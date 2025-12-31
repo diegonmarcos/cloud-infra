@@ -1,0 +1,13 @@
+[Unit]
+Description=Idle Shutdown Check
+Documentation=https://github.com/diegonmarcos/back-System
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/scripts/idle-shutdown.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

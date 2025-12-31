@@ -1,0 +1,10 @@
+id,name,category,command,description,requires_auth
+ssh-web1,SSH Web Server 1,access,ssh -i ~/.ssh/matomo_key ubuntu@130.110.251.193,Connect to web-server-1,yes
+ssh-services1,SSH Services Server 1,access,ssh -i ~/.ssh/matomo_key ubuntu@129.151.228.66,Connect to services-server-1,yes
+ssh-arch1,SSH Arch 1,access,ssh -i ~/.ssh/gcloud_key diego@<pending>,Connect to arch-1 (pending),yes
+oci-list,OCI List Instances,cli,"oci compute instance list --compartment-id $OCI_COMPARTMENT_ID",List Oracle Cloud instances,yes
+oci-install,OCI CLI Install,install,"bash -c ""$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)""",Install Oracle CLI,no
+gcloud-list,GCloud List Instances,cli,gcloud compute instances list,List Google Cloud instances,yes
+gcloud-install,GCloud CLI Install,install,curl https://sdk.cloud.google.com | bash,Install Google Cloud CLI,no
+docker-ps,Docker Status,monitoring,sudo docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}',List running containers,yes
+docker-logs,Docker Logs,monitoring,sudo docker logs --tail 100 <container>,View container logs,yes

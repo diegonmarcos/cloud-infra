@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Dashboard | Live Monitoring</title>
+
+    <!-- Matomo Tag Manager -->
+    <script>
+      var _mtm = window._mtm = window._mtm || [];
+      _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+      (function() {
+        var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+        g.async=true; g.src='https://analytics.diegonmarcos.com/js/container_odwLIyPV.js'; s.parentNode.insertBefore(g,s);
+      })();
+    </script>
+    <!-- End Matomo Tag Manager -->
+
+    <style>:root,[data-theme=minimalistic]{--bg-primary: #000000;--bg-secondary: #0a0a0a;--bg-card: #111111;--bg-card-hover: #1a1a1a;--text-primary: #ffffff;--text-secondary: #888888;--accent-primary: #ff6600;--accent-orange: #ff6600;--accent-blue: #3399ff;--accent-green: #00cc66;--accent-yellow: #ffcc00;--accent-red: #ff3333;--accent-purple: #8b5cf6;--border-color: #333333;--border-highlight: #ff6600;--shadow: rgba(0, 0, 0, 0.5);--glow: rgba(255, 102, 0, 0.3);--font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;--font-main: var(--font-mono);--border-radius: 0px;--border-radius-lg: 0px;--card-padding: 1rem;--transition-speed: 0.15s}[data-theme=blurred]{--bg-primary: #0a0e27;--bg-secondary: #151a33;--bg-card: rgba(26, 31, 58, 0.8);--bg-card-hover: rgba(35, 42, 74, 0.9);--text-primary: #e0e6ff;--text-secondary: #8b95c9;--accent-primary: #4a9eff;--accent-orange: #ff6b35;--accent-blue: #4a9eff;--accent-green: #10b981;--accent-yellow: #fbbf24;--accent-red: #ef4444;--accent-purple: #8b5cf6;--border-color: rgba(255, 255, 255, 0.1);--border-highlight: #4a9eff;--shadow: rgba(0, 0, 0, 0.3);--glow: rgba(74, 158, 255, 0.4);--font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;--font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;--border-radius: 12px;--border-radius-lg: 16px;--card-padding: 1.5rem;--transition-speed: 0.3s}*{margin:0;padding:0;box-sizing:border-box}html,body{height:100%;width:100%;overflow-x:auto}html{min-width:1200px}body{font-family:var(--font-main);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;min-width:1200px;padding:1rem;display:flex;flex-direction:column;font-size:clamp(12px,.9vw,14px);line-height:1.4;transition:background var(--transition-speed) ease,color var(--transition-speed) ease}[data-theme=blurred] body{background:linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);font-size:clamp(13px,1vw,15px);padding:2rem}.container{width:100%;max-width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column}[data-theme=blurred] .container{max-width:1400px}#cards-view{max-width:1600px;width:100%;margin:0 auto}#tree-view{width:100%;overflow-x:auto}#architecture-view{flex:1;width:100%}@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeInDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}@keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}@keyframes slideInScale{from{opacity:0;transform:scale(0.9) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}header{text-align:center;margin-bottom:1.5rem;animation:fadeInDown .6s ease-out}header h1{font-size:1.5rem;font-weight:700;color:var(--accent-primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:.25rem;transition:all var(--transition-speed) ease}[data-theme=blurred] header{margin-bottom:3rem}[data-theme=blurred] header h1{font-size:3rem;text-transform:none;letter-spacing:normal;background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:rgba(0,0,0,0);background-clip:text}.subtitle{color:var(--text-secondary);font-size:.85rem;text-transform:uppercase;letter-spacing:1px;transition:all var(--transition-speed) ease}[data-theme=blurred] .subtitle{font-size:1.2rem;text-transform:none;letter-spacing:normal;font-weight:300}.section-header{text-align:left;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border-color);transition:all var(--transition-speed) ease}.section-header h2{font-size:1rem;font-weight:600;color:var(--accent-primary);text-transform:uppercase;letter-spacing:1px;transition:all var(--transition-speed) ease}[data-theme=blurred] .section-header{text-align:center;margin-bottom:2rem;border-bottom:none;padding-bottom:0}[data-theme=blurred] .section-header h2{font-size:2rem;text-transform:none;letter-spacing:normal;background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:rgba(0,0,0,0);background-clip:text}.theme-toggle{position:fixed;top:1rem;right:1rem;z-index:1000;display:flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:none;background:rgba(0,0,0,0);color:var(--text-secondary);cursor:pointer;transition:all .3s ease;border-radius:50%}.theme-toggle svg{width:18px;height:18px;transition:transform .5s ease,color .3s ease}.theme-toggle .theme-label{position:absolute;right:100%;margin-right:.5rem;font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;white-space:nowrap;opacity:0;transform:translateX(10px);transition:opacity .2s ease,transform .2s ease;pointer-events:none}.theme-toggle:hover{color:var(--accent-primary);background:var(--bg-card)}.theme-toggle:hover svg{transform:rotate(180deg)}.theme-toggle:hover .theme-label{opacity:1;transform:translateX(0)}[data-theme=blurred] .theme-toggle{color:var(--text-secondary)}[data-theme=blurred] .theme-toggle:hover{color:var(--accent-blue);background:hsla(0,0%,100%,.1);box-shadow:0 0 20px var(--glow)}[data-theme=blurred] .theme-toggle:hover svg{filter:drop-shadow(0 0 8px var(--accent-blue))}.zoom-controls{position:fixed;top:3.5rem;right:1rem;z-index:1000;display:flex;align-items:center;gap:.25rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:.25rem;opacity:.7;transition:all .3s ease}.zoom-controls:hover{opacity:1;border-color:var(--accent-primary)}[data-theme=blurred] .zoom-controls{background:rgba(26,31,58,.9);backdrop-filter:blur(10px);border-radius:20px;padding:.35rem}[data-theme=blurred] .zoom-controls:hover{border-color:var(--accent-blue);box-shadow:0 0 20px var(--glow)}.zoom-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:none;background:rgba(0,0,0,0);color:var(--text-secondary);cursor:pointer;transition:all .2s ease;border-radius:4px}.zoom-btn svg{width:16px;height:16px}.zoom-btn:hover:not(:disabled){color:var(--accent-primary);background:var(--bg-primary)}.zoom-btn:disabled{opacity:.3;cursor:not-allowed}[data-theme=blurred] .zoom-btn{border-radius:50%}[data-theme=blurred] .zoom-btn:hover:not(:disabled){color:var(--accent-blue);background:hsla(0,0%,100%,.1)}.zoom-level{font-family:var(--font-mono);font-size:.65rem;color:var(--text-secondary);min-width:32px;text-align:center;user-select:none}[data-theme=blurred] .zoom-level{font-size:.7rem}.cards-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(var(--card-min-width, 220px), 1fr));gap:calc(1rem*var(--zoom-scale, 1));animation:fadeIn .8s ease-out}[data-theme=blurred] .cards-grid{grid-template-columns:repeat(auto-fit, minmax(var(--card-min-width, 280px), 1fr));gap:calc(2rem*var(--zoom-scale, 1))}.card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:calc(var(--card-padding)*var(--zoom-scale, 1));cursor:pointer;transition:all .3s ease,transform .3s ease;position:relative;text-decoration:none;display:block;transform-origin:center center;z-index:1}.card:hover{background:var(--bg-card-hover);border-color:var(--border-highlight);transform:scale(var(--hover-scale, 2));z-index:100;box-shadow:0 20px 60px rgba(0,0,0,.7)}.card:hover .card-icon{color:var(--accent-primary)}.card:hover h3{color:var(--accent-primary)}.card:hover .card-status.online{background:var(--accent-green);color:#000}.card.card-link{text-decoration:none;color:inherit}[data-theme=blurred] .card{border-radius:var(--border-radius-lg);overflow:hidden;backdrop-filter:blur(10px)}[data-theme=blurred] .card::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));opacity:0;transition:opacity .4s ease;z-index:0}[data-theme=blurred] .card::after{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);opacity:0;transition:opacity .4s ease;pointer-events:none}[data-theme=blurred] .card:hover{transform:scale(var(--hover-scale, 2));box-shadow:0 25px 80px var(--shadow),0 0 50px var(--glow);border-color:var(--accent-blue)}[data-theme=blurred] .card:hover::before{opacity:.1}[data-theme=blurred] .card:hover::after{opacity:1}[data-theme=blurred] .card:hover .card-icon{filter:drop-shadow(0 0 12px var(--accent-blue))}[data-theme=blurred] .card:hover h3{color:var(--accent-blue)}[data-theme=blurred] .card:hover p{color:var(--text-primary)}[data-theme=blurred] .card:hover .card-status.online{background:rgba(16,185,129,.25);color:var(--accent-green);box-shadow:0 0 15px rgba(16,185,129,.3)}[data-theme=blurred] .card>*{position:relative;z-index:1}.card-icon{width:calc(32px*var(--zoom-scale, 1));height:calc(32px*var(--zoom-scale, 1));margin-bottom:calc(.75rem*var(--zoom-scale, 1));color:var(--accent-blue);transition:all var(--transition-speed) ease}.card-icon svg{width:100%;height:100%}[data-theme=blurred] .card-icon{width:calc(60px*var(--zoom-scale, 1));height:calc(60px*var(--zoom-scale, 1));margin-bottom:calc(1.5rem*var(--zoom-scale, 1))}.card h3{font-size:calc(.95rem*var(--zoom-scale, 1));margin-bottom:calc(.25rem*var(--zoom-scale, 1));font-weight:600;text-transform:uppercase;letter-spacing:.5px;transition:color var(--transition-speed) ease}[data-theme=blurred] .card h3{font-size:calc(1.5rem*var(--zoom-scale, 1));text-transform:none;letter-spacing:normal;margin-bottom:calc(.75rem*var(--zoom-scale, 1))}.card p{color:var(--text-secondary);font-size:calc(.8rem*var(--zoom-scale, 1));margin-bottom:calc(.75rem*var(--zoom-scale, 1));transition:color var(--transition-speed) ease}[data-theme=blurred] .card p{font-size:calc(.95rem*var(--zoom-scale, 1));line-height:1.6;margin-bottom:calc(1.5rem*var(--zoom-scale, 1))}.card-status{display:inline-block;padding:calc(.2rem*var(--zoom-scale, 1)) calc(.5rem*var(--zoom-scale, 1));font-size:calc(.7rem*var(--zoom-scale, 1));font-weight:600;text-transform:uppercase;letter-spacing:.5px;transition:all var(--transition-speed) ease;border-radius:var(--border-radius)}.card-status.online{background:rgba(0,0,0,0);color:var(--accent-green);border:1px solid var(--accent-green)}.card-status.pending{background:rgba(0,0,0,0);color:var(--accent-yellow);border:1px solid var(--accent-yellow)}[data-theme=blurred] .card-status{padding:calc(.4rem*var(--zoom-scale, 1)) calc(1rem*var(--zoom-scale, 1));font-size:calc(.85rem*var(--zoom-scale, 1));border-radius:20px}[data-theme=blurred] .card-status.online{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3)}[data-theme=blurred] .card-status.pending{background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.3)}.card-actions{margin-top:calc(.5rem*var(--zoom-scale, 1));padding-top:calc(.5rem*var(--zoom-scale, 1));border-top:1px solid var(--border-color)}[data-theme=blurred] .card-actions{margin-top:calc(1rem*var(--zoom-scale, 1));padding-top:calc(1rem*var(--zoom-scale, 1))}.code-with-copy{display:flex;align-items:center;gap:calc(.5rem*var(--zoom-scale, 1));background:var(--bg-primary);padding:calc(.4rem*var(--zoom-scale, 1)) calc(.5rem*var(--zoom-scale, 1));border:1px solid var(--border-color);border-radius:var(--border-radius)}[data-theme=blurred] .code-with-copy{background:rgba(0,0,0,.3);border-radius:8px;padding:calc(.75rem*var(--zoom-scale, 1)) calc(1rem*var(--zoom-scale, 1))}.card-code{font-family:var(--font-mono);font-size:calc(.65rem*var(--zoom-scale, 1));color:var(--accent-orange);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}[data-theme=blurred] .card-code{color:var(--accent-green);font-size:calc(.75rem*var(--zoom-scale, 1))}.copy-icon{background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:calc(.25rem*var(--zoom-scale, 1));display:flex;align-items:center;justify-content:center;transition:color var(--transition-speed) ease}.copy-icon svg{width:calc(14px*var(--zoom-scale, 1));height:calc(14px*var(--zoom-scale, 1))}.copy-icon:hover{color:var(--accent-primary)}.copy-icon:disabled{opacity:.3;cursor:not-allowed}.vm-buttons{display:flex;gap:calc(.5rem*var(--zoom-scale, 1));margin-top:calc(.5rem*var(--zoom-scale, 1))}.vm-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:calc(.25rem*var(--zoom-scale, 1));padding:calc(.4rem*var(--zoom-scale, 1));background:var(--bg-primary);border:1px solid var(--border-color);border-radius:var(--border-radius);color:var(--text-secondary);font-family:var(--font-mono);font-size:calc(.55rem*var(--zoom-scale, 1));text-transform:uppercase;cursor:pointer;transition:all var(--transition-speed) ease}.vm-btn svg{width:calc(12px*var(--zoom-scale, 1));height:calc(12px*var(--zoom-scale, 1))}.vm-btn:hover:not(:disabled){border-color:var(--accent-primary);color:var(--accent-primary)}.vm-btn:disabled{opacity:.3;cursor:not-allowed}[data-theme=blurred] .vm-btn{border-radius:8px;padding:calc(.5rem*var(--zoom-scale, 1)) calc(.75rem*var(--zoom-scale, 1));backdrop-filter:blur(5px);background:hsla(0,0%,100%,.05);font-size:calc(.6rem*var(--zoom-scale, 1))}[data-theme=blurred] .vm-btn:hover:not(:disabled){background:rgba(74,158,255,.1);border-color:var(--accent-blue);color:var(--accent-blue);box-shadow:0 0 15px rgba(74,158,255,.2)}.card:nth-child(1){animation:fadeIn .4s ease-out .1s backwards}.card:nth-child(2){animation:fadeIn .4s ease-out .2s backwards}.card:nth-child(3){animation:fadeIn .4s ease-out .3s backwards}.card:nth-child(4){animation:fadeIn .4s ease-out .4s backwards}.card:nth-child(5){animation:fadeIn .4s ease-out .5s backwards}.card:nth-child(6){animation:fadeIn .4s ease-out .6s backwards}.card:nth-child(7){animation:fadeIn .4s ease-out .7s backwards}.card:nth-child(8){animation:fadeIn .4s ease-out .8s backwards}.card:nth-child(9){animation:fadeIn .4s ease-out .9s backwards}.card:nth-child(10){animation:fadeIn .4s ease-out 1s backwards}.view-toggle{display:flex;justify-content:center;gap:.5rem;margin-top:1rem}[data-theme=blurred] .view-toggle{gap:.75rem}.tree-controls{display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:1rem;padding-top:.5rem}.tree-controls-group{display:flex;gap:.25rem}.tree-controls-sep{width:1px;height:24px;background:var(--border-color);margin:0 .5rem}.tree-filter-btn{padding:.25rem .5rem;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;cursor:pointer;transition:all var(--transition-speed) ease;border-radius:var(--border-radius)}.tree-filter-btn:hover{border-color:var(--accent-primary);color:var(--accent-primary)}.tree-filter-btn.active{background:var(--accent-primary);border-color:var(--accent-primary);color:#000}[data-theme=blurred] .tree-controls-sep{background:hsla(0,0%,100%,.1)}[data-theme=blurred] .tree-filter-btn{border-radius:12px;backdrop-filter:blur(10px);background:hsla(0,0%,100%,.05)}[data-theme=blurred] .tree-filter-btn:hover{background:hsla(0,0%,100%,.1);border-color:var(--accent-blue);color:var(--accent-blue)}[data-theme=blurred] .tree-filter-btn.active{background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));border-color:rgba(0,0,0,0);color:#fff}.tree-ctrl-btn{display:flex;align-items:center;gap:.25rem;padding:.3rem .6rem;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-mono);font-size:.75rem;text-transform:uppercase;cursor:pointer;transition:all var(--transition-speed) ease;border-radius:var(--border-radius)}.tree-ctrl-btn svg{width:12px;height:12px}.tree-ctrl-btn:hover{border-color:var(--accent-primary);color:var(--accent-primary)}[data-theme=blurred] .tree-ctrl-btn{border-radius:15px;backdrop-filter:blur(10px);background:hsla(0,0%,100%,.05)}[data-theme=blurred] .tree-ctrl-btn:hover{background:hsla(0,0%,100%,.1);border-color:var(--accent-blue);color:var(--accent-blue)}.view-btn{display:flex;align-items:center;gap:.25rem;padding:.4rem .8rem;border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-secondary);font-family:var(--font-mono);font-size:.8rem;text-transform:uppercase;cursor:pointer;transition:all var(--transition-speed) ease;border-radius:var(--border-radius)}.view-btn svg{width:14px;height:14px}.view-btn:hover{border-color:var(--accent-primary);color:var(--text-primary)}.view-btn.active{background:var(--accent-primary);border-color:var(--accent-primary);color:#000}[data-theme=blurred] .view-btn{border-radius:20px;padding:.5rem 1rem;backdrop-filter:blur(10px);background:hsla(0,0%,100%,.05);text-transform:none}[data-theme=blurred] .view-btn:hover{background:hsla(0,0%,100%,.1);border-color:var(--accent-blue)}[data-theme=blurred] .view-btn.active{background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));border-color:rgba(0,0,0,0);color:#fff}.view-group{display:flex;flex-direction:column;align-items:center;gap:.35rem}.view-group-label{font-size:.6rem;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);opacity:.6}.view-group-buttons{display:flex;gap:.25rem}[data-theme=blurred] .view-group-label{font-size:.65rem;letter-spacing:1.5px;opacity:.5}[data-theme=blurred] .view-group-buttons{gap:.5rem}.view-separator{width:1px;height:40px;background:var(--border-color);margin:0 .75rem;opacity:.4;align-self:center}[data-theme=blurred] .view-separator{background:linear-gradient(180deg, transparent, var(--border-color), transparent);height:50px;opacity:.3;margin:0 1.5rem}.view-content{display:none}.view-content.active{display:block}#tree-view{width:100%}.tree-container{font-family:var(--font-mono);font-size:.8rem;padding:1rem 0}.tree-section{margin-bottom:1.5rem}.tree-section-header{display:flex;align-items:center;gap:.75rem;padding:.5rem 0;margin-bottom:.5rem;border-bottom:1px solid var(--border-color)}.tree-section-header .section-icon{font-size:1rem}.tree-section-header .section-title{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary)}.tree-list{list-style:none;padding:0;margin:0}.tree-item,.tree-node{position:relative}.tree-item::before,.tree-node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--border-color)}.tree-item:last-child::before,.tree-node:last-child::before{height:1.1rem}.tree-row,.node-header{display:flex;align-items:center;gap:.5rem;padding:.35rem .5rem;margin-left:1rem;position:relative;transition:background .15s ease;border-radius:4px}.tree-row::before,.node-header::before{content:"";position:absolute;left:-1rem;top:50%;width:.75rem;height:1px;background:var(--border-color)}.tree-row:hover,.node-header:hover{background:var(--bg-card-hover)}.tree-row:hover .tree-actions,.node-header:hover .tree-actions{opacity:1}.tree-item[data-level="0"]>.tree-row,.tree-item[data-level="0"]>.node-header,[data-level="0"].tree-node>.tree-row,[data-level="0"].tree-node>.node-header{margin-left:0}.tree-item[data-level="0"]>.tree-row::before,.tree-item[data-level="0"]>.node-header::before,[data-level="0"].tree-node>.tree-row::before,[data-level="0"].tree-node>.node-header::before{display:none}.tree-item[data-level="0"]::before,[data-level="0"].tree-node::before{display:none}.tree-item[data-level="1"],[data-level="1"].tree-node{padding-left:1.5rem}.tree-item[data-level="2"],[data-level="2"].tree-node{padding-left:3rem}.tree-item[data-level="3"],[data-level="3"].tree-node{padding-left:4.5rem}.tree-toggle,.expand-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);flex-shrink:0}.tree-toggle:hover,.expand-icon:hover{color:var(--accent-primary)}.tree-toggle svg,.expand-icon svg{width:10px;height:10px;transition:transform .15s ease}.tree-toggle.expanded svg,.expanded.expand-icon svg{transform:rotate(90deg)}.tree-toggle.empty,.empty.expand-icon{visibility:hidden}.tree-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}.tree-status.on{background:var(--accent-green);box-shadow:0 0 6px var(--accent-green)}.tree-status.dev{background:var(--accent-yellow)}.tree-status.hold{background:var(--accent-orange)}.tree-status.tbd{background:var(--text-secondary);opacity:.4}.tree-status.offline{background:var(--accent-red)}.tree-icon{font-size:.9rem;flex-shrink:0;width:18px;text-align:center}.tree-label,.node-title{color:var(--text-primary);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tree-label.category,.category.node-title{color:var(--text-secondary);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px}.tree-label.provider,.provider.node-title{font-weight:600;font-size:.85rem}.tree-label.vm,.vm.node-title{color:var(--accent-blue)}.tree-type{font-size:.6rem;padding:.1rem .35rem;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:3px;text-transform:uppercase;flex-shrink:0}.tree-actions{display:flex;gap:.25rem;opacity:0;transition:opacity .15s ease;flex-shrink:0}.tree-action-btn,.node-copy-btn,.node-url-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--bg-card);border:1px solid var(--border-color);border-radius:4px;color:var(--text-secondary);cursor:pointer;transition:all .15s ease}.tree-action-btn svg,.node-copy-btn svg,.node-url-btn svg{width:12px;height:12px}.tree-action-btn:hover,.node-copy-btn:hover,.node-url-btn:hover{border-color:var(--accent-primary);color:var(--accent-primary)}.tree-action-btn.url-btn:hover,.url-btn.node-copy-btn:hover,.url-btn.node-url-btn:hover{border-color:var(--accent-blue);color:var(--accent-blue)}.tree-action-btn:disabled,.node-copy-btn:disabled,.node-url-btn:disabled{opacity:.3;cursor:not-allowed}.tree-action-btn.copied,.copied.node-copy-btn,.copied.node-url-btn{border-color:var(--accent-green);color:var(--accent-green)}.tree-children{display:none}.tree-children.expanded{display:block}.vm-card-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:.75rem;padding:.5rem 0}.vm-box{background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;overflow:hidden}.vm-box.box-services{border-left:3px solid var(--accent-blue)}.vm-box.box-data{border-left:3px solid var(--accent-purple)}.vm-box.box-os{border-left:3px solid var(--accent-green)}.vm-box-header{display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary)}.vm-box-header .box-icon{font-size:.8rem}.vm-box-content{padding:.4rem}.vm-box-section:not(:last-child){margin-bottom:.5rem;padding-bottom:.5rem;border-bottom:1px dashed var(--border-color)}.vm-box-section-label{font-size:.55rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);opacity:.7;padding:.15rem .3rem;margin-bottom:.2rem}.vm-item{display:flex;align-items:center;gap:.4rem;padding:.3rem .4rem;border-radius:4px;transition:background .15s ease}.vm-item:hover{background:var(--bg-card-hover)}.vm-item-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:.5}.vm-item-status.on{background:var(--accent-green)}.vm-item-status.offline{background:var(--accent-red)}.vm-item-status.dev{background:var(--accent-yellow)}.vm-item-status.hold{background:var(--accent-orange)}.vm-item-status.tbd{background:var(--text-secondary);opacity:.3}.vm-item-name{font-size:.7rem;color:var(--text-primary);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vm-live-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.3rem}.vm-live-status.online{background:var(--accent-green);box-shadow:0 0 6px var(--accent-green);animation:pulse-green 2s ease-in-out infinite}.vm-live-status.offline{background:var(--accent-red);box-shadow:0 0 6px var(--accent-red)}.vm-live-status.unknown{background:var(--text-secondary);opacity:.4}@keyframes pulse-green{0%,100%{box-shadow:0 0 4px var(--accent-green)}50%{box-shadow:0 0 10px var(--accent-green)}}.vm-item-actions{display:flex;align-items:center;gap:.2rem;flex-shrink:0}.vm-action-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0);border:1px solid var(--border-color);border-radius:3px;color:var(--text-secondary);cursor:pointer;transition:all .15s ease;opacity:.5}.vm-action-btn svg{width:10px;height:10px}.vm-action-btn:hover{opacity:1;border-color:var(--accent-primary);color:var(--accent-primary)}.vm-action-btn.btn-url:hover{border-color:var(--accent-blue);color:var(--accent-blue)}.vm-action-btn.btn-ssh:hover{border-color:var(--accent-green);color:var(--accent-green)}.vm-action-btn:disabled{opacity:.2;cursor:not-allowed}.vm-action-btn:disabled:hover{border-color:var(--border-color);color:var(--text-secondary)}.vm-action-btn.copied{border-color:var(--accent-green);color:var(--accent-green);opacity:1}.vm-os-info{display:flex;align-items:center;gap:.5rem;padding:.4rem}.vm-os-info .os-icon{font-size:1.2rem}.vm-os-info .os-details{flex:1}.vm-os-info .os-details .os-name{font-size:.75rem;font-weight:600;color:var(--text-primary)}.vm-os-info .os-details .os-ip{font-size:.65rem;color:var(--text-secondary);font-family:var(--font-mono)}.os-subsection{padding:.3rem .4rem;border-top:1px dashed var(--border-color)}.os-subsection:first-of-type{margin-top:.3rem}.os-subsection-header{display:flex;align-items:center;gap:.3rem;font-size:.55rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);opacity:.8;margin-bottom:.2rem}.os-subsection-header .subsection-icon{font-size:.65rem}.os-subsection-items{display:flex;flex-wrap:wrap;gap:.25rem}.os-tag{display:inline-flex;align-items:center;gap:.2rem;padding:.15rem .4rem;font-size:.6rem;font-family:var(--font-mono);border-radius:3px;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-secondary)}.os-tag.tag-network{border-color:rgba(138,180,248,.3);color:var(--accent-blue)}.os-tag.tag-partition{border-color:rgba(129,199,132,.3);color:var(--accent-green)}[data-theme=blurred] .vm-box{background:hsla(0,0%,100%,.03);backdrop-filter:blur(10px);border-color:hsla(0,0%,100%,.08);border-radius:10px}[data-theme=blurred] .vm-box.box-services{border-left-color:var(--accent-blue)}[data-theme=blurred] .vm-box.box-data{border-left-color:var(--accent-purple)}[data-theme=blurred] .vm-box.box-os{border-left-color:var(--accent-green)}[data-theme=blurred] .vm-box-header{background:hsla(0,0%,100%,.02);border-bottom-color:hsla(0,0%,100%,.06)}[data-theme=blurred] .vm-box-section{border-bottom-color:hsla(0,0%,100%,.05)}[data-theme=blurred] .vm-item:hover{background:hsla(0,0%,100%,.05)}[data-theme=blurred] .vm-action-btn{background:hsla(0,0%,100%,.02);border-color:hsla(0,0%,100%,.1)}[data-theme=blurred] .vm-action-btn:hover{background:hsla(0,0%,100%,.08)}.tree-columns{display:flex;gap:1.5rem;padding:.5rem 0}.tree-columns .tree-column{flex:1;min-width:0}.tree-columns .tree-column .column-header{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);padding:.25rem .5rem;margin-bottom:.25rem;border-bottom:1px solid var(--border-color)}.tree-columns .tree-column .column-items{display:flex;flex-direction:column;gap:.15rem}.tree-service{display:flex;align-items:center;gap:.4rem;padding:.25rem .4rem;border-radius:4px;transition:background .15s ease}.tree-service:hover{background:var(--bg-card-hover)}.tree-service:hover .tree-actions{opacity:1}.tree-service .service-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}.tree-service .service-status.on{background:var(--accent-green);box-shadow:0 0 4px var(--accent-green)}.tree-service .service-status.dev{background:var(--accent-yellow)}.tree-service .service-status.hold{background:var(--accent-orange)}.tree-service .service-status.tbd{background:var(--text-secondary);opacity:.4}.tree-service .service-name{font-size:.75rem;color:var(--text-primary);min-width:10rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tree-service .tree-actions{opacity:0}.tree-provider,.tree-vps{background:var(--bg-card);border:1px solid var(--border-color);border-radius:6px;margin-bottom:1rem;overflow:hidden}.tree-provider>.tree-row,.tree-provider>.node-header,.tree-vps>.tree-row,.tree-vps>.node-header{padding:.6rem .75rem;margin-left:0;border-bottom:1px solid var(--border-color)}.tree-provider>.tree-row::before,.tree-provider>.node-header::before,.tree-vps>.tree-row::before,.tree-vps>.node-header::before{display:none}.tree-provider>.tree-children,.tree-vps>.tree-children{padding:.5rem 0}.tree-section-divider{width:100%;display:flex;align-items:center;gap:1rem;margin:1.5rem 0 1rem}.tree-section-divider::before,.tree-section-divider::after{content:"";flex:1;height:1px;background:var(--border-color)}.tree-section-divider .divider-label{font-size:.65rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;padding:.2rem .6rem;background:var(--bg-card);border:1px solid var(--border-color)}[data-theme=blurred] .tree-container{padding:1.5rem 0}[data-theme=blurred] .tree-section-header{border-bottom-color:hsla(0,0%,100%,.1)}[data-theme=blurred] .tree-item::before,[data-theme=blurred] .tree-node::before{background:hsla(0,0%,100%,.1)}[data-theme=blurred] .tree-row::before,[data-theme=blurred] .node-header::before{background:hsla(0,0%,100%,.1)}[data-theme=blurred] .tree-row:hover,[data-theme=blurred] .node-header:hover{background:hsla(0,0%,100%,.05)}[data-theme=blurred] .tree-provider,[data-theme=blurred] .tree-vps{background:hsla(0,0%,100%,.03);backdrop-filter:blur(10px);border-color:hsla(0,0%,100%,.08);border-radius:12px}[data-theme=blurred] .tree-provider>.tree-row,[data-theme=blurred] .tree-provider>.node-header,[data-theme=blurred] .tree-vps>.tree-row,[data-theme=blurred] .tree-vps>.node-header{border-bottom-color:hsla(0,0%,100%,.06)}[data-theme=blurred] .tree-status.online{box-shadow:0 0 8px var(--accent-green)}[data-theme=blurred] .tree-type{background:hsla(0,0%,100%,.05);border-color:hsla(0,0%,100%,.1);border-radius:8px}[data-theme=blurred] .tree-action-btn,[data-theme=blurred] .node-copy-btn,[data-theme=blurred] .node-url-btn{background:hsla(0,0%,100%,.05);border-color:hsla(0,0%,100%,.1);border-radius:6px}[data-theme=blurred] .tree-action-btn:hover,[data-theme=blurred] .node-copy-btn:hover,[data-theme=blurred] .node-url-btn:hover{background:hsla(0,0%,100%,.1)}[data-theme=blurred] .tree-section-divider::before,[data-theme=blurred] .tree-section-divider::after{background:linear-gradient(90deg, transparent, var(--border-color), transparent)}[data-theme=blurred] .tree-section-divider .divider-label{background:hsla(0,0%,100%,.05);border-color:hsla(0,0%,100%,.1);border-radius:12px;backdrop-filter:blur(10px)}.node-badge{font-size:.6rem;padding:.1rem .35rem;border-radius:3px;text-transform:uppercase;flex-shrink:0;margin-left:auto}.node-badge.on{background:rgba(0,0,0,0);color:var(--accent-green);border:1px solid var(--accent-green)}.node-badge.dev{background:rgba(0,0,0,0);color:var(--accent-yellow);border:1px solid var(--accent-yellow)}.node-badge.hold{background:rgba(0,0,0,0);color:var(--accent-orange);border:1px solid var(--accent-orange)}.node-badge.tbd{background:rgba(0,0,0,0);color:var(--text-secondary);border:1px solid var(--border-color)}.expand-icon{font-size:.65rem;width:12px}.expand-icon.expanded{transform:rotate(90deg)}.tree-children{padding-left:1rem;display:none}.tree-children.expanded{display:block}.tree-container[data-filter=on] .tree-service[data-mode=dev],.tree-container[data-filter=on] .tree-service[data-mode=hold],.tree-container[data-filter=on] .tree-service[data-mode=tbd],.tree-container[data-filter=on] .tree-node[data-mode=dev],.tree-container[data-filter=on] .tree-node[data-mode=hold],.tree-container[data-filter=on] .tree-node[data-mode=tbd]{display:none}.tree-container[data-filter=offline] .tree-service[data-mode=dev],.tree-container[data-filter=offline] .tree-service[data-mode=hold],.tree-container[data-filter=offline] .tree-service[data-mode=tbd],.tree-container[data-filter=offline] .tree-node[data-mode=dev],.tree-container[data-filter=offline] .tree-node[data-mode=hold],.tree-container[data-filter=offline] .tree-node[data-mode=tbd]{display:none}.tree-container[data-filter=offline] .tree-service[data-mode=on]:not([data-offline=true]),.tree-container[data-filter=offline] .tree-node[data-mode=on]:not([data-offline=true]){display:none}.ssh-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:2000;animation:fadeIn .3s ease-out}.ssh-modal{background:var(--bg-card);border-radius:16px;padding:2.5rem;max-width:600px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);border:1px solid rgba(74,158,255,.3);animation:slideInScale .3s ease-out}.ssh-modal h3{color:var(--accent-blue);margin-bottom:1.5rem;font-size:1.5rem}.ssh-command{background:rgba(0,0,0,.3);border-radius:8px;padding:1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;border:1px solid rgba(74,158,255,.2)}.ssh-command code{flex:1;color:var(--accent-green);font-family:"Courier New",monospace;font-size:.9rem;word-break:break-all}.copy-btn{padding:.5rem 1rem;background:var(--accent-blue);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;transition:all .3s ease;white-space:nowrap}.copy-btn:hover{background:var(--accent-purple);transform:scale(1.05)}.ssh-instruction{color:var(--text-secondary);margin-bottom:1rem;font-size:1rem}.ssh-options{display:flex;gap:1rem;margin-bottom:1.5rem}.ssh-option-btn{flex:1;padding:1rem;background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;transition:all .3s ease}.ssh-option-btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(74,158,255,.4)}.close-modal-btn{width:100%;padding:.75rem;background:hsla(0,0%,100%,.1);color:var(--text-primary);border:1px solid hsla(0,0%,100%,.2);border-radius:8px;cursor:pointer;font-weight:500;transition:all .3s ease}.close-modal-btn:hover{background:hsla(0,0%,100%,.15);border-color:hsla(0,0%,100%,.3)}.notification{position:fixed;top:20px;right:20px;background:linear-gradient(135deg, var(--accent-blue), var(--accent-purple));color:#fff;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:1000;animation:slideIn .3s ease-out;font-weight:500}.notification.closing{animation:slideOut .3s ease-out}#monitoring-view{max-width:1400px;width:100%;margin:0 auto;padding:0 1rem}.monitoring-grid{display:flex;flex-direction:column;gap:2rem}.monitoring-section{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:1.5rem}[data-theme=blurred] .monitoring-section{backdrop-filter:blur(10px);border-radius:var(--border-radius-lg)}.monitoring-section-title{font-size:1rem;font-weight:600;color:var(--accent-primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border-color)}[data-theme=blurred] .monitoring-section-title{color:var(--accent-blue);text-transform:none;font-size:1.2rem}.vm-status-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem}.vm-status-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:1rem;transition:all var(--transition-speed) ease}.vm-status-card:hover{border-color:var(--accent-blue)}[data-theme=blurred] .vm-status-card{background:hsla(0,0%,100%,.03);border-radius:12px}.vm-status-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border-color)}.vm-icon{font-size:1.5rem}.vm-name{flex:1;font-weight:600;font-size:.9rem;text-transform:uppercase}[data-theme=blurred] .vm-name{text-transform:none;font-size:1rem}.vm-status-indicator{width:12px;height:12px;border-radius:50%;animation:pulse 2s infinite}.vm-status-indicator.online{background:var(--accent-green);box-shadow:0 0 8px var(--accent-green)}.vm-status-indicator.pending{background:var(--accent-yellow);box-shadow:0 0 8px var(--accent-yellow)}.vm-status-indicator.offline{background:var(--accent-red);box-shadow:0 0 8px var(--accent-red)}.vm-status-details{display:flex;flex-direction:column;gap:.5rem}.vm-stat{display:flex;justify-content:space-between;font-size:.8rem}.vm-stat .stat-label{color:var(--text-secondary)}.vm-stat .stat-value{color:var(--text-primary);font-family:var(--font-mono)}.service-health-grid{display:flex;flex-direction:column;gap:.5rem}.service-health-row{display:grid;grid-template-columns:1fr 1.5fr auto;gap:1rem;padding:.75rem 1rem;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--border-radius);align-items:center;font-size:.85rem}[data-theme=blurred] .service-health-row{background:hsla(0,0%,100%,.02);border-radius:8px}.service-name{font-weight:600;text-transform:uppercase}[data-theme=blurred] .service-name{text-transform:none}.service-url{color:var(--text-secondary);font-family:var(--font-mono);font-size:.75rem}.service-status{padding:.25rem .75rem;font-size:.7rem;font-weight:600;text-transform:uppercase;border-radius:var(--border-radius)}.service-status.online{background:rgba(0,204,102,.15);color:var(--accent-green);border:1px solid var(--accent-green)}.service-status.pending{background:rgba(255,204,0,.15);color:var(--accent-yellow);border:1px solid var(--accent-yellow)}[data-theme=blurred] .service-status{border-radius:12px}#resources-view{max-width:1400px;width:100%;margin:0 auto;padding:0 1rem}.resources-summary{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1.5rem;margin-bottom:2rem}.summary-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:1.5rem}.summary-card h4{font-size:1rem;font-weight:600;color:var(--accent-primary);text-transform:uppercase;margin-bottom:1rem}[data-theme=blurred] .summary-card{backdrop-filter:blur(10px);border-radius:var(--border-radius-lg);background:linear-gradient(135deg, rgba(74, 158, 255, 0.1), rgba(139, 92, 246, 0.1))}[data-theme=blurred] .summary-card h4{color:var(--text-primary);text-transform:none}.summary-stats{display:flex;flex-direction:column;gap:.75rem}.summary-stat{display:flex;align-items:center;gap:.75rem}.summary-stat .stat-icon{font-size:1.25rem}.summary-stat .stat-label{color:var(--text-secondary);font-size:.85rem;width:80px}.summary-stat .stat-value{color:var(--accent-blue);font-family:var(--font-mono);font-weight:600}.resources-section{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--border-radius);padding:1.5rem;margin-bottom:1.5rem}[data-theme=blurred] .resources-section{backdrop-filter:blur(10px);border-radius:var(--border-radius-lg)}.resources-section-title{font-size:1rem;font-weight:600;color:var(--accent-primary);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem}[data-theme=blurred] .resources-section-title{color:var(--accent-blue);text-transform:none;font-size:1.2rem}.resources-table-container{overflow-x:auto}.resources-table{width:100%;border-collapse:collapse;font-size:.8rem}.resources-table th,.resources-table td{padding:.75rem .5rem;text-align:left;border-bottom:1px solid var(--border-color)}.resources-table th{color:var(--text-secondary);font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.5px;background:var(--bg-secondary)}[data-theme=blurred] .resources-table th{background:hsla(0,0%,100%,.03);text-transform:none;font-size:.8rem}.resources-table td{font-family:var(--font-mono)}.service-row,.vm-row{background:var(--bg-card)}.service-row:hover,.vm-row:hover{background:var(--bg-card-hover)}.component-row{background:var(--bg-secondary)}.component-row td{font-size:.75rem;color:var(--text-secondary)}.component-name{padding-left:1rem;color:var(--text-secondary)}.ai-service,.ai-vm{border-left:3px solid var(--accent-purple)}.resources-category{margin-bottom:3rem}.resources-category-title{font-size:1.5rem;font-weight:700;color:var(--accent-primary);text-transform:uppercase;letter-spacing:2px;margin-bottom:1.5rem;padding-bottom:.5rem;border-bottom:2px solid var(--accent-primary)}[data-theme=blurred] .resources-category-title{color:var(--accent-blue);text-transform:none;background:linear-gradient(135deg, var(--accent-blue), var(--accent-green));-webkit-background-clip:text;-webkit-text-fill-color:rgba(0,0,0,0);background-clip:text;border-bottom-color:var(--accent-blue)}.ai-category .resources-category-title{color:var(--accent-purple);border-bottom-color:var(--accent-purple)}[data-theme=blurred] .ai-category .resources-category-title{background:linear-gradient(135deg, var(--accent-purple), var(--accent-blue));-webkit-background-clip:text;-webkit-text-fill-color:rgba(0,0,0,0);background-clip:text;border-bottom-color:var(--accent-purple)}.ai-card{border-left:3px solid var(--accent-purple)}[data-theme=blurred] .ai-card{background:linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(74, 158, 255, 0.1))}.ai-section{border-left:3px solid var(--accent-purple)}.totals-row{background:var(--bg-secondary);font-weight:600}.totals-row td{border-top:1px solid var(--border-color);color:var(--accent-primary)}[data-theme=blurred] .totals-row{background:hsla(0,0%,100%,.03)}[data-theme=blurred] .totals-row td{color:var(--accent-blue)}.totals-row.total-final{background:var(--bg-card)}.totals-row.total-final td{border-top:2px solid var(--accent-primary);font-size:.85rem}[data-theme=blurred] .totals-row.total-final{background:rgba(74,158,255,.1)}[data-theme=blurred] .totals-row.total-final td{border-top-color:var(--accent-blue)}.health-badge{padding:.2rem .5rem;font-size:.65rem;font-weight:600;text-transform:uppercase;border-radius:var(--border-radius)}.health-badge.online{background:rgba(0,204,102,.15);color:var(--accent-green);border:1px solid var(--accent-green)}.health-badge.pending{background:rgba(255,204,0,.15);color:var(--accent-yellow);border:1px solid var(--accent-yellow)}.health-badge.offline{background:rgba(255,51,51,.15);color:var(--accent-red);border:1px solid var(--accent-red)}[data-theme=blurred] .health-badge{border-radius:10px}.status-table td{font-size:.75rem}.status-badge{padding:.2rem .5rem;font-size:.65rem;font-weight:600;text-transform:uppercase;border-radius:var(--border-radius)}.status-badge.on{background:rgba(0,204,102,.15);color:var(--accent-green);border:1px solid var(--accent-green)}.status-badge.dev{background:rgba(74,158,255,.15);color:var(--accent-blue);border:1px solid var(--accent-blue)}.status-badge.hold{background:rgba(139,92,246,.15);color:var(--accent-purple);border:1px solid var(--accent-purple)}[data-theme=blurred] .status-badge{border-radius:10px}
+</style>
+    <style>
+        /* Dashboard-specific styles */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+
+        /* Wake-on-Demand Button Styles */
+        .wake-btn{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .6rem;background:var(--bg-secondary);border:1px solid var(--accent-green);border-radius:var(--border-radius);color:var(--accent-green);font-size:.7rem;font-weight:600;cursor:pointer;transition:all .2s ease}.wake-btn:hover:not(:disabled){background:var(--accent-green);color:#000}.wake-btn:disabled{opacity:.5;cursor:not-allowed;border-color:var(--border-color);color:var(--text-secondary)}.wake-btn svg{width:12px;height:12px}.wake-btn .spinner{width:12px;height:12px;border:2px solid rgba(0,0,0,0);border-top-color:currentColor;border-radius:50%;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}[data-theme=blurred] .wake-btn{border-radius:8px;background:rgba(16,185,129,.1)}[data-theme=blurred] .wake-btn:hover:not(:disabled){background:var(--accent-green);box-shadow:0 0 15px rgba(16,185,129,.3)}.vm-dormant{background:rgba(255,200,0,.02)}[data-theme=blurred] .vm-dormant{background:rgba(255,200,0,.05)}
+
+        .dashboard-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dashboard-title h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: var(--accent-red);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--accent-green); }
+            50% { opacity: 0.6; box-shadow: 0 0 8px var(--accent-green); }
+        }
+
+        .dashboard-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .auto-refresh-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .auto-refresh-toggle input {
+            accent-color: var(--accent-primary);
+        }
+
+        /* API Toggle Switch */
+        .api-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--border-radius);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .api-toggle:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .api-toggle input {
+            display: none;
+        }
+
+        .api-toggle-label {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .api-toggle input:checked + .api-toggle-label {
+            color: var(--accent-green);
+        }
+
+        .api-toggle input:checked + .api-toggle-label::before {
+            content: "● ";
+        }
+
+        .api-toggle input:not(:checked) + .api-toggle-label {
+            color: var(--accent-orange);
+        }
+
+        .api-toggle input:not(:checked) + .api-toggle-label::before {
+            content: "○ ";
+        }
+
+        [data-theme=blurred] .api-toggle {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: var(--border-radius);
+            color: #000;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .refresh-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        /* GitHub OAuth Login */
+        .github-login-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: #24292e;
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .github-login-btn:hover {
+            background: #2f363d;
+            border-color: #666;
+        }
+
+        .github-login-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .github-login-btn.logged-in {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: #000;
+        }
+
+        .user-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .logout-btn {
+            padding: 0.2rem 0.4rem;
+            background: transparent;
+            border: 1px solid currentColor;
+            border-radius: 4px;
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.65rem;
+            margin-left: 0.5rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* Reboot Button */
+        .reboot-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.6rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            opacity: 0.5;
+        }
+
+        .reboot-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .reboot-btn.enabled {
+            opacity: 1;
+            cursor: pointer;
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+        }
+
+        .reboot-btn.enabled:hover {
+            background: var(--accent-orange);
+            color: #000;
+        }
+
+        .reboot-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        .reboot-btn.success {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* Live status badge that gets updated by JS */
+        .live-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .live-status.checking {
+            background: rgba(156, 163, 175, 0.15);
+            color: var(--text-tertiary);
+        }
+
+        .live-status.online {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--accent-green);
+        }
+
+        .live-status.offline {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--accent-red);
+        }
+
+        .live-status.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .live-status.dev {
+            background: rgba(96, 165, 250, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .live-status.hold {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent-yellow);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .live-status.online .live-dot {
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 2px currentColor; }
+            50% { box-shadow: 0 0 6px currentColor; }
+        }
+
+        /* Tab Navigation Styles */
+        .dashboard-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+        }
+
+        [data-theme=blurred] .dashboard-tabs {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.8);
+            border-radius: 16px;
+            padding: 0.75rem;
+            gap: 0.75rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #000;
+        }
+
+        [data-theme=blurred] .tab-btn {
+            border-radius: 12px;
+            text-transform: none;
+            font-size: 0.95rem;
+            letter-spacing: normal;
+        }
+
+        [data-theme=blurred] .tab-btn:hover {
+            background: rgba(74, 158, 255, 0.1);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        [data-theme=blurred] .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Cost Sub-tabs */
+        .cost-subtabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0 0 1.5rem 0;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        [data-theme=blurred] .cost-subtabs {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .cost-subtab-btn {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--border-radius) - 2px);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cost-subtab-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .cost-subtab-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #000;
+        }
+
+        [data-theme=blurred] .cost-subtab-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .cost-subtab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .cost-subtab-content.active {
+            display: block;
+        }
+
+        /* Status Sub-tabs (Frontend/Backend) */
+        .status-subtabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0 0 1rem 0;
+            padding: 0.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        [data-theme=blurred] .status-subtabs {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 12px;
+            padding: 0.75rem;
+        }
+
+        .status-subtab-btn {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--border-radius) - 2px);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-subtab-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .status-subtab-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #000;
+        }
+
+        [data-theme=blurred] .status-subtab-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .status-subtab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .status-subtab-content.active {
+            display: block;
+        }
+
+        /* View Toggle (Cards/List) */
+        .view-toggle-inline {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0 0 1rem 0;
+            justify-content: flex-end;
+        }
+
+        .view-toggle-btn {
+            padding: 0.4rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggle-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .view-toggle-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: #000;
+        }
+
+        [data-theme=blurred] .view-toggle-btn.active {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-color: transparent;
+            color: #fff;
+        }
+
+        /* ============================================
+           COST TAB STYLES
+           ============================================ */
+
+        .cost-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .cost-summary-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .cost-summary-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        [data-theme=blurred] .cost-summary-card {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 16px;
+        }
+
+        [data-theme=blurred] .cost-summary-card:hover {
+            background: rgba(35, 42, 74, 0.8);
+            border-color: var(--accent-blue);
+            box-shadow: 0 8px 32px var(--glow);
+        }
+
+        .cost-card-icon {
+            color: var(--accent-primary);
+            flex-shrink: 0;
+        }
+
+        [data-theme=blurred] .cost-card-icon {
+            color: var(--accent-blue);
+        }
+
+        .cost-card-content {
+            flex: 1;
+        }
+
+        .cost-card-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .cost-card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .cost-card-sublabel {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .cost-block-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .cost-block-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        [data-theme=blurred] .cost-block-row {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .cost-block-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .cost-block-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .model-distribution-bar {
+            height: 40px;
+            display: flex;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: var(--bg-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .model-dist-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .model-opus {
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+        }
+
+        .model-sonnet {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        .model-haiku {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .model-distribution-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .model-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        [data-theme=blurred] .model-legend-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .model-legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .model-legend-dot.model-opus {
+            background: #8b5cf6;
+        }
+
+        .model-legend-dot.model-sonnet {
+            background: #3b82f6;
+        }
+
+        .model-legend-dot.model-haiku {
+            background: #10b981;
+        }
+
+        .model-legend-label {
+            flex: 1;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .model-legend-value {
+            font-weight: 600;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .model-legend-percent {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-left: 0.5rem;
+        }
+
+        /* ============================================
+           PERFORMANCE TAB STYLES
+           ============================================ */
+
+        .vm-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .vm-metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+        }
+
+        [data-theme=blurred] .vm-metric-card {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 16px;
+        }
+
+        .vm-metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .vm-metric-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .vm-metric-ip {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .metric-gauges {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+
+        .gauge {
+            text-align: center;
+        }
+
+        .gauge-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--gauge-color, var(--accent-primary)) calc(var(--gauge-percent, 0) * 1%),
+                var(--bg-secondary) 0
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            position: relative;
+        }
+
+        .gauge-circle::before {
+            content: '';
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-card);
+        }
+
+        .gauge-value {
+            position: relative;
+            z-index: 1;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .gauge-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .capacity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .capacity-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+        }
+
+        [data-theme=blurred] .capacity-card {
+            backdrop-filter: blur(10px);
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 12px;
+        }
+
+        .capacity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .capacity-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .capacity-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .status-ok { background: rgba(81, 207, 102, 0.2); color: #51cf66; }
+        .status-warning { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .status-danger { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .status-dev { background: rgba(74, 158, 255, 0.2); color: #4a9eff; }
+        .status-hold { background: rgba(134, 142, 150, 0.2); color: #868e96; }
+
+        .capacity-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .capacity-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .capacity-fill[data-level="ok"] {
+            background: linear-gradient(90deg, #51cf66, #69db7c);
+        }
+        .capacity-fill[data-level="warning"] {
+            background: linear-gradient(90deg, #ffc107, #ffdd57);
+        }
+        .capacity-fill[data-level="danger"] {
+            background: linear-gradient(90deg, #ff6b6b, #ff8787);
+        }
+
+        .capacity-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .table-separator td {
+            border-top: 2px solid var(--border-color);
+            padding-top: 1rem;
+        }
+
+        .table-total td {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        .loading-placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+    </style>
+    <script>
+        // Apply saved theme immediately
+        (function() {
+            var theme = localStorage.getItem('cloud-dashboard-theme') || 'blurred';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>Cloud Services Dashboard</h1>
+            <p class="subtitle">Manage your infrastructure</p>
+            <div class="view-toggle">
+                <div class="view-group">
+                    <span class="view-group-label">Services</span>
+                    <div class="view-group-buttons">
+                        <a href="index.html#frontend" class="view-btn">Front</a>
+                        <a href="index.html#backend" class="view-btn">Back</a>
+                    </div>
+                </div>
+                <span class="view-separator"></span>
+                <div class="view-group">
+                    <span class="view-group-label">Architecture</span>
+                    <div class="view-group-buttons">
+                        <a href="index.html#resources" class="view-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <path d="M8 21h8"/>
+                                <path d="M12 17v4"/>
+                                <path d="M6 8h4"/>
+                                <path d="M6 11h8"/>
+                            </svg>
+                            Resources
+                        </a>
+                        <a href="index.html#architecture" class="view-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="3" y1="9" x2="21" y2="9"/>
+                                <line x1="9" y1="21" x2="9" y2="9"/>
+                            </svg>
+                            Server
+                        </a>
+                        <a href="index.html#ai-architecture" class="view-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                            </svg>
+                            AI
+                        </a>
+                    </div>
+                </div>
+                <span class="view-separator"></span>
+                <div class="view-group">
+                    <span class="view-group-label">Monitoring</span>
+                    <div class="view-group-buttons">
+                        <button class="view-btn active" data-dash-tab="status">Status</button>
+                        <button class="view-btn" data-dash-tab="performance">Performance</button>
+                        <button class="view-btn" data-dash-tab="cost">Cost</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Controls -->
+        <div class="dashboard-header">
+            <div class="dashboard-title">
+                <div class="status-dot" id="connection-status"></div>
+                <h2>Live Monitoring</h2>
+            </div>
+            <div class="dashboard-controls">
+                <label class="api-toggle" title="Toggle between API (online) and Local JS (offline)">
+                    <input type="checkbox" id="api-toggle" checked>
+                    <span class="api-toggle-label">API</span>
+                </label>
+                <span class="last-updated">Last: <span id="last-updated">--:--:--</span></span>
+                <label class="auto-refresh-toggle">
+                    <input type="checkbox" id="auto-refresh" checked>
+                    Auto (30s)
+                </label>
+                <button class="refresh-btn" id="refresh-btn" onclick="refreshAll()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
+                <button class="github-login-btn" id="github-login-btn" onclick="handleGitHubLogin()">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span id="github-login-text">Login</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Tab Content -->
+        <div id="status-tab" class="tab-content active">
+
+        <!-- VMs Section -->
+        <div class="resources-category">
+            <h3 class="resources-category-title">VMs</h3>
+            <div class="resources-section">
+                <div class="resources-table-container">
+                    <table class="resources-table status-table">
+                        <thead><tr><th>Mode</th><th>VM</th><th>Role</th><th>IP</th><th>RAM</th><th>Availability</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="vms-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Services -->
+        <div class="resources-category">
+            <h3 class="resources-category-title">User Services</h3>
+            <div class="resources-section">
+                <div class="resources-table-container">
+                    <table class="resources-table status-table">
+                        <thead><tr><th>Mode</th><th>Service</th><th>URL</th><th>IP:Port</th><th>RAM</th><th>Storage</th><th>Status</th></tr></thead>
+                        <tbody id="user-services-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coder Services -->
+        <div class="resources-category">
+            <h3 class="resources-category-title">Coder Services</h3>
+            <div class="resources-section">
+                <div class="resources-table-container">
+                    <table class="resources-table status-table">
+                        <thead><tr><th>Mode</th><th>Service</th><th>URL</th><th>IP:Port</th><th>RAM</th><th>Storage</th><th>Status</th></tr></thead>
+                        <tbody id="coder-services-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Services -->
+        <div class="resources-category">
+            <h3 class="resources-category-title">AI Services</h3>
+            <div class="resources-section">
+                <div class="resources-table-container">
+                    <table class="resources-table status-table">
+                        <thead><tr><th>Mode</th><th>Service</th><th>URL</th><th>IP:Port</th><th>RAM</th><th>Storage</th><th>Status</th></tr></thead>
+                        <tbody id="ai-services-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Infra Services -->
+        <div class="resources-category">
+            <h3 class="resources-category-title">Infra Services</h3>
+            <div class="resources-section">
+                <div class="resources-table-container">
+                    <table class="resources-table status-table">
+                        <thead><tr><th>Mode</th><th>Service</th><th>URL</th><th>IP:Port</th><th>RAM</th><th>Storage</th><th>Status</th></tr></thead>
+                        <tbody id="infra-services-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        </div><!-- End Status Tab -->
+
+        <!-- Performance Tab Content -->
+        <div id="performance-tab" class="tab-content">
+            <!-- VM Metrics Section -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">VM Resources</h3>
+                <div class="vm-metrics-grid" id="vm-metrics-grid">
+                    <!-- Will be populated by JavaScript -->
+                    <div class="loading-placeholder">Loading VM metrics...</div>
+                </div>
+            </div>
+
+            <!-- Capacity Assessment -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Capacity Assessment</h3>
+                <div class="capacity-grid">
+                    <div class="capacity-card" id="cap-gcloud">
+                        <div class="capacity-header">
+                            <span class="capacity-name">GCloud Arch 1</span>
+                            <span class="capacity-status status-ok">OK</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: 30%" data-level="ok"></div>
+                        </div>
+                        <div class="capacity-details">
+                            <span>~300MB / 1024MB RAM</span>
+                            <span>1 service (NPM)</span>
+                        </div>
+                    </div>
+
+                    <div class="capacity-card" id="cap-oracle-web">
+                        <div class="capacity-header">
+                            <span class="capacity-name">Oracle Web 1</span>
+                            <span class="capacity-status status-dev">DEV</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: 10%" data-level="ok"></div>
+                        </div>
+                        <div class="capacity-details">
+                            <span>~100MB / 1024MB RAM</span>
+                            <span>1 service (Mail - Dev)</span>
+                        </div>
+                    </div>
+
+                    <div class="capacity-card" id="cap-oracle-svc">
+                        <div class="capacity-header">
+                            <span class="capacity-name">Oracle Services 1</span>
+                            <span class="capacity-status status-ok">OK</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: 50%" data-level="ok"></div>
+                        </div>
+                        <div class="capacity-details">
+                            <span>~500MB / 1024MB RAM</span>
+                            <span>1 service (Matomo)</span>
+                        </div>
+                    </div>
+
+                    <div class="capacity-card" id="cap-oracle-dev">
+                        <div class="capacity-header">
+                            <span class="capacity-name">Oracle Dev</span>
+                            <span class="capacity-status status-warning">MODERATE</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: 40%" data-level="warning"></div>
+                        </div>
+                        <div class="capacity-details">
+                            <span>~3GB / 8GB RAM</span>
+                            <span>6 services</span>
+                        </div>
+                    </div>
+
+                    <div class="capacity-card" id="cap-arm">
+                        <div class="capacity-header">
+                            <span class="capacity-name">Oracle ARM</span>
+                            <span class="capacity-status status-hold">HOLD</span>
+                        </div>
+                        <div class="capacity-bar">
+                            <div class="capacity-fill" style="width: 0%" data-level="ok"></div>
+                        </div>
+                        <div class="capacity-details">
+                            <span>0GB / 24GB RAM</span>
+                            <span>AI workloads (pending)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container Metrics Table -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Container Metrics</h3>
+                <div class="resources-section">
+                    <div class="resources-table-container">
+                        <table class="resources-table">
+                            <thead>
+                                <tr>
+                                    <th>Container</th>
+                                    <th>VM</th>
+                                    <th>CPU</th>
+                                    <th>Memory</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="container-metrics-body">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                                        Loading container metrics...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resource Estimates -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Resource Planning</h3>
+                <div class="resources-section">
+                    <div class="resources-table-container">
+                        <table class="resources-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>RAM (Min-Max)</th>
+                                    <th>Storage</th>
+                                    <th>Bandwidth</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Non-AI Services</strong></td>
+                                    <td><span class="status-badge on">ON</span></td>
+                                    <td>1.4 - 2.8 GB</td>
+                                    <td>9 - 125 GB</td>
+                                    <td>32 - 135 GB/mo</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td><span class="status-badge dev">DEV</span></td>
+                                    <td>0.9 - 1.8 GB</td>
+                                    <td>66 - 165 GB</td>
+                                    <td>8 - 72 GB/mo</td>
+                                </tr>
+                                <tr class="table-separator">
+                                    <td><strong>AI Services</strong></td>
+                                    <td><span class="status-badge hold">HOLD</span></td>
+                                    <td>1.3 - 48 GB</td>
+                                    <td>3 - 20 GB</td>
+                                    <td>5 - 20 GB/mo</td>
+                                </tr>
+                                <tr class="table-total">
+                                    <td><strong>TOTAL (All)</strong></td>
+                                    <td>-</td>
+                                    <td><strong>3.6 - 52.6 GB</strong></td>
+                                    <td>78 - 310 GB</td>
+                                    <td>45 - 227 GB/mo</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Tab Content -->
+        <div id="cost-tab" class="tab-content">
+            <!-- Cost Sub-tabs -->
+            <div class="cost-subtabs">
+                <button class="cost-subtab-btn active" data-subtab="cost-ai">AI Costs</button>
+                <button class="cost-subtab-btn" data-subtab="cost-infra">Infrastructure</button>
+            </div>
+
+            <!-- AI Cost Sub-tab -->
+            <div id="cost-ai" class="cost-subtab-content active">
+            <!-- AI Summary Cards -->
+            <div class="cost-summary-grid">
+                <div class="cost-summary-card">
+                    <div class="cost-card-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div class="cost-card-content">
+                        <div class="cost-card-label">AI Today</div>
+                        <div class="cost-card-value" id="cost-ai-today">$0.00</div>
+                        <div class="cost-card-sublabel" id="cost-ai-today-sub">Loading...</div>
+                    </div>
+                </div>
+                <div class="cost-summary-card">
+                    <div class="cost-card-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                    </div>
+                    <div class="cost-card-content">
+                        <div class="cost-card-label">Current Session</div>
+                        <div class="cost-card-value" id="cost-session">$0.00</div>
+                        <div class="cost-card-sublabel" id="cost-session-sub">This 5h block</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current 5h Block Details -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Current 5-Hour Block</h3>
+                <div class="resources-section">
+                    <div class="cost-block-details">
+                        <div class="cost-block-row">
+                            <span class="cost-block-label">Block Start:</span>
+                            <span class="cost-block-value" id="block-start">--:--</span>
+                        </div>
+                        <div class="cost-block-row">
+                            <span class="cost-block-label">Time Remaining:</span>
+                            <span class="cost-block-value" id="block-remaining">--:--</span>
+                        </div>
+                        <div class="cost-block-row">
+                            <span class="cost-block-label">Burn Rate:</span>
+                            <span class="cost-block-value" id="block-burn-rate">$0.00/hr</span>
+                        </div>
+                        <div class="cost-block-row">
+                            <span class="cost-block-label">Projected Total:</span>
+                            <span class="cost-block-value" id="block-projection">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Distribution -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">AI Model Distribution (Today)</h3>
+                <div class="resources-section">
+                    <div class="model-distribution-bar" id="model-dist-bar">
+                        <div class="model-dist-segment model-opus" style="width: 0%" id="model-opus-bar"></div>
+                        <div class="model-dist-segment model-sonnet" style="width: 0%" id="model-sonnet-bar"></div>
+                        <div class="model-dist-segment model-haiku" style="width: 0%" id="model-haiku-bar"></div>
+                    </div>
+                    <div class="model-distribution-legend">
+                        <div class="model-legend-item">
+                            <span class="model-legend-dot model-opus"></span>
+                            <span class="model-legend-label">Opus</span>
+                            <span class="model-legend-value" id="model-opus-cost">$0.00</span>
+                            <span class="model-legend-percent" id="model-opus-pct">0%</span>
+                        </div>
+                        <div class="model-legend-item">
+                            <span class="model-legend-dot model-sonnet"></span>
+                            <span class="model-legend-label">Sonnet</span>
+                            <span class="model-legend-value" id="model-sonnet-cost">$0.00</span>
+                            <span class="model-legend-percent" id="model-sonnet-pct">0%</span>
+                        </div>
+                        <div class="model-legend-item">
+                            <span class="model-legend-dot model-haiku"></span>
+                            <span class="model-legend-label">Haiku</span>
+                            <span class="model-legend-value" id="model-haiku-cost">$0.00</span>
+                            <span class="model-legend-percent" id="model-haiku-pct">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Summary -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Monthly Summary</h3>
+                <div class="resources-section">
+                    <div class="resources-table-container">
+                        <table class="resources-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Opus</th>
+                                    <th>Sonnet</th>
+                                    <th>Haiku</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-cost-table">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">
+                                        Loading monthly data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Breakdown (Last 14 Days) -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Daily Breakdown (Last 14 Days)</h3>
+                <div class="resources-section">
+                    <div class="resources-table-container">
+                        <table class="resources-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Opus</th>
+                                    <th>Sonnet</th>
+                                    <th>Haiku</th>
+                                    <th>Total</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-cost-table">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">
+                                        Loading daily data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            </div><!-- End AI Cost Sub-tab -->
+
+            <!-- Infrastructure Cost Sub-tab -->
+            <div id="cost-infra" class="cost-subtab-content">
+            <!-- Infrastructure Summary Card -->
+            <div class="cost-summary-grid">
+                <div class="cost-summary-card">
+                    <div class="cost-card-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3h18v18H3z"/>
+                            <path d="M3 9h18M9 21V9"/>
+                        </svg>
+                    </div>
+                    <div class="cost-card-content">
+                        <div class="cost-card-label">Total Infrastructure</div>
+                        <div class="cost-card-value" id="cost-infra-total">~$5-7</div>
+                        <div class="cost-card-sublabel">3 Free + 1 Paid (Dormant)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Providers -->
+            <div class="resources-category">
+                <h3 class="resources-category-title">Infrastructure Providers</h3>
+                <div class="resources-section">
+                    <div class="resources-table-container">
+                        <table class="resources-table">
+                            <thead>
+                                <tr>
+                                    <th>Provider</th>
+                                    <th>Tier</th>
+                                    <th>Monthly Cost</th>
+                                    <th>Services</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Oracle Cloud</strong></td>
+                                    <td>Always Free</td>
+                                    <td>$0.00</td>
+                                    <td>2 VMs</td>
+                                    <td><span class="status-badge on">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Oracle Cloud</strong></td>
+                                    <td>Paid (E4.Flex)</td>
+                                    <td>~$5-7</td>
+                                    <td>1 VM</td>
+                                    <td><span class="status-badge on">Dormant</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Google Cloud</strong></td>
+                                    <td>Free Tier</td>
+                                    <td>$0.00</td>
+                                    <td>1 VM</td>
+                                    <td><span class="status-badge on">Active</span></td>
+                                </tr>
+                                <tr class="totals-row">
+                                    <td><strong>Total</strong></td>
+                                    <td>-</td>
+                                    <td><strong>~$5-7</strong></td>
+                                    <td>4</td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div><!-- End Infrastructure Cost Sub-tab -->
+
+        </div><!-- End Cost Tab -->
+
+    </div>
+
+    <!-- Load local data as fallback (generated by cloud_dash.py --export js) -->
+    <script src="cloud_dash_data.js"></script>
+
+    <script>
+        // =================================================================
+        // CONFIGURATION
+        // =================================================================
+        const apiUrl = 'http://84.235.234.87:5000/api';
+        const GITHUB_CLIENT_ID = 'Ov23liOg9JhezyYUCHmS';
+        const GITHUB_REDIRECT_URI = window.location.href.split('?')[0];
+
+        // =================================================================
+        // STATE
+        // =================================================================
+        let dataSourceMode = localStorage.getItem('dataSourceMode') || 'api';
+        let autoRefreshInterval = null;
+        let isLoading = false;
+        let isLoggedIn = false;
+        let githubUser = null;
+
+        // =================================================================
+        // DATA SOURCE TOGGLE (API / LOCAL)
+        // Simple: API mode fetches from server, Local mode uses CONFIG from .js file
+        // =================================================================
+
+        // Initialize UI on page load
+        (function init() {
+            const toggle = document.getElementById('api-toggle');
+            const label = document.querySelector('.api-toggle-label');
+
+            toggle.checked = (dataSourceMode === 'api');
+            label.textContent = (dataSourceMode === 'api') ? 'API' : 'Local';
+
+            if (dataSourceMode === 'local') {
+                document.getElementById('connection-status').classList.add('disconnected');
+            }
+        })();
+
+        // Toggle change handler
+        document.getElementById('api-toggle').addEventListener('change', function() {
+            dataSourceMode = this.checked ? 'api' : 'local';
+            localStorage.setItem('dataSourceMode', dataSourceMode);
+            document.querySelector('.api-toggle-label').textContent = this.checked ? 'API' : 'Local';
+        });
+
+        // =================================================================
+        // RENDER TABLES FROM CONFIG (JSON is source of truth!)
+        // =================================================================
+        function renderTablesFromConfig() {
+            if (typeof CONFIG === 'undefined') {
+                console.error('CONFIG not loaded');
+                return;
+            }
+
+            // Render VMs table
+            const vmsTbody = document.getElementById('vms-tbody');
+            if (vmsTbody) {
+                vmsTbody.innerHTML = '';
+                Object.values(CONFIG.virtualMachines || {}).forEach(vm => {
+                    const statusBadge = vm.status === 'active' ? 'on' : vm.status === 'pending' ? 'hold' : 'dev';
+                    const statusLabel = vm.status === 'active' ? 'ON' : vm.status === 'pending' ? 'HOLD' : 'DEV';
+                    const services = (vm.services || []).join(', ') || '-';
+                    const ip = vm.network?.publicIp || '-';
+                    const ram = vm.specs?.ram || '-';
+                    const availability = vm.availability || '24/7';
+
+                    vmsTbody.innerHTML += `
+                        <tr class="vm-row">
+                            <td><span class="status-badge ${statusBadge}">${statusLabel}</span></td>
+                            <td><strong>${vm.name}</strong></td>
+                            <td>${services}</td>
+                            <td>${ip}</td>
+                            <td>${ram}</td>
+                            <td>${availability}</td>
+                            <td><span class="live-status checking" data-vm="${vm.id}"><span class="live-dot"></span>Checking...</span></td>
+                            <td><button class="reboot-btn" data-vm-reboot="${vm.id}" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Reboot</button></td>
+                        </tr>`;
+                });
+            }
+
+            // Helper to render services by category
+            function renderServicesByCategory(categoryId, tbodyId) {
+                const tbody = document.getElementById(tbodyId);
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                // Get parent services (those without parentService) in this category
+                const parentServices = Object.values(CONFIG.services || {})
+                    .filter(svc => !svc.parentService && svc.category === categoryId);
+
+                parentServices.forEach(parent => {
+                    const statusBadge = parent.status === 'on' ? 'on' : parent.status === 'dev' ? 'dev' : 'hold';
+                    const statusLabel = parent.status === 'on' ? 'ON' : parent.status === 'dev' ? 'DEV' : 'HOLD';
+                    const url = parent.urls?.gui || parent.network?.domain || '-';
+                    const vm = CONFIG.virtualMachines?.[parent.vmId];
+                    const ip = vm?.network?.publicIp || '-';
+                    const port = parent.network?.proxyAddress?.split(':')[1] || '-';
+                    const ipPort = port !== '-' ? `${ip}:${port}` : ip;
+
+                    // Get resource info
+                    const res = CONFIG.resources?.services?.[parent.id];
+                    const ram = res ? `${res.ram?.min || '-'}-${res.ram?.max || '-'}` : '-';
+                    const storage = res ? `${res.storage?.min || '-'}-${res.storage?.max || '-'}` : '-';
+
+                    // Find child service with -app suffix for status
+                    const appChild = Object.values(CONFIG.services || {})
+                        .find(svc => svc.parentService === parent.id && svc.id.endsWith('-app'));
+                    const statusServiceId = appChild?.id || parent.id;
+
+                    tbody.innerHTML += `
+                        <tr class="service-row">
+                            <td><span class="status-badge ${statusBadge}">${statusLabel}</span></td>
+                            <td><strong>${parent.displayName || parent.name}</strong></td>
+                            <td>${url}</td>
+                            <td>${ipPort}</td>
+                            <td>${ram}</td>
+                            <td>${storage}</td>
+                            <td><span class="live-status checking" data-service="${statusServiceId}"><span class="live-dot"></span>Checking...</span></td>
+                        </tr>`;
+                });
+            }
+
+            // Render each service category
+            renderServicesByCategory('user', 'user-services-tbody');
+            renderServicesByCategory('coder', 'coder-services-tbody');
+            renderServicesByCategory('ai', 'ai-services-tbody');
+
+            // Infra combines multiple categories
+            const infraTbody = document.getElementById('infra-services-tbody');
+            if (infraTbody) {
+                infraTbody.innerHTML = '';
+                const infraCategories = ['infra-proxy', 'infra-db', 'infra-services'];
+
+                Object.values(CONFIG.services || {})
+                    .filter(svc => !svc.parentService && infraCategories.includes(svc.category))
+                    .forEach(parent => {
+                        const statusBadge = parent.status === 'on' ? 'on' : parent.status === 'dev' ? 'dev' : 'hold';
+                        const statusLabel = parent.status === 'on' ? 'ON' : parent.status === 'dev' ? 'DEV' : 'HOLD';
+                        const url = parent.urls?.gui || parent.urls?.admin || parent.network?.domain || '-';
+                        const vm = CONFIG.virtualMachines?.[parent.vmId];
+                        const ip = vm?.network?.publicIp || '-';
+                        const port = parent.network?.proxyAddress?.split(':')[1] || '-';
+                        const ipPort = port !== '-' ? `${ip}:${port}` : ip;
+
+                        const res = CONFIG.resources?.services?.[parent.id];
+                        const ram = res ? `${res.ram?.min || '-'}-${res.ram?.max || '-'}` : '-';
+                        const storage = res ? `${res.storage?.min || '-'}-${res.storage?.max || '-'}` : '-';
+
+                        const appChild = Object.values(CONFIG.services || {})
+                            .find(svc => svc.parentService === parent.id && svc.id.endsWith('-app'));
+                        const statusServiceId = appChild?.id || parent.id;
+
+                        infraTbody.innerHTML += `
+                            <tr class="service-row">
+                                <td><span class="status-badge ${statusBadge}">${statusLabel}</span></td>
+                                <td><strong>${parent.displayName || parent.name}</strong></td>
+                                <td>${url}</td>
+                                <td>${ipPort}</td>
+                                <td>${ram}</td>
+                                <td>${storage}</td>
+                                <td><span class="live-status checking" data-service="${statusServiceId}"><span class="live-dot"></span>Checking...</span></td>
+                            </tr>`;
+                    });
+            }
+
+            console.log('Tables rendered from CONFIG');
+        }
+
+        // =================================================================
+        // REFRESH FUNCTION
+        // API mode: fetch from server
+        // Local mode: re-render from CONFIG (no page reload)
+        // =================================================================
+        function refreshAll() {
+            if (dataSourceMode === 'local') {
+                fetchFromLocal();
+            } else {
+                fetchFromAPI();
+            }
+        }
+
+        function fetchFromLocal() {
+            console.log('fetchFromLocal() called');
+            const connectionStatus = document.getElementById('connection-status');
+            connectionStatus.classList.add('disconnected');
+
+            if (typeof CONFIG === 'undefined') {
+                console.error('CONFIG not loaded - cloud_dash_data.js missing');
+                document.getElementById('last-updated').textContent = 'No local data';
+                return;
+            }
+
+            console.log('CONFIG loaded, virtualMachines:', Object.keys(CONFIG.virtualMachines || {}));
+            console.log('CONFIG loaded, services:', Object.keys(CONFIG.services || {}));
+
+            // Convert CONFIG to API-like format
+            // Note: JSON has "Online" (capital O) not "online"
+            const data = {
+                vms: [{
+                    category: 'All VMs',
+                    vms: Object.values(CONFIG.virtualMachines || {}).map(vm => ({
+                        id: vm.id,
+                        status: vm.runtimeStatus?.Online ? 'Online' : (vm.status === 'pending' ? 'Pending' : 'Offline')
+                    }))
+                }],
+                services: [{
+                    category: 'All Services',
+                    services: Object.values(CONFIG.services || {})
+                        .filter(svc => svc.parentService)
+                        .map(svc => ({
+                            id: svc.id,
+                            health_status: svc.status === 'on' ? 'healthy' :
+                                           svc.status === 'dev' ? 'development' :
+                                           svc.status === 'hold' ? 'hold' : 'tbd'
+                        }))
+                }]
+            };
+
+            console.log('Data for updateDashboard:', JSON.stringify(data, null, 2));
+            try {
+                updateDashboard(data);
+            } catch (e) {
+                console.error('updateDashboard ERROR:', e);
+            }
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString() + ' (local)';
+            console.log('fetchFromLocal() completed');
+        }
+
+        // Fetch full config from API and render tables (for API mode without local JS file)
+        async function fetchConfigFromAPI() {
+            try {
+                const response = await fetch(`${apiUrl}/config`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const config = await response.json();
+                window.CONFIG = config;
+                renderTablesFromConfig();
+            } catch (error) {
+                console.error('Failed to fetch config from API:', error);
+            }
+        }
+
+        async function fetchFromAPI() {
+            if (isLoading) return;
+            isLoading = true;
+
+            const refreshBtn = document.getElementById('refresh-btn');
+            const connectionStatus = document.getElementById('connection-status');
+            refreshBtn.classList.add('loading');
+
+            try {
+                const response = await fetch(`${apiUrl}/dashboard/summary`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const apiData = await response.json();
+
+                // Transform API response to match updateDashboard() expected format
+                const data = {
+                    vms: [{
+                        category: 'All VMs',
+                        vms: (apiData.vms?.list || []).map(vm => ({
+                            id: vm.id,
+                            status: vm.online ? 'Online' : (vm.status === 'pending' ? 'Pending' : 'Offline')
+                        }))
+                    }],
+                    services: [{
+                        category: 'All Services',
+                        services: (apiData.services?.list || []).map(svc => ({
+                            id: svc.id,
+                            health_status: svc.status === 'on' ? 'healthy' :
+                                           svc.status === 'dev' ? 'development' :
+                                           svc.status === 'hold' ? 'hold' : 'tbd'
+                        }))
+                    }]
+                };
+
+                connectionStatus.classList.remove('disconnected');
+                updateDashboard(data);
+                document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('API Error:', error);
+                connectionStatus.classList.add('disconnected');
+                document.getElementById('last-updated').textContent = 'API Error';
+            } finally {
+                refreshBtn.classList.remove('loading');
+                isLoading = false;
+            }
+        }
+
+        function updateDashboard(data) {
+            console.log('updateDashboard() called with', data.vms[0]?.vms?.length, 'VMs and', data.services[0]?.services?.length, 'services');
+
+            // Update VM statuses
+            data.vms.forEach(cat => {
+                cat.vms.forEach(vm => {
+                    const el = document.querySelector(`[data-vm="${vm.id}"]`);
+                    console.log(`VM ${vm.id}: element found = ${!!el}, status = ${vm.status}`);
+                    if (el) {
+                        const status = vm.status.toLowerCase().replace(' ', '-');
+                        const statusMap = {
+                            'online': { class: 'online', label: 'Online' },
+                            'offline': { class: 'offline', label: 'Offline' },
+                            'no-ssh': { class: 'pending', label: 'No SSH' },
+                            'pending': { class: 'pending', label: 'Pending' }
+                        };
+                        const s = statusMap[status] || { class: 'checking', label: vm.status };
+                        el.className = 'live-status ' + s.class;
+                        el.innerHTML = `<span class="live-dot"></span>${s.label}`;
+                    }
+                });
+            });
+
+            // Update Service statuses
+            data.services.forEach(cat => {
+                cat.services.forEach(svc => {
+                    const el = document.querySelector(`[data-service="${svc.id}"]`);
+                    console.log(`Service ${svc.id}: element found = ${!!el}, status = ${svc.health_status}`);
+                    if (el) {
+                        const statusMap = {
+                            'healthy': { class: 'online', label: 'Healthy' },
+                            'error': { class: 'offline', label: 'Error' },
+                            'development': { class: 'dev', label: 'Dev' },
+                            'hold': { class: 'hold', label: 'Hold' },
+                            'tbd': { class: 'pending', label: 'TBD' },
+                            'no_url': { class: 'pending', label: 'N/A' }
+                        };
+                        const s = statusMap[svc.health_status] || { class: 'checking', label: svc.health_status };
+                        el.className = 'live-status ' + s.class;
+                        el.innerHTML = `<span class="live-dot"></span>${s.label}`;
+                    }
+                });
+            });
+            console.log('updateDashboard() completed');
+        }
+
+        // =================================================================
+        // AUTO-REFRESH
+        // API mode: fetch every 30s
+        // Local mode: reload page every 30s
+        // =================================================================
+        document.getElementById('auto-refresh').addEventListener('change', function() {
+            if (this.checked) {
+                autoRefreshInterval = setInterval(refreshAll, 30000);
+            } else {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        });
+
+
+        // =================================================================
+        // GitHub OAuth Functions
+        // =================================================================
+        function handleGitHubLogin() {
+            if (isLoggedIn) {
+                // Logout
+                logout();
+            } else {
+                // Login - redirect to GitHub OAuth
+                const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI)}&scope=read:user`;
+                window.location.href = authUrl;
+            }
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            githubUser = null;
+            localStorage.removeItem('github_token');
+            localStorage.removeItem('github_user');
+            updateLoginUI();
+            updateRebootButtons();
+        }
+
+        function updateLoginUI() {
+            const btn = document.getElementById('github-login-btn');
+            const text = document.getElementById('github-login-text');
+
+            if (isLoggedIn && githubUser) {
+                btn.classList.add('logged-in');
+                btn.innerHTML = `
+                    <img src="${githubUser.avatar_url}" alt="" class="user-avatar">
+                    <span>${githubUser.login}</span>
+                    <button class="logout-btn" onclick="event.stopPropagation(); logout();">Logout</button>
+                `;
+            } else {
+                btn.classList.remove('logged-in');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>Login</span>
+                `;
+            }
+        }
+
+        function updateRebootButtons() {
+            const buttons = document.querySelectorAll('.reboot-btn');
+            buttons.forEach(btn => {
+                if (isLoggedIn) {
+                    btn.disabled = false;
+                    btn.classList.add('enabled');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.remove('enabled');
+                }
+            });
+        }
+
+        async function handleOAuthCallback() {
+            // Check for error in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+
+            if (error) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+                alert('GitHub login failed: ' + error);
+                return;
+            }
+
+            // The backend callback already stored token in localStorage via JavaScript redirect
+            // Just clean up the URL if there's a code param (shouldn't happen but just in case)
+            const code = urlParams.get('code');
+            if (code) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        function checkExistingLogin() {
+            const token = localStorage.getItem('github_token');
+            const user = localStorage.getItem('github_user');
+
+            if (token && user) {
+                try {
+                    githubUser = JSON.parse(user);
+                    isLoggedIn = true;
+                    updateLoginUI();
+                    updateRebootButtons();
+                } catch (e) {
+                    logout();
+                }
+            }
+        }
+
+        // Reboot VM function
+        async function rebootVM(vmId) {
+            if (!isLoggedIn) {
+                alert('Please login with GitHub to reboot VMs');
+                return;
+            }
+
+            const btn = document.querySelector(`[data-vm-reboot="${vmId}"]`);
+            if (!btn || btn.classList.contains('loading')) return;
+
+            if (!confirm(`Are you sure you want to reboot ${vmId}?`)) return;
+
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const token = localStorage.getItem('github_token');
+                const response = await fetch(`${apiUrl}/vm/${vmId}/reboot`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    btn.classList.remove('loading');
+                    btn.classList.add('success');
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>Rebooting`;
+
+                    setTimeout(() => {
+                        btn.classList.remove('success');
+                        btn.classList.add('enabled');
+                        btn.disabled = false;
+                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Reboot`;
+                    }, 3000);
+                } else {
+                    throw new Error(await response.text());
+                }
+            } catch (error) {
+                console.error('Reboot error:', error);
+                alert(`Reboot failed: ${error.message}`);
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Add click handlers to reboot buttons
+        function initRebootButtons() {
+            document.querySelectorAll('.reboot-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const vmId = btn.getAttribute('data-vm-reboot');
+                    if (vmId) rebootVM(vmId);
+                });
+            });
+        }
+
+        // ============================================
+        // WAKE-ON-DEMAND FUNCTIONS
+        // ============================================
+
+        async function checkDevServerStatus() {
+            try {
+                const resp = await fetch(`${apiUrl}/wake/status`);
+                const data = await resp.json();
+
+                const statusEl = document.getElementById('dev-server-status');
+                const textEl = document.getElementById('dev-server-status-text');
+                const wakeBtn = document.getElementById('wake-dev-btn');
+
+                if (data.state === 'RUNNING') {
+                    statusEl.className = 'live-status online';
+                    textEl.textContent = 'Running';
+                    wakeBtn.disabled = true;
+                    wakeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Running';
+                } else if (data.state === 'STOPPED') {
+                    statusEl.className = 'live-status offline';
+                    textEl.textContent = 'Sleeping';
+                    wakeBtn.disabled = false;
+                    wakeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Wake';
+                } else {
+                    statusEl.className = 'live-status checking';
+                    textEl.textContent = data.state || 'Unknown';
+                }
+            } catch (e) {
+                console.error('Failed to check dev server status:', e);
+            }
+        }
+
+        async function wakeDevServer() {
+            const wakeBtn = document.getElementById('wake-dev-btn');
+            const statusEl = document.getElementById('dev-server-status');
+            const textEl = document.getElementById('dev-server-status-text');
+
+            wakeBtn.disabled = true;
+            wakeBtn.innerHTML = '<span class="spinner"></span> Waking...';
+            statusEl.className = 'live-status checking';
+            textEl.textContent = 'Waking...';
+
+            try {
+                const resp = await fetch(`${apiUrl}/wake/trigger`, { method: 'POST' });
+                const data = await resp.json();
+
+                if (data.success) {
+                    // Poll for running status
+                    let attempts = 0;
+                    const maxAttempts = 24; // 2 minutes (24 * 5s)
+
+                    const checkInterval = setInterval(async () => {
+                        attempts++;
+                        const statusResp = await fetch(`${apiUrl}/wake/status`);
+                        const statusData = await statusResp.json();
+
+                        if (statusData.state === 'RUNNING') {
+                            clearInterval(checkInterval);
+                            statusEl.className = 'live-status online';
+                            textEl.textContent = 'Running';
+                            wakeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Running';
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            statusEl.className = 'live-status checking';
+                            textEl.textContent = 'Timeout';
+                            wakeBtn.disabled = false;
+                            wakeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Wake';
+                        }
+                    }, 5000);
+                } else {
+                    throw new Error(data.message || 'Wake failed');
+                }
+            } catch (e) {
+                console.error('Failed to wake dev server:', e);
+                alert(`Failed to wake dev server: ${e.message}`);
+                wakeBtn.disabled = false;
+                wakeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Wake';
+                statusEl.className = 'live-status offline';
+                textEl.textContent = 'Sleeping';
+            }
+        }
+
+        // ============================================
+        // COST TAB FUNCTIONS
+        // ============================================
+
+        async function loadCostData() {
+            try {
+                const [aiNowResp, aiDailyResp, aiMonthlyResp] = await Promise.all([
+                    fetch(`${apiUrl}/costs/ai/now`),
+                    fetch(`${apiUrl}/costs/ai/daily`),
+                    fetch(`${apiUrl}/costs/ai/monthly`)
+                ]);
+
+                const aiNowData = await aiNowResp.json();
+                const aiDailyData = await aiDailyResp.json();
+                const aiMonthlyData = await aiMonthlyResp.json();
+
+                // Update summary cards
+                if (!aiNowData.error && aiNowData.blocks && aiNowData.blocks.length > 0) {
+                    const currentBlock = aiNowData.blocks[0];
+                    document.getElementById('cost-session').textContent = `$${currentBlock.total?.toFixed(2) || '0.00'}`;
+                    document.getElementById('cost-session-sub').textContent = `Block ${currentBlock.id || 'current'}`;
+                    document.getElementById('block-start').textContent = currentBlock.period?.start || '--:--';
+                    document.getElementById('block-remaining').textContent = currentBlock.time_remaining || '--:--';
+                    document.getElementById('block-burn-rate').textContent = `$${currentBlock.burn_rate?.toFixed(2) || '0.00'}/hr`;
+                    document.getElementById('block-projection').textContent = `$${currentBlock.projected_total?.toFixed(2) || '0.00'}`;
+                }
+
+                if (!aiDailyData.error && Array.isArray(aiDailyData) && aiDailyData.length > 0) {
+                    const today = aiDailyData[0];
+                    document.getElementById('cost-ai-today').textContent = `$${today.total?.toFixed(2) || '0.00'}`;
+                    document.getElementById('cost-ai-today-sub').textContent = today.date || 'Today';
+                    updateModelDistribution(today);
+                    updateDailyTable(aiDailyData.slice(0, 14));
+                }
+
+                if (!aiMonthlyData.error && Array.isArray(aiMonthlyData)) {
+                    updateMonthlyTable(aiMonthlyData);
+                    if (aiMonthlyData.length > 0) {
+                        document.getElementById('anthropic-monthly-cost').textContent = `$${aiMonthlyData[0].total?.toFixed(2) || '0.00'}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading cost data:', error);
+            }
+        }
+
+        function updateModelDistribution(data) {
+            const total = data.total || 0;
+            const opusCost = data.opus || 0;
+            const sonnetCost = data.sonnet || 0;
+            const haikuCost = data.haiku || 0;
+            const opusPct = total > 0 ? (opusCost / total * 100) : 0;
+            const sonnetPct = total > 0 ? (sonnetCost / total * 100) : 0;
+            const haikuPct = total > 0 ? (haikuCost / total * 100) : 0;
+
+            document.getElementById('model-opus-bar').style.width = `${opusPct}%`;
+            document.getElementById('model-sonnet-bar').style.width = `${sonnetPct}%`;
+            document.getElementById('model-haiku-bar').style.width = `${haikuPct}%`;
+            document.getElementById('model-opus-cost').textContent = `$${opusCost.toFixed(2)}`;
+            document.getElementById('model-opus-pct').textContent = `${opusPct.toFixed(0)}%`;
+            document.getElementById('model-sonnet-cost').textContent = `$${sonnetCost.toFixed(2)}`;
+            document.getElementById('model-sonnet-pct').textContent = `${sonnetPct.toFixed(0)}%`;
+            document.getElementById('model-haiku-cost').textContent = `$${haikuCost.toFixed(2)}`;
+            document.getElementById('model-haiku-pct').textContent = `${haikuPct.toFixed(0)}%`;
+        }
+
+        function updateDailyTable(data) {
+            const tbody = document.getElementById('daily-cost-table');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No data available</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map((day, idx) => {
+                const trend = idx < data.length - 1 ? (day.total > data[idx + 1].total ? '▲' : '▼') : '-';
+                return `<tr><td>${day.date || 'N/A'}</td><td>$${day.opus?.toFixed(2) || '0.00'}</td><td>$${day.sonnet?.toFixed(2) || '0.00'}</td><td>$${day.haiku?.toFixed(2) || '0.00'}</td><td><strong>$${day.total?.toFixed(2) || '0.00'}</strong></td><td>${trend}</td></tr>`;
+            }).join('');
+        }
+
+        function updateMonthlyTable(data) {
+            const tbody = document.getElementById('monthly-cost-table');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No data available</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(month => `<tr><td><strong>${month.month || 'N/A'}</strong></td><td>$${month.opus?.toFixed(2) || '0.00'}</td><td>$${month.sonnet?.toFixed(2) || '0.00'}</td><td>$${month.haiku?.toFixed(2) || '0.00'}</td><td><strong>$${month.total?.toFixed(2) || '0.00'}</strong></td></tr>`).join('');
+        }
+
+        // ============================================
+        // PERFORMANCE TAB FUNCTIONS
+        // ============================================
+
+        async function loadPerformanceData() {
+            await Promise.all([fetchVMMetrics(), fetchContainerMetrics()]);
+        }
+
+        async function fetchVMMetrics() {
+            try {
+                const response = await fetch(`${apiUrl}/metrics/vms`);
+                const data = await response.json();
+                const grid = document.getElementById('vm-metrics-grid');
+
+                if (Object.keys(data).length === 0) {
+                    grid.innerHTML = '<div class="loading-placeholder">No VM metrics available</div>';
+                    return;
+                }
+
+                grid.innerHTML = Object.entries(data).map(([vmId, vm]) => {
+                    const mem = vm.memory || {};
+                    const disk = vm.disk || {};
+                    const load = vm.load || {};
+                    const memPercent = mem.percent_used || 0;
+                    const diskPercent = disk.percent_used || 0;
+                    const loadPercent = Math.min((load.load_1m || 0) * 100, 100);
+
+                    return `<div class="vm-metric-card"><div class="vm-metric-header"><span class="vm-metric-name">${vm.name || vmId}</span><span class="vm-metric-ip">${vm.ip || 'N/A'}</span></div><div class="metric-gauges"><div class="gauge"><div class="gauge-circle" style="--gauge-percent: ${memPercent}; --gauge-color: ${getGaugeColor(memPercent)}"><span class="gauge-value">${memPercent}%</span></div><div class="gauge-label">RAM</div></div><div class="gauge"><div class="gauge-circle" style="--gauge-percent: ${diskPercent}; --gauge-color: ${getGaugeColor(diskPercent)}"><span class="gauge-value">${diskPercent}%</span></div><div class="gauge-label">Disk</div></div><div class="gauge"><div class="gauge-circle" style="--gauge-percent: ${loadPercent}; --gauge-color: ${getGaugeColor(loadPercent)}"><span class="gauge-value">${(load.load_1m || 0).toFixed(2)}</span></div><div class="gauge-label">Load</div></div></div>${vm.error ? `<div style="color: var(--accent-red); font-size: 0.75rem; margin-top: 0.5rem;">${vm.error}</div>` : ''}</div>`;
+                }).join('');
+            } catch (error) {
+                console.error('Error fetching VM metrics:', error);
+                document.getElementById('vm-metrics-grid').innerHTML = `<div class="loading-placeholder">Error: ${error.message}</div>`;
+            }
+        }
+
+        function getGaugeColor(percent) {
+            if (percent < 70) return '#51cf66';
+            if (percent < 90) return '#ffc107';
+            return '#ff6b6b';
+        }
+
+        async function fetchContainerMetrics() {
+            try {
+                const response = await fetch(`${apiUrl}/metrics/vms`);
+                const data = await response.json();
+                const tbody = document.getElementById('container-metrics-body');
+                const rows = [];
+
+                for (const [vmId, vm] of Object.entries(data)) {
+                    if (vm.containers && Array.isArray(vm.containers)) {
+                        for (const container of vm.containers) {
+                            rows.push(`<tr><td>${container.name}</td><td>${vm.name || vmId}</td><td><span class="mono">${container.cpu}</span></td><td><span class="mono">${container.memory}</span></td><td><span class="live-status online"><span class="live-dot"></span>Running</span></td></tr>`);
+                        }
+                    }
+                }
+
+                tbody.innerHTML = rows.length > 0 ? rows.join('') : '<tr><td colspan="5" style="text-align: center;">No container data available</td></tr>';
+            } catch (error) {
+                console.error('Error fetching container metrics:', error);
+            }
+        }
+
+        // Tab Switching with Lazy Loading
+        function initTabs() {
+            const headerButtons = document.querySelectorAll('[data-dash-tab]');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const loadedTabs = { status: true };
+
+            function switchTab(targetTab) {
+                // Update header buttons and tab contents
+                headerButtons.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // Activate the selected tab
+                document.querySelectorAll(`[data-dash-tab="${targetTab}"]`).forEach(b => b.classList.add('active'));
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+
+                if (!loadedTabs[targetTab]) {
+                    loadedTabs[targetTab] = true;
+                    if (targetTab === 'cost') loadCostData();
+                    else if (targetTab === 'performance') loadPerformanceData();
+                }
+            }
+
+            // Handle header monitoring buttons
+            headerButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.getAttribute('data-dash-tab');
+                    switchTab(targetTab);
+                });
+            });
+        }
+
+        // Cost Sub-tab Switching
+        function initCostSubtabs() {
+            const subtabButtons = document.querySelectorAll('.cost-subtab-btn');
+            const subtabContents = document.querySelectorAll('.cost-subtab-content');
+
+            subtabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetSubtab = btn.getAttribute('data-subtab');
+                    subtabButtons.forEach(b => b.classList.remove('active'));
+                    subtabContents.forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(targetSubtab).classList.add('active');
+                });
+            });
+        }
+
+        // Status Sub-tab Switching (Frontend/Backend)
+        function initStatusSubtabs() {
+            const subtabButtons = document.querySelectorAll('.status-subtab-btn');
+            const subtabContents = document.querySelectorAll('.status-subtab-content');
+
+            subtabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetSubtab = btn.getAttribute('data-subtab');
+                    subtabButtons.forEach(b => b.classList.remove('active'));
+                    subtabContents.forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(targetSubtab).classList.add('active');
+                });
+            });
+        }
+
+        // View Toggle (Cards/List) - Note: This is a placeholder
+        // Actual cards view implementation would require additional HTML structure
+        function initViewToggles() {
+            const toggleGroups = document.querySelectorAll('.view-toggle-inline');
+
+            toggleGroups.forEach(group => {
+                const buttons = group.querySelectorAll('.view-toggle-btn');
+                buttons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        buttons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        // View switching logic would go here
+                        // For now, just toggle the active state
+                    });
+                });
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            checkExistingLogin();
+            handleOAuthCallback();
+            initRebootButtons();
+            initTabs();
+            initCostSubtabs();
+
+            // Render tables from CONFIG (JSON is source of truth!)
+            if (dataSourceMode === 'api') {
+                // API mode: fetch config from API to render tables
+                await fetchConfigFromAPI();
+                checkDevServerStatus();
+            } else {
+                // Local mode: use local CONFIG from cloud_dash_data.js
+                if (typeof CONFIG !== 'undefined') {
+                    renderTablesFromConfig();
+                }
+            }
+
+            refreshAll(); // Always refresh on page load (either from API or Local)
+
+            // Start auto-refresh if enabled
+            if (document.getElementById('auto-refresh').checked) {
+                autoRefreshInterval = setInterval(refreshAll, 30000);
+            }
+        });
+    </script>
+</body>
+</html>
