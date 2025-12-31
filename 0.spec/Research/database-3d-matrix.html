@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Decision Matrix</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body {
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8892b0;
+            margin-bottom: 20px;
+        }
+        .view-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .view-btn {
+            background: #0f3460;
+            color: white;
+            border: 2px solid #667eea;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .view-btn:hover {
+            background: #1a4a7a;
+        }
+        .view-btn.active {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        .filters {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-group label {
+            color: #8892b0;
+            font-weight: bold;
+        }
+        .filter-btn {
+            background: #16213e;
+            color: white;
+            border: 1px solid #667eea;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .filter-btn:hover {
+            background: #1f2b47;
+        }
+        .filter-btn.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+            color: #1a1a2e;
+        }
+        .plot-area {
+            width: 100%;
+            height: 700px;
+            border: 2px solid #667eea;
+            background: #16213e;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .axis-info {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .axis-card {
+            background: #16213e;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .axis-card.x { border-color: #ff6b6b; }
+        .axis-card.y { border-color: #4ecdc4; }
+        .axis-card.z { border-color: #ffd700; }
+        .axis-card strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .axis-card span {
+            color: #8892b0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗄️ Database Decision Matrix</h1>
+    <p class="subtitle">Interactive 3D & 2D Visualization</p>
+
+    <!-- View Selector -->
+    <div class="view-selector">
+        <button class="view-btn active" onclick="switchView('3d')">📦 3D View</button>
+        <button class="view-btn" onclick="switchView('xy')">📊 XY: Query Size × Data Model</button>
+        <button class="view-btn" onclick="switchView('xz')">📊 XZ: Query Size × SQL Type</button>
+        <button class="view-btn" onclick="switchView('yz')">📊 YZ: Data Model × SQL Type</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+        <div class="filter-group">
+            <label>Query Size:</label>
+            <button class="filter-btn active" onclick="setFilter('querySize', 'all')">All</button>
+            <button class="filter-btn" onclick="setFilter('querySize', 'small')">Small (OLTP)</button>
+            <button class="filter-btn" onclick="setFilter('querySize', 'big')">Big (OLAP)</button>
+        </div>
+        <div class="filter-group">
+            <label>SQL Type:</label>
+            <button class="filter-btn active" onclick="setFilter('sqlType', 'all')">All</button>
+            <button class="filter-btn" onclick="setFilter('sqlType', 'sql')">SQL</button>
+            <button class="filter-btn" onclick="setFilter('sqlType', 'nosql')">NoSQL</button>
+        </div>
+    </div>
+
+    <!-- Plot Areas -->
+    <div id="plot-3d" class="plot-area"></div>
+    <div id="plot-xy" class="plot-area hidden"></div>
+    <div id="plot-xz" class="plot-area hidden"></div>
+    <div id="plot-yz" class="plot-area hidden"></div>
+
+    <!-- Legend -->
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background:#ff6b6b"></div>OLAP (Big Queries)</div>
+        <div class="legend-item"><div class="legend-color" style="background:#4ecdc4"></div>OLTP Relational</div>
+        <div class="legend-item"><div class="legend-color" style="background:#aa96da"></div>Time-Series</div>
+        <div class="legend-item"><div class="legend-color" style="background:#95e1d3"></div>Document</div>
+        <div class="legend-item"><div class="legend-color" style="background:#f38181"></div>Search</div>
+        <div class="legend-item"><div class="legend-color" style="background:#fcbad3"></div>Cache / Key-Value</div>
+    </div>
+
+    <!-- Axis Info -->
+    <div class="axis-info">
+        <div class="axis-card x">
+            <strong>X: Query Size</strong>
+            <span>0-5: Small (OLTP) | 6-10: Big (OLAP)</span>
+        </div>
+        <div class="axis-card y">
+            <strong>Y: Data Model</strong>
+            <span>0: Key-Value | 1: Document | 2: Relational | 3: Columnar</span>
+        </div>
+        <div class="axis-card z">
+            <strong>Z: SQL Type</strong>
+            <span>0: NoSQL | 1: SQL</span>
+        </div>
+    </div>
+
+    <script>
+        const databases = [
+            // OLAP - Big Queries
+            { name: 'ClickHouse', x: 8, y: 3, z: 1, color: '#ff6b6b', size: 20, sqlType: 'sql' },
+            { name: 'BigQuery', x: 9, y: 3, z: 1, color: '#ff6b6b', size: 18, sqlType: 'sql' },
+            { name: 'Redshift', x: 9, y: 3.2, z: 1, color: '#ff6b6b', size: 18, sqlType: 'sql' },
+            { name: 'Druid', x: 8, y: 3, z: 0, color: '#ff6b6b', size: 16, sqlType: 'nosql' },
+            { name: 'Pinot', x: 8.2, y: 3, z: 0, color: '#ff6b6b', size: 15, sqlType: 'nosql' },
+            // OLTP - Relational
+            { name: 'PostgreSQL', x: 2, y: 2, z: 1, color: '#4ecdc4', size: 22, sqlType: 'sql' },
+            { name: 'MySQL', x: 2.3, y: 2, z: 1, color: '#4ecdc4', size: 20, sqlType: 'sql' },
+            { name: 'CockroachDB', x: 2.5, y: 2.2, z: 0.8, color: '#4ecdc4', size: 14, sqlType: 'sql' },
+            // Time-Series
+            { name: 'TimescaleDB', x: 2, y: 2.8, z: 1, color: '#aa96da', size: 18, sqlType: 'sql' },
+            { name: 'InfluxDB', x: 2.5, y: 2.8, z: 0, color: '#aa96da', size: 17, sqlType: 'nosql' },
+            { name: 'Prometheus', x: 3, y: 2.8, z: 0, color: '#aa96da', size: 16, sqlType: 'nosql' },
+            // Document
+            { name: 'MongoDB', x: 2, y: 1, z: 0, color: '#95e1d3', size: 20, sqlType: 'nosql' },
+            { name: 'CouchDB', x: 2.5, y: 1, z: 0, color: '#95e1d3', size: 14, sqlType: 'nosql' },
+            { name: 'DynamoDB', x: 2.3, y: 1.2, z: 0, color: '#95e1d3', size: 16, sqlType: 'nosql' },
+            // Search
+            { name: 'Elasticsearch', x: 3, y: 1.2, z: 0, color: '#f38181', size: 19, sqlType: 'nosql' },
+            { name: 'Meilisearch', x: 3.5, y: 1.2, z: 0, color: '#f38181', size: 14, sqlType: 'nosql' },
+            // Cache
+            { name: 'Redis', x: 1, y: 0, z: 0, color: '#fcbad3', size: 24, sqlType: 'nosql' },
+            { name: 'Memcached', x: 1.3, y: 0.2, z: 0, color: '#fcbad3', size: 18, sqlType: 'nosql' },
+        ];
+
+        let currentView = '3d';
+        let filters = { querySize: 'all', sqlType: 'all' };
+
+        const darkTheme = {
+            paper_bgcolor: '#16213e',
+            plot_bgcolor: '#16213e',
+            font: { color: '#ffffff', size: 12 }
+        };
+
+        function getFilteredData() {
+            return databases.filter(d => {
+                const sizeMatch = filters.querySize === 'all' ||
+                    (filters.querySize === 'small' && d.x <= 5) ||
+                    (filters.querySize === 'big' && d.x > 5);
+                const sqlMatch = filters.sqlType === 'all' || d.sqlType === filters.sqlType;
+                return sizeMatch && sqlMatch;
+            });
+        }
+
+        function create3DPlot(data) {
+            const trace = {
+                x: data.map(d => d.x),
+                y: data.map(d => d.y),
+                z: data.map(d => d.z),
+                mode: 'markers+text',
+                type: 'scatter3d',
+                text: data.map(d => d.name),
+                textposition: 'top center',
+                textfont: { size: 11, color: '#ffffff' },
+                marker: {
+                    size: data.map(d => d.size),
+                    color: data.map(d => d.color),
+                    opacity: 0.9,
+                    line: { color: '#ffffff', width: 1 }
+                },
+                hovertemplate: '<b>%{text}</b><br>Query Size: %{x}<br>Data Model: %{y}<br>SQL/NoSQL: %{z}<extra></extra>'
+            };
+
+            const layout = {
+                ...darkTheme,
+                title: { text: '3D Database Decision Matrix', font: { size: 18, color: '#667eea' } },
+                scene: {
+                    xaxis: {
+                        title: 'Query Size (Small → Big)',
+                        titlefont: { color: '#ff6b6b', size: 14 },
+                        gridcolor: 'rgba(255,255,255,0.2)',
+                        showbackground: true,
+                        backgroundcolor: '#1a1a2e'
+                    },
+                    yaxis: {
+                        title: 'Data Model',
+                        titlefont: { color: '#4ecdc4', size: 14 },
+                        gridcolor: 'rgba(255,255,255,0.2)',
+                        showbackground: true,
+                        backgroundcolor: '#1a1a2e'
+                    },
+                    zaxis: {
+                        title: 'SQL (1) / NoSQL (0)',
+                        titlefont: { color: '#ffd700', size: 14 },
+                        gridcolor: 'rgba(255,255,255,0.2)',
+                        showbackground: true,
+                        backgroundcolor: '#1a1a2e'
+                    },
+                    bgcolor: '#1a1a2e'
+                },
+                margin: { l: 0, r: 0, b: 0, t: 50 }
+            };
+
+            Plotly.newPlot('plot-3d', [trace], layout);
+        }
+
+        function create2DPlot(plane, data) {
+            let xData, yData, xTitle, yTitle, plotId, title;
+
+            if (plane === 'xy') {
+                xData = data.map(d => d.x);
+                yData = data.map(d => d.y);
+                xTitle = 'Query Size (Small → Big)';
+                yTitle = 'Data Model (Key-Value → Columnar)';
+                plotId = 'plot-xy';
+                title = '2D View: Query Size × Data Model';
+            } else if (plane === 'xz') {
+                xData = data.map(d => d.x);
+                yData = data.map(d => d.z);
+                xTitle = 'Query Size (Small → Big)';
+                yTitle = 'SQL (1) / NoSQL (0)';
+                plotId = 'plot-xz';
+                title = '2D View: Query Size × SQL Type';
+            } else if (plane === 'yz') {
+                xData = data.map(d => d.y);
+                yData = data.map(d => d.z);
+                xTitle = 'Data Model (Key-Value → Columnar)';
+                yTitle = 'SQL (1) / NoSQL (0)';
+                plotId = 'plot-yz';
+                title = '2D View: Data Model × SQL Type';
+            }
+
+            const trace = {
+                x: xData,
+                y: yData,
+                mode: 'markers+text',
+                type: 'scatter',
+                text: data.map(d => d.name),
+                textposition: 'top center',
+                textfont: { size: 12, color: '#ffffff' },
+                marker: {
+                    size: data.map(d => d.size * 1.5),
+                    color: data.map(d => d.color),
+                    opacity: 0.9,
+                    line: { color: '#ffffff', width: 2 }
+                },
+                hovertemplate: '<b>%{text}</b><br>' + xTitle + ': %{x}<br>' + yTitle + ': %{y}<extra></extra>'
+            };
+
+            const layout = {
+                ...darkTheme,
+                title: { text: title, font: { size: 18, color: '#667eea' } },
+                xaxis: {
+                    title: { text: xTitle, font: { color: '#ff6b6b', size: 14 } },
+                    gridcolor: 'rgba(255,255,255,0.2)',
+                    zerolinecolor: 'rgba(255,255,255,0.3)'
+                },
+                yaxis: {
+                    title: { text: yTitle, font: { color: '#4ecdc4', size: 14 } },
+                    gridcolor: 'rgba(255,255,255,0.2)',
+                    zerolinecolor: 'rgba(255,255,255,0.3)'
+                },
+                margin: { l: 80, r: 40, b: 80, t: 60 }
+            };
+
+            Plotly.newPlot(plotId, [trace], layout);
+        }
+
+        function switchView(view) {
+            currentView = view;
+
+            // Update button states
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Hide all plots
+            document.querySelectorAll('.plot-area').forEach(p => p.classList.add('hidden'));
+
+            // Show selected plot
+            const plotId = 'plot-' + view;
+            document.getElementById(plotId).classList.remove('hidden');
+
+            // Render the plot
+            updatePlot();
+        }
+
+        function setFilter(filterType, value) {
+            filters[filterType] = value;
+
+            // Update button states
+            const buttons = document.querySelectorAll(`.filter-group button`);
+            buttons.forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                if (onclick && onclick.includes(filterType)) {
+                    btn.classList.toggle('active', onclick.includes(`'${value}'`));
+                }
+            });
+
+            updatePlot();
+        }
+
+        function updatePlot() {
+            const data = getFilteredData();
+
+            if (currentView === '3d') {
+                create3DPlot(data);
+            } else {
+                create2DPlot(currentView, data);
+            }
+        }
+
+        // Initialize
+        create3DPlot(databases);
+    </script>
+</body>
+</html>

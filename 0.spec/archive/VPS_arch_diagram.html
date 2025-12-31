@@ -1,0 +1,2844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS Architecture - Complete Security Diagram v2</title>
+    <style>
+        /* ============================================
+           ROOT VARIABLES & THEME
+           ============================================ */
+        :root {
+            /* Dark Theme */
+            --bg-color: #0a0a0f;
+            --bg-gradient: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+            --vps-bg: #12121a;
+            --container-bg: #1e1e2d;
+            --text-main: #e8e8f0;
+            --text-muted: #8888a0;
+            --text-dim: #555566;
+
+            /* Semantic Colors */
+            --firewall-color: #ff4757;
+            --firewall-glow: rgba(255, 71, 87, 0.4);
+            --doors-color: #c0392b;
+
+            --nginx-color: #f39c12;
+            --nginx-glow: rgba(243, 156, 18, 0.3);
+            --nginx-bg: rgba(243, 156, 18, 0.08);
+
+            --public-color: #2ecc71;
+            --public-glow: rgba(46, 204, 113, 0.3);
+            --public-bg: rgba(46, 204, 113, 0.08);
+
+            --private-color: #3498db;
+            --private-glow: rgba(52, 152, 219, 0.3);
+            --private-bg: rgba(52, 152, 219, 0.08);
+
+            --mail-color: #9b59b6;
+            --mail-glow: rgba(155, 89, 182, 0.3);
+            --mail-bg: rgba(155, 89, 182, 0.08);
+
+            --ssh-color: #e056fd;
+            --ssh-glow: rgba(224, 86, 253, 0.4);
+
+            --db-sql-color: #f1c40f;
+            --db-nosql-color: #1abc9c;
+            --db-glow: rgba(241, 196, 15, 0.3);
+
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #27ae60;
+
+            /* Animation Speeds */
+            --pulse-speed: 2s;
+            --flow-speed: 3s;
+            --glow-speed: 4s;
+        }
+
+        /* ============================================
+           RESET & BASE STYLES
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           MAIN LAYOUT
+           ============================================ */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Header */
+        .diagram-header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .diagram-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--public-color), var(--private-color), var(--mail-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .diagram-header .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--private-color);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        /* ============================================
+           SECTION 1: INTERNET CLOUD
+           ============================================ */
+        .internet-zone {
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .cloud-icon {
+            font-size: 60px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .traffic-labels {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .traffic-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .traffic-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .traffic-dot.http { background: var(--nginx-color); }
+        .traffic-dot.ssh { background: var(--ssh-color); }
+        .traffic-dot.mail { background: var(--mail-color); }
+        .traffic-dot.blocked { background: var(--danger-color); }
+
+        /* Animated Arrows */
+        .arrow-stream {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+            height: 40px;
+            overflow: hidden;
+        }
+
+        .arrow-particle {
+            font-size: 18px;
+            opacity: 0;
+            animation: arrow-fall 1.5s infinite;
+        }
+
+        .arrow-particle:nth-child(1) { animation-delay: 0s; }
+        .arrow-particle:nth-child(2) { animation-delay: 0.3s; }
+        .arrow-particle:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes arrow-fall {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+
+        /* ============================================
+           SECTION 2: DOORS LAYER (PORTS)
+           ============================================ */
+        .doors-layer {
+            background: linear-gradient(180deg, rgba(192, 57, 43, 0.2) 0%, rgba(192, 57, 43, 0.05) 100%);
+            border: 2px solid var(--doors-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .doors-layer::before {
+            content: 'SERVER DOORS (Open Ports)';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-color);
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--doors-color);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .doors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .door-box {
+            background: rgba(0,0,0,0.4);
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 15px 10px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .door-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .door-box.ssh {
+            border-color: var(--ssh-color);
+            box-shadow: 0 0 15px var(--ssh-glow);
+        }
+        .door-box.web {
+            border-color: var(--nginx-color);
+            box-shadow: 0 0 15px var(--nginx-glow);
+        }
+        .door-box.mail {
+            border-color: var(--mail-color);
+            box-shadow: 0 0 15px var(--mail-glow);
+        }
+        .door-box.blocked {
+            border-color: var(--danger-color);
+            opacity: 0.5;
+        }
+
+        .door-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .door-port {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .door-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .door-status {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-color);
+        }
+
+        .door-status.open {
+            background: var(--success-color);
+            animation: status-pulse 2s infinite;
+        }
+
+        .door-status.closed {
+            background: var(--danger-color);
+        }
+
+        @keyframes status-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(39, 174, 96, 0); }
+        }
+
+        /* Door Connectors */
+        .door-connector {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            z-index: 10;
+        }
+
+        .door-connector.ssh { color: var(--ssh-color); }
+        .door-connector.web { color: var(--nginx-color); }
+        .door-connector.mail { color: var(--mail-color); }
+
+        /* Security Comment */
+        .security-comment {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 3px solid var(--danger-color);
+            padding: 10px 15px;
+            margin-top: 15px;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .security-comment strong {
+            color: var(--danger-color);
+        }
+
+        /* ============================================
+           SECTION 3: FIREWALL (UFW)
+           ============================================ */
+        .firewall-layer {
+            background: linear-gradient(90deg, var(--firewall-color), #c0392b);
+            border-radius: 8px;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px var(--firewall-glow);
+        }
+
+        .firewall-layer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: firewall-scan 3s linear infinite;
+        }
+
+        @keyframes firewall-scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .firewall-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 1;
+        }
+
+        .firewall-title .icon {
+            font-size: 24px;
+            animation: shield-pulse 2s infinite;
+        }
+
+        @keyframes shield-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .firewall-stats {
+            display: flex;
+            gap: 20px;
+            z-index: 1;
+        }
+
+        .firewall-stat {
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 15px;
+            border-radius: 6px;
+        }
+
+        .firewall-stat .value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .firewall-stat .label {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .info-btn {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 1;
+        }
+
+        .info-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+
+        /* ============================================
+           SECTION 4: VPS SERVER BOX
+           ============================================ */
+        .vps-box {
+            background: var(--vps-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px 20px 20px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .vps-label {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .vps-label .ip {
+            font-family: 'Courier New', monospace;
+            color: var(--public-color);
+            font-size: 11px;
+        }
+
+        /* Hardware Specs Bar */
+        .hardware-specs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 70px 20px;
+            padding: 12px 20px;
+            background: linear-gradient(90deg, rgba(52,73,94,0.3), rgba(44,62,80,0.3));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hw-spec {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .hw-spec .icon {
+            font-size: 16px;
+        }
+
+        .hw-spec .label {
+            color: var(--text-muted);
+        }
+
+        .hw-spec .value {
+            color: var(--public-color);
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .hw-spec.provider {
+            border-left: 3px solid #f39c12;
+        }
+
+        .hw-spec.cpu {
+            border-left: 3px solid #e74c3c;
+        }
+
+        .hw-spec.ram {
+            border-left: 3px solid #3498db;
+        }
+
+        .hw-spec.storage {
+            border-left: 3px solid #2ecc71;
+        }
+
+        .hw-spec.arch {
+            border-left: 3px solid #9b59b6;
+        }
+
+        /* SSH Direct Path */
+        .ssh-direct-path {
+            position: absolute;
+            left: 15px;
+            top: 50px;
+            bottom: 20px;
+            width: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .ssh-line {
+            flex: 1;
+            width: 4px;
+            background: linear-gradient(180deg, var(--ssh-color), transparent);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ssh-line::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(180deg, transparent, rgba(224, 86, 253, 0.8), transparent);
+            animation: ssh-flow 2s linear infinite;
+        }
+
+        @keyframes ssh-flow {
+            0% { top: -50%; }
+            100% { top: 150%; }
+        }
+
+        .ssh-badge {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            background: var(--ssh-color);
+            color: white;
+            padding: 10px 5px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-top: 10px;
+        }
+
+        .ssh-target {
+            background: rgba(224, 86, 253, 0.1);
+            border: 1px dashed var(--ssh-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .ssh-target .icon { font-size: 20px; }
+
+        /* ============================================
+           NGINX REVERSE PROXY LAYER
+           ============================================ */
+        .nginx-layer {
+            background: var(--nginx-bg);
+            border: 2px dashed var(--nginx-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-left: 70px;
+            position: relative;
+            box-shadow: 0 0 20px var(--nginx-glow);
+        }
+
+        .nginx-layer::before {
+            content: 'NGINX REVERSE PROXY (Host Level)';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--vps-bg);
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--nginx-color);
+            font-weight: bold;
+        }
+
+        .nginx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .nginx-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--nginx-color);
+            font-weight: bold;
+        }
+
+        .nginx-title .icon {
+            font-size: 24px;
+            animation: rotate-slow 10s linear infinite;
+        }
+
+        @keyframes rotate-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .nginx-routes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .route-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .route-box .domain {
+            color: var(--nginx-color);
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .route-box .arrow {
+            color: var(--text-dim);
+        }
+
+        .route-box .target {
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Route Flow Arrows */
+        .nginx-flow-arrows {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0 -10px;
+            padding: 0 50px;
+        }
+
+        .flow-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .flow-arrow .line {
+            width: 3px;
+            height: 30px;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flow-arrow .line::after {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: flow-down 1s linear infinite;
+        }
+
+        @keyframes flow-down {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        .flow-arrow.public .line { background: var(--public-color); }
+        .flow-arrow.public .line::after { background: linear-gradient(180deg, transparent, var(--public-color), transparent); }
+
+        .flow-arrow.private .line { background: var(--private-color); }
+        .flow-arrow.private .line::after { background: linear-gradient(180deg, transparent, var(--private-color), transparent); }
+
+        .flow-arrow.mail .line { background: var(--mail-color); }
+        .flow-arrow.mail .line::after { background: linear-gradient(180deg, transparent, var(--mail-color), transparent); }
+
+        .flow-arrow .label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* ============================================
+           DOCKER ENVIRONMENT
+           ============================================ */
+        .docker-env {
+            background: rgba(0,0,0,0.2);
+            border: 1px dashed #555;
+            border-radius: 12px;
+            padding: 25px 20px 20px;
+            margin-left: 70px;
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .docker-label {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #2496ed;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .docker-label .whale {
+            font-size: 14px;
+        }
+
+        /* Network Zones Grid */
+        .network-zones {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .network-zones {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Zone Column */
+        .zone-column {
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .zone-column:hover {
+            transform: translateY(-5px);
+        }
+
+        .zone-column.public {
+            border: 1px solid var(--public-color);
+            box-shadow: 0 0 20px var(--public-glow);
+        }
+
+        .zone-column.private {
+            border: 1px solid var(--private-color);
+            box-shadow: 0 0 20px var(--private-glow);
+        }
+
+        .zone-column.mail {
+            border: 1px solid var(--mail-color);
+            box-shadow: 0 0 20px var(--mail-glow);
+        }
+
+        .zone-header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .zone-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .zone-column.public .zone-title { color: var(--public-color); }
+        .zone-column.private .zone-title { color: var(--private-color); }
+        .zone-column.mail .zone-title { color: var(--mail-color); }
+
+        .zone-network {
+            font-size: 10px;
+            color: var(--text-dim);
+            font-family: 'Courier New', monospace;
+            margin-top: 5px;
+        }
+
+        /* Container Box */
+        .container-box {
+            background: var(--container-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+
+        .container-box:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .container-box.public { border-left-color: var(--public-color); }
+        .container-box.private { border-left-color: var(--private-color); }
+        .container-box.mail { border-left-color: var(--mail-color); }
+        .container-box.db-sql { border-left-color: var(--db-sql-color); }
+        .container-box.db-nosql { border-left-color: var(--db-nosql-color); }
+
+        .container-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .container-name {
+            font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .container-name .icon {
+            font-size: 16px;
+        }
+
+        .container-port {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: var(--text-muted);
+        }
+
+        .container-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .container-tech {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+        }
+
+        /* Database Type Badges */
+        .db-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .db-type.sql {
+            background: rgba(241, 196, 15, 0.2);
+            color: var(--db-sql-color);
+            border: 1px solid var(--db-sql-color);
+        }
+
+        .db-type.nosql {
+            background: rgba(26, 188, 156, 0.2);
+            color: var(--db-nosql-color);
+            border: 1px solid var(--db-nosql-color);
+        }
+
+        /* Connector Arrow */
+        .connector {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        /* ============================================
+           DOCKER NETWORKS VISUALIZATION
+           ============================================ */
+        .networks-layer {
+            margin-top: 20px;
+            margin-left: 70px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .networks-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--vps-bg);
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        .networks-grid {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .network-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .network-badge.public-net {
+            border-color: var(--public-color);
+            background: var(--public-bg);
+        }
+
+        .network-badge.private-net {
+            border-color: var(--private-color);
+            background: var(--private-bg);
+        }
+
+        .network-badge.mail-net {
+            border-color: var(--mail-color);
+            background: var(--mail-bg);
+        }
+
+        .network-badge.db-net {
+            border-color: var(--db-sql-color);
+            background: rgba(241, 196, 15, 0.08);
+        }
+
+        .network-icon {
+            font-size: 18px;
+        }
+
+        .network-name {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .network-members {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .network-isolation {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger-color);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        /* ============================================
+           ISOLATION SECTION (NEW)
+           ============================================ */
+        .isolation-section {
+            margin-top: 30px;
+            margin-left: 70px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 25px;
+            position: relative;
+        }
+
+        .isolation-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .isolation-icon {
+            font-size: 28px;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+            50% { filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); }
+        }
+
+        .isolation-title {
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--public-color), var(--private-color), var(--mail-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .isolation-subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 25px;
+            padding-left: 40px;
+        }
+
+        /* Clean SVG Isolation Diagram */
+        .isolation-diagram-clean {
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .isolation-svg {
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            min-height: 520px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* How it works section */
+        .isolation-how-it-works {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .how-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .how-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .how-item {
+            display: flex;
+            gap: 15px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .how-num {
+            width: 30px;
+            height: 30px;
+            background: var(--private-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .how-content {
+            flex: 1;
+        }
+
+        .how-content strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        .how-content p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .how-content code {
+            display: block;
+            background: rgba(0,0,0,0.4);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--nginx-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ============================================
+           INTEGRATED ISOLATION (within main flow)
+           ============================================ */
+        .isolation-integrated {
+            margin-top: 25px;
+            background: linear-gradient(180deg, rgba(52,152,219,0.08) 0%, rgba(155,89,182,0.08) 100%);
+            border: 1px solid rgba(52,152,219,0.3);
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .isolation-bar {
+            background: linear-gradient(90deg, rgba(46,204,113,0.2), rgba(52,152,219,0.2), rgba(155,89,182,0.2));
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 13px;
+            color: var(--text-main);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .isolation-bar span {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .isolation-svg-container {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .isolation-svg-container svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Hover effect on SVG info buttons */
+        .svg-info-btn:hover circle,
+        .svg-info-btn:hover rect {
+            filter: brightness(1.2);
+            cursor: pointer;
+        }
+
+        .svg-info-btn {
+            transition: transform 0.2s ease;
+        }
+
+        .svg-info-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* ============================================
+           STORAGE LAYER
+           ============================================ */
+        .storage-wrapper {
+            margin-top: 30px;
+            margin-left: 70px;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            border: 1px dashed #444;
+            border-radius: 12px;
+            padding: 25px 20px 20px;
+        }
+
+        .storage-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--vps-bg);
+            padding: 0 10px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        .pipe-public { stroke: var(--public-color); }
+        .pipe-private { stroke: var(--private-color); }
+        .pipe-mail { stroke: var(--mail-color); }
+
+        .blocked-path {
+            stroke: var(--danger-color);
+            stroke-width: 2;
+            stroke-dasharray: 5 3;
+            opacity: 0.5;
+            animation: none;
+        }
+
+        .blocked-x {
+            fill: var(--danger-color);
+            animation: pulse-block 2s infinite;
+        }
+
+        @keyframes pulse-block {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        /* Storage Partitions */
+        .storage-partitions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px dashed #444;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .storage-partitions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .partition-box {
+            background: #2c3e50;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 4px solid;
+            position: relative;
+        }
+
+        .partition-box.system { border-bottom-color: var(--ssh-color); }
+        .partition-box.public { border-bottom-color: var(--public-color); }
+        .partition-box.private { border-bottom-color: var(--private-color); }
+        .partition-box.mail { border-bottom-color: var(--mail-color); }
+
+        .partition-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .partition-name {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .partition-desc {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .partition-security {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .security-tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .security-tag.encrypted {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+
+        .security-tag.readonly {
+            background: rgba(243, 156, 18, 0.2);
+            color: var(--warning-color);
+        }
+
+        .security-tag.restricted {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--danger-color);
+        }
+
+        /* ============================================
+           SECURITY ANNOTATIONS
+           ============================================ */
+        .annotation {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 10px;
+            max-width: 200px;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+
+        .annotation.warning {
+            border-color: var(--warning-color);
+        }
+
+        .annotation.danger {
+            border-color: var(--danger-color);
+        }
+
+        .annotation.info {
+            border-color: var(--private-color);
+        }
+
+        .annotation-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .annotation.warning .annotation-title { color: var(--warning-color); }
+        .annotation.danger .annotation-title { color: var(--danger-color); }
+        .annotation.info .annotation-title { color: var(--private-color); }
+
+        /* ============================================
+           LEGEND
+           ============================================ */
+        .legend {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.public { background: var(--public-color); }
+        .legend-color.private { background: var(--private-color); }
+        .legend-color.mail { background: var(--mail-color); }
+        .legend-color.ssh { background: var(--ssh-color); }
+        .legend-color.nginx { background: var(--nginx-color); }
+        .legend-color.firewall { background: var(--firewall-color); }
+        .legend-color.sql { background: var(--db-sql-color); }
+        .legend-color.nosql { background: var(--db-nosql-color); }
+
+        /* ============================================
+           MODAL
+           ============================================ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #1e1e2d;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: modal-in 0.3s ease;
+        }
+
+        @keyframes modal-in {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            max-height: calc(85vh - 80px);
+        }
+
+        .modal-body h4 {
+            color: var(--public-color);
+            margin: 20px 0 10px;
+        }
+
+        .modal-body h4:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        .modal-body code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--nginx-color);
+        }
+
+        .modal-body .warning-box {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 4px solid var(--danger-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .modal-body .warning-box strong {
+            color: var(--danger-color);
+        }
+
+        .modal-body .tip-box {
+            background: rgba(46, 204, 113, 0.1);
+            border-left: 4px solid var(--success-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* ============================================
+           FOOTER ACTIONS
+           ============================================ */
+        .footer-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(90deg, var(--public-color), var(--private-color));
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- ============================================
+         HEADER
+         ============================================ -->
+    <div class="diagram-header">
+        <h1>Secure VPS Architecture <span class="version-badge">v2.0</span></h1>
+        <p class="subtitle">Complete Infrastructure Security Diagram with Network Isolation & Data Separation</p>
+    </div>
+
+    <!-- ============================================
+         SECTION 1: INTERNET CLOUD
+         ============================================ -->
+    <div class="internet-zone">
+        <div class="cloud-icon">☁️</div>
+        <div style="font-size: 18px; font-weight: bold; margin: 10px 0;">Internet Traffic</div>
+
+        <div class="traffic-labels">
+            <div class="traffic-type">
+                <span class="traffic-dot http"></span>
+                <span>HTTP/HTTPS (Web)</span>
+            </div>
+            <div class="traffic-type">
+                <span class="traffic-dot ssh"></span>
+                <span>SSH (Admin)</span>
+            </div>
+            <div class="traffic-type">
+                <span class="traffic-dot mail"></span>
+                <span>SMTP/IMAP (Mail)</span>
+            </div>
+            <div class="traffic-type">
+                <span class="traffic-dot blocked"></span>
+                <span>All Other (Blocked)</span>
+            </div>
+        </div>
+
+        <div class="arrow-stream">
+            <span class="arrow-particle">⬇️</span>
+            <span class="arrow-particle">⬇️</span>
+            <span class="arrow-particle">⬇️</span>
+        </div>
+    </div>
+
+    <!-- ============================================
+         SECTION 2: SERVER DOORS (PORTS)
+         ============================================ -->
+    <div class="doors-layer">
+        <div class="doors-grid">
+            <!-- SSH Door -->
+            <div class="door-box ssh" onclick="openModal('ssh')">
+                <div class="door-status open"></div>
+                <div class="door-icon">🔐</div>
+                <div class="door-port">:22</div>
+                <div class="door-label">SSH (Key Only)</div>
+                <div class="door-connector ssh">↓</div>
+            </div>
+
+            <!-- HTTP Door -->
+            <div class="door-box web" onclick="openModal('http')">
+                <div class="door-status open"></div>
+                <div class="door-icon">🌐</div>
+                <div class="door-port">:80</div>
+                <div class="door-label">HTTP → HTTPS</div>
+                <div class="door-connector web">↓</div>
+            </div>
+
+            <!-- HTTPS Door -->
+            <div class="door-box web" onclick="openModal('https')">
+                <div class="door-status open"></div>
+                <div class="door-icon">🔒</div>
+                <div class="door-port">:443</div>
+                <div class="door-label">HTTPS (TLS)</div>
+                <div class="door-connector web">↓</div>
+            </div>
+
+            <!-- SMTP Door -->
+            <div class="door-box mail" onclick="openModal('mail')">
+                <div class="door-status open"></div>
+                <div class="door-icon">📤</div>
+                <div class="door-port">:25/587</div>
+                <div class="door-label">SMTP (Mail Out)</div>
+                <div class="door-connector mail">↓</div>
+            </div>
+
+            <!-- IMAP Door -->
+            <div class="door-box mail" onclick="openModal('mail')">
+                <div class="door-status open"></div>
+                <div class="door-icon">📥</div>
+                <div class="door-port">:993</div>
+                <div class="door-label">IMAPS (Mail In)</div>
+                <div class="door-connector mail">↓</div>
+            </div>
+
+            <!-- Blocked Door -->
+            <div class="door-box blocked">
+                <div class="door-status closed"></div>
+                <div class="door-icon">🚫</div>
+                <div class="door-port">:*</div>
+                <div class="door-label">All Other Ports</div>
+            </div>
+        </div>
+
+        <div class="security-comment">
+            <strong>⚠️ SECURITY:</strong> Only these 6 ports are exposed. All others are DROP by default.
+            Direct access to :8080 (Matomo), :3306 (MySQL), :27017 (MongoDB) is <strong>BLOCKED</strong> from internet.
+        </div>
+    </div>
+
+    <!-- ============================================
+         SECTION 3: FIREWALL (UFW)
+         ============================================ -->
+    <div class="firewall-layer">
+        <div class="firewall-title">
+            <span class="icon">🛡️</span>
+            <span>UFW FIREWALL</span>
+        </div>
+
+        <div class="firewall-stats">
+            <div class="firewall-stat">
+                <div class="value">6</div>
+                <div class="label">Ports Open</div>
+            </div>
+            <div class="firewall-stat">
+                <div class="value">65529</div>
+                <div class="label">Ports Blocked</div>
+            </div>
+            <div class="firewall-stat">
+                <div class="value">DROP</div>
+                <div class="label">Default Policy</div>
+            </div>
+        </div>
+
+        <button class="info-btn" onclick="openModal('firewall')">i</button>
+    </div>
+
+    <div class="arrow-stream" style="height: 30px;">
+        <span class="arrow-particle" style="color: var(--success-color);">✓</span>
+        <span class="arrow-particle" style="color: var(--success-color);">✓</span>
+        <span class="arrow-particle" style="color: var(--success-color);">✓</span>
+    </div>
+
+    <!-- ============================================
+         SECTION 4: VPS SERVER BOX
+         ============================================ -->
+    <div class="vps-box">
+        <div class="vps-label">
+            <span>🖥️ VPS SERVER</span>
+            <span class="ip">130.110.251.193</span>
+            <button class="info-btn" onclick="openModal('server')">i</button>
+        </div>
+
+        <!-- Hardware Specs -->
+        <div class="hardware-specs">
+            <div class="hw-spec provider">
+                <span class="icon">☁️</span>
+                <span class="label">Provider:</span>
+                <span class="value">Oracle Cloud</span>
+            </div>
+            <div class="hw-spec arch">
+                <span class="icon">🔧</span>
+                <span class="label">Arch:</span>
+                <span class="value">ARM64 Ampere A1</span>
+            </div>
+            <div class="hw-spec cpu">
+                <span class="icon">⚡</span>
+                <span class="label">CPU:</span>
+                <span class="value">4 OCPUs</span>
+            </div>
+            <div class="hw-spec ram">
+                <span class="icon">🧠</span>
+                <span class="label">RAM:</span>
+                <span class="value">24 GB</span>
+            </div>
+            <div class="hw-spec storage">
+                <span class="icon">💾</span>
+                <span class="label">Storage:</span>
+                <span class="value">197 GB</span>
+            </div>
+        </div>
+
+        <!-- SSH Direct Path -->
+        <div class="ssh-direct-path">
+            <div class="ssh-line"></div>
+            <div class="ssh-badge">DIRECT SSH</div>
+            <div class="ssh-target">
+                <div class="icon">🐧</div>
+                <div>Ubuntu 24.04</div>
+                <div style="color: var(--ssh-color);">Host OS</div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             NGINX REVERSE PROXY
+             ============================================ -->
+        <div class="nginx-layer">
+            <div class="nginx-header">
+                <div class="nginx-title">
+                    <span class="icon">⚙️</span>
+                    <span>NGINX Reverse Proxy</span>
+                </div>
+                <button class="info-btn" onclick="openModal('nginx')">i</button>
+            </div>
+
+            <div class="nginx-routes">
+                <div class="route-box">
+                    <span class="domain">diegonmarcos.com</span>
+                    <span class="arrow">→</span>
+                    <span class="target">127.0.0.1:8081</span>
+                </div>
+                <div class="route-box">
+                    <span class="domain">analytics.*.com</span>
+                    <span class="arrow">→</span>
+                    <span class="target">127.0.0.1:8080</span>
+                </div>
+                <div class="route-box">
+                    <span class="domain">cloud.*.com</span>
+                    <span class="arrow">→</span>
+                    <span class="target">127.0.0.1:8082</span>
+                </div>
+                <div class="route-box">
+                    <span class="domain">mail.*.com</span>
+                    <span class="arrow">→</span>
+                    <span class="target">127.0.0.1:8025</span>
+                </div>
+            </div>
+
+            <div class="nginx-flow-arrows">
+                <div class="flow-arrow public">
+                    <div class="line"></div>
+                    <span class="label">Public</span>
+                </div>
+                <div class="flow-arrow public">
+                    <div class="line"></div>
+                    <span class="label">Analytics</span>
+                </div>
+                <div class="flow-arrow private">
+                    <div class="line"></div>
+                    <span class="label">Private</span>
+                </div>
+                <div class="flow-arrow mail">
+                    <div class="line"></div>
+                    <span class="label">Mail</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             DOCKER ENVIRONMENT
+             ============================================ -->
+        <div class="docker-env">
+            <div class="docker-label">
+                <span class="whale">🐳</span>
+                <span>DOCKER COMPOSE</span>
+            </div>
+
+            <div class="network-zones">
+                <!-- PUBLIC ZONE -->
+                <div class="zone-column public">
+                    <div class="zone-header">
+                        <div class="zone-title">🌐 Public Zone</div>
+                        <div class="zone-network">network: public_net</div>
+                    </div>
+
+                    <div class="container-box public">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">🌍</span> Web Server</span>
+                            <span class="container-port">:8081</span>
+                        </div>
+                        <div class="container-desc">Static website hosting (GitHub Pages replacement)</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">nginx:alpine</span>
+                            <span class="tech-tag">read-only</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box public">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">📊</span> Matomo</span>
+                            <span class="container-port">:8080</span>
+                        </div>
+                        <div class="container-desc">Privacy-focused analytics platform</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">matomo:fpm</span>
+                            <span class="tech-tag">PHP 8.4</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box db-sql">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">🛢️</span> Matomo DB</span>
+                            <span class="db-type sql">SQL</span>
+                        </div>
+                        <div class="container-desc">Analytics data storage</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">MariaDB 11.4</span>
+                            <span class="tech-tag">InnoDB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRIVATE ZONE -->
+                <div class="zone-column private">
+                    <div class="zone-header">
+                        <div class="zone-title">🔒 Private Zone</div>
+                        <div class="zone-network">network: private_net (internal)</div>
+                    </div>
+
+                    <div class="container-box private">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">☁️</span> NextCloud</span>
+                            <span class="container-port">:8082</span>
+                        </div>
+                        <div class="container-desc">Private file sync & storage</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">nextcloud:fpm</span>
+                            <span class="tech-tag">auth-only</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box db-sql">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">🛢️</span> NextCloud DB</span>
+                            <span class="db-type sql">SQL</span>
+                        </div>
+                        <div class="container-desc">User data & metadata</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">PostgreSQL 16</span>
+                            <span class="tech-tag">Encrypted</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box db-nosql">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">🍃</span> Cache/Search</span>
+                            <span class="db-type nosql">NoSQL</span>
+                        </div>
+                        <div class="container-desc">Redis cache + search index</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">Redis 7</span>
+                            <span class="tech-tag">memory-only</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIL ZONE -->
+                <div class="zone-column mail">
+                    <div class="zone-header">
+                        <div class="zone-title">📧 Mail Zone</div>
+                        <div class="zone-network">network: mail_net (isolated)</div>
+                    </div>
+
+                    <div class="container-box mail">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">📮</span> Mail Server</span>
+                            <span class="container-port">:25/587/993</span>
+                        </div>
+                        <div class="container-desc">Postfix + Dovecot mail stack</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">docker-mailserver</span>
+                            <span class="tech-tag">DKIM</span>
+                            <span class="tech-tag">SPF</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box db-sql">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">🛢️</span> Mail DB</span>
+                            <span class="db-type sql">SQL</span>
+                        </div>
+                        <div class="container-desc">User accounts & aliases</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">SQLite</span>
+                            <span class="tech-tag">Lightweight</span>
+                        </div>
+                    </div>
+
+                    <div class="connector">⬇</div>
+
+                    <div class="container-box db-nosql">
+                        <div class="container-header">
+                            <span class="container-name"><span class="icon">📁</span> Mailboxes</span>
+                            <span class="db-type nosql">Files</span>
+                        </div>
+                        <div class="container-desc">Maildir format storage</div>
+                        <div class="container-tech">
+                            <span class="tech-tag">Maildir++</span>
+                            <span class="tech-tag">Encrypted</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             DOCKER NETWORKS
+             ============================================ -->
+        <div class="networks-layer">
+            <div class="networks-label">🔗 DOCKER NETWORKS (Isolated)</div>
+
+            <div class="networks-grid">
+                <div class="network-badge public-net">
+                    <span class="network-icon">🌐</span>
+                    <div>
+                        <div class="network-name">public_net</div>
+                        <div class="network-members">web, matomo, matomo-db</div>
+                    </div>
+                </div>
+
+                <div class="network-badge private-net">
+                    <span class="network-icon">🔒</span>
+                    <div>
+                        <div class="network-name">private_net</div>
+                        <div class="network-members">nextcloud, nc-db, redis</div>
+                    </div>
+                    <div class="network-isolation" title="Internal Only">🚫</div>
+                </div>
+
+                <div class="network-badge mail-net">
+                    <span class="network-icon">📧</span>
+                    <div>
+                        <div class="network-name">mail_net</div>
+                        <div class="network-members">mailserver, mail-db</div>
+                    </div>
+                    <div class="network-isolation" title="Isolated">🚫</div>
+                </div>
+
+                <div class="network-badge db-net">
+                    <span class="network-icon">🛢️</span>
+                    <div>
+                        <div class="network-name">db_bridge</div>
+                        <div class="network-members">backup-agent only</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-comment" style="margin-top: 15px;">
+                <strong>⚠️ NETWORK ISOLATION:</strong> Containers in <code>private_net</code> cannot reach <code>public_net</code> and vice versa.
+                A compromised Matomo container <strong>CANNOT</strong> access NextCloud or Mail data.
+            </div>
+        </div>
+
+        <!-- ============================================
+             HOST STORAGE LAYER (Physical Disks)
+             ============================================ -->
+        <div class="storage-wrapper">
+            <div class="storage-label">💾 HOST STORAGE LAYER (Physical Disks)</div>
+
+            <div class="storage-partitions">
+                <div class="partition-box system">
+                    <div class="partition-icon">⚙️</div>
+                    <div class="partition-name">/ <span style="color:#888;font-size:10px">(47GB)</span></div>
+                    <div class="partition-desc">Boot Volume - System & Configs</div>
+                    <div class="partition-security">
+                        <span class="security-tag restricted">root only</span>
+                    </div>
+                </div>
+
+                <div class="partition-box public">
+                    <div class="partition-icon">📊</div>
+                    <div class="partition-name">/mnt/public <span style="color:#888;font-size:10px">(50GB)</span></div>
+                    <div class="partition-desc">Block Vol 1 - Matomo DB + Logs</div>
+                    <div class="partition-security">
+                        <span class="security-tag readonly">quota limited</span>
+                    </div>
+                </div>
+
+                <div class="partition-box private">
+                    <div class="partition-icon">🔐</div>
+                    <div class="partition-name">/mnt/private <span style="color:#888;font-size:10px">(50GB)</span></div>
+                    <div class="partition-desc">Block Vol 2 - NextCloud Files + DB</div>
+                    <div class="partition-security">
+                        <span class="security-tag encrypted">LUKS encrypted</span>
+                    </div>
+                </div>
+
+                <div class="partition-box mail">
+                    <div class="partition-icon">📧</div>
+                    <div class="partition-name">/mnt/mail <span style="color:#888;font-size:10px">(50GB)</span></div>
+                    <div class="partition-desc">Block Vol 3 - Mailboxes + Certs</div>
+                    <div class="partition-security">
+                        <span class="security-tag encrypted">LUKS encrypted</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================
+             NETWORK + VOLUME ISOLATION (Integrated)
+             ============================================ -->
+        <div class="isolation-integrated">
+            <div class="isolation-bar">
+                <span>🔒 DOCKER NETWORK + VOLUME ISOLATION</span>
+                <button class="info-btn" onclick="openModal('isolation')">i</button>
+            </div>
+
+            <!-- SVG Isolation Diagram - Integrated -->
+            <div class="isolation-svg-container">
+                <svg class="isolation-svg" viewBox="0 0 900 420" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <!-- Gradients -->
+                        <linearGradient id="publicGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2ecc71;stop-opacity:0.3"/>
+                            <stop offset="100%" style="stop-color:#2ecc71;stop-opacity:0.05"/>
+                        </linearGradient>
+                        <linearGradient id="privateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3498db;stop-opacity:0.3"/>
+                            <stop offset="100%" style="stop-color:#3498db;stop-opacity:0.05"/>
+                        </linearGradient>
+                        <linearGradient id="mailGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#9b59b6;stop-opacity:0.3"/>
+                            <stop offset="100%" style="stop-color:#9b59b6;stop-opacity:0.05"/>
+                        </linearGradient>
+
+                        <!-- Glow filters -->
+                        <filter id="glow-public">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="glow-private">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+                        <filter id="glow-mail">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                        </filter>
+
+                        <!-- Arrow marker -->
+                        <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#2ecc71"/>
+                        </marker>
+                        <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#3498db"/>
+                        </marker>
+                        <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L9,3 z" fill="#9b59b6"/>
+                        </marker>
+                    </defs>
+
+                    <!-- ========== PUBLIC ZONE ========== -->
+                    <g class="zone-group public-zone-svg">
+                        <!-- Zone background -->
+                        <rect x="30" y="20" width="250" height="300" rx="15" fill="url(#publicGrad)" stroke="#2ecc71" stroke-width="2" filter="url(#glow-public)"/>
+
+                        <!-- Zone header -->
+                        <rect x="30" y="20" width="250" height="40" rx="15" fill="#2ecc71" fill-opacity="0.2"/>
+                        <text x="155" y="47" text-anchor="middle" fill="#2ecc71" font-size="14" font-weight="bold">🌐 PUBLIC NETWORK</text>
+
+                        <!-- Network name -->
+                        <text x="155" y="70" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">public_net (172.20.0.0/24)</text>
+
+                        <!-- Containers -->
+                        <rect x="55" y="85" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#2ecc71" stroke-width="1"/>
+                        <text x="165" y="107" text-anchor="middle" fill="#fff" font-size="11">📊 Matomo (analytics)</text>
+
+                        <rect x="55" y="130" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#2ecc71" stroke-width="1"/>
+                        <text x="165" y="152" text-anchor="middle" fill="#fff" font-size="11">🌍 Web Server (static)</text>
+
+                        <rect x="55" y="175" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#f1c40f" stroke-width="1"/>
+                        <text x="165" y="197" text-anchor="middle" fill="#fff" font-size="11">🛢️ MariaDB (SQL)</text>
+
+                        <!-- Volume connection -->
+                        <line x1="155" y1="220" x2="155" y2="270" stroke="#2ecc71" stroke-width="3" stroke-dasharray="5,3">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1s" repeatCount="indefinite"/>
+                        </line>
+                        <text x="175" y="245" fill="#2ecc71" font-size="9" font-weight="bold">MOUNT</text>
+
+                        <!-- Volume -->
+                        <rect x="80" y="275" width="150" height="35" rx="6" fill="#0a0a0f" stroke="#2ecc71" stroke-width="2" stroke-dasharray="4,2"/>
+                        <text x="155" y="297" text-anchor="middle" fill="#2ecc71" font-size="11" font-family="monospace">💾 /mnt/public</text>
+                    </g>
+
+                    <!-- ========== PRIVATE ZONE ========== -->
+                    <g class="zone-group private-zone-svg">
+                        <!-- Zone background -->
+                        <rect x="325" y="20" width="250" height="300" rx="15" fill="url(#privateGrad)" stroke="#3498db" stroke-width="2" filter="url(#glow-private)"/>
+
+                        <!-- Zone header -->
+                        <rect x="325" y="20" width="250" height="40" rx="15" fill="#3498db" fill-opacity="0.2"/>
+                        <text x="450" y="47" text-anchor="middle" fill="#3498db" font-size="14" font-weight="bold">🔒 PRIVATE NETWORK</text>
+
+                        <!-- Network name -->
+                        <text x="450" y="70" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">private_net (172.21.0.0/24) internal</text>
+
+                        <!-- Containers -->
+                        <rect x="350" y="85" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#3498db" stroke-width="1"/>
+                        <text x="460" y="107" text-anchor="middle" fill="#fff" font-size="11">☁️ NextCloud (files)</text>
+
+                        <rect x="350" y="130" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#f1c40f" stroke-width="1"/>
+                        <text x="460" y="152" text-anchor="middle" fill="#fff" font-size="11">🐘 PostgreSQL (SQL)</text>
+
+                        <rect x="350" y="175" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#1abc9c" stroke-width="1"/>
+                        <text x="460" y="197" text-anchor="middle" fill="#fff" font-size="11">⚡ Redis (NoSQL cache)</text>
+
+                        <!-- Volume connection -->
+                        <line x1="450" y1="220" x2="450" y2="270" stroke="#3498db" stroke-width="3" stroke-dasharray="5,3">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1s" repeatCount="indefinite"/>
+                        </line>
+                        <text x="470" y="245" fill="#3498db" font-size="9" font-weight="bold">MOUNT</text>
+
+                        <!-- Volume -->
+                        <rect x="375" y="275" width="150" height="35" rx="6" fill="#0a0a0f" stroke="#27ae60" stroke-width="2"/>
+                        <text x="450" y="293" text-anchor="middle" fill="#27ae60" font-size="11" font-family="monospace">🔐 /mnt/private</text>
+                        <text x="450" y="305" text-anchor="middle" fill="#27ae60" font-size="8">LUKS ENCRYPTED</text>
+                    </g>
+
+                    <!-- ========== MAIL ZONE ========== -->
+                    <g class="zone-group mail-zone-svg">
+                        <!-- Zone background -->
+                        <rect x="620" y="20" width="250" height="300" rx="15" fill="url(#mailGrad)" stroke="#9b59b6" stroke-width="2" filter="url(#glow-mail)"/>
+
+                        <!-- Zone header -->
+                        <rect x="620" y="20" width="250" height="40" rx="15" fill="#9b59b6" fill-opacity="0.2"/>
+                        <text x="745" y="47" text-anchor="middle" fill="#9b59b6" font-size="14" font-weight="bold">📧 MAIL NETWORK</text>
+
+                        <!-- Network name -->
+                        <text x="745" y="70" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">mail_net (172.22.0.0/24) isolated</text>
+
+                        <!-- Containers -->
+                        <rect x="645" y="85" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#9b59b6" stroke-width="1"/>
+                        <text x="755" y="107" text-anchor="middle" fill="#fff" font-size="11">📮 Postfix (SMTP)</text>
+
+                        <rect x="645" y="130" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#9b59b6" stroke-width="1"/>
+                        <text x="755" y="152" text-anchor="middle" fill="#fff" font-size="11">📥 Dovecot (IMAP)</text>
+
+                        <rect x="645" y="175" width="200" height="35" rx="6" fill="#1a1a2e" stroke="#1abc9c" stroke-width="1"/>
+                        <text x="755" y="197" text-anchor="middle" fill="#fff" font-size="11">📁 Maildir (storage)</text>
+
+                        <!-- Volume connection -->
+                        <line x1="745" y1="220" x2="745" y2="270" stroke="#9b59b6" stroke-width="3" stroke-dasharray="5,3">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="1s" repeatCount="indefinite"/>
+                        </line>
+                        <text x="765" y="245" fill="#9b59b6" font-size="9" font-weight="bold">MOUNT</text>
+
+                        <!-- Volume -->
+                        <rect x="670" y="275" width="150" height="35" rx="6" fill="#0a0a0f" stroke="#27ae60" stroke-width="2"/>
+                        <text x="745" y="293" text-anchor="middle" fill="#27ae60" font-size="11" font-family="monospace">🔐 /mnt/mail</text>
+                        <text x="745" y="305" text-anchor="middle" fill="#27ae60" font-size="8">LUKS ENCRYPTED</text>
+                    </g>
+
+                    <!-- ========== BLOCKED CONNECTIONS ========== -->
+                    <!-- Public trying to access Private -->
+                    <g class="blocked-connection">
+                        <path d="M 280 150 Q 302 150 302 150" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,4" fill="none" opacity="0.6">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="0.5s" repeatCount="indefinite"/>
+                        </path>
+                        <circle cx="302" cy="150" r="12" fill="#e74c3c">
+                            <animate attributeName="r" values="12;14;12" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="302" y="154" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✕</text>
+                    </g>
+
+                    <!-- Private trying to access Public -->
+                    <g class="blocked-connection">
+                        <path d="M 325 180 Q 302 180 302 180" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,4" fill="none" opacity="0.6">
+                            <animate attributeName="stroke-dashoffset" from="0" to="16" dur="0.5s" repeatCount="indefinite"/>
+                        </path>
+                        <circle cx="302" cy="180" r="12" fill="#e74c3c">
+                            <animate attributeName="r" values="12;14;12" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="302" y="184" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✕</text>
+                    </g>
+
+                    <!-- Private trying to access Mail -->
+                    <g class="blocked-connection">
+                        <path d="M 575 150 Q 597 150 597 150" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,4" fill="none" opacity="0.6">
+                            <animate attributeName="stroke-dashoffset" from="0" to="-16" dur="0.5s" repeatCount="indefinite"/>
+                        </path>
+                        <circle cx="597" cy="150" r="12" fill="#e74c3c">
+                            <animate attributeName="r" values="12;14;12" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="597" y="154" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✕</text>
+                    </g>
+
+                    <!-- Mail trying to access Private -->
+                    <g class="blocked-connection">
+                        <path d="M 620 180 Q 597 180 597 180" stroke="#e74c3c" stroke-width="2" stroke-dasharray="4,4" fill="none" opacity="0.6">
+                            <animate attributeName="stroke-dashoffset" from="0" to="16" dur="0.5s" repeatCount="indefinite"/>
+                        </path>
+                        <circle cx="597" cy="180" r="12" fill="#e74c3c">
+                            <animate attributeName="r" values="12;14;12" dur="1s" repeatCount="indefinite"/>
+                        </circle>
+                        <text x="597" y="184" text-anchor="middle" fill="white" font-size="12" font-weight="bold">✕</text>
+                    </g>
+
+                    <!-- ========== ISOLATION LABELS ========== -->
+                    <text x="302" y="130" text-anchor="middle" fill="#e74c3c" font-size="9" font-weight="bold">NO ROUTE</text>
+                    <text x="597" y="130" text-anchor="middle" fill="#e74c3c" font-size="9" font-weight="bold">NO ROUTE</text>
+
+                    <!-- ========== CLICKABLE INFO BUTTONS ========== -->
+                    <!-- Networks info -->
+                    <g class="svg-info-btn" onclick="openModal('networks')" style="cursor:pointer">
+                        <circle cx="302" cy="200" r="10" fill="#3498db"/>
+                        <text x="302" y="204" text-anchor="middle" fill="white" font-size="11" font-weight="bold">?</text>
+                    </g>
+                    <g class="svg-info-btn" onclick="openModal('networks')" style="cursor:pointer">
+                        <circle cx="597" cy="200" r="10" fill="#3498db"/>
+                        <text x="597" y="204" text-anchor="middle" fill="white" font-size="11" font-weight="bold">?</text>
+                    </g>
+
+                    <!-- Attack scenario button -->
+                    <g class="svg-info-btn" onclick="openModal('attack')" style="cursor:pointer">
+                        <rect x="350" y="335" width="200" height="30" rx="6" fill="#e74c3c"/>
+                        <text x="450" y="355" text-anchor="middle" fill="white" font-size="11" font-weight="bold">💀 View Attack Scenario</text>
+                    </g>
+
+                    <!-- How it works button -->
+                    <g class="svg-info-btn" onclick="openModal('howitworks')" style="cursor:pointer">
+                        <rect x="350" y="375" width="200" height="30" rx="6" fill="#3498db"/>
+                        <text x="450" y="395" text-anchor="middle" fill="white" font-size="11" font-weight="bold">🔧 How Isolation Works</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+    </div><!-- End VPS Box -->
+
+    <!-- ============================================
+         LEGEND
+         ============================================ -->
+    <div class="legend">
+        <div class="legend-title">📋 LEGEND</div>
+        <div class="legend-grid">
+            <div class="legend-item">
+                <div class="legend-color public"></div>
+                <span>Public Zone (Internet Accessible)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color private"></div>
+                <span>Private Zone (Auth Required)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color mail"></div>
+                <span>Mail Zone (Email Services)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color ssh"></div>
+                <span>SSH (Admin Access Only)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color nginx"></div>
+                <span>NGINX (Reverse Proxy)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color firewall"></div>
+                <span>Firewall (UFW/iptables)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color sql"></div>
+                <span>SQL Database (MariaDB/PostgreSQL)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color nosql"></div>
+                <span>NoSQL/Cache (Redis/Files)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================
+         FOOTER ACTIONS
+         ============================================ -->
+    <div class="footer-actions">
+        <button class="action-btn primary" onclick="openModal('checklist')">
+            ✅ Implementation Checklist
+        </button>
+        <button class="action-btn secondary" onclick="openModal('security')">
+            🔒 Security Best Practices
+        </button>
+        <button class="action-btn secondary" onclick="openModal('databases')">
+            🛢️ Database Strategy
+        </button>
+    </div>
+
+</div><!-- End Main Container -->
+
+<!-- ============================================
+     MODAL
+     ============================================ -->
+<div id="modal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title" id="modal-title">Title</div>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body" id="modal-body">Content</div>
+    </div>
+</div>
+
+<script>
+    // Modal Content Database
+    const modalContent = {
+        isolation: {
+            title: '🔒 Docker Network + Volume Isolation',
+            body: `
+                <h4>The Core Security Concept</h4>
+                <p>Docker creates <strong>completely isolated environments</strong> called networks. Containers on different networks cannot communicate with each other - there is literally no network route between them.</p>
+
+                <h4>How Volume Isolation Works</h4>
+                <p>Each container can <strong>ONLY</strong> access volumes that are explicitly mounted to it in the docker-compose.yml file.</p>
+
+                <div class="warning-box">
+                    <strong>Key Point:</strong> A container in <code>public_net</code> has NO filesystem path to <code>/mnt/private</code>.
+                    The volume simply doesn't exist from that container's perspective!
+                </div>
+
+                <h4>Technical Implementation</h4>
+                <pre style="background:#111;padding:10px;border-radius:4px;overflow-x:auto;font-size:11px;"><code># docker-compose.yml
+
+networks:
+  public_net:
+    driver: bridge
+  private_net:
+    driver: bridge
+    internal: true  # No external access!
+
+services:
+  matomo:
+    networks: [public_net]  # ONLY public_net
+    volumes:
+      - /mnt/public:/data   # ONLY /mnt/public
+
+  nextcloud:
+    networks: [private_net]  # ONLY private_net
+    volumes:
+      - /mnt/private:/data   # ONLY /mnt/private</code></pre>
+
+                <h4>Why This Matters</h4>
+                <ul>
+                    <li><strong>Network Isolation:</strong> Matomo cannot ping NextCloud (no route)</li>
+                    <li><strong>Volume Isolation:</strong> Matomo cannot read /mnt/private (not mounted)</li>
+                    <li><strong>Blast Radius:</strong> Hacked Matomo = only analytics data at risk</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>💡 Verification:</strong><br>
+                    <code>docker exec matomo ping nextcloud</code> → Network unreachable<br>
+                    <code>docker exec matomo ls /mnt/private</code> → No such file or directory
+                </div>
+            `
+        },
+        ssh: {
+            title: '🔐 SSH Access (Port 22)',
+            body: `
+                <h4>Direct Host Access</h4>
+                <p>SSH provides direct access to the Ubuntu host OS, bypassing all containerized services.</p>
+
+                <h4>Security Configuration</h4>
+                <ul>
+                    <li><strong>Key-Only Authentication</strong> - Password login disabled</li>
+                    <li><strong>Root Login Disabled</strong> - Use sudo from unprivileged user</li>
+                    <li><strong>Fail2Ban</strong> - Auto-blocks IPs after failed attempts</li>
+                    <li><strong>Port Knocking</strong> - Optional additional layer</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ WARNING:</strong> SSH is the "master key". If compromised, attacker has full server access.
+                    Protect your private key and use strong passphrases.
+                </div>
+
+                <h4>Commands</h4>
+                <ul>
+                    <li><code>ssh -i ~/.ssh/key ubuntu@130.110.251.193</code></li>
+                    <li><code>sshd_config: PasswordAuthentication no</code></li>
+                    <li><code>sshd_config: PermitRootLogin no</code></li>
+                </ul>
+            `
+        },
+        http: {
+            title: '🌐 HTTP Redirect (Port 80)',
+            body: `
+                <h4>Purpose</h4>
+                <p>Port 80 exists solely to redirect all traffic to HTTPS (443).</p>
+
+                <h4>NGINX Configuration</h4>
+                <pre style="background:#111;padding:10px;border-radius:4px;overflow-x:auto;"><code>server {
+    listen 80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}</code></pre>
+
+                <div class="tip-box">
+                    <strong>💡 TIP:</strong> This ensures no unencrypted traffic is ever processed.
+                    HSTS headers further enforce HTTPS-only browsing.
+                </div>
+            `
+        },
+        https: {
+            title: '🔒 HTTPS (Port 443)',
+            body: `
+                <h4>SSL/TLS Termination</h4>
+                <p>All encrypted web traffic terminates at the host NGINX. Internal traffic to containers is unencrypted (localhost only).</p>
+
+                <h4>Certificate Management</h4>
+                <ul>
+                    <li><strong>Provider:</strong> Let's Encrypt (via Certbot)</li>
+                    <li><strong>Auto-renewal:</strong> Cron job every 12 hours</li>
+                    <li><strong>Protocol:</strong> TLS 1.2+ only (no SSLv3, TLS 1.0/1.1)</li>
+                </ul>
+
+                <h4>Security Headers</h4>
+                <ul>
+                    <li><code>Strict-Transport-Security: max-age=31536000</code></li>
+                    <li><code>X-Content-Type-Options: nosniff</code></li>
+                    <li><code>X-Frame-Options: SAMEORIGIN</code></li>
+                </ul>
+            `
+        },
+        mail: {
+            title: '📧 Mail Ports (25/587/993)',
+            body: `
+                <h4>Port Functions</h4>
+                <ul>
+                    <li><strong>25 (SMTP):</strong> Server-to-server mail delivery</li>
+                    <li><strong>587 (Submission):</strong> Client → Server (authenticated)</li>
+                    <li><strong>993 (IMAPS):</strong> Client mail retrieval (encrypted)</li>
+                </ul>
+
+                <h4>Security Measures</h4>
+                <ul>
+                    <li><strong>DKIM:</strong> Email signing for authenticity</li>
+                    <li><strong>SPF:</strong> Authorized sender verification</li>
+                    <li><strong>DMARC:</strong> Policy enforcement</li>
+                    <li><strong>Fail2Ban:</strong> Blocks brute-force attempts</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ NOTE:</strong> Port 25 must be open for receiving mail but is often blocked by cloud providers.
+                    Check Oracle Cloud's outbound SMTP policy.
+                </div>
+            `
+        },
+        firewall: {
+            title: '🛡️ UFW Firewall Configuration',
+            body: `
+                <h4>Default Policy</h4>
+                <ul>
+                    <li><strong>Incoming:</strong> DENY (whitelist approach)</li>
+                    <li><strong>Outgoing:</strong> ALLOW (containers need internet)</li>
+                    <li><strong>Routed:</strong> DENY</li>
+                </ul>
+
+                <h4>Active Rules</h4>
+                <pre style="background:#111;padding:10px;border-radius:4px;overflow-x:auto;"><code>ufw allow 22/tcp    # SSH
+ufw allow 80/tcp    # HTTP → HTTPS redirect
+ufw allow 443/tcp   # HTTPS
+ufw allow 25/tcp    # SMTP
+ufw allow 587/tcp   # SMTP Submission
+ufw allow 993/tcp   # IMAPS</code></pre>
+
+                <div class="warning-box">
+                    <strong>⚠️ DOCKER BYPASS:</strong> Docker modifies iptables directly!
+                    Always bind containers to <code>127.0.0.1:port</code> to prevent UFW bypass.
+                </div>
+
+                <h4>Verification</h4>
+                <ul>
+                    <li><code>sudo ufw status verbose</code></li>
+                    <li><code>sudo iptables -L -n</code></li>
+                    <li>External port scan: <code>nmap -p- server_ip</code></li>
+                </ul>
+            `
+        },
+        nginx: {
+            title: '⚙️ NGINX Reverse Proxy',
+            body: `
+                <h4>Role in Architecture</h4>
+                <p>NGINX is the <strong>only</strong> service that talks to the internet (besides SSH).
+                All web traffic is proxied through it to internal containers.</p>
+
+                <h4>Routing Logic</h4>
+                <ul>
+                    <li><code>diegonmarcos.com</code> → Static site container (:8081)</li>
+                    <li><code>analytics.diegonmarcos.com</code> → Matomo (:8080)</li>
+                    <li><code>cloud.diegonmarcos.com</code> → NextCloud (:8082)</li>
+                </ul>
+
+                <h4>Security Benefits</h4>
+                <ul>
+                    <li>SSL termination at edge</li>
+                    <li>Request filtering (blocks malformed HTTP)</li>
+                    <li>Rate limiting per endpoint</li>
+                    <li>Logging of all requests</li>
+                </ul>
+
+                <h4>Internal Binding</h4>
+                <p>Containers bind to localhost only:</p>
+                <pre style="background:#111;padding:10px;border-radius:4px;"><code>ports:
+  - "127.0.0.1:8080:80"  # Not 0.0.0.0!</code></pre>
+            `
+        },
+        server: {
+            title: '🖥️ VPS Server Overview',
+            body: `
+                <h4>Specifications</h4>
+                <ul>
+                    <li><strong>Provider:</strong> Oracle Cloud (Always Free)</li>
+                    <li><strong>Instance:</strong> ARM64 Ampere A1</li>
+                    <li><strong>RAM:</strong> 24 GB (free tier)</li>
+                    <li><strong>CPU:</strong> 4 OCPUs</li>
+                    <li><strong>Storage:</strong> 200 GB boot + block volumes</li>
+                    <li><strong>OS:</strong> Ubuntu 24.04 LTS</li>
+                </ul>
+
+                <h4>Software Stack</h4>
+                <ul>
+                    <li>Docker + Docker Compose</li>
+                    <li>NGINX (host-level reverse proxy)</li>
+                    <li>UFW firewall</li>
+                    <li>Fail2Ban intrusion prevention</li>
+                    <li>Certbot for SSL certificates</li>
+                </ul>
+
+                <h4>Isolation Layers</h4>
+                <ol>
+                    <li>Network: UFW firewall</li>
+                    <li>Application: Docker containers</li>
+                    <li>Data: Separate volumes per service</li>
+                    <li>Encryption: LUKS for sensitive data</li>
+                </ol>
+            `
+        },
+        databases: {
+            title: '🛢️ Database Strategy',
+            body: `
+                <h4>SQL vs NoSQL Decision</h4>
+
+                <h4>SQL Databases (Relational)</h4>
+                <ul>
+                    <li><strong>MariaDB (Matomo):</strong> Analytics data with complex queries</li>
+                    <li><strong>PostgreSQL (NextCloud):</strong> User data, file metadata</li>
+                    <li><strong>SQLite (Mail):</strong> Lightweight user/alias storage</li>
+                </ul>
+
+                <h4>NoSQL / Key-Value</h4>
+                <ul>
+                    <li><strong>Redis:</strong> Session cache, search index</li>
+                    <li><strong>Maildir:</strong> Email storage (file-based)</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ ISOLATION RULE:</strong> Each service has its OWN database instance.
+                    Never share a database between public and private services!
+                </div>
+
+                <h4>Backup Strategy</h4>
+                <ul>
+                    <li>SQL: Daily mysqldump / pg_dump to encrypted storage</li>
+                    <li>Files: rsync to separate location</li>
+                    <li>Retention: 7 daily, 4 weekly, 12 monthly</li>
+                </ul>
+            `
+        },
+        security: {
+            title: '🔒 Security Best Practices',
+            body: `
+                <h4>Blast Radius Containment</h4>
+                <p>Assume any public service can be compromised. Design to limit damage.</p>
+
+                <h4>Network Isolation</h4>
+                <ul>
+                    <li>Separate Docker networks per zone</li>
+                    <li>No cross-network communication</li>
+                    <li>Internal services use <code>internal: true</code></li>
+                </ul>
+
+                <h4>Data Isolation</h4>
+                <ul>
+                    <li>Separate volume mounts per service</li>
+                    <li>Different partitions with quotas</li>
+                    <li>LUKS encryption for sensitive data</li>
+                </ul>
+
+                <h4>Access Control</h4>
+                <ul>
+                    <li>SSH key-only authentication</li>
+                    <li>Fail2Ban on all exposed ports</li>
+                    <li>Regular security updates</li>
+                    <li>Minimal installed packages</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>💡 PRINCIPLE:</strong> If Matomo is hacked, the attacker should NOT be able to:
+                    <ul>
+                        <li>Access NextCloud files</li>
+                        <li>Read email data</li>
+                        <li>SSH into the host</li>
+                        <li>Pivot to other containers</li>
+                    </ul>
+                </div>
+            `
+        },
+        checklist: {
+            title: '✅ Implementation Checklist',
+            body: `
+                <h4>Phase 1: Base Infrastructure</h4>
+                <ul>
+                    <li>☑️ Provision Oracle Cloud VPS</li>
+                    <li>☑️ Configure SSH key access</li>
+                    <li>☑️ Setup UFW firewall</li>
+                    <li>☑️ Install Docker & Compose</li>
+                    <li>☑️ Install host NGINX</li>
+                </ul>
+
+                <h4>Phase 2: Public Services</h4>
+                <ul>
+                    <li>☑️ Deploy Matomo container</li>
+                    <li>☑️ Configure MariaDB for Matomo</li>
+                    <li>☑️ Setup analytics.diegonmarcos.com</li>
+                    <li>⬜ Deploy static web server</li>
+                    <li>⬜ Configure diegonmarcos.com</li>
+                </ul>
+
+                <h4>Phase 3: Private Services</h4>
+                <ul>
+                    <li>⬜ Create encrypted /mnt/private partition</li>
+                    <li>⬜ Deploy NextCloud container</li>
+                    <li>⬜ Configure PostgreSQL</li>
+                    <li>⬜ Setup cloud.diegonmarcos.com</li>
+                </ul>
+
+                <h4>Phase 4: Mail Services</h4>
+                <ul>
+                    <li>⬜ Deploy docker-mailserver</li>
+                    <li>⬜ Configure DNS (MX, SPF, DKIM)</li>
+                    <li>⬜ Setup mail.diegonmarcos.com</li>
+                    <li>⬜ Test email delivery</li>
+                </ul>
+
+                <h4>Phase 5: Hardening</h4>
+                <ul>
+                    <li>⬜ Configure Fail2Ban</li>
+                    <li>⬜ Setup automated backups</li>
+                    <li>⬜ Enable monitoring/alerting</li>
+                    <li>⬜ Document recovery procedures</li>
+                </ul>
+            `
+        },
+        networks: {
+            title: '🔗 Docker Network Isolation Explained',
+            body: `
+                <h4>How Docker Networks Create Isolation</h4>
+                <p>Docker networks create <strong>virtual network interfaces</strong> that are completely separate from each other.
+                Containers can only communicate with other containers on the SAME network.</p>
+
+                <h4>Network Types in Use</h4>
+                <ul>
+                    <li><strong style="color:#2ecc71">public_net</strong> - Bridge network for public-facing services (website, analytics)</li>
+                    <li><strong style="color:#3498db">private_net</strong> - Internal network with <code>internal: true</code> (no internet access)</li>
+                    <li><strong style="color:#9b59b6">mail_net</strong> - Isolated network for email services only</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ Key Point:</strong> There is NO network route between public_net and private_net.
+                    <code>docker exec matomo ping nextcloud</code> → "Network unreachable"
+                </div>
+
+                <h4>Technical Implementation</h4>
+                <pre style="background:#111;padding:10px;border-radius:4px;overflow-x:auto;font-size:11px;"><code># docker-compose.yml
+
+networks:
+  public_net:
+    driver: bridge
+  private_net:
+    driver: bridge
+    internal: true  # ← Blocks internet access!
+  mail_net:
+    driver: bridge</code></pre>
+
+                <div class="tip-box">
+                    <strong>💡 Verification Command:</strong><br>
+                    <code>docker network inspect public_net</code> - See which containers are connected
+                </div>
+            `
+        },
+        attack: {
+            title: '💀 Attack Scenario: Blast Radius Containment',
+            body: `
+                <h4>Scenario: Matomo Gets Compromised</h4>
+                <p>Let's say an attacker finds a vulnerability in Matomo (analytics) and gains shell access inside the container.</p>
+
+                <h4 style="color:#e74c3c">❌ What The Attacker CANNOT Do:</h4>
+                <ul>
+                    <li><strong>Access NextCloud files</strong> - Volume not mounted, path doesn't exist</li>
+                    <li><strong>Ping NextCloud container</strong> - No network route (different network)</li>
+                    <li><strong>Read email data</strong> - Mail container is on mail_net, unreachable</li>
+                    <li><strong>Access host filesystem</strong> - Container isolation prevents this</li>
+                    <li><strong>SSH to the host</strong> - No SSH keys inside container</li>
+                    <li><strong>Modify the website</strong> - Read-only volume mount</li>
+                </ul>
+
+                <h4 style="color:#27ae60">✅ What The Attacker CAN Access:</h4>
+                <ul>
+                    <li><strong>Matomo analytics data</strong> - But this is already public-ish data (page views, IPs)</li>
+                    <li><strong>Matomo database</strong> - Only analytics, no personal files</li>
+                </ul>
+
+                <div class="tip-box">
+                    <strong>💡 Result:</strong> The "blast radius" is contained to just the analytics container.
+                    Your private files, emails, and system remain safe.
+                </div>
+
+                <h4>Defense Layers That Protected You:</h4>
+                <ol>
+                    <li><strong>Network Isolation:</strong> Can't reach other containers</li>
+                    <li><strong>Volume Isolation:</strong> Can't access other data</li>
+                    <li><strong>Container Isolation:</strong> Can't escape to host</li>
+                    <li><strong>Read-Only Mounts:</strong> Can't persist malware</li>
+                </ol>
+            `
+        },
+        howitworks: {
+            title: '🔧 How Docker Isolation Actually Works',
+            body: `
+                <h4>1. Network Namespaces</h4>
+                <p>Each Docker network creates a separate <strong>network namespace</strong>. Containers in different namespaces
+                literally cannot see each other's network traffic - it's like they're on different physical networks.</p>
+
+                <h4>2. Volume Mount Restrictions</h4>
+                <p>Containers can ONLY access directories explicitly mounted in docker-compose.yml:</p>
+                <pre style="background:#111;padding:10px;border-radius:4px;font-size:11px;"><code>matomo:
+  volumes:
+    - /mnt/public/matomo:/var/www/html  # Can ONLY see this path
+
+nextcloud:
+  volumes:
+    - /mnt/private/nextcloud:/data  # Can ONLY see THIS path</code></pre>
+
+                <h4>3. Process Isolation (cgroups)</h4>
+                <p>Docker uses Linux cgroups to limit what each container can do:</p>
+                <ul>
+                    <li>CPU limits - prevent one container from starving others</li>
+                    <li>Memory limits - prevent container from crashing host</li>
+                    <li>I/O limits - prevent disk abuse</li>
+                </ul>
+
+                <h4>4. The Internal Flag</h4>
+                <pre style="background:#111;padding:10px;border-radius:4px;font-size:11px;"><code>private_net:
+  internal: true  # ← This is crucial!</code></pre>
+                <p>With <code>internal: true</code>, containers on private_net:</p>
+                <ul>
+                    <li>✅ Can talk to each other (NextCloud ↔ PostgreSQL)</li>
+                    <li>❌ Cannot access the internet at all</li>
+                    <li>❌ Cannot be reached from public_net containers</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>⚠️ Remember:</strong> This isolation is enforced at the Linux kernel level.
+                    It's not just a configuration - it's actual separation of resources.
+                </div>
+            `
+        }
+    };
+
+    // Modal Functions
+    function openModal(key) {
+        const modal = document.getElementById('modal');
+        const title = document.getElementById('modal-title');
+        const body = document.getElementById('modal-body');
+
+        if (modalContent[key]) {
+            title.textContent = modalContent[key].title;
+            body.innerHTML = modalContent[key].body;
+            modal.style.display = 'flex';
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+    }
+
+    // Keyboard close
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+</script>
+
+</body>
+</html>
