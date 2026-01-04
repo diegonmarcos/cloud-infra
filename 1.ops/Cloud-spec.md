@@ -1588,13 +1588,13 @@ private_crypt /dev/sdb1 /root/.luks-keyfile luks
 ```bash
 # === OCI (Oracle Cloud) - Use SSH key ===
 # Oracle Flex 1 - Main Services (Flask, Photos, Gitea)
-ssh -i ~/Documents/Git/LOCAL_KEYS/00_terminal/ssh/id_rsa ubuntu@84.235.234.87
+ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@84.235.234.87
 
 # Oracle Micro 1 - Mail Server (Mailu)
-ssh -i ~/Documents/Git/LOCAL_KEYS/00_terminal/ssh/id_rsa ubuntu@130.110.251.193
+ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@130.110.251.193
 
 # Oracle Micro 2 - Services
-ssh -i ~/Documents/Git/LOCAL_KEYS/00_terminal/ssh/id_rsa ubuntu@129.151.228.66
+ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@129.151.228.66
 
 # === GCP (Google Cloud) - Use gcloud CLI ===
 # GCP Micro 1 (arch-1) - NPM, Authelia, OAuth2 Proxy
