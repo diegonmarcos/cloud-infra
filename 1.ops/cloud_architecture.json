@@ -1,7 +1,7 @@
 {
   "$schema": "cloud-infrastructure-static",
   "version": "7.0.0",
-  "lastUpdated": "2025-12-29",
+  "lastUpdated": "2026-01-05",
   "owner": "Diego Nepomuceno Marcos",
   "description": "Static infrastructure configuration - source of truth for architecture and cloud_control exports",
 
@@ -14,6 +14,7 @@
       {"key": "partV_operations", "title": "Operations", "description": "SSH commands, docker commands, monitoring"},
       {"key": "partVI_reference", "title": "Reference & Costs", "description": "Costs, wake-on-demand, port mapping, docker images"},
       {"key": "partVII_changeManagement", "title": "IP Change Management", "description": "CRITICAL: What to update when VM IPs change"},
+      {"key": "partVIII_localHardware", "title": "Local Hardware & Boot", "description": "Surface multi-boot: Arch/Kinoite/NixOS with LUKS USB keyfile"},
       {"key": "cloudControlExports", "title": "Cloud Control Exports", "description": "Pre-designed structures for topology/cost/monitor exports"}
     ],
     "stats": {
@@ -603,6 +604,139 @@
       "7. Test connectivity: curl -sI https://<domain>",
       "8. DO NOT run iptables-restore - Docker manages iptables automatically"
     ]
+  },
+
+  "partVIII_localHardware": {
+    "title": "Local Hardware & Boot Configuration",
+    "_description": "Surface laptop multi-boot setup with LUKS encryption",
+
+    "device": {
+      "name": "Surface Laptop",
+      "storage": {
+        "device": "/dev/nvme0n1",
+        "size": "256 GB",
+        "partitions": {
+          "p1": {"type": "EFI", "size": "100 MB", "mount": "/boot/efi"},
+          "p2": {"type": "Windows Reserved", "size": "16 MB"},
+          "p3": {"type": "NTFS (Windows)", "size": "~100 GB"},
+          "p4": {"type": "LUKS2", "uuid": "3c75c6db-4d7c-4570-81f1-02d168781aac", "size": "~130 GB", "contains": "Btrfs pool"}
+        }
+      }
+    },
+
+    "encryption": {
+      "type": "LUKS2",
+      "device": "/dev/nvme0n1p4",
+      "uuid": "3c75c6db-4d7c-4570-81f1-02d168781aac",
+      "unlockMethods": {
+        "passphrase": {"enabled": true, "keySlot": 0},
+        "usbKeyfile": {
+          "enabled": true,
+          "usbUuid": "223C-F3F8",
+          "keyPath": "/.luks/surface.key",
+          "keySize": "4096 bytes",
+          "filesystem": "FAT32 (Ventoy EFI partition)"
+        }
+      },
+      "mappedDevice": "/dev/mapper/luks-3c75c6db-4d7c-4570-81f1-02d168781aac"
+    },
+
+    "btrfsPool": {
+      "uuid": "6818afcb-97f5-43be-9436-4b9c3db98c00",
+      "mountPoint": "/media/diego/pool",
+      "subvolumes": {
+        "@root": {"purpose": "Arch Linux host", "bootloader": "GRUB"},
+        "@root-kinoite": {"purpose": "Fedora Kinoite (OSTree)", "bootloader": "GRUB manual entry"},
+        "@root-nixos": {"purpose": "NixOS", "bootloader": "GRUB manual entry"},
+        "@home": {"purpose": "Shared /home"},
+        "@shared": {"purpose": "Shared data between distros"}
+      }
+    },
+
+    "bootConfiguration": {
+      "bootloader": "GRUB2",
+      "bootPartition": "/boot (on btrfs @root)",
+      "entries": {
+        "archLinux": {
+          "kernel": "/vmlinuz-linux-surface",
+          "initramfs": "/initramfs-linux-surface.img",
+          "managed": "grub-mkconfig auto-detected"
+        },
+        "kinoite": {
+          "kernel": "/kinoite/vmlinuz",
+          "initramfs": "/kinoite/initramfs.img",
+          "managed": "Manual via /etc/grub.d/40_custom",
+          "kernelParams": [
+            "root=UUID=6818afcb-97f5-43be-9436-4b9c3db98c00",
+            "rootflags=subvol=@root-kinoite",
+            "rd.luks.uuid=3c75c6db-4d7c-4570-81f1-02d168781aac",
+            "rd.luks.key=/usb-key/.luks/surface.key:UUID=223C-F3F8",
+            "ostree=/ostree/boot.1/default/<hash>/0"
+          ],
+          "specialNotes": [
+            "btrfs and dm-mod are kernel built-ins (CONFIG_*=y), not modules",
+            "cryptsetup binary manually added to initramfs",
+            "USB keyfile hook at /usr/lib/dracut/hooks/pre-mount/10-usb-keyfile.sh"
+          ]
+        },
+        "nixos": {
+          "kernel": "/nixos/vmlinuz",
+          "initramfs": "/nixos/initramfs.img",
+          "managed": "Manual via /etc/grub.d/40_custom"
+        }
+      }
+    },
+
+    "kinoiteOSTree": {
+      "deployPath": "/media/diego/pool/@root-kinoite/ostree/deploy/default/deploy/<hash>.0",
+      "currentDeployment": "54fd3748c8e7ae5e4ee6ff394ade975028b2fdec00fac1ad81fc9eb346f7ecea.0",
+      "bootRef": "986561b7d71bfe7bbd57525847ae01bcd50dd95b71e160acdd5b3ba5dc68ab57",
+      "osRelease": "Fedora Linux (Kinoite)",
+      "kernelVersion": "6.17.13-3.surface.fc41.x86_64",
+      "kernelConfig": {
+        "CONFIG_BTRFS_FS": "y (built-in)",
+        "CONFIG_BLK_DEV_DM": "y (built-in)",
+        "CONFIG_DM_CRYPT": "m (module)"
+      }
+    },
+
+    "initramfsPatching": {
+      "_description": "Kinoite initramfs requires manual patching for USB keyfile LUKS unlock",
+      "structure": {
+        "earlyOffset": "0-29829 blocks (512B each) = 15,272,448 bytes",
+        "mainArchive": "gzip compressed cpio after early_cpio",
+        "backupLocation": "/boot/kinoite/initramfs.img.bak"
+      },
+      "addedComponents": [
+        {"path": "/usr/sbin/cryptsetup", "source": "Kinoite deployment"},
+        {"path": "/usr/lib64/libcryptsetup.so.12*", "source": "Kinoite deployment"},
+        {"path": "/etc/crypttab", "content": "pool UUID=<luks-uuid> /usb-key/.luks/surface.key luks,timeout=5"},
+        {"path": "/usr/lib/dracut/hooks/pre-mount/10-usb-keyfile.sh", "content": "USB mount + keyfile detection"}
+      ],
+      "extractCommand": "dd if=initramfs.img bs=512 skip=29829 | gunzip | cpio -idm",
+      "repackCommand": "find . | cpio -o -H newc | gzip -9 > main.gz && cat early.cpio main.gz > initramfs.img"
+    },
+
+    "diagnostics": {
+      "script": "/boot/kinoite/boot-diag.sh",
+      "checksCount": 65,
+      "criticalChecks": [
+        "cryptsetup binary in initramfs",
+        "crypttab with LUKS UUID",
+        "USB keyfile hook present and executable",
+        "vfat/fat modules for USB mount",
+        "dm-crypt module",
+        "GRUB entry with correct kernel params",
+        "USB keyfile can unlock LUKS (test)"
+      ]
+    },
+
+    "troubleshooting": {
+      "usbNotFound": "Hook waits 30s, then falls back to passphrase prompt",
+      "initramfsCorrupt": "Restore from /boot/kinoite/initramfs.img.bak",
+      "grubMissing": "Boot Arch, run: sudo grub-mkconfig -o /boot/grub/grub.cfg",
+      "luksWontUnlock": "Verify keyfile: cryptsetup luksOpen --test-passphrase --key-file <key> <device>"
+    }
   },
 
   "cloudControlExports": {
