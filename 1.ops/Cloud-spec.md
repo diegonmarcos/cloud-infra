@@ -321,6 +321,9 @@ gcloud compute ssh arch-1 --zone us-central1-a
 ### 4.5 Productivity Services
 
 #### Mail Server (Mailu)
+
+> **Detailed Spec:** [`a_solutions/front-products/mail/0.spec/MAIL_SPECS.md`](../a_solutions/front-products/mail/0.spec/MAIL_SPECS.md)
+
 | Property | Value |
 |----------|-------|
 | **VM** | oci-f-micro_1 (130.110.251.193) |
