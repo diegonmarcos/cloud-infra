@@ -588,10 +588,14 @@
       "items": [
         "iptables NAT rules (DOCKER chain, DOCKER-BRIDGE, DOCKER-CT)",
         "Container IP addresses (assigned dynamically)",
-        "/etc/iptables/rules.v4 Docker sections",
         "Docker network bridge configurations"
       ],
-      "recovery": "If iptables are corrupted: sudo systemctl restart docker"
+      "recovery": "If iptables are corrupted: sudo systemctl restart docker",
+      "netfilterPersistent": {
+        "status": "DISABLED on all VMs (2026-01-06)",
+        "reason": "iptables-save captures incomplete Docker rules that break container networking on restore",
+        "neverDo": ["iptables-save > /etc/iptables/rules.v4", "systemctl enable netfilter-persistent"]
+      }
     },
 
     "ipChangeChecklist": [

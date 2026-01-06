@@ -335,28 +335,49 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Auth** | Authelia SSO (proxy auth via NPM) + PROXY_AUTH_HEADER |
 | **Ports** | 25 (SMTP relay), 465 (SMTPS client), 993 (IMAPS), 443 (HTTPS webmail) |
 | **Features** | IMAP, SMTP, Webmail (Roundcube), Antispam (Rspamd), CalDAV (via Radicale) |
-| **Email Routing** | Cloudflare Email Routing → Mailu:587 |
-| **Status** | On |
+| **Email Routing** | Cloudflare Email Worker → SMTP Proxy (BROKEN - see below) |
+| **Status** | INBOUND BROKEN |
 
 **Mail Flow Architecture:**
 
-Oracle Cloud blocks SMTP port 25 both inbound and outbound (anti-spam policy). The workaround uses relay services:
+Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (anti-spam policy).
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           INBOUND EMAIL                                  │
+│                    INBOUND EMAIL (CURRENTLY BROKEN)                      │
 │                                                                          │
 │   sender@gmail.com → me@diegonmarcos.com                                │
 │                                                                          │
-│   ┌──────────────┐      ┌──────────────────┐      ┌──────────────────┐  │
-│   │   Internet   │ ──▶  │   Cloudflare MX  │ ──▶  │   Mailu:587      │  │
-│   │   Port 25    │      │   (Email Worker) │      │   (Submission)   │  │
-│   └──────────────┘      │   route1/2/3.mx  │      │   130.110.251.193│  │
-│                         │   .cloudflare.net│      └──────────────────┘  │
-│                         └──────────────────┘                             │
+│   ┌──────────────┐    ┌──────────────────┐    ┌──────────────────────┐  │
+│   │   Internet   │ ▶  │   Cloudflare MX  │ ▶  │  Email Worker (JS)   │  │
+│   │   Port 25    │    │   route1/2/3.mx  │    │  email-forwarder     │  │
+│   └──────────────┘    │   .cloudflare.net│    └──────────┬───────────┘  │
+│                       └──────────────────┘               │              │
+│                                                          ▼              │
+│                       ┌──────────────────────────────────────────────┐  │
+│                       │  Worker tries: POST http://smtp:8080/        │  │
+│                       │  ├── SMTP Proxy (port 8080) ❌ BLOCKED       │  │
+│                       │  └── BACKUP_EMAIL ❌ NOT CONFIGURED          │  │
+│                       │                                              │  │
+│                       │  Result: "Primary delivery failed and no     │  │
+│                       │           backup configured"                 │  │
+│                       └──────────────────────────────────────────────┘  │
 │                                                                          │
-│   Cloudflare receives mail on port 25, forwards to Mailu on port 587    │
+│   Mailu (130.110.251.193) ← NEVER REACHED                               │
 └─────────────────────────────────────────────────────────────────────────┘
+
+**Cloudflare Worker Configuration (email-forwarder):**
+| Setting | Value | Issue |
+|---------|-------|-------|
+| SMTP_PROXY_URL | http://smtp.diegonmarcos.com:8080/ | Port 8080 blocked by Oracle |
+| SMTP_PROXY_KEY | stalwart-proxy-key-2025 | - |
+| BACKUP_EMAIL | (empty) | No fallback configured |
+
+**Worker/Proxy Mismatches:**
+| Component | Worker Sends | Proxy Expects |
+|-----------|--------------|---------------|
+| Header | X-API-Key | X-Proxy-Key |
+| Body | Plain text | JSON {from, to, raw} |
 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          OUTBOUND EMAIL                                  │
@@ -375,15 +396,25 @@ Oracle Cloud blocks SMTP port 25 both inbound and outbound (anti-spam policy). T
 
 **Port Usage:**
 
-| Direction | Port | Flow | Purpose |
-|-----------|------|------|---------|
-| **Inbound** | 25→587 | Internet → Cloudflare MX → Mailu | Receiving external mail |
-| **Outbound** | 25→relay | Mailu → Oracle Email Delivery → Internet | Sending external mail |
-| **IMAP** | 993 | Client ↔ Mailu (direct) | Reading mail (SSL) |
-| **SMTPS** | 465 | Client → Mailu → relay | Sending from mail client (SSL) |
-| **Webmail** | 443 | Browser → NPM → Authelia → Mailu | Web interface (SSO) |
+| Direction | Port | Flow | Status |
+|-----------|------|------|--------|
+| **Inbound** | 25→8080 | Internet → Cloudflare → Worker → SMTP Proxy | ❌ BLOCKED |
+| **Outbound** | 25→relay | Mailu → Oracle Email Delivery → Internet | ✅ Working |
+| **IMAP** | 993 | Client ↔ Mailu (direct) | ✅ Working |
+| **SMTPS** | 465 | Client → Mailu → relay | ✅ Working |
+| **Webmail** | 443 | Browser → NPM → Authelia → Mailu | ✅ Working |
 
-**Note:** Port 587 (STARTTLS) is blocked by Oracle Cloud. Use port 465 (SSL) for email clients.
+**Oracle Cloud Blocked Ports:**
+- Port 25 (inbound/outbound SMTP)
+- Port 587 (STARTTLS submission)
+- Port 8080 (HTTP - used by SMTP proxy)
+
+**Note:** Use port 465 (SMTPS) for email clients. Inbound email requires fix (see solutions below).
+
+**Fix Options for Inbound Email:**
+1. **Quick**: Set `BACKUP_EMAIL` in Cloudflare Worker to forward to Gmail
+2. **Native**: Use Cloudflare Email Routing's built-in forwarding (disable Worker)
+3. **Self-hosted**: Route SMTP proxy through GCP (ports not blocked there)
 
 **DNS Records:**
 
@@ -1355,13 +1386,26 @@ services:
 ```
 
 **Firewall + Docker Integration**:
-```bash
-# Block direct access to service port, allow only from NPM proxy
-sudo iptables -I INPUT 1 -p tcp --dport 8080 -s 35.226.147.64 -j ACCEPT
-sudo iptables -I INPUT 2 -p tcp --dport 8080 -j DROP
 
-# Persist rules
-sudo iptables-save > /etc/iptables/rules.v4
+> **CRITICAL: Docker Manages iptables - DO NOT use iptables-save/restore!**
+>
+> Docker dynamically creates iptables rules for container networking. Using `iptables-save`
+> or `netfilter-persistent` will capture incomplete rules that break container networking
+> after restore. The `netfilter-persistent` service has been **disabled** on all VMs.
+>
+> If you need custom INPUT rules (e.g., for WireGuard), add them via a script that runs
+> after Docker starts, or use cloud provider security lists (OCI/GCP firewalls).
+
+```bash
+# WRONG - DO NOT DO THIS:
+# sudo iptables-save > /etc/iptables/rules.v4  # Breaks Docker!
+
+# CORRECT - Use cloud provider firewalls:
+# OCI: Security Lists / Network Security Groups
+# GCP: VPC Firewall Rules
+
+# For temporary INPUT rules (lost on reboot):
+sudo iptables -I INPUT 1 -p tcp --dport 8080 -s 35.226.147.64 -j ACCEPT
 ```
 
 ### 7.13 Security Checklist
@@ -1375,7 +1419,7 @@ sudo iptables-save > /etc/iptables/rules.v4
 | SSH key-only authentication | ✓ | No passwords |
 | Let's Encrypt SSL on all domains | ✓ | Auto-renewal via NPM |
 | Database ports never exposed publicly | ✓ | Internal networks only |
-| Firewall rules persist after reboot | ✓ | iptables-persistent |
+| Docker manages iptables (no iptables-persistent) | ✓ | netfilter-persistent disabled |
 | Public DNS (Google/Cloudflare) on all VMs | ✓ | Prevents ISP DNS filtering/poisoning |
 
 **DNS Configuration (Required on all VMs):**
