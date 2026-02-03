@@ -20,7 +20,7 @@
 ## Network
 | Property | Value |
 |----------|-------|
-| **Public IP** | 84.235.234.87 |
+| **Public IP** | 144.24.196.72 |
 | **Private IP** | 10.0.0.x |
 | **Region** | eu-marseille-1 |
 | **Docker Network** | dev_network (172.24.0.0/24) |
@@ -33,7 +33,7 @@
 
 ## SSH Access
 ```bash
-ssh ubuntu@84.235.234.87
+ssh ubuntu@144.24.196.72
 ```
 
 ## Services Running
