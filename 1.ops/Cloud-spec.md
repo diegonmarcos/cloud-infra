@@ -74,7 +74,7 @@
 ### SSH Quick Commands
 ```bash
 # Oracle Paid Flex 1 (Photoprism, Calendar, Cloud API) - Wake-on-Demand
-ssh ubuntu@84.235.234.87
+ssh ubuntu@144.24.196.72
 
 # Oracle Free Micro 1 (Mailu Mail)
 ssh ubuntu@130.110.251.193
@@ -113,7 +113,7 @@ gcloud compute ssh arch-1 --zone us-central1-a
 |  |                                                                    |  |
 |  |  +-------------------------+                                       |  |
 |  |  |  oci-p-flex_1           |    (VM.Standard.E4.Flex)              |  |
-|  |  |  84.235.234.87          |    1 OCPU | 8GB RAM | 100GB           |  |
+|  |  |  144.24.196.72          |    1 OCPU | 8GB RAM | 100GB           |  |
 |  |  |  WireGuard: 10.0.0.2    |                                       |  |
 |  |  |                         |                                       |  |
 |  |  |  Services:              |    Status: WAKE-ON-DEMAND (Paid)      |  |
@@ -205,7 +205,7 @@ gcloud compute ssh arch-1 --zone us-central1-a
 |----------|-------|
 | **ID** | oci-p-flex_1 |
 | **Provider** | Oracle Cloud |
-| **IP** | 84.235.234.87 |
+| **IP** | 144.24.196.72 |
 | **Type** | VM.Standard.E4.Flex |
 | **Specs** | 1 OCPU (2 vCPU), 8GB RAM, 100GB |
 | **OS** | Ubuntu 22.04 Minimal |
@@ -713,7 +713,7 @@ services:
 | **sauron** | YARA malware scanner | Rust binary on Debian slim | CPU: 25%, RAM: 256 MB |
 | **collector** | Log aggregator + ntfy forwarder | Debian slim + curl | CPU: 5%, RAM: 32 MB |
 
-**Deployed On**: `oci-p-flex_1` (84.235.234.87)
+**Deployed On**: `oci-p-flex_1` (144.24.196.72)
 
 **Architecture**:
 ```
@@ -941,7 +941,7 @@ All VMs are connected via WireGuard mesh network with GCP as the central hub. Th
 ┌─────────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
 │  Oracle Dev         │      │  Oracle Web         │      │  Oracle Services    │
 │  10.0.0.2           │      │  10.0.0.3           │      │  10.0.0.4           │
-│  84.235.234.87      │      │  130.110.251.193    │      │  129.151.228.66     │
+│  144.24.196.72      │      │  130.110.251.193    │      │  129.151.228.66     │
 │  Photoprism,Cal     │      │  Mailu              │      │  Matomo             │
 └─────────────────────┘      └─────────────────────┘      └─────────────────────┘
 
@@ -956,7 +956,7 @@ All VMs are connected via WireGuard mesh network with GCP as the central hub. Th
 | Node | Public IP | WireGuard IP | Role |
 |------|-----------|--------------|------|
 | GCP Hub | 35.226.147.64 | 10.0.0.1 | Central Hub |
-| Oracle Dev | 84.235.234.87 | 10.0.0.2 | Peer |
+| Oracle Dev | 144.24.196.72 | 10.0.0.2 | Peer |
 | Oracle Web | 130.110.251.193 | 10.0.0.3 | Peer |
 | Oracle Services | 129.151.228.66 | 10.0.0.4 | Peer |
 | Local Machine | dynamic | 10.0.0.5 | Optional Peer |
@@ -964,7 +964,7 @@ All VMs are connected via WireGuard mesh network with GCP as the central hub. Th
 **Security Benefits**:
 ```
 WITHOUT WireGuard (INSECURE):
-User → 84.235.234.87:2342 → Photoprism directly (BYPASSES 2FA!) ✗
+User → 144.24.196.72:2342 → Photoprism directly (BYPASSES 2FA!) ✗
 
 WITH WireGuard (SECURE):
 User → photos.diegonmarcos.com → GCP:443 → NPM → Authelia 2FA ✓
@@ -988,7 +988,7 @@ ListenPort = 51820
 # Oracle Dev
 PublicKey = <ORACLE_DEV_PUBKEY>
 AllowedIPs = 10.0.0.2/32
-Endpoint = 84.235.234.87:51820
+Endpoint = 144.24.196.72:51820
 PersistentKeepalive = 25
 
 [Peer]
@@ -1514,7 +1514,7 @@ async function wakeServer() {
 **Dormant VMs**:
 | VM | Services | Idle Timeout | Wake Time |
 |----|----------|--------------|-----------|
-| oci-p-flex_1 (84.235.234.87) | Photoprism, Gitea | 30 min | ~60-90s |
+| oci-p-flex_1 (144.24.196.72) | Photoprism, Gitea | 30 min | ~60-90s |
 
 **WireGuard Reconnection**:
 After wake, the WireGuard peer (10.0.0.2) takes ~30s to re-establish handshake with GCP (10.0.0.1). The API polls the WireGuard status before reporting the VM as fully ready.
@@ -1635,7 +1635,7 @@ private_crypt /dev/sdb1 /root/.luks-keyfile luks
 ```bash
 # === OCI (Oracle Cloud) - Use SSH key ===
 # Oracle Flex 1 - Main Services (Flask, Photos, Gitea)
-ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@84.235.234.87
+ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@144.24.196.72
 
 # Oracle Micro 1 - Mail Server (Mailu)
 ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@130.110.251.193
@@ -2276,7 +2276,7 @@ graph TD
                     MARIADB["MariaDB :3306"]
                 end
             end
-            subgraph DEV_VM["oci-p-flex_1 - 84.235.234.87 (Wake-on-Demand)"]
+            subgraph DEV_VM["oci-p-flex_1 - 144.24.196.72 (Wake-on-Demand)"]
                 subgraph DOCKER3["Docker Engine"]
                     PHOTOPRISM["Photoprism :2342"]
                     RADICALE["Radicale :5232"]

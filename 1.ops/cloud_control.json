@@ -29,7 +29,7 @@
       "_columns": ["Host", "VM ID", "IP", "Docker Network", "OS"],
       "data": [
       {"host": "GCP", "vmId": "gcp-f-micro_1", "ip": "35.226.147.64", "dockerNetwork": "proxy_network", "os": "Arch Linux"},
-      {"host": "OCI", "vmId": "oci-p-flex_1", "ip": "84.235.234.87", "dockerNetwork": "dev_network", "os": "Ubuntu 24.04"},
+      {"host": "OCI", "vmId": "oci-p-flex_1", "ip": "144.24.196.72", "dockerNetwork": "dev_network", "os": "Ubuntu 24.04"},
       {"host": "OCI", "vmId": "oci-f-micro_1", "ip": "130.110.251.193", "dockerNetwork": "mail_network", "os": "Ubuntu 24.04"},
       {"host": "OCI", "vmId": "oci-f-micro_2", "ip": "129.151.228.66", "dockerNetwork": "matomo_network", "os": "Ubuntu 24.04"}
     ]},
@@ -44,6 +44,7 @@
       "oci-p-flex_1": [
         {"service": "PhotoPrism", "description": "Photo Gallery", "ports": "2342", "status": "Wake-on-Demand"},
         {"service": "Radicale", "description": "Calendar/Contacts", "ports": "5232", "status": "Wake-on-Demand"},
+        {"service": "NocoDB", "description": "Database UI (Airtable alternative)", "ports": "8085", "status": "Wake-on-Demand"},
         {"service": "WireGuard", "description": "VPN Server", "ports": "51820/udp", "status": "Active"},
         {"service": "Redis", "description": "Cache Server", "ports": "-", "status": "Active"}
       ],
@@ -73,7 +74,8 @@
       "A122_data_api": {"name": "A122) Data & API & MCP", "description": "APIs, caching, databases, and Model Context Protocol services", "services": [
         {"service": "Cloud API", "vm": "gcp-f-micro_1", "description": "Flask REST API"},
         {"service": "Redis", "vm": "oci-p-flex_1", "description": "Cache and session storage"},
-        {"service": "MariaDB", "vm": "oci-p-flex_1, oci-f-micro_2", "description": "Database engine"}
+        {"service": "MariaDB", "vm": "oci-p-flex_1, oci-f-micro_2", "description": "Database engine"},
+        {"service": "NocoDB", "vm": "oci-p-flex_1", "description": "Database UI (Airtable alternative)"}
       ]},
       "A123_others": {"name": "A123) Other Services", "description": "User-facing and miscellaneous services", "services": [
         {"service": "PhotoPrism", "vm": "oci-p-flex_1", "description": "Photo gallery"},
@@ -93,7 +95,8 @@
         {"name": "photoprism-db", "type": "MariaDB", "service": "PhotoPrism", "size": "~2 GB", "path": "/data/photoprism/database/"},
         {"name": "photoprism-sidecar", "type": "Files (YAML/JSON)", "service": "PhotoPrism", "size": "~5 GB", "path": "/data/photoprism/storage/sidecar/"},
         {"name": "photoprism-originals", "type": "Files (Photos)", "service": "PhotoPrism", "size": "~100 GB", "path": "/data/photoprism/originals/"},
-        {"name": "radicale-db", "type": "Files (ICS/VCF)", "service": "Radicale", "size": "~50 MB", "path": "/data/radicale/collections/"}
+        {"name": "radicale-db", "type": "Files (ICS/VCF)", "service": "Radicale", "size": "~50 MB", "path": "/data/radicale/collections/"},
+        {"name": "nocodb-db", "type": "PostgreSQL 16", "service": "NocoDB", "size": "~500 MB - 10 GB", "path": "docker volume: nocodb_postgres"}
       ]},
       "oci-f-micro_1": {"bootSize": "47 GB", "databases": [
         {"name": "mailu-db", "type": "SQLite", "service": "Mailu", "size": "~50 MB", "path": "/mailu/data/main.db"},
@@ -373,7 +376,7 @@
       "data": [
         {"vm": "OCI Paid Flex 1", "command": "ssh -i ~/.ssh/id_rsa ubuntu@130.110.251.193"},
         {"vm": "OCI Free Micro 1", "command": "ssh -i ~/.ssh/id_rsa ubuntu@129.151.228.66"},
-        {"vm": "OCI Free Micro 2", "command": "ssh -i ~/.ssh/id_rsa ubuntu@84.235.234.87"},
+        {"vm": "OCI Free Micro 2", "command": "ssh -i ~/.ssh/id_rsa ubuntu@144.24.196.72"},
         {"vm": "GCP Free Micro 1", "command": "gcloud compute ssh arch-1 --zone=us-central1-a"}
       ]
     },
@@ -390,7 +393,7 @@
       "oci-f-micro_1": {"ip": "130.110.251.193", "pingable": null, "sshable": null, "latencyMs": null, "lastCheck": null},
       "oci-f-micro_2": {"ip": "129.151.228.66", "pingable": null, "sshable": null, "latencyMs": null, "lastCheck": null},
       "gcp-f-micro_1": {"ip": "35.226.147.64", "pingable": null, "sshable": null, "latencyMs": null, "lastCheck": null},
-      "oci-p-flex_1": {"ip": "84.235.234.87", "pingable": null, "sshable": null, "latencyMs": null, "lastCheck": null, "wakeOnDemand": {"isAwake": null, "lastWakeTime": null}}
+      "oci-p-flex_1": {"ip": "144.24.196.72", "pingable": null, "sshable": null, "latencyMs": null, "lastCheck": null, "wakeOnDemand": {"isAwake": null, "lastWakeTime": null}}
     },
 
     "endpointStatus": {

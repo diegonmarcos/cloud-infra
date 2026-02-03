@@ -60,6 +60,7 @@
       {"id": "matomo", "name": "Matomo Analytics", "url": "https://analytics.diegonmarcos.com", "availability": "24/7"},
       {"id": "mail", "name": "Mailu Mail", "url": "https://mail.diegonmarcos.com", "availability": "24/7"},
       {"id": "calendar", "name": "Radicale Calendar", "url": "https://cal.diegonmarcos.com", "availability": "wake"},
+      {"id": "web-ide", "name": "Code Server IDE", "url": "https://ide.diegonmarcos.com", "availability": "wake"},
       {"id": "cloud", "name": "Cloud Dashboard", "url": "https://cloud.diegonmarcos.com", "availability": "24/7"},
       {"id": "authelia", "name": "Authelia 2FA", "url": "https://auth.diegonmarcos.com", "availability": "24/7"}
     ],
@@ -164,24 +165,24 @@
         "name": "OCI Paid Flex 1",
         "displayName": "Dev Server",
         "provider": "oracle",
-        "ociInstanceId": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczachwpa3qrh7n25vfez3smidz4o7gpmtj4ga4d7zqlja5yq",
+        "ociInstanceId": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczach3pczd4kn6w5stdt7rs64u2uqexzor6lyneaebc2i2ra",
         "category": "services",
-        "instanceType": "VM.Standard.E4.Flex",
-        "specs": {"cpu": "1 OCPU (2 vCPU)", "ram": "8 GB", "storage": "100 GB"},
+        "instanceType": "VM.Standard.A1.Flex",
+        "specs": {"cpu": "1 OCPU (ARM)", "ram": "8 GB", "storage": "200 GB"},
         "network": {
-          "publicIp": "84.235.234.87",
+          "publicIp": "144.24.196.72",
           "privateIp": "10.0.0.x",
           "dockerNetwork": "dev_network",
           "dockerSubnet": "172.24.0.0/24"
         },
-        "os": {"name": "Ubuntu", "version": "22.04 Minimal"},
+        "os": {"name": "Ubuntu", "version": "24.04 LTS"},
         "ssh": {
           "user": "ubuntu",
           "keyPath": "/home/diego/vault/A0_keys/ssh/id_rsa",
-          "command": "ssh -i /home/diego/vault/A0_keys/ssh/id_rsa ubuntu@84.235.234.87"
+          "command": "ssh -i /home/diego/vault/A0_keys/ssh/id_rsa ubuntu@144.24.196.72"
         },
-        "services": ["photos", "calendar", "cache"],
-        "ports": {"external": [22, 443], "internal": [5000, 6379, 2342, 5232]},
+        "services": ["photos", "calendar", "cache", "web-ide", "nocodb"],
+        "ports": {"external": [22, 443, 8443, 8085], "internal": [5000, 6379, 2342, 5232, 8085]},
         "availability": "wake-on-demand",
         "wakeConfig": {"idleTimeout": 1800, "wakeTime": 60},
         "cost": {"monthly": 5.5, "hourly": 0.037, "currency": "USD"},
@@ -241,6 +242,29 @@
         "technology": {"image": "tomsquest/docker-radicale", "version": "latest"},
         "urls": {"gui": "https://cal.diegonmarcos.com/.web/"},
         "resources": {"ram": "32-64 MB", "storage": "10-100 MB", "bandwidth": "10-50 MB/mo"}
+      },
+      "nocodb": {
+        "id": "nocodb",
+        "displayName": "NocoDB Database UI",
+        "category": "infra-db",
+        "vmId": "oci-p-flex_1",
+        "containers": ["nocodb", "nocodb-db"],
+        "technology": {"image": "nocodb/nocodb:latest", "database": "postgres:16-alpine"},
+        "urls": {"gui": "https://db.diegonmarcos.com"},
+        "authRequired": true,
+        "network": {"dockerNetwork": "nocodb_network", "subnet": "172.25.0.0/24", "bindIp": "10.0.0.2", "port": 8085},
+        "resources": {"ram": "400-800 MB", "storage": "1-15 GB", "bandwidth": "100 MB - 1 GB/mo"}
+      },
+      "web-ide": {
+        "id": "web-ide",
+        "displayName": "Code Server Web IDE",
+        "category": "coder",
+        "vmId": "oci-p-flex_1",
+        "containers": [],
+        "technology": {"package": "code-server", "version": "4.91.1", "runtime": "nix-flake"},
+        "urls": {"gui": "https://ide.diegonmarcos.com"},
+        "authRequired": true,
+        "resources": {"ram": "512 MB - 2 GB", "storage": "1-10 GB", "bandwidth": "variable"}
       },
       "matomo": {
         "id": "matomo",
@@ -430,7 +454,7 @@
     "sshCommands": {
       "oci-f-micro_1": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@130.110.251.193",
       "oci-f-micro_2": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@129.151.228.66",
-      "oci-p-flex_1": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@84.235.234.87",
+      "oci-p-flex_1": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@144.24.196.72",
       "gcp-f-micro_1": "gcloud compute ssh arch-1 --zone us-central1-a"
     },
 
@@ -571,7 +595,7 @@
         ]
       },
       "oci-p-flex_1": {
-        "currentIp": "84.235.234.87",
+        "currentIp": "144.24.196.72",
         "description": "Dev Server (Photos, Calendar)",
         "whenThisIpChanges": [
           {

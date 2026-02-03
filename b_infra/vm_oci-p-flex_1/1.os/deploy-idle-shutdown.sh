@@ -4,9 +4,9 @@
 
 set -euo pipefail
 
-VM_IP="84.235.234.87"
+VM_IP="144.24.196.72"
 VM_USER="ubuntu"
-SSH_KEY="/home/diego/Documents/Git/LOCAL_KEYS/00_terminal/ssh/id_rsa"
+SSH_KEY="/home/diego/Mounts/Git/vault/A0_keys/ssh/id_rsa"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "=== Deploying Idle Shutdown to oci-p-flex_1 ==="
