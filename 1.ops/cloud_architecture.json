@@ -307,6 +307,17 @@
         "urls": {"gui": "https://auth.diegonmarcos.com"},
         "resources": {"ram": "32-64 MB", "storage": "50-100 MB"}
       },
+      "introspect-proxy": {
+        "id": "introspect-proxy",
+        "displayName": "Token Introspection Proxy",
+        "category": "infra-auth",
+        "vmId": "gcp-f-micro_1",
+        "containers": ["introspect-proxy"],
+        "technology": {"image": "introspect-proxy:latest", "type": "Flask/Python"},
+        "network": {"internalPort": 4182},
+        "description": "Validates Bearer tokens via Authelia OIDC introspection for CLI/API authentication",
+        "resources": {"ram": "32-64 MB", "storage": "10-20 MB"}
+      },
       "cache": {
         "id": "cache",
         "displayName": "Redis Cache",
@@ -522,7 +533,8 @@
       {"service": "cache-app", "image": "redis", "version": "alpine"},
       {"service": "npm-*", "image": "jc21/nginx-proxy-manager", "version": "latest"},
       {"service": "photoprism-app", "image": "photoprism/photoprism", "version": "latest"},
-      {"service": "authelia", "image": "authelia/authelia", "version": "latest"}
+      {"service": "authelia", "image": "authelia/authelia", "version": "latest"},
+      {"service": "introspect-proxy", "image": "introspect-proxy:latest", "version": "custom", "notes": "Bearer token validator for CLI auth"}
     ]
   },
 
@@ -782,7 +794,7 @@
         "A120b_auth_proxy": {
           "name": "A120b) Auth & Proxy Services",
           "description": "Web servers, OAuth2, Authelia 2FA, VPN, and reverse proxies",
-          "services": ["npm", "authelia", "wireguard", "oauth2-proxy"]
+          "services": ["npm", "authelia", "introspect-proxy", "wireguard", "oauth2-proxy"]
         },
         "A121_audit": {
           "name": "A121) Audit & Analytics",
@@ -803,10 +815,11 @@
 
       "containers": {
         "gcp-f-micro_1": {
-          "count": 5,
+          "count": 6,
           "items": [
             {"name": "npm", "image": "jc21/nginx-proxy-manager:latest", "ports": "80, 443, 81", "network": "proxy_network"},
             {"name": "authelia", "image": "authelia/authelia:latest", "ports": "9091", "network": "proxy_network"},
+            {"name": "introspect-proxy", "image": "introspect-proxy:latest", "ports": "127.0.0.1:4182", "network": "proxy_network", "notes": "Bearer token validator via OIDC introspection"},
             {"name": "cloud-api", "image": "python:3.11-slim", "ports": "5000", "network": "proxy_network"},
             {"name": "sauron", "image": "sauron-sauron:latest", "ports": "-", "network": "security", "notes": "YARA malware scanner"},
             {"name": "syslog-forwarder", "image": "balabit/syslog-ng:4.4.0", "ports": "-", "network": "security", "notes": "Forwards to central syslog"}
