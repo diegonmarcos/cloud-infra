@@ -59,6 +59,7 @@
 | mailu | Mail Server | https://mail.diegonmarcos.com | on |
 | calendar | Radicale Calendar | https://cal.diegonmarcos.com | on |
 | ntfy | Push Notifications | https://rss.diegonmarcos.com | on |
+| nocodb | NocoDB Database | https://db.diegonmarcos.com | on |
 
 ### Proxy Admin Panel (SINGLE NPM)
 | Server | URL |
@@ -338,8 +339,8 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Auth** | Authelia SSO (proxy auth via NPM) + PROXY_AUTH_HEADER |
 | **Ports** | 25 (SMTP relay), 465 (SMTPS client), 993 (IMAPS), 443 (HTTPS webmail) |
 | **Features** | IMAP, SMTP, Webmail (Roundcube), Antispam (Rspamd), CalDAV (via Radicale) |
-| **Email Routing** | Cloudflare Email Worker → SMTP Proxy (BROKEN - see below) |
-| **Status** | INBOUND BROKEN |
+| **Email Routing** | Cloudflare Email Worker → Backup to live.com (primary SMTP proxy blocked) |
+| **Status** | INBOUND VIA BACKUP (live.com forwarding) |
 
 **Mail Flow Architecture:**
 
@@ -347,7 +348,7 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    INBOUND EMAIL (CURRENTLY BROKEN)                      │
+│                    INBOUND EMAIL (BACKUP FORWARDING)                     │
 │                                                                          │
 │   sender@gmail.com → me@diegonmarcos.com                                │
 │                                                                          │
@@ -360,21 +361,22 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 │                       ┌──────────────────────────────────────────────┐  │
 │                       │  Worker tries: POST http://smtp:8080/        │  │
 │                       │  ├── SMTP Proxy (port 8080) ❌ BLOCKED       │  │
-│                       │  └── BACKUP_EMAIL ❌ NOT CONFIGURED          │  │
+│                       │  └── BACKUP_EMAIL ✅ diegonmarcos@live.com   │  │
 │                       │                                              │  │
-│                       │  Result: "Primary delivery failed and no     │  │
-│                       │           backup configured"                 │  │
+│                       │  Result: Forwards to live.com after 5s      │  │
+│                       │          timeout on primary                  │  │
 │                       └──────────────────────────────────────────────┘  │
 │                                                                          │
-│   Mailu (130.110.251.193) ← NEVER REACHED                               │
+│   diegonmarcos@live.com ← RECEIVES FORWARDED EMAIL                      │
 └─────────────────────────────────────────────────────────────────────────┘
 
 **Cloudflare Worker Configuration (email-forwarder):**
-| Setting | Value | Issue |
-|---------|-------|-------|
-| SMTP_PROXY_URL | http://smtp.diegonmarcos.com:8080/ | Port 8080 blocked by Oracle |
+| Setting | Value | Status |
+|---------|-------|--------|
+| SMTP_PROXY_URL | http://smtp.diegonmarcos.com:8080/ | ❌ Port 8080 blocked by Oracle |
 | SMTP_PROXY_KEY | stalwart-proxy-key-2025 | - |
-| BACKUP_EMAIL | (empty) | No fallback configured |
+| BACKUP_EMAIL | diegonmarcos@live.com | ✅ Configured (2026-02-03) |
+| Fetch Timeout | 5 seconds | ✅ Fast failover to backup |
 
 **Worker/Proxy Mismatches:**
 | Component | Worker Sends | Proxy Expects |
@@ -402,6 +404,7 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 | Direction | Port | Flow | Status |
 |-----------|------|------|--------|
 | **Inbound** | 25→8080 | Internet → Cloudflare → Worker → SMTP Proxy | ❌ BLOCKED |
+| **Inbound Backup** | 25→forward | Internet → Cloudflare → Worker → live.com | ✅ Working |
 | **Outbound** | 25→relay | Mailu → Oracle Email Delivery → Internet | ✅ Working |
 | **IMAP** | 993 | Client ↔ Mailu (direct) | ✅ Working |
 | **SMTPS** | 465 | Client → Mailu → relay | ✅ Working |
@@ -412,10 +415,10 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 - Port 587 (STARTTLS submission)
 - Port 8080 (HTTP - used by SMTP proxy)
 
-**Note:** Use port 465 (SMTPS) for email clients. Inbound email requires fix (see solutions below).
+**Note:** Use port 465 (SMTPS) for email clients.
 
 **Fix Options for Inbound Email:**
-1. **Quick**: Set `BACKUP_EMAIL` in Cloudflare Worker to forward to Gmail
+1. ✅ **Quick (IMPLEMENTED 2026-02-03)**: Set `BACKUP_EMAIL=diegonmarcos@live.com` + 5s timeout
 2. **Native**: Use Cloudflare Email Routing's built-in forwarding (disable Worker)
 3. **Self-hosted**: Route SMTP proxy through GCP (ports not blocked there)
 
