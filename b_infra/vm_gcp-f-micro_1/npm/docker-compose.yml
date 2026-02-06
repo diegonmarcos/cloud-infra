@@ -1,0 +1,20 @@
+# Nginx Proxy Manager
+# Deployed on: gcp-f-micro_1 (35.226.147.64)
+# Path on server: /home/diego/npm/
+# Domain: proxy.diegonmarcos.com
+
+version: '3.8'
+services:
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+      - '81:81'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    environment:
+      - DISABLE_IPV6=true
