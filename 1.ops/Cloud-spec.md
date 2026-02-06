@@ -201,10 +201,11 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Provider** | Oracle Cloud |
 | **IP** | 129.151.228.66 |
 | **Type** | VM.Standard.E2.1.Micro |
-| **Specs** | 1 OCPU (AMD), 1GB RAM, 47GB Boot |
+| **Specs** | 1 OCPU (AMD), 1GB RAM + **2GB Swap**, 47GB Boot |
 | **OS** | Ubuntu 24.04 LTS |
 | **Services** | Matomo Analytics |
 | **Ports** | 22, 80, 443, 8080, 3306 |
+| **Swap Config** | `/swapfile` (2GB, swappiness=10, persistent via fstab) |
 | **Availability** | 24/7 (Free) |
 | **Status** | Active |
 
@@ -217,8 +218,8 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Type** | e2-micro |
 | **Specs** | 0.25-2 vCPU, 1GB RAM, 30GB |
 | **OS** | Arch Linux (rolling) |
-| **Services** | NPM (SINGLE CENTRAL), Authelia 2FA, Flask API, ntfy, C3 Collector, Sauron Central (SIEM), Dozzle, Alerts API, Introspect Proxy |
-| **Ports** | 22, 80, 443, 81, 9091, 6379, 5514 (syslog), 9999 (Dozzle), 5050 (Alerts API), 4182 (Introspect Proxy) |
+| **Services** | NPM (SINGLE CENTRAL), Authelia 2FA, Flask API, ntfy, Sauron Central (SIEM), Dozzle, Alerts API, Introspect Proxy |
+| **Ports** | 22, 80, 443, 81, 9091, 6379, 5514 (syslog), 8080 (SIEM API), 9999 (Dozzle), 5050 (Alerts API), 4182 (Introspect Proxy) |
 | **Availability** | 24/7 (Free) |
 | **Status** | Active |
 
@@ -305,8 +306,7 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | on | ↳ introspect-proxy | | 32-64 MB | 50-100 MB | 50-200 MB/mo | OIDC token validation |
 | | **monitoring** | Infrastructure | | | | Monitoring and logging |
 | on | ↳ dozzle | | 32-64 MB | 50-100 MB | 50-200 MB/mo | Docker log viewer |
-| on | ↳ alerts-api | | 32-64 MB | 100-500 MB | 50-200 MB/mo | Alert management API |
-| on | ↳ c3-collector | | 50-100 MB | 100-500 MB | - | VM stats collector |
+| on | ↳ alerts-api | | 32-64 MB | 100-500 MB | 50-200 MB/mo | Alert management API (custom, NOT Grafana) |
 | | **development** | Infrastructure | | | | Development tools |
 | on | ↳ code-server | | 200-400 MB | 1-5 GB | 100-500 MB/mo | VS Code in browser |
 | on | ↳ photos-webhook | | 50-100 MB | 500 MB-2 GB | 50-200 MB/mo | Photoprism webhook + PostgreSQL |
@@ -318,10 +318,13 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | VM | Services | Total RAM (Est) | Total Storage (Est) | Bandwidth (Est) |
 |----|----------|-----------------|---------------------|-----------------|
 | oci-f-micro_1 | mailu, fluent-bit, sauron-lite | ~380-630 MB | ~5-50 GB | ~1-10 GB/mo |
-| oci-f-micro_2 | analytics (matomo), fluent-bit, sauron-lite | ~590 MB - 1.2 GB | ~3-15 GB | ~500 MB-2 GB/mo |
+| oci-f-micro_2 | analytics (matomo), fluent-bit | ~540-1.1 GB | ~3-15 GB | ~500 MB-2 GB/mo |
 | oci-p-flex_1 | photoprism, radicale, lgtm, gitea, bup, borg, fluent-bit, **suite**, vaultwarden, code-server, photos-webhook, sauron | ~3.5-6.5 GB | ~35-160 GB | ~12-50 GB/mo |
-| gcp-f-micro_1 | npm, authelia, flask-app, fluent-bit, dozzle, alerts-api, c3-collector, introspect-proxy, siem-api | ~380-660 MB | ~300 MB-1 GB | ~6-22 GB/mo |
-| **TOTAL** | | **~5-9 GB** | **~45-226 GB** | **~20-84 GB/mo** |
+| gcp-f-micro_1 | npm, authelia, flask-app, fluent-bit, dozzle, alerts-api, introspect-proxy, siem-api | ~330-560 MB | ~300 MB-1 GB | ~6-22 GB/mo |
+| **TOTAL** | | **~4.8-8.8 GB** | **~45-226 GB** | **~20-84 GB/mo** |
+
+**Notes:**
+- **oci-f-micro_2**: RAM usage (540-1100 MB) exceeds physical RAM (1GB) at peak. **2GB swap added** (`/swapfile`, swappiness=10) to prevent OOM kills during traffic spikes. Swap is persistent via `/etc/fstab`.
 
 ---
 
@@ -593,7 +596,7 @@ DKIM: mail._domainkey.diegonmarcos.com (RSA 2048-bit)
 | **Watch Paths** | /etc, /home (read-only) |
 | **RAM** | 32-64 MB |
 | **CPU** | 25% limit |
-| **Status** | Active on micro VMs |
+| **Status** | Active on OCI Micro 1 only (removed from Micro 2 to save RAM) |
 
 **Sauron Central (gcp-f-micro_1)**
 | Property | Value |
@@ -691,15 +694,15 @@ NPM forwards `Authorization: Bearer <token>` headers to this proxy, which valida
 #### C3 Collector (VM Stats Collector)
 | Property | Value |
 |----------|-------|
-| **VM** | gcp-f-micro_1 (35.226.147.64) |
+| **VM** | Removed from GCP (planned for local machine or flex VM) |
 | **Technology** | Python + SSH (paramiko) |
 | **Features** | VM stats collection, Docker metrics, JSON output, Dashboard data |
 | **Output** | /app/4.jsons/dashboard.json (shared with Flask API) |
 | **SSH Access** | ~/.ssh keys (read-only) |
 | **Schedule** | Continuous (60s interval) |
 | **Config** | /app/config/architecture.json |
-| **RAM** | 50-100 MB |
-| **Status** | Active |
+| **RAM** | 50-100 MB (not counted in GCP totals) |
+| **Status** | Removed from GCP - Too memory intensive for 1GB VM |
 
 **Collected Metrics:**
 - CPU, RAM, disk usage per VM
@@ -968,13 +971,13 @@ services:
 | **Cloud Firewalls** | Network Security | OCI Security Lists + GCP Firewall Rules | OCI + GCP | ON |
 | **WireGuard VPN** | Private Network | Native mesh VPN (10.0.0.0/24) - NOT Docker | All VMs (native) | ON |
 | **Gmail SMTP Relay** | Email Notifications | App Password auth for Authelia notifications | Gmail (SaaS) | ON |
-| **Sauron Full** | Malware Scanner | Rust YARA scanner with incremental scanning + forwarder | OCI Flex 1, OCI Micro 1, OCI Micro 2 | ON |
-| **Sauron Lite** | Malware Scanner | Lightweight YARA scanner for 1GB VMs | OCI Micro 1, OCI Micro 2 | ON |
+| **Sauron Full** | Malware Scanner | Rust YARA scanner with incremental scanning + forwarder | OCI Flex 1, OCI Micro 1 | ON |
+| **Sauron Lite** | Malware Scanner | Lightweight YARA scanner for 1GB VMs | OCI Micro 1 only (removed from Micro 2 to save RAM) | ON |
 | **Sauron Central** | SIEM | Central syslog collector + SQLite database + API | GCP Micro 1 (port 5514, 8080) | ON |
 | **Palantir Monitor** | Security Scanner | Daily security audit of all VMs + containers | OCI Flex 1 (daily 7am) | ON |
 | **Dozzle** | Log Viewer | Real-time Docker container log viewer | GCP Micro 1 (port 9999) | ON |
 | **Alerts API** | Alert Manager | Alert CRUD + ntfy integration | GCP Micro 1 (port 5050) | ON |
-| **C3 Collector** | Stats Collector | VM/container metrics → dashboard JSON | GCP Micro 1 | ON |
+| **C3 Collector** | Stats Collector | VM/container metrics → dashboard JSON | Removed from GCP (planned for local/flex) | PLANNED |
 
 ### 7.7.1 Security Monitoring Stack (Sauron + Collector)
 
@@ -2229,9 +2232,55 @@ docker logs --tail 100 -f mailserver
 # Check disk usage
 df -h /mnt/*
 docker system df
+
+# Check memory and swap usage (especially oci-f-micro_2)
+free -h
+swapon --show
 ```
 
-### 12.2 Weekly Operations
+### 12.2 Memory & Swap Management
+
+**oci-f-micro_2 (Analytics VM)** uses 2GB swap due to high RAM usage from Matomo.
+
+**Check swap status:**
+```bash
+# View current memory/swap usage
+free -h
+
+# Show swap devices
+swapon --show
+
+# Check swap activity
+vmstat 1 5
+```
+
+**Swap configuration:**
+```bash
+# Swap file: /swapfile (2GB)
+# Swappiness: 10 (prefer RAM, only swap when > 90% full)
+# Persistent: /etc/fstab
+
+# View swappiness
+cat /proc/sys/vm/swappiness
+
+# Manually adjust swappiness (temporary)
+sudo sysctl vm.swappiness=10
+
+# Make permanent
+echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
+```
+
+**If swap needs recreation (disaster recovery):**
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+sudo sysctl vm.swappiness=10
+```
+
+### 12.3 Weekly Operations
 
 ```bash
 # Update containers
@@ -2245,7 +2294,7 @@ docker image prune -a --filter "until=168h"
 ls -la /backup/
 ```
 
-### 12.3 Monthly Operations
+### 12.4 Monthly Operations
 
 ```bash
 # OS updates
@@ -2262,7 +2311,7 @@ docker network ls
 docker network inspect public_net
 ```
 
-### 12.4 Dashboard Usage
+### 12.5 Dashboard Usage
 
 The unified `cloud-dashboard.py` provides three modes: TUI, API Server, and CLI.
 
