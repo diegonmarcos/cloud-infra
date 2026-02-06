@@ -1,6 +1,6 @@
 # Cloud Infrastructure Specification
 
-> **Version**: 6.1.0 | **Updated**: 2025-12-23
+> **Version**: 6.3.0 | **Updated**: 2026-02-06
 
 ## Source of Truth
 
@@ -53,13 +53,32 @@
 | Service ID | Display Name | URL | Status |
 |------------|--------------|-----|--------|
 | photoprism-app | Photo Gallery (with 2FA) | https://photos.diegonmarcos.com | on |
-| matomo-app | Matomo Analytics | https://analytics.diegonmarcos.com | on |
+| analytics-app | Matomo Analytics | https://analytics.diegonmarcos.com | on |
 | cloud-app | Cloud Dashboard | https://cloud.diegonmarcos.com | on |
 | api | Cloud API | https://api.diegonmarcos.com | on |
 | mailu | Mail Server | https://mail.diegonmarcos.com | on |
 | calendar | Radicale Calendar | https://cal.diegonmarcos.com | on |
 | ntfy | Push Notifications | https://rss.diegonmarcos.com | on |
 | nocodb | NocoDB Database | https://db.diegonmarcos.com | on |
+| vaultwarden | Password Manager | https://vault.diegonmarcos.com | on |
+| lgtm_grafana | Grafana Dashboard | http://144.24.196.72:3016 | on |
+| gitea | Gitea Code Mirrors | http://144.24.196.72:3000 | on |
+| hedgedoc_app | HedgeDoc Notes | http://144.24.196.72:3010 | on |
+| grist_app | Grist Sheets | http://144.24.196.72:3011 | on |
+| etherpad_app | Etherpad Docs | http://144.24.196.72:3012 | on |
+| photoprism_app | PhotoPrism Photos | http://144.24.196.72:3013 | on |
+| revealmd_app | RevealMD Slides | http://144.24.196.72:3014 | on |
+| filebrowser_app | Filebrowser Files | http://144.24.196.72:3015 | on |
+| nocodb-suite | NocoDB PowerSheets | http://144.24.196.72:3020 | on |
+| code-server | VS Code Web IDE | http://144.24.196.72:8443 | on |
+| dozzle | Docker Log Viewer | http://35.226.147.64:9999 | on |
+| alerts-api | Alerts Management API | http://35.226.147.64:5050 | on |
+| photos-webhook | Photoprism Webhook Handler | http://144.24.196.72:5001 | on |
+| sauron | Malware Scanner (Central) | Internal | on |
+| sauron-lite | Malware Scanner (Lightweight) | Internal | on |
+| palantir-monitor | Security Monitor | Internal | on |
+| introspect-proxy | OIDC Token Introspection | http://35.226.147.64:4182 | on |
+| c3-collector | VM Stats Collector | Internal | on |
 
 ### Proxy Admin Panel (SINGLE NPM)
 | Server | URL |
@@ -120,7 +139,9 @@ gcloud compute ssh arch-1 --zone us-central1-a
 |  |  |  Services:              |    Status: WAKE-ON-DEMAND (Paid)      |  |
 |  |  |  - Photoprism (Photos)  |                                       |  |
 |  |  |  - Radicale (Calendar)  |                                       |  |
-|  |  |  - Redis (Cache)        |                                       |  |
+|  |  |  - LGTM Stack (Logging) |                                       |  |
+|  |  |  - Gitea (Code Backup)  |                                       |  |
+|  |  |  - Backup (bup/borg)    |                                       |  |
 |  |  +-------------------------+                                       |  |
 |  +-------------------------------------------------------------------+  |
 |                                                                          |
@@ -196,8 +217,8 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Type** | e2-micro |
 | **Specs** | 0.25-2 vCPU, 1GB RAM, 30GB |
 | **OS** | Arch Linux (rolling) |
-| **Services** | NPM (SINGLE CENTRAL), Authelia 2FA, Flask API |
-| **Ports** | 22, 80, 443, 81, 9091, 6379 |
+| **Services** | NPM (SINGLE CENTRAL), Authelia 2FA, Flask API, ntfy, C3 Collector, Sauron Central (SIEM), Dozzle, Alerts API, Introspect Proxy |
+| **Ports** | 22, 80, 443, 81, 9091, 6379, 5514 (syslog), 9999 (Dozzle), 5050 (Alerts API), 4182 (Introspect Proxy) |
 | **Availability** | 24/7 (Free) |
 | **Status** | Active |
 
@@ -210,8 +231,8 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Type** | VM.Standard.E4.Flex |
 | **Specs** | 1 OCPU (2 vCPU), 8GB RAM, 100GB |
 | **OS** | Ubuntu 22.04 Minimal |
-| **Services** | Photoprism, Radicale Calendar, Redis Cache |
-| **Ports** | 22, 443, 5000, 6379, 2342, 5232 |
+| **Services** | Photoprism, Radicale, Redis, LGTM Stack, Gitea, Backup (bup/borg), Fluent Bit, Sauron, Palantir Monitor, **Suite Apps** (HedgeDoc, Grist, Etherpad, RevealMD, Filebrowser, NocoDB), **Security** (Vaultwarden, Code Server, Photos Webhook) |
+| **Ports** | 22, 443, 5000, 6379, 2342, 5232, 3000 (Gitea), 3010-3020 (Suite), 3016-3019 (LGTM), 8081 (Vaultwarden), 8443 (Code Server), 5001 (Photos Webhook) |
 | **Availability** | Wake-on-Demand |
 | **Cost** | ~$5.50/mo |
 | **Status** | Active |
@@ -228,6 +249,8 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Productivity** | Productivity and communication tools |
 | **Web** | Web analytics and monitoring |
 | **Automation** | Workflow automation services |
+| **Observability** | Logging, metrics, and tracing (LGTM stack) |
+| **Backup** | Code mirrors, database backups, media archives |
 
 ### 4.2 Service Resource Requirements
 
@@ -237,32 +260,68 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | on | ↳ mailu (8 containers) | | 300-500 MB | 5-50 GB | 1-10 GB/mo | Full mail suite, Cloudflare Email Routing |
 | on | ↳ mail-db (RocksDB) | | 8-32 MB | Variable | - | Embedded RocksDB |
 | | **analytics** | Web | | | | Matomo Analytics platform |
-| on | ↳ matomo-app | | 256-512 MB | 2-5 GB | 500 MB-2 GB/mo | PHP FPM Alpine |
-| on | ↳ matomo-db | | 256-512 MB | 1-10 GB | - | MariaDB - grows with data |
+| on | ↳ analytics-app | | 256-512 MB | 2-5 GB | 500 MB-2 GB/mo | PHP FPM Alpine |
+| on | ↳ analytics-db | | 256-512 MB | 1-10 GB | - | MariaDB - grows with data |
 | | **npm** | Infrastructure | | | | Central reverse proxy |
 | on | ↳ npm-gcloud | | 128-256 MB | 100-500 MB | 5-20 GB/mo | SSL certs + configs |
 | | **authelia** | Infrastructure | | | | 2FA authentication |
 | on | ↳ authelia-app | | 32-64 MB | 50-100 MB | 100-500 MB/mo | TOTP + session management |
 | | **photos** | Productivity | | | | Photoprism photo gallery |
-| on | ↳ photoprism-app | | 1-2 GB | 10-50 GB | 5-20 GB/mo | Photo indexing + UI |
-| on | ↳ photoprism-db | | 128-256 MB | 1-5 GB | - | MariaDB |
+| on | ↳ photoprism_app | | 1-2 GB | 10-50 GB | 5-20 GB/mo | Photo indexing + UI |
+| on | ↳ photoprism_mariadb | | 128-256 MB | 1-5 GB | - | MariaDB |
 | | **calendar** | Productivity | | | | Radicale calendar |
 | on | ↳ radicale-app | | 32-64 MB | 50-200 MB | 50-200 MB/mo | CalDAV/CardDAV |
 | | **cloud** | Infrastructure | | | | Cloud Dashboard |
 | on | ↳ cloud-app | | - | 5 MB | 50-200 MB/mo | Static HTML/CSS/JS |
 | on | ↳ flask-app | | 64-128 MB | 50-100 MB | 100-500 MB/mo | Flask API Server |
-| | **TOTAL** | | **~1.5-3 GB** | **~20-80 GB** | **~10-45 GB/mo** | All active services |
+| | **lgtm** | Observability | | | | Grafana Labs Stack |
+| on | ↳ lgtm_grafana | | 100-150 MB | 100-500 MB | 50-200 MB/mo | Dashboard & visualization |
+| on | ↳ lgtm_loki | | 50-100 MB | 1-5 GB | - | Log aggregation |
+| on | ↳ lgtm_tempo | | 50-100 MB | 500 MB-2 GB | - | Distributed tracing |
+| on | ↳ lgtm_mimir | | 80-150 MB | 500 MB-2 GB | - | Metrics storage |
+| | **fluent-bit** | Observability | | | | Log shipping agents |
+| on | ↳ fluent-bit (flex) | | 4-10 MB | 10-50 MB | - | Log shipper on Flex VM |
+| on | ↳ fluent-bit (gcp) | | 3-10 MB | 10-50 MB | - | Log shipper on GCP |
+| on | ↳ fluent-bit (micro1) | | 30-50 MB | 10-50 MB | - | Log shipper on Micro 1 |
+| on | ↳ fluent-bit (micro2) | | 40-60 MB | 10-50 MB | - | Log shipper on Micro 2 |
+| | **backup** | Backup | | | | Backup infrastructure |
+| on | ↳ gitea | | 100-200 MB | 500 MB-2 GB | - | Git repo mirrors |
+| on | ↳ bup | | 20-50 MB | 100 MB-1 GB | - | Database backups (dedup) |
+| on | ↳ borg | | 50-100 MB | 5-50 GB | - | Media backups (dedup) |
+| | **suite** | Productivity | | | | Self-hosted productivity suite |
+| on | ↳ hedgedoc | | 150-300 MB | 500 MB-2 GB | 100-500 MB/mo | Collaborative markdown notes |
+| on | ↳ grist | | 200-400 MB | 500 MB-2 GB | 100-500 MB/mo | Spreadsheet/database hybrid |
+| on | ↳ etherpad | | 100-200 MB | 200 MB-1 GB | 50-200 MB/mo | Real-time doc collaboration |
+| on | ↳ revealmd | | 50-100 MB | 100-500 MB | 20-100 MB/mo | Markdown presentations |
+| on | ↳ filebrowser | | 50-100 MB | Variable | Variable | Web file manager |
+| on | ↳ nocodb-suite | | 200-400 MB | 500 MB-2 GB | 100-500 MB/mo | Airtable alternative |
+| | **security** | Security | | | | Security monitoring services |
+| on | ↳ vaultwarden | | 64-128 MB | 500 MB-2 GB | 50-200 MB/mo | Self-hosted password manager |
+| on | ↳ sauron | | 50-80 MB | 100-500 MB | - | YARA malware scanner (full) |
+| on | ↳ sauron-lite | | 32-64 MB | 50-200 MB | - | YARA malware scanner (lightweight) |
+| on | ↳ sauron-forwarder | | 10-16 MB | 10-50 MB | - | Alert forwarder to central |
+| on | ↳ siem-api | | 50-100 MB | 100-500 MB | - | Central syslog collector + API |
+| on | ↳ palantir-monitor | | 50-80 MB | 100-500 MB | - | Security scanner (Rust, daily) |
+| on | ↳ introspect-proxy | | 32-64 MB | 50-100 MB | 50-200 MB/mo | OIDC token validation |
+| | **monitoring** | Infrastructure | | | | Monitoring and logging |
+| on | ↳ dozzle | | 32-64 MB | 50-100 MB | 50-200 MB/mo | Docker log viewer |
+| on | ↳ alerts-api | | 32-64 MB | 100-500 MB | 50-200 MB/mo | Alert management API |
+| on | ↳ c3-collector | | 50-100 MB | 100-500 MB | - | VM stats collector |
+| | **development** | Infrastructure | | | | Development tools |
+| on | ↳ code-server | | 200-400 MB | 1-5 GB | 100-500 MB/mo | VS Code in browser |
+| on | ↳ photos-webhook | | 50-100 MB | 500 MB-2 GB | 50-200 MB/mo | Photoprism webhook + PostgreSQL |
+| | **TOTAL** | | **~4.5-7 GB** | **~45-165 GB** | **~22-68 GB/mo** | All active services |
 
 
 **VM Totals (Estimated)**:
 
 | VM | Services | Total RAM (Est) | Total Storage (Est) | Bandwidth (Est) |
 |----|----------|-----------------|---------------------|-----------------|
-| oci-f-micro_1 | mailu | ~300-500 MB | ~5-50 GB | ~1-10 GB/mo |
-| oci-f-micro_2 | matomo-app, matomo-db | ~500 MB - 1 GB | ~3-15 GB | ~500 MB-2 GB/mo |
-| oci-p-flex_1 | photoprism, radicale, redis | ~1.2-2.5 GB | ~15-60 GB | ~5-25 GB/mo |
-| gcp-f-micro_1 | npm, authelia, flask-app | ~200-450 MB | ~200 MB-700 MB | ~5-20 GB/mo |
-| **TOTAL** | | **~2.5-5 GB** | **~120-230 GB** | **~23-105 GB/mo** |
+| oci-f-micro_1 | mailu, fluent-bit, sauron-lite | ~380-630 MB | ~5-50 GB | ~1-10 GB/mo |
+| oci-f-micro_2 | analytics (matomo), fluent-bit, sauron-lite | ~590 MB - 1.2 GB | ~3-15 GB | ~500 MB-2 GB/mo |
+| oci-p-flex_1 | photoprism, radicale, lgtm, gitea, bup, borg, fluent-bit, **suite**, vaultwarden, code-server, photos-webhook, sauron | ~3.5-6.5 GB | ~35-160 GB | ~12-50 GB/mo |
+| gcp-f-micro_1 | npm, authelia, flask-app, fluent-bit, dozzle, alerts-api, c3-collector, introspect-proxy, siem-api | ~380-660 MB | ~300 MB-1 GB | ~6-22 GB/mo |
+| **TOTAL** | | **~5-9 GB** | **~45-226 GB** | **~20-84 GB/mo** |
 
 ---
 
@@ -315,7 +374,7 @@ gcloud compute ssh arch-1 --zone us-central1-a
 | **Domain** | analytics.diegonmarcos.com |
 | **Internal Port** | 8080 |
 | **Technology** | matomo:fpm-alpine + mariadb:11.4 |
-| **Container** | matomo-app, matomo-db |
+| **Container** | analytics-app, analytics-db, analytics-web |
 | **Features** | Anti-blocker proxy, Tag Manager, Custom events |
 | **Status** | Active |
 
@@ -451,6 +510,208 @@ DKIM: mail._domainkey.diegonmarcos.com (RSA 2048-bit)
 
 **Clients:** Thunderbird, iOS Calendar, Android DAVx5
 
+#### Vaultwarden (Password Manager)
+| Property | Value |
+|----------|-------|
+| **VM** | oci-p-flex_1 (144.24.196.72) |
+| **Domain** | vault.diegonmarcos.com |
+| **Internal Port** | 8081 (HTTP), 3012 (WebSocket) |
+| **Technology** | Vaultwarden (Bitwarden-compatible server) |
+| **Container** | vaultwarden/server:latest |
+| **Database** | SQLite (/data/db.sqlite3) |
+| **Features** | Password vault, WebSocket sync, Admin panel, SMTP notifications via Gmail |
+| **Auth** | Master password + 2FA (optional) |
+| **RAM** | 64-128 MB |
+| **Storage** | 500 MB-2 GB |
+| **Status** | Active |
+
+**Configuration:**
+- Signups disabled, invitations enabled
+- WebSocket enabled for live sync
+- SMTP via Gmail (587/starttls)
+- Admin panel protected by token
+
+#### Code Server (Web IDE)
+| Property | Value |
+|----------|-------|
+| **VM** | oci-p-flex_1 (144.24.196.72) |
+| **Port** | 8443 |
+| **Technology** | LinuxServer code-server (VS Code in browser) |
+| **Container** | lscr.io/linuxserver/code-server:latest |
+| **Features** | Full VS Code experience, Extensions, Integrated terminal |
+| **Auth** | Protected by Authelia (no password) |
+| **Workspace** | /config/workspace |
+| **RAM** | 200-400 MB |
+| **Storage** | 1-5 GB |
+| **Status** | Active |
+
+**Security:**
+- Binds to WireGuard IP (10.0.0.2) or localhost only
+- Protected by Authelia 2FA
+- Sudo available with password
+
+#### Photos Webhook Handler
+| Property | Value |
+|----------|-------|
+| **VM** | oci-p-flex_1 (144.24.196.72) |
+| **Port** | 5001 |
+| **Technology** | Python Flask + PostgreSQL |
+| **Containers** | photos-webhook, photos-db |
+| **Database** | PostgreSQL 16 Alpine |
+| **Features** | Photoprism webhook processing, S3 integration, Event logging |
+| **RAM** | 50-100 MB (webhook), 30-50 MB (db) |
+| **Storage** | 500 MB-2 GB |
+| **Status** | Active |
+
+**Integration:**
+- Receives webhooks from Photoprism on photo events
+- Stores metadata in PostgreSQL
+- Integrates with Oracle Object Storage (S3-compatible)
+
+### 4.6 Security Services
+
+#### Sauron (Malware Scanner)
+
+**Sauron Full (oci-p-flex_1, oci-f-micro_1, oci-f-micro_2)**
+| Property | Value |
+|----------|-------|
+| **Container** | sauron + sauron-forwarder |
+| **Technology** | Rust binary + YARA rules |
+| **Watch Paths** | /etc, /home, /var/lib/docker (read-only) |
+| **Detection** | Webshells, cryptominers, suspicious patterns |
+| **Scan Mode** | Incremental (inotify + hourly modified files scan) |
+| **Alert Method** | JSON logs + netcat forward to central |
+| **RAM** | 50-80 MB (scanner), 10-16 MB (forwarder) |
+| **CPU** | 25% limit (cgroup weight 256) |
+| **Status** | Active on all VMs |
+
+**Sauron Lite (1GB VMs)**
+| Property | Value |
+|----------|-------|
+| **Container** | sauron |
+| **Technology** | Rust binary + YARA rules (reduced ruleset) |
+| **Watch Paths** | /etc, /home (read-only) |
+| **RAM** | 32-64 MB |
+| **CPU** | 25% limit |
+| **Status** | Active on micro VMs |
+
+**Sauron Central (gcp-f-micro_1)**
+| Property | Value |
+|----------|-------|
+| **Containers** | syslog-central, siem-api |
+| **Technology** | syslog-ng 4.4 + Python Flask |
+| **Port** | 5514/tcp (syslog), 8080 (API) |
+| **Database** | SQLite (/var/log/siem/alerts.db) |
+| **Features** | Centralized alert aggregation, Query API, Alert persistence |
+| **RAM** | 50-100 MB |
+| **Status** | Active |
+
+**Architecture:**
+```
+All VMs (sauron/sauron-lite) → [netcat:5514] → GCP (syslog-central) → SQLite
+                                                       ↓
+                                                   SIEM API (port 8080)
+```
+
+#### Palantir Monitor (Security Scanner)
+| Property | Value |
+|----------|-------|
+| **VM** | oci-p-flex_1 (144.24.196.72) |
+| **Containers** | palantir-monitor, palantir-cron |
+| **Technology** | Rust binary + Alpine cron |
+| **Schedule** | Daily at 7:00 AM UTC |
+| **Features** | VM health checks, Container security scan, Docker socket analysis, Email reports |
+| **RAM** | 50-80 MB (monitor), 40-60 MB (cron) |
+| **CPU** | 50% limit (monitor), 5% (cron) |
+| **Reports** | /app/reports (persistent volume) |
+| **Email** | Via SMTP proxy (no-reply@diegonmarcos.com) |
+| **Status** | Active (restart: no) |
+
+**Monitored VMs:**
+- oci-f-micro_1 (130.110.251.193)
+- oci-f-micro_2 (129.151.228.66)
+- gcp-f-micro_1 (35.226.147.64)
+- oci-p-flex_1 (local)
+
+**Checks:**
+- SSH connectivity
+- Docker daemon status
+- Container security (privileged, capabilities)
+- Volume mounts
+- Network exposure
+
+#### Introspect Proxy (OIDC Token Validation)
+| Property | Value |
+|----------|-------|
+| **VM** | gcp-f-micro_1 (35.226.147.64) |
+| **Port** | 4182 (localhost only) |
+| **Technology** | Python Flask + requests |
+| **Features** | Bearer token validation, OIDC introspection, NPM integration |
+| **Authelia Endpoint** | https://auth.diegonmarcos.com/api/oidc/introspection |
+| **Client ID** | cli |
+| **RAM** | 32-64 MB |
+| **Status** | Active |
+
+**Usage:**
+NPM forwards `Authorization: Bearer <token>` headers to this proxy, which validates tokens via Authelia's OIDC introspection endpoint.
+
+### 4.7 Monitoring Services
+
+#### Dozzle (Docker Log Viewer)
+| Property | Value |
+|----------|-------|
+| **VM** | gcp-f-micro_1 (35.226.147.64) |
+| **Port** | 9999 |
+| **Technology** | amir20/dozzle:latest |
+| **Features** | Real-time Docker logs, Multi-container view, Search/filter |
+| **Access** | Docker socket (read-only) |
+| **RAM** | 32-64 MB |
+| **Status** | Active |
+
+**Access:** http://35.226.147.64:9999
+
+#### Alerts API (Alert Management)
+| Property | Value |
+|----------|-------|
+| **VM** | gcp-f-micro_1 (35.226.147.64) |
+| **Port** | 5050 |
+| **Technology** | Python Flask + SQLite |
+| **Database** | /data/alerts.db |
+| **Features** | Alert CRUD, ntfy integration, REST API |
+| **Endpoints** | /api/health, /api/alerts, /api/alerts/<id> |
+| **RAM** | 32-64 MB |
+| **CPU** | 10% limit |
+| **Status** | Active |
+
+**Integration:**
+- Stores alerts in SQLite
+- Forwards to ntfy (https://rss.diegonmarcos.com)
+- Used by Cloud Dashboard
+
+#### C3 Collector (VM Stats Collector)
+| Property | Value |
+|----------|-------|
+| **VM** | gcp-f-micro_1 (35.226.147.64) |
+| **Technology** | Python + SSH (paramiko) |
+| **Features** | VM stats collection, Docker metrics, JSON output, Dashboard data |
+| **Output** | /app/4.jsons/dashboard.json (shared with Flask API) |
+| **SSH Access** | ~/.ssh keys (read-only) |
+| **Schedule** | Continuous (60s interval) |
+| **Config** | /app/config/architecture.json |
+| **RAM** | 50-100 MB |
+| **Status** | Active |
+
+**Collected Metrics:**
+- CPU, RAM, disk usage per VM
+- Container status and resource usage
+- Service uptime and health
+- Network traffic stats
+
+**Architecture:**
+```
+C3 Collector (SSH to all VMs) → JSON files → Flask API → Cloud Dashboard
+```
+
 ---
 
 ## 5. Network Architecture
@@ -572,9 +833,9 @@ networks:
 
 | Container | public_net | private_net | mail_net | db_bridge |
 |-----------|:----------:|:-----------:|:--------:|:---------:|
-| web-server | X | | | |
-| matomo-app | X | | | |
-| matomo-db | X | | | X |
+| analytics-web | X | | | |
+| analytics-app | X | | | |
+| analytics-db | X | | | X |
 | nextcloud-app | | X | | |
 | nextcloud-db | | X | | X |
 | redis | | X | | |
@@ -585,8 +846,8 @@ networks:
 ### 6.3 Isolation Verification
 
 ```bash
-# From matomo-app, verify cannot reach private network
-docker exec matomo-app ping -c 1 172.21.0.2  # Should fail
+# From analytics-app, verify cannot reach private network
+docker exec analytics-app ping -c 1 172.21.0.2  # Should fail
 
 # From nextcloud-app, verify cannot reach public network
 docker exec nextcloud-app ping -c 1 172.20.0.2  # Should fail
@@ -696,16 +957,24 @@ services:
 
 | Service | Type | Description | Location | Status |
 |---------|------|-------------|----------|--------|
-| **MyVault** | Password Manager | Bitwarden EU - Secure credential storage | vault.bitwarden.eu (SaaS) | ON |
+| **Vaultwarden** | Password Manager | Self-hosted Bitwarden-compatible server | OCI Flex 1 (vault.diegonmarcos.com) | ON |
+| **MyVault** | Password Manager | Bitwarden EU - Secure credential storage (backup) | vault.bitwarden.eu (SaaS) | ON |
 | **Authelia** | 2FA Gateway | TOTP authentication for protected services (SMTP: Gmail) | GCP Micro 1 | ON |
+| **Introspect Proxy** | OIDC Validation | Bearer token validation via Authelia introspection | GCP Micro 1 (port 4182) | ON |
 | **OAuth2 Proxy** | Admin Auth | GitHub OAuth2 authentication proxy | GCP Micro 1 | ON |
 | **NPM + SSL** | TLS Termination | Let's Encrypt certificates with auto-renewal | GCP Micro 1 | ON |
 | **Docker Networks** | Network Isolation | Segmented: public_net, private_net, db_bridge | OCI Flex 1 | ON |
 | **SSH Keys** | Access Control | Key-based auth for all VMs - no passwords | All VMs | ON |
 | **Cloud Firewalls** | Network Security | OCI Security Lists + GCP Firewall Rules | OCI + GCP | ON |
+| **WireGuard VPN** | Private Network | Native mesh VPN (10.0.0.0/24) - NOT Docker | All VMs (native) | ON |
 | **Gmail SMTP Relay** | Email Notifications | App Password auth for Authelia notifications | Gmail (SaaS) | ON |
-| **Sauron** | Malware Scanner | Rust YARA scanner with incremental scanning | oci-p-flex_1 | ON |
-| **Collector** | Log Aggregator | journald + Sauron alerts → ntfy | oci-p-flex_1 | ON |
+| **Sauron Full** | Malware Scanner | Rust YARA scanner with incremental scanning + forwarder | OCI Flex 1, OCI Micro 1, OCI Micro 2 | ON |
+| **Sauron Lite** | Malware Scanner | Lightweight YARA scanner for 1GB VMs | OCI Micro 1, OCI Micro 2 | ON |
+| **Sauron Central** | SIEM | Central syslog collector + SQLite database + API | GCP Micro 1 (port 5514, 8080) | ON |
+| **Palantir Monitor** | Security Scanner | Daily security audit of all VMs + containers | OCI Flex 1 (daily 7am) | ON |
+| **Dozzle** | Log Viewer | Real-time Docker container log viewer | GCP Micro 1 (port 9999) | ON |
+| **Alerts API** | Alert Manager | Alert CRUD + ntfy integration | GCP Micro 1 (port 5050) | ON |
+| **C3 Collector** | Stats Collector | VM/container metrics → dashboard JSON | GCP Micro 1 | ON |
 
 ### 7.7.1 Security Monitoring Stack (Sauron + Collector)
 
@@ -844,6 +1113,127 @@ Message: {"path":"/watch/...", "tags":["PHP_WebShell_Generic"]}
 - `/home/diego/Documents/Git/back-System/cloud/a_solutions/back-security/anti-virus/sauron/SPEC.md`
 - `/home/diego/Documents/Git/back-System/cloud/a_solutions/back-security/anti-virus/sauron/collector/SPEC.md`
 
+### 7.7.2 Observability Stack (LGTM + Fluent Bit)
+
+**Overview**: Centralized logging and monitoring using Grafana Labs stack with lightweight log shippers.
+
+| Component | Purpose | Location | RAM |
+|-----------|---------|----------|-----|
+| **Grafana** | Dashboard & visualization | oci-p-flex_1 | ~100 MB |
+| **Loki** | Log aggregation | oci-p-flex_1 | ~50 MB |
+| **Tempo** | Distributed tracing | oci-p-flex_1 | ~50 MB |
+| **Mimir** | Metrics storage | oci-p-flex_1 | ~80 MB |
+| **Fluent Bit** | Log shipper | All VMs | 4-50 MB |
+
+**Deployed On**: `oci-p-flex_1` (144.24.196.72)
+
+**Architecture**:
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   GCP VM    │     │  Micro 1    │     │  Micro 2    │     │  Flex VM    │
+│ fluent-bit  │     │ fluent-bit  │     │ fluent-bit  │     │ fluent-bit  │
+│   (3 MB)    │     │  (30 MB)    │     │  (42 MB)    │     │   (4 MB)    │
+└──────┬──────┘     └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+       │                   │                   │                   │
+       └───────────────────┴───────────────────┴───────────────────┘
+                                    │
+                                    ▼ Port 3017
+                    ┌───────────────────────────────┐
+                    │      oci-p-flex_1             │
+                    │  ┌─────────────────────────┐  │
+                    │  │         LOKI            │  │
+                    │  │    (Log storage)        │  │
+                    │  └───────────┬─────────────┘  │
+                    │              │                │
+                    │  ┌───────────▼─────────────┐  │
+                    │  │       GRAFANA           │  │
+                    │  │   (Visualization)       │  │
+                    │  │    Port 3016            │  │
+                    │  └─────────────────────────┘  │
+                    │                               │
+                    │  ┌─────────┐  ┌─────────┐    │
+                    │  │  TEMPO  │  │  MIMIR  │    │
+                    │  │ (Traces)│  │(Metrics)│    │
+                    │  └─────────┘  └─────────┘    │
+                    └───────────────────────────────┘
+```
+
+**Access URLs**:
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Grafana | http://144.24.196.72:3016 | admin / 1234567890 |
+| Loki API | http://144.24.196.72:3017 | - |
+
+**Fluent Bit Configuration** (per VM):
+```conf
+[OUTPUT]
+    Name         loki
+    Match        *
+    Host         144.24.196.72
+    Port         3017
+    Labels       job=fluent-bit, host=${HOSTNAME}
+```
+
+**Location**: `/opt/lgtm` and `/opt/fluent-bit` on each VM
+
+### 7.7.3 Backup Infrastructure (Gitea + bup + Borg)
+
+**Overview**: Three-tier backup system with deduplication for code, databases, and media.
+
+| Tier | Tool | Data Type | Dedup Method | Storage |
+|------|------|-----------|--------------|---------|
+| **Code** | Gitea | Git repos | Git packfiles | ~500 MB |
+| **Databases** | bup | SQL dumps | Git packfiles | ~100 MB |
+| **Media** | Borg | Photos, files | Content-chunking | ~5-50 GB |
+
+**Deployed On**: `oci-p-flex_1` (144.24.196.72)
+
+**Architecture**:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FLEX VM                                 │
+│                    (oci-p-flex_1)                               │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ 1. CODE - Gitea (:3000)                                 │   │
+│  │    Git server mirroring GitHub repos                    │   │
+│  │    /backup/code/                                        │   │
+│  │    ├── cloud.git  ✓                                     │   │
+│  │    ├── unix.git   ✓                                     │   │
+│  │    ├── front.git  (needs GitHub token)                  │   │
+│  │    └── vault.git  (needs GitHub token)                  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ 2. DATABASES - bup (Git packfiles)                      │   │
+│  │    SQL/SQLite dumps with deduplication                  │   │
+│  │    /backup/databases/                                   │   │
+│  │    └── flex/latest/  (NocoDB backup ✓)                  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ 3. MEDIA - Borg (binary dedup)                          │   │
+│  │    Photos, uploads, large files                         │   │
+│  │    /backup/media/                                       │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Access URLs**:
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Gitea | http://144.24.196.72:3000 | diego / 1234567890 |
+
+**Cron Schedule**:
+| Time | Job | Tool |
+|------|-----|------|
+| 3:00 AM | Database backup | bup |
+| 4:00 AM | Media backup | Borg |
+
+**Location**: `/opt/gitea`, `/opt/backup/bup`, `/opt/backup/borg` on oci-p-flex_1
+**Config Files**: `a_solutions/all/back-backup/`
+
 ### 7.8 Security Architecture Diagram
 
 ```
@@ -924,6 +1314,8 @@ services:
 ```
 
 ### 7.10 WireGuard VPN Mesh Network
+
+> **IMPORTANT**: WireGuard runs **NATIVELY** on all VMs (not in Docker). Configuration is in `/etc/wireguard/wg0.conf` on each VM.
 
 All VMs are connected via WireGuard mesh network with GCP as the central hub. This enables secure inter-VM communication and prevents direct public IP access bypassing authentication.
 
@@ -1670,16 +2062,16 @@ gcloud compute ssh arch-1 --zone=us-central1-a --command="sudo docker cp npm:/da
 sudo docker ps
 
 # View logs
-sudo docker logs --tail 100 matomo-app
-sudo docker logs --tail 100 -f matomo-db
+sudo docker logs --tail 100 analytics-app
+sudo docker logs --tail 100 -f analytics-db
 
 # Execute shell in container
-sudo docker exec -it matomo-app bash
+sudo docker exec -it analytics-app bash
 sudo docker exec -it matomo-db bash
 sudo docker exec -it mailu-admin sh
 
 # Restart container
-sudo docker restart matomo-app
+sudo docker restart analytics-app
 
 # View resource usage
 sudo docker stats --no-stream
@@ -1815,8 +2207,9 @@ All services follow a consistent naming pattern:
 
 | Pattern | Example | Description |
 |---------|---------|-------------|
-| `{service}-app` | `matomo-app`, `radicale-app` | Application/service container |
-| `{service}-db` | `matomo-db`, `photoprism-db` | Database container |
+| `{service}-app` | `analytics-app`, `radicale-app` | Application/service container |
+| `{service}_app` | `photoprism_app`, `hedgedoc_app` | Application container (underscore variant) |
+| `{service}-db` | `analytics-db`, `photoprism_mariadb` | Database container |
 | `npm-gcloud` | Central NPM proxy | Single reverse proxy on GCP |
 
 ---
@@ -2435,12 +2828,74 @@ GitHub App settings:
 5. **Rate Limiting**: Admin endpoints rate-limited to prevent abuse
 6. **Audit Logging**: All admin actions logged with timestamp and user
 
+### 14.8 CLI/API Authentication with Authelia (Introspect Proxy)
+
+For CLI/API access to protected services (NocoDB, Matomo, IDE), use Bearer token authentication via the Introspect Proxy.
+
+**Architecture:**
+```
+CLI/API Request
+    │ Authorization: Bearer <token>
+    ▼
+NPM (Lua auth) ──► Introspect Proxy (:4182) ──► Authelia OIDC Introspection
+    │                     │
+    │ ◄─── 200 + headers ─┘ (valid token)
+    │ ◄─── 401 ───────────┘ (invalid → redirect)
+    ▼
+Backend Service
+```
+
+**Configured Services:**
+
+| Service | Domain | Bearer Auth |
+|---------|--------|-------------|
+| NocoDB | db.diegonmarcos.com | ✅ |
+| Matomo | analytics.diegonmarcos.com | ✅ |
+| Code Server | ide.diegonmarcos.com | ✅ |
+
+**Obtaining Tokens:**
+
+```bash
+# 1. Start OIDC auth flow (open in browser)
+open "https://auth.diegonmarcos.com/api/oidc/authorization?client_id=cli&response_type=code&scope=openid%20profile%20email&redirect_uri=http://localhost:8085/callback"
+
+# 2. Complete login + 2FA in browser, copy code from redirect URL
+
+# 3. Exchange code for tokens
+curl -X POST https://auth.diegonmarcos.com/api/oidc/token \
+  -u "cli:cli-secret-2026-secure-token-for-automation" \
+  -d "grant_type=authorization_code&code=<CODE>&redirect_uri=http://localhost:8085/callback"
+
+# 4. Use access_token from response
+TOKEN="eyJhbGc..."
+curl -H "Authorization: Bearer $TOKEN" https://db.diegonmarcos.com/api/v2/meta/bases
+```
+
+**Authelia CLI Client Config:**
+```yaml
+# In authelia configuration.yml under identity_providers.oidc.clients:
+- client_id: 'cli'
+  client_name: 'CLI Client'
+  client_secret: '$pbkdf2-sha512$...'  # cli-secret-2026-secure-token-for-automation
+  public: false
+  authorization_policy: 'two_factor'
+  scopes: ['openid', 'profile', 'email']
+  grant_types: ['authorization_code', 'refresh_token']
+  token_endpoint_auth_method: 'client_secret_basic'
+```
+
+**Introspect Proxy Location:** `gcp-f-micro_1:/opt/introspect-proxy`
+
+**Reference:** `/home/diego/Mounts/Git/cloud/a_solutions/all/back-security/introspect-proxy/DEPLOY.md`
+
 ---
 
 ## Changelog
 
 | Date | Change |
 |------|--------|
+| 2026-02-05 | **v3.6.0** - Added Section 14.8: CLI/API Authentication with Authelia Introspect Proxy |
+| 2026-02-05 | Documented Bearer token auth for NocoDB, Matomo, IDE via introspect-proxy |
 | 2025-12-14 | **v3.5.0** - Removed all dev/hold/backlog items, keeping only active services |
 | 2025-12-14 | Removed ML VMs, ARM server, and all dev services (git, vpn, terminal, cryptpad, cache) |
 | 2025-12-14 | Simplified status to single `on` value |
@@ -2799,7 +3254,7 @@ index.html (Navigation Hub)
 
 | User | Coder |
 |------|-------|
-| photos-app | matomo-app |
+| photoprism_app | analytics-app |
 | mail-app | calendar-app |
 
 **Card Component:**
@@ -2820,9 +3275,9 @@ index.html (Navigation Hub)
 | Root (Cloud Management) | Infra (Service Infrastructure) |
 |-------------------------|--------------------------------|
 | **Cloud Providers** | **User Services** |
-| - Oracle Cloud Console | - photos-app, mail-app, calendar-app |
+| - Oracle Cloud Console | - photoprism_app, mail-app, calendar-app |
 | - Google Cloud Console | **Databases** |
-| **VMs (SSH Access)** | - matomo-db, git-db, etc. |
+| **VMs (SSH Access)** | - analytics-db, git-db, etc. |
 | - oracle-web-server-1 | **Infra Services** |
 | - oracle-services-server-1 | - flask-app, cache-app |
 | - oracle-arm-server | **Proxies** |
