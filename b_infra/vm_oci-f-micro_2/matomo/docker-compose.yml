@@ -1,0 +1,50 @@
+# Matomo - Web Analytics
+# Deployed on: oci-f-micro_2 (129.151.228.66)
+# Path on server: /home/ubuntu/matomo/
+# Domain: analytics.diegonmarcos.com
+
+version: '3.8'
+
+services:
+  matomo-db:
+    image: mariadb:10.11
+    container_name: matomo-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: matomo
+      MYSQL_USER: matomo
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - matomo_db:/var/lib/mysql
+      - ./mariadb-custom.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    ports:
+      - "10.0.0.4:3306:3306"
+    networks:
+      - matomo-net
+
+  matomo-app:
+    image: matomo:latest
+    container_name: matomo-app
+    restart: unless-stopped
+    depends_on:
+      - matomo-db
+    environment:
+      MATOMO_DATABASE_HOST: matomo-db
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      MATOMO_DATABASE_DBNAME: matomo
+    volumes:
+      - matomo_data:/var/www/html
+    ports:
+      - '8080:80'
+    networks:
+      - matomo-net
+
+volumes:
+  matomo_db:
+  matomo_data:
+
+networks:
+  matomo-net:
+    driver: bridge
