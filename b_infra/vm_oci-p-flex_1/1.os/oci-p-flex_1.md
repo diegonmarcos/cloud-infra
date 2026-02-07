@@ -6,103 +6,92 @@
 | **ID** | oci-p-flex_1 |
 | **Name** | OCI Paid Flex 1 |
 | **Provider** | Oracle Cloud |
-| **Instance Type** | VM.Standard.E4.Flex |
-| **Status** | Wake-on-Demand |
-| **Availability** | PAID (~$5.50/mo) |
+| **Instance Type** | VM.Standard.A1.Flex (4 OCPU, 24GB) |
+| **Hostname** | oci-p-flex-1 |
+| **OCID** | ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczach3pczd4kn6w5stdt7rs64u2uqexzor6lyneaebc2i2ra |
+| **Status** | PRODUCTION |
 
 ## Specs
 | Resource | Value |
 |----------|-------|
-| **CPU** | 1 OCPU (2 vCPU AMD) |
-| **RAM** | 8 GB |
-| **Storage** | 100 GB Boot |
+| **CPU** | 4 OCPU (Ampere A1 ARM) |
+| **RAM** | 24 GB |
+| **Storage** | 200 GB |
+| **Arch** | aarch64 (ARM64) |
 
 ## Network
 | Property | Value |
 |----------|-------|
 | **Public IP** | 144.24.196.72 |
-| **Private IP** | 10.0.0.x |
+| **WireGuard IP** | 10.0.0.2 |
 | **Region** | eu-marseille-1 |
 | **Docker Network** | dev_network (172.24.0.0/24) |
 
 ## OS
 | Property | Value |
 |----------|-------|
-| **Name** | Ubuntu |
-| **Version** | 22.04 LTS |
+| **Name** | Ubuntu 24.04 LTS |
+| **Kernel** | 6.14.0-1018-oracle |
+| **Arch** | aarch64 |
 
 ## SSH Access
 ```bash
-ssh ubuntu@144.24.196.72
+# From GCP hub:
+ssh -i ~/.ssh/id_rsa ubuntu@144.24.196.72
+# Or via WireGuard:
+ssh -i ~/.ssh/id_rsa ubuntu@10.0.0.2
 ```
 
 ## Services Running
-| Service | Port | Status |
-|---------|------|--------|
-| n8n-infra-app | 5678 | ON |
-| sync-app | 8384 | ON |
-| cloud-app | 80 | ON |
-| flask-app | 5000 | DEV |
-| git-app | 3000 | DEV |
-| vpn-app | 1194 | DEV |
-| terminal-app | 7681 | DEV |
-| cache-app | 6379 | DEV |
+| Service | Container | Port | Network |
+|---------|-----------|------|---------|
+| NocoDB (main) | nocodb | 8085 | dev_network + nocodb_network |
+| NocoDB Postgres | nocodb-db | - | nocodb_network |
+| NocoDB (front-suite) | nocodb_app | 3020 | dev_network |
+| NocoDB Postgres (front-suite) | nocodb_postgres | - | dev_network |
+| PhotoPrism (main) | photoprism | 10.0.0.2:2342 | dev_network |
+| PhotoPrism MariaDB | photoprism-db | 127.0.0.1:3307 | dev_network |
+| PhotoPrism (front-suite) | photoprism_app | 3013 | dev_network |
+| PhotoPrism MariaDB (front-suite) | photoprism_mariadb | - | dev_network |
+| Radicale (calendar) | radicale | 10.0.0.2:5232 | dev_network |
+| Redis | redis | 6379 | dev_network |
+| HedgeDoc (notes) | hedgedoc_app | 3010 | dev_network |
+| HedgeDoc Postgres | hedgedoc_postgres | - | dev_network |
+| Etherpad (docs) | etherpad_app | 3012 | dev_network |
+| Etherpad Postgres | etherpad_postgres | - | dev_network |
+| Filebrowser | filebrowser_app | 3015 | dev_network |
+| Grist (sheets) | grist_app | 3011 | dev_network |
+| RevealMD (slides) | revealmd_app | 3014 | dev_network |
+| Grafana | lgtm_grafana | 3016 | dev_network |
+| Loki | lgtm_loki | 3017 | dev_network |
+| Tempo | lgtm_tempo | 3018 | dev_network |
+| Mimir | lgtm_mimir | 3019 | dev_network |
+| Gitea | gitea | 3000, 2222 | gitea_backup_network |
+| Sauron (security) | sauron | - | sauron_security |
+| Collector | collector | - | host |
+| Fluent-bit | fluent-bit | - | - |
 
-## Databases
-| Database | Port | Status |
-|----------|------|--------|
-| cloud-db | 5432 | DEV |
-| git-db | 5432 | DEV |
+## Docker Networks
+- dev_network (main shared network)
+- nocodb_network (172.25.0.0/24)
+- gitea_backup_network
+- sauron_security
 
-## Ports
-**External:** 22, 80, 443, 22000, 21027, 1194, 2222
-**Internal:** 5678, 8384, 5000, 3000, 7681, 6379, 5432
-
-## Resource Usage
-| Resource | Min | Max |
-|----------|-----|-----|
-| RAM | 2 GB | 6 GB |
-| Storage | 10 GB | 50 GB |
+## OS Config Files
+- `/etc/wireguard/wg0.conf` - WireGuard spoke (see wireguard-wg0.conf)
+- iptables: SSH + ICMP + WireGuard (10.0.0.0/24) ACCEPT, REJECT default
 
 ## Wake-on-Demand Architecture
-This VM is **NOT always-on** to save costs:
-- Stays **dormant** by default
-- Only started when services are needed
-- Reduces monthly cost from ~$50+ to ~$5.50/mo
-- Heavy services (n8n, sync, git, cloud) run here instead of free-tier VMs
+This VM is **wake-on-demand** to save costs:
+- Heavy services run here instead of free-tier VMs
+- Auto-shutdown via idle detection timer
 
 ### Auto-Shutdown (Idle Detection)
 **Script:** `/opt/scripts/idle-shutdown.sh`
 **Timer:** `idle-shutdown.timer` (runs every 5 minutes)
 **Timeout:** 30 minutes (1800 seconds) of inactivity
 
-**Idle conditions (all must be true):**
-- No active SSH sessions
-- CPU usage < 10%
-- No Docker containers using > 5% CPU
-- No active Syncthing transfers
-- No active n8n workflow executions
-- Network traffic < 100 KB/s
-
-**Logs:** `/var/log/idle-shutdown.log`
-
-**Commands:**
-```bash
-# Check timer status
-systemctl status idle-shutdown.timer
-
-# View idle logs
-tail -f /var/log/idle-shutdown.log
-
-# Reset idle timer (keep VM running)
-sudo rm /var/run/idle-shutdown-state
-
-# Disable auto-shutdown temporarily
-sudo systemctl stop idle-shutdown.timer
-
-# Re-enable auto-shutdown
-sudo systemctl start idle-shutdown.timer
-```
-
 ## Notes
-Wake-on-Demand development server for heavy workloads: n8n (Infra) + Syncthing + Cloud Dashboard + Git + VPN + Terminal + Cache
+- ARM64 (aarch64) - all images must support arm64
+- All containers set to `restart: unless-stopped` (fixed 2026-02-07)
+- Main suite hosting: docs, sheets, slides, photos, calendar, notes, DB

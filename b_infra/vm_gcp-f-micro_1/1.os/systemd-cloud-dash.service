@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloud Dashboard Flask API
+After=network.target
+
+[Service]
+Type=simple
+User=diego
+WorkingDirectory=/home/diego/cloud-dash
+Environment="PATH=/home/diego/.local/bin:/usr/local/bin:/usr/bin"
+Environment="SUPPRESS_LABEL_WARNING=True"
+Environment="HOME=/home/diego"
+ExecStart=/usr/bin/python3 /home/diego/cloud-dash/run_api.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Code Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Environment="PATH=/nix/store/.../code-server/bin:/usr/bin:/bin"
+ExecStart=/nix/store/.../code-server --bind-addr 0.0.0.0:8443 --auth none --disable-telemetry /home/ubuntu/workspace
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
