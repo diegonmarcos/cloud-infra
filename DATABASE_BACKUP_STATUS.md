@@ -1,112 +1,62 @@
 # Database Backup Status
 
-> **Generated**: 2026-02-05
-> **Status**: Flex VM backup infrastructure deployed
+> **Updated**: 2026-02-07
+> **Status**: Partial — Flex has backups, GCP/Micros mostly unprotected
 
 ## Database Inventory
 
-| Server | Service | DB Type | Container | Size | Backup |
-|--------|---------|---------|-----------|------|--------|
-| **gcp-f-micro_1** | NPM | SQLite | sqlite-npm (ws4sqlite) | 200KB | ❌ |
-| | Vaultwarden | SQLite | sqlite-vaultwarden (ws4sqlite) | ? | ❌ |
-| | ntfy | SQLite | sqlite-ntfy (ws4sqlite) | ? | ❌ |
-| | Authelia | Redis | authelia-redis | in-mem | ❌ |
-| **oci-f-micro_1** | Mailu | Redis | mailu-redis | in-mem | ❌ |
-| **oci-f-micro_2** | Matomo | MariaDB 10.11 | matomo-db | ? | ❌ |
-| **oci-p-flex_1** | NocoDB | PostgreSQL 16 | nocodb-db | 924KB | ✅ bup |
-| | Photoprism | MariaDB | photoprism-db | ? | ❌ |
+| Server | Service | DB Type | Container | Backup | Notes |
+|--------|---------|---------|-----------|--------|-------|
+| **gcp-f-micro_1** | NPM | SQLite | npm | ❌ | `/home/diego/npm/data/database.sqlite` |
+| | Vaultwarden | SQLite | vaultwarden | ❌ | `/home/diego/vaultwarden/data/db.sqlite3` |
+| | ntfy | SQLite | ntfy | ❌ | `/home/diego/ntfy/cache/cache.db` (low priority) |
+| | Authelia | SQLite | authelia | ✅ systemd timer | Daily 3AM → `/home/diego/backups/authelia/` (7 copies) |
+| | Authelia sessions | Redis | authelia-redis | ❌ | In-memory, ephemeral (acceptable) |
+| **oci-p-flex_1** | NocoDB | PostgreSQL 16 | nocodb-db | ✅ bup cron | Daily 3AM via `bup` |
+| | NocoDB (front) | PostgreSQL 16 | nocodb_postgres | ✅ bup cron | Same bup job |
+| | PhotoPrism | MariaDB 10.11 | photoprism-db | ❌ | No backup configured |
+| | PhotoPrism (front) | MariaDB 11 | photoprism_mariadb | ❌ | No backup configured |
+| | Etherpad | PostgreSQL 16 | etherpad_postgres | ❌ | No backup configured |
+| | HedgeDoc | PostgreSQL 16 | hedgedoc_postgres | ❌ | No backup configured |
+| | Redis | Redis | redis | ❌ | AOF enabled, no offsite |
+| **oci-f-micro_1** | Matomo | MariaDB 10.11 | matomo-db | ❌ | No cron, no backup scripts |
+| | Stalwart Mail | Internal | stalwart-mail | ❌ | No backup configured |
+| **oci-f-micro_2** | Matomo | MariaDB (hybrid) | matomo-hybrid | ❌ | Old manual backup exists |
+| | Windmill | PostgreSQL 16 | windmill-db | ❌ | No backup configured |
 
 ## Summary
 
-| DB Type | Count | Backup Tool | Status |
-|---------|-------|-------------|--------|
-| SQLite | 3 | Litestream | ❌ Not deployed |
-| PostgreSQL | 1 | pgBackRest | ❌ Not deployed |
-| MariaDB | 2 | mariabackup | ❌ Not deployed |
-| Redis | 2 | RDB snapshots | ❌ Not deployed |
+| Status | Count | Details |
+|--------|-------|---------|
+| ✅ Backed up | 3 | Authelia SQLite, NocoDB Postgres (x2) |
+| ❌ No backup | 12 | NPM, Vaultwarden, ntfy, PhotoPrism (x2), Etherpad, HedgeDoc, Redis, Matomo (x2), Stalwart, Windmill |
+| ℹ Ephemeral (OK) | 1 | Authelia Redis (sessions) |
 
-**Total: 8 databases, 1 backup configured (NocoDB on Flex)**
+**Total: 16 databases, 3 backed up**
 
-## Recommended Backup Architecture
+## Active Backup Infrastructure
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        BACKUP PIPELINE                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  SQLite (npm, vaultwarden, ntfy)                               │
-│  └── Litestream → S3/B2 (continuous WAL streaming)             │
-│                                                                 │
-│  PostgreSQL (nocodb)                                            │
-│  └── pgBackRest → S3/B2 (incremental, PITR)                    │
-│                                                                 │
-│  MariaDB (matomo, photoprism)                                   │
-│  └── mariabackup → S3/B2 (incremental)                         │
-│                                                                 │
-│  Redis (authelia, mailu)                                        │
-│  └── RDB snapshots → S3/B2 (periodic)                          │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+### Flex VM (oci-p-flex_1)
+- **bup** cron at 3AM: backs up NocoDB Postgres via `pg_dump`
+- **borg** cron at 4AM: backs up media files (photos, filebrowser)
+- **Gitea** mirrors: cloud, unix repos
 
-## Backup Tools
+### GCP (gcp-f-micro_1)
+- **systemd timer** `authelia-backup.timer`: daily 3AM SQLite `.backup` → 7 rolling copies
 
-| DB Type | Tool | Features |
-|---------|------|----------|
-| SQLite | **Litestream** | Continuous WAL replication, S3/B2 native |
-| PostgreSQL | **pgBackRest** | Incremental, parallel, PITR, S3 native |
-| MariaDB | **mariabackup** | Hot backup, incremental, compressed |
-| Redis | **RDB/AOF** | Built-in snapshots, can sync to S3 |
+## Critical Missing Backups
 
-## Storage Targets
-
-| Provider | Free Tier | Use Case |
-|----------|-----------|----------|
-| Oracle Object Storage | 10GB | Primary |
-| Backblaze B2 | 10GB | Secondary |
-| Cross-VM rsync | ∞ | Quick recovery |
-
-## Backup Architecture
-
-Three-tier backup to Flex VM (no cloud storage needed):
-
-| Tier | Tool | Data | Dedup |
-|------|------|------|-------|
-| **Code** | Gitea | Git repos | Git packfiles |
-| **Databases** | bup | SQL dumps | Git packfiles |
-| **Media** | Borg | Photos, files | Content-chunking |
-
-## Configs
-
-Location: `a_solutions/all/back-backup/`
-
-```
-back-backup/
-├── README.md           # Full documentation
-├── deploy.sh           # One-command deployment
-├── gitea/              # Code mirrors
-├── bup/                # Database backups
-└── borg/               # Media backups
-```
-
-## Deploy
-
-```bash
-cd a_solutions/all/back-backup
-./deploy.sh
-```
-
-## Status (2026-02-05)
-
-- [x] Flex VM backup infrastructure deployed
-- [x] Gitea running at http://144.24.196.72:3000
-- [x] GitHub mirrors: cloud ✓, unix ✓ (front/vault need GitHub token for private repos)
-- [x] bup repository initialized, NocoDB backup tested (924KB)
-- [x] Cron jobs configured (3 AM: databases, 4 AM: media)
+1. **Vaultwarden** (GCP) — Password vault, DATA LOSS = catastrophic
+2. **PhotoPrism MariaDB** (Flex) — Photo metadata/indexes
+3. **Matomo MariaDB** (Micro1) — Analytics data
+4. **Windmill Postgres** (Micro2) — Workflow configurations
 
 ## TODO
 
-- [ ] Add GitHub token for private repo mirrors (front, vault)
+- [ ] Add Vaultwarden SQLite backup (systemd timer on GCP, same as Authelia)
+- [ ] Add bup jobs for Etherpad, HedgeDoc, PhotoPrism on Flex
 - [ ] Deploy bup backup scripts to GCP and Micro VMs
-- [ ] Test full media backup with Borg
+- [ ] Add GitHub token for private repo mirrors (front, vault)
 - [ ] Test database restore from bup
+- [ ] Add Matomo mysqldump cron on Micro1
+- [ ] Add Windmill pg_dump cron on Micro2

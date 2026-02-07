@@ -1,0 +1,22 @@
+# Flex oci-p-flex_1 iptables rules
+# Pulled: 2026-02-07
+# Custom INPUT chain (strict):
+#   ACCEPT: established, ICMP, loopback, SSH (22), WireGuard subnet (10.0.0.0/24)
+#   ACCEPT: 35.226.147.64 (GCP) → port 8443 (code-server)
+#   REJECT: everything else
+#
+# Docker networks:
+# br-a14fa7ea677e = dev_network (main)
+# br-ad3813305235 = nocodb_network
+# br-e358b303d5a7 = gitea_backup_network
+# br-060ac89c931b = sauron_security
+
+# Custom filter rules:
+*filter
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+-A INPUT -s 10.0.0.0/24 -j ACCEPT
+-A INPUT -s 35.226.147.64/32 -p tcp -m tcp --dport 8443 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited

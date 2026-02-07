@@ -1,0 +1,25 @@
+# GCP gcp-f-micro_1 iptables rules
+# Pulled: 2026-02-07
+# Note: Most rules are Docker-managed (DOCKER chains)
+# Custom rules: WireGuard MASQUERADE for 10.0.0.0/24
+# No custom INPUT rules (GCP firewall handles external filtering)
+
+# Key custom NAT rule:
+# -A POSTROUTING -s 10.0.0.0/24 -o wg0 -j MASQUERADE
+
+# Docker networks:
+# br-1d8b757fc136 = npm_default
+# br-a99e6ab2d5cc = auth-net (authelia)
+# br-1c225248d640 = postlite_default
+# br-edea8dd9798f = sauron
+# br-ebe2f695ba88 = palantir-monitor
+
+# Port mappings:
+# 80,81,443 → NPM (172.19.0.3)
+# 5000 → flask-api (172.18.0.10)
+# 5514 → syslog (172.18.0.8)
+# 8880-8883 → ws4sqlite (10.0.0.1 only)
+# 5433-5436 → postlite (10.0.0.1 only)
+# 127.0.0.1:9091 → authelia
+# 127.0.0.1:6379 → redis
+# 127.0.0.1:8090 → ntfy
