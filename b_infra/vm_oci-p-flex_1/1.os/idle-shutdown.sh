@@ -2,9 +2,14 @@
 # idle-shutdown.sh - Auto-shutdown VM after 30 minutes of inactivity
 # Location on VM: /opt/scripts/idle-shutdown.sh
 #
+# VM profile: OCI E4.Flex - 1 OCPU (ARM), 8GB RAM
+# Always-on containers: nocodb-db (~1% CPU), photoprism_rclone (~0% CPU)
+#
 # Idle conditions (ALL must be true):
-#   - No active SSH sessions (except the script's own)
-#   - CPU usage < 10% average
+#   - No active SSH sessions
+#   - CPU load < 60% (1 core, background containers ~5-10% baseline)
+#   - No container using > 30% CPU (excludes background DB idle)
+#   - Network < 50KB/s
 #   - No active Syncthing transfers
 #   - No active n8n workflow executions
 #
@@ -17,8 +22,10 @@ set -euo pipefail
 IDLE_TIMEOUT_SECONDS=1800  # 30 minutes
 STATE_FILE="/var/run/idle-shutdown-state"
 LOG_FILE="/var/log/idle-shutdown.log"
-CPU_THRESHOLD=10           # Percent - below this is "idle"
-MIN_UPTIME_SECONDS=300     # Don't shutdown within 5 min of boot
+CPU_THRESHOLD=60           # Percent - load avg * 100 / nproc (1 core baseline ~5-10%)
+DOCKER_CPU_THRESHOLD=30    # Per-container CPU % to consider active
+NETWORK_THRESHOLD=51200    # 50KB/s - lower than before (VM baseline ~500 B/s)
+MIN_UPTIME_SECONDS=600     # Don't shutdown within 10 min of boot (containers need startup time)
 
 # === Logging ===
 log() {
@@ -96,14 +103,16 @@ check_n8n() {
 }
 
 check_docker_activity() {
-    # Check if any container is using significant CPU
-    local active_containers
-    active_containers=$(docker stats --no-stream --format "{{.Name}}:{{.CPUPerc}}" 2>/dev/null | \
-        awk -F: '{gsub(/%/,"",$2); if($2 > 5) print $1}' | wc -l) || active_containers=0
+    # Check if any container is using significant CPU (above threshold)
+    local active_containers active_names
+    active_names=$(docker stats --no-stream --format "{{.Name}}:{{.CPUPerc}}" 2>/dev/null | \
+        awk -F: '{gsub(/%/,"",$2); if($2 > '"$DOCKER_CPU_THRESHOLD"') print $1}') || active_names=""
+
+    active_containers=$(echo "$active_names" | grep -c . || true)
     active_containers=${active_containers:-0}
 
     if [[ "$active_containers" -gt 0 ]]; then
-        log "ACTIVE: $active_containers container(s) using >5% CPU"
+        log "ACTIVE: $active_containers container(s) using >${DOCKER_CPU_THRESHOLD}% CPU: $active_names"
         return 1  # Not idle
     fi
     return 0  # Idle
@@ -133,8 +142,8 @@ check_network_activity() {
     rx_rate=$(( (rx2 - rx1) / 2 ))  # bytes per second
     tx_rate=$(( (tx2 - tx1) / 2 ))
 
-    # Threshold: 100KB/s
-    if [[ "$rx_rate" -gt 102400 ]] || [[ "$tx_rate" -gt 102400 ]]; then
+    # Threshold: 50KB/s (VM baseline is ~500 B/s)
+    if [[ "$rx_rate" -gt "$NETWORK_THRESHOLD" ]] || [[ "$tx_rate" -gt "$NETWORK_THRESHOLD" ]]; then
         log "ACTIVE: Network activity RX:${rx_rate}B/s TX:${tx_rate}B/s"
         return 1  # Not idle
     fi
