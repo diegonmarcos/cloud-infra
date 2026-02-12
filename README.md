@@ -10,7 +10,7 @@ Self-hosted cloud services across Oracle Cloud and Google Cloud free tiers, with
 
 | VM | Alias | IP | WG IP | RAM | Services |
 |----|-------|----|-------|-----|----------|
-| gcp-f-micro_1 | gcp-proxy | 35.226.147.64 | 10.0.0.1 | 1 GB | Caddy, Authelia, Vaultwarden, ntfy, API |
+| gcp-f-micro_1 | gcp-proxy | 35.226.147.64 | 10.0.0.1 | 1 GB | Caddy, Authelia, introspect-proxy, Vaultwarden, ntfy, API |
 | oci-f-micro_1 | oci-mail | 130.110.251.193 | 10.0.0.3 | 1 GB | Mailu, Syncthing, Radicale |
 | oci-f-micro_2 | oci-analytics | 129.151.228.66 | 10.0.0.4 | 1 GB | Matomo, Windmill (hybrid toggle) |
 
@@ -150,6 +150,61 @@ Standard tools deployed to all VMs: sops, age, jq, yq, rsync, rclone, curl, wget
 # Cloudflare DNS (Terraform)
 ~/git/cloud/a_solutions/container-nix/ba-clo_cloudflare/build.sh
 ```
+
+---
+
+## Authentication & Security
+
+### Security Stack
+
+| Layer | Components |
+|-------|------------|
+| **Network Edge** | Cloudflare Proxy, Cloud Firewalls |
+| **Traffic** | Caddy Reverse Proxy, Let's Encrypt TLS |
+| **Authentication** | Authelia 2FA (TOTP/WebAuthn), OIDC bearer tokens |
+| **Token Validation** | introspect-proxy (OIDC introspection sidecar) |
+| **Application** | Docker Networks, WireGuard VPN, Container Isolation |
+| **Credentials** | Vaultwarden (passwords), Aegis (TOTP) |
+
+### Bearer Token Auth (CLI Access)
+
+All Caddy-protected services accept bearer tokens from Authelia OIDC.
+
+```bash
+# Get token (interactive, opens browser for 2FA)
+python ~/git/vault/A0_keys/providers/authelia/oauth/get_token.py
+
+# Use token
+TOKEN=$(jq -r .access_token ~/git/vault/A0_keys/providers/authelia/oauth/authelia_tokens.json)
+curl -H "Authorization: Bearer $TOKEN" https://photos.diegonmarcos.com/api/v1/status
+```
+
+Token lifetime: 1 year. See `vault/A0_keys/providers/authelia/README.md` for details.
+
+---
+
+## Matomo Hybrid Architecture
+
+oci-analytics (1GB RAM) can't run Matomo + Windmill simultaneously. Matomo uses a hybrid container with supervisord:
+
+- **Awake**: MariaDB + Matomo PHP + Nginx (~160MB). Tracking goes direct to DB.
+- **Sleeping**: Only receiver-nginx + receiver-php-fpm (~7MB). Tracking buffered to `/inbox/` JSON files. Wake imports buffered payloads.
+
+```bash
+~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh wake   # stops windmill, wakes matomo
+~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh sleep  # sleeps matomo, starts windmill
+```
+
+---
+
+## IP Change Management
+
+**When VM IPs change, update:**
+1. Cloudflare DNS records (Terraform in `ba-clo_cloudflare/`)
+2. WireGuard peer endpoints
+3. Mailu `PROXY_AUTH_WHITELIST` (if gcp-proxy IP changed)
+
+**DO NOT TOUCH:** iptables, container IPs, Docker networks.
 
 ---
 
