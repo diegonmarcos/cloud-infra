@@ -7,12 +7,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: diegonmarcos/rust-api
-
 jobs:
-  build-and-push:
+  ship:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,39 +18,42 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: a_solutions/container-nix/bb-sec_rust-api/src/
-          file: a_solutions/container-nix/bb-sec_rust-api/src/Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCP_PROXY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat >> ~/.ssh/config <<EOF
+          Host gcp-proxy
+            HostName ${{ secrets.GCP_PROXY_HOST }}
+            User ${{ secrets.GCP_PROXY_USER }}
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+          EOF
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to gcp-proxy
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.GCP_PROXY_HOST }}
-          username: ${{ secrets.GCP_PROXY_USER }}
-          key: ${{ secrets.GCP_PROXY_SSH_KEY }}
-          script: |
-            cd /opt/containers/rust-api
-            docker compose pull rust-api
-            docker compose up -d --no-deps rust-api
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship
+        run: bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
