@@ -19,6 +19,7 @@ jobs:
     outputs:
       caddy: ${{ steps.changes.outputs.caddy }}
       rust-api: ${{ steps.changes.outputs.rust-api }}
+      go-api: ${{ steps.changes.outputs.go-api }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +34,8 @@ jobs:
               - 'a_solutions/container-nix/bb-sec_caddy/**'
             rust-api:
               - 'a_solutions/container-nix/bb-sec_rust-api/**'
+            go-api:
+              - 'a_solutions/container-nix/bb-sec_go-api/**'
 
       - name: Force service override
         if: github.event_name == 'workflow_dispatch'
@@ -44,6 +47,9 @@ jobs:
           if [ -z "$svc" ] || [ "$svc" = "rust-api" ]; then
             echo "rust-api=true" >> "$GITHUB_OUTPUT"
           fi
+          if [ -z "$svc" ] || [ "$svc" = "go-api" ]; then
+            echo "go-api=true" >> "$GITHUB_OUTPUT"
+          fi
         id: force
 
       - name: Merge outputs
@@ -51,6 +57,7 @@ jobs:
         run: |
           echo "caddy=${{ steps.force.outputs.caddy || 'false' }}" >> "$GITHUB_OUTPUT"
           echo "rust-api=${{ steps.force.outputs.rust-api || 'false' }}" >> "$GITHUB_OUTPUT"
+          echo "go-api=${{ steps.force.outputs.go-api || 'false' }}" >> "$GITHUB_OUTPUT"
         id: merge
 
   ship-caddy:
@@ -154,3 +161,54 @@ jobs:
 
       - name: Ship rust-api
         run: bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
+
+  ship-go-api:
+    needs: detect
+    if: needs.detect.outputs.go-api == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCP_PROXY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat >> ~/.ssh/config <<EOF
+          Host gcp-proxy
+            HostName ${{ secrets.GCP_PROXY_HOST }}
+            User ${{ secrets.GCP_PROXY_USER }}
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+          EOF
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship go-api
+        run: bash a_solutions/container-nix/bb-sec_go-api/build.sh ship
