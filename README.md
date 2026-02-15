@@ -14,11 +14,12 @@ Self-hosted cloud services across Oracle Cloud and Google Cloud free tiers, with
 | oci-f-micro_1 | oci-mail | 130.110.251.193 | 10.0.0.3 | 1 GB | Mailu, Syncthing, Radicale |
 | oci-f-micro_2 | oci-analytics | 129.151.228.66 | 10.0.0.4 | 1 GB | Matomo, Windmill (hybrid toggle) |
 
-### Wake-on-Demand — Paid
+### Wake-on-Demand — A1.Flex (Free Tier)
 
 | VM | Alias | IP | WG IP | RAM | Services |
 |----|-------|----|-------|-----|----------|
-| oci-p-flex_1 | oci-flex | 144.24.196.72 | 10.0.0.2 | 8 GB | PhotoPrism, NocoDB, Code Server, AFFiNE |
+| oci-p-flex_0 | oci-flex-0 | 82.70.229.129 | 10.0.0.6 | 16 GB | (none yet) |
+| oci-p-flex_1 | oci-flex-1 | 144.24.196.72 | 10.0.0.2 | 8 GB | PhotoPrism, NocoDB, Code Server, AFFiNE |
 
 ---
 
@@ -32,7 +33,7 @@ All VMs connected via **WireGuard mesh** (hub: gcp-proxy `10.0.0.1`).
 - **Browser**: Authelia forward-auth (cookie/session + 2FA via TOTP/WebAuthn)
 - **CLI/API**: Bearer token via introspect-proxy (OIDC token introspection)
 
-SSH aliases: `ssh oci-flex`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy`.
+SSH aliases: `ssh oci-flex-0`, `ssh oci-flex-1`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy`.
 
 ---
 
@@ -50,10 +51,10 @@ SSH aliases: `ssh oci-flex`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy
 | Radicale Calendar | cal.diegonmarcos.com | oci-mail | 5232 | 24/7 |
 | Matomo Analytics | analytics.diegonmarcos.com | oci-analytics | 8080 | 24/7 (hybrid) |
 | Windmill | — | oci-analytics | — | 24/7 (toggles with Matomo) |
-| PhotoPrism | photos.diegonmarcos.com | oci-flex | 3013 | wake-on-demand |
-| NocoDB | db.diegonmarcos.com | oci-flex | 8085 | wake-on-demand |
-| Code Server | ide.diegonmarcos.com | oci-flex | 8443 | wake-on-demand |
-| AFFiNE | drive-notes-affine.diegonmarcos.com | oci-flex | 3010 | wake-on-demand |
+| PhotoPrism | photos.diegonmarcos.com | oci-flex-1 | 3013 | wake-on-demand |
+| NocoDB | db.diegonmarcos.com | oci-flex-1 | 8085 | wake-on-demand |
+| Code Server | ide.diegonmarcos.com | oci-flex-1 | 8443 | wake-on-demand |
+| AFFiNE | drive-notes-affine.diegonmarcos.com | oci-flex-1 | 3010 | wake-on-demand |
 
 ---
 
@@ -66,7 +67,7 @@ cloud/
 │
 ├── a_solutions/
 │   ├── home-manager/              # Nix Home Manager for all 4 VMs
-│   │   ├── flake.nix              # Main flake (gcp-proxy, oci-flex, oci-mail, oci-analytics)
+│   │   ├── flake.nix              # Main flake (gcp-proxy, oci-flex-0, oci-flex-1, oci-mail, oci-analytics)
 │   │   ├── wireguard.nix          # WireGuard mesh config
 │   │   ├── deploy.sh              # Automated deployment
 │   │   └── build.sh + build.json  # Standard build system
