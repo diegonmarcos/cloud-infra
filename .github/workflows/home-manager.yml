@@ -1,4 +1,4 @@
-name: Deploy Home Manager (x86_64 VMs)
+name: Deploy Home Manager (All VMs)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       vm:
-        description: "Target VM (gcp-proxy, oci-mail, oci-analytics, or empty for all)"
+        description: "Target VM (gcp-proxy, oci-mail, oci-analytics, oci-apps, oci-apps-1, oci-apps-2, or empty for all)"
         required: false
         type: string
 
@@ -37,6 +37,24 @@ jobs:
           - vm: oci-analytics
             config: "ubuntu@oci-analytics"
             host: "129.151.228.66"
+            user: "ubuntu"
+            key_secret: OCI_SSH_KEY
+            use_gcp_secrets: "false"
+          - vm: oci-apps
+            config: "ubuntu@oci-apps"
+            host: "82.70.229.129"
+            user: "ubuntu"
+            key_secret: OCI_SSH_KEY
+            use_gcp_secrets: "false"
+          - vm: oci-apps-1
+            config: "ubuntu@oci-apps-1"
+            host: "144.24.196.72"
+            user: "ubuntu"
+            key_secret: OCI_SSH_KEY
+            use_gcp_secrets: "false"
+          - vm: oci-apps-2
+            config: "ubuntu@oci-apps-2"
+            host: "79.72.28.10"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
