@@ -145,4 +145,4 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         run: |
           echo "Activating on ${{ matrix.vm }}..."
-          ssh ${{ matrix.vm }} "${STORE_PATH}/activate"
+          ssh ${{ matrix.vm }} "export PATH=/nix/var/nix/profiles/default/bin:/usr/local/bin:\$PATH && ${STORE_PATH}/activate"

@@ -1,0 +1,134 @@
+name: Ship Flex-0 services
+
+on:
+  push:
+    paths:
+      - "a_solutions/container-nix/ac-fin_*/**"
+      - ".github/workflows/ship-flex0.yml"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Force ship a specific service (leave empty for auto-detect)"
+        required: false
+        type: string
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      quant-lab-light: ${{ steps.changes.outputs.quant-lab-light || steps.merge.outputs.quant-lab-light }}
+      quant-lab-full: ${{ steps.changes.outputs.quant-lab-full || steps.merge.outputs.quant-lab-full }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            quant-lab-light:
+              - 'a_solutions/container-nix/ac-fin_quant-lab-light/**'
+            quant-lab-full:
+              - 'a_solutions/container-nix/ac-fin_quant-lab-full/**'
+
+      - name: Force service override
+        if: github.event_name == 'workflow_dispatch'
+        id: force
+        run: |
+          svc="${{ inputs.service }}"
+          if [ -z "$svc" ] || [ "$svc" = "quant-lab-light" ]; then
+            echo "quant-lab-light=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "$svc" ] || [ "$svc" = "quant-lab-full" ]; then
+            echo "quant-lab-full=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge outputs
+        if: github.event_name == 'workflow_dispatch'
+        id: merge
+        run: |
+          echo "quant-lab-light=${{ steps.force.outputs.quant-lab-light || 'false' }}" >> "$GITHUB_OUTPUT"
+          echo "quant-lab-full=${{ steps.force.outputs.quant-lab-full || 'false' }}" >> "$GITHUB_OUTPUT"
+
+  ship-quant-lab-light:
+    needs: detect
+    if: needs.detect.outputs.quant-lab-light == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "82.70.229.129" >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<EOF
+          Host oci-flex-0
+            HostName 82.70.229.129
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship quant-lab-light
+        run: bash a_solutions/container-nix/ac-fin_quant-lab-light/build.sh ship
+
+  ship-quant-lab-full:
+    needs: detect
+    if: needs.detect.outputs.quant-lab-full == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "82.70.229.129" >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<EOF
+          Host oci-flex-0
+            HostName 82.70.229.129
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship quant-lab-full
+        run: bash a_solutions/container-nix/ac-fin_quant-lab-full/build.sh ship
