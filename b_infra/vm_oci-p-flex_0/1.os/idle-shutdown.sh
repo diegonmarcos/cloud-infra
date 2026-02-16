@@ -1,5 +1,5 @@
 #!/bin/bash
-# idle-shutdown.sh - Auto-shutdown VM after 30 minutes of inactivity
+# idle-shutdown.sh - Auto-shutdown VM after 4 hours of inactivity
 # Location on VM: /opt/scripts/idle-shutdown.sh
 #
 # VM profile: OCI A1.Flex - 3 OCPUs (ARM), 16GB RAM
@@ -19,7 +19,7 @@
 set -euo pipefail
 
 # === Configuration ===
-IDLE_TIMEOUT_SECONDS=1800  # 30 minutes
+IDLE_TIMEOUT_SECONDS=14400  # 4 hours
 STATE_FILE="/var/run/idle-shutdown-state"
 LOG_FILE="/var/log/idle-shutdown.log"
 CPU_THRESHOLD=60           # Percent - load avg * 100 / nproc (1 core baseline ~5-10%)
