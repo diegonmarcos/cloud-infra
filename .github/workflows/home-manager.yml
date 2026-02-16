@@ -44,21 +44,32 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}
 
-    if: >-
-      github.event_name != 'workflow_dispatch' ||
-      inputs.vm == '' ||
-      inputs.vm == matrix.vm
-
     steps:
+      - name: Check if should run
+        id: gate
+        run: |
+          EVENT="${{ github.event_name }}"
+          TARGET="${{ inputs.vm }}"
+          VM="${{ matrix.vm }}"
+          if [ "$EVENT" != "workflow_dispatch" ] || [ -z "$TARGET" ] || [ "$TARGET" = "$VM" ]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping $VM (target: $TARGET)"
+          fi
+
       - name: Checkout
+        if: steps.gate.outputs.skip != 'true'
         uses: actions/checkout@v4
 
       - name: Install Nix
+        if: steps.gate.outputs.skip != 'true'
         uses: cachix/install-nix-action@v30
         with:
           nix_path: nixpkgs=channel:nixos-24.11
 
       - name: Build activation package
+        if: steps.gate.outputs.skip != 'true'
         working-directory: a_solutions/home-manager
         run: |
           echo "::group::Building ${{ matrix.config }}"
@@ -70,6 +81,7 @@ jobs:
           echo "Built: ${STORE_PATH}"
 
       - name: Setup SSH
+        if: steps.gate.outputs.skip != 'true'
         env:
           SSH_KEY: ${{ secrets[matrix.key_secret] }}
           GCP_HOST: ${{ secrets.GCP_PROXY_HOST }}
@@ -106,11 +118,13 @@ jobs:
           echo "DEPLOY_USER=${USER}" >> "$GITHUB_ENV"
 
       - name: Copy Nix closure to VM
+        if: steps.gate.outputs.skip != 'true'
         run: |
           echo "Copying closure to ${{ matrix.vm }} (${DEPLOY_USER}@${DEPLOY_HOST})..."
           nix copy --to "ssh://${DEPLOY_USER}@${DEPLOY_HOST}" "$STORE_PATH"
 
       - name: Activate home-manager
+        if: steps.gate.outputs.skip != 'true'
         run: |
           echo "Activating on ${{ matrix.vm }}..."
           ssh ${{ matrix.vm }} "${STORE_PATH}/activate"
