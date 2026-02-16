@@ -1,0 +1,109 @@
+name: Deploy Home Manager (x86_64 VMs)
+
+on:
+  push:
+    paths:
+      - "a_solutions/home-manager/**"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      vm:
+        description: "Target VM (gcp-proxy, oci-mail, oci-analytics, or empty for all)"
+        required: false
+        type: string
+
+# Only one deploy at a time
+concurrency:
+  group: home-manager-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - vm: gcp-proxy
+            config: "diego@gcp-proxy"
+            host_secret: GCP_PROXY_HOST
+            user_secret: GCP_PROXY_USER
+            key_secret: GCP_PROXY_SSH_KEY
+          - vm: oci-mail
+            config: "ubuntu@oci-mail"
+            host: "130.110.251.193"
+            user: "ubuntu"
+            key_secret: OCI_SSH_KEY
+          - vm: oci-analytics
+            config: "ubuntu@oci-analytics"
+            host: "129.151.228.66"
+            user: "ubuntu"
+            key_secret: OCI_SSH_KEY
+
+    runs-on: ubuntu-latest
+    name: ${{ matrix.vm }}
+
+    # Skip VMs not matching workflow_dispatch input
+    if: >-
+      github.event_name != 'workflow_dispatch' ||
+      inputs.vm == '' ||
+      inputs.vm == matrix.vm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Build activation package
+        working-directory: a_solutions/home-manager
+        run: |
+          echo "::group::Building ${{ matrix.config }}"
+          STORE_PATH=$(nix build \
+            ".#homeConfigurations.\"${{ matrix.config }}\".activationPackage" \
+            --no-link --print-out-paths)
+          echo "::endgroup::"
+          echo "STORE_PATH=${STORE_PATH}" >> "$GITHUB_ENV"
+          echo "Built: ${STORE_PATH}"
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # Write SSH key
+          echo "${{ secrets[matrix.key_secret] }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+
+          # Resolve host/user (from secret or matrix)
+          HOST="${{ secrets[matrix.host_secret] || matrix.host }}"
+          USER="${{ secrets[matrix.user_secret] || matrix.user }}"
+
+          # Scan host keys
+          ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Write SSH config for both regular ssh and nix copy
+          cat >> ~/.ssh/config <<-EOF
+          Host ${{ matrix.vm }} ${HOST}
+            HostName ${HOST}
+            User ${USER}
+            IdentityFile ~/.ssh/id_deploy
+            ServerAliveInterval 30
+            ServerAliveCountMax 5
+          EOF
+          chmod 600 ~/.ssh/config
+
+          echo "DEPLOY_HOST=${HOST}" >> "$GITHUB_ENV"
+          echo "DEPLOY_USER=${USER}" >> "$GITHUB_ENV"
+
+      - name: Copy Nix closure to VM
+        run: |
+          echo "Copying closure to ${{ matrix.vm }} (${DEPLOY_USER}@${DEPLOY_HOST})..."
+          nix copy --to "ssh://${DEPLOY_USER}@${DEPLOY_HOST}" "$STORE_PATH"
+
+      - name: Activate home-manager
+        run: |
+          echo "Activating on ${{ matrix.vm }}..."
+          ssh ${{ matrix.vm }} "${STORE_PATH}/activate"
