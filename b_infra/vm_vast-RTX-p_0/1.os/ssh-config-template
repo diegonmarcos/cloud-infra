@@ -1,0 +1,31 @@
+# Vast.ai SSH Config Template
+# After renting your instance, copy connection details from Vast.ai console
+# Then add this to ~/git/vault/A0_keys/config_mobile
+
+# =============================================================================
+# VAST.AI - ON-DEMAND GPU
+# =============================================================================
+
+# Vast.ai RTX A4000 - Ollama LLM Server
+# On-demand instance - IP/port changes each rental
+Host vast-ollama
+    HostName <GET_FROM_VAST_CONSOLE>     # e.g., ssh4.vast.ai
+    Port <GET_FROM_VAST_CONSOLE>          # e.g., 12345
+    User root
+    IdentityFile /data/data/com.termux.nix/files/home/git/vault/A0_keys/ssh/id_ed25519
+    IdentitiesOnly yes
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+
+# INSTRUCTIONS:
+# 1. Go to https://vast.ai/console/instances/
+# 2. Find your running instance
+# 3. Click "Connect" button
+# 4. Copy the SSH command, it looks like:
+#    ssh -p 12345 root@ssh4.vast.ai -L 8080:localhost:8080
+#
+# 5. Update HostName and Port above:
+#    - HostName: the part after @  (e.g., ssh4.vast.ai)
+#    - Port: the part after -p      (e.g., 12345)
+#
+# 6. Save and test: ssh vast-ollama
