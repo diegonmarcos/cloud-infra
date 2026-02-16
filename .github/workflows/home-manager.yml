@@ -180,8 +180,9 @@ jobs:
             a_solutions/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
 
           echo "Building on ${{ matrix.vm }}..."
-          ssh ${{ matrix.vm }} "cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1 > /tmp/store_path
-          echo "STORE_PATH=$(cat /tmp/store_path)" >> "$GITHUB_ENV"
+          STORE_PATH=$(ssh ${{ matrix.vm }} "cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1)
+          echo "STORE_PATH=${STORE_PATH}" >> "$GITHUB_ENV"
+          echo "Built: ${STORE_PATH}"
 
       - name: Activate home-manager
         if: steps.gate.outputs.skip != 'true'
