@@ -119,6 +119,8 @@ jobs:
 
       - name: Copy Nix closure to VM
         if: steps.gate.outputs.skip != 'true'
+        env:
+          NIX_SSHOPTS: "-i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new"
         run: |
           echo "Copying closure to ${{ matrix.vm }} (${DEPLOY_USER}@${DEPLOY_HOST})..."
           nix copy --to "ssh://${DEPLOY_USER}@${DEPLOY_HOST}" "$STORE_PATH"
