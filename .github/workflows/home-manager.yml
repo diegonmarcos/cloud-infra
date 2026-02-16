@@ -123,7 +123,7 @@ jobs:
           ssh ${{ matrix.vm }} '
             NIX_BIN="/nix/var/nix/profiles/default/bin"
             [ ! -x "$NIX_BIN/nix-store" ] && NIX_BIN="$HOME/.nix-profile/bin"
-            for bin in nix nix-store nix-daemon; do
+            for bin in nix nix-build nix-store nix-daemon; do
               [ -x "$NIX_BIN/$bin" ] && sudo ln -sf "$NIX_BIN/$bin" "/usr/local/bin/$bin"
             done
             CONF="/etc/nix/nix.custom.conf"
