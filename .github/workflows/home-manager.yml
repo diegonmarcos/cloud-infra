@@ -126,8 +126,9 @@ jobs:
             for bin in nix nix-store nix-daemon; do
               [ -x "$NIX_BIN/$bin" ] && sudo ln -sf "$NIX_BIN/$bin" "/usr/local/bin/$bin"
             done
-            grep -q "trusted-users.*$(whoami)" /etc/nix/nix.conf 2>/dev/null || {
-              echo "trusted-users = root $(whoami)" | sudo tee -a /etc/nix/nix.conf
+            CONF="/etc/nix/nix.custom.conf"
+            grep -q "trusted-users.*$(whoami)" "$CONF" 2>/dev/null || {
+              echo "trusted-users = root $(whoami)" | sudo tee -a "$CONF"
               sudo systemctl restart nix-daemon
             }
           '
