@@ -28,36 +28,42 @@ jobs:
             user: ""
             key_secret: GCP_PROXY_SSH_KEY
             use_gcp_secrets: "true"
+            arch: "x86_64-linux"
           - vm: oci-mail
             config: "ubuntu@oci-mail"
             host: "130.110.251.193"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
+            arch: "x86_64-linux"
           - vm: oci-analytics
             config: "ubuntu@oci-analytics"
             host: "129.151.228.66"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
+            arch: "x86_64-linux"
           - vm: oci-apps
             config: "ubuntu@oci-apps"
             host: "82.70.229.129"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
+            arch: "aarch64-linux"
           - vm: oci-apps-1
             config: "ubuntu@oci-apps-1"
             host: "144.24.196.72"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
+            arch: "aarch64-linux"
           - vm: oci-apps-2
             config: "ubuntu@oci-apps-2"
             host: "79.72.28.10"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
+            arch: "aarch64-linux"
 
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}
@@ -80,21 +86,14 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         uses: actions/checkout@v4
 
-      - name: Set up QEMU for multi-arch builds
-        if: steps.gate.outputs.skip != 'true'
-        uses: docker/setup-qemu-action@v3
-
       - name: Install Nix
         if: steps.gate.outputs.skip != 'true'
         uses: cachix/install-nix-action@v30
         with:
           nix_path: nixpkgs=channel:nixos-24.11
-          extra_nix_config: |
-            extra-platforms = aarch64-linux
-            extra-system-features = nixos-test benchmark big-parallel kvm
 
-      - name: Build activation package
-        if: steps.gate.outputs.skip != 'true'
+      - name: Build activation package (x86_64 VMs)
+        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
         working-directory: a_solutions/home-manager
         run: |
           echo "::group::Building ${{ matrix.config }}"
@@ -142,8 +141,8 @@ jobs:
           echo "DEPLOY_HOST=${HOST}" >> "$GITHUB_ENV"
           echo "DEPLOY_USER=${USER}" >> "$GITHUB_ENV"
 
-      - name: Prepare remote nix for closure copy
-        if: steps.gate.outputs.skip != 'true'
+      - name: Prepare remote nix for closure copy (x86_64 VMs)
+        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
         run: |
           ssh ${{ matrix.vm }} '
             NIX_BIN="/nix/var/nix/profiles/default/bin"
@@ -158,13 +157,31 @@ jobs:
             }
           '
 
-      - name: Copy Nix closure to VM
-        if: steps.gate.outputs.skip != 'true'
+      - name: Copy Nix closure to VM (x86_64 VMs)
+        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
         env:
           NIX_SSHOPTS: "-i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new"
         run: |
           echo "Copying closure to ${{ matrix.vm }} (${DEPLOY_USER}@${DEPLOY_HOST})..."
           nix copy --to "ssh://${DEPLOY_USER}@${DEPLOY_HOST}" "$STORE_PATH"
+
+      - name: Copy flake to ARM VM and build on-VM (aarch64 VMs)
+        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'aarch64-linux'
+        run: |
+          echo "Copying flake to ${{ matrix.vm }}..."
+          ssh ${{ matrix.vm }} "mkdir -p ~/.config/home-manager"
+          rsync -avz --delete \
+            --include="flake.nix" \
+            --include="flake.lock" \
+            --include="*.nix" \
+            --include="modules/" \
+            --include="modules/**" \
+            --exclude="*" \
+            a_solutions/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
+
+          echo "Building on ${{ matrix.vm }}..."
+          ssh ${{ matrix.vm }} "cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1 > /tmp/store_path
+          echo "STORE_PATH=$(cat /tmp/store_path)" >> "$GITHUB_ENV"
 
       - name: Activate home-manager
         if: steps.gate.outputs.skip != 'true'
