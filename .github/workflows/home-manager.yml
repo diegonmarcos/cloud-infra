@@ -180,7 +180,7 @@ jobs:
             a_solutions/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
 
           echo "Building on ${{ matrix.vm }}..."
-          STORE_PATH=$(ssh ${{ matrix.vm }} "cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1)
+          STORE_PATH=$(ssh ${{ matrix.vm }} "export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:\$PATH && cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1)
           echo "STORE_PATH=${STORE_PATH}" >> "$GITHUB_ENV"
           echo "Built: ${STORE_PATH}"
 
