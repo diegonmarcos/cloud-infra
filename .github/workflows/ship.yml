@@ -17,9 +17,9 @@ jobs:
   detect:
     runs-on: ubuntu-latest
     outputs:
-      caddy: ${{ steps.changes.outputs.caddy }}
-      rust-api: ${{ steps.changes.outputs.rust-api }}
-      go-api: ${{ steps.changes.outputs.go-api }}
+      caddy: ${{ steps.changes.outputs.caddy || steps.merge.outputs.caddy }}
+      rust-api: ${{ steps.changes.outputs.rust-api || steps.merge.outputs.rust-api }}
+      go-api: ${{ steps.changes.outputs.go-api || steps.merge.outputs.go-api }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
