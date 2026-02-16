@@ -117,6 +117,15 @@ jobs:
           echo "DEPLOY_HOST=${HOST}" >> "$GITHUB_ENV"
           echo "DEPLOY_USER=${USER}" >> "$GITHUB_ENV"
 
+      - name: Ensure nix in PATH for non-interactive SSH
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          ssh ${{ matrix.vm }} 'NIX_BIN="/nix/var/nix/profiles/default/bin"
+            [ ! -x "$NIX_BIN/nix-store" ] && NIX_BIN="$HOME/.nix-profile/bin"
+            for bin in nix nix-store nix-daemon; do
+              [ -x "$NIX_BIN/$bin" ] && sudo ln -sf "$NIX_BIN/$bin" "/usr/local/bin/$bin"
+            done'
+
       - name: Copy Nix closure to VM
         if: steps.gate.outputs.skip != 'true'
         env:
