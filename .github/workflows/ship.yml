@@ -133,10 +133,9 @@ jobs:
   ship-rust-api:
     needs: detect
     if: needs.detect.outputs.rust-api == 'true'
-    runs-on: ubuntu-24.04-arm64
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -145,18 +144,6 @@ jobs:
         uses: cachix/install-nix-action@v30
         with:
           nix_path: nixpkgs=channel:nixos-24.11
-
-      - name: Set up Docker Buildx
-        if: needs.detect.outputs.rust-api-docker == 'true'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        if: needs.detect.outputs.rust-api-docker == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup SSH
         run: |
@@ -181,6 +168,8 @@ jobs:
         run: nix profile install nixpkgs#sops
 
       - name: Ship rust-api
+        env:
+          REMOTE_BUILD: "true"
         run: |
           if [ "${{ needs.detect.outputs.rust-api-docker }}" = "true" ]; then
             bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
