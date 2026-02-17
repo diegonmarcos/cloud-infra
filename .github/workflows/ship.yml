@@ -133,7 +133,7 @@ jobs:
   ship-rust-api:
     needs: detect
     if: needs.detect.outputs.rust-api == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm64
     permissions:
       contents: read
       packages: write
@@ -161,12 +161,12 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_PROXY_SSH_KEY }}" > ~/.ssh/id_deploy
+          echo "${{ secrets.OCI_APPS_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           cat >> ~/.ssh/config <<EOF
-          Host gcp-proxy
-            HostName ${{ secrets.GCP_PROXY_HOST }}
-            User ${{ secrets.GCP_PROXY_USER }}
+          Host oci-apps
+            HostName ${{ secrets.OCI_APPS_HOST }}
+            User ${{ secrets.OCI_APPS_USER }}
             IdentityFile ~/.ssh/id_deploy
             StrictHostKeyChecking no
           EOF
