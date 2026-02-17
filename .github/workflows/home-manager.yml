@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       vm:
-        description: "Target VM (gcp-proxy, oci-mail, oci-analytics, oci-apps, oci-apps-1, oci-apps-2, or empty for all)"
+        description: "Target VM (gcp-proxy, gcp-t4, oci-mail, oci-analytics, oci-apps, oci-apps-1, oci-apps-2, or empty for all)"
         required: false
         type: string
 
@@ -28,6 +28,14 @@ jobs:
             user: ""
             key_secret: GCP_PROXY_SSH_KEY
             use_gcp_secrets: "true"
+            arch: "x86_64-linux"
+          - vm: gcp-t4
+            config: "diego@gcp-t4"
+            host: ""
+            user: ""
+            key_secret: GCP_T4_SSH_KEY
+            use_gcp_secrets: "false"
+            use_gcp_t4_secrets: "true"
             arch: "x86_64-linux"
           - vm: oci-mail
             config: "ubuntu@oci-mail"
@@ -108,8 +116,10 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         env:
           SSH_KEY: ${{ secrets[matrix.key_secret] }}
-          GCP_HOST: ${{ secrets.GCP_PROXY_HOST }}
-          GCP_USER: ${{ secrets.GCP_PROXY_USER }}
+          GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
+          GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
+          GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
+          GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -117,10 +127,13 @@ jobs:
           echo "${SSH_KEY}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
 
-          # Resolve host/user
+          # Resolve host/user (GCP VMs use secrets for dynamic IPs)
           if [ "${{ matrix.use_gcp_secrets }}" = "true" ]; then
-            HOST="${GCP_HOST}"
-            USER="${GCP_USER}"
+            HOST="${GCP_PROXY_HOST}"
+            USER="${GCP_PROXY_USER}"
+          elif [ "${{ matrix.use_gcp_t4_secrets }}" = "true" ]; then
+            HOST="${GCP_T4_HOST}"
+            USER="${GCP_T4_USER}"
           else
             HOST="${{ matrix.host }}"
             USER="${{ matrix.user }}"
