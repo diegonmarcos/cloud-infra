@@ -32,7 +32,7 @@ jobs:
           echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
 
-          ssh-keyscan -H 82.70.229.129 >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H 82.70.229.129 >> ~/.ssh/known_hosts 2>/dev/null || true
 
           cat > ~/.ssh/config <<EOF
           Host oci-apps
