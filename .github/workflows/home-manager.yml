@@ -126,7 +126,7 @@ jobs:
             USER="${{ matrix.user }}"
           fi
 
-          ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
           cat > ~/.ssh/config <<EOF
           Host ${{ matrix.vm }}
