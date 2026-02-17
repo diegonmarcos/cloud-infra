@@ -18,7 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       caddy: ${{ steps.changes.outputs.caddy || steps.merge.outputs.caddy }}
+      caddy-docker: ${{ steps.changes.outputs.caddy-docker || steps.merge.outputs.caddy-docker }}
       rust-api: ${{ steps.changes.outputs.rust-api || steps.merge.outputs.rust-api }}
+      rust-api-docker: ${{ steps.changes.outputs.rust-api-docker || steps.merge.outputs.rust-api-docker }}
       go-api: ${{ steps.changes.outputs.go-api || steps.merge.outputs.go-api }}
     steps:
       - name: Checkout
@@ -32,8 +34,14 @@ jobs:
           filters: |
             caddy:
               - 'a_solutions/container-nix/bb-sec_caddy/**'
+            caddy-docker:
+              - 'a_solutions/container-nix/bb-sec_caddy/src/Dockerfile.caddy'
+              - 'a_solutions/container-nix/bb-sec_caddy/src/introspect-proxy/**'
             rust-api:
               - 'a_solutions/container-nix/bb-sec_rust-api/**'
+            rust-api-docker:
+              - 'a_solutions/container-nix/bb-sec_rust-api/src/Dockerfile'
+              - 'a_solutions/container-nix/bb-sec_rust-api/src/src/**'
             go-api:
               - 'a_solutions/container-nix/bb-sec_go-api/**'
 
@@ -43,9 +51,11 @@ jobs:
           svc="${{ inputs.service }}"
           if [ -z "$svc" ] || [ "$svc" = "caddy" ]; then
             echo "caddy=true" >> "$GITHUB_OUTPUT"
+            echo "caddy-docker=true" >> "$GITHUB_OUTPUT"
           fi
           if [ -z "$svc" ] || [ "$svc" = "rust-api" ]; then
             echo "rust-api=true" >> "$GITHUB_OUTPUT"
+            echo "rust-api-docker=true" >> "$GITHUB_OUTPUT"
           fi
           if [ -z "$svc" ] || [ "$svc" = "go-api" ]; then
             echo "go-api=true" >> "$GITHUB_OUTPUT"
@@ -56,7 +66,9 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "caddy=${{ steps.force.outputs.caddy || 'false' }}" >> "$GITHUB_OUTPUT"
+          echo "caddy-docker=${{ steps.force.outputs.caddy-docker || 'false' }}" >> "$GITHUB_OUTPUT"
           echo "rust-api=${{ steps.force.outputs.rust-api || 'false' }}" >> "$GITHUB_OUTPUT"
+          echo "rust-api-docker=${{ steps.force.outputs.rust-api-docker || 'false' }}" >> "$GITHUB_OUTPUT"
           echo "go-api=${{ steps.force.outputs.go-api || 'false' }}" >> "$GITHUB_OUTPUT"
         id: merge
 
@@ -77,9 +89,11 @@ jobs:
           nix_path: nixpkgs=channel:nixos-24.11
 
       - name: Set up Docker Buildx
+        if: needs.detect.outputs.caddy-docker == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
+        if: needs.detect.outputs.caddy-docker == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -109,7 +123,12 @@ jobs:
         run: nix profile install nixpkgs#sops
 
       - name: Ship caddy
-        run: bash a_solutions/container-nix/bb-sec_caddy/build.sh ship
+        run: |
+          if [ "${{ needs.detect.outputs.caddy-docker }}" = "true" ]; then
+            bash a_solutions/container-nix/bb-sec_caddy/build.sh ship
+          else
+            bash a_solutions/container-nix/bb-sec_caddy/build.sh redeploy
+          fi
 
   ship-rust-api:
     needs: detect
@@ -128,9 +147,11 @@ jobs:
           nix_path: nixpkgs=channel:nixos-24.11
 
       - name: Set up Docker Buildx
+        if: needs.detect.outputs.rust-api-docker == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
+        if: needs.detect.outputs.rust-api-docker == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -160,7 +181,12 @@ jobs:
         run: nix profile install nixpkgs#sops
 
       - name: Ship rust-api
-        run: bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
+        run: |
+          if [ "${{ needs.detect.outputs.rust-api-docker }}" = "true" ]; then
+            bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
+          else
+            bash a_solutions/container-nix/bb-sec_rust-api/build.sh redeploy
+          fi
 
   ship-go-api:
     needs: detect
