@@ -62,11 +62,9 @@ SSH aliases: `ssh oci-flex-0`, `ssh oci-flex-1`, `ssh oci-mail`, `ssh oci-analyt
 
 ```
 cloud/
-├── 0.spec/                        # Specifications & planning (v1, v2, v3)
-├── 1.ops/                         # Operations scripts (archive)
+├── 1.ops/                         # Active ops (Cloud-spec.md, architecture.json)
 │
 ├── a_solutions/                   # 51 containerized services (Nix flakes)
-│   ├── home-manager/              # Nix Home Manager for all VMs
 │   ├── aa-sui_*                   # Suite apps (AFFiNE, Code Server, Mailu, PhotoPrism...)
 │   ├── ab-mic_*                   # Misc (Syncthing, Vaultwarden)
 │   ├── ba-clo_*                   # Cloud providers (Cloudflare Terraform, gcloud, oci)
@@ -79,15 +77,17 @@ cloud/
 │   └── z_archive/                 # Archived services & backups
 │
 ├── b_infra/                       # VM infrastructure configs
-│   ├── vm_gcp-f-micro_1/          # GCP proxy VM (iptables, sshd, wireguard, systemd)
-│   ├── vm_oci-f-micro_1/          # OCI mail VM
-│   ├── vm_oci-f-micro_2/          # OCI analytics VM
-│   ├── vm_oci-p-flex_1/           # OCI flex VM (idle shutdown management)
+│   ├── home-manager/              # Nix Home Manager for all VMs
+│   ├── vm_gcp-E2-f_0/             # GCP proxy VM
+│   ├── vm_oci-E2-f_0/             # OCI mail VM
+│   ├── vm_oci-E2-f_1/             # OCI analytics VM
+│   ├── vm_oci-A1-f_*/             # OCI flex VMs
 │   ├── vps_gcloud/                # GCP VPS configs
-│   └── vps_oracle/                # OCI VPS configs
+│   └── vps_oci/                   # OCI VPS configs
 │
+├── z_archive/                     # Stale configs (0.spec/, old ops docs)
 ├── c_myhardware/                  # Local hardware configs (Surface Pro 8)
-└── .github/workflows/             # CI/CD (Rust API build)
+└── .github/workflows/             # CI/CD
 ```
 
 ---
@@ -111,12 +111,12 @@ Each service is a standalone Nix flake with `build.sh` + `build.json` at project
 
 ## Home Manager
 
-All 4 VMs use Nix Home Manager for reproducible user environments (`a_solutions/home-manager/`).
+All VMs use Nix Home Manager for reproducible user environments (`b_infra/home-manager/`).
 
 ```bash
 # Deploy to a specific VM
-~/git/cloud/a_solutions/home-manager/deploy.sh gcp-proxy
-~/git/cloud/a_solutions/home-manager/deploy.sh oci-flex
+~/git/cloud/b_infra/home-manager/deploy.sh gcp-proxy
+~/git/cloud/b_infra/home-manager/deploy.sh oci-flex
 ```
 
 Standard tools deployed to all VMs: sops, age, jq, yq, rsync, rclone, curl, wget, htop, btop, ncdu, ripgrep, fd, bat, git, gh.
