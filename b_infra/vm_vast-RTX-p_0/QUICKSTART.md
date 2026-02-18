@@ -112,7 +112,7 @@ ollama run llama2:13b
 
 This VM is now tracked in your cloud infrastructure:
 
-**Config**: `~/git/cloud/a_solutions/container-nix/config.json`
+**Config**: `~/git/cloud/a_solutions/config.json`
 ```json
 {
   "vast-RTX-p_0": {

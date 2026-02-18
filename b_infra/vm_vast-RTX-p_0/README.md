@@ -93,7 +93,7 @@ curl http://$VAST_IP:11434/api/generate -d '{
 ## Integration with Your Cloud
 
 This instance is tracked in:
-- **Config**: `~/git/cloud/a_solutions/container-nix/config.json`
+- **Config**: `~/git/cloud/a_solutions/config.json`
 - **SSH**: `~/git/vault/A0_keys/config_mobile` (alias: `vast-ollama`)
 - **MCP**: Accessible via `cloud-infra` MCP server
 
