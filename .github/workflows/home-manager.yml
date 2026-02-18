@@ -3,7 +3,7 @@ name: Deploy Home Manager (All VMs)
 on:
   push:
     paths:
-      - "a_solutions/home-manager/**"
+      - "b_infra/home-manager/**"
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -102,7 +102,7 @@ jobs:
 
       - name: Build activation package (x86_64 VMs)
         if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
-        working-directory: a_solutions/home-manager
+        working-directory: b_infra/home-manager
         run: |
           echo "::group::Building ${{ matrix.config }}"
           STORE_PATH=$(nix build \
@@ -190,7 +190,7 @@ jobs:
             --include="modules/" \
             --include="modules/**" \
             --exclude="*" \
-            a_solutions/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
+            b_infra/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
 
           echo "Building on ${{ matrix.vm }}..."
           STORE_PATH=$(ssh ${{ matrix.vm }} "export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:\$PATH && cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1)
