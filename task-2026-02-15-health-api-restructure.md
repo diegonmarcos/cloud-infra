@@ -5,7 +5,7 @@
 Three changes:
 1. **Tiered health endpoints**: Replace 11 flat health routes with a clean 5-tier escalation (declared -> deployed -> drift -> status -> profiling)
 2. **API route restructure**: Rust API becomes default at `api.diegonmarcos.com/*`, Flask moves to `/flask/*`, new Go API at `/go/*`
-3. **Go API project**: New container-nix project mirroring rust-api endpoints (not deployed yet, but full flake + build.sh + docker-compose)
+3. **Go API project**: New cloud service project mirroring rust-api endpoints (not deployed yet, but full flake + build.sh + docker-compose)
 
 ---
 

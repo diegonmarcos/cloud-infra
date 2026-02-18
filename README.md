@@ -65,22 +65,18 @@ cloud/
 ├── 0.spec/                        # Specifications & planning (v1, v2, v3)
 ├── 1.ops/                         # Operations scripts (archive)
 │
-├── a_solutions/
-│   ├── home-manager/              # Nix Home Manager for all 4 VMs
-│   │   ├── flake.nix              # Main flake (gcp-proxy, oci-flex-0, oci-flex-1, oci-mail, oci-analytics)
-│   │   ├── wireguard.nix          # WireGuard mesh config
-│   │   ├── deploy.sh              # Automated deployment
-│   │   └── build.sh + build.json  # Standard build system
-│   │
-│   ├── container-nix/             # 43 containerized services (Nix flakes)
-│   │   ├── aa-sui_*               # Suite apps (AFFiNE, Code Server, Mailu, PhotoPrism...)
-│   │   ├── ab-mic_*               # Misc (Syncthing, Vaultwarden)
-│   │   ├── ba-clo_*               # Cloud providers (Cloudflare Terraform, gcloud, oci)
-│   │   ├── bb-sec_*               # Security (Authelia, Caddy, APIs)
-│   │   ├── bc-obs_*               # Observability (Matomo, NocoDB, ntfy, LGTM, Windmill)
-│   │   └── ca-dat_*               # Data & backups (Borg, Gitea, Redis)
-│   │
-│   └── z_backup_all/              # Backup archives & encryption
+├── a_solutions/                   # 51 containerized services (Nix flakes)
+│   ├── home-manager/              # Nix Home Manager for all VMs
+│   ├── aa-sui_*                   # Suite apps (AFFiNE, Code Server, Mailu, PhotoPrism...)
+│   ├── ab-mic_*                   # Misc (Syncthing, Vaultwarden)
+│   ├── ba-clo_*                   # Cloud providers (Cloudflare Terraform, gcloud, oci)
+│   ├── bb-sec_*                   # Security (Authelia, Caddy, APIs)
+│   ├── bc-obs_*                   # Observability (Matomo, NocoDB, ntfy, LGTM, Windmill)
+│   ├── ca-dat_*                   # Data & backups (Borg, Gitea, Redis)
+│   ├── build.sh                   # Root orchestrator
+│   ├── config.json                # Service registry
+│   ├── flake.nix                  # Root Nix flake
+│   └── z_archive/                 # Archived services & backups
 │
 ├── b_infra/                       # VM infrastructure configs
 │   ├── vm_gcp-f-micro_1/          # GCP proxy VM (iptables, sshd, wireguard, systemd)
@@ -96,7 +92,7 @@ cloud/
 
 ---
 
-## Container-Nix Projects (43 services)
+## Cloud Services (51 projects)
 
 Each service is a standalone Nix flake with `build.sh` + `build.json` at project root, producing Docker Compose configurations.
 
@@ -142,14 +138,14 @@ Standard tools deployed to all VMs: sops, age, jq, yq, rsync, rclone, curl, wget
 
 ```bash
 # Matomo hybrid toggle (oci-analytics shares 1GB RAM)
-~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh wake   # stops windmill, wakes matomo
-~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh sleep  # sleeps matomo, starts windmill
+~/git/cloud/a_solutions/bc-obs_matomo/build.sh wake   # stops windmill, wakes matomo
+~/git/cloud/a_solutions/bc-obs_matomo/build.sh sleep  # sleeps matomo, starts windmill
 
 # Deploy container service
-~/git/cloud/a_solutions/container-nix/<service>/build.sh
+~/git/cloud/a_solutions/<service>/build.sh
 
 # Cloudflare DNS (Terraform)
-~/git/cloud/a_solutions/container-nix/ba-clo_cloudflare/build.sh
+~/git/cloud/a_solutions/ba-clo_cloudflare/build.sh
 ```
 
 ---
@@ -192,8 +188,8 @@ oci-analytics (1GB RAM) can't run Matomo + Windmill simultaneously. Matomo uses 
 - **Sleeping**: Only receiver-nginx + receiver-php-fpm (~7MB). Tracking buffered to `/inbox/` JSON files. Wake imports buffered payloads.
 
 ```bash
-~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh wake   # stops windmill, wakes matomo
-~/git/cloud/a_solutions/container-nix/bc-obs_matomo/build.sh sleep  # sleeps matomo, starts windmill
+~/git/cloud/a_solutions/bc-obs_matomo/build.sh wake   # stops windmill, wakes matomo
+~/git/cloud/a_solutions/bc-obs_matomo/build.sh sleep  # sleeps matomo, starts windmill
 ```
 
 ---

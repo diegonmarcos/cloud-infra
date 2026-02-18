@@ -3,7 +3,7 @@ name: Ship services
 on:
   push:
     paths:
-      - "a_solutions/container-nix/bb-sec_*/**"
+      - "a_solutions/bb-sec_*/**"
       - ".github/workflows/ship.yml"
     branches: [main]
   workflow_dispatch:
@@ -33,17 +33,17 @@ jobs:
         with:
           filters: |
             caddy:
-              - 'a_solutions/container-nix/bb-sec_caddy/src/**'
+              - 'a_solutions/bb-sec_caddy/src/**'
             caddy-docker:
-              - 'a_solutions/container-nix/bb-sec_caddy/src/Dockerfile.caddy'
-              - 'a_solutions/container-nix/bb-sec_caddy/src/introspect-proxy/**'
+              - 'a_solutions/bb-sec_caddy/src/Dockerfile.caddy'
+              - 'a_solutions/bb-sec_caddy/src/introspect-proxy/**'
             rust-api:
-              - 'a_solutions/container-nix/bb-sec_rust-api/src/**'
+              - 'a_solutions/bb-sec_rust-api/src/**'
             rust-api-docker:
-              - 'a_solutions/container-nix/bb-sec_rust-api/src/Dockerfile'
-              - 'a_solutions/container-nix/bb-sec_rust-api/src/src/**'
+              - 'a_solutions/bb-sec_rust-api/src/Dockerfile'
+              - 'a_solutions/bb-sec_rust-api/src/src/**'
             go-api:
-              - 'a_solutions/container-nix/bb-sec_go-api/src/**'
+              - 'a_solutions/bb-sec_go-api/src/**'
 
       - name: Force service override
         if: github.event_name == 'workflow_dispatch'
@@ -125,9 +125,9 @@ jobs:
       - name: Ship caddy
         run: |
           if [ "${{ needs.detect.outputs.caddy-docker }}" = "true" ]; then
-            bash a_solutions/container-nix/bb-sec_caddy/build.sh ship
+            bash a_solutions/bb-sec_caddy/build.sh ship
           else
-            bash a_solutions/container-nix/bb-sec_caddy/build.sh redeploy
+            bash a_solutions/bb-sec_caddy/build.sh redeploy
           fi
 
   ship-rust-api:
@@ -172,9 +172,9 @@ jobs:
           REMOTE_BUILD: "true"
         run: |
           if [ "${{ needs.detect.outputs.rust-api-docker }}" = "true" ]; then
-            bash a_solutions/container-nix/bb-sec_rust-api/build.sh ship
+            bash a_solutions/bb-sec_rust-api/build.sh ship
           else
-            bash a_solutions/container-nix/bb-sec_rust-api/build.sh redeploy
+            bash a_solutions/bb-sec_rust-api/build.sh redeploy
           fi
 
   ship-go-api:
@@ -226,4 +226,4 @@ jobs:
         run: nix profile install nixpkgs#sops
 
       - name: Ship go-api
-        run: bash a_solutions/container-nix/bb-sec_go-api/build.sh ship
+        run: bash a_solutions/bb-sec_go-api/build.sh ship
