@@ -32,60 +32,112 @@ variable "zone" {
 }
 
 variable "ssh_public_key" {
-  description = "SSH public key content for diego user"
+  description = "SSH public key for diego user"
   type        = string
   # Set via: TF_VAR_ssh_public_key=$(cat ~/git/vault/A0_keys/ssh/google_compute_engine.pub)
+  # Or via build.sh which reads from vault automatically
 }
 
 # =============================================================================
-# VPC Network
+# VPC Network - GCP default (auto-created, cannot be deleted)
 # =============================================================================
 
 resource "google_compute_network" "main" {
-  name                    = "main-network"
+  name                    = "default"
+  description             = "Default network for the project"
   auto_create_subnetworks = true
+
+  lifecycle {
+    prevent_destroy = true  # GCP default network cannot be recreated
+  }
 }
 
 # =============================================================================
 # Firewall Rules
+# NOTE: default-allow-icmp, default-allow-internal, default-allow-rdp,
+#       default-allow-ssh are GCP auto-created defaults — NOT managed here.
 # =============================================================================
 
-# Allow SSH from anywhere (key-based auth only)
-resource "google_compute_firewall" "allow_ssh" {
-  name    = "allow-ssh"
+resource "google_compute_firewall" "allow_flask_api" {
+  name    = "allow-flask-api"
   network = google_compute_network.main.name
 
   allow {
     protocol = "tcp"
-    ports    = ["22"]
+    ports    = ["5000"]
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["ssh-enabled"]
-  description   = "Allow SSH access (key-based auth only)"
+  description   = "Allow Flask API on port 5000"
 }
 
-# Allow HTTP/HTTPS + HTTP3 (Caddy on gcp-proxy only)
-resource "google_compute_firewall" "allow_web" {
-  name    = "allow-web"
+resource "google_compute_firewall" "allow_http" {
+  name    = "allow-http"
   network = google_compute_network.main.name
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "443"]
-  }
-
-  allow {
-    protocol = "udp"
-    ports    = ["443"]  # HTTP/3 (QUIC)
+    ports    = ["80"]
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["web-server"]
-  description   = "Allow HTTP, HTTPS and HTTP/3 (Caddy)"
+  target_tags   = ["http-server"]
+  description   = "Allow HTTP traffic"
 }
 
-# Allow WireGuard VPN
+resource "google_compute_firewall" "allow_https" {
+  name    = "allow-https"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["https-server"]
+  description   = "Allow HTTPS traffic"
+}
+
+resource "google_compute_firewall" "allow_mail_imaps" {
+  name    = "allow-mail-imaps"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["993"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Allow IMAPS"
+}
+
+resource "google_compute_firewall" "allow_mail_smtp" {
+  name    = "allow-mail-smtp"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["25"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Allow SMTP"
+}
+
+resource "google_compute_firewall" "allow_mail_submission" {
+  name    = "allow-mail-submission"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["587"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Allow SMTP Submission"
+}
+
 resource "google_compute_firewall" "allow_wireguard" {
   name    = "allow-wireguard"
   network = google_compute_network.main.name
@@ -96,47 +148,7 @@ resource "google_compute_firewall" "allow_wireguard" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["wireguard"]
-  description   = "Allow WireGuard VPN traffic"
-}
-
-# Allow Syslog from all OCI VMs (over WireGuard mesh)
-resource "google_compute_firewall" "allow_syslog" {
-  name    = "allow-syslog"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["514", "5514"]
-  }
-
-  allow {
-    protocol = "udp"
-    ports    = ["514"]
-  }
-
-  source_ranges = [
-    "130.110.251.193/32",  # oci-E2-f_0 (oci-mail)
-    "129.151.228.66/32",   # oci-E2-f_1 (oci-analytics)
-    "82.70.229.129/32",    # oci-A1-f_0 (oci-apps)
-    "144.24.196.72/32",    # oci-A1-f_1 (oci-apps-1)
-    "79.72.28.10/32"       # oci-A1-p_0 (oci-apps-2)
-  ]
-  target_tags   = ["syslog-server"]
-  description   = "Allow syslog from all OCI VMs"
-}
-
-# Allow ICMP (ping)
-resource "google_compute_firewall" "allow_icmp" {
-  name    = "allow-icmp"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "icmp"
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow ICMP for diagnostics"
+  description   = "WireGuard from Oracle VM"
 }
 
 # =============================================================================
@@ -144,7 +156,7 @@ resource "google_compute_firewall" "allow_icmp" {
 # =============================================================================
 
 resource "google_compute_address" "proxy_ip" {
-  name   = "central-proxy-ip"
+  name   = "arch-1-ip"
   region = var.region
 }
 
@@ -152,18 +164,18 @@ resource "google_compute_address" "proxy_ip" {
 # Compute Instances
 # =============================================================================
 
-# gcp-proxy (arch-1) — always-on free tier e2-micro
+# gcp-proxy (arch-1) — always-on free tier e2-micro (Fedora, despite the name)
 resource "google_compute_instance" "central_proxy" {
   name         = "arch-1"
   machine_type = "e2-micro"
   zone         = var.zone
 
-  tags = ["ssh-enabled", "web-server", "wireguard", "syslog-server"]
+  tags = ["http-server", "https-server", "npm-admin"]
 
   boot_disk {
     initialize_params {
-      image = "projects/arch-linux-gce/global/images/family/arch"
-      size  = 30
+      image = "projects/fedora-cloud/global/images/family/fedora-cloud-42"
+      size  = 32
       type  = "pd-standard"
     }
   }
@@ -186,13 +198,20 @@ resource "google_compute_instance" "central_proxy" {
   }
 
   service_account {
-    scopes = ["cloud-platform"]
+    email = "514615763870-compute@developer.gserviceaccount.com"
+    scopes = [
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring.write",
+      "https://www.googleapis.com/auth/pubsub",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/trace.append",
+    ]
   }
 
-  labels = {
-    environment = "production"
-    role        = "central-proxy"
-    managed_by  = "terraform"
+  lifecycle {
+    ignore_changes = [boot_disk, metadata]  # Avoid re-imaging running instance
   }
 }
 
@@ -202,13 +221,11 @@ resource "google_compute_instance" "ollama_gpu" {
   machine_type = "n1-standard-4"
   zone         = var.zone
 
-  tags = ["ssh-enabled", "wireguard"]
-
   boot_disk {
     initialize_params {
-      image = "projects/debian-cloud/global/images/family/debian-12"
+      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
       size  = 50
-      type  = "pd-balanced"
+      type  = "pd-standard"
     }
   }
 
@@ -219,7 +236,6 @@ resource "google_compute_instance" "ollama_gpu" {
 
   network_interface {
     network = google_compute_network.main.name
-
     access_config {}  # Ephemeral IP — spot instances change IP on restart
   }
 
@@ -228,19 +244,19 @@ resource "google_compute_instance" "ollama_gpu" {
   }
 
   scheduling {
-    preemptible         = true
-    automatic_restart   = false
-    on_host_maintenance = "TERMINATE"  # Required for GPU instances
+    preemptible                 = true
+    automatic_restart           = false
+    on_host_maintenance         = "TERMINATE"  # Required for GPU instances
+    instance_termination_action = "STOP"
   }
 
   service_account {
+    email  = "514615763870-compute@developer.gserviceaccount.com"
     scopes = ["cloud-platform"]
   }
 
-  labels = {
-    environment = "production"
-    role        = "ollama-gpu"
-    managed_by  = "terraform"
+  lifecycle {
+    ignore_changes = [boot_disk, metadata]
   }
 }
 
@@ -250,26 +266,10 @@ resource "google_compute_instance" "ollama_gpu" {
 
 output "proxy_ip" {
   value       = google_compute_address.proxy_ip.address
-  description = "Static public IP of gcp-proxy"
+  description = "Static public IP of gcp-proxy (35.226.147.64)"
 }
 
 output "proxy_ssh" {
-  value       = "gcloud compute ssh arch-1 --zone us-central1-a"
-  description = "SSH command for gcp-proxy"
-}
-
-output "ollama_ssh" {
-  value       = "gcloud compute ssh ollama-spot-gpu --zone us-central1-a"
-  description = "SSH command for gcp-ollama (only when running)"
-}
-
-output "firewall_rules" {
-  value = [
-    "allow-ssh      (22/tcp)",
-    "allow-web      (80,443/tcp + 443/udp HTTP3)",
-    "allow-wireguard (51820/udp)",
-    "allow-syslog   (514,5514/tcp+udp — OCI VMs only)",
-    "allow-icmp"
-  ]
-  description = "Configured firewall rules"
+  value       = "ssh gcp-proxy"
+  description = "SSH alias for gcp-proxy"
 }
