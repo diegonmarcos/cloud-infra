@@ -146,9 +146,11 @@ resource "oci_core_security_list" "mail_server" {
     }
   }
 
-  # HTTP (8080) - Mailu admin from GCP proxy
+  # HTTP (8080) - SMTP proxy for Cloudflare Worker email delivery
+  # Cloudflare Workers use Cloudflare IPs (not GCP), must allow 0.0.0.0/0
+  # Protected by API key (X-API-Key: stalwart-proxy-key-2025)
   ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
+    source    = "0.0.0.0/0"
     protocol  = "6"
     stateless = false
     tcp_options {
