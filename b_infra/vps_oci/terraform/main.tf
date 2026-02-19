@@ -534,6 +534,22 @@ resource "oci_core_security_list" "flex2_server" {
 }
 
 # =============================================================================
+# OCI Email Delivery - Approved Senders
+# These addresses are authorized to send via OCI SMTP relay
+# (smtp.email.eu-marseille-1.oci.oraclecloud.com:587)
+# =============================================================================
+
+resource "oci_email_sender" "me" {
+  compartment_id = var.compartment_ocid
+  email_address  = "me@diegonmarcos.com"
+}
+
+resource "oci_email_sender" "no_reply" {
+  compartment_id = var.compartment_ocid
+  email_address  = "no-reply@diegonmarcos.com"
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 
