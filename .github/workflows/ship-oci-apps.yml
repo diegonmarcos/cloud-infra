@@ -1,0 +1,150 @@
+name: "Ship → oci-apps"
+
+on:
+  push:
+    paths:
+      - "a_solutions/bb-sec_rust-api/src/**"
+      - "a_solutions/bc-obs_rig/src/**"
+      - "a_solutions/ca-dat_kg-graph/src/**"
+      - "a_solutions/ac-fin_quant-lab-light/src/**"
+      - "a_solutions/ac-fin_quant-lab-full/src/**"
+      - "a_solutions/ac-fin_crawlee-cloud/src/**"
+      - ".github/workflows/ship-oci-apps.yml"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Ship specific service (leave empty for all changed)"
+        required: false
+        type: string
+      wipe_data:
+        description: "Wipe KG Graph data (fresh start, re-seeds)"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ship-oci-apps
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            rust-api:
+              - 'a_solutions/bb-sec_rust-api/src/**'
+            rig:
+              - 'a_solutions/bc-obs_rig/src/**'
+            kg-graph:
+              - 'a_solutions/ca-dat_kg-graph/src/**'
+            quant-lab-light:
+              - 'a_solutions/ac-fin_quant-lab-light/src/**'
+            quant-lab-full:
+              - 'a_solutions/ac-fin_quant-lab-full/src/**'
+            crawlee-cloud:
+              - 'a_solutions/ac-fin_crawlee-cloud/src/**'
+
+      - name: Force service override
+        id: force
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          svc="${{ inputs.service }}"
+          for name in rust-api rig kg-graph quant-lab-light quant-lab-full crawlee-cloud; do
+            if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
+              echo "$name=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host oci-apps
+            HostName 82.70.229.129
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship rust-api
+        if: steps.changes.outputs.rust-api == 'true' || steps.force.outputs.rust-api == 'true'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bb-sec_rust-api/build.sh ship
+
+      - name: Ship rig
+        if: steps.changes.outputs.rig == 'true' || steps.force.outputs.rig == 'true'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_rig/build.sh ship
+
+      - name: Ship quant-lab-light
+        if: steps.changes.outputs.quant-lab-light == 'true' || steps.force.outputs.quant-lab-light == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ac-fin_quant-lab-light/build.sh ship
+
+      - name: Ship quant-lab-full
+        if: steps.changes.outputs.quant-lab-full == 'true' || steps.force.outputs.quant-lab-full == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ac-fin_quant-lab-full/build.sh ship
+
+      - name: Ship crawlee-cloud
+        if: steps.changes.outputs.crawlee-cloud == 'true' || steps.force.outputs.crawlee-cloud == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ac-fin_crawlee-cloud/build.sh ship
+
+      - name: Ship kg-graph
+        id: ship-kg-graph
+        if: steps.changes.outputs.kg-graph == 'true' || steps.force.outputs.kg-graph == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_kg-graph/build.sh ship
+
+      - name: Copy KG seed resources
+        if: steps.ship-kg-graph.outcome == 'success'
+        run: |
+          rsync -avz a_solutions/ca-dat_kg-graph/scripts/ oci-apps:/opt/containers/kg-graph/scripts/
+          rsync -avz a_solutions/config.json oci-apps:/opt/containers/kg-graph/config.json
+
+      - name: Wipe KG Graph data (fresh start)
+        if: steps.ship-kg-graph.outcome == 'success' && github.event.inputs.wipe_data == 'true'
+        run: |
+          ssh oci-apps "cd /opt/containers/kg-graph && docker compose down 2>/dev/null; sudo rm -rf /opt/data/surrealdb && sudo mkdir -p /opt/data/surrealdb && sudo chown 65532:65532 /opt/data/surrealdb"
+          ssh oci-apps "cd /opt/containers/kg-graph && docker compose --env-file .secrets up -d"
+          echo "Waiting for SurrealDB to start..."
+          sleep 10
+
+      - name: Seed KG Graph
+        if: steps.ship-kg-graph.outcome == 'success' && github.event.inputs.wipe_data == 'true'
+        run: ssh oci-apps "chmod +x /opt/containers/kg-graph/scripts/seed_from_config.sh && cd /opt/containers/kg-graph && bash scripts/seed_from_config.sh http://localhost:8001 /opt/containers/kg-graph/config.json"
+
+      - name: Verify KG Graph
+        if: steps.ship-kg-graph.outcome == 'success'
+        run: ssh oci-apps "curl -sf http://localhost:8001/health && echo ' <- SurrealDB health OK' || echo 'SurrealDB health FAILED'"
