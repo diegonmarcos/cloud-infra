@@ -1,0 +1,80 @@
+name: "Ship → gcp-t4"
+
+on:
+  push:
+    paths:
+      - "a_solutions/ad-agi_ollama/src/**"
+      - ".github/workflows/ship-gcp-t4.yml"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Ship specific service (leave empty for all changed)"
+        required: false
+        type: string
+
+concurrency:
+  group: ship-gcp-t4
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            ollama:
+              - 'a_solutions/ad-agi_ollama/src/**'
+
+      - name: Force service override
+        id: force
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          svc="${{ inputs.service }}"
+          for name in ollama; do
+            if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
+              echo "$name=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.GCP_T4_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host gcp-t4
+            HostName ${{ secrets.GCP_T4_HOST }}
+            User ${{ secrets.GCP_T4_USER }}
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship ollama
+        if: steps.changes.outputs.ollama == 'true' || steps.force.outputs.ollama == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ad-agi_ollama/build.sh ship
