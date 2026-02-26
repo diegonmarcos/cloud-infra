@@ -1,0 +1,104 @@
+name: "Ship → oci-mail"
+
+on:
+  push:
+    paths:
+      - "a_solutions/aa-sui_tools-mailu/src/**"
+      - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
+      - "a_solutions/ab-mic_syncthing/src/**"
+      - "a_solutions/bc-obs_syslog-forwarder/src/**"
+      - ".github/workflows/ship-oci-mail.yml"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Ship specific service (leave empty for all changed)"
+        required: false
+        type: string
+
+concurrency:
+  group: ship-oci-mail
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            mailu:
+              - 'a_solutions/aa-sui_tools-mailu/src/**'
+            smtp-proxy:
+              - 'a_solutions/aa-sui_tools-smtp-proxy/src/**'
+            syncthing:
+              - 'a_solutions/ab-mic_syncthing/src/**'
+            syslog-forwarder:
+              - 'a_solutions/bc-obs_syslog-forwarder/src/**'
+
+      - name: Force service override
+        id: force
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          svc="${{ inputs.service }}"
+          for name in mailu smtp-proxy syncthing syslog-forwarder; do
+            if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
+              echo "$name=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-24.11
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host oci-mail
+            HostName 130.110.251.193
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship mailu
+        if: steps.changes.outputs.mailu == 'true' || steps.force.outputs.mailu == 'true'
+        continue-on-error: true
+        run: bash a_solutions/aa-sui_tools-mailu/build.sh ship
+
+      - name: Ship smtp-proxy
+        if: steps.changes.outputs.smtp-proxy == 'true' || steps.force.outputs.smtp-proxy == 'true'
+        continue-on-error: true
+        run: bash a_solutions/aa-sui_tools-smtp-proxy/build.sh ship
+
+      - name: Ship syncthing
+        if: steps.changes.outputs.syncthing == 'true' || steps.force.outputs.syncthing == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ab-mic_syncthing/build.sh ship
+
+      - name: Ship syslog-forwarder
+        if: steps.changes.outputs.syslog-forwarder == 'true' || steps.force.outputs.syslog-forwarder == 'true'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_syslog-forwarder/build.sh ship
