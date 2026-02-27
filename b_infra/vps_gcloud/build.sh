@@ -1,67 +1,88 @@
 #!/bin/sh
-# GCP Terraform helper — plan, apply, destroy
+# GCP Terraform: src/*.tf → dist/ (terraform runs in dist/)
 # Auth: service account key from vault (GOOGLE_APPLICATION_CREDENTIALS)
 set -e
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 SRC_DIR="$DIR/src"
 DIST_DIR="$DIR/dist"
-VAULT="$HOME/git/vault/A0_keys"
+
+# Vault paths — auto-detect mobile vs desktop
+if [ -d "$HOME/git/vault/A0_keys" ]; then
+    VAULT="$HOME/git/vault/A0_keys"
+elif [ -d "/home/diego/Mounts/Git/vault/A0_keys" ]; then
+    VAULT="/home/diego/Mounts/Git/vault/A0_keys"
+else
+    echo "ERROR: vault not found"; exit 1
+fi
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
-# Auth + vars
+# Auth
 export GOOGLE_APPLICATION_CREDENTIALS="$VAULT/providers/gcloud/api/diego-cli-key.json"
+
+# Vars from vault
 export TF_VAR_ssh_public_key="${TF_VAR_ssh_public_key:-$(cat "$VAULT/ssh/google_compute_engine.pub" 2>/dev/null || echo FILL_FROM_VAULT)}"
 
-# terraform 1.8 -chdir is unreliable — use cd + subshell
+# Run terraform in dist/ (state + providers live there)
 tf() { (cd "$DIST_DIR" && terraform "$@"); }
 
+# ── Build — copy src/*.tf → dist/ ──────────────────────────────────────
 step_build() {
-    log "Copying main.tf → dist/"
+    log "Copying src/*.tf → dist/"
     mkdir -p "$DIST_DIR"
-    cp "$SRC_DIR/main.tf" "$DIST_DIR/main.tf"
+    cp "$SRC_DIR"/*.tf "$DIST_DIR/"
+    log "Built → dist/"
 }
 
+# ── Init ────────────────────────────────────────────────────────────────
 step_init() {
     step_build
     log "terraform init"
     tf init -upgrade
 }
 
+# ── Plan ────────────────────────────────────────────────────────────────
 step_plan() {
     step_build
     log "terraform plan"
     tf plan
 }
 
+# ── Apply (interactive) ────────────────────────────────────────────────
 step_apply() {
     step_build
     log "terraform apply"
     tf apply
 }
 
+# ── Ship (build + apply -auto-approve) ─────────────────────────────────
 step_ship() {
     step_build
     log "terraform apply -auto-approve"
     tf apply -auto-approve
 }
 
+# ── Destroy ─────────────────────────────────────────────────────────────
 step_destroy() {
+    step_build
     log "terraform destroy"
     tf destroy
 }
 
+# ── Fmt ─────────────────────────────────────────────────────────────────
 step_fmt() {
     log "terraform fmt"
-    terraform fmt "$SRC_DIR/main.tf"
+    terraform fmt "$SRC_DIR"
 }
 
+# ── Clean — remove dist/ .tf copies only (keeps state + .terraform/) ──
 step_clean() {
-    log "Removing dist/"
-    rm -rf "$DIST_DIR"
+    log "Removing dist/*.tf"
+    rm -f "$DIST_DIR"/*.tf
 }
 
+# ── Main ────────────────────────────────────────────────────────────────
 echo "╔════════════════════════════════════════╗"
 echo "║  GCP Terraform                         ║"
 echo "╚════════════════════════════════════════╝"
@@ -77,14 +98,14 @@ case "${1:-plan}" in
     clean)    step_clean ;;
     *)
         echo "Usage: $0 [build|init|plan|apply|ship|destroy|fmt|clean]"
-        echo "  build    Copy main.tf → dist/"
+        echo "  build    Copy src/*.tf → dist/"
         echo "  init     build + terraform init"
         echo "  plan     build + terraform plan (default)"
         echo "  apply    build + terraform apply (interactive)"
         echo "  ship     build + terraform apply -auto-approve"
-        echo "  destroy  terraform destroy"
-        echo "  fmt      terraform fmt"
-        echo "  clean    Remove dist/"
+        echo "  destroy  build + terraform destroy"
+        echo "  fmt      terraform fmt src/"
+        echo "  clean    Remove dist/*.tf (keeps state)"
         ;;
 esac
 

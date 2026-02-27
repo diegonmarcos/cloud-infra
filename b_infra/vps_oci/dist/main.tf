@@ -550,6 +550,45 @@ resource "oci_email_sender" "no_reply" {
 }
 
 # =============================================================================
+# Budget Alerts
+# =============================================================================
+
+resource "oci_budget_budget" "tenancy_budget" {
+  compartment_id = var.tenancy_ocid
+  amount         = 30
+  reset_period   = "MONTHLY"
+  display_name   = "OCI-Free-Tier-30EUR"
+  description    = "Alert if OCI spend exceeds free tier expectations"
+  target_type    = "COMPARTMENT"
+
+  targets = [var.tenancy_ocid]
+}
+
+resource "oci_budget_alert_rule" "half_budget" {
+  budget_id    = oci_budget_budget.tenancy_budget.id
+  display_name = "50pct-spend-alert"
+  type         = "ACTUAL"
+  threshold      = 50
+  threshold_type = "PERCENTAGE"
+}
+
+resource "oci_budget_alert_rule" "ninety_budget" {
+  budget_id    = oci_budget_budget.tenancy_budget.id
+  display_name = "90pct-spend-alert"
+  type         = "ACTUAL"
+  threshold      = 90
+  threshold_type = "PERCENTAGE"
+}
+
+resource "oci_budget_alert_rule" "full_budget" {
+  budget_id    = oci_budget_budget.tenancy_budget.id
+  display_name = "100pct-spend-alert"
+  type         = "ACTUAL"
+  threshold      = 100
+  threshold_type = "PERCENTAGE"
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 
