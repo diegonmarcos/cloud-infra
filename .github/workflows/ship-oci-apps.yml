@@ -3,6 +3,7 @@ name: "Ship → oci-apps"
 on:
   push:
     paths:
+      - "a_solutions/bb-sec_mcp-server-skills/src/**"
       - "a_solutions/bb-sec_rust-api/src/**"
       - "a_solutions/bc-obs_rig/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
@@ -39,6 +40,8 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
+            c3-api:
+              - 'a_solutions/bb-sec_mcp-server-skills/src/**'
             rust-api:
               - 'a_solutions/bb-sec_rust-api/src/**'
             rig:
@@ -57,7 +60,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in rust-api rig kg-graph quant-lab-light quant-lab-full crawlee-cloud; do
+          for name in c3-api rust-api rig kg-graph quant-lab-light quant-lab-full crawlee-cloud; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -93,6 +96,13 @@ jobs:
 
       - name: Install sops
         run: nix profile install nixpkgs#sops
+
+      - name: Ship c3-api
+        if: steps.changes.outputs.c3-api == 'true' || steps.force.outputs.c3-api == 'true'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bb-sec_mcp-server-skills/build.sh ship
 
       - name: Ship rust-api
         if: steps.changes.outputs.rust-api == 'true' || steps.force.outputs.rust-api == 'true'

@@ -579,6 +579,22 @@ resource "oci_budget_alert_rule" "full_budget" {
 }
 
 # =============================================================================
+# IAM Policies
+# =============================================================================
+
+resource "oci_identity_policy" "boot_volume_management" {
+  compartment_id = var.tenancy_ocid
+  name           = "boot-volume-management-policy"
+  description    = "Allow management of boot volumes for CLI operations"
+
+  statements = [
+    "Allow any-user to manage boot-volumes in tenancy",
+    "Allow any-user to manage volume-attachments in tenancy",
+    "Allow any-user to read boot-volume-attachments in tenancy"
+  ]
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 
