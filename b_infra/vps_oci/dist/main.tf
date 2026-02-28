@@ -525,19 +525,18 @@ resource "oci_core_security_list" "flex2_server" {
 
 # =============================================================================
 # OCI Email Delivery - Approved Senders
-# These addresses are authorized to send via OCI SMTP relay
-# (smtp.email.eu-marseille-1.oci.oraclecloud.com:587)
+# Already created manually via OCI Console - no terraform management needed
 # =============================================================================
 
-resource "oci_email_sender" "me" {
-  compartment_id = var.compartment_ocid
-  email_address  = "me@diegonmarcos.com"
-}
-
-resource "oci_email_sender" "no_reply" {
-  compartment_id = var.compartment_ocid
-  email_address  = "no-reply@diegonmarcos.com"
-}
+# resource "oci_email_sender" "me" {
+#   compartment_id = var.compartment_ocid
+#   email_address  = "me@diegonmarcos.com"
+# }
+#
+# resource "oci_email_sender" "no_reply" {
+#   compartment_id = var.compartment_ocid
+#   email_address  = "no-reply@diegonmarcos.com"
+# }
 
 # =============================================================================
 # Budget Alerts
@@ -579,18 +578,32 @@ resource "oci_budget_alert_rule" "full_budget" {
 }
 
 # =============================================================================
-# IAM Policies
+# IAM Group & Policies
 # =============================================================================
 
-resource "oci_identity_policy" "boot_volume_management" {
+# Get existing Administrators group (reserved/built-in group)
+data "oci_identity_groups" "administrators" {
   compartment_id = var.tenancy_ocid
-  name           = "boot-volume-management-policy"
-  description    = "Allow management of boot volumes for CLI operations"
+  filter {
+    name   = "name"
+    values = ["Administrators"]
+  }
+}
+
+# Add user to Administrators group
+resource "oci_identity_user_group_membership" "admin_user" {
+  user_id  = "ocid1.user.oc1..aaaaaaaaadh3p7atydr4ga3yvr3noohaar4f5h62d7stidvzkzgmilyt4enq"  # diegonmarcos@gmail.com
+  group_id = data.oci_identity_groups.administrators.groups[0].id
+}
+
+# Grant Administrators full access
+resource "oci_identity_policy" "administrators_policy" {
+  compartment_id = var.tenancy_ocid
+  name           = "administrators-full-access"
+  description    = "Grant administrators full access to manage all resources"
 
   statements = [
-    "Allow any-user to manage boot-volumes in tenancy",
-    "Allow any-user to manage volume-attachments in tenancy",
-    "Allow any-user to read boot-volume-attachments in tenancy"
+    "Allow group Administrators to manage all-resources in tenancy"
   ]
 }
 

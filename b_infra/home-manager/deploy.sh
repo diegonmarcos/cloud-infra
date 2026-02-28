@@ -22,11 +22,6 @@ deploy_vm() {
             config="ubuntu@oci-apps"
             vm="oci-apps"  # Normalize alias
             ;;
-        oci-apps-1|oci-flex-1)
-            user="ubuntu"
-            config="ubuntu@oci-apps-1"
-            vm="oci-apps-1"
-            ;;
         oci-apps-2)
             user="ubuntu"
             config="ubuntu@oci-apps-2"
@@ -41,7 +36,7 @@ deploy_vm() {
             ;;
         *)
             echo "Unknown VM: $vm"
-            echo "Valid VMs: gcp-proxy, oci-apps, oci-apps-1, oci-apps-2, oci-mail, oci-analytics"
+            echo "Valid VMs: gcp-proxy, oci-apps, oci-apps-2, oci-mail, oci-analytics"
             return 1
             ;;
     esac
@@ -72,17 +67,16 @@ case "${1:-all}" in
     all)
         deploy_vm "gcp-proxy"
         deploy_vm "oci-apps"
-        deploy_vm "oci-apps-1"
         deploy_vm "oci-apps-2"
         deploy_vm "oci-mail"
         deploy_vm "oci-analytics"
         log "All VMs deployed"
         ;;
-    gcp-proxy|oci-apps|oci-apps-1|oci-apps-2|oci-mail|oci-analytics|oci-flex-0|oci-flex-1)
+    gcp-proxy|oci-apps|oci-apps-2|oci-mail|oci-analytics|oci-flex-0)
         deploy_vm "$1"
         ;;
     *)
-        echo "Usage: $0 [all|gcp-proxy|oci-apps|oci-apps-1|oci-apps-2|oci-mail|oci-analytics]"
+        echo "Usage: $0 [all|gcp-proxy|oci-apps|oci-apps-2|oci-mail|oci-analytics]"
         exit 1
         ;;
 esac
