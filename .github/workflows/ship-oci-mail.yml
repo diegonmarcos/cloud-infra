@@ -6,6 +6,7 @@ on:
       - "a_solutions/aa-sui_tools-mailu/src/**"
       - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
       - "a_solutions/ab-mic_syncthing/src/**"
+      - "a_solutions/bc-obs_dagu/src/**"
       - "a_solutions/bc-obs_syslog-forwarder/src/**"
       - ".github/workflows/ship-oci-mail.yml"
     branches: [main]
@@ -65,6 +66,7 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          mkdir -p ~/.ssh/sockets
           cat > ~/.ssh/config <<EOF
           Host oci-mail
             HostName 130.110.251.193
@@ -73,6 +75,9 @@ jobs:
             StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 10
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
           EOF
           chmod 600 ~/.ssh/config
 
