@@ -1,7 +1,10 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ (import ./wireguard.nix { vmName = "gcp-proxy"; }) ];
+  imports = [
+    (import ./wireguard.nix { vmName = "gcp-proxy"; })
+    ./modules/sshd-hardening.nix
+  ];
   # Home Manager needs a bit of information about you and the paths it should manage
   home.username = "diego";
   home.homeDirectory = "/home/diego";

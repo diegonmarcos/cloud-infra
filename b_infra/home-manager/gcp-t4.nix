@@ -4,6 +4,7 @@
   imports = [
     (import ./wireguard.nix { vmName = "gcp-t4"; })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
+    ./modules/sshd-hardening.nix
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

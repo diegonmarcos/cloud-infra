@@ -276,6 +276,7 @@ resource "oci_core_security_list" "analytics_server" {
 
 # =============================================================================
 # Security List - Apps Server (oci-A1-f_0 / oci-apps)
+# Consolidated: all services from former oci-apps + oci-apps-1
 # =============================================================================
 
 resource "oci_core_security_list" "apps_server" {
@@ -312,6 +313,104 @@ resource "oci_core_security_list" "apps_server" {
     }
   }
 
+  # HTTPS (443) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 443
+      max = 443
+    }
+  }
+
+  # PhotoPrism (2342) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 2342
+      max = 2342
+    }
+  }
+
+  # Radicale (5232) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 5232
+      max = 5232
+    }
+  }
+
+  # Code Server (8443) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 8443
+      max = 8443
+    }
+  }
+
+  # NocoDB (8085) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 8085
+      max = 8085
+    }
+  }
+
+  # AFFiNE (3010) - from GCP proxy (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "${var.gcp_proxy_ip}/32"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 3010
+      max = 3010
+    }
+  }
+
+  # Syncthing (22000) - direct access (migrated from oci-apps-1)
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 22000
+      max = 22000
+    }
+  }
+
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "17"  # UDP
+    stateless = false
+    udp_options {
+      min = 22000
+      max = 22000
+    }
+  }
+
+  # Syncthing Discovery (21027) - migrated from oci-apps-1
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "17"
+    stateless = false
+    udp_options {
+      min = 21027
+      max = 21027
+    }
+  }
+
   # WireGuard (51820)
   ingress_security_rules {
     source    = "0.0.0.0/0"
@@ -336,22 +435,22 @@ resource "oci_core_security_list" "apps_server" {
 }
 
 # =============================================================================
-# Security List - Dev Server (oci-A1-f_1 / oci-apps-1)
+# Security List - Dev Server (oci-A1-f_1 / oci-apps-1) — DECOMMISSIONED
+# Rules merged into apps_server. Kept for terraform state until instance deleted.
 # =============================================================================
 
 resource "oci_core_security_list" "dev_server" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "dev-server-security-list"
+  display_name   = "dev-server-security-list-DECOMMISSIONED"
 
-  # Egress - Allow all outbound
   egress_security_rules {
     destination = "0.0.0.0/0"
     protocol    = "all"
     stateless   = false
   }
 
-  # SSH
+  # Minimal: SSH only (for decommission access)
   ingress_security_rules {
     source    = "0.0.0.0/0"
     protocol  = "6"
@@ -359,115 +458,6 @@ resource "oci_core_security_list" "dev_server" {
     tcp_options {
       min = 22
       max = 22
-    }
-  }
-
-  # HTTPS (443) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 443
-      max = 443
-    }
-  }
-
-  # PhotoPrism (2342) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 2342
-      max = 2342
-    }
-  }
-
-  # Radicale (5232) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 5232
-      max = 5232
-    }
-  }
-
-  # Code Server (8443) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8443
-      max = 8443
-    }
-  }
-
-  # NocoDB (8085) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8085
-      max = 8085
-    }
-  }
-
-  # AFFiNE (3010) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 3010
-      max = 3010
-    }
-  }
-
-  # Syncthing (22000) - direct access
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 22000
-      max = 22000
-    }
-  }
-
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"  # UDP
-    stateless = false
-    udp_options {
-      min = 22000
-      max = 22000
-    }
-  }
-
-  # Syncthing Discovery (21027)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"
-    stateless = false
-    udp_options {
-      min = 21027
-      max = 21027
-    }
-  }
-
-  # WireGuard (51820)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"
-    stateless = false
-    udp_options {
-      min = 51820
-      max = 51820
     }
   }
 
@@ -602,7 +592,7 @@ output "security_lists" {
     mail_server      = oci_core_security_list.mail_server.id
     analytics_server = oci_core_security_list.analytics_server.id
     apps_server      = oci_core_security_list.apps_server.id
-    dev_server       = oci_core_security_list.dev_server.id
+    dev_server       = oci_core_security_list.dev_server.id  # DECOMMISSIONED — kept for state
     flex2_server     = oci_core_security_list.flex2_server.id
   }
   description = "Security List OCIDs"
@@ -623,13 +613,9 @@ output "instance_info" {
     "oci-A1-f_0" = {
       ip   = "82.70.229.129"
       ocid = "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
-      role = "Apps Server (oci-apps)"
+      role = "Consolidated Apps Server (oci-apps) — 4 OCPUs / 24GB / 100GB"
     }
-    "oci-A1-f_1" = {
-      ip   = "144.24.196.72"
-      ocid = "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczach3pczd4kn6w5stdt7rs64u2uqexzor6lyneaebc2i2ra"
-      role = "Dev Server (oci-apps-1)"
-    }
+    # oci-A1-f_1 DECOMMISSIONED — all services migrated to oci-A1-f_0
     "oci-A1-p_0" = {
       ip   = "79.72.28.10"
       ocid = "FILL_FROM_OCI_CONSOLE"

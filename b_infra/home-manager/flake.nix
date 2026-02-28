@@ -16,17 +16,13 @@
       modules = [ ./gcp-proxy.nix ];
     };
 
-    # oci-apps (82.70.229.129) - Ampere ARM, 3 OCPUs / 16GB, Ubuntu
+    # oci-apps (82.70.229.129) - Ampere ARM, 4 OCPUs / 24GB, Ubuntu
     homeConfigurations."ubuntu@oci-apps" = home-manager.lib.homeManagerConfiguration {
       pkgs = nixpkgs.legacyPackages.aarch64-linux;
       modules = [ ./oci-apps.nix ];
     };
 
-    # oci-apps-1 (144.24.196.72) - Ampere ARM, 1 OCPU / 8GB, Ubuntu (Wake-on-Demand)
-    homeConfigurations."ubuntu@oci-apps-1" = home-manager.lib.homeManagerConfiguration {
-      pkgs = nixpkgs.legacyPackages.aarch64-linux;
-      modules = [ ./oci-apps-1.nix ];
-    };
+    # oci-apps-1 DECOMMISSIONED (2026-02-28) — services consolidated to oci-apps
 
     # oci-mail (130.110.251.193) - x86_64, 1GB RAM, Ubuntu
     homeConfigurations."ubuntu@oci-mail" = home-manager.lib.homeManagerConfiguration {

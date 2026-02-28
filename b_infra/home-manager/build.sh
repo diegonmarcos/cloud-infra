@@ -15,7 +15,7 @@ get_vms() {
     elif command -v python3 >/dev/null 2>&1; then
         python3 -c "import json; c=json.load(open('$CONFIG')); print(' '.join(c['vms'].keys()))"
     else
-        echo "gcp-proxy oci-flex-0 oci-flex-1 oci-mail oci-analytics"
+        echo "gcp-proxy oci-apps oci-apps-2 oci-mail oci-analytics gcp-t4"
     fi
 }
 
@@ -69,13 +69,16 @@ deploy_single_vm() {
         rsync -avz --delete \
             --include="flake.nix" \
             --include="flake.lock" \
-            --include="${vm}.nix" \
             --include="*.nix" \
+            --include="modules/" \
+            --include="modules/*.nix" \
             --exclude="*" \
             "$SERVICE_DIR/" "$vm:~/.config/home-manager/" 2>&1 | grep -v "^sending\|^sent\|^total"
     else
         # Fallback: use scp for individual files
+        ssh "$vm" "mkdir -p ~/.config/home-manager/modules"
         scp "$SERVICE_DIR"/*.nix "$SERVICE_DIR/flake.lock" "$vm:~/.config/home-manager/" 2>&1 | tail -1
+        scp "$SERVICE_DIR"/modules/*.nix "$vm:~/.config/home-manager/modules/" 2>&1 | tail -1
     fi
 
     log "  ✓ Files copied to $vm"
@@ -100,13 +103,16 @@ activate_single_vm() {
 
     log "Activating home-manager on $vm..."
 
+    # Source nix daemon profile for full PATH (some VMs have incomplete /usr/local/bin symlinks)
+    local nix_source=". /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
+
     # Run home-manager switch on VM with backup
-    ssh "$vm" "cd ~/.config/home-manager && nix run home-manager/release-24.11 -- switch --flake .#$config -b backup" 2>&1 | tail -10
+    ssh "$vm" "$nix_source; cd ~/.config/home-manager && nix run home-manager/release-24.11 -- switch --flake .#$config -b backup" 2>&1 | tail -10
 
     log "  ✓ $vm activated"
 
     # Trim to last 3 generations and GC on remote VM
-    ssh "$vm" "nix-env --delete-generations +3 && nix-collect-garbage" 2>&1 || true
+    ssh "$vm" "$nix_source; nix-env --delete-generations +3 && nix-collect-garbage" 2>&1 || true
     log "  ✓ $vm generations trimmed"
 }
 
@@ -203,14 +209,14 @@ case "${1:-help}" in
         echo "  update    Update flake inputs"
         echo "  clean     No-op (for consistency)"
         echo ""
-        echo "VMs: all (default), gcp-proxy, oci-flex-0, oci-flex-1, oci-mail, oci-analytics"
+        echo "VMs: all (default), gcp-proxy, oci-apps, oci-apps-2, oci-mail, oci-analytics, gcp-t4"
         echo ""
         echo "Examples:"
         echo "  $0 ship              # Deploy to all VMs"
-        echo "  $0 ship oci-flex-1   # Deploy to oci-flex-1 only"
+        echo "  $0 ship oci-apps     # Deploy to oci-apps only"
         echo "  $0 deploy gcp-proxy  # Copy files to gcp-proxy"
         echo "  $0 status            # WireGuard status on all VMs"
-        echo "  $0 diff oci-flex-1   # Show remote config (redacted)"
+        echo "  $0 diff oci-apps     # Show remote config (redacted)"
         ;;
 esac
 
