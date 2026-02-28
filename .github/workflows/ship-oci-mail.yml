@@ -41,6 +41,8 @@ jobs:
               - 'a_solutions/aa-sui_tools-smtp-proxy/src/**'
             syncthing:
               - 'a_solutions/ab-mic_syncthing/src/**'
+            dagu:
+              - 'a_solutions/bc-obs_dagu/src/**'
             syslog-forwarder:
               - 'a_solutions/bc-obs_syslog-forwarder/src/**'
 
@@ -49,7 +51,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mailu smtp-proxy syncthing syslog-forwarder; do
+          for name in mailu smtp-proxy syncthing dagu syslog-forwarder; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -104,6 +106,11 @@ jobs:
         if: steps.changes.outputs.syncthing == 'true' || steps.force.outputs.syncthing == 'true'
         continue-on-error: true
         run: bash a_solutions/ab-mic_syncthing/build.sh ship
+
+      - name: Ship dagu
+        if: steps.changes.outputs.dagu == 'true' || steps.force.outputs.dagu == 'true'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_dagu/build.sh ship
 
       - name: Ship syslog-forwarder
         if: steps.changes.outputs.syslog-forwarder == 'true' || steps.force.outputs.syslog-forwarder == 'true'
