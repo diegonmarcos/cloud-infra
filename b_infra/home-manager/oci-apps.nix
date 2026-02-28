@@ -4,6 +4,7 @@
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps"; })
     ./modules/docker-service.nix
+    ./modules/sshd-hardening.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
@@ -52,6 +53,10 @@
     # Monitoring
     lsof
     iftop
+
+    # Orchestrator dependencies
+    socat
+    bc
 
     # Container runtime
     docker
@@ -109,7 +114,7 @@
       }
 
       # Custom prompt with color
-      PS1='\[\033[01;32m\]\u@oci-flex-0\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+      PS1='\[\033[01;32m\]\u@oci-apps\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
       # History settings
       export HISTSIZE=10000

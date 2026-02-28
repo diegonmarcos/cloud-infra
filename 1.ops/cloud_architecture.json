@@ -1,7 +1,7 @@
 {
   "$schema": "cloud-infrastructure-static",
-  "version": "7.0.0",
-  "lastUpdated": "2026-01-05",
+  "version": "8.0.0",
+  "lastUpdated": "2026-02-28",
   "owner": "Diego Nepomuceno Marcos",
   "description": "Static infrastructure configuration - source of truth for architecture and cloud_control exports",
 
@@ -160,33 +160,33 @@
         "cost": {"monthly": 0, "currency": "USD"},
         "notes": "SINGLE CENTRAL NPM + Authelia 2FA - 24/7 FREE"
       },
-      "oci-p-flex_1": {
-        "id": "oci-p-flex_1",
-        "name": "OCI Paid Flex 1",
-        "displayName": "Dev Server",
+      "oci-p-flex_0": {
+        "id": "oci-p-flex_0",
+        "name": "OCI Flex 0",
+        "displayName": "Apps Server",
         "provider": "oracle",
-        "ociInstanceId": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczach3pczd4kn6w5stdt7rs64u2uqexzor6lyneaebc2i2ra",
+        "ociInstanceId": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
         "category": "services",
         "instanceType": "VM.Standard.A1.Flex",
-        "specs": {"cpu": "1 OCPU (ARM)", "ram": "8 GB", "storage": "200 GB"},
+        "specs": {"cpu": "4 OCPU (ARM)", "ram": "24 GB", "storage": "100 GB"},
         "network": {
-          "publicIp": "144.24.196.72",
+          "publicIp": "82.70.229.129",
           "privateIp": "10.0.0.x",
-          "dockerNetwork": "dev_network",
+          "dockerNetwork": "apps_network",
           "dockerSubnet": "172.24.0.0/24"
         },
         "os": {"name": "Ubuntu", "version": "24.04 LTS"},
         "ssh": {
           "user": "ubuntu",
           "keyPath": "/home/diego/vault/A0_keys/ssh/id_rsa",
-          "command": "ssh -i /home/diego/vault/A0_keys/ssh/id_rsa ubuntu@144.24.196.72"
+          "command": "ssh -i /home/diego/vault/A0_keys/ssh/id_rsa ubuntu@82.70.229.129"
         },
-        "services": ["photos", "calendar", "cache", "web-ide", "nocodb"],
-        "ports": {"external": [22, 443, 8443, 8085], "internal": [5000, 6379, 2342, 5232, 8085]},
+        "services": ["photos", "calendar", "cache", "web-ide", "nocodb", "orchestrator"],
+        "ports": {"external": [22, 443, 8443, 8085], "internal": [5000, 6379, 2342, 5232, 8085, 9090]},
         "availability": "wake-on-demand",
         "wakeConfig": {"idleTimeout": 1800, "wakeTime": 60},
-        "cost": {"monthly": 5.5, "hourly": 0.037, "currency": "USD"},
-        "notes": "Dev Server - Wake-on-Demand PAID"
+        "cost": {"monthly": 0, "currency": "USD"},
+        "notes": "Apps Server (consolidated from oci-apps + oci-apps-1) - Wake-on-Demand, A1.Flex Free Tier"
       }
     },
 
@@ -226,7 +226,7 @@
         "id": "photos",
         "displayName": "Photoprism",
         "category": "user-productivity",
-        "vmId": "oci-p-flex_1",
+        "vmId": "oci-p-flex_0",
         "containers": ["photoprism-app", "photos-db"],
         "technology": {"image": "photoprism/photoprism", "version": "latest"},
         "urls": {"gui": "https://photos.diegonmarcos.com"},
@@ -237,7 +237,7 @@
         "id": "calendar",
         "displayName": "Radicale Calendar",
         "category": "user-productivity",
-        "vmId": "oci-p-flex_1",
+        "vmId": "oci-p-flex_0",
         "containers": ["radicale-app"],
         "technology": {"image": "tomsquest/docker-radicale", "version": "latest"},
         "urls": {"gui": "https://cal.diegonmarcos.com/.web/"},
@@ -247,19 +247,19 @@
         "id": "nocodb",
         "displayName": "NocoDB Database UI",
         "category": "infra-db",
-        "vmId": "oci-p-flex_1",
+        "vmId": "oci-p-flex_0",
         "containers": ["nocodb", "nocodb-db"],
         "technology": {"image": "nocodb/nocodb:latest", "database": "postgres:16-alpine"},
         "urls": {"gui": "https://db.diegonmarcos.com"},
         "authRequired": true,
-        "network": {"dockerNetwork": "nocodb_network", "subnet": "172.25.0.0/24", "bindIp": "10.0.0.2", "port": 8085},
+        "network": {"dockerNetwork": "nocodb_network", "subnet": "172.25.0.0/24", "bindIp": "10.0.0.6", "port": 8085},
         "resources": {"ram": "400-800 MB", "storage": "1-15 GB", "bandwidth": "100 MB - 1 GB/mo"}
       },
       "web-ide": {
         "id": "web-ide",
         "displayName": "Code Server Web IDE",
         "category": "coder",
-        "vmId": "oci-p-flex_1",
+        "vmId": "oci-p-flex_0",
         "containers": [],
         "technology": {"package": "code-server", "version": "4.91.1", "runtime": "nix-flake"},
         "urls": {"gui": "https://ide.diegonmarcos.com"},
@@ -322,7 +322,7 @@
         "id": "cache",
         "displayName": "Redis Cache",
         "category": "infra-services",
-        "vmId": "oci-p-flex_1",
+        "vmId": "oci-p-flex_0",
         "containers": ["cache-app"],
         "technology": {"image": "redis", "version": "alpine"},
         "resources": {"ram": "64-256 MB", "storage": "100 MB-1 GB"}
@@ -367,7 +367,7 @@
       "mail_network": {"vmId": "oci-f-micro_1", "subnet": "172.20.0.0/24", "purpose": "Mail services (Mailu)"},
       "matomo_network": {"vmId": "oci-f-micro_2", "subnet": "172.21.0.0/24", "purpose": "Analytics stack"},
       "proxy_network": {"vmId": "gcp-f-micro_1", "subnet": "172.23.0.0/24", "purpose": "NPM + Authelia"},
-      "dev_network": {"vmId": "oci-p-flex_1", "subnet": "172.24.0.0/24", "purpose": "Photos, Calendar, Cache"}
+      "apps_network": {"vmId": "oci-p-flex_0", "subnet": "172.24.0.0/24", "purpose": "Photos, Calendar, Cache, NocoDB, Code Server, Orchestrator"}
     }
   },
 
@@ -380,11 +380,11 @@
       "nameservers": ["burt.ns.cloudflare.com", "phoenix.ns.cloudflare.com"],
       "subdomains": {
         "analytics.diegonmarcos.com": {"service": "matomo", "vmId": "oci-f-micro_2", "proxyVia": "gcp-f-micro_1", "ssl": true, "auth": "none"},
-        "photos.diegonmarcos.com": {"service": "photos", "vmId": "oci-p-flex_1", "proxyVia": "gcp-f-micro_1", "ssl": true, "auth": "authelia"},
+        "photos.diegonmarcos.com": {"service": "photos", "vmId": "oci-p-flex_0", "proxyVia": "gcp-f-micro_1", "ssl": true, "auth": "authelia"},
         "auth.diegonmarcos.com": {"service": "authelia", "vmId": "gcp-f-micro_1", "ssl": true, "auth": "none"},
         "mail.diegonmarcos.com": {"service": "mail", "vmId": "oci-f-micro_1", "ssl": true, "auth": "native", "directAccess": true},
         "cloud.diegonmarcos.com": {"service": "cloud", "hosting": "GitHub Pages", "ssl": true, "auth": "none"},
-        "cal.diegonmarcos.com": {"service": "calendar", "vmId": "oci-p-flex_1", "ssl": true, "auth": "authelia"},
+        "cal.diegonmarcos.com": {"service": "calendar", "vmId": "oci-p-flex_0", "ssl": true, "auth": "authelia"},
         "proxy.diegonmarcos.com": {"service": "npm", "vmId": "gcp-f-micro_1", "ssl": true, "auth": "authelia"}
       }
     },
@@ -407,7 +407,7 @@
         {"port": 443, "protocol": "TCP", "service": "HTTPS"},
         {"port": 81, "protocol": "TCP", "service": "NPM Admin"}
       ],
-      "oci-p-flex_1": [
+      "oci-p-flex_0": [
         {"port": 22, "protocol": "TCP", "service": "SSH"},
         {"port": 443, "protocol": "TCP", "service": "HTTPS"}
       ]
@@ -435,7 +435,7 @@
 
     "databases": {
       "matomo-db": {"service": "matomo", "vmId": "oci-f-micro_2", "technology": "MariaDB 11.4", "storage": "1-10 GB"},
-      "photos-db": {"service": "photos", "vmId": "oci-p-flex_1", "technology": "PostgreSQL", "storage": "1-5 GB"},
+      "photos-db": {"service": "photos", "vmId": "oci-p-flex_0", "technology": "PostgreSQL", "storage": "1-5 GB"},
       "mailu-db": {"service": "mail", "vmId": "oci-f-micro_1", "technology": "SQLite", "storage": "100-500 MB"},
       "authelia-redis": {"service": "authelia", "vmId": "gcp-f-micro_1", "technology": "Redis", "storage": "50-100 MB"}
     },
@@ -465,7 +465,7 @@
     "sshCommands": {
       "oci-f-micro_1": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@130.110.251.193",
       "oci-f-micro_2": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@129.151.228.66",
-      "oci-p-flex_1": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@144.24.196.72",
+      "oci-p-flex_0": "ssh -i ~/vault/A0_keys/ssh/id_rsa ubuntu@82.70.229.129",
       "gcp-f-micro_1": "gcloud compute ssh arch-1 --zone us-central1-a"
     },
 
@@ -496,7 +496,7 @@
 
     "costs": {
       "infra": {
-        "oracle": {"tier": "always-free", "monthly": 0, "paidVms": {"oci-p-flex_1": 5.5}},
+        "oracle": {"tier": "always-free", "monthly": 0},
         "gcloud": {"tier": "free-tier", "monthly": 0},
         "cloudflare": {"tier": "free", "monthly": 0},
         "github-pages": {"tier": "free", "monthly": 0}
@@ -504,15 +504,15 @@
       "ai": {
         "claude": {"plan": "max5x", "monthlyBudget": 100}
       },
-      "total": {"infra": 5.5, "ai": 100, "total": 105.5, "currency": "USD"}
+      "total": {"infra": 0, "ai": 100, "total": 100, "currency": "USD"}
     },
 
     "wakeOnDemand": {
       "enabled": true,
-      "targetVm": "oci-p-flex_1",
+      "targetVm": "oci-p-flex_0",
       "healthCheckUrl": "https://photos.diegonmarcos.com",
       "idleTimeoutSeconds": 1800,
-      "services": ["photos", "calendar", "cache"]
+      "services": ["photos", "calendar", "cache", "nocodb", "web-ide", "orchestrator"]
     },
 
     "portMapping": [
@@ -606,14 +606,14 @@
           }
         ]
       },
-      "oci-p-flex_1": {
-        "currentIp": "144.24.196.72",
-        "description": "Dev Server (Photos, Calendar)",
+      "oci-p-flex_0": {
+        "currentIp": "82.70.229.129",
+        "description": "Apps Server (Photos, Calendar, NocoDB, Code Server, Orchestrator)",
         "whenThisIpChanges": [
           {
-            "location": "NPM Proxy Hosts",
-            "what": "Forward Host for photos.app, cal, sync subdomains",
-            "how": "NPM Admin UI"
+            "location": "Caddy Proxy Hosts",
+            "what": "Forward Host for photos, cal, db, ide subdomains",
+            "how": "Update Caddyfile reverse_proxy targets"
           }
         ]
       }
@@ -825,14 +825,17 @@
             {"name": "syslog-forwarder", "image": "balabit/syslog-ng:4.4.0", "ports": "-", "network": "security", "notes": "Forwards to central syslog"}
           ]
         },
-        "oci-p-flex_1": {
-          "count": 6,
+        "oci-p-flex_0": {
+          "count": 8,
           "items": [
-            {"name": "photoprism", "image": "photoprism/photoprism:latest", "ports": "127.0.0.1:2342", "network": "dev_network"},
-            {"name": "photoprism-db", "image": "mariadb:10.11", "ports": "-", "network": "dev_network"},
-            {"name": "radicale", "image": "tomsquest/docker-radicale:latest", "ports": "127.0.0.1:5232", "network": "dev_network"},
+            {"name": "photoprism", "image": "photoprism/photoprism:latest", "ports": "127.0.0.1:2342", "network": "apps_network"},
+            {"name": "photoprism-db", "image": "mariadb:10.11", "ports": "-", "network": "apps_network"},
+            {"name": "radicale", "image": "tomsquest/docker-radicale:latest", "ports": "127.0.0.1:5232", "network": "apps_network"},
+            {"name": "nocodb", "image": "nocodb/nocodb:latest", "ports": "127.0.0.1:8085", "network": "apps_network"},
+            {"name": "code-server", "image": "code-server:latest", "ports": "127.0.0.1:8443", "network": "apps_network"},
             {"name": "wireguard", "image": "linuxserver/wireguard:latest", "ports": "51820/udp", "network": "host"},
-            {"name": "redis", "image": "redis:alpine", "ports": "-", "network": "dev_network"}
+            {"name": "redis", "image": "redis:alpine", "ports": "-", "network": "apps_network"},
+            {"name": "orchestrator", "image": "orchestrator:latest", "ports": "127.0.0.1:9090", "network": "apps_network"}
           ]
         },
         "oci-f-micro_1": {
@@ -869,13 +872,14 @@
             {"name": "npm-db", "type": "SQLite", "service": "NPM", "size": "~10 MB", "path": "/data/npm/database.sqlite"}
           ]
         },
-        "oci-p-flex_1": {
-          "bootSize": "242 GB",
+        "oci-p-flex_0": {
+          "bootSize": "100 GB",
           "databases": [
             {"name": "photoprism-db", "type": "MariaDB", "service": "PhotoPrism", "size": "~2 GB", "path": "/data/photoprism/database/"},
             {"name": "photoprism-sidecar", "type": "Files (YAML/JSON)", "service": "PhotoPrism", "size": "~5 GB", "path": "/data/photoprism/storage/sidecar/"},
             {"name": "photoprism-originals", "type": "Files (Photos)", "service": "PhotoPrism", "size": "~100 GB", "path": "/data/photoprism/originals/"},
-            {"name": "radicale-db", "type": "Files (ICS/VCF)", "service": "Radicale", "size": "~50 MB", "path": "/data/radicale/collections/"}
+            {"name": "radicale-db", "type": "Files (ICS/VCF)", "service": "Radicale", "size": "~50 MB", "path": "/data/radicale/collections/"},
+            {"name": "nocodb-db", "type": "PostgreSQL", "service": "NocoDB", "size": "~1 GB", "path": "/data/nocodb/db/"}
           ]
         },
         "oci-f-micro_1": {
@@ -928,15 +932,16 @@
       ],
 
       "resourceUsageByVm": {
-        "oci-p-flex_1": {
-          "displayName": "OCI Paid Flex 1",
-          "specs": "1 OCPU, 8 GB RAM, 242 GB",
-          "vmTotal": {"cpu": 15, "ram": 45, "storage": 68},
+        "oci-p-flex_0": {
+          "displayName": "OCI Apps Server",
+          "specs": "4 OCPU, 24 GB RAM, 100 GB",
+          "vmTotal": {"cpu": 20, "ram": 35, "storage": 68},
           "services": [
             {"name": "photoprism", "cpu": 5, "ram": 15, "storage": 21},
             {"name": "radicale", "cpu": "<1", "ram": 1, "storage": "<1"},
-            {"name": "cloud-api", "cpu": 1, "ram": 2, "storage": "<1"},
-            {"name": "openvpn", "cpu": "<1", "ram": "<1", "storage": "<1"},
+            {"name": "nocodb", "cpu": 2, "ram": 4, "storage": 1},
+            {"name": "code-server", "cpu": 3, "ram": 5, "storage": 1},
+            {"name": "orchestrator", "cpu": 1, "ram": 2, "storage": "<1"},
             {"name": "redis", "cpu": 1, "ram": "<1", "storage": "<1"}
           ]
         },
@@ -999,13 +1004,13 @@
       },
 
       "marketComparison": [
-        {"provider": "Your Cost", "cost": 0.83, "currency": "EUR", "period": "mo", "specs": "OCI + GCP Free Tier"},
+        {"provider": "Your Cost", "cost": 0, "currency": "EUR", "period": "mo", "specs": "OCI + GCP Free Tier"},
         {"provider": "AWS Equivalent", "cost": 45.00, "currency": "EUR", "period": "mo", "specs": "t3.medium + 50GB EBS"},
         {"provider": "Azure Equivalent", "cost": 42.00, "currency": "EUR", "period": "mo", "specs": "B2s + 50GB SSD"}
       ],
 
       "infraBreakdown": [
-        {"provider": "Oracle", "vm": "oci-p-flex_1", "tier": "Paid (Flex)", "cost": 5.50, "currency": "EUR"},
+        {"provider": "Oracle", "vm": "oci-p-flex_0", "tier": "Always Free (A1.Flex)", "cost": 0},
         {"provider": "Oracle", "vm": "oci-f-micro_1", "tier": "Always Free", "cost": 0},
         {"provider": "Oracle", "vm": "oci-f-micro_2", "tier": "Always Free", "cost": 0},
         {"provider": "Google", "vm": "gcp-f-micro_1", "tier": "Free Tier", "cost": 0},
@@ -1021,7 +1026,7 @@
       "vmOverview": {
         "_columns": ["VM", "CPU", "RAM", "Storage", "VRAM", "Status"],
         "vms": [
-          {"id": "oci-p-flex_1", "displayName": "OCI Paid Flex 1", "cpu": "2 vCPU", "ram": "8 GB", "storage": "242 GB"},
+          {"id": "oci-p-flex_0", "displayName": "OCI Apps Server", "cpu": "4 OCPU", "ram": "24 GB", "storage": "100 GB"},
           {"id": "oci-f-micro_1", "displayName": "OCI Free Micro 1", "cpu": "1 OCPU", "ram": "1 GB", "storage": "47 GB"},
           {"id": "oci-f-micro_2", "displayName": "OCI Free Micro 2", "cpu": "1 OCPU", "ram": "1 GB", "storage": "47 GB"},
           {"id": "gcp-f-micro_1", "displayName": "GCP Free Micro 1", "cpu": "0.25 vCPU", "ram": "1 GB", "storage": "30 GB"}

@@ -14,12 +14,11 @@ Self-hosted cloud services across Oracle Cloud and Google Cloud free tiers, with
 | oci-f-micro_1 | oci-mail | 130.110.251.193 | 10.0.0.3 | 1 GB | Mailu, Syncthing, Radicale |
 | oci-f-micro_2 | oci-analytics | 129.151.228.66 | 10.0.0.4 | 1 GB | Matomo, Windmill (hybrid toggle) |
 
-### Wake-on-Demand — A1.Flex (Free Tier)
+### Wake-on-Demand — A1.Flex (Free Tier: 4 OCPUs / 24GB total)
 
-| VM | Alias | IP | WG IP | RAM | Services |
-|----|-------|----|-------|-----|----------|
-| oci-p-flex_0 | oci-flex-0 | 82.70.229.129 | 10.0.0.6 | 16 GB | (none yet) |
-| oci-p-flex_1 | oci-flex-1 | 144.24.196.72 | 10.0.0.2 | 8 GB | PhotoPrism, NocoDB, Code Server, AFFiNE |
+| VM | Alias | IP | WG IP | CPUs/RAM | Services |
+|----|-------|----|-------|----------|----------|
+| oci-p-flex_0 | oci-apps | 82.70.229.129 | 10.0.0.6 | 4 / 24GB | PhotoPrism, NocoDB, Code Server, AFFiNE, Crawlee Cloud, Orchestrator |
 
 ---
 
@@ -33,7 +32,7 @@ All VMs connected via **WireGuard mesh** (hub: gcp-proxy `10.0.0.1`).
 - **Browser**: Authelia forward-auth (cookie/session + 2FA via TOTP/WebAuthn)
 - **CLI/API**: Bearer token via introspect-proxy (OIDC token introspection)
 
-SSH aliases: `ssh oci-flex-0`, `ssh oci-flex-1`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy`.
+SSH aliases: `ssh oci-apps`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy`.
 
 ---
 
@@ -51,10 +50,11 @@ SSH aliases: `ssh oci-flex-0`, `ssh oci-flex-1`, `ssh oci-mail`, `ssh oci-analyt
 | Radicale Calendar | cal.diegonmarcos.com | oci-mail | 5232 | 24/7 |
 | Matomo Analytics | analytics.diegonmarcos.com | oci-analytics | 8080 | 24/7 (hybrid) |
 | Windmill | — | oci-analytics | — | 24/7 (toggles with Matomo) |
-| PhotoPrism | photos.diegonmarcos.com | oci-flex-1 | 3013 | wake-on-demand |
-| NocoDB | db.diegonmarcos.com | oci-flex-1 | 8085 | wake-on-demand |
-| Code Server | ide.diegonmarcos.com | oci-flex-1 | 8443 | wake-on-demand |
-| AFFiNE | drive-notes-affine.diegonmarcos.com | oci-flex-1 | 3010 | wake-on-demand |
+| PhotoPrism | photos.diegonmarcos.com | oci-apps | 3013 | wake-on-demand |
+| NocoDB | db.diegonmarcos.com | oci-apps | 8085 | wake-on-demand |
+| Code Server | ide.diegonmarcos.com | oci-apps | 8443 | wake-on-demand |
+| AFFiNE | drive-notes-affine.diegonmarcos.com | oci-apps | 3010 | wake-on-demand |
+| Orchestrator | — | oci-apps | 9090 | wake-on-demand |
 
 ---
 
@@ -116,7 +116,7 @@ All VMs use Nix Home Manager for reproducible user environments (`b_infra/home-m
 ```bash
 # Deploy to a specific VM
 ~/git/cloud/b_infra/home-manager/deploy.sh gcp-proxy
-~/git/cloud/b_infra/home-manager/deploy.sh oci-flex
+~/git/cloud/b_infra/home-manager/deploy.sh oci-apps
 ```
 
 Standard tools deployed to all VMs: sops, age, jq, yq, rsync, rclone, curl, wget, htop, btop, ncdu, ripgrep, fd, bat, git, gh.
@@ -127,7 +127,7 @@ Standard tools deployed to all VMs: sops, age, jq, yq, rsync, rclone, curl, wget
 
 | Provider | Tier | Region | Purpose |
 |----------|------|--------|---------|
-| Oracle Cloud | Always Free | eu-marseille-1 | 3 VMs (mail, analytics, flex) |
+| Oracle Cloud | Always Free | eu-marseille-1 | 3 VMs (mail, analytics, apps) |
 | Google Cloud | Free Tier | us-central1 | 1 VM (proxy/gateway) |
 | Cloudflare | Free | Global | DNS, proxy, DDoS protection |
 | GitHub Pages | Free | Global | Static site hosting |
@@ -205,4 +205,4 @@ oci-analytics (1GB RAM) can't run Matomo + Windmill simultaneously. Matomo uses 
 
 ---
 
-**Last Updated**: 2026-02-11
+**Last Updated**: 2026-02-28

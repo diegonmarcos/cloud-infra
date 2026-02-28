@@ -1,7 +1,10 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ (import ./wireguard.nix { vmName = "oci-mail"; }) ];
+  imports = [
+    (import ./wireguard.nix { vmName = "oci-mail"; })
+    ./modules/sshd-hardening.nix
+  ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
   home.stateVersion = "24.11";

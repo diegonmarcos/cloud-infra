@@ -22,13 +22,8 @@ let
       publicKey = "+kT46gxAd55+niqMWoaAMfPuU9ZCg42cOymzehnErFQ=";
       role      = "spoke";
     };
-    oci-apps-1 = {
-      address   = "10.0.0.2";
-      endpoint  = "144.24.196.72";
-      port      = 51820;
-      publicKey = "Wl5oTIvtBW2Qih3n1Y/4a8zKCcBVlXFr6M2ltM0gm1c=";
-      role      = "spoke";
-    };
+    # oci-apps-1 DECOMMISSIONED (2026-02-28) — services consolidated to oci-apps
+    # WG IP 10.0.0.2 is now unused
     oci-apps-2 = {
       address   = "10.0.0.7";
       endpoint  = "79.72.28.10";
