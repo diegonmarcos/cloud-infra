@@ -106,7 +106,23 @@ in {
     WantedBy=multi-user.target
   '';
 
-  # ─── Disk watchdog: prevent disk-full crashes ─────────────────────────
+  # ─── BOUNCER: protect critical services (SSH + WireGuard) ─────────────
+
+  home.file.".local/share/resource-bouncer/sshd-bouncer.conf".text = ''
+    # Managed by home-manager (resource-bouncer.nix) — do not edit
+    [Service]
+    MemoryMin=50M
+    CPUWeight=1000
+  '';
+
+  home.file.".local/share/resource-bouncer/wg-quick-bouncer.conf".text = ''
+    # Managed by home-manager (resource-bouncer.nix) — do not edit
+    [Service]
+    MemoryMin=30M
+    CPUWeight=1000
+  '';
+
+  # ─── JANITOR: disk watchdog — prevent disk-full crashes ──────────────
 
   home.file.".local/share/resource-bouncer/disk-watchdog.sh" = {
     executable = true;
@@ -228,21 +244,30 @@ in {
 
     # ── BOUNCER: disk reserved blocks (ext4 only) ──
     # Reserve 5% of root filesystem for root — non-root processes get ENOSPC at 95%
-    ROOT_DEV=$($SUDO findmnt -n -o SOURCE / | head -1)
+    # Use tune2fs -m 5 directly (idempotent) — skip parsing, just set it
+    ROOT_DEV=$($SUDO findmnt -n -o SOURCE / 2>/dev/null) || true
+    ROOT_DEV=$(echo "$ROOT_DEV" | while read -r line; do echo "$line"; break; done)
     if [ -n "$ROOT_DEV" ] && $SUDO tune2fs -l "$ROOT_DEV" >/dev/null 2>&1; then
-      CURRENT=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep 'Reserved block count' | tr -s ' ' | rev | cut -d' ' -f1 | rev)
-      TOTAL=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep '^Block count' | tr -s ' ' | rev | cut -d' ' -f1 | rev)
-      if [ -n "$CURRENT" ] && [ -n "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
-        PERCENT=$(( CURRENT * 100 / TOTAL ))
-        if [ "$PERCENT" -lt 5 ]; then
-          echo "[resource-bouncer] Disk bouncer: setting ext4 reserved blocks to 5% (was ''${PERCENT}%)"
-          $SUDO tune2fs -m 5 "$ROOT_DEV" 2>/dev/null || true
-        else
-          echo "[resource-bouncer] Disk bouncer: ext4 reserved blocks already at ''${PERCENT}%"
-        fi
-      fi
+      $SUDO tune2fs -m 5 "$ROOT_DEV" 2>/dev/null || true
+      echo "[resource-bouncer] Disk bouncer: ext4 reserved blocks set to 5% on $ROOT_DEV"
     else
       echo "[resource-bouncer] Disk bouncer: root is not ext4 — skipping reserved blocks"
+    fi
+
+    # ── BOUNCER: protect SSH + WireGuard (systemd drop-ins) ──
+    # sshd: Ubuntu uses ssh.service, some use sshd.service — cover both
+    for svc in ssh sshd; do
+      if $SUDO systemctl cat "''${svc}.service" >/dev/null 2>&1; then
+        $SUDO mkdir -p "/etc/systemd/system/''${svc}.service.d"
+        $SUDO cp -f "$SRC/sshd-bouncer.conf" "/etc/systemd/system/''${svc}.service.d/bouncer.conf"
+        echo "[resource-bouncer] Protected ''${svc}.service (MemoryMin=50M CPUWeight=1000)"
+      fi
+    done
+    # WireGuard
+    if $SUDO systemctl cat "wg-quick@wg0.service" >/dev/null 2>&1; then
+      $SUDO mkdir -p "/etc/systemd/system/wg-quick@wg0.service.d"
+      $SUDO cp -f "$SRC/wg-quick-bouncer.conf" "/etc/systemd/system/wg-quick@wg0.service.d/bouncer.conf"
+      echo "[resource-bouncer] Protected wg-quick@wg0 (MemoryMin=30M CPUWeight=1000)"
     fi
 
     # ── BOUNCER + JANITOR: services ──
