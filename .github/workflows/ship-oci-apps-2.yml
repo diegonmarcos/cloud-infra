@@ -3,8 +3,7 @@ name: "Ship → oci-apps-2"
 on:
   push:
     paths:
-      # Add service paths here when services are deployed to oci-apps-2
-      # Example: - "a_solutions/SERVICE_DIR/src/**"
+      - "a_solutions/ad-agi_ollama-arm/src/**"
       - ".github/workflows/ship-oci-apps-2.yml"
     branches: [main]
   workflow_dispatch:
@@ -32,21 +31,15 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
-            # Add service filters here when services are deployed to oci-apps-2
-            # Example:
-            # service-name:
-            #   - 'a_solutions/SERVICE_DIR/src/**'
-            placeholder:
-              - '.github/workflows/ship-oci-apps-2.yml'
+            ollama-arm:
+              - 'a_solutions/ad-agi_ollama-arm/src/**'
 
       - name: Force service override
         id: force
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          # Add service names here when services are deployed to oci-apps-2
-          # Example: for name in service-a service-b; do
-          for name in placeholder; do
+          for name in ollama-arm; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -87,13 +80,7 @@ jobs:
       - name: Install sops
         run: nix profile install nixpkgs#sops
 
-      # ========================================================================
-      # Add service deployment steps here when services are deployed to oci-apps-2
-      # ========================================================================
-      # Example:
-      #
-      # - name: Ship service-name
-      #   if: steps.changes.outputs.service-name == 'true' || steps.force.outputs.service-name == 'true'
-      #   continue-on-error: true
-      #   run: bash a_solutions/SERVICE_DIR/build.sh ship
-      # ========================================================================
+      - name: Ship ollama-arm
+        if: steps.changes.outputs.ollama-arm == 'true' || steps.force.outputs.ollama-arm == 'true'
+        continue-on-error: true
+        run: bash a_solutions/ad-agi_ollama-arm/build.sh ship
