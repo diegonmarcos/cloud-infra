@@ -5,6 +5,7 @@
     (import ./wireguard.nix { vmName = "oci-apps-2"; })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "oci-apps-2"; idleTimeoutHours = 1; })
     ./modules/sshd-hardening.nix
+    (import ./modules/resource-bouncer.nix { inherit config pkgs lib; ramMB = 32768; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
