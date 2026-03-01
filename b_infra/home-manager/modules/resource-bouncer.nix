@@ -230,8 +230,8 @@ in {
     # Reserve 5% of root filesystem for root — non-root processes get ENOSPC at 95%
     ROOT_DEV=$($SUDO findmnt -n -o SOURCE / | head -1)
     if [ -n "$ROOT_DEV" ] && $SUDO tune2fs -l "$ROOT_DEV" >/dev/null 2>&1; then
-      CURRENT=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep 'Reserved block count' | awk '{print $NF}')
-      TOTAL=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep 'Block count' | awk '{print $NF}')
+      CURRENT=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep 'Reserved block count' | tr -s ' ' | rev | cut -d' ' -f1 | rev)
+      TOTAL=$($SUDO tune2fs -l "$ROOT_DEV" 2>/dev/null | grep '^Block count' | tr -s ' ' | rev | cut -d' ' -f1 | rev)
       if [ -n "$CURRENT" ] && [ -n "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
         PERCENT=$(( CURRENT * 100 / TOTAL ))
         if [ "$PERCENT" -lt 5 ]; then
