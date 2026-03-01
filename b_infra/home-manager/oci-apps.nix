@@ -5,6 +5,7 @@
     (import ./wireguard.nix { vmName = "oci-apps"; })
     ./modules/docker-service.nix
     ./modules/sshd-hardening.nix
+    (import ./modules/resource-bouncer.nix { inherit config pkgs lib; ramMB = 24576; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
