@@ -4,7 +4,7 @@
   imports = [
     (import ./wireguard.nix { vmName = "oci-mail"; })
     ./modules/sshd-hardening.nix
-    (import ./modules/resource-bouncer.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
