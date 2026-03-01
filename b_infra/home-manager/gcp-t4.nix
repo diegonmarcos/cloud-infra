@@ -5,7 +5,7 @@
     (import ./wireguard.nix { vmName = "gcp-t4"; })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/sshd-hardening.nix
-    (import ./modules/resource-bouncer.nix { inherit config pkgs lib; ramMB = 15360; })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

@@ -4,7 +4,7 @@
   imports = [
     (import ./wireguard.nix { vmName = "gcp-proxy"; })
     ./modules/sshd-hardening.nix
-    (import ./modules/resource-bouncer.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
   ];
   # Home Manager needs a bit of information about you and the paths it should manage
   home.username = "diego";
