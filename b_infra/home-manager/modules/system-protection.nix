@@ -44,6 +44,8 @@ in {
     vm.dirty_ratio = 10
     vm.dirty_background_ratio = 5
     vm.watermark_scale_factor = 500
+    # Docker/WireGuard need IP forwarding — override GCP's 60-gce-network-security.conf
+    net.ipv4.ip_forward = 1
   '';
 
   # ── Zram setup script ──────────────────────────────────────────────────
