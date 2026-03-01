@@ -72,7 +72,7 @@ cloud/
 │   ├── bc-obs_*                   # Observability (Matomo, NocoDB, ntfy, LGTM, Windmill)
 │   ├── ca-dat_*                   # Data & backups (Borg, Gitea, Redis)
 │   ├── build.sh                   # Root orchestrator
-│   ├── config.json                # Service registry
+│   ├── _engine.sh                 # Shared build engine
 │   ├── flake.nix                  # Root Nix flake
 │   └── z_archive/                 # Archived services & backups
 │
@@ -85,6 +85,7 @@ cloud/
 │   ├── vps_gcloud/                # GCP VPS configs
 │   └── vps_oci/                   # OCI VPS configs
 │
+├── config.json                    # Infrastructure registry (VMs, services, networking)
 ├── z_archive/                     # Stale configs (0.spec/, old ops docs)
 ├── c_myhardware/                  # Local hardware configs (Surface Pro 8)
 └── .github/workflows/             # CI/CD
