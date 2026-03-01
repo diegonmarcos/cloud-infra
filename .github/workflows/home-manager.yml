@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       vm:
-        description: "Target VM (gcp-proxy, gcp-t4, oci-mail, oci-analytics, oci-apps, oci-apps-1, oci-apps-2, or empty for all)"
+        description: "Target VM (gcp-proxy, gcp-t4, oci-mail, oci-analytics, oci-apps, oci-apps-2, or empty for all)"
         required: false
         type: string
 
@@ -54,13 +54,6 @@ jobs:
           - vm: oci-apps
             config: "ubuntu@oci-apps"
             host: "82.70.229.129"
-            user: "ubuntu"
-            key_secret: OCI_SSH_KEY
-            use_gcp_secrets: "false"
-            arch: "aarch64-linux"
-          - vm: oci-apps-1
-            config: "ubuntu@oci-apps-1"
-            host: "144.24.196.72"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
             use_gcp_secrets: "false"
