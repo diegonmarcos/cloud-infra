@@ -3,7 +3,7 @@ name: "Ship → oci-apps"
 on:
   push:
     paths:
-      - "a_solutions/bb-sec_mcp-server-skills/src/**"
+      - "a_solutions/mcp-api-c3/src/**"
       - "a_solutions/bb-sec_rust-api/src/**"
       - "a_solutions/bc-obs_rig/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
@@ -43,7 +43,7 @@ jobs:
         with:
           filters: |
             c3-api:
-              - 'a_solutions/bb-sec_mcp-server-skills/src/**'
+              - 'a_solutions/mcp-api-c3/src/**'
             rust-api:
               - 'a_solutions/bb-sec_rust-api/src/**'
             rig:
@@ -79,6 +79,7 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          mkdir -p ~/.ssh/sockets
           cat > ~/.ssh/config <<EOF
           Host oci-apps
             HostName 82.70.229.129
@@ -87,6 +88,9 @@ jobs:
             StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 10
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
           EOF
           chmod 600 ~/.ssh/config
 
@@ -104,7 +108,7 @@ jobs:
         continue-on-error: true
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/bb-sec_mcp-server-skills/build.sh ship
+        run: bash a_solutions/mcp-api-c3/build.sh ship
 
       - name: Ship rust-api
         if: steps.changes.outputs.rust-api == 'true' || steps.force.outputs.rust-api == 'true'
