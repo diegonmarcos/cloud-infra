@@ -126,6 +126,7 @@ jobs:
 
           echo "${SSH_KEY}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          mkdir -p ~/.ssh/sockets
 
           # Resolve host/user (GCP VMs use secrets for dynamic IPs)
           if [ "${{ matrix.use_gcp_secrets }}" = "true" ]; then
@@ -148,6 +149,9 @@ jobs:
             IdentityFile ~/.ssh/id_deploy
             ServerAliveInterval 30
             ServerAliveCountMax 5
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
           EOF
           chmod 600 ~/.ssh/config
 

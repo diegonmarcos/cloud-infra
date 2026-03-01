@@ -86,6 +86,7 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.GCP_PROXY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          mkdir -p ~/.ssh/sockets
           cat > ~/.ssh/config <<EOF
           Host gcp-proxy
             HostName ${{ secrets.GCP_PROXY_HOST }}
@@ -94,6 +95,9 @@ jobs:
             StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 10
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
           EOF
           chmod 600 ~/.ssh/config
 
