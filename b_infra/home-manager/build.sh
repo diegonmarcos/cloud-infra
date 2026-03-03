@@ -28,6 +28,26 @@ get_vm_config() {
     fi
 }
 
+# ── Step: Secrets (sops decrypt → .secrets) ────────────────────────────
+step_secrets() {
+    secrets_file="$SERVICE_DIR/secrets.yaml"
+
+    if [ ! -f "$secrets_file" ]; then
+        log "No secrets.yaml — skipping"
+        return 0
+    fi
+
+    log "Decrypting secrets -> .secrets"
+    if command -v yq >/dev/null 2>&1; then
+        sops -d "$secrets_file" | yq -r 'to_entries | .[] | "\(.key)=\(.value)"' \
+            | grep '^[A-Z_]*=' > "$SERVICE_DIR/.secrets"
+    else
+        # Fallback: YAML KEY: value → KEY=value
+        sops -d "$secrets_file" | grep '^[A-Z_]' | sed 's/: /=/' > "$SERVICE_DIR/.secrets"
+    fi
+    log "  ✓ Secrets decrypted"
+}
+
 # ── Step 1: Build (validate flake) ─────────────────────────────────────
 step_build() {
     log "Validating flake configurations..."
@@ -70,6 +90,7 @@ deploy_single_vm() {
             --include="flake.nix" \
             --include="flake.lock" \
             --include="*.nix" \
+            --include=".secrets" \
             --include="modules/" \
             --include="modules/*.nix" \
             --exclude="*" \
@@ -79,6 +100,7 @@ deploy_single_vm() {
         ssh "$vm" "mkdir -p ~/.config/home-manager/modules"
         scp "$SERVICE_DIR"/*.nix "$SERVICE_DIR/flake.lock" "$vm:~/.config/home-manager/" 2>&1 | tail -1
         scp "$SERVICE_DIR"/modules/*.nix "$vm:~/.config/home-manager/modules/" 2>&1 | tail -1
+        [ -f "$SERVICE_DIR/.secrets" ] && scp "$SERVICE_DIR/.secrets" "$vm:~/.config/home-manager/" 2>&1 | tail -1
     fi
 
     log "  ✓ Files copied to $vm"
@@ -173,8 +195,12 @@ case "${1:-help}" in
     compose|activate)
         step_compose "${2:-all}"
         ;;
+    secrets)
+        step_secrets
+        ;;
     ship)
         step_build
+        step_secrets
         step_deploy "${2:-all}"
         step_compose "${2:-all}"
         ;;
