@@ -1,0 +1,1 @@
+../../_shared/wireguard.nix

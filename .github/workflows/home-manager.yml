@@ -126,11 +126,11 @@ jobs:
           echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
           echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
 
-      - name: Install sops
+      - name: Install sops + yq
         if: steps.gate.outputs.skip != 'true'
-        run: nix profile install nixpkgs#sops
+        run: nix profile install nixpkgs#sops nixpkgs#yq-go
 
       - name: Ship home-manager
         if: steps.gate.outputs.skip != 'true'
         continue-on-error: true
-        run: bash b_infra/home-manager/build.sh ship ${{ matrix.vm }}
+        run: bash b_infra/home-manager/${{ matrix.vm }}/build.sh ship
