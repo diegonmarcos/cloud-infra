@@ -6,6 +6,7 @@
     ./modules/docker-service.nix
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
+    ./modules/authorized-keys.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

@@ -6,6 +6,7 @@
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
+    ./modules/authorized-keys.nix
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";
