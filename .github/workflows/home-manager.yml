@@ -23,48 +23,31 @@ jobs:
       matrix:
         include:
           - vm: gcp-proxy
-            config: "diego@gcp-proxy"
             host: ""
             user: ""
             key_secret: GCP_PROXY_SSH_KEY
             use_gcp_secrets: "true"
-            arch: "x86_64-linux"
           - vm: gcp-t4
-            config: "diego@gcp-t4"
             host: ""
             user: ""
             key_secret: GCP_T4_SSH_KEY
-            use_gcp_secrets: "false"
             use_gcp_t4_secrets: "true"
-            arch: "x86_64-linux"
           - vm: oci-mail
-            config: "ubuntu@oci-mail"
             host: "130.110.251.193"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
-            use_gcp_secrets: "false"
-            arch: "x86_64-linux"
           - vm: oci-analytics
-            config: "ubuntu@oci-analytics"
             host: "129.151.228.66"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
-            use_gcp_secrets: "false"
-            arch: "x86_64-linux"
           - vm: oci-apps
-            config: "ubuntu@oci-apps"
             host: "82.70.229.129"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
-            use_gcp_secrets: "false"
-            arch: "aarch64-linux"
           - vm: oci-apps-2
-            config: "ubuntu@oci-apps-2"
             host: "79.72.28.10"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
-            use_gcp_secrets: "false"
-            arch: "aarch64-linux"
 
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}
@@ -93,18 +76,6 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-24.11
 
-      - name: Build activation package (x86_64 VMs)
-        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
-        working-directory: b_infra/home-manager
-        run: |
-          echo "::group::Building ${{ matrix.config }}"
-          STORE_PATH=$(nix build \
-            ".#homeConfigurations.\"${{ matrix.config }}\".activationPackage" \
-            --no-link --print-out-paths)
-          echo "::endgroup::"
-          echo "STORE_PATH=${STORE_PATH}" >> "$GITHUB_ENV"
-          echo "Built: ${STORE_PATH}"
-
       - name: Setup SSH
         if: steps.gate.outputs.skip != 'true'
         env:
@@ -116,7 +87,6 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-
           echo "${SSH_KEY}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           mkdir -p ~/.ssh/sockets
@@ -140,6 +110,7 @@ jobs:
             HostName ${HOST}
             User ${USER}
             IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
             ServerAliveInterval 30
             ServerAliveCountMax 5
             ControlMaster auto
@@ -148,54 +119,18 @@ jobs:
           EOF
           chmod 600 ~/.ssh/config
 
-          echo "DEPLOY_HOST=${HOST}" >> "$GITHUB_ENV"
-          echo "DEPLOY_USER=${USER}" >> "$GITHUB_ENV"
-
-      - name: Prepare remote nix for closure copy (x86_64 VMs)
-        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
-        run: |
-          ssh ${{ matrix.vm }} '
-            NIX_BIN="/nix/var/nix/profiles/default/bin"
-            [ ! -x "$NIX_BIN/nix-store" ] && NIX_BIN="$HOME/.nix-profile/bin"
-            for bin in nix nix-build nix-store nix-daemon; do
-              [ -x "$NIX_BIN/$bin" ] && sudo ln -sf "$NIX_BIN/$bin" "/usr/local/bin/$bin"
-            done
-            CONF="/etc/nix/nix.custom.conf"
-            grep -q "trusted-users.*$(whoami)" "$CONF" 2>/dev/null || {
-              echo "trusted-users = root $(whoami)" | sudo tee -a "$CONF"
-              sudo systemctl restart nix-daemon
-            }
-          '
-
-      - name: Copy Nix closure to VM (x86_64 VMs)
-        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'x86_64-linux'
-        env:
-          NIX_SSHOPTS: "-i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new"
-        run: |
-          echo "Copying closure to ${{ matrix.vm }} (${DEPLOY_USER}@${DEPLOY_HOST})..."
-          nix copy --to "ssh://${DEPLOY_USER}@${DEPLOY_HOST}" "$STORE_PATH"
-
-      - name: Copy flake to ARM VM and build on-VM (aarch64 VMs)
-        if: steps.gate.outputs.skip != 'true' && matrix.arch == 'aarch64-linux'
-        run: |
-          echo "Copying flake to ${{ matrix.vm }}..."
-          ssh ${{ matrix.vm }} "mkdir -p ~/.config/home-manager"
-          rsync -avz --delete \
-            --include="flake.nix" \
-            --include="flake.lock" \
-            --include="*.nix" \
-            --include="modules/" \
-            --include="modules/**" \
-            --exclude="*" \
-            b_infra/home-manager/ "${{ matrix.vm }}:~/.config/home-manager/"
-
-          echo "Building on ${{ matrix.vm }}..."
-          STORE_PATH=$(ssh ${{ matrix.vm }} "export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:\$PATH && cd ~/.config/home-manager && nix build \".#homeConfigurations.\\\"${{ matrix.config }}\\\".activationPackage\" --no-link --print-out-paths" | tail -1)
-          echo "STORE_PATH=${STORE_PATH}" >> "$GITHUB_ENV"
-          echo "Built: ${STORE_PATH}"
-
-      - name: Activate home-manager
+      - name: Setup SOPS age key
         if: steps.gate.outputs.skip != 'true'
         run: |
-          echo "Activating on ${{ matrix.vm }}..."
-          ssh ${{ matrix.vm }} "export PATH=/nix/var/nix/profiles/default/bin:/usr/local/bin:\$PATH && ${STORE_PATH}/activate"
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
+
+      - name: Install sops
+        if: steps.gate.outputs.skip != 'true'
+        run: nix profile install nixpkgs#sops
+
+      - name: Ship home-manager
+        if: steps.gate.outputs.skip != 'true'
+        continue-on-error: true
+        run: bash b_infra/home-manager/build.sh ship ${{ matrix.vm }}

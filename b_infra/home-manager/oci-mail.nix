@@ -5,6 +5,7 @@
     (import ./wireguard.nix { vmName = "oci-mail"; })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
+    ./modules/authorized-keys.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
