@@ -6,62 +6,13 @@
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix
+    ./modules/container-tools.nix
   ];
-  # Home Manager needs a bit of information about you and the paths it should manage
   home.username = "diego";
   home.homeDirectory = "/home/diego";
-
-  # This value determines the Home Manager release that your configuration is compatible with
   home.stateVersion = "24.11";
 
-  # Let Home Manager install and manage itself
   programs.home-manager.enable = true;
-
-  # Essential development and deployment tools
-  home.packages = with pkgs; [
-    # Secrets management
-    sops
-    age
-
-    # JSON/YAML processing
-    jq
-    yq-go  # yq (go implementation)
-
-    # File transfer
-    rsync
-    rclone
-
-    # Container runtime (rootless, alongside system Docker)
-    podman
-
-    # Network tools
-    curl
-    wget
-    netcat
-
-    # System tools
-    htop
-    btop
-    ncdu
-    tree
-
-    # Git and version control
-    git
-    gh  # GitHub CLI
-
-    # Text processing
-    ripgrep
-    fd
-    bat
-
-    # Compression
-    gzip
-    unzip
-    zip
-
-    # Monitoring
-    lsof
-  ];
 
   # Git configuration
   programs.git = {
