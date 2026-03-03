@@ -7,6 +7,7 @@
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
     ./modules/authorized-keys.nix
+    ./modules/container-tools.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
@@ -15,56 +16,8 @@
   programs.home-manager.enable = true;
 
   home.packages = with pkgs; [
-    # Secrets management
-    sops
-    age
-
-    # JSON/YAML processing
-    jq
-    yq-go
-
-    # File transfer
-    rsync
-    rclone
-
-    # Network tools
-    curl
-    wget
-    netcat
-
-    # System tools
-    htop
-    btop
-    ncdu
-    tree
-
-    # Git and version control
-    git
-    gh
-
-    # Text processing
-    ripgrep
-    fd
-    bat
-
-    # Compression
-    gzip
-    unzip
-    zip
-
-    # Monitoring
-    lsof
-    iftop
-
-    # Orchestrator dependencies
-    socat
-    bc
-
-    # Container runtime
-    docker
-    docker-compose
-    docker-buildx
-    podman
+    # Cloud SDKs (C3 API runs on this VM)
+    google-cloud-sdk
   ];
 
   programs.git = {

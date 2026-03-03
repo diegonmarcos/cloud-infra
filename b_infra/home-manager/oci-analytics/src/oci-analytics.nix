@@ -6,58 +6,13 @@
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix
+    ./modules/container-tools.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
   home.stateVersion = "24.11";
 
   programs.home-manager.enable = true;
-
-  home.packages = with pkgs; [
-    # Secrets management
-    sops
-    age
-
-    # JSON/YAML processing
-    jq
-    yq-go
-
-    # File transfer
-    rsync
-    rclone
-
-    # Network tools
-    curl
-    wget
-    netcat
-
-    # System tools
-    htop
-    btop
-    ncdu
-    tree
-
-    # Git and version control
-    git
-    gh
-
-    # Text processing
-    ripgrep
-    fd
-    bat
-
-    # Compression
-    gzip
-    unzip
-    zip
-
-    # Monitoring
-    lsof
-    iftop
-
-    # Container runtime (rootless, alongside system Docker)
-    podman
-  ];
 
   programs.git = {
     enable = true;
