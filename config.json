@@ -45,7 +45,7 @@
       "description": "Oracle Paid - A1 Flex 0 (8 OCPUs / 32GB)"
     },
     "gcp-T4-p_0": {
-      "ip": "34.57.36.41",
+      "ip": "34.173.227.250",
       "wg_ip": "10.0.0.8",
       "user": "diego",
       "method": "gcloud",
@@ -80,7 +80,8 @@
       "category": "app",
       "vm": "oci-A1-f_0",
       "containers": [
-        "affine"
+        "hedgedoc_app",
+        "hedgedoc_postgres"
       ],
       "domain": "drive-notes-affine.diegonmarcos.com",
       "description": "HedgeDoc Collaborative Editor (notes.diegonmarcos.com)"
@@ -134,13 +135,14 @@
       "category": "app",
       "vm": "oci-A1-f_0",
       "containers": [
-        "photos-webhook"
+        "photos-webhook",
+        "photos-db"
       ],
       "description": "PhotoPrism Webhook + S3 Processor"
     },
     "radicale": {
       "category": "app",
-      "vm": "oci-E2-f_0",
+      "vm": "oci-A1-f_0",
       "containers": [
         "radicale"
       ],
@@ -156,17 +158,17 @@
       "domain": "slides.diegonmarcos.com",
       "description": "Markdown Presentations (slides.diegonmarcos.com)"
     },
-    "mattermost": {
+    "mattermost-bots": {
       "category": "app",
       "vm": "oci-A1-f_0",
       "containers": [
         "mattermost",
         "mattermost-postgres",
-        "mattermost-ntfy-bridge"
+        "mattermost-bots"
       ],
       "domain": "chat.diegonmarcos.com",
       "api_port": "8065",
-      "description": "Mattermost team chat with ntfy bridge and AI agents"
+      "description": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     "mailu": {
       "category": "app",
@@ -243,7 +245,8 @@
       "category": "sec",
       "vm": "gcp-E2-f_0",
       "containers": [
-        "sauron-central"
+        "syslog-central",
+        "siem-api"
       ],
       "description": "Central Syslog Collector + SIEM API"
     },
@@ -363,37 +366,15 @@
     },
     "redis": {
       "category": "data",
-      "vm": "oci-E2-f_0",
+      "vm": "gcp-E2-f_0",
       "containers": [
         "redis"
       ],
       "description": "Cache Server"
     },
-    "syslog-central": {
-      "category": "tools",
-      "vm": "gcp-E2-f_0",
-      "flake": "syslog",
-      "subfolder": "central",
-      "containers": [
-        "syslog-central"
-      ],
-      "description": "Central Syslog Server"
-    },
     "syslog-forwarder-micro1": {
       "category": "tools",
       "vm": "oci-E2-f_0",
-      "flake": "syslog",
-      "subfolder": "forwarder",
-      "containers": [
-        "syslog-forwarder"
-      ],
-      "description": "Syslog Forwarder"
-    },
-    "syslog-forwarder-micro2": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "flake": "syslog",
-      "subfolder": "forwarder",
       "containers": [
         "syslog-forwarder"
       ],
@@ -412,19 +393,11 @@
       ],
       "description": "Internal DNS (.internal zone, WireGuard mesh)"
     },
-    "backup-gitea": {
-      "category": "data",
-      "vm": "oci-A1-f_0",
-      "containers": [
-        "gitea"
-      ],
-      "description": "Git Backup Server (Code Mirror)"
-    },
     "backup-bup": {
       "category": "data",
       "vm": "oci-A1-f_0",
       "containers": [
-        "backup-bup"
+        "bup-server"
       ],
       "description": "Database Backups SSH Server (bup)"
     },
@@ -432,7 +405,7 @@
       "category": "data",
       "vm": "oci-A1-f_0",
       "containers": [
-        "backup-borg"
+        "borg-server"
       ],
       "description": "Media Backups SSH Server (Borg)"
     },
@@ -553,6 +526,69 @@
       "category": "sec",
       "vm": "oci-A1-f_0",
       "description": "C3 API (Cloud Control Center) — MCP Server + Fastify REST API + Skills"
+    },
+    "dagu": {
+      "category": "tools",
+      "vm": "oci-E2-f_0",
+      "containers": [
+        "dagu"
+      ],
+      "description": "DAG-based Workflow Scheduler"
+    },
+    "fluent-bit": {
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "containers": [
+        "fluent-bit"
+      ],
+      "description": "Log Processor and Forwarder"
+    },
+    "rig": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "rig"
+      ],
+      "description": "Rig Intelligence Framework — Self-healing orchestrator + GraphRAG"
+    },
+    "sauron-forwarder": {
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "containers": [
+        "sauron-forwarder"
+      ],
+      "description": "Alert Forwarder to Central Sauron"
+    },
+    "gitea": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "gitea"
+      ],
+      "description": "Self-hosted Git Service"
+    },
+    "kg-graph": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "surrealdb"
+      ],
+      "description": "SurrealDB Knowledge Graph — Infrastructure topology + vector search"
+    },
+    "cloudflare-worker": {
+      "category": "cloud",
+      "vm": "local",
+      "description": "Cloudflare Email Worker — routes inbound email to Mailu via SMTP proxy"
+    },
+    "hedgedoc": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "hedgedoc_app",
+        "hedgedoc_postgres"
+      ],
+      "domain": "notes.diegonmarcos.com",
+      "description": "HedgeDoc Collaborative Markdown Editor"
     }
   }
 }
