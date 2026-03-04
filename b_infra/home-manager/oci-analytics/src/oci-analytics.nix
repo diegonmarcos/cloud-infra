@@ -6,6 +6,7 @@
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix
+    ./modules/ssh-keys.nix
     ./modules/container-tools.nix
   ];
   home.username = "ubuntu";
