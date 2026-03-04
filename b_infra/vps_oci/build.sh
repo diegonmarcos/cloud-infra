@@ -69,6 +69,20 @@ step_destroy() {
     tf destroy
 }
 
+# ── Destroy Target ───────────────────────────────────────────────────────
+step_destroy_target() {
+    step_build
+    log "terraform destroy -target=$2"
+    tf destroy -target="$2" -auto-approve
+}
+
+# ── Import ──────────────────────────────────────────────────────────────
+step_import() {
+    step_build
+    log "terraform import $2 $3"
+    tf import "$2" "$3"
+}
+
 # ── Fmt ─────────────────────────────────────────────────────────────────
 step_fmt() {
     log "terraform fmt"
@@ -93,6 +107,8 @@ case "${1:-plan}" in
     apply)    step_apply ;;
     ship)     step_ship ;;
     destroy)  step_destroy ;;
+    import)   step_import "$@" ;;
+    destroy-target) step_destroy_target "$@" ;;
     fmt)      step_fmt ;;
     clean)    step_clean ;;
     *)
