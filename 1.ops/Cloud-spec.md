@@ -452,12 +452,12 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 │   me@diegonmarcos.com → recipient@gmail.com                             │
 │                                                                          │
 │   ┌──────────────────┐      ┌──────────────────┐      ┌──────────────┐  │
-│   │   Mailu:25       │ ──▶  │   Oracle Email   │ ──▶  │   Internet   │  │
-│   │   (Postfix SMTP) │      │   Delivery (OCI) │      │   Recipient  │  │
-│   │   130.110.251.193│      │   (SMTP Relay)   │      │              │  │
+│   │   Mailu:25       │ ──▶  │    AWS SES       │ ──▶  │   Internet   │  │
+│   │   (Postfix SMTP) │      │   (SMTP Relay)   │      │   Recipient  │  │
+│   │   130.110.251.193│      │   us-east-1:587  │      │              │  │
 │   └──────────────────┘      └──────────────────┘      └──────────────┘  │
 │                                                                          │
-│   Mailu relays through Oracle Email Delivery (authenticated relay)      │
+│   Mailu relays through AWS SES (primary). OCI relay available as fallback│
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -467,7 +467,7 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 |-----------|------|------|--------|
 | **Inbound** | 25→8080 | Internet → Cloudflare → Worker → SMTP Proxy | ❌ BLOCKED |
 | **Inbound Backup** | 25→forward | Internet → Cloudflare → Worker → live.com | ✅ Working |
-| **Outbound** | 25→relay | Mailu → Oracle Email Delivery → Internet | ✅ Working |
+| **Outbound** | 25→relay | Mailu → AWS SES → Internet | ✅ Working |
 | **IMAP** | 993 | Client ↔ Mailu (direct) | ✅ Working |
 | **SMTPS** | 465 | Client → Mailu → relay | ✅ Working |
 | **Webmail** | 443 | Browser → NPM → Authelia → Mailu | ✅ Working |
@@ -493,10 +493,10 @@ MX Records (Inbound):
   97  route3.mx.cloudflare.net  (backup)
 
 SPF Record (Outbound authorization):
-  v=spf1 include:_spf.mx.cloudflare.net include:rp.oracleemaildelivery.com ~all
-         ↑ Cloudflare inbound           ↑ Oracle relay outbound
+  v=spf1 include:_spf.mx.cloudflare.net include:amazonses.com include:eu.rp.oracleemaildelivery.com a:smtp.diegonmarcos.com ~all
+         ↑ Cloudflare inbound           ↑ AWS SES (primary) ↑ OCI relay (fallback)    ↑ Mailu direct
 
-DKIM: mail._domainkey.diegonmarcos.com (RSA 2048-bit)
+DKIM: dkim._domainkey.diegonmarcos.com (Mailu RSA) + SES Easy DKIM (3 CNAMEs)
 ```
 
 #### Calendar & Contacts (Radicale)
