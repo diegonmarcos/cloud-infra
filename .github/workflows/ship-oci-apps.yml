@@ -3,7 +3,7 @@ name: "Ship → oci-apps"
 on:
   push:
     paths:
-      - "a_solutions/aa-sui_mattermost/src/**"
+      - "a_solutions/aa-sui_mattermost-bots/src/**"
       - "a_solutions/aa-sui_code-server/src/**"
       - "a_solutions/aa-sui_etherpad/src/**"
       - "a_solutions/aa-sui_filebrowser/src/**"
@@ -55,8 +55,8 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
-            mattermost:
-              - 'a_solutions/aa-sui_mattermost/src/**'
+            mattermost-bots:
+              - 'a_solutions/aa-sui_mattermost-bots/src/**'
             code-server:
               - 'a_solutions/aa-sui_code-server/src/**'
             etherpad:
@@ -101,7 +101,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator rust-api lgtm nocodb rig gitea kg-graph c3-api; do
+          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator rust-api lgtm nocodb rig gitea kg-graph c3-api; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -142,10 +142,10 @@ jobs:
       - name: Install sops
         run: nix profile install nixpkgs#sops
 
-      - name: Ship mattermost
-        if: steps.changes.outputs.mattermost == 'true' || steps.force.outputs.mattermost == 'true'
+      - name: Ship mattermost-bots
+        if: steps.changes.outputs.mattermost-bots == 'true' || steps.force.outputs.mattermost-bots == 'true'
         continue-on-error: true
-        run: bash a_solutions/aa-sui_mattermost/build.sh ship
+        run: bash a_solutions/aa-sui_mattermost-bots/build.sh ship
 
       - name: Ship code-server
         if: steps.changes.outputs.code-server == 'true' || steps.force.outputs.code-server == 'true'
