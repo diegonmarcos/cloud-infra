@@ -19,7 +19,7 @@ on:
       - "a_solutions/bb-sec_rust-api/src/**"
       - "a_solutions/bc-obs_lgtm/src/**"
       - "a_solutions/bc-obs_nocodb/src/**"
-      - "a_solutions/bc-obs_rig/src/**"
+      - "a_solutions/ad-agi_rig-agentic/src/**"
       - "a_solutions/ca-dat_gitea/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
       - "a_solutions/mcp-api-c3/src/**"
@@ -87,8 +87,8 @@ jobs:
               - 'a_solutions/bc-obs_lgtm/src/**'
             nocodb:
               - 'a_solutions/bc-obs_nocodb/src/**'
-            rig:
-              - 'a_solutions/bc-obs_rig/src/**'
+            rig-agentic:
+              - 'a_solutions/ad-agi_rig-agentic/src/**'
             gitea:
               - 'a_solutions/ca-dat_gitea/src/**'
             kg-graph:
@@ -101,7 +101,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator rust-api lgtm nocodb rig gitea kg-graph c3-api; do
+          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator rust-api lgtm nocodb rig-agentic gitea kg-graph c3-api; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -224,10 +224,12 @@ jobs:
         continue-on-error: true
         run: bash a_solutions/bc-obs_nocodb/build.sh ship
 
-      - name: Ship rig
-        if: steps.changes.outputs.rig == 'true' || steps.force.outputs.rig == 'true'
+      - name: Ship rig-agentic
+        if: steps.changes.outputs.rig-agentic == 'true' || steps.force.outputs.rig-agentic == 'true'
         continue-on-error: true
-        run: bash a_solutions/bc-obs_rig/build.sh ship
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/ad-agi_rig-agentic/build.sh ship
 
       - name: Ship gitea
         if: steps.changes.outputs.gitea == 'true' || steps.force.outputs.gitea == 'true'
