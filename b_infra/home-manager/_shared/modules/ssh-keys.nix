@@ -23,7 +23,7 @@
     get_secret() {
       local key="$1"
       local val
-      val=$(grep "^${key}=" "$SECRETS" | head -1 | cut -d'=' -f2-)
+      val=$(grep "^''${key}=" "$SECRETS" | head -1 | cut -d'=' -f2-)
       # strip surrounding quotes if present
       echo "$val" | sed 's/^"//;s/"$//'
     }
