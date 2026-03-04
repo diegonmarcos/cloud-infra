@@ -528,6 +528,7 @@ resource "oci_core_security_list" "flex2_server" {
 # Already created manually via OCI Console - no terraform management needed
 # =============================================================================
 
+# OCI Email Delivery senders DELETED 2026-03-04 — switched to AWS SES relay
 # resource "oci_email_sender" "me" {
 #   compartment_id = var.compartment_ocid
 #   email_address  = "me@diegonmarcos.com"
@@ -579,33 +580,12 @@ resource "oci_budget_alert_rule" "full_budget" {
 
 # =============================================================================
 # IAM Group & Policies
+# User is already member of Administrators group with full permissions
 # =============================================================================
 
-# Get existing Administrators group (reserved/built-in group)
-data "oci_identity_groups" "administrators" {
-  compartment_id = var.tenancy_ocid
-  filter {
-    name   = "name"
-    values = ["Administrators"]
-  }
-}
-
-# Add user to Administrators group
-resource "oci_identity_user_group_membership" "admin_user" {
-  user_id  = "ocid1.user.oc1..aaaaaaaaadh3p7atydr4ga3yvr3noohaar4f5h62d7stidvzkzgmilyt4enq"  # diegonmarcos@gmail.com
-  group_id = data.oci_identity_groups.administrators.groups[0].id
-}
-
-# Grant Administrators full access
-resource "oci_identity_policy" "administrators_policy" {
-  compartment_id = var.tenancy_ocid
-  name           = "administrators-full-access"
-  description    = "Grant administrators full access to manage all resources"
-
-  statements = [
-    "Allow group Administrators to manage all-resources in tenancy"
-  ]
-}
+# NOTE: diegonmarcos@gmail.com is already in Administrators group
+# NOTE: Administrators group already has full-access policy
+# No terraform management needed for IAM
 
 # =============================================================================
 # Outputs
