@@ -528,16 +528,15 @@ resource "oci_core_security_list" "flex2_server" {
 # Already created manually via OCI Console - no terraform management needed
 # =============================================================================
 
-# OCI Email Delivery senders DELETED 2026-03-04 — switched to AWS SES relay
-# resource "oci_email_sender" "me" {
-#   compartment_id = var.compartment_ocid
-#   email_address  = "me@diegonmarcos.com"
-# }
-#
-# resource "oci_email_sender" "no_reply" {
-#   compartment_id = var.compartment_ocid
-#   email_address  = "no-reply@diegonmarcos.com"
-# }
+resource "oci_email_sender" "me" {
+  compartment_id = var.compartment_ocid
+  email_address  = "me@diegonmarcos.com"
+}
+
+resource "oci_email_sender" "no_reply" {
+  compartment_id = var.compartment_ocid
+  email_address  = "no-reply@diegonmarcos.com"
+}
 
 # =============================================================================
 # Budget Alerts
