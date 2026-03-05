@@ -9,7 +9,8 @@ set -e
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/../config.json"
+SOLUTIONS_DIR="$SCRIPT_DIR/a_solutions"
+CONFIG_FILE="$SCRIPT_DIR/config.json"
 
 # Age key - auto-detect mobile vs desktop
 if [ -f "$HOME/git/vault/A0_keys/providers/system/oauth/age_keys.txt" ]; then
@@ -151,7 +152,7 @@ cmd_build() {
 build_service() {
     svc="$1"
     folder=$(get_service_folder "$svc")
-    svc_dir="$SCRIPT_DIR/$folder"
+    svc_dir="$SOLUTIONS_DIR/$folder"
 
     # Skip services without a build.sh
     if [ ! -f "$svc_dir/build.sh" ]; then
@@ -176,8 +177,8 @@ build_service() {
     echo ""
 }
 
-# Deploy one or all services
-cmd_deploy() {
+# Ship (build + deploy) one or all services
+cmd_ship() {
     service="$1"
     remote_base=$(jq -r '.remote_base' "$CONFIG_FILE")
 
@@ -194,7 +195,7 @@ cmd_deploy() {
 deploy_service() {
     svc="$1"; remote_base="$2"
     folder=$(get_service_folder "$svc")
-    svc_dir="$SCRIPT_DIR/$folder"
+    svc_dir="$SOLUTIONS_DIR/$folder"
     dist_dir="$svc_dir/dist"
 
     vm=$(get_svc_prop "$svc" "vm")
@@ -243,39 +244,6 @@ cmd_compose() {
     fi
 }
 
-# List services
-cmd_list() {
-    printf "\n%-25s %-8s %-15s %-20s %s\n" "SERVICE" "TYPE" "VM" "IP" "DESCRIPTION"
-    printf "%s\n" "-------------------------------------------------------------------------------------"
-    get_all_services | while read -r svc; do
-        category=$(get_svc_prop "$svc" "category")
-        vm=$(get_svc_prop "$svc" "vm")
-        desc=$(get_svc_prop "$svc" "description")
-        ip=$(get_vm_prop "$vm" "ip")
-        folder=$(get_service_folder "$svc")
-        has_dist=" "
-        [ -d "$SCRIPT_DIR/$folder/dist" ] && has_dist="*"
-        printf "%-25s %-8s %-15s %-20s %s %s\n" "$svc" "$category" "$vm" "${ip:-local}" "$has_dist" "$desc"
-    done | sort
-    echo ""
-    echo "  * = dist/ built"
-    echo ""
-}
-
-# List VMs
-cmd_vms() {
-    printf "\n%-15s %-20s %-10s %-10s %s\n" "VM" "IP" "USER" "METHOD" "DESCRIPTION"
-    printf "%s\n" "--------------------------------------------------------------------------------"
-    get_all_vms | while read -r vm; do
-        ip=$(get_vm_prop "$vm" "ip")
-        user=$(get_vm_prop "$vm" "user")
-        method=$(get_vm_prop "$vm" "method")
-        desc=$(get_vm_prop "$vm" "description")
-        printf "%-15s %-20s %-10s %-10s %s\n" "$vm" "$ip" "$user" "$method" "$desc"
-    done
-    echo ""
-}
-
 # SSH into VM
 cmd_ssh() {
     vm_name="$1"
@@ -312,7 +280,7 @@ cmd_secrets() {
         echo "=== Secrets Status ==="
         printf "  %-25s %-12s %s\n" "SERVICE" "STATUS" "FILE"
         printf "  %s\n" "------------------------------------------------------------"
-        for folder in "$SCRIPT_DIR"/*/src/secrets.yaml; do
+        for folder in "$SOLUTIONS_DIR"/*/src/secrets.yaml; do
             [ -f "$folder" ] || continue
             svc_name=$(basename "$(dirname "$(dirname "$folder")")")
             if grep -q "sops:" "$folder" 2>/dev/null; then
@@ -327,29 +295,40 @@ cmd_secrets() {
     fi
 
     folder=$(get_service_folder "$service")
-    secrets_file="$SCRIPT_DIR/$folder/src/secrets.yaml"
+    secrets_file="$SOLUTIONS_DIR/$folder/src/secrets.yaml"
     [ ! -f "$secrets_file" ] && { log_error "No secrets.yaml for $service"; exit 1; }
 
     case "$action" in
         encrypt) sops -e -i "$secrets_file"; log "Encrypted $secrets_file" ;;
-        decrypt) sh "$SCRIPT_DIR/$folder/build.sh" secrets; log "Decrypted to dist/.secrets" ;;
+        decrypt) sh "$SOLUTIONS_DIR/$folder/build.sh" secrets; log "Decrypted to dist/.secrets" ;;
         edit)    sops "$secrets_file" ;;
         show)    sops -d "$secrets_file" ;;
         *)       sops -d "$secrets_file" 2>/dev/null | grep -v "^#" | grep -v "^$" | cut -d: -f1 | sed 's/^/  /' ;;
     esac
 }
 
+# Generate config.json + config.md from sources
+cmd_config() {
+    TOOLS_DIR="$SCRIPT_DIR/tools"
+    if [ ! -d "$TOOLS_DIR/node_modules" ]; then
+        log "Installing tools dependencies..."
+        (cd "$TOOLS_DIR" && npm install --silent)
+    fi
+    log "Generating config.json + config.md..."
+    node --import tsx "$TOOLS_DIR/gen-config.ts"
+}
+
 # Clean all dist/ folders
 cmd_clean() {
     log "Cleaning all dist/ folders..."
     count=0
-    for d in "$SCRIPT_DIR"/*/dist; do
+    for d in "$SOLUTIONS_DIR"/*/dist; do
         [ -d "$d" ] || continue
         rm -rf "$d"
         count=$((count + 1))
     done
     # Also clean .result symlinks
-    for r in "$SCRIPT_DIR"/*/.result; do
+    for r in "$SOLUTIONS_DIR"/*/.result; do
         [ -e "$r" ] && rm -f "$r"
     done
     log "Cleaned $count dist/ folders"
@@ -361,38 +340,46 @@ cmd_clean() {
 
 usage() {
     cat <<'EOF'
-Container-Nix Orchestrator
+Cloud Orchestrator — repo-level CLI for cloud/ infrastructure
 
-USAGE:  ./build.sh <command> [service]
+USAGE:  ./build.sh <command> [args]
 
-COMMANDS:
-    build [service]     Build nix flakes -> dist/ (all or single)
-    deploy [service]    Build + deploy dist/ to VM
-    compose <service>   Run docker compose up on VM
-    clean               Remove all dist/ folders
+PIPELINE:
+    build [service]       Nix build -> dist/ (all services if omitted)
+    ship [service]        Full pipeline: build + secrets + deploy + compose
+    compose <service>     Docker compose up on target VM
+    clean                 Remove all dist/ folders
 
-    list                List all services with VM mappings
-    vms                 List VMs with connection info
-    ssh <vm>            SSH into a VM
-    status <vm>         Docker container status on VM
-    restart <service>   Restart service (docker compose down/up)
+CONFIG:
+    config                Regenerate config.json + config.md from sources
+                          (parses ~/.ssh/config + build.json files)
 
-    secrets             List services with secrets
-    secrets <s> edit    Edit encrypted secrets
-    secrets <s> show    Show decrypted secrets
-    secrets <s> encrypt Encrypt plaintext secrets
+OPS:
+    ssh <alias>           SSH into a VM (e.g. oci-apps, gcp-proxy)
+    status <alias>        Docker container status on a VM
+    restart <service>     Restart service (compose down + up on VM)
+
+SECRETS:
+    secrets               List all services with secrets status
+    secrets <s> show      Show decrypted secrets
+    secrets <s> edit      Edit encrypted secrets (opens $EDITOR)
+    secrets <s> encrypt   Encrypt plaintext secrets.yaml
+    secrets <s> decrypt   Decrypt to dist/.secrets
 
 OPTIONS:
-    -n, --dry-run       Show what would be done
-    -v, --verbose       Enable verbose output
-    -k, --key <path>    Override age key path
+    -n, --dry-run         Show what would be done (no changes)
+    -v, --verbose         Enable verbose output (set -x)
+    -k, --key <path>      Override SOPS age key path
 
 EXAMPLES:
+    ./build.sh ship authelia        Build + deploy + compose authelia
+    ./build.sh build lgtm           Build single service to dist/
     ./build.sh build                Build all services
-    ./build.sh build lgtm           Build single service
-    ./build.sh deploy authelia      Build + deploy authelia
-    ./build.sh compose lgtm         Docker compose up on VM
-    ./build.sh status oci-p-flex_1  Check containers on Flex
+    ./build.sh compose lgtm         Compose up on target VM
+    ./build.sh config               Regenerate config from sources
+    ./build.sh ssh oci-apps         SSH into oci-apps VM
+    ./build.sh status gcp-proxy     Check containers on gcp-proxy
+    ./build.sh secrets authelia     List secret keys for authelia
 EOF
     exit 0
 }
@@ -418,15 +405,14 @@ command="${1:-}"; shift 2>/dev/null || true
 
 case "$command" in
     build)    cmd_build "$@" ;;
-    deploy)   cmd_deploy "$@" ;;
+    ship)     cmd_ship "$@" ;;
     compose)  cmd_compose "$@" ;;
     clean)    cmd_clean ;;
-    list)     cmd_list ;;
-    vms)      cmd_vms ;;
     ssh)      cmd_ssh "$@" ;;
     status)   cmd_status "$@" ;;
     restart)  cmd_restart "$@" ;;
     secrets)  cmd_secrets "$@" ;;
+    config)   cmd_config ;;
     ""|help)  usage ;;
     *)        log_error "Unknown: $command"; usage ;;
 esac
