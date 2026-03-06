@@ -126,6 +126,9 @@ let
 
 in
 {
-  home.sessionPath = [ "$HOME/.local/bin" ];
+  # Prepend ~/.local/bin so wrappers intercept before ~/.nix-profile/bin
+  programs.bash.initExtra = lib.mkBefore ''
+    export PATH="$HOME/.local/bin:$PATH"
+  '';
   home.file = builtins.listToAttrs (map mkWrapper allCommands);
 }
