@@ -127,7 +127,11 @@ let
 in
 {
   # Prepend ~/.local/bin so wrappers intercept before ~/.nix-profile/bin
+  # initExtra covers interactive shells, profileExtra covers login shells
   programs.bash.initExtra = lib.mkBefore ''
+    export PATH="$HOME/.local/bin:$PATH"
+  '';
+  programs.bash.profileExtra = lib.mkAfter ''
     export PATH="$HOME/.local/bin:$PATH"
   '';
   home.file = builtins.listToAttrs (map mkWrapper allCommands);
