@@ -1,0 +1,94 @@
+name: "Setup Dependencies"
+description: "Universal dependency setup — reads deps.json from repo root"
+
+inputs:
+  ssh_key:
+    description: "SSH private key for target VM"
+    required: false
+  ssh_host:
+    description: "SSH host IP/hostname"
+    required: false
+  ssh_user:
+    description: "SSH username"
+    required: false
+    default: "ubuntu"
+  ssh_alias:
+    description: "SSH config Host alias (e.g. oci-apps, gcp-proxy)"
+    required: false
+  sops_age_key:
+    description: "SOPS age private key"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Read deps.json
+      id: deps
+      shell: bash
+      run: |
+        DEPS="$GITHUB_WORKSPACE/deps.json"
+        echo "node_version=$(jq -r '.gha.node_version' "$DEPS")" >> "$GITHUB_OUTPUT"
+        echo "nix_channel=$(jq -r '.gha.nix_channel' "$DEPS")" >> "$GITHUB_OUTPUT"
+        # All nix packages from system.required + system.optional
+        nix_pkgs=$(jq -r '
+          [ .system.required | to_entries[] | .value.nix // empty ] +
+          [ .system.optional | to_entries[] | .value.nix // empty ]
+          | map("nixpkgs#" + .) | join(" ")
+        ' "$DEPS")
+        echo "nix_packages=$nix_pkgs" >> "$GITHUB_OUTPUT"
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v30
+      with:
+        nix_path: nixpkgs=channel:${{ steps.deps.outputs.nix_channel }}
+
+    - name: Install nix packages to PATH
+      shell: bash
+      run: |
+        for pkg in ${{ steps.deps.outputs.nix_packages }}; do
+          pkg_path=$(nix build --no-link --print-out-paths "$pkg")
+          echo "$pkg_path/bin" >> "$GITHUB_PATH"
+        done
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ steps.deps.outputs.node_version }}
+
+    - name: Install engine node modules
+      shell: bash
+      run: |
+        ENGINE_DIR="$GITHUB_WORKSPACE/a_solutions/mcp-api-c3/src"
+        if [ -f "$ENGINE_DIR/package.json" ]; then
+          cd "$ENGINE_DIR" && npm ci --silent --yes 2>/dev/null || npm ci --silent
+        fi
+
+    - name: Setup SSH
+      if: inputs.ssh_key != ''
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh/sockets
+        chmod 700 ~/.ssh
+        echo "${{ inputs.ssh_key }}" > ~/.ssh/id_deploy
+        chmod 600 ~/.ssh/id_deploy
+        cat > ~/.ssh/config <<EOF
+        Host ${{ inputs.ssh_alias }}
+          HostName ${{ inputs.ssh_host }}
+          User ${{ inputs.ssh_user }}
+          IdentityFile ~/.ssh/id_deploy
+          StrictHostKeyChecking no
+          ServerAliveInterval 30
+          ServerAliveCountMax 10
+          ControlMaster auto
+          ControlPath ~/.ssh/sockets/%r@%h-%p
+          ControlPersist 600
+        EOF
+        chmod 600 ~/.ssh/config
+
+    - name: Setup SOPS age key
+      if: inputs.sops_age_key != ''
+      shell: bash
+      run: |
+        mkdir -p ~/.config/sops/age
+        echo "${{ inputs.sops_age_key }}" > ~/.config/sops/age/keys.txt
+        echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"

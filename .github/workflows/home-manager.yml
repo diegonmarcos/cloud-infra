@@ -23,15 +23,13 @@ jobs:
       matrix:
         include:
           - vm: gcp-proxy
-            host: ""
-            user: ""
+            host_secret: GCP_PROXY_HOST
+            user_secret: GCP_PROXY_USER
             key_secret: GCP_PROXY_SSH_KEY
-            use_gcp_secrets: "true"
           - vm: gcp-t4
-            host: ""
-            user: ""
+            host_secret: GCP_T4_HOST
+            user_secret: GCP_T4_USER
             key_secret: GCP_T4_SSH_KEY
-            use_gcp_t4_secrets: "true"
           - vm: oci-mail
             host: "130.110.251.193"
             user: "ubuntu"
@@ -70,65 +68,27 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         uses: actions/checkout@v4
 
-      - name: Install Nix
+      - name: Resolve host/user
         if: steps.gate.outputs.skip != 'true'
-        uses: cachix/install-nix-action@v30
+        id: resolve
+        run: |
+          # GCP VMs use secrets for dynamic IPs, OCI VMs use static
+          HOST="${{ matrix.host }}"
+          USER="${{ matrix.user }}"
+          [ -z "$HOST" ] && HOST="${{ secrets[matrix.host_secret] }}"
+          [ -z "$USER" ] && USER="${{ secrets[matrix.user_secret] }}"
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "user=$USER" >> "$GITHUB_OUTPUT"
+
+      - name: Setup deps
+        if: steps.gate.outputs.skip != 'true'
+        uses: ./.github/actions/setup-deps
         with:
-          nix_path: nixpkgs=channel:nixos-24.11
-
-      - name: Setup SSH
-        if: steps.gate.outputs.skip != 'true'
-        env:
-          SSH_KEY: ${{ secrets[matrix.key_secret] }}
-          GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
-          GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
-          GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
-          GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${SSH_KEY}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          mkdir -p ~/.ssh/sockets
-
-          # Resolve host/user (GCP VMs use secrets for dynamic IPs)
-          if [ "${{ matrix.use_gcp_secrets }}" = "true" ]; then
-            HOST="${GCP_PROXY_HOST}"
-            USER="${GCP_PROXY_USER}"
-          elif [ "${{ matrix.use_gcp_t4_secrets }}" = "true" ]; then
-            HOST="${GCP_T4_HOST}"
-            USER="${GCP_T4_USER}"
-          else
-            HOST="${{ matrix.host }}"
-            USER="${{ matrix.user }}"
-          fi
-
-          ssh-keyscan -H "${HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-          cat > ~/.ssh/config <<EOF
-          Host ${{ matrix.vm }}
-            HostName ${HOST}
-            User ${USER}
-            IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking no
-            ServerAliveInterval 30
-            ServerAliveCountMax 5
-            ControlMaster auto
-            ControlPath ~/.ssh/sockets/%r@%h-%p
-            ControlPersist 600
-          EOF
-          chmod 600 ~/.ssh/config
-
-      - name: Setup SOPS age key
-        if: steps.gate.outputs.skip != 'true'
-        run: |
-          mkdir -p ~/.config/sops/age
-          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
-          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
-
-      - name: Install sops + yq
-        if: steps.gate.outputs.skip != 'true'
-        run: nix profile install nixpkgs#sops nixpkgs#yq-go
+          ssh_key: ${{ secrets[matrix.key_secret] }}
+          ssh_host: ${{ steps.resolve.outputs.host }}
+          ssh_user: ${{ steps.resolve.outputs.user }}
+          ssh_alias: ${{ matrix.vm }}
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Ship home-manager
         if: steps.gate.outputs.skip != 'true'

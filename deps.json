@@ -1,0 +1,32 @@
+{
+  "_comment": "Single source of truth for all cloud/ repo dependencies. Read by build.sh deps + GHA setup-deps action.",
+  "system": {
+    "_comment": "Keys = binary name checked on PATH. Values = package name per manager.",
+    "required": {
+      "node":  { "nix": "nodejs_22", "apt": "nodejs" },
+      "git":   { "nix": "git",       "apt": "git" },
+      "ssh":   { "nix": "openssh",   "apt": "openssh-client" },
+      "jq":    { "nix": "jq",        "apt": "jq" },
+      "sops":  { "nix": "sops",      "apt": null },
+      "rsync": { "nix": "rsync",     "apt": "rsync" }
+    },
+    "optional": {
+      "rclone": { "nix": "rclone", "apt": "rclone" },
+      "yq":     { "nix": "yq-go",  "apt": null }
+    }
+  },
+  "node": {
+    "_comment": "Node packages required in mcp-api-c3/src/node_modules (engines runtime).",
+    "required": ["tsx", "yaml", "nunjucks"]
+  },
+  "install": {
+    "_comment": "nix_method: 'shell' = ephemeral nix-shell (CI/GHA), 'profile' = persistent nix profile install (local dev). auto_yes: skip all confirmations.",
+    "nix_method": "shell",
+    "auto_yes": true
+  },
+  "gha": {
+    "_comment": "GHA-specific settings.",
+    "node_version": "22",
+    "nix_channel": "nixos-24.11"
+  }
+}

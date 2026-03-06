@@ -45,40 +45,13 @@ jobs:
             fi
           done
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v30
+      - uses: ./.github/actions/setup-deps
         with:
-          nix_path: nixpkgs=channel:nixos-24.11
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.GCP_T4_SSH_KEY }}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          mkdir -p ~/.ssh/sockets
-          cat > ~/.ssh/config <<EOF
-          Host gcp-t4
-            HostName ${{ secrets.GCP_T4_HOST }}
-            User ${{ secrets.GCP_T4_USER }}
-            IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking no
-            ServerAliveInterval 30
-            ServerAliveCountMax 10
-            ControlMaster auto
-            ControlPath ~/.ssh/sockets/%r@%h-%p
-            ControlPersist 600
-          EOF
-          chmod 600 ~/.ssh/config
-
-      - name: Setup SOPS age key
-        run: |
-          mkdir -p ~/.config/sops/age
-          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
-          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
-
-      - name: Install sops
-        run: nix profile install nixpkgs#sops
+          ssh_key: ${{ secrets.GCP_T4_SSH_KEY }}
+          ssh_host: ${{ secrets.GCP_T4_HOST }}
+          ssh_user: ${{ secrets.GCP_T4_USER }}
+          ssh_alias: gcp-t4
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Ship ollama
         if: steps.changes.outputs.ollama == 'true' || steps.force.outputs.ollama == 'true'
