@@ -3,6 +3,11 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps"; })
+    (import ./httpd.nix {
+      sites = {
+        cloud-spec = { root = "/opt/containers/cloud-spec"; port = 8099; };
+      };
+    })
     ./modules/docker-service.nix
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
