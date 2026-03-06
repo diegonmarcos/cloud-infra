@@ -1,0 +1,35 @@
+name: "Regenerate topology + configs"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: gen-configs
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-deps
+
+      - name: Generate configs
+        env:
+          GIT_BASE: ${{ github.workspace }}/../
+        run: bash build.sh config
+
+      - name: Commit updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cloud-topology.json cloud-topology.md cloud-configs.json cloud-configs.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "auto: regenerate topology + configs [skip ci]"
+            git push
+          fi

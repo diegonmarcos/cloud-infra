@@ -15,23 +15,74 @@ CONFIG_FILE="$SCRIPT_DIR/cloud-topology.json"
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
 
 # =============================================================================
-# Dependency Engine
+# Dependency Engine — reads from deps.json (single source of truth)
 # =============================================================================
 
-REQUIRED_SYSTEM="node git ssh jq sops"
-REQUIRED_NODE="tsx yaml nunjucks"
+DEPS_FILE="$SCRIPT_DIR/deps.json"
 
+# Settings from deps.json install section
+DEPS_NIX_METHOD=$(jq -r '.install.nix_method // "shell"' "$DEPS_FILE")
+DEPS_AUTO_YES=$(jq -r '.install.auto_yes // false' "$DEPS_FILE")
+
+# Also auto-yes when non-interactive (CI, piped, GHA)
+[ ! -t 0 ] && DEPS_AUTO_YES=true
+[ -n "${CI:-}" ] && DEPS_AUTO_YES=true
+[ -n "${GITHUB_ACTIONS:-}" ] && DEPS_AUTO_YES=true
+
+# Detect package manager: nix > apt > none
+detect_pm() {
+    if command -v nix >/dev/null 2>&1; then
+        echo "nix"
+    elif command -v apt-get >/dev/null 2>&1; then
+        echo "apt"
+    else
+        echo "none"
+    fi
+}
+
+# deps.json accessors
+deps_binaries() { jq -r '.system.required | keys[]' "$DEPS_FILE" | tr '\n' ' '; }
+deps_pkg_name() { jq -r ".system.required[\"$1\"][\"$2\"] // empty" "$DEPS_FILE"; }
+deps_node_required() { jq -r '.node.required[]' "$DEPS_FILE" | tr '\n' ' '; }
+
+# Confirm prompt — auto-yes if configured or non-interactive
+confirm() {
+    [ "$DEPS_AUTO_YES" = "true" ] && return 0
+    printf "  %s [y/N] " "$1"
+    read -r answer
+    [ "$answer" = "y" ] || [ "$answer" = "Y" ]
+}
+
+# Install nix packages — shell (ephemeral) or profile (persistent)
+nix_install() {
+    case "$DEPS_NIX_METHOD" in
+        profile)
+            log "Nix (profile): installing $*"
+            nix profile install $*
+            ;;
+        shell|*)
+            log "Nix (shell): adding $*"
+            # Add to current PATH via nix shell (ephemeral, no profile pollution)
+            for pkg in $*; do
+                pkg_path=$(nix build --no-link --print-out-paths "$pkg" 2>/dev/null) || continue
+                export PATH="$pkg_path/bin:$PATH"
+            done
+            ;;
+    esac
+}
+
+# Check what's missing — prints status, returns 1 if anything missing
 check_deps() {
     missing_sys=""
     missing_node=""
 
-    for tool in $REQUIRED_SYSTEM; do
-        command -v "$tool" >/dev/null 2>&1 || missing_sys="$missing_sys $tool"
+    for bin in $(deps_binaries); do
+        command -v "$bin" >/dev/null 2>&1 || missing_sys="$missing_sys $bin"
     done
 
     if command -v node >/dev/null 2>&1; then
         engine_dir="$SOLUTIONS_DIR/mcp-api-c3/src"
-        for pkg in $REQUIRED_NODE; do
+        for pkg in $(deps_node_required); do
             NODE_PATH="$engine_dir/node_modules" node -e "require('$pkg')" 2>/dev/null \
                 || missing_node="$missing_node $pkg"
         done
@@ -46,36 +97,87 @@ check_deps() {
     [ -n "$missing_sys" ]  && echo "  System:  $missing_sys"
     [ -n "$missing_node" ] && echo "  Node:    $missing_node"
     echo ""
+    echo "  Run: ./build.sh deps"
+    echo ""
+    return 1
+}
 
-    if command -v nix-env >/dev/null 2>&1; then
-        sys_cmd="nix-env -iA$(echo "$missing_sys" | sed 's/ / nixpkgs./g; s/^/ nixpkgs./')"
-    elif command -v apt-get >/dev/null 2>&1; then
-        sys_cmd="sudo apt-get install -y$missing_sys"
+# Install ALL deps from deps.json — works on NixOS, Termux (nix), Ubuntu (apt), GHA
+cmd_deps() {
+    pm=$(detect_pm)
+    log "Installing all dependencies from deps.json (manager: $pm, nix_method: $DEPS_NIX_METHOD, auto_yes: $DEPS_AUTO_YES)..."
+
+    # Collect missing system binaries
+    missing_sys=""
+    for bin in $(deps_binaries); do
+        command -v "$bin" >/dev/null 2>&1 && continue
+        missing_sys="$missing_sys $bin"
+    done
+
+    if [ -n "$missing_sys" ]; then
+        case "$pm" in
+            nix)
+                nix_args=""
+                for bin in $missing_sys; do
+                    pkg=$(deps_pkg_name "$bin" "nix")
+                    [ -n "$pkg" ] && nix_args="$nix_args nixpkgs#$pkg"
+                done
+                if [ -n "$nix_args" ]; then
+                    confirm "Install via nix:$nix_args?" || { log "Aborted."; exit 1; }
+                    nix_install $nix_args
+                fi
+                ;;
+            apt)
+                apt_args=""
+                nix_fallback=""
+                for bin in $missing_sys; do
+                    pkg=$(deps_pkg_name "$bin" "apt")
+                    if [ -n "$pkg" ]; then
+                        apt_args="$apt_args $pkg"
+                    else
+                        nix_pkg=$(deps_pkg_name "$bin" "nix")
+                        [ -n "$nix_pkg" ] && nix_fallback="$nix_fallback nixpkgs#$nix_pkg"
+                    fi
+                done
+                if [ -n "$apt_args" ]; then
+                    confirm "Install via apt:$apt_args?" || { log "Aborted."; exit 1; }
+                    log "Apt: installing$apt_args"
+                    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q $apt_args
+                fi
+                if [ -n "$nix_fallback" ]; then
+                    confirm "Install via nix (no apt pkg):$nix_fallback?" || { log "Aborted."; exit 1; }
+                    nix_install $nix_fallback
+                fi
+                ;;
+            none)
+                log_error "No supported package manager (nix/apt). Install manually:$missing_sys"
+                exit 1
+                ;;
+        esac
     else
-        echo "  No supported package manager (nix/apt). Install manually:"
-        echo "   $missing_sys $missing_node"
-        exit 1
+        log "System: all binaries on PATH"
     fi
 
-    node_cmd=""
-    [ -n "$missing_node" ] && node_cmd="(cd $SOLUTIONS_DIR/mcp-api-c3/src && npm install)"
+    # Node modules (engine runtime)
+    engine_dir="$SOLUTIONS_DIR/mcp-api-c3/src"
+    if [ -f "$engine_dir/package.json" ]; then
+        log "Node: installing engine dependencies..."
+        (cd "$engine_dir" && npm install --silent --yes)
+    fi
 
-    printf "  Install all missing deps? [y/N] "
-    read -r answer
-    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-        [ -n "$missing_sys" ] && eval "$sys_cmd"
-        [ -n "$node_cmd" ] && eval "$node_cmd"
-        check_deps  # re-verify
+    # Verify
+    if check_deps; then
+        log "All dependencies installed."
     else
-        echo "  Aborting. Install manually:"
-        [ -n "$missing_sys" ] && echo "    $sys_cmd"
-        [ -n "$node_cmd" ]   && echo "    $node_cmd"
+        log_error "Some dependencies still missing after install"
         exit 1
     fi
 }
 
-# Check deps at startup
-check_deps
+# Check deps at startup (skip for 'deps' command — it installs them)
+if [ "${1:-}" != "deps" ]; then
+    check_deps || exit 1
+fi
 
 # Age key - auto-detect mobile vs desktop
 if [ -f "$HOME/git/vault/A0_keys/providers/system/oauth/age_keys.txt" ]; then
@@ -412,6 +514,9 @@ Cloud Orchestrator — repo-level CLI for cloud/ infrastructure
 
 USAGE:  ./build.sh <command> [args]
 
+SETUP:
+    deps                  Install ALL dependencies from deps.json (nix + node)
+
 PIPELINE:
     build [service]       Nix build -> dist/ (all services if omitted)
     ship [service]        Full pipeline: build + secrets + deploy + compose
@@ -472,6 +577,7 @@ done
 command="${1:-}"; shift 2>/dev/null || true
 
 case "$command" in
+    deps)     cmd_deps ;;
     build)    cmd_build "$@" ;;
     ship)     cmd_ship "$@" ;;
     compose)  cmd_compose "$@" ;;

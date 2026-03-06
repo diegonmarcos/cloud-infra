@@ -107,40 +107,13 @@ jobs:
             fi
           done
 
-      - name: Install Nix
-        uses: cachix/install-nix-action@v30
+      - uses: ./.github/actions/setup-deps
         with:
-          nix_path: nixpkgs=channel:nixos-24.11
-
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          mkdir -p ~/.ssh/sockets
-          cat > ~/.ssh/config <<EOF
-          Host oci-apps
-            HostName 82.70.229.129
-            User ubuntu
-            IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking no
-            ServerAliveInterval 30
-            ServerAliveCountMax 10
-            ControlMaster auto
-            ControlPath ~/.ssh/sockets/%r@%h-%p
-            ControlPersist 600
-          EOF
-          chmod 600 ~/.ssh/config
-
-      - name: Setup SOPS age key
-        run: |
-          mkdir -p ~/.config/sops/age
-          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
-          echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
-
-      - name: Install sops
-        run: nix profile install nixpkgs#sops
+          ssh_key: ${{ secrets.OCI_SSH_KEY }}
+          ssh_host: 82.70.229.129
+          ssh_user: ubuntu
+          ssh_alias: oci-apps
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Ship mattermost-bots
         if: steps.changes.outputs.mattermost-bots == 'true' || steps.force.outputs.mattermost-bots == 'true'

@@ -1,4 +1,610 @@
 {
+  "_meta": {
+    "generated_by": "a_solutions/mcp-api-c3/src/engines/gen-configs.ts",
+    "api_route": "GET /c3-api/configs",
+    "source": "cloud-topology.json + Caddy/Authelia/DNS flakes",
+    "generated_at": "2026-03-06T14:31:01.865Z"
+  },
+  "services": [
+    {
+      "name": "db-agent",
+      "category": "data",
+      "vm": "all",
+      "domain": "—",
+      "containers": [
+        "db-agent"
+      ]
+    },
+    {
+      "name": "sauron-lite",
+      "category": "tools",
+      "vm": "all",
+      "domain": "—",
+      "containers": [
+        "sauron",
+        "sauron-forwarder"
+      ]
+    },
+    {
+      "name": "alerts-api",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "alerts-api"
+      ]
+    },
+    {
+      "name": "authelia",
+      "category": "sec",
+      "vm": "gcp-E2-f_0",
+      "domain": "auth.diegonmarcos.com",
+      "containers": [
+        "authelia",
+        "authelia-redis"
+      ]
+    },
+    {
+      "name": "caddy",
+      "category": "sec",
+      "vm": "gcp-E2-f_0",
+      "domain": "proxy.diegonmarcos.com",
+      "containers": [
+        "caddy",
+        "introspect-proxy"
+      ]
+    },
+    {
+      "name": "db-agent-gcp",
+      "category": "data",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "db-agent"
+      ]
+    },
+    {
+      "name": "dozzle",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "domain": "logs.diegonmarcos.com",
+      "containers": [
+        "dozzle"
+      ]
+    },
+    {
+      "name": "fluent-bit",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "fluent-bit"
+      ]
+    },
+    {
+      "name": "hickory-dns",
+      "category": "cloud",
+      "vm": "gcp-E2-f_0",
+      "domain": "dns.internal",
+      "containers": [
+        "hickory-dns"
+      ]
+    },
+    {
+      "name": "ntfy",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "domain": "rss.diegonmarcos.com",
+      "containers": [
+        "github-rss",
+        "ntfy",
+        "syslog-bridge"
+      ]
+    },
+    {
+      "name": "postlite",
+      "category": "data",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "postlite-authelia",
+        "postlite-npm",
+        "postlite-ntfy",
+        "postlite-vaultwarden",
+        "sqlite-authelia",
+        "sqlite-npm",
+        "sqlite-ntfy",
+        "sqlite-vaultwarden"
+      ]
+    },
+    {
+      "name": "redis",
+      "category": "data",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "redis"
+      ]
+    },
+    {
+      "name": "sauron-central",
+      "category": "sec",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "siem-api",
+        "syslog-central"
+      ]
+    },
+    {
+      "name": "sauron-lite-gcp",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "sauron"
+      ]
+    },
+    {
+      "name": "vaultwarden",
+      "category": "mic",
+      "vm": "gcp-E2-f_0",
+      "domain": "vault.diegonmarcos.com",
+      "containers": [
+        "vaultwarden"
+      ]
+    },
+    {
+      "name": "ollama",
+      "category": "agi",
+      "vm": "gcp-T4-p_0",
+      "domain": "—",
+      "containers": [
+        "ollama"
+      ]
+    },
+    {
+      "name": "cloud-spec",
+      "category": "tools",
+      "vm": "local",
+      "domain": "—",
+      "containers": []
+    },
+    {
+      "name": "cloudflare",
+      "category": "cloud",
+      "vm": "local",
+      "domain": "—",
+      "containers": []
+    },
+    {
+      "name": "cloudflare-worker",
+      "category": "cloud",
+      "vm": "local",
+      "domain": "—",
+      "containers": []
+    },
+    {
+      "name": "gcloud",
+      "category": "cloud",
+      "vm": "local",
+      "domain": "—",
+      "containers": []
+    },
+    {
+      "name": "affine",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "drive-notes-affine.diegonmarcos.com",
+      "containers": [
+        "hedgedoc_app",
+        "hedgedoc_postgres"
+      ]
+    },
+    {
+      "name": "backup-borg",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "borg-server"
+      ]
+    },
+    {
+      "name": "backup-bup",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "bup-server"
+      ]
+    },
+    {
+      "name": "backup-gitea",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "git.diegonmarcos.com",
+      "containers": [
+        "gitea"
+      ]
+    },
+    {
+      "name": "c3-api",
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "domain": "api.diegonmarcos.com/c3-api",
+      "containers": [
+        "c3-api"
+      ]
+    },
+    {
+      "name": "code-server",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "ide.diegonmarcos.com",
+      "containers": [
+        "code-server"
+      ]
+    },
+    {
+      "name": "crawlee-cloud",
+      "category": "fin",
+      "vm": "oci-A1-f_0",
+      "domain": "api.diegonmarcos.com/crawlee/",
+      "containers": [
+        "crawlee_api",
+        "crawlee_dashboard",
+        "crawlee_db",
+        "crawlee_minio",
+        "crawlee_minio_init",
+        "crawlee_redis",
+        "crawlee_runner",
+        "crawlee_scheduler"
+      ]
+    },
+    {
+      "name": "db-agent-flex",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "db-agent"
+      ]
+    },
+    {
+      "name": "etherpad",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "pad.diegonmarcos.com",
+      "containers": [
+        "etherpad_app",
+        "etherpad_postgres"
+      ]
+    },
+    {
+      "name": "filebrowser",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "files.diegonmarcos.com",
+      "containers": [
+        "filebrowser_app"
+      ]
+    },
+    {
+      "name": "gitea",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "git.diegonmarcos.com",
+      "containers": [
+        "gitea"
+      ]
+    },
+    {
+      "name": "grist",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "grist.diegonmarcos.com",
+      "containers": [
+        "grist_app"
+      ]
+    },
+    {
+      "name": "hedgedoc",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "doc.diegonmarcos.com",
+      "containers": [
+        "hedgedoc_app",
+        "hedgedoc_postgres"
+      ]
+    },
+    {
+      "name": "kg-graph",
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "surrealdb"
+      ]
+    },
+    {
+      "name": "lgtm",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "domain": "grafana.diegonmarcos.com",
+      "containers": [
+        "lgtm_grafana",
+        "lgtm_loki",
+        "lgtm_mimir",
+        "lgtm_tempo"
+      ]
+    },
+    {
+      "name": "mattermost-bots",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "chat.diegonmarcos.com",
+      "containers": [
+        "mattermost",
+        "mattermost-bots",
+        "mattermost-postgres"
+      ]
+    },
+    {
+      "name": "mattermost-mcp",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": []
+    },
+    {
+      "name": "nocodb",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "domain": "db.diegonmarcos.com",
+      "containers": [
+        "nocodb",
+        "nocodb-db"
+      ]
+    },
+    {
+      "name": "orchestrator",
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "orchestrator"
+      ]
+    },
+    {
+      "name": "photoprism",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "photos.diegonmarcos.com",
+      "containers": [
+        "photoprism_app",
+        "photoprism_mariadb",
+        "photoprism_rclone"
+      ]
+    },
+    {
+      "name": "photos-webhook",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "photos-db",
+        "photos-webhook"
+      ]
+    },
+    {
+      "name": "quant-lab-full",
+      "category": "fin",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "quant-lab-full"
+      ]
+    },
+    {
+      "name": "quant-lab-light",
+      "category": "fin",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "quant-lab-light"
+      ]
+    },
+    {
+      "name": "radicale",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "cal.diegonmarcos.com",
+      "containers": [
+        "radicale"
+      ]
+    },
+    {
+      "name": "revealmd",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "domain": "slides.diegonmarcos.com",
+      "containers": [
+        "revealmd_app"
+      ]
+    },
+    {
+      "name": "rig",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "rig"
+      ]
+    },
+    {
+      "name": "rig-agentic",
+      "category": "agi",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "rig"
+      ]
+    },
+    {
+      "name": "rust-api",
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "domain": "api.diegonmarcos.com/rust-api",
+      "containers": [
+        "rust-api"
+      ]
+    },
+    {
+      "name": "sauron-lite-flex",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "domain": "—",
+      "containers": [
+        "sauron"
+      ]
+    },
+    {
+      "name": "ollama-arm",
+      "category": "agi",
+      "vm": "oci-A1-p_0",
+      "domain": "—",
+      "containers": [
+        "ollama-arm"
+      ]
+    },
+    {
+      "name": "dagu",
+      "category": "tools",
+      "vm": "oci-E2-f_0",
+      "domain": "dagu.diegonmarcos.com",
+      "containers": [
+        "dagu"
+      ]
+    },
+    {
+      "name": "mailu",
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "domain": "mail.diegonmarcos.com",
+      "containers": [
+        "admin",
+        "antispam",
+        "front",
+        "imap",
+        "redis",
+        "resolver",
+        "smtp",
+        "webmail"
+      ]
+    },
+    {
+      "name": "mailu-mcp",
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "mailu-mcp"
+      ]
+    },
+    {
+      "name": "sauron-lite-micro1",
+      "category": "tools",
+      "vm": "oci-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "sauron"
+      ]
+    },
+    {
+      "name": "smtp-proxy",
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "smtp-proxy"
+      ]
+    },
+    {
+      "name": "syncthing",
+      "category": "mic",
+      "vm": "oci-E2-f_0",
+      "domain": "sync.diegonmarcos.com",
+      "containers": [
+        "syncthing"
+      ]
+    },
+    {
+      "name": "syslog-forwarder",
+      "category": "tools",
+      "vm": "oci-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "syslog-forwarder"
+      ]
+    },
+    {
+      "name": "syslog-forwarder-micro1",
+      "category": "tools",
+      "vm": "oci-E2-f_0",
+      "domain": "—",
+      "containers": [
+        "syslog-forwarder"
+      ]
+    },
+    {
+      "name": "db-agent-micro2",
+      "category": "data",
+      "vm": "oci-E2-f_1",
+      "domain": "—",
+      "containers": [
+        "db-agent"
+      ]
+    },
+    {
+      "name": "matomo",
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "domain": "analytics.diegonmarcos.com",
+      "containers": [
+        "matomo-hybrid"
+      ]
+    },
+    {
+      "name": "sauron-forwarder",
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "domain": "—",
+      "containers": [
+        "sauron-forwarder"
+      ]
+    },
+    {
+      "name": "sauron-lite-micro2",
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "domain": "—",
+      "containers": [
+        "sauron"
+      ]
+    },
+    {
+      "name": "windmill",
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "domain": "windmill.diegonmarcos.com",
+      "containers": [
+        "windmill-db",
+        "windmill-server",
+        "windmill-worker"
+      ]
+    }
+  ],
   "infra": {
     "caddy": {
       "routes": [
