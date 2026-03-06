@@ -3,14 +3,19 @@
     "generated_by": "a_solutions/mcp-api-c3/src/engines/gen-configs.ts",
     "api_route": "GET /c3-api/configs",
     "source": "cloud-topology.json + Caddy/Authelia/DNS flakes",
-    "generated_at": "2026-03-06T17:14:56.497Z"
+    "generated_at": "2026-03-06T17:35:10.657Z"
   },
   "services": [
     {
       "name": "db-agent",
       "category": "data",
       "vm": "all",
+      "description": "Central DB Backup Agent (deployed on all VMs)",
       "domain": "—",
+      "ports": [],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "db-agent"
       ]
@@ -19,7 +24,12 @@
       "name": "sauron-lite",
       "category": "tools",
       "vm": "all",
+      "description": "File Integrity Scanner (deployed on all VMs)",
       "domain": "—",
+      "ports": [],
+      "networks": [
+        "security"
+      ],
       "containers": [
         "sauron",
         "sauron-forwarder"
@@ -29,7 +39,14 @@
       "name": "alerts-api",
       "category": "tools",
       "vm": "gcp-E2-f_0",
+      "description": "Security Alert Aggregation API",
       "domain": "—",
+      "ports": [
+        "5050:5000"
+      ],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "alerts-api"
       ]
@@ -38,7 +55,16 @@
       "name": "authelia",
       "category": "sec",
       "vm": "gcp-E2-f_0",
+      "description": "SSO and 2FA authentication portal",
       "domain": "auth.diegonmarcos.com",
+      "ports": [
+        "9091:9091",
+        "127.0.0.1:6379:6379"
+      ],
+      "networks": [
+        "auth-net",
+        "npm_default"
+      ],
       "containers": [
         "authelia",
         "authelia-redis"
@@ -48,7 +74,16 @@
       "name": "caddy",
       "category": "sec",
       "vm": "gcp-E2-f_0",
+      "description": "Caddy reverse proxy (replaces NPM on gcp-proxy + oci-mail)",
       "domain": "proxy.diegonmarcos.com",
+      "ports": [
+        "80:80",
+        "443:443",
+        "443:443/udp"
+      ],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "caddy",
         "introspect-proxy"
@@ -58,7 +93,10 @@
       "name": "db-agent-gcp",
       "category": "data",
       "vm": "gcp-E2-f_0",
+      "description": "Central DB Backup Agent",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "db-agent"
       ]
@@ -67,7 +105,14 @@
       "name": "dozzle",
       "category": "tools",
       "vm": "gcp-E2-f_0",
+      "description": "Dozzle - Real-time Docker log viewer",
       "domain": "logs.diegonmarcos.com",
+      "ports": [
+        "9999:8080"
+      ],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "dozzle"
       ]
@@ -76,7 +121,12 @@
       "name": "fluent-bit",
       "category": "tools",
       "vm": "gcp-E2-f_0",
+      "description": "Log processor and forwarder",
       "domain": "—",
+      "ports": [],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "fluent-bit"
       ]
@@ -85,7 +135,13 @@
       "name": "hickory-dns",
       "category": "cloud",
       "vm": "gcp-E2-f_0",
+      "description": "Internal DNS server for WireGuard mesh (.internal zone)",
       "domain": "dns.internal",
+      "ports": [
+        "10.0.0.1:53:53/tcp",
+        "10.0.0.1:53:53/udp"
+      ],
+      "networks": [],
       "containers": [
         "hickory-dns"
       ]
@@ -94,7 +150,14 @@
       "name": "ntfy",
       "category": "tools",
       "vm": "gcp-E2-f_0",
+      "description": "Push notification server",
       "domain": "rss.diegonmarcos.com",
+      "ports": [
+        "10.0.0.1:8090:80"
+      ],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "github-rss",
         "ntfy",
@@ -105,7 +168,19 @@
       "name": "postlite",
       "category": "data",
       "vm": "gcp-E2-f_0",
+      "description": "SQLite REST API (WireGuard only)",
       "domain": "—",
+      "ports": [
+        "10.0.0.1:8880:12321",
+        "10.0.0.1:8881:12321",
+        "10.0.0.1:8882:12321",
+        "10.0.0.1:8883:12321",
+        "10.0.0.1:5433:5432",
+        "10.0.0.1:5434:5432",
+        "10.0.0.1:5435:5432",
+        "10.0.0.1:5436:5432"
+      ],
+      "networks": [],
       "containers": [
         "postlite-authelia",
         "postlite-npm",
@@ -121,7 +196,12 @@
       "name": "redis",
       "category": "data",
       "vm": "gcp-E2-f_0",
+      "description": "In-memory data store",
       "domain": "—",
+      "ports": [],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "redis"
       ]
@@ -130,7 +210,15 @@
       "name": "sauron-central",
       "category": "sec",
       "vm": "gcp-E2-f_0",
+      "description": "Central Syslog Collector + SIEM API",
       "domain": "—",
+      "ports": [
+        "5514:5514/tcp",
+        "127.0.0.1:8080:8080"
+      ],
+      "networks": [
+        "security"
+      ],
       "containers": [
         "siem-api",
         "syslog-central"
@@ -140,7 +228,10 @@
       "name": "sauron-lite-gcp",
       "category": "tools",
       "vm": "gcp-E2-f_0",
+      "description": "File Integrity Scanner",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "sauron"
       ]
@@ -149,7 +240,12 @@
       "name": "vaultwarden",
       "category": "mic",
       "vm": "gcp-E2-f_0",
+      "description": "Bitwarden password manager",
       "domain": "vault.diegonmarcos.com",
+      "ports": [],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "vaultwarden"
       ]
@@ -158,7 +254,12 @@
       "name": "ollama",
       "category": "agi",
       "vm": "gcp-T4-p_0",
+      "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
       "domain": "—",
+      "ports": [
+        "10.0.0.8:11434:11434"
+      ],
+      "networks": [],
       "containers": [
         "ollama"
       ]
@@ -167,35 +268,54 @@
       "name": "cloud-spec",
       "category": "tools",
       "vm": "local",
+      "description": "Unified Cloud Documentation Portal",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": []
     },
     {
       "name": "cloudflare",
       "category": "cloud",
       "vm": "local",
+      "description": "Cloudflare DNS records and configuration (Terraform)",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": []
     },
     {
       "name": "cloudflare-worker",
       "category": "cloud",
       "vm": "local",
+      "description": "Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": []
     },
     {
       "name": "gcloud",
       "category": "cloud",
       "vm": "local",
+      "description": "Google Cloud SDK and tools (local CLI only)",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": []
     },
     {
       "name": "affine",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "AFFiNE Collaborative Workspace (drive-notes-affine.diegonmarcos.com) — deployed via hedgedoc flake",
       "domain": "drive-notes-affine.diegonmarcos.com",
+      "ports": [
+        "3010:3000"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "hedgedoc_app",
         "hedgedoc_postgres"
@@ -205,7 +325,14 @@
       "name": "backup-borg",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "Media Backups SSH Server (Borg deduplication)",
       "domain": "—",
+      "ports": [
+        "2224:22"
+      ],
+      "networks": [
+        "backup_network"
+      ],
       "containers": [
         "borg-server"
       ]
@@ -214,7 +341,14 @@
       "name": "backup-bup",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "Database Backups SSH Server (bup)",
       "domain": "—",
+      "ports": [
+        "2223:22"
+      ],
+      "networks": [
+        "backup_network"
+      ],
       "containers": [
         "bup-server"
       ]
@@ -223,7 +357,15 @@
       "name": "backup-gitea",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "Self-hosted Gitea for git backups and mirroring",
       "domain": "git.diegonmarcos.com",
+      "ports": [
+        "3000:3000",
+        "2222:22"
+      ],
+      "networks": [
+        "proxy"
+      ],
       "containers": [
         "gitea"
       ]
@@ -232,7 +374,12 @@
       "name": "c3-api",
       "category": "sec",
       "vm": "oci-A1-f_0",
+      "description": "C3 — Cloud Control Center: MCP server + Fastify API (api.diegonmarcos.com)",
       "domain": "api.diegonmarcos.com/c3-api",
+      "ports": [
+        "8081:8080"
+      ],
+      "networks": [],
       "containers": [
         "c3-api"
       ]
@@ -241,7 +388,14 @@
       "name": "code-server",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "VS Code IDE (ide.diegonmarcos.com)",
       "domain": "ide.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:8443:8443"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "code-server"
       ]
@@ -250,7 +404,19 @@
       "name": "crawlee-cloud",
       "category": "fin",
       "vm": "oci-A1-f_0",
+      "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
       "domain": "api.diegonmarcos.com/crawlee/",
+      "ports": [
+        "3000:3000",
+        "3001:3001",
+        "5433:5432",
+        "6380:6379",
+        "9000:9000",
+        "9001:9001"
+      ],
+      "networks": [
+        "crawlee_network"
+      ],
       "containers": [
         "crawlee_api",
         "crawlee_dashboard",
@@ -266,7 +432,10 @@
       "name": "db-agent-flex",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "Central DB Backup Agent",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "db-agent"
       ]
@@ -275,7 +444,14 @@
       "name": "etherpad",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Etherpad collaborative editor (NEW - not deployed yet)",
       "domain": "pad.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3012:9001"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "etherpad_app",
         "etherpad_postgres"
@@ -285,7 +461,14 @@
       "name": "filebrowser",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "FileBrowser web file manager (NEW - not deployed yet)",
       "domain": "files.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3015:80"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "filebrowser_app"
       ]
@@ -294,7 +477,15 @@
       "name": "gitea",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "Self-hosted Git service",
       "domain": "git.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3017:3000",
+        "10.0.0.6:2222:22"
+      ],
+      "networks": [
+        "gitea_backup_network"
+      ],
       "containers": [
         "gitea"
       ]
@@ -303,7 +494,14 @@
       "name": "grist",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
       "domain": "grist.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3011:8484"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "grist_app"
       ]
@@ -312,7 +510,14 @@
       "name": "hedgedoc",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Collaborative markdown editor",
       "domain": "doc.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3018:3000"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "hedgedoc_app",
         "hedgedoc_postgres"
@@ -322,7 +527,14 @@
       "name": "kg-graph",
       "category": "data",
       "vm": "oci-A1-f_0",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
       "domain": "—",
+      "ports": [
+        "127.0.0.1:8001:8000"
+      ],
+      "networks": [
+        "kg-net"
+      ],
       "containers": [
         "surrealdb"
       ]
@@ -331,7 +543,19 @@
       "name": "lgtm",
       "category": "tools",
       "vm": "oci-A1-f_0",
+      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
       "domain": "grafana.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3016:3000",
+        "10.0.0.6:3019:3100",
+        "10.0.0.6:3020:3200",
+        "10.0.0.6:4317:4317",
+        "10.0.0.6:4318:4318",
+        "10.0.0.6:3021:8080"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "lgtm_grafana",
         "lgtm_loki",
@@ -343,7 +567,15 @@
       "name": "mattermost-bots",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Mattermost team chat with ntfy bridge and C3 command bot",
       "domain": "chat.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:8065:8065",
+        "10.0.0.6:8888:8888"
+      ],
+      "networks": [
+        "c3-api_default"
+      ],
       "containers": [
         "mattermost",
         "mattermost-bots",
@@ -354,14 +586,25 @@
       "name": "mattermost-mcp",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Mattermost MCP server",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": []
     },
     {
       "name": "nocodb",
       "category": "tools",
       "vm": "oci-A1-f_0",
+      "description": "NocoDB database spreadsheet (nocodb.diegonmarcos.com)",
       "domain": "db.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:8085:8080"
+      ],
+      "networks": [
+        "nocodb_network",
+        "dev_network"
+      ],
       "containers": [
         "nocodb",
         "nocodb-db"
@@ -371,7 +614,14 @@
       "name": "orchestrator",
       "category": "sec",
       "vm": "oci-A1-f_0",
+      "description": "Container orchestrator — resource budget management for on-demand services",
       "domain": "—",
+      "ports": [
+        "127.0.0.1:9100:9100"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "orchestrator"
       ]
@@ -380,7 +630,14 @@
       "name": "photoprism",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "PhotoPrism AI-powered photo management (oci-flex-1)",
       "domain": "photos.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3013:2342"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "photoprism_app",
         "photoprism_mariadb",
@@ -391,7 +648,15 @@
       "name": "photos-webhook",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "PhotoPrism Webhook + S3 Processor",
       "domain": "—",
+      "ports": [
+        "5432:5432",
+        "5001:5001"
+      ],
+      "networks": [
+        "photos_net"
+      ],
       "containers": [
         "photos-db",
         "photos-webhook"
@@ -401,7 +666,10 @@
       "name": "quant-lab-full",
       "category": "fin",
       "vm": "oci-A1-f_0",
+      "description": "Full quant stack: Jupyter + Analytics + ML + Risk + NautilusTrader + Postgres",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "quant-lab-full"
       ]
@@ -410,7 +678,10 @@
       "name": "quant-lab-light",
       "category": "fin",
       "vm": "oci-A1-f_0",
+      "description": "Lightweight quant research: Jupyter + NautilusTrader + Postgres",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "quant-lab-light"
       ]
@@ -419,7 +690,14 @@
       "name": "radicale",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
       "domain": "cal.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:5232:5232"
+      ],
+      "networks": [
+        "default"
+      ],
       "containers": [
         "radicale"
       ]
@@ -428,7 +706,14 @@
       "name": "revealmd",
       "category": "app",
       "vm": "oci-A1-f_0",
+      "description": "Reveal.js markdown presentations (NEW - not deployed yet)",
       "domain": "slides.diegonmarcos.com",
+      "ports": [
+        "10.0.0.6:3014:1948"
+      ],
+      "networks": [
+        "dev_network"
+      ],
       "containers": [
         "revealmd_app"
       ]
@@ -437,7 +722,10 @@
       "name": "rig",
       "category": "tools",
       "vm": "oci-A1-f_0",
+      "description": "Rig Intelligence Framework — Self-healing orchestrator + GraphRAG",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "rig"
       ]
@@ -446,7 +734,10 @@
       "name": "rig-agentic",
       "category": "agi",
       "vm": "oci-A1-f_0",
+      "description": "Rig Agentic AI - Infrastructure agent with DeepSeek + tool calling via C3 API",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "rig"
       ]
@@ -455,7 +746,14 @@
       "name": "rust-api",
       "category": "sec",
       "vm": "oci-A1-f_0",
+      "description": "Cloud Rust API (api.diegonmarcos.com — default)",
       "domain": "api.diegonmarcos.com/rust-api",
+      "ports": [
+        "8080:8080"
+      ],
+      "networks": [
+        "npm_default"
+      ],
       "containers": [
         "rust-api"
       ]
@@ -464,7 +762,10 @@
       "name": "sauron-lite-flex",
       "category": "tools",
       "vm": "oci-A1-f_0",
+      "description": "File Integrity Scanner",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "sauron"
       ]
@@ -473,7 +774,10 @@
       "name": "ollama-arm",
       "category": "agi",
       "vm": "oci-A1-p_0",
+      "description": "Ollama LLM server (ARM CPU, 7b models)",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "ollama-arm"
       ]
@@ -482,7 +786,14 @@
       "name": "dagu",
       "category": "tools",
       "vm": "oci-E2-f_0",
+      "description": "Dagu - Lightweight DAG-based workflow scheduler",
       "domain": "dagu.diegonmarcos.com",
+      "ports": [
+        "10.0.0.3:8070:8080"
+      ],
+      "networks": [
+        "mailu_default"
+      ],
       "containers": [
         "dagu"
       ]
@@ -491,7 +802,18 @@
       "name": "mailu",
       "category": "app",
       "vm": "oci-E2-f_0",
+      "description": "Mailu mail server stack (mail.diegonmarcos.com)",
       "domain": "mail.diegonmarcos.com",
+      "ports": [
+        "10.0.0.3:8444:443",
+        "0.0.0.0:25:25",
+        "0.0.0.0:465:465",
+        "0.0.0.0:587:587",
+        "0.0.0.0:993:993"
+      ],
+      "networks": [
+        "default"
+      ],
       "containers": [
         "admin",
         "antispam",
@@ -507,7 +829,10 @@
       "name": "mailu-mcp",
       "category": "app",
       "vm": "oci-E2-f_0",
+      "description": "Mailu mail MCP server — IMAP/SMTP/Admin via MCP protocol",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "mailu-mcp"
       ]
@@ -516,7 +841,10 @@
       "name": "sauron-lite-micro1",
       "category": "tools",
       "vm": "oci-E2-f_0",
+      "description": "File Integrity Scanner",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "sauron"
       ]
@@ -525,7 +853,14 @@
       "name": "smtp-proxy",
       "category": "app",
       "vm": "oci-E2-f_0",
+      "description": "SMTP Relay",
       "domain": "—",
+      "ports": [
+        "8080:8080"
+      ],
+      "networks": [
+        "mailu_default"
+      ],
       "containers": [
         "smtp-proxy"
       ]
@@ -534,7 +869,16 @@
       "name": "syncthing",
       "category": "mic",
       "vm": "oci-E2-f_0",
+      "description": "File Sync",
       "domain": "sync.diegonmarcos.com",
+      "ports": [
+        "10.0.0.3:8384:8384",
+        "0.0.0.0:22000:22000",
+        "0.0.0.0:21027:21027/udp"
+      ],
+      "networks": [
+        "matomo_default"
+      ],
       "containers": [
         "syncthing"
       ]
@@ -543,7 +887,12 @@
       "name": "syslog-forwarder",
       "category": "tools",
       "vm": "oci-E2-f_0",
+      "description": "",
       "domain": "—",
+      "ports": [],
+      "networks": [
+        "sauron_security"
+      ],
       "containers": [
         "syslog-forwarder"
       ]
@@ -552,7 +901,10 @@
       "name": "syslog-forwarder-micro1",
       "category": "tools",
       "vm": "oci-E2-f_0",
+      "description": "Syslog Forwarder",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "syslog-forwarder"
       ]
@@ -561,7 +913,10 @@
       "name": "db-agent-micro2",
       "category": "data",
       "vm": "oci-E2-f_1",
+      "description": "Central DB Backup Agent",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "db-agent"
       ]
@@ -570,7 +925,12 @@
       "name": "matomo",
       "category": "tools",
       "vm": "oci-E2-f_1",
+      "description": "Matomo hybrid analytics (oci-analytics)",
       "domain": "analytics.diegonmarcos.com",
+      "ports": [
+        "10.0.0.4:8080:8080"
+      ],
+      "networks": [],
       "containers": [
         "matomo-hybrid"
       ]
@@ -579,7 +939,10 @@
       "name": "sauron-forwarder",
       "category": "tools",
       "vm": "oci-E2-f_1",
+      "description": "Alert forwarding to central sauron",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "sauron-forwarder"
       ]
@@ -588,7 +951,10 @@
       "name": "sauron-lite-micro2",
       "category": "tools",
       "vm": "oci-E2-f_1",
+      "description": "File Integrity Scanner",
       "domain": "—",
+      "ports": [],
+      "networks": [],
       "containers": [
         "sauron"
       ]
@@ -597,7 +963,14 @@
       "name": "windmill",
       "category": "tools",
       "vm": "oci-E2-f_1",
+      "description": "Windmill workflow orchestration (windmill.diegonmarcos.com)",
       "domain": "windmill.diegonmarcos.com",
+      "ports": [
+        "127.0.0.1:8000:8000"
+      ],
+      "networks": [
+        "windmill-net"
+      ],
       "containers": [
         "windmill-db",
         "windmill-server",
