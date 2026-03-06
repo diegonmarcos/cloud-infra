@@ -8,6 +8,7 @@
     ./modules/authorized-keys.nix
     ./modules/ssh-keys.nix
     ./modules/container-tools.nix
+    ./modules/guardrails.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
