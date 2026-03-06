@@ -1,7 +1,7 @@
 #!/bin/sh
 # Container-Nix Orchestrator
 # Delegates builds to per-service build.sh, deploys dist/ to VMs
-# Configuration: config.json
+# Configuration: cloud-topology.json
 set -e
 
 # =============================================================================
@@ -10,7 +10,72 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOLUTIONS_DIR="$SCRIPT_DIR/a_solutions"
-CONFIG_FILE="$SCRIPT_DIR/config.json"
+CONFIG_FILE="$SCRIPT_DIR/cloud-topology.json"
+# Fallback to old name during migration
+[ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
+
+# =============================================================================
+# Dependency Engine
+# =============================================================================
+
+REQUIRED_SYSTEM="node git ssh jq sops"
+REQUIRED_NODE="tsx yaml nunjucks"
+
+check_deps() {
+    missing_sys=""
+    missing_node=""
+
+    for tool in $REQUIRED_SYSTEM; do
+        command -v "$tool" >/dev/null 2>&1 || missing_sys="$missing_sys $tool"
+    done
+
+    if command -v node >/dev/null 2>&1; then
+        engine_dir="$SOLUTIONS_DIR/mcp-api-c3/src"
+        for pkg in $REQUIRED_NODE; do
+            NODE_PATH="$engine_dir/node_modules" node -e "require('$pkg')" 2>/dev/null \
+                || missing_node="$missing_node $pkg"
+        done
+    fi
+
+    [ -z "$missing_sys" ] && [ -z "$missing_node" ] && return 0
+
+    echo ""
+    echo "============================================"
+    echo "  MISSING DEPENDENCIES"
+    echo "============================================"
+    [ -n "$missing_sys" ]  && echo "  System:  $missing_sys"
+    [ -n "$missing_node" ] && echo "  Node:    $missing_node"
+    echo ""
+
+    if command -v nix-env >/dev/null 2>&1; then
+        sys_cmd="nix-env -iA$(echo "$missing_sys" | sed 's/ / nixpkgs./g; s/^/ nixpkgs./')"
+    elif command -v apt-get >/dev/null 2>&1; then
+        sys_cmd="sudo apt-get install -y$missing_sys"
+    else
+        echo "  No supported package manager (nix/apt). Install manually:"
+        echo "   $missing_sys $missing_node"
+        exit 1
+    fi
+
+    node_cmd=""
+    [ -n "$missing_node" ] && node_cmd="(cd $SOLUTIONS_DIR/mcp-api-c3/src && npm install)"
+
+    printf "  Install all missing deps? [y/N] "
+    read -r answer
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        [ -n "$missing_sys" ] && eval "$sys_cmd"
+        [ -n "$node_cmd" ] && eval "$node_cmd"
+        check_deps  # re-verify
+    else
+        echo "  Aborting. Install manually:"
+        [ -n "$missing_sys" ] && echo "    $sys_cmd"
+        [ -n "$node_cmd" ]   && echo "    $node_cmd"
+        exit 1
+    fi
+}
+
+# Check deps at startup
+check_deps
 
 # Age key - auto-detect mobile vs desktop
 if [ -f "$HOME/git/vault/A0_keys/providers/system/oauth/age_keys.txt" ]; then
@@ -307,15 +372,18 @@ cmd_secrets() {
     esac
 }
 
-# Generate config.json + config.md from sources
+# Generate cloud-topology.json/md + cloud-configs.json/md from sources
 cmd_config() {
-    TOOLS_DIR="$SCRIPT_DIR/tools"
-    if [ ! -d "$TOOLS_DIR/node_modules" ]; then
-        log "Installing tools dependencies..."
-        (cd "$TOOLS_DIR" && npm install --silent)
+    ENGINE_DIR="$SOLUTIONS_DIR/mcp-api-c3/src"
+    if [ ! -d "$ENGINE_DIR/node_modules" ]; then
+        log "Installing engine dependencies..."
+        (cd "$ENGINE_DIR" && npm install --silent)
     fi
-    log "Generating config.json + config.md..."
-    node --import tsx "$TOOLS_DIR/gen-config.ts"
+    TSX="$ENGINE_DIR/node_modules/.bin/tsx"
+    log "Generating cloud-topology.json + cloud-topology.md..."
+    "$TSX" "$ENGINE_DIR/engines/gen-topology.ts"
+    log "Generating cloud-configs.json + cloud-configs.md..."
+    "$TSX" "$ENGINE_DIR/engines/gen-configs.ts"
 }
 
 # Clean all dist/ folders
@@ -351,8 +419,8 @@ PIPELINE:
     clean                 Remove all dist/ folders
 
 CONFIG:
-    config                Regenerate config.json + config.md from sources
-                          (parses ~/.ssh/config + build.json files)
+    config                Regenerate cloud-topology + cloud-configs from sources
+                          (parses SSH config, build.json, Caddyfile, Authelia, DNS, etc.)
 
 OPS:
     ssh <alias>           SSH into a VM (e.g. oci-apps, gcp-proxy)
