@@ -253,7 +253,7 @@ jobs:
         if: steps.ship-kg-graph.outcome == 'success'
         run: |
           rsync -avz a_solutions/ca-dat_kg-graph/scripts/ oci-apps:/opt/containers/kg-graph/scripts/
-          rsync -avz config.json oci-apps:/opt/containers/kg-graph/config.json
+          rsync -avz cloud-topology.json oci-apps:/opt/containers/kg-graph/cloud-topology.json
 
       - name: Wipe KG Graph data (fresh start)
         if: steps.ship-kg-graph.outcome == 'success' && github.event.inputs.wipe_data == 'true'
@@ -265,7 +265,7 @@ jobs:
 
       - name: Seed KG Graph
         if: steps.ship-kg-graph.outcome == 'success' && github.event.inputs.wipe_data == 'true'
-        run: ssh oci-apps "chmod +x /opt/containers/kg-graph/scripts/seed_from_config.sh && cd /opt/containers/kg-graph && bash scripts/seed_from_config.sh http://localhost:8001 /opt/containers/kg-graph/config.json"
+        run: ssh oci-apps "chmod +x /opt/containers/kg-graph/scripts/seed_from_config.sh && cd /opt/containers/kg-graph && bash scripts/seed_from_config.sh http://localhost:8001 /opt/containers/kg-graph/cloud-topology.json"
 
       - name: Verify KG Graph
         if: steps.ship-kg-graph.outcome == 'success'

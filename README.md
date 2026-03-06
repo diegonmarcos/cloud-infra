@@ -85,7 +85,8 @@ cloud/
 │   ├── vps_gcloud/                # GCP VPS configs
 │   └── vps_oci/                   # OCI VPS configs
 │
-├── config.json                    # Infrastructure registry (VMs, services, networking)
+├── cloud-topology.json            # Infrastructure topology (VMs, services, WG mesh, DNS)
+├── cloud-configs.json             # Per-service configs (Caddy routes, ACL, ntfy, mailu)
 ├── z_archive/                     # Stale configs (0.spec/, old ops docs)
 ├── c_myhardware/                  # Local hardware configs (Surface Pro 8)
 └── .github/workflows/             # CI/CD
