@@ -22,46 +22,20 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Read deps.json
+    - name: Read nix channel from deps.json
       id: deps
       shell: bash
       run: |
-        DEPS="$GITHUB_WORKSPACE/deps.json"
-        echo "node_version=$(jq -r '.gha.node_version' "$DEPS")" >> "$GITHUB_OUTPUT"
-        echo "nix_channel=$(jq -r '.gha.nix_channel' "$DEPS")" >> "$GITHUB_OUTPUT"
-        # All nix packages from system.required + system.optional
-        nix_pkgs=$(jq -r '
-          [ .system.required | to_entries[] | .value.nix // empty ] +
-          [ .system.optional | to_entries[] | .value.nix // empty ]
-          | map("nixpkgs#" + .) | join(" ")
-        ' "$DEPS")
-        echo "nix_packages=$nix_pkgs" >> "$GITHUB_OUTPUT"
+        echo "nix_channel=$(jq -r '.gha.nix_channel' "$GITHUB_WORKSPACE/deps.json")" >> "$GITHUB_OUTPUT"
 
     - name: Install Nix
       uses: cachix/install-nix-action@v30
       with:
         nix_path: nixpkgs=channel:${{ steps.deps.outputs.nix_channel }}
 
-    - name: Install nix packages to PATH
+    - name: Install dependencies via build.sh
       shell: bash
-      run: |
-        for pkg in ${{ steps.deps.outputs.nix_packages }}; do
-          pkg_path=$(nix build --no-link --print-out-paths "$pkg")
-          echo "$pkg_path/bin" >> "$GITHUB_PATH"
-        done
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ steps.deps.outputs.node_version }}
-
-    - name: Install engine node modules
-      shell: bash
-      run: |
-        ENGINE_DIR="$GITHUB_WORKSPACE/a_solutions/mcp-api-c3/src"
-        if [ -f "$ENGINE_DIR/package.json" ]; then
-          cd "$ENGINE_DIR" && npm ci --silent --yes 2>/dev/null || npm ci --silent
-        fi
+      run: ./build.sh deps
 
     - name: Setup SSH
       if: inputs.ssh_key != ''
