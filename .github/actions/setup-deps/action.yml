@@ -37,6 +37,18 @@ runs:
       shell: bash
       run: ./build.sh deps
 
+    - name: Persist nix paths for subsequent GHA steps
+      shell: bash
+      run: |
+        DEPS="$GITHUB_WORKSPACE/deps.json"
+        for pkg in $(jq -r '
+          [ .system.required | to_entries[] | .value.nix // empty ] +
+          [ .system.optional | to_entries[] | .value.nix // empty ]
+          | .[]' "$DEPS"); do
+          pkg_path=$(nix build --no-link --print-out-paths "nixpkgs#$pkg" 2>/dev/null) || continue
+          echo "$pkg_path/bin" >> "$GITHUB_PATH"
+        done
+
     - name: Setup SSH
       if: inputs.ssh_key != ''
       shell: bash

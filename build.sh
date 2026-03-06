@@ -66,8 +66,6 @@ nix_install() {
             for pkg in $*; do
                 pkg_path=$(nix build --no-link --print-out-paths "$pkg" 2>/dev/null) || continue
                 export PATH="$pkg_path/bin:$PATH"
-                # Persist across GHA steps
-                [ -n "${GITHUB_PATH:-}" ] && echo "$pkg_path/bin" >> "$GITHUB_PATH"
             done
             ;;
     esac
