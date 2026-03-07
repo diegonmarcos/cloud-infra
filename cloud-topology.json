@@ -581,43 +581,194 @@
       ]
     }
   ],
+  "os_firewalls": [
+    {
+      "vm": "gcp-proxy",
+      "rules": [
+        {
+          "port": 80,
+          "proto": "tcp",
+          "desc": "HTTP (Caddy)"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (Caddy)"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "QUIC (Caddy)"
+        },
+        {
+          "port": 5050,
+          "proto": "tcp",
+          "desc": "alerts-api"
+        },
+        {
+          "port": 5514,
+          "proto": "tcp",
+          "desc": "sauron-central syslog"
+        }
+      ]
+    },
+    {
+      "vm": "gcp-t4",
+      "rules": []
+    },
+    {
+      "vm": "oci-analytics",
+      "rules": []
+    },
+    {
+      "vm": "oci-apps",
+      "rules": [
+        {
+          "port": 3010,
+          "proto": "tcp",
+          "desc": "AFFiNE"
+        },
+        {
+          "port": 8081,
+          "proto": "tcp",
+          "desc": "C3 API"
+        },
+        {
+          "port": 8080,
+          "proto": "tcp",
+          "desc": "Rust API"
+        },
+        {
+          "port": 3000,
+          "proto": "tcp",
+          "desc": "Crawlee/Gitea/Backup"
+        },
+        {
+          "port": 3001,
+          "proto": "tcp",
+          "desc": "Crawlee API"
+        },
+        {
+          "port": 2222,
+          "proto": "tcp",
+          "desc": "Gitea SSH"
+        },
+        {
+          "port": 2223,
+          "proto": "tcp",
+          "desc": "Backup BUP SSH"
+        },
+        {
+          "port": 2224,
+          "proto": "tcp",
+          "desc": "Backup Borg SSH"
+        },
+        {
+          "port": 5432,
+          "proto": "tcp",
+          "desc": "Photos webhook DB"
+        },
+        {
+          "port": 8099,
+          "proto": "tcp",
+          "desc": "cloud-spec httpd"
+        }
+      ]
+    },
+    {
+      "vm": "oci-apps-2",
+      "rules": []
+    },
+    {
+      "vm": "oci-mail",
+      "rules": [
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP inbound"
+        },
+        {
+          "port": 465,
+          "proto": "tcp",
+          "desc": "SMTPS"
+        },
+        {
+          "port": 587,
+          "proto": "tcp",
+          "desc": "SMTP submission"
+        },
+        {
+          "port": 993,
+          "proto": "tcp",
+          "desc": "IMAPS"
+        },
+        {
+          "port": 8080,
+          "proto": "tcp",
+          "desc": "SMTP proxy"
+        },
+        {
+          "port": 22000,
+          "proto": "tcp",
+          "desc": "Syncthing transfer"
+        },
+        {
+          "port": 21027,
+          "proto": "udp",
+          "desc": "Syncthing discovery"
+        }
+      ]
+    }
+  ],
   "wireguard": {
     "peers": [
       {
-        "name": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "endpoint": "130.110.251.193:51820",
-        "role": "spoke"
-      },
-      {
-        "name": "oci-analytics",
-        "wg_ip": "10.0.0.4",
-        "endpoint": "129.151.228.66:51820",
-        "role": "spoke"
+        "name": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
+        "endpoint": "35.226.147.64:51820",
+        "role": "hub",
+        "port": 51820
       },
       {
         "name": "oci-apps",
         "wg_ip": "10.0.0.6",
         "endpoint": "82.70.229.129:51820",
-        "role": "spoke"
+        "role": "spoke",
+        "port": 51820
       },
       {
         "name": "oci-apps-2",
         "wg_ip": "10.0.0.7",
         "endpoint": "79.72.28.10:51820",
-        "role": "spoke"
+        "role": "spoke",
+        "port": 51820
+      },
+      {
+        "name": "oci-mail",
+        "wg_ip": "10.0.0.3",
+        "endpoint": "130.110.251.193:51820",
+        "role": "spoke",
+        "port": 51820
+      },
+      {
+        "name": "oci-analytics",
+        "wg_ip": "10.0.0.4",
+        "endpoint": "129.151.228.66:51820",
+        "role": "spoke",
+        "port": 51820
       },
       {
         "name": "gcp-t4",
         "wg_ip": "10.0.0.8",
-        "endpoint": "34.173.227.250:51820",
-        "role": "spoke"
+        "endpoint": "34.57.36.41:51820",
+        "role": "spoke",
+        "port": 51820
       },
       {
-        "name": "gcp-proxy",
-        "wg_ip": "35.226.147.64",
-        "endpoint": "35.226.147.64:51820",
-        "role": "hub"
+        "name": "mobile",
+        "wg_ip": "10.0.0.5",
+        "endpoint": "dynamic",
+        "role": "client"
       }
     ]
   },

@@ -3,6 +3,12 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-t4"; })
+    (import ./modules/firewall.nix {
+      vmName = "gcp-t4";
+      publicPorts = [
+        # No public ports — ollama binds to 10.0.0.8 (WireGuard only)
+      ];
+    })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })

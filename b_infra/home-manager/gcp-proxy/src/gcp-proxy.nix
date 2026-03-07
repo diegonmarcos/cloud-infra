@@ -3,6 +3,16 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-proxy"; })
+    (import ./modules/firewall.nix {
+      vmName = "gcp-proxy";
+      publicPorts = [
+        { port = 80;   proto = "tcp"; desc = "HTTP (Caddy)"; }
+        { port = 443;  proto = "tcp"; desc = "HTTPS (Caddy)"; }
+        { port = 443;  proto = "udp"; desc = "QUIC (Caddy)"; }
+        { port = 5050; proto = "tcp"; desc = "alerts-api"; }
+        { port = 5514; proto = "tcp"; desc = "sauron-central syslog"; }
+      ];
+    })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix

@@ -3,6 +3,12 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-analytics"; })
+    (import ./modules/firewall.nix {
+      vmName = "oci-analytics";
+      publicPorts = [
+        # No public ports — all services bind to 10.0.0.4 (WireGuard) or 127.0.0.1
+      ];
+    })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix

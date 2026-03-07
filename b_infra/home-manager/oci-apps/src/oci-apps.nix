@@ -3,6 +3,21 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps"; })
+    (import ./modules/firewall.nix {
+      vmName = "oci-apps";
+      publicPorts = [
+        { port = 3010; proto = "tcp"; desc = "AFFiNE"; }
+        { port = 8081; proto = "tcp"; desc = "C3 API"; }
+        { port = 8080; proto = "tcp"; desc = "Rust API"; }
+        { port = 3000; proto = "tcp"; desc = "Crawlee/Gitea/Backup"; }
+        { port = 3001; proto = "tcp"; desc = "Crawlee API"; }
+        { port = 2222; proto = "tcp"; desc = "Gitea SSH"; }
+        { port = 2223; proto = "tcp"; desc = "Backup BUP SSH"; }
+        { port = 2224; proto = "tcp"; desc = "Backup Borg SSH"; }
+        { port = 5432; proto = "tcp"; desc = "Photos webhook DB"; }
+        { port = 8099; proto = "tcp"; desc = "cloud-spec httpd"; }
+      ];
+    })
     (import ./httpd.nix {
       sites = {
         cloud-spec = { root = "/opt/containers/cloud-spec"; port = 8099; };
