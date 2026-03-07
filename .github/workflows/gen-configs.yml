@@ -3,6 +3,13 @@ name: "Regenerate topology + configs"
 on:
   push:
     branches: [main]
+    paths:
+      - 'a_solutions/*/build.json'
+      - 'a_solutions/*/src/compose.yml'
+      - 'a_solutions/*/dist/compose.yml'
+      - 'a_solutions/mcp-api-c3/src/engines/**'
+      - 'b_infra/vps_*/src/main.tf'
+      - 'b_infra/home-manager/**'
   workflow_dispatch:
 
 permissions:
@@ -25,14 +32,16 @@ jobs:
           GIT_BASE: ${{ github.workspace }}/../
         run: bash build.sh config
 
-      - name: Commit updated files
+      - name: Commit and push updated files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add cloud-topology.json cloud-topology.md cloud-configs.json cloud-configs.md
           if git diff --cached --quiet; then
             echo "No changes to commit"
-          else
-            git commit -m "auto: regenerate topology + configs [skip ci]"
-            git push
+            exit 0
           fi
+          git commit -m "auto: regenerate topology + configs [skip ci]"
+          # Pull-rebase in case another workflow pushed while we were generating
+          git pull --rebase origin main
+          git push
