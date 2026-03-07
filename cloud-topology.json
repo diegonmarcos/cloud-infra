@@ -42,7 +42,13 @@
         "mailu_default",
         "matomo_default",
         "sauron_security"
-      ]
+      ],
+      "specs": {
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 47,
+        "shape": "VM.Standard.E2.1.Micro"
+      }
     },
     "oci-E2-f_1": {
       "ip": "129.151.228.66",
@@ -66,7 +72,13 @@
       ],
       "networks": [
         "windmill-net"
-      ]
+      ],
+      "specs": {
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 50,
+        "shape": "VM.Standard.E2.1.Micro"
+      }
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -169,7 +181,13 @@
         "proxy",
         "gitea_backup_network",
         "kg-net"
-      ]
+      ],
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 24,
+        "disk_gb": 100,
+        "shape": "VM.Standard.A1.Flex"
+      }
     },
     "oci-A1-p_0": {
       "ip": "79.72.28.10",
@@ -205,7 +223,15 @@
       "ports": [
         "10.0.0.8:11434:11434"
       ],
-      "networks": []
+      "networks": [],
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 15,
+        "disk_gb": 50,
+        "machine_type": "n1-standard-4",
+        "gpu": "NVIDIA T4",
+        "gpu_vram": "16GB"
+      }
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -270,7 +296,13 @@
         "auth-net",
         "security",
         "dev_network"
-      ]
+      ],
+      "specs": {
+        "cpu": 2,
+        "ram_gb": 1,
+        "disk_gb": 32,
+        "machine_type": "e2-micro"
+      }
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -302,7 +334,8 @@
         "oci-A1-f_0",
         "oci-A1-p_0"
       ],
-      "description": "OCI VMs with VCN, security lists, budget, and Terraform automation"
+      "description": "OCI VMs with VCN, security lists, budget, and Terraform automation",
+      "has_terraform": true
     },
     "gcloud": {
       "provider": "Google Cloud",
@@ -313,7 +346,8 @@
         "gcp-E2-f_0",
         "gcp-T4-p_0"
       ],
-      "description": "GCP instances - free micro + spot T4 GPU for LLM workloads"
+      "description": "GCP instances - free micro + spot T4 GPU for LLM workloads",
+      "has_terraform": true
     },
     "aws": {
       "provider": "Amazon Web Services",
@@ -321,7 +355,8 @@
       "infrastructure_type": "Terraform",
       "folder": "b_infra/vps_aws",
       "instances": [],
-      "description": "AWS infrastructure code (not currently active)"
+      "description": "AWS infrastructure code (not currently active)",
+      "has_terraform": true
     },
     "vast-ai": {
       "provider": "Vast.ai",
@@ -331,9 +366,30 @@
       "instances": [
         "vast-RTX-p_0"
       ],
-      "description": "On-demand GPU rental for LLM fallback when GCP spot is unavailable"
+      "description": "On-demand GPU rental for LLM fallback when GCP spot is unavailable",
+      "has_terraform": false
+    },
+    "hetzner": {
+      "has_terraform": true,
+      "folder": "b_infra/vps_hetzner"
+    },
+    "oracle": {
+      "has_terraform": false,
+      "folder": "b_infra/vps_oracle"
     }
   },
+  "storage": [
+    {
+      "provider": "oci",
+      "name": "archlinux-images",
+      "tier": "Standard"
+    },
+    {
+      "provider": "oci",
+      "name": "my-photos",
+      "tier": "Standard"
+    }
+  ],
   "wireguard": {
     "peers": [
       {
