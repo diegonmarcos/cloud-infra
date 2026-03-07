@@ -3,6 +3,18 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-mail"; })
+    (import ./modules/firewall.nix {
+      vmName = "oci-mail";
+      publicPorts = [
+        { port = 25;    proto = "tcp"; desc = "SMTP inbound"; }
+        { port = 465;   proto = "tcp"; desc = "SMTPS"; }
+        { port = 587;   proto = "tcp"; desc = "SMTP submission"; }
+        { port = 993;   proto = "tcp"; desc = "IMAPS"; }
+        { port = 8080;  proto = "tcp"; desc = "SMTP proxy"; }
+        { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
+        { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
+      ];
+    })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     ./modules/authorized-keys.nix

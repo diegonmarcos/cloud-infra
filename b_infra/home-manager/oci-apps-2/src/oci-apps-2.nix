@@ -3,6 +3,12 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps-2"; })
+    (import ./modules/firewall.nix {
+      vmName = "oci-apps-2";
+      publicPorts = [
+        # No public ports yet — new VM
+      ];
+    })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "oci-apps-2"; idleTimeoutHours = 1; })
     ./modules/sshd-hardening.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 32768; })
