@@ -148,6 +148,8 @@
 | Google Cloud | Free + Paid (Spot) | Terraform | gcp-E2-f_0, gcp-T4-p_0 |
 | Amazon Web Services | Exploration | Terraform |  |
 | Vast.ai | On-demand rental | Manual rental | vast-RTX-p_0 |
+|  |  | — | — |
+|  |  | — | — |
 
 ## WireGuard Mesh
 

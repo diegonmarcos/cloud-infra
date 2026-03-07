@@ -9,7 +9,6 @@ terraform {
 
 provider "oci" {
   region = var.region
-  # Auth via ~/.oci/config or environment variables
 }
 
 variable "region" {
@@ -34,6 +33,12 @@ variable "gcp_proxy_ip" {
   default     = "35.226.147.64"
 }
 
+variable "os_namespace" {
+  description = "OCI Object Storage namespace"
+  type        = string
+  default     = "axpmn3qtq4ig"
+}
+
 # =============================================================================
 # VCN (Virtual Cloud Network)
 # =============================================================================
@@ -41,49 +46,59 @@ variable "gcp_proxy_ip" {
 resource "oci_core_vcn" "main" {
   compartment_id = var.compartment_ocid
   cidr_blocks    = ["10.0.0.0/16"]
-  display_name   = "main-vcn"
-  dns_label      = "mainvcn"
+  display_name   = "web-server-vcn"
+  # dns_label not set (null in OCI)
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [defined_tags]
+  }
 }
 
 resource "oci_core_internet_gateway" "main" {
   compartment_id = var.compartment_ocid
   vcn_id         = oci_core_vcn.main.id
-  display_name   = "main-igw"
+  display_name   = "web-server-igw"
   enabled        = true
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
-resource "oci_core_route_table" "main" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "main-rt"
+# Default Route Table (auto-created with VCN)
+resource "oci_core_default_route_table" "main" {
+  manage_default_resource_id = oci_core_vcn.main.default_route_table_id
 
   route_rules {
     destination       = "0.0.0.0/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.main.id
   }
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 # =============================================================================
-# Security List - Mail Server (oci-E2-f_0 / oci-mail)
+# Default Security List (shared by all VMs via single subnet)
+# Exact rule order as returned by OCI API
 # =============================================================================
 
-resource "oci_core_security_list" "mail_server" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "mail-server-security-list"
+resource "oci_core_default_security_list" "main" {
+  manage_default_resource_id = oci_core_vcn.main.default_security_list_id
 
-  # Egress - Allow all outbound
   egress_security_rules {
     destination = "0.0.0.0/0"
     protocol    = "all"
     stateless   = false
   }
 
-  # SSH
+  # 1. SSH (22)
   ingress_security_rules {
     source    = "0.0.0.0/0"
-    protocol  = "6"  # TCP
+    protocol  = "6"
     stateless = false
     tcp_options {
       min = 22
@@ -91,136 +106,21 @@ resource "oci_core_security_list" "mail_server" {
     }
   }
 
-  # SMTP (25)
+  # 2. SMTP (25)
   ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "SMTP Inbound"
     tcp_options {
       min = 25
       max = 25
     }
   }
 
-  # SMTP Implicit TLS (465)
+  # 3. HTTP (80)
   ingress_security_rules {
     source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 465
-      max = 465
-    }
-  }
-
-  # SMTP Submission (587)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 587
-      max = 587
-    }
-  }
-
-  # IMAPS (993)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 993
-      max = 993
-    }
-  }
-
-  # HTTPS (443) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 443
-      max = 443
-    }
-  }
-
-  # HTTP (8080) - SMTP proxy for Cloudflare Worker email delivery
-  # Cloudflare Workers use Cloudflare IPs (not GCP), must allow 0.0.0.0/0
-  # Protected by API key (X-API-Key: stalwart-proxy-key-2025)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8080
-      max = 8080
-    }
-  }
-
-  # WireGuard (51820)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"  # UDP
-    stateless = false
-    udp_options {
-      min = 51820
-      max = 51820
-    }
-  }
-
-  # ICMP
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-      code = 4
-    }
-  }
-
-  ingress_security_rules {
-    source    = "10.0.0.0/16"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-    }
-  }
-}
-
-# =============================================================================
-# Security List - Analytics Server (oci-E2-f_1 / oci-analytics)
-# =============================================================================
-
-resource "oci_core_security_list" "analytics_server" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "analytics-server-security-list"
-
-  # Egress - Allow all outbound
-  egress_security_rules {
-    destination = "0.0.0.0/0"
-    protocol    = "all"
-    stateless   = false
-  }
-
-  # SSH
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
-
-  # HTTP (80) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
     protocol  = "6"
     stateless = false
     tcp_options {
@@ -229,9 +129,9 @@ resource "oci_core_security_list" "analytics_server" {
     }
   }
 
-  # HTTPS (443) - from GCP proxy
+  # 4. HTTPS (443)
   ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
+    source    = "0.0.0.0/0"
     protocol  = "6"
     stateless = false
     tcp_options {
@@ -240,9 +140,9 @@ resource "oci_core_security_list" "analytics_server" {
     }
   }
 
-  # Matomo (8080) - from GCP proxy
+  # 5. HTTP alt (8080)
   ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
+    source    = "0.0.0.0/0"
     protocol  = "6"
     stateless = false
     tcp_options {
@@ -251,91 +151,147 @@ resource "oci_core_security_list" "analytics_server" {
     }
   }
 
-  # WireGuard (51820)
+  # 6. Matomo Analytics (8081)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "Matomo Analytics"
+    tcp_options {
+      min = 8081
+      max = 8081
+    }
+  }
+
+  # 7. HTTP alt (81)
   ingress_security_rules {
     source    = "0.0.0.0/0"
-    protocol  = "17"
+    protocol  = "6"
     stateless = false
+    tcp_options {
+      min = 81
+      max = 81
+    }
+  }
+
+  # 8. n8n (5678)
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 5678
+      max = 5678
+    }
+  }
+
+  # 9. Syncthing (8384)
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 8384
+      max = 8384
+    }
+  }
+
+  # 10. Syncthing TCP (22000)
+  ingress_security_rules {
+    source    = "0.0.0.0/0"
+    protocol  = "6"
+    stateless = false
+    tcp_options {
+      min = 22000
+      max = 22000
+    }
+  }
+
+  # 11. Flask API (5000)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "Flask API"
+    tcp_options {
+      min = 5000
+      max = 5000
+    }
+  }
+
+  # 12. Snappymail Webmail (8888)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "Snappymail Webmail"
+    tcp_options {
+      min = 8888
+      max = 8888
+    }
+  }
+
+  # 13. SMTP STARTTLS (587)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "SMTP STARTTLS"
+    tcp_options {
+      min = 587
+      max = 587
+    }
+  }
+
+  # 14. IMAPS (993)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "IMAPS"
+    tcp_options {
+      min = 993
+      max = 993
+    }
+  }
+
+  # 15. SMTPS (465)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "SMTPS"
+    tcp_options {
+      min = 465
+      max = 465
+    }
+  }
+
+  # 16. SMTP Proxy for Cloudflare Worker (8088)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "SMTP Proxy for Cloudflare Worker"
+    tcp_options {
+      min = 8088
+      max = 8088
+    }
+  }
+
+  # 17. WireGuard VPN (51820/UDP)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "17"
+    stateless   = false
+    description = "WireGuard VPN"
     udp_options {
       min = 51820
       max = 51820
     }
   }
 
-  # ICMP
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-      code = 4
-    }
-  }
-}
-
-# =============================================================================
-# Security List - Apps Server (oci-A1-f_0 / oci-apps)
-# Consolidated: all services from former oci-apps + oci-apps-1
-# =============================================================================
-
-resource "oci_core_security_list" "apps_server" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "apps-server-security-list"
-
-  # Egress - Allow all outbound
-  egress_security_rules {
-    destination = "0.0.0.0/0"
-    protocol    = "all"
-    stateless   = false
-  }
-
-  # SSH
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 22
-      max = 22
-    }
-  }
-
-  # Rust API (8080) - from GCP proxy
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8080
-      max = 8080
-    }
-  }
-
-  # HTTPS (443) - from GCP proxy (migrated from oci-apps-1)
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 443
-      max = 443
-    }
-  }
-
-  # PhotoPrism (2342) - from GCP proxy (migrated from oci-apps-1)
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 2342
-      max = 2342
-    }
-  }
-
-  # Radicale (5232) - from GCP proxy (migrated from oci-apps-1)
+  # 18. Radicale (5232) — from GCP proxy
   ingress_security_rules {
     source    = "${var.gcp_proxy_ip}/32"
     protocol  = "6"
@@ -346,196 +302,262 @@ resource "oci_core_security_list" "apps_server" {
     }
   }
 
-  # Code Server (8443) - from GCP proxy (migrated from oci-apps-1)
+  # 19. AFFiNE (3010) — from GCP proxy
   ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8443
-      max = 8443
-    }
-  }
-
-  # NocoDB (8085) - from GCP proxy (migrated from oci-apps-1)
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 8085
-      max = 8085
-    }
-  }
-
-  # AFFiNE (3010) - from GCP proxy (migrated from oci-apps-1)
-  ingress_security_rules {
-    source    = "${var.gcp_proxy_ip}/32"
-    protocol  = "6"
-    stateless = false
+    source      = "${var.gcp_proxy_ip}/32"
+    protocol    = "6"
+    stateless   = false
+    description = "AFFiNE from NPM"
     tcp_options {
       min = 3010
       max = 3010
     }
   }
 
-  # Syncthing (22000) - direct access (migrated from oci-apps-1)
+  # 20. Code Server (8443) — from GCP proxy
   ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
-    tcp_options {
-      min = 22000
-      max = 22000
-    }
-  }
-
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"  # UDP
-    stateless = false
-    udp_options {
-      min = 22000
-      max = 22000
-    }
-  }
-
-  # Syncthing Discovery (21027) - migrated from oci-apps-1
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"
-    stateless = false
-    udp_options {
-      min = 21027
-      max = 21027
-    }
-  }
-
-  # WireGuard (51820)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"
-    stateless = false
-    udp_options {
-      min = 51820
-      max = 51820
-    }
-  }
-
-  # ICMP
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-      code = 4
-    }
-  }
-}
-
-# =============================================================================
-# Security List - Dev Server (oci-A1-f_1 / oci-apps-1) — DECOMMISSIONED
-# Rules merged into apps_server. Kept for terraform state until instance deleted.
-# =============================================================================
-
-resource "oci_core_security_list" "dev_server" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "dev-server-security-list-DECOMMISSIONED"
-
-  egress_security_rules {
-    destination = "0.0.0.0/0"
-    protocol    = "all"
+    source      = "${var.gcp_proxy_ip}/32"
+    protocol    = "6"
     stateless   = false
-  }
-
-  # Minimal: SSH only (for decommission access)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
+    description = "Code-Server from NPM"
     tcp_options {
-      min = 22
-      max = 22
+      min = 8443
+      max = 8443
     }
   }
 
-  # ICMP
+  # 21. NocoDB (8085) — from GCP proxy
   ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-      code = 4
-    }
-  }
-}
-
-# =============================================================================
-# Security List - Flex Server 2 (oci-A1-p_0 / oci-apps-2)
-# =============================================================================
-
-resource "oci_core_security_list" "flex2_server" {
-  compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.main.id
-  display_name   = "flex2-server-security-list"
-
-  # Egress - Allow all outbound
-  egress_security_rules {
-    destination = "0.0.0.0/0"
-    protocol    = "all"
+    source      = "${var.gcp_proxy_ip}/32"
+    protocol    = "6"
     stateless   = false
-  }
-
-  # SSH
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "6"
-    stateless = false
+    description = "NocoDB from NPM"
     tcp_options {
-      min = 22
-      max = 22
+      min = 8085
+      max = 8085
     }
   }
 
-  # WireGuard (51820)
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "17"
-    stateless = false
-    udp_options {
-      min = 51820
-      max = 51820
-    }
-  }
-
-  # ICMP
-  ingress_security_rules {
-    source    = "0.0.0.0/0"
-    protocol  = "1"
-    stateless = false
-    icmp_options {
-      type = 3
-      code = 4
-    }
+  lifecycle {
+    ignore_changes = [defined_tags]
   }
 }
 
 # =============================================================================
-# OCI Email Delivery - Approved Senders
-# Already created manually via OCI Console - no terraform management needed
+# Subnet (shared by all VMs)
+# =============================================================================
+
+resource "oci_core_subnet" "main" {
+  compartment_id             = var.compartment_ocid
+  vcn_id                     = oci_core_vcn.main.id
+  cidr_block                 = "10.0.1.0/24"
+  display_name               = "web-server-subnet"
+  prohibit_public_ip_on_vnic = false
+  prohibit_internet_ingress  = false
+  # dns_label not set (null in OCI)
+
+  route_table_id    = oci_core_vcn.main.default_route_table_id
+  security_list_ids = [oci_core_vcn.main.default_security_list_id]
+  dhcp_options_id   = oci_core_vcn.main.default_dhcp_options_id
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [defined_tags]
+  }
+}
+
+# =============================================================================
+# Compute Instances
+# =============================================================================
+
+# oci-E2-f_0 / oci-mail — Mail Server
+# Shape: VM.Standard.E2.1.Micro | 1 OCPU | 1 GB RAM | 47 GB boot
+resource "oci_core_instance" "mail_server" {
+  availability_domain = "bRpM:EU-MARSEILLE-1-AD-1"
+  compartment_id      = var.compartment_ocid
+  display_name        = "oci-E2-f_0"
+  shape               = "VM.Standard.E2.1.Micro"
+  fault_domain        = "FAULT-DOMAIN-2"
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.main.id
+    display_name     = "web-server"
+    assign_public_ip = true
+  }
+
+  source_details {
+    source_type             = "image"
+    source_id               = "ocid1.image.oc1.eu-marseille-1.aaaaaaaaroyr7dd2stfnhbjmqrqrbvhoa77i6o3eap6er6cd5rxjzxgu73oq"
+    boot_volume_size_in_gbs = 47
+  }
+
+  metadata = {}
+
+  agent_config {
+    are_all_plugins_disabled = false
+    is_management_disabled   = false
+    is_monitoring_disabled   = false
+  }
+
+  instance_options {
+    are_legacy_imds_endpoints_disabled = false
+  }
+
+  availability_config {
+    recovery_action = "RESTORE_INSTANCE"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [source_details, metadata, create_vnic_details, defined_tags, freeform_tags]
+  }
+}
+
+# oci-E2-f_1 / oci-analytics — Analytics + Workflows
+# Shape: VM.Standard.E2.1.Micro | 1 OCPU | 1 GB RAM | 50 GB boot
+resource "oci_core_instance" "analytics_server" {
+  availability_domain = "bRpM:EU-MARSEILLE-1-AD-1"
+  compartment_id      = var.compartment_ocid
+  display_name        = "oci-E2-f_1"
+  shape               = "VM.Standard.E2.1.Micro"
+  fault_domain        = "FAULT-DOMAIN-1"
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.main.id
+    display_name     = "services-server"
+    assign_public_ip = true
+  }
+
+  source_details {
+    source_type             = "image"
+    source_id               = "ocid1.image.oc1.eu-marseille-1.aaaaaaaaroyr7dd2stfnhbjmqrqrbvhoa77i6o3eap6er6cd5rxjzxgu73oq"
+    boot_volume_size_in_gbs = 50
+  }
+
+  metadata = {}
+
+  agent_config {
+    are_all_plugins_disabled = false
+    is_management_disabled   = false
+    is_monitoring_disabled   = false
+  }
+
+  instance_options {
+    are_legacy_imds_endpoints_disabled = false
+  }
+
+  availability_config {
+    recovery_action = "RESTORE_INSTANCE"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [source_details, metadata, create_vnic_details, defined_tags, freeform_tags]
+  }
+}
+
+# oci-A1-f_0 / oci-apps — Consolidated Apps Server
+# Shape: VM.Standard.A1.Flex | 4 OCPUs | 24 GB RAM | 100 GB boot
+resource "oci_core_instance" "apps_server" {
+  availability_domain = "bRpM:EU-MARSEILLE-1-AD-1"
+  compartment_id      = var.compartment_ocid
+  display_name        = "oci-A1-f_0"
+  shape               = "VM.Standard.A1.Flex"
+  fault_domain        = "FAULT-DOMAIN-2"
+
+  shape_config {
+    ocpus         = 4
+    memory_in_gbs = 24
+  }
+
+  create_vnic_details {
+    subnet_id        = oci_core_subnet.main.id
+    display_name     = "arm-server-1"
+    assign_public_ip = true
+  }
+
+  source_details {
+    source_type             = "image"
+    source_id               = "ocid1.image.oc1.eu-marseille-1.aaaaaaaar3pm2xlih5tqkjwr7ykfgzixjytjivkacgmqrlxi66vzlf5a2wlq"
+    boot_volume_size_in_gbs = 100
+  }
+
+  metadata = {}
+
+  agent_config {
+    are_all_plugins_disabled = false
+    is_management_disabled   = false
+    is_monitoring_disabled   = false
+  }
+
+  instance_options {
+    are_legacy_imds_endpoints_disabled = false
+  }
+
+  availability_config {
+    recovery_action = "RESTORE_INSTANCE"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [source_details, metadata, create_vnic_details, defined_tags, freeform_tags]
+  }
+}
+
+# =============================================================================
+# Object Storage
+# =============================================================================
+
+resource "oci_objectstorage_bucket" "archlinux_images" {
+  compartment_id        = var.compartment_ocid
+  namespace             = var.os_namespace
+  name                  = "archlinux-images"
+  access_type           = "NoPublicAccess"
+  storage_tier          = "Standard"
+  versioning            = "Disabled"
+  object_events_enabled = false
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [defined_tags]
+  }
+}
+
+resource "oci_objectstorage_bucket" "my_photos" {
+  compartment_id        = var.compartment_ocid
+  namespace             = var.os_namespace
+  name                  = "my-photos"
+  access_type           = "NoPublicAccess"
+  storage_tier          = "Standard"
+  versioning            = "Disabled"
+  object_events_enabled = false
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [defined_tags]
+  }
+}
+
+# =============================================================================
+# OCI Email Delivery
 # =============================================================================
 
 resource "oci_email_sender" "me" {
   compartment_id = var.compartment_ocid
   email_address  = "me@diegonmarcos.com"
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 resource "oci_email_sender" "no_reply" {
   compartment_id = var.compartment_ocid
   email_address  = "no-reply@diegonmarcos.com"
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 # =============================================================================
@@ -549,86 +571,93 @@ resource "oci_budget_budget" "tenancy_budget" {
   display_name   = "OCI-Free-Tier-30EUR"
   description    = "Alert if OCI spend exceeds free tier expectations"
   target_type    = "COMPARTMENT"
+  targets        = [var.tenancy_ocid]
 
-  targets = [var.tenancy_ocid]
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 resource "oci_budget_alert_rule" "half_budget" {
-  budget_id    = oci_budget_budget.tenancy_budget.id
-  display_name = "50pct-spend-alert"
-  type         = "ACTUAL"
+  budget_id      = oci_budget_budget.tenancy_budget.id
+  display_name   = "50pct-spend-alert"
+  type           = "ACTUAL"
   threshold      = 50
   threshold_type = "PERCENTAGE"
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 resource "oci_budget_alert_rule" "ninety_budget" {
-  budget_id    = oci_budget_budget.tenancy_budget.id
-  display_name = "90pct-spend-alert"
-  type         = "ACTUAL"
+  budget_id      = oci_budget_budget.tenancy_budget.id
+  display_name   = "90pct-spend-alert"
+  type           = "ACTUAL"
   threshold      = 90
   threshold_type = "PERCENTAGE"
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 resource "oci_budget_alert_rule" "full_budget" {
-  budget_id    = oci_budget_budget.tenancy_budget.id
-  display_name = "100pct-spend-alert"
-  type         = "ACTUAL"
+  budget_id      = oci_budget_budget.tenancy_budget.id
+  display_name   = "100pct-spend-alert"
+  type           = "ACTUAL"
   threshold      = 100
   threshold_type = "PERCENTAGE"
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
-
-# =============================================================================
-# IAM Group & Policies
-# User is already member of Administrators group with full permissions
-# =============================================================================
-
-# NOTE: diegonmarcos@gmail.com is already in Administrators group
-# NOTE: Administrators group already has full-access policy
-# No terraform management needed for IAM
 
 # =============================================================================
 # Outputs
 # =============================================================================
 
 output "vcn_id" {
-  value       = oci_core_vcn.main.id
-  description = "VCN OCID"
+  value = oci_core_vcn.main.id
 }
 
-output "security_lists" {
-  value = {
-    mail_server      = oci_core_security_list.mail_server.id
-    analytics_server = oci_core_security_list.analytics_server.id
-    apps_server      = oci_core_security_list.apps_server.id
-    dev_server       = oci_core_security_list.dev_server.id  # DECOMMISSIONED — kept for state
-    flex2_server     = oci_core_security_list.flex2_server.id
-  }
-  description = "Security List OCIDs"
+output "subnet_id" {
+  value = oci_core_subnet.main.id
 }
 
-output "instance_info" {
+output "instances" {
   value = {
     "oci-E2-f_0" = {
-      ip   = "130.110.251.193"
-      ocid = "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
-      role = "Mail Server (oci-mail)"
+      id    = oci_core_instance.mail_server.id
+      shape = "VM.Standard.E2.1.Micro"
+      ocpus = 1
+      ram   = 1
+      disk  = 47
+      ip    = "130.110.251.193"
     }
     "oci-E2-f_1" = {
-      ip   = "129.151.228.66"
-      ocid = "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
-      role = "Analytics (oci-analytics)"
+      id    = oci_core_instance.analytics_server.id
+      shape = "VM.Standard.E2.1.Micro"
+      ocpus = 1
+      ram   = 1
+      disk  = 50
+      ip    = "129.151.228.66"
     }
     "oci-A1-f_0" = {
-      ip   = "82.70.229.129"
-      ocid = "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
-      role = "Consolidated Apps Server (oci-apps) — 4 OCPUs / 24GB / 100GB"
-    }
-    # oci-A1-f_1 DECOMMISSIONED — all services migrated to oci-A1-f_0
-    "oci-A1-p_0" = {
-      ip   = "79.72.28.10"
-      ocid = "FILL_FROM_OCI_CONSOLE"
-      role = "Flex Server 2 (oci-apps-2)"
+      id    = oci_core_instance.apps_server.id
+      shape = "VM.Standard.A1.Flex"
+      ocpus = 4
+      ram   = 24
+      disk  = 100
+      ip    = "82.70.229.129"
     }
   }
-  description = "Instance information"
+}
+
+output "buckets" {
+  value = {
+    "archlinux-images" = oci_objectstorage_bucket.archlinux_images.name
+    "my-photos"        = oci_objectstorage_bucket.my_photos.name
+  }
 }
