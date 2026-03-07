@@ -91,6 +91,12 @@ jobs:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Ship home-manager
+        id: ship
         if: steps.gate.outputs.skip != 'true'
-        continue-on-error: true
         run: bash b_infra/home-manager/${{ matrix.vm }}/build.sh ship
+
+      - name: Report failure
+        if: failure() && steps.ship.outcome == 'failure'
+        run: |
+          echo "::error::Home Manager deployment failed for ${{ matrix.vm }}"
+          echo "Check the 'Ship home-manager' step above for nix build errors"
