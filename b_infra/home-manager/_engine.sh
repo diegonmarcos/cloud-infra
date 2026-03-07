@@ -52,6 +52,8 @@ step_build() {
     mkdir -p "$DIST_DIR"
     cp -rL "$SRC_DIR/"* "$DIST_DIR/"
     chmod -R u+w "$DIST_DIR"
+    # Nix flakes ignore untracked files in git repos — stage dist/ so nix can see it
+    git add --force "$DIST_DIR" 2>/dev/null || true
     log "Built files:"
     find "$DIST_DIR" -type f | sed "s|$DIST_DIR/|  |"
 }
@@ -115,12 +117,22 @@ step_deploy() {
         # ── Local build: nix build on runner → nix copy closure to VM ──
         log "Building HM closure locally for $HM_CONFIG"
         cd "$DIST_DIR"
-        RESULT=$(nix build \
+        BUILD_LOG="$SERVICE_DIR/.build-log"
+        if nix build \
             --no-link --print-out-paths \
-            ".#homeConfigurations.\"$HM_CONFIG\".activationPackage" 2>&1 | tail -1)
+            ".#homeConfigurations.\"$HM_CONFIG\".activationPackage" \
+            > "$BUILD_LOG" 2>&1; then
+            RESULT=$(tail -1 "$BUILD_LOG")
+        else
+            log "ERROR: nix build failed"
+            cat "$BUILD_LOG"
+            rm -f "$BUILD_LOG"
+            return 1
+        fi
+        rm -f "$BUILD_LOG"
 
         if [ -z "$RESULT" ] || [ ! -d "$RESULT" ]; then
-            log "ERROR: nix build failed"
+            log "ERROR: nix build produced no output"
             return 1
         fi
         log "Closure built: $RESULT"
