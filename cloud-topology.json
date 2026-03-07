@@ -390,6 +390,197 @@
       "tier": "Standard"
     }
   ],
+  "firewalls": [
+    {
+      "provider": "gcloud",
+      "scope": "vps",
+      "rules": [
+        {
+          "port": 5000,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-flask-api"
+        },
+        {
+          "port": 993,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-mail-imaps"
+        },
+        {
+          "port": 25,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-mail-smtp"
+        },
+        {
+          "port": 587,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-mail-submission"
+        },
+        {
+          "port": 51820,
+          "protocol": "udp",
+          "source": "0.0.0.0/0",
+          "description": "allow-wireguard"
+        }
+      ]
+    },
+    {
+      "provider": "gcloud",
+      "scope": "http-server",
+      "rules": [
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-http",
+          "target_tags": [
+            "http-server"
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "gcloud",
+      "scope": "https-server",
+      "rules": [
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "allow-https",
+          "target_tags": [
+            "https-server"
+          ]
+        }
+      ]
+    },
+    {
+      "provider": "oci",
+      "scope": "vps",
+      "rules": [
+        {
+          "port": 22,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 25,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "SMTP Inbound"
+        },
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 443,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 8080,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 8081,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "Matomo Analytics"
+        },
+        {
+          "port": 81,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 5678,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 8384,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 22000,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0"
+        },
+        {
+          "port": 5000,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "Flask API"
+        },
+        {
+          "port": 8888,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "Snappymail Webmail"
+        },
+        {
+          "port": 587,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "SMTP STARTTLS"
+        },
+        {
+          "port": 993,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "IMAPS"
+        },
+        {
+          "port": 465,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "SMTPS"
+        },
+        {
+          "port": 8088,
+          "protocol": "tcp",
+          "source": "0.0.0.0/0",
+          "description": "SMTP Proxy for Cloudflare Worker"
+        },
+        {
+          "port": 51820,
+          "protocol": "udp",
+          "source": "0.0.0.0/0",
+          "description": "WireGuard VPN"
+        },
+        {
+          "port": 5232,
+          "protocol": "tcp",
+          "source": "${var.gcp_proxy_ip}/32"
+        },
+        {
+          "port": 3010,
+          "protocol": "tcp",
+          "source": "${var.gcp_proxy_ip}/32",
+          "description": "AFFiNE from NPM"
+        },
+        {
+          "port": 8443,
+          "protocol": "tcp",
+          "source": "${var.gcp_proxy_ip}/32",
+          "description": "Code-Server from NPM"
+        },
+        {
+          "port": 8085,
+          "protocol": "tcp",
+          "source": "${var.gcp_proxy_ip}/32",
+          "description": "NocoDB from NPM"
+        }
+      ]
+    }
+  ],
   "wireguard": {
     "peers": [
       {
