@@ -26,15 +26,15 @@
 | 14 | sauron-lite-gcp | tools | gcp-E2-f_0 | — | sauron |
 | 15 | vaultwarden | mic | gcp-E2-f_0 | vault.diegonmarcos.com | vaultwarden |
 | 16 | ollama | agi | gcp-T4-p_0 | — | ollama |
-| 17 | cloud-spec | tools | local | — | — |
-| 18 | cloudflare | cloud | local | — | — |
-| 19 | cloudflare-worker | cloud | local | — | — |
-| 20 | gcloud | cloud | local | — | — |
-| 21 | affine | app | oci-A1-f_0 | drive-notes-affine.diegonmarcos.com | hedgedoc_app, hedgedoc_postgres |
-| 22 | backup-borg | data | oci-A1-f_0 | — | borg-server |
-| 23 | backup-bup | data | oci-A1-f_0 | — | bup-server |
-| 24 | backup-gitea | data | oci-A1-f_0 | git.diegonmarcos.com | gitea |
-| 25 | c3-api | sec | oci-A1-f_0 | api.diegonmarcos.com/c3-api | c3-api |
+| 17 | cloudflare | cloud | local | — | — |
+| 18 | cloudflare-worker | cloud | local | — | — |
+| 19 | gcloud | cloud | local | — | — |
+| 20 | affine | app | oci-A1-f_0 | drive-notes-affine.diegonmarcos.com | hedgedoc_app, hedgedoc_postgres |
+| 21 | backup-borg | data | oci-A1-f_0 | — | borg-server |
+| 22 | backup-bup | data | oci-A1-f_0 | — | bup-server |
+| 23 | backup-gitea | data | oci-A1-f_0 | git.diegonmarcos.com | gitea |
+| 24 | c3-api | sec | oci-A1-f_0 | api.diegonmarcos.com/c3-api | c3-api |
+| 25 | cloud-spec | tools | oci-A1-f_0 | — | cloud-spec |
 | 26 | code-server | app | oci-A1-f_0 | ide.diegonmarcos.com | code-server |
 | 27 | crawlee-cloud | fin | oci-A1-f_0 | api.diegonmarcos.com/crawlee/ | crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler |
 | 28 | db-agent-flex | data | oci-A1-f_0 | — | db-agent |
@@ -266,18 +266,6 @@
 | Ports | 10.0.0.8:11434:11434 |
 | Networks | — |
 
-### cloud-spec
-
-| Key | Value |
-|-----|-------|
-| Category | tools |
-| VM | local |
-| Description | Unified Cloud Documentation Portal |
-| Domain | — |
-| Containers | — |
-| Ports | — |
-| Networks | — |
-
 ### cloudflare
 
 | Key | Value |
@@ -372,6 +360,18 @@
 | Domain | api.diegonmarcos.com/c3-api |
 | Containers | c3-api |
 | Ports | 8081:8080 |
+| Networks | — |
+
+### cloud-spec
+
+| Key | Value |
+|-----|-------|
+| Category | tools |
+| VM | oci-A1-f_0 |
+| Description | Unified Cloud Documentation Portal |
+| Domain | — |
+| Containers | cloud-spec |
+| Ports | 127.0.0.1:3080:3080 |
 | Networks | — |
 
 ### code-server

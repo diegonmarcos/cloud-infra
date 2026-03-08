@@ -130,7 +130,8 @@
         "surrealdb",
         "c3-api",
         "sauron",
-        "db-agent"
+        "db-agent",
+        "cloud-spec"
       ],
       "ports": [
         "3010:3000",
@@ -167,7 +168,8 @@
         "10.0.0.6:3017:3000",
         "10.0.0.6:2222:22",
         "127.0.0.1:8001:8000",
-        "8081:8080"
+        "8081:8080",
+        "127.0.0.1:3080:3080"
       ],
       "networks": [
         "dev_network",
@@ -1372,6 +1374,18 @@
         "npm_default"
       ]
     },
+    "cloud-spec": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "cloud-spec"
+      ],
+      "description": "Unified Cloud Documentation Portal",
+      "flake": "cloud-spec",
+      "ports": [
+        "127.0.0.1:3080:3080"
+      ]
+    },
     "dagu": {
       "category": "tools",
       "vm": "oci-E2-f_0",
@@ -1651,13 +1665,6 @@
       "networks": [
         "dev_network"
       ]
-    },
-    "cloud-spec": {
-      "category": "tools",
-      "vm": "local",
-      "containers": [],
-      "description": "Unified Cloud Documentation Portal",
-      "flake": "cloud-spec"
     },
     "c3-api": {
       "category": "sec",
