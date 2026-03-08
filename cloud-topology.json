@@ -722,6 +722,79 @@
       ]
     }
   ],
+  "os_firewall_global": {
+    "docker_iptables": false,
+    "forward_policy": "DROP",
+    "docker_subnet": "172.16.0.0/12",
+    "wg_subnet": "10.0.0.0/24",
+    "forward_rules": [
+      {
+        "chain": "FORWARD",
+        "action": "ACCEPT",
+        "source": "*",
+        "destination": "*",
+        "desc": "*→*"
+      },
+      {
+        "chain": "FORWARD",
+        "action": "ACCEPT",
+        "source": "*",
+        "destination": "*",
+        "desc": "*→*"
+      },
+      {
+        "chain": "FORWARD",
+        "action": "ACCEPT",
+        "source": "*",
+        "destination": "*",
+        "desc": "*→*"
+      },
+      {
+        "chain": "FORWARD",
+        "action": "ACCEPT",
+        "source": "*",
+        "destination": "*",
+        "desc": "iface:wg0"
+      },
+      {
+        "chain": "FORWARD",
+        "action": "ACCEPT",
+        "source": "*",
+        "destination": "*",
+        "desc": "oface:wg0"
+      }
+    ],
+    "nat_rules": [
+      {
+        "chain": "NAT",
+        "action": "MASQUERADE",
+        "source": "*",
+        "destination": "!*",
+        "desc": "MASQUERADE via *"
+      },
+      {
+        "chain": "NAT",
+        "action": "MASQUERADE",
+        "source": "*",
+        "destination": "!*",
+        "desc": "MASQUERADE via eth0"
+      },
+      {
+        "chain": "NAT",
+        "action": "MASQUERADE",
+        "source": "*",
+        "destination": "!*",
+        "desc": "MASQUERADE via ens4"
+      },
+      {
+        "chain": "NAT",
+        "action": "MASQUERADE",
+        "source": "*",
+        "destination": "!*",
+        "desc": "MASQUERADE via *"
+      }
+    ]
+  },
   "wireguard": {
     "peers": [
       {
