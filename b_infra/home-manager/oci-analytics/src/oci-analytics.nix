@@ -9,12 +9,8 @@
         # No public ports — all services bind to 10.0.0.4 (WireGuard) or 127.0.0.1
       ];
     })
-    ./modules/sshd-hardening.nix
+    ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    ./modules/authorized-keys.nix
-    ./modules/ssh-keys.nix
-    ./modules/container-tools.nix
-    ./modules/guardrails.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

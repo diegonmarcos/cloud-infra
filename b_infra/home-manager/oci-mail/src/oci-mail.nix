@@ -15,12 +15,8 @@
         { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
       ];
     })
-    ./modules/sshd-hardening.nix
+    ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    ./modules/authorized-keys.nix
-    ./modules/ssh-keys.nix
-    ./modules/container-tools.nix
-    ./modules/guardrails.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
