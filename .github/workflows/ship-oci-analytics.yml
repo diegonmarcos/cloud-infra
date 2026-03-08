@@ -61,15 +61,12 @@ jobs:
 
       - name: Ship matomo
         if: steps.changes.outputs.matomo == 'true' || steps.force.outputs.matomo == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_matomo/build.sh ship
 
       - name: Ship windmill
         if: steps.changes.outputs.windmill == 'true' || steps.force.outputs.windmill == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_windmill/build.sh ship
 
       - name: Ship sauron-forwarder
         if: steps.changes.outputs.sauron-forwarder == 'true' || steps.force.outputs.sauron-forwarder == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_sauron-forwarder/build.sh ship

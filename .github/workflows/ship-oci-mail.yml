@@ -67,25 +67,20 @@ jobs:
 
       - name: Ship mailu
         if: steps.changes.outputs.mailu == 'true' || steps.force.outputs.mailu == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_tools-mailu/build.sh ship
 
       - name: Ship smtp-proxy
         if: steps.changes.outputs.smtp-proxy == 'true' || steps.force.outputs.smtp-proxy == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_tools-smtp-proxy/build.sh ship
 
       - name: Ship syncthing
         if: steps.changes.outputs.syncthing == 'true' || steps.force.outputs.syncthing == 'true'
-        continue-on-error: true
         run: bash a_solutions/ab-mic_syncthing/build.sh ship
 
       - name: Ship dagu
         if: steps.changes.outputs.dagu == 'true' || steps.force.outputs.dagu == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_dagu/build.sh ship
 
       - name: Ship syslog-forwarder
         if: steps.changes.outputs.syslog-forwarder == 'true' || steps.force.outputs.syslog-forwarder == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_syslog-forwarder/build.sh ship
