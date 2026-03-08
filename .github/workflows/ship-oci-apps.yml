@@ -117,101 +117,82 @@ jobs:
 
       - name: Ship mattermost-bots
         if: steps.changes.outputs.mattermost-bots == 'true' || steps.force.outputs.mattermost-bots == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_mattermost-bots/build.sh ship
 
       - name: Ship code-server
         if: steps.changes.outputs.code-server == 'true' || steps.force.outputs.code-server == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_code-server/build.sh ship
 
       - name: Ship etherpad
         if: steps.changes.outputs.etherpad == 'true' || steps.force.outputs.etherpad == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_etherpad/build.sh ship
 
       - name: Ship filebrowser
         if: steps.changes.outputs.filebrowser == 'true' || steps.force.outputs.filebrowser == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_filebrowser/build.sh ship
 
       - name: Ship grist
         if: steps.changes.outputs.grist == 'true' || steps.force.outputs.grist == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_grist/build.sh ship
 
       - name: Ship hedgedoc
         if: steps.changes.outputs.hedgedoc == 'true' || steps.force.outputs.hedgedoc == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_hedgedoc/build.sh ship
 
       - name: Ship photoprism
         if: steps.changes.outputs.photoprism == 'true' || steps.force.outputs.photoprism == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_photoprism/build.sh ship
 
       - name: Ship radicale
         if: steps.changes.outputs.radicale == 'true' || steps.force.outputs.radicale == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_radicale/build.sh ship
 
       - name: Ship revealmd
         if: steps.changes.outputs.revealmd == 'true' || steps.force.outputs.revealmd == 'true'
-        continue-on-error: true
         run: bash a_solutions/aa-sui_revealmd/build.sh ship
 
       - name: Ship crawlee-cloud
         if: steps.changes.outputs.crawlee-cloud == 'true' || steps.force.outputs.crawlee-cloud == 'true'
-        continue-on-error: true
         run: bash a_solutions/ac-fin_crawlee-cloud/build.sh ship
 
       - name: Ship quant-lab-full
         if: steps.changes.outputs.quant-lab-full == 'true' || steps.force.outputs.quant-lab-full == 'true'
-        continue-on-error: true
         run: bash a_solutions/ac-fin_quant-lab-full/build.sh ship
 
       - name: Ship quant-lab-light
         if: steps.changes.outputs.quant-lab-light == 'true' || steps.force.outputs.quant-lab-light == 'true'
-        continue-on-error: true
         run: bash a_solutions/ac-fin_quant-lab-light/build.sh ship
 
       - name: Ship orchestrator
         if: steps.changes.outputs.orchestrator == 'true' || steps.force.outputs.orchestrator == 'true'
-        continue-on-error: true
         run: bash a_solutions/bb-sec_orchestrator/build.sh ship
 
       - name: Ship rust-api
         if: steps.changes.outputs.rust-api == 'true' || steps.force.outputs.rust-api == 'true'
-        continue-on-error: true
         env:
           REMOTE_BUILD: "true"
         run: bash a_solutions/bb-sec_rust-api/build.sh ship
 
       - name: Ship lgtm
         if: steps.changes.outputs.lgtm == 'true' || steps.force.outputs.lgtm == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_lgtm/build.sh ship
 
       - name: Ship nocodb
         if: steps.changes.outputs.nocodb == 'true' || steps.force.outputs.nocodb == 'true'
-        continue-on-error: true
         run: bash a_solutions/bc-obs_nocodb/build.sh ship
 
       - name: Ship rig-agentic
         if: steps.changes.outputs.rig-agentic == 'true' || steps.force.outputs.rig-agentic == 'true'
-        continue-on-error: true
         env:
           REMOTE_BUILD: "true"
         run: bash a_solutions/ad-agi_rig-agentic/build.sh ship
 
       - name: Ship gitea
         if: steps.changes.outputs.gitea == 'true' || steps.force.outputs.gitea == 'true'
-        continue-on-error: true
         run: bash a_solutions/ca-dat_gitea/build.sh ship
 
       - name: Ship c3-api
         if: steps.changes.outputs.c3-api == 'true' || steps.force.outputs.c3-api == 'true'
-        continue-on-error: true
         env:
           REMOTE_BUILD: "true"
         run: bash a_solutions/mcp-api-c3/build.sh ship
@@ -219,7 +200,6 @@ jobs:
       - name: Ship kg-graph
         id: ship-kg-graph
         if: steps.changes.outputs.kg-graph == 'true' || steps.force.outputs.kg-graph == 'true'
-        continue-on-error: true
         run: bash a_solutions/ca-dat_kg-graph/build.sh ship
 
       - name: Copy KG seed resources
