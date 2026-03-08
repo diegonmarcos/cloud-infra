@@ -1,15 +1,17 @@
-# OS-level firewall (iptables) — defense-in-depth behind cloud provider firewalls
+# Fully declarative iptables — owns ALL chains (INPUT, FORWARD, NAT)
 #
-# Default policy: DROP all incoming on public interfaces
-# Always allowed: SSH (22), WireGuard (51820), ICMP, established connections
-# WG-bound services (10.0.0.x:*) don't need rules — wg0 is fully accepted
+# Docker runs with iptables:false (daemon.json) — we manage everything.
+# Port publishing works via docker-proxy (userland), no DNAT needed.
+# We handle: INPUT filtering, FORWARD for bridges, MASQUERADE for outbound.
+#
+# Docker subnet range: 172.16.0.0/12 (covers 172.16-31.x.x)
+# WG subnet: 10.0.0.0/24
 #
 # Usage in VM config:
 #   (import ./modules/firewall.nix {
 #     vmName = "oci-apps";
 #     publicPorts = [
 #       { port = 8081; proto = "tcp"; desc = "C3 API"; }
-#       { port = 3010; proto = "tcp"; desc = "AFFiNE"; }
 #     ];
 #   })
 #
@@ -18,7 +20,10 @@
 { config, lib, pkgs, ... }:
 
 let
-  # Build iptables ACCEPT rules for public ports
+  dockerSubnet = "172.16.0.0/12";
+  wgSubnet = "10.0.0.0/24";
+
+  # Build iptables ACCEPT rules for public ports (INPUT chain)
   mkPortRule = r:
     let
       port = toString r.port;
@@ -29,41 +34,65 @@ let
 
   portRules = builtins.concatStringsSep "\n    " (map mkPortRule publicPorts);
 
-  # Generate the full iptables script
   fwScript = ''
     #!/bin/bash
     # Managed by home-manager (firewall.nix) — do not edit
-    # VM: ${vmName} — ${toString (builtins.length publicPorts)} public port rules
+    # VM: ${vmName} — fully declarative iptables (Docker iptables: false)
     set -euo pipefail
 
-    # Flush existing INPUT rules (keep Docker/FORWARD intact)
-    iptables -F INPUT 2>/dev/null || true
+    # ══════════════════════════════════════════════════════════════
+    # FILTER TABLE
+    # ══════════════════════════════════════════════════════════════
 
-    # Default policy: DROP incoming
+    # ── INPUT chain ──
+    iptables -F INPUT 2>/dev/null || true
     iptables -P INPUT DROP
 
-    # Always accept: loopback
+    # Loopback
     iptables -A INPUT -i lo -j ACCEPT
-
-    # Always accept: established/related connections
+    # Established/related
     iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-    # Always accept: ICMP (ping)
+    # ICMP
     iptables -A INPUT -p icmp -j ACCEPT
-
-    # Always accept: WireGuard interface (all traffic over VPN is trusted)
+    # WireGuard interface (all VPN traffic trusted)
     iptables -A INPUT -i wg0 -j ACCEPT
-
-    # Always accept: SSH (before DROP policy takes effect)
+    # SSH
     iptables -A INPUT -p tcp --dport 22 -m comment --comment "SSH" -j ACCEPT
-
-    # Always accept: WireGuard port (UDP)
+    # WireGuard port
     iptables -A INPUT -p udp --dport 51820 -m comment --comment "WireGuard" -j ACCEPT
-
     # VM-specific public ports
     ${portRules}
 
-    echo "[firewall] Applied: DROP policy + ${toString (builtins.length publicPorts)} public ports for ${vmName}"
+    # ── FORWARD chain ──
+    # Docker with iptables:false doesn't manage FORWARD — we do.
+    iptables -F FORWARD 2>/dev/null || true
+    iptables -P FORWARD DROP
+
+    # Established/related forwarded connections
+    iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+    # Docker containers → internet (outbound)
+    iptables -A FORWARD -s ${dockerSubnet} ! -d ${dockerSubnet} -j ACCEPT
+    # Inter-container traffic (same or cross bridge)
+    iptables -A FORWARD -s ${dockerSubnet} -d ${dockerSubnet} -j ACCEPT
+    # Internet → Docker containers (return traffic for docker-proxy, handled by ESTABLISHED above)
+    # WireGuard forwarding (cross-VM traffic)
+    iptables -A FORWARD -i wg0 -j ACCEPT
+    iptables -A FORWARD -o wg0 -j ACCEPT
+
+    # ══════════════════════════════════════════════════════════════
+    # NAT TABLE
+    # ══════════════════════════════════════════════════════════════
+
+    iptables -t nat -F POSTROUTING 2>/dev/null || true
+
+    # MASQUERADE: Docker containers reaching internet
+    iptables -t nat -A POSTROUTING -s ${dockerSubnet} ! -d ${dockerSubnet} -j MASQUERADE
+    # MASQUERADE: WireGuard traffic
+    iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+
+    echo "[firewall] Applied: full declarative iptables for ${vmName} (${toString (builtins.length publicPorts)} public ports)"
   '';
 
 in {
