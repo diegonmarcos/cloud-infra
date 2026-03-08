@@ -4,8 +4,9 @@
   home.file.".local/share/docker-service/docker.service".text = ''
     [Unit]
     Description=Docker Application Container Engine (nix)
-    After=network-online.target
+    After=network-online.target firewall.service
     Wants=network-online.target
+    Requires=firewall.service
 
     [Service]
     Type=notify
@@ -22,6 +23,12 @@
     [Install]
     WantedBy=multi-user.target
   '';
+
+  # Docker daemon config — iptables disabled, we manage all rules in firewall.nix
+  home.file.".local/share/docker-service/daemon.json".text = builtins.toJSON {
+    iptables = false;
+    ip6tables = false;
+  };
 
   home.activation.dockerService = lib.hm.dag.entryAfter ["linkGeneration"] ''
     DOCKER_LOG="[docker-service]"
@@ -74,6 +81,29 @@
         $SUDO systemctl enable docker
         $SUDO systemctl start docker
         echo "$DOCKER_LOG Docker enabled and started"
+      fi
+    fi
+
+    # Deploy daemon.json
+    DAEMON_SRC="$HOME/.local/share/docker-service/daemon.json"
+    DAEMON_DEST="/etc/docker/daemon.json"
+    if [ -f "$DAEMON_SRC" ]; then
+      $SUDO mkdir -p /etc/docker
+      DAEMON_CURRENT=""
+      if $SUDO test -f "$DAEMON_DEST"; then
+        DAEMON_CURRENT=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
+      fi
+      DAEMON_NEW=$(cat "$DAEMON_SRC")
+      if [ "$DAEMON_NEW" = "$DAEMON_CURRENT" ]; then
+        echo "$DOCKER_LOG daemon.json unchanged — skipping"
+      else
+        echo "$DAEMON_NEW" | $SUDO tee "$DAEMON_DEST" > /dev/null
+        echo "$DOCKER_LOG daemon.json deployed (iptables: false)"
+        # Restart Docker to pick up new daemon.json
+        if $SUDO systemctl is-active docker >/dev/null 2>&1; then
+          $SUDO systemctl restart docker
+          echo "$DOCKER_LOG Docker restarted for daemon.json"
+        fi
       fi
     fi
   '';
