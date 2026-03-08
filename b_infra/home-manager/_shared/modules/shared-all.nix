@@ -1,0 +1,12 @@
+# Auto-import all non-parameterized shared modules
+# Parameterized modules (firewall, system-protection, idle-shutdown,
+# resource-bouncer, httpd) must be imported explicitly with their args.
+{ imports = [
+    ./authorized-keys.nix
+    ./container-tools.nix
+    ./docker-service.nix
+    ./guardrails.nix
+    ./ssh-keys.nix
+    ./sshd-hardening.nix
+  ];
+}

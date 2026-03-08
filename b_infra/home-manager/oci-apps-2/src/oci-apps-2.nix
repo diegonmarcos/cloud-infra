@@ -10,12 +10,8 @@
       ];
     })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "oci-apps-2"; idleTimeoutHours = 1; })
-    ./modules/sshd-hardening.nix
+    ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 32768; })
-    ./modules/authorized-keys.nix
-    ./modules/ssh-keys.nix
-    ./modules/container-tools.nix
-    ./modules/guardrails.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

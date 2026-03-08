@@ -23,13 +23,8 @@
         cloud-spec = { root = "/opt/containers/cloud-spec"; port = 8099; };
       };
     })
-    ./modules/docker-service.nix
-    ./modules/sshd-hardening.nix
+    ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
-    ./modules/authorized-keys.nix
-    ./modules/ssh-keys.nix
-    ./modules/container-tools.nix
-    ./modules/guardrails.nix
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

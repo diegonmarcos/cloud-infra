@@ -13,12 +13,8 @@
         { port = 5514; proto = "tcp"; desc = "sauron-central syslog"; }
       ];
     })
-    ./modules/sshd-hardening.nix
+    ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    ./modules/authorized-keys.nix
-    ./modules/ssh-keys.nix
-    ./modules/container-tools.nix
-    ./modules/guardrails.nix
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";
