@@ -17,6 +17,7 @@
     LimitNOFILE=infinity
     LimitNPROC=infinity
     LimitCORE=infinity
+    CPUQuota=80%
     Delegate=yes
     KillMode=process
 
