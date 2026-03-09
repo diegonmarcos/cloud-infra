@@ -39,6 +39,7 @@ let
     # Managed by home-manager (firewall.nix) — do not edit
     # VM: ${vmName} — fully declarative iptables (Docker iptables: false)
     set -euo pipefail
+    export PATH="${pkgs.iptables}/bin:$PATH"
 
     # ══════════════════════════════════════════════════════════════
     # FILTER TABLE
@@ -96,6 +97,8 @@ let
   '';
 
 in {
+  home.packages = [ pkgs.iptables ];
+
   home.file.".local/share/firewall/firewall.sh" = {
     executable = true;
     text = fwScript;
