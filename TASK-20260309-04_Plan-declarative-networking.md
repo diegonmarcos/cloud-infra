@@ -1,8 +1,58 @@
-# Plan: Docker DNS + Fixed IPs + Declarative Networking
+# Declarative Networking — Docker DNS + Fixed IPs + Mesh Topology + Auth + Fallback
 
-**Date**: 2026-03-09
-**Updated**: 2026-03-09 (v7 — Caddy L4 SSH multiplexing for WG fallback)
+> **Date**: 2026-03-09
+> **Updated**: 2026-03-09 (v7 — Caddy L4 + wstunnel for port 443 fallback)
+> **Status**: Planning complete, implementation pending
+
 **Root Cause**: Docker with `iptables: false` loses container DNS resolution and port forwarding. Docker engine restart/reboot wipes DNAT rules. Setting `iptables: true` conflicts with our declarative firewall.nix.
+
+---
+
+## Checklist
+
+### Phase 1: Data layer (no deployment, no downtime)
+- [ ] Create `mesh-topology.nix` — extract peer data from current wireguard.nix
+- [ ] Add `auth` blocks to all service `build.json` files
+- [ ] Add `containerNetwork` to all VM `.nix` files
+
+### Phase 2: C3 parsers (read-only, no deployment impact)
+- [ ] Create `mesh-topology.ts` parser
+- [ ] Create `container-network.ts` parser
+- [ ] Extend `build-json.ts` — parse new `auth` field
+- [ ] Update `gen-topology.ts` — use new parsers
+- [ ] Update `gen-configs.ts` — auth from build.json + drift detection
+- [ ] Update `build.sh cmd_config()` — nix eval exports
+- [ ] Verify: `build.sh config` output matches current topology/configs JSON
+
+### Phase 3: Home-manager modules (deploy to test VM first)
+- [ ] Create docker-network.nix module
+- [ ] Create dnsmasq.nix module
+- [ ] Create web-server-busybox.nix module
+- [ ] Update wireguard.nix — read from `meshTopology`
+- [ ] Update firewall.nix — containerNetwork + meshTopology params
+- [ ] Push home-manager for gcp-proxy only
+- [ ] Verify gcp-proxy: WG mesh, firewall rules, dnsmasq resolves
+
+### Phase 4: Service flakes (one VM at a time)
+- [ ] Rebuild Caddy with caddy-l4 plugin
+- [ ] Update Caddy flake — auto-generate Caddyfile + L4 SSH multiplexing
+- [ ] Update Authelia flake — auto-generate ACL + OIDC audience
+- [ ] Diff generated Caddy/Authelia configs against current (must match)
+- [ ] Update gcp-proxy service flakes — new networks + fixed IPs
+- [ ] Ship gcp-proxy services
+- [ ] Verify gcp-proxy: DNS, ports, public access, auth (cookie + bearer)
+- [ ] Verify Caddy L4: `ssh -p 443 gcp-proxy` + HTTPS still works
+- [ ] Deploy wstunnel server on gcp-proxy
+- [ ] Verify WG fallback: wstunnel client → WG reconnects through WSS
+- [ ] Add `gcp-proxy-443` to SSH configs (vault/config + config_mobile)
+- [ ] Repeat for each VM: oci-apps, oci-mail, oci-analytics, oci-apps-2, gcp-t4
+
+### Phase 5: Cleanup
+- [ ] Delete `ssh-config.ts` parser
+- [ ] Remove WG/firewall regex parsing from `wireguard.ts`
+- [ ] Update GHA workflow trigger paths
+
+---
 
 **Goal**: Full declarative control — we own DNS, IPs, firewall rules, auth routing. Docker only runs containers.
 

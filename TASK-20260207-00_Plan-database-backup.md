@@ -1,7 +1,22 @@
 # Database Backup Status
 
+> **Date**: 2026-02-07
 > **Updated**: 2026-02-07
 > **Status**: Partial — Flex has backups, GCP/Micros mostly unprotected
+
+---
+
+## Checklist
+
+- [ ] Add Vaultwarden SQLite backup (systemd timer on GCP, same as Authelia)
+- [ ] Add bup jobs for Etherpad, HedgeDoc, PhotoPrism on Flex
+- [ ] Deploy bup backup scripts to GCP and Micro VMs
+- [ ] Add GitHub token for private repo mirrors (front, vault)
+- [ ] Test database restore from bup
+- [ ] Add Matomo mysqldump cron on Micro1
+- [ ] Add Windmill pg_dump cron on Micro2
+
+---
 
 ## Database Inventory
 
@@ -50,13 +65,3 @@
 2. **PhotoPrism MariaDB** (Flex) — Photo metadata/indexes
 3. **Matomo MariaDB** (Micro1) — Analytics data
 4. **Windmill Postgres** (Micro2) — Workflow configurations
-
-## TODO
-
-- [ ] Add Vaultwarden SQLite backup (systemd timer on GCP, same as Authelia)
-- [ ] Add bup jobs for Etherpad, HedgeDoc, PhotoPrism on Flex
-- [ ] Deploy bup backup scripts to GCP and Micro VMs
-- [ ] Add GitHub token for private repo mirrors (front, vault)
-- [ ] Test database restore from bup
-- [ ] Add Matomo mysqldump cron on Micro1
-- [ ] Add Windmill pg_dump cron on Micro2

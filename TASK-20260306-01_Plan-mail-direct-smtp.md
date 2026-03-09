@@ -1,5 +1,35 @@
 # Mailu Direct SMTP Delivery with OCI Relay Fallback
 
+> **Date**: 2026-03-06
+> **Updated**: 2026-03-06
+> **Status**: Blocked on OCI console requests
+
+---
+
+## Checklist
+
+### Prerequisites (manual, OCI console)
+- [ ] OCI max-message-size increased to 60MB (Request 1 — fixes bounce immediately)
+- [ ] OCI outbound port 25 unblocked (Request 2 — enables direct delivery)
+- [ ] Verify port 25: `ssh oci-mail "echo QUIT | nc -w3 gmail-smtp-in.l.google.com 25"`
+- [ ] rDNS for 130.110.251.193 → smtp.diegonmarcos.com (`dig -x 130.110.251.193`)
+
+### Implementation
+- [ ] Create `overrides/postfix/postfix.cf` with `smtp_fallback_relay` + SASL
+- [ ] Update `flake.nix`: remove RELAYHOST from env, add sasl_passwd generation
+- [ ] Verify SPF already covers both paths (no change needed)
+- [ ] Set rDNS (PTR) for oci-mail IP via OCI CLI
+- [ ] `build.sh ship` for mailu service
+
+### Verification
+- [ ] Send email to external (Gmail) — headers show direct delivery
+- [ ] SPF pass in headers
+- [ ] DKIM pass in headers
+- [ ] Send >2MB attachment — no OCI 552 error
+- [ ] Simulate port 25 failure — email routes through OCI relay fallback
+
+---
+
 ## Context
 
 Mailu currently routes ALL outbound email through OCI Email Delivery relay (`smtp.email.eu-marseille-1.oci.oraclecloud.com:587`). OCI has a 2 MB message size limit (default), causing `552 exceeds byte limit` bounces for emails with attachments.
@@ -127,15 +157,6 @@ cd ~/git/cloud/a_solutions/aa-sui_tools-mailu && build.sh ship
 # 3. Send test email and check headers
 ```
 
-## Verification
-
-1. Send email from `me@diegonmarcos.com` to an external address (e.g. Gmail)
-2. Check email headers — should show `Received: from smtp.diegonmarcos.com` (direct), not OCI relay
-3. Check SPF pass: `spf=pass` in headers
-4. Check DKIM pass: `dkim=pass`
-5. Send large attachment (>2MB) — should succeed without OCI 552 error
-6. Simulate direct delivery failure (e.g. block port 25 temporarily) — email should route through OCI relay
-
 ## Risk Assessment
 
 | Risk | Mitigation |
@@ -145,10 +166,3 @@ cd ~/git/cloud/a_solutions/aa-sui_tools-mailu && build.sh ship
 | DKIM mismatch | Mailu signs with own key regardless of delivery path — no change |
 | SPF failure on fallback | `include:eu.rp.oracleemaildelivery.com` already in SPF covers OCI relay IPs |
 | DMARC reject on direct | SPF (`a:smtp.diegonmarcos.com`) + DKIM (Mailu key) both pass — no issue |
-
-## Prerequisites Checklist
-
-- [ ] OCI max-message-size increased to 60MB (Request 1 — fixes bounce immediately)
-- [ ] OCI outbound port 25 unblocked (Request 2 — enables direct delivery)
-- [ ] Verify port 25: `ssh oci-mail "echo QUIT | nc -w3 gmail-smtp-in.l.google.com 25"`
-- [ ] rDNS for 130.110.251.193 → smtp.diegonmarcos.com (`dig -x 130.110.251.193`)
