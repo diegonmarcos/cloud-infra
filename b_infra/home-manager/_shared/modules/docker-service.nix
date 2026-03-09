@@ -69,20 +69,19 @@
       CURRENT=$($SUDO cat /etc/systemd/system/docker.service 2>/dev/null || true)
     fi
 
-    if [ "$NEW_UNIT" = "$CURRENT" ]; then
-      echo "$DOCKER_LOG docker.service unchanged — skipping"
-    else
+    if [ "$NEW_UNIT" != "$CURRENT" ]; then
       echo "$DOCKER_LOG docker.service changed — deploying"
       echo "$NEW_UNIT" | $SUDO tee /etc/systemd/system/docker.service > /dev/null
       $SUDO systemctl daemon-reload
-      if $SUDO systemctl is-active docker >/dev/null 2>&1; then
-        $SUDO systemctl restart docker
-        echo "$DOCKER_LOG Docker restarted"
-      else
-        $SUDO systemctl enable docker
-        $SUDO systemctl start docker
-        echo "$DOCKER_LOG Docker enabled and started"
-      fi
+      $SUDO systemctl restart docker 2>/dev/null || $SUDO systemctl start docker
+      echo "$DOCKER_LOG Docker restarted"
+    fi
+
+    # Always ensure docker is enabled and running (survives dnf remove, reboot, etc.)
+    $SUDO systemctl enable docker 2>/dev/null || true
+    if ! $SUDO systemctl is-active docker >/dev/null 2>&1; then
+      $SUDO systemctl start docker
+      echo "$DOCKER_LOG Docker was not running — started"
     fi
 
     # Deploy daemon.json
