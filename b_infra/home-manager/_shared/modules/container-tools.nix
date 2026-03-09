@@ -70,4 +70,10 @@
     # ── Security scanning (used by sauron-lite) ──
     yara
   ];
+
+  # Static busybox for Docker healthcheck probes in distroless containers.
+  # Bind-mount ~/bin/busybox-static into containers that lack wget/nc.
+  home.file."bin/busybox-static" = {
+    source = "${pkgs.pkgsStatic.busybox}/bin/busybox";
+  };
 }
