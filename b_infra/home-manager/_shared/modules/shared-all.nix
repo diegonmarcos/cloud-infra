@@ -7,6 +7,7 @@
     ./docker-service.nix
     ./guardrails.nix
     ./ssh-keys.nix
+    ./shell-path.nix
     ./sshd-hardening.nix
   ];
 }
