@@ -16,7 +16,6 @@ on:
       - "a_solutions/ac-fin_quant-lab-full/src/**"
       - "a_solutions/ac-fin_quant-lab-light/src/**"
       - "a_solutions/bb-sec_orchestrator/src/**"
-      - "a_solutions/bb-sec_rust-api/src/**"
       - "a_solutions/bc-obs_lgtm/src/**"
       - "a_solutions/bc-obs_nocodb/src/**"
       - "a_solutions/ad-agi_rig-agentic/src/**"
@@ -82,8 +81,6 @@ jobs:
               - 'a_solutions/ac-fin_quant-lab-light/src/**'
             orchestrator:
               - 'a_solutions/bb-sec_orchestrator/src/**'
-            rust-api:
-              - 'a_solutions/bb-sec_rust-api/src/**'
             lgtm:
               - 'a_solutions/bc-obs_lgtm/src/**'
             nocodb:
@@ -104,7 +101,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator rust-api lgtm nocodb rig-agentic gitea kg-graph c3-api cloud-spec; do
+          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api cloud-spec; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -169,12 +166,6 @@ jobs:
       - name: Ship orchestrator
         if: steps.changes.outputs.orchestrator == 'true' || steps.force.outputs.orchestrator == 'true'
         run: bash a_solutions/bb-sec_orchestrator/build.sh ship
-
-      - name: Ship rust-api
-        if: steps.changes.outputs.rust-api == 'true' || steps.force.outputs.rust-api == 'true'
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bb-sec_rust-api/build.sh ship
 
       - name: Ship lgtm
         if: steps.changes.outputs.lgtm == 'true' || steps.force.outputs.lgtm == 'true'
