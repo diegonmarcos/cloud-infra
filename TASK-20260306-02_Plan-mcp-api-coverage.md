@@ -1,11 +1,26 @@
-# TASK: Service APIs — MCP Coverage Audit
+# Service APIs — MCP Coverage Audit
 
-Goal: identify every service with a REST API and track whether it's reachable via MCP tool.
+> **Date**: 2026-03-06
+> **Updated**: 2026-03-06
+> **Status**: Audit complete, implementation pending
 
-Legend:
-- `has_api` — service exposes a REST/HTTP API
-- `mcp_tool` — accessible via cloud-infra MCP tool today
-- `spec_url` — known OpenAPI/Swagger/config endpoint
+---
+
+## Checklist
+
+### Priority MCP tools to add
+- [ ] ntfy — push notification API (already used for infra alerts)
+- [ ] matomo — analytics queries
+- [ ] gitea — repo/issue management
+- [ ] ollama — AI inference directly from MCP
+- [ ] windmill — trigger workflows from MCP
+- [ ] authelia — user/token management
+- [ ] syncthing — sync status/control
+
+### Architecture
+- [ ] Route all service APIs through C3 as unified gateway
+- [ ] Add C3 wrappers for weak/incomplete APIs (radicale, fluent-bit, postlite)
+- [ ] Create C3 APIs for services with none (dozzle, redis, backup-borg, db-agent, caddy, hickory-dns)
 
 ---
 

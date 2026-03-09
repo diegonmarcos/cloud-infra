@@ -1,4 +1,34 @@
-# PLAN: Cloud Topology + Configs Consolidation
+# Cloud Topology + Configs Consolidation
+
+> **Date**: 2026-03-06
+> **Updated**: 2026-03-06
+> **Status**: Planning complete, implementation pending
+
+---
+
+## Checklist
+
+### Phase 1: Foundation
+- [ ] Add dependency engine to `build.sh`
+- [ ] Create `engines/`, `parsers/`, `templates/` dirs in `mcp-api-c3/src/`
+- [ ] Write parsers: build-json, compose, ssh-config, caddyfile, authelia, wireguard, dns, ntfy, mailu
+- [ ] Write `gen-topology.ts`
+- [ ] Write `gen-configs.ts`
+- [ ] Write Nunjucks templates for both .md exports
+
+### Phase 2: Integration
+- [ ] Update `cloud/build.sh cmd_config()` to use C3 engines
+- [ ] Update C3-API Dockerfile: add git, entrypoint clones repos with force-pull
+- [ ] Update `paths.ts`: container `/app/repos`, local `~/git`
+- [ ] Add API routes `GET /topology`, `GET /configs` for remote consumers
+
+### Phase 3: MCP + Cleanup
+- [ ] Add MCP tools: `c3_routes`, `c3_acl`, `c3_mesh`, `c3_service_config`
+- [ ] Rename `config.json` refs to `cloud-topology.json` everywhere
+- [ ] Delete `cloud/tools/gen-config.ts`, `config.md.njk`, `config.json`, `config.md`
+- [ ] Update GHA workflows to deploy both JSON files to oci-apps
+
+---
 
 ## Problem
 
@@ -310,163 +340,7 @@ The Nunjucks templates iterate over every top-level and nested key in the JSON a
 | `oci-E2-f_1` | `oci-analytics` | 129.151.228.66 | 10.0.0.4 | opc | ssh | 2 | Analytics + workflows |
 | `oci-A1-f_0` | `oci-apps` | 82.70.229.129 | 10.0.0.6 | opc | ssh | 12 | Main app server |
 | `oci-A1-f_1` | `oci-apps-1` | 144.24.196.72 | 10.0.0.2 | opc | ssh | 4 | Secondary apps |
-
-### gcp-proxy (`gcp-E2-f_0`) — Containers
-
-| Container | Ports | Networks |
-|-----------|-------|----------|
-| caddy | 80:80, 443:443 | npm_default |
-| authelia | 9091 | npm_default |
-| introspect-proxy | 4180 | npm_default |
-| vaultwarden | 80 | npm_default |
-| ntfy | 8090 | npm_default |
-| hickory-dns | 53:53 | npm_default |
-
-### oci-mail (`oci-E2-f_0`) — Containers
-
-| Container | Ports | Networks |
-|-----------|-------|----------|
-| mailu-front | 8444:8443, 25:25, 465:465 | mailu_default |
-| mailu-admin | 8080 | mailu_default |
-| syncthing | 8384:8384 | syncthing_net |
-
-### oci-analytics (`oci-E2-f_1`) — Containers
-
-| Container | Ports | Networks |
-|-----------|-------|----------|
-| matomo | 8080:80 | matomo_net |
-| windmill | 8000:8000 | windmill_net |
-
-### oci-apps (`oci-A1-f_0`) — Containers
-
-| Container | Ports | Networks |
-|-----------|-------|----------|
-| c3-api | 8081:8081 | c3_net |
-| crawlee-api | 3000:3000 | crawlee_net |
-| crawlee-worker | — | crawlee_net |
-| kg-graph | 8082:8082 | c3_net |
-| orchestrator | 8083:8083 | c3_net |
-| lgtm-grafana | 3000 | lgtm_net |
-| lgtm-loki | 3100 | lgtm_net |
-| lgtm-prometheus | 9090 | lgtm_net |
-| gitea | 3000:3000 | gitea_net |
-| nocodb | 8085:8080 | nocodb_net |
-| code-server | 8443:8443 | code_net |
-| affine | 3010:3010 | affine_net |
-
-### oci-apps-1 (`oci-A1-f_1`) — Containers
-
-| Container | Ports | Networks |
-|-----------|-------|----------|
-| photoprism | 3013:2342 | photo_net |
-| ollama-arm | 11434:11434 | ollama_net |
-| mattermost | 8065:8065 | mm_net |
-| mattermost-db | 5432 | mm_net |
-
-## VPS Providers
-
-| Provider | Tier | Type | Instances |
-|----------|------|------|-----------|
-| Oracle Cloud | free | E2.1.Micro | oci-E2-f_0, oci-E2-f_1 |
-| Oracle Cloud | free | A1.Flex | oci-A1-f_0, oci-A1-f_1 |
-| Google Cloud | free | e2-micro | gcp-E2-f_0 |
-
-## WireGuard Mesh
-
-| Peer | WG IP | Endpoint | Role |
-|------|-------|----------|------|
-| gcp-proxy | 10.0.0.1 | 35.226.147.64:51820 | hub |
-| oci-apps-1 | 10.0.0.2 | 144.24.196.72:51820 | spoke |
-| oci-mail | 10.0.0.3 | 130.110.251.193:51820 | spoke |
-| oci-analytics | 10.0.0.4 | 129.151.228.66:51820 | spoke |
-| oci-apps | 10.0.0.6 | 82.70.229.129:51820 | spoke |
-| surface | 10.0.0.10 | dynamic | client |
-| termux | 10.0.0.11 | dynamic | client |
-
-## DNS Records (internal zone)
-
-| Name | Type | Value |
-|------|------|-------|
-| proxy | A | 10.0.0.1 |
-| apps | A | 10.0.0.6 |
-| apps-1 | A | 10.0.0.2 |
-| mail | A | 10.0.0.3 |
-| analytics | A | 10.0.0.4 |
-
-## Services by VM
-
-### gcp-proxy
-
-| Service | Category | Domain | Ports | Containers |
-|---------|----------|--------|-------|------------|
-| caddy | sec | proxy.diegonmarcos.com | 80, 443 | caddy, introspect-proxy |
-| authelia | sec | auth.diegonmarcos.com | 9091 | authelia |
-| vaultwarden | sec | vault.diegonmarcos.com | 80 | vaultwarden |
-| ntfy | sec | rss.diegonmarcos.com | 8090 | ntfy |
-| hickory-dns | sec | — | 53 | hickory-dns |
-
-### oci-apps
-
-| Service | Category | Domain | Ports | Containers |
-|---------|----------|--------|-------|------------|
-| c3-api | sec | api.diegonmarcos.com/c3-api | 8081 | c3-api |
-| crawlee | cloud | api.diegonmarcos.com/crawlee | 3000 | crawlee-api, crawlee-worker |
-| gitea | data | — | 3000 | gitea |
-
-### oci-mail
-
-| Service | Category | Domain | Ports | Containers |
-|---------|----------|--------|-------|------------|
-| mailu | app | mail.diegonmarcos.com | 8444, 25, 465 | mailu-front, mailu-admin |
-| syncthing | app | sync.diegonmarcos.com | 8384 | syncthing |
-
-### oci-analytics
-
-| Service | Category | Domain | Ports | Containers |
-|---------|----------|--------|-------|------------|
-| matomo | tools | analytics.diegonmarcos.com | 8080 | matomo |
-| windmill | tools | windmill.diegonmarcos.com | 8000 | windmill |
-
-## Services by Category
-
-### Security (bb-sec_*)
-
-| Service | Flake | VM | Domain | Description |
-|---------|-------|----|--------|-------------|
-| caddy | bb-sec_caddy | gcp-proxy | proxy.diegonmarcos.com | Caddy reverse proxy |
-| authelia | bb-sec_authelia | gcp-proxy | auth.diegonmarcos.com | 2FA authentication |
-| vaultwarden | bb-sec_vaultwarden | gcp-proxy | vault.diegonmarcos.com | Password manager |
-| ntfy | bc-obs_ntfy | gcp-proxy | rss.diegonmarcos.com | Push notifications |
-| c3-api | bb-sec_mcp-server-skills | oci-apps | api.diegonmarcos.com/c3-api | Cloud control center |
-
-### Suite (aa-sui_*)
-
-| Service | Flake | VM | Domain | Description |
-|---------|-------|----|--------|-------------|
-| mailu | aa-sui_tools-mailu | oci-mail | mail.diegonmarcos.com | Email server |
-| syncthing | aa-sui_tools-syncthing | oci-mail | sync.diegonmarcos.com | File sync |
-| photoprism | aa-sui_photoprism | oci-apps-1 | photos.diegonmarcos.com | Photo management |
-
-### Observability (bc-obs_*)
-
-| Service | Flake | VM | Domain | Description |
-|---------|-------|----|--------|-------------|
-| matomo | bc-obs_matomo | oci-analytics | analytics.diegonmarcos.com | Web analytics |
-| windmill | bc-obs_windmill | oci-analytics | windmill.diegonmarcos.com | Workflow automation |
-| lgtm | bc-obs_lgtm | oci-apps | — | Grafana + Loki + Prometheus |
-
-## Docker Networks
-
-| Network | VM | Connected Containers |
-|---------|----|---------------------|
-| npm_default | gcp-proxy | caddy, authelia, introspect-proxy, vaultwarden, ntfy, hickory-dns |
-| mailu_default | oci-mail | mailu-front, mailu-admin |
-| c3_net | oci-apps | c3-api, kg-graph, orchestrator |
-| crawlee_net | oci-apps | crawlee-api, crawlee-worker |
-| matomo_net | oci-analytics | matomo |
 ```
-
----
 
 ### `cloud-configs.md` (expected output)
 
@@ -486,66 +360,4 @@ The Nunjucks templates iterate over every top-level and nested key in the JSON a
 | rss.diegonmarcos.com | ntfy:80 | 3-tier | no | — |
 | mail.diegonmarcos.com | 10.0.0.3:8444 | authelia+bearer | yes | — |
 | analytics.diegonmarcos.com | 10.0.0.4:8080 | authelia+bearer | no | /matomo.js, /matomo.php, /js/* |
-| photos.diegonmarcos.com | 10.0.0.2:3013 | authelia+bearer | no | — |
-| chat.diegonmarcos.com | 10.0.0.2:8065 | authelia+bearer | no | /api/v4/websocket |
-| api.diegonmarcos.com | 10.0.0.6:8081 | authelia+bearer | no | /c3-api/docs |
-| ide.diegonmarcos.com | 10.0.0.2:8443 | authelia | yes | — |
-| sync.diegonmarcos.com | 10.0.0.3:8384 | authelia | no | — |
-
-### Authelia ACL
-
-| Domain Pattern | Policy | Subjects |
-|----------------|--------|----------|
-| vault.* | two_factor | — |
-| api.* | one_factor | — |
-| *.diegonmarcos.com | one_factor | — |
-
-### Hickory DNS
-
-#### Zone: internal
-
-| Name | Type | Value |
-|------|------|-------|
-| proxy | A | 10.0.0.1 |
-| apps | A | 10.0.0.6 |
-| apps-1 | A | 10.0.0.2 |
-| mail | A | 10.0.0.3 |
-| analytics | A | 10.0.0.4 |
-
-## Applications
-
-### ntfy
-
-| Setting | Value |
-|---------|-------|
-| Topics | syslog, github-releases, alerts, health, backups |
-| Users | admin, diego |
-| Enable Login | true |
-| Default Access | read-write |
-
-### Mailu
-
-| Setting | Value |
-|---------|-------|
-| Domain | diegonmarcos.com |
-| Mailboxes | me@, no-reply@ |
-| Relay | smtp.email.eu-marseille-1.oci.oraclecloud.com:587 |
-
-### Matomo
-
-| Setting | Value |
-|---------|-------|
-| Tracked Sites | diegonmarcos.com |
-
-### PhotoPrism
-
-| Setting | Value |
-|---------|-------|
-| Library | /photoprism/originals |
-
-### Mattermost
-
-| Setting | Value |
-|---------|-------|
-| Team | diegonmarcos |
 ```
