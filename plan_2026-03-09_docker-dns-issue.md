@@ -1,7 +1,7 @@
 # Plan: Docker DNS + Fixed IPs + Declarative Networking
 
 **Date**: 2026-03-09
-**Updated**: 2026-03-09 (v6 — parser adjustments for gen-topology/gen-configs)
+**Updated**: 2026-03-09 (v7 — Caddy L4 SSH multiplexing for WG fallback)
 **Root Cause**: Docker with `iptables: false` loses container DNS resolution and port forwarding. Docker engine restart/reboot wipes DNAT rules. Setting `iptables: true` conflicts with our declarative firewall.nix.
 
 **Goal**: Full declarative control — we own DNS, IPs, firewall rules, auth routing. Docker only runs containers.
@@ -764,7 +764,198 @@ c3-api.oci-apps.internal.    IN A 172.21.0.2
 
 ---
 
-## Step 8: C3 Parser Adjustments (gen-topology + gen-configs)
+## Step 8: Port 443 Fallback — SSH + WG Tunnel (Restrictive Networks)
+
+### Problem
+
+Restrictive networks (airports, hotels, corporate WiFi) block:
+- UDP 51820 → WireGuard dies, entire mesh unreachable
+- TCP 22 → SSH dies (we already hit this — GitHub SSH now uses port 443)
+
+Only TCP 443 (HTTPS) is reliably open everywhere.
+
+### Solution: Three protocols, one port (443)
+
+```
+Airport WiFi :443 ──→ Caddy L4 ──┬── SSH bytes ("SSH-2.0-...") ──→ sshd :22
+                                  └── TLS ClientHello ──→ Caddy HTTPS :8443
+                                                              │
+                                          wg-tunnel.diegonmarcos.com (WebSocket)
+                                                              │
+                                                      wstunnel server
+                                                              │
+                                                    unwrap UDP → WG :51820
+```
+
+| Protocol | Normal | Airport fallback (all via TCP 443) |
+|----------|--------|------------------------------------|
+| HTTPS | TCP 443 direct | TCP 443 (unchanged) |
+| SSH | TCP 22 direct | TCP 443 → Caddy L4 → sshd :22 |
+| WireGuard | UDP 51820 direct | TCP 443 → Caddy HTTPS → wstunnel (WSS) → UDP :51820 |
+
+### Component 1: Caddy L4 — SSH multiplexing
+
+Caddy with the **caddy-l4** plugin detects protocol from the first bytes of each TCP 443 connection:
+- `SSH-2.0-...` → forward to sshd on localhost:22
+- TLS ClientHello → normal Caddy HTTPS handling (on internal port 8443)
+
+#### Why Caddy L4 over SSLH
+
+| Feature | sshd alone | SSLH | Caddy L4 |
+|---------|-----------|------|----------|
+| Structured JSON access logs | No | No | Yes |
+| Proactive rate limiting (per-IP) | No | No | Yes |
+| IP/Geo filtering | iptables (separate) | iptables (separate) | Same Caddyfile |
+| Prometheus metrics | No | No | Yes |
+| Unified log pipeline with HTTPS | No | No | Yes |
+| Extra service to manage | — | Yes | No (Caddy already runs) |
+| Extra plugin needed | — | No | Yes (caddy-l4) |
+
+Caddy L4 acts as a **unified front door** — same logging, rate limiting, and metrics for SSH and HTTPS. SSH security (key auth, encryption) still handled by sshd.
+
+#### Caddy L4 config (gcp-proxy)
+
+```json
+{
+  "apps": {
+    "layer4": {
+      "servers": {
+        "multiplex": {
+          "listen": [":443"],
+          "routes": [
+            {
+              "match": [{"ssh": {}}],
+              "handle": [{"handler": "proxy", "upstreams": [{"dial": ["localhost:22"]}]}]
+            },
+            {
+              "match": [{"tls": {}}],
+              "handle": [{"handler": "proxy", "upstreams": [{"dial": ["localhost:8443"]}]}]
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+**Note**: When L4 owns port 443, Caddy HTTPS listener moves to internal port 8443. L4 routes TLS traffic there.
+
+### Component 2: wstunnel — WireGuard over WebSocket
+
+SSH tunnels (`ssh -L`) are TCP-only. WireGuard uses UDP. **SSH cannot carry WG traffic.** wstunnel wraps UDP inside WebSocket (WSS), which Caddy proxies natively.
+
+#### Server side (gcp-proxy)
+
+wstunnel server runs as a container or systemd service, forwarding received UDP to WG:
+
+```bash
+# wstunnel server — listens for WSS connections, unwraps to UDP 51820
+wstunnel server --restrict-to localhost:51820 ws://0.0.0.0:51821
+```
+
+Caddy reverse-proxies the WebSocket:
+```
+wg-tunnel.diegonmarcos.com {
+    reverse_proxy localhost:51821
+}
+```
+
+#### Client side (airport fallback)
+
+```bash
+# 1. Start wstunnel client — wraps WG UDP into WSS through port 443
+wstunnel client --local-to-remote udp://51820:localhost:51820 \
+    wss://wg-tunnel.diegonmarcos.com
+
+# 2. Swap WG endpoint to go through the tunnel
+wg set wg0 peer <gcp-proxy-pubkey> endpoint 127.0.0.1:51820
+
+# WG now sends UDP to localhost:51820 → wstunnel wraps as WSS
+# → Caddy (TCP 443) → wstunnel server → unwrap → WG (UDP 51820)
+```
+
+### SSH config (client side)
+
+```
+# Normal SSH (port 22, when not restricted)
+Host gcp-proxy
+    HostName 35.226.147.64
+    Port 22
+    User user
+    IdentityFile ~/.ssh/id_rsa
+
+# Fallback SSH via Caddy L4 (port 443, restrictive networks)
+Host gcp-proxy-443
+    HostName 35.226.147.64
+    Port 443
+    User user
+    IdentityFile ~/.ssh/id_rsa
+```
+
+### Caddy Docker build change
+
+Current Caddy is stock. Need to rebuild with `caddy-l4`:
+
+```Dockerfile
+FROM caddy:builder AS builder
+RUN xcaddy build --with github.com/mholt/caddy-l4
+
+FROM caddy:latest
+COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+```
+
+### wstunnel deployment
+
+wstunnel runs on gcp-proxy as a container in the `apps` network:
+
+```yaml
+# In caddy or dedicated wstunnel docker-compose
+wstunnel:
+  image: ghcr.io/erebe/wstunnel
+  command: server --restrict-to localhost:51820 ws://0.0.0.0:51821
+  network_mode: host  # needs access to host WG on localhost:51820
+  restart: unless-stopped
+```
+
+**Note**: `network_mode: host` because wstunnel needs to reach WG on the host's localhost:51820. Alternatively, use `host.docker.internal` or the Docker gateway IP.
+
+### Automation — wg-fallback.sh (client side)
+
+```bash
+#!/bin/bash
+# wg-fallback.sh — auto-tunnel WG through wstunnel when direct UDP fails
+WG_IFACE="wg0"
+GCP_PUBKEY="<gcp-proxy-pubkey>"
+TUNNEL_URL="wss://wg-tunnel.diegonmarcos.com"
+
+# Check if WG handshake is stale (>180 seconds)
+LAST=$(wg show "$WG_IFACE" latest-handshakes | awk '{print $2}')
+NOW=$(date +%s)
+
+if [ $((NOW - LAST)) -gt 180 ]; then
+    echo "WG handshake stale, starting wstunnel fallback..."
+
+    # Kill any existing wstunnel
+    pkill -f "wstunnel client" 2>/dev/null
+
+    # Start wstunnel (UDP over WSS)
+    wstunnel client --local-to-remote udp://51820:localhost:51820 \
+        "$TUNNEL_URL" &
+
+    sleep 2
+
+    # Swap WG endpoint to tunnel
+    wg set "$WG_IFACE" peer "$GCP_PUBKEY" endpoint 127.0.0.1:51820
+    echo "WG routed through wstunnel on TCP 443"
+fi
+```
+
+This can be a systemd timer on the client or integrated into the existing WG health check.
+
+---
+
+## Step 9: C3 Parser Adjustments (gen-topology + gen-configs)
 
 ### Current parser architecture
 
@@ -939,9 +1130,14 @@ ntfy/mailu configs ────────────────────�
 | `gcp-t4/src/gcp-t4.nix` | **EDIT** | Import `meshTopology`, add `containerNetwork` definition |
 | **Services (a_solutions/)** | | |
 | Every service `build.json` | **EDIT** | Add `auth` block (domain, policy, bearer, public paths) |
-| `bb-sec_caddy/src/flake.nix` | **EDIT** | Auto-generate Caddyfile routes from `build.json` auth + `meshTopology` upstream IPs |
+| `bb-sec_caddy/src/flake.nix` | **EDIT** | Auto-generate Caddyfile routes from `build.json` auth + `meshTopology` upstream IPs + Caddy L4 SSH multiplexing |
+| `bb-sec_caddy/src/Dockerfile` | **EDIT** | Rebuild Caddy with `caddy-l4` plugin (xcaddy build) |
+| `bb-sec_wstunnel/` | **NEW** | wstunnel server service (WSS → UDP for WG fallback) |
 | `bb-sec_authelia/src/flake.nix` | **EDIT** | Auto-generate ACL + OIDC audience from `build.json` auth blocks |
 | Every service `flake.nix` | **EDIT** | Replace `npm_default` → trust-zone network + `ipv4_address` + `dns: [gateway]` |
+| **Client SSH Config (vault/)** | | |
+| `vault/A0_keys/config` | **EDIT** | Add `gcp-proxy-443` host entry (desktop) |
+| `vault/A0_keys/config_mobile` | **EDIT** | Add `gcp-proxy-443` host entry (Termux) |
 | **C3 Parsers (mcp-api-c3/src/engines/)** | | |
 | `parsers/mesh-topology.ts` | **NEW** | Read `mesh-topology.json` (replaces ssh-config.ts + WG parts of wireguard.ts) |
 | `parsers/container-network.ts` | **NEW** | Read `container-network-{vm}.json` (supplements compose.ts with declared IPs/ports) |
@@ -991,19 +1187,24 @@ ntfy/mailu configs ────────────────────�
 
 ### Phase 4: Service flakes (one VM at a time)
 
-16. **Update Caddy flake** — auto-generate Caddyfile from `build.json` auth + `meshTopology` upstream IPs
-17. **Update Authelia flake** — auto-generate ACL + OIDC audience from `build.json` auth blocks
-18. **Diff generated Caddy/Authelia configs against current** — must be equivalent before deploying
-19. **Update gcp-proxy service flakes** (caddy, authelia, vaultwarden, ntfy, hickory-dns) — new networks + IPs
-20. **Ship gcp-proxy services** (`build.sh ship` per service)
-21. **Verify gcp-proxy**: containers resolve each other, ports forward, public access works, auth works (cookie + bearer)
-22. **Repeat for each VM**: oci-apps, oci-mail, oci-analytics, oci-apps-2, gcp-t4
+16. **Rebuild Caddy with caddy-l4** — add xcaddy build step with `github.com/mholt/caddy-l4`
+17. **Update Caddy flake** — auto-generate Caddyfile from `build.json` auth + `meshTopology` upstream IPs + L4 SSH multiplexing config
+18. **Update Authelia flake** — auto-generate ACL + OIDC audience from `build.json` auth blocks
+19. **Diff generated Caddy/Authelia configs against current** — must be equivalent before deploying
+20. **Update gcp-proxy service flakes** (caddy, authelia, vaultwarden, ntfy, hickory-dns) — new networks + IPs
+21. **Ship gcp-proxy services** (`build.sh ship` per service)
+22. **Verify gcp-proxy**: containers resolve each other, ports forward, public access works, auth works (cookie + bearer)
+23. **Verify Caddy L4**: `ssh -p 443 gcp-proxy` works, HTTPS still works on same port
+24. **Deploy wstunnel server** on gcp-proxy (`build.sh ship`)
+25. **Verify WG fallback**: from client, `wstunnel client` → swap WG endpoint → mesh reconnects through WSS
+26. **Add `gcp-proxy-443` to SSH configs** (vault/config + config_mobile)
+25. **Repeat for each VM**: oci-apps, oci-mail, oci-analytics, oci-apps-2, gcp-t4
 
 ### Phase 5: Cleanup
 
-23. **Delete `ssh-config.ts` parser** — fully replaced by mesh-topology.ts
-24. **Remove WG/firewall regex parsing from `wireguard.ts`** — fully replaced
-25. **Update GHA workflow** — add trigger paths for `mesh-topology.nix`, VM `.nix` files, `build.json` auth changes
+28. **Delete `ssh-config.ts` parser** — fully replaced by mesh-topology.ts
+29. **Remove WG/firewall regex parsing from `wireguard.ts`** — fully replaced
+30. **Update GHA workflow** — add trigger paths for `mesh-topology.nix`, VM `.nix` files, `build.json` auth changes
 
 **Rule: one VM at a time. Never push all VMs simultaneously.**
 **Rule: Phase 2 (parsers) must produce identical output before Phase 3 starts.**
@@ -1026,3 +1227,9 @@ ntfy/mailu configs ────────────────────�
 - **Parser migration**: Phase 2 (parsers) must produce identical JSON output to current parsers before any deployment. Run both old and new parsers, diff results. Any discrepancy means the new parser is missing data.
 - **nix eval dependency**: `build.sh config` now needs `nix` available to export mesh-topology.json. On GHA this is already installed (cachix/install-nix-action). On VMs, nix is in home-manager PATH. On Termux, nix is available. No new dependency.
 - **Drift detection false positives**: First run of drift detection will likely show differences (declared auth vs deployed configs may use different formatting). Normalize both sides before comparing.
+- **Caddy L4 port migration**: When L4 takes port 443, Caddy HTTPS listener moves to internal port (e.g. 8443). L4 routes TLS traffic there. DNAT rule for 443 still points to Caddy container — L4 handles the split inside. Brief downtime during switchover.
+- **Caddy L4 + SSH brute force**: SSH on 443 is now publicly reachable. Mitigated by: key-only auth (no passwords), Caddy rate limiting (proactive), fail2ban (reactive). Same security as port 22 but with better observability.
+- **xcaddy build**: Caddy must be rebuilt from source with the L4 plugin. Custom Docker image, not stock `caddy:latest`. Build time increases slightly. Use `REMOTE_BUILD=true` on gcp-proxy (x86_64).
+- **wstunnel security**: `--restrict-to localhost:51820` limits what the tunnel can reach. Only WG port is exposed through the WebSocket. wstunnel itself has no auth — relies on WG's own crypto (public key auth) to reject unauthorized peers.
+- **wstunnel network_mode**: Uses `host` networking to reach WG on host localhost:51820. This bypasses Docker network isolation for this container only. Alternative: use Docker gateway IP + firewall rule.
+- **WG endpoint swap**: Client `wg set` to swap endpoint is ephemeral — a WG restart reverts to the config file endpoint. The fallback script needs to re-run after any WG restart on the client.
