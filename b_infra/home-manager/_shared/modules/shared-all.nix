@@ -9,5 +9,6 @@
     ./ssh-keys.nix
     ./shell-path.nix
     ./sshd-hardening.nix
+    ./system-cleanup.nix
   ];
 }
