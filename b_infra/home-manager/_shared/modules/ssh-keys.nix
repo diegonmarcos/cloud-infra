@@ -7,28 +7,25 @@
 {
   home.activation.sshKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     SK_LOG="[ssh-keys]"
-    SECRETS="$HOME/.config/home-manager/.secrets"
+    SECRETS_YAML="$HOME/.config/home-manager/secrets.yaml"
     SSH_DIR="$HOME/.ssh"
     SOCKETS="$SSH_DIR/sockets"
 
-    if [ ! -f "$SECRETS" ]; then
-      echo "$SK_LOG No .secrets file — skipping"
+    if [ ! -f "$SECRETS_YAML" ]; then
+      echo "$SK_LOG No secrets.yaml — skipping"
       exit 0
     fi
 
     mkdir -p "$SSH_DIR" "$SOCKETS"
     chmod 700 "$SSH_DIR"
 
-    # ── Helper: extract a value from KEY=VALUE secrets file ──────────────
+    # ── Helper: extract multiline values directly from sops YAML ────────
     get_secret() {
       local key="$1"
-      local val
-      val=$(grep "^''${key}=" "$SECRETS" | head -1 | cut -d'=' -f2-)
-      # strip surrounding quotes if present
-      echo "$val" | sed 's/^"//;s/"$//'
+      sops -d --extract "[\"$key\"]" "$SECRETS_YAML" 2>/dev/null
     }
 
-    # ── Write private keys ────────────────────────────────────────────────
+    # ── Write keys (handles multiline SSH private keys correctly) ────────
     write_key() {
       local name="$1"
       local secret_key="$2"
@@ -36,7 +33,7 @@
       local val
       val=$(get_secret "$secret_key")
       if [ -z "$val" ]; then
-        echo "$SK_LOG WARNING: $secret_key not found in .secrets — skipping $name"
+        echo "$SK_LOG WARNING: $secret_key not found in secrets.yaml — skipping $name"
         return
       fi
       # Only rewrite if content changed (avoid unnecessary file churn)
@@ -45,7 +42,7 @@
       if [ "$current" != "$val" ]; then
         printf '%s\n' "$val" > "$path"
         chmod 600 "$path"
-        echo "$SK_LOG Wrote $path"
+        echo "$SK_LOG Wrote $path ($(echo "$val" | wc -c) bytes)"
       else
         echo "$SK_LOG $path unchanged"
       fi
