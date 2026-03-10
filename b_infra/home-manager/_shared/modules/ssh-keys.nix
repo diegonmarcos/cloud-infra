@@ -7,25 +7,34 @@
 {
   home.activation.sshKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     SK_LOG="[ssh-keys]"
-    SECRETS_YAML="$HOME/.config/home-manager/secrets.yaml"
+    SECRETS="$HOME/.config/home-manager/.secrets"
+    SECRETS_D="$HOME/.config/home-manager/.secrets.d"
     SSH_DIR="$HOME/.ssh"
     SOCKETS="$SSH_DIR/sockets"
 
-    if [ ! -f "$SECRETS_YAML" ]; then
-      echo "$SK_LOG No secrets.yaml — skipping"
+    if [ ! -f "$SECRETS" ] && [ ! -d "$SECRETS_D" ]; then
+      echo "$SK_LOG No .secrets or .secrets.d — skipping"
       exit 0
     fi
 
     mkdir -p "$SSH_DIR" "$SOCKETS"
     chmod 700 "$SSH_DIR"
 
-    # ── Helper: extract multiline values directly from sops YAML ────────
+    # ── Helper: read secret from .secrets.d/ (multiline) or .secrets (single-line)
     get_secret() {
       local key="$1"
-      sops -d --extract "[\"$key\"]" "$SECRETS_YAML" 2>/dev/null
+      # Prefer .secrets.d/ (multiline-safe)
+      if [ -f "$SECRETS_D/$key" ]; then
+        cat "$SECRETS_D/$key"
+        return
+      fi
+      # Fallback to .secrets KEY=VALUE
+      if [ -f "$SECRETS" ]; then
+        grep "^''${key}=" "$SECRETS" | head -1 | cut -d'=' -f2-
+      fi
     }
 
-    # ── Write keys (handles multiline SSH private keys correctly) ────────
+    # ── Write keys ──────────────────────────────────────────────────────
     write_key() {
       local name="$1"
       local secret_key="$2"
@@ -33,16 +42,15 @@
       local val
       val=$(get_secret "$secret_key")
       if [ -z "$val" ]; then
-        echo "$SK_LOG WARNING: $secret_key not found in secrets.yaml — skipping $name"
+        echo "$SK_LOG WARNING: $secret_key not found — skipping $name"
         return
       fi
-      # Only rewrite if content changed (avoid unnecessary file churn)
       local current=""
       [ -f "$path" ] && current=$(cat "$path")
       if [ "$current" != "$val" ]; then
-        printf '%s\n' "$val" > "$path"
+        printf '%s' "$val" > "$path"
         chmod 600 "$path"
-        echo "$SK_LOG Wrote $path ($(echo "$val" | wc -c) bytes)"
+        echo "$SK_LOG Wrote $path ($(printf '%s' "$val" | wc -c) bytes)"
       else
         echo "$SK_LOG $path unchanged"
       fi
