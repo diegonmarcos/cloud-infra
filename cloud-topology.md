@@ -10,7 +10,7 @@
 
 | VM ID | Alias | IP | WG IP | User | Method | Containers | Description |
 |-------|-------|----|-------|------|--------|------------|-------------|
-| `oci-E2-f_0` | `oci-mail` | 130.110.251.193 | 10.0.0.3 | ubuntu | key | 14 | Oracle Free - E2 Micro 0 - Mail Server |
+| `oci-E2-f_0` | `oci-mail` | 130.110.251.193 | 10.0.0.3 | ubuntu | key | 22 | Oracle Free - E2 Micro 0 - Mail Server |
 | `oci-E2-f_1` | `oci-analytics` | 129.151.228.66 | 10.0.0.4 | ubuntu | key | 7 | Oracle Free - E2 Micro 1 - Analytics + Workflows |
 | `oci-A1-f_0` | `oci-apps` | 82.70.229.129 | 10.0.0.6 | ubuntu | key | 44 | Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated |
 | `oci-A1-p_0` | `oci-apps-2` | 79.72.28.10 | 10.0.0.7 | ubuntu | key | 1 | Oracle Paid - A1 Flex 0 (8 OCPUs / 32GB) |
@@ -36,6 +36,14 @@
 | dagu | — | — |
 | syslog-forwarder | — | — |
 | sauron | — | — |
+| mailu-admin-1 | — | — |
+| mailu-antispam-1 | — | — |
+| mailu-front-1 | — | — |
+| mailu-imap-1 | — | — |
+| mailu-redis-1 | — | — |
+| mailu-resolver-1 | — | — |
+| mailu-smtp-1 | — | — |
+| mailu-webmail-1 | — | — |
 
 ### oci-analytics (`oci-E2-f_1`) — Containers
 
@@ -204,7 +212,7 @@
 | Service | Category | Domain | Ports | Containers |
 |---------|----------|--------|-------|------------|
 | mailu-mcp | app | — | — | mailu-mcp |
-| mailu | app | mail.diegonmarcos.com | 10.0.0.3:8444:443, 0.0.0.0:25:25, 0.0.0.0:465:465, 0.0.0.0:587:587, 0.0.0.0:993:993 | admin, antispam, front, imap, redis, resolver, smtp, webmail |
+| mailu | app | mail.diegonmarcos.com | 10.0.0.3:8444:443, 0.0.0.0:25:25, 0.0.0.0:465:465, 0.0.0.0:587:587, 0.0.0.0:993:993 | mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
 | smtp-proxy | app | — | 8080:8080 | smtp-proxy |
 | syncthing | mic | sync.diegonmarcos.com | 10.0.0.3:8384:8384, 0.0.0.0:22000:22000, 0.0.0.0:21027:21027/udp | syncthing |
 | dagu | tools | dagu.diegonmarcos.com | 10.0.0.3:8070:8080 | dagu |
@@ -413,10 +421,10 @@
 
 | Network | VM | Connected Containers |
 |---------|----|---------------------|
-| default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
-| mailu_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
-| matomo_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
-| sauron_security | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
+| default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
+| mailu_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
+| matomo_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
+| sauron_security | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
 | windmill-net | oci-analytics | matomo-hybrid, sauron-forwarder, windmill-db, windmill-server, windmill-worker, sauron, db-agent |
 | dev_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
 | c3-api_default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |

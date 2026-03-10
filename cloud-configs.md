@@ -61,7 +61,7 @@
 | 49 | sauron-lite-flex | tools | oci-A1-f_0 | — | sauron |
 | 50 | ollama-arm | agi | oci-A1-p_0 | — | ollama-arm |
 | 51 | dagu | tools | oci-E2-f_0 | dagu.diegonmarcos.com | dagu |
-| 52 | mailu | app | oci-E2-f_0 | mail.diegonmarcos.com | admin, antispam, front, imap, redis, resolver, smtp, webmail |
+| 52 | mailu | app | oci-E2-f_0 | mail.diegonmarcos.com | mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
 | 53 | mailu-mcp | app | oci-E2-f_0 | — | mailu-mcp |
 | 54 | sauron-lite-micro1 | tools | oci-E2-f_0 | — | sauron |
 | 55 | smtp-proxy | app | oci-E2-f_0 | — | smtp-proxy |
@@ -694,7 +694,7 @@
 | VM | oci-E2-f_0 |
 | Description | Mailu mail server stack (mail.diegonmarcos.com) |
 | Domain | mail.diegonmarcos.com |
-| Containers | admin, antispam, front, imap, redis, resolver, smtp, webmail |
+| Containers | mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
 | Ports | 10.0.0.3:8444:443, 0.0.0.0:25:25, 0.0.0.0:465:465, 0.0.0.0:587:587, 0.0.0.0:993:993 |
 | Networks | default |
 
