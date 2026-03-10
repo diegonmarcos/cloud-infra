@@ -371,7 +371,7 @@
 | Description | Unified Cloud Documentation Portal |
 | Domain | — |
 | Containers | cloud-spec |
-| Ports | 127.0.0.1:3080:3080 |
+| Ports | 3080:3080 |
 | Networks | — |
 
 ### code-server
@@ -841,9 +841,10 @@
 | api.diegonmarcos.com/rust-api | 10.0.0.6:8080 | authelia+bearer | no | — |
 | api.diegonmarcos.com/flask | 10.0.0.1:5000 | authelia+bearer | no | — |
 | api.diegonmarcos.com/crawlee | 10.0.0.6:3000 | authelia+bearer | no | — |
-| cal.diegonmarcos.com | 10.0.0.6:5232 | none | no | — |
+| cal.diegonmarcos.com | 10.0.0.6:5232 | authelia+bearer | no | — |
 | chat.diegonmarcos.com | 10.0.0.6:8065 | authelia+bearer | no | — |
-| drive-notes-affine.diegonmarcos.com | 10.0.0.6:3010 | none | no | — |
+| drive-notes-affine.diegonmarcos.com | 10.0.0.6:3010 | authelia+bearer | no | — |
+| cloud.diegonmarcos.com | 10.0.0.6:3080 | authelia+bearer | no | — |
 | analytics.diegonmarcos.com | 10.0.0.4:8080 | authelia+bearer | no | /matomo.js, /matomo.php, /piwik.js, /piwik.php, /collect.php, /api.php, /track.php, /js/* |
 | photos.diegonmarcos.com | 10.0.0.6:3013 | authelia+bearer | no | — |
 | mail.diegonmarcos.com | 10.0.0.3:8444 | authelia+bearer | yes | — |
