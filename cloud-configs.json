@@ -3,7 +3,7 @@
     "generated_by": "a_solutions/mcp-api-c3/src/engines/gen-configs.ts",
     "api_route": "GET /c3-api/configs",
     "source": "cloud-topology.json + Caddy/Authelia/DNS flakes",
-    "generated_at": "2026-03-09T04:17:44.203Z"
+    "generated_at": "2026-03-10T19:59:32.942Z"
   },
   "services": [
     {
@@ -381,7 +381,7 @@
       "description": "Unified Cloud Documentation Portal",
       "domain": "—",
       "ports": [
-        "127.0.0.1:3080:3080"
+        "3080:3080"
       ],
       "networks": [],
       "containers": [
@@ -1023,7 +1023,7 @@
         {
           "domain": "cal.diegonmarcos.com",
           "upstream": "10.0.0.6:5232",
-          "auth": "none",
+          "auth": "authelia+bearer",
           "tls_skip": false,
           "public_paths": []
         },
@@ -1037,7 +1037,14 @@
         {
           "domain": "drive-notes-affine.diegonmarcos.com",
           "upstream": "10.0.0.6:3010",
-          "auth": "none",
+          "auth": "authelia+bearer",
+          "tls_skip": false,
+          "public_paths": []
+        },
+        {
+          "domain": "cloud.diegonmarcos.com",
+          "upstream": "10.0.0.6:3080",
+          "auth": "authelia+bearer",
           "tls_skip": false,
           "public_paths": []
         },
