@@ -67,33 +67,49 @@ step_secrets() {
         return 0
     fi
 
-    log "Decrypting secrets -> dist/.secrets"
+    log "Decrypting secrets -> dist/.secrets + .secrets.d/"
     mkdir -p "$DIST_DIR"
 
-    if command -v yq >/dev/null 2>&1; then
+    # python3+yaml: properly handles multiline values (SSH keys, PEM certs)
+    # Single-line → .secrets (KEY=VALUE), multiline → .secrets.d/KEY (one file per key)
+    if command -v python3 >/dev/null 2>&1; then
+        sops -d "$secrets_file" | python3 -c "
+import sys, os, yaml
+data = yaml.safe_load(sys.stdin)
+if not isinstance(data, dict):
+    sys.exit(0)
+dist = '$DIST_DIR'
+secrets_d = os.path.join(dist, '.secrets.d')
+os.makedirs(secrets_d, exist_ok=True)
+env_lines = []
+multiline = 0
+for k, v in data.items():
+    if k == 'sops':
+        continue
+    if not isinstance(v, str):
+        v = str(v)
+    if '\n' in v:
+        path = os.path.join(secrets_d, k)
+        with open(path, 'w') as f:
+            f.write(v + '\n')
+        os.chmod(path, 0o600)
+        multiline += 1
+    else:
+        env_lines.append(f'{k}={v}')
+with open(os.path.join(dist, '.secrets'), 'w') as f:
+    f.write('\n'.join(env_lines) + '\n')
+print(f'  {len(env_lines)} env vars, {multiline} multiline files', file=sys.stderr)
+"
+    elif command -v yq >/dev/null 2>&1; then
         sops -d "$secrets_file" | yq -r 'to_entries | .[] | "\(.key)=\(.value)"' \
             | grep '^[A-Z_]*=' > "$DIST_DIR/.secrets"
-    elif command -v python3 >/dev/null 2>&1; then
-        sops -d "$secrets_file" | python3 -c "
-import sys
-for line in sys.stdin:
-    line = line.strip()
-    if line.startswith('sops:'):
-        break
-    if not line or line.startswith('#'):
-        continue
-    if ':' in line:
-        k, v = line.split(':', 1)
-        k, v = k.strip(), v.strip().strip('\"').strip(\"'\")
-        if v:
-            print(f'{k}={v}')
-" > "$DIST_DIR/.secrets"
+        log "WARNING: yq fallback — multiline values may be truncated"
     else
-        log "ERROR: No yq or python3 for YAML->env conversion"
+        log "ERROR: No python3 or yq for YAML->env conversion"
         return 1
     fi
 
-    log "Secrets decrypted ($(grep -c '=' "$DIST_DIR/.secrets" 2>/dev/null || echo 0) keys)"
+    log "Secrets decrypted ($(grep -c '=' "$DIST_DIR/.secrets" 2>/dev/null || echo 0) env keys)"
 }
 
 # ── Step: Deploy ──────────────────────────────────────────────────────
