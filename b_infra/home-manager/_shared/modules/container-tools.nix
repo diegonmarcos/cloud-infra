@@ -39,6 +39,7 @@
     # ── Git ──
     git
     gh
+    cacert          # CA certificates — needed by nix git/curl inside containers
 
     # ── Text ──
     ripgrep
