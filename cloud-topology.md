@@ -305,7 +305,7 @@
 
 | Service | Category | Description |
 |---------|----------|-------------|
-| cloudflare | cloud | Cloudflare DNS records and configuration (Terraform) |
+| cloudflare | cloud | Cloudflare DNS, Email Routing, Tunnel config (Terraform) |
 | cloudflare-worker | cloud | Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy |
 | gcloud | cloud | Google Cloud SDK and tools (local CLI only) |
 | sauron-lite | tools | File Integrity Scanner (deployed on all VMs) |
@@ -360,7 +360,7 @@
 
 | Service | Flake | VM | Domain | Description |
 |---------|-------|----|--------|-------------|
-| `cloudflare` | `ba-clo_cloudflare` | local | — | Cloudflare DNS records and configuration (Terraform) |
+| `cloudflare` | `ba-clo_cloudflare` | local | — | Cloudflare DNS, Email Routing, Tunnel config (Terraform) |
 | `cloudflare-worker` | `ba-clo_cloudflare-worker` | local | — | Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy |
 | `gcloud` | `ba-clo_gcloud` | local | — | Google Cloud SDK and tools (local CLI only) |
 | `hickory-dns` | `ba-clo_hickory-dns` | gcp-proxy | dns.internal | Internal DNS server for WireGuard mesh (.internal zone) |
