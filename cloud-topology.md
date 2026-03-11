@@ -370,7 +370,7 @@
 | Service | Flake | VM | Domain | Description |
 |---------|-------|----|--------|-------------|
 | `authelia` | `bb-sec_authelia` | gcp-proxy | auth.diegonmarcos.com | SSO and 2FA authentication portal |
-| `caddy` | `bb-sec_caddy` | gcp-proxy | proxy.diegonmarcos.com | Caddy reverse proxy (replaces NPM on gcp-proxy + oci-mail) |
+| `caddy` | `bb-sec_caddy` | gcp-proxy | proxy.diegonmarcos.com | Caddy reverse proxy + security dashboard (gcp-proxy) |
 | `orchestrator` | `bb-sec_orchestrator` | oci-apps | — | Container orchestrator — resource budget management for on-demand services |
 | `rust-api` | `bb-sec_rust-api` | oci-apps | api.diegonmarcos.com/rust-api | Cloud Rust API (api.diegonmarcos.com — default) |
 | `sauron-central` | `bb-sec_sauron-central` | gcp-proxy | — | Central Syslog Collector + SIEM API |
