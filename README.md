@@ -1,6 +1,6 @@
 # Cloud Infrastructure
 
-Self-hosted cloud services across Oracle Cloud and Google Cloud free tiers, with Cloudflare edge and WireGuard mesh networking.
+Self-hosted cloud services across Oracle Cloud and Google Cloud free tiers, with Cloudflare edge and WireGuard mesh networking. Managed via `build.sh` + Nix flakes.
 
 ---
 
