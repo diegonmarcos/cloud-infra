@@ -128,7 +128,7 @@
 |-----|-------|
 | Category | sec |
 | VM | gcp-E2-f_0 |
-| Description | Caddy reverse proxy (replaces NPM on gcp-proxy + oci-mail) |
+| Description | Caddy reverse proxy + security dashboard (gcp-proxy) |
 | Domain | proxy.diegonmarcos.com |
 | Containers | caddy, introspect-proxy |
 | Ports | 80:80, 443:443, 443:443/udp |
