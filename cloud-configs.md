@@ -64,7 +64,7 @@
 | 52 | mailu | app | oci-E2-f_0 | mail.diegonmarcos.com | mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
 | 53 | mailu-mcp | app | oci-E2-f_0 | — | mailu-mcp |
 | 54 | sauron-lite-micro1 | tools | oci-E2-f_0 | — | sauron |
-| 55 | smtp-proxy | app | oci-E2-f_0 | — | smtp-proxy |
+| 55 | smtp-proxy | app | oci-E2-f_0 | smtp-proxy.diegonmarcos.com | smtp-proxy |
 | 56 | syncthing | mic | oci-E2-f_0 | sync.diegonmarcos.com | syncthing |
 | 57 | syslog-forwarder | tools | oci-E2-f_0 | — | syslog-forwarder |
 | 58 | syslog-forwarder-micro1 | tools | oci-E2-f_0 | — | syslog-forwarder |
@@ -728,8 +728,8 @@
 |-----|-------|
 | Category | app |
 | VM | oci-E2-f_0 |
-| Description | SMTP Relay |
-| Domain | — |
+| Description | SMTP Relay for Cloudflare Email Worker → Mailu |
+| Domain | smtp-proxy.diegonmarcos.com |
 | Containers | smtp-proxy |
 | Ports | 8080:8080 |
 | Networks | mailu_default |

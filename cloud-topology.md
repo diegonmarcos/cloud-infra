@@ -213,7 +213,7 @@
 |---------|----------|--------|-------|------------|
 | mailu-mcp | app | — | — | mailu-mcp |
 | mailu | app | mail.diegonmarcos.com | 10.0.0.3:8444:443, 0.0.0.0:25:25, 0.0.0.0:465:465, 0.0.0.0:587:587, 0.0.0.0:993:993 | mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
-| smtp-proxy | app | — | 8080:8080 | smtp-proxy |
+| smtp-proxy | app | smtp-proxy.diegonmarcos.com | 8080:8080 | smtp-proxy |
 | syncthing | mic | sync.diegonmarcos.com | 10.0.0.3:8384:8384, 0.0.0.0:22000:22000, 0.0.0.0:21027:21027/udp | syncthing |
 | dagu | tools | dagu.diegonmarcos.com | 10.0.0.3:8070:8080 | dagu |
 | syslog-forwarder | tools | — | — | syslog-forwarder |
@@ -331,7 +331,7 @@
 | `radicale` | `aa-sui_radicale` | oci-apps | cal.diegonmarcos.com | Radicale CalDAV/CardDAV server (cal.diegonmarcos.com) |
 | `revealmd` | `aa-sui_revealmd` | oci-apps | slides.diegonmarcos.com | Reveal.js markdown presentations (NEW - not deployed yet) |
 | `mailu` | `aa-sui_tools-mailu` | oci-mail | mail.diegonmarcos.com | Mailu mail server stack (mail.diegonmarcos.com) |
-| `smtp-proxy` | `aa-sui_tools-smtp-proxy` | oci-mail | — | SMTP Relay |
+| `smtp-proxy` | `aa-sui_tools-smtp-proxy` | oci-mail | smtp-proxy.diegonmarcos.com | SMTP Relay for Cloudflare Email Worker → Mailu |
 
 ### Misc (ab-mic_*)
 
