@@ -272,7 +272,7 @@
 |-----|-------|
 | Category | cloud |
 | VM | local |
-| Description | Cloudflare DNS records and configuration (Terraform) |
+| Description | Cloudflare DNS, Email Routing, Tunnel config (Terraform) |
 | Domain | — |
 | Containers | — |
 | Ports | — |
