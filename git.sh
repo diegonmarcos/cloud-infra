@@ -68,13 +68,21 @@ done < "$GIT_YAML"
 
 cmd_config() {
     TSX="$ENGINE_DIR/node_modules/.bin/tsx"
+    TOPO="$ENGINE_DIR/engines/gen-topology.ts"
+    CONF="$ENGINE_DIR/engines/gen-configs.ts"
+
     if [ ! -x "$TSX" ]; then
-        printf "[git.sh] ERROR: tsx not found. Run: (cd %s && npm install)\n" "$ENGINE_DIR" >&2
-        exit 1
+        printf "[git.sh] SKIP: tsx not found (run: cd %s && npm install)\n" "$ENGINE_DIR"
+        return 1
     fi
+    if [ ! -f "$TOPO" ] || [ ! -f "$CONF" ]; then
+        printf "[git.sh] SKIP: engine sources not available locally\n"
+        return 1
+    fi
+
     printf "[git.sh] Regenerating configs...\n"
-    "$TSX" "$ENGINE_DIR/engines/gen-topology.ts"
-    "$TSX" "$ENGINE_DIR/engines/gen-configs.ts"
+    "$TSX" "$TOPO"
+    "$TSX" "$CONF"
     printf "[git.sh] Done.\n"
 }
 
@@ -115,27 +123,20 @@ cmd_push() {
         resolve_remote_wins
     fi
 
-    # 2. Check if engine sources differ from remote
-    _has_engine=0
-    if git -C "$REPO_ROOT" diff origin/main --name-only 2>/dev/null | grep -q "^$ENGINE_TRIGGER"; then
-        _has_engine=1
-    fi
-
-    # 3. Regenerate configs if engines changed
-    if [ "$_has_engine" = "1" ]; then
-        printf "[git.sh] Engine changes detected — regenerating configs...\n"
-        cmd_config
-
+    # 2. Regenerate configs (fast + idempotent — no diff = no amend)
+    if cmd_config; then
         # Stage regenerated outputs
         for _f in $REGEN_OUTPUTS; do
             git -C "$REPO_ROOT" add "$REPO_ROOT/$_f" 2>/dev/null || true
         done
 
-        # Amend into last commit (no new commit)
+        # Amend into last commit if outputs changed (no new commit)
         if ! git -C "$REPO_ROOT" diff --cached --quiet 2>/dev/null; then
             printf "[git.sh] Folding regenerated configs into last commit...\n"
             git -C "$REPO_ROOT" commit --amend --no-edit
         fi
+    else
+        printf "[git.sh] Skipping regen — GHA will handle it\n"
     fi
 
     # 4. Push
