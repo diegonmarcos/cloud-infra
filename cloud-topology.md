@@ -10,7 +10,7 @@
 
 | VM ID | Alias | IP | WG IP | User | Method | Containers | Description |
 |-------|-------|----|-------|------|--------|------------|-------------|
-| `oci-E2-f_0` | `oci-mail` | 130.110.251.193 | 10.0.0.3 | ubuntu | key | 22 | Oracle Free - E2 Micro 0 - Mail Server |
+| `oci-E2-f_0` | `oci-mail` | 130.110.251.193 | 10.0.0.3 | ubuntu | key | 14 | Oracle Free - E2 Micro 0 - Mail Server |
 | `oci-E2-f_1` | `oci-analytics` | 129.151.228.66 | 10.0.0.4 | ubuntu | key | 7 | Oracle Free - E2 Micro 1 - Analytics + Workflows |
 | `oci-A1-f_0` | `oci-apps` | 82.70.229.129 | 10.0.0.6 | ubuntu | key | 44 | Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated |
 | `oci-A1-p_0` | `oci-apps-2` | 79.72.28.10 | 10.0.0.7 | ubuntu | key | 1 | Oracle Paid - A1 Flex 0 (8 OCPUs / 32GB) |
@@ -23,19 +23,6 @@
 | Container | Ports | Networks |
 |-----------|-------|----------|
 | mailu-mcp | 10.0.0.3:8444:443, 0.0.0.0:25:25, 0.0.0.0:465:465, 0.0.0.0:587:587, 0.0.0.0:993:993, 8080:8080, 10.0.0.3:8384:8384, 0.0.0.0:22000:22000, 0.0.0.0:21027:21027/udp, 10.0.0.3:8070:8080 | default, mailu_default, matomo_default, sauron_security |
-| admin | — | — |
-| antispam | — | — |
-| front | — | — |
-| imap | — | — |
-| redis | — | — |
-| resolver | — | — |
-| smtp | — | — |
-| webmail | — | — |
-| smtp-proxy | — | — |
-| syncthing | — | — |
-| dagu | — | — |
-| syslog-forwarder | — | — |
-| sauron | — | — |
 | mailu-admin-1 | — | — |
 | mailu-antispam-1 | — | — |
 | mailu-front-1 | — | — |
@@ -44,6 +31,11 @@
 | mailu-resolver-1 | — | — |
 | mailu-smtp-1 | — | — |
 | mailu-webmail-1 | — | — |
+| smtp-proxy | — | — |
+| syncthing | — | — |
+| dagu | — | — |
+| syslog-forwarder | — | — |
+| sauron | — | — |
 
 ### oci-analytics (`oci-E2-f_1`) — Containers
 
@@ -61,7 +53,7 @@
 
 | Container | Ports | Networks |
 |-----------|-------|----------|
-| hedgedoc_app | 3010:3000, 10.0.0.6:8443:8443, 10.0.0.6:3012:9001, 10.0.0.6:3015:80, 10.0.0.6:3011:8484, 10.0.0.6:3018:3000, 10.0.0.6:8065:8065, 10.0.0.6:8888:8888, 10.0.0.6:3013:2342, 5432:5432, 5001:5001, 10.0.0.6:5232:5232, 10.0.0.6:3014:1948, 3000:3000, 3001:3001, 5433:5432, 6380:6379, 9000:9000, 9001:9001, 127.0.0.1:9100:9100, 8080:8080, 10.0.0.6:3016:3000, 10.0.0.6:3019:3100, 10.0.0.6:3020:3200, 10.0.0.6:4317:4317, 10.0.0.6:4318:4318, 10.0.0.6:3021:8080, 10.0.0.6:8085:8080, 2224:22, 2223:22, 2222:22, 10.0.0.6:3017:3000, 10.0.0.6:2222:22, 127.0.0.1:8001:8000, 8081:8080, 127.0.0.1:3080:3080, 3080:3080 | dev_network, c3-api_default, photos_net, default, crawlee_network, npm_default, nocodb_network, backup_network, proxy, gitea_backup_network, kg-net |
+| hedgedoc_app | 3010:3000, 10.0.0.6:8443:8443, 10.0.0.6:3012:9001, 10.0.0.6:3015:80, 10.0.0.6:3011:8484, 10.0.0.6:3018:3000, 10.0.0.6:8065:8065, 10.0.0.6:8888:8888, 10.0.0.6:3013:2342, 5432:5432, 5001:5001, 10.0.0.6:5232:5232, 10.0.0.6:3014:1948, 3000:3000, 3001:3001, 5433:5432, 6380:6379, 9000:9000, 9001:9001, 127.0.0.1:9100:9100, 8080:8080, 3080:3080, 10.0.0.6:3016:3000, 10.0.0.6:3019:3100, 10.0.0.6:3020:3200, 10.0.0.6:4317:4317, 10.0.0.6:4318:4318, 10.0.0.6:3021:8080, 8081:8080, 10.0.0.6:8085:8080, 2224:22, 2223:22, 2222:22, 10.0.0.6:3017:3000, 10.0.0.6:2222:22, 127.0.0.1:8001:8000 | dev_network, c3-api_default, photos_net, default, crawlee_network, npm_default, nocodb_network, backup_network, proxy, gitea_backup_network, kg-net |
 | hedgedoc_postgres | — | — |
 | code-server | — | — |
 | etherpad_app | — | — |
@@ -91,20 +83,20 @@
 | rig | — | — |
 | orchestrator | — | — |
 | rust-api | — | — |
+| cloud-spec | — | — |
 | lgtm_grafana | — | — |
 | lgtm_loki | — | — |
 | lgtm_mimir | — | — |
 | lgtm_tempo | — | — |
+| c3-api | — | — |
 | nocodb | — | — |
 | nocodb-db | — | — |
 | borg-server | — | — |
 | bup-server | — | — |
 | gitea | — | — |
 | surrealdb | — | — |
-| c3-api | — | — |
 | sauron | — | — |
 | db-agent | — | — |
-| cloud-spec | — | — |
 
 ### oci-apps-2 (`oci-A1-p_0`) — Containers
 
@@ -254,13 +246,13 @@
 | rust-api | sec | api.diegonmarcos.com/rust-api | 8080:8080 | rust-api |
 | cloud-spec | tools | — | 3080:3080 | cloud-spec |
 | lgtm | tools | grafana.diegonmarcos.com | 10.0.0.6:3016:3000, 10.0.0.6:3019:3100, 10.0.0.6:3020:3200, 10.0.0.6:4317:4317, 10.0.0.6:4318:4318, 10.0.0.6:3021:8080 | lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo |
+| c3-api | sec | api.diegonmarcos.com/c3-api | 8081:8080 | c3-api |
 | nocodb | tools | db.diegonmarcos.com | 10.0.0.6:8085:8080 | nocodb, nocodb-db |
 | backup-borg | data | — | 2224:22 | borg-server |
 | backup-bup | data | — | 2223:22 | bup-server |
 | backup-gitea | data | git.diegonmarcos.com | 3000:3000, 2222:22 | gitea |
 | gitea | data | git.diegonmarcos.com | 10.0.0.6:3017:3000, 10.0.0.6:2222:22 | gitea |
 | kg-graph | data | — | 127.0.0.1:8001:8000 | surrealdb |
-| c3-api | sec | api.diegonmarcos.com/c3-api | 8081:8080 | c3-api |
 | sauron-lite-flex | tools | — | — | sauron |
 | db-agent-flex | data | — | — | db-agent |
 | rig | tools | — | — | rig |
@@ -421,22 +413,22 @@
 
 | Network | VM | Connected Containers |
 |---------|----|---------------------|
-| default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
-| mailu_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
-| matomo_default | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
-| sauron_security | oci-mail | mailu-mcp, admin, antispam, front, imap, redis, resolver, smtp, webmail, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1 |
+| default | oci-mail | mailu-mcp, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
+| mailu_default | oci-mail | mailu-mcp, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
+| matomo_default | oci-mail | mailu-mcp, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
+| sauron_security | oci-mail | mailu-mcp, mailu-admin-1, mailu-antispam-1, mailu-front-1, mailu-imap-1, mailu-redis-1, mailu-resolver-1, mailu-smtp-1, mailu-webmail-1, smtp-proxy, syncthing, dagu, syslog-forwarder, sauron |
 | windmill-net | oci-analytics | matomo-hybrid, sauron-forwarder, windmill-db, windmill-server, windmill-worker, sauron, db-agent |
-| dev_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| c3-api_default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| photos_net | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| crawlee_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| npm_default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| nocodb_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| backup_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| proxy | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| gitea_backup_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
-| kg-net | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, c3-api, sauron, db-agent, cloud-spec |
+| dev_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| c3-api_default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| photos_net | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| crawlee_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| npm_default | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| nocodb_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| backup_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| proxy | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| gitea_backup_network | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
+| kg-net | oci-apps | hedgedoc_app, hedgedoc_postgres, code-server, etherpad_app, etherpad_postgres, filebrowser_app, grist_app, mattermost, mattermost-bots, mattermost-postgres, photoprism_app, photoprism_mariadb, photoprism_rclone, photos-db, photos-webhook, radicale, revealmd_app, crawlee_api, crawlee_dashboard, crawlee_db, crawlee_minio, crawlee_minio_init, crawlee_redis, crawlee_runner, crawlee_scheduler, quant-lab-full, quant-lab-light, rig, orchestrator, rust-api, cloud-spec, lgtm_grafana, lgtm_loki, lgtm_mimir, lgtm_tempo, c3-api, nocodb, nocodb-db, borg-server, bup-server, gitea, surrealdb, sauron, db-agent |
 | npm_default | gcp-proxy | vaultwarden, hickory-dns, authelia, authelia-redis, caddy, introspect-proxy, siem-api, syslog-central, alerts-api, dozzle, fluent-bit, github-rss, ntfy, syslog-bridge, postlite-authelia, postlite-npm, postlite-ntfy, postlite-vaultwarden, sqlite-authelia, sqlite-npm, sqlite-ntfy, sqlite-vaultwarden, redis, sauron, db-agent |
 | auth-net | gcp-proxy | vaultwarden, hickory-dns, authelia, authelia-redis, caddy, introspect-proxy, siem-api, syslog-central, alerts-api, dozzle, fluent-bit, github-rss, ntfy, syslog-bridge, postlite-authelia, postlite-npm, postlite-ntfy, postlite-vaultwarden, sqlite-authelia, sqlite-npm, sqlite-ntfy, sqlite-vaultwarden, redis, sauron, db-agent |
 | security | gcp-proxy | vaultwarden, hickory-dns, authelia, authelia-redis, caddy, introspect-proxy, siem-api, syslog-central, alerts-api, dozzle, fluent-bit, github-rss, ntfy, syslog-bridge, postlite-authelia, postlite-npm, postlite-ntfy, postlite-vaultwarden, sqlite-authelia, sqlite-npm, sqlite-ntfy, sqlite-vaultwarden, redis, sauron, db-agent |

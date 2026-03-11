@@ -11,19 +11,6 @@
       "description": "Oracle Free - E2 Micro 0 - Mail Server",
       "containers": [
         "mailu-mcp",
-        "admin",
-        "antispam",
-        "front",
-        "imap",
-        "redis",
-        "resolver",
-        "smtp",
-        "webmail",
-        "smtp-proxy",
-        "syncthing",
-        "dagu",
-        "syslog-forwarder",
-        "sauron",
         "mailu-admin-1",
         "mailu-antispam-1",
         "mailu-front-1",
@@ -31,7 +18,12 @@
         "mailu-redis-1",
         "mailu-resolver-1",
         "mailu-smtp-1",
-        "mailu-webmail-1"
+        "mailu-webmail-1",
+        "smtp-proxy",
+        "syncthing",
+        "dagu",
+        "syslog-forwarder",
+        "sauron"
       ],
       "ports": [
         "10.0.0.3:8444:443",
@@ -126,20 +118,20 @@
         "rig",
         "orchestrator",
         "rust-api",
+        "cloud-spec",
         "lgtm_grafana",
         "lgtm_loki",
         "lgtm_mimir",
         "lgtm_tempo",
+        "c3-api",
         "nocodb",
         "nocodb-db",
         "borg-server",
         "bup-server",
         "gitea",
         "surrealdb",
-        "c3-api",
         "sauron",
-        "db-agent",
-        "cloud-spec"
+        "db-agent"
       ],
       "ports": [
         "3010:3000",
@@ -163,22 +155,21 @@
         "9001:9001",
         "127.0.0.1:9100:9100",
         "8080:8080",
+        "3080:3080",
         "10.0.0.6:3016:3000",
         "10.0.0.6:3019:3100",
         "10.0.0.6:3020:3200",
         "10.0.0.6:4317:4317",
         "10.0.0.6:4318:4318",
         "10.0.0.6:3021:8080",
+        "8081:8080",
         "10.0.0.6:8085:8080",
         "2224:22",
         "2223:22",
         "2222:22",
         "10.0.0.6:3017:3000",
         "10.0.0.6:2222:22",
-        "127.0.0.1:8001:8000",
-        "8081:8080",
-        "127.0.0.1:3080:3080",
-        "3080:3080"
+        "127.0.0.1:8001:8000"
       ],
       "networks": [
         "dev_network",
@@ -1545,6 +1536,19 @@
         "10.0.0.4:8080:8080"
       ]
     },
+    "c3-api": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "c3-api"
+      ],
+      "description": "C3 — Cloud Control Center: MCP server + Fastify API (api.diegonmarcos.com)",
+      "domain": "api.diegonmarcos.com/c3-api",
+      "flake": "mcp-api-c3",
+      "ports": [
+        "8081:8080"
+      ]
+    },
     "nocodb": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -1747,19 +1751,6 @@
       "description": "In-memory data store",
       "networks": [
         "dev_network"
-      ]
-    },
-    "c3-api": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "containers": [
-        "c3-api"
-      ],
-      "description": "C3 — Cloud Control Center: MCP server + Fastify API (api.diegonmarcos.com)",
-      "domain": "api.diegonmarcos.com/c3-api",
-      "flake": "mcp-api-c3",
-      "ports": [
-        "8081:8080"
       ]
     },
     "sauron-lite-micro1": {
