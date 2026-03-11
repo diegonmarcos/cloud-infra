@@ -62,7 +62,7 @@ SSH aliases: `ssh oci-apps`, `ssh oci-mail`, `ssh oci-analytics`, `ssh gcp-proxy
 
 ```
 cloud/
-├── 1.ops/                         # Active ops (Cloud-spec.md, architecture.json)
+├── 0_docs/                        # Docs & specs (Cloud-spec.md, architecture.json)
 │
 ├── a_solutions/                   # 51 containerized services (Nix flakes)
 │   ├── aa-sui_*                   # Suite apps (AFFiNE, Code Server, Mailu, PhotoPrism...)
