@@ -81,7 +81,7 @@ check_deps() {
     done
 
     if command -v node >/dev/null 2>&1; then
-        engine_dir="$SOLUTIONS_DIR/mcp-api-c3/src"
+        engine_dir="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
         for pkg in $(deps_node_required); do
             NODE_PATH="$engine_dir/node_modules" node -e "require('$pkg')" 2>/dev/null \
                 || missing_node="$missing_node $pkg"
@@ -159,7 +159,7 @@ cmd_deps() {
     fi
 
     # Node modules (engine runtime)
-    engine_dir="$SOLUTIONS_DIR/mcp-api-c3/src"
+    engine_dir="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
     if [ -f "$engine_dir/package.json" ]; then
         log "Node: installing engine dependencies..."
         (cd "$engine_dir" && npm install --silent --yes)
@@ -476,16 +476,19 @@ cmd_secrets() {
 
 # Generate cloud-topology.json/md + cloud-configs.json/md from sources
 cmd_config() {
-    ENGINE_DIR="$SOLUTIONS_DIR/mcp-api-c3/src"
-    if [ ! -d "$ENGINE_DIR/node_modules" ]; then
-        log "Installing engine dependencies..."
-        (cd "$ENGINE_DIR" && npm install --silent)
+    ENGINE_DIR="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
+    if ! command -v tsx >/dev/null 2>&1; then
+        log "SKIP: tsx not installed (npm install -g tsx)"
+        return 1
     fi
-    TSX="$ENGINE_DIR/node_modules/.bin/tsx"
+    if [ ! -f "$ENGINE_DIR/engines/gen-topology.ts" ] || [ ! -f "$ENGINE_DIR/engines/gen-configs.ts" ]; then
+        log "SKIP: engine sources not available locally"
+        return 1
+    fi
     log "Generating cloud-topology.json + cloud-topology.md..."
-    "$TSX" "$ENGINE_DIR/engines/gen-topology.ts"
+    tsx "$ENGINE_DIR/engines/gen-topology.ts"
     log "Generating cloud-configs.json + cloud-configs.md..."
-    "$TSX" "$ENGINE_DIR/engines/gen-configs.ts"
+    tsx "$ENGINE_DIR/engines/gen-configs.ts"
 }
 
 # Clean all dist/ folders
