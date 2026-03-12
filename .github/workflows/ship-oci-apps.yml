@@ -23,6 +23,7 @@ on:
       - "a_solutions/ca-dat_kg-graph/src/**"
       - "a_solutions/bc-obs_mcp-api-c3/src/**"
       - "a_solutions/bc-obs_cloud-spec/src/**"
+      - "a_solutions/bc-obs_windmill/src/**"
       - ".github/workflows/ship-oci-apps.yml"
     branches: [main]
   workflow_dispatch:
@@ -95,13 +96,15 @@ jobs:
               - 'a_solutions/bc-obs_mcp-api-c3/src/**'
             cloud-spec:
               - 'a_solutions/bc-obs_cloud-spec/src/**'
+            windmill:
+              - 'a_solutions/bc-obs_windmill/src/**'
 
       - name: Force service override
         id: force
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api cloud-spec; do
+          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api cloud-spec windmill; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -194,6 +197,10 @@ jobs:
       - name: Ship cloud-spec
         if: steps.changes.outputs.cloud-spec == 'true' || steps.force.outputs.cloud-spec == 'true'
         run: bash a_solutions/bc-obs_cloud-spec/build.sh ship
+
+      - name: Ship windmill
+        if: steps.changes.outputs.windmill == 'true' || steps.force.outputs.windmill == 'true'
+        run: bash a_solutions/bc-obs_windmill/build.sh ship
 
       - name: Ship kg-graph
         id: ship-kg-graph
