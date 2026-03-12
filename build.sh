@@ -13,6 +13,8 @@ SOLUTIONS_DIR="$SCRIPT_DIR/a_solutions"
 CONFIG_FILE="$SCRIPT_DIR/cloud-topology.json"
 # Fallback to old name during migration
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
+ENGINE_FOLDER=$(jq -r ".engine_folder" "$SCRIPT_DIR/config.json" 2>/dev/null)
+ENGINE_DIR="$SOLUTIONS_DIR/$ENGINE_FOLDER/src"
 
 # =============================================================================
 # Dependency Engine — reads from deps.json (single source of truth)
@@ -81,7 +83,7 @@ check_deps() {
     done
 
     if command -v node >/dev/null 2>&1; then
-        engine_dir="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
+        engine_dir="$ENGINE_DIR"
         for pkg in $(deps_node_required); do
             NODE_PATH="$engine_dir/node_modules" node -e "require('$pkg')" 2>/dev/null \
                 || missing_node="$missing_node $pkg"
@@ -159,7 +161,7 @@ cmd_deps() {
     fi
 
     # Node modules (engine runtime)
-    engine_dir="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
+    engine_dir="$ENGINE_DIR"
     if [ -f "$engine_dir/package.json" ]; then
         log "Node: installing engine dependencies..."
         (cd "$engine_dir" && npm install --silent --yes)
@@ -476,7 +478,6 @@ cmd_secrets() {
 
 # Generate cloud-topology.json/md + cloud-configs.json/md from sources
 cmd_config() {
-    ENGINE_DIR="$SOLUTIONS_DIR/bc-obs_mcp-api-c3/src"
     if ! command -v tsx >/dev/null 2>&1; then
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
