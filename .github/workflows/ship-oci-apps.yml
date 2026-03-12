@@ -21,7 +21,7 @@ on:
       - "a_solutions/ad-agi_rig-agentic/src/**"
       - "a_solutions/ca-dat_gitea/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
-      - "a_solutions/mcp-api-c3/src/**"
+      - "a_solutions/bc-obs_mcp-api-c3/src/**"
       - "a_solutions/bc-obs_cloud-spec/src/**"
       - ".github/workflows/ship-oci-apps.yml"
     branches: [main]
@@ -92,7 +92,7 @@ jobs:
             kg-graph:
               - 'a_solutions/ca-dat_kg-graph/src/**'
             c3-api:
-              - 'a_solutions/mcp-api-c3/src/**'
+              - 'a_solutions/bc-obs_mcp-api-c3/src/**'
             cloud-spec:
               - 'a_solutions/bc-obs_cloud-spec/src/**'
 
@@ -189,7 +189,7 @@ jobs:
         if: steps.changes.outputs.c3-api == 'true' || steps.force.outputs.c3-api == 'true'
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/mcp-api-c3/build.sh ship
+        run: bash a_solutions/bc-obs_mcp-api-c3/build.sh ship
 
       - name: Ship cloud-spec
         if: steps.changes.outputs.cloud-spec == 'true' || steps.force.outputs.cloud-spec == 'true'
