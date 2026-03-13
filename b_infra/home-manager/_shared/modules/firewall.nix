@@ -120,6 +120,8 @@ in {
   '';
 
   home.activation.installFirewall = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    (
+    trap 'echo "[firewall] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
       [ -x "$p" ] && SUDO="$p" && break
@@ -153,5 +155,6 @@ in {
       echo "$NEW" | $SUDO tee /opt/scripts/.firewall.sh.prev > /dev/null
       echo "[firewall] rules applied for ${vmName}"
     fi
+    ) || echo "[firewall] FAILED — see errors above, activation continues"
   '';
 }

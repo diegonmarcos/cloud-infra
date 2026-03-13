@@ -4,6 +4,8 @@
 
 {
   home.activation.sshdHardening = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[sshd-hardening] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     SSHD_DROP="/etc/ssh/sshd_config.d/10-hardening.conf"
     SSHD_OLD="/etc/ssh/sshd_config.d/90-hardening.conf"
     SSHD_LOG_PREFIX="[sshd-hardening]"
@@ -14,7 +16,7 @@
     done
     if [ -z "$SUDO" ]; then
       echo "$SSHD_LOG_PREFIX WARN: sudo not found — skipping sshd hardening"
-      return 0
+      exit 0
     fi
 
     # Clean up old filename
@@ -45,5 +47,6 @@ GSSAPIAuthentication no
         echo "$SSHD_LOG_PREFIX sshd reloaded"
       fi
     fi
+    ) || echo "[sshd-hardening] FAILED — see errors above, activation continues"
   '';
 }

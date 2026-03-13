@@ -231,6 +231,8 @@ in {
   # ═══════════════════════════════════════════════════════════════════════
 
   home.activation.installSystemProtection = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    trap 'echo "[system-protection] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
       [ -x "$p" ] && SUDO="$p" && break
@@ -294,5 +296,6 @@ in {
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
 
     echo "[system-protection] deployed: bouncer(mem=${toString (minFreeKB / 1024)}MB-reserve zram=${toString zramSizeMB}MB disk=5%-reserved ssh+wg=protected) janitor(earlyoom disk-watchdog=5min)"
+    ) || echo "[system-protection] FAILED — see errors above, activation continues"
   '';
 }

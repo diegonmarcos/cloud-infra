@@ -5,6 +5,8 @@
 
 {
   home.activation.authorizedKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[authorized-keys] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     AK_LOG="[authorized-keys]"
     AK_FILE="$HOME/.ssh/authorized_keys"
     SECRETS="$HOME/.config/home-manager/.secrets"
@@ -39,5 +41,6 @@
     if [ "$CHANGED" = "0" ]; then
       echo "$AK_LOG All keys already present — no changes"
     fi
+    ) || echo "[authorized-keys] FAILED — see errors above, activation continues"
   '';
 }
