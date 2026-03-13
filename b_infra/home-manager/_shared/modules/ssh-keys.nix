@@ -10,59 +10,32 @@
     SSH_DIR="$HOME/.ssh"
     SOCKETS="$SSH_DIR/sockets"
 
-    if [ ! -f "$SECRETS" ] && [ ! -d "$SECRETS_D" ]; then
-      echo "$SK_LOG No .secrets or .secrets.d — skipping"
+    if [ ! -d "$SECRETS_D" ]; then
+      echo "$SK_LOG No .secrets.d/ — skipping"
       exit 0
     fi
 
     mkdir -p "$SSH_DIR" "$SOCKETS"
     chmod 700 "$SSH_DIR"
 
-    # ── Helper: read secret from .secrets.d/ (multiline) or .secrets (single-line)
-    get_secret() {
-      local key="$1"
-      # Prefer .secrets.d/ (multiline-safe)
-      if [ -f "$SECRETS_D/$key" ]; then
-        cat "$SECRETS_D/$key"
+    # ── Deploy keys: .secrets.d/KEY → ~/.ssh/name ──
+    deploy_key() {
+      local src="$SECRETS_D/$1"
+      local dst="$SSH_DIR/$2"
+      local perm="$3"
+      if [ ! -f "$src" ]; then
+        echo "$SK_LOG WARNING: $1 not found — skipping"
         return
       fi
-      # Fallback to .secrets KEY=VALUE
-      if [ -f "$SECRETS" ]; then
-        grep "^''${key}=" "$SECRETS" | head -1 | cut -d'=' -f2-
-      fi
+      cp "$src" "$dst"
+      chmod "$perm" "$dst"
+      echo "$SK_LOG $dst ($(wc -c < "$dst") bytes)"
     }
 
-    # ── Write keys ──────────────────────────────────────────────────────
-    write_key() {
-      local name="$1"
-      local secret_key="$2"
-      local path="$SSH_DIR/$name"
-      local val
-      val=$(get_secret "$secret_key")
-      if [ -z "$val" ]; then
-        echo "$SK_LOG WARNING: $secret_key not found — skipping $name"
-        return
-      fi
-      local current=""
-      [ -f "$path" ] && current=$(cat "$path")
-      if [ "$current" != "$val" ]; then
-        printf '%s' "$val" > "$path"
-        chmod 600 "$path"
-        echo "$SK_LOG Wrote $path ($(printf '%s' "$val" | wc -c) bytes)"
-      else
-        echo "$SK_LOG $path unchanged"
-      fi
-    }
-
-    write_key "vault_id_rsa"          "VAULT_ID_RSA"
-    write_key "vault_id_rsa.pub"      "VAULT_ID_RSA_PUB"
-    write_key "google_compute_engine" "GCP_COMPUTE_ENGINE"
-    write_key "google_compute_engine.pub" "GCP_COMPUTE_ENGINE_PUB"
-
-    # fix .pub permissions (644 not 600)
-    for pub in "$SSH_DIR"/*.pub; do
-      [ -f "$pub" ] && chmod 644 "$pub"
-    done
+    deploy_key VAULT_ID_RSA          vault_id_rsa          600
+    deploy_key VAULT_ID_RSA_PUB      vault_id_rsa.pub      644
+    deploy_key GCP_COMPUTE_ENGINE    google_compute_engine  600
+    deploy_key GCP_COMPUTE_ENGINE_PUB google_compute_engine.pub 644
 
     # ── Write SSH config (WireGuard IPs — all traffic via mesh) ──────────
     CONFIG="$SSH_DIR/config"
