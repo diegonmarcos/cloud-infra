@@ -1,7 +1,5 @@
-# SSH key deployment for oci-apps home-manager
-# Reads VAULT_ID_RSA, GCP_COMPUTE_ENGINE (+ _PUB variants) from sops-decrypted
-# .secrets and writes them to ~/.ssh/ so the c3-api container (which mounts
-# ~/.ssh:/root/.ssh:ro) can SSH out to other VMs via WireGuard.
+# SSH key deployment — reads from .secrets.d/ (multiline) or .secrets (single-line)
+# and writes to ~/.ssh/ so containers mounting ~/.ssh can SSH out via WireGuard.
 { lib, ... }:
 
 {
