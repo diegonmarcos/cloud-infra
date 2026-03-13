@@ -42,7 +42,7 @@ export SOPS_AGE_KEY_FILE
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
-NIX_SOURCE=". /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
+NIX_SOURCE="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
 REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 
 # ── Step: Build (prepare dist/ from src/) ─────────────────────────────
