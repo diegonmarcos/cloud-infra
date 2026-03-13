@@ -68,48 +68,34 @@ step_secrets() {
     fi
 
     log "Decrypting secrets -> dist/.secrets + .secrets.d/"
-    mkdir -p "$DIST_DIR"
+    mkdir -p "$DIST_DIR/.secrets.d"
 
-    # python3+yaml: properly handles multiline values (SSH keys, PEM certs)
-    # Single-line → .secrets (KEY=VALUE), multiline → .secrets.d/KEY (one file per key)
-    if command -v python3 >/dev/null 2>&1; then
-        sops -d "$secrets_file" | python3 -c "
-import sys, os, yaml
-data = yaml.safe_load(sys.stdin)
-if not isinstance(data, dict):
-    sys.exit(0)
-dist = '$DIST_DIR'
-secrets_d = os.path.join(dist, '.secrets.d')
-os.makedirs(secrets_d, exist_ok=True)
-env_lines = []
-multiline = 0
-for k, v in data.items():
-    if k == 'sops':
-        continue
-    if not isinstance(v, str):
-        v = str(v)
-    if '\n' in v:
-        path = os.path.join(secrets_d, k)
-        with open(path, 'w') as f:
-            f.write(v + '\n')
-        os.chmod(path, 0o600)
-        multiline += 1
-    else:
-        env_lines.append(f'{k}={v}')
-with open(os.path.join(dist, '.secrets'), 'w') as f:
-    f.write('\n'.join(env_lines) + '\n')
-print(f'  {len(env_lines)} env vars, {multiline} multiline files', file=sys.stderr)
-"
-    elif command -v yq >/dev/null 2>&1; then
-        sops -d "$secrets_file" | yq -r 'to_entries | .[] | "\(.key)=\(.value)"' \
-            | grep '^[A-Z_]*=' > "$DIST_DIR/.secrets"
-        log "WARNING: yq fallback — multiline values may be truncated"
-    else
-        log "ERROR: No python3 or yq for YAML->env conversion"
+    if ! command -v yq >/dev/null 2>&1; then
+        log "ERROR: yq required for YAML->env conversion"
         return 1
     fi
 
-    log "Secrets decrypted ($(grep -c '=' "$DIST_DIR/.secrets" 2>/dev/null || echo 0) env keys)"
+    # Decrypt once, split into single-line (.secrets) and multiline (.secrets.d/)
+    DECRYPTED=$(sops -d "$secrets_file")
+    ENV_COUNT=0
+    MULTI_COUNT=0
+    : > "$DIST_DIR/.secrets"
+
+    for key in $(printf '%s' "$DECRYPTED" | yq -r 'keys | .[] | select(. != "sops")'); do
+        val=$(printf '%s' "$DECRYPTED" | yq -r ".[\"$key\"]")
+        if printf '%s' "$val" | grep -q "$(printf '\n')"; then
+            # Multiline → .secrets.d/KEY
+            printf '%s\n' "$val" > "$DIST_DIR/.secrets.d/$key"
+            chmod 600 "$DIST_DIR/.secrets.d/$key"
+            MULTI_COUNT=$((MULTI_COUNT + 1))
+        else
+            # Single-line → .secrets KEY=VALUE
+            printf '%s=%s\n' "$key" "$val" >> "$DIST_DIR/.secrets"
+            ENV_COUNT=$((ENV_COUNT + 1))
+        fi
+    done
+
+    log "Secrets decrypted ($ENV_COUNT env keys, $MULTI_COUNT multiline files)"
 }
 
 # ── Step: Deploy ──────────────────────────────────────────────────────
@@ -164,8 +150,11 @@ step_deploy() {
         ssh "$DEPLOY_HOST" "mkdir -p $REMOTE_PATH"
         if [ -f "$DIST_DIR/.secrets" ]; then
             rsync -az "$DIST_DIR/.secrets" "$DEPLOY_HOST:$REMOTE_PATH/.secrets"
-            log "Secrets synced"
         fi
+        if [ -d "$DIST_DIR/.secrets.d" ]; then
+            rsync -az "$DIST_DIR/.secrets.d/" "$DEPLOY_HOST:$REMOTE_PATH/.secrets.d/"
+        fi
+        log "Secrets synced"
     fi
 }
 
