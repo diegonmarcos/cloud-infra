@@ -4,6 +4,8 @@
 
 {
   home.activation.sshKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[ssh-keys] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     SK_LOG="[ssh-keys]"
     SECRETS="$HOME/.config/home-manager/.secrets"
     SECRETS_D="$HOME/.config/home-manager/.secrets.d"
@@ -101,5 +103,6 @@ Host *
     else
       echo "$SK_LOG $CONFIG unchanged"
     fi
+    ) || echo "[ssh-keys] FAILED — see errors above, activation continues"
   '';
 }

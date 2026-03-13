@@ -223,6 +223,8 @@ in {
   '';
 
   home.activation.installIdleScripts = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    trap 'echo "[idle-shutdown] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     # Find sudo (not in PATH during home-manager activation)
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
@@ -242,5 +244,6 @@ in {
     $DRY_RUN_CMD $SUDO systemctl enable idle-shutdown.timer daily-shutdown.timer
     $DRY_RUN_CMD $SUDO systemctl restart idle-shutdown.timer daily-shutdown.timer
     $VERBOSE_ECHO "Idle shutdown scripts installed for ${vmName} (${toString idleTimeoutHours}h timeout)"
+    ) || echo "[idle-shutdown] FAILED — see errors above, activation continues"
   '';
 }

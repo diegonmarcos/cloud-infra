@@ -225,6 +225,8 @@ in {
   # ─── Activation: deploy to system locations with sudo ──────────────────
 
   home.activation.installResourceBouncer = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    trap 'echo "[resource-bouncer] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
       [ -x "$p" ] && SUDO="$p" && break
@@ -288,5 +290,6 @@ in {
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
 
     echo "[resource-bouncer] deployed: bouncer(mem=${toString (minFreeKB / 1024)}MB-reserve zram=${toString zramSizeMB}MB disk=5%-reserved) janitor(earlyoom disk-watchdog=5min)"
+    ) || echo "[resource-bouncer] FAILED — see errors above, activation continues"
   '';
 }

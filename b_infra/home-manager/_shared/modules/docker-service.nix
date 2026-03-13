@@ -1,6 +1,9 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  # Resolve dockerd path at nix eval time — no runtime searching
+  dockerdBin = "${pkgs.docker}/bin/dockerd";
+in {
   home.file.".local/share/docker-service/docker.service".text = ''
     [Unit]
     Description=Docker Application Container Engine (nix)
@@ -10,7 +13,7 @@
 
     [Service]
     Type=notify
-    ExecStart=__DOCKERD_PATH__
+    ExecStart=${dockerdBin}
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
@@ -32,6 +35,8 @@
   };
 
   home.activation.dockerService = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    trap 'echo "[docker-service] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     DOCKER_LOG="[docker-service]"
 
     # Find sudo (not in PATH during home-manager activation)
@@ -44,34 +49,30 @@
       exit 0
     fi
 
-    # Find dockerd from nix profile
-    DOCKERD=""
-    for p in $HOME/.nix-profile/bin/dockerd /nix/var/nix/profiles/default/bin/dockerd /usr/bin/dockerd; do
-      [ -x "$p" ] && DOCKERD="$p" && break
-    done
-    if [ -z "$DOCKERD" ]; then
-      echo "$DOCKER_LOG WARNING: dockerd not found — skipping docker service setup"
+    # Verify dockerd exists (nix store path baked at eval time)
+    if [ ! -x "${dockerdBin}" ]; then
+      echo "$DOCKER_LOG WARNING: ${dockerdBin} not found — skipping"
       exit 0
     fi
 
-    # Read template and inject dockerd path
-    TEMPLATE="$HOME/.local/share/docker-service/docker.service"
-    if [ ! -f "$TEMPLATE" ]; then
-      echo "$DOCKER_LOG WARNING: template not found at $TEMPLATE"
+    # Deploy service unit (dockerd path already baked in by nix)
+    UNIT_SRC="$HOME/.local/share/docker-service/docker.service"
+    UNIT_DEST="/etc/systemd/system/docker.service"
+    if [ ! -f "$UNIT_SRC" ]; then
+      echo "$DOCKER_LOG WARNING: unit template not found at $UNIT_SRC"
       exit 0
     fi
 
-    NEW_UNIT=$(sed "s|__DOCKERD_PATH__|$DOCKERD|" "$TEMPLATE")
+    NEW_UNIT=$(cat "$UNIT_SRC")
 
-    # Compare with current
     CURRENT=""
-    if $SUDO test -f /etc/systemd/system/docker.service; then
-      CURRENT=$($SUDO cat /etc/systemd/system/docker.service 2>/dev/null || true)
+    if $SUDO test -f "$UNIT_DEST"; then
+      CURRENT=$($SUDO cat "$UNIT_DEST" 2>/dev/null || true)
     fi
 
     if [ "$NEW_UNIT" != "$CURRENT" ]; then
       echo "$DOCKER_LOG docker.service changed — deploying"
-      echo "$NEW_UNIT" | $SUDO tee /etc/systemd/system/docker.service > /dev/null
+      echo "$NEW_UNIT" | $SUDO tee "$UNIT_DEST" > /dev/null
       $SUDO systemctl daemon-reload
       $SUDO systemctl restart docker 2>/dev/null || $SUDO systemctl start docker
       echo "$DOCKER_LOG Docker restarted"
@@ -106,5 +107,6 @@
         fi
       fi
     fi
+    ) || echo "[docker-service] FAILED — see errors above, activation continues"
   '';
 }

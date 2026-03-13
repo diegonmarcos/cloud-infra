@@ -56,6 +56,8 @@ in lib.mkIf (sites != {}) {
   home.packages = [ pkgs.busybox ];
 
   home.activation.httpd = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[httpd] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     HTTPD_LOG_PREFIX="[httpd]"
 
     SUDO=""
@@ -131,5 +133,6 @@ UNITEOF
         fi
       fi
     '') sitesList}
+    ) || echo "[httpd] FAILED — see errors above, activation continues"
   '';
 }

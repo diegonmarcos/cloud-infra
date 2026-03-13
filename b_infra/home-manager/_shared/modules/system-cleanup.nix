@@ -40,6 +40,8 @@ let
 
 in {
   home.activation.systemCleanup = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[system-cleanup] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     CLEANUP_PREFIX="[system-cleanup]"
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo; do
@@ -79,5 +81,6 @@ in {
         echo "$CLEANUP_PREFIX no conflicting system packages found"
       fi
     fi
+    ) || echo "[system-cleanup] FAILED — see errors above, activation continues"
   '';
 }

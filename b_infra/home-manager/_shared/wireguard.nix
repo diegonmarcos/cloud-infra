@@ -132,6 +132,8 @@ in {
   '';
 
   home.activation.wireguard = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[wireguard] FAILED at line $LINENO (''${FUNCNAME[0]:-main}): $BASH_COMMAND" >&2' ERR
     WG_CONF="/etc/wireguard/wg0.conf"
     WG_LOG_PREFIX="[wireguard]"
 
@@ -153,12 +155,9 @@ in {
 
     if [ -z "$PRIVKEY" ]; then
       echo "$WG_LOG_PREFIX No existing PrivateKey in $WG_CONF — generating new keypair"
-      WG_BIN=""
-      for p in $HOME/.nix-profile/bin/wg /nix/var/nix/profiles/default/bin/wg /run/current-system/sw/bin/wg /usr/bin/wg /usr/local/bin/wg; do
-        [ -x "$p" ] && WG_BIN="$p" && break
-      done
-      if [ -z "$WG_BIN" ]; then
-        echo "$WG_LOG_PREFIX ERROR: wg (wireguard-tools) not found — cannot generate keypair"
+      WG_BIN="${pkgs.wireguard-tools}/bin/wg"
+      if [ ! -x "$WG_BIN" ]; then
+        echo "$WG_LOG_PREFIX ERROR: $WG_BIN not found — cannot generate keypair"
         exit 1
       fi
       PRIVKEY=$($WG_BIN genkey)
@@ -198,5 +197,6 @@ in {
         echo "$WG_LOG_PREFIX wg-quick@wg0 not active — config written, start manually"
       fi
     fi
+    ) || echo "[wireguard] FAILED — see errors above, activation continues"
   '';
 }
