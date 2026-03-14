@@ -10,7 +10,7 @@ let
   # Read container SSH targets from JSON — parseable by jq, MCP, CI, etc.
   sshContainers = builtins.fromJSON (builtins.readFile ./ssh-containers.json);
   containerTargets = lib.concatStringsSep " " (map (c:
-    "${c.name}:${toString c.uid}:${lib.concatStringsSep "," c.keys}"
+    "${c.name}:${toString c.uid}:${c.ssh_dir}:${lib.concatStringsSep "," c.keys}"
   ) sshContainers);
 in
 {
@@ -146,11 +146,13 @@ Host *
         CNAME="''${entry%%:*}"
         rest="''${entry#*:}"
         CUID="''${rest%%:*}"
+        rest="''${rest#*:}"
+        CSSH_DIR="''${rest%%:*}"
         KEYS="''${rest#*:}"
         STARTED_BY_US=false
         CFAILED=false
 
-        echo "$SK_LOG [$CNAME] Starting SSH key deploy (target uid=$CUID)"
+        echo "$SK_LOG [$CNAME] Starting SSH key deploy (target uid=$CUID, dir=$CSSH_DIR)"
 
         # ── Check container exists ──
         if ! $DOCKER_CMD inspect "$CNAME" >/dev/null 2>&1; then
@@ -182,18 +184,18 @@ Host *
         fi
 
         # ── Create .ssh dir + sockets inside container ──
-        if ! $DOCKER_CMD exec "$CNAME" mkdir -p /root/.ssh/sockets 2>&1; then
-          echo "$SK_LOG [$CNAME] ERROR: Failed to create /root/.ssh — skipping"
+        if ! $DOCKER_CMD exec "$CNAME" mkdir -p "$CSSH_DIR/sockets" 2>&1; then
+          echo "$SK_LOG [$CNAME] ERROR: Failed to create $CSSH_DIR — skipping"
           CFAILED=true
         fi
 
         if [ "$CFAILED" = false ]; then
-          $DOCKER_CMD exec "$CNAME" chmod 700 /root/.ssh 2>/dev/null || true
+          $DOCKER_CMD exec "$CNAME" chmod 700 "$CSSH_DIR" 2>/dev/null || true
 
           # ── Copy SSH config ──
-          if $DOCKER_CMD cp "$CONFIG" "$CNAME:/root/.ssh/config" 2>&1; then
-            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" /root/.ssh/config 2>/dev/null || true
-            $DOCKER_CMD exec "$CNAME" chmod 600 /root/.ssh/config 2>/dev/null || true
+          if $DOCKER_CMD cp "$CONFIG" "$CNAME:$CSSH_DIR/config" 2>&1; then
+            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "$CSSH_DIR/config" 2>/dev/null || true
+            $DOCKER_CMD exec "$CNAME" chmod 600 "$CSSH_DIR/config" 2>/dev/null || true
             echo "$SK_LOG [$CNAME]   ✓ config"
           else
             echo "$SK_LOG [$CNAME]   ✗ config — docker cp FAILED"
@@ -210,16 +212,16 @@ Host *
               echo "$SK_LOG [$CNAME]   ✗ $keyfile — not found locally"
               continue
             fi
-            if ! $DOCKER_CMD cp "$local_key" "$CNAME:/root/.ssh/$keyfile" 2>&1; then
+            if ! $DOCKER_CMD cp "$local_key" "$CNAME:$CSSH_DIR/$keyfile" 2>&1; then
               echo "$SK_LOG [$CNAME]   ✗ $keyfile — docker cp FAILED"
               CFAILED=true
               break
             fi
-            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "/root/.ssh/$keyfile" 2>/dev/null || true
+            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "$CSSH_DIR/$keyfile" 2>/dev/null || true
             if echo "$keyfile" | grep -q '\.pub$'; then
-              $DOCKER_CMD exec "$CNAME" chmod 644 "/root/.ssh/$keyfile" 2>/dev/null || true
+              $DOCKER_CMD exec "$CNAME" chmod 644 "$CSSH_DIR/$keyfile" 2>/dev/null || true
             else
-              $DOCKER_CMD exec "$CNAME" chmod 600 "/root/.ssh/$keyfile" 2>/dev/null || true
+              $DOCKER_CMD exec "$CNAME" chmod 600 "$CSSH_DIR/$keyfile" 2>/dev/null || true
             fi
             echo "$SK_LOG [$CNAME]   ✓ $keyfile"
           done
@@ -227,10 +229,10 @@ Host *
 
         # ── Verify deployment ──
         if [ "$CFAILED" = false ]; then
-          VERIFY=$($DOCKER_CMD exec "$CNAME" ls -la /root/.ssh/ 2>&1)
+          VERIFY=$($DOCKER_CMD exec "$CNAME" ls -la "$CSSH_DIR/" 2>&1)
           if [ $? -eq 0 ]; then
             FILE_COUNT=$(echo "$VERIFY" | grep -c '^-' || true)
-            echo "$SK_LOG [$CNAME]   Verified: $FILE_COUNT files in /root/.ssh/"
+            echo "$SK_LOG [$CNAME]   Verified: $FILE_COUNT files in $CSSH_DIR/"
           else
             echo "$SK_LOG [$CNAME]   WARNING: Verification failed — ls returned error"
           fi
