@@ -1,9 +1,11 @@
 # Guardrails: PATH wrapper scripts in ~/.local/bin/
-# Three-tier command protection:
+# Four-tier command protection:
+#   WHITELIST → read-only / safe subcommands — pass through immediately
 #   BLOCKED   → dangerous flag combos that wipe databases/volumes — hard stop
 #   CONFIRM   → declarative reminder + ask y/N (auto-confirmed by build.sh)
 #   WARNING   → reminder banner, then run
-#   (no match on flags → falls through to CONFIRM or WARNING tier)
+#
+# Flow: whitelist? → pass | blocked? → stop | confirm/warning? → prompt | else → pass
 #
 # build.sh sets BUILDSH_GUARDRAIL=1 to auto-confirm tier 2.
 # BLOCKED is never bypassed, not even by build.sh.
@@ -11,6 +13,66 @@
 { config, lib, ... }:
 
 let
+  # ── Tier 0: WHITELIST — read-only subcommands, pass immediately ────
+  # These never modify the system. Needed for Claude Code internals
+  # (npm root -g, npm config get prefix, etc.) and general safe queries.
+  whitelist = [
+    { cmd = "npm"; subcommands = [
+      "root" "config" "prefix" "ls" "list" "ll" "la"
+      "view" "info" "show" "search" "help" "explain"
+      "doctor" "audit" "outdated" "fund" "pack" "ping"
+      "whoami" "token" "profile" "access" "bugs" "repo"
+      "completion" "explore" "-v" "--version" "-h" "--help"
+    ]; }
+    { cmd = "npx"; subcommands = [
+      "-h" "--help" "--version" "-v"
+    ]; }
+    { cmd = "docker"; subcommands = [
+      "ps" "images" "logs" "inspect" "top" "stats" "diff"
+      "port" "version" "info" "events" "history" "search"
+      "network ls" "network inspect" "volume ls" "volume inspect"
+      "-v" "--version" "-h" "--help"
+    ]; }
+    { cmd = "nix"; subcommands = [
+      "eval" "show-derivation" "path-info" "log" "why-depends"
+      "build" "store" "hash" "flake show" "flake check" "flake info" "flake metadata"
+      "registry list" "doctor" "profile list"
+      "--version" "--help" "-h"
+    ]; }
+    { cmd = "pip"; subcommands = [
+      "list" "show" "freeze" "check" "config"
+      "--version" "-V" "--help" "-h"
+    ]; }
+    { cmd = "pip3"; subcommands = [
+      "list" "show" "freeze" "check" "config"
+      "--version" "-V" "--help" "-h"
+    ]; }
+  ];
+
+  whitelistFor = cmd: let
+    rules = builtins.filter (r: r.cmd == cmd) whitelist;
+    subs = if rules == [] then [] else (builtins.head rules).subcommands;
+  in subs;
+
+  mkWhitelistCheck = cmd: let
+    subs = whitelistFor cmd;
+    # Match first non-flag argument against each whitelisted subcommand
+    checks = map (sub: ''
+      ${sub}) exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'') subs;
+  in if subs == [] then "" else ''
+    # Tier 0: WHITELIST — scan past flags to find the subcommand
+    _sub=""
+    for _arg in "$@"; do
+      case "$_arg" in
+        -*) continue ;;
+        *) _sub="$_arg"; break ;;
+      esac
+    done
+    case "$_sub" in
+    ${builtins.concatStringsSep "\n    " checks}
+    esac
+  '';
+
   # ── Tier 1: BLOCKED — flag patterns that destroy data ──────────────
   # The COMMAND is fine. The ARGS are the problem.
   blocked = [
@@ -42,30 +104,6 @@ let
 
   # All commands that need wrappers
   allCommands = lib.unique (confirmCmds ++ warningCmds ++ blockedCmds);
-
-  # ── Read-only subcommands that bypass confirmation ────────────────
-  # These can't modify the system — safe to run without prompting.
-  # Prevents hanging when called from non-interactive shells (e.g. Claude Code).
-  readOnly = {
-    npm  = [ "config" "root" "prefix" "ls" "list" "view" "info" "explain" "help" "version" "query" "why" ];
-    npx  = [];
-    nix  = [ "eval" "flake" "show" "search" "path-info" "derivation" "log" "why-depends" "store" ];
-  };
-
-  # Generate whitelist check: scan all args (not just $1) for read-only subcommands
-  mkWhitelistCheck = cmd: let
-    subs = readOnly.${cmd} or [];
-    cases = lib.concatStringsSep "|" subs;
-  in if subs == [] then "" else ''
-        # Whitelist read-only subcommands — skip confirmation
-        for _arg in "$@"; do
-          case "$_arg" in
-            -*) continue ;;
-            ${cases}) exec ${cmd} "$@" ;;
-            *) break ;;
-          esac
-        done
-  '';
 
   # ── Rule matching helpers ──────────────────────────────────────────
   blockedRulesFor = cmd: builtins.filter (r: r.cmd == cmd) blocked;
@@ -103,13 +141,22 @@ let
       executable = true;
       text = ''
         #!/bin/sh
+        # Error handling — NEVER fail silently
+        _die() { printf "\033[1;31m  [guardrail/${cmd}] ERROR: %s\033[0m\n" "$1" >&2; exit 1; }
+
         # Re-entry guard: skip if already inside a guardrail wrapper
-        if [ "''${_GUARDRAIL:-}" = "1" ]; then exec ${cmd} "$@"; fi
+        if [ "''${_GUARDRAIL:-}" = "1" ]; then
+          exec ${cmd} "$@" || _die "exec '${cmd}' failed (not found on PATH?)"
+        fi
         export _GUARDRAIL=1
         # Strip ~/.local/bin from PATH so exec hits the real binary
         PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
-        ARGS="$*"
+        # Verify the real binary exists after PATH strip
+        if ! command -v ${cmd} >/dev/null 2>&1; then
+          _die "'${cmd}' not found on PATH after stripping ~/.local/bin. Is it installed?"
+        fi
         ${whitelistCheck}
+        ARGS="$*"
         ${blockChecks}
       '' + (if isWarning then ''
         printf "\n"
@@ -120,10 +167,10 @@ let
         printf "\033[0;33m  ║  Direct use is fine for quick tasks — just be aware.         ║\033[0m\n"
         printf "\033[0;33m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
         printf "\n"
-        exec ${cmd} "$@"
+        exec ${cmd} "$@" || _die "exec '${cmd}' failed"
       '' else ''
         if [ "''${BUILDSH_GUARDRAIL:-}" = "1" ]; then
-          exec ${cmd} "$@"
+          exec ${cmd} "$@" || _die "exec '${cmd}' failed (BUILDSH_GUARDRAIL path)"
         fi
         printf "\n"
         printf "\033[1;31m  ╔══════════════════════════════════════════════════════════════╗\033[0m\n"
@@ -139,19 +186,30 @@ let
         printf "\033[1;35m  ║     Always report a bug in the build.sh engine               ║\033[0m\n"
         printf "\033[1;35m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
         printf "\n"
-        printf "\033[0;36m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n"
-        printf "\n"
+        # Non-interactive (no TTY) — explain how to approve via env var
+        if ! [ -e /dev/tty ]; then
+          printf "\033[1;33m  ┌─────────────────────────────────────────────────────────────┐\033[0m\n"
+          printf "\033[1;33m  │  NO TTY — cannot prompt for confirmation.                   │\033[0m\n"
+          printf "\033[1;33m  │                                                             │\033[0m\n"
+          printf "\033[1;37m  │  To approve, re-run with:                                   │\033[0m\n"
+          printf "\033[1;36m  │    BUILDSH_GUARDRAIL=1 ${cmd} %s\033[0m\n" "$ARGS"
+          printf "\033[1;33m  │                                                             │\033[0m\n"
+          printf "\033[0;37m  │  Or use build.sh which auto-approves guardrails.            │\033[0m\n"
+          printf "\033[1;33m  └─────────────────────────────────────────────────────────────┘\033[0m\n"
+          printf "\n"
+          exit 1
+        fi
         printf "\033[1;37m  Proceed? [y/N] \033[0m"
         if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
           printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
-          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n" >&2
+          printf "\033[0;33m  Source: ~/git/unix/bb_flakes_termux/src/modules/guardrails.nix\033[0m\n" >&2
           exit 1
         fi
         if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
           printf "\033[0;31m  Aborted.\033[0m\n"
           exit 1
         fi
-        exec ${cmd} "$@"
+        exec ${cmd} "$@" || _die "exec '${cmd}' failed after confirmation"
       '');
     };
   };
