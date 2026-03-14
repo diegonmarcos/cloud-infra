@@ -131,6 +131,8 @@ Host *
     DOCKER_CMD=""
     if command -v docker >/dev/null 2>&1; then
       DOCKER_CMD="docker"
+    elif [ -x "$HOME/.nix-profile/bin/docker" ]; then
+      DOCKER_CMD="$HOME/.nix-profile/bin/docker"
     elif $SUDO docker version >/dev/null 2>&1; then
       DOCKER_CMD="$SUDO docker"
     fi
