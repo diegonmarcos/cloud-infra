@@ -1,7 +1,18 @@
 # SSH key deployment — reads from .secrets.d/ (multiline) or .secrets (single-line)
 # and writes to ~/.ssh/ so containers mounting ~/.ssh can SSH out via WireGuard.
+#
+# Also copies SSH keys + config INTO running Docker containers that need SSH
+# access (e.g. Dagu), with ownership set to the container's running UID.
+# Container targets are defined in ssh-containers.json (single source of truth).
 { lib, ... }:
 
+let
+  # Read container SSH targets from JSON — parseable by jq, MCP, CI, etc.
+  sshContainers = builtins.fromJSON (builtins.readFile ./ssh-containers.json);
+  containerTargets = lib.concatStringsSep " " (map (c:
+    "${c.name}:${toString c.uid}:${lib.concatStringsSep "," c.keys}"
+  ) sshContainers);
+in
 {
   home.activation.sshKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     (
@@ -11,6 +22,8 @@
     SECRETS_D="$HOME/.config/home-manager/.secrets.d"
     SSH_DIR="$HOME/.ssh"
     SOCKETS="$SSH_DIR/sockets"
+    SUDO=""
+    if command -v sudo >/dev/null 2>&1; then SUDO="sudo"; fi
 
     if [ ! -d "$SECRETS_D" ]; then
       echo "$SK_LOG No .secrets.d/ — skipping"
@@ -28,6 +41,11 @@
       if [ ! -f "$src" ]; then
         echo "$SK_LOG WARNING: $1 not found — skipping"
         return
+      fi
+      # Remove stale directory if dst exists as a dir (leftover from old deploys)
+      if [ -d "$dst" ]; then
+        echo "$SK_LOG WARNING: $dst is a directory — removing stale leftover"
+        rm -rf "$dst"
       fi
       cp "$src" "$dst"
       chmod "$perm" "$dst"
@@ -103,6 +121,140 @@ Host *
     else
       echo "$SK_LOG $CONFIG unchanged"
     fi
-    ) || echo "[ssh-keys] FAILED — see errors above, activation continues"
+
+    # ── Deploy SSH keys INTO Docker containers ──────────────────────────
+    # Each entry: "container_name:uid:keys..." where keys is comma-separated
+    # list of key filenames to copy. Config is always included.
+    # If a container is stopped, it will be started, keys deployed, then stopped again.
+    CONTAINER_SSH_TARGETS="${containerTargets}"
+
+    DOCKER_CMD=""
+    if command -v docker >/dev/null 2>&1; then
+      DOCKER_CMD="docker"
+    elif $SUDO docker version >/dev/null 2>&1; then
+      DOCKER_CMD="$SUDO docker"
+    fi
+
+    if [ -z "$DOCKER_CMD" ]; then
+      echo "$SK_LOG Docker not available — skipping container SSH deploy"
+    else
+      echo "$SK_LOG ── Container SSH deployment ──"
+
+      for entry in $CONTAINER_SSH_TARGETS; do
+        CNAME="''${entry%%:*}"
+        rest="''${entry#*:}"
+        CUID="''${rest%%:*}"
+        KEYS="''${rest#*:}"
+        STARTED_BY_US=false
+        CFAILED=false
+
+        echo "$SK_LOG [$CNAME] Starting SSH key deploy (target uid=$CUID)"
+
+        # ── Check container exists ──
+        if ! $DOCKER_CMD inspect "$CNAME" >/dev/null 2>&1; then
+          echo "$SK_LOG [$CNAME] ERROR: Container does not exist — skipping"
+          continue
+        fi
+
+        # ── Start container if not running ──
+        RUNNING=$($DOCKER_CMD inspect --format='{{.State.Running}}' "$CNAME" 2>/dev/null || echo "false")
+        if [ "$RUNNING" != "true" ]; then
+          echo "$SK_LOG [$CNAME] Container is stopped — starting it for key deploy..."
+          if $DOCKER_CMD start "$CNAME" >/dev/null 2>&1; then
+            # Wait for container to be ready (up to 10s)
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              RUNNING=$($DOCKER_CMD inspect --format='{{.State.Running}}' "$CNAME" 2>/dev/null || echo "false")
+              if [ "$RUNNING" = "true" ]; then break; fi
+              sleep 1
+            done
+            if [ "$RUNNING" != "true" ]; then
+              echo "$SK_LOG [$CNAME] ERROR: Container failed to start after 10s — skipping"
+              continue
+            fi
+            STARTED_BY_US=true
+            echo "$SK_LOG [$CNAME] Container started successfully"
+          else
+            echo "$SK_LOG [$CNAME] ERROR: 'docker start' failed — skipping"
+            continue
+          fi
+        fi
+
+        # ── Create .ssh dir inside container ──
+        if ! $DOCKER_CMD exec "$CNAME" mkdir -p /root/.ssh 2>&1; then
+          echo "$SK_LOG [$CNAME] ERROR: Failed to create /root/.ssh — skipping"
+          CFAILED=true
+        fi
+
+        if [ "$CFAILED" = false ]; then
+          $DOCKER_CMD exec "$CNAME" chmod 700 /root/.ssh 2>/dev/null || true
+
+          # ── Copy SSH config ──
+          if $DOCKER_CMD cp "$CONFIG" "$CNAME:/root/.ssh/config" 2>&1; then
+            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" /root/.ssh/config 2>/dev/null || true
+            $DOCKER_CMD exec "$CNAME" chmod 600 /root/.ssh/config 2>/dev/null || true
+            echo "$SK_LOG [$CNAME]   ✓ config"
+          else
+            echo "$SK_LOG [$CNAME]   ✗ config — docker cp FAILED"
+            CFAILED=true
+          fi
+        fi
+
+        # ── Copy each key ──
+        if [ "$CFAILED" = false ]; then
+          IFS=',' read -ra KEY_LIST <<< "$KEYS"
+          for keyfile in "''${KEY_LIST[@]}"; do
+            local_key="$SSH_DIR/$keyfile"
+            if [ ! -f "$local_key" ]; then
+              echo "$SK_LOG [$CNAME]   ✗ $keyfile — not found locally"
+              continue
+            fi
+            if ! $DOCKER_CMD cp "$local_key" "$CNAME:/root/.ssh/$keyfile" 2>&1; then
+              echo "$SK_LOG [$CNAME]   ✗ $keyfile — docker cp FAILED"
+              CFAILED=true
+              break
+            fi
+            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "/root/.ssh/$keyfile" 2>/dev/null || true
+            if echo "$keyfile" | grep -q '\.pub$'; then
+              $DOCKER_CMD exec "$CNAME" chmod 644 "/root/.ssh/$keyfile" 2>/dev/null || true
+            else
+              $DOCKER_CMD exec "$CNAME" chmod 600 "/root/.ssh/$keyfile" 2>/dev/null || true
+            fi
+            echo "$SK_LOG [$CNAME]   ✓ $keyfile"
+          done
+        fi
+
+        # ── Verify deployment ──
+        if [ "$CFAILED" = false ]; then
+          VERIFY=$($DOCKER_CMD exec "$CNAME" ls -la /root/.ssh/ 2>&1)
+          if [ $? -eq 0 ]; then
+            FILE_COUNT=$(echo "$VERIFY" | grep -c '^-' || true)
+            echo "$SK_LOG [$CNAME]   Verified: $FILE_COUNT files in /root/.ssh/"
+          else
+            echo "$SK_LOG [$CNAME]   WARNING: Verification failed — ls returned error"
+          fi
+        fi
+
+        # ── Stop container if we started it ──
+        if [ "$STARTED_BY_US" = true ]; then
+          echo "$SK_LOG [$CNAME] Stopping container (was not running before deploy)"
+          $DOCKER_CMD stop "$CNAME" >/dev/null 2>&1 || echo "$SK_LOG [$CNAME] WARNING: Failed to stop container"
+        fi
+
+        if [ "$CFAILED" = true ]; then
+          echo "$SK_LOG [$CNAME] FAILED — some keys were not deployed" >&2
+          DEPLOY_FAILED=true
+        else
+          echo "$SK_LOG [$CNAME] Done"
+        fi
+      done
+
+      echo "$SK_LOG ── Container SSH deployment complete ──"
+    fi
+
+    if [ "''${DEPLOY_FAILED:-}" = true ]; then
+      echo "$SK_LOG FATAL: Container SSH key deployment failed — aborting activation" >&2
+      exit 1
+    fi
+    )
   '';
 }
