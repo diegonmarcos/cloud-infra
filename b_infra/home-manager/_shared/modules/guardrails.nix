@@ -13,6 +13,8 @@
 { config, lib, ... }:
 
 let
+  managed = import ./managed-header.nix { inherit lib; repo = "cloud/b_infra/home-manager"; };
+
   # ── Tier 0: WHITELIST — read-only subcommands, pass immediately ────
   # These never modify the system. Needed for Claude Code internals
   # (npm root -g, npm config get prefix, etc.) and general safe queries.
@@ -139,7 +141,7 @@ let
     name = ".local/bin/${cmd}";
     value = {
       executable = true;
-      text = ''
+      text = managed.inject { source = "_shared/modules/guardrails.nix"; text = (''
         #!/bin/sh
         # Error handling — NEVER fail silently
         _die() { printf "\033[1;31m  [guardrail/${cmd}] ERROR: %s\033[0m\n" "$1" >&2; exit 1; }
@@ -202,7 +204,7 @@ let
         printf "\033[1;37m  Proceed? [y/N] \033[0m"
         if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
           printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
-          printf "\033[0;33m  Source: ~/git/unix/bb_flakes_termux/src/modules/guardrails.nix\033[0m\n" >&2
+          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/src/modules/guardrails.nix\033[0m\n" >&2
           exit 1
         fi
         if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
@@ -210,7 +212,7 @@ let
           exit 1
         fi
         exec ${cmd} "$@" || _die "exec '${cmd}' failed after confirmation"
-      '');
+      '')); };
     };
   };
 
