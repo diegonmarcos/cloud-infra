@@ -75,27 +75,24 @@ step_secrets() {
         return 1
     fi
 
-    # Decrypt once, split into single-line (.secrets) and multiline (.secrets.d/)
+    # Decrypt → write ALL keys to both:
+    #   .secrets     = KEY=VALUE lines (docker-compose env_file)
+    #   .secrets.d/  = one raw file per key (ssh-keys.nix, file mounts)
     DECRYPTED=$(sops -d "$secrets_file")
-    ENV_COUNT=0
-    MULTI_COUNT=0
+    KEY_COUNT=0
     : > "$DIST_DIR/.secrets"
 
     for key in $(printf '%s' "$DECRYPTED" | yq -r 'keys | .[] | select(. != "sops")'); do
         val=$(printf '%s' "$DECRYPTED" | yq -r ".[\"$key\"]")
-        if printf '%s' "$val" | grep -q "$(printf '\n')"; then
-            # Multiline → .secrets.d/KEY
-            printf '%s\n' "$val" > "$DIST_DIR/.secrets.d/$key"
-            chmod 600 "$DIST_DIR/.secrets.d/$key"
-            MULTI_COUNT=$((MULTI_COUNT + 1))
-        else
-            # Single-line → .secrets KEY=VALUE
-            printf '%s=%s\n' "$key" "$val" >> "$DIST_DIR/.secrets"
-            ENV_COUNT=$((ENV_COUNT + 1))
-        fi
+        # .secrets.d/KEY — raw file
+        printf '%s\n' "$val" > "$DIST_DIR/.secrets.d/$key"
+        chmod 600 "$DIST_DIR/.secrets.d/$key"
+        # .secrets — KEY=VALUE
+        printf '%s=%s\n' "$key" "$val" >> "$DIST_DIR/.secrets"
+        KEY_COUNT=$((KEY_COUNT + 1))
     done
 
-    log "Secrets decrypted ($ENV_COUNT env keys, $MULTI_COUNT multiline files)"
+    log "Secrets decrypted ($KEY_COUNT keys)"
 }
 
 # ── Step: Deploy ──────────────────────────────────────────────────────
