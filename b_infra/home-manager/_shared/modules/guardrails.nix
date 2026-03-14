@@ -60,7 +60,7 @@ let
     subs = whitelistFor cmd;
     # Match first non-flag argument against each whitelisted subcommand
     checks = map (sub: ''
-      ${sub}) exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'') subs;
+      ${sub}) _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'') subs;
   in if subs == [] then "" else ''
     # Tier 0: WHITELIST — scan past flags to find the subcommand
     _sub=""
@@ -126,6 +126,7 @@ let
         printf "\033[1;31m  ║                                                              ║\033[0m\n"
         printf "\033[0;33m  ║  Use build.sh for safe deploy/compose operations.            ║\033[0m\n"
         printf "\033[1;31m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
+        _log_guardrail "blocked"
         printf "\n"
         exit 1
       fi
@@ -146,6 +147,26 @@ let
         # Error handling — NEVER fail silently
         _die() { printf "\033[1;31m  [guardrail/${cmd}] ERROR: %s\033[0m\n" "$1" >&2; exit 1; }
 
+        # ── Logging: daily tier-specific logs with caller info ──
+        _log_guardrail() {
+          _tier="$1"
+          _log_dir="$HOME/.local/log/guardrails"
+          mkdir -p "$_log_dir" 2>/dev/null || return 0
+          _date=$(date +%Y-%m-%d)
+          _ts=$(date +%Y-%m-%dT%H:%M:%S%z)
+          _logfile="$_log_dir/guardrails-$_date-$_tier.log"
+          _ppid_cmd=$(ps -o comm= $PPID 2>/dev/null || echo "unknown")
+          _ppid_full=$(cat /proc/$PPID/cmdline 2>/dev/null | tr '\0' ' ' | head -c 200 || echo "N/A")
+          _tty_info="none"
+          if [ -t 0 ] || [ -t 1 ]; then _tty_info=$(tty 2>/dev/null || echo "tty"); fi
+          _ssh_info="local"
+          if [ -n "''${SSH_CLIENT:-}" ]; then _ssh_info="ssh:$(echo "''${SSH_CLIENT}" | cut -d' ' -f1)"; fi
+          _user=$(id -un 2>/dev/null || echo "unknown")
+          printf '%s | %s %s | caller=%s(pid=%s) | cmdline=%s | tty=%s | %s | user=%s\n' \
+            "$_ts" "${cmd}" "$ARGS" "$_ppid_cmd" "$PPID" "$_ppid_full" "$_tty_info" "$_ssh_info" "$_user" \
+            >> "$_logfile" 2>/dev/null || true
+        }
+
         # Re-entry guard: skip if already inside a guardrail wrapper
         if [ "''${_GUARDRAIL:-}" = "1" ]; then
           exec ${cmd} "$@" || _die "exec '${cmd}' failed (not found on PATH?)"
@@ -157,8 +178,8 @@ let
         if ! command -v ${cmd} >/dev/null 2>&1; then
           _die "'${cmd}' not found on PATH after stripping ~/.local/bin. Is it installed?"
         fi
-        ${whitelistCheck}
         ARGS="$*"
+        ${whitelistCheck}
         ${blockChecks}
       '' + (if isWarning then ''
         printf "\n"
@@ -169,9 +190,11 @@ let
         printf "\033[0;33m  ║  Direct use is fine for quick tasks — just be aware.         ║\033[0m\n"
         printf "\033[0;33m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
         printf "\n"
+        _log_guardrail "warning"
         exec ${cmd} "$@" || _die "exec '${cmd}' failed"
       '' else ''
         if [ "''${BUILDSH_GUARDRAIL:-}" = "1" ]; then
+          _log_guardrail "confirm-auto"
           exec ${cmd} "$@" || _die "exec '${cmd}' failed (BUILDSH_GUARDRAIL path)"
         fi
         printf "\n"
@@ -204,13 +227,14 @@ let
         printf "\033[1;37m  Proceed? [y/N] \033[0m"
         if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
           printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
-          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/src/modules/guardrails.nix\033[0m\n" >&2
+          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n" >&2
           exit 1
         fi
         if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
           printf "\033[0;31m  Aborted.\033[0m\n"
           exit 1
         fi
+        _log_guardrail "confirm"
         exec ${cmd} "$@" || _die "exec '${cmd}' failed after confirmation"
       '')); };
     };
