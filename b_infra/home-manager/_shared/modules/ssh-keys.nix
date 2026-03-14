@@ -174,8 +174,7 @@ Host *
         fi
       done
 
-      FILE_COUNT=$(ls -1 "$TARGET_DIR" 2>/dev/null | wc -l)
-      echo "$SK_LOG [$CNAME] $FILE_COUNT files in $TARGET_DIR (uid=$CUID)"
+      echo "$SK_LOG [$CNAME] Keys deployed to $TARGET_DIR (uid=$CUID)"
     done
 
     echo "$SK_LOG ── Container SSH deployment complete ──"
