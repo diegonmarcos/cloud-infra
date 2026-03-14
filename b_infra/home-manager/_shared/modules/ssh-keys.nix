@@ -1,8 +1,8 @@
-# SSH key deployment — reads from .secrets.d/ (multiline) or .secrets (single-line)
-# and writes to ~/.ssh/ so containers mounting ~/.ssh can SSH out via WireGuard.
+# SSH key deployment — reads from .secrets.d/ and writes to ~/.ssh/.
 #
-# Also copies SSH keys + config INTO running Docker containers that need SSH
-# access (e.g. Dagu), with ownership set to the container's running UID.
+# Also writes SSH keys + config to /opt/ssh-keys/<container>/ on the host.
+# Docker compose bind-mounts these directories into containers (:ro).
+# Keys persist across container recreation (unlike the old docker cp approach).
 # Container targets are defined in ssh-containers.json (single source of truth).
 { lib, ... }:
 
@@ -122,138 +122,59 @@ Host *
       echo "$SK_LOG $CONFIG unchanged"
     fi
 
-    # ── Deploy SSH keys INTO Docker containers ──────────────────────────
-    # Each entry: "container_name:uid:keys..." where keys is comma-separated
-    # list of key filenames to copy. Config is always included.
-    # If a container is stopped, it will be started, keys deployed, then stopped again.
+    # ── Deploy SSH keys to /opt/ssh-keys/<container>/ (bind-mounted by compose) ──
     CONTAINER_SSH_TARGETS="${containerTargets}"
+    HOST_SSH_BASE="/opt/ssh-keys"
 
-    DOCKER_CMD=""
-    if command -v docker >/dev/null 2>&1; then
-      DOCKER_CMD="docker"
-    elif [ -x "$HOME/.nix-profile/bin/docker" ]; then
-      DOCKER_CMD="$HOME/.nix-profile/bin/docker"
-    elif $SUDO docker version >/dev/null 2>&1; then
-      DOCKER_CMD="$SUDO docker"
-    fi
+    # Container SSH config: same hosts but no ControlMaster (read-only mount)
+    CONTAINER_CONFIG=$(printf '%s' "$NEW_CONFIG" | grep -v 'ControlMaster\|ControlPath\|ControlPersist')
 
-    if [ -z "$DOCKER_CMD" ]; then
-      echo "$SK_LOG Docker not available — skipping container SSH deploy"
-    else
-      echo "$SK_LOG ── Container SSH deployment ──"
+    echo "$SK_LOG ── Container SSH key deployment (/opt/ssh-keys/) ──"
 
-      for entry in $CONTAINER_SSH_TARGETS; do
-        CNAME="''${entry%%:*}"
-        rest="''${entry#*:}"
-        CUID="''${rest%%:*}"
-        rest="''${rest#*:}"
-        CSSH_DIR="''${rest%%:*}"
-        KEYS="''${rest#*:}"
-        STARTED_BY_US=false
-        CFAILED=false
+    for entry in $CONTAINER_SSH_TARGETS; do
+      CNAME="''${entry%%:*}"
+      rest="''${entry#*:}"
+      CUID="''${rest%%:*}"
+      rest="''${rest#*:}"
+      CSSH_DIR="''${rest%%:*}"
+      KEYS="''${rest#*:}"
 
-        echo "$SK_LOG [$CNAME] Starting SSH key deploy (target uid=$CUID, dir=$CSSH_DIR)"
+      TARGET_DIR="$HOST_SSH_BASE/$CNAME"
 
-        # ── Check container exists ──
-        if ! $DOCKER_CMD inspect "$CNAME" >/dev/null 2>&1; then
-          echo "$SK_LOG [$CNAME] ERROR: Container does not exist — skipping"
+      $SUDO mkdir -p "$TARGET_DIR"
+
+      # Write container SSH config (no ControlMaster)
+      printf '%s' "$CONTAINER_CONFIG" | $SUDO tee "$TARGET_DIR/config" >/dev/null
+
+      # Copy each key
+      IFS=',' read -ra KEY_LIST <<< "$KEYS"
+      for keyfile in "''${KEY_LIST[@]}"; do
+        local_key="$SSH_DIR/$keyfile"
+        if [ ! -f "$local_key" ]; then
+          echo "$SK_LOG [$CNAME] $keyfile not found locally — skipping"
           continue
         fi
+        $SUDO cp "$local_key" "$TARGET_DIR/$keyfile"
+      done
 
-        # ── Start container if not running ──
-        RUNNING=$($DOCKER_CMD inspect --format='{{.State.Running}}' "$CNAME" 2>/dev/null || echo "false")
-        if [ "$RUNNING" != "true" ]; then
-          echo "$SK_LOG [$CNAME] Container is stopped — starting it for key deploy..."
-          if $DOCKER_CMD start "$CNAME" >/dev/null 2>&1; then
-            # Wait for container to be ready (up to 10s)
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-              RUNNING=$($DOCKER_CMD inspect --format='{{.State.Running}}' "$CNAME" 2>/dev/null || echo "false")
-              if [ "$RUNNING" = "true" ]; then break; fi
-              sleep 1
-            done
-            if [ "$RUNNING" != "true" ]; then
-              echo "$SK_LOG [$CNAME] ERROR: Container failed to start after 10s — skipping"
-              continue
-            fi
-            STARTED_BY_US=true
-            echo "$SK_LOG [$CNAME] Container started successfully"
-          else
-            echo "$SK_LOG [$CNAME] ERROR: 'docker start' failed — skipping"
-            continue
-          fi
-        fi
-
-        # ── Create .ssh dir + sockets inside container ──
-        if ! $DOCKER_CMD exec "$CNAME" mkdir -p "$CSSH_DIR/sockets" 2>&1; then
-          echo "$SK_LOG [$CNAME] ERROR: Failed to create $CSSH_DIR — skipping"
-          CFAILED=true
-        fi
-
-        if [ "$CFAILED" = false ]; then
-          $DOCKER_CMD exec "$CNAME" chmod 700 "$CSSH_DIR" 2>/dev/null || true
-
-          # ── Copy SSH config ──
-          if $DOCKER_CMD cp "$CONFIG" "$CNAME:$CSSH_DIR/config" 2>&1; then
-            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "$CSSH_DIR/config" 2>/dev/null || true
-            $DOCKER_CMD exec "$CNAME" chmod 600 "$CSSH_DIR/config" 2>/dev/null || true
-            echo "$SK_LOG [$CNAME]   ✓ config"
-          else
-            echo "$SK_LOG [$CNAME]   ✗ config — docker cp FAILED"
-            CFAILED=true
-          fi
-        fi
-
-        # ── Copy each key ──
-        if [ "$CFAILED" = false ]; then
-          IFS=',' read -ra KEY_LIST <<< "$KEYS"
-          for keyfile in "''${KEY_LIST[@]}"; do
-            local_key="$SSH_DIR/$keyfile"
-            if [ ! -f "$local_key" ]; then
-              echo "$SK_LOG [$CNAME]   ✗ $keyfile — not found locally"
-              continue
-            fi
-            if ! $DOCKER_CMD cp "$local_key" "$CNAME:$CSSH_DIR/$keyfile" 2>&1; then
-              echo "$SK_LOG [$CNAME]   ✗ $keyfile — docker cp FAILED"
-              CFAILED=true
-              break
-            fi
-            $DOCKER_CMD exec "$CNAME" chown "$CUID:$CUID" "$CSSH_DIR/$keyfile" 2>/dev/null || true
-            if echo "$keyfile" | grep -q '\.pub$'; then
-              $DOCKER_CMD exec "$CNAME" chmod 644 "$CSSH_DIR/$keyfile" 2>/dev/null || true
-            else
-              $DOCKER_CMD exec "$CNAME" chmod 600 "$CSSH_DIR/$keyfile" 2>/dev/null || true
-            fi
-            echo "$SK_LOG [$CNAME]   ✓ $keyfile"
-          done
-        fi
-
-        # ── Verify deployment ──
-        if [ "$CFAILED" = false ]; then
-          VERIFY=$($DOCKER_CMD exec "$CNAME" ls -la "$CSSH_DIR/" 2>&1)
-          if [ $? -eq 0 ]; then
-            FILE_COUNT=$(echo "$VERIFY" | grep -c '^-' || true)
-            echo "$SK_LOG [$CNAME]   Verified: $FILE_COUNT files in $CSSH_DIR/"
-          else
-            echo "$SK_LOG [$CNAME]   WARNING: Verification failed — ls returned error"
-          fi
-        fi
-
-        # ── Stop container if we started it ──
-        if [ "$STARTED_BY_US" = true ]; then
-          echo "$SK_LOG [$CNAME] Stopping container (was not running before deploy)"
-          $DOCKER_CMD stop "$CNAME" >/dev/null 2>&1 || echo "$SK_LOG [$CNAME] WARNING: Failed to stop container"
-        fi
-
-        if [ "$CFAILED" = true ]; then
-          echo "$SK_LOG [$CNAME] FAILED — some keys were not deployed" >&2
-          DEPLOY_FAILED=true
+      # Set ownership and permissions
+      $SUDO chown -R "$CUID:$CUID" "$TARGET_DIR"
+      $SUDO chmod 700 "$TARGET_DIR"
+      $SUDO chmod 600 "$TARGET_DIR/config"
+      for keyfile in "''${KEY_LIST[@]}"; do
+        [ ! -f "$TARGET_DIR/$keyfile" ] && continue
+        if echo "$keyfile" | grep -q '\.pub$'; then
+          $SUDO chmod 644 "$TARGET_DIR/$keyfile"
         else
-          echo "$SK_LOG [$CNAME] Done"
+          $SUDO chmod 600 "$TARGET_DIR/$keyfile"
         fi
       done
 
-      echo "$SK_LOG ── Container SSH deployment complete ──"
-    fi
+      FILE_COUNT=$(ls -1 "$TARGET_DIR" 2>/dev/null | wc -l)
+      echo "$SK_LOG [$CNAME] $FILE_COUNT files in $TARGET_DIR (uid=$CUID)"
+    done
+
+    echo "$SK_LOG ── Container SSH deployment complete ──"
 
     if [ "''${DEPLOY_FAILED:-}" = true ]; then
       echo "$SK_LOG FATAL: Container SSH key deployment failed — aborting activation" >&2
