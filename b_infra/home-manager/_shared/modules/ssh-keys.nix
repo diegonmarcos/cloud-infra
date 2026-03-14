@@ -23,7 +23,11 @@ in
     SSH_DIR="$HOME/.ssh"
     SOCKETS="$SSH_DIR/sockets"
     SUDO=""
-    if command -v sudo >/dev/null 2>&1; then SUDO="sudo"; fi
+    if command -v sudo >/dev/null 2>&1; then
+      SUDO="sudo"
+    elif [ -x /usr/bin/sudo ]; then
+      SUDO="/usr/bin/sudo"
+    fi
 
     if [ ! -d "$SECRETS_D" ]; then
       echo "$SK_LOG No .secrets.d/ — skipping"
