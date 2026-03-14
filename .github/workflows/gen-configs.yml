@@ -1,15 +1,9 @@
-name: "Regenerate topology + configs"
+name: "Regenerate topology + configs (DISABLED — Dagu owns data sync to cloud-data/)"
 
+# DISABLED: Dagu DAG cloud-data-sync now fetches from C3 API and commits to
+# cloud-data/ repo (submodule). cloud-topology.json and cloud-configs.json in
+# cloud/ root are symlinks to the submodule. Keep workflow_dispatch for emergencies.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'a_solutions/*/build.json'
-      - 'a_solutions/*/src/compose.yml'
-      - 'a_solutions/*/dist/compose.yml'
-      - 'a_solutions/bc-obs_c3-mcp-api/src/engines/**'
-      - 'b_infra/vps_*/src/main.tf'
-      - 'b_infra/home-manager/**'
   workflow_dispatch:
 
 permissions:
