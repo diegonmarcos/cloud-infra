@@ -181,8 +181,8 @@ Host *
           fi
         fi
 
-        # ── Create .ssh dir inside container ──
-        if ! $DOCKER_CMD exec "$CNAME" mkdir -p /root/.ssh 2>&1; then
+        # ── Create .ssh dir + sockets inside container ──
+        if ! $DOCKER_CMD exec "$CNAME" mkdir -p /root/.ssh/sockets 2>&1; then
           echo "$SK_LOG [$CNAME] ERROR: Failed to create /root/.ssh — skipping"
           CFAILED=true
         fi
