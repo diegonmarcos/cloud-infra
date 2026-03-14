@@ -43,6 +43,30 @@ let
   # All commands that need wrappers
   allCommands = lib.unique (confirmCmds ++ warningCmds ++ blockedCmds);
 
+  # ── Read-only subcommands that bypass confirmation ────────────────
+  # These can't modify the system — safe to run without prompting.
+  # Prevents hanging when called from non-interactive shells (e.g. Claude Code).
+  readOnly = {
+    npm  = [ "config" "root" "prefix" "ls" "list" "view" "info" "explain" "help" "version" "query" "why" ];
+    npx  = [];
+    nix  = [ "eval" "flake" "show" "search" "path-info" "derivation" "log" "why-depends" "store" ];
+  };
+
+  # Generate whitelist check: scan all args (not just $1) for read-only subcommands
+  mkWhitelistCheck = cmd: let
+    subs = readOnly.${cmd} or [];
+    cases = lib.concatStringsSep "|" subs;
+  in if subs == [] then "" else ''
+        # Whitelist read-only subcommands — skip confirmation
+        for _arg in "$@"; do
+          case "$_arg" in
+            -*) continue ;;
+            ${cases}) exec ${cmd} "$@" ;;
+            *) break ;;
+          esac
+        done
+  '';
+
   # ── Rule matching helpers ──────────────────────────────────────────
   blockedRulesFor = cmd: builtins.filter (r: r.cmd == cmd) blocked;
 
@@ -72,6 +96,7 @@ let
   mkWrapper = cmd: let
     isWarning = builtins.elem cmd warningCmds;
     blockChecks = mkBlockChecks cmd;
+    whitelistCheck = mkWhitelistCheck cmd;
   in {
     name = ".local/bin/${cmd}";
     value = {
@@ -84,6 +109,7 @@ let
         # Strip ~/.local/bin from PATH so exec hits the real binary
         PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
         ARGS="$*"
+        ${whitelistCheck}
         ${blockChecks}
       '' + (if isWarning then ''
         printf "\n"
@@ -113,8 +139,14 @@ let
         printf "\033[1;35m  ║     Always report a bug in the build.sh engine               ║\033[0m\n"
         printf "\033[1;35m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
         printf "\n"
+        printf "\033[0;36m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n"
+        printf "\n"
         printf "\033[1;37m  Proceed? [y/N] \033[0m"
-        read -r REPLY < /dev/tty
+        if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
+          printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
+          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n" >&2
+          exit 1
+        fi
         if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
           printf "\033[0;31m  Aborted.\033[0m\n"
           exit 1
