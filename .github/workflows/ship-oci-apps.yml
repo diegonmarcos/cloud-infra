@@ -22,6 +22,7 @@ on:
       - "a_solutions/ca-dat_gitea/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
       - "a_solutions/bc-obs_c3-mcp-api/src/**"
+      - "a_solutions/bc-obs_c3-services-mcp-api/src/**"
       - "a_solutions/bc-obs_cloud-spec/src/**"
       - "a_solutions/bc-obs_windmill/src/**"
       - ".github/workflows/ship-oci-apps.yml"
@@ -94,6 +95,8 @@ jobs:
               - 'a_solutions/ca-dat_kg-graph/src/**'
             c3-api:
               - 'a_solutions/bc-obs_c3-mcp-api/src/**'
+            c3-services-api:
+              - 'a_solutions/bc-obs_c3-services-mcp-api/src/**'
             cloud-spec:
               - 'a_solutions/bc-obs_cloud-spec/src/**'
             windmill:
@@ -104,7 +107,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api cloud-spec windmill; do
+          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api c3-services-api cloud-spec windmill; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -193,6 +196,12 @@ jobs:
         env:
           REMOTE_BUILD: "true"
         run: bash a_solutions/bc-obs_c3-mcp-api/build.sh ship
+
+      - name: Ship c3-services-api
+        if: steps.changes.outputs.c3-services-api == 'true' || steps.force.outputs.c3-services-api == 'true'
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_c3-services-mcp-api/build.sh ship
 
       - name: Ship cloud-spec
         if: steps.changes.outputs.cloud-spec == 'true' || steps.force.outputs.cloud-spec == 'true'
