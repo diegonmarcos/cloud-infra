@@ -167,6 +167,14 @@ cmd_deps() {
         (cd "$engine_dir" && npm install --silent --yes)
     fi
 
+    # Generate cloud-deps.json (consolidated deps from all services)
+    if command -v tsx >/dev/null 2>&1 && [ -f "$ENGINE_DIR/engines/gen-deps.ts" ]; then
+        log "Generating cloud-deps.json..."
+        tsx "$ENGINE_DIR/engines/gen-deps.ts"
+    else
+        log "SKIP cloud-deps.json (tsx or gen-deps.ts not available)"
+    fi
+
     # Verify
     if check_deps; then
         log "All dependencies installed."
@@ -490,6 +498,8 @@ cmd_config() {
     tsx "$ENGINE_DIR/engines/gen-topology.ts"
     log "Generating cloud-configs.json + cloud-configs.md..."
     tsx "$ENGINE_DIR/engines/gen-configs.ts"
+    log "Generating cloud-deps.json..."
+    tsx "$ENGINE_DIR/engines/gen-deps.ts"
 }
 
 # Clean all dist/ folders
