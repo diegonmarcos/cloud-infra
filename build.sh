@@ -17,14 +17,12 @@ ENGINE_FOLDER=$(jq -r ".engine_folder" "$SCRIPT_DIR/config.json" 2>/dev/null)
 ENGINE_DIR="$SOLUTIONS_DIR/$ENGINE_FOLDER/src"
 
 # =============================================================================
-# Dependency Engine — reads from deps.json (single source of truth)
+# Dependency Engine — reads from config.json .deps section
 # =============================================================================
 
-DEPS_FILE="$SCRIPT_DIR/deps.json"
-
-# Settings from deps.json install section
-DEPS_NIX_METHOD=$(jq -r '.install.nix_method // "shell"' "$DEPS_FILE")
-DEPS_AUTO_YES=$(jq -r '.install.auto_yes // false' "$DEPS_FILE")
+# Settings from config.json deps.install section
+DEPS_NIX_METHOD=$(jq -r '.deps.install.nix_method // "shell"' "$CONFIG_FILE")
+DEPS_AUTO_YES=$(jq -r '.deps.install.auto_yes // false' "$CONFIG_FILE")
 
 # Also auto-yes when non-interactive (CI, piped, GHA)
 [ ! -t 0 ] && DEPS_AUTO_YES=true
@@ -42,10 +40,10 @@ detect_pm() {
     fi
 }
 
-# deps.json accessors
-deps_binaries() { jq -r '.system.required | keys[]' "$DEPS_FILE" | tr '\n' ' '; }
-deps_pkg_name() { jq -r ".system.required[\"$1\"][\"$2\"] // empty" "$DEPS_FILE"; }
-deps_node_required() { jq -r '.node.required[]' "$DEPS_FILE" | tr '\n' ' '; }
+# config.json deps accessors
+deps_binaries() { jq -r '.deps.system | keys[]' "$CONFIG_FILE" | tr '\n' ' '; }
+deps_pkg_name() { jq -r ".deps.system[\"$1\"][\"$2\"] // empty" "$CONFIG_FILE"; }
+deps_node_required() { jq -r '.deps.node.required[]' "$CONFIG_FILE" | tr '\n' ' '; }
 
 # Confirm prompt — auto-yes if configured or non-interactive
 confirm() {
@@ -104,10 +102,10 @@ check_deps() {
     return 1
 }
 
-# Install ALL deps from deps.json — works on NixOS, Termux (nix), Ubuntu (apt), GHA
+# Install ALL deps from config.json — works on NixOS, Termux (nix), Ubuntu (apt), GHA
 cmd_deps() {
     pm=$(detect_pm)
-    log "Installing all dependencies from deps.json (manager: $pm, nix_method: $DEPS_NIX_METHOD, auto_yes: $DEPS_AUTO_YES)..."
+    log "Installing all dependencies from config.json (manager: $pm, nix_method: $DEPS_NIX_METHOD, auto_yes: $DEPS_AUTO_YES)..."
 
     # Collect missing system binaries
     missing_sys=""
@@ -529,7 +527,7 @@ Cloud Orchestrator — repo-level CLI for cloud/ infrastructure
 USAGE:  ./build.sh <command> [args]
 
 SETUP:
-    deps                  Install ALL dependencies from deps.json (nix + node)
+    deps                  Install ALL dependencies from config.json (nix + node)
 
 PIPELINE:
     build [service]       Nix build -> dist/ (all services if omitted)
