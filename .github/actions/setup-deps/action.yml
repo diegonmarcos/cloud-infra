@@ -1,5 +1,5 @@
 name: "Setup Dependencies"
-description: "Universal dependency setup — reads deps.json from repo root"
+description: "Universal dependency setup — reads config.json .deps from repo root"
 
 inputs:
   ssh_key:
@@ -22,11 +22,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Read nix channel from deps.json
+    - name: Read nix channel from config.json
       id: deps
       shell: bash
       run: |
-        echo "nix_channel=$(jq -r '.gha.nix_channel' "$GITHUB_WORKSPACE/deps.json")" >> "$GITHUB_OUTPUT"
+        echo "nix_channel=$(jq -r '.deps.gha.nix_channel' "$GITHUB_WORKSPACE/config.json")" >> "$GITHUB_OUTPUT"
 
     - name: Install Nix
       uses: cachix/install-nix-action@v30
@@ -40,11 +40,11 @@ runs:
     - name: Persist nix paths for subsequent GHA steps
       shell: bash
       run: |
-        DEPS="$GITHUB_WORKSPACE/deps.json"
+        CFG="$GITHUB_WORKSPACE/config.json"
         for pkg in $(jq -r '
-          [ .system.required | to_entries[] | .value.nix // empty ] +
-          [ .system.optional | to_entries[] | .value.nix // empty ]
-          | .[]' "$DEPS"); do
+          [ .deps.system | to_entries[] | .value.nix // empty ] +
+          [ .deps.optional | to_entries[] | .value.nix // empty ]
+          | .[]' "$CFG"); do
           pkg_path=$(nix build --no-link --print-out-paths "nixpkgs#$pkg" 2>/dev/null) || continue
           echo "$pkg_path/bin" >> "$GITHUB_PATH"
         done
