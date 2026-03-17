@@ -3,6 +3,8 @@ name: "Ship → oci-apps"
 on:
   push:
     paths:
+      - "a_solutions/aa-sui_mattermost-mcp/src/**"
+      - "a_solutions/aa-sui_mailu-mcp/src/**"
       - "a_solutions/aa-sui_mattermost-bots/src/**"
       - "a_solutions/aa-sui_code-server/src/**"
       - "a_solutions/aa-sui_etherpad/src/**"
@@ -57,6 +59,10 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
+            mattermost-mcp:
+              - 'a_solutions/aa-sui_mattermost-mcp/src/**'
+            mailu-mcp:
+              - 'a_solutions/aa-sui_mailu-mcp/src/**'
             mattermost-bots:
               - 'a_solutions/aa-sui_mattermost-bots/src/**'
             code-server:
@@ -107,7 +113,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api c3-services-api cloud-spec windmill; do
+          for name in mattermost-mcp mailu-mcp mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api c3-services-api cloud-spec windmill; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -120,6 +126,18 @@ jobs:
           ssh_user: ubuntu
           ssh_alias: oci-apps
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+
+      - name: Ship mattermost-mcp
+        if: steps.changes.outputs.mattermost-mcp == 'true' || steps.force.outputs.mattermost-mcp == 'true'
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/aa-sui_mattermost-mcp/build.sh ship
+
+      - name: Ship mailu-mcp
+        if: steps.changes.outputs.mailu-mcp == 'true' || steps.force.outputs.mailu-mcp == 'true'
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/aa-sui_mailu-mcp/build.sh ship
 
       - name: Ship mattermost-bots
         if: steps.changes.outputs.mattermost-bots == 'true' || steps.force.outputs.mattermost-bots == 'true'
