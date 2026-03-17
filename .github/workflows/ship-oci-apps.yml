@@ -23,7 +23,7 @@ on:
       - "a_solutions/ad-agi_rig-agentic/src/**"
       - "a_solutions/ca-dat_gitea/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
-      - "a_solutions/bc-obs_c3-mcp-api/src/**"
+      - "a_solutions/bc-obs_c3-infra-mcp-api/src/**"
       - "a_solutions/bc-obs_c3-services-mcp-api/src/**"
       - "a_solutions/bc-obs_cloud-spec/src/**"
       - "a_solutions/bc-obs_windmill/src/**"
@@ -100,7 +100,7 @@ jobs:
             kg-graph:
               - 'a_solutions/ca-dat_kg-graph/src/**'
             c3-api:
-              - 'a_solutions/bc-obs_c3-mcp-api/src/**'
+              - 'a_solutions/bc-obs_c3-infra-mcp-api/src/**'
             c3-services-api:
               - 'a_solutions/bc-obs_c3-services-mcp-api/src/**'
             cloud-spec:
@@ -213,7 +213,7 @@ jobs:
         if: steps.changes.outputs.c3-api == 'true' || steps.force.outputs.c3-api == 'true'
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-mcp-api/build.sh ship
+        run: bash a_solutions/bc-obs_c3-infra-mcp-api/build.sh ship
 
       - name: Ship c3-services-api
         if: steps.changes.outputs.c3-services-api == 'true' || steps.force.outputs.c3-services-api == 'true'
