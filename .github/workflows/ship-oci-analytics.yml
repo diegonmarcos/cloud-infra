@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "a_solutions/bc-obs_matomo/src/**"
+      - "a_solutions/bc-obs_umami/src/**"
       - "a_solutions/bc-obs_sauron-forwarder/src/**"
       - ".github/workflows/ship-oci-analytics.yml"
     branches: [main]
@@ -34,6 +35,8 @@ jobs:
           filters: |
             matomo:
               - 'a_solutions/bc-obs_matomo/src/**'
+            umami:
+              - 'a_solutions/bc-obs_umami/src/**'
             sauron-forwarder:
               - 'a_solutions/bc-obs_sauron-forwarder/src/**'
 
@@ -42,7 +45,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in matomo sauron-forwarder; do
+          for name in matomo umami sauron-forwarder; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -59,6 +62,10 @@ jobs:
       - name: Ship matomo
         if: steps.changes.outputs.matomo == 'true' || steps.force.outputs.matomo == 'true'
         run: bash a_solutions/bc-obs_matomo/build.sh ship
+
+      - name: Ship umami
+        if: steps.changes.outputs.umami == 'true' || steps.force.outputs.umami == 'true'
+        run: bash a_solutions/bc-obs_umami/build.sh ship
 
       - name: Ship sauron-forwarder
         if: steps.changes.outputs.sauron-forwarder == 'true' || steps.force.outputs.sauron-forwarder == 'true'
