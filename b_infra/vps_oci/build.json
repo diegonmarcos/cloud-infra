@@ -1,8 +1,19 @@
 {
   "name": "vps-oci",
   "description": "OCI infrastructure — VMs, VCN, security lists, budget (Terraform)",
+  "category": "cloud",
+  "build": {
+    "copy_only": true
+  },
   "deploy": {
     "host": "local",
-    "remote_path": ""
+    "remote_path": "",
+    "terraform": true
+  },
+  "terraform": {
+    "tfvars_template": "terraform.tfvars.template",
+    "env": {
+      "OCI_CLI_CONFIG_FILE": "~/.oci/config"
+    }
   }
 }
