@@ -7,6 +7,7 @@ on:
       - "b_infra/vps_gcloud/src/**"
       - "b_infra/vps_oci/src/**"
       - "b_infra/vps_aws/src/**"
+      - "b_infra/vps_hetzner/src/**"
       - ".github/workflows/terraform.yml"
     branches: [main]
   workflow_dispatch:
@@ -44,13 +45,15 @@ jobs:
               - 'b_infra/vps_oci/src/**'
             aws:
               - 'b_infra/vps_aws/src/**'
+            hetzner:
+              - 'b_infra/vps_hetzner/src/**'
 
       - name: Force project override
         id: force
         if: github.event_name == 'workflow_dispatch'
         run: |
           proj="${{ inputs.project }}"
-          for name in cloudflare gcloud oci aws; do
+          for name in cloudflare gcloud oci aws hetzner; do
             if [ -z "$proj" ] || [ "$proj" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -151,6 +154,20 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
+        run: |
+          terraform init -input=false
+          terraform plan -input=false -out=tfplan
+          terraform apply -input=false -auto-approve tfplan
+
+      # ════════════════════════════════════════════════════════════
+      # Hetzner — VMs (placeholder, ready for provisioning)
+      # ════════════════════════════════════════════════════════════
+
+      - name: Terraform — Hetzner
+        if: steps.changes.outputs.hetzner == 'true' || steps.force.outputs.hetzner == 'true'
+        working-directory: b_infra/vps_hetzner/src
+        env:
+          TF_VAR_hcloud_token: ${{ secrets.HETZNER_API_TOKEN }}
         run: |
           terraform init -input=false
           terraform plan -input=false -out=tfplan
