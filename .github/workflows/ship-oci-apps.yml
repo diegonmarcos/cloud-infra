@@ -264,3 +264,55 @@ jobs:
       - name: Verify KG Graph
         if: steps.ship-kg-graph.outcome == 'success'
         run: ssh oci-apps "curl -sf http://localhost:8001/health && echo ' <- SurrealDB health OK' || echo 'SurrealDB health FAILED'"
+
+      # ── Health verification (runs for all services that were deployed) ──
+      - name: Health check deployed services
+        if: always()
+        run: |
+          echo "=== Post-deploy health checks ==="
+          failed=0
+          for filter_name in mattermost-mcp mailu-mcp mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea c3-api c3-services-api cloud-spec windmill google-workspace-mcp kg-graph; do
+            # Map filter names to folder paths
+            case "$filter_name" in
+              c3-api)           dir="bc-obs_c3-infra-mcp-api" ;;
+              c3-services-api)  dir="bc-obs_c3-services-mcp-api" ;;
+              cloud-spec)       dir="bc-obs_cloud-spec" ;;
+              crawlee-cloud)    dir="ac-fin_crawlee-cloud" ;;
+              quant-lab-full)   dir="ac-fin_quant-lab-full" ;;
+              quant-lab-light)  dir="ac-fin_quant-lab-light" ;;
+              orchestrator)     dir="bb-sec_orchestrator" ;;
+              lgtm)             dir="bc-obs_lgtm" ;;
+              nocodb)           dir="bc-obs_nocodb" ;;
+              rig-agentic)      dir="ad-agi_rig-agentic" ;;
+              gitea)            dir="ca-dat_gitea" ;;
+              kg-graph)         dir="ca-dat_kg-graph" ;;
+              windmill)         dir="bc-obs_windmill" ;;
+              google-workspace-mcp) dir="aa-sui_google-workspace-mcp" ;;
+              *)                dir="aa-sui_${filter_name}" ;;
+            esac
+
+            # Check if this service was deployed in this run (changes or force)
+            was_deployed="false"
+            if [ "${{ github.event_name }}" = "push" ]; then
+              val="${{ steps.changes.outputs[filter_name] || 'false' }}"
+              [ "$val" = "true" ] && was_deployed="true"
+            else
+              val="${{ steps.force.outputs[filter_name] || 'false' }}"
+              [ "$val" = "true" ] && was_deployed="true"
+            fi
+
+            if [ "$was_deployed" = "true" ]; then
+              echo "--- Health: $filter_name ---"
+              if bash "a_solutions/$dir/build.sh" health; then
+                echo "  ✓ $filter_name healthy"
+              else
+                echo "  ✗ $filter_name FAILED health check"
+                failed=$((failed + 1))
+              fi
+            fi
+          done
+          if [ "$failed" -gt 0 ]; then
+            echo "::warning::$failed service(s) failed health checks"
+          else
+            echo "All deployed services healthy"
+          fi
