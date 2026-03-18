@@ -9,6 +9,8 @@
         { port = 80;   proto = "tcp"; desc = "HTTP (Caddy)"; }
         { port = 443;  proto = "tcp"; desc = "HTTPS (Caddy)"; }
         { port = 443;  proto = "udp"; desc = "QUIC (Caddy)"; }
+        { port = 993;  proto = "tcp"; desc = "IMAPS (Caddy L4 → oci-mail)"; }
+        { port = 465;  proto = "tcp"; desc = "SMTPS (Caddy L4 → oci-mail)"; }
         { port = 5050; proto = "tcp"; desc = "alerts-api"; }
         { port = 5514; proto = "tcp"; desc = "sauron-central syslog"; }
       ];
