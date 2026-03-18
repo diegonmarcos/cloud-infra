@@ -106,18 +106,7 @@ resource "oci_core_default_security_list" "main" {
     }
   }
 
-  # 2. SMTP (25)
-  ingress_security_rules {
-    source      = "0.0.0.0/0"
-    protocol    = "6"
-    stateless   = false
-    description = "SMTP Inbound"
-    tcp_options {
-      min = 25
-      max = 25
-    }
-  }
-
+  # 2. SMTP (25) — REMOVED: inbound via CF Tunnel, not public port
   # 3. HTTP (80)
   ingress_security_rules {
     source    = "0.0.0.0/0"
@@ -231,41 +220,7 @@ resource "oci_core_default_security_list" "main" {
     }
   }
 
-  # 13. SMTP STARTTLS (587)
-  ingress_security_rules {
-    source      = "0.0.0.0/0"
-    protocol    = "6"
-    stateless   = false
-    description = "SMTP STARTTLS"
-    tcp_options {
-      min = 587
-      max = 587
-    }
-  }
-
-  # 14. IMAPS (993)
-  ingress_security_rules {
-    source      = "0.0.0.0/0"
-    protocol    = "6"
-    stateless   = false
-    description = "IMAPS"
-    tcp_options {
-      min = 993
-      max = 993
-    }
-  }
-
-  # 15. SMTPS (465)
-  ingress_security_rules {
-    source      = "0.0.0.0/0"
-    protocol    = "6"
-    stateless   = false
-    description = "SMTPS"
-    tcp_options {
-      min = 465
-      max = 465
-    }
-  }
+  # 13-15. SMTP/IMAPS/SMTPS (587, 993, 465) — REMOVED: mail access via WG only (Caddy L4 on gcp-proxy)
 
   # 16. SMTP Proxy for Cloudflare Worker (8088)
   ingress_security_rules {
