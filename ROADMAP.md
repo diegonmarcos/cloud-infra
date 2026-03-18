@@ -16,6 +16,7 @@ Master sequencing document. Each task has its own TASK-sec-*.md file. This defin
 | sec-03 | Declarative Networking + Firewall | `TASK-sec-20260318-03_declarative-networking-firewall.md` | Draft |
 | sec-04 | GHCR Registry | `TASK-sec-20260318-04_ghcr-registry.md` | TODO |
 | sec-05 | Database Backup | `TASK-sec-20260318-05_database-backup.md` | Partial |
+| sec-06 | GHA Pipeline Optimization | `TASK-sec-20260318-06_gha-pipeline-optimization.md` | Draft |
 | — | Mail Direct SMTP | `TASK-20260306-01_Plan-mail-direct-smtp.md` | Blocked (OCI) |
 | — | MCP API Coverage | `TASK-20260306-02_Plan-mcp-api-coverage.md` | Pending |
 
