@@ -1,4 +1,4 @@
-# GHA Pipeline Optimization
+# GHA Pipeline Optimization — Fully Declarative
 
 > **Date**: 2026-03-18
 > **Updated**: 2026-03-18
@@ -8,12 +8,12 @@
 
 ## Checklist
 
-- [ ] Phase 1: Pin sops binary (replace nix-shell)
-- [ ] Phase 2: Cache nix store
-- [ ] Phase 3: Single SSH session (deploy + compose)
+- [ ] Phase 1: Nix store cache (absorbs sops + build deps)
+- [ ] Phase 2: GHA deps flake (sops, wireguard-tools, yq — single `nix develop`)
+- [ ] Phase 3: SSH ControlMaster (single socket, reuse across steps)
 - [ ] Phase 4: rsync compression + delta optimization
-- [ ] Phase 5: Hash-before-deploy (skip rsync entirely if unchanged)
-- [ ] Phase 6: WireGuard tunnel from GHA runner
+- [ ] Phase 5: Hash-before-deploy (skip rsync if unchanged)
+- [ ] Phase 6: WireGuard tunnel via nix flake
 
 ---
 
@@ -25,43 +25,23 @@
 | Install Nix | 4s | 2% | cachix/install-nix-action |
 | `build.sh deps` (nix-shell sops) | 29s | 13% | Evaluates nixpkgs to get sops binary |
 | SSH setup + sops age key | 20s | 9% | Write SSH key, known_hosts, age key |
-| `build.sh ship` — nix build | 9s | 4% | Evaluate flake → dist/ |
-| secrets decrypt | 1s | <1% | sops -d → .secrets |
+| `build.sh ship` — nix build | 9s | 4% | Evaluate flake -> dist/ |
+| secrets decrypt | 1s | <1% | sops -d -> .secrets |
 | rsync deploy | 108s | 49% | Transfer dist/ to VM |
-| docker compose up | 40s | 18% | SSH → compose up + health verify |
+| docker compose up | 40s | 18% | SSH -> compose up + health verify |
 | **Total** | **~220s** | **100%** | |
 
 **Target**: < 60s for config-only services (no Docker build).
 
 ---
 
-## Phase 1: Pin sops Binary (saves ~25s)
+## Phase 1: Cache Nix Store (saves ~30s — absorbs sops + all deps)
 
-Replace `nix-shell -p sops` with direct binary download. sops is a single static binary.
+Cache `/nix/store` across GHA runs. First run populates the cache, subsequent runs restore in <2s. This makes `nix-shell -p sops` and `nix build` near-instant from cache.
+
+**No need to pin sops binary** — nix-shell resolves from cached store.
 
 ### In `setup-deps/action.yml`:
-
-```yaml
-- name: Install sops
-  shell: bash
-  run: |
-    SOPS_VERSION="3.9.4"
-    curl -sSL "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64" \
-      -o /usr/local/bin/sops
-    chmod +x /usr/local/bin/sops
-```
-
-### In `_engine.sh` `build.sh deps`:
-
-Remove `nix-shell -p sops` from the deps command. `sops` is already on PATH from the GHA step.
-
-**Files**: `.github/actions/setup-deps/action.yml`, `_engine.sh` (deps command)
-
----
-
-## Phase 2: Cache Nix Store (saves ~9s build, prevents future regression)
-
-Add `nix-community/cache-nix-action` or GHA cache for `/nix/store`.
 
 ```yaml
 - name: Cache nix store
@@ -69,26 +49,95 @@ Add `nix-community/cache-nix-action` or GHA cache for `/nix/store`.
   with:
     primary-key: nix-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
     restore-prefixes-first-match: nix-${{ runner.os }}-
+    paths: |
+      /nix/store
+      /nix/var/nix
+      ~/.cache/nix
 ```
-
-For config-only services the nix build is already fast (9s), but this prevents regression as flakes grow. Also speeds up `source_code` services that have heavier builds.
 
 **Files**: `.github/actions/setup-deps/action.yml`
 
 ---
 
-## Phase 3: Single SSH Session (saves ~20-30s)
+## Phase 2: GHA Deps Flake (declarative toolchain)
 
-Current pipeline opens 4+ SSH connections (deploy rsync, compose up, health check, log fetch). Each has connection overhead (~5s handshake to slow VMs).
+Replace ad-hoc `nix-shell -p sops` calls with a single flake that declares ALL GHA build dependencies. One `nix develop` enters the environment with everything available.
 
-### Solution: SSH ControlMaster persistent socket
+### New flake: `.github/flake.nix`
+
+```nix
+{
+  description = "GHA CI/CD build environment";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+
+  outputs = { self, nixpkgs }: let
+    forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ];
+  in {
+    devShells = forAllSystems (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+    in {
+      default = pkgs.mkShell {
+        buildInputs = [
+          pkgs.sops
+          pkgs.age
+          pkgs.yq-go
+          pkgs.wireguard-tools  # for Phase 6
+          pkgs.rsync
+          pkgs.openssh
+        ];
+      };
+    });
+  };
+}
+```
+
+### In `_engine.sh` `build.sh deps`:
+
+```bash
+cmd_deps() {
+    # GHA: use .github/flake.nix devShell
+    if [ -f "$REPO_ROOT/.github/flake.nix" ]; then
+        log "Nix (develop): entering GHA build environment"
+        nix develop "$REPO_ROOT/.github#" --command true  # populates nix store
+        export PATH="$(nix develop "$REPO_ROOT/.github#" --print-dev-env 2>/dev/null | grep '^export PATH=' | cut -d= -f2- | tr -d '"'):$PATH"
+    else
+        # Fallback: individual nix-shell calls (local dev)
+        for dep in sops age yq-go; do
+            command -v "$dep" >/dev/null 2>&1 || nix_add "$dep"
+        done
+    fi
+}
+```
+
+Or simpler — GHA action.yml does:
 
 ```yaml
-- name: SSH setup
+- name: Enter build environment
+  shell: bash
+  run: |
+    nix develop .github/#default --profile /tmp/gha-env
+    echo "/tmp/gha-env/bin" >> "$GITHUB_PATH"
+```
+
+All tools on PATH, all from nix, all cached by Phase 1.
+
+**Files**: `.github/flake.nix` (NEW), `.github/actions/setup-deps/action.yml`, `_engine.sh`
+
+---
+
+## Phase 3: SSH ControlMaster (saves ~20-30s)
+
+Current pipeline opens 4+ SSH connections (deploy rsync, compose up, health check, log fetch). Each has ~5s handshake overhead.
+
+### In `setup-deps/action.yml`:
+
+```yaml
+- name: SSH ControlMaster
   shell: bash
   run: |
     mkdir -p ~/.ssh/sockets
-    cat >> ~/.ssh/config <<EOF
+    cat >> ~/.ssh/config <<'EOF'
     Host *
       ControlMaster auto
       ControlPath ~/.ssh/sockets/%r@%h-%p
@@ -96,120 +145,172 @@ Current pipeline opens 4+ SSH connections (deploy rsync, compose up, health chec
     EOF
 ```
 
-First SSH connection opens the socket, subsequent ones reuse it — near-zero overhead.
+First SSH connection opens the socket, all subsequent reuse it — near-zero overhead.
 
 ### In `_engine.sh`:
 
-Add SSH_OPTS with ControlMaster:
+Verify `SSH_OPTS` includes ControlMaster (may already be there from SSH config above — no engine change needed if SSH config is global).
 
-```bash
-SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-%r@%h-%p -o ControlPersist=120"
-```
-
-**Check**: May already be partially implemented — verify current SSH_OPTS in engine.
-
-**Files**: `.github/actions/setup-deps/action.yml`, `_engine.sh`
+**Files**: `.github/actions/setup-deps/action.yml`
 
 ---
 
-## Phase 4: rsync Compression + Delta (saves ~50-60s)
+## Phase 4: rsync Compression + Delta (saves ~40-50s)
 
-Current rsync is the biggest bottleneck (108s / 49%). The GHA runner → VM path goes over public internet.
+The biggest bottleneck (108s / 49%). GHA runner -> VM goes over public internet.
 
-### Optimizations:
+### In `_engine.sh` step_deploy:
 
 ```bash
-# Current (likely)
-rsync -avz dist/ vm:path/
-
-# Optimized
-rsync -az --compress-level=9 --partial --inplace dist/ vm:path/
+# Optimized rsync flags
+rsync -az \
+    --compress-level=9 \
+    --partial \
+    --inplace \
+    --checksum \
+    --exclude='docs/' \
+    -e "ssh $SSH_OPTS" \
+    "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/"
 ```
 
 | Flag | Effect |
 |------|--------|
-| `--compress-level=9` | Max compression (small config files compress well) |
+| `--compress-level=9` | Max compression (config files compress >90%) |
 | `--partial` | Resume interrupted transfers |
-| `--inplace` | Update files in-place (no temp copy → less I/O) |
-| `--checksum` | Compare by checksum not mtime (skip unchanged files reliably) |
+| `--inplace` | Update in-place (less I/O on VM) |
+| `--checksum` | Skip unchanged files by content hash (not mtime) |
+| `--exclude='docs/'` | Skip mdbook docs (large, not needed on VM) |
 
-### Also: strip docs from deploy
-
-Many services generate `docs/` in dist/ (mdbook output). These are large and not needed on the VM.
-
-```bash
-# In step_deploy, add exclude
-rsync ... --exclude='docs/' dist/ vm:path/
-```
-
-**Files**: `_engine.sh` (step_deploy rsync flags)
+**Files**: `_engine.sh` (step_deploy)
 
 ---
 
 ## Phase 5: Hash-Before-Deploy (saves full rsync on no-change)
 
-The engine already hashes dist/ after build to skip deploy if unchanged. But the hash is stored locally in `.dist-hash` on the GHA runner — which is ephemeral. Each run rebuilds from scratch and always deploys.
+The engine hashes dist/ to skip deploy, but the hash lives on the ephemeral GHA runner (`.dist-hash`). Every run always deploys.
 
-### Solution: Store hash on the VM
+### Solution: Store hash on the VM (engine-managed deploy state)
 
 ```bash
-# After successful deploy, write hash to VM
-ssh $VM "echo '$NEW_HASH' > $DEPLOY_PATH/.dist-hash"
+# In step_deploy (before rsync):
+# Read hash from VM
+OLD_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.dist-hash 2>/dev/null" || true)
 
-# Before deploy, read hash from VM
-OLD_HASH=$(ssh $VM "cat $DEPLOY_PATH/.dist-hash 2>/dev/null" || true)
+# Compare with local dist/ hash
+NEW_HASH=$(find "$DIST_DIR" -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
 
-# Compare
-if [ "$OLD_HASH" = "$NEW_HASH" ]; then
+if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ]; then
     log "Config unchanged on VM — skipping deploy+compose"
     return 0
 fi
+
+# ... rsync ...
+
+# After successful deploy, write hash to VM
+ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_HASH' > $DEPLOY_PATH/.dist-hash"
 ```
 
-This skips rsync + compose entirely when nothing changed. The most common case for multi-service workflows (push changes one service, all others skip).
+This is engine-managed state (written by the deploy pipeline, read by the deploy pipeline). The `.dist-hash` file is part of the deployment artifact lifecycle — not an imperative hack.
 
-**Files**: `_engine.sh` (step_deploy, ship flow)
+**No-change skip**: checkout + nix build + hash check = ~15s total. Skips rsync + compose entirely.
+
+**Files**: `_engine.sh` (ship flow, step_deploy)
 
 ---
 
-## Phase 6: WireGuard Tunnel from GHA (saves ~50% rsync time)
+## Phase 6: WireGuard Tunnel via Nix Flake (saves ~50% rsync)
 
-Route GHA runner traffic through WireGuard to reach VMs via private IPs. This could dramatically improve rsync speed by going through the WG mesh.
+Route GHA runner traffic through WireGuard mesh. All tools from the Phase 2 deps flake (`wireguard-tools` already declared there).
 
-### Setup:
-
-1. Add `WG_PRIVATE_KEY` to GitHub Secrets
-2. Allocate a WG IP for GHA runner (e.g., `10.0.0.20`)
-3. Add peer to `mesh-topology.nix` for GHA
-4. In GHA setup step:
+### Nix-based WG setup in `setup-deps/action.yml`:
 
 ```yaml
 - name: WireGuard tunnel
+  if: env.WG_PRIVATE_KEY != ''
   shell: bash
   run: |
-    sudo apt-get install -y wireguard-tools
+    # wireguard-tools available from Phase 2 deps flake
+    WG_CONFIG=$(nix eval --raw .github/#lib.ghaWireguardConfig)
+
     sudo ip link add wg-gha type wireguard
-    echo "${{ secrets.WG_PRIVATE_KEY }}" | sudo wg set wg-gha private-key /dev/stdin \
-      peer $GCP_PROXY_PUBKEY endpoint 35.226.147.64:51820 \
-      allowed-ips 10.0.0.0/24
+    echo "$WG_CONFIG" | sudo wg setconf wg-gha /dev/stdin
     sudo ip addr add 10.0.0.20/24 dev wg-gha
     sudo ip link set wg-gha up
     sudo ip route add 10.0.0.0/24 dev wg-gha
+  env:
+    WG_PRIVATE_KEY: ${{ secrets.GHA_WG_PRIVATE_KEY }}
 ```
 
-5. rsync/SSH now uses WG IPs (10.0.0.x) instead of public IPs
+### WG config generated from flake:
 
-### Caveats:
+```nix
+# In .github/flake.nix — add lib output
+lib.ghaWireguardConfig = pkgs.writeText "wg-gha.conf" ''
+  [Interface]
+  PrivateKey = PLACEHOLDER_INJECTED_AT_RUNTIME
 
-- Ephemeral runner = ephemeral WG peer (key regenerated each run OR static key in secrets)
-- Static key approach: store WG private key in GitHub Secrets, GHA peer always has same pubkey
-- Need to add GHA peer to all VMs' wireguard.nix AllowedIPs
-- **Security**: The WG key in GitHub Secrets has access to the entire mesh. Scope with AllowedIPs.
+  [Peer]
+  PublicKey = ${gcpProxyPubkey}
+  Endpoint = 35.226.147.64:51820
+  AllowedIPs = 10.0.0.0/24
+  PersistentKeepalive = 25
+'';
+```
 
-**Effort**: Medium — depends on TASK-sec-03 (mesh-topology.nix) for clean peer management.
-**Dependency**: Can be done standalone, but cleaner after sec-03.
+Or read from `mesh-topology.nix` (after sec-03):
 
-**Files**: `.github/actions/setup-deps/action.yml`, `b_infra/home-manager/_shared/wireguard.nix` or `mesh-topology.nix`
+```nix
+lib.ghaWireguardConfig = let
+  mesh = import ../b_infra/home-manager/_shared/mesh-topology.nix;
+  hub = mesh.peers.gcp-proxy;
+in pkgs.writeText "wg-gha.conf" ''
+  [Interface]
+  PrivateKey = RUNTIME_INJECTED
+
+  [Peer]
+  PublicKey = ${hub.publicKey}
+  Endpoint = ${hub.endpoint}
+  AllowedIPs = ${mesh.wgSubnet}
+  PersistentKeepalive = 25
+'';
+```
+
+### Peer declaration in mesh topology:
+
+```nix
+# In mesh-topology.nix (or wireguard.nix)
+clients = {
+  surface = { wgIp = "10.0.0.10"; };
+  termux  = { wgIp = "10.0.0.11"; };
+  gha     = { wgIp = "10.0.0.20"; };  # GHA runner
+};
+```
+
+### SSH config swap to WG IPs:
+
+When WG tunnel is up, engine uses WG IPs instead of public IPs. Declared in SSH config:
+
+```yaml
+- name: SSH config (WG)
+  if: env.WG_PRIVATE_KEY != ''
+  shell: bash
+  run: |
+    # Override VM hosts to use WG IPs (from mesh-topology)
+    cat >> ~/.ssh/config <<'EOF'
+    Host gcp-proxy
+      Hostname 10.0.0.1
+    Host oci-apps
+      Hostname 10.0.0.6
+    Host oci-mail
+      Hostname 10.0.0.3
+    Host oci-analytics
+      Hostname 10.0.0.4
+    EOF
+```
+
+**Dependency**: Cleaner after sec-03 (mesh-topology.nix as source of truth for WG IPs).
+
+**Files**: `.github/flake.nix`, `.github/actions/setup-deps/action.yml`, `b_infra/home-manager/_shared/wireguard.nix` or `mesh-topology.nix`
 
 ---
 
@@ -218,25 +319,40 @@ Route GHA runner traffic through WireGuard to reach VMs via private IPs. This co
 | Phase | Saves | Cumulative | New Total |
 |-------|-------|------------|-----------|
 | Baseline | — | — | ~220s |
-| Phase 1: Pin sops | ~25s | 25s | ~195s |
-| Phase 2: Nix cache | ~5s (config-only) | 30s | ~190s |
-| Phase 3: SSH ControlMaster | ~20s | 50s | ~170s |
-| Phase 4: rsync optimize | ~40s | 90s | ~130s |
+| Phase 1: Nix cache | ~30s (sops + build) | 30s | ~190s |
+| Phase 2: Deps flake | ~5s (single nix develop vs multiple nix-shell) | 35s | ~185s |
+| Phase 3: SSH ControlMaster | ~20s | 55s | ~165s |
+| Phase 4: rsync optimize | ~40s | 95s | ~125s |
 | Phase 5: Hash-on-VM (no-change) | ~150s (full skip) | — | **~15s** |
-| Phase 6: WG tunnel | ~30s more on rsync | 120s | **~100s** |
+| Phase 6: WG tunnel | ~30s more on rsync | 125s | **~95s** |
 
-**No-change deploy** (most common in multi-service workflows): **~15s** after Phase 5.
-**Changed deploy**: **~60-100s** after all phases (down from 220s).
+**No-change deploy**: **~15s** after Phase 5.
+**Changed deploy**: **~60-95s** after all phases (down from 220s).
+
+---
+
+## Declarative Compliance
+
+| Phase | Nix Way? | Notes |
+|-------|----------|-------|
+| Phase 1: Nix cache | Yes | GHA action caching nix store — no imperative installs |
+| Phase 2: Deps flake | Yes | All tools declared in `.github/flake.nix`, single `nix develop` |
+| Phase 3: SSH ControlMaster | Yes | Config in action.yml source |
+| Phase 4: rsync flags | Yes | Engine source change in `_engine.sh` |
+| Phase 5: Hash-on-VM | Yes | Engine-managed deploy state (written/read by pipeline only) |
+| Phase 6: WG tunnel | Yes | `wireguard-tools` from deps flake, config generated from `mesh-topology.nix` |
+
+**Zero `apt-get`, zero `curl` binary downloads, zero imperative installs. Everything from nix.**
 
 ---
 
 ## Implementation Order
 
-1. **Phase 1 + 3** together (easy, no dependencies) — pin sops + SSH ControlMaster
-2. **Phase 4** (rsync flags, easy)
-3. **Phase 5** (hash-on-VM, medium — engine change)
-4. **Phase 2** (nix cache, easy but low impact for config-only)
-5. **Phase 6** (WG tunnel, medium effort, best after sec-03)
+1. **Phase 1 + 2** together — nix cache + deps flake (biggest bang, foundational)
+2. **Phase 3** — SSH ControlMaster (easy, no deps)
+3. **Phase 4** — rsync flags (easy, engine change)
+4. **Phase 5** — hash-on-VM (medium, engine change — biggest skip-win)
+5. **Phase 6** — WG tunnel (after sec-03 mesh-topology.nix)
 
 ---
 
@@ -244,6 +360,8 @@ Route GHA runner traffic through WireGuard to reach VMs via private IPs. This co
 
 | File | Change |
 |------|--------|
-| `.github/actions/setup-deps/action.yml` | Pin sops binary, SSH ControlMaster, nix cache, WG tunnel |
-| `a_solutions/_engine.sh` | rsync flags, hash-on-VM, SSH_OPTS ControlMaster |
-| `b_infra/home-manager/_shared/wireguard.nix` | Add GHA peer (Phase 6) |
+| `.github/flake.nix` | NEW — GHA build environment (sops, age, yq, wireguard-tools, rsync) |
+| `.github/flake.lock` | NEW — generated from flake.nix |
+| `.github/actions/setup-deps/action.yml` | Nix cache, `nix develop` instead of individual nix-shell, SSH ControlMaster, WG tunnel |
+| `a_solutions/_engine.sh` | rsync flags, hash-on-VM, deps flake support |
+| `b_infra/home-manager/_shared/wireguard.nix` | Add GHA peer (10.0.0.20) |
