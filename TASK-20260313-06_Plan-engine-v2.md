@@ -1,7 +1,21 @@
-# Plan: _engine.sh v2 — Universal Build Pipeline + Ops API
+# _engine.sh v2 — Universal Build Pipeline + Ops API
 
 > **Date**: 2026-03-13
+> **Updated**: 2026-03-13
 > **Status**: Draft
+
+---
+
+## Checklist
+
+- [ ] Make REMOTE_BUILD declarative in build.json (not env var)
+- [ ] Fix step_docker_remote to use dist/ pattern
+- [ ] Add source_code pattern for owned-code services
+- [ ] Add health check step post-deploy
+- [ ] Add report step (deploy record)
+
+---
+
 > **Scope**: `a_solutions/_engine.sh` + `bc-obs_c3-mcp-api/src/api/routes/ops.ts`
 
 ---
