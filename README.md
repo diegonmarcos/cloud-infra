@@ -4,19 +4,46 @@ Self-hosted cloud across Oracle Cloud + Google Cloud free tiers. 5 VMs, 50+ cont
 
 ---
 
-## A) Overview
+## Table of Contents
 
-### Architecture
+### A) Documentation Overview
+- [A.1 Architecture](#a1-architecture)
+- [A.2 Virtual Machines](#a2-virtual-machines)
+- [A.3 Active Services](#a3-active-services)
+- [A.4 Cloud Providers](#a4-cloud-providers)
+- [A.5 Quick Start](#a5-quick-start)
+- [A.6 Authentication & Access](#a6-authentication--access)
+- [A.7 Key Operations](#a7-key-operations)
+
+### B) Architectural Design
+- [B.1 Repository Structure](#b1-repository-structure)
+- [B.2 Service Structure](#b2-service-structure)
+- [B.3 build.json Schema](#b3-buildjson-schema)
+- [B.4 Build Pipeline](#b4-build-pipeline)
+- [B.5 Category Prefixes](#b5-category-prefixes)
+- [B.6 Networking](#b6-networking)
+- [B.7 CI/CD](#b7-cicd-github-actions)
+- [B.8 Security Stack](#b8-security-stack)
+- [B.9 Home Manager](#b9-home-manager)
+- [B.10 Generated Data](#b10-generated-data-cloud-data)
+- [B.11 MCP Servers](#b11-mcp-servers)
+- [B.12 Matomo Hybrid Architecture](#b12-matomo-hybrid-architecture)
+
+---
+
+## A) Documentation Overview
+
+### A.1 Architecture
 
 ```
-Cloudflare (DNS + proxy)
-    → Caddy (gcp-proxy, TLS termination)
+Cloudflare (DNS + proxy + DDoS)
+    → Caddy (gcp-proxy, TLS termination, Let's Encrypt)
         → Authelia (2FA: TOTP/WebAuthn, OIDC bearer tokens)
-            → WireGuard mesh (10.0.0.0/24)
+            → WireGuard mesh (10.0.0.0/24, hub-and-spoke)
                 → Docker containers on target VM
 ```
 
-### Virtual Machines
+### A.2 Virtual Machines
 
 | VM | Alias | IP | WG IP | Arch | RAM | Availability |
 |----|-------|----|-------|------|-----|-------------|
@@ -26,7 +53,9 @@ Cloudflare (DNS + proxy)
 | oci-A1-f_0 | oci-apps | 82.70.229.129 | 10.0.0.6 | aarch64 | 16 GB | 24/7 |
 | gcp-T4-p_0 | gcp-t4 | — | 10.0.0.8 | x86_64 | 16 GB | on-demand |
 
-### Services
+SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`, `ssh gcp-t4`
+
+### A.3 Active Services
 
 | Service | Domain | VM | Port |
 |---------|--------|----|------|
@@ -34,9 +63,10 @@ Cloudflare (DNS + proxy)
 | Authelia 2FA | auth.diegonmarcos.com | gcp-proxy | 9091 |
 | Vaultwarden | vault.diegonmarcos.com | gcp-proxy | 80 |
 | ntfy Push | rss.diegonmarcos.com | gcp-proxy | 8090 |
-| Hickory DNS | dns.internal (WG) | gcp-proxy | 53 |
-| C3 API | api.diegonmarcos.com/c3-api | oci-apps | 8081 |
+| Hickory DNS | dns.internal (WG only) | gcp-proxy | 53 |
+| C3 Infra API | api.diegonmarcos.com/c3-api | oci-apps | 8081 |
 | Crawlee Cloud | api.diegonmarcos.com/crawlee/ | oci-apps | 3000 |
+| Mattermost | chat.diegonmarcos.com | oci-apps | 8065 |
 | Mailu Mail | mail.diegonmarcos.com | oci-mail | 8444 |
 | Syncthing | sync.diegonmarcos.com | oci-mail | 8384 |
 | Radicale | cal.diegonmarcos.com | oci-mail | 5232 |
@@ -48,7 +78,16 @@ Cloudflare (DNS + proxy)
 | AFFiNE | drive-notes-affine.diegonmarcos.com | oci-apps | 3010 |
 | Ollama | — | gcp-t4 | 11434 |
 
-### Quick Start
+### A.4 Cloud Providers
+
+| Provider | Tier | Region | Purpose |
+|----------|------|--------|---------|
+| Oracle Cloud | Always Free (A1.Flex + E2.Micro) | eu-marseille-1 | 4 VMs |
+| Google Cloud | Free Tier (e2-micro) + T4 GPU | us-central1 | 1-2 VMs |
+| Cloudflare | Free | Global | DNS, proxy, DDoS |
+| GitHub | Free | Global | CI/CD, Pages, Container Registry |
+
+### A.5 Quick Start
 
 ```bash
 # Deploy a service (full pipeline: build → secrets → deploy → compose)
@@ -64,18 +103,41 @@ bash build.sh secrets
 ssh oci-apps
 ```
 
-### Cloud Providers
+### A.6 Authentication & Access
 
-| Provider | Tier | Region | Purpose |
-|----------|------|--------|---------|
-| Oracle Cloud | Always Free (A1.Flex + E2.Micro) | eu-marseille-1 | 4 VMs |
-| Google Cloud | Free Tier (e2-micro) + T4 GPU | us-central1 | 1-2 VMs |
-| Cloudflare | Free | Global | DNS, proxy, DDoS |
-| GitHub | Free | Global | CI/CD, Pages, Container Registry |
+**Browser access**: Cloudflare → Caddy → Authelia forward-auth (cookie/session + 2FA via TOTP or WebAuthn).
+
+**CLI/API access**: Bearer token via OIDC introspection.
+
+```bash
+# Get token (interactive, opens browser for 2FA)
+python ~/git/vault/A0_keys/providers/authelia/oauth/get_token.py
+
+# Use token
+TOKEN=$(jq -r .access_token ~/git/vault/A0_keys/providers/authelia/oauth/authelia_tokens.json)
+curl -H "Authorization: Bearer $TOKEN" https://photos.diegonmarcos.com/api/v1/status
+```
+
+### A.7 Key Operations
+
+```bash
+# Deploy any service
+a_solutions/<service>/build.sh ship
+
+# Matomo hybrid toggle (1GB VM constraint)
+a_solutions/bc-obs_matomo/build.sh wake    # stops windmill, wakes matomo
+a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo, starts windmill
+
+# Cloudflare DNS (Terraform)
+a_solutions/ba-clo_cloudflare/build.sh
+
+# Home Manager deploy (all VMs via GHA, or manual)
+b_infra/home-manager/deploy.sh oci-apps
+```
 
 ---
 
-## B) Engineering Specification
+## B) Architectural Design
 
 ### B.1 Repository Structure
 
@@ -94,7 +156,7 @@ cloud/
 │   └── z_archive/                Archived services
 │
 ├── b_infra/                      VM infrastructure
-│   ├── home-manager/             Nix Home Manager (deployed to all VMs via GHA)
+│   ├── home-manager/             Nix Home Manager (deployed via GHA)
 │   │   ├── _shared/              Shared modules (WireGuard, SSH keys, Docker)
 │   │   └── hosts/                Per-VM overrides
 │   ├── vm_*/                     VM provisioning configs
@@ -107,14 +169,14 @@ cloud/
 │   ├── cloud-configs.md          Human-readable configs
 │   └── cloud-deps.json           npm dependencies per service
 │
-├── config.json                   Master config (symlink to cloud-topology.json)
+├── config.json                   Master config (symlink → cloud-topology.json)
 ├── git.yaml                      Pre-push hooks (engine auto-regeneration)
 └── .github/workflows/            CI/CD (auto-deploy on push to main)
 ```
 
-### B.2 Service Structure (Mandatory)
+### B.2 Service Structure
 
-Every service in `a_solutions/` follows this exact structure:
+Every service in `a_solutions/` follows this mandatory template:
 
 ```
 <category-prefix>_<name>/
@@ -175,16 +237,19 @@ Every service in `a_solutions/` follows this exact structure:
 
 ### B.6 Networking
 
-**WireGuard mesh**: Hub-and-spoke topology, gcp-proxy as hub (`10.0.0.1`).
+#### B.6.1 WireGuard Mesh
+Hub-and-spoke topology. gcp-proxy (`10.0.0.1`) is the hub. All inter-VM traffic goes through WireGuard.
 
-**Traffic flow**: `Cloudflare → Caddy (gcp-proxy:443) → WireGuard → target VM:port`
+#### B.6.2 Traffic Flow
+`Cloudflare → Caddy (gcp-proxy:443) → WireGuard → target VM:port`
 
-**Authentication**:
-- Browser: Authelia forward-auth (cookie + 2FA)
-- CLI/API: Bearer token via introspect-proxy (OIDC introspection)
-- SSH: Key-based, aliases configured in vault
+#### B.6.3 Authentication
+- **Browser**: Authelia forward-auth (cookie + 2FA)
+- **CLI/API**: Bearer token via introspect-proxy (OIDC introspection)
+- **SSH**: Key-based, aliases configured in vault
 
-**Docker networking**: Containers on shared Docker networks. Docker 29+ nftables DNAT handles WireGuard traffic automatically.
+#### B.6.4 Docker Networking
+Containers on shared Docker networks. Docker 29+ nftables DNAT handles WireGuard traffic automatically. No extra iptables rules needed.
 
 ### B.7 CI/CD (GitHub Actions)
 
@@ -197,7 +262,7 @@ Every service in `a_solutions/` follows this exact structure:
 | `home-manager.yml` | `b_infra/home-manager/` | all VMs |
 
 All workflows: `cachix/install-nix-action` + SSH key + SOPS age key → `build.sh ship`.
-Services with Docker images use `REMOTE_BUILD=true` (builds on target VM).
+Services with Docker images use `REMOTE_BUILD=true` (builds on target VM, avoids cross-compilation).
 All support `workflow_dispatch` for manual triggering.
 
 **Push to `main` with changes in `a_solutions/*/src/` triggers auto-deploy.**
@@ -211,15 +276,17 @@ All support `workflow_dispatch` for manual triggering.
 | Authentication | Authelia 2FA (TOTP/WebAuthn), OIDC bearer tokens |
 | Token Validation | introspect-proxy (OIDC introspection sidecar) |
 | Application | Docker Networks, WireGuard VPN, Container Isolation |
-| Credentials | Vaultwarden (passwords), Aegis (TOTP), sops+age (secrets) |
+| Secrets | sops + age encryption, per-service secrets.yaml |
+| Credentials | Vaultwarden (passwords), Aegis (TOTP) |
 
 ### B.9 Home Manager
 
-All VMs use Nix Home Manager for reproducible environments.
+All VMs use Nix Home Manager for reproducible user environments.
 
-- **Deployment**: GHA workflow, x86_64 builds on runner + `nix copy`, aarch64 builds on-machine
-- **Modules**: WireGuard, SSH container keys, Docker service, shell config
-- **Config**: `b_infra/home-manager/_shared/` (shared) + `hosts/` (per-VM overrides)
+- **Deployment**: GHA workflow — x86_64 builds on runner + `nix copy`, aarch64 builds on-machine
+- **Shared modules**: WireGuard, SSH container keys, Docker service, shell config
+- **Per-VM overrides**: `b_infra/home-manager/hosts/`
+- **6 VMs deployed**: gcp-proxy, gcp-t4, oci-mail, oci-analytics (x86_64), oci-apps (aarch64)
 
 ### B.10 Generated Data (cloud-data/)
 
@@ -240,24 +307,20 @@ Engine source: `a_solutions/bc-obs_c3-infra-mcp-api/src/engines/`
 | Server | Type | Tools | Purpose |
 |--------|------|-------|---------|
 | `cloud-infra` | HTTP (remote) | 115+ | Infrastructure management (SSH, Docker, health, build, deploy) |
-| `cloud-services` | HTTP (remote) | 20+ | Service API proxy (Matomo, Syncthing, etc.) |
-| `cloud-skills` | stdio (local) | 16 | Knowledge retrieval (skills, specs, data, docs) |
+| `cloud-services` | HTTP (remote) | 20+ | Service API proxy (Matomo, Syncthing, Radicale, etc.) |
+| `cloud-specs-docs` | stdio (local) | 16 | Knowledge retrieval (skills, specs, data, docs) |
 
-### B.12 Key Operations
+### B.12 Matomo Hybrid Architecture
+
+oci-analytics (1GB RAM) can't run Matomo + Windmill simultaneously. Matomo uses a hybrid container:
+
+- **Awake**: MariaDB + Matomo PHP + Nginx (~160MB). Tracking goes direct to DB.
+- **Sleeping**: Only receiver-nginx + receiver-php-fpm (~7MB). Tracking buffered to `/inbox/` JSON files.
+- **Wake**: Imports buffered payloads, starts full Matomo, stops Windmill.
 
 ```bash
-# Deploy a service
-a_solutions/<service>/build.sh ship
-
-# Matomo hybrid toggle (1GB VM constraint)
 a_solutions/bc-obs_matomo/build.sh wake    # stops windmill, wakes matomo
 a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo, starts windmill
-
-# Cloudflare DNS (Terraform)
-a_solutions/ba-clo_cloudflare/build.sh
-
-# Bearer token for CLI access
-python ~/git/vault/A0_keys/providers/authelia/oauth/get_token.py
 ```
 
 ---
