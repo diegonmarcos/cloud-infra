@@ -96,6 +96,15 @@ jobs:
         if: steps.changes.outputs.caddy-l4-image == 'true' || steps.force.outputs.caddy-l4-image == 'true'
         run: bash a_solutions/bb-sec_caddy-l4-image/build.sh docker
 
+      - name: Make caddy-l4 image public
+        if: steps.changes.outputs.caddy-l4-image == 'true' || steps.force.outputs.caddy-l4-image == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api --method PUT \
+            /user/packages/container/caddy-l4/visibility \
+            -f visibility=public 2>/dev/null || echo "Package visibility already set or API unavailable"
+
       - name: Ship caddy
         if: steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
         run: bash a_solutions/bb-sec_caddy/build.sh ship
