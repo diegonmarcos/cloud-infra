@@ -3,6 +3,7 @@
 > **Date**: 2026-03-18
 > **Updated**: 2026-03-18
 > **Status**: Draft
+> **Note**: Engine pipeline changes (secrets-before-build, symlink check) moved to TASK-sec-01
 
 ---
 
@@ -11,13 +12,11 @@
 - [ ] Phase 1: Create vault/E0_secrets/ structure + copy all secrets
 - [ ] Phase 2: GHA vault access (deploy key + setup-deps clone step)
 - [ ] Phase 3: Replace secrets files with symlinks in cloud/unix/front
-- [ ] Phase 4: Engine pipeline reorder (secrets before build)
-- [ ] Phase 5: (Optional) git filter-repo history cleanup
-- [ ] Phase 6: Documentation updates
+- [ ] Phase 4: Documentation updates
 
 ---
 
-> **Scope**: `vault/E0_secrets/`, `cloud/a_solutions/_engine.sh`, `cloud/.github/`, `cloud/a_solutions/*/src/secrets.yaml`, `unix/b{a,b}_flakes_*/`, `front/secrets.yaml`
+> **Scope**: `vault/E0_secrets/`, `cloud/a_solutions/*/src/secrets.yaml`, `unix/b{a,b}_flakes_*/`, `front/secrets.yaml`, `cloud/.github/`
 
 ---
 
@@ -25,7 +24,9 @@
 
 All 3 public repos (cloud, unix, front) contain sops-encrypted `secrets.yaml` files. While encrypted, the ciphertext, age recipients, and key names are visible in public repos. The vault repo is private and already owns raw credentials.
 
-**Goal**: Make vault the single owner of all sops-encrypted secrets, with public repos containing only symlinks. Additionally, reorder the `_engine.sh` pipeline so secrets are decrypted first — making local and remote builds universal.
+**Goal**: Make vault the single owner of all sops-encrypted secrets, with public repos containing only symlinks.
+
+**Engine changes**: The pipeline reorder (secrets before build) and symlink check in `step_secrets` are handled by TASK-sec-01 (engine v2). This task only covers the vault structure, GHA access, and symlink migration.
 
 ---
 
@@ -95,8 +96,8 @@ inputs:
 **GHA runner layout** (symlinks resolve correctly):
 ```
 /home/runner/work/cloud/
-  cloud/    ← $GITHUB_WORKSPACE
-  vault/    ← cloned sibling (../../../../vault/ resolves here)
+  cloud/    <- $GITHUB_WORKSPACE
+  vault/    <- cloned sibling (../../../../vault/ resolves here)
 ```
 
 9. Update all ship workflows to pass `vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}`
@@ -123,73 +124,27 @@ done
 13. Same for unix secrets (claude secrets, desktop secrets)
 14. Same for front secrets
 15. Remove `.sops.yaml` from cloud root (now lives in vault)
-16. Verify: `sops -d` still works through symlinks (finds `.sops.yaml` walking up into vault)
+16. Verify: `sops -d` still works through symlinks
 17. Test: `build.sh all` on one service locally
 18. Commit + push all 3 repos (symlinks only, no encrypted content)
 
 ---
 
-## Phase 4: Engine Pipeline Reorder
+## Phase 4: History Cleanup (Optional)
 
-**Current ship order**:
-```
-docker → build → secrets → deploy → compose
-```
-
-**New ship order**:
-```
-secrets → build → [docker local] → deploy → [docker remote] → compose → health → report
-```
-
-### Steps
-
-19. Move `step_secrets` before `step_build` in ship flow
-20. Modify `step_build` to preserve `.secrets*` across `rm -rf "$DIST_DIR"`:
-```bash
-# Save secrets if they exist (from step_secrets running first)
-if [ -d "$DIST_DIR" ] && [ -f "$DIST_DIR/.secrets" ]; then
-  _saved=$(mktemp -d)
-  cp -a "$DIST_DIR/.secrets" "$DIST_DIR/.secrets.d" "$_saved/" 2>/dev/null || true
-fi
-rm -rf "$DIST_DIR"; mkdir -p "$DIST_DIR"
-# Restore
-if [ -n "${_saved:-}" ] && [ -d "$_saved" ]; then
-  cp -a "$_saved/"* "$DIST_DIR/" 2>/dev/null || true
-  rm -rf "$_saved"
-fi
-```
-21. Add symlink check in `step_secrets`:
-```bash
-if [ -L "$SRC_DIR/secrets.yaml" ] && [ ! -e "$SRC_DIR/secrets.yaml" ]; then
-  log_warn "secrets.yaml symlink target missing (vault not cloned?) — skipping"
-  return 0
-fi
-```
-22. Result: `dist/` has BOTH config files (from flake) AND decrypted secrets before deploy — universal for local and remote builds
-
-### Critical files
-
-- `~/git/cloud/a_solutions/_engine.sh`
-- `~/git/cloud/.github/actions/setup-deps/action.yml`
-- `~/git/cloud/.github/workflows/ship-*.yml` (×6)
-
----
-
-## Phase 5: History Cleanup (Optional)
-
-23. Use `git filter-repo` to remove `*/secrets.yaml` and `*/jwks_key.yaml` from cloud git history
-24. Force-push cloud (coordinate with forks)
-25. Same for unix and front if desired
+19. Use `git filter-repo` to remove `*/secrets.yaml` and `*/jwks_key.yaml` from cloud git history
+20. Force-push cloud (coordinate with forks)
+21. Same for unix and front if desired
 
 > Optional — files were always encrypted, but removes ciphertext from history for defense in depth.
 
 ---
 
-## Phase 6: Documentation
+## Phase 5: Documentation
 
-26. Update `vault/README.md` — document E0_secrets structure
-27. Update `cloud/README.md` — document symlink-to-vault pattern
-28. Update CLAUDE.md source (in unix flakes) — document vault symlink pattern
+22. Update `vault/README.md` — document E0_secrets structure
+23. Update `cloud/README.md` — document symlink-to-vault pattern
+24. Update CLAUDE.md source (in unix flakes) — document vault symlink pattern
 
 ---
 
@@ -209,12 +164,11 @@ fi
 |------|--------|
 | `vault/E0_secrets/**` | NEW — all secrets.yaml files |
 | `vault/E0_secrets/.sops.yaml` | NEW — sops config |
-| `cloud/a_solutions/*/src/secrets.yaml` (×32) | File → symlink |
-| `cloud/a_solutions/bb-sec_authelia/src/jwks_key.yaml` | File → symlink |
-| `cloud/b_infra/home-manager/_shared/secrets.yaml` | File → symlink |
+| `cloud/a_solutions/*/src/secrets.yaml` (x32) | File -> symlink |
+| `cloud/a_solutions/bb-sec_authelia/src/jwks_key.yaml` | File -> symlink |
+| `cloud/b_infra/home-manager/_shared/secrets.yaml` | File -> symlink |
 | `cloud/.sops.yaml` | Removed (moved to vault) |
-| `cloud/a_solutions/_engine.sh` | Reorder ship, symlink check, preserve secrets in step_build |
 | `cloud/.github/actions/setup-deps/action.yml` | Add vault clone step |
-| `cloud/.github/workflows/ship-*.yml` (×6) | Pass vault_deploy_key |
-| `unix/b{a,b}_flakes_*/src/**/secrets.yaml` (×3) | File → symlink |
-| `front/secrets.yaml` | File → symlink |
+| `cloud/.github/workflows/ship-*.yml` (x6) | Pass vault_deploy_key |
+| `unix/b{a,b}_flakes_*/src/**/secrets.yaml` (x3) | File -> symlink |
+| `front/secrets.yaml` | File -> symlink |
