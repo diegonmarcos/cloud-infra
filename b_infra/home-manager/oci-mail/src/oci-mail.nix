@@ -5,12 +5,10 @@
     (import ./wireguard.nix { vmName = "oci-mail"; })
     (import ./modules/firewall.nix {
       vmName = "oci-mail";
+      # Mail ports (25, 465, 587, 993) removed — access via WG only (Caddy L4 on gcp-proxy)
+      # Inbound email: CF MX → Worker → Tunnel → smtp-proxy:8080 (bypasses firewall)
       publicPorts = [
-        { port = 25;    proto = "tcp"; desc = "SMTP inbound"; }
-        { port = 465;   proto = "tcp"; desc = "SMTPS"; }
-        { port = 587;   proto = "tcp"; desc = "SMTP submission"; }
-        { port = 993;   proto = "tcp"; desc = "IMAPS"; }
-        { port = 8080;  proto = "tcp"; desc = "SMTP proxy"; }
+        { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Tunnel ingress)"; }
         { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
         { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
       ];
