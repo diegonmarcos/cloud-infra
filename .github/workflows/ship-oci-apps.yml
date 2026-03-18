@@ -265,50 +265,107 @@ jobs:
         if: steps.ship-kg-graph.outcome == 'success'
         run: ssh oci-apps "curl -sf http://localhost:8001/health && echo ' <- SurrealDB health OK' || echo 'SurrealDB health FAILED'"
 
-      # ── Health verification (runs for all services that were deployed) ──
-      - name: Health check deployed services
+      # ── Collect deployed services ──
+      - name: Collect deployed services
+        id: deployed
         if: always()
+        env:
+          EVENT: ${{ github.event_name }}
+          # Push trigger — from path changes
+          CH_mattermost_mcp: ${{ steps.changes.outputs.mattermost-mcp }}
+          CH_mailu_mcp: ${{ steps.changes.outputs.mailu-mcp }}
+          CH_mattermost_bots: ${{ steps.changes.outputs.mattermost-bots }}
+          CH_code_server: ${{ steps.changes.outputs.code-server }}
+          CH_etherpad: ${{ steps.changes.outputs.etherpad }}
+          CH_filebrowser: ${{ steps.changes.outputs.filebrowser }}
+          CH_grist: ${{ steps.changes.outputs.grist }}
+          CH_hedgedoc: ${{ steps.changes.outputs.hedgedoc }}
+          CH_photoprism: ${{ steps.changes.outputs.photoprism }}
+          CH_radicale: ${{ steps.changes.outputs.radicale }}
+          CH_revealmd: ${{ steps.changes.outputs.revealmd }}
+          CH_crawlee_cloud: ${{ steps.changes.outputs.crawlee-cloud }}
+          CH_quant_lab_full: ${{ steps.changes.outputs.quant-lab-full }}
+          CH_quant_lab_light: ${{ steps.changes.outputs.quant-lab-light }}
+          CH_orchestrator: ${{ steps.changes.outputs.orchestrator }}
+          CH_lgtm: ${{ steps.changes.outputs.lgtm }}
+          CH_nocodb: ${{ steps.changes.outputs.nocodb }}
+          CH_rig_agentic: ${{ steps.changes.outputs.rig-agentic }}
+          CH_gitea: ${{ steps.changes.outputs.gitea }}
+          CH_c3_api: ${{ steps.changes.outputs.c3-api }}
+          CH_c3_services_api: ${{ steps.changes.outputs.c3-services-api }}
+          CH_cloud_spec: ${{ steps.changes.outputs.cloud-spec }}
+          CH_windmill: ${{ steps.changes.outputs.windmill }}
+          CH_google_workspace_mcp: ${{ steps.changes.outputs.google-workspace-mcp }}
+          CH_kg_graph: ${{ steps.changes.outputs.kg-graph }}
+          # Force trigger
+          F_mattermost_mcp: ${{ steps.force.outputs.mattermost-mcp }}
+          F_mailu_mcp: ${{ steps.force.outputs.mailu-mcp }}
+          F_mattermost_bots: ${{ steps.force.outputs.mattermost-bots }}
+          F_code_server: ${{ steps.force.outputs.code-server }}
+          F_etherpad: ${{ steps.force.outputs.etherpad }}
+          F_filebrowser: ${{ steps.force.outputs.filebrowser }}
+          F_grist: ${{ steps.force.outputs.grist }}
+          F_hedgedoc: ${{ steps.force.outputs.hedgedoc }}
+          F_photoprism: ${{ steps.force.outputs.photoprism }}
+          F_radicale: ${{ steps.force.outputs.radicale }}
+          F_revealmd: ${{ steps.force.outputs.revealmd }}
+          F_crawlee_cloud: ${{ steps.force.outputs.crawlee-cloud }}
+          F_quant_lab_full: ${{ steps.force.outputs.quant-lab-full }}
+          F_quant_lab_light: ${{ steps.force.outputs.quant-lab-light }}
+          F_orchestrator: ${{ steps.force.outputs.orchestrator }}
+          F_lgtm: ${{ steps.force.outputs.lgtm }}
+          F_nocodb: ${{ steps.force.outputs.nocodb }}
+          F_rig_agentic: ${{ steps.force.outputs.rig-agentic }}
+          F_gitea: ${{ steps.force.outputs.gitea }}
+          F_c3_api: ${{ steps.force.outputs.c3-api }}
+          F_c3_services_api: ${{ steps.force.outputs.c3-services-api }}
+          F_cloud_spec: ${{ steps.force.outputs.cloud-spec }}
+          F_windmill: ${{ steps.force.outputs.windmill }}
+          F_google_workspace_mcp: ${{ steps.force.outputs.google-workspace-mcp }}
+          F_kg_graph: ${{ steps.force.outputs.kg-graph }}
+        run: |
+          deployed=""
+          for name in mattermost_mcp mailu_mcp mattermost_bots code_server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee_cloud quant_lab_full quant_lab_light orchestrator lgtm nocodb rig_agentic gitea c3_api c3_services_api cloud_spec windmill google_workspace_mcp kg_graph; do
+            ch_var="CH_${name}"
+            f_var="F_${name}"
+            if [ "${!ch_var}" = "true" ] || [ "${!f_var}" = "true" ]; then
+              deployed="$deployed $name"
+            fi
+          done
+          echo "list=$deployed" >> "$GITHUB_OUTPUT"
+          echo "Deployed services:$deployed"
+
+      # ── Health verification ──
+      - name: Health check deployed services
+        if: always() && steps.deployed.outputs.list != ''
         run: |
           echo "=== Post-deploy health checks ==="
           failed=0
-          for filter_name in mattermost-mcp mailu-mcp mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea c3-api c3-services-api cloud-spec windmill google-workspace-mcp kg-graph; do
-            # Map filter names to folder paths
-            case "$filter_name" in
-              c3-api)           dir="bc-obs_c3-infra-mcp-api" ;;
-              c3-services-api)  dir="bc-obs_c3-services-mcp-api" ;;
-              cloud-spec)       dir="bc-obs_cloud-spec" ;;
-              crawlee-cloud)    dir="ac-fin_crawlee-cloud" ;;
-              quant-lab-full)   dir="ac-fin_quant-lab-full" ;;
-              quant-lab-light)  dir="ac-fin_quant-lab-light" ;;
-              orchestrator)     dir="bb-sec_orchestrator" ;;
-              lgtm)             dir="bc-obs_lgtm" ;;
-              nocodb)           dir="bc-obs_nocodb" ;;
-              rig-agentic)      dir="ad-agi_rig-agentic" ;;
-              gitea)            dir="ca-dat_gitea" ;;
-              kg-graph)         dir="ca-dat_kg-graph" ;;
-              windmill)         dir="bc-obs_windmill" ;;
-              google-workspace-mcp) dir="aa-sui_google-workspace-mcp" ;;
-              *)                dir="aa-sui_${filter_name}" ;;
+          for name in ${{ steps.deployed.outputs.list }}; do
+            # Map underscore names to folder paths
+            case "$name" in
+              c3_api)              dir="bc-obs_c3-infra-mcp-api" ;;
+              c3_services_api)     dir="bc-obs_c3-services-mcp-api" ;;
+              cloud_spec)          dir="bc-obs_cloud-spec" ;;
+              crawlee_cloud)       dir="ac-fin_crawlee-cloud" ;;
+              quant_lab_full)      dir="ac-fin_quant-lab-full" ;;
+              quant_lab_light)     dir="ac-fin_quant-lab-light" ;;
+              orchestrator)        dir="bb-sec_orchestrator" ;;
+              lgtm)                dir="bc-obs_lgtm" ;;
+              nocodb)              dir="bc-obs_nocodb" ;;
+              rig_agentic)         dir="ad-agi_rig-agentic" ;;
+              gitea)               dir="ca-dat_gitea" ;;
+              kg_graph)            dir="ca-dat_kg-graph" ;;
+              windmill)            dir="bc-obs_windmill" ;;
+              google_workspace_mcp) dir="aa-sui_google-workspace-mcp" ;;
+              *)                   dir="aa-sui_$(echo "$name" | tr '_' '-')" ;;
             esac
-
-            # Check if this service was deployed in this run (changes or force)
-            was_deployed="false"
-            if [ "${{ github.event_name }}" = "push" ]; then
-              val="${{ steps.changes.outputs[filter_name] || 'false' }}"
-              [ "$val" = "true" ] && was_deployed="true"
+            echo "--- Health: $name ---"
+            if bash "a_solutions/$dir/build.sh" health; then
+              echo "  OK: $name healthy"
             else
-              val="${{ steps.force.outputs[filter_name] || 'false' }}"
-              [ "$val" = "true" ] && was_deployed="true"
-            fi
-
-            if [ "$was_deployed" = "true" ]; then
-              echo "--- Health: $filter_name ---"
-              if bash "a_solutions/$dir/build.sh" health; then
-                echo "  ✓ $filter_name healthy"
-              else
-                echo "  ✗ $filter_name FAILED health check"
-                failed=$((failed + 1))
-              fi
+              echo "  FAIL: $name"
+              failed=$((failed + 1))
             fi
           done
           if [ "$failed" -gt 0 ]; then
