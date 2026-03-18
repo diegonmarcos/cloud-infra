@@ -3,6 +3,7 @@ name: "Ship → gcp-proxy"
 on:
   push:
     paths:
+      - "a_solutions/bb-sec_caddy-l4-image/src/**"
       - "a_solutions/bb-sec_caddy/src/**"
       - "a_solutions/bb-sec_authelia/src/**"
       - "a_solutions/ab-mic_vaultwarden/src/**"
@@ -41,6 +42,8 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
+            caddy-l4-image:
+              - 'a_solutions/bb-sec_caddy-l4-image/src/**'
             caddy:
               - 'a_solutions/bb-sec_caddy/src/**'
             authelia:
@@ -63,7 +66,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in caddy authelia vaultwarden hickory-dns dozzle fluent-bit ntfy redis; do
+          for name in caddy-l4-image caddy authelia vaultwarden hickory-dns dozzle fluent-bit ntfy redis; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -78,16 +81,20 @@ jobs:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Setup Docker Buildx
-        if: steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
+        if: steps.changes.outputs.caddy-l4-image == 'true' || steps.force.outputs.caddy-l4-image == 'true' || steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
-        if: steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
+        if: steps.changes.outputs.caddy-l4-image == 'true' || steps.force.outputs.caddy-l4-image == 'true' || steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build caddy-l4 image
+        if: steps.changes.outputs.caddy-l4-image == 'true' || steps.force.outputs.caddy-l4-image == 'true'
+        run: bash a_solutions/bb-sec_caddy-l4-image/build.sh build
 
       - name: Ship caddy
         if: steps.changes.outputs.caddy == 'true' || steps.force.outputs.caddy == 'true'
