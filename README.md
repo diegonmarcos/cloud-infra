@@ -1,3 +1,16 @@
+```
+╔═══════════════════════════════════════════════════════════════╗
+║   ██████╗██╗      ██████╗ ██╗   ██╗██████╗                   ║
+║  ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗                  ║
+║  ██║     ██║     ██║   ██║██║   ██║██║  ██║                  ║
+║  ██║     ██║     ██║   ██║██║   ██║██║  ██║                  ║
+║  ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝                  ║
+║   ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝                   ║
+║                                                               ║
+║  5 VMs · 50+ Services · WireGuard Mesh · Nix Flakes · IaC    ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
 # Cloud Infrastructure as Code
 
 Self-hosted cloud across Oracle Cloud + Google Cloud free tiers. 5 VMs, 50+ containerized services, WireGuard mesh, fully declarative Nix flakes. Zero manual configuration — everything ships via `build.sh`.
