@@ -14,6 +14,23 @@
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
+    (import ./modules/docker-network.nix {
+      vmName  = "gcp-t4";
+      subnet  = "172.25.0.0/24";
+      gateway = "172.25.0.1";
+    })
+    (import ./modules/dnsmasq.nix {
+      vmName   = "gcp-t4";
+      dnsIp    = "172.25.0.2";
+      subnet   = "172.25.0.0/24";
+      containers = {};
+      meshPeers = {
+        "gcp-proxy"     = "10.0.0.1";
+        "oci-apps"      = "10.0.0.6";
+        "oci-mail"      = "10.0.0.3";
+        "oci-analytics" = "10.0.0.4";
+      };
+    })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

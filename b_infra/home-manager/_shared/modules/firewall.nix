@@ -15,7 +15,13 @@
 #     ];
 #   })
 #
-{ vmName, publicPorts ? [] }:
+# dnatRules: list of DNAT forwarding rules (only needed if docker-proxy is bypassed)
+# Example:
+#   dnatRules = [
+#     { proto = "tcp"; dport = 8081; dest = "172.21.0.10:8081"; }
+#     { proto = "tcp"; dport = 9091; dest = "172.20.0.11:9091"; iface = "wg0"; }
+#   ];
+{ vmName, publicPorts ? [], dnatRules ? [] }:
 
 { config, lib, pkgs, ... }:
 
@@ -33,6 +39,20 @@ let
       "iptables -A INPUT -p ${proto} --dport ${port} -m comment --comment \"${comment}\" -j ACCEPT";
 
   portRules = builtins.concatStringsSep "\n    " (map mkPortRule publicPorts);
+
+  # Build iptables DNAT rules for fixed container IPs
+  mkDnatRule = r:
+    let
+      proto = r.proto or "tcp";
+      dport = toString r.dport;
+      dest = r.dest;
+      iface = r.iface or null;
+      ifaceMatch = if iface != null then "-i ${iface} " else "";
+    in
+      # PREROUTING DNAT
+      "iptables -t nat -A PREROUTING ${ifaceMatch}-p ${proto} --dport ${dport} -j DNAT --to-destination ${dest}";
+
+  dnatRuleLines = builtins.concatStringsSep "\n    " (map mkDnatRule dnatRules);
 
   fwScript = ''
     #!/bin/bash
@@ -84,7 +104,11 @@ let
     # NAT TABLE
     # ══════════════════════════════════════════════════════════════
 
+    iptables -t nat -F PREROUTING 2>/dev/null || true
     iptables -t nat -F POSTROUTING 2>/dev/null || true
+
+    # DNAT rules for fixed container IPs (empty if no dnatRules configured)
+    ${dnatRuleLines}
 
     # MASQUERADE: Docker containers reaching internet
     iptables -t nat -A POSTROUTING -s ${dockerSubnet} ! -d ${dockerSubnet} -j MASQUERADE
