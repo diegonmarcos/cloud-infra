@@ -4,6 +4,7 @@
 { imports = [
     ./authorized-keys.nix
     ./container-tools.nix
+    ./dns-hickory.nix
     ./docker-service.nix
     ./guardrails.nix
     ./ssh-keys.nix
