@@ -6,6 +6,10 @@ on:
       - "a_solutions/bc-obs_matomo/src/**"
       - "a_solutions/bc-obs_umami/src/**"
       - "a_solutions/bc-obs_sauron-forwarder/src/**"
+      - "a_solutions/bb-sec_sauron-central/src/**"
+      - "a_solutions/bc-obs_alerts-api/src/**"
+      - "a_solutions/bc-obs_dozzle/src/**"
+      - "a_solutions/bc-obs_fluent-bit/src/**"
       - ".github/workflows/ship-oci-analytics.yml"
     branches: [main]
   workflow_dispatch:
@@ -39,13 +43,21 @@ jobs:
               - 'a_solutions/bc-obs_umami/src/**'
             sauron-forwarder:
               - 'a_solutions/bc-obs_sauron-forwarder/src/**'
+            sauron-central:
+              - 'a_solutions/bb-sec_sauron-central/src/**'
+            alerts-api:
+              - 'a_solutions/bc-obs_alerts-api/src/**'
+            dozzle:
+              - 'a_solutions/bc-obs_dozzle/src/**'
+            fluent-bit:
+              - 'a_solutions/bc-obs_fluent-bit/src/**'
 
       - name: Force service override
         id: force
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in matomo umami sauron-forwarder; do
+          for name in matomo umami sauron-forwarder sauron-central alerts-api dozzle fluent-bit; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -70,3 +82,19 @@ jobs:
       - name: Ship sauron-forwarder
         if: steps.changes.outputs.sauron-forwarder == 'true' || steps.force.outputs.sauron-forwarder == 'true'
         run: bash a_solutions/bc-obs_sauron-forwarder/build.sh ship
+
+      - name: Ship sauron-central
+        if: steps.changes.outputs.sauron-central == 'true' || steps.force.outputs.sauron-central == 'true'
+        run: bash a_solutions/bb-sec_sauron-central/build.sh ship
+
+      - name: Ship alerts-api
+        if: steps.changes.outputs.alerts-api == 'true' || steps.force.outputs.alerts-api == 'true'
+        run: bash a_solutions/bc-obs_alerts-api/build.sh ship
+
+      - name: Ship dozzle
+        if: steps.changes.outputs.dozzle == 'true' || steps.force.outputs.dozzle == 'true'
+        run: bash a_solutions/bc-obs_dozzle/build.sh ship
+
+      - name: Ship fluent-bit
+        if: steps.changes.outputs.fluent-bit == 'true' || steps.force.outputs.fluent-bit == 'true'
+        run: bash a_solutions/bc-obs_fluent-bit/build.sh ship

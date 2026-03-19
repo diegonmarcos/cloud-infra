@@ -8,8 +8,6 @@ on:
       - "a_solutions/bb-sec_authelia/src/**"
       - "a_solutions/ab-mic_vaultwarden/src/**"
       - "a_solutions/ba-clo_hickory-dns/src/**"
-      - "a_solutions/bc-obs_dozzle/src/**"
-      - "a_solutions/bc-obs_fluent-bit/src/**"
       - "a_solutions/bc-obs_ntfy/src/**"
       - "a_solutions/ca-dat_redis/src/**"
       - ".github/workflows/ship-gcp-proxy.yml"
@@ -52,10 +50,6 @@ jobs:
               - 'a_solutions/ab-mic_vaultwarden/src/**'
             hickory-dns:
               - 'a_solutions/ba-clo_hickory-dns/src/**'
-            dozzle:
-              - 'a_solutions/bc-obs_dozzle/src/**'
-            fluent-bit:
-              - 'a_solutions/bc-obs_fluent-bit/src/**'
             ntfy:
               - 'a_solutions/bc-obs_ntfy/src/**'
             redis:
@@ -66,7 +60,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in caddy-l4-image caddy authelia vaultwarden hickory-dns dozzle fluent-bit ntfy redis; do
+          for name in caddy-l4-image caddy authelia vaultwarden hickory-dns ntfy redis; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -120,14 +114,6 @@ jobs:
       - name: Ship hickory-dns
         if: steps.changes.outputs.hickory-dns == 'true' || steps.force.outputs.hickory-dns == 'true'
         run: bash a_solutions/ba-clo_hickory-dns/build.sh ship
-
-      - name: Ship dozzle
-        if: steps.changes.outputs.dozzle == 'true' || steps.force.outputs.dozzle == 'true'
-        run: bash a_solutions/bc-obs_dozzle/build.sh ship
-
-      - name: Ship fluent-bit
-        if: steps.changes.outputs.fluent-bit == 'true' || steps.force.outputs.fluent-bit == 'true'
-        run: bash a_solutions/bc-obs_fluent-bit/build.sh ship
 
       - name: Ship ntfy
         if: steps.changes.outputs.ntfy == 'true' || steps.force.outputs.ntfy == 'true'
