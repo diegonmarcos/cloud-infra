@@ -7,11 +7,13 @@
       vmName = "gcp-t4";
       publicPorts = [
         # No public ports — ollama binds to 10.0.0.8 (WireGuard only)
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

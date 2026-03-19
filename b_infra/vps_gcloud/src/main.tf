@@ -174,6 +174,19 @@ resource "google_compute_firewall" "allow_wireguard" {
   description   = "WireGuard from Oracle VM"
 }
 
+resource "google_compute_firewall" "allow_rescue_ssh" {
+  name    = "allow-rescue-ssh"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["2200"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor"
+}
+
 # =============================================================================
 # Static IPs
 # =============================================================================
@@ -197,7 +210,7 @@ resource "google_compute_instance" "central_proxy" {
 
   boot_disk {
     initialize_params {
-      image = "projects/fedora-cloud/global/images/family/fedora-cloud-42"
+      image = "projects/fedora-cloud/global/images/family/fedora-cloud-42-x86-64"
       size  = 32
       type  = "pd-standard"
     }
@@ -212,7 +225,9 @@ resource "google_compute_instance" "central_proxy" {
   }
 
   metadata = {
-    ssh-keys = "diego:${var.ssh_public_key}"
+    ssh-keys              = "diego:${var.ssh_public_key}"
+    serial-port-enable    = "TRUE"
+    enable-guest-attributes = "TRUE"
   }
 
   scheduling {
@@ -234,7 +249,7 @@ resource "google_compute_instance" "central_proxy" {
   }
 
   lifecycle {
-    ignore_changes = [boot_disk, metadata]  # Avoid re-imaging running instance
+    ignore_changes = [boot_disk]  # Avoid re-imaging running instance
   }
 }
 

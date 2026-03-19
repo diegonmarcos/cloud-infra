@@ -14,6 +14,7 @@
         { port = 2223; proto = "tcp"; desc = "Backup BUP SSH"; }
         { port = 2224; proto = "tcp"; desc = "Backup Borg SSH"; }
         { port = 8099; proto = "tcp"; desc = "cloud-spec httpd"; }
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     (import ./httpd.nix {
@@ -23,6 +24,7 @@
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

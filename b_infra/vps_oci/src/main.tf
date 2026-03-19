@@ -106,6 +106,18 @@ resource "oci_core_default_security_list" "main" {
     }
   }
 
+  # 1b. Rescue SSH — Dropbear (2200)
+  ingress_security_rules {
+    source      = "0.0.0.0/0"
+    protocol    = "6"
+    stateless   = false
+    description = "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor"
+    tcp_options {
+      min = 2200
+      max = 2200
+    }
+  }
+
   # 2. SMTP (25) — REMOVED: inbound via CF Tunnel, not public port
   # 3. HTTP (80)
   ingress_security_rules {
