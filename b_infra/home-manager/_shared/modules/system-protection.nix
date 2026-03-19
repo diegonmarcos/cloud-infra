@@ -103,13 +103,20 @@ in {
       SWAP_SIZE="2G"
 
       if swapon --show=NAME 2>/dev/null | grep -q "$SWAPFILE"; then
-        echo "[disk-swap] Already active, skipping"
-        exit 0
+        CURRENT=$(stat -c%s "$SWAPFILE" 2>/dev/null || echo 0)
+        WANT=2147483648
+        if [ "$CURRENT" -ge "$WANT" ]; then
+          echo "[disk-swap] Already active ($(($CURRENT/1024/1024))MB), skipping"
+          exit 0
+        fi
+        echo "[disk-swap] Existing swap too small ($(($CURRENT/1024/1024))MB), recreating..."
+        swapoff "$SWAPFILE" 2>/dev/null || true
+        rm -f "$SWAPFILE"
       fi
 
       if [ ! -f "$SWAPFILE" ]; then
-        echo "[disk-swap] Creating $SWAP_SIZE swapfile..."
-        fallocate -l $SWAP_SIZE "$SWAPFILE" 2>/dev/null || dd if=/dev/zero of="$SWAPFILE" bs=1M count=2048 status=progress
+        echo "[disk-swap] Creating 2GB swapfile..."
+        dd if=/dev/zero of="$SWAPFILE" bs=1M count=2048 status=progress
         chmod 600 "$SWAPFILE"
         mkswap "$SWAPFILE"
       fi
