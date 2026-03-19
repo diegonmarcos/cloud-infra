@@ -7,11 +7,13 @@
       vmName = "oci-apps-2";
       publicPorts = [
         # No public ports yet — new VM
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "oci-apps-2"; idleTimeoutHours = 1; })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 32768; })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

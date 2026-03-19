@@ -12,12 +12,16 @@
         { port = 993;  proto = "tcp"; desc = "IMAPS (Caddy L4 → oci-mail)"; }
         { port = 465;  proto = "tcp"; desc = "SMTPS (Caddy L4 → oci-mail)"; }
         { port = 587;  proto = "tcp"; desc = "SMTP Submission (Caddy L4 → oci-mail)"; }
-        { port = 5050; proto = "tcp"; desc = "alerts-api"; }
-        { port = 5514; proto = "tcp"; desc = "sauron-central syslog"; }
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/container-init.nix {
+      inherit config pkgs lib;
+      staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
+    })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";
@@ -86,6 +90,43 @@
       [ -f "$HOME/.config/sops/age/keys.txt" ] && export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
     '';
   };
+
+  # GCP guest agent — enables startup scripts + rescue-mode metadata
+  home.packages = [ pkgs.google-guest-agent ];
+
+  # Deploy google-guest-agent systemd service
+  home.file.".local/share/gcp-agent/google-guest-agent.service".text = ''
+    [Unit]
+    Description=Google Guest Agent (nix)
+    After=network-online.target
+    Wants=network-online.target
+
+    [Service]
+    Type=simple
+    ExecStart=${pkgs.google-guest-agent}/bin/google_guest_agent
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+  '';
+
+  home.activation.installGcpAgent = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    SUDO=""
+    for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
+      [ -x "$p" ] && SUDO="$p" && break
+    done
+    [ -z "$SUDO" ] && exit 0
+
+    SRC="$HOME/.local/share/gcp-agent"
+    $SUDO cp -f "$SRC/google-guest-agent.service" /etc/systemd/system/google-guest-agent.service
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable google-guest-agent.service 2>/dev/null || true
+    $SUDO systemctl restart google-guest-agent.service 2>/dev/null || true
+    echo "[gcp-agent] Google Guest Agent deployed — startup scripts + rescue mode enabled"
+    ) || echo "[gcp-agent] FAILED — see errors above"
+  '';
 
   # Environment variables
   home.sessionVariables = {

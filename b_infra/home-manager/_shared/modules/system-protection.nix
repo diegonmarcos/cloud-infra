@@ -31,6 +31,11 @@ let
   # Disk swap: max(2GB, 100% RAM) — scales with VM size
   diskSwapMB = if ramMB < 2048 then 2048 else ramMB;
 
+  # Docker memory cap: leave 350MB for kernel+SSH+WG, rest for Docker
+  dockerMaxMB = if ramMB <= 1024 then ramMB - 350
+                else if ramMB <= 8192 then ramMB - 512
+                else ramMB - 1024;
+
 in {
   # earlyoom + e2fsprogs (for tune2fs)
   home.packages = [ pkgs.earlyoom pkgs.e2fsprogs ];
@@ -157,8 +162,8 @@ in {
     ExecStart=${pkgs.earlyoom}/bin/earlyoom \
       -m 10 -s 10 \
       -M 5 -S 5 \
-      --prefer "^(nix-daemon|nix-build|nix)$" \
-      --avoid "^(sshd|systemd|earlyoom|dbus|dockerd|containerd|wg-quick)$" \
+      --prefer "^(containerd-shim|nix-daemon|nix-build|nix)$" \
+      --avoid "^(sshd|ssh|systemd|earlyoom|dbus|wg-quick|wg)$" \
       -r 0
     Restart=always
     RestartSec=5
@@ -170,17 +175,38 @@ in {
   # ── SSH protection (systemd drop-in) ───────────────────────────────────
   home.file.".local/share/system-protection/sshd-protection.conf".text = ''
     # Managed by home-manager (system-protection.nix) — do not edit
+    # SSH must NEVER be killed or blocked — this is our lifeline
     [Service]
     MemoryMin=50M
+    MemoryLow=80M
     CPUWeight=1000
+    OOMScoreAdjust=-900
+    OOMPolicy=continue
   '';
 
   # ── WireGuard protection (systemd drop-in) ─────────────────────────────
   home.file.".local/share/system-protection/wg-quick-protection.conf".text = ''
     # Managed by home-manager (system-protection.nix) — do not edit
+    # WireGuard must NEVER be killed — it's our mesh backbone
     [Service]
     MemoryMin=30M
+    MemoryLow=50M
     CPUWeight=1000
+    OOMScoreAdjust=-900
+    OOMPolicy=continue
+  '';
+
+  # ── Docker memory cap (systemd slice) ───────────────────────────────────
+  # Hard-cap Docker so it can NEVER starve SSH/WG. On 1GB VM = 674MB max.
+  # earlyoom kills containerd-shim inside this cap; Docker restart policy
+  # cannot escape the cgroup limit.
+  home.file.".local/share/system-protection/docker-memory-cap.conf".text = ''
+    # Managed by home-manager (system-protection.nix) — do not edit
+    # Hard memory ceiling — Docker cannot exceed this, period.
+    [Service]
+    MemoryMax=${toString dockerMaxMB}M
+    MemoryHigh=${toString (dockerMaxMB * 9 / 10)}M
+    OOMScoreAdjust=500
   '';
 
   # ── Disk watchdog script (janitor) ─────────────────────────────────────
@@ -331,7 +357,14 @@ in {
     if $SUDO systemctl cat "wg-quick@wg0.service" >/dev/null 2>&1; then
       $SUDO mkdir -p "/etc/systemd/system/wg-quick@wg0.service.d"
       $SUDO cp -f "$SRC/wg-quick-protection.conf" "/etc/systemd/system/wg-quick@wg0.service.d/protection.conf"
-      echo "[system-protection] Protected wg-quick@wg0 (MemoryMin=30M CPUWeight=1000)"
+      echo "[system-protection] Protected wg-quick@wg0 (MemoryMin=30M OOMScoreAdjust=-900)"
+    fi
+
+    # Docker memory cap — hard ceiling so containers can NEVER starve SSH/WG
+    if $SUDO systemctl cat "docker.service" >/dev/null 2>&1; then
+      $SUDO mkdir -p "/etc/systemd/system/docker.service.d"
+      $SUDO cp -f "$SRC/docker-memory-cap.conf" "/etc/systemd/system/docker.service.d/memory-cap.conf"
+      echo "[system-protection] Docker capped at ${toString dockerMaxMB}MB (OOMScoreAdjust=500)"
     fi
 
     # ── BOUNCER + JANITOR: services ──
@@ -354,7 +387,7 @@ in {
     $SUDO systemctl restart earlyoom.service 2>/dev/null || true
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
 
-    echo "[system-protection] deployed: bouncer(mem=${toString (minFreeKB / 1024)}MB-reserve zram=${toString zramSizeMB}MB disk=5%-reserved ssh+wg=protected) janitor(earlyoom disk-watchdog=5min)"
+    echo "[system-protection] deployed: bouncer(mem=${toString (minFreeKB / 1024)}MB-reserve zram=${toString zramSizeMB}MB docker-cap=${toString dockerMaxMB}MB ssh+wg=OOM-immune) janitor(earlyoom→containerd-shim disk-watchdog=5min)"
     ) || echo "[system-protection] FAILED — see errors above, activation continues"
   '';
 }

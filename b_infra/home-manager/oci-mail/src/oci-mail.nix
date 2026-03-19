@@ -11,10 +11,12 @@
         { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Tunnel ingress)"; }
         { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
         { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

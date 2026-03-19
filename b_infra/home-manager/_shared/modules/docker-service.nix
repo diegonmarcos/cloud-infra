@@ -13,6 +13,17 @@ in {
 
     [Service]
     Type=notify
+    # RESCUE MODE: check GCP metadata for rescue-mode flag.
+    # If set, Docker refuses to start — SSH stays alive for manual recovery.
+    # Enter:  gcloud compute instances add-metadata VM --metadata=rescue-mode=true
+    # Exit:   gcloud compute instances remove-metadata VM --keys=rescue-mode
+    ExecStartPre=/bin/bash -c '\
+      RESCUE=$(curl -sf -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/instance/attributes/rescue-mode" 2>/dev/null || echo ""); \
+      if [ "$RESCUE" = "true" ]; then \
+        echo "[docker] RESCUE MODE — Docker blocked. Remove rescue-mode metadata to resume."; \
+        exit 1; \
+      fi'
     ExecStart=${dockerdBin}
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always

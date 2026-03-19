@@ -7,10 +7,12 @@
       vmName = "oci-analytics";
       publicPorts = [
         # No public ports — all services bind to 10.0.0.4 (WireGuard) or 127.0.0.1
+        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
