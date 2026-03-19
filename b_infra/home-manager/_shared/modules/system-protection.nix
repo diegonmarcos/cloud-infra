@@ -115,7 +115,9 @@ in {
       fi
 
       if [ ! -f "$SWAPFILE" ]; then
-        echo "[disk-swap] Creating 2GB swapfile..."
+        echo "[disk-swap] Creating 2GB swapfile (btrfs-safe)..."
+        truncate -s 0 "$SWAPFILE"
+        chattr +C "$SWAPFILE" 2>/dev/null || true
         dd if=/dev/zero of="$SWAPFILE" bs=1M count=2048 status=progress
         chmod 600 "$SWAPFILE"
         mkswap "$SWAPFILE"
