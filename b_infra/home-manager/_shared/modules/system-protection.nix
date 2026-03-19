@@ -90,6 +90,50 @@ in {
     WantedBy=multi-user.target
   '';
 
+  # ── Disk swap (for low-RAM VMs where zram alone isn't enough) ─────────
+  # Creates a 2GB swapfile on disk. Unlike zram, this provides real extra memory.
+  # Only activates on VMs with <=1GB RAM where Docker OOM is a real risk.
+  home.file.".local/share/system-protection/disk-swap.sh" = {
+    executable = true;
+    text = ''
+      #!/bin/bash
+      # Disk-backed swap: 2GB swapfile for low-RAM VMs
+      set -euo pipefail
+      SWAPFILE="/swapfile"
+      SWAP_SIZE="2G"
+
+      if swapon --show=NAME 2>/dev/null | grep -q "$SWAPFILE"; then
+        echo "[disk-swap] Already active, skipping"
+        exit 0
+      fi
+
+      if [ ! -f "$SWAPFILE" ]; then
+        echo "[disk-swap] Creating $SWAP_SIZE swapfile..."
+        fallocate -l $SWAP_SIZE "$SWAPFILE" 2>/dev/null || dd if=/dev/zero of="$SWAPFILE" bs=1M count=2048 status=progress
+        chmod 600 "$SWAPFILE"
+        mkswap "$SWAPFILE"
+      fi
+
+      swapon -p 10 "$SWAPFILE"
+      echo "[disk-swap] Activated $SWAP_SIZE disk swap (priority 10, zram has priority 100)"
+    '';
+  };
+
+  home.file.".local/share/system-protection/disk-swap.service".text = ''
+    [Unit]
+    Description=Disk-backed swap (2GB) for low-RAM VMs
+    After=local-fs.target
+    Before=docker.service
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/opt/scripts/disk-swap.sh
+
+    [Install]
+    WantedBy=multi-user.target
+  '';
+
   # ── Earlyoom (memory janitor) ──────────────────────────────────────────
   home.file.".local/share/system-protection/earlyoom.service".text = ''
     [Unit]
@@ -281,16 +325,19 @@ in {
     # ── BOUNCER + JANITOR: services ──
     $SUDO mkdir -p /opt/scripts
     $SUDO cp -f "$SRC/zram-setup.sh" /opt/scripts/zram-setup.sh
+    $SUDO cp -f "$SRC/disk-swap.sh" /opt/scripts/disk-swap.sh
     $SUDO cp -f "$SRC/disk-watchdog.sh" /opt/scripts/disk-watchdog.sh
-    $SUDO chmod +x /opt/scripts/zram-setup.sh /opt/scripts/disk-watchdog.sh
+    $SUDO chmod +x /opt/scripts/zram-setup.sh /opt/scripts/disk-swap.sh /opt/scripts/disk-watchdog.sh
     $SUDO cp -f "$SRC/zram-setup.service" /etc/systemd/system/zram-setup.service
+    $SUDO cp -f "$SRC/disk-swap.service" /etc/systemd/system/disk-swap.service
     $SUDO cp -f "$SRC/earlyoom.service" /etc/systemd/system/earlyoom.service
     $SUDO cp -f "$SRC/disk-watchdog.service" /etc/systemd/system/disk-watchdog.service
     $SUDO cp -f "$SRC/disk-watchdog.timer" /etc/systemd/system/disk-watchdog.timer
 
     # Enable and start
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable zram-setup.service earlyoom.service disk-watchdog.timer 2>/dev/null || true
+    $SUDO systemctl enable zram-setup.service disk-swap.service earlyoom.service disk-watchdog.timer 2>/dev/null || true
+    $SUDO systemctl start disk-swap.service 2>/dev/null || true
     $SUDO systemctl start zram-setup.service 2>/dev/null || true
     $SUDO systemctl restart earlyoom.service 2>/dev/null || true
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
