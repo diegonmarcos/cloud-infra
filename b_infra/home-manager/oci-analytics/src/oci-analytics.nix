@@ -13,6 +13,29 @@
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
+    (import ./modules/docker-network.nix {
+      vmName  = "oci-analytics";
+      subnet  = "172.23.0.0/24";
+      gateway = "172.23.0.1";
+    })
+    (import ./modules/dnsmasq.nix {
+      vmName   = "oci-analytics";
+      dnsIp    = "172.23.0.2";
+      subnet   = "172.23.0.0/24";
+      containers = {
+        matomo       = "172.23.0.10";
+        windmill     = "172.23.0.11";
+        "fluent-bit" = "172.23.0.12";
+        dozzle       = "172.23.0.13";
+        "alerts-api" = "172.23.0.14";
+        "db-agent"   = "172.23.0.15";
+      };
+      meshPeers = {
+        "gcp-proxy" = "10.0.0.1";
+        "oci-apps"  = "10.0.0.6";
+        "oci-mail"  = "10.0.0.3";
+      };
+    })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
