@@ -25,51 +25,6 @@
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
-    (import ./modules/docker-network.nix {
-      vmName  = "oci-apps";
-      subnet  = "172.21.0.0/24";
-      gateway = "172.21.0.1";
-    })
-    (import ./modules/dnsmasq.nix {
-      vmName   = "oci-apps";
-      dnsIp    = "172.21.0.2";
-      subnet   = "172.21.0.0/24";
-      containers = {
-        "c3-api"           = "172.21.0.10";
-        "rig-agentic"      = "172.21.0.11";
-        nocodb             = "172.21.0.12";
-        "nocodb-db"        = "172.21.0.13";
-        "lgtm-grafana"     = "172.21.0.40";
-        "lgtm-loki"        = "172.21.0.41";
-        "lgtm-mimir"       = "172.21.0.42";
-        "lgtm-tempo"       = "172.21.0.43";
-        "photoprism-app"   = "172.21.0.50";
-        "photoprism-db"    = "172.21.0.51";
-        "photoprism-rclone" = "172.21.0.52";
-        "code-server"      = "172.21.0.61";
-        orchestrator       = "172.21.0.63";
-        "hedgedoc-affine"  = "172.21.0.70";
-        "hedgedoc-affine-db" = "172.21.0.71";
-        "grist-app"        = "172.21.0.72";
-        "filebrowser-app"  = "172.21.0.73";
-        "etherpad-app"     = "172.21.0.74";
-        "etherpad-db"      = "172.21.0.75";
-        radicale           = "172.21.0.76";
-        "revealmd-app"     = "172.21.0.77";
-        "hedgedoc-app"     = "172.21.0.78";
-        "hedgedoc-db"      = "172.21.0.79";
-        "c3-services-mcp-api" = "172.21.0.80";
-        "google-workspace-mcp" = "172.21.0.81";
-        "mailu-mcp"        = "172.21.0.82";
-        "mattermost-mcp"   = "172.21.0.83";
-      };
-      meshPeers = {
-        "gcp-proxy"     = "10.0.0.1";
-        "oci-mail"      = "10.0.0.3";
-        "oci-analytics" = "10.0.0.4";
-        "oci-apps-2"    = "10.0.0.7";
-      };
-    })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
