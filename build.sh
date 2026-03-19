@@ -11,6 +11,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOLUTIONS_DIR="$SCRIPT_DIR/a_solutions"
 CONFIG_FILE="$SCRIPT_DIR/cloud-topology.json"
+
+# Shared node_modules — ESM (tsx) does not respect NODE_PATH, but CJS fallback does.
+# Set here so all tsx calls in this script find packages from the shared install.
+export NODE_PATH="${NODE_PATH:-$HOME/.node_modules/node_modules}"
 # Fallback to old name during migration
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
 ENGINE_FOLDER=$(jq -r ".engine_folder" "$SCRIPT_DIR/config.json" 2>/dev/null)
@@ -491,6 +495,11 @@ cmd_config() {
     if [ ! -f "$ENGINE_DIR/engines/gen-topology.ts" ] || [ ! -f "$ENGINE_DIR/engines/gen-configs.ts" ]; then
         log "SKIP: engine sources not available locally"
         return 1
+    fi
+    # ESM resolution ignores NODE_PATH — symlink shared node_modules so tsx finds packages
+    SHARED_NM="$HOME/.node_modules/node_modules"
+    if [ -d "$SHARED_NM" ] && [ ! -e "$ENGINE_DIR/node_modules" ]; then
+        ln -s "$SHARED_NM" "$ENGINE_DIR/node_modules"
     fi
     log "Generating cloud-topology.json + cloud-topology.md..."
     tsx "$ENGINE_DIR/engines/gen-topology.ts"
