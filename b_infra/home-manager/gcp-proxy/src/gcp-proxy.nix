@@ -111,8 +111,10 @@
     WantedBy=multi-user.target
   '';
 
-  # Configure DNS to use Hickory (10.0.0.1) as resolver
-  # Services resolve as <name>.app via Hickory per-service zones — no search domain needed
+  # Configure DNS: route .app queries to Hickory (10.0.0.1) via wg0 interface
+  # systemd-resolved uses per-link DNS — setting it globally loses to ens4's GCP metadata DNS.
+  # Fix: bind Hickory to wg0 with routing domain ~app so .app queries go to Hickory,
+  # everything else stays on ens4 (GCP metadata DNS for public resolution).
   home.activation.configureHickoryDns = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
     SUDO=""
@@ -121,22 +123,22 @@
     done
     [ -z "$SUDO" ] && echo "[hickory-dns] no sudo — skipping" && exit 0
 
-    if $SUDO systemctl is-active --quiet systemd-resolved 2>/dev/null; then
-      $SUDO mkdir -p /etc/systemd/resolved.conf.d
-      $SUDO tee /etc/systemd/resolved.conf.d/hickory.conf > /dev/null <<'EOF'
+    # Set Hickory as DNS for wg0, route .app queries through it
+    $SUDO resolvectl dns wg0 10.0.0.1
+    $SUDO resolvectl domain wg0 ~app
+    echo "[hickory-dns] wg0 DNS=10.0.0.1, routing domain=~app"
+
+    # Also set as fallback in global config (for non-systemd-resolved systems)
+    $SUDO mkdir -p /etc/systemd/resolved.conf.d
+    $SUDO tee /etc/systemd/resolved.conf.d/hickory.conf > /dev/null <<'EOF'
 [Resolve]
-DNS=10.0.0.1
-FallbackDNS=1.1.1.1
+FallbackDNS=10.0.0.1
 EOF
-      $SUDO systemctl restart systemd-resolved
-      echo "[hickory-dns] systemd-resolved configured → DNS=10.0.0.1"
-    else
-      $SUDO tee /etc/resolv.conf > /dev/null <<'EOF'
-nameserver 10.0.0.1
-nameserver 1.1.1.1
-EOF
-      echo "[hickory-dns] /etc/resolv.conf configured → nameserver 10.0.0.1"
-    fi
+    $SUDO systemctl restart systemd-resolved
+    # Re-apply link-level settings after restart
+    $SUDO resolvectl dns wg0 10.0.0.1
+    $SUDO resolvectl domain wg0 ~app
+    echo "[hickory-dns] systemd-resolved configured — .app → Hickory via wg0"
     ) || echo "[hickory-dns] FAILED — see errors above"
   '';
 
