@@ -111,8 +111,8 @@
     WantedBy=multi-user.target
   '';
 
-  # Configure DNS to use Hickory (10.0.0.1:53) with search domain "internal"
-  # so container names (authelia, vaultwarden, ntfy) resolve via .internal zone
+  # Configure DNS to use Hickory (10.0.0.1) as resolver
+  # Services resolve as <name>.app via Hickory per-service zones — no search domain needed
   home.activation.configureHickoryDns = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
     SUDO=""
@@ -121,24 +121,21 @@
     done
     [ -z "$SUDO" ] && echo "[hickory-dns] no sudo — skipping" && exit 0
 
-    # Use systemd-resolved drop-in if available, else write resolv.conf directly
     if $SUDO systemctl is-active --quiet systemd-resolved 2>/dev/null; then
       $SUDO mkdir -p /etc/systemd/resolved.conf.d
       $SUDO tee /etc/systemd/resolved.conf.d/hickory.conf > /dev/null <<'EOF'
 [Resolve]
 DNS=10.0.0.1
 FallbackDNS=1.1.1.1
-Domains=internal
 EOF
       $SUDO systemctl restart systemd-resolved
-      echo "[hickory-dns] systemd-resolved configured → DNS=10.0.0.1 Domains=internal"
+      echo "[hickory-dns] systemd-resolved configured → DNS=10.0.0.1"
     else
       $SUDO tee /etc/resolv.conf > /dev/null <<'EOF'
 nameserver 10.0.0.1
 nameserver 1.1.1.1
-search internal
 EOF
-      echo "[hickory-dns] /etc/resolv.conf configured → nameserver 10.0.0.1 search internal"
+      echo "[hickory-dns] /etc/resolv.conf configured → nameserver 10.0.0.1"
     fi
     ) || echo "[hickory-dns] FAILED — see errors above"
   '';
