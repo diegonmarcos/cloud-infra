@@ -22,32 +22,6 @@
       staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
     })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
-    (import ./modules/docker-network.nix {
-      vmName  = "gcp-proxy";
-      subnet  = "172.20.0.0/24";
-      gateway = "172.20.0.1";
-    })
-    (import ./modules/dnsmasq.nix {
-      vmName   = "gcp-proxy";
-      dnsIp    = "172.20.0.2";
-      subnet   = "172.20.0.0/24";
-      containers = {
-        caddy               = "172.20.0.10";
-        authelia            = "172.20.0.11";
-        "introspect-proxy"  = "172.20.0.12";
-        vaultwarden         = "172.20.0.13";
-        ntfy                = "172.20.0.14";
-        "hickory-dns"       = "172.20.0.15";
-        redis               = "172.20.0.16";
-      };
-      meshPeers = {
-        "oci-apps"      = "10.0.0.6";
-        "oci-mail"      = "10.0.0.3";
-        "oci-analytics" = "10.0.0.4";
-        "oci-apps-2"    = "10.0.0.7";
-        "gcp-t4"        = "10.0.0.8";
-      };
-    })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

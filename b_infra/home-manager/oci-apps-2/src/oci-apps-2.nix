@@ -14,23 +14,6 @@
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 32768; })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
-    (import ./modules/docker-network.nix {
-      vmName  = "oci-apps-2";
-      subnet  = "172.24.0.0/24";
-      gateway = "172.24.0.1";
-    })
-    (import ./modules/dnsmasq.nix {
-      vmName   = "oci-apps-2";
-      dnsIp    = "172.24.0.2";
-      subnet   = "172.24.0.0/24";
-      containers = {};
-      meshPeers = {
-        "gcp-proxy"     = "10.0.0.1";
-        "oci-apps"      = "10.0.0.6";
-        "oci-mail"      = "10.0.0.3";
-        "oci-analytics" = "10.0.0.4";
-      };
-    })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

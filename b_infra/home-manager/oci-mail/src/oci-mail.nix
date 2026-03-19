@@ -17,28 +17,6 @@
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
-    (import ./modules/docker-network.nix {
-      vmName  = "oci-mail";
-      subnet  = "172.22.0.0/24";
-      gateway = "172.22.0.1";
-    })
-    (import ./modules/dnsmasq.nix {
-      vmName   = "oci-mail";
-      dnsIp    = "172.22.0.2";
-      subnet   = "172.22.0.0/24";
-      containers = {
-        "mailu-front"    = "172.22.0.10";
-        "mailu-resolver" = "172.22.0.11";
-        syncthing        = "172.22.0.20";
-        "smtp-proxy"     = "172.22.0.22";
-        dagu             = "172.22.0.23";
-      };
-      meshPeers = {
-        "gcp-proxy"     = "10.0.0.1";
-        "oci-apps"      = "10.0.0.6";
-        "oci-analytics" = "10.0.0.4";
-      };
-    })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
