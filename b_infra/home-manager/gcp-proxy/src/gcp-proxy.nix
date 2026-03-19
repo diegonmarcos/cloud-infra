@@ -111,10 +111,9 @@
     WantedBy=multi-user.target
   '';
 
-  # Configure DNS: route .app queries to Hickory (10.0.0.1) via wg0 interface
-  # systemd-resolved uses per-link DNS — setting it globally loses to ens4's GCP metadata DNS.
-  # Fix: bind Hickory to wg0 with routing domain ~app so .app queries go to Hickory,
-  # everything else stays on ens4 (GCP metadata DNS for public resolution).
+  # Configure DNS: Hickory (10.0.0.1) as primary resolver
+  # Hickory serves .app zones locally and forwards everything else to Cloudflare.
+  # Skip systemd-resolved complexity — direct resolv.conf is simplest.
   home.activation.configureHickoryDns = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
     SUDO=""
@@ -123,22 +122,17 @@
     done
     [ -z "$SUDO" ] && echo "[hickory-dns] no sudo — skipping" && exit 0
 
-    # Set Hickory as DNS for wg0, route .app queries through it
-    $SUDO resolvectl dns wg0 10.0.0.1
-    $SUDO resolvectl domain wg0 ~app
-    echo "[hickory-dns] wg0 DNS=10.0.0.1, routing domain=~app"
-
-    # Also set as fallback in global config (for non-systemd-resolved systems)
-    $SUDO mkdir -p /etc/systemd/resolved.conf.d
-    $SUDO tee /etc/systemd/resolved.conf.d/hickory.conf > /dev/null <<'EOF'
-[Resolve]
-FallbackDNS=10.0.0.1
+    # Remove systemd-resolved symlink and write direct resolv.conf
+    if [ -L /etc/resolv.conf ]; then
+      $SUDO rm /etc/resolv.conf
+    fi
+    $SUDO tee /etc/resolv.conf > /dev/null <<'EOF'
+nameserver 10.0.0.1
+nameserver 169.254.169.254
 EOF
-    $SUDO systemctl restart systemd-resolved
-    # Re-apply link-level settings after restart
-    $SUDO resolvectl dns wg0 10.0.0.1
-    $SUDO resolvectl domain wg0 ~app
-    echo "[hickory-dns] systemd-resolved configured — .app → Hickory via wg0"
+    # Clean up old resolved drop-in if present
+    $SUDO rm -f /etc/systemd/resolved.conf.d/hickory.conf
+    echo "[hickory-dns] resolv.conf → nameserver 10.0.0.1 (Hickory)"
     ) || echo "[hickory-dns] FAILED — see errors above"
   '';
 
