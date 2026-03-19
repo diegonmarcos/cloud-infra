@@ -28,6 +28,9 @@ let
   zramSizeMB = ramMB / 2;  # 50% of RAM
   zramSizeBytes = toString (zramSizeMB * 1024 * 1024);
 
+  # Disk swap: max(2GB, 100% RAM) — scales with VM size
+  diskSwapMB = if ramMB < 2048 then 2048 else ramMB;
+
 in {
   # earlyoom + e2fsprogs (for tune2fs)
   home.packages = [ pkgs.earlyoom pkgs.e2fsprogs ];
@@ -97,40 +100,40 @@ in {
     executable = true;
     text = ''
       #!/bin/bash
-      # Disk-backed swap: 2GB swapfile for low-RAM VMs
+      # Disk-backed swap: max(2GB, 100% RAM) — ${toString diskSwapMB}MB for this VM
       set -euo pipefail
       SWAPFILE="/swapfile"
-      SWAP_SIZE="2G"
+      SWAP_MB=${toString diskSwapMB}
 
       if swapon --show=NAME 2>/dev/null | grep -q "$SWAPFILE"; then
         CURRENT=$(stat -c%s "$SWAPFILE" 2>/dev/null || echo 0)
-        WANT=2147483648
+        WANT=$(($SWAP_MB * 1024 * 1024))
         if [ "$CURRENT" -ge "$WANT" ]; then
           echo "[disk-swap] Already active ($(($CURRENT/1024/1024))MB), skipping"
           exit 0
         fi
-        echo "[disk-swap] Existing swap too small ($(($CURRENT/1024/1024))MB), recreating..."
+        echo "[disk-swap] Existing swap too small ($(($CURRENT/1024/1024))MB < ${toString diskSwapMB}MB), recreating..."
         swapoff "$SWAPFILE" 2>/dev/null || true
         rm -f "$SWAPFILE"
       fi
 
       if [ ! -f "$SWAPFILE" ]; then
-        echo "[disk-swap] Creating 2GB swapfile (btrfs-safe)..."
+        echo "[disk-swap] Creating ''${SWAP_MB}MB swapfile (btrfs-safe)..."
         truncate -s 0 "$SWAPFILE"
         chattr +C "$SWAPFILE" 2>/dev/null || true
-        dd if=/dev/zero of="$SWAPFILE" bs=1M count=2048 status=progress
+        dd if=/dev/zero of="$SWAPFILE" bs=1M count=$SWAP_MB status=progress
         chmod 600 "$SWAPFILE"
         mkswap "$SWAPFILE"
       fi
 
       swapon -p 10 "$SWAPFILE"
-      echo "[disk-swap] Activated $SWAP_SIZE disk swap (priority 10, zram has priority 100)"
+      echo "[disk-swap] Activated ''${SWAP_MB}MB disk swap (priority 10, zram has priority 100)"
     '';
   };
 
   home.file.".local/share/system-protection/disk-swap.service".text = ''
     [Unit]
-    Description=Disk-backed swap (2GB) for low-RAM VMs
+    Description=Disk-backed swap (${toString diskSwapMB}MB) for VM
     After=local-fs.target
     Before=docker.service
 
