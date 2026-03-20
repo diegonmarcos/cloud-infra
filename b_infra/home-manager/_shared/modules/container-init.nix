@@ -137,6 +137,19 @@ in {
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable container-init.service 2>/dev/null || true
 
+    # Run stale container cleanup immediately (don't wait for reboot)
+    STALE="${staleList}"
+    if [ -n "$STALE" ]; then
+      echo "[container-init] Removing stale containers now: $STALE"
+      for name in $STALE; do
+        if $SUDO docker inspect "$name" >/dev/null 2>&1; then
+          $SUDO docker stop "$name" 2>/dev/null || true
+          $SUDO docker rm -f "$name" 2>/dev/null || true
+          echo "[container-init]   removed: $name"
+        fi
+      done
+    fi
+
     echo "[container-init] deployed: sequential startup + stale cleanup"
     ) || echo "[container-init] FAILED — see errors above, activation continues"
   '';
