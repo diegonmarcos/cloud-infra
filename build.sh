@@ -1,7 +1,7 @@
 #!/bin/sh
 # Container-Nix Orchestrator
 # Delegates builds to per-service build.sh, deploys dist/ to VMs
-# Configuration: cloud-topology.json
+# Configuration: cloud-data-topology.json
 set -e
 
 # =============================================================================
@@ -10,7 +10,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOLUTIONS_DIR="$SCRIPT_DIR/a_solutions"
-CONFIG_FILE="$SCRIPT_DIR/cloud-topology.json"
+CONFIG_FILE="$SCRIPT_DIR/cloud-data-topology.json"
 
 # Shared node_modules — ESM (tsx) does not respect NODE_PATH, but CJS fallback does.
 # Set here so all tsx calls in this script find packages from the shared install.

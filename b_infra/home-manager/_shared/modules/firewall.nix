@@ -64,8 +64,8 @@ let
     # VM-specific public ports (static from nix — fallback)
     ${portRules}
 
-    # Dynamic ports from firewall-rules.json (cloud-data pipeline)
-    FW_JSON="/opt/containers/cloud-data/firewall-rules.json"
+    # Dynamic ports from cloud-data-firewall-rules.json (cloud-data pipeline)
+    FW_JSON="/opt/containers/cloud-data/cloud-data-firewall-rules.json"
     if [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
       DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.vms[$vm].ingress[]? | "\(.port):\(.proto // "tcp"):\(.service // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
       for entry in $DYNAMIC_PORTS; do
