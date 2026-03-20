@@ -24,6 +24,10 @@
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
+    (import ./modules/container-init.nix {
+      inherit config pkgs lib;
+      staleContainers = [ "c3-mcp-api" ];
+    })
     (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
