@@ -61,8 +61,23 @@ let
     iptables -A INPUT -p tcp --dport 22 -m comment --comment "SSH" -j ACCEPT
     # WireGuard port
     iptables -A INPUT -p udp --dport 51820 -m comment --comment "WireGuard" -j ACCEPT
-    # VM-specific public ports
+    # VM-specific public ports (static from nix — fallback)
     ${portRules}
+
+    # Dynamic ports from firewall-rules.json (cloud-data pipeline)
+    FW_JSON="/opt/containers/cloud-data/firewall-rules.json"
+    if [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
+      DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.vms[$vm].ingress[]? | "\(.port):\(.proto // "tcp"):\(.service // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
+      for entry in $DYNAMIC_PORTS; do
+        PORT=''${entry%%:*}
+        REST=''${entry#*:}
+        PROTO=''${REST%%:*}
+        SVC=''${REST#*:}
+        iptables -C INPUT -p "$PROTO" --dport "$PORT" -j ACCEPT 2>/dev/null || \
+          iptables -A INPUT -p "$PROTO" --dport "$PORT" -m comment --comment "$SVC (dynamic)" -j ACCEPT
+      done
+      echo "[firewall] Applied dynamic ports from $FW_JSON"
+    fi
 
     # ── FORWARD chain ──
     # Docker with iptables:false doesn't manage FORWARD — we do.
