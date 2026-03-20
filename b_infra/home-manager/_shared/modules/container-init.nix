@@ -46,9 +46,16 @@ in {
         log "Removing stale containers: $STALE"
         for name in $STALE; do
           if docker inspect "$name" >/dev/null 2>&1; then
-            docker stop "$name" 2>/dev/null || true
-            docker rm -f "$name" 2>/dev/null || true
-            log "  removed: $name"
+            COMPOSE_DIR="$CONTAINERS_DIR/$name"
+            if [ -f "$COMPOSE_DIR/docker-compose.yml" ]; then
+              (cd "$COMPOSE_DIR" && docker compose down --remove-orphans 2>/dev/null) || true
+              rm -rf "$COMPOSE_DIR"
+              log "  compose down + removed dir: $name"
+            else
+              docker stop "$name" 2>/dev/null || true
+              docker rm -f "$name" 2>/dev/null || true
+              log "  removed: $name"
+            fi
           fi
         done
       fi
@@ -138,14 +145,22 @@ in {
     $SUDO systemctl enable container-init.service 2>/dev/null || true
 
     # Run stale container cleanup immediately (don't wait for reboot)
+    # Use compose down if compose project dir exists, else stop+rm
     STALE="${staleList}"
     if [ -n "$STALE" ]; then
       echo "[container-init] Removing stale containers now: $STALE"
       for name in $STALE; do
         if $SUDO docker inspect "$name" >/dev/null 2>&1; then
-          $SUDO docker stop "$name" 2>/dev/null || true
-          $SUDO docker rm -f "$name" 2>/dev/null || true
-          echo "[container-init]   removed: $name"
+          COMPOSE_DIR="/opt/containers/$name"
+          if [ -f "$COMPOSE_DIR/docker-compose.yml" ]; then
+            (cd "$COMPOSE_DIR" && $SUDO docker compose down --remove-orphans 2>/dev/null) || true
+            $SUDO rm -rf "$COMPOSE_DIR"
+            echo "[container-init]   compose down + removed dir: $name"
+          else
+            $SUDO docker stop "$name" 2>/dev/null || true
+            $SUDO docker rm -f "$name" 2>/dev/null || true
+            echo "[container-init]   removed: $name"
+          fi
         fi
       done
     fi
