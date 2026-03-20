@@ -191,12 +191,8 @@ if [ "${1:-}" != "deps" ]; then
     check_deps || exit 1
 fi
 
-# Age key - auto-detect mobile vs desktop
-if [ -f "$HOME/git/vault/A0_keys/providers/system/ssh_asymmetric/age_keys.txt" ]; then
-    : "${SOPS_AGE_KEY_FILE:=$HOME/git/vault/A0_keys/providers/system/ssh_asymmetric/age_keys.txt}"
-elif [ -f "/home/diego/Mounts/Git/vault/A0_keys/providers/system/ssh_asymmetric/age_keys.txt" ]; then
-    : "${SOPS_AGE_KEY_FILE:=/home/diego/Mounts/Git/vault/A0_keys/providers/system/ssh_asymmetric/age_keys.txt}"
-fi
+# Age key — use dotfile symlink set up by vault/build.sh setup system
+: "${SOPS_AGE_KEY_FILE:=$HOME/.config/sops/age/keys.txt}"
 export SOPS_AGE_KEY_FILE
 
 # SSH key - auto-detect
