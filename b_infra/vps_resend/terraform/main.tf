@@ -3,7 +3,7 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 #
 # Resend sends transactional/health-check emails via Amazon SES.
-# We register mail.diegonmarcos.com (subdomain) to isolate reputation
+# We register mails.diegonmarcos.com (subdomain) to isolate reputation
 # from Mailu's root-domain DKIM/SPF.
 #
 # DNS records are created in Cloudflare. Resend verification is triggered
@@ -48,7 +48,7 @@ variable "cloudflare_zone_id" {
 variable "domain" {
   description = "Subdomain to register with Resend"
   type        = string
-  default     = "mail.diegonmarcos.com"
+  default     = "mails.diegonmarcos.com"
 }
 
 # ── Providers ─────────────────────────────────────────────────────────────────
@@ -73,32 +73,32 @@ resource "resend_domain" "mail" {
 # DKIM — Resend's own signing key (separate selector from Mailu's dkim._domainkey)
 resource "cloudflare_record" "resend_dkim" {
   zone_id = var.cloudflare_zone_id
-  name    = "resend._domainkey.mail"
+  name    = "resend._domainkey.mails"
   type    = "TXT"
   content = resend_domain.mail.records[0].value
   ttl     = 1 # Auto
-  comment = "Resend DKIM for mail.diegonmarcos.com"
+  comment = "Resend DKIM for mails.diegonmarcos.com"
 }
 
-# SPF MX — Resend bounce handling (send.mail subdomain)
+# SPF MX — Resend bounce handling (send.mails subdomain)
 resource "cloudflare_record" "resend_spf_mx" {
   zone_id  = var.cloudflare_zone_id
-  name     = "send.mail"
+  name     = "send.mails"
   type     = "MX"
   content  = "feedback-smtp.us-east-1.amazonses.com"
   priority = 10
   ttl      = 1 # Auto
-  comment  = "Resend SPF MX for mail.diegonmarcos.com"
+  comment  = "Resend SPF MX for mails.diegonmarcos.com"
 }
 
-# SPF TXT — Resend SPF (send.mail subdomain)
+# SPF TXT — Resend SPF (send.mails subdomain)
 resource "cloudflare_record" "resend_spf_txt" {
   zone_id = var.cloudflare_zone_id
-  name    = "send.mail"
+  name    = "send.mails"
   type    = "TXT"
   content = "v=spf1 include:amazonses.com ~all"
   ttl     = 1 # Auto
-  comment = "Resend SPF for mail.diegonmarcos.com"
+  comment = "Resend SPF for mails.diegonmarcos.com"
 }
 
 # ── Verify Domain ─────────────────────────────────────────────────────────────
