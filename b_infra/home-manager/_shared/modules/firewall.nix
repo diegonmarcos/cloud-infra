@@ -100,6 +100,10 @@ let
     # ══════════════════════════════════════════════════════════════
 
     iptables -t nat -F POSTROUTING 2>/dev/null || true
+    # Flush stale Docker DNAT rules (zombie port mappings from old bridge-mode containers)
+    # With network_mode: host, there should be NO DNAT rules — services bind directly.
+    iptables -t nat -F DOCKER 2>/dev/null || true
+    iptables -t nat -F PREROUTING 2>/dev/null || true
 
     # MASQUERADE: Docker containers reaching internet
     iptables -t nat -A POSTROUTING -s ${dockerSubnet} ! -d ${dockerSubnet} -j MASQUERADE
