@@ -5,13 +5,16 @@
     (import ./wireguard.nix { vmName = "oci-mail"; })
     (import ./modules/firewall.nix {
       vmName = "oci-mail";
-      # Mail ports (25, 465, 587, 993) removed — access via WG only (Caddy L4 on gcp-proxy)
-      # Inbound email: CF MX → Worker → Tunnel → smtp-proxy:8080 (bypasses firewall)
       publicPorts = [
-        { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Tunnel ingress)"; }
+        { port = 25;    proto = "tcp"; desc = "SMTP relay (Mailu front)"; }
+        { port = 465;   proto = "tcp"; desc = "SMTPS (Mailu via Caddy L4)"; }
+        { port = 587;   proto = "tcp"; desc = "SMTP submission (Mailu via Caddy L4)"; }
+        { port = 993;   proto = "tcp"; desc = "IMAPS (Mailu via Caddy L4)"; }
+        { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Worker ingress)"; }
+        { port = 8444;  proto = "tcp"; desc = "Mailu webmail HTTPS"; }
         { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
         { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
-        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
+        { port = 2200;  proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }
       ];
     })
     ./modules/shared-all.nix
