@@ -1,8 +1,10 @@
-# Fully declarative iptables — owns ALL chains (INPUT, FORWARD, NAT)
+# Fully declarative iptables + nftables — owns ALL chains
 #
-# Docker runs with iptables:false (daemon.json) — we manage everything.
-# Port publishing works via docker-proxy (userland), no DNAT needed.
-# We handle: INPUT filtering, FORWARD for bridges, MASQUERADE for outbound.
+# This firewall is THE SINGLE OWNER of all packet filtering rules.
+# Docker runs with iptables:false (daemon.json) — it creates NO rules.
+# All containers use network_mode: host — no DNAT, no bridge isolation.
+#
+# On every run: flush ALL tables → rebuild from scratch. Zero stale rules.
 #
 # Docker subnet range: 172.16.0.0/12 (covers 172.16-31.x.x)
 # WG subnet: 10.0.0.0/24
@@ -23,7 +25,6 @@ let
   dockerSubnet = "172.16.0.0/12";
   wgSubnet = "10.0.0.0/24";
 
-  # Build iptables ACCEPT rules for public ports (INPUT chain)
   mkPortRule = r:
     let
       port = toString r.port;
@@ -37,16 +38,37 @@ let
   fwScript = ''
     #!/bin/bash
     # Managed by home-manager (firewall.nix) — do not edit
-    # VM: ${vmName} — fully declarative iptables (Docker iptables: false)
+    # VM: ${vmName} — fully declarative iptables + nftables
+    # THIS SCRIPT OWNS ALL PACKET FILTERING. Docker creates nothing.
     set -euo pipefail
     export PATH="${pkgs.iptables}/bin:$PATH"
 
     # ══════════════════════════════════════════════════════════════
-    # FILTER TABLE
+    # PHASE 0: FLUSH EVERYTHING — clean slate
     # ══════════════════════════════════════════════════════════════
 
-    # ── INPUT chain ──
+    # Filter table
     iptables -F INPUT 2>/dev/null || true
+    iptables -F FORWARD 2>/dev/null || true
+    iptables -F OUTPUT 2>/dev/null || true
+
+    # NAT table — ALL chains (kills any zombie Docker DNAT/SNAT rules)
+    iptables -t nat -F 2>/dev/null || true
+
+    # Mangle table
+    iptables -t mangle -F 2>/dev/null || true
+
+    # nftables raw table — flush Docker's container isolation rules
+    if command -v nft >/dev/null 2>&1 && nft list table ip raw >/dev/null 2>&1; then
+      nft flush chain ip raw PREROUTING 2>/dev/null || true
+      nft flush chain ip raw OUTPUT 2>/dev/null || true
+      echo "[firewall] nft raw: flushed all rules"
+    fi
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 1: FILTER TABLE — INPUT
+    # ══════════════════════════════════════════════════════════════
+
     iptables -P INPUT DROP
 
     # Loopback
@@ -61,10 +83,10 @@ let
     iptables -A INPUT -p tcp --dport 22 -m comment --comment "SSH" -j ACCEPT
     # WireGuard port
     iptables -A INPUT -p udp --dport 51820 -m comment --comment "WireGuard" -j ACCEPT
-    # VM-specific public ports (static from nix — fallback)
+    # VM-specific public ports (static from nix)
     ${portRules}
 
-    # Dynamic ports from cloud-data-firewall-rules.json (cloud-data pipeline)
+    # Dynamic ports from cloud-data-firewall-rules.json
     FW_JSON="/opt/containers/cloud-data/cloud-data-firewall-rules.json"
     if [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
       DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.vms[$vm].ingress[]? | "\(.port):\(.proto // "tcp"):\(.service // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
@@ -79,60 +101,35 @@ let
       echo "[firewall] Applied dynamic ports from $FW_JSON"
     fi
 
-    # ── FORWARD chain ──
-    # Docker with iptables:false doesn't manage FORWARD — we do.
-    iptables -F FORWARD 2>/dev/null || true
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 2: FILTER TABLE — FORWARD
+    # ══════════════════════════════════════════════════════════════
+
     iptables -P FORWARD DROP
 
-    # Established/related forwarded connections
+    # Established/related
     iptables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
     # Docker containers → internet (outbound)
     iptables -A FORWARD -s ${dockerSubnet} ! -d ${dockerSubnet} -j ACCEPT
-    # Inter-container traffic (same or cross bridge)
+    # Inter-container traffic
     iptables -A FORWARD -s ${dockerSubnet} -d ${dockerSubnet} -j ACCEPT
-    # Internet → Docker containers (return traffic for docker-proxy, handled by ESTABLISHED above)
-    # WireGuard forwarding (cross-VM traffic)
+    # WireGuard forwarding
     iptables -A FORWARD -i wg0 -j ACCEPT
     iptables -A FORWARD -o wg0 -j ACCEPT
 
     # ══════════════════════════════════════════════════════════════
-    # NAT TABLE
+    # PHASE 3: NAT TABLE — MASQUERADE only, zero DNAT
     # ══════════════════════════════════════════════════════════════
+    # With network_mode: host, services bind directly on 0.0.0.0.
+    # No DNAT needed. No docker-proxy. No port mapping.
+    # Only MASQUERADE for outbound from Docker bridges and WG.
 
-    iptables -t nat -F POSTROUTING 2>/dev/null || true
-    # Flush stale Docker DNAT rules (zombie port mappings from old bridge-mode containers)
-    # With network_mode: host, there should be NO DNAT rules — services bind directly.
-    iptables -t nat -F DOCKER 2>/dev/null || true
-    iptables -t nat -F PREROUTING 2>/dev/null || true
-
-    # MASQUERADE: Docker containers reaching internet
     iptables -t nat -A POSTROUTING -s ${dockerSubnet} ! -d ${dockerSubnet} -j MASQUERADE
-    # MASQUERADE: WireGuard traffic
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
 
-    # ══════════════════════════════════════════════════════════════
-    # NFTABLES RAW — whitelist WireGuard before Docker's isolation
-    # ══════════════════════════════════════════════════════════════
-    # Docker creates nft raw PREROUTING rules that DROP traffic to
-    # container IPs from non-bridge interfaces. This blocks WG traffic
-    # (iifname=wg0) to published ports (993, 465, etc.) even though
-    # iptables INPUT accepts wg0. Fix: insert ACCEPT for wg0 first.
-    # nft raw table only exists after Docker starts — skip if not present
-    if command -v nft >/dev/null 2>&1; then
-      if nft list table ip raw >/dev/null 2>&1; then
-        (nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
-          nft delete rule ip raw PREROUTING handle "$handle" 2>/dev/null || true
-        done) || true
-        nft insert rule ip raw PREROUTING iifname wg0 accept 2>/dev/null || true
-        echo "[firewall] nft raw: wg0 whitelisted in PREROUTING"
-      else
-        echo "[firewall] nft raw: table ip raw not found (Docker not started yet — normal at boot)"
-      fi
-    fi
-
-    echo "[firewall] Applied: full declarative iptables for ${vmName} (${toString (builtins.length publicPorts)} public ports)"
+    echo "[firewall] Applied: fully declarative iptables + nft for ${vmName} (${toString (builtins.length publicPorts)} static ports)"
   '';
 
 in {
