@@ -118,9 +118,9 @@ let
     # nft raw table only exists after Docker starts — skip if not present
     if command -v nft >/dev/null 2>&1; then
       if nft list table ip raw >/dev/null 2>&1; then
-        nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
+        (nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
           nft delete rule ip raw PREROUTING handle "$handle" 2>/dev/null || true
-        done
+        done) || true
         nft insert rule ip raw PREROUTING iifname wg0 accept 2>/dev/null || true
         echo "[firewall] nft raw: wg0 whitelisted in PREROUTING"
       else
