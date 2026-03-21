@@ -6,12 +6,13 @@
     (import ./modules/firewall.nix {
       vmName = "oci-mail";
       publicPorts = [
-        { port = 25;    proto = "tcp"; desc = "SMTP relay (Mailu front)"; }
-        { port = 465;   proto = "tcp"; desc = "SMTPS (Mailu via Caddy L4)"; }
-        { port = 587;   proto = "tcp"; desc = "SMTP submission (Mailu via Caddy L4)"; }
-        { port = 993;   proto = "tcp"; desc = "IMAPS (Mailu via Caddy L4)"; }
+        { port = 25;    proto = "tcp"; desc = "SMTP (Stalwart)"; }
+        { port = 465;   proto = "tcp"; desc = "SMTPS (Stalwart via Caddy L4)"; }
+        { port = 587;   proto = "tcp"; desc = "SMTP submission (Stalwart via Caddy L4)"; }
+        { port = 993;   proto = "tcp"; desc = "IMAPS (Stalwart via Caddy L4)"; }
+        { port = 4190;  proto = "tcp"; desc = "ManageSieve (Stalwart)"; }
         { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Worker ingress)"; }
-        { port = 8444;  proto = "tcp"; desc = "Mailu webmail HTTPS"; }
+        { port = 8443;  proto = "tcp"; desc = "Stalwart web admin HTTPS"; }
         { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
         { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
         { port = 2200;  proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }
@@ -23,7 +24,7 @@
     (import ./modules/container-init.nix {
       inherit config pkgs lib;
       priorityOrder = [ "syncthing" "syslog-forwarder" "dagu" "smtp-proxy" ];
-      extraComposeDirs = [ "/opt/mailu" ];
+      extraComposeDirs = [ "/opt/stalwart" ];
       staleContainers = [];
     })
   ];

@@ -3,7 +3,7 @@ name: "Ship → oci-mail"
 on:
   push:
     paths:
-      - "a_solutions/aa-sui_tools-mailu/src/**"
+      - "a_solutions/aa-sui_tools-stalwart/src/**"
       - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
       - "a_solutions/ab-mic_syncthing/src/**"
       - "a_solutions/bc-obs_dagu/src/**"
@@ -36,8 +36,8 @@ jobs:
         if: github.event_name == 'push'
         with:
           filters: |
-            mailu:
-              - 'a_solutions/aa-sui_tools-mailu/src/**'
+            stalwart:
+              - 'a_solutions/aa-sui_tools-stalwart/src/**'
             smtp-proxy:
               - 'a_solutions/aa-sui_tools-smtp-proxy/src/**'
             syncthing:
@@ -52,7 +52,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mailu smtp-proxy syncthing dagu syslog-forwarder; do
+          for name in stalwart smtp-proxy syncthing dagu syslog-forwarder; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -66,9 +66,9 @@ jobs:
           ssh_alias: oci-mail
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Ship mailu
-        if: steps.changes.outputs.mailu == 'true' || steps.force.outputs.mailu == 'true'
-        run: bash a_solutions/aa-sui_tools-mailu/build.sh ship
+      - name: Ship stalwart
+        if: steps.changes.outputs.stalwart == 'true' || steps.force.outputs.stalwart == 'true'
+        run: bash a_solutions/aa-sui_tools-stalwart/build.sh ship
 
       - name: Ship smtp-proxy
         if: steps.changes.outputs.smtp-proxy == 'true' || steps.force.outputs.smtp-proxy == 'true'
