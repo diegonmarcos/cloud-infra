@@ -115,14 +115,17 @@ let
     # container IPs from non-bridge interfaces. This blocks WG traffic
     # (iifname=wg0) to published ports (993, 465, etc.) even though
     # iptables INPUT accepts wg0. Fix: insert ACCEPT for wg0 first.
-    if command -v nft >/dev/null 2>&1 && nft list table ip raw >/dev/null 2>&1; then
-      # Remove any existing wg0 rule to avoid duplicates
-      nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
-        nft delete rule ip raw PREROUTING handle "$handle" 2>/dev/null || true
-      done
-      # Insert at top — before Docker's container isolation drops
-      nft insert rule ip raw PREROUTING iifname wg0 accept
-      echo "[firewall] nft raw: wg0 whitelisted in PREROUTING"
+    # nft raw table only exists after Docker starts — skip if not present
+    if command -v nft >/dev/null 2>&1; then
+      if nft list table ip raw >/dev/null 2>&1; then
+        nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
+          nft delete rule ip raw PREROUTING handle "$handle" 2>/dev/null || true
+        done
+        nft insert rule ip raw PREROUTING iifname wg0 accept 2>/dev/null || true
+        echo "[firewall] nft raw: wg0 whitelisted in PREROUTING"
+      else
+        echo "[firewall] nft raw: table ip raw not found (Docker not started yet — normal at boot)"
+      fi
     fi
 
     echo "[firewall] Applied: full declarative iptables for ${vmName} (${toString (builtins.length publicPorts)} public ports)"
