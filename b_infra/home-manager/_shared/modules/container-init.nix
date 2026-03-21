@@ -15,7 +15,7 @@
 #     staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
 #   })
 #
-{ config, pkgs, lib, staleContainers ? [], ... }:
+{ config, pkgs, lib, staleContainers ? [], priorityOrder ? [], extraComposeDirs ? [], ... }:
 
 let
   staleList = lib.concatStringsSep " " staleContainers;
@@ -74,14 +74,14 @@ in {
       # ── Phase 2: Sequential container startup ──
       log "Starting containers sequentially..."
 
-      # Priority order: core infra first, then services
-      PRIORITY_ORDER="hickory-dns caddy authelia vaultwarden ntfy redis postlite"
+      # Priority order (passed from VM config, or discover all)
+      PRIORITY_ORDER="${lib.concatStringsSep " " priorityOrder}"
 
       started=""
       for svc in $PRIORITY_ORDER; do
         compose="$CONTAINERS_DIR/$svc/docker-compose.yml"
         if [ -f "$compose" ]; then
-          log "  starting: $svc"
+          log "  starting: $svc (sequential)"
           (cd "$CONTAINERS_DIR/$svc" && docker compose up -d 2>&1) || log "  WARN: $svc failed"
           started="$started $svc"
           sleep 2
@@ -98,6 +98,17 @@ in {
         log "  starting: $svc"
         (cd "$dir" && docker compose up -d 2>&1) || log "  WARN: $svc failed"
         sleep 2
+      done
+
+      # Extra compose dirs (outside /opt/containers/, e.g. /opt/mailu)
+      EXTRA_DIRS="${lib.concatStringsSep " " extraComposeDirs}"
+      for dir in $EXTRA_DIRS; do
+        if [ -f "$dir/docker-compose.yml" ]; then
+          svc=$(basename "$dir")
+          log "  starting: $svc (extra dir: $dir)"
+          (cd "$dir" && docker compose up -d 2>&1) || log "  WARN: $svc failed"
+          sleep 5
+        fi
       done
 
       log "Done — all containers started sequentially"
