@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "a_solutions/aa-sui_mattermost-mcp/src/**"
-      - "a_solutions/aa-sui_mailu-mcp/src/**"
+      - "a_solutions/aa-sui_mail-mcp/src/**"
       - "a_solutions/aa-sui_mattermost-bots/src/**"
       - "a_solutions/aa-sui_code-server/src/**"
       - "a_solutions/aa-sui_etherpad/src/**"
@@ -63,8 +63,8 @@ jobs:
           filters: |
             mattermost-mcp:
               - 'a_solutions/aa-sui_mattermost-mcp/src/**'
-            mailu-mcp:
-              - 'a_solutions/aa-sui_mailu-mcp/src/**'
+            mail-mcp:
+              - 'a_solutions/aa-sui_mail-mcp/src/**'
             mattermost-bots:
               - 'a_solutions/aa-sui_mattermost-bots/src/**'
             code-server:
@@ -117,7 +117,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in mattermost-mcp mailu-mcp mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api c3-services-api cloud-spec windmill google-workspace-mcp; do
+          for name in mattermost-mcp mail-mcp mattermost-bots code-server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee-cloud quant-lab-full quant-lab-light orchestrator lgtm nocodb rig-agentic gitea kg-graph c3-api c3-services-api cloud-spec windmill google-workspace-mcp; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -137,11 +137,11 @@ jobs:
           REMOTE_BUILD: "true"
         run: bash a_solutions/aa-sui_mattermost-mcp/build.sh ship
 
-      - name: Ship mailu-mcp
-        if: steps.changes.outputs.mailu-mcp == 'true' || steps.force.outputs.mailu-mcp == 'true'
+      - name: Ship mail-mcp
+        if: steps.changes.outputs.mail-mcp == 'true' || steps.force.outputs.mail-mcp == 'true'
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/aa-sui_mailu-mcp/build.sh ship
+        run: bash a_solutions/aa-sui_mail-mcp/build.sh ship
 
       - name: Ship mattermost-bots
         if: steps.changes.outputs.mattermost-bots == 'true' || steps.force.outputs.mattermost-bots == 'true'
@@ -274,7 +274,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           # Push trigger — from path changes
           CH_mattermost_mcp: ${{ steps.changes.outputs.mattermost-mcp }}
-          CH_mailu_mcp: ${{ steps.changes.outputs.mailu-mcp }}
+          CH_mail_mcp: ${{ steps.changes.outputs.mail-mcp }}
           CH_mattermost_bots: ${{ steps.changes.outputs.mattermost-bots }}
           CH_code_server: ${{ steps.changes.outputs.code-server }}
           CH_etherpad: ${{ steps.changes.outputs.etherpad }}
@@ -300,7 +300,7 @@ jobs:
           CH_kg_graph: ${{ steps.changes.outputs.kg-graph }}
           # Force trigger
           F_mattermost_mcp: ${{ steps.force.outputs.mattermost-mcp }}
-          F_mailu_mcp: ${{ steps.force.outputs.mailu-mcp }}
+          F_mail_mcp: ${{ steps.force.outputs.mail-mcp }}
           F_mattermost_bots: ${{ steps.force.outputs.mattermost-bots }}
           F_code_server: ${{ steps.force.outputs.code-server }}
           F_etherpad: ${{ steps.force.outputs.etherpad }}
@@ -326,7 +326,7 @@ jobs:
           F_kg_graph: ${{ steps.force.outputs.kg-graph }}
         run: |
           deployed=""
-          for name in mattermost_mcp mailu_mcp mattermost_bots code_server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee_cloud quant_lab_full quant_lab_light orchestrator lgtm nocodb rig_agentic gitea c3_api c3_services_api cloud_spec windmill google_workspace_mcp kg_graph; do
+          for name in mattermost_mcp mail_mcp mattermost_bots code_server etherpad filebrowser grist hedgedoc photoprism radicale revealmd crawlee_cloud quant_lab_full quant_lab_light orchestrator lgtm nocodb rig_agentic gitea c3_api c3_services_api cloud_spec windmill google_workspace_mcp kg_graph; do
             ch_var="CH_${name}"
             f_var="F_${name}"
             if [ "${!ch_var}" = "true" ] || [ "${!f_var}" = "true" ]; then
