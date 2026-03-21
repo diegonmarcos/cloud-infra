@@ -108,6 +108,23 @@ let
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
 
+    # ══════════════════════════════════════════════════════════════
+    # NFTABLES RAW — whitelist WireGuard before Docker's isolation
+    # ══════════════════════════════════════════════════════════════
+    # Docker creates nft raw PREROUTING rules that DROP traffic to
+    # container IPs from non-bridge interfaces. This blocks WG traffic
+    # (iifname=wg0) to published ports (993, 465, etc.) even though
+    # iptables INPUT accepts wg0. Fix: insert ACCEPT for wg0 first.
+    if command -v nft >/dev/null 2>&1 && nft list table ip raw >/dev/null 2>&1; then
+      # Remove any existing wg0 rule to avoid duplicates
+      nft -a list chain ip raw PREROUTING 2>/dev/null | grep 'iifname "wg0"' | awk '{print $NF}' | while read handle; do
+        nft delete rule ip raw PREROUTING handle "$handle" 2>/dev/null || true
+      done
+      # Insert at top — before Docker's container isolation drops
+      nft insert rule ip raw PREROUTING iifname wg0 accept
+      echo "[firewall] nft raw: wg0 whitelisted in PREROUTING"
+    fi
+
     echo "[firewall] Applied: full declarative iptables for ${vmName} (${toString (builtins.length publicPorts)} public ports)"
   '';
 
