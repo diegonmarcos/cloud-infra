@@ -1,0 +1,18 @@
+name: "Health → all VMs"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        vm: [gcp-proxy, gcp-t4, oci-apps, oci-apps-2, oci-analytics, oci-mail]
+    steps:
+      - name: Trigger ${{ matrix.vm }} health check
+        run: gh workflow run "${{ matrix.vm }}-health.yml" --repo "${{ github.repository }}" --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
