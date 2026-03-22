@@ -75,7 +75,12 @@ jobs:
             elif [ "$code" = "502" ] || [ "$code" = "503" ]; then
               echo "FAIL|$name|$url|$code" > "$RESULTS/$idx"
             elif [ "$code" = "401" ] || [ "$code" = "403" ]; then
-              echo "WARN|$name|$url|$code" > "$RESULTS/$idx"
+              # ntfy uses its own auth (JWT/tk_/cookie) — 401 means it's alive and serving its login
+              if [ "$name" = "ntfy" ] && [ "$code" = "401" ]; then
+                echo "PASS|$name|$url|$code (own auth)" > "$RESULTS/$idx"
+              else
+                echo "WARN|$name|$url|$code" > "$RESULTS/$idx"
+              fi
             else
               echo "PASS|$name|$url|$code" > "$RESULTS/$idx"
             fi
