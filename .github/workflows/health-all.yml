@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  trigger:
+  vms:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -18,5 +18,13 @@ jobs:
     steps:
       - name: Trigger ${{ matrix.vm }} health check
         run: gh workflow run "${{ matrix.vm }}-health.yml" --repo "${{ github.repository }}" --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  http:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger HTTP public health check
+        run: gh workflow run "health-http-public.yml" --repo "${{ github.repository }}" --ref main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
