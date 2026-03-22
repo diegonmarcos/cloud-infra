@@ -25,7 +25,7 @@
       inherit config pkgs lib;
       priorityOrder = [ "syncthing" "syslog-forwarder" "dagu" "smtp-proxy" ];
       extraComposeDirs = [ "/opt/stalwart" ];
-      staleContainers = [];
+      staleContainers = [ "caddy" "introspect-proxy" "mailu-front-1" "mailu-admin-1" "mailu-imap-1" "mailu-smtp-1" "mailu-antispam-1" "mailu-webmail-1" "mailu-redis-1" ];
     })
   ];
   home.username = "ubuntu";
