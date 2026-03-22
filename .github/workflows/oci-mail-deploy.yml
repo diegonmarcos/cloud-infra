@@ -8,6 +8,7 @@ on:
       - "a_solutions/ab-mic_syncthing/src/**"
       - "a_solutions/bc-obs_dagu/src/**"
       - "a_solutions/bc-obs_syslog-forwarder/src/**"
+      - "a_solutions/aa-sui_snappymail/src/**"
       - ".github/workflows/oci-mail-deploy.yml"
     branches: [main]
   workflow_dispatch:
@@ -46,13 +47,15 @@ jobs:
               - 'a_solutions/bc-obs_dagu/src/**'
             syslog-forwarder:
               - 'a_solutions/bc-obs_syslog-forwarder/src/**'
+            snappymail:
+              - 'a_solutions/aa-sui_snappymail/src/**'
 
       - name: Force service override
         id: force
         if: github.event_name == 'workflow_dispatch'
         run: |
           svc="${{ inputs.service }}"
-          for name in stalwart smtp-proxy syncthing dagu syslog-forwarder; do
+          for name in stalwart smtp-proxy syncthing dagu syslog-forwarder snappymail; do
             if [ -z "$svc" ] || [ "$svc" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -85,3 +88,7 @@ jobs:
       - name: Ship syslog-forwarder
         if: steps.changes.outputs.syslog-forwarder == 'true' || steps.force.outputs.syslog-forwarder == 'true'
         run: bash a_solutions/bc-obs_syslog-forwarder/build.sh ship
+
+      - name: Ship snappymail
+        if: steps.changes.outputs.snappymail == 'true' || steps.force.outputs.snappymail == 'true'
+        run: bash a_solutions/aa-sui_snappymail/build.sh ship
