@@ -1,0 +1,89 @@
+name: "Health → HTTP private (.app)"
+
+on:
+  workflow_run:
+    workflows:
+      - "Deploy → gcp-proxy"
+      - "Deploy → oci-apps"
+      - "Deploy → oci-mail"
+      - "Deploy → oci-analytics"
+      - "Deploy → gcp-t4"
+    types: [completed]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"  # daily at 06:00 UTC
+
+concurrency:
+  group: health-http-private
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/setup-deps
+        with:
+          ssh_key: ${{ secrets.GCP_SSH_KEY }}
+          ssh_host: ${{ secrets.GCP_PROXY_HOST }}
+          ssh_user: ${{ secrets.GCP_PROXY_USER }}
+          ssh_alias: gcp-proxy
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+
+      - name: Check all internal .app DNS addresses
+        run: |
+          set +e
+          DNS_FILE="cloud-data/cloud-data-dns-services.json"
+
+          if [ ! -f "$DNS_FILE" ] || [ ! -s "$DNS_FILE" ]; then
+            echo "::error::$DNS_FILE not found or empty"
+            exit 1
+          fi
+
+          PASS=0
+          FAIL=0
+
+          echo "=== Internal .app DNS reachability (via WG) ==="
+          echo ""
+
+          # Extract all service name → IP pairs from DNS registry
+          jq -r '.services | to_entries[] | "\(.key) \(.value.ip)"' "$DNS_FILE" | sort | while read -r name ip; do
+            [ -z "$name" ] || [ -z "$ip" ] && continue
+
+            # Test TCP connectivity to the .app address via gcp-proxy (WG peer)
+            # Use dig to resolve via Hickory DNS, then nc to test port
+            RESOLVED=$(ssh gcp-proxy "dig +short ${name}.app @10.0.0.1 2>/dev/null" 2>/dev/null | head -1)
+
+            if [ -z "$RESOLVED" ]; then
+              echo "::warning::${name}.app — DNS not resolved (Hickory has no zone)"
+              continue
+            fi
+
+            if [ "$RESOLVED" != "$ip" ]; then
+              echo "::error::${name}.app — DNS mismatch: expected $ip, got $RESOLVED"
+              FAIL=$((FAIL + 1))
+              continue
+            fi
+
+            # Test SSH reachability to the VM (port 22)
+            if ssh gcp-proxy "timeout 2 bash -c 'echo > /dev/tcp/$ip/22' 2>/dev/null"; then
+              echo "✓ ${name}.app → $ip (VM reachable)"
+              PASS=$((PASS + 1))
+            else
+              echo "::warning::${name}.app → $ip (VM unreachable — might be wake-on-demand)"
+            fi
+          done
+
+          echo ""
+          echo "════════════════════════════════════════"
+          echo "RESULT: $PASS passed, $FAIL failed"
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "::error::$FAIL DNS mismatch(es)"
+            exit 1
+          fi
+          echo "All internal .app DNS entries correct"
