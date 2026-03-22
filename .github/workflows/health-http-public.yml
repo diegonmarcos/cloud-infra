@@ -61,7 +61,7 @@ jobs:
             local hdr=""
             [ "$auth" != "none" ] && [ "$auth" != "public" ] && [ "$auth" != "mcp" ] && [ -n "$OIDC_TOKEN" ] && hdr="-H 'Authorization: Bearer $OIDC_TOKEN'"
             local code
-            code=$(eval curl -sk -o /dev/null -w '%{http_code}' --max-time 10 -L $hdr "'$url'" 2>/dev/null)
+            code=$(eval curl -sk -o /dev/null -w '%{http_code}' --max-time 10 --location-trusted $hdr "'$url'" 2>/dev/null)
 
             if [ "$auth" = "mcp" ]; then
               # MCP: 400/405 = alive
