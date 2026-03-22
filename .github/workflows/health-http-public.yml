@@ -73,12 +73,7 @@ jobs:
             elif [ "$code" = "000" ]; then
               echo "FAIL|$name|$url|TIMEOUT" > "$RESULTS/$idx"
             elif [ "$code" = "502" ] || [ "$code" = "503" ]; then
-              # analytics returns 503 when matomo is in sleep mode (expected, saves resources)
-              if [ "$name" = "analytics" ] && [ "$code" = "503" ]; then
-                echo "PASS|$name|$url|$code (sleep mode)" > "$RESULTS/$idx"
-              else
-                echo "FAIL|$name|$url|$code" > "$RESULTS/$idx"
-              fi
+              echo "FAIL|$name|$url|$code" > "$RESULTS/$idx"
             elif [ "$code" = "401" ] || [ "$code" = "403" ]; then
               # ntfy uses its own auth (JWT/tk_/cookie) — 401 means it's alive and serving its login
               if [ "$name" = "ntfy" ] && [ "$code" = "401" ]; then
