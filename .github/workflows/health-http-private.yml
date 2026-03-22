@@ -11,7 +11,7 @@ on:
     types: [completed]
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * *"  # daily at 06:00 UTC
+    - cron: "0 6 * * *"
 
 concurrency:
   group: health-http-private
@@ -34,56 +34,68 @@ jobs:
           ssh_alias: gcp-proxy
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Check all internal .app DNS addresses
+      - name: Check all .app DNS (single SSH, batch dig)
         run: |
-          set +e
           DNS_FILE="cloud-data/cloud-data-dns-services.json"
+          [ ! -f "$DNS_FILE" ] || [ ! -s "$DNS_FILE" ] && echo "::error::$DNS_FILE missing" && exit 1
 
-          if [ ! -f "$DNS_FILE" ] || [ ! -s "$DNS_FILE" ]; then
-            echo "::error::$DNS_FILE not found or empty"
-            exit 1
-          fi
+          # Build batch dig script — single SSH call resolves ALL names
+          NAMES=$(jq -r '.services | keys[]' "$DNS_FILE" | sort)
+          SCRIPT=""
+          for name in $NAMES; do
+            SCRIPT="$SCRIPT echo \"==$name==\"; dig +short ${name}.app @10.0.0.1 2>/dev/null | head -1;"
+          done
 
-          PASS=0
-          FAIL=0
+          echo "=== Resolving $(echo "$NAMES" | wc -w) .app names via single SSH ==="
+          BATCH_RESULT=$(ssh gcp-proxy "$SCRIPT" 2>/dev/null)
 
-          echo "=== Internal .app DNS reachability (via WG) ==="
-          echo ""
+          # Parse results + compare with expected IPs
+          RESULTS="/tmp/dns-results.txt"
+          > "$RESULTS"
+          CURRENT_NAME=""
 
-          # Extract all service name → IP pairs from DNS registry
-          jq -r '.services | to_entries[] | "\(.key) \(.value.ip)"' "$DNS_FILE" | sort | while read -r name ip; do
-            [ -z "$name" ] || [ -z "$ip" ] && continue
-
-            # Test TCP connectivity to the .app address via gcp-proxy (WG peer)
-            # Use dig to resolve via Hickory DNS, then nc to test port
-            RESOLVED=$(ssh gcp-proxy "dig +short ${name}.app @10.0.0.1 2>/dev/null" 2>/dev/null | head -1)
-
-            if [ -z "$RESOLVED" ]; then
-              echo "::warning::${name}.app — DNS not resolved (Hickory has no zone)"
-              continue
-            fi
-
-            if [ "$RESOLVED" != "$ip" ]; then
-              echo "::error::${name}.app — DNS mismatch: expected $ip, got $RESOLVED"
-              FAIL=$((FAIL + 1))
-              continue
-            fi
-
-            # Test SSH reachability to the VM (port 22)
-            if ssh gcp-proxy "timeout 2 bash -c 'echo > /dev/tcp/$ip/22' 2>/dev/null"; then
-              echo "✓ ${name}.app → $ip (VM reachable)"
-              PASS=$((PASS + 1))
-            else
-              echo "::warning::${name}.app → $ip (VM unreachable — might be wake-on-demand)"
+          echo "$BATCH_RESULT" | while read -r line; do
+            if echo "$line" | grep -q "^==.*==$"; then
+              CURRENT_NAME=$(echo "$line" | awk -F'==' '{print $2}')
+            elif [ -n "$CURRENT_NAME" ]; then
+              RESOLVED="$line"
+              EXPECTED=$(jq -r ".services[\"$CURRENT_NAME\"].ip // \"\"" "$DNS_FILE")
+              if [ -z "$RESOLVED" ]; then
+                echo "WARN|${CURRENT_NAME}.app|no zone" >> "$RESULTS"
+              elif [ "$RESOLVED" = "$EXPECTED" ]; then
+                echo "PASS|${CURRENT_NAME}.app|$RESOLVED" >> "$RESULTS"
+              else
+                echo "FAIL|${CURRENT_NAME}.app|expected=$EXPECTED got=$RESOLVED" >> "$RESULTS"
+              fi
+              CURRENT_NAME=""
             fi
           done
 
+          # Also batch-test VM reachability (SSH port 22 on each unique IP)
+          UNIQUE_IPS=$(jq -r '[.services[].ip] | unique[]' "$DNS_FILE")
+          for ip in $UNIQUE_IPS; do
+            (
+              if ssh gcp-proxy "timeout 2 bash -c 'echo > /dev/tcp/$ip/22' 2>/dev/null"; then
+                echo "PASS|VM $ip|reachable" >> "$RESULTS"
+              else
+                echo "WARN|VM $ip|unreachable" >> "$RESULTS"
+              fi
+            ) &
+          done
+          wait
+
+          # Report
           echo ""
           echo "════════════════════════════════════════"
-          echo "RESULT: $PASS passed, $FAIL failed"
+          PASS_N=$(grep -c "^PASS" "$RESULTS" 2>/dev/null || echo 0)
+          FAIL_N=$(grep -c "^FAIL" "$RESULTS" 2>/dev/null || echo 0)
+          WARN_N=$(grep -c "^WARN" "$RESULTS" 2>/dev/null || echo 0)
 
-          if [ "$FAIL" -gt 0 ]; then
-            echo "::error::$FAIL DNS mismatch(es)"
-            exit 1
-          fi
-          echo "All internal .app DNS entries correct"
+          grep "^PASS" "$RESULTS" | awk -F'|' '{print "✓ " $2 " → " $3}'
+          grep "^WARN" "$RESULTS" | awk -F'|' '{print "⚠ " $2 " — " $3}'
+          grep "^FAIL" "$RESULTS" | awk -F'|' '{print "::error::" $2 " — " $3}'
+
+          echo ""
+          echo "RESULT: $PASS_N passed, $FAIL_N failed, $WARN_N warnings"
+          [ "$FAIL_N" -gt 0 ] && exit 1
+          echo "All .app DNS entries correct"
