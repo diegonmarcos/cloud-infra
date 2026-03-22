@@ -11,7 +11,7 @@ on:
     types: [completed]
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * *"  # daily at 06:00 UTC
+    - cron: "0 6 * * *"
 
 concurrency:
   group: health-http-public
@@ -26,113 +26,105 @@ jobs:
         with:
           submodules: true
 
-      - name: Check all public URLs
+      - name: Build URL list from Caddy routes
+        id: urls
+        run: |
+          R="a_solutions/bb-sec_caddy/src/cloud-data-caddy-routes.json"
+          [ ! -f "$R" ] && echo "::error::$R not found" && exit 1
+          URLS="/tmp/urls.txt"
+          > "$URLS"
+
+          # Subdomain routes
+          jq -r '.routes[] | "https://\(.domain)/|\(.auth // "two_factor")|\(.comment // .domain)"' "$R" >> "$URLS"
+          # Path routes
+          jq -r '.path_routes[]? | .parent_domain as $p | .paths[]? | "https://\($p)\(.base_path)/|\(.auth // "two_factor")|\(.comment // .base_path)"' "$R" >> "$URLS"
+          # GitHub Pages
+          jq -r '.github_pages_proxies[]? | "https://\(.domain | split(",") | .[0] | gsub("^ +| +$";""))/|none|\(.comment // .domain)"' "$R" >> "$URLS"
+          # MCP (expect 400 = alive)
+          jq -r '.mcp_routes[]? | .parent_domain as $p | .endpoints[]? | "https://\($p)\(.base_path)/mcp|mcp|\(.comment // .base_path)"' "$R" >> "$URLS"
+          # Special
+          jq -r '.special | to_entries[]? | select(.value.domain) | "https://\(.value.domain)/|two_factor|\(.key)"' "$R" >> "$URLS"
+
+          echo "total=$(wc -l < "$URLS")" >> "$GITHUB_OUTPUT"
+          echo "Generated $(wc -l < "$URLS") URLs to check"
+
+      - name: Check all URLs (async)
         env:
           OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
         run: |
-          set +e
-          ROUTES_FILE="a_solutions/bb-sec_caddy/src/cloud-data-caddy-routes.json"
+          URLS="/tmp/urls.txt"
+          RESULTS="/tmp/results"
+          mkdir -p "$RESULTS"
 
-          if [ ! -f "$ROUTES_FILE" ]; then
-            echo "::error::$ROUTES_FILE not found"
-            exit 1
-          fi
+          check() {
+            local idx="$1" url="$2" auth="$3" name="$4"
+            local hdr=""
+            [ "$auth" != "none" ] && [ "$auth" != "public" ] && [ "$auth" != "mcp" ] && [ -n "$OIDC_TOKEN" ] && hdr="-H 'Authorization: Bearer $OIDC_TOKEN'"
+            local code
+            code=$(eval curl -sk -o /dev/null -w '%{http_code}' --max-time 10 -L $hdr "'$url'" 2>/dev/null)
 
-          PASS=0
-          FAIL=0
-          WARN=0
-
-          check_url() {
-            local url="$1"
-            local name="$2"
-            local auth="$3"
-            local expected="${4:-200}"
-
-            HEADERS=""
-            if [ "$auth" != "none" ] && [ "$auth" != "public" ] && [ -n "$OIDC_TOKEN" ]; then
-              HEADERS="-H \"Authorization: Bearer $OIDC_TOKEN\""
-            fi
-
-            CODE=$(eval curl -sk -o /dev/null -w '%{http_code}' --max-time 10 -L $HEADERS "\"$url\"" 2>/dev/null)
-
-            if [ "$CODE" = "000" ]; then
-              echo "::error::$name — $url — TIMEOUT (no response)"
-              FAIL=$((FAIL + 1))
-              return 1
-            elif [ "$CODE" = "502" ] || [ "$CODE" = "503" ]; then
-              echo "::error::$name — $url — HTTP $CODE (upstream down)"
-              FAIL=$((FAIL + 1))
-              return 1
-            elif [ "$CODE" = "401" ] || [ "$CODE" = "403" ]; then
-              echo "::warning::$name — $url — HTTP $CODE (auth issue)"
-              WARN=$((WARN + 1))
-              return 0
+            if [ "$auth" = "mcp" ]; then
+              # MCP: 400/405 = alive
+              if [ "$code" = "400" ] || [ "$code" = "405" ]; then
+                echo "PASS|$name|$url|$code" > "$RESULTS/$idx"
+              else
+                echo "FAIL|$name|$url|$code" > "$RESULTS/$idx"
+              fi
+            elif [ "$code" = "000" ]; then
+              echo "FAIL|$name|$url|TIMEOUT" > "$RESULTS/$idx"
+            elif [ "$code" = "502" ] || [ "$code" = "503" ]; then
+              echo "FAIL|$name|$url|$code" > "$RESULTS/$idx"
+            elif [ "$code" = "401" ] || [ "$code" = "403" ]; then
+              echo "WARN|$name|$url|$code" > "$RESULTS/$idx"
             else
-              echo "✓ $name — $url — HTTP $CODE"
-              PASS=$((PASS + 1))
-              return 0
+              echo "PASS|$name|$url|$code" > "$RESULTS/$idx"
             fi
           }
 
-          echo "=== Subdomain Routes ==="
-          jq -r '.routes[] | "\(.domain)|\(.auth // "two_factor")|\(.comment // .domain)"' "$ROUTES_FILE" | while IFS='|' read -r domain auth comment; do
-            check_url "https://$domain/" "$comment" "$auth"
-          done
+          # Launch ALL checks in parallel
+          IDX=0
+          while IFS='|' read -r url auth name; do
+            check "$IDX" "$url" "$auth" "$name" &
+            IDX=$((IDX + 1))
+          done < "$URLS"
 
-          echo ""
-          echo "=== Path Routes ==="
-          jq -r '.path_routes[]? | .parent_domain as $pd | .paths[]? | "\($pd)\(.base_path)/|\(.auth // "two_factor")|\(.comment // .base_path)"' "$ROUTES_FILE" | while IFS='|' read -r url auth comment; do
-            check_url "https://$url" "$comment" "$auth"
-          done
+          # Wait for all
+          wait
 
-          echo ""
-          echo "=== GitHub Pages Proxies ==="
-          jq -r '.github_pages_proxies[]? | "\(.domain | split(",") | .[0] | gsub("^ +| +$";""))|\(.comment // .domain)"' "$ROUTES_FILE" | while IFS='|' read -r domain comment; do
-            check_url "https://$domain/" "$comment" "none"
+          # Also check L4 TCP ports in parallel
+          jq -r '.l4_routes[]? | "\(.port)|\(.comment // "port")"' "a_solutions/bb-sec_caddy/src/cloud-data-caddy-routes.json" | while IFS='|' read -r port comment; do
+            (
+              if timeout 3 bash -c "echo > /dev/tcp/mail.diegonmarcos.com/$port" 2>/dev/null; then
+                echo "PASS|L4 :$port $comment|tcp://$port|OK" > "$RESULTS/l4_$port"
+              else
+                echo "FAIL|L4 :$port $comment|tcp://$port|CLOSED" > "$RESULTS/l4_$port"
+              fi
+            ) &
           done
+          wait
 
-          echo ""
-          echo "=== MCP Endpoints ==="
-          jq -r '.mcp_routes[]? | .parent_domain as $pd | .endpoints[]? | "\($pd)\(.base_path)/mcp|\(.comment // .base_path)"' "$ROUTES_FILE" | while IFS='|' read -r url comment; do
-            # MCP endpoints return 400 on GET (need POST with JSON-RPC) — 400 = alive
-            CODE=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 10 "https://$url" 2>/dev/null)
-            if [ "$CODE" = "400" ] || [ "$CODE" = "405" ]; then
-              echo "✓ MCP $comment — https://$url — HTTP $CODE (alive)"
-              PASS=$((PASS + 1))
-            elif [ "$CODE" = "000" ]; then
-              echo "::error::MCP $comment — https://$url — TIMEOUT"
-              FAIL=$((FAIL + 1))
-            else
-              echo "::warning::MCP $comment — https://$url — HTTP $CODE"
-              WARN=$((WARN + 1))
-            fi
-          done
-
-          echo ""
-          echo "=== L4 TCP Ports ==="
-          jq -r '.l4_routes[]? | "\(.port)|\(.comment // "port")"' "$ROUTES_FILE" | while IFS='|' read -r port comment; do
-            if timeout 3 bash -c "echo > /dev/tcp/mail.diegonmarcos.com/$port" 2>/dev/null; then
-              echo "✓ L4 :$port — $comment"
-              PASS=$((PASS + 1))
-            else
-              echo "::error::L4 :$port — $comment — CLOSED"
-              FAIL=$((FAIL + 1))
-            fi
-          done
-
-          echo ""
-          echo "=== Special Routes ==="
-          jq -r '.special | to_entries[]? | "\(.value.domain)|\(.key)"' "$ROUTES_FILE" | while IFS='|' read -r domain name; do
-            [ -z "$domain" ] && continue
-            check_url "https://$domain/" "$name" "two_factor"
-          done
-
+          # Collect results
           echo ""
           echo "════════════════════════════════════════"
-          echo "RESULT: $PASS passed, $FAIL failed, $WARN warnings"
+          PASS_N=0; FAIL_N=0; WARN_N=0
+          for f in "$RESULTS"/*; do
+            [ -f "$f" ] || continue
+            LINE=$(cat "$f")
+            STATUS=$(echo "$LINE" | awk -F'|' '{print $1}')
+            NAME=$(echo "$LINE" | awk -F'|' '{print $2}')
+            URL=$(echo "$LINE" | awk -F'|' '{print $3}')
+            CODE=$(echo "$LINE" | awk -F'|' '{print $4}')
+            case "$STATUS" in
+              PASS) echo "✓ $NAME — $URL — $CODE"; PASS_N=$((PASS_N + 1)) ;;
+              FAIL) echo "::error::$NAME — $URL — $CODE"; FAIL_N=$((FAIL_N + 1)) ;;
+              WARN) echo "::warning::$NAME — $URL — $CODE"; WARN_N=$((WARN_N + 1)) ;;
+            esac
+          done
 
-          if [ "$FAIL" -gt 0 ]; then
-            echo "::error::$FAIL URL(s) failed"
+          echo ""
+          echo "RESULT: $PASS_N passed, $FAIL_N failed, $WARN_N warnings"
+          if [ "$FAIL_N" -gt 0 ]; then
+            echo "::error::$FAIL_N URL(s) failed"
             exit 1
           fi
           echo "All public URLs healthy"
