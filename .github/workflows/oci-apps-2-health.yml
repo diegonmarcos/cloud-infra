@@ -45,7 +45,7 @@ jobs:
 
           echo ""
           echo "=== Port checks ==="
-          for port in 3013 8085 8443 3010; do
+          for port in 11434; do
             if ssh oci-apps-2 "timeout 2 bash -c 'echo > /dev/tcp/127.0.0.1/$port' 2>/dev/null"; then
               echo "✓ :$port open"
             else
