@@ -1,17 +1,9 @@
-name: "Deploy → gcp-proxy"
+name: "Deploy → gcp-proxy (LEGACY — use deploy.yml)"
 
+# SUPERSEDED by deploy.yml (manifest-driven deploy)
+# Push triggers removed to avoid double deploys.
+# Keep workflow_dispatch as manual fallback.
 on:
-  push:
-    paths:
-      - "a_solutions/bb-sec_caddy-l4-image/src/**"
-      - "a_solutions/bb-sec_caddy/src/**"
-      - "a_solutions/bb-sec_authelia/src/**"
-      - "a_solutions/ab-mic_vaultwarden/src/**"
-      - "a_solutions/ba-clo_hickory-dns/src/**"
-      - "a_solutions/bc-obs_ntfy/src/**"
-      - "a_solutions/ca-dat_redis/src/**"
-      - ".github/workflows/gcp-proxy-deploy.yml"
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:

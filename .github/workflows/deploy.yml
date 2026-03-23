@@ -1,0 +1,396 @@
+name: "Deploy → services"
+
+on:
+  push:
+    paths:
+      - "a_solutions/*/src/**"
+      - "!a_solutions/z_archive/**"
+      - "!a_solutions/ba-clo_cloudflare-worker/**"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Service dir name (e.g. bb-sec_caddy) — leave empty for all"
+        required: false
+        type: string
+      host:
+        description: "Target VM (e.g. oci-apps) — leave empty for auto-detect from build.json"
+        required: false
+        type: string
+      wipe_data:
+        description: "Wipe KG Graph data (fresh start, re-seeds)"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-${{ github.event.inputs.host || 'auto' }}
+  cancel-in-progress: false
+
+jobs:
+  # ── Step 1: Discover changed services, group by deploy host ──
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_services: ${{ steps.build-matrix.outputs.has_services }}
+      ghcr_services: ${{ steps.build-matrix.outputs.ghcr_services }}
+      has_ghcr: ${{ steps.build-matrix.outputs.has_ghcr }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Discover services to deploy
+        id: build-matrix
+        run: |
+          set -euo pipefail
+
+          # ── Collect changed service dirs ──
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            svc_input="${{ inputs.service }}"
+            host_input="${{ inputs.host }}"
+            if [ -n "$svc_input" ]; then
+              # Specific service requested
+              changed_dirs="$svc_input"
+            else
+              # All services (optionally filtered by host)
+              changed_dirs=""
+              for d in a_solutions/*/build.json; do
+                dir=$(dirname "$d")
+                dir=$(basename "$dir")
+                # Skip archive
+                [[ "$dir" == z_archive* ]] && continue
+                if [ -n "$host_input" ]; then
+                  h=$(python3 -c "import json; print(json.load(open('a_solutions/$dir/build.json')).get('deploy',{}).get('host',''))" 2>/dev/null || echo "")
+                  [ "$h" != "$host_input" ] && continue
+                fi
+                changed_dirs="$changed_dirs $dir"
+              done
+            fi
+          else
+            # Push event: detect changed service dirs from git diff
+            changed_dirs=$(
+              git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' 2>/dev/null \
+              | awk -F/ '{print $2}' \
+              | sort -u \
+              | grep -v '^z_archive' \
+              | tr '\n' ' '
+            ) || true
+          fi
+
+          echo "Changed service dirs: $changed_dirs"
+
+          # ── Read build.json for each changed dir, group by host ──
+          # Output: JSON matrix with { host, services: [{dir, name, has_docker}] }
+          # Also: separate list of GHCR-only services (no deploy.host)
+
+          declare -A host_services
+          ghcr_list="[]"
+
+          for dir in $changed_dirs; do
+            bjson="a_solutions/$dir/build.json"
+            [ -f "$bjson" ] || continue
+
+            name=$(python3 -c "import json; print(json.load(open('$bjson')).get('name',''))" 2>/dev/null || echo "")
+            host=$(python3 -c "import json; print(json.load(open('$bjson')).get('deploy',{}).get('host',''))" 2>/dev/null || echo "")
+            has_docker=$(python3 -c "import json; d=json.load(open('$bjson')); print('true' if 'docker' in d else 'false')" 2>/dev/null || echo "false")
+
+            echo "  Service: $dir → host=$host, name=$name, docker=$has_docker"
+
+            # Skip services with no host, local, or wrangler deploys
+            if [ -z "$host" ] || [ "$host" = "local" ]; then
+              # Check if it's a GHCR image-only service
+              if [ "$has_docker" = "true" ]; then
+                ghcr_list=$(echo "$ghcr_list" | python3 -c "
+import json, sys
+lst = json.load(sys.stdin)
+lst.append({'dir': '$dir', 'name': '$name'})
+print(json.dumps(lst))
+")
+              fi
+              continue
+            fi
+
+            # Skip "all" host (sauron-lite, db-agent) — these need special handling
+            if [ "$host" = "all" ]; then
+              echo "  Skipping host=all for $dir (not supported in matrix deploy)"
+              continue
+            fi
+
+            # Skip wrangler deploys
+            wrangler=$(python3 -c "import json; print(json.load(open('$bjson')).get('deploy',{}).get('wrangler',''))" 2>/dev/null || echo "")
+            if [ "$wrangler" = "true" ]; then
+              continue
+            fi
+
+            # Accumulate per-host
+            existing="${host_services[$host]:-[]}"
+            host_services[$host]=$(echo "$existing" | python3 -c "
+import json, sys
+lst = json.load(sys.stdin)
+lst.append({'dir': '$dir', 'name': '$name', 'has_docker': $( [ "$has_docker" = "true" ] && echo "True" || echo "False" )})
+print(json.dumps(lst))
+")
+          done
+
+          # ── Build matrix JSON ──
+          matrix_includes="[]"
+          for host in "${!host_services[@]}"; do
+            services="${host_services[$host]}"
+            matrix_includes=$(echo "$matrix_includes" | python3 -c "
+import json, sys
+lst = json.load(sys.stdin)
+lst.append({'host': '$host', 'services': $services})
+print(json.dumps(lst))
+")
+          done
+
+          matrix="{\"include\": $matrix_includes}"
+          echo "Matrix: $matrix"
+          echo "GHCR: $ghcr_list"
+
+          has_services="false"
+          if [ "$(echo "$matrix_includes" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')" -gt 0 ]; then
+            has_services="true"
+          fi
+
+          has_ghcr="false"
+          if [ "$(echo "$ghcr_list" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')" -gt 0 ]; then
+            has_ghcr="true"
+          fi
+
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "has_services=$has_services" >> "$GITHUB_OUTPUT"
+          echo "ghcr_services=$ghcr_list" >> "$GITHUB_OUTPUT"
+          echo "has_ghcr=$has_ghcr" >> "$GITHUB_OUTPUT"
+
+  # ── Step 2: Build & push GHCR images (image-only services like caddy-l4-image) ──
+  ghcr:
+    needs: discover
+    if: needs.discover.outputs.has_ghcr == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.discover.outputs.ghcr_services) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/setup-deps
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push ${{ matrix.service.name }}
+        run: bash a_solutions/${{ matrix.service.dir }}/build.sh docker
+
+      - name: Make GHCR package public
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract image name from build.json
+          image=$(python3 -c "import json; d=json.load(open('a_solutions/${{ matrix.service.dir }}/build.json')); print(d.get('docker',{}).get('image',''))" 2>/dev/null || echo "")
+          if [ -n "$image" ]; then
+            # Image format: "diegonmarcos/caddy-l4" → package name is "caddy-l4"
+            pkg_name=$(echo "$image" | awk -F/ '{print $NF}')
+            gh api --method PUT "/user/packages/container/$pkg_name/visibility" -f visibility=public 2>/dev/null || echo "Package visibility already set or API unavailable"
+          fi
+
+  # ── Step 3: Ship services per VM ──
+  ship:
+    needs: discover
+    if: needs.discover.outputs.has_services == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    concurrency:
+      group: ship-${{ matrix.host }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      # ── Setup nix + SOPS (without SSH — SSH configured in next step) ──
+      - uses: ./.github/actions/setup-deps
+        with:
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+
+      # ── Setup SSH per host ──
+      # GitHub Actions can't do secrets[dynamic_key], so we resolve per host
+      # using env vars and write SSH config directly.
+      - name: Setup SSH
+        env:
+          KEY_GCP_PROXY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+          KEY_GCP_T4: ${{ secrets.GCP_T4_SSH_KEY }}
+          KEY_OCI: ${{ secrets.OCI_SSH_KEY }}
+          HOST_GCP_PROXY: ${{ secrets.GCP_PROXY_HOST }}
+          HOST_GCP_T4: ${{ secrets.GCP_T4_HOST }}
+          USER_GCP_PROXY: ${{ secrets.GCP_PROXY_USER }}
+          USER_GCP_T4: ${{ secrets.GCP_T4_USER }}
+        run: |
+          host="${{ matrix.host }}"
+          case "$host" in
+            gcp-proxy)  key="$KEY_GCP_PROXY"; ssh_host="$HOST_GCP_PROXY"; ssh_user="$USER_GCP_PROXY" ;;
+            gcp-t4)     key="$KEY_GCP_T4";    ssh_host="$HOST_GCP_T4";    ssh_user="$USER_GCP_T4" ;;
+            oci-apps)   key="$KEY_OCI"; ssh_host="82.70.229.129";  ssh_user="ubuntu" ;;
+            oci-apps-2) key="$KEY_OCI"; ssh_host="79.72.28.10";    ssh_user="ubuntu" ;;
+            oci-mail)   key="$KEY_OCI"; ssh_host="130.110.251.193"; ssh_user="ubuntu" ;;
+            oci-analytics) key="$KEY_OCI"; ssh_host="129.151.228.66"; ssh_user="ubuntu" ;;
+            *) echo "::error::Unknown host: $host"; exit 1 ;;
+          esac
+
+          mkdir -p ~/.ssh/sockets
+          chmod 700 ~/.ssh
+          echo "$key" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<SSHEOF
+          Host $host
+            HostName $ssh_host
+            User $ssh_user
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+            ControlMaster auto
+            ControlPath ~/.ssh/sockets/%r@%h-%p
+            ControlPersist 600
+          SSHEOF
+          chmod 600 ~/.ssh/config
+
+      # ── Docker Buildx + GHCR login (for hosts that build images, e.g. caddy on gcp-proxy) ──
+      - name: Check if any service needs Docker build
+        id: needs-docker
+        run: |
+          needs_docker="false"
+          echo '${{ toJSON(matrix.services) }}' | python3 -c "
+          import json, sys
+          services = json.load(sys.stdin)
+          for s in services:
+              if s.get('has_docker'):
+                  print('true')
+                  sys.exit(0)
+          print('false')
+          " > /tmp/needs_docker.txt
+          echo "value=$(cat /tmp/needs_docker.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Docker Buildx
+        if: steps.needs-docker.outputs.value == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: steps.needs-docker.outputs.value == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Ship each changed service ──
+      - name: Ship services
+        run: |
+          set -euo pipefail
+          services='${{ toJSON(matrix.services) }}'
+          count=$(echo "$services" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+
+          echo "=== Shipping $count service(s) to ${{ matrix.host }} ==="
+
+          for i in $(seq 0 $((count - 1))); do
+            dir=$(echo "$services" | python3 -c "import json,sys; print(json.load(sys.stdin)[$i]['dir'])")
+            name=$(echo "$services" | python3 -c "import json,sys; print(json.load(sys.stdin)[$i]['name'])")
+            has_docker=$(echo "$services" | python3 -c "import json,sys; print(json.load(sys.stdin)[$i].get('has_docker', False))")
+
+            echo ""
+            echo "── Ship: $name ($dir) ──"
+
+            # Set REMOTE_BUILD for services with Docker images deploying to remote
+            if [ "$has_docker" = "True" ]; then
+              export REMOTE_BUILD="true"
+              echo "  (REMOTE_BUILD=true)"
+            else
+              unset REMOTE_BUILD 2>/dev/null || true
+            fi
+
+            bash "a_solutions/$dir/build.sh" ship
+          done
+
+      # ── Post-deploy: KG Graph special steps ──
+      - name: Check if kg-graph was deployed
+        id: kg-check
+        run: |
+          deployed="false"
+          echo '${{ toJSON(matrix.services) }}' | python3 -c "
+          import json, sys
+          for s in json.load(sys.stdin):
+              if s['dir'] == 'ca-dat_kg-graph':
+                  print('true')
+                  sys.exit(0)
+          print('false')
+          " > /tmp/kg_check.txt
+          echo "deployed=$(cat /tmp/kg_check.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Copy KG seed resources
+        if: steps.kg-check.outputs.deployed == 'true'
+        run: |
+          rsync -avz a_solutions/ca-dat_kg-graph/scripts/ ${{ matrix.host }}:/opt/containers/kg-graph/scripts/
+          rsync -avz cloud-topology.json ${{ matrix.host }}:/opt/containers/kg-graph/cloud-topology.json
+
+      - name: Wipe KG Graph data (fresh start)
+        if: steps.kg-check.outputs.deployed == 'true' && github.event.inputs.wipe_data == 'true'
+        run: |
+          ssh ${{ matrix.host }} "cd /opt/containers/kg-graph && docker compose down 2>/dev/null; sudo rm -rf /opt/data/surrealdb && sudo mkdir -p /opt/data/surrealdb && sudo chown 65532:65532 /opt/data/surrealdb"
+          ssh ${{ matrix.host }} "cd /opt/containers/kg-graph && docker compose --env-file .secrets up -d"
+          echo "Waiting for SurrealDB to start..."
+          sleep 10
+
+      - name: Seed KG Graph
+        if: steps.kg-check.outputs.deployed == 'true' && github.event.inputs.wipe_data == 'true'
+        run: ssh ${{ matrix.host }} "chmod +x /opt/containers/kg-graph/scripts/seed_from_config.sh && cd /opt/containers/kg-graph && bash scripts/seed_from_config.sh http://localhost:8001 /opt/containers/kg-graph/cloud-topology.json"
+
+      - name: Verify KG Graph
+        if: steps.kg-check.outputs.deployed == 'true'
+        run: ssh ${{ matrix.host }} "curl -sf http://localhost:8001/health && echo ' <- SurrealDB health OK' || echo 'SurrealDB health FAILED'"
+
+      # ── Health checks ──
+      - name: Health check deployed services
+        if: always()
+        run: |
+          echo "=== Post-deploy health checks (${{ matrix.host }}) ==="
+          services='${{ toJSON(matrix.services) }}'
+          count=$(echo "$services" | python3 -c "import json,sys; print(len(json.load(sys.stdin)))")
+          failed=0
+
+          for i in $(seq 0 $((count - 1))); do
+            dir=$(echo "$services" | python3 -c "import json,sys; print(json.load(sys.stdin)[$i]['dir'])")
+            name=$(echo "$services" | python3 -c "import json,sys; print(json.load(sys.stdin)[$i]['name'])")
+            echo "--- Health: $name ---"
+            if bash "a_solutions/$dir/build.sh" health 2>/dev/null; then
+              echo "  OK: $name healthy"
+            else
+              echo "  WARN: $name health check failed or not configured"
+              failed=$((failed + 1))
+            fi
+          done
+
+          if [ "$failed" -gt 0 ]; then
+            echo "::warning::$failed service(s) failed health checks on ${{ matrix.host }}"
+          else
+            echo "All services healthy on ${{ matrix.host }}"
+          fi
