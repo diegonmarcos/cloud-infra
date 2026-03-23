@@ -261,18 +261,7 @@ print(json.dumps(lst))
           chmod 700 ~/.ssh
           echo "$key" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          cat > ~/.ssh/config <<SSHEOF
-          Host $host
-            HostName $ssh_host
-            User $ssh_user
-            IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking no
-            ServerAliveInterval 30
-            ServerAliveCountMax 10
-            ControlMaster auto
-            ControlPath ~/.ssh/sockets/%r@%h-%p
-            ControlPersist 600
-          SSHEOF
+          printf "Host %s\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n  StrictHostKeyChecking no\n  ServerAliveInterval 30\n  ServerAliveCountMax 10\n  ControlMaster auto\n  ControlPath ~/.ssh/sockets/%%r@%%h-%%p\n  ControlPersist 600\n" "$host" "$ssh_host" "$ssh_user" > ~/.ssh/config
           chmod 600 ~/.ssh/config
 
       # ── Docker Buildx + GHCR login (for hosts that build images, e.g. caddy on gcp-proxy) ──
