@@ -15,10 +15,12 @@ CONFIG_FILE="$SCRIPT_DIR/cloud-data-topology.json"
 # Shared node_modules — ESM (tsx) does not respect NODE_PATH, but CJS fallback does.
 # Set here so all tsx calls in this script find packages from the shared install.
 export NODE_PATH="${NODE_PATH:-$HOME/.node_modules/node_modules}"
+export BUILDSH_GUARDRAIL=1
 # Fallback to old name during migration
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
 ENGINE_FOLDER=$(jq -r ".engine_folder" "$SCRIPT_DIR/config.json" 2>/dev/null)
 ENGINE_DIR="$SOLUTIONS_DIR/$ENGINE_FOLDER/src"
+export PATH="$ENGINE_DIR/node_modules/.bin:$PATH"
 
 # =============================================================================
 # Dependency Engine — reads from config.json .deps section
