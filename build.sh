@@ -714,6 +714,12 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
     find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
     cp "$WF_DIST"/*.yml "$GH_DIR/"
 
+    # ── Symlink scripts/ → .github/scripts ──
+    if [ -d "$WF_SRC/scripts" ] && [ ! -L "$SCRIPT_DIR/.github/scripts" ]; then
+        rm -rf "$SCRIPT_DIR/.github/scripts"
+        ln -s "../../workflows/src/scripts" "$SCRIPT_DIR/.github/scripts"
+    fi
+
     log "Generated $generated workflow(s) → workflows/dist/"
     log "Copied to .github/workflows/"
 }
