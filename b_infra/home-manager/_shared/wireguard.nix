@@ -52,11 +52,18 @@ let
       publicKey = "PN6ddzDiUyvPPec1Op9FQleM+BXadKd2rzhR5aTA6yg=";
       role      = "spoke";
     };
-    mobile = {
+    surface = {
       address   = "10.0.0.5";
       endpoint  = null;
       port      = null;
-      publicKey = "9nL3UbbPUVeU1LeMOjFn1e7u5UQnQGClQY5YsKxmpwo=";
+      publicKey = "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY=";
+      role      = "client";
+    };
+    termux = {
+      address   = "10.0.0.9";
+      endpoint  = null;
+      port      = null;
+      publicKey = "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA=";
       role      = "client";
     };
   };
