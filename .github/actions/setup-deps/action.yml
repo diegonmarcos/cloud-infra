@@ -44,14 +44,12 @@ runs:
         purge-primary-key: never
         purge-prefixes: nix-${{ runner.os }}-
 
-    - name: GC stale source derivations from cached store
+    - name: GC unreferenced nix store paths
       shell: bash
       run: |
-        # Remove source derivations cached from previous builds — they're stale
-        # (rebuilt from fresh checkout on every run anyway). Keeps tool binaries intact.
-        for p in /nix/store/*-source; do
-          [ -d "$p" ] && nix-store --delete "$p" 2>/dev/null || true
-        done
+        # After cache restore, GC removes all unreferenced store paths.
+        # This cleans stale source copies and build outputs from previous runs.
+        # Nix determines what's referenced — no pattern guessing needed.
         nix-store --gc 2>/dev/null || true
 
     - name: Build GHA deps flake environment
