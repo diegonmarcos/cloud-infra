@@ -321,7 +321,7 @@ Engine source: `a_solutions/bc-obs_c3-infra-mcp-api/src/engines/`
 |--------|------|-------|---------|
 | `cloud-infra` | HTTP (remote) | 115+ | Infrastructure management (SSH, Docker, health, build, deploy) |
 | `cloud-services` | HTTP (remote) | 20+ | Service API proxy (Matomo, Syncthing, Radicale, etc.) |
-| `cloud-specs-docs` | stdio (local) | 16 | Knowledge retrieval (skills, specs, data, docs) |
+| `code-graph-context` | stdio (local) | 23 | Knowledge graph + infra (specs, docs, skills, Octocode, CodeGraph-Rust) |
 
 ### B.12 Matomo Hybrid Architecture
 
