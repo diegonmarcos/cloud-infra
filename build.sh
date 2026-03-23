@@ -505,6 +505,205 @@ cmd_config() {
     tsx "$ENGINE_DIR/engines/gen-deps.ts"
 }
 
+# Generate GHA deploy workflows from build.json + templates
+cmd_workflow() {
+    log "Generating GHA workflows from build.json + templates..."
+
+    WF_SRC="$SCRIPT_DIR/workflows/src"
+    WF_DIST="$SCRIPT_DIR/workflows/dist"
+    GH_DIR="$SCRIPT_DIR/.github/workflows"
+    mkdir -p "$WF_DIST"
+
+    # Verify templates exist
+    for tpl in deploy-vm.yml.tpl deploy-ghcr.yml.tpl; do
+        [ -f "$WF_SRC/$tpl" ] || { log_error "Missing template: workflows/src/$tpl"; exit 1; }
+    done
+
+    # ── SSH secret mapping per VM ──
+    # Format: vm_alias|secret_key|secret_host|secret_user
+    ssh_map="gcp-proxy|GCP_PROXY_SSH_KEY|GCP_PROXY_HOST|GCP_PROXY_USER
+gcp-t4|GCP_T4_SSH_KEY|GCP_T4_HOST|GCP_T4_USER
+oci-apps|OCI_SSH_KEY|82.70.229.129|ubuntu
+oci-apps-2|OCI_SSH_KEY|79.72.28.10|ubuntu
+oci-mail|OCI_SSH_KEY|130.110.251.193|ubuntu
+oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
+
+    # ── Scan build.json, group services by deploy.host ──
+    vm_list=""
+    ghcr_dirs=""
+    rm -f /tmp/wf_vm_*.txt
+
+    for bjson in "$SOLUTIONS_DIR"/*/build.json; do
+        dir=$(basename "$(dirname "$bjson")")
+        case "$dir" in z_archive*) continue ;; esac
+
+        host=$(jq -r '.deploy.host // ""' "$bjson")
+        has_docker=$(jq -r 'if .docker then "true" else "false" end' "$bjson")
+        name=$(jq -r '.name // ""' "$bjson")
+        wrangler=$(jq -r '.deploy.wrangler // ""' "$bjson")
+
+        [ "$wrangler" = "true" ] && continue
+        case "$host" in ""|local|all|null)
+            [ "$has_docker" = "true" ] && ghcr_dirs="$ghcr_dirs $dir"
+            continue ;;
+        esac
+
+        case " $vm_list " in *" $host "*) ;; *) vm_list="$vm_list $host" ;; esac
+        echo "$dir|$name|$has_docker" >> "/tmp/wf_vm_${host}.txt"
+    done
+
+    # Clean old dist
+    rm -f "$WF_DIST"/*.yml
+    generated=0
+
+    # ── Per-VM deploy workflows from template ──
+    for vm in $vm_list; do
+        svc_file="/tmp/wf_vm_${vm}.txt"
+        [ -f "$svc_file" ] || continue
+
+        # Lookup SSH config
+        ssh_key=""; ssh_host=""; ssh_user=""
+        echo "$ssh_map" | while IFS='|' read -r alias key host user; do
+            [ "$alias" = "$vm" ] && echo "$key|$host|$user"
+        done | read -r ssh_key ssh_host ssh_user 2>/dev/null || true
+        # Fallback: grep approach for subshell safety
+        if [ -z "$ssh_key" ]; then
+            line=$(echo "$ssh_map" | grep "^${vm}|")
+            ssh_key=$(echo "$line" | awk -F'|' '{print $2}')
+            ssh_host=$(echo "$line" | awk -F'|' '{print $3}')
+            ssh_user=$(echo "$line" | awk -F'|' '{print $4}')
+        fi
+        [ -z "$ssh_key" ] && { log_error "No SSH config for VM: $vm"; continue; }
+
+        # Build data fragments
+        path_filters=""
+        ship_steps=""
+        needs_docker=false
+
+        while IFS='|' read -r dir name has_docker; do
+            path_filters="${path_filters}      - \"a_solutions/${dir}/src/**\"
+"
+            if [ "$has_docker" = "true" ]; then
+                needs_docker=true
+                ship_steps="${ship_steps}
+      - name: Ship ${name}
+        if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
+        env:
+          REMOTE_BUILD: \"true\"
+        run: bash a_solutions/${dir}/build.sh ship
+"
+            else
+                ship_steps="${ship_steps}
+      - name: Ship ${name}
+        if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/${dir}/build.sh ship
+"
+            fi
+        done < "$svc_file"
+
+        # SSH config block
+        if echo "$ssh_host" | grep -qE '^[0-9]'; then
+            ssh_config="          ssh_key: \${{ secrets.${ssh_key} }}
+          ssh_host: ${ssh_host}
+          ssh_user: ${ssh_user}
+          ssh_alias: ${vm}
+"
+        else
+            ssh_config="          ssh_key: \${{ secrets.${ssh_key} }}
+          ssh_host: \${{ secrets.${ssh_host} }}
+          ssh_user: \${{ secrets.${ssh_user} }}
+          ssh_alias: ${vm}
+"
+        fi
+
+        # Docker steps (only if needed)
+        docker_steps=""
+        if [ "$needs_docker" = "true" ]; then
+            docker_steps="
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}
+"
+        fi
+
+        # Apply template
+        awk -v vm="$vm" \
+            -v paths="$path_filters" \
+            -v ssh="$ssh_config" \
+            -v docker="$docker_steps" \
+            -v ships="$ship_steps" \
+            '{
+                gsub("{{VM_NAME}}", vm)
+                gsub("{{PATH_FILTERS}}", paths)
+                gsub("{{SSH_CONFIG}}", ssh)
+                gsub("{{DOCKER_STEPS}}", docker)
+                gsub("{{SHIP_STEPS}}", ships)
+                print
+            }' "$WF_SRC/deploy-vm.yml.tpl" > "$WF_DIST/deploy-${vm}.yml"
+
+        generated=$((generated + 1))
+        log "  deploy-${vm}.yml ($(wc -l < "$svc_file") services)"
+        rm -f "$svc_file"
+    done
+
+    # ── GHCR image build workflow from template ──
+    if [ -n "$ghcr_dirs" ]; then
+        ghcr_paths=""
+        ghcr_steps=""
+        for dir in $ghcr_dirs; do
+            name=$(jq -r '.name // ""' "$SOLUTIONS_DIR/$dir/build.json")
+            image=$(jq -r '.docker.image // ""' "$SOLUTIONS_DIR/$dir/build.json")
+            pkg_name=$(echo "$image" | awk -F/ '{print $NF}')
+            ghcr_paths="${ghcr_paths}      - \"a_solutions/${dir}/src/**\"
+"
+            ghcr_steps="${ghcr_steps}
+      - name: Build ${name}
+        run: bash a_solutions/${dir}/build.sh docker
+
+      - name: Make ${name} public
+        if: always()
+        env:
+          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method PUT /user/packages/container/${pkg_name}/visibility -f visibility=public 2>/dev/null || true
+"
+        done
+
+        awk -v paths="$ghcr_paths" -v steps="$ghcr_steps" \
+            '{
+                gsub("{{PATH_FILTERS}}", paths)
+                gsub("{{BUILD_STEPS}}", steps)
+                print
+            }' "$WF_SRC/deploy-ghcr.yml.tpl" > "$WF_DIST/deploy-ghcr.yml"
+
+        generated=$((generated + 1))
+        log "  deploy-ghcr.yml ($(echo $ghcr_dirs | wc -w) images)"
+    fi
+
+    # ── Copy static workflows into dist/ ──
+    for f in "$WF_SRC"/static/*.yml; do
+        [ -f "$f" ] || continue
+        cp "$f" "$WF_DIST/"
+    done
+
+    # ── Symlink ALL from dist/ into .github/workflows/ ──
+    # Remove old symlinks first
+    for f in "$GH_DIR"/*.yml; do
+        [ -L "$f" ] && rm -f "$f"
+    done
+    for f in "$WF_DIST"/*.yml; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        ln -s "../../workflows/dist/$base" "$GH_DIR/$base"
+    done
+
+    log "Generated $generated workflow(s) → workflows/dist/"
+    log "Symlinked to .github/workflows/"
+}
+
 # Clean all dist/ folders
 cmd_clean() {
     log "Cleaning all dist/ folders..."
@@ -543,6 +742,8 @@ PIPELINE:
 CONFIG:
     config                Regenerate cloud-topology + cloud-configs from sources
                           (parses SSH config, build.json, Caddyfile, Authelia, DNS, etc.)
+    workflow              Generate GHA workflows from build.json + templates
+                          (workflows/src/*.tpl → workflows/dist/ → .github/workflows/)
 
 OPS:
     ssh <alias>           SSH into a VM (e.g. oci-apps, gcp-proxy)
@@ -604,6 +805,7 @@ case "$command" in
     restart)  cmd_restart "$@" ;;
     secrets)  cmd_secrets "$@" ;;
     config)   cmd_config ;;
+    workflow) cmd_workflow ;;
     ""|help)  usage ;;
     *)        log_error "Unknown: $command"; usage ;;
 esac
