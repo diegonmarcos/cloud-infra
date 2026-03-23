@@ -1,16 +1,9 @@
-name: "Deploy → oci-mail"
+name: "Deploy → oci-mail (LEGACY — use deploy.yml)"
 
+# SUPERSEDED by deploy.yml (manifest-driven deploy)
+# Push triggers removed to avoid double deploys.
+# Keep workflow_dispatch as manual fallback.
 on:
-  push:
-    paths:
-      - "a_solutions/aa-sui_tools-stalwart/src/**"
-      - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
-      - "a_solutions/ab-mic_syncthing/src/**"
-      - "a_solutions/bc-obs_dagu/src/**"
-      - "a_solutions/bc-obs_syslog-forwarder/src/**"
-      - "a_solutions/aa-sui_snappymail/src/**"
-      - ".github/workflows/oci-mail-deploy.yml"
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:

@@ -1,11 +1,9 @@
-name: "Deploy → gcp-t4"
+name: "Deploy → gcp-t4 (LEGACY — use deploy.yml)"
 
+# SUPERSEDED by deploy.yml (manifest-driven deploy)
+# Push triggers removed to avoid double deploys.
+# Keep workflow_dispatch as manual fallback.
 on:
-  push:
-    paths:
-      - "a_solutions/ad-agi_ollama/src/**"
-      - ".github/workflows/gcp-t4-deploy.yml"
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:

@@ -1,35 +1,9 @@
-name: "Deploy → oci-apps"
+name: "Deploy → oci-apps (LEGACY — use deploy.yml)"
 
+# SUPERSEDED by deploy.yml (manifest-driven deploy)
+# Push triggers removed to avoid double deploys.
+# Keep workflow_dispatch as manual fallback.
 on:
-  push:
-    paths:
-      - "a_solutions/aa-sui_mattermost-mcp/src/**"
-      - "a_solutions/aa-sui_mail-mcp/src/**"
-      - "a_solutions/aa-sui_mattermost-bots/src/**"
-      - "a_solutions/aa-sui_code-server/src/**"
-      - "a_solutions/aa-sui_etherpad/src/**"
-      - "a_solutions/aa-sui_filebrowser/src/**"
-      - "a_solutions/aa-sui_grist/src/**"
-      - "a_solutions/aa-sui_hedgedoc/src/**"
-      - "a_solutions/aa-sui_photoprism/src/**"
-      - "a_solutions/aa-sui_radicale/src/**"
-      - "a_solutions/aa-sui_revealmd/src/**"
-      - "a_solutions/ac-fin_crawlee-cloud/src/**"
-      - "a_solutions/ac-fin_quant-lab-full/src/**"
-      - "a_solutions/ac-fin_quant-lab-light/src/**"
-      - "a_solutions/bb-sec_orchestrator/src/**"
-      - "a_solutions/bc-obs_lgtm/src/**"
-      - "a_solutions/bc-obs_nocodb/src/**"
-      - "a_solutions/ad-agi_rig-agentic/src/**"
-      - "a_solutions/ca-dat_gitea/src/**"
-      - "a_solutions/ca-dat_kg-graph/src/**"
-      - "a_solutions/bc-obs_c3-infra-mcp-api/src/**"
-      - "a_solutions/bc-obs_c3-services-mcp-api/src/**"
-      - "a_solutions/bc-obs_cloud-spec/src/**"
-      - "a_solutions/bc-obs_windmill/src/**"
-      - "a_solutions/aa-sui_google-workspace-mcp/src/**"
-      - ".github/workflows/oci-apps-deploy.yml"
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:

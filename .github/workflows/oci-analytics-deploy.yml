@@ -1,17 +1,9 @@
-name: "Deploy → oci-analytics"
+name: "Deploy → oci-analytics (LEGACY — use deploy.yml)"
 
+# SUPERSEDED by deploy.yml (manifest-driven deploy)
+# Push triggers removed to avoid double deploys.
+# Keep workflow_dispatch as manual fallback.
 on:
-  push:
-    paths:
-      - "a_solutions/bc-obs_matomo/src/**"
-      - "a_solutions/bc-obs_umami/src/**"
-      - "a_solutions/bc-obs_sauron-forwarder/src/**"
-      - "a_solutions/bb-sec_sauron-central/src/**"
-      - "a_solutions/bc-obs_alerts-api/src/**"
-      - "a_solutions/bc-obs_dozzle/src/**"
-      - "a_solutions/bc-obs_fluent-bit/src/**"
-      - ".github/workflows/oci-analytics-deploy.yml"
-    branches: [main]
   workflow_dispatch:
     inputs:
       service:
