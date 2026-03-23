@@ -714,15 +714,14 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
     find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
     cp "$WF_DIST"/*.yml "$GH_DIR/"
 
-    # ── Deploy scripts: src/scripts/ → dist/scripts/ → .github/scripts (symlink) ──
+    # ── Deploy scripts: src/scripts/ → dist/scripts/ → .github/workflows/scripts (symlink) ──
     if [ -d "$WF_SRC/scripts" ]; then
         mkdir -p "$WF_DIST/scripts"
         cp "$WF_SRC/scripts/"* "$WF_DIST/scripts/"
         chmod +x "$WF_DIST/scripts/"*.sh 2>/dev/null || true
-        # Symlink .github/scripts → dist/scripts (same pattern as workflows)
-        if [ ! -L "$SCRIPT_DIR/.github/scripts" ]; then
-            rm -rf "$SCRIPT_DIR/.github/scripts"
-            ln -s "../workflows/dist/scripts" "$SCRIPT_DIR/.github/scripts"
+        if [ ! -L "$GH_DIR/scripts" ]; then
+            rm -rf "$GH_DIR/scripts"
+            ln -s "../../workflows/dist/scripts" "$GH_DIR/scripts"
         fi
     fi
 
