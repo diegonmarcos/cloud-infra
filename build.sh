@@ -515,7 +515,7 @@ cmd_workflow() {
     mkdir -p "$WF_DIST"
 
     # Verify templates exist
-    for tpl in deploy-vm.yml.tpl deploy-ghcr.yml.tpl; do
+    for tpl in ship-vm.yml.tpl ship-ghcr.yml.tpl; do
         [ -f "$WF_SRC/$tpl" ] || { log_error "Missing template: workflows/src/$tpl"; exit 1; }
     done
 
@@ -643,10 +643,10 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
                 gsub("{{DOCKER_STEPS}}", docker)
                 gsub("{{SHIP_STEPS}}", ships)
                 print
-            }' "$WF_SRC/deploy-vm.yml.tpl" > "$WF_DIST/deploy-${vm}.yml"
+            }' "$WF_SRC/ship-vm.yml.tpl" > "$WF_DIST/ship-${vm}.yml"
 
         generated=$((generated + 1))
-        log "  deploy-${vm}.yml ($(wc -l < "$svc_file") services)"
+        log "  ship-${vm}.yml ($(wc -l < "$svc_file") services)"
         rm -f "$svc_file"
     done
 
@@ -677,10 +677,10 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
                 gsub("{{PATH_FILTERS}}", paths)
                 gsub("{{BUILD_STEPS}}", steps)
                 print
-            }' "$WF_SRC/deploy-ghcr.yml.tpl" > "$WF_DIST/deploy-ghcr.yml"
+            }' "$WF_SRC/ship-ghcr.yml.tpl" > "$WF_DIST/ship-ghcr.yml"
 
         generated=$((generated + 1))
-        log "  deploy-ghcr.yml ($(echo $ghcr_dirs | wc -w) images)"
+        log "  ship-ghcr.yml ($(echo $ghcr_dirs | wc -w) images)"
     fi
 
     # ── Copy static workflows into dist/ ──

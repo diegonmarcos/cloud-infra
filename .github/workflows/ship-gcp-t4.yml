@@ -1,0 +1,58 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/  (templates + static)            │
+# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
+# │  Deploy: copies dist/ → .github/workflows/                    │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "Ship → gcp-t4"
+
+on:
+  push:
+    paths:
+      - "a_solutions/ad-agi_ollama/src/**"
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ship-gcp-t4
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      - name: Detect changed services
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "dirs=ALL" >> "$GITHUB_OUTPUT"
+          else
+            dirs=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: ./.github/actions/setup-deps
+        with:
+          ssh_key: ${{ secrets.GCP_T4_SSH_KEY }}
+          ssh_host: ${{ secrets.GCP_T4_HOST }}
+          ssh_user: ${{ secrets.GCP_T4_USER }}
+          ssh_alias: gcp-t4
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+
+
+      - name: Ship ollama
+        if: contains(steps.changed.outputs.dirs, 'ad-agi_ollama') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/ad-agi_ollama/build.sh ship
+

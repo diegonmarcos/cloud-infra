@@ -1,0 +1,51 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/  (templates + static)            │
+# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
+# │  Deploy: copies dist/ → .github/workflows/                    │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "Ship → gen-configs"
+
+# DISABLED: Dagu DAG cloud-data-sync now fetches from C3 API and commits to
+# cloud-data/ repo (submodule). cloud-topology.json and cloud-configs.json in
+# cloud/ root are symlinks to the submodule. Keep workflow_dispatch for emergencies.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gen-configs
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-deps
+
+      - name: Generate configs
+        env:
+          GIT_BASE: ${{ github.workspace }}/../
+        run: bash build.sh config
+
+      - name: Commit and push updated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add cloud-topology.json cloud-topology.md cloud-configs.json cloud-configs.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "auto: regenerate topology + configs [skip ci]"
+          # Pull-rebase in case another workflow pushed while we were generating
+          git pull --rebase origin main
+          git push
