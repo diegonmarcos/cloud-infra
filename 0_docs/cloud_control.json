@@ -49,8 +49,8 @@
         {"service": "Redis", "description": "Cache Server", "ports": "-", "status": "Active"}
       ],
       "oci-f-micro_1": [
-        {"service": "Mailu", "description": "Mail Server (Postfix + Dovecot + Rspamd)", "ports": "25, 465, 587, 993, 995", "status": "Active"},
-        {"service": "Roundcube", "description": "Webmail 1.6.11 (calendar 3.2.8 + carddav 5.1.1)", "ports": "-", "status": "Active"}
+        {"service": "Stalwart", "description": "Mail Server (SMTP + IMAP + JMAP, Rust)", "ports": "25, 465, 587, 993, 995, 143", "status": "Active"},
+        {"service": "SnappyMail", "description": "Webmail UI for Stalwart", "ports": "-", "status": "Active"}
       ],
       "oci-f-micro_2": [
         {"service": "Matomo", "description": "Web Analytics", "ports": "8080", "status": "Active"}
@@ -80,8 +80,8 @@
       "A123_others": {"name": "A123) Other Services", "description": "User-facing and miscellaneous services", "services": [
         {"service": "PhotoPrism", "vm": "oci-p-flex_1", "description": "Photo gallery"},
         {"service": "Radicale", "vm": "oci-p-flex_1", "description": "Calendar/Contacts (CalDAV)"},
-        {"service": "Mailu", "vm": "oci-f-micro_1", "description": "Mail server (Postfix + Dovecot + Rspamd)"},
-        {"service": "Roundcube", "vm": "oci-f-micro_1", "description": "Webmail 1.6.11 (calendar + carddav plugins)"}
+        {"service": "Stalwart", "vm": "oci-E2-f_0", "description": "Mail server (SMTP + IMAP + JMAP, Rust)"},
+        {"service": "SnappyMail", "vm": "oci-E2-f_0", "description": "Webmail UI for Stalwart"}
       ]}
     },
 
@@ -99,9 +99,8 @@
         {"name": "nocodb-db", "type": "PostgreSQL 16", "service": "NocoDB", "size": "~500 MB - 10 GB", "path": "docker volume: nocodb_postgres"}
       ]},
       "oci-f-micro_1": {"bootSize": "47 GB", "databases": [
-        {"name": "mailu-db", "type": "SQLite", "service": "Mailu", "size": "~50 MB", "path": "/mailu/data/main.db"},
-        {"name": "mailu-mail", "type": "Maildir", "service": "Mailu (Dovecot)", "size": "~2 GB", "path": "/mailu/mail/"},
-        {"name": "mailu-dkim", "type": "Keys", "service": "Mailu (DKIM)", "size": "~1 MB", "path": "/mailu/dkim/"}
+        {"name": "stalwart-data", "type": "Files", "service": "Stalwart", "size": "~2 GB", "path": "/opt/containers/stalwart/data/"},
+        {"name": "stalwart-config", "type": "TOML", "service": "Stalwart", "size": "~1 MB", "path": "/opt/containers/stalwart/config/"}
       ]},
       "oci-f-micro_2": {"bootSize": "47 GB", "databases": [
         {"name": "matomo-db", "type": "MariaDB", "service": "Matomo", "size": "~1 GB", "path": "/data/matomo/db/"},
@@ -126,14 +125,8 @@
         {"name": "redis", "image": "redis:alpine", "ports": "-", "network": "dev_network", "status": "UP"}
       ]},
       "oci-f-micro_1": {"count": 10, "items": [
-        {"name": "mailu-front", "image": "mailu/nginx:2.0", "ports": "25, 465, 587, 993, 995, 143", "network": "mail_network", "status": "UP"},
-        {"name": "mailu-admin", "image": "mailu/admin:2.0", "ports": "-", "network": "mail_network", "status": "UP"},
-        {"name": "mailu-imap", "image": "mailu/dovecot:2.0", "ports": "-", "network": "mail_network", "status": "UP"},
-        {"name": "mailu-smtp", "image": "mailu/postfix:2.0", "ports": "-", "network": "mail_network", "status": "UP"},
-        {"name": "mailu-antispam", "image": "mailu/rspamd:2.0", "ports": "-", "network": "mail_network", "status": "UP"},
-        {"name": "roundcube", "image": "mailu/webmail:2.0", "ports": "-", "network": "mail_network", "status": "UP", "notes": "Roundcube 1.6.11 + calendar 3.2.8 + carddav 5.1.1"},
-        {"name": "mailu-redis", "image": "redis:alpine", "ports": "-", "network": "mail_network", "status": "UP"},
-        {"name": "mailu-resolver", "image": "mailu/unbound:2.0", "ports": "-", "network": "mail_network", "status": "UP"},
+        {"name": "stalwart", "image": "stalwartlabs/mail-server:v0.11", "ports": "25, 465, 587, 993, 995, 143", "network": "mail_network", "status": "UP"},
+        {"name": "snappymail", "image": "djmaze/snappymail:latest", "ports": "-", "network": "mail_network", "status": "UP"},
         {"name": "sauron", "image": "sauron-sauron:latest", "ports": "-", "network": "security", "status": "UP"},
         {"name": "syslog-forwarder", "image": "balabit/syslog-ng:4.4.0", "ports": "-", "network": "security", "status": "UP"}
       ]},
