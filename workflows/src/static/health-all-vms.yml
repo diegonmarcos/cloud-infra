@@ -17,7 +17,7 @@ jobs:
         vm: [gcp-proxy, gcp-t4, oci-apps, oci-analytics, oci-mail]
     steps:
       - name: Trigger ${{ matrix.vm }} health check
-        run: gh workflow run "${{ matrix.vm }}-health.yml" --repo "${{ github.repository }}" --ref main
+        run: gh workflow run "health-${{ matrix.vm }}.yml" --repo "${{ github.repository }}" --ref main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
