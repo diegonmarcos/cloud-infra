@@ -590,6 +590,7 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
                 ship_steps="${ship_steps}
       - name: Ship ${name}
         if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         env:
           REMOTE_BUILD: \"true\"
         run: bash a_solutions/${dir}/build.sh ship
@@ -598,6 +599,7 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
                 ship_steps="${ship_steps}
       - name: Ship ${name}
         if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/${dir}/build.sh ship
 "
             fi

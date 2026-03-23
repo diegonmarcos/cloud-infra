@@ -54,5 +54,6 @@ jobs:
 
       - name: Ship ollama-arm
         if: contains(steps.changed.outputs.dirs, 'ad-agi_ollama-arm') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/ad-agi_ollama-arm/build.sh ship
 
