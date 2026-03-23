@@ -689,13 +689,10 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
         cp "$f" "$WF_DIST/"
     done
 
-    # ── Copy ALL from dist/ into .github/workflows/ ──
-    # GHA does NOT follow symlinks — must be real files
-    for f in "$WF_DIST"/*.yml; do
-        [ -f "$f" ] || continue
-        base=$(basename "$f")
-        cp -f "$f" "$GH_DIR/$base"
-    done
+    # ── Deploy dist/ → .github/workflows/ ──
+    # Remove old .yml files, then copy fresh from dist/
+    find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
+    cp "$WF_DIST"/*.yml "$GH_DIR/"
 
     log "Generated $generated workflow(s) → workflows/dist/"
     log "Copied to .github/workflows/"
