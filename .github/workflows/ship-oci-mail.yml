@@ -1,0 +1,83 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/  (templates + static)            │
+# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
+# │  Deploy: copies dist/ → .github/workflows/                    │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "Ship → oci-mail"
+
+on:
+  push:
+    paths:
+      - "a_solutions/aa-sui_snappymail/src/**"
+      - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
+      - "a_solutions/aa-sui_tools-stalwart/src/**"
+      - "a_solutions/ab-mic_syncthing/src/**"
+      - "a_solutions/bc-obs_dagu/src/**"
+      - "a_solutions/bc-obs_syslog-forwarder/src/**"
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ship-oci-mail
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      - name: Detect changed services
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "dirs=ALL" >> "$GITHUB_OUTPUT"
+          else
+            dirs=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: ./.github/actions/setup-deps
+        with:
+          ssh_key: ${{ secrets.OCI_SSH_KEY }}
+          ssh_host: 130.110.251.193
+          ssh_user: ubuntu
+          ssh_alias: oci-mail
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+
+
+      - name: Ship snappymail
+        if: contains(steps.changed.outputs.dirs, 'aa-sui_snappymail') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/aa-sui_snappymail/build.sh ship
+
+      - name: Ship smtp-proxy
+        if: contains(steps.changed.outputs.dirs, 'aa-sui_tools-smtp-proxy') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/aa-sui_tools-smtp-proxy/build.sh ship
+
+      - name: Ship stalwart
+        if: contains(steps.changed.outputs.dirs, 'aa-sui_tools-stalwart') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/aa-sui_tools-stalwart/build.sh ship
+
+      - name: Ship syncthing
+        if: contains(steps.changed.outputs.dirs, 'ab-mic_syncthing') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/ab-mic_syncthing/build.sh ship
+
+      - name: Ship dagu
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_dagu') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/bc-obs_dagu/build.sh ship
+
+      - name: Ship syslog-forwarder
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_syslog-forwarder') || github.event_name == 'workflow_dispatch'
+        run: bash a_solutions/bc-obs_syslog-forwarder/build.sh ship
+
