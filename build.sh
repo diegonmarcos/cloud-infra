@@ -689,8 +689,26 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
         cp "$f" "$WF_DIST/"
     done
 
+    # ── Inject header into ALL dist/ files ──
+    HEADER="# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/  (templates + static)            │
+# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
+# │  Deploy: copies dist/ → .github/workflows/                    │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+"
+    for f in "$WF_DIST"/*.yml; do
+        [ -f "$f" ] || continue
+        # Skip if header already present
+        head -1 "$f" | grep -q 'DO NOT EDIT' && continue
+        tmp="$f.tmp"
+        printf '%s\n' "$HEADER" | cat - "$f" > "$tmp" && mv "$tmp" "$f"
+    done
+
     # ── Deploy dist/ → .github/workflows/ ──
-    # Remove old .yml files, then copy fresh from dist/
     find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
     cp "$WF_DIST"/*.yml "$GH_DIR/"
 
