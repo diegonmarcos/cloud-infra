@@ -122,6 +122,19 @@ resource "google_compute_firewall" "allow_mail_imaps" {
   description   = "Allow IMAPS"
 }
 
+resource "google_compute_firewall" "allow_mail_smtps" {
+  name    = "allow-mail-smtps"
+  network = google_compute_network.main.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["465"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  description   = "Allow SMTPS (implicit TLS)"
+}
+
 resource "google_compute_firewall" "allow_mail_smtp" {
   name    = "allow-mail-smtp"
   network = google_compute_network.main.name

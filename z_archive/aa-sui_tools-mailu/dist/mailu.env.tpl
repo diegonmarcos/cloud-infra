@@ -1,10 +1,10 @@
 # Mailu main configuration file
 DOMAIN=diegonmarcos.com
-HOSTNAMES=imap.diegonmarcos.com,smtp.diegonmarcos.com
+HOSTNAMES=mail.diegonmarcos.com,imap.diegonmarcos.com,smtp.diegonmarcos.com
 POSTMASTER=me
 
 SECRET_KEY=${SECRET_KEY}
-SUBNET=192.168.203.0/24
+SUBNET=172.16.203.0/24
 
 WEBMAIL=roundcube
 WEB_ADMIN=/admin
@@ -29,10 +29,10 @@ WEBDAV=none
 FETCHMAIL=false
 
 RELAYHOST=[smtp.email.eu-marseille-1.oci.oraclecloud.com]:587
-RELAYUSER=${RELAYUSER}
-RELAYPASSWORD=${RELAYPASSWORD}
 OCI_RELAYUSER=${OCI_RELAYUSER}
 OCI_RELAYPASSWORD=${OCI_RELAYPASSWORD}
+AWS_RELAYUSER=${AWS_RELAYUSER}
+AWS_RELAYPASSWORD=${AWS_RELAYPASSWORD}
 
 MESSAGE_SIZE_LIMIT=50000000
 

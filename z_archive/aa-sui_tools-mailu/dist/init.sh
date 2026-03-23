@@ -2,7 +2,7 @@
 set -e
 cd "$(dirname "$0")"
 
-ENV_VARS='$SECRET_KEY $INITIAL_ADMIN_PW $RELAYUSER $RELAYPASSWORD $NOREPLY_PASSWORD $OCI_RELAYUSER $OCI_RELAYPASSWORD'
+ENV_VARS='$SECRET_KEY $INITIAL_ADMIN_PW $OCI_RELAYUSER $OCI_RELAYPASSWORD $NOREPLY_PASSWORD $AWS_RELAYUSER $AWS_RELAYPASSWORD'
 
 echo "[init] Substituting secrets into mailu.env..."
 # Read .secrets safely (avoid shell interpretation of < > $ in values)
@@ -20,12 +20,12 @@ if [ -n "$DKIM_PRIVATE_KEY_B64" ]; then
   chmod 600 dkim/diegonmarcos.com.dkim.key
 fi
 
-# Generate combined sasl_passwd for postfix (AWS primary + OCI fallback)
-if [ -n "$RELAYUSER" ] && [ -n "$OCI_RELAYUSER" ]; then
-  echo "[init] Writing combined postfix sasl_passwd (AWS + OCI)..."
+# Generate combined sasl_passwd for postfix (OCI primary + AWS fallback)
+if [ -n "$OCI_RELAYUSER" ] && [ -n "$AWS_RELAYUSER" ]; then
+  echo "[init] Writing combined postfix sasl_passwd (OCI + AWS)..."
   mkdir -p overrides/postfix
   printf '[smtp.email.eu-marseille-1.oci.oraclecloud.com]:587 %s:%s\n[email-smtp.us-east-1.amazonaws.com]:587 %s:%s\n' \
-    "$RELAYUSER" "$RELAYPASSWORD" "$OCI_RELAYUSER" "$OCI_RELAYPASSWORD" \
+    "$OCI_RELAYUSER" "$OCI_RELAYPASSWORD" "$AWS_RELAYUSER" "$AWS_RELAYPASSWORD" \
     > overrides/postfix/sasl_multi_passwd
   chmod 600 overrides/postfix/sasl_multi_passwd
 fi
