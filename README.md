@@ -80,7 +80,7 @@ SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`
 | C3 Infra API | api.diegonmarcos.com/c3-api | oci-apps | 8081 |
 | Crawlee Cloud | api.diegonmarcos.com/crawlee/ | oci-apps | 3000 |
 | Mattermost | chat.diegonmarcos.com | oci-apps | 8065 |
-| Mailu Mail | mail.diegonmarcos.com | oci-mail | 8444 |
+| Stalwart Mail | mail.diegonmarcos.com | oci-mail | — |
 | Syncthing | sync.diegonmarcos.com | oci-mail | 8384 |
 | Radicale | cal.diegonmarcos.com | oci-mail | 5232 |
 | Matomo | analytics.diegonmarcos.com | oci-analytics | 8080 |
@@ -157,7 +157,7 @@ b_infra/home-manager/deploy.sh oci-apps
 ```
 cloud/
 ├── a_solutions/                  50+ containerized services (Nix flakes)
-│   ├── aa-sui_*                  Applications (AFFiNE, Code Server, Mailu, PhotoPrism...)
+│   ├── aa-sui_*                  Applications (AFFiNE, Code Server, Stalwart, PhotoPrism...)
 │   ├── ab-mic_*                  Microservices (Syncthing, Vaultwarden)
 │   ├── ac-fin_*                  Financial (Crawlee Cloud, Quant Lab)
 │   ├── ad-agi_*                  AI/AGI (Ollama, Rig Agentic)
@@ -270,7 +270,7 @@ Containers on shared Docker networks. Docker 29+ nftables DNAT handles WireGuard
 |----------|---------|--------|
 | `ship-gcp-proxy.yml` | `bb-sec_caddy/`, `bb-sec_authelia/`, etc. | gcp-proxy |
 | `ship-oci-apps.yml` | `bc-obs_c3-infra-mcp-api/`, `ad-agi_rig-agentic/`, etc. | oci-apps |
-| `ship-oci-mail.yml` | `aa-sui_tools-mailu/`, etc. | oci-mail |
+| `ship-oci-mail.yml` | `aa-sui_tools-stalwart/`, `aa-sui_snappymail/`, etc. | oci-mail |
 | `ship-oci-analytics.yml` | `bc-obs_*` services | oci-analytics |
 | `home-manager.yml` | `b_infra/home-manager/` | all VMs |
 
