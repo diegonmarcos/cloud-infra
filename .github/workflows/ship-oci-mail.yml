@@ -16,7 +16,6 @@ on:
       - "a_solutions/aa-sui_snappymail/src/**"
       - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
       - "a_solutions/aa-sui_tools-stalwart/src/**"
-      - "a_solutions/ab-mic_syncthing/src/**"
       - "a_solutions/bc-obs_dagu/src/**"
       - "a_solutions/bc-obs_syslog-forwarder/src/**"
     branches: [main]
@@ -59,25 +58,26 @@ jobs:
 
       - name: Ship snappymail
         if: contains(steps.changed.outputs.dirs, 'aa-sui_snappymail') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/aa-sui_snappymail/build.sh ship
 
       - name: Ship smtp-proxy
         if: contains(steps.changed.outputs.dirs, 'aa-sui_tools-smtp-proxy') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/aa-sui_tools-smtp-proxy/build.sh ship
 
       - name: Ship stalwart
         if: contains(steps.changed.outputs.dirs, 'aa-sui_tools-stalwart') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/aa-sui_tools-stalwart/build.sh ship
-
-      - name: Ship syncthing
-        if: contains(steps.changed.outputs.dirs, 'ab-mic_syncthing') || github.event_name == 'workflow_dispatch'
-        run: bash a_solutions/ab-mic_syncthing/build.sh ship
 
       - name: Ship dagu
         if: contains(steps.changed.outputs.dirs, 'bc-obs_dagu') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_dagu/build.sh ship
 
       - name: Ship syslog-forwarder
         if: contains(steps.changed.outputs.dirs, 'bc-obs_syslog-forwarder') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_syslog-forwarder/build.sh ship
 

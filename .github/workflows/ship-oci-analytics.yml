@@ -60,29 +60,36 @@ jobs:
 
       - name: Ship sauron-central
         if: contains(steps.changed.outputs.dirs, 'bb-sec_sauron-central') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bb-sec_sauron-central/build.sh ship
 
       - name: Ship alerts-api
         if: contains(steps.changed.outputs.dirs, 'bc-obs_alerts-api') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_alerts-api/build.sh ship
 
       - name: Ship dozzle
         if: contains(steps.changed.outputs.dirs, 'bc-obs_dozzle') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_dozzle/build.sh ship
 
       - name: Ship fluent-bit
         if: contains(steps.changed.outputs.dirs, 'bc-obs_fluent-bit') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_fluent-bit/build.sh ship
 
       - name: Ship matomo
         if: contains(steps.changed.outputs.dirs, 'bc-obs_matomo') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_matomo/build.sh ship
 
       - name: Ship sauron-forwarder
         if: contains(steps.changed.outputs.dirs, 'bc-obs_sauron-forwarder') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_sauron-forwarder/build.sh ship
 
       - name: Ship umami
         if: contains(steps.changed.outputs.dirs, 'bc-obs_umami') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: bash a_solutions/bc-obs_umami/build.sh ship
 
