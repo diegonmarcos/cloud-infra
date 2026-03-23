@@ -27,51 +27,5 @@ jobs:
           ssh_alias: oci-analytics
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Check all containers
-        run: |
-          echo "=== oci-analytics container health ==="
-          ssh oci-analytics 'docker ps --format "{{.Names}}\t{{.Status}}" 2>&1' | tee /tmp/containers.txt
-
-          # Known-flaky containers: warn but don't fail the workflow
-          # windmill-worker: restarts briefly during startup / job execution
-          # alerts-api: custom-built, may be unhealthy after deploy until image is rebuilt
-          KNOWN_FLAKY="windmill-worker alerts-api"
-
-          failed=0
-          warned=0
-          while IFS=$'\t' read -r name status; do
-            if echo "$status" | grep -qiE "Restarting|unhealthy|Exited"; then
-              if echo "$KNOWN_FLAKY" | grep -qw "$name"; then
-                echo "::warning::$name — $status (known-flaky, non-blocking)"
-                ssh -n oci-analytics "docker logs $name --tail 10 2>&1" || true
-                warned=$((warned + 1))
-              else
-                echo "::error::$name — $status"
-                ssh -n oci-analytics "docker logs $name --tail 10 2>&1" || true
-                failed=$((failed + 1))
-              fi
-            else
-              echo "✓ $name — $status"
-            fi
-          done < /tmp/containers.txt
-
-          echo ""
-          echo "=== Port checks ==="
-          for port in 8080; do
-            if ssh oci-analytics "timeout 2 bash -c 'echo > /dev/tcp/127.0.0.1/$port' 2>/dev/null"; then
-              echo "✓ :$port open"
-            else
-              echo "✗ :$port closed"
-            fi
-          done
-
-          echo ""
-          [ "$warned" -gt 0 ] && echo "::warning::$warned known-flaky container(s) unhealthy (non-blocking)"
-          if [ "$failed" -gt 0 ]; then
-            echo "::error::$failed container(s) unhealthy"
-            echo ""
-            echo "=== Debug dump ==="
-            ssh oci-analytics 'free -m; echo "---"; uptime; echo "---"; df -h / 2>/dev/null' || true
-            exit 1
-          fi
-          echo "All containers healthy"
+      - name: Health check
+        run: .github/scripts/health-check-vm.sh oci-analytics 8080 windmill-worker,alerts-api
