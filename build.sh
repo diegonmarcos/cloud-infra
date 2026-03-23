@@ -689,19 +689,16 @@ oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
         cp "$f" "$WF_DIST/"
     done
 
-    # ── Symlink ALL from dist/ into .github/workflows/ ──
-    # Remove old symlinks first
-    for f in "$GH_DIR"/*.yml; do
-        [ -L "$f" ] && rm -f "$f"
-    done
+    # ── Copy ALL from dist/ into .github/workflows/ ──
+    # GHA does NOT follow symlinks — must be real files
     for f in "$WF_DIST"/*.yml; do
         [ -f "$f" ] || continue
         base=$(basename "$f")
-        ln -s "../../workflows/dist/$base" "$GH_DIR/$base"
+        cp -f "$f" "$GH_DIR/$base"
     done
 
     log "Generated $generated workflow(s) → workflows/dist/"
-    log "Symlinked to .github/workflows/"
+    log "Copied to .github/workflows/"
 }
 
 # Clean all dist/ folders
