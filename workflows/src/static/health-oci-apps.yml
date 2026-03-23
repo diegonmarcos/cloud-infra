@@ -36,7 +36,7 @@ jobs:
           while IFS=$'\t' read -r name status; do
             if echo "$status" | grep -qiE "Restarting|unhealthy|Exited"; then
               echo "::error::$name — $status"
-              ssh oci-apps "docker logs $name --tail 10 2>&1" || true
+              ssh -n oci-apps "docker logs $name --tail 10 2>&1" || true
               failed=$((failed + 1))
             else
               echo "✓ $name — $status"
