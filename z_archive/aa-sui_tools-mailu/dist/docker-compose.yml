@@ -1,3 +1,10 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ DO NOT EDIT — DECLARATIVE ENVIRONMENT — NIX FLAKES WAY         ║
+# ║ AUTO-GENERATED — DONT USE IMPERATIVE SOLUTIONS!!!              ║
+# ╠══════════════════════════════════════════════════════════════════╣
+# ║ Source: ~/git/cloud/a_solutions/aa-sui_tools-mailu/src/flake.nix ║
+# ║ Rebuild: ~/git/cloud/a_solutions/aa-sui_tools-mailu/build.sh ship ║
+# ╚══════════════════════════════════════════════════════════════════╝
 version: "3.8"
 
 services:
@@ -7,7 +14,7 @@ services:
     restart: always
     networks:
       default:
-        ipv4_address: 192.168.203.254
+        ipv4_address: 172.16.203.254
 
   front:
     image: ghcr.io/mailu/nginx:2024.06
@@ -25,7 +32,7 @@ services:
     depends_on:
       - resolver
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
   admin:
     image: ghcr.io/mailu/admin:2024.06
@@ -38,7 +45,7 @@ services:
       - resolver
       - redis
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
   imap:
     image: ghcr.io/mailu/dovecot:2024.06
@@ -51,7 +58,7 @@ services:
       - resolver
       - front
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
   smtp:
     image: ghcr.io/mailu/postfix:2024.06
@@ -64,7 +71,7 @@ services:
       - resolver
       - front
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
   antispam:
     image: ghcr.io/mailu/rspamd:2024.06
@@ -77,7 +84,7 @@ services:
       - resolver
       - front
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
   redis:
     image: redis:7-bookworm
@@ -97,7 +104,7 @@ services:
       - front
       - imap
     dns:
-      - 192.168.203.254
+      - 172.16.203.254
 
 networks:
   default:
@@ -105,4 +112,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 192.168.203.0/24
+        - subnet: 172.16.203.0/24
