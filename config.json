@@ -25,7 +25,7 @@
       "user": "ubuntu",
       "method": "key",
       "ssh_alias": "oci-apps",
-      "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated"
+      "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) \u2014 Consolidated"
     },
     "oci-A1-p_0": {
       "ip": "79.72.28.10",
@@ -49,7 +49,7 @@
       "vram": "16GB",
       "cost_per_hour": "$0.18",
       "provisioning": "spot",
-      "notes": "Spot VM — may be preempted. Dynamic IP, update after creation."
+      "notes": "Spot VM \u2014 may be preempted. Dynamic IP, update after creation."
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -79,7 +79,7 @@
   "native": {
     "wireguard": {
       "vm": "all",
-      "description": "WireGuard VPN mesh — managed via home-manager (not Docker)",
+      "description": "WireGuard VPN mesh \u2014 managed via home-manager (not Docker)",
       "wg_hub": "gcp-E2-f_0",
       "peers": [
         "oci-E2-f_0",
@@ -188,7 +188,7 @@
       "containers": [
         "mail-mcp"
       ],
-      "description": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+      "description": "Mail MCP server \u2014 IMAP/SMTP/Admin via Stalwart REST API",
       "flake": "mail-mcp"
     },
     "mattermost-bots": {
@@ -309,7 +309,7 @@
         "crawlee_scheduler"
       ],
       "domain": "api.diegonmarcos.com/crawlee/",
-      "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
+      "description": "Self-hosted Crawlee Cloud \u2014 Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "quant-lab-full": {
       "category": "fin",
@@ -333,7 +333,7 @@
       "containers": [
         "ollama"
       ],
-      "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
+      "description": "Ollama LLM Server \u2014 DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
       "fallback_vm": "vast-RTX-p_0",
       "api_port": "11434",
       "models": [
@@ -413,7 +413,7 @@
       "containers": [
         "orchestrator"
       ],
-      "description": "Container orchestrator — resource budget management for on-demand services"
+      "description": "Container orchestrator \u2014 resource budget management for on-demand services"
     },
     "rust-api": {
       "category": "sec",
@@ -422,7 +422,7 @@
         "rust-api"
       ],
       "domain": "api.diegonmarcos.com/rust-api",
-      "description": "Cloud Rust API (api.diegonmarcos.com — default)"
+      "description": "Cloud Rust API (api.diegonmarcos.com \u2014 default)"
     },
     "sauron-central": {
       "category": "sec",
@@ -626,16 +626,6 @@
       "description": "Unified Cloud Documentation Portal",
       "flake": "cloud-spec"
     },
-    "c3-infra-mcp-api": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "containers": [
-        "c3-infra-mcp-api"
-      ],
-      "domain": "api.diegonmarcos.com/c3-api",
-      "description": "C3 — Cloud Control Center: MCP infrastructure server + Fastify API (api.diegonmarcos.com)",
-      "flake": "c3-infra-mcp-api"
-    },
     "sauron-lite-micro1": {
       "category": "tools",
       "vm": "oci-E2-f_0",
@@ -714,8 +704,48 @@
       "containers": [
         "rig"
       ],
-      "description": "Rig Intelligence Framework — Self-healing orchestrator + GraphRAG",
+      "description": "Rig Intelligence Framework \u2014 Self-healing orchestrator + GraphRAG",
       "flake": "rig-agentic"
+    },
+    "c3-infra-mcp": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "c3-infra-mcp"
+      ],
+      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+      "description": "C3 Infrastructure MCP server (tools + resources)",
+      "flake": "c3-infra-mcp"
+    },
+    "c3-infra-api": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "c3-infra-api"
+      ],
+      "domain": "api.diegonmarcos.com/c3-api",
+      "description": "C3 Infrastructure REST API (health, inventory, control)",
+      "flake": "c3-infra-api"
+    },
+    "c3-services-mcp": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "c3-services-mcp"
+      ],
+      "domain": "mcp.diegonmarcos.com/c3-services-mcp",
+      "description": "C3 Services MCP server (service-specific tools)",
+      "flake": "c3-services-mcp"
+    },
+    "c3-services-api": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "containers": [
+        "c3-services-api"
+      ],
+      "domain": "api.diegonmarcos.com/services-api",
+      "description": "C3 Services REST API (Matomo, ntfy, Radicale, etc.)",
+      "flake": "c3-services-api"
     }
   },
   "deps": {
