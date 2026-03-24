@@ -1,1 +1,1 @@
-/home/diego/Mounts/Git/cloud/a_solutions/bc-obs_c3-mcp/src/mcp/tools/health_mail.ts
+/home/diego/Mounts/Git/cloud/a_solutions/bc-obs_c3-infra-mcp/src/mcp/tools/health_mail.ts
