@@ -31,8 +31,8 @@ on:
       - "a_solutions/ac-fin_quant-lab-light/src/**"
       - "a_solutions/ad-agi_rig-agentic/src/**"
       - "a_solutions/bb-sec_orchestrator/src/**"
-      - "a_solutions/bc-obs_c3-mcp/src/**"
-      - "a_solutions/bc-obs_c3-api/src/**"
+      - "a_solutions/bc-obs_c3-infra-mcp/src/**"
+      - "a_solutions/bc-obs_c3-infra-api/src/**"
       - "a_solutions/bc-obs_c3-services-mcp/src/**"
       - "a_solutions/bc-obs_c3-services-api/src/**"
       - "a_solutions/bc-obs_cloud-spec/src/**"
@@ -186,19 +186,19 @@ jobs:
         continue-on-error: true
         run: bash a_solutions/bb-sec_orchestrator/build.sh ship
 
-      - name: Ship c3-mcp
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-mcp') || github.event_name == 'workflow_dispatch'
+      - name: Ship c3-infra-mcp
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-mcp') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-mcp/build.sh ship
+        run: bash a_solutions/bc-obs_c3-infra-mcp/build.sh ship
 
-      - name: Ship c3-api
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-api') || github.event_name == 'workflow_dispatch'
+      - name: Ship c3-infra-api
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-api') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
           REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-api/build.sh ship
+        run: bash a_solutions/bc-obs_c3-infra-api/build.sh ship
 
       - name: Ship c3-services-mcp
         if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-services-mcp') || github.event_name == 'workflow_dispatch'
