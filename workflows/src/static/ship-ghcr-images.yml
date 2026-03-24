@@ -7,8 +7,10 @@ on:
       - "a_solutions/aa-sui_mail-mcp/src/**"
       - "a_solutions/aa-sui_mattermost-mcp/src/**"
       - "a_solutions/bb-sec_introspect-proxy/src/**"
-      - "a_solutions/bc-obs_c3-infra-mcp-api/src/**"
-      - "a_solutions/bc-obs_c3-services-mcp-api/src/**"
+      - "a_solutions/bc-obs_c3-mcp/src/**"
+      - "a_solutions/bc-obs_c3-api/src/**"
+      - "a_solutions/bc-obs_c3-services-mcp/src/**"
+      - "a_solutions/bc-obs_c3-services-api/src/**"
     branches: [main]
   workflow_dispatch:
 
@@ -35,12 +37,18 @@ jobs:
           - name: introspect-proxy
             context: a_solutions/bb-sec_introspect-proxy/src
             file: a_solutions/bb-sec_introspect-proxy/src/Dockerfile
-          - name: c3-infra-mcp-api
-            context: a_solutions/bc-obs_c3-infra-mcp-api/src
-            file: a_solutions/bc-obs_c3-infra-mcp-api/src/Dockerfile
-          - name: c3-services-mcp-api
-            context: a_solutions/bc-obs_c3-services-mcp-api/src
-            file: a_solutions/bc-obs_c3-services-mcp-api/src/Dockerfile
+          - name: c3-mcp
+            context: a_solutions/bc-obs_c3-mcp/src
+            file: a_solutions/bc-obs_c3-mcp/src/Dockerfile
+          - name: c3-api
+            context: a_solutions/bc-obs_c3-api/src
+            file: a_solutions/bc-obs_c3-api/src/Dockerfile
+          - name: c3-services-mcp
+            context: a_solutions/bc-obs_c3-services-mcp/src
+            file: a_solutions/bc-obs_c3-services-mcp/src/Dockerfile
+          - name: c3-services-api
+            context: a_solutions/bc-obs_c3-services-api/src
+            file: a_solutions/bc-obs_c3-services-api/src/Dockerfile
     steps:
       - uses: actions/checkout@v4
 
