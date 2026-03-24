@@ -47,49 +47,99 @@ in {
     ExecStart=/bin/sh -c '\
       exec 3>/dev/watchdog; \
       DOCKER_FAIL=0; \
+      CTR_RESTART_TRACK=""; \
       LOG="/var/log/watchdog-petter.log"; \
       log() { echo "$(date -Is) [watchdog] $1" >> "$LOG" 2>/dev/null; }; \
       while true; do \
-        # ── Tier 1: Is Docker responding? ── \
-        if docker info >/dev/null 2>&1; then \
-          # Docker alive — check for critical containers \
-          UNHEALTHY=$(docker ps --filter health=unhealthy --format "{{.Names}}" 2>/dev/null | head -5); \
-          RESTARTING=$(docker ps --filter status=restarting --format "{{.Names}}" 2>/dev/null | head -5); \
-          if [ -n "$RESTARTING" ]; then \
-            log "WARN: restarting containers: $RESTARTING"; \
-          fi; \
-          # Tier 1 pass — pet the dog \
-          echo V >&3; \
-          DOCKER_FAIL=0; \
-        else \
-          # ── Tier 2: Docker not responding ── \
-          DOCKER_FAIL=$((DOCKER_FAIL + 1)); \
-          log "ALERT: Docker not responding (fail $DOCKER_FAIL/3)"; \
-          if [ "$DOCKER_FAIL" -ge 2 ] && [ "$DOCKER_FAIL" -le 3 ]; then \
-            # Try to restart Docker daemon \
-            log "ACTION: restarting Docker daemon"; \
-            systemctl restart docker 2>/dev/null || true; \
-            # Still pet — give Docker a chance to recover \
-            echo V >&3; \
-          elif [ "$DOCKER_FAIL" -ge 4 ]; then \
-            # ── Tier 3: Docker restart failed — check if kernel is responsive ── \
-            if [ -f /proc/loadavg ]; then \
-              LOAD=$(cat /proc/loadavg | cut -d" " -f1); \
-              log "CRITICAL: Docker dead after restart. Load: $LOAD. Checking kernel..."; \
-              # Kernel still alive — pet but log critical \
-              # Only stop petting if /proc itself is unreadable (true freeze) \
-              echo V >&3; \
-            else \
-              # /proc unreadable — kernel is frozen \
-              # STOP PETTING — kernel watchdog will reset in ${toString watchdogTimeout}s \
-              log "FATAL: /proc unreadable — stopping petter. Kernel reset imminent."; \
-              exit 1; \
-            fi; \
-          else \
-            # First failure — pet and wait \
-            echo V >&3; \
-          fi; \
+        # ═══════════════════════════════════════════════════════════ \
+        # TIER 0: KERNEL — is /proc readable? \
+        # ═══════════════════════════════════════════════════════════ \
+        if ! [ -f /proc/loadavg ]; then \
+          log "FATAL: /proc unreadable — kernel frozen. Stopping petter."; \
+          exit 1; \
         fi; \
+        \
+        # ═══════════════════════════════════════════════════════════ \
+        # TIER 1: DOCKER DAEMON — is it responding? \
+        # ═══════════════════════════════════════════════════════════ \
+        if ! docker info >/dev/null 2>&1; then \
+          DOCKER_FAIL=$((DOCKER_FAIL + 1)); \
+          log "ALERT: Docker not responding (fail $DOCKER_FAIL)"; \
+          if [ "$DOCKER_FAIL" -ge 3 ]; then \
+            log "ACTION: restarting Docker daemon (attempt $((DOCKER_FAIL - 2)))"; \
+            systemctl restart docker 2>/dev/null || true; \
+          fi; \
+          echo V >&3; \
+          sleep ${toString petInterval}; \
+          continue; \
+        fi; \
+        DOCKER_FAIL=0; \
+        \
+        # ═══════════════════════════════════════════════════════════ \
+        # TIER 2: CONTAINERS — iterate ALL, auto-heal individually \
+        # ═══════════════════════════════════════════════════════════ \
+        \
+        # 2a: Restart crash-looping containers (status=restarting) \
+        for ctr in $(docker ps -a --filter status=restarting --format "{{.Names}}" 2>/dev/null); do \
+          # Track restart attempts per container (max 2 per cycle) \
+          PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
+          if [ "$PREV" -lt 2 ]; then \
+            log "ACTION: restarting crash-looping container: $ctr"; \
+            docker restart "$ctr" --time 10 2>/dev/null || true; \
+            CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
+          elif [ "$PREV" -eq 2 ]; then \
+            log "WARN: $ctr still crash-looping after 2 restarts — skipping"; \
+          fi; \
+        done; \
+        \
+        # 2b: Restart unhealthy containers \
+        for ctr in $(docker ps --filter health=unhealthy --format "{{.Names}}" 2>/dev/null); do \
+          PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
+          if [ "$PREV" -lt 1 ]; then \
+            log "ACTION: restarting unhealthy container: $ctr"; \
+            docker restart "$ctr" --time 10 2>/dev/null || true; \
+            CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
+          fi; \
+        done; \
+        \
+        # 2c: Restart exited containers (non-zero exit, not one-shot) \
+        for ctr in $(docker ps -a --filter status=exited --filter "exited!=0" --format "{{.Names}}" 2>/dev/null); do \
+          # Skip known one-shot containers (init, migration, etc.) \
+          case "$ctr" in *init*|*migrate*|*setup*|*_minio_init*) continue;; esac; \
+          PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
+          if [ "$PREV" -lt 1 ]; then \
+            log "ACTION: restarting exited container: $ctr (non-zero exit)"; \
+            docker start "$ctr" 2>/dev/null || true; \
+            CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
+          fi; \
+        done; \
+        \
+        # ═══════════════════════════════════════════════════════════ \
+        # TIER 3: SYSTEM HEALTH — memory, disk, load \
+        # ═══════════════════════════════════════════════════════════ \
+        MEM_AVAIL=$(awk "/MemAvailable/ {print int(\$2/1024)}" /proc/meminfo 2>/dev/null || echo 9999); \
+        DISK_PCT=$(df / 2>/dev/null | awk "NR==2 {gsub(/%/,\"\"); print \$5}" || echo 0); \
+        LOAD=$(cat /proc/loadavg 2>/dev/null | cut -d" " -f1 || echo 0); \
+        if [ "$MEM_AVAIL" -lt 50 ]; then \
+          log "WARN: low memory: ${MEM_AVAIL}MB available — pruning Docker"; \
+          docker system prune -f --volumes 2>/dev/null || true; \
+        fi; \
+        if [ "$DISK_PCT" -gt 95 ]; then \
+          log "WARN: disk ${DISK_PCT}% full — pruning Docker images"; \
+          docker image prune -af 2>/dev/null || true; \
+        fi; \
+        \
+        # Reset container restart tracking every 10 cycles (50s) \
+        CYCLE=$((${CYCLE:-0} + 1)); \
+        if [ "$CYCLE" -ge 10 ]; then \
+          CTR_RESTART_TRACK=""; \
+          CYCLE=0; \
+        fi; \
+        \
+        # ═══════════════════════════════════════════════════════════ \
+        # ALL TIERS PASSED — pet the dog \
+        # ═══════════════════════════════════════════════════════════ \
+        echo V >&3; \
         sleep ${toString petInterval}; \
       done'
     # If the petter itself hangs, systemd kills and restarts it
