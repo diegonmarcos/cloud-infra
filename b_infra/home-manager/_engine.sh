@@ -174,8 +174,10 @@ step_compose() {
 
     log "Activated $HM_CONFIG on $DEPLOY_HOST"
 
-    # Trim to last 3 generations and GC
-    ssh "$DEPLOY_HOST" "$NIX_SOURCE; nix-env --delete-generations +3 && nix-collect-garbage" 2>&1 || true
+    # Trim to last 3 generations (skip GC on resource-constrained VMs)
+    ssh "$DEPLOY_HOST" "$NIX_SOURCE; nix-env --delete-generations +3" 2>&1 || true
+    # Only GC if >2GB free RAM (avoids OOM on 1GB VMs)
+    ssh "$DEPLOY_HOST" 'MEM=$(awk "/MemAvailable/ {print int(\$2/1024)}" /proc/meminfo); [ "$MEM" -gt 2048 ] && nix-collect-garbage 2>/dev/null || echo "[hm] Skipping GC (${MEM}MB free < 2GB threshold)"' 2>&1 || true
     log "Generations trimmed on $DEPLOY_HOST"
 }
 
