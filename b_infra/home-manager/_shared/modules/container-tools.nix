@@ -5,6 +5,9 @@
 
 {
   home.packages = with pkgs; [
+    # ── Code analysis ──
+    (callPackage ../pkgs/octocode.nix {})
+
     # ── Secrets ──
     sops
     age
