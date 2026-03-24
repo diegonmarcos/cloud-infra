@@ -521,37 +521,37 @@ cmd_workflow() {
         [ -f "$WF_SRC/$tpl" ] || { log_error "Missing template: workflows/src/$tpl"; exit 1; }
     done
 
-    # ── SSH secret mapping per VM ──
-    # Format: vm_alias|secret_key|secret_host|secret_user
-    ssh_map="gcp-proxy|GCP_PROXY_SSH_KEY|GCP_PROXY_HOST|GCP_PROXY_USER
-gcp-t4|GCP_T4_SSH_KEY|GCP_T4_HOST|GCP_T4_USER
-oci-apps|OCI_SSH_KEY|82.70.229.129|ubuntu
-oci-apps-2|OCI_SSH_KEY|79.72.28.10|ubuntu
-oci-mail|OCI_SSH_KEY|130.110.251.193|ubuntu
-oci-analytics|OCI_SSH_KEY|129.151.228.66|ubuntu"
+    # ── Read GHA config from cloud-data (source of truth) ──
+    GHA_CONFIG="$SCRIPT_DIR/cloud-data/cloud-data-gha-config.json"
+    if [ ! -f "$GHA_CONFIG" ]; then
+        log_error "Missing cloud-data/cloud-data-gha-config.json — run Dagu sync first"
+        exit 1
+    fi
 
-    # ── Scan build.json, group services by deploy.host ──
+    # Build ssh_map from cloud-data (format: vm_alias|secret_key|host_or_secret|user_or_secret)
+    ssh_map=$(jq -r '.vms | to_entries[] | [
+        .key,
+        .value.ssh_secret,
+        (.value.host // .value.host_secret),
+        (.value.user // .value.user_secret)
+    ] | join("|")' "$GHA_CONFIG")
+
+    # ── Group services by deploy.host from cloud-data ──
     vm_list=""
     ghcr_dirs=""
     rm -f /tmp/wf_vm_*.txt
 
-    for bjson in "$SOLUTIONS_DIR"/*/build.json; do
-        dir=$(basename "$(dirname "$bjson")")
-        case "$dir" in z_archive*) continue ;; esac
+    # Read services from cloud-data (frozen already excluded by C3 API)
+    for svc in $(jq -r '.services | keys[]' "$GHA_CONFIG"); do
+        dir=$(jq -r ".services[\"$svc\"].dir" "$GHA_CONFIG")
+        vm=$(jq -r ".services[\"$svc\"].vm" "$GHA_CONFIG")
+        has_docker=$(jq -r ".services[\"$svc\"].has_docker" "$GHA_CONFIG")
 
-        host=$(jq -r '.deploy.host // ""' "$bjson")
-        has_docker=$(jq -r 'if .docker then "true" else "false" end' "$bjson")
-        name=$(jq -r '.name // ""' "$bjson")
-        wrangler=$(jq -r '.deploy.wrangler // ""' "$bjson")
+        case " $vm_list " in *" $vm "*) ;; *) vm_list="$vm_list $vm" ;; esac
+        echo "$dir|$svc|$has_docker" >> "/tmp/wf_vm_${vm}.txt"
 
-        [ "$wrangler" = "true" ] && continue
-        case "$host" in ""|local|all|null)
-            [ "$has_docker" = "true" ] && ghcr_dirs="$ghcr_dirs $dir"
-            continue ;;
-        esac
-
-        case " $vm_list " in *" $host "*) ;; *) vm_list="$vm_list $host" ;; esac
-        echo "$dir|$name|$has_docker" >> "/tmp/wf_vm_${host}.txt"
+        # Track GHCR dirs for docker-only services
+        [ "$has_docker" = "true" ] && ghcr_dirs="$ghcr_dirs $dir"
     done
 
     # Clean old dist
