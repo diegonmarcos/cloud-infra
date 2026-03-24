@@ -1,7 +1,7 @@
 # Shared CLI tools — imported by ALL VMs.
 # Containers mount ~/.nix-profile/bin to share these binaries.
 # Cloud-specific SDKs (gcloud, oci) go in the VM-specific .nix file.
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   home.packages = with pkgs; [
