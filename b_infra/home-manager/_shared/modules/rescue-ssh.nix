@@ -14,7 +14,7 @@
 # Usage in VM config:
 #   (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
 #
-{ config, pkgs, lib, port ? 2222, ... }:
+{ config, pkgs, lib, port ? 2200, ... }:
 
 let
   dropbearBin = "${pkgs.dropbear}/bin/dropbear";

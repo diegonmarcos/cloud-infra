@@ -24,7 +24,7 @@ in {
         echo "[docker] RESCUE MODE — Docker blocked. Remove rescue-mode metadata to resume."; \
         exit 1; \
       fi'
-    ExecStart=${dockerdBin}
+    ExecStart=${dockerdBin} --dns 10.0.0.1 --dns 1.1.1.1
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
