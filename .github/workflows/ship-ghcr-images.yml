@@ -71,6 +71,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve symlinks in build context
+        run: |
+          # Replace symlinks with real copies so Docker can access them
+          ctx="${{ matrix.context }}"
+          find "$ctx" -maxdepth 1 -type l | while read link; do
+            target=$(readlink -f "$link")
+            rm "$link"
+            cp -r "$target" "$link"
+          done
+
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
