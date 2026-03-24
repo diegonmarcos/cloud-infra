@@ -7,7 +7,7 @@
 #
 # Flow: whitelist? → pass | blocked? → stop | confirm/warning? → prompt | else → pass
 #
-# build.sh sets BUILDSH_GUARDRAIL=1 to auto-confirm tier 2.
+# BUILDSH_GUARDRAIL=1 bypasses all prompts (re-entry + auto-confirm).
 # BLOCKED is never bypassed, not even by build.sh.
 # All wrappers are POSIX sh — no bash required.
 { config, lib, ... }:
@@ -167,13 +167,14 @@ let
             >> "$_logfile" 2>/dev/null || true
         }
 
-        # Re-entry guard: skip if already inside a guardrail wrapper
-        if [ "''${_GUARDRAIL:-}" = "1" ]; then
+        # Strip ~/.local/bin from PATH so exec hits the real binary (must happen BEFORE any exec)
+        PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
+
+        # Bypass: BUILDSH_GUARDRAIL=1 skips all prompts (re-entry guard + auto-confirm)
+        if [ "''${BUILDSH_GUARDRAIL:-}" = "1" ]; then
           exec ${cmd} "$@" || _die "exec '${cmd}' failed (not found on PATH?)"
         fi
-        export _GUARDRAIL=1
-        # Strip ~/.local/bin from PATH so exec hits the real binary
-        PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
+        export BUILDSH_GUARDRAIL=1
         # Verify the real binary exists after PATH strip
         if ! command -v ${cmd} >/dev/null 2>&1; then
           _die "'${cmd}' not found on PATH after stripping ~/.local/bin. Is it installed?"
@@ -193,10 +194,6 @@ let
         _log_guardrail "warning"
         exec ${cmd} "$@" || _die "exec '${cmd}' failed"
       '' else ''
-        if [ "''${BUILDSH_GUARDRAIL:-}" = "1" ]; then
-          _log_guardrail "confirm-auto"
-          exec ${cmd} "$@" || _die "exec '${cmd}' failed (BUILDSH_GUARDRAIL path)"
-        fi
         printf "\n"
         printf "\033[1;31m  ╔══════════════════════════════════════════════════════════════╗\033[0m\n"
         printf "\033[1;31m  ║  ⚠ CONFIRM — DECLARATIVE ENVIRONMENT                        ║\033[0m\n"
