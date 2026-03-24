@@ -27,7 +27,7 @@ stdenv.mkDerivation {
   unpackPhase = "tar xf $src";
 
   nativeBuildInputs = lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];
-  buildInputs = [ openssl zstd ];
+  buildInputs = [ openssl zstd stdenv.cc.cc.lib ];
 
   installPhase = ''
     mkdir -p $out/bin
