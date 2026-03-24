@@ -10,8 +10,8 @@ DIST_DIR="$DIR/dist"
 # Vault paths — auto-detect mobile vs desktop
 if [ -d "$HOME/git/vault/A0_keys" ]; then
     VAULT="$HOME/git/vault/A0_keys"
-elif [ -d "/home/diego/Mounts/Git/vault/A0_keys" ]; then
-    VAULT="/home/diego/Mounts/Git/vault/A0_keys"
+elif [ -d "/home/diego/git/vault/A0_keys" ]; then
+    VAULT="/home/diego/git/vault/A0_keys"
 else
     echo "ERROR: vault not found"; exit 1
 fi
