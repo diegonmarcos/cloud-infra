@@ -112,12 +112,22 @@ in {
           fi; \
         done; \
         \
-        # 2b: Restart unhealthy containers \
+        # 2b: Restart unhealthy containers (only if up > 90s to respect start_period) \
         for ctr in $(docker ps --filter health=unhealthy --format "{{.Names}}" 2>/dev/null); do \
+          # Skip containers still in startup grace period \
+          UPTIME=$(docker inspect "$ctr" --format "{{.State.StartedAt}}" 2>/dev/null || echo ""); \
+          if [ -n "$UPTIME" ]; then \
+            START_EPOCH=$(date -d "$UPTIME" +%s 2>/dev/null || echo 0); \
+            NOW_EPOCH=$(date +%s); \
+            AGE=$((NOW_EPOCH - START_EPOCH)); \
+            if [ "$AGE" -lt 90 ]; then \
+              continue; \
+            fi; \
+          fi; \
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
           if [ "$PREV" -lt 1 ]; then \
-            log "ACTION: restarting unhealthy container: $ctr"; \
-            ntfy 3 "Container unhealthy" "$ctr unhealthy — restarting" "warning,heartpulse"; \
+            log "ACTION: restarting unhealthy container: $ctr (up ${AGE}s)"; \
+            ntfy 3 "Container unhealthy" "$ctr unhealthy ${AGE}s — restarting" "warning,heartpulse"; \
             docker restart "$ctr" --time 10 2>/dev/null || true; \
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
           fi; \
