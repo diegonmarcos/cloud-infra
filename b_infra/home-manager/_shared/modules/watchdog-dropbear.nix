@@ -49,7 +49,15 @@ in {
       DOCKER_FAIL=0; \
       CTR_RESTART_TRACK=""; \
       LOG="/var/log/watchdog-petter.log"; \
-      log() { echo "$(date -Is) [watchdog] $1" >> "$LOG" 2>/dev/null; }; \
+      HOSTNAME=$(hostname -s 2>/dev/null || echo "?"); \
+      sysinfo() { \
+        MEM=$(awk "/MemAvailable/ {printf \"%.0f\", \$2/1024}" /proc/meminfo 2>/dev/null || echo "?"); \
+        LOAD=$(cut -d" " -f1-3 /proc/loadavg 2>/dev/null || echo "?"); \
+        DISK=$(df / 2>/dev/null | awk "NR==2 {print \$5}" || echo "?"); \
+        CTRS=$(docker ps -q 2>/dev/null | wc -l || echo "?"); \
+        echo "mem=${MEM}MB load=$LOAD disk=$DISK ctrs=$CTRS"; \
+      }; \
+      log() { echo "$(date -Is) [$HOSTNAME] [watchdog] $1 | $(sysinfo)" >> "$LOG" 2>/dev/null; }; \
       while true; do \
         # ═══════════════════════════════════════════════════════════ \
         # TIER 0: KERNEL — is /proc readable? \
