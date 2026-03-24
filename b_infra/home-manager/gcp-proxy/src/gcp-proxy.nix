@@ -21,7 +21,6 @@
       inherit config pkgs lib;
       staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
     })
-    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";
