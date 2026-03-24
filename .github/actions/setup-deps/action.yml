@@ -36,11 +36,12 @@ runs:
     - name: Cache nix store
       uses: nix-community/cache-nix-action@v6
       with:
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('.github/flake.lock', '**/flake.lock') }}
+        # Include config.json hash — cache invalidates when services change (refactors, renames)
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock') }}
         restore-prefixes-first-match: nix-${{ runner.os }}-
         gc-max-store-size-linux: 2G
         purge: true
-        purge-created: 0
+        purge-created: 604800
         purge-primary-key: never
         purge-prefixes: nix-${{ runner.os }}-
 
