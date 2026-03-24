@@ -12,7 +12,6 @@
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

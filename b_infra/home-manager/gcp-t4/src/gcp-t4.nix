@@ -13,7 +13,6 @@
     (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
-    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

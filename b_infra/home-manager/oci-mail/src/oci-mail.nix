@@ -20,7 +20,6 @@
     })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    (import ./modules/rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
     (import ./modules/container-init.nix {
       inherit config pkgs lib;
       priorityOrder = [ "syncthing" "syslog-forwarder" "dagu" "smtp-proxy" ];
