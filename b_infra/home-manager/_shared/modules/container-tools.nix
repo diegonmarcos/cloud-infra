@@ -54,6 +54,11 @@
     unzip
     zip
 
+    # ── Node.js runtime (shared with containers via nix-profile bind mount) ──
+    nodejs_22
+    nodePackages.typescript
+    nodePackages.tsx
+
     # ── Container runtime ──
     docker
     docker-compose
