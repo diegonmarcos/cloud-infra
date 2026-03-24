@@ -12,5 +12,7 @@
     ./shell-path.nix
     ./sshd-hardening.nix
     ./system-cleanup.nix
+    ./watchdog-dropbear.nix
+    (import ./rescue-ssh.nix { inherit config pkgs lib; port = 2200; })
   ];
 }
