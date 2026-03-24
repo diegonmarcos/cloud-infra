@@ -27,7 +27,6 @@ on:
       - "a_solutions/aa-sui_radicale/src/**"
       - "a_solutions/aa-sui_revealmd/src/**"
       - "a_solutions/ac-fin_crawlee-cloud/src/**"
-      - "a_solutions/ac-fin_quant-lab-full/src/**"
       - "a_solutions/ac-fin_quant-lab-light/src/**"
       - "a_solutions/ad-agi_rig-agentic/src/**"
       - "a_solutions/bb-sec_orchestrator/src/**"
@@ -163,11 +162,6 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'ac-fin_crawlee-cloud') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/ac-fin_crawlee-cloud/build.sh ship
-
-      - name: Ship quant-lab-full
-        if: contains(steps.changed.outputs.dirs, 'ac-fin_quant-lab-full') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ac-fin_quant-lab-full/build.sh ship
 
       - name: Ship quant-lab-light
         if: contains(steps.changed.outputs.dirs, 'ac-fin_quant-lab-light') || github.event_name == 'workflow_dispatch'
