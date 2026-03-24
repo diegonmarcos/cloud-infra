@@ -14,5 +14,6 @@
     ./system-cleanup.nix
     ./watchdog-dropbear.nix
     ./rescue-ssh.nix
+    ./no-build-guard.nix
   ];
 }
