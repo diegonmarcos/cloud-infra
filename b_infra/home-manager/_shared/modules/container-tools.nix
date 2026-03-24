@@ -83,4 +83,15 @@
   home.file."bin/busybox-static" = {
     source = "${pkgs.pkgsStatic.busybox}/bin/busybox";
   };
+
+  # Auto-update git submodules in all repos on activation.
+  # Ensures cloud-data submodule is always fresh.
+  home.activation.gitSubmoduleUpdate = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    for repo in "$HOME/git/cloud" "$HOME/git/front" "$HOME/git/unix"; do
+      [ -d "$repo/.git" ] || continue
+      [ -f "$repo/.gitmodules" ] || continue
+      printf "[git-submodules] Updating submodules in %s\n" "$repo"
+      ${pkgs.git}/bin/git -C "$repo" submodule update --remote --init 2>/dev/null || true
+    done
+  '';
 }
