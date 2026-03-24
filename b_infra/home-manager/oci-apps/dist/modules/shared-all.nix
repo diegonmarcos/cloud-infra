@@ -7,7 +7,6 @@
     ./dns-hickory.nix
     ./docker-service.nix
     ./guardrails.nix
-    ./node-deps.nix
     ./ssh-keys.nix
     ./shell-path.nix
     ./sshd-hardening.nix
