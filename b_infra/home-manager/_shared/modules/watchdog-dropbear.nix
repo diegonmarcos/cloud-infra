@@ -50,6 +50,15 @@ in {
       CTR_RESTART_TRACK=""; \
       LOG="/var/log/watchdog-petter.log"; \
       HOSTNAME=$(hostname -s 2>/dev/null || echo "?"); \
+      NTFY="http://10.0.0.1:8090/watchdog-dropbear"; \
+      ntfy() { \
+        PRIO="$1"; TITLE="$2"; MSG="$3"; \
+        curl -sf --max-time 3 -X POST "$NTFY" \
+          -H "Title: [$HOSTNAME] $TITLE" \
+          -H "Priority: $PRIO" \
+          -H "Tags: $4" \
+          -d "$MSG | $(sysinfo)" 2>/dev/null || true; \
+      }; \
       sysinfo() { \
         MEM=$(awk "/MemAvailable/ {printf \"%.0f\", \$2/1024}" /proc/meminfo 2>/dev/null || echo "?"); \
         LOAD=$(cut -d" " -f1-3 /proc/loadavg 2>/dev/null || echo "?"); \
@@ -64,6 +73,7 @@ in {
         # ═══════════════════════════════════════════════════════════ \
         if ! [ -f /proc/loadavg ]; then \
           log "FATAL: /proc unreadable — kernel frozen. Stopping petter."; \
+          ntfy 5 "KERNEL FROZEN" "/proc unreadable — watchdog reset in ${toString watchdogTimeout}s" "rotating_light,skull"; \
           exit 1; \
         fi; \
         \
@@ -75,6 +85,7 @@ in {
           log "ALERT: Docker not responding (fail $DOCKER_FAIL)"; \
           if [ "$DOCKER_FAIL" -ge 3 ]; then \
             log "ACTION: restarting Docker daemon (attempt $((DOCKER_FAIL - 2)))"; \
+            ntfy 4 "Docker daemon restart" "Docker not responding — restarting (attempt $((DOCKER_FAIL - 2)))" "warning,whale"; \
             systemctl restart docker 2>/dev/null || true; \
           fi; \
           echo V >&3; \
@@ -93,6 +104,7 @@ in {
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
           if [ "$PREV" -lt 2 ]; then \
             log "ACTION: restarting crash-looping container: $ctr"; \
+            ntfy 3 "Container restart" "$ctr crash-looping — restarting" "warning,package"; \
             docker restart "$ctr" --time 10 2>/dev/null || true; \
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
           elif [ "$PREV" -eq 2 ]; then \
@@ -105,6 +117,7 @@ in {
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
           if [ "$PREV" -lt 1 ]; then \
             log "ACTION: restarting unhealthy container: $ctr"; \
+            ntfy 3 "Container unhealthy" "$ctr unhealthy — restarting" "warning,heartpulse"; \
             docker restart "$ctr" --time 10 2>/dev/null || true; \
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
           fi; \
@@ -117,6 +130,7 @@ in {
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true); \
           if [ "$PREV" -lt 1 ]; then \
             log "ACTION: restarting exited container: $ctr (non-zero exit)"; \
+            ntfy 3 "Container exited" "$ctr exited non-zero — restarting" "warning,coffin"; \
             docker start "$ctr" 2>/dev/null || true; \
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK\n$ctr"; \
           fi; \
@@ -130,10 +144,12 @@ in {
         LOAD=$(cat /proc/loadavg 2>/dev/null | cut -d" " -f1 || echo 0); \
         if [ "$MEM_AVAIL" -lt 50 ]; then \
           log "WARN: low memory: ${MEM_AVAIL}MB available — pruning Docker"; \
+          ntfy 4 "Low memory" "${MEM_AVAIL}MB available — pruning Docker" "warning,brain"; \
           docker system prune -f --volumes 2>/dev/null || true; \
         fi; \
         if [ "$DISK_PCT" -gt 95 ]; then \
           log "WARN: disk ${DISK_PCT}% full — pruning Docker images"; \
+          ntfy 4 "Disk full" "Disk ${DISK_PCT}% — pruning Docker images" "warning,floppy_disk"; \
           docker image prune -af 2>/dev/null || true; \
         fi; \
         \
