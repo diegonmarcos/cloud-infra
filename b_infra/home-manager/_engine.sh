@@ -132,7 +132,18 @@ step_deploy() {
         fi
         log "Closure built: $RESULT"
 
-        log "Copying closure to $DEPLOY_HOST via nix copy"
+        # Check VM free RAM before nix copy (avoid OOM on <2GB VMs)
+        VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null" || echo 9999)
+        if [ "$VM_MEM" -lt 200 ]; then
+            log "WARNING: VM has only ${VM_MEM}MB free — waiting 30s for earlyoom to free memory"
+            sleep 30
+            VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null" || echo 9999)
+            if [ "$VM_MEM" -lt 100 ]; then
+                log "ERROR: VM has only ${VM_MEM}MB free — skipping nix copy (would OOM)"
+                return 1
+            fi
+        fi
+        log "Copying closure to $DEPLOY_HOST via nix copy (VM has ${VM_MEM}MB free)"
         nix copy --to "ssh://$DEPLOY_HOST" "$RESULT"
         log "Closure copied"
 
