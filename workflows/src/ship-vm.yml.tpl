@@ -30,4 +30,5 @@ jobs:
 {{SSH_CONFIG}}          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 {{DOCKER_STEPS}}
       - name: Ship services
+        shell: bash {0}
         run: bash .github/workflows/scripts/ship-vm.sh {{VM_NAME}}

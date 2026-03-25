@@ -4,7 +4,7 @@
 # Usage: ship-vm.sh <vm-alias> [service-filter]
 #   vm-alias: gcp-proxy, oci-apps, oci-mail, oci-analytics, gcp-t4
 #   service-filter: optional, only ship this service dir (e.g. bc-obs_dagu)
-set -euo pipefail
+set -uo pipefail  # no -e: build failures are caught by if/else in the loop
 
 VM="${1:?Usage: ship-vm.sh <vm-alias> [service-filter]}"
 FILTER="${2:-}"
