@@ -80,6 +80,13 @@ Host oci-analytics
     IdentityFile ~/.ssh/vault_id_rsa
     IdentitiesOnly yes
 
+# OCI A1 Flex 0 - Consolidated Apps
+Host oci-apps
+    HostName 10.0.0.6
+    User ubuntu
+    IdentityFile ~/.ssh/vault_id_rsa
+    IdentitiesOnly yes
+
 # OCI A1 Flex Paid - Apps 2
 Host oci-apps-2
     HostName 10.0.0.7
