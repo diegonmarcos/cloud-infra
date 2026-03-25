@@ -45,7 +45,7 @@ echo "════════════════════════�
 echo "Ship → $VM ($TOTAL services)"
 echo "═══════════════════════════════════════════════"
 
-echo "$SERVICES" | while IFS='|' read -r dir name has_docker; do
+while IFS='|' read -r dir name has_docker; do
   # Apply filter
   if [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ]; then
     continue
@@ -82,7 +82,7 @@ echo "$SERVICES" | while IFS='|' read -r dir name has_docker; do
     echo "FAIL $name (exit $?)"
     FAIL=$((FAIL + 1))
   fi
-done
+done <<< "$SERVICES"
 
 echo ""
 echo "═══════════════════════════════════════════════"
