@@ -3,6 +3,7 @@
 # httpd) must be imported explicitly with their args.
 { imports = [
     ./authorized-keys.nix
+    ./container-init.nix
     ./container-tools.nix
     ./dns-hickory.nix
     ./docker-service.nix
