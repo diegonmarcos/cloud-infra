@@ -81,29 +81,36 @@ in {
       --avoid "^(sshd|ssh|systemd|earlyoom|dbus|wg-quick|wg)$" \
       -r 0
     Restart=always
-    RestartSec=5
+    RestartSec=2
+    OOMScoreAdjust=-999
+    MemoryMin=10M
+    Nice=-20
     [Install]
     WantedBy=multi-user.target
   '';
 
-  # ── SSH protection ────────────────────────────────────────────────────
+  # ── SSH protection — UNTOUCHABLE (-1000 = kernel NEVER kills) ─────────
   home.file.".local/share/system-protection/sshd-protection.conf".text = ''
     [Service]
+    OOMScoreAdjust=-1000
+    OOMPolicy=continue
     MemoryMin=50M
     MemoryLow=80M
-    CPUWeight=1000
-    OOMScoreAdjust=-900
-    OOMPolicy=continue
+    CPUWeight=10000
+    Nice=-19
+    IOWeight=10000
   '';
 
-  # ── WireGuard protection ──────────────────────────────────────────────
+  # ── WireGuard protection — UNTOUCHABLE (no WG = no access) ──────────
   home.file.".local/share/system-protection/wg-quick-protection.conf".text = ''
     [Service]
+    OOMScoreAdjust=-1000
+    OOMPolicy=continue
     MemoryMin=30M
     MemoryLow=50M
-    CPUWeight=1000
-    OOMScoreAdjust=-900
-    OOMPolicy=continue
+    CPUWeight=10000
+    Nice=-19
+    IOWeight=10000
   '';
 
   # ── Docker memory cap ─────────────────────────────────────────────────
