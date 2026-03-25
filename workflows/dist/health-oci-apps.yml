@@ -29,6 +29,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Update submodules to latest
+        run: git submodule update --remote
+
       - uses: ./.github/actions/setup-deps
         with:
           ssh_key: ${{ secrets.OCI_SSH_KEY }}

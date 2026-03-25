@@ -51,6 +51,11 @@ jobs:
             file: a_solutions/bc-obs_c3-services-api/src/Dockerfile
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Update submodules to latest
+        run: git submodule update --remote
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3

@@ -29,6 +29,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Update submodules to latest
+        run: git submodule update --remote
 
       - uses: ./.github/actions/setup-deps
 
