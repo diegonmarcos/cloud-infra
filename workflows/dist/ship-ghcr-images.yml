@@ -64,7 +64,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Update submodules to latest
+      - name: Update submodules
         run: git submodule update --remote
 
       - uses: docker/setup-qemu-action@v3
@@ -78,7 +78,6 @@ jobs:
 
       - name: Resolve symlinks in build context
         run: |
-          # Replace symlinks with real copies so Docker can access them
           ctx="${{ matrix.context }}"
           find "$ctx" -maxdepth 1 -type l | while read link; do
             target=$(readlink -f "$link")

@@ -29,7 +29,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Update submodules to latest
+      - name: Update submodules
         run: git submodule update --remote
 
       - uses: ./.github/actions/setup-deps
@@ -40,5 +40,6 @@ jobs:
           ssh_alias: oci-apps
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Health check
-        run: .github/workflows/scripts/health-check-vm.sh oci-apps 3100,3101,3102,3103,8065,8081
+      - name: Run
+        shell: bash {0}
+        run: bash .github/workflows/scripts/health-check-vm.sh oci-apps 3100,3101,3102,3103,8065,8081

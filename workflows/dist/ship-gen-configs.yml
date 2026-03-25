@@ -42,47 +42,18 @@ jobs:
           fetch-depth: 0
           ssh-key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
-      - name: Update submodules to latest
+      - name: Update submodules
         run: git submodule update --remote
 
       - uses: ./.github/actions/setup-deps
+        with:
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Generate cloud-data (topology + configs + deps)
+      - name: Configure main repo push URL
+        run: git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/diegonmarcos/cloud.git"
+
+      - name: Run
+        shell: bash {0}
         env:
           GIT_BASE: ${{ github.workspace }}/../
-        run: bash build.sh config
-
-      - name: Commit and push cloud-data submodule
-        run: |
-          cd cloud-data
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Stash generated files, checkout main, pop stash, pull latest
-          git stash --include-untracked
-          git checkout main
-          git pull --rebase origin main
-          git stash pop || true
-          git add -A *.json *.md
-          if git diff --cached --quiet; then
-            echo "cloud-data: no changes"
-            exit 0
-          fi
-          git commit -m "auto: regenerate cloud-data from build.json + config.json [skip ci]"
-          git push origin main
-
-      - name: Update submodule reference in main repo
-        run: |
-          cd "$GITHUB_WORKSPACE"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Reset any nix/cache modifications, keep only cloud-data change
-          git checkout -- . 2>/dev/null || true
-          git add cloud-data
-          if git diff --cached --quiet; then
-            echo "main repo: submodule ref unchanged"
-            exit 0
-          fi
-          git commit -m "auto: update cloud-data submodule ref [skip ci]"
-          # Push main repo via HTTPS + GITHUB_TOKEN (deploy key only works for cloud-data)
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/diegonmarcos/cloud.git"
-          git push origin main
+        run: bash .github/workflows/scripts/ship-gen-configs.sh

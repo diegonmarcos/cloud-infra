@@ -26,9 +26,12 @@ jobs:
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update submodules to latest
+      - name: Update submodules
+        run: git submodule update --remote
+
+      - name: Run
+        shell: bash {0}
         run: |
-          git submodule update --remote
           if ! git diff --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"

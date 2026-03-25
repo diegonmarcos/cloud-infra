@@ -22,13 +22,16 @@ jobs:
         with:
           submodules: true
 
-      - name: Update submodules to latest
+      - name: Update submodules
         run: git submodule update --remote
 
       - uses: ./.github/actions/setup-deps
+        with:
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Ship cloudflare-worker
+      - name: Run
+        shell: bash {0}
         env:
           CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
-        run: bash a_solutions/ba-clo_cloudflare-worker/build.sh ship
+        run: bash .github/workflows/scripts/ship-cloudflare-worker.sh
