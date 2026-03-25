@@ -1,6 +1,7 @@
-# Container orchestrator — imports all container-related modules
+# Container Control — orchestrator for all container-related modules
 { imports = [
-    ./container-init.nix
-    ./container-tools.nix
+    ./container-control-init.nix
+    ./container-control-tools.nix
+    ./container-control-no-build-guardrails.nix
   ];
 }
