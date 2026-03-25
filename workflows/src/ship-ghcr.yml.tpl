@@ -17,6 +17,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Update submodules to latest
+        run: git submodule update --remote
+
       - uses: ./.github/actions/setup-deps
 
       - uses: docker/setup-buildx-action@v3

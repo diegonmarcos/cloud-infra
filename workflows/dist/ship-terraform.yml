@@ -39,6 +39,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          submodules: true
+
+      - name: Update submodules to latest
+        run: git submodule update --remote
+        with:
           fetch-depth: 2
 
       - name: Detect changes

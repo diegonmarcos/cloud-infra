@@ -22,6 +22,9 @@ jobs:
           fetch-depth: 2
           submodules: true
 
+      - name: Update submodules to latest
+        run: git submodule update --remote
+
       - name: Detect changed services
         id: changed
         run: |
