@@ -13,7 +13,7 @@ FROM nixos/nix:latest AS builder
 # Enable flakes
 RUN mkdir -p /etc/nix && echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf
 
-# Copy deps flake + config.json
+# Copy deps flake (context is workflows/src/deps/)
 WORKDIR /build
 COPY flake.nix flake.lock ./
 
