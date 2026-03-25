@@ -61,11 +61,14 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Clean up any nix/cache artifacts before committing
+          git checkout -- .github/flake.lock 2>/dev/null || true
           git add cloud-data
           if git diff --cached --quiet; then
             echo "main repo: submodule ref unchanged"
             exit 0
           fi
           git commit -m "auto: update cloud-data submodule ref [skip ci]"
-          git pull --rebase --autostash origin main
+          git fetch origin main
+          git rebase origin/main
           git push
