@@ -56,7 +56,7 @@ runs:
         find /nix/var/nix/gcroots/auto -type l 2>/dev/null | while read root; do
           target=$(readlink "$root" 2>/dev/null || true)
           case "$target" in
-            */profiles/*|*/per-user/*|*gha-devshell*) ;;  # keep Layer 1 roots
+            */profiles/*|*/per-user/*|*gha-devshell*|*nix-gha*) ;;  # keep Layer 1 roots
             *) rm -f "$root" 2>/dev/null || true ;;
           esac
         done
@@ -68,7 +68,9 @@ runs:
         if [ -f "$GITHUB_WORKSPACE/.github/flake.nix" ]; then
           # Build dev shell as a GC root — survives cache GC, gets cached for next run
           nix build "$GITHUB_WORKSPACE/.github#devShells.x86_64-linux.default.inputDerivation" \
-            --out-link /nix/var/nix/gcroots/gha-devshell
+            --out-link "$HOME/.nix-gha-devshell"
+          # Register as GC root via nix-store (has permission to write gcroots)
+          nix-store --add-root /nix/var/nix/gcroots/auto/gha-devshell -r "$(readlink "$HOME/.nix-gha-devshell")" >/dev/null 2>&1 || true
           # Add all nix store paths from the dev shell to $PATH
           for pkg_path in $(nix develop "$GITHUB_WORKSPACE/.github#" --command sh -c 'echo $PATH' | tr ':' '\n' | grep /nix/store); do
             echo "$pkg_path" >> "$GITHUB_PATH"
