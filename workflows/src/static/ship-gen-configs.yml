@@ -59,16 +59,16 @@ jobs:
 
       - name: Update submodule reference in main repo
         run: |
+          # Fresh checkout to avoid nix cache artifacts dirtying worktree
+          cd "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Clean up any nix/cache artifacts before committing
-          git checkout -- .github/flake.lock 2>/dev/null || true
+          # Reset any nix/cache modifications, keep only cloud-data change
+          git checkout -- . 2>/dev/null || true
           git add cloud-data
           if git diff --cached --quiet; then
             echo "main repo: submodule ref unchanged"
             exit 0
           fi
           git commit -m "auto: update cloud-data submodule ref [skip ci]"
-          git fetch origin main
-          git rebase origin/main
-          git push
+          git push origin main
