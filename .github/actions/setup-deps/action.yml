@@ -33,17 +33,14 @@ runs:
         CI_IMAGE="ghcr.io/diegonmarcos/cloud-ci:latest"
         # Pull the pre-built nix store image
         if docker pull "$CI_IMAGE" 2>/dev/null; then
-          # Extract nix store from image into runner's nix store
           CID=$(docker create "$CI_IMAGE" true)
-          # Copy nix store paths (deps only — no build outputs)
-          sudo docker cp "$CID:/nix/store/." /nix/store/ 2>/dev/null || true
-          sudo docker cp "$CID:/nix/var/." /nix/var/ 2>/dev/null || true
-          # Copy pre-installed node_modules
+          # Copy node_modules + deps flake (NOT nix store — use image for builds)
           docker cp "$CID:/root/.node_modules" "$HOME/.node_modules" 2>/dev/null || true
-          # Copy deps flake for nix develop
           docker cp "$CID:/opt/deps-flake" "$HOME/.deps-flake" 2>/dev/null || true
           docker rm "$CID" >/dev/null
-          echo "Restored nix store from cloud-ci image"
+          # Export image name for _engine.sh to use
+          echo "CLOUD_CI_IMAGE=$CI_IMAGE" >> "$GITHUB_ENV"
+          echo "Pulled cloud-ci image — builds will run inside container"
         else
           echo "::warning::cloud-ci image not available — building deps from scratch"
         fi
