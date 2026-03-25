@@ -40,7 +40,7 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - uses: ./.github/actions/setup-deps
 
@@ -54,23 +54,32 @@ jobs:
           cd cloud-data
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Stash generated files, checkout main, pop stash, pull latest
+          git stash --include-untracked
+          git checkout main
+          git pull --rebase origin main
+          git stash pop || true
           git add -A *.json *.md
           if git diff --cached --quiet; then
             echo "cloud-data: no changes"
             exit 0
           fi
           git commit -m "auto: regenerate cloud-data from build.json + config.json [skip ci]"
-          git push origin HEAD:main
+          git push origin main
 
       - name: Update submodule reference in main repo
         run: |
+          cd "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Reset any nix/cache modifications, keep only cloud-data change
+          git checkout -- . 2>/dev/null || true
           git add cloud-data
           if git diff --cached --quiet; then
             echo "main repo: submodule ref unchanged"
             exit 0
           fi
           git commit -m "auto: update cloud-data submodule ref [skip ci]"
-          git pull --rebase origin main
-          git push
+          # Push main repo via HTTPS + GITHUB_TOKEN (deploy key only works for cloud-data)
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/diegonmarcos/cloud.git"
+          git push origin main
