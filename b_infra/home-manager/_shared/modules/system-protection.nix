@@ -1,19 +1,18 @@
 # System Protection — Orchestrator
 #
-# Imports the 3 sub-modules:
-#   system-protection-resource-bouncer.nix   — zram, earlyoom, sysctl, cgroups, Docker cap
-#   system-protection-watchdog-dropbear.nix  — disk swap, disk watchdog, rescue SSH
-#   system-protection-guardrails.nix         — command whitelist/blacklist (imported via shared-all.nix)
-#
-# Desktop equivalent: unix/aa_nixos-surface_host/src/modules/configuration_resource-bouncer.nix
+# Reads VM specs from cloud-data-home-manager.json (ram_gb, rescue_port)
+# Imports sub-modules with derived parameters.
 #
 # Usage in VM config:
-#   (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-#   (replaces both old system-protection.nix + rescue-ssh.nix with ONE import)
-#
-{ config, pkgs, lib, ramMB, rescuePort ? 2200, ... }:
+#   (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "gcp-proxy"; })
+{ config, pkgs, lib, vmName, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  vmData = cloudData.vms.${vmName};
+  ramMB = vmData.specs.ram_gb * 1024;
+  rescuePort = vmData.rescue_port;
+in {
   imports = [
     (import ./system-protection-resource-bouncer.nix { inherit config pkgs lib ramMB; })
     (import ./system-protection-watchdog-dropbear.nix { inherit config pkgs lib ramMB rescuePort; })

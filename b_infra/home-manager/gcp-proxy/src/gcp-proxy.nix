@@ -1,39 +1,28 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+  vmData = cloudData.vms."gcp-proxy";
+  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }];
+in {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-proxy"; })
-    (import ./modules/network-firewall.nix {
-      vmName = "gcp-proxy";
-      publicPorts = [
-        { port = 80;   proto = "tcp"; desc = "HTTP (Caddy)"; }
-        { port = 443;  proto = "tcp"; desc = "HTTPS (Caddy)"; }
-        { port = 443;  proto = "udp"; desc = "QUIC (Caddy)"; }
-        { port = 993;  proto = "tcp"; desc = "IMAPS (Caddy L4 → oci-mail)"; }
-        { port = 465;  proto = "tcp"; desc = "SMTPS (Caddy L4 → oci-mail)"; }
-        { port = 587;  proto = "tcp"; desc = "SMTP Submission (Caddy L4 → oci-mail)"; }
-        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
-      ];
-    })
+    (import ./modules/network-firewall.nix { vmName = "gcp-proxy"; inherit publicPorts; })
     ./modules/shared-all.nix
-    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    (import ./modules/container-init.nix {
-      inherit config pkgs lib;
-      staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
-    })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "gcp-proxy"; })
     (import ./modules/system-protection-systemd-control.nix {})
   ];
-  home.username = "diego";
-  home.homeDirectory = "/home/diego";
-  home.stateVersion = "24.11";
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
 
   programs.home-manager.enable = true;
 
-  # Git configuration
   programs.git = {
     enable = true;
-    userName = "Diego Marcos";
-    userEmail = "diegonmarcos@gmail.com";
+    userName = cloudData.owner.name;
+    userEmail = cloudData.owner.email;
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase = false;

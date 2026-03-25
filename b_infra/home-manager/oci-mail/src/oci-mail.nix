@@ -1,48 +1,32 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+  vmData = cloudData.vms."oci-mail";
+  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }];
+in {
   imports = [
     (import ./wireguard.nix { vmName = "oci-mail"; })
-    (import ./modules/network-firewall.nix {
-      vmName = "oci-mail";
-      publicPorts = [
-        { port = 25;    proto = "tcp"; desc = "SMTP (Stalwart)"; }
-        { port = 465;   proto = "tcp"; desc = "SMTPS (Stalwart via Caddy L4)"; }
-        { port = 587;   proto = "tcp"; desc = "SMTP submission (Stalwart via Caddy L4)"; }
-        { port = 993;   proto = "tcp"; desc = "IMAPS (Stalwart via Caddy L4)"; }
-        { port = 4190;  proto = "tcp"; desc = "ManageSieve (Stalwart)"; }
-        { port = 8080;  proto = "tcp"; desc = "SMTP proxy (CF Worker ingress)"; }
-        { port = 8443;  proto = "tcp"; desc = "Stalwart web admin HTTPS"; }
-        { port = 22000; proto = "tcp"; desc = "Syncthing transfer"; }
-        { port = 21027; proto = "udp"; desc = "Syncthing discovery"; }
-        { port = 2200;  proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }
-      ];
-    })
+    (import ./modules/network-firewall.nix { vmName = "oci-mail"; inherit publicPorts; })
     ./modules/shared-all.nix
-    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
-    (import ./modules/container-init.nix {
-      inherit config pkgs lib;
-      priorityOrder = [ "syncthing" "syslog-forwarder" "dagu" "smtp-proxy" ];
-      extraComposeDirs = [ "/opt/stalwart" ];
-      staleContainers = [ "caddy" "introspect-proxy" "mailu-front-1" "mailu-admin-1" "mailu-imap-1" "mailu-smtp-1" "mailu-antispam-1" "mailu-webmail-1" "mailu-redis-1" ];
-    })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "oci-mail"; })
     (import ./modules/system-protection-systemd-control.nix {})
   ];
-  home.username = "ubuntu";
-  home.homeDirectory = "/home/ubuntu";
-  home.stateVersion = "24.11";
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
 
   programs.home-manager.enable = true;
 
   home.packages = with pkgs; [
-    # Mail-specific tools
-    swaks  # SMTP testing
+    swaks
   ];
 
   programs.git = {
     enable = true;
-    userName = "Diego Marcos";
-    userEmail = "diegonmarcos@gmail.com";
+    userName = cloudData.owner.name;
+    userEmail = cloudData.owner.email;
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase = false;
