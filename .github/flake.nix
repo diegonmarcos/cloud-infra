@@ -1,49 +1,81 @@
 {
-  description = "GHA CI/CD build environment — permanent deps layer";
+  description = "GHA CI/CD build environment — reads deps from cloud-data-deps.json";
   # ┌──────────────────────────────────────────────────────────────────┐
   # │ ARCHITECTURE: Two-layer nix store strategy                       │
   # │                                                                  │
-  # │ Layer 1 (CACHED): This devShell closure — all build tools and    │
-  # │   nixpkgs deps. Slow to fetch (~500MB), rarely changes.         │
-  # │   GHA caches this between runs.                                  │
+  # │ Layer 1 (CACHED): This devShell closure — all unix tools + node  │
+  # │   Reads config.json .deps.system for nix package names.         │
+  # │   shellHook installs npm packages to ~/.node_modules.            │
   # │                                                                  │
-  # │ Layer 2 (EPHEMERAL): Service build outputs (docker-compose.yml,  │
-  # │   configs). Fast to build (seconds), changes often.             │
-  # │   GC'd after every cache restore — always rebuilt fresh.         │
-  # │                                                                  │
-  # │ Result: builds are fast (deps cached) AND correct (outputs fresh)│
+  # │ Layer 2 (EPHEMERAL): Service build outputs (docker-compose.yml)  │
+  # │   GC'd after cache restore — always rebuilt fresh.               │
   # └──────────────────────────────────────────────────────────────────┘
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
 
   outputs = { self, nixpkgs }: let
     forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ];
+
+    # Read deps from config.json (source of truth)
+    configJson = builtins.fromJSON (builtins.readFile ../../../config.json);
+    sysDeps = configJson.deps.system;
+    buildDeps = configJson.deps.build or {};
+    optDeps = configJson.deps.optional;
+    nodeDeps = configJson.deps.node.required or [];
+
+    # Map config.json nix package names to actual nixpkgs attributes
+    # Handles dotted paths like "nodePackages.typescript"
+    resolvePkg = pkgs: nixStr:
+      if nixStr == null then null
+      else if builtins.match ".*\\..*" nixStr != null then
+        let parts = builtins.split "\\." nixStr;
+        in pkgs.${builtins.elemAt parts 0}.${builtins.elemAt parts 2}
+      else pkgs.${nixStr};
+
+    # Collect all nix packages from system + optional deps
+    collectPkgs = pkgs:
+      let
+        sysPackages = builtins.filter (p: p != null) (
+          builtins.attrValues (builtins.mapAttrs (_: v: resolvePkg pkgs (v.nix or null)) sysDeps)
+        );
+        buildPackages = builtins.filter (p: p != null) (
+          builtins.attrValues (builtins.mapAttrs (_: v: resolvePkg pkgs (v.nix or null)) buildDeps)
+        );
+        optPackages = builtins.filter (p: p != null) (
+          builtins.attrValues (builtins.mapAttrs (_: v: resolvePkg pkgs (v.nix or null)) optDeps)
+        );
+      in sysPackages ++ buildPackages ++ optPackages;
+
   in {
     devShells = forAllSystems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       default = pkgs.mkShell {
-        buildInputs = [
-          # ── Build tools (used by nix build in service flakes) ──
-          pkgs.mdbook         # Documentation generator
-          pkgs.jq             # JSON processing
-          pkgs.file           # MIME type detection (docs)
+        buildInputs = collectPkgs pkgs;
 
-          # ── Secrets & deploy ──
-          pkgs.sops           # Secrets decryption
-          pkgs.age            # Age encryption (sops backend)
-          pkgs.yq-go          # YAML processing
-          pkgs.rsync          # File sync to VMs
-          pkgs.openssh        # SSH for deploy + compose
+        NODE_MODULES_DIR = "$HOME/.node_modules";
 
-          # ── Runtime (tsx for config generation) ──
-          pkgs.nodejs_20      # Node.js runtime
-          pkgs.nodePackages.typescript  # TypeScript
+        shellHook = ''
+          # ── Install npm packages to shared ~/.node_modules ──
+          NM_DIR="$HOME/.node_modules"
+          mkdir -p "$NM_DIR"
+          export NODE_PATH="$NM_DIR/node_modules"
+          export PATH="$NM_DIR/node_modules/.bin:$PATH"
 
-          # ── Network ──
-          pkgs.wireguard-tools  # WG mesh status
-          pkgs.curl             # Health checks
-        ];
+          # Install required node packages (from config.json .deps.node.required)
+          PKGS="${builtins.concatStringsSep " " nodeDeps}"
+          if [ -n "$PKGS" ]; then
+            cd "$NM_DIR"
+            NEEDS_INSTALL=false
+            for pkg in $PKGS; do
+              [ ! -d "node_modules/$pkg" ] && NEEDS_INSTALL=true && break
+            done
+            if [ "$NEEDS_INSTALL" = "true" ]; then
+              npm install --silent $PKGS 2>/dev/null
+            fi
+            cd - >/dev/null
+          fi
+        '';
       };
     });
   };
