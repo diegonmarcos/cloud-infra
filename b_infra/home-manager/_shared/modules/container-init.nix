@@ -60,6 +60,11 @@ in {
       # Managed by home-manager (container-init.nix) — do not edit
       set -uo pipefail
 
+      # Ensure nix binaries (docker, docker-compose) are in PATH for systemd
+      for p in /home/*/nix-profile/bin /home/*/.nix-profile/bin /nix/var/nix/profiles/default/bin; do
+        [ -d "$p" ] && export PATH="$p:$PATH"
+      done
+
       HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
       LOG_TAG="container-init"
       LOG_FILE="/var/log/container-init.log"
@@ -70,12 +75,17 @@ in {
       HEALTH_TIMEOUT=${toString healthCheckTimeout}
       HEALTH_INTERVAL=${toString healthCheckInterval}
       START_DELAY=${toString startDelay}
-      BOOT_START=$(date +%s)
+      BOOT_START=$(date +%s%3N)
+      _LAST_STEP=$BOOT_START
 
-      # ── Logging ───────────────────────────────────────────────────────
+      # ── Perf + Logging (flush every line) ─────────────────────────────
       log() {
-        local msg="[$LOG_TAG] $(date '+%Y-%m-%d %H:%M:%S') $*"
-        echo "$msg"
+        local now=$(date +%s%3N)
+        local elapsed=$(( now - BOOT_START ))
+        local step_ms=$(( now - _LAST_STEP ))
+        _LAST_STEP=$now
+        local msg="[$LOG_TAG] +''${elapsed}ms (+''${step_ms}ms) $*"
+        echo "$msg" >&2
         echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
       }
 
@@ -113,6 +123,7 @@ in {
             log "FATAL: Docker process died during startup"
             break
           fi
+          log "  waiting for dockerd... (''${i}/''${DOCKER_TIMEOUT}s) mem=$(free -m 2>/dev/null | awk '/Mem:/{print $4}')MB free"
           sleep 1
         done
       fi
@@ -277,6 +288,8 @@ in {
     ExecStart=/opt/scripts/container-init.sh
     TimeoutStartSec=900
     StandardOutput=journal+console
+    StandardError=journal+console
+    Environment=PYTHONUNBUFFERED=1
 
     [Install]
     WantedBy=multi-user.target
