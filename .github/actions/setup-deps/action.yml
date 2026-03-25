@@ -36,23 +36,31 @@ runs:
     - name: Cache nix store
       uses: nix-community/cache-nix-action@v6
       with:
-        # Cache key includes ALL nix sources — any .nix change busts the cache completely
-        # NO prefix fallback — stale store outputs poison builds (wrong ports, old configs)
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock', 'b_infra/home-manager/**/*.nix', 'a_solutions/**/src/flake.nix', 'a_solutions/**/src/*.nix') }}
-        restore-prefixes-first-match: |
-          DO-NOT-RESTORE-STALE-CACHE
+        # Cache stores ONLY deps (nixpkgs, tools). Build outputs are ephemeral.
+        # Prefix fallback is safe because we GC build outputs after restore.
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
         gc-max-store-size-linux: 2G
         purge: true
         purge-created: 604800
         purge-primary-key: never
         purge-prefixes: nix-${{ runner.os }}-
 
-    - name: GC unreferenced nix store paths
+    - name: GC stale build outputs (keep deps only)
       shell: bash
       run: |
-        # After cache restore, GC removes all unreferenced store paths.
-        # This cleans stale source copies and build outputs from previous runs.
-        # Nix determines what's referenced — no pattern guessing needed.
+        # Strategy: cache holds deps (nixpkgs, mdbook, etc.), NOT our build outputs.
+        # After restore, delete all GC roots from previous builds (.result symlinks),
+        # then GC. Deps survive because flake inputs reference them. Build outputs
+        # become unreferenced and get collected — forcing nix to rebuild fresh.
+        find /nix/var/nix/gcroots/auto -type l 2>/dev/null | while read root; do
+          target=$(readlink "$root" 2>/dev/null || true)
+          # Remove roots pointing to non-profile paths (build outputs, .result links)
+          case "$target" in
+            */profiles/*|*/per-user/*) ;;  # keep profile roots (nix itself)
+            *) rm -f "$root" 2>/dev/null || true ;;
+          esac
+        done
         nix-store --gc 2>/dev/null || true
 
     - name: Build GHA deps flake environment
