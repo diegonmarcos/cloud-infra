@@ -113,11 +113,14 @@ step_deploy() {
         log "Building HM closure locally for $HM_CONFIG"
         cd "$DIST_DIR"
         BUILD_LOG="$SERVICE_DIR/.build-log"
-        if nix build \
-            --no-link --print-out-paths \
-            --option eval-cache false \
-            ".#homeConfigurations.\"$HM_CONFIG\".activationPackage" \
-            > "$BUILD_LOG" 2>&1; then
+        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/deps"
+        NIX_BUILD_CMD="nix build --no-link --print-out-paths --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
+        if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
+            nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" > "$BUILD_LOG" 2>&1
+        else
+            $NIX_BUILD_CMD > "$BUILD_LOG" 2>&1
+        fi
+        if [ $? -eq 0 ]; then
             RESULT=$(tail -1 "$BUILD_LOG")
         else
             log "ERROR: nix build failed"
