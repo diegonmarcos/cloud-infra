@@ -89,34 +89,7 @@ in {
     WantedBy=multi-user.target
   '';
 
-  # ── SSH protection — REAL-TIME SCHEDULER (absolute CPU priority) ─────
-  # fifo = SSH gets CPU BEFORE any normal process, no matter what
-  home.file.".local/share/system-protection/sshd-protection.conf".text = ''
-    [Service]
-    OOMScoreAdjust=-1000
-    OOMPolicy=continue
-    MemoryMin=50M
-    MemoryLow=80M
-    CPUSchedulingPolicy=fifo
-    CPUSchedulingPriority=1
-    IOSchedulingClass=realtime
-    IOSchedulingPriority=0
-    Nice=-20
-  '';
-
-  # ── WireGuard protection — REAL-TIME SCHEDULER (no WG = no access) ─
-  home.file.".local/share/system-protection/wg-quick-protection.conf".text = ''
-    [Service]
-    OOMScoreAdjust=-1000
-    OOMPolicy=continue
-    MemoryMin=30M
-    MemoryLow=50M
-    CPUSchedulingPolicy=fifo
-    CPUSchedulingPriority=1
-    IOSchedulingClass=realtime
-    IOSchedulingPriority=0
-    Nice=-20
-  '';
+  # SSH + WG + Docker scheduler configs moved to system-protection-scheduler-fifo-rr-cfs.nix
 
   # ── Docker memory cap ─────────────────────────────────────────────────
   home.file.".local/share/system-protection/docker-memory-cap.conf".text = ''
@@ -151,19 +124,9 @@ in {
       $SUDO tune2fs -m 5 "$ROOT_DEV" 2>/dev/null || true
     fi
 
-    # SSH/WG drop-ins
-    for svc in ssh sshd; do
-      if $SUDO systemctl cat "''${svc}.service" >/dev/null 2>&1; then
-        $SUDO mkdir -p "/etc/systemd/system/''${svc}.service.d"
-        $SUDO cp -f "$SRC/sshd-protection.conf" "/etc/systemd/system/''${svc}.service.d/protection.conf"
-      fi
-    done
-    if $SUDO systemctl cat "wg-quick@wg0.service" >/dev/null 2>&1; then
-      $SUDO mkdir -p "/etc/systemd/system/wg-quick@wg0.service.d"
-      $SUDO cp -f "$SRC/wg-quick-protection.conf" "/etc/systemd/system/wg-quick@wg0.service.d/protection.conf"
-    fi
+    # SSH/WG/Docker scheduler drop-ins handled by system-protection-scheduler-fifo-rr-cfs.nix
 
-    # Docker cap
+    # Docker memory cap (separate from scheduler)
     if $SUDO systemctl cat "docker.service" >/dev/null 2>&1; then
       $SUDO mkdir -p "/etc/systemd/system/docker.service.d"
       $SUDO cp -f "$SRC/docker-memory-cap.conf" "/etc/systemd/system/docker.service.d/memory-cap.conf"
