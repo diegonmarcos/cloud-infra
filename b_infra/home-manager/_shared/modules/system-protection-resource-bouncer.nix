@@ -89,7 +89,7 @@ in {
     WantedBy=multi-user.target
   '';
 
-  # ── SSH protection — UNTOUCHABLE (-1000 = kernel NEVER kills) ─────────
+  # ── SSH protection — UNTOUCHABLE ──────────────────────────────────────
   home.file.".local/share/system-protection/sshd-protection.conf".text = ''
     [Service]
     OOMScoreAdjust=-1000
@@ -101,7 +101,7 @@ in {
     IOWeight=10000
   '';
 
-  # ── WireGuard protection — UNTOUCHABLE (no WG = no access) ──────────
+  # ── WireGuard protection — UNTOUCHABLE ──────────────────────────────
   home.file.".local/share/system-protection/wg-quick-protection.conf".text = ''
     [Service]
     OOMScoreAdjust=-1000
