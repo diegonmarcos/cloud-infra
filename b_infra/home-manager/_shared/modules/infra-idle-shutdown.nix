@@ -1,23 +1,31 @@
-{ config, pkgs, lib, vmName, idleTimeoutHours ? 4, ... }:
+{ config, pkgs, lib, vmName, ... }:
 
 let
+  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  vmData = cloudData.vms.${vmName};
+  idleCfg = vmData.idle_shutdown;
+  idleTimeoutHours = if idleCfg != null then idleCfg.timeout_hours else 4;
   idleTimeoutSeconds = idleTimeoutHours * 3600;
+  cpuThreshold = if idleCfg != null then idleCfg.cpu_threshold else 60;
+  dockerCpuThreshold = if idleCfg != null then idleCfg.docker_cpu_threshold else 30;
+  networkThreshold = if idleCfg != null then idleCfg.network_threshold else 51200;
+  minUptimeSeconds = if idleCfg != null then idleCfg.min_uptime_seconds else 600;
 
   idleShutdownScript = pkgs.writeShellScriptBin "idle-shutdown.sh" ''
     #!/bin/bash
     # idle-shutdown.sh - Auto-shutdown VM after ${toString idleTimeoutHours} hours of inactivity
-    # Managed by Home Manager
+    # Managed by Home Manager — thresholds from cloud-data-home-manager.json
 
     set -euo pipefail
 
-    # === Configuration ===
+    # === Configuration (from cloud-data) ===
     IDLE_TIMEOUT_SECONDS=${toString idleTimeoutSeconds}
     STATE_FILE="/var/run/idle-shutdown-state"
     LOG_FILE="/var/log/idle-shutdown.log"
-    CPU_THRESHOLD=60
-    DOCKER_CPU_THRESHOLD=30
-    NETWORK_THRESHOLD=51200
-    MIN_UPTIME_SECONDS=600
+    CPU_THRESHOLD=${toString cpuThreshold}
+    DOCKER_CPU_THRESHOLD=${toString dockerCpuThreshold}
+    NETWORK_THRESHOLD=${toString networkThreshold}
+    MIN_UPTIME_SECONDS=${toString minUptimeSeconds}
 
     # === Logging ===
     log() {
