@@ -2,7 +2,7 @@
 # Memory: zram, earlyoom, sysctl, cgroup caps, Docker MemoryMax
 # SSH/WG OOM immunity, ext4 reserved blocks
 #
-# Desktop equivalent: unix/aa_nixos-surface_host/src/modules/configuration_resource-bouncer.nix
+# Desktop equivalent: unix/aa_nixos-surface_host/src/modules/configuration_system-protection.nix
 # Imported by: system-protection.nix (orchestrator)
 #
 { config, pkgs, lib, ramMB, ... }:
