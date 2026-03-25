@@ -29,4 +29,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-{{BUILD_STEPS}}
+
+      - name: Build and push images
+        run: bash .github/workflows/scripts/ship-ghcr.sh
