@@ -521,11 +521,49 @@ cmd_workflow() {
         [ -f "$WF_SRC/$tpl" ] || { log_error "Missing template: workflows/src/$tpl"; exit 1; }
     done
 
+    # ── Copy static workflows first (always works, no dependencies) ──
+    for f in "$WF_SRC"/static/*.yml; do
+        [ -f "$f" ] || continue
+        cp "$f" "$WF_DIST/"
+    done
+    log "  Static workflows copied"
+
     # ── Read GHA config from cloud-data (source of truth) ──
     GHA_CONFIG="$SCRIPT_DIR/cloud-data/cloud-data-gha-config.json"
+    # Always regenerate — cloud-data is dynamic, never trust stale files
+    {
+        log "Generating cloud-data-gha-config.json via tsx..."
+        C3_SRC="$SCRIPT_DIR/a_solutions/bc-obs_c3-infra-api/src"
+        TOPO_FILE="$SCRIPT_DIR/cloud-data/cloud-data-topology.json"
+
+        if [ -f "$TOPO_FILE" ] && [ -f "$C3_SRC/gen-gha-config.ts" ]; then
+            # Run the generator .ts file from the C3 source directory (tsx resolves imports)
+            CONFIG_JSON_PATH="$TOPO_FILE" GIT_BASE="${GIT_BASE:-$(dirname "$SCRIPT_DIR")}" \
+            tsx "$C3_SRC/gen-gha-config.ts" > "$GHA_CONFIG" 2>/dev/null
+
+            if [ -s "$GHA_CONFIG" ]; then
+                log "  Generated gha-config locally ($(jq '.services | length' "$GHA_CONFIG") services)"
+            else
+                rm -f "$GHA_CONFIG"
+                log_error "tsx generation produced empty output"
+            fi
+        fi
+    }
+
+    # Final check — if generation failed, deploy static only
     if [ ! -f "$GHA_CONFIG" ]; then
-        log_error "Missing cloud-data/cloud-data-gha-config.json — run Dagu sync first"
-        exit 1
+        log_error "No cloud-data-gha-config.json and no topology to generate from"
+        log "Deploying static workflows only."
+        for f in "$WF_DIST"/*.yml; do
+            [ -f "$f" ] || continue
+            head -1 "$f" | grep -q 'DO NOT EDIT' || {
+                tmp="$f.tmp"; printf '%s\n' "$HEADER" | cat - "$f" > "$tmp" && mv "$tmp" "$f"
+            }
+        done
+        find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
+        cp "$WF_DIST"/*.yml "$GH_DIR/"
+        log "Deployed static workflows only ($(ls "$WF_DIST"/*.yml 2>/dev/null | wc -l) files)"
+        return 0
     fi
 
     # Build ssh_map from cloud-data (format: vm_alias|secret_key|host_or_secret|user_or_secret)
@@ -570,7 +608,7 @@ cmd_workflow() {
         done | read -r ssh_key ssh_host ssh_user 2>/dev/null || true
         # Fallback: grep approach for subshell safety
         if [ -z "$ssh_key" ]; then
-            line=$(echo "$ssh_map" | grep "^${vm}|")
+            line=$(echo "$ssh_map" | grep "^${vm}|" || true)
             ssh_key=$(echo "$line" | awk -F'|' '{print $2}')
             ssh_host=$(echo "$line" | awk -F'|' '{print $3}')
             ssh_user=$(echo "$line" | awk -F'|' '{print $4}')
@@ -687,7 +725,7 @@ cmd_workflow() {
         log "  ship-ghcr.yml ($(echo $ghcr_dirs | wc -w) images)"
     fi
 
-    # ── Copy static workflows into dist/ ──
+    # ── Copy static workflows into dist/ (refresh — already copied early) ──
     for f in "$WF_SRC"/static/*.yml; do
         [ -f "$f" ] || continue
         cp "$f" "$WF_DIST/"
