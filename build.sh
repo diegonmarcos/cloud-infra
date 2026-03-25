@@ -773,7 +773,7 @@ cmd_workflow() {
         log "  Actions deployed"
     fi
 
-    # ── Deploy deps flake: src/deps/ → .github/ (flake.nix + flake.lock) ──
+    # ── Deploy deps flake: src/deps/ → .github/ (flake.nix + flake.lock + config.json) ──
     if [ -d "$WF_SRC/deps" ]; then
         cp "$WF_SRC/deps/flake.nix" "$SCRIPT_DIR/.github/flake.nix"
         [ -f "$WF_SRC/deps/flake.lock" ] && cp "$WF_SRC/deps/flake.lock" "$SCRIPT_DIR/.github/flake.lock"

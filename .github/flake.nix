@@ -11,13 +11,20 @@
   # │   GC'd after cache restore — always rebuilt fresh.               │
   # └──────────────────────────────────────────────────────────────────┘
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    # Live config.json from GitHub — always fresh, never stale
+    config-json = {
+      url = "https://raw.githubusercontent.com/diegonmarcos/cloud/main/config.json";
+      flake = false;
+    };
+  };
 
-  outputs = { self, nixpkgs }: let
+  outputs = { self, nixpkgs, config-json }: let
     forAllSystems = nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ];
 
-    # Read deps from config.json (source of truth)
-    configJson = builtins.fromJSON (builtins.readFile ../../../config.json);
+    # Read deps from config.json fetched live from GitHub
+    configJson = builtins.fromJSON (builtins.readFile config-json);
     sysDeps = configJson.deps.system;
     buildDeps = configJson.deps.build or {};
     optDeps = configJson.deps.optional;
