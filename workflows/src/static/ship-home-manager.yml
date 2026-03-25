@@ -62,13 +62,12 @@ jobs:
             echo "Skipping $VM (target: $TARGET)"
           fi
 
-      - name: Checkout
+      - uses: actions/checkout@v4
         if: steps.gate.outputs.skip != 'true'
-        uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Update submodules to latest
+      - name: Update submodules
         if: steps.gate.outputs.skip != 'true'
         run: git submodule update --remote
 
@@ -76,7 +75,6 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         id: resolve
         run: |
-          # GCP VMs use secrets for dynamic IPs, OCI VMs use static
           HOST="${{ matrix.host }}"
           USER="${{ matrix.user }}"
           [ -z "$HOST" ] && HOST="${{ secrets[matrix.host_secret] }}"
@@ -84,9 +82,8 @@ jobs:
           echo "host=$HOST" >> "$GITHUB_OUTPUT"
           echo "user=$USER" >> "$GITHUB_OUTPUT"
 
-      - name: Setup deps
+      - uses: ./.github/actions/setup-deps
         if: steps.gate.outputs.skip != 'true'
-        uses: ./.github/actions/setup-deps
         with:
           ssh_key: ${{ secrets[matrix.key_secret] }}
           ssh_host: ${{ steps.resolve.outputs.host }}
@@ -94,30 +91,10 @@ jobs:
           ssh_alias: ${{ matrix.vm }}
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Check VM reachable
-        id: reachable
+      - name: Run
         if: steps.gate.outputs.skip != 'true'
-        run: |
-          HOST="${{ steps.resolve.outputs.host }}"
-          if [ -z "$HOST" ] || ! ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${{ matrix.vm }}" 'echo ok' 2>/dev/null; then
-            if [ "${{ matrix.optional }}" = "true" ]; then
-              echo "::notice::${{ matrix.vm }} is unreachable (optional VM) — skipping"
-              echo "skip=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "::error::${{ matrix.vm }} is unreachable"
-              exit 1
-            fi
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Ship home-manager
-        id: ship
-        if: steps.gate.outputs.skip != 'true' && steps.reachable.outputs.skip != 'true'
-        run: bash b_infra/home-manager/${{ matrix.vm }}/build.sh ship
-
-      - name: Report failure
-        if: failure() && steps.ship.outcome == 'failure'
-        run: |
-          echo "::error::Home Manager deployment failed for ${{ matrix.vm }}"
-          echo "Check the 'Ship home-manager' step above for nix build errors"
+        shell: bash {0}
+        env:
+          VM: ${{ matrix.vm }}
+          OPTIONAL: ${{ matrix.optional || false }}
+        run: bash .github/workflows/scripts/ship-home-manager.sh "$VM"

@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Update submodules to latest
+      - name: Update submodules
         run: git submodule update --remote
 
       - uses: ./.github/actions/setup-deps
@@ -32,15 +32,6 @@ jobs:
           ssh_alias: oci-mail
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        working-directory: a_solutions/bc-obs_c3-infra-mcp-api
-        run: npm install
-
-      - name: Run full mail health check
-        run: |
-          npx tsx .github/workflows/scripts/health_mail_full.ts
+      - name: Run
+        shell: bash {0}
+        run: bash .github/workflows/scripts/health-mail-full.sh

@@ -10,29 +10,19 @@ permissions:
   contents: read
 
 jobs:
-  vms:
+  dispatch:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        vm: [gcp-proxy, gcp-t4, oci-apps, oci-analytics, oci-mail]
     steps:
-      - name: Trigger ${{ matrix.vm }} health check
-        run: gh workflow run "health-${{ matrix.vm }}.yml" --repo "${{ github.repository }}" --ref main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
 
-  http-public:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger HTTP public health check
-        run: gh workflow run "health-http-public.yml" --repo "${{ github.repository }}" --ref main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update submodules
+        run: git submodule update --remote
 
-  http-private:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger HTTP private (.app) health check
-        run: gh workflow run "health-http-private.yml" --repo "${{ github.repository }}" --ref main
+      - name: Run
+        shell: bash {0}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/workflows/scripts/health-all-vms.sh
