@@ -46,10 +46,11 @@ detect_pm() {
     fi
 }
 
-# config.json deps accessors
-deps_binaries() { jq -r '.deps.system | keys[]' "$CONFIG_FILE" | tr '\n' ' '; }
-deps_pkg_name() { jq -r ".deps.system[\"$1\"][\"$2\"] // empty" "$CONFIG_FILE"; }
-deps_node_required() { jq -r '.deps.node.required[]' "$CONFIG_FILE" | tr '\n' ' '; }
+# Deps read from config.json (source of truth), NOT from topology
+DEPS_FILE="$SCRIPT_DIR/config.json"
+deps_binaries() { jq -r '.deps.system | keys[]' "$DEPS_FILE" | tr '\n' ' '; }
+deps_pkg_name() { jq -r ".deps.system[\"$1\"][\"$2\"] // empty" "$DEPS_FILE"; }
+deps_node_required() { jq -r '.deps.node.required[]' "$DEPS_FILE" | tr '\n' ' '; }
 
 # Confirm prompt — auto-yes if configured or non-interactive
 confirm() {
