@@ -18,7 +18,8 @@
 { config, pkgs, lib, ... }:
 
 let
-  ntfyUrl = "https://rss.diegonmarcos.com/container-init";
+  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  ntfyUrl = "${cloudData.monitoring.ntfy_base}/container-init";
   dockerStartTimeout = 60;
   healthCheckTimeout = 120;
   healthCheckInterval = 5;

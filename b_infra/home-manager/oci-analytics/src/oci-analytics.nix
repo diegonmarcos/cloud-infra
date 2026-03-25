@@ -1,29 +1,28 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+  vmData = cloudData.vms."oci-analytics";
+  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }];
+in {
   imports = [
     (import ./wireguard.nix { vmName = "oci-analytics"; })
-    (import ./modules/network-firewall.nix {
-      vmName = "oci-analytics";
-      publicPorts = [
-        # No public ports — all services bind to 10.0.0.4 (WireGuard) or 127.0.0.1
-        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
-      ];
-    })
+    (import ./modules/network-firewall.nix { vmName = "oci-analytics"; inherit publicPorts; })
     ./modules/shared-all.nix
-    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 1024; })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "oci-analytics"; })
     (import ./modules/system-protection-systemd-control.nix {})
   ];
-  home.username = "ubuntu";
-  home.homeDirectory = "/home/ubuntu";
-  home.stateVersion = "24.11";
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
 
   programs.home-manager.enable = true;
 
   programs.git = {
     enable = true;
-    userName = "Diego Marcos";
-    userEmail = "diegonmarcos@gmail.com";
+    userName = cloudData.owner.name;
+    userEmail = cloudData.owner.email;
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase = false;

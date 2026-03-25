@@ -1,30 +1,29 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+  vmData = cloudData.vms."gcp-t4";
+  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }];
+in {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-t4"; })
-    (import ./modules/network-firewall.nix {
-      vmName = "gcp-t4";
-      publicPorts = [
-        # No public ports — ollama binds to 10.0.0.8 (WireGuard only)
-        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
-      ];
-    })
-    (import ./modules/infra-idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
+    (import ./modules/network-firewall.nix { vmName = "gcp-t4"; inherit publicPorts; })
+    (import ./modules/infra-idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; })
     ./modules/shared-all.nix
-    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "gcp-t4"; })
     (import ./modules/system-protection-systemd-control.nix {})
   ];
-  home.username = "diego";
-  home.homeDirectory = "/home/diego";
-  home.stateVersion = "24.11";
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
 
   programs.home-manager.enable = true;
 
   programs.git = {
     enable = true;
-    userName = "Diego Marcos";
-    userEmail = "diegonmarcos@gmail.com";
+    userName = cloudData.owner.name;
+    userEmail = cloudData.owner.email;
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase = false;

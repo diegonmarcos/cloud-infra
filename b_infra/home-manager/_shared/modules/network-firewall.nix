@@ -22,8 +22,9 @@
 { config, lib, pkgs, ... }:
 
 let
-  dockerSubnet = "172.16.0.0/12";
-  wgSubnet = "10.0.0.0/24";
+  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  dockerSubnet = cloudData.docker.subnet;
+  wgSubnet = cloudData.wireguard.subnet;
 
   mkPortRule = r:
     let
@@ -82,7 +83,7 @@ let
     # SSH
     iptables -A INPUT -p tcp --dport 22 -m comment --comment "SSH" -j ACCEPT
     # WireGuard port
-    iptables -A INPUT -p udp --dport 51820 -m comment --comment "WireGuard" -j ACCEPT
+    iptables -A INPUT -p udp --dport ${toString cloudData.wireguard.port} -m comment --comment "WireGuard" -j ACCEPT
     # VM-specific public ports (static from nix)
     ${portRules}
 
