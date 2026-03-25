@@ -36,9 +36,11 @@ runs:
     - name: Cache nix store
       uses: nix-community/cache-nix-action@v6
       with:
-        # Cache busts on: config changes, flake lock updates, nix source changes, service flake changes
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock', 'b_infra/home-manager/**/*.nix', 'a_solutions/**/src/flake.nix') }}
-        restore-prefixes-first-match: nix-${{ runner.os }}-
+        # Cache key includes ALL nix sources — any .nix change busts the cache completely
+        # NO prefix fallback — stale store outputs poison builds (wrong ports, old configs)
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock', 'b_infra/home-manager/**/*.nix', 'a_solutions/**/src/flake.nix', 'a_solutions/**/src/*.nix') }}
+        restore-prefixes-first-match: |
+          DO-NOT-RESTORE-STALE-CACHE
         gc-max-store-size-linux: 2G
         purge: true
         purge-created: 604800
