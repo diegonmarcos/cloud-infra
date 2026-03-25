@@ -23,14 +23,7 @@ let
       role      = "spoke";
     };
     # oci-apps-1 DECOMMISSIONED (2026-02-28) — services consolidated to oci-apps
-    # WG IP 10.0.0.2 is now unused
-    oci-apps-2 = {
-      address   = "10.0.0.7";
-      endpoint  = "79.72.28.10";
-      port      = 51820;
-      publicKey = "MlXRUN7DODGHdI4iwKMKNBUGjA9JJ1Jb/Ul+poyEkyU=";
-      role      = "spoke";
-    };
+    # oci-apps-2 DECOMMISSIONED — WG IPs 10.0.0.2 + 10.0.0.7 now unused
     oci-mail = {
       address   = "10.0.0.3";
       endpoint  = "130.110.251.193";

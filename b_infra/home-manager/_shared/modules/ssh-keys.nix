@@ -87,13 +87,6 @@ Host oci-apps
     IdentityFile ~/.ssh/vault_id_rsa
     IdentitiesOnly yes
 
-# OCI A1 Flex Paid - Apps 2
-Host oci-apps-2
-    HostName 10.0.0.7
-    User ubuntu
-    IdentityFile ~/.ssh/vault_id_rsa
-    IdentitiesOnly yes
-
 # GCP Proxy (WireGuard hub — use public IP to avoid loopback)
 Host gcp-proxy
     HostName 35.226.147.64
