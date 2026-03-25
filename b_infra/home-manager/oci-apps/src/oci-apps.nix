@@ -3,7 +3,7 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps"; })
-    (import ./modules/firewall.nix {
+    (import ./modules/network-firewall.nix {
       vmName = "oci-apps";
       publicPorts = [
         { port = 3010; proto = "tcp"; desc = "AFFiNE"; }
@@ -28,6 +28,7 @@
       inherit config pkgs lib;
       staleContainers = [ "c3-mcp-api" "mailu-mcp" ];
     })
+    (import ./modules/system-protection-systemd-control.nix {})
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";

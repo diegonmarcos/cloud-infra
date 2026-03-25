@@ -3,7 +3,7 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-proxy"; })
-    (import ./modules/firewall.nix {
+    (import ./modules/network-firewall.nix {
       vmName = "gcp-proxy";
       publicPorts = [
         { port = 80;   proto = "tcp"; desc = "HTTP (Caddy)"; }
@@ -21,6 +21,7 @@
       inherit config pkgs lib;
       staleContainers = [ "syslog-central" "siem-api" "alerts-api" "dozzle" "fluent-bit" ];
     })
+    (import ./modules/system-protection-systemd-control.nix {})
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

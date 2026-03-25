@@ -3,16 +3,17 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "gcp-t4"; })
-    (import ./modules/firewall.nix {
+    (import ./modules/network-firewall.nix {
       vmName = "gcp-t4";
       publicPorts = [
         # No public ports — ollama binds to 10.0.0.8 (WireGuard only)
         { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
       ];
     })
-    (import ./modules/idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
+    (import ./modules/infra-idle-shutdown.nix { inherit config pkgs lib; vmName = "gcp-t4"; idleTimeoutHours = 1; })
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 15360; })
+    (import ./modules/system-protection-systemd-control.nix {})
   ];
   home.username = "diego";
   home.homeDirectory = "/home/diego";

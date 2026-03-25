@@ -3,7 +3,7 @@
 {
   imports = [
     (import ./wireguard.nix { vmName = "oci-mail"; })
-    (import ./modules/firewall.nix {
+    (import ./modules/network-firewall.nix {
       vmName = "oci-mail";
       publicPorts = [
         { port = 25;    proto = "tcp"; desc = "SMTP (Stalwart)"; }
@@ -26,6 +26,7 @@
       extraComposeDirs = [ "/opt/stalwart" ];
       staleContainers = [ "caddy" "introspect-proxy" "mailu-front-1" "mailu-admin-1" "mailu-imap-1" "mailu-smtp-1" "mailu-antispam-1" "mailu-webmail-1" "mailu-redis-1" ];
     })
+    (import ./modules/system-protection-systemd-control.nix {})
   ];
   home.username = "ubuntu";
   home.homeDirectory = "/home/ubuntu";
