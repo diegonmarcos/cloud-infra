@@ -5,61 +5,33 @@
 { config, lib, pkgs, ... }:
 
 let
-  # ── Mesh topology ──────────────────────────────────────────────────────
-  # Hub-and-spoke: all spokes connect to GCP hub, hub routes between them
-  topology = {
-    gcp-proxy = {
-      address   = "10.0.0.1";
-      endpoint  = "35.226.147.64";
-      port      = 51820;
-      publicKey = "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=";
-      role      = "hub";
-    };
-    oci-apps = {
-      address   = "10.0.0.6";
-      endpoint  = "82.70.229.129";
-      port      = 51820;
-      publicKey = "+kT46gxAd55+niqMWoaAMfPuU9ZCg42cOymzehnErFQ=";
-      role      = "spoke";
-    };
-    # oci-apps-1 DECOMMISSIONED (2026-02-28) — services consolidated to oci-apps
-    # oci-apps-2 DECOMMISSIONED — WG IPs 10.0.0.2 + 10.0.0.7 now unused
-    oci-mail = {
-      address   = "10.0.0.3";
-      endpoint  = "130.110.251.193";
-      port      = 51820;
-      publicKey = "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=";
-      role      = "spoke";
-    };
-    oci-analytics = {
-      address   = "10.0.0.4";
-      endpoint  = "129.151.228.66";
-      port      = 51820;
-      publicKey = "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=";
-      role      = "spoke";
-    };
-    gcp-t4 = {
-      address   = "10.0.0.8";
-      endpoint  = "34.57.36.41";
-      port      = 51820;
-      publicKey = "PN6ddzDiUyvPPec1Op9FQleM+BXadKd2rzhR5aTA6yg=";
-      role      = "spoke";
-    };
-    surface = {
-      address   = "10.0.0.5";
-      endpoint  = null;
-      port      = null;
-      publicKey = "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY=";
-      role      = "client";
-    };
-    termux = {
-      address   = "10.0.0.9";
-      endpoint  = null;
-      port      = null;
-      publicKey = "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA=";
-      role      = "client";
-    };
+  # ── Mesh topology from cloud-data ─────────────────────────────────────
+  # Hub-and-spoke: all spokes connect to hub, hub routes between them
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+
+  toTopoEntry = p: {
+    address   = p.wg_ip;
+    endpoint  = p.public_ip;
+    port      = p.wg_port;
+    publicKey = p.wg_public_key;
+    role      = p.role;
   };
+  toClientEntry = name: c: {
+    address   = c.wg_ip;
+    endpoint  = null;
+    port      = null;
+    publicKey = c.wg_public_key;
+    role      = c.role;
+  };
+
+  # Build topology from JSON peers (VMs) + clients (surface, termux)
+  peerEntries = builtins.listToAttrs (
+    builtins.filter (e: e.value.publicKey != null) (
+      map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
+    )
+  );
+  clientEntries = lib.mapAttrs toClientEntry cloudData.wireguard.clients;
+  topology = peerEntries // clientEntries;
 
   thisVm = topology.${vmName};
 
@@ -104,11 +76,14 @@ let
     "AllowedIPs = ${peer.address}/32\n"
   ) + "PersistentKeepalive = 25\n";
 
+  # Derive hub name from topology (the peer with role == "hub")
+  hubName = (lib.findFirst (p: p.role == "hub") { name = "gcp-proxy"; } cloudData.wireguard.peers).name;
+
   # Hub config: interface + ALL other peers
   mkHubConfig =
     let
-      hub = topology.gcp-proxy;
-      peers = lib.filterAttrs (n: _: n != "gcp-proxy") topology;
+      hub = topology.${hubName};
+      peers = lib.filterAttrs (n: _: n != hubName) topology;
     in mkHubInterface hub
        + lib.concatStrings (lib.mapAttrsToList mkPeer peers);
 
@@ -116,9 +91,9 @@ let
   mkSpokeConfig = name:
     let
       spoke = topology.${name};
-      hub = topology.gcp-proxy;
+      hub = topology.${hubName};
     in mkSpokeInterface spoke
-       + mkPeer "gcp-proxy" hub;
+       + mkPeer hubName hub;
 
   # Select the right config for this VM
   wgTemplate =

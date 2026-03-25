@@ -9,14 +9,14 @@ let
   # Hub-and-spoke: all spokes connect to hub, hub routes between them
   cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
 
-  mkPeer = p: {
+  toTopoEntry = p: {
     address   = p.wg_ip;
     endpoint  = p.public_ip;
     port      = p.wg_port;
     publicKey = p.wg_public_key;
     role      = p.role;
   };
-  mkClient = name: c: {
+  toClientEntry = name: c: {
     address   = c.wg_ip;
     endpoint  = null;
     port      = null;
@@ -27,10 +27,10 @@ let
   # Build topology from JSON peers (VMs) + clients (surface, termux)
   peerEntries = builtins.listToAttrs (
     builtins.filter (e: e.value.publicKey != null) (
-      map (p: { name = p.name; value = mkPeer p; }) cloudData.wireguard.peers
+      map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
     )
   );
-  clientEntries = lib.mapAttrs mkClient cloudData.wireguard.clients;
+  clientEntries = lib.mapAttrs toClientEntry cloudData.wireguard.clients;
   topology = peerEntries // clientEntries;
 
   thisVm = topology.${vmName};
