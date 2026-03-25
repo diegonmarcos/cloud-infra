@@ -78,6 +78,10 @@ jobs:
         with:
           submodules: true
 
+      - name: Update submodules to latest
+        if: steps.gate.outputs.skip != 'true'
+        run: git submodule update --remote
+
       - name: Resolve host/user
         if: steps.gate.outputs.skip != 'true'
         id: resolve
