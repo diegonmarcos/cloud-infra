@@ -136,7 +136,10 @@ in {
     MemoryMin=20M
     MemoryMax=30M
     MemoryHigh=25M
-    CPUWeight=10000
+    CPUSchedulingPolicy=fifo
+    CPUSchedulingPriority=1
+    IOSchedulingClass=realtime
+    IOSchedulingPriority=0
     Nice=-20
     [Install]
     WantedBy=multi-user.target

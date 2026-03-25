@@ -89,28 +89,33 @@ in {
     WantedBy=multi-user.target
   '';
 
-  # ── SSH protection — UNTOUCHABLE ──────────────────────────────────────
+  # ── SSH protection — REAL-TIME SCHEDULER (absolute CPU priority) ─────
+  # fifo = SSH gets CPU BEFORE any normal process, no matter what
   home.file.".local/share/system-protection/sshd-protection.conf".text = ''
     [Service]
     OOMScoreAdjust=-1000
     OOMPolicy=continue
     MemoryMin=50M
     MemoryLow=80M
-    CPUWeight=10000
-    Nice=-19
-    IOWeight=10000
+    CPUSchedulingPolicy=fifo
+    CPUSchedulingPriority=1
+    IOSchedulingClass=realtime
+    IOSchedulingPriority=0
+    Nice=-20
   '';
 
-  # ── WireGuard protection — UNTOUCHABLE ──────────────────────────────
+  # ── WireGuard protection — REAL-TIME SCHEDULER (no WG = no access) ─
   home.file.".local/share/system-protection/wg-quick-protection.conf".text = ''
     [Service]
     OOMScoreAdjust=-1000
     OOMPolicy=continue
     MemoryMin=30M
     MemoryLow=50M
-    CPUWeight=10000
-    Nice=-19
-    IOWeight=10000
+    CPUSchedulingPolicy=fifo
+    CPUSchedulingPriority=1
+    IOSchedulingClass=realtime
+    IOSchedulingPriority=0
+    Nice=-20
   '';
 
   # ── Docker memory cap ─────────────────────────────────────────────────
