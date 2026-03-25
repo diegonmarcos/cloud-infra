@@ -166,7 +166,7 @@ in {
         svc_start=$(date +%s)
         log "  [$svc] starting..."
 
-        if (cd "$dir" && docker compose up -d 2>&1 | while read -r line; do log "    $line"; done); then
+        if (cd "$dir" && docker compose up -d --no-build 2>&1 | while read -r line; do log "    $line"; done); then
           svc_ms=$(( ($(date +%s) - svc_start) * 1000 ))
           log "  [$svc] started (''${svc_ms}ms)"
           STARTED=$((STARTED + 1))
