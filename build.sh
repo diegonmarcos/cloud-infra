@@ -779,6 +779,19 @@ cmd_workflow() {
         log "  Deps flake deployed"
     fi
 
+    # ── Deploy .gitmodules: src/modules/gitmodules → .gitmodules ──
+    if [ -f "$WF_SRC/modules/gitmodules" ]; then
+        if [ -f "$SCRIPT_DIR/.gitmodules" ]; then
+            # Drift detection: warn if current .gitmodules diverged from source
+            if ! diff -q "$WF_SRC/modules/gitmodules" "$SCRIPT_DIR/.gitmodules" >/dev/null 2>&1; then
+                log "  WARNING: .gitmodules diverged from source — overwriting with workflows/src/modules/gitmodules"
+                log "  (if you added a submodule via git, update the source file too)"
+            fi
+        fi
+        cp "$WF_SRC/modules/gitmodules" "$SCRIPT_DIR/.gitmodules"
+        log "  Submodules config deployed"
+    fi
+
     # ── Deploy repo gitconfig: src/gitconfig → .gitconfig (include in .git/config) ──
     if [ -f "$WF_SRC/gitconfig" ]; then
         cp "$WF_SRC/gitconfig" "$SCRIPT_DIR/.gitconfig"
