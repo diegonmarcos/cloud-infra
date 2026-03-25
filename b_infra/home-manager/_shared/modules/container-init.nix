@@ -135,3 +135,4 @@
     ) || echo "[container-init] FAILED — see errors above, activation continues"
   '';
 }
+# Trigger home-manager deploy - 2026-03-25T02:13:15+01:00
