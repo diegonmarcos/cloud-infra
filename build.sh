@@ -779,6 +779,16 @@ cmd_workflow() {
         log "  Deps flake deployed"
     fi
 
+    # ── Deploy repo gitconfig: src/gitconfig → .gitconfig (include in .git/config) ──
+    if [ -f "$WF_SRC/gitconfig" ]; then
+        cp "$WF_SRC/gitconfig" "$SCRIPT_DIR/.gitconfig"
+        # Auto-include in .git/config if not already
+        if ! git -C "$SCRIPT_DIR" config --local --get include.path 2>/dev/null | grep -q '.gitconfig'; then
+            git -C "$SCRIPT_DIR" config --local include.path ../.gitconfig
+        fi
+        log "  Repo gitconfig deployed"
+    fi
+
     log "Generated $generated workflow(s) → workflows/dist/"
     log "Copied to .github/workflows/"
 }
