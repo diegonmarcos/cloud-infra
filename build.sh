@@ -765,6 +765,13 @@ cmd_workflow() {
         fi
     fi
 
+    # ── Deploy actions: src/actions/ → .github/actions/ ──
+    if [ -d "$WF_SRC/actions" ]; then
+        rm -rf "$SCRIPT_DIR/.github/actions"
+        cp -r "$WF_SRC/actions" "$SCRIPT_DIR/.github/actions"
+        log "  Actions deployed"
+    fi
+
     log "Generated $generated workflow(s) → workflows/dist/"
     log "Copied to .github/workflows/"
 }
