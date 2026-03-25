@@ -39,7 +39,7 @@ runs:
         # Cache = Layer 1 (deps only). Key only hashes the GHA flake.lock (deps).
         # Service flake.lock changes don't bust cache — deps are shared.
         # Prefix fallback is safe because Layer 2 (outputs) is GC'd after restore.
-        primary-key: nix-deps-${{ runner.os }}-${{ hashFiles('.github/flake.lock') }}
+        primary-key: nix-deps-${{ runner.os }}-${{ hashFiles('.github/flake.lock', '.github/flake.nix') }}
         restore-prefixes-first-match: nix-deps-${{ runner.os }}-
         gc-max-store-size-linux: 2G
         purge: true
