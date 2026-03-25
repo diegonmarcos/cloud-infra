@@ -13,14 +13,14 @@ name: "Ship → gcp-proxy"
 on:
   push:
     paths:
-      - "a_solutions/ab-mic_vaultwarden/src/**"
-      - "a_solutions/ba-clo_hickory-dns/src/**"
       - "a_solutions/bb-sec_authelia/src/**"
       - "a_solutions/bb-sec_caddy/src/**"
+      - "a_solutions/ba-clo_hickory-dns/src/**"
       - "a_solutions/bb-sec_introspect-proxy/src/**"
       - "a_solutions/bc-obs_ntfy/src/**"
       - "a_solutions/ca-dat_postlite/src/**"
       - "a_solutions/ca-dat_redis/src/**"
+      - "a_solutions/ab-mic_vaultwarden/src/**"
     branches: [main]
   workflow_dispatch:
 
@@ -67,16 +67,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
 
-      - name: Ship vaultwarden
-        if: contains(steps.changed.outputs.dirs, 'ab-mic_vaultwarden') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ab-mic_vaultwarden/build.sh ship
-
-      - name: Ship hickory-dns
-        if: contains(steps.changed.outputs.dirs, 'ba-clo_hickory-dns') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ba-clo_hickory-dns/build.sh ship
-
       - name: Ship authelia
         if: contains(steps.changed.outputs.dirs, 'bb-sec_authelia') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
@@ -86,6 +76,11 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'bb-sec_caddy') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/bb-sec_caddy/build.sh ship
+
+      - name: Ship hickory-dns
+        if: contains(steps.changed.outputs.dirs, 'ba-clo_hickory-dns') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ba-clo_hickory-dns/build.sh ship
 
       - name: Ship introspect-proxy
         if: contains(steps.changed.outputs.dirs, 'bb-sec_introspect-proxy') || github.event_name == 'workflow_dispatch'
@@ -108,4 +103,9 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'ca-dat_redis') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/ca-dat_redis/build.sh ship
+
+      - name: Ship vaultwarden
+        if: contains(steps.changed.outputs.dirs, 'ab-mic_vaultwarden') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ab-mic_vaultwarden/build.sh ship
 

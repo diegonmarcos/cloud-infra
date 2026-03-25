@@ -18,6 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       vm:
+        description: "Target VM (gcp-proxy, gcp-t4, oci-mail, oci-analytics, oci-apps, oci-apps-2, or empty for all)"
         required: false
         type: string
 
@@ -52,10 +53,6 @@ jobs:
             host: "82.70.229.129"
             user: "ubuntu"
             key_secret: OCI_SSH_KEY
-            host: "79.72.28.10"
-            user: "ubuntu"
-            key_secret: OCI_SSH_KEY
-            optional: true
 
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}

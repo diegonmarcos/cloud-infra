@@ -45,9 +45,9 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        working-directory: a_solutions/bc-obs_c3-infra-mcp/src
+        working-directory: a_solutions/bc-obs_c3-infra-mcp-api
         run: npm install
 
       - name: Run full mail health check
-        working-directory: a_solutions/bc-obs_c3-infra-mcp/src
-        run: npx tsx mcp/tools/health_mail.ts
+        run: |
+          npx tsx .github/workflows/scripts/health_mail_full.ts

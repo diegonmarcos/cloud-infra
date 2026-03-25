@@ -13,39 +13,39 @@ name: "Ship → oci-apps"
 on:
   push:
     paths:
-      - "a_solutions/aa-sui_code-server/src/**"
-      - "a_solutions/aa-sui_etherpad/src/**"
-      - "a_solutions/aa-sui_filebrowser/src/**"
-      - "a_solutions/aa-sui_google-workspace-mcp/src/**"
-      - "a_solutions/aa-sui_grist/src/**"
-      - "a_solutions/aa-sui_hedgedoc/src/**"
-      - "a_solutions/aa-sui_mail-mcp/src/**"
-      - "a_solutions/aa-sui_mattermost-bots/src/**"
-      - "a_solutions/aa-sui_mattermost-mcp/src/**"
-      - "a_solutions/aa-sui_photoprism/src/**"
-      - "a_solutions/aa-sui_photos-webhook/src/**"
-      - "a_solutions/aa-sui_radicale/src/**"
-      - "a_solutions/aa-sui_revealmd/src/**"
-      - "a_solutions/ac-fin_crawlee-cloud/src/**"
-      - "a_solutions/ac-fin_quant-lab-light/src/**"
-      - "a_solutions/ad-agi_ollama-hai/src/**"
-      - "a_solutions/ad-agi_rig-agentic-sonn-14bq8/src/**"
-      - "a_solutions/ad-agi_rig-agentic-hai-1.5bq4/src/**"
-      - "a_solutions/bc-obs_cloud-cgc-mcp/src/**"
-      - "a_solutions/bb-sec_orchestrator/src/**"
-      - "a_solutions/bc-obs_c3-infra-mcp/src/**"
-      - "a_solutions/bc-obs_c3-infra-api/src/**"
-      - "a_solutions/bc-obs_c3-services-mcp/src/**"
-      - "a_solutions/bc-obs_c3-services-api/src/**"
-      - "a_solutions/bc-obs_cloud-spec/src/**"
-      - "a_solutions/bc-obs_lgtm/src/**"
-      - "a_solutions/bc-obs_nocodb/src/**"
-      - "a_solutions/bc-obs_windmill/src/**"
       - "a_solutions/ca-dat_backup-borg/src/**"
       - "a_solutions/ca-dat_backup-bup/src/**"
       - "a_solutions/ca-dat_backup-gitea/src/**"
+      - "a_solutions/bc-obs_c3-infra-api/src/**"
+      - "a_solutions/bc-obs_c3-infra-mcp/src/**"
+      - "a_solutions/bc-obs_c3-services-api/src/**"
+      - "a_solutions/bc-obs_c3-services-mcp/src/**"
+      - "a_solutions/bc-obs_cloud-cgc-mcp/src/**"
+      - "a_solutions/bc-obs_cloud-spec/src/**"
+      - "a_solutions/aa-sui_code-server/src/**"
+      - "a_solutions/ac-fin_crawlee-cloud/src/**"
+      - "a_solutions/aa-sui_etherpad/src/**"
+      - "a_solutions/aa-sui_filebrowser/src/**"
       - "a_solutions/ca-dat_gitea/src/**"
+      - "a_solutions/aa-sui_google-workspace-mcp/src/**"
+      - "a_solutions/aa-sui_grist/src/**"
+      - "a_solutions/aa-sui_hedgedoc/src/**"
       - "a_solutions/ca-dat_kg-graph/src/**"
+      - "a_solutions/bc-obs_lgtm/src/**"
+      - "a_solutions/aa-sui_mail-mcp/src/**"
+      - "a_solutions/aa-sui_mattermost-bots/src/**"
+      - "a_solutions/aa-sui_mattermost-mcp/src/**"
+      - "a_solutions/bc-obs_nocodb/src/**"
+      - "a_solutions/ad-agi_ollama-hai/src/**"
+      - "a_solutions/bb-sec_orchestrator/src/**"
+      - "a_solutions/aa-sui_photoprism/src/**"
+      - "a_solutions/aa-sui_photos-webhook/src/**"
+      - "a_solutions/ac-fin_quant-lab-light/src/**"
+      - "a_solutions/aa-sui_radicale/src/**"
+      - "a_solutions/aa-sui_revealmd/src/**"
+      - "a_solutions/ad-agi_rig-agentic-hai-1.5bq4/src/**"
+      - "a_solutions/ad-agi_rig-agentic-sonn-14bq8/src/**"
+      - "a_solutions/bc-obs_windmill/src/**"
     branches: [main]
   workflow_dispatch:
 
@@ -92,10 +92,70 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
 
+      - name: Ship backup-borg
+        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-borg') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_backup-borg/build.sh ship
+
+      - name: Ship backup-bup
+        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-bup') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_backup-bup/build.sh ship
+
+      - name: Ship backup-gitea
+        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-gitea') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_backup-gitea/build.sh ship
+
+      - name: Ship c3-infra-api
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-api') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_c3-infra-api/build.sh ship
+
+      - name: Ship c3-infra-mcp
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-mcp') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_c3-infra-mcp/build.sh ship
+
+      - name: Ship c3-services-api
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-services-api') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_c3-services-api/build.sh ship
+
+      - name: Ship c3-services-mcp
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-services-mcp') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_c3-services-mcp/build.sh ship
+
+      - name: Ship cloud-cgc-mcp
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_cloud-cgc-mcp') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          REMOTE_BUILD: "true"
+        run: bash a_solutions/bc-obs_cloud-cgc-mcp/build.sh ship
+
+      - name: Ship cloud-spec
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_cloud-spec') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_cloud-spec/build.sh ship
+
       - name: Ship code-server
         if: contains(steps.changed.outputs.dirs, 'aa-sui_code-server') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/aa-sui_code-server/build.sh ship
+
+      - name: Ship crawlee-cloud
+        if: contains(steps.changed.outputs.dirs, 'ac-fin_crawlee-cloud') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ac-fin_crawlee-cloud/build.sh ship
 
       - name: Ship etherpad
         if: contains(steps.changed.outputs.dirs, 'aa-sui_etherpad') || github.event_name == 'workflow_dispatch'
@@ -106,6 +166,11 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'aa-sui_filebrowser') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/aa-sui_filebrowser/build.sh ship
+
+      - name: Ship gitea
+        if: contains(steps.changed.outputs.dirs, 'ca-dat_gitea') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_gitea/build.sh ship
 
       - name: Ship google-workspace-mcp
         if: contains(steps.changed.outputs.dirs, 'aa-sui_google-workspace-mcp') || github.event_name == 'workflow_dispatch'
@@ -123,6 +188,16 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'aa-sui_hedgedoc') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/aa-sui_hedgedoc/build.sh ship
+
+      - name: Ship kg-graph
+        if: contains(steps.changed.outputs.dirs, 'ca-dat_kg-graph') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ca-dat_kg-graph/build.sh ship
+
+      - name: Ship lgtm
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_lgtm') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_lgtm/build.sh ship
 
       - name: Ship mail-mcp
         if: contains(steps.changed.outputs.dirs, 'aa-sui_mail-mcp') || github.event_name == 'workflow_dispatch'
@@ -143,6 +218,21 @@ jobs:
           REMOTE_BUILD: "true"
         run: bash a_solutions/aa-sui_mattermost-mcp/build.sh ship
 
+      - name: Ship nocodb
+        if: contains(steps.changed.outputs.dirs, 'bc-obs_nocodb') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/bc-obs_nocodb/build.sh ship
+
+      - name: Ship ollama-hai
+        if: contains(steps.changed.outputs.dirs, 'ad-agi_ollama-hai') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ad-agi_ollama-hai/build.sh ship
+
+      - name: Ship orchestrator
+        if: contains(steps.changed.outputs.dirs, 'bb-sec_orchestrator') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/bb-sec_orchestrator/build.sh ship
+
       - name: Ship photoprism
         if: contains(steps.changed.outputs.dirs, 'aa-sui_photoprism') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
@@ -152,6 +242,11 @@ jobs:
         if: contains(steps.changed.outputs.dirs, 'aa-sui_photos-webhook') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/aa-sui_photos-webhook/build.sh ship
+
+      - name: Ship quant-lab-light
+        if: contains(steps.changed.outputs.dirs, 'ac-fin_quant-lab-light') || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: bash a_solutions/ac-fin_quant-lab-light/build.sh ship
 
       - name: Ship radicale
         if: contains(steps.changed.outputs.dirs, 'aa-sui_radicale') || github.event_name == 'workflow_dispatch'
@@ -163,96 +258,18 @@ jobs:
         continue-on-error: true
         run: bash a_solutions/aa-sui_revealmd/build.sh ship
 
-      - name: Ship crawlee-cloud
-        if: contains(steps.changed.outputs.dirs, 'ac-fin_crawlee-cloud') || github.event_name == 'workflow_dispatch'
+      - name: Ship rig-agentic-hai-1.5bq4
+        if: contains(steps.changed.outputs.dirs, 'ad-agi_rig-agentic-hai-1.5bq4') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
-        run: bash a_solutions/ac-fin_crawlee-cloud/build.sh ship
+        run: bash a_solutions/ad-agi_rig-agentic-hai-1.5bq4/build.sh ship
 
-      - name: Ship quant-lab-light
-        if: contains(steps.changed.outputs.dirs, 'ac-fin_quant-lab-light') || github.event_name == 'workflow_dispatch'
+      - name: Ship rig-agentic-sonn-14bq8
+        if: contains(steps.changed.outputs.dirs, 'ad-agi_rig-agentic-sonn-14bq8') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
-        run: bash a_solutions/ac-fin_quant-lab-light/build.sh ship
-
-      - name: Ship rig-agentic
-        if: contains(steps.changed.outputs.dirs, 'ad-agi_rig-agentic') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ad-agi_rig-agentic/build.sh ship
-
-      - name: Ship orchestrator
-        if: contains(steps.changed.outputs.dirs, 'bb-sec_orchestrator') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bb-sec_orchestrator/build.sh ship
-
-      - name: Ship c3-infra-mcp
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-mcp') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-infra-mcp/build.sh ship
-
-      - name: Ship c3-infra-api
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-infra-api') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-infra-api/build.sh ship
-
-      - name: Ship c3-services-mcp
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-services-mcp') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-services-mcp/build.sh ship
-
-      - name: Ship c3-services-api
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_c3-services-api') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bc-obs_c3-services-api/build.sh ship
-
-      - name: Ship cloud-spec
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_cloud-spec') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bc-obs_cloud-spec/build.sh ship
-
-      - name: Ship lgtm
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_lgtm') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bc-obs_lgtm/build.sh ship
-
-      - name: Ship nocodb
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_nocodb') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bc-obs_nocodb/build.sh ship
+        run: bash a_solutions/ad-agi_rig-agentic-sonn-14bq8/build.sh ship
 
       - name: Ship windmill
         if: contains(steps.changed.outputs.dirs, 'bc-obs_windmill') || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: bash a_solutions/bc-obs_windmill/build.sh ship
-
-      - name: Ship backup-borg
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-borg') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_backup-borg/build.sh ship
-
-      - name: Ship backup-bup
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-bup') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_backup-bup/build.sh ship
-
-      - name: Ship backup-gitea
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_backup-gitea') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_backup-gitea/build.sh ship
-
-      - name: Ship gitea
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_gitea') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_gitea/build.sh ship
-
-      - name: Ship kg-graph
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_kg-graph') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_kg-graph/build.sh ship
 
