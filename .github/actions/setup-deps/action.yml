@@ -36,10 +36,11 @@ runs:
     - name: Cache nix store
       uses: nix-community/cache-nix-action@v6
       with:
-        # Cache stores ONLY deps (nixpkgs, tools). Build outputs are ephemeral.
-        # Prefix fallback is safe because we GC build outputs after restore.
-        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock') }}
-        restore-prefixes-first-match: nix-${{ runner.os }}-
+        # Cache = Layer 1 (deps only). Key only hashes the GHA flake.lock (deps).
+        # Service flake.lock changes don't bust cache — deps are shared.
+        # Prefix fallback is safe because Layer 2 (outputs) is GC'd after restore.
+        primary-key: nix-deps-${{ runner.os }}-${{ hashFiles('.github/flake.lock') }}
+        restore-prefixes-first-match: nix-deps-${{ runner.os }}-
         gc-max-store-size-linux: 2G
         purge: true
         purge-created: 604800
@@ -49,25 +50,26 @@ runs:
     - name: GC stale build outputs (keep deps only)
       shell: bash
       run: |
-        # Strategy: cache holds deps (nixpkgs, mdbook, etc.), NOT our build outputs.
-        # After restore, delete all GC roots from previous builds (.result symlinks),
-        # then GC. Deps survive because flake inputs reference them. Build outputs
-        # become unreferenced and get collected — forcing nix to rebuild fresh.
+        # Layer 2 eviction: remove all GC roots except profiles and gha-devshell.
+        # This makes build outputs (docker-compose.yml, configs) unreferenced.
+        # GC collects them. Deps (Layer 1) survive via gha-devshell root + profiles.
         find /nix/var/nix/gcroots/auto -type l 2>/dev/null | while read root; do
           target=$(readlink "$root" 2>/dev/null || true)
-          # Remove roots pointing to non-profile paths (build outputs, .result links)
           case "$target" in
-            */profiles/*|*/per-user/*) ;;  # keep profile roots (nix itself)
+            */profiles/*|*/per-user/*|*gha-devshell*) ;;  # keep Layer 1 roots
             *) rm -f "$root" 2>/dev/null || true ;;
           esac
         done
         nix-store --gc 2>/dev/null || true
 
-    - name: Build GHA deps flake environment
+    - name: Build Layer 1 (deps devShell) + add to PATH
       shell: bash
       run: |
         if [ -f "$GITHUB_WORKSPACE/.github/flake.nix" ]; then
-          nix build "$GITHUB_WORKSPACE/.github#devShells.x86_64-linux.default.inputDerivation" --no-link
+          # Build dev shell as a GC root — survives cache GC, gets cached for next run
+          nix build "$GITHUB_WORKSPACE/.github#devShells.x86_64-linux.default.inputDerivation" \
+            --out-link /nix/var/nix/gcroots/gha-devshell
+          # Add all nix store paths from the dev shell to $PATH
           for pkg_path in $(nix develop "$GITHUB_WORKSPACE/.github#" --command sh -c 'echo $PATH' | tr ':' '\n' | grep /nix/store); do
             echo "$pkg_path" >> "$GITHUB_PATH"
           done
