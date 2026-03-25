@@ -94,9 +94,26 @@ jobs:
           ssh_alias: ${{ matrix.vm }}
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
+      - name: Check VM reachable
+        id: reachable
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          HOST="${{ steps.resolve.outputs.host }}"
+          if [ -z "$HOST" ] || ! ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${{ matrix.vm }}" 'echo ok' 2>/dev/null; then
+            if [ "${{ matrix.optional }}" = "true" ]; then
+              echo "::notice::${{ matrix.vm }} is unreachable (optional VM) — skipping"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::${{ matrix.vm }} is unreachable"
+              exit 1
+            fi
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Ship home-manager
         id: ship
-        if: steps.gate.outputs.skip != 'true'
+        if: steps.gate.outputs.skip != 'true' && steps.reachable.outputs.skip != 'true'
         run: bash b_infra/home-manager/${{ matrix.vm }}/build.sh ship
 
       - name: Report failure
