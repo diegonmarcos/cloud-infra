@@ -83,9 +83,8 @@
   home.file.".local/share/container-init/container-init.service".text = ''
     [Unit]
     Description=Sequential container startup (container-init)
-    After=docker.service network-online.target
-    Wants=docker.service network-online.target
-    Requires=docker.service
+    After=network-online.target
+    Wants=network-online.target
 
     [Service]
     Type=oneshot
