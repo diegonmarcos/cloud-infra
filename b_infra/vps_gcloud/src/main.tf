@@ -1,44 +1,40 @@
+# GCP Infrastructure — data-driven from terraform.json
+# All values live in terraform.json; this file is a pure template.
+
+locals {
+  config = jsondecode(file("${path.module}/terraform.json"))
+  # Index instances by name for resource addressing
+  instances_with_static_ip = { for i in local.config.instances : i.name => i if i.static_ip_name != null }
+  instances_with_gpu       = { for i in local.config.instances : i.name => i if i.gpu != null }
+}
+
+# =============================================================================
+# Provider
+# =============================================================================
+
 terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = local.config.provider.version
     }
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = "~> 5.0"
+      version = local.config.provider.version
     }
   }
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
-  zone    = var.zone
+  project = local.config.provider.project_id
+  region  = local.config.provider.region
+  zone    = local.config.provider.zone
 }
 
 provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-  zone    = var.zone
-}
-
-variable "project_id" {
-  description = "GCP Project ID"
-  type        = string
-  default     = "diegonmarcos-infra-prod"
-}
-
-variable "region" {
-  description = "GCP Region"
-  type        = string
-  default     = "us-central1"
-}
-
-variable "zone" {
-  description = "GCP Zone"
-  type        = string
-  default     = "us-central1-a"
+  project = local.config.provider.project_id
+  region  = local.config.provider.region
+  zone    = local.config.provider.zone
 }
 
 variable "ssh_public_key" {
@@ -49,170 +45,77 @@ variable "ssh_public_key" {
 }
 
 # =============================================================================
-# VPC Network - GCP default (auto-created, cannot be deleted)
+# VPC Network
 # =============================================================================
 
 resource "google_compute_network" "main" {
-  name                    = "default"
-  description             = "Default network for the project"
-  auto_create_subnetworks = true
+  name                    = local.config.network.name
+  description             = local.config.network.description
+  auto_create_subnetworks = local.config.network.auto_create_subnetworks
 
   lifecycle {
-    prevent_destroy = true  # GCP default network cannot be recreated
+    prevent_destroy = true
   }
 }
 
 # =============================================================================
-# Firewall Rules
+# Firewall Rules — all from terraform.json
 # NOTE: default-allow-icmp, default-allow-internal, default-allow-rdp,
 #       default-allow-ssh are GCP auto-created defaults — NOT managed here.
 # =============================================================================
 
-resource "google_compute_firewall" "allow_flask_api" {
-  name    = "allow-flask-api"
+resource "google_compute_firewall" "rules" {
+  for_each = { for r in local.config.firewall_rules : r.name => r }
+
+  name    = each.value.name
   network = google_compute_network.main.name
 
   allow {
-    protocol = "tcp"
-    ports    = ["5000"]
+    protocol = each.value.protocol
+    ports    = each.value.ports
   }
 
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow Flask API on port 5000"
-}
-
-resource "google_compute_firewall" "allow_http" {
-  name    = "allow-http"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["http-server"]
-  description   = "Allow HTTP traffic"
-}
-
-resource "google_compute_firewall" "allow_https" {
-  name    = "allow-https"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["443"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["https-server"]
-  description   = "Allow HTTPS traffic"
-}
-
-resource "google_compute_firewall" "allow_mail_imaps" {
-  name    = "allow-mail-imaps"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["993"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow IMAPS"
-}
-
-resource "google_compute_firewall" "allow_mail_smtps" {
-  name    = "allow-mail-smtps"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["465"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow SMTPS (implicit TLS)"
-}
-
-resource "google_compute_firewall" "allow_mail_smtp" {
-  name    = "allow-mail-smtp"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["25"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow SMTP"
-}
-
-resource "google_compute_firewall" "allow_mail_submission" {
-  name    = "allow-mail-submission"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["587"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Allow SMTP Submission"
-}
-
-resource "google_compute_firewall" "allow_wireguard" {
-  name    = "allow-wireguard"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "udp"
-    ports    = ["51820"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "WireGuard from Oracle VM"
-}
-
-resource "google_compute_firewall" "allow_rescue_ssh" {
-  name    = "allow-rescue-ssh"
-  network = google_compute_network.main.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["2200"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  description   = "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor"
+  source_ranges = [each.value.source]
+  target_tags   = length(each.value.tags) > 0 ? each.value.tags : null
+  description   = each.value.description
 }
 
 # =============================================================================
 # Static IPs
 # =============================================================================
 
-resource "google_compute_address" "proxy_ip" {
-  name   = "arch-1-ip"
-  region = var.region
+resource "google_compute_address" "ips" {
+  for_each = { for ip in local.config.static_ips : ip.name => ip }
+
+  name   = each.value.name
+  region = each.value.region
 }
 
 # =============================================================================
-# Compute Instances
+# Compute Instances — all from terraform.json
 # =============================================================================
 
-# gcp-proxy (arch-1) — always-on free tier e2-micro (Fedora, despite the name)
-resource "google_compute_instance" "central_proxy" {
-  name         = "arch-1"
-  machine_type = "e2-micro"
-  zone         = var.zone
+resource "google_compute_instance" "vms" {
+  for_each = { for i in local.config.instances : i.name => i }
 
-  tags = ["http-server", "https-server", "npm-admin"]
+  name         = each.value.name
+  machine_type = each.value.machine_type
+  zone         = local.config.provider.zone
+  tags         = each.value.tags
 
   boot_disk {
     initialize_params {
-      image = "projects/fedora-cloud/global/images/family/fedora-cloud-42-x86-64"
-      size  = 32
-      type  = "pd-standard"
+      image = each.value.image
+      size  = each.value.disk_size_gb
+      type  = each.value.disk_type
+    }
+  }
+
+  dynamic "guest_accelerator" {
+    for_each = each.value.gpu != null ? [each.value.gpu] : []
+    content {
+      type  = guest_accelerator.value.type
+      count = guest_accelerator.value.count
     }
   }
 
@@ -220,61 +123,8 @@ resource "google_compute_instance" "central_proxy" {
     network = google_compute_network.main.name
 
     access_config {
-      nat_ip = google_compute_address.proxy_ip.address
+      nat_ip = each.value.static_ip_name != null ? google_compute_address.ips[each.value.static_ip_name].address : null
     }
-  }
-
-  metadata = {
-    ssh-keys              = "diego:${var.ssh_public_key}"
-    serial-port-enable    = "TRUE"
-    enable-guest-attributes = "TRUE"
-  }
-
-  scheduling {
-    preemptible       = false
-    automatic_restart = true
-  }
-
-  service_account {
-    email = "514615763870-compute@developer.gserviceaccount.com"
-    scopes = [
-      "https://www.googleapis.com/auth/devstorage.read_only",
-      "https://www.googleapis.com/auth/logging.write",
-      "https://www.googleapis.com/auth/monitoring.write",
-      "https://www.googleapis.com/auth/pubsub",
-      "https://www.googleapis.com/auth/service.management.readonly",
-      "https://www.googleapis.com/auth/servicecontrol",
-      "https://www.googleapis.com/auth/trace.append",
-    ]
-  }
-
-  lifecycle {
-    ignore_changes = [boot_disk]  # Avoid re-imaging running instance
-  }
-}
-
-# gcp-ollama (ollama-spot-gpu) — spot T4 GPU, started on demand
-resource "google_compute_instance" "ollama_gpu" {
-  name         = "ollama-spot-gpu"
-  machine_type = "n1-standard-4"
-  zone         = var.zone
-
-  boot_disk {
-    initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts"
-      size  = 50
-      type  = "pd-standard"
-    }
-  }
-
-  guest_accelerator {
-    type  = "nvidia-tesla-t4"
-    count = 1
-  }
-
-  network_interface {
-    network = google_compute_network.main.name
-    access_config {}  # Ephemeral IP — spot instances change IP on restart
   }
 
   metadata = {
@@ -282,15 +132,15 @@ resource "google_compute_instance" "ollama_gpu" {
   }
 
   scheduling {
-    preemptible                 = true
-    automatic_restart           = false
-    on_host_maintenance         = "TERMINATE"  # Required for GPU instances
-    instance_termination_action = "STOP"
+    preemptible                 = each.value.preemptible
+    automatic_restart           = each.value.automatic_restart
+    on_host_maintenance         = each.value.on_host_maintenance
+    instance_termination_action = each.value.preemptible ? "STOP" : null
   }
 
   service_account {
-    email  = "514615763870-compute@developer.gserviceaccount.com"
-    scopes = ["cloud-platform"]
+    email  = local.config.service_account.email
+    scopes = each.value.scopes
   }
 
   lifecycle {
@@ -302,37 +152,40 @@ resource "google_compute_instance" "ollama_gpu" {
 # Budget Alerts
 # =============================================================================
 
-resource "google_billing_budget" "spot_gpu" {
+resource "google_billing_budget" "main" {
   provider        = google-beta
-  billing_account = "016370-B652E5-7E0A8A"
-  display_name    = "GCP Spot GPU 30 EUR"
+  billing_account = local.config.budget.billing_account
+  display_name    = local.config.budget.display_name
 
   budget_filter {
-    projects = ["projects/diegonmarcos-infra-prod"]
+    projects = ["projects/${local.config.provider.project_id}"]
   }
 
   amount {
     specified_amount {
-      currency_code = "EUR"
-      units         = "30"
+      currency_code = local.config.budget.currency
+      units         = tostring(local.config.budget.amount)
     }
   }
 
-  threshold_rules { threshold_percent = 0.5 }
-  threshold_rules { threshold_percent = 0.9 }
-  threshold_rules { threshold_percent = 1.0 }
+  dynamic "threshold_rules" {
+    for_each = local.config.budget.thresholds
+    content {
+      threshold_percent = threshold_rules.value
+    }
+  }
 }
 
 # =============================================================================
 # Outputs
 # =============================================================================
 
-output "proxy_ip" {
-  value       = google_compute_address.proxy_ip.address
-  description = "Static public IP of gcp-proxy (35.226.147.64)"
+output "static_ips" {
+  value       = { for name, ip in google_compute_address.ips : name => ip.address }
+  description = "Static public IPs"
 }
 
-output "proxy_ssh" {
-  value       = "ssh gcp-proxy"
-  description = "SSH alias for gcp-proxy"
+output "instances" {
+  value       = { for name, vm in google_compute_instance.vms : name => vm.network_interface[0].access_config[0].nat_ip }
+  description = "Instance IPs"
 }

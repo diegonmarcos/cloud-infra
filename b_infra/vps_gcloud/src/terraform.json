@@ -1,0 +1,89 @@
+{
+  "provider": {
+    "name": "google",
+    "version": "~> 5.0",
+    "project_id": "diegonmarcos-infra-prod",
+    "region": "us-central1",
+    "zone": "us-central1-a"
+  },
+
+  "network": {
+    "name": "default",
+    "description": "Default network for the project",
+    "auto_create_subnetworks": true,
+    "prevent_destroy": true
+  },
+
+  "firewall_rules": [
+    { "name": "allow-flask-api",       "protocol": "tcp", "ports": ["5000"],  "source": "0.0.0.0/0", "tags": [],                                       "description": "Allow Flask API on port 5000" },
+    { "name": "allow-http",            "protocol": "tcp", "ports": ["80"],    "source": "0.0.0.0/0", "tags": ["http-server"],                            "description": "Allow HTTP traffic" },
+    { "name": "allow-https",           "protocol": "tcp", "ports": ["443"],   "source": "0.0.0.0/0", "tags": ["https-server"],                           "description": "Allow HTTPS traffic" },
+    { "name": "allow-mail-imaps",      "protocol": "tcp", "ports": ["993"],   "source": "0.0.0.0/0", "tags": [],                                        "description": "Allow IMAPS" },
+    { "name": "allow-mail-smtps",      "protocol": "tcp", "ports": ["465"],   "source": "0.0.0.0/0", "tags": [],                                        "description": "Allow SMTPS (implicit TLS)" },
+    { "name": "allow-mail-smtp",       "protocol": "tcp", "ports": ["25"],    "source": "0.0.0.0/0", "tags": [],                                        "description": "Allow SMTP" },
+    { "name": "allow-mail-submission", "protocol": "tcp", "ports": ["587"],   "source": "0.0.0.0/0", "tags": [],                                        "description": "Allow SMTP Submission" },
+    { "name": "allow-wireguard",       "protocol": "udp", "ports": ["51820"], "source": "0.0.0.0/0", "tags": [],                                        "description": "WireGuard from Oracle VM" },
+    { "name": "allow-rescue-ssh",      "protocol": "tcp", "ports": ["2200"],  "source": "0.0.0.0/0", "tags": [],                                        "description": "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor" }
+  ],
+
+  "static_ips": [
+    { "name": "arch-1-ip", "region": "us-central1" }
+  ],
+
+  "instances": [
+    {
+      "name": "arch-1",
+      "alias": "gcp-proxy",
+      "description": "always-on free tier e2-micro (Fedora)",
+      "machine_type": "e2-micro",
+      "image": "projects/fedora-cloud/global/images/family/fedora-cloud-42-x86-64",
+      "disk_size_gb": 32,
+      "disk_type": "pd-standard",
+      "tags": ["http-server", "https-server", "npm-admin"],
+      "static_ip_name": "arch-1-ip",
+      "preemptible": false,
+      "automatic_restart": true,
+      "on_host_maintenance": "MIGRATE",
+      "gpu": null,
+      "scopes": [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring.write",
+        "https://www.googleapis.com/auth/pubsub",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append"
+      ],
+      "ignore_changes": ["boot_disk"]
+    },
+    {
+      "name": "ollama-spot-gpu",
+      "alias": "gcp-t4",
+      "description": "spot T4 GPU, started on demand",
+      "machine_type": "n1-standard-4",
+      "image": "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts",
+      "disk_size_gb": 50,
+      "disk_type": "pd-standard",
+      "tags": [],
+      "static_ip_name": null,
+      "preemptible": true,
+      "automatic_restart": false,
+      "on_host_maintenance": "TERMINATE",
+      "gpu": { "type": "nvidia-tesla-t4", "count": 1 },
+      "scopes": ["cloud-platform"],
+      "ignore_changes": ["boot_disk", "metadata"]
+    }
+  ],
+
+  "service_account": {
+    "email": "514615763870-compute@developer.gserviceaccount.com"
+  },
+
+  "budget": {
+    "billing_account": "016370-B652E5-7E0A8A",
+    "display_name": "GCP Spot GPU 30 EUR",
+    "currency": "EUR",
+    "amount": 30,
+    "thresholds": [0.5, 0.9, 1.0]
+  }
+}

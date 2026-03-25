@@ -1,32 +1,25 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# Resend — Email delivery service (domain + DNS verification)
-# ═══════════════════════════════════════════════════════════════════════════════
-#
-# Resend sends transactional/health-check emails via Amazon SES.
-# We register mails.diegonmarcos.com (subdomain) to isolate reputation
-# from Mailu's root-domain DKIM/SPF.
-#
-# DNS records are created in Cloudflare. Resend verification is triggered
-# after records propagate.
-#
-# Provider: y0n0zawa/resend (community)
-# Docs: https://registry.terraform.io/providers/y0n0zawa/resend/latest
-# ═══════════════════════════════════════════════════════════════════════════════
+# Resend — data-driven from terraform.json
+# Email delivery service (domain + DNS verification via Cloudflare)
+
+locals {
+  config = jsondecode(file("${path.module}/terraform.json"))
+  dns    = local.config.dns_records
+}
 
 terraform {
   required_providers {
     resend = {
       source  = "y0n0zawa/resend"
-      version = "~> 1.0"
+      version = local.config.provider.resend_version
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 4.0"
+      version = local.config.provider.cloudflare_version
     }
   }
 }
 
-# ── Variables ─────────────────────────────────────────────────────────────────
+# ── Variables (secrets — injected via tfvars) ────────────────────────────────
 
 variable "resend_api_key" {
   description = "Resend API key (full access)"
@@ -45,13 +38,7 @@ variable "cloudflare_zone_id" {
   type        = string
 }
 
-variable "domain" {
-  description = "Subdomain to register with Resend"
-  type        = string
-  default     = "mails.diegonmarcos.com"
-}
-
-# ── Providers ─────────────────────────────────────────────────────────────────
+# ── Providers ────────────────────────────────────────────────────────────────
 
 provider "resend" {
   api_key = var.resend_api_key
@@ -61,47 +48,44 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-# ── Resend Domain ─────────────────────────────────────────────────────────────
+# ── Resend Domain ────────────────────────────────────────────────────────────
 
 resource "resend_domain" "mail" {
-  name   = var.domain
-  region = "us-east-1"
+  name   = local.config.domain
+  region = local.config.resend_region
 }
 
-# ── Cloudflare DNS Records (from Resend's required records) ───────────────────
+# ── Cloudflare DNS Records ───────────────────────────────────────────────────
 
-# DKIM — Resend's own signing key (separate selector from Mailu's dkim._domainkey)
 resource "cloudflare_record" "resend_dkim" {
   zone_id = var.cloudflare_zone_id
-  name    = "resend._domainkey.mails"
+  name    = local.dns.dkim.name
   type    = "TXT"
   content = resend_domain.mail.records[0].value
-  ttl     = 1 # Auto
-  comment = "Resend DKIM for mails.diegonmarcos.com"
+  ttl     = 1
+  comment = local.dns.dkim.comment
 }
 
-# SPF MX — Resend bounce handling (send.mails subdomain)
 resource "cloudflare_record" "resend_spf_mx" {
   zone_id  = var.cloudflare_zone_id
-  name     = "send.mails"
+  name     = local.dns.spf_mx.name
   type     = "MX"
-  content  = "feedback-smtp.us-east-1.amazonses.com"
-  priority = 10
-  ttl      = 1 # Auto
-  comment  = "Resend SPF MX for mails.diegonmarcos.com"
+  content  = local.dns.spf_mx.content
+  priority = local.dns.spf_mx.priority
+  ttl      = 1
+  comment  = local.dns.spf_mx.comment
 }
 
-# SPF TXT — Resend SPF (send.mails subdomain)
 resource "cloudflare_record" "resend_spf_txt" {
   zone_id = var.cloudflare_zone_id
-  name    = "send.mails"
+  name    = local.dns.spf_txt.name
   type    = "TXT"
-  content = "v=spf1 include:amazonses.com ~all"
-  ttl     = 1 # Auto
-  comment = "Resend SPF for mails.diegonmarcos.com"
+  content = local.dns.spf_txt.content
+  ttl     = 1
+  comment = local.dns.spf_txt.comment
 }
 
-# ── Verify Domain ─────────────────────────────────────────────────────────────
+# ── Verify Domain ────────────────────────────────────────────────────────────
 
 resource "resend_domain_verification" "mail" {
   domain_id = resend_domain.mail.id
@@ -113,7 +97,7 @@ resource "resend_domain_verification" "mail" {
   ]
 }
 
-# ── Outputs ───────────────────────────────────────────────────────────────────
+# ── Outputs ──────────────────────────────────────────────────────────────────
 
 output "domain_id" {
   description = "Resend domain ID"
