@@ -66,6 +66,8 @@ runs:
       shell: bash
       run: |
         if [ -f "$GITHUB_WORKSPACE/.github/flake.nix" ]; then
+          # Refresh config.json input (fetches latest from GitHub main)
+          nix flake update config-json --flake "$GITHUB_WORKSPACE/.github" 2>/dev/null || true
           # Build dev shell as a GC root — survives cache GC, gets cached for next run
           nix build "$GITHUB_WORKSPACE/.github#devShells.x86_64-linux.default.inputDerivation" \
             --out-link "$HOME/.nix-gha-devshell"
