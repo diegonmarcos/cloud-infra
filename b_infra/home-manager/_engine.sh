@@ -115,6 +115,7 @@ step_deploy() {
         BUILD_LOG="$SERVICE_DIR/.build-log"
         if nix build \
             --no-link --print-out-paths \
+            --option eval-cache false \
             ".#homeConfigurations.\"$HM_CONFIG\".activationPackage" \
             > "$BUILD_LOG" 2>&1; then
             RESULT=$(tail -1 "$BUILD_LOG")
