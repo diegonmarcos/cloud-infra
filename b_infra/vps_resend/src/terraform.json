@@ -1,0 +1,27 @@
+{
+  "provider": {
+    "resend_version": "~> 1.0",
+    "cloudflare_version": "~> 4.0"
+  },
+
+  "domain": "mails.diegonmarcos.com",
+  "resend_region": "us-east-1",
+
+  "dns_records": {
+    "dkim": {
+      "name": "resend._domainkey.mails",
+      "comment": "Resend DKIM for mails.diegonmarcos.com"
+    },
+    "spf_mx": {
+      "name": "send.mails",
+      "content": "feedback-smtp.us-east-1.amazonses.com",
+      "priority": 10,
+      "comment": "Resend SPF MX for mails.diegonmarcos.com"
+    },
+    "spf_txt": {
+      "name": "send.mails",
+      "content": "v=spf1 include:amazonses.com ~all",
+      "comment": "Resend SPF for mails.diegonmarcos.com"
+    }
+  }
+}
