@@ -43,16 +43,6 @@ jobs:
       - name: Update submodules to latest
         run: git submodule update --remote
 
-      - name: Detect changed services
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "dirs=ALL" >> "$GITHUB_OUTPUT"
-          else
-            dirs=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
-            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: ./.github/actions/setup-deps
         with:
           ssh_key: ${{ secrets.GCP_PROXY_SSH_KEY }}
@@ -69,46 +59,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Ship authelia
-        if: contains(steps.changed.outputs.dirs, 'bb-sec_authelia') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bb-sec_authelia/build.sh ship
-
-      - name: Ship caddy
-        if: contains(steps.changed.outputs.dirs, 'bb-sec_caddy') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bb-sec_caddy/build.sh ship
-
-      - name: Ship hickory-dns
-        if: contains(steps.changed.outputs.dirs, 'ba-clo_hickory-dns') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ba-clo_hickory-dns/build.sh ship
-
-      - name: Ship introspect-proxy
-        if: contains(steps.changed.outputs.dirs, 'bb-sec_introspect-proxy') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: "true"
-        run: bash a_solutions/bb-sec_introspect-proxy/build.sh ship
-
-      - name: Ship ntfy
-        if: contains(steps.changed.outputs.dirs, 'bc-obs_ntfy') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/bc-obs_ntfy/build.sh ship
-
-      - name: Ship postlite
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_postlite') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_postlite/build.sh ship
-
-      - name: Ship redis
-        if: contains(steps.changed.outputs.dirs, 'ca-dat_redis') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ca-dat_redis/build.sh ship
-
-      - name: Ship vaultwarden
-        if: contains(steps.changed.outputs.dirs, 'ab-mic_vaultwarden') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ab-mic_vaultwarden/build.sh ship
-
+      - name: Ship services
+        run: bash .github/workflows/scripts/ship-vm.sh gcp-proxy

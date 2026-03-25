@@ -25,18 +25,9 @@ jobs:
       - name: Update submodules to latest
         run: git submodule update --remote
 
-      - name: Detect changed services
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "dirs=ALL" >> "$GITHUB_OUTPUT"
-          else
-            dirs=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
-            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: ./.github/actions/setup-deps
         with:
 {{SSH_CONFIG}}          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 {{DOCKER_STEPS}}
-{{SHIP_STEPS}}
+      - name: Ship services
+        run: bash .github/workflows/scripts/ship-vm.sh {{VM_NAME}}

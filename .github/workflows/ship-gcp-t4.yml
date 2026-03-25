@@ -36,16 +36,6 @@ jobs:
       - name: Update submodules to latest
         run: git submodule update --remote
 
-      - name: Detect changed services
-        id: changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "dirs=ALL" >> "$GITHUB_OUTPUT"
-          else
-            dirs=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
-            echo "dirs=$dirs" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: ./.github/actions/setup-deps
         with:
           ssh_key: ${{ secrets.GCP_T4_SSH_KEY }}
@@ -54,9 +44,5 @@ jobs:
           ssh_alias: gcp-t4
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-
-      - name: Ship ollama
-        if: contains(steps.changed.outputs.dirs, 'ad-agi_ollama') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/ad-agi_ollama/build.sh ship
-
+      - name: Ship services
+        run: bash .github/workflows/scripts/ship-vm.sh gcp-t4
