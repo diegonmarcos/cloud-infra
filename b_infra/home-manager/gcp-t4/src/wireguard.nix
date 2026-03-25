@@ -44,8 +44,8 @@ let
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
     MTU = 1380
-    PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -o wg0 -j MASQUERADE
-    PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s 10.0.0.0/24 -o wg0 -j MASQUERADE
+    PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
+    PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
   '';
 
   # Spoke [Interface] — allow WireGuard traffic to reach Docker port mappings
@@ -71,7 +71,7 @@ let
   (if peer.role == "client" then
     "AllowedIPs = ${peer.address}/32\n"
   else if peer.role == "hub" then
-    "AllowedIPs = 10.0.0.0/24\n"
+    "AllowedIPs = ${cloudData.wireguard.subnet}\n"
   else
     "AllowedIPs = ${peer.address}/32\n"
   ) + "PersistentKeepalive = 25\n";
