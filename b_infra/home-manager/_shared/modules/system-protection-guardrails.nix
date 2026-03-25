@@ -13,7 +13,7 @@
 { config, lib, ... }:
 
 let
-  managed = import ./managed-header.nix { inherit lib; repo = "cloud/b_infra/home-manager"; };
+  managed = import ./infra-managed-header.nix { inherit lib; repo = "cloud/b_infra/home-manager"; };
 
   # ── Tier 0: WHITELIST — read-only subcommands, pass immediately ────
   # These never modify the system. Needed for Claude Code internals
