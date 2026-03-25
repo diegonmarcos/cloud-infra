@@ -46,10 +46,11 @@ in {
     KillMode=process
   '';
 
-  # ── Docker daemon config — iptables off, firewall.nix manages rules ─
+  # ── Docker daemon config — iptables + DNS (single owner of daemon.json) ─
   home.file.".local/share/container-init/daemon.json".text = builtins.toJSON {
     iptables = false;
     ip6tables = false;
+    dns = [ cloudData.dns.primary cloudData.dns.fallback ];
   };
   home.file.".local/share/container-init/container-init.sh" = {
     executable = true;
