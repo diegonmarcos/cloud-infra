@@ -1,0 +1,98 @@
+name: "Setup Dependencies"
+description: "Universal dependency setup — nix flake + cache + SSH + SOPS"
+
+inputs:
+  ssh_key:
+    description: "SSH private key for target VM"
+    required: false
+  ssh_host:
+    description: "SSH host IP/hostname"
+    required: false
+  ssh_user:
+    description: "SSH username"
+    required: false
+    default: "ubuntu"
+  ssh_alias:
+    description: "SSH config Host alias (e.g. oci-apps, gcp-proxy)"
+    required: false
+  sops_age_key:
+    description: "SOPS age private key"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Read nix channel from config.json
+      id: deps
+      shell: bash
+      run: |
+        echo "nix_channel=$(jq -r '.deps.gha.nix_channel' "$GITHUB_WORKSPACE/config.json")" >> "$GITHUB_OUTPUT"
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v30
+      with:
+        nix_path: nixpkgs=channel:${{ steps.deps.outputs.nix_channel }}
+
+    - name: Cache nix store
+      uses: nix-community/cache-nix-action@v6
+      with:
+        # Cache busts on: config changes, flake lock updates, nix source changes, service flake changes
+        primary-key: nix-${{ runner.os }}-${{ hashFiles('config.json', '.github/flake.lock', '**/flake.lock', 'b_infra/home-manager/**/*.nix', 'a_solutions/**/src/flake.nix') }}
+        restore-prefixes-first-match: nix-${{ runner.os }}-
+        gc-max-store-size-linux: 2G
+        purge: true
+        purge-created: 604800
+        purge-primary-key: never
+        purge-prefixes: nix-${{ runner.os }}-
+
+    - name: GC unreferenced nix store paths
+      shell: bash
+      run: |
+        # After cache restore, GC removes all unreferenced store paths.
+        # This cleans stale source copies and build outputs from previous runs.
+        # Nix determines what's referenced — no pattern guessing needed.
+        nix-store --gc 2>/dev/null || true
+
+    - name: Build GHA deps flake environment
+      shell: bash
+      run: |
+        if [ -f "$GITHUB_WORKSPACE/.github/flake.nix" ]; then
+          nix build "$GITHUB_WORKSPACE/.github#devShells.x86_64-linux.default.inputDerivation" --no-link
+          for pkg_path in $(nix develop "$GITHUB_WORKSPACE/.github#" --command sh -c 'echo $PATH' | tr ':' '\n' | grep /nix/store); do
+            echo "$pkg_path" >> "$GITHUB_PATH"
+          done
+        fi
+
+    - name: Install dependencies via build.sh
+      shell: bash
+      run: ./build.sh deps
+
+    - name: Setup SSH
+      if: inputs.ssh_key != ''
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh/sockets
+        chmod 700 ~/.ssh
+        echo "${{ inputs.ssh_key }}" > ~/.ssh/id_deploy
+        chmod 600 ~/.ssh/id_deploy
+        cat > ~/.ssh/config <<EOF
+        Host ${{ inputs.ssh_alias }}
+          HostName ${{ inputs.ssh_host }}
+          User ${{ inputs.ssh_user }}
+          IdentityFile ~/.ssh/id_deploy
+          StrictHostKeyChecking no
+          ServerAliveInterval 30
+          ServerAliveCountMax 10
+          ControlMaster auto
+          ControlPath ~/.ssh/sockets/%r@%h-%p
+          ControlPersist 600
+        EOF
+        chmod 600 ~/.ssh/config
+
+    - name: Setup SOPS age key
+      if: inputs.sops_age_key != ''
+      shell: bash
+      run: |
+        mkdir -p ~/.config/sops/age
+        echo "${{ inputs.sops_age_key }}" > ~/.config/sops/age/keys.txt
+        echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"
