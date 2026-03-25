@@ -40,6 +40,7 @@ runs:
           docker rm "$CID" >/dev/null
           # Export image name for _engine.sh to use
           echo "CLOUD_CI_IMAGE=$CI_IMAGE" >> "$GITHUB_ENV"
+          echo "FORCE_DEPLOY=1" >> "$GITHUB_ENV"
           echo "Pulled cloud-ci image — builds will run inside container"
         else
           echo "::warning::cloud-ci image not available — building deps from scratch"
