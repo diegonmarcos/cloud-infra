@@ -35,8 +35,9 @@ in {
     Delegate=yes
     KillMode=process
 
-    [Install]
-    WantedBy=multi-user.target
+    # NO [Install] section — Docker does NOT autostart on boot.
+    # container-init.service is the sole entry point: it starts Docker
+    # first, then brings up containers sequentially to avoid OOM.
   '';
 
   # Docker daemon config — iptables disabled, we manage all rules in firewall.nix
@@ -89,12 +90,9 @@ in {
       echo "$DOCKER_LOG Docker restarted"
     fi
 
-    # Always ensure docker is enabled and running (survives dnf remove, reboot, etc.)
-    $SUDO systemctl enable docker 2>/dev/null || true
-    if ! $SUDO systemctl is-active docker >/dev/null 2>&1; then
-      $SUDO systemctl start docker
-      echo "$DOCKER_LOG Docker was not running — started"
-    fi
+    # Docker is NOT enabled on boot — container-init.service handles startup.
+    # Explicitly disable to prevent leftover symlinks from re-enabling it.
+    $SUDO systemctl disable docker 2>/dev/null || true
 
     # Deploy daemon.json
     DAEMON_SRC="$HOME/.local/share/docker-service/daemon.json"
