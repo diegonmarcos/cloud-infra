@@ -32,7 +32,7 @@ in {
 
     [Service]
     Type=notify
-    ExecStart=${dockerdBin}
+    ExecStart=${dockerdBin} --containerd-startup-timeout 120s
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
@@ -55,7 +55,7 @@ in {
   home.file.".local/share/container-init/container-init.service".text = ''
     [Unit]
     Description=Container Init — Docker + sequential container startup
-    After=network-online.target firewall.service earlyoom.service disk-swap.service zram-setup.service
+    After=network-online.target firewall.service disk-swap.service zram-setup.service
     Wants=network-online.target
 
     [Service]
