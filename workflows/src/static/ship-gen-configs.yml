@@ -44,9 +44,11 @@ jobs:
           cd cloud-data
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Ensure we're on main branch (checkout leaves submodule in detached HEAD)
+          # Stash generated files, checkout main, pop stash, pull latest
+          git stash --include-untracked
           git checkout main
           git pull --rebase origin main
+          git stash pop || true
           git add -A *.json *.md
           if git diff --cached --quiet; then
             echo "cloud-data: no changes"
