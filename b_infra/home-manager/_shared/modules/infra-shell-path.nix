@@ -2,6 +2,7 @@
 # - home.sessionPath → ~/.profile (login shells, SSH sessions)
 # - home.sessionVariables → ~/.profile (env vars)
 # - /etc/environment → PAM-level, covers non-login non-interactive SSH (GHA, cron, scripts)
+# - /etc/systemd/system.conf.d/ → DefaultEnvironment for ALL root systemd services
 { lib, pkgs, config, ... }:
 {
   home.sessionPath = [
@@ -44,6 +45,21 @@
       fi
       echo "[shell-path] Added nix paths to /etc/environment"
     fi
+    # systemd DefaultEnvironment — root services (watchdog, container-init, etc.)
+    # /etc/environment only covers PAM sessions, not systemd-spawned services.
+    SYSTEMD_CONF_DIR="/etc/systemd/system.conf.d"
+    SYSTEMD_CONF="$SYSTEMD_CONF_DIR/nix-path.conf"
+    WANT="[Manager]
+DefaultEnvironment=PATH=$NIX_PATHS:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+    $SUDO mkdir -p "$SYSTEMD_CONF_DIR"
+    CURRENT=$($SUDO cat "$SYSTEMD_CONF" 2>/dev/null || true)
+    if [ "$CURRENT" != "$WANT" ]; then
+      echo "$WANT" | $SUDO tee "$SYSTEMD_CONF" > /dev/null
+      $SUDO systemctl daemon-reexec 2>/dev/null || true
+      echo "[shell-path] systemd DefaultEnvironment deployed (daemon-reexec)"
+    fi
+
     ) || echo "[shell-path] FAILED — see errors above, activation continues"
   '';
 }
