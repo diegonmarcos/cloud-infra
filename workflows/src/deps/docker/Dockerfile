@@ -52,6 +52,9 @@ COPY --from=builder /build /opt/deps-flake
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
 
+# Self-documenting: include own Dockerfile inside the image
+COPY Dockerfile /opt/cloud-builder/Dockerfile
+
 # Default: drop into nix develop shell
 WORKDIR /workspace
 ENTRYPOINT ["nix", "develop", "/opt/deps-flake#", "--command"]
