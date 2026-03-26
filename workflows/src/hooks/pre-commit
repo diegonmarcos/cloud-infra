@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ pre-commit — block secrets from ever reaching a commit           ║
+# ║                                                                  ║
+# ║ Source: cloud/workflows/src/hooks/pre-commit                     ║
+# ║ Deploy: build.sh workflow → workflows/dist/hooks/                ║
+# ║ Active: via .gitconfig [core] hooksPath = workflows/dist/hooks   ║
+# ║                                                                  ║
+# ║ Catches secrets even after git add -f (gitignore bypass).        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+set -euo pipefail
+
+BLOCKED=""
+
+# Pattern 1: any file with "secrets" in name (.secrets, *.secrets, .secrets.d/)
+SECRETS=$(git diff --cached --name-only | grep -iE '(^|/)\.?secrets(\.d/|$)|\.secrets$' || true)
+[ -n "$SECRETS" ] && BLOCKED="${BLOCKED}${SECRETS}"$'\n'
+
+# Pattern 2: known private key filenames (without _PUB suffix)
+PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB$' || true)
+[ -n "$PRIVKEYS" ] && BLOCKED="${BLOCKED}${PRIVKEYS}"$'\n'
+
+# Pattern 3: env files that commonly hold secrets
+ENVFILES=$(git diff --cached --name-only | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template' || true)
+[ -n "$ENVFILES" ] && BLOCKED="${BLOCKED}${ENVFILES}"$'\n'
+
+# Pattern 4: decrypted secrets in dist/ (sops output — never commit)
+# Matches dist/.secrets and dist/.secrets.d/ but NOT .nix/.json files that reference secrets
+DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/(\.secrets|\.secrets\.d/)' || true)
+[ -n "$DECRYPTED" ] && BLOCKED="${BLOCKED}${DECRYPTED}"$'\n'
+
+# Pattern 5: sops-encrypted source is OK, but decrypted age/gpg keys are not
+AGEKEYS=$(git diff --cached --name-only | grep -iE '(age\.key|\.age$|keys\.txt)' || true)
+[ -n "$AGEKEYS" ] && BLOCKED="${BLOCKED}${AGEKEYS}"$'\n'
+
+if [ -n "$BLOCKED" ]; then
+  echo "══════════════════════════════════════════════════" >&2
+  echo "BLOCKED: secrets or private keys staged for commit" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  echo "$BLOCKED" | sort -u | while read -r f; do
+    [ -n "$f" ] && echo "  - $f" >&2
+  done
+  echo "" >&2
+  echo "To unstage: git reset HEAD <file>" >&2
+  echo "If intentional (public keys only): git commit --no-verify" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  exit 1
+fi
