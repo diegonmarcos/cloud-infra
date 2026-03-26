@@ -238,6 +238,7 @@ in {
     After=network.target
     Before=docker.service
     [Service]
+    Slice=connectivity.slice
     Type=simple
     ExecStartPre=/opt/scripts/rescue-ssh-setup.sh
     ExecStart=${dropbearBin} -F -E -p ${toString rescuePort} -r /etc/dropbear/dropbear_ed25519_host_key

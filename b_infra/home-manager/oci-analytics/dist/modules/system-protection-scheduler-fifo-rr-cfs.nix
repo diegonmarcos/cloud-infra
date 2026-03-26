@@ -7,12 +7,33 @@
 #
 # Drop-in configs deployed to /etc/systemd/system/<service>.d/scheduler.conf
 # Applied on every home-manager activation + sshd restarted to pick up changes.
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, ramMB, ... }:
 
 let
+  # Memory budgets derived from VM RAM
+  # Reserve 150MB for SSH+WG+earlyoom+watchdog+kernel, rest split between docker+container-init
+  reservedMB = 150;
+  availableMB = ramMB - reservedMB;
+  containerInitMaxMB = availableMB / 4;     # container-init orchestrator gets 25%
+  dockerMaxMB        = availableMB * 3 / 4; # Docker daemon + containers get 75%
+
+  # Total memory reserved for connectivity slice (SSH+WG+Dropbear)
+  connectivityReserveMB = if ramMB <= 1024 then 120 else 200;
+
+  # ── connectivity.slice — kernel-guaranteed memory for SSH/WG/Dropbear ──
+  connectivitySlice = ''
+    [Slice]
+    Description=Protected connectivity slice — SSH, WG, Dropbear
+    MemoryMin=${toString connectivityReserveMB}M
+    MemoryLow=${toString connectivityReserveMB}M
+    CPUWeight=10000
+    IOWeight=1000
+  '';
+
   # ── Lane 1: FIFO — never waits, preempts ALL normal processes ───────
   fifoConf = priority: mem: ''
     [Service]
+    Slice=connectivity.slice
     CPUSchedulingPolicy=fifo
     CPUSchedulingPriority=${toString priority}
     IOSchedulingClass=realtime
@@ -36,12 +57,14 @@ let
   '';
 
   # ── Lane 3: CFS — normal, with caps to prevent starvation ──────────
-  cfsConf = cpuQuota: nice: oomScore: ''
+  cfsConf = cpuQuota: nice: oomScore: memMax: ''
     [Service]
     CPUQuota=${toString cpuQuota}%
     Nice=${toString nice}
     OOMScoreAdjust=${toString oomScore}
     IOWeight=50
+    MemoryMax=${toString memMax}M
+    MemoryHigh=${toString (memMax * 9 / 10)}M
   '';
 
   # ── Assignments ─────────────────────────────────────────────────────
@@ -62,8 +85,8 @@ let
     watchdog        = { conf = rrConf 1; targets = [ "watchdog-petter" ]; };
 
     # ── CFS: workloads (capped) ───────────────────────────────────────
-    container-init  = { conf = cfsConf 70 10 200;  targets = [ "container-init" ]; };
-    docker          = { conf = cfsConf 80 5  500;  targets = [ "docker" ]; };
+    container-init  = { conf = cfsConf 70 10 200 containerInitMaxMB;  targets = [ "container-init" ]; };
+    docker          = { conf = cfsConf 80 5  500 dockerMaxMB;          targets = [ "docker" ]; };
   };
 
   # Generate home.file entries for each drop-in
@@ -87,7 +110,9 @@ let
   ) assignments);
 
 in {
-  home.file = dropInFiles;
+  home.file = dropInFiles // {
+    ".local/share/system-protection/connectivity.slice".text = connectivitySlice;
+  };
 
   home.activation.installScheduler = lib.hm.dag.entryAfter ["installResourceBouncer" "installWatchdogDropbear"] ''
     (
@@ -99,6 +124,9 @@ in {
 
     SRC="$HOME/.local/share/system-protection"
 
+    # Deploy connectivity.slice — kernel-guaranteed memory for SSH/WG/Dropbear
+    $SUDO cp -f "$SRC/connectivity.slice" /etc/systemd/system/connectivity.slice
+
     ${deployScript}
 
     $SUDO systemctl daemon-reload
@@ -106,7 +134,7 @@ in {
     # Restart sshd to pick up FIFO scheduling (CRITICAL — must apply immediately)
     $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null || true
 
-    echo "[scheduler] deployed: FIFO=sshd+wg | RR=earlyoom+watchdog | CFS=docker+container-init"
+    echo "[scheduler] deployed: connectivity.slice=${toString connectivityReserveMB}MB | FIFO=sshd+wg | RR=earlyoom+watchdog | CFS=docker(${toString dockerMaxMB}MB)+container-init(${toString containerInitMaxMB}MB)"
     ) || echo "[scheduler] FAILED — activation continues"
   '';
 }

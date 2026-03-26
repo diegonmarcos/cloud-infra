@@ -77,10 +77,12 @@ in {
     }
 
     # npm install if package.json changed
-    # RAM guard: skip on VMs with <2GB total RAM (gcp-proxy has 945MB — npm install OOMs it)
-    TOTAL_RAM=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 9999)
-    if [ "$TOTAL_RAM" -lt 2048 ]; then
-      printf "[node-npm-deps] SKIP npm install — VM has only ''${TOTAL_RAM}MB RAM (need 2GB+)\n"
+    # NEVER run npm install on remote VMs — build locally and rsync.
+    # Only run on local machine (where home-manager is interactive).
+    TOTAL_RAM_KB=$(${pkgs.gnugrep}/bin/grep -m1 '^MemTotal:' /proc/meminfo 2>/dev/null | ${pkgs.coreutils}/bin/tr -s ' ' | ${pkgs.coreutils}/bin/cut -d' ' -f2)
+    TOTAL_RAM_MB=$(( ''${TOTAL_RAM_KB:-0} / 1024 ))
+    if [ "''${TOTAL_RAM_MB}" -lt 4096 ]; then
+      printf "[node-npm-deps] SKIP npm install — ''${TOTAL_RAM_MB}MB RAM (need 4GB+, build locally + rsync)\n"
     elif [ -f "$PKG_JSON" ]; then
       if [ ! -d "$NODE_MODULES/node_modules" ] || [ "$PKG_JSON" -nt "$LOCK" ]; then
         printf "[node-npm-deps] npm install: ~/.node_modules/\n"
