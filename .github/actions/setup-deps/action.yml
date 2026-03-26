@@ -1,5 +1,5 @@
 name: "Setup Dependencies"
-description: "Pull cloud-ci image + setup SSH/SOPS — all builds run inside container"
+description: "Pull cloud-builder image + setup SSH/SOPS — all builds run inside container"
 
 inputs:
   ssh_key:
@@ -22,15 +22,15 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Pull cloud-ci image
+    - name: Pull cloud-builder image
       shell: bash
       run: |
-        CI_IMAGE="ghcr.io/diegonmarcos/cloud-ci:latest"
+        CI_IMAGE="ghcr.io/diegonmarcos/cloud-builder:latest"
         if docker pull "$CI_IMAGE" 2>/dev/null; then
           echo "CLOUD_CI_IMAGE=$CI_IMAGE" >> "$GITHUB_ENV"
-          echo "Pulled cloud-ci image — all builds run inside this container"
+          echo "Pulled cloud-builder image — all builds run inside this container"
         else
-          echo "::error::cloud-ci image not available — cannot build"
+          echo "::error::cloud-builder image not available — cannot build"
           exit 1
         fi
 
