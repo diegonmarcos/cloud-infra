@@ -310,6 +310,7 @@ step_docker_package() {
     # Collect runtime closure (only store paths referenced at runtime)
     log "Collecting runtime closure..."
     DOCKER_CTX="$DIST_DIR/docker-ctx"
+    chmod -R u+w "$DOCKER_CTX" 2>/dev/null || true
     rm -rf "$DOCKER_CTX"
     mkdir -p "$DOCKER_CTX/nix-store"
 
@@ -322,6 +323,17 @@ step_docker_package() {
     printf '%s\n' "$CLOSURE_PATHS" | while read -r storepath; do
         cp -a "$storepath" "$DOCKER_CTX/nix-store/" 2>/dev/null || true
     done
+
+    # Export nix closure for import on VM (register paths in nix DB)
+    log "Exporting nix closure registration..."
+    nix-store --export $(nix-store -qR "$RESULT") 2>/dev/null | gzip > "$DOCKER_CTX/nix-closure.nar.gz" || {
+        log "WARN: nix-store --export failed"
+        rm -f "$DOCKER_CTX/nix-closure.nar.gz"
+    }
+    if [ -f "$DOCKER_CTX/nix-closure.nar.gz" ]; then
+        NAR_SIZE=$(du -sh "$DOCKER_CTX/nix-closure.nar.gz" | cut -f1)
+        log "NAR export: $NAR_SIZE (compressed)"
+    fi
 
     # Copy encrypted secrets if present
     [ -f "$SRC_DIR/secrets.yaml" ] && cp "$SRC_DIR/secrets.yaml" "$DOCKER_CTX/"
@@ -341,6 +353,21 @@ log() { printf '[hm-activate] %s\n' "$1"; }
 
 log "Copying nix store paths to host..."
 cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
+
+# Import nix closure into host's nix DB (so nix-build recognizes paths)
+log "Importing nix closure into host DB..."
+if [ -f "/hm/nix-closure.nar.gz" ]; then
+    log "NAR file found ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
+    # Decompress and import via chroot (uses host's nix-store binary)
+    gunzip -c /hm/nix-closure.nar.gz | chroot "$HOST" /bin/bash -c "
+        export PATH=/nix/var/nix/profiles/default/bin:\$PATH
+        nix-store --import
+    " 2>&1 | tail -5
+    log "Nix closure imported"
+else
+    log "WARN: /hm/nix-closure.nar.gz not found — activation may fail"
+    ls -la /hm/ 2>/dev/null
+fi
 
 # Decrypt secrets using host's age key
 if [ -f "/hm/secrets.yaml" ]; then
@@ -367,13 +394,11 @@ if [ -f "/hm/secrets.yaml" ]; then
 fi
 
 # Ensure nix-build/nix-instantiate symlinks exist (HM activate expects them)
-for cmd in nix-build nix-instantiate; do
-    if [ ! -x "$HOST/usr/bin/$cmd" ] && [ ! -x "$HOST/home/$HM_USER/.nix-profile/bin/$cmd" ]; then
-        NIX_BIN=$(find "$HOST/nix/store" -maxdepth 2 -name "nix" -path "*/bin/nix" 2>/dev/null | head -1)
-        if [ -n "$NIX_BIN" ]; then
-            NIX_DIR=$(dirname "$NIX_BIN")
-            ln -sf nix "$NIX_DIR/$cmd" 2>/dev/null || true
-        fi
+NIX_PROFILE_BIN="$HOST/nix/var/nix/profiles/default/bin"
+for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
+    if [ -x "$NIX_PROFILE_BIN/nix" ] && [ ! -e "$NIX_PROFILE_BIN/$cmd" ]; then
+        ln -sf nix "$NIX_PROFILE_BIN/$cmd" 2>/dev/null || true
+        log "Created symlink: $cmd -> nix"
     fi
 done
 
@@ -382,7 +407,7 @@ log "Activating $HM_ACTIVATION_PATH..."
 chroot "$HOST" /bin/bash -c "
     export HOME=/home/$HM_USER
     export USER=$HM_USER
-    export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin
+    export PATH=/nix/var/nix/profiles/default/bin:\$HOME/.nix-profile/bin:/usr/local/bin:/usr/bin:/bin
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
     $HM_ACTIVATION_PATH/activate
 "
@@ -392,14 +417,17 @@ ACTIVATE_EOF
     # Generate Dockerfile
     SECRETS_COPY=""
     [ -f "$DOCKER_CTX/secrets.yaml" ] && SECRETS_COPY="COPY secrets.yaml /hm/secrets.yaml"
+    NAR_COPY=""
+    [ -f "$DOCKER_CTX/nix-closure.nar.gz" ] && NAR_COPY="COPY nix-closure.nar.gz /hm/nix-closure.nar.gz"
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
 FROM debian:bookworm-slim
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
-RUN apt-get update && apt-get install -y --no-install-recommends bash coreutils sudo && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends bash coreutils sudo gzip && rm -rf /var/lib/apt/lists/*
 COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
 $SECRETS_COPY
+$NAR_COPY
 RUN chmod +x /hm/activate.sh
 ENV HM_ACTIVATION_PATH=/nix/store/$RESULT_BASENAME
 ENV HM_USER=$HM_USER
