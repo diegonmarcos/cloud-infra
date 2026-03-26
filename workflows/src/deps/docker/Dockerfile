@@ -5,7 +5,7 @@
 # ║ Does NOT contain: code, secrets, service outputs (built fresh)   ║
 # ║                                                                  ║
 # ║ Source: workflows/src/deps/docker/Dockerfile                     ║
-# ║ Registry: ghcr.io/diegonmarcos/cloud-builder                    ║
+# ║ Registry: ghcr.io/diegonmarcos/cloud-builder-x86-nixos                    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
 FROM nixos/nix:latest AS builder
