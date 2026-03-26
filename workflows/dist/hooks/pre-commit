@@ -6,43 +6,94 @@
 # ║ Deploy: build.sh workflow → workflows/dist/hooks/                ║
 # ║ Active: via .gitconfig [core] hooksPath = workflows/dist/hooks   ║
 # ║                                                                  ║
+# ║ KEEP IN SYNC with .gitignore patterns.                           ║
 # ║ Catches secrets even after git add -f (gitignore bypass).        ║
 # ╚══════════════════════════════════════════════════════════════════╝
-set -euo pipefail
+set -uo pipefail  # no -e: grep exit codes are handled by || true
+
+STAGED=$(git diff --cached --name-only)
+[ -z "$STAGED" ] && exit 0
 
 BLOCKED=""
 
-# Pattern 1: any file with "secrets" in name (.secrets, *.secrets, .secrets.d/, secrets.yaml decrypted output)
-SECRETS=$(git diff --cached --name-only | grep -iE '\.secrets(\.d/.*)?$|(^|/)\.secrets$' || true)
-[ -n "$SECRETS" ] && BLOCKED="${BLOCKED}${SECRETS}"$'\n'
+add_blocked() {
+  local matches
+  matches=$(echo "$STAGED" | eval "$1" || true)
+  [ -n "$matches" ] && BLOCKED="${BLOCKED}${matches}"$'\n'
+}
 
-# Pattern 2: known private key filenames (without _PUB suffix)
-PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB$' || true)
-[ -n "$PRIVKEYS" ] && BLOCKED="${BLOCKED}${PRIVKEYS}"$'\n'
+# ── Secrets & Credentials ────────────────────────────────
 
-# Pattern 3: env files that commonly hold secrets
-ENVFILES=$(git diff --cached --name-only | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template' || true)
-[ -n "$ENVFILES" ] && BLOCKED="${BLOCKED}${ENVFILES}"$'\n'
+# P1: .secrets and .secrets.d/ (dot-prefixed)
+add_blocked "grep -E '(^|/)\.secrets(/|$)'"
 
-# Pattern 4: decrypted secrets in dist/ (sops output — never commit)
-# Matches dist/.secrets and dist/.secrets.d/ but NOT .nix/.json files that reference secrets
-DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/(\.secrets|\.secrets\.d/)' || true)
-[ -n "$DECRYPTED" ] && BLOCKED="${BLOCKED}${DECRYPTED}"$'\n'
+# P2: *.secrets (any file ending in .secrets)
+add_blocked "grep -E '\.secrets$'"
 
-# Pattern 5: sops-encrypted source is OK, but decrypted age/gpg keys are not
-AGEKEYS=$(git diff --cached --name-only | grep -iE '(age\.key|\.age$|keys\.txt)' || true)
-[ -n "$AGEKEYS" ] && BLOCKED="${BLOCKED}${AGEKEYS}"$'\n'
+# P3: decrypted sops output in dist/
+add_blocked "grep -E 'dist/\.secrets'"
+
+# ── Environment files ────────────────────────────────────
+
+# P4: .env files (not .example or .template)
+add_blocked "grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template'"
+
+# ── Private keys & certificates ──────────────────────────
+
+# P5: private keys (id_rsa, id_ed25519, id_ecdsa) — exclude _PUB
+add_blocked "grep -iE '(id_rsa|id_ed25519|id_ecdsa)$' | grep -iv '_PUB$'"
+
+# P6: key/cert files (.pem, .key, .p12, .pfx, .jks, .keystore)
+add_blocked "grep -iE '\.(pem|key|p12|pfx|jks|keystore)$'"
+
+# ── Auth tokens & credentials ────────────────────────────
+
+# P7: token files
+add_blocked "grep -iE '\.token$'"
+
+# P8: credentials JSON files
+add_blocked "grep -iE 'credentials.*\.json$'"
+
+# P9: *_token.json / *_tokens.json
+add_blocked "grep -iE '_tokens?\.json$'"
+
+# ── Cloud provider configs ───────────────────────────────
+
+# P10: .oci/ and .gcloud/ directories
+add_blocked "grep -E '(^|/)\.(oci|gcloud)/'"
+
+# ── GPG & age ────────────────────────────────────────────
+
+# P11: GPG armored files
+add_blocked "grep -iE '\.asc$'"
+
+# P12: age key files (not .age.pub)
+add_blocked "grep -iE '\.age$' | grep -v '\.age\.pub$'"
+
+# P13: age.key and keys.txt
+add_blocked "grep -iE '(age\.key|keys\.txt)$'"
+
+# ── Terraform secrets ────────────────────────────────────
+
+# P14: .tfvars files (not .tfvars.example)
+add_blocked "grep -iE '\.tfvars$' | grep -v '\.example$'"
+
+# P15: terraform.tfvars specifically
+add_blocked "grep -E '(^|/)terraform\.tfvars$'"
+
+# ── Deduplicate and check ────────────────────────────────
+BLOCKED=$(echo "$BLOCKED" | sort -u | sed '/^$/d')
 
 if [ -n "$BLOCKED" ]; then
   echo "══════════════════════════════════════════════════" >&2
   echo "BLOCKED: secrets or private keys staged for commit" >&2
   echo "══════════════════════════════════════════════════" >&2
-  echo "$BLOCKED" | sort -u | while read -r f; do
-    [ -n "$f" ] && echo "  - $f" >&2
+  echo "$BLOCKED" | while IFS= read -r f; do
+    echo "  - $f" >&2
   done
   echo "" >&2
   echo "To unstage: git reset HEAD <file>" >&2
-  echo "If intentional (public keys only): git commit --no-verify" >&2
+  echo "NO BYPASS EXISTS. Remove the secret files first." >&2
   echo "══════════════════════════════════════════════════" >&2
   exit 1
 fi
