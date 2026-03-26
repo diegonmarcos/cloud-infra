@@ -128,7 +128,7 @@ in {
       #!/bin/bash
       exec 3>/dev/watchdog
       DOCKER_FAIL=0
-      DOCKER_FAIL_THRESHOLD=12
+      DOCKER_FAIL_THRESHOLD=120
       CTR_RESTART_TRACK=""
       HOSTNAME=$(hostname -s)
       LOG=/var/log/watchdog-petter.log
@@ -302,7 +302,7 @@ in {
     $SUDO systemctl restart rescue-ssh.service 2>/dev/null || true
     $SUDO systemctl restart watchdog-petter.service 2>/dev/null || true
 
-    echo "[watchdog-dropbear] deployed: disk-swap=${toString diskSwapMB}MB rescue-ssh=port${toString rescuePort} watchdog-petter=60s-grace"
+    echo "[watchdog-dropbear] deployed: disk-swap=${toString diskSwapMB}MB rescue-ssh=port${toString rescuePort} watchdog-petter=10min-grace"
     ) || echo "[watchdog-dropbear] FAILED — activation continues"
   '';
 }
