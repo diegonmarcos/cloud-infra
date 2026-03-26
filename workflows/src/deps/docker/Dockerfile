@@ -1,11 +1,11 @@
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ cloud-ci — GHA builder image with pre-populated nix store       ║
+# ║ cloud-builder — Self-contained CI/CD builder image              ║
 # ║                                                                  ║
-# ║ Contains: nix daemon + deps devShell (all unix tools + node)     ║
-# ║ Does NOT contain: service build outputs (ephemeral, built fresh) ║
+# ║ Contains: nix + devShell (sops, rsync, ssh, git, jq, yq, node)  ║
+# ║ Does NOT contain: code, secrets, service outputs (built fresh)   ║
 # ║                                                                  ║
-# ║ Source: workflows/src/deps/                                      ║
-# ║ Registry: ghcr.io/diegonmarcos/cloud-ci                         ║
+# ║ Source: workflows/src/deps/docker/Dockerfile                     ║
+# ║ Registry: ghcr.io/diegonmarcos/cloud-builder                    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
 FROM nixos/nix:latest AS builder
@@ -50,7 +50,7 @@ COPY --from=builder /build /opt/deps-flake
 
 # Labels
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
-LABEL org.opencontainers.image.description="Cloud CI/CD builder — nix store with all deps pre-populated"
+LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
 
 # Default: drop into nix develop shell
 WORKDIR /workspace
