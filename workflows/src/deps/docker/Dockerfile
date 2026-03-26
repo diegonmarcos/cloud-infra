@@ -49,7 +49,7 @@ COPY --from=builder /root/.node_modules /root/.node_modules
 COPY --from=builder /build /opt/deps-flake
 
 # Self-documenting: Dockerfile as file (cat) + label (docker inspect)
-COPY Dockerfile /opt/cloud-builder/Dockerfile
+COPY docker/Dockerfile /opt/cloud-builder/Dockerfile
 ARG DOCKERFILE_B64=""
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
