@@ -47,6 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}
     continue-on-error: ${{ matrix.optional || false }}
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Check if should run
@@ -62,15 +65,6 @@ jobs:
             echo "Skipping $VM (target: $TARGET)"
           fi
 
-      - uses: actions/checkout@v4
-        if: steps.gate.outputs.skip != 'true'
-        with:
-          submodules: true
-
-      - name: Update submodules
-        if: steps.gate.outputs.skip != 'true'
-        run: git submodule update --remote
-
       - name: Resolve host/user
         if: steps.gate.outputs.skip != 'true'
         id: resolve
@@ -82,19 +76,44 @@ jobs:
           echo "host=$HOST" >> "$GITHUB_OUTPUT"
           echo "user=$USER" >> "$GITHUB_OUTPUT"
 
-      - uses: ./.github/actions/setup-deps
+      - name: Ship inside cloud-builder
         if: steps.gate.outputs.skip != 'true'
-        with:
-          ssh_key: ${{ secrets[matrix.key_secret] }}
-          ssh_host: ${{ steps.resolve.outputs.host }}
-          ssh_user: ${{ steps.resolve.outputs.user }}
-          ssh_alias: ${{ matrix.vm }}
-          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
-
-      - name: Run
-        if: steps.gate.outputs.skip != 'true'
-        shell: bash {0}
-        env:
-          VM: ${{ matrix.vm }}
-          OPTIONAL: ${{ matrix.optional || false }}
-        run: bash .github/workflows/scripts/ship-home-manager.sh "$VM"
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
+          docker run --rm \
+            -e SSH_KEY='${{ secrets[matrix.key_secret] }}' \
+            -e SSH_HOST='${{ steps.resolve.outputs.host }}' \
+            -e SSH_USER='${{ steps.resolve.outputs.user }}' \
+            -e SSH_ALIAS='${{ matrix.vm }}' \
+            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_ACTIONS=true \
+            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_SHA="${{ github.sha }}" \
+            ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
+            bash -c '
+              # Setup SSH
+              mkdir -p ~/.ssh/sockets
+              echo "$SSH_KEY" > ~/.ssh/id_deploy
+              chmod 600 ~/.ssh/id_deploy
+              cat > ~/.ssh/config <<SSHEOF
+          Host $SSH_ALIAS
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          SSHEOF
+              chmod 600 ~/.ssh/config
+              # Setup SOPS
+              mkdir -p ~/.config/sops/age
+              echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+              export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+              # Clone and ship
+              ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
+              git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace
+              cd /workspace
+              git submodule update --remote
+              bash .github/workflows/scripts/ship-home-manager.sh "$SSH_ALIAS"
+            '
