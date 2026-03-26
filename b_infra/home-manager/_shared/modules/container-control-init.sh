@@ -31,16 +31,16 @@ DOCKER_TIMEOUT=60
 HEALTH_TIMEOUT=120
 HEALTH_INTERVAL=5
 START_DELAY=3
-BOOT_START=$(date +%s%3N)
+BOOT_START=$(date +%s)
 _LAST_STEP=$BOOT_START
 
 # ── Perf + Logging (flush every line to journal) ─────────────────────
 log() {
-  local now=$(date +%s%3N)
+  local now=$(date +%s)
   local elapsed=$(( now - BOOT_START ))
-  local step_ms=$(( now - _LAST_STEP ))
+  local step_s=$(( now - _LAST_STEP ))
   _LAST_STEP=$now
-  local msg="[$LOG_TAG] +${elapsed}ms (+${step_ms}ms) $*"
+  local msg="[$LOG_TAG] +${elapsed}s (+${step_s}s) $*"
   echo "$msg" >&2
   echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
 }
@@ -89,7 +89,7 @@ if [ "$DOCKER_OK" = false ]; then
   exit 1
 fi
 
-DOCKER_ELAPSED=$(( ($(date +%s%3N) - BOOT_START) / 1000 ))
+DOCKER_ELAPSED=$(( $(date +%s) - BOOT_START ))
 log "Docker ready (${DOCKER_ELAPSED}s)"
 
 # ── Phase 1: Discover compose projects ────────────────────────────────
@@ -116,31 +116,31 @@ BOOT_RESULTS=""
 
 for dir in $PROJECTS; do
   svc=$(basename "$dir")
-  svc_start=$(date +%s%3N)
+  svc_start=$(date +%s)
   log "  [$svc] starting..."
   log "  [$svc] mem=$(free -m 2>/dev/null | awk '/Mem:/{print $4}')MB free"
 
   if (cd "$dir" && docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
-    svc_ms=$(( $(date +%s%3N) - svc_start ))
-    log "  [$svc] started (${svc_ms}ms)"
+    svc_s=$(( $(date +%s) - svc_start ))
+    log "  [$svc] started (${svc_s}s)"
     STARTED=$((STARTED + 1))
-    BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"ms\":$svc_ms,\"ok\":true},"
+    BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true},"
   else
-    svc_ms=$(( $(date +%s%3N) - svc_start ))
-    log "  [$svc] FAILED (${svc_ms}ms)"
+    svc_s=$(( $(date +%s) - svc_start ))
+    log "  [$svc] FAILED (${svc_s}s)"
     FAILED=$((FAILED + 1))
-    BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"ms\":$svc_ms,\"ok\":false},"
+    BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false},"
   fi
 
   sleep "$START_DELAY"
 done
 
-STARTUP_ELAPSED=$(( ($(date +%s%3N) - BOOT_START) / 1000 ))
+STARTUP_ELAPSED=$(( $(date +%s) - BOOT_START ))
 log "Startup complete: $STARTED ok, $FAILED failed (${STARTUP_ELAPSED}s)"
 
 # ── Phase 3: Health verification ──────────────────────────────────────
 log "═══ PHASE 3: Health verification ═══"
-HEALTH_START=$(date +%s%3N)
+HEALTH_START=$(date +%s)
 UNHEALTHY=""
 HEALTHY_COUNT=0
 TOTAL_CONTAINERS=0
@@ -190,9 +190,9 @@ while IFS= read -r container; do
   fi
 done < <(docker ps -q 2>/dev/null)
 
-HEALTH_MS=$(( $(date +%s%3N) - HEALTH_START ))
-TOTAL_ELAPSED=$(( ($(date +%s%3N) - BOOT_START) / 1000 ))
-log "Health: $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy, $RESTARTED restarted (${HEALTH_MS}ms)"
+HEALTH_S=$(( $(date +%s) - HEALTH_START ))
+TOTAL_ELAPSED=$(( $(date +%s) - BOOT_START ))
+log "Health: $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy, $RESTARTED restarted (${HEALTH_S}s)"
 
 # ── Phase 4: Report ───────────────────────────────────────────────────
 log "═══ PHASE 4: Report ═══"
