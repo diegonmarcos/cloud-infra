@@ -90,7 +90,7 @@ check_deps() {
     if command -v node >/dev/null 2>&1; then
         engine_dir="$ENGINE_DIR"
         for pkg in $(deps_node_required); do
-            NODE_PATH="$engine_dir/node_modules" node -e "require('$pkg')" 2>/dev/null \
+            NODE_PATH="$engine_dir/node_modules:${NODE_PATH:-}" node -e "require('$pkg')" 2>/dev/null \
                 || missing_node="$missing_node $pkg"
         done
     fi
