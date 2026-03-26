@@ -10,35 +10,45 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -euo pipefail
 
+STAGED=$(git diff --cached --name-only)
+[ -z "$STAGED" ] && exit 0
+
 BLOCKED=""
 
-# Pattern 1: any file with "secrets" in name (.secrets, *.secrets, .secrets.d/)
-SECRETS=$(git diff --cached --name-only | grep -iE '(^|/)\.?secrets(\.d/|$)|\.secrets$' || true)
-[ -n "$SECRETS" ] && BLOCKED="${BLOCKED}${SECRETS}"$'\n'
+# Collect blocked files — each grep uses exit 0 fallback
+add_blocked() {
+  local matches
+  matches=$(echo "$STAGED" | eval "$1" || true)
+  [ -n "$matches" ] && BLOCKED="${BLOCKED}${matches}"$'\n'
+}
 
-# Pattern 2: known private key filenames (without _PUB suffix)
-PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB$' || true)
-[ -n "$PRIVKEYS" ] && BLOCKED="${BLOCKED}${PRIVKEYS}"$'\n'
+# P1: .secrets and .secrets.d/ (dot-prefixed)
+add_blocked "grep -E '(^|/)\.secrets(/|$)'"
 
-# Pattern 3: env files that commonly hold secrets
-ENVFILES=$(git diff --cached --name-only | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template' || true)
-[ -n "$ENVFILES" ] && BLOCKED="${BLOCKED}${ENVFILES}"$'\n'
+# P2: *.secrets (any file ending in .secrets)
+add_blocked "grep -E '\.secrets$'"
 
-# Pattern 4: decrypted secrets in dist/ (sops output — never commit)
-# Matches dist/.secrets and dist/.secrets.d/ but NOT .nix/.json files that reference secrets
-DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/(\.secrets|\.secrets\.d/)' || true)
-[ -n "$DECRYPTED" ] && BLOCKED="${BLOCKED}${DECRYPTED}"$'\n'
+# P3: private keys (id_rsa, id_ed25519, .pem, .key) — exclude _PUB
+add_blocked "grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB$'"
 
-# Pattern 5: sops-encrypted source is OK, but decrypted age/gpg keys are not
-AGEKEYS=$(git diff --cached --name-only | grep -iE '(age\.key|\.age$|keys\.txt)' || true)
-[ -n "$AGEKEYS" ] && BLOCKED="${BLOCKED}${AGEKEYS}"$'\n'
+# P4: .env files (not .example or .template)
+add_blocked "grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template'"
+
+# P5: decrypted sops output in dist/
+add_blocked "grep -E 'dist/\.secrets'"
+
+# P6: age/gpg key files
+add_blocked "grep -iE '(age\.key|\.age$|keys\.txt)$'"
+
+# Deduplicate and check
+BLOCKED=$(echo "$BLOCKED" | sort -u | sed '/^$/d')
 
 if [ -n "$BLOCKED" ]; then
   echo "══════════════════════════════════════════════════" >&2
   echo "BLOCKED: secrets or private keys staged for commit" >&2
   echo "══════════════════════════════════════════════════" >&2
-  echo "$BLOCKED" | sort -u | while read -r f; do
-    [ -n "$f" ] && echo "  - $f" >&2
+  echo "$BLOCKED" | while IFS= read -r f; do
+    echo "  - $f" >&2
   done
   echo "" >&2
   echo "To unstage: git reset HEAD <file>" >&2

@@ -12,21 +12,26 @@ set -euo pipefail
 
 BLOCKED=""
 
-# Pattern 1: .secrets files and .secrets.d/ directories
-SECRETS=$(git diff --cached --name-only | grep -E '(^|/)\.secrets(\.d/|$)' || true)
+# Pattern 1: any file with "secrets" in name (.secrets, *.secrets, .secrets.d/, secrets.yaml decrypted output)
+SECRETS=$(git diff --cached --name-only | grep -iE '\.secrets(\.d/.*)?$|(^|/)\.secrets$' || true)
 [ -n "$SECRETS" ] && BLOCKED="${BLOCKED}${SECRETS}"$'\n'
 
 # Pattern 2: known private key filenames (without _PUB suffix)
-PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB\.' | grep -iv '_PUB$' || true)
+PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB$' || true)
 [ -n "$PRIVKEYS" ] && BLOCKED="${BLOCKED}${PRIVKEYS}"$'\n'
 
 # Pattern 3: env files that commonly hold secrets
 ENVFILES=$(git diff --cached --name-only | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template' || true)
 [ -n "$ENVFILES" ] && BLOCKED="${BLOCKED}${ENVFILES}"$'\n'
 
-# Pattern 4: sops-encrypted source files should stay encrypted (never commit decrypted output)
-DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/.*secrets' || true)
+# Pattern 4: decrypted secrets in dist/ (sops output — never commit)
+# Matches dist/.secrets and dist/.secrets.d/ but NOT .nix/.json files that reference secrets
+DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/(\.secrets|\.secrets\.d/)' || true)
 [ -n "$DECRYPTED" ] && BLOCKED="${BLOCKED}${DECRYPTED}"$'\n'
+
+# Pattern 5: sops-encrypted source is OK, but decrypted age/gpg keys are not
+AGEKEYS=$(git diff --cached --name-only | grep -iE '(age\.key|\.age$|keys\.txt)' || true)
+[ -n "$AGEKEYS" ] && BLOCKED="${BLOCKED}${AGEKEYS}"$'\n'
 
 if [ -n "$BLOCKED" ]; then
   echo "══════════════════════════════════════════════════" >&2
