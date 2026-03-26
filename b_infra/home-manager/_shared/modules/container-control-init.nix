@@ -33,7 +33,7 @@ in {
     [Service]
     Type=notify
     ExecStartPre=/bin/bash -c '[ -d /var/run/docker.sock ] && rm -rf /var/run/docker.sock || true'
-    ExecStart=${dockerdBin} --containerd-startup-timeout 120s
+    ExecStart=${dockerdBin}
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
