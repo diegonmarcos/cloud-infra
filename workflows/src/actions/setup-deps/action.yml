@@ -1,5 +1,5 @@
 name: "Setup Dependencies"
-description: "Universal dependency setup — pulls cloud-ci image + SSH + SOPS"
+description: "Pull cloud-ci image + setup SSH/SOPS — all builds run inside container"
 
 inputs:
   ssh_key:
@@ -22,51 +22,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install Nix
-      uses: cachix/install-nix-action@v30
-      with:
-        nix_path: nixpkgs=channel:nixos-24.11
-
-    - name: Pull cloud-ci nix store from GHCR
+    - name: Pull cloud-ci image
       shell: bash
       run: |
         CI_IMAGE="ghcr.io/diegonmarcos/cloud-ci:latest"
-        # Pull the pre-built nix store image
         if docker pull "$CI_IMAGE" 2>/dev/null; then
-          CID=$(docker create "$CI_IMAGE" true)
-          # Copy node_modules + deps flake (NOT nix store — use image for builds)
-          docker cp "$CID:/root/.node_modules" "$HOME/.node_modules" 2>/dev/null || true
-          docker cp "$CID:/opt/deps-flake" "$HOME/.deps-flake" 2>/dev/null || true
-          docker rm "$CID" >/dev/null
-          # Export image name for _engine.sh to use
           echo "CLOUD_CI_IMAGE=$CI_IMAGE" >> "$GITHUB_ENV"
-          echo "FORCE_DEPLOY=1" >> "$GITHUB_ENV"
-          echo "Pulled cloud-ci image — builds will run inside container"
+          echo "Pulled cloud-ci image — all builds run inside this container"
         else
-          echo "::warning::cloud-ci image not available — building deps from scratch"
+          echo "::error::cloud-ci image not available — cannot build"
+          exit 1
         fi
-
-    - name: Setup nix develop PATH
-      shell: bash
-      run: |
-        # Add deps devShell tools to PATH
-        DEPS_FLAKE="${HOME}/.deps-flake"
-        [ ! -d "$DEPS_FLAKE" ] && DEPS_FLAKE="$GITHUB_WORKSPACE/.github"
-        if [ -f "$DEPS_FLAKE/flake.nix" ]; then
-          nix flake update config-json --flake "$DEPS_FLAKE" 2>/dev/null || true
-          for pkg_path in $(nix develop "$DEPS_FLAKE#" --command sh -c 'echo $PATH' | tr ':' '\n' | grep /nix/store); do
-            echo "$pkg_path" >> "$GITHUB_PATH"
-          done
-        fi
-        # Add shared node_modules to PATH + NODE_PATH
-        if [ -d "$HOME/.node_modules/node_modules" ]; then
-          echo "$HOME/.node_modules/node_modules/.bin" >> "$GITHUB_PATH"
-          echo "NODE_PATH=$HOME/.node_modules/node_modules" >> "$GITHUB_ENV"
-        fi
-
-    - name: Install dependencies via build.sh
-      shell: bash
-      run: ./build.sh deps
 
     - name: Setup SSH
       if: inputs.ssh_key != ''
@@ -84,9 +50,6 @@ runs:
           StrictHostKeyChecking no
           ServerAliveInterval 30
           ServerAliveCountMax 10
-          ControlMaster auto
-          ControlPath ~/.ssh/sockets/%r@%h-%p
-          ControlPersist 600
         EOF
         chmod 600 ~/.ssh/config
 

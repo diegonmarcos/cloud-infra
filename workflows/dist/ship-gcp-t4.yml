@@ -46,4 +46,16 @@ jobs:
 
       - name: Ship services
         shell: bash {0}
-        run: bash .github/workflows/scripts/ship-vm.sh gcp-t4
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -v "$HOME/.ssh:/root/.ssh:ro" \
+            -v "$HOME/.config/sops/age:/root/.config/sops/age:ro" \
+            -e SOPS_AGE_KEY_FILE=/root/.config/sops/age/keys.txt \
+            -e FORCE_DEPLOY=1 \
+            -e GITHUB_ACTIONS=true \
+            -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
+            -e GITHUB_WORKSPACE=/workspace \
+            -w /workspace \
+            "$CLOUD_CI_IMAGE" \
+            bash .github/workflows/scripts/ship-vm.sh gcp-t4
