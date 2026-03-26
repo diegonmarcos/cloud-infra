@@ -505,12 +505,18 @@ cmd_config() {
         log "Generating _cloud-data-consolidated.json (v2)..."
         tsx "$ENGINE_DIR/engines/gen-cloud-data.ts"
     fi
-    # Legacy generators (kept until derivation layer replaces them)
-    log "Generating cloud-topology.json + cloud-topology.md..."
+    # Derivation layer — extracts 17 per-consumer JSONs from consolidated
+    if [ -f "$ENGINE_DIR/engines/derive-cloud-data.ts" ] && [ -f "$SCRIPT_DIR/cloud-data/_cloud-data-consolidated.json" ]; then
+        log "Deriving per-consumer JSONs from consolidated..."
+        tsx "$ENGINE_DIR/engines/derive-cloud-data.ts"
+    fi
+    # Legacy generators run LAST — they overwrite derivation output during transition
+    # Remove in Phase 5 when derivation layer is fully validated
+    log "Generating cloud-topology.json + cloud-topology.md (legacy)..."
     tsx "$ENGINE_DIR/engines/gen-topology.ts"
-    log "Generating cloud-configs.json + cloud-configs.md..."
+    log "Generating cloud-configs.json + cloud-configs.md (legacy)..."
     tsx "$ENGINE_DIR/engines/gen-configs.ts"
-    log "Generating cloud-deps.json..."
+    log "Generating cloud-deps.json (legacy)..."
     tsx "$ENGINE_DIR/engines/gen-deps.ts"
 }
 
