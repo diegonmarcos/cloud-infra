@@ -491,7 +491,7 @@ cmd_config() {
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
     fi
-    if [ ! -f "$ENGINE_DIR/engines/gen-topology.ts" ] || [ ! -f "$ENGINE_DIR/engines/gen-configs.ts" ]; then
+    if [ ! -f "$ENGINE_DIR/engines/gen-cloud-data.ts" ] || [ ! -f "$ENGINE_DIR/engines/derive-cloud-data.ts" ]; then
         log "SKIP: engine sources not available locally"
         return 1
     fi
@@ -500,24 +500,11 @@ cmd_config() {
     if [ -d "$SHARED_NM" ] && [ ! -e "$ENGINE_DIR/node_modules" ]; then
         ln -s "$SHARED_NM" "$ENGINE_DIR/node_modules"
     fi
-    # Consolidated generator (v2) — produces _cloud-data-consolidated.json
-    if [ -f "$ENGINE_DIR/engines/gen-cloud-data.ts" ]; then
-        log "Generating _cloud-data-consolidated.json (v2)..."
-        tsx "$ENGINE_DIR/engines/gen-cloud-data.ts"
-    fi
-    # Derivation layer — extracts 17 per-consumer JSONs from consolidated
-    if [ -f "$ENGINE_DIR/engines/derive-cloud-data.ts" ] && [ -f "$SCRIPT_DIR/cloud-data/_cloud-data-consolidated.json" ]; then
-        log "Deriving per-consumer JSONs from consolidated..."
-        tsx "$ENGINE_DIR/engines/derive-cloud-data.ts"
-    fi
-    # Legacy generators run LAST — they overwrite derivation output during transition
-    # Remove in Phase 5 when derivation layer is fully validated
-    log "Generating cloud-topology.json + cloud-topology.md (legacy)..."
-    tsx "$ENGINE_DIR/engines/gen-topology.ts"
-    log "Generating cloud-configs.json + cloud-configs.md (legacy)..."
-    tsx "$ENGINE_DIR/engines/gen-configs.ts"
-    log "Generating cloud-deps.json (legacy)..."
-    tsx "$ENGINE_DIR/engines/gen-deps.ts"
+    # v2 pipeline: consolidated → derivation (17 per-consumer JSONs)
+    log "Generating _cloud-data-consolidated.json..."
+    tsx "$ENGINE_DIR/engines/gen-cloud-data.ts"
+    log "Deriving per-consumer JSONs from consolidated..."
+    tsx "$ENGINE_DIR/engines/derive-cloud-data.ts"
 }
 
 # Generate GHA deploy workflows from build.json + templates
