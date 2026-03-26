@@ -13,6 +13,7 @@ SERVICE_NAME="$(basename "$SERVICE_DIR")"
 SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
+BUILD_LOG_FILE="$SERVICE_DIR/build.log"
 
 # ── Config reader (node primary, python3 fallback) ────────────────────
 get_config() {
@@ -36,7 +37,34 @@ fi
 : "${SOPS_AGE_KEY_FILE:=$HOME/.config/sops/age/keys.txt}"
 export SOPS_AGE_KEY_FILE
 
-log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
+# ── Logging: console + persistent build.log ───────────────────────────
+# Every run overwrites build.log with full verbose output.
+# Console sees the same output in real-time.
+: > "$BUILD_LOG_FILE"
+
+log() {
+    _msg="[$(date '+%H:%M:%S')] $1"
+    printf '%s\n' "$_msg"
+    printf '%s\n' "$_msg" >> "$BUILD_LOG_FILE"
+}
+
+# Log a command's stdout+stderr to both console and build.log
+# Usage: run_logged <description> <command> [args...]
+run_logged() {
+    _desc="$1"; shift
+    log "RUN: $_desc"
+    log "CMD: $*"
+    set +e
+    "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
+    _exit=${PIPESTATUS:-$?}
+    set -e
+    if [ "$_exit" -ne 0 ]; then
+        log "FAILED (exit $_exit): $_desc"
+        return "$_exit"
+    fi
+    log "OK: $_desc"
+    return 0
+}
 
 NIX_SOURCE="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
 REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
@@ -112,43 +140,65 @@ step_deploy() {
         # ── Local build: nix build on runner → nix copy closure to VM ──
         log "Building HM closure locally for $HM_CONFIG"
         cd "$DIST_DIR"
-        BUILD_LOG="$SERVICE_DIR/.build-log"
+        # Nix flakes in git repos only see tracked files — force-stage dist/
+        git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+        log "Staged dist/ for nix ($(git -C "$DIST_DIR" ls-files "$DIST_DIR" 2>/dev/null | wc -l) files)"
         DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/deps"
         NIX_BUILD_CMD="nix build --no-link --print-out-paths --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
+
+        log "Flake: $DIST_DIR"
+        log "Nix cmd: $NIX_BUILD_CMD"
+
+        NIX_OUT=""
+        set +e
         if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
-            nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" > "$BUILD_LOG" 2>&1
+            log "Using deps devShell from $DEPS_FLAKE"
+            NIX_OUT=$(nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
+            NIX_RC=${PIPESTATUS:-$?}
         else
-            $NIX_BUILD_CMD > "$BUILD_LOG" 2>&1
+            log "Using direct nix build (no deps flake)"
+            NIX_OUT=$(eval "$NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
+            NIX_RC=${PIPESTATUS:-$?}
         fi
-        if [ $? -eq 0 ]; then
-            RESULT=$(tail -1 "$BUILD_LOG")
-        else
-            log "ERROR: nix build failed"
-            cat "$BUILD_LOG"
-            rm -f "$BUILD_LOG"
+        set -e
+
+        if [ "$NIX_RC" -ne 0 ]; then
+            log "ERROR: nix build failed (exit $NIX_RC)"
+            log "Full nix output:"
+            printf '%s\n' "$NIX_OUT"
             return 1
         fi
-        rm -f "$BUILD_LOG"
+
+        # Extract store path (last line of output)
+        RESULT=$(printf '%s\n' "$NIX_OUT" | grep '^/nix/store/' | tail -1)
 
         if [ -z "$RESULT" ] || [ ! -d "$RESULT" ]; then
-            log "ERROR: nix build produced no output"
+            log "ERROR: nix build produced no valid store path"
+            log "Full nix output:"
+            printf '%s\n' "$NIX_OUT"
             return 1
         fi
         log "Closure built: $RESULT"
 
         # Check VM free RAM before nix copy (avoid OOM on <2GB VMs)
-        VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null" || echo 9999)
+        set +e
+        VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null")
+        set -e
+        VM_MEM="${VM_MEM:-9999}"
         if [ "$VM_MEM" -lt 200 ]; then
             log "WARNING: VM has only ${VM_MEM}MB free — waiting 30s for earlyoom to free memory"
             sleep 30
-            VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null" || echo 9999)
+            set +e
+            VM_MEM=$(ssh "$DEPLOY_HOST" "awk '/MemAvailable/ {print int(\$2/1024)}' /proc/meminfo 2>/dev/null")
+            set -e
+            VM_MEM="${VM_MEM:-9999}"
             if [ "$VM_MEM" -lt 100 ]; then
                 log "ERROR: VM has only ${VM_MEM}MB free — skipping nix copy (would OOM)"
                 return 1
             fi
         fi
         log "Copying closure to $DEPLOY_HOST via nix copy (VM has ${VM_MEM}MB free)"
-        nix copy --to "ssh://$DEPLOY_HOST" "$RESULT"
+        run_logged "nix copy to $DEPLOY_HOST" nix copy --to "ssh://$DEPLOY_HOST" "$RESULT"
         log "Closure copied"
 
         # Save result path for compose step
@@ -157,10 +207,10 @@ step_deploy() {
         # Rsync secrets (not part of nix closure)
         ssh "$DEPLOY_HOST" "mkdir -p $REMOTE_PATH"
         if [ -f "$DIST_DIR/.secrets" ]; then
-            rsync -az "$DIST_DIR/.secrets" "$DEPLOY_HOST:$REMOTE_PATH/.secrets"
+            run_logged "rsync secrets" rsync -az "$DIST_DIR/.secrets" "$DEPLOY_HOST:$REMOTE_PATH/.secrets"
         fi
         if [ -d "$DIST_DIR/.secrets.d" ]; then
-            rsync -az "$DIST_DIR/.secrets.d/" "$DEPLOY_HOST:$REMOTE_PATH/.secrets.d/"
+            run_logged "rsync secrets.d" rsync -az "$DIST_DIR/.secrets.d/" "$DEPLOY_HOST:$REMOTE_PATH/.secrets.d/"
         fi
         log "Secrets synced"
     fi
@@ -174,7 +224,16 @@ step_compose() {
     if [ "$REMOTE_BUILD" = "true" ]; then
         # ── Remote build: full nix run on VM ──
         log "Activating on $DEPLOY_HOST (remote build)"
-        ssh "$DEPLOY_HOST" "$NIX_SOURCE; cd $REMOTE_PATH && nix run home-manager/release-24.11 -- switch --flake .#$HM_CONFIG -b backup" 2>&1 | tail -20
+        SWITCH_CMD="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true; cd $REMOTE_PATH && nix run home-manager/release-24.11 -- switch --flake .#$HM_CONFIG -b backup"
+        log "Remote cmd: $SWITCH_CMD"
+        set +e
+        ssh "$DEPLOY_HOST" "$SWITCH_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        SWITCH_RC=${PIPESTATUS:-$?}
+        set -e
+        if [ "$SWITCH_RC" -ne 0 ]; then
+            log "FAILED (exit $SWITCH_RC): HM switch on $DEPLOY_HOST"
+            return 1
+        fi
     else
         # ── Local build: activate pre-built closure (no nix eval on VM) ──
         CLOSURE=$(cat "$SERVICE_DIR/.closure-path" 2>/dev/null || true)
@@ -183,16 +242,27 @@ step_compose() {
             return 1
         fi
         log "Activating pre-built closure on $DEPLOY_HOST"
-        ssh "$DEPLOY_HOST" "$NIX_SOURCE; $CLOSURE/activate" 2>&1 | tail -20
+        ACTIVATE_CMD="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true; for cmd in nix-build nix-instantiate; do if ! command -v \$cmd >/dev/null 2>&1; then NIX_BIN=\$(dirname \$(command -v nix)); ln -sf nix \$NIX_BIN/\$cmd 2>/dev/null || sudo ln -sf nix \$NIX_BIN/\$cmd; fi; done; $CLOSURE/activate"
+        log "Remote cmd: $ACTIVATE_CMD"
+        set +e
+        ssh "$DEPLOY_HOST" "$ACTIVATE_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        ACTIVATE_RC=${PIPESTATUS:-$?}
+        set -e
+        if [ "$ACTIVATE_RC" -ne 0 ]; then
+            log "FAILED (exit $ACTIVATE_RC): HM activate on $DEPLOY_HOST"
+            return 1
+        fi
         rm -f "$SERVICE_DIR/.closure-path"
     fi
 
     log "Activated $HM_CONFIG on $DEPLOY_HOST"
 
     # Trim to last 3 generations (skip GC on resource-constrained VMs)
-    ssh "$DEPLOY_HOST" "$NIX_SOURCE; nix-env --delete-generations +3" 2>&1 || true
+    set +e
+    ssh "$DEPLOY_HOST" "$NIX_SOURCE; nix-env --delete-generations +3" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
     # Only GC if >2GB free RAM (avoids OOM on 1GB VMs)
-    ssh "$DEPLOY_HOST" 'MEM=$(awk "/MemAvailable/ {print int(\$2/1024)}" /proc/meminfo); [ "$MEM" -gt 2048 ] && nix-collect-garbage 2>/dev/null || echo "[hm] Skipping GC (${MEM}MB free < 2GB threshold)"' 2>&1 || true
+    ssh "$DEPLOY_HOST" 'MEM=$(awk "/MemAvailable/ {print int(\$2/1024)}" /proc/meminfo); [ "$MEM" -gt 2048 ] && nix-collect-garbage 2>/dev/null || echo "[hm] Skipping GC (${MEM}MB free < 2GB threshold)"' 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+    set -e
     log "Generations trimmed on $DEPLOY_HOST"
 }
 
@@ -200,10 +270,13 @@ step_compose() {
 STRATEGY="local build + nix copy"
 [ "$REMOTE_BUILD" = "true" ] && STRATEGY="remote build on VM"
 
-echo "========================================"
-echo "  Home Manager: $SERVICE_NAME"
-echo "  Strategy: $STRATEGY"
-echo "========================================"
+log "========================================"
+log "  Home Manager: $SERVICE_NAME"
+log "  Strategy: $STRATEGY"
+log "  Host: ${DEPLOY_HOST:-none}"
+log "  HM config: ${HM_CONFIG:-none}"
+log "  Log: $BUILD_LOG_FILE"
+log "========================================"
 
 case "${1:-all}" in
     build)    step_build ;;

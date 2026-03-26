@@ -40,4 +40,9 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git commit -m "auto: update cloud-data submodule ref [skip ci]"
-git push origin main
+# Retry push with pull-rebase (race condition with other workflows)
+for i in 1 2 3; do
+  git push origin main && break
+  echo "Push attempt $i failed — pulling and retrying..."
+  git pull --rebase origin main 2>/dev/null || true
+done
