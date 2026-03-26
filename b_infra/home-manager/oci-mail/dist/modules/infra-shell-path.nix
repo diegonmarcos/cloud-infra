@@ -2,6 +2,7 @@
 # - home.sessionPath → ~/.profile (login shells, SSH sessions)
 # - home.sessionVariables → ~/.profile (env vars)
 # - /etc/environment → PAM-level, covers non-login non-interactive SSH (GHA, cron, scripts)
+# - /etc/systemd/system.conf.d/ → DefaultEnvironment for ALL root systemd services
 { lib, pkgs, config, ... }:
 {
   home.sessionPath = [
@@ -44,6 +45,33 @@
       fi
       echo "[shell-path] Added nix paths to /etc/environment"
     fi
+    # systemd DefaultEnvironment — root services (watchdog, container-init, etc.)
+    # /etc/environment only covers PAM sessions, not systemd-spawned services.
+    SYSTEMD_CONF_DIR="/etc/systemd/system.conf.d"
+    SYSTEMD_CONF="$SYSTEMD_CONF_DIR/nix-path.conf"
+    WANT="[Manager]
+DefaultEnvironment=PATH=$NIX_PATHS:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+    $SUDO mkdir -p "$SYSTEMD_CONF_DIR"
+    CURRENT=$($SUDO cat "$SYSTEMD_CONF" 2>/dev/null || true)
+    if [ "$CURRENT" != "$WANT" ]; then
+      echo "$WANT" | $SUDO tee "$SYSTEMD_CONF" > /dev/null
+      $SUDO systemctl daemon-reexec 2>/dev/null || true
+      echo "[shell-path] systemd DefaultEnvironment deployed (daemon-reexec)"
+    fi
+
+    # sudoers — add nix paths to secure_path so `sudo docker` works
+    # without `sudo env PATH="$PATH"` workaround
+    SUDOERS_NIX="/etc/sudoers.d/nix-path"
+    SUDOERS_WANT="Defaults secure_path=\"$NIX_PATHS:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\""
+    SUDOERS_CURRENT=$($SUDO cat "$SUDOERS_NIX" 2>/dev/null || true)
+    if [ "$SUDOERS_CURRENT" != "$SUDOERS_WANT" ]; then
+      echo "$SUDOERS_WANT" | $SUDO tee "$SUDOERS_NIX" > /dev/null
+      $SUDO chmod 440 "$SUDOERS_NIX"
+      $SUDO visudo -cf "$SUDOERS_NIX" >/dev/null 2>&1 || { $SUDO rm -f "$SUDOERS_NIX"; echo "[shell-path] WARN: sudoers syntax error, removed"; }
+      echo "[shell-path] sudoers secure_path updated with nix paths"
+    fi
+
     ) || echo "[shell-path] FAILED — see errors above, activation continues"
   '';
 }

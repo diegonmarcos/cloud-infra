@@ -1,49 +1,37 @@
 { config, pkgs, lib, ... }:
 
-{
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./modules/cloud-data-home-manager.json);
+  vmData = cloudData.vms."oci-apps";
+  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }];
+in {
   imports = [
     (import ./wireguard.nix { vmName = "oci-apps"; })
-    (import ./modules/firewall.nix {
-      vmName = "oci-apps";
-      publicPorts = [
-        { port = 3010; proto = "tcp"; desc = "AFFiNE"; }
-        { port = 8081; proto = "tcp"; desc = "C3 API"; }
-        { port = 3000; proto = "tcp"; desc = "Crawlee/Gitea/Backup"; }
-        { port = 3001; proto = "tcp"; desc = "Crawlee API"; }
-        { port = 2222; proto = "tcp"; desc = "Gitea SSH"; }
-        { port = 2223; proto = "tcp"; desc = "Backup BUP SSH"; }
-        { port = 2224; proto = "tcp"; desc = "Backup Borg SSH"; }
-        { port = 8099; proto = "tcp"; desc = "cloud-spec httpd"; }
-        { port = 2200; proto = "tcp"; desc = "Rescue SSH (Dropbear — untouchable)"; }
-      ];
-    })
+    (import ./modules/network-firewall.nix { vmName = "oci-apps"; inherit publicPorts; })
     (import ./httpd.nix {
       sites = {
         cloud-spec = { root = "/opt/containers/cloud-spec"; port = 8099; };
       };
     })
     ./modules/shared-all.nix
-    (import ./modules/system-protection.nix { inherit config pkgs lib; ramMB = 24576; })
-    (import ./modules/container-init.nix {
-      inherit config pkgs lib;
-      staleContainers = [ "c3-mcp-api" "mailu-mcp" ];
-    })
+    (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "oci-apps"; })
+    (import ./modules/system-protection-systemd-control.nix {})
   ];
-  home.username = "ubuntu";
-  home.homeDirectory = "/home/ubuntu";
-  home.stateVersion = "24.11";
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
 
   programs.home-manager.enable = true;
 
   home.packages = with pkgs; [
-    # Cloud SDKs (C3 API runs on this VM)
     google-cloud-sdk
   ];
 
   programs.git = {
     enable = true;
-    userName = "Diego Marcos";
-    userEmail = "diegonmarcos@gmail.com";
+    userName = cloudData.owner.name;
+    userEmail = cloudData.owner.email;
     extraConfig = {
       init.defaultBranch = "main";
       pull.rebase = false;

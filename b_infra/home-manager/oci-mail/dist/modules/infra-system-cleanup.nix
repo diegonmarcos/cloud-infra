@@ -49,6 +49,44 @@ in {
     done
     [ -z "$SUDO" ] && echo "$CLEANUP_PREFIX no sudo found, skipping" && exit 0
 
+    # ── Kill bloatware services before package removal ──────────────
+    # Oracle Cloud Agent: 3 Go processes eating ~20% CPU + 36MB on 1GB VMs
+    # cloudflared: Cloudflare tunnel not needed (traffic via gcp-proxy Caddy)
+    for svc in snap.oracle-cloud-agent.oracle-cloud-agent.service \
+               snap.oracle-cloud-agent.oracle-cloud-agent-updater.service \
+               cloudflared.service; do
+      if $SUDO systemctl is-active "$svc" >/dev/null 2>&1; then
+        $SUDO systemctl stop "$svc" 2>/dev/null || true
+        $SUDO systemctl disable "$svc" 2>/dev/null || true
+        $SUDO systemctl mask "$svc" 2>/dev/null || true
+        echo "$CLEANUP_PREFIX stopped+masked $svc"
+      fi
+    done
+
+    # Kill processes directly (catches non-systemd installs)
+    for proc in cloudflared oracle-cloud-agent; do
+      if $SUDO pkill -f "$proc" 2>/dev/null; then
+        echo "$CLEANUP_PREFIX killed $proc processes"
+      fi
+    done
+
+    # Remove Oracle Cloud Agent snap + snapd itself (frees ~80MB disk + RAM)
+    if command -v snap >/dev/null 2>&1; then
+      for s in oracle-cloud-agent core18; do
+        if snap list "$s" >/dev/null 2>&1; then
+          $SUDO snap stop "$s" 2>/dev/null || true
+          $SUDO snap disable "$s" 2>/dev/null || true
+          $SUDO snap remove "$s" 2>/dev/null || true
+          echo "$CLEANUP_PREFIX removed snap: $s"
+        fi
+      done
+      # Stop snapd itself — saves 5% CPU on E2 Micros
+      $SUDO systemctl stop snapd snapd.socket snapd.seeded 2>/dev/null || true
+      $SUDO systemctl disable snapd snapd.socket 2>/dev/null || true
+      $SUDO systemctl mask snapd snapd.socket 2>/dev/null || true
+      echo "$CLEANUP_PREFIX stopped+masked snapd"
+    fi
+
     if command -v dpkg >/dev/null 2>&1; then
       # Debian/Ubuntu
       TO_REMOVE=""

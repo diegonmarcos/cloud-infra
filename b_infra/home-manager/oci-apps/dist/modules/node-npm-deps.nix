@@ -77,7 +77,13 @@ in {
     }
 
     # npm install if package.json changed
-    if [ -f "$PKG_JSON" ]; then
+    # NEVER run npm install on remote VMs — build locally and rsync.
+    # Only run on local machine (where home-manager is interactive).
+    TOTAL_RAM_KB=$(${pkgs.gnugrep}/bin/grep -m1 '^MemTotal:' /proc/meminfo 2>/dev/null | ${pkgs.coreutils}/bin/tr -s ' ' | ${pkgs.coreutils}/bin/cut -d' ' -f2)
+    TOTAL_RAM_MB=$(( ''${TOTAL_RAM_KB:-0} / 1024 ))
+    if [ "''${TOTAL_RAM_MB}" -lt 4096 ]; then
+      printf "[node-npm-deps] SKIP npm install — ''${TOTAL_RAM_MB}MB RAM (need 4GB+, build locally + rsync)\n"
+    elif [ -f "$PKG_JSON" ]; then
       if [ ! -d "$NODE_MODULES/node_modules" ] || [ "$PKG_JSON" -nt "$LOCK" ]; then
         printf "[node-npm-deps] npm install: ~/.node_modules/\n"
         PATH="${nodejs}/bin:$PATH" $DRY_RUN_CMD ${nodejs}/bin/npm install \
