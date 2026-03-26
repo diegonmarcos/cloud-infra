@@ -12,6 +12,10 @@ FILTER="${2:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
+# ── Trace collection ─────────────────────────────────────────────
+RUN_START=$(date +%s)
+TRACE_SERVICES="[]"
+
 GHA_CONFIG="cloud-data/cloud-data-gha-config.json"
 if [ ! -f "$GHA_CONFIG" ]; then
   echo "ERROR: $GHA_CONFIG not found" >&2
@@ -56,6 +60,8 @@ while IFS='|' read -r dir name has_docker; do
   if [ -n "$CHANGED_DIRS" ] && ! echo "$CHANGED_DIRS" | grep -q "$dir"; then
     echo "SKIP $name (unchanged)"
     SKIP=$((SKIP + 1))
+    TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
+      '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
     continue
   fi
 
@@ -63,6 +69,8 @@ while IFS='|' read -r dir name has_docker; do
   if [ ! -f "$BUILD_SH" ]; then
     echo "SKIP $name (no build.sh)"
     SKIP=$((SKIP + 1))
+    TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
+      '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
     continue
   fi
 
@@ -76,18 +84,51 @@ while IFS='|' read -r dir name has_docker; do
     unset REMOTE_BUILD 2>/dev/null || true
   fi
 
+  svc_start=$(date +%s)
   if bash "$BUILD_SH" ship; then
     echo "OK $name"
     OK=$((OK + 1))
+    svc_status="ok"
   else
     echo "FAIL $name (exit $?)"
     FAIL=$((FAIL + 1))
+    svc_status="fail"
   fi
+  svc_dur=$(( $(date +%s) - svc_start ))
+  TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" --arg s "$svc_status" --argjson dur "$svc_dur" \
+    '. + [{"name":$n,"dir":$d,"status":$s,"duration_s":$dur}]' <<< "$TRACE_SERVICES")
 done <<< "$SERVICES"
 
 echo ""
 echo "═══════════════════════════════════════════════"
 echo "Ship → $VM: $OK ok, $FAIL failed, $SKIP skipped (of $TOTAL)"
+
+# ── Write trace JSON ─────────────────────────────────────────────
+# TRACE_DIR env var: set by GHA template (-v mount), fallback for CLI/Dagu
+RUN_DUR=$(( $(date +%s) - RUN_START ))
+RUN_STATUS="success"; [ "$FAIL" -gt 0 ] && RUN_STATUS="failure"
+
+TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/cloud-data/traces-gha}"
+mkdir -p "$TRACE_DIR"
+
+jq -n \
+  --arg vm "$VM" \
+  --arg run_id "${GITHUB_RUN_ID:-local}" \
+  --arg run_url "https://github.com/${GITHUB_REPOSITORY:-local}/actions/runs/${GITHUB_RUN_ID:-0}" \
+  --arg sha "${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
+  --arg trigger "${GITHUB_EVENT_NAME:-manual}" \
+  --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --argjson dur "$RUN_DUR" \
+  --argjson total "$TOTAL" \
+  --argjson ok "$OK" \
+  --argjson fail "$FAIL" \
+  --argjson skip "$SKIP" \
+  --arg status "$RUN_STATUS" \
+  --argjson services "$TRACE_SERVICES" \
+  '{vm:$vm,run_id:$run_id,run_url:$run_url,sha:$sha,trigger:$trigger,ts:$ts,duration_s:$dur,total:$total,ok:$ok,fail:$fail,skip:$skip,status:$status,services:$services}' \
+  > "$TRACE_DIR/${VM}.json"
+
+echo "Trace written: $TRACE_DIR/${VM}.json"
 
 [ "$FAIL" -gt 0 ] && exit 1
 exit 0
