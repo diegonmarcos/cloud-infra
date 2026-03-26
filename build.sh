@@ -500,6 +500,12 @@ cmd_config() {
     if [ -d "$SHARED_NM" ] && [ ! -e "$ENGINE_DIR/node_modules" ]; then
         ln -s "$SHARED_NM" "$ENGINE_DIR/node_modules"
     fi
+    # Consolidated generator (v2) — produces _cloud-data-consolidated.json
+    if [ -f "$ENGINE_DIR/engines/gen-cloud-data.ts" ]; then
+        log "Generating _cloud-data-consolidated.json (v2)..."
+        tsx "$ENGINE_DIR/engines/gen-cloud-data.ts"
+    fi
+    # Legacy generators (kept until derivation layer replaces them)
     log "Generating cloud-topology.json + cloud-topology.md..."
     tsx "$ENGINE_DIR/engines/gen-topology.ts"
     log "Generating cloud-configs.json + cloud-configs.md..."
