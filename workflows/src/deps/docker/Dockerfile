@@ -48,12 +48,13 @@ COPY --from=builder /root/.node_modules /root/.node_modules
 # Copy deps flake for nix develop at runtime
 COPY --from=builder /build /opt/deps-flake
 
-# Labels
+# Self-documenting: Dockerfile as file (cat) + label (docker inspect)
+COPY Dockerfile /opt/cloud-builder/Dockerfile
+ARG DOCKERFILE_B64=""
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
-
-# Self-documenting: include own Dockerfile inside the image
-COPY Dockerfile /opt/cloud-builder/Dockerfile
+LABEL org.opencontainers.image.dockerfile-path="workflows/src/deps/docker/Dockerfile"
+LABEL cloud.builder.dockerfile-base64="${DOCKERFILE_B64}"
 
 # Default: drop into nix develop shell
 WORKDIR /workspace

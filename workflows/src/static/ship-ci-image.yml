@@ -33,12 +33,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push CI image
+      - name: Encode Dockerfile for label
+        id: dockerfile
+        run: echo "b64=$(base64 -w0 workflows/src/deps/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push cloud-builder image
         uses: docker/build-push-action@v6
         with:
           context: workflows/src/deps
           file: workflows/src/deps/docker/Dockerfile
           push: true
+          build-args: |
+            DOCKERFILE_B64=${{ steps.dockerfile.outputs.b64 }}
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
