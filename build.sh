@@ -745,6 +745,14 @@ cmd_workflow() {
         fi
     fi
 
+    # ── Deploy hooks: src/hooks/ → dist/hooks/ (used via gitconfig core.hooksPath) ──
+    if [ -d "$WF_SRC/hooks" ]; then
+        mkdir -p "$WF_DIST/hooks"
+        cp "$WF_SRC/hooks/"* "$WF_DIST/hooks/"
+        chmod +x "$WF_DIST/hooks/"* 2>/dev/null || true
+        log "  Git hooks deployed"
+    fi
+
     # ── Deploy actions: src/actions/ → .github/actions/ ──
     if [ -d "$WF_SRC/actions" ]; then
         rm -rf "$SCRIPT_DIR/.github/actions"

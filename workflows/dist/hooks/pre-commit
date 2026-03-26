@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ pre-commit — block secrets from ever reaching a commit           ║
+# ║                                                                  ║
+# ║ Source: cloud/workflows/src/hooks/pre-commit                     ║
+# ║ Deploy: build.sh workflow → workflows/dist/hooks/                ║
+# ║ Active: via .gitconfig [core] hooksPath = workflows/dist/hooks   ║
+# ║                                                                  ║
+# ║ Catches secrets even after git add -f (gitignore bypass).        ║
+# ╚══════════════════════════════════════════════════════════════════╝
+set -euo pipefail
+
+BLOCKED=""
+
+# Pattern 1: .secrets files and .secrets.d/ directories
+SECRETS=$(git diff --cached --name-only | grep -E '(^|/)\.secrets(\.d/|$)' || true)
+[ -n "$SECRETS" ] && BLOCKED="${BLOCKED}${SECRETS}"$'\n'
+
+# Pattern 2: known private key filenames (without _PUB suffix)
+PRIVKEYS=$(git diff --cached --name-only | grep -iE '(id_rsa|id_ed25519|id_ecdsa|\.pem|\.key)$' | grep -iv '_PUB\.' | grep -iv '_PUB$' || true)
+[ -n "$PRIVKEYS" ] && BLOCKED="${BLOCKED}${PRIVKEYS}"$'\n'
+
+# Pattern 3: env files that commonly hold secrets
+ENVFILES=$(git diff --cached --name-only | grep -E '(^|/)\.env(\.|$)' | grep -v '\.example' | grep -v '\.template' || true)
+[ -n "$ENVFILES" ] && BLOCKED="${BLOCKED}${ENVFILES}"$'\n'
+
+# Pattern 4: sops-encrypted source files should stay encrypted (never commit decrypted output)
+DECRYPTED=$(git diff --cached --name-only | grep -E 'dist/.*secrets' || true)
+[ -n "$DECRYPTED" ] && BLOCKED="${BLOCKED}${DECRYPTED}"$'\n'
+
+if [ -n "$BLOCKED" ]; then
+  echo "══════════════════════════════════════════════════" >&2
+  echo "BLOCKED: secrets or private keys staged for commit" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  echo "$BLOCKED" | sort -u | while read -r f; do
+    [ -n "$f" ] && echo "  - $f" >&2
+  done
+  echo "" >&2
+  echo "To unstage: git reset HEAD <file>" >&2
+  echo "If intentional (public keys only): git commit --no-verify" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  exit 1
+fi
