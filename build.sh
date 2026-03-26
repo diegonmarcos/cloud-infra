@@ -896,6 +896,27 @@ case "$command" in
     secrets)  cmd_secrets "$@" ;;
     config)   cmd_config ;;
     workflow) cmd_workflow ;;
+    profile-ship)
+        [ -z "${CLOUD_PROFILE:-}" ] && { log_error "CLOUD_PROFILE not set. Usage: CLOUD_PROFILE=<name> ./build.sh profile-ship"; exit 1; }
+        export CLOUD_PROFILE FORCE_DEPLOY=1
+        PF="$SCRIPT_DIR/build_${CLOUD_PROFILE}.json"
+        [ ! -f "$PF" ] && { log_error "build_${CLOUD_PROFILE}.json not found"; exit 1; }
+        log "=== Profile: $CLOUD_PROFILE ==="
+        for tier in 1 2 3; do
+            [ -n "${TIER:-}" ] && [ "$TIER" != "$tier" ] && continue
+            log "=== Tier $tier ==="
+            for svc in $(jq -r ".tiers.\"$tier\"[]" "$PF"); do
+                SVC_DIR=$(find "$SOLUTIONS_DIR" -maxdepth 1 -name "*_$svc" -type d | head -1)
+                if [ -d "$SVC_DIR" ]; then
+                    log "Shipping $svc..."
+                    "$SVC_DIR/build.sh" ship || log_warn "FAIL: $svc"
+                else
+                    log_warn "Not found: $svc"
+                fi
+            done
+            log "=== Tier $tier complete ==="
+        done
+        ;;
     ""|help)  usage ;;
     *)        log_error "Unknown: $command"; usage ;;
 esac
