@@ -10,7 +10,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = local.config.provider.version
+      version = "~> 1.45"
     }
   }
 }
