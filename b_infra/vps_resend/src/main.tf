@@ -10,11 +10,11 @@ terraform {
   required_providers {
     resend = {
       source  = "y0n0zawa/resend"
-      version = local.config.provider.resend_version
+      version = "~> 1.0"
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = local.config.provider.cloudflare_version
+      version = "~> 4.0"
     }
   }
 }
