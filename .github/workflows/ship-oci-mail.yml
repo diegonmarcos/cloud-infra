@@ -52,33 +52,8 @@ jobs:
             "$CI_IMAGE" \
             bash -c '
               set -e
-
-              # Clone repo
-              mkdir -p ~/.ssh
-              ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-              git clone --depth 2 --recurse-submodules \
-                "https://github.com/$GITHUB_REPOSITORY.git" /workspace
-              cd /workspace
-              git submodule update --remote
-
-              # Setup SSH to target VM
-              echo "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
-              cat > ~/.ssh/config <<SSHEOF
-              Host $SSH_ALIAS
-                HostName $SSH_HOST
-                User $SSH_USER
-                IdentityFile ~/.ssh/id_deploy
-                StrictHostKeyChecking no
-                ServerAliveInterval 30
-                ServerAliveCountMax 10
-              SSHEOF
-              chmod 600 ~/.ssh/config
-
-              # Setup SOPS
-              mkdir -p ~/.config/sops/age
-              echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
-              export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
-
-              # Ship all services for this VM
-              bash .github/workflows/scripts/ship-vm.sh $SSH_ALIAS
+              mkdir -p ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+              git clone --depth 2 --recurse-submodules "https://github.com/$GITHUB_REPOSITORY.git" /workspace
+              cd /workspace && git submodule update --remote
+              bash .github/workflows/scripts/cloud-builder-init.sh ship-vm.sh $SSH_ALIAS
             '
