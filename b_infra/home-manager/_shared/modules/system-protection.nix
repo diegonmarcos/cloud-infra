@@ -16,7 +16,7 @@ in {
   imports = [
     (import ./system-protection-resource-bouncer.nix { inherit config pkgs lib ramMB; })
     (import ./system-protection-watchdog-dropbear.nix { inherit config pkgs lib ramMB rescuePort; })
-    ./system-protection-scheduler-fifo-rr-cfs.nix
+    (import ./system-protection-scheduler-fifo-rr-cfs.nix { inherit config pkgs lib ramMB; })
     # system-protection-guardrails.nix + system-protection-no-build-guard.nix via shared-all.nix
   ];
 }
