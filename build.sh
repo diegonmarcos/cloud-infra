@@ -643,47 +643,27 @@ cmd_workflow() {
             fi
         done < "$svc_file"
 
-        # SSH config block
+        # SSH secret references (literal value vs secret reference)
         if echo "$ssh_host" | grep -qE '^[0-9]'; then
-            ssh_config="          ssh_key: \${{ secrets.${ssh_key} }}
-          ssh_host: ${ssh_host}
-          ssh_user: ${ssh_user}
-          ssh_alias: ${vm}
-"
+            ssh_host_val="$ssh_host"
+            ssh_user_val="$ssh_user"
         else
-            ssh_config="          ssh_key: \${{ secrets.${ssh_key} }}
-          ssh_host: \${{ secrets.${ssh_host} }}
-          ssh_user: \${{ secrets.${ssh_user} }}
-          ssh_alias: ${vm}
-"
-        fi
-
-        # Docker steps (only if needed)
-        docker_steps=""
-        if [ "$needs_docker" = "true" ]; then
-            docker_steps="
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: \${{ github.actor }}
-          password: \${{ secrets.GITHUB_TOKEN }}
-"
+            ssh_host_val="\${{ secrets.${ssh_host} }}"
+            ssh_user_val="\${{ secrets.${ssh_user} }}"
         fi
 
         # Apply template
         awk -v vm="$vm" \
             -v paths="$path_filters" \
-            -v ssh="$ssh_config" \
-            -v docker="$docker_steps" \
-            -v ships="$ship_steps" \
+            -v ssh_key_secret="$ssh_key" \
+            -v ssh_host_val="$ssh_host_val" \
+            -v ssh_user_val="$ssh_user_val" \
             '{
                 gsub("{{VM_NAME}}", vm)
                 gsub("{{PATH_FILTERS}}", paths)
-                gsub("{{SSH_CONFIG}}", ssh)
-                gsub("{{DOCKER_STEPS}}", docker)
-                gsub("{{SHIP_STEPS}}", ships)
+                gsub("{{SSH_KEY_SECRET}}", ssh_key_secret)
+                gsub("{{SSH_HOST_VALUE}}", ssh_host_val)
+                gsub("{{SSH_USER_VALUE}}", ssh_user_val)
                 print
             }' "$WF_SRC/ship-vm.yml.tpl" > "$WF_DIST/ship-${vm}.yml"
 
