@@ -31,6 +31,10 @@ if [ -f "$CONFIG" ]; then
     DEPLOY_PATH="$(get_config deploy.remote_path)"
     HM_CONFIG="$(get_config hm.config)"
     REMOTE_BUILD="$(get_config hm.remote_build)"
+    HM_DELIVERY="$(get_config hm.delivery)"
+    HM_IMAGE="$(get_config hm.image)"
+    HM_PLATFORM="$(get_config hm.platform)"
+    HM_REMOTE_BUILDER="$(get_config hm.remote_builder)"
 fi
 
 # Age key — use dotfile symlink set up by vault/build.sh setup system
@@ -266,36 +270,225 @@ step_compose() {
     log "Generations trimmed on $DEPLOY_HOST"
 }
 
+# ── Step: Docker package (nix build → Docker context with closure) ────
+step_docker_package() {
+    [ -z "$HM_IMAGE" ] && { log "ERROR: hm.image not set in build.json"; return 1; }
+
+    cd "$DIST_DIR"
+    # Nix flakes in git repos only see tracked files
+    git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+    log "Staged dist/ for nix ($(find "$DIST_DIR" -type f | wc -l) files)"
+
+    NIX_BUILD_CMD="nix build --no-link --print-out-paths --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
+    log "Flake: $DIST_DIR"
+    log "Nix cmd: $NIX_BUILD_CMD"
+
+    set +e
+    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/deps"
+    if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
+        log "Using deps devShell from $DEPS_FLAKE"
+        NIX_OUT=$(nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
+        NIX_RC=${PIPESTATUS:-$?}
+    else
+        NIX_OUT=$(eval "$NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
+        NIX_RC=${PIPESTATUS:-$?}
+    fi
+    set -e
+
+    if [ "$NIX_RC" -ne 0 ]; then
+        log "ERROR: nix build failed (exit $NIX_RC)"
+        return 1
+    fi
+
+    RESULT=$(printf '%s\n' "$NIX_OUT" | grep '^/nix/store/' | tail -1)
+    if [ -z "$RESULT" ] || [ ! -d "$RESULT" ]; then
+        log "ERROR: nix build produced no valid store path"
+        return 1
+    fi
+    log "Closure built: $RESULT"
+
+    # Collect runtime closure (only store paths referenced at runtime)
+    log "Collecting runtime closure..."
+    DOCKER_CTX="$DIST_DIR/docker-ctx"
+    rm -rf "$DOCKER_CTX"
+    mkdir -p "$DOCKER_CTX/nix-store"
+
+    CLOSURE_PATHS=$(nix-store -qR "$RESULT")
+    CLOSURE_COUNT=$(printf '%s\n' "$CLOSURE_PATHS" | wc -l)
+    CLOSURE_SIZE=$(printf '%s\n' "$CLOSURE_PATHS" | xargs du -scm 2>/dev/null | tail -1 | cut -f1)
+    log "Runtime closure: $CLOSURE_COUNT paths, ${CLOSURE_SIZE}MB"
+
+    # Copy closure paths (preserve structure)
+    printf '%s\n' "$CLOSURE_PATHS" | while read -r storepath; do
+        cp -a "$storepath" "$DOCKER_CTX/nix-store/" 2>/dev/null || true
+    done
+
+    # Copy encrypted secrets if present
+    [ -f "$SRC_DIR/secrets.yaml" ] && cp "$SRC_DIR/secrets.yaml" "$DOCKER_CTX/"
+
+    # Generate activate.sh
+    RESULT_BASENAME=$(basename "$RESULT")
+    HM_USER="$(get_config hm.user)"
+    cat > "$DOCKER_CTX/activate.sh" <<'ACTIVATE_EOF'
+#!/bin/bash
+set -euo pipefail
+HOST="${HM_HOST_ROOT:-/host}"
+HM_USER="${HM_USER:-ubuntu}"
+HM_HOME="$HOST/home/$HM_USER"
+ACTIVATION="$HOST$HM_ACTIVATION_PATH/activate"
+
+log() { printf '[hm-activate] %s\n' "$1"; }
+
+log "Copying nix store paths to host..."
+cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
+
+# Decrypt secrets using host's age key
+if [ -f "/hm/secrets.yaml" ]; then
+    AGE_KEY="$HM_HOME/.config/sops/age/keys.txt"
+    if [ -f "$AGE_KEY" ] && command -v sops >/dev/null 2>&1; then
+        log "Decrypting secrets..."
+        mkdir -p "$HM_HOME/.config/home-manager/.secrets.d"
+        SOPS_AGE_KEY_FILE="$AGE_KEY" sops -d /hm/secrets.yaml > /tmp/.hm-secrets-raw
+        # Extract KEY=VALUE pairs
+        if command -v yq >/dev/null 2>&1; then
+            : > "$HM_HOME/.config/home-manager/.secrets"
+            for key in $(yq -r 'keys | .[] | select(. != "sops")' /tmp/.hm-secrets-raw); do
+                val=$(yq -r ".[\"$key\"]" /tmp/.hm-secrets-raw)
+                printf '%s=%s\n' "$key" "$val" >> "$HM_HOME/.config/home-manager/.secrets"
+                printf '%s\n' "$val" > "$HM_HOME/.config/home-manager/.secrets.d/$key"
+                chmod 600 "$HM_HOME/.config/home-manager/.secrets.d/$key"
+            done
+            log "Secrets decrypted ($(wc -l < "$HM_HOME/.config/home-manager/.secrets") keys)"
+        fi
+        rm -f /tmp/.hm-secrets-raw
+    else
+        log "WARN: No age key or sops — skipping secrets"
+    fi
+fi
+
+# Ensure nix-build/nix-instantiate symlinks exist (HM activate expects them)
+for cmd in nix-build nix-instantiate; do
+    if [ ! -x "$HOST/usr/bin/$cmd" ] && [ ! -x "$HOST/home/$HM_USER/.nix-profile/bin/$cmd" ]; then
+        NIX_BIN=$(find "$HOST/nix/store" -maxdepth 2 -name "nix" -path "*/bin/nix" 2>/dev/null | head -1)
+        if [ -n "$NIX_BIN" ]; then
+            NIX_DIR=$(dirname "$NIX_BIN")
+            ln -sf nix "$NIX_DIR/$cmd" 2>/dev/null || true
+        fi
+    fi
+done
+
+# Run HM activation via chroot
+log "Activating $HM_ACTIVATION_PATH..."
+chroot "$HOST" /bin/bash -c "
+    export HOME=/home/$HM_USER
+    export USER=$HM_USER
+    export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin
+    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
+    $HM_ACTIVATION_PATH/activate
+"
+log "Activation complete"
+ACTIVATE_EOF
+
+    # Generate Dockerfile
+    SECRETS_COPY=""
+    [ -f "$DOCKER_CTX/secrets.yaml" ] && SECRETS_COPY="COPY secrets.yaml /hm/secrets.yaml"
+    cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends bash coreutils sudo && rm -rf /var/lib/apt/lists/*
+COPY nix-store/ /nix/store/
+COPY activate.sh /hm/activate.sh
+$SECRETS_COPY
+RUN chmod +x /hm/activate.sh
+ENV HM_ACTIVATION_PATH=/nix/store/$RESULT_BASENAME
+ENV HM_USER=$HM_USER
+ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]
+DOCKERFILE_EOF
+
+    log "Docker context ready: $DOCKER_CTX ($(du -sh "$DOCKER_CTX" | cut -f1))"
+    log "  Closure: ${CLOSURE_SIZE}MB, ${CLOSURE_COUNT} store paths"
+    echo "$RESULT" > "$SERVICE_DIR/.closure-path"
+}
+
+# ── Step: Docker push (build image + push to GHCR) ───────────────────
+step_docker_push() {
+    [ -z "$HM_IMAGE" ] && { log "ERROR: hm.image not set in build.json"; return 1; }
+
+    DOCKER_CTX="$DIST_DIR/docker-ctx"
+    [ ! -d "$DOCKER_CTX" ] && { log "ERROR: No docker-ctx/ — run docker-package first"; return 1; }
+
+    PLATFORM="${HM_PLATFORM:-linux/amd64}"
+    SHA_TAG="$(git rev-parse --short HEAD 2>/dev/null || echo 'latest')"
+
+    # Login to GHCR if token available
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin 2>/dev/null
+    fi
+
+    log "Building + pushing $HM_IMAGE ($PLATFORM)"
+    if command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1; then
+        run_logged "docker buildx build + push" \
+            docker buildx build \
+            --platform "$PLATFORM" \
+            --push \
+            -t "$HM_IMAGE:latest" \
+            -t "$HM_IMAGE:$SHA_TAG" \
+            "$DOCKER_CTX"
+    else
+        # Fallback: regular docker build (no multi-arch, no push)
+        run_logged "docker build" docker build -t "$HM_IMAGE:latest" "$DOCKER_CTX"
+        run_logged "docker push latest" docker push "$HM_IMAGE:latest"
+        run_logged "docker tag+push sha" docker tag "$HM_IMAGE:latest" "$HM_IMAGE:$SHA_TAG" && docker push "$HM_IMAGE:$SHA_TAG"
+    fi
+
+    log "Pushed $HM_IMAGE:latest + $HM_IMAGE:$SHA_TAG"
+}
+
 # ── Main ──────────────────────────────────────────────────────────────
-STRATEGY="local build + nix copy"
-[ "$REMOTE_BUILD" = "true" ] && STRATEGY="remote build on VM"
+if [ "$HM_DELIVERY" = "docker" ]; then
+    STRATEGY="docker image → GHCR → VM pulls"
+elif [ "$REMOTE_BUILD" = "true" ]; then
+    STRATEGY="remote build on VM"
+else
+    STRATEGY="local build + nix copy"
+fi
 
 log "========================================"
 log "  Home Manager: $SERVICE_NAME"
 log "  Strategy: $STRATEGY"
 log "  Host: ${DEPLOY_HOST:-none}"
 log "  HM config: ${HM_CONFIG:-none}"
+log "  Image: ${HM_IMAGE:-none}"
 log "  Log: $BUILD_LOG_FILE"
 log "========================================"
 
 case "${1:-all}" in
-    build)    step_build ;;
-    secrets)  step_secrets ;;
-    deploy)   step_deploy ;;
-    compose)  step_compose ;;
-    all)      step_build; step_secrets ;;
-    ship)     step_build; step_secrets; step_deploy; step_compose ;;
-    clean)    rm -rf "$DIST_DIR" "$SERVICE_DIR/.closure-path"; log "Cleaned" ;;
+    build)           step_build ;;
+    secrets)         step_secrets ;;
+    deploy)          step_deploy ;;
+    compose)         step_compose ;;
+    docker-package)  step_build; step_secrets; step_docker_package ;;
+    docker-push)     step_docker_push ;;
+    all)             step_build; step_secrets ;;
+    ship)
+        if [ "$HM_DELIVERY" = "docker" ]; then
+            step_build; step_secrets; step_docker_package; step_docker_push
+        else
+            step_build; step_secrets; step_deploy; step_compose
+        fi
+        ;;
+    clean)  rm -rf "$DIST_DIR" "$SERVICE_DIR/.closure-path"; log "Cleaned" ;;
     *)
-        echo "Usage: $0 [build|secrets|deploy|compose|all|ship|clean]"
+        echo "Usage: $0 [build|secrets|deploy|compose|docker-package|docker-push|all|ship|clean]"
         echo ""
-        echo "  build     Prepare dist/ from src/ (resolve symlinks)"
-        echo "  secrets   Decrypt secrets -> dist/.secrets"
-        echo "  deploy    Build + copy closure (local) or rsync flake (remote)"
-        echo "  compose   Activate home-manager on VM"
-        echo "  all       build + secrets (default)"
-        echo "  ship      build + secrets + deploy + compose"
-        echo "  clean     Remove dist/"
+        echo "  build           Prepare dist/ from src/ (resolve symlinks)"
+        echo "  secrets         Decrypt secrets -> dist/.secrets"
+        echo "  deploy          Build + copy closure (local) or rsync flake (remote)"
+        echo "  compose         Activate home-manager on VM"
+        echo "  docker-package  Build nix closure → Docker context with closure"
+        echo "  docker-push     Build Docker image + push to GHCR"
+        echo "  all             build + secrets (default)"
+        echo "  ship            Full pipeline (docker or legacy based on hm.delivery)"
+        echo "  clean           Remove dist/"
         ;;
 esac
 
