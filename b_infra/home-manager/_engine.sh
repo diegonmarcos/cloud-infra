@@ -394,6 +394,8 @@ ACTIVATE_EOF
     [ -f "$DOCKER_CTX/secrets.yaml" ] && SECRETS_COPY="COPY secrets.yaml /hm/secrets.yaml"
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
 FROM debian:bookworm-slim
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
 RUN apt-get update && apt-get install -y --no-install-recommends bash coreutils sudo && rm -rf /var/lib/apt/lists/*
 COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
@@ -441,6 +443,14 @@ step_docker_push() {
     fi
 
     log "Pushed $HM_IMAGE:latest + $HM_IMAGE:$SHA_TAG"
+
+    # Make package public (GHCR defaults to private even for public repos)
+    PKG_NAME=$(echo "$HM_IMAGE" | sed 's|ghcr.io/[^/]*/||')
+    if command -v gh >/dev/null 2>&1; then
+        gh api --method PUT "/user/packages/container/${PKG_NAME}/visibility" \
+            -f visibility=public 2>/dev/null && log "Package $PKG_NAME set to public" \
+            || log "WARN: could not set package visibility (may need manual fix)"
+    fi
 }
 
 # ── Main ──────────────────────────────────────────────────────────────
