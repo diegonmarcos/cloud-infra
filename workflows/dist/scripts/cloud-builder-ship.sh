@@ -45,6 +45,45 @@ TOTAL=$(echo "$SERVICES" | wc -l)
 _CORES=$(nproc 2>/dev/null || echo 2)
 MAX_PARALLEL="${SHIP_PARALLEL:-$(( _CORES > 1 ? _CORES - 1 : 1 ))}"  # nproc-1, min 1
 
+# ── Pre-stage cloud-data into all services' src/ (before parallel jobs) ──
+# Parallel builds race on git index — stage everything once, serially.
+CLOUD_DATA_DIR="$REPO_ROOT/cloud-data"
+CLOUD_DATA_PRESTAGED=""
+if [ -d "$CLOUD_DATA_DIR" ]; then
+  echo "Pre-staging cloud-data/*.json into services with include_cloud_data=true"
+  while IFS='|' read -r dir name has_docker; do
+    SVC_DIR="$REPO_ROOT/a_solutions/$dir"
+    BUILD_JSON="$SVC_DIR/build.json"
+    [ -f "$BUILD_JSON" ] || continue
+    INCLUDE=$(node -e "try{const c=require('$BUILD_JSON');process.stdout.write(String(c.build?.include_cloud_data||''))}catch{}" 2>/dev/null)
+    [ "$INCLUDE" = "true" ] || continue
+    SRC="$SVC_DIR/src"
+    [ -d "$SRC" ] || continue
+    for f in "$CLOUD_DATA_DIR"/*.json; do
+      [ -f "$f" ] || continue
+      BASENAME=$(basename "$f")
+      TARGET="$SRC/$BASENAME"
+      # Skip files already committed in src/
+      REL=$(realpath --relative-to="$REPO_ROOT" "$TARGET")
+      if git -C "$REPO_ROOT" ls-files --error-unmatch "$REL" >/dev/null 2>&1; then
+        continue
+      fi
+      cp "$f" "$TARGET"
+      CLOUD_DATA_PRESTAGED="$CLOUD_DATA_PRESTAGED $TARGET"
+    done
+  done <<< "$SERVICES"
+  # Single git add for all files — no index race
+  if [ -n "$CLOUD_DATA_PRESTAGED" ]; then
+    RELS=""
+    for t in $CLOUD_DATA_PRESTAGED; do
+      RELS="$RELS $(realpath --relative-to="$REPO_ROOT" "$t")"
+    done
+    git -C "$REPO_ROOT" add -f $RELS
+    echo "Staged $(echo $CLOUD_DATA_PRESTAGED | wc -w) cloud-data files across services"
+  fi
+  export CLOUD_DATA_PRESTAGED_BY_CI=true
+fi
+
 echo "═══════════════════════════════════════════════"
 echo "Ship → $VM ($TOTAL services, max $MAX_PARALLEL parallel)"
 echo "═══════════════════════════════════════════════"
@@ -113,6 +152,15 @@ cat "$SHIP_CMDS" | xargs -P "$MAX_PARALLEL" -I{} bash -c '
   ship_one "$dir" "$name" "$has_docker"
 '
 rm -f "$SHIP_CMDS"
+
+# ── Post-parallel: clean up pre-staged cloud-data files ─────────
+if [ -n "${CLOUD_DATA_PRESTAGED:-}" ]; then
+  for t in $CLOUD_DATA_PRESTAGED; do
+    REL=$(realpath --relative-to="$REPO_ROOT" "$t" 2>/dev/null || true)
+    [ -n "$REL" ] && git -C "$REPO_ROOT" reset HEAD "$REL" 2>/dev/null || true
+    rm -f "$t"
+  done
+fi
 
 # ── Collect results ──────────────────────────────────────────────
 OK=0; FAIL=0; SKIP=0
