@@ -358,51 +358,21 @@ in {
     '';
   };
 
-  # ── Watchdog Petter Docker Compose ──────────────────────────────────
-  home.file.".local/share/system-protection/watchdog-petter-compose.yml".text = ''
-    services:
-      watchdog-petter:
-        image: alpine:latest
-        container_name: watchdog-petter
-        restart: always
-        entrypoint: ["/bin/sh", "-c", "apk add --no-cache bash curl procps >/dev/null 2>&1 && exec /opt/scripts/watchdog-petter.sh"]
-        network_mode: host
-        pid: host
-        privileged: true
-        volumes:
-          - /opt/scripts/watchdog-petter.sh:/opt/scripts/watchdog-petter.sh:ro
-          - /var/log:/var/log
-          - /proc:/proc:ro
-          - /dev/watchdog:/dev/watchdog
-          - /var/run/docker.sock:/var/run/docker.sock
-        deploy:
-          resources:
-            limits:
-              memory: 32M
-              cpus: "0.10"
-            reservations:
-              memory: 16M
-        mem_limit: 32m
-        cpus: 0.10
-        logging:
-          driver: json-file
-          options:
-            max-size: "5m"
-            max-file: "3"
-  '';
-
   home.file.".local/share/system-protection/watchdog-petter.service".text = ''
     [Unit]
-    Description=Kernel Watchdog Petter — Docker container with resource limits
-    After=docker.service
-    Requires=docker.service
+    Description=Kernel Watchdog Petter — feeds /dev/watchdog, auto-heals containers, rich telemetry
+    After=multi-user.target
     [Service]
     Type=simple
-    ExecStartPre=-/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml down
-    ExecStart=/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml up --no-build
-    ExecStop=/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml down
+    ExecStart=/opt/scripts/watchdog-petter.sh
+    OOMScoreAdjust=-999
+    MemoryMax=32M
+    MemoryMin=10M
+    CPUQuota=10%
+    Nice=-20
     Restart=always
-    RestartSec=10
+    RestartSec=2
+    User=root
     [Install]
     WantedBy=multi-user.target
   '';
@@ -466,7 +436,6 @@ in {
     $SUDO cp -f "$SRC/disk-watchdog.sh" /opt/scripts/disk-watchdog.sh
     $SUDO cp -f "$SRC/rescue-ssh-setup.sh" /opt/scripts/rescue-ssh-setup.sh
     $SUDO cp -f "$SRC/watchdog-petter.sh" /opt/scripts/watchdog-petter.sh
-    $SUDO cp -f "$SRC/watchdog-petter-compose.yml" /opt/scripts/watchdog-petter-compose.yml
     $SUDO chmod +x /opt/scripts/disk-swap.sh /opt/scripts/disk-swap-maintenance.sh /opt/scripts/disk-watchdog.sh /opt/scripts/rescue-ssh-setup.sh /opt/scripts/watchdog-petter.sh
     $SUDO cp -f "$SRC/disk-swap.service" /etc/systemd/system/disk-swap.service
     $SUDO cp -f "$SRC/disk-swap-maintenance.service" /etc/systemd/system/disk-swap-maintenance.service
