@@ -57,15 +57,19 @@ COPY --from=builder /root/.node_modules /root/.node_modules
 # Copy deps flake for nix develop at runtime
 COPY --from=builder /build /opt/deps-flake
 
-# Self-documenting: Dockerfile as file (cat) + label (docker inspect)
+# Self-documenting: Dockerfile + docker-up.sh + entrypoint baked in
 COPY docker/Dockerfile /opt/cloud-builder/Dockerfile
+COPY docker/docker-up.sh /opt/cloud-builder/docker-up.sh
+COPY docker/entrypoint.sh /opt/cloud-builder/entrypoint.sh
+RUN chmod +x /opt/cloud-builder/entrypoint.sh /opt/cloud-builder/docker-up.sh
 ARG DOCKERFILE_B64=""
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
-LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
+LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh, docker)"
 LABEL org.opencontainers.image.dockerfile-path="workflows/src/deps/docker/Dockerfile"
 LABEL cloud.builder.dockerfile-base64="${DOCKERFILE_B64}"
+LABEL cloud.builder.usage="docker run --rm ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest docker-up | sh -s ship all"
 
-# Default: drop into nix develop shell
+# Entrypoint: no args = print usage, docker-up = print script, anything else = nix develop
 WORKDIR /workspace
-ENTRYPOINT ["nix", "develop", "/opt/deps-flake#", "--command"]
-CMD ["bash"]
+ENTRYPOINT ["/opt/cloud-builder/entrypoint.sh"]
+CMD []
