@@ -1,0 +1,16 @@
+{
+  "name": "cloud-builder",
+  "description": "Self-contained CI/CD builder image (nix, sops, docker, rsync, ssh)",
+  "build": {
+    "copy_only": true
+  },
+  "docker": {
+    "registry": "ghcr.io/diegonmarcos",
+    "image": "cloud-builder-x86-nixos",
+    "dockerfile": "docker/Dockerfile",
+    "build_args": "NIX_SYSTEM=x86_64-linux"
+  },
+  "deploy": {
+    "host": "local"
+  }
+}

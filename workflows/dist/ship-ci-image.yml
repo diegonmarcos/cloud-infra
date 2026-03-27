@@ -13,7 +13,7 @@ name: "Ship → CI image"
 on:
   push:
     paths:
-      - "workflows/src/deps/**"
+      - "workflows/src/cloud-builder/**"
       - "config.json"
     branches: [main]
   workflow_dispatch:
@@ -45,13 +45,13 @@ jobs:
 
       - name: Encode Dockerfile for label
         id: dockerfile
-        run: echo "b64=$(base64 -w0 workflows/src/deps/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
+        run: echo "b64=$(base64 -w0 workflows/src/cloud-builder/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
 
       - name: Build and push cloud-builder image
         uses: docker/build-push-action@v6
         with:
-          context: workflows/src/deps
-          file: workflows/src/deps/docker/Dockerfile
+          context: workflows/src/cloud-builder
+          file: workflows/src/cloud-builder/docker/Dockerfile
           push: true
           build-args: |
             DOCKERFILE_B64=${{ steps.dockerfile.outputs.b64 }}
