@@ -1,10 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 # Watchdog Petter — kernel watchdog + container auto-healer
 # Rich telemetry: mem, swap, PSI, top procs, disk, containers every 30s
+# POSIX sh — no bash required
 # Managed by home-manager — DO NOT EDIT on VM
 # Source: cloud/b_infra/home-manager/_shared/modules/watchdog-petter.sh
 
-exec 3>/dev/watchdog 2>/dev/null || echo "[watchdog] WARNING: /dev/watchdog not available"
+# Hardware watchdog DISABLED — CPUQuota throttling causes missed pets → VM reset
+# TODO: re-enable once we confirm VMs are stable without it
+# exec 3>/dev/watchdog 2>/dev/null || echo "[watchdog] WARNING: /dev/watchdog not available"
+WD_ENABLED=0
 DOCKER_FAIL=0
 DOCKER_FAIL_THRESHOLD=120
 CTR_RESTART_TRACK=""
@@ -64,8 +68,10 @@ sysinfo_full() {
 
 log() {
   INFO=$(sysinfo_full)
-  echo "$(date -Is) [$HOSTNAME] [watchdog] $1 | $INFO" >> "$LOG" 2>/dev/null
-  echo "$(date -Is) [$HOSTNAME] $1 | $INFO"
+  MSG="$(date -Is) [$HOSTNAME] [watchdog] $1 | $INFO"
+  # Force sync to disk — must survive kernel freeze
+  printf '%s\n' "$MSG" >> "$LOG" 2>/dev/null && sync "$LOG" 2>/dev/null
+  printf '%s\n' "$MSG"
 }
 ntfy() { curl -sf --max-time 3 -X POST "$NTFY" -H "Title: [$HOSTNAME] $2" -H "Priority: $1" -H "Tags: $4" -d "$3 | $(sysinfo_full)" 2>/dev/null || true; }
 
@@ -99,7 +105,7 @@ while true; do
       systemctl restart docker 2>/dev/null || true
       DOCKER_FAIL=0
     fi
-    echo V >&3 2>/dev/null
+    [ "$WD_ENABLED" = "1" ] && echo V >&3 2>/dev/null
     sleep 5
     continue
   fi
