@@ -201,31 +201,87 @@ in {
 
   # ── Kernel Watchdog Petter ────────────────────────────────────────────
   # Feeds /dev/watchdog to prevent hardware reset, auto-heals containers,
-  # restarts Docker if hung. Grace period: 12 failures × 5s = 60s before restart.
+  # restarts Docker if hung. Runs as Docker container with resource limits.
+  # Rich telemetry: mem, swap, PSI, top procs, disk, containers every cycle.
   home.file.".local/share/system-protection/watchdog-petter.sh" = {
     executable = true;
     text = ''
       #!/bin/bash
-      exec 3>/dev/watchdog
+      # Watchdog Petter — kernel watchdog + container auto-healer
+      # Runs inside Docker with host PID/NET/devices access
+      # Logs comprehensive telemetry every cycle (5s)
+
+      exec 3>/dev/watchdog 2>/dev/null || echo "[watchdog] WARNING: /dev/watchdog not available"
       DOCKER_FAIL=0
       DOCKER_FAIL_THRESHOLD=120
       CTR_RESTART_TRACK=""
-      HOSTNAME=$(hostname -s)
+      HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
       LOG=/var/log/watchdog-petter.log
       NTFY="http://10.0.0.1:8090/watchdog-dropbear"
-
-      sysinfo() {
-        MEM=$(awk '/MemAvailable/ {printf "%.0f", $2/1024}' /proc/meminfo 2>/dev/null || echo "?")
-        LOAD=$(cut -d" " -f1-3 /proc/loadavg 2>/dev/null || echo "?")
-        DISK=$(df / 2>/dev/null | awk 'NR==2 {print $5}' || echo "?")
-        CTRS=$(docker ps -q 2>/dev/null | wc -l || echo "?")
-        echo "mem=''${MEM}MB load=$LOAD disk=$DISK ctrs=$CTRS"
-      }
-      log()  { echo "$(date -Is) [$HOSTNAME] [watchdog] $1 | $(sysinfo)" >> "$LOG" 2>/dev/null; }
-      ntfy() { curl -sf --max-time 3 -X POST "$NTFY" -H "Title: [$HOSTNAME] $2" -H "Priority: $1" -H "Tags: $4" -d "$3 | $(sysinfo)" 2>/dev/null || true; }
-
+      BOOT_TIME=$(date -Is)
       CYCLE=0
+      TICK=0
+
+      # ── Rich telemetry ──────────────────────────────────────────────
+      sysinfo_full() {
+        # Memory
+        MEM_TOTAL=$(awk '/MemTotal/    {print int($2/1024)}' /proc/meminfo 2>/dev/null)
+        MEM_AVAIL=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo 2>/dev/null)
+        MEM_USED=$((MEM_TOTAL - MEM_AVAIL))
+        MEM_PCT=$((MEM_USED * 100 / (MEM_TOTAL + 1)))
+        BUFCACHE=$(awk '/Buffers/{b=$2} /^Cached/{c=$2} END{print int((b+c)/1024)}' /proc/meminfo 2>/dev/null)
+
+        # Swap
+        SWAP_TOTAL=$(awk '/SwapTotal/ {print int($2/1024)}' /proc/meminfo 2>/dev/null)
+        SWAP_USED=$(awk '/SwapFree/  {print int($2/1024)}' /proc/meminfo 2>/dev/null)
+        SWAP_USED=$((SWAP_TOTAL - SWAP_USED))
+
+        # PSI (pressure stall info)
+        MEM_PSI="N/A"; CPU_PSI="N/A"; IO_PSI="N/A"
+        [ -f /proc/pressure/memory ] && MEM_PSI=$(awk '/some/{print $2}' /proc/pressure/memory 2>/dev/null | head -1)
+        [ -f /proc/pressure/cpu ]    && CPU_PSI=$(awk '/some/{print $2}' /proc/pressure/cpu 2>/dev/null | head -1)
+        [ -f /proc/pressure/io ]     && IO_PSI=$(awk '/some/{print $2}' /proc/pressure/io 2>/dev/null | head -1)
+
+        # Load + uptime
+        LOAD=$(cut -d" " -f1-3 /proc/loadavg 2>/dev/null)
+        PROCS=$(cut -d" " -f4 /proc/loadavg 2>/dev/null)
+        UPTIME=$(awk '{d=int($1/86400); h=int(($1%86400)/3600); m=int(($1%3600)/60); printf "%dd%dh%dm", d, h, m}' /proc/uptime 2>/dev/null)
+
+        # Disk
+        DISK=$(df / 2>/dev/null | awk 'NR==2{printf "%s/%s (%s)", $3, $2, $5}')
+
+        # Docker containers
+        CTRS=0; CTRS_HEALTHY=0; CTRS_UNHEALTHY=0; CTRS_RESTARTING=0
+        if docker info >/dev/null 2>&1; then
+          CTRS=$(docker ps -q 2>/dev/null | wc -l)
+          CTRS_HEALTHY=$(docker ps --filter health=healthy -q 2>/dev/null | wc -l)
+          CTRS_UNHEALTHY=$(docker ps --filter health=unhealthy -q 2>/dev/null | wc -l)
+          CTRS_RESTARTING=$(docker ps -a --filter status=restarting -q 2>/dev/null | wc -l)
+        fi
+
+        # Top 5 procs by RSS
+        TOP_PROCS=$(ps aux --sort=-%mem 2>/dev/null | awk 'NR>1&&NR<=6{printf "%s(%s%%/%dMB) ", $11, $4, $6/1024}')
+
+        printf "mem=%dM/%dM(%d%%) buf+cache=%dM swap=%dM/%dM | load=%s procs=%s up=%s | psi:mem=%s cpu=%s io=%s | disk=%s | ctrs=%d(ok=%d bad=%d loop=%d) | top: %s" \
+          "$MEM_USED" "$MEM_TOTAL" "$MEM_PCT" "$BUFCACHE" "$SWAP_USED" "$SWAP_TOTAL" \
+          "$LOAD" "$PROCS" "$UPTIME" "$MEM_PSI" "$CPU_PSI" "$IO_PSI" \
+          "$DISK" "$CTRS" "$CTRS_HEALTHY" "$CTRS_UNHEALTHY" "$CTRS_RESTARTING" \
+          "$TOP_PROCS"
+      }
+
+      log() {
+        INFO=$(sysinfo_full)
+        echo "$(date -Is) [$HOSTNAME] [watchdog] $1 | $INFO" >> "$LOG" 2>/dev/null
+        # Also stdout for Docker logs
+        echo "$(date -Is) [$HOSTNAME] $1 | $INFO"
+      }
+      ntfy() { curl -sf --max-time 3 -X POST "$NTFY" -H "Title: [$HOSTNAME] $2" -H "Priority: $1" -H "Tags: $4" -d "$3 | $(sysinfo_full)" 2>/dev/null || true; }
+
+      log "BOOT: watchdog-petter started (threshold=$DOCKER_FAIL_THRESHOLD)"
+
       while true; do
+        TICK=$((TICK + 1))
+
         # Kernel liveness
         if ! [ -f /proc/loadavg ]; then
           log "FATAL: /proc unreadable"
@@ -233,27 +289,36 @@ in {
           exit 1
         fi
 
-        # Docker liveness (60s grace period before restart)
+        # Periodic telemetry (every 6th cycle = 30s)
+        if [ $((TICK % 6)) -eq 0 ]; then
+          log "tick=$TICK"
+        fi
+
+        # Docker liveness
         if ! docker info >/dev/null 2>&1; then
           DOCKER_FAIL=$((DOCKER_FAIL + 1))
-          log "Docker not responding (fail $DOCKER_FAIL/$DOCKER_FAIL_THRESHOLD)"
+          # Log every 12th failure (60s) to avoid spam
+          if [ $((DOCKER_FAIL % 12)) -eq 1 ]; then
+            log "Docker not responding (fail $DOCKER_FAIL/$DOCKER_FAIL_THRESHOLD)"
+          fi
           if [ "$DOCKER_FAIL" -ge "$DOCKER_FAIL_THRESHOLD" ]; then
             log "Restarting Docker daemon"
             ntfy 4 "Docker restart" "Docker hung ($DOCKER_FAIL failures) — restarting" "warning,whale"
             systemctl restart docker 2>/dev/null || true
             DOCKER_FAIL=0
           fi
-          echo V >&3
+          echo V >&3 2>/dev/null
           sleep 5
           continue
         fi
+        [ "$DOCKER_FAIL" -gt 0 ] && log "Docker recovered after $DOCKER_FAIL failures"
         DOCKER_FAIL=0
 
         # Restart crash-looping containers
         for ctr in $(docker ps -a --filter status=restarting --format "{{.Names}}" 2>/dev/null); do
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true)
           if [ "$PREV" -lt 2 ]; then
-            log "Restarting crash-looping: $ctr"
+            log "ACTION: Restarting crash-looping: $ctr"
             ntfy 3 "Container restart" "$ctr crash-looping" "warning,package"
             docker restart "$ctr" --time 10 2>/dev/null || true
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK
@@ -265,7 +330,7 @@ in {
         for ctr in $(docker ps --filter health=unhealthy --format "{{.Names}}" 2>/dev/null); do
           PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true)
           if [ "$PREV" -lt 1 ]; then
-            log "Restarting unhealthy: $ctr"
+            log "ACTION: Restarting unhealthy: $ctr"
             ntfy 3 "Container unhealthy" "$ctr unhealthy" "warning,heartpulse"
             docker restart "$ctr" --time 10 2>/dev/null || true
             CTR_RESTART_TRACK="$CTR_RESTART_TRACK
@@ -276,7 +341,7 @@ in {
         # Low memory prune
         MEM_AVAIL=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 9999)
         if [ "$MEM_AVAIL" -lt 50 ]; then
-          log "Low memory: ''${MEM_AVAIL}MB"
+          log "ALERT: Low memory ''${MEM_AVAIL}MB — pruning Docker"
           ntfy 4 "Low memory" "''${MEM_AVAIL}MB available" "warning,brain"
           docker system prune -f 2>/dev/null || true
         fi
@@ -287,26 +352,57 @@ in {
           CYCLE=0
         fi
 
-        echo V >&3
+        echo V >&3 2>/dev/null
         sleep 5
       done
     '';
   };
 
+  # ── Watchdog Petter Docker Compose ──────────────────────────────────
+  home.file.".local/share/system-protection/watchdog-petter-compose.yml".text = ''
+    services:
+      watchdog-petter:
+        image: alpine:latest
+        container_name: watchdog-petter
+        restart: always
+        entrypoint: ["/bin/sh", "-c", "apk add --no-cache bash curl procps >/dev/null 2>&1 && exec /opt/scripts/watchdog-petter.sh"]
+        network_mode: host
+        pid: host
+        privileged: true
+        volumes:
+          - /opt/scripts/watchdog-petter.sh:/opt/scripts/watchdog-petter.sh:ro
+          - /var/log:/var/log
+          - /proc:/proc:ro
+          - /dev/watchdog:/dev/watchdog
+          - /var/run/docker.sock:/var/run/docker.sock
+        deploy:
+          resources:
+            limits:
+              memory: 32M
+              cpus: "0.10"
+            reservations:
+              memory: 16M
+        mem_limit: 32m
+        cpus: 0.10
+        logging:
+          driver: json-file
+          options:
+            max-size: "5m"
+            max-file: "3"
+  '';
+
   home.file.".local/share/system-protection/watchdog-petter.service".text = ''
     [Unit]
-    Description=Kernel Watchdog Petter — auto-heals containers, resets if kernel frozen
+    Description=Kernel Watchdog Petter — Docker container with resource limits
     After=docker.service
+    Requires=docker.service
     [Service]
     Type=simple
-    ExecStart=/opt/scripts/watchdog-petter.sh
-    OOMScoreAdjust=-999
-    MemoryMax=10M
-    MemoryMin=5M
-    CPUWeight=10000
+    ExecStartPre=-/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml down
+    ExecStart=/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml up --no-build
+    ExecStop=/usr/bin/docker compose -f /opt/scripts/watchdog-petter-compose.yml down
     Restart=always
-    RestartSec=2
-    User=root
+    RestartSec=10
     [Install]
     WantedBy=multi-user.target
   '';
@@ -370,6 +466,7 @@ in {
     $SUDO cp -f "$SRC/disk-watchdog.sh" /opt/scripts/disk-watchdog.sh
     $SUDO cp -f "$SRC/rescue-ssh-setup.sh" /opt/scripts/rescue-ssh-setup.sh
     $SUDO cp -f "$SRC/watchdog-petter.sh" /opt/scripts/watchdog-petter.sh
+    $SUDO cp -f "$SRC/watchdog-petter-compose.yml" /opt/scripts/watchdog-petter-compose.yml
     $SUDO chmod +x /opt/scripts/disk-swap.sh /opt/scripts/disk-swap-maintenance.sh /opt/scripts/disk-watchdog.sh /opt/scripts/rescue-ssh-setup.sh /opt/scripts/watchdog-petter.sh
     $SUDO cp -f "$SRC/disk-swap.service" /etc/systemd/system/disk-swap.service
     $SUDO cp -f "$SRC/disk-swap-maintenance.service" /etc/systemd/system/disk-swap-maintenance.service
