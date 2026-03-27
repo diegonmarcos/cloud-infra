@@ -40,7 +40,7 @@ jobs:
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \
             ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS'
+            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && stdbuf -oL bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS 2>&1 | stdbuf -oL cat'
 
       - name: Push traces to cloud-data
         if: always()
