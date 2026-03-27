@@ -60,7 +60,7 @@ COPY --from=builder /build /opt/deps-flake
 # Self-documenting: Dockerfile as file (cat) + label (docker inspect)
 COPY docker/Dockerfile /opt/cloud-builder/Dockerfile
 ARG DOCKERFILE_B64=""
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/unix"
 LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
 LABEL org.opencontainers.image.dockerfile-path="workflows/src/deps/docker/Dockerfile"
 LABEL cloud.builder.dockerfile-base64="${DOCKERFILE_B64}"
