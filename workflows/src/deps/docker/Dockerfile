@@ -2,13 +2,19 @@
 # ║ cloud-builder — Self-contained CI/CD builder image              ║
 # ║                                                                  ║
 # ║ Contains: nix + devShell (sops, rsync, ssh, git, jq, yq, node)  ║
+# ║           + docker CLI (for docker compose build --push)         ║
 # ║ Does NOT contain: code, secrets, service outputs (built fresh)   ║
 # ║                                                                  ║
 # ║ Source: workflows/src/deps/docker/Dockerfile                     ║
-# ║ Registry: ghcr.io/diegonmarcos/cloud-builder-x86-nixos                    ║
+# ║ Registry: ghcr.io/diegonmarcos/cloud-builder-{x86,arm}-nixos    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
+# NIX_SYSTEM: x86_64-linux or aarch64-linux (set by GHA matrix)
+ARG NIX_SYSTEM=x86_64-linux
+
 FROM nixos/nix:latest AS builder
+
+ARG NIX_SYSTEM
 
 # Enable flakes
 RUN mkdir -p /etc/nix && echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf
@@ -21,10 +27,10 @@ COPY flake.nix flake.lock ./
 RUN nix flake update config-json --flake .
 
 # Build the devShell — populates nix store with all deps
-RUN nix build .#devShells.x86_64-linux.default.inputDerivation --no-link
+RUN nix build ".#devShells.${NIX_SYSTEM}.default.inputDerivation" --no-link
 
 # Also pre-populate nixpkgs evaluations for faster service builds
-RUN nix eval --json .#devShells.x86_64-linux.default.name > /dev/null
+RUN nix eval --json ".#devShells.${NIX_SYSTEM}.default.name" > /dev/null
 
 # Install npm packages to /root/.node_modules (shared node deps)
 RUN nix develop .# --command bash -c '\
@@ -33,10 +39,13 @@ RUN nix develop .# --command bash -c '\
     npm install --silent tsx yaml nunjucks 2>/dev/null && \
     echo "Node modules installed: $(ls node_modules | wc -l) packages"'
 
-# ── Final image: nix store + node_modules ready ──
+# ── Final image: nix store + node_modules + docker CLI ready ──
 FROM nixos/nix:latest
 
 RUN mkdir -p /etc/nix && echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf
+
+# Install Docker CLI (needed for docker compose build --push in step_compose_build)
+RUN nix profile install nixpkgs#docker-client nixpkgs#docker-compose
 
 # Copy populated nix store from builder
 COPY --from=builder /nix/store /nix/store
