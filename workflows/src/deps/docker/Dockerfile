@@ -44,12 +44,12 @@ FROM nixos/nix:latest
 
 RUN mkdir -p /etc/nix && echo "experimental-features = nix-command flakes" > /etc/nix/nix.conf
 
-# Install Docker CLI (needed for docker compose build --push in step_compose_build)
-RUN nix profile install nixpkgs#docker-client nixpkgs#docker-compose
-
-# Copy populated nix store from builder
+# Copy populated nix store from builder (devShell + npm deps)
 COPY --from=builder /nix/store /nix/store
 COPY --from=builder /nix/var /nix/var
+
+# Install Docker CLI AFTER nix store copy (otherwise COPY overwrites it)
+RUN nix profile install nixpkgs#docker-client nixpkgs#docker-compose
 
 # Copy node_modules
 COPY --from=builder /root/.node_modules /root/.node_modules
@@ -60,7 +60,7 @@ COPY --from=builder /build /opt/deps-flake
 # Self-documenting: Dockerfile as file (cat) + label (docker inspect)
 COPY docker/Dockerfile /opt/cloud-builder/Dockerfile
 ARG DOCKERFILE_B64=""
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/unix"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="cloud-builder — self-contained CI/CD image (nix, sops, rsync, ssh)"
 LABEL org.opencontainers.image.dockerfile-path="workflows/src/deps/docker/Dockerfile"
 LABEL cloud.builder.dockerfile-base64="${DOCKERFILE_B64}"
