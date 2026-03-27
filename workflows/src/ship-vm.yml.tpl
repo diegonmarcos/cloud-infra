@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
+      packages: write
     steps:
       - name: Ship inside cloud-builder
         run: |
@@ -24,12 +24,15 @@ jobs:
           mkdir -p "${{ runner.temp }}/traces"
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.{{SSH_KEY_SECRET}} }}' \
             -e SSH_HOST='{{SSH_HOST_VALUE}}' \
             -e SSH_USER='{{SSH_USER_VALUE}}' \
             -e SSH_ALIAS='{{VM_NAME}}' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
             -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
