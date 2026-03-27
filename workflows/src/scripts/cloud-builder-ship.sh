@@ -41,63 +41,95 @@ if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispa
   CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 fi
 
-OK=0
-FAIL=0
-SKIP=0
 TOTAL=$(echo "$SERVICES" | wc -l)
+_CORES=$(nproc 2>/dev/null || echo 2)
+MAX_PARALLEL="${SHIP_PARALLEL:-$(( _CORES > 1 ? _CORES - 1 : 1 ))}"  # nproc-1, min 1
 
 echo "═══════════════════════════════════════════════"
-echo "Ship → $VM ($TOTAL services)"
+echo "Ship → $VM ($TOTAL services, max $MAX_PARALLEL parallel)"
 echo "═══════════════════════════════════════════════"
+
+# ── Per-service worker (runs in background) ──────────────────────
+RESULTS_DIR=$(mktemp -d)
+
+ship_one() {
+  local dir="$1" name="$2" has_docker="$3"
+  local log_file="$RESULTS_DIR/${name}.log"
+  local svc_start
+  svc_start=$(date +%s)
+
+  {
+    echo "── Ship: $name ($dir) ──"
+
+    BUILD_SH="a_solutions/${dir}/build.sh"
+    if [ ! -f "$BUILD_SH" ]; then
+      echo "SKIP $name (no build.sh)"
+      echo "skip" > "$RESULTS_DIR/${name}.status"
+      echo "0" > "$RESULTS_DIR/${name}.dur"
+      return 0
+    fi
+
+    if [ "$has_docker" = "true" ]; then
+      export REMOTE_BUILD="true"
+    else
+      unset REMOTE_BUILD 2>/dev/null || true
+    fi
+
+    if bash "$BUILD_SH" ship; then
+      echo "OK $name"
+      echo "ok" > "$RESULTS_DIR/${name}.status"
+    else
+      echo "FAIL $name (exit $?)"
+      echo "fail" > "$RESULTS_DIR/${name}.status"
+    fi
+  } 2>&1 | stdbuf -oL sed "s/^/[$name] /" | tee "$log_file"
+
+  echo "$(( $(date +%s) - svc_start ))" > "$RESULTS_DIR/${name}.dur"
+}
+
+# ── Launch services in parallel ──────────────────────────────────
+RUNNING=0
 
 while IFS='|' read -r dir name has_docker; do
-  # Apply filter
   if [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ]; then
     continue
   fi
 
-  # Skip unchanged (only in GHA push events)
   if [ -n "$CHANGED_DIRS" ] && ! echo "$CHANGED_DIRS" | grep -q "$dir"; then
     echo "SKIP $name (unchanged)"
-    SKIP=$((SKIP + 1))
-    TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
-      '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
+    echo "skip" > "$RESULTS_DIR/${name}.status"
+    echo "0" > "$RESULTS_DIR/${name}.dur"
     continue
   fi
 
-  BUILD_SH="a_solutions/${dir}/build.sh"
-  if [ ! -f "$BUILD_SH" ]; then
-    echo "SKIP $name (no build.sh)"
-    SKIP=$((SKIP + 1))
-    TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
-      '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
-    continue
-  fi
+  while [ "$RUNNING" -ge "$MAX_PARALLEL" ]; do
+    wait -n 2>/dev/null || true
+    RUNNING=$(jobs -rp | wc -l)
+  done
 
-  echo ""
-  echo "── Ship: $name ($dir) ──"
+  ship_one "$dir" "$name" "$has_docker" &
+  RUNNING=$(jobs -rp | wc -l)
+done <<< "$SERVICES"
 
-  # Set REMOTE_BUILD for Docker services
-  if [ "$has_docker" = "true" ]; then
-    export REMOTE_BUILD="true"
-  else
-    unset REMOTE_BUILD 2>/dev/null || true
-  fi
+wait
 
-  svc_start=$(date +%s)
-  if bash "$BUILD_SH" ship; then
-    echo "OK $name"
-    OK=$((OK + 1))
-    svc_status="ok"
-  else
-    echo "FAIL $name (exit $?)"
-    FAIL=$((FAIL + 1))
-    svc_status="fail"
-  fi
-  svc_dur=$(( $(date +%s) - svc_start ))
-  TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" --arg s "$svc_status" --argjson dur "$svc_dur" \
+# ── Collect results ──────────────────────────────────────────────
+OK=0; FAIL=0; SKIP=0
+
+while IFS='|' read -r dir name has_docker; do
+  [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ] && continue
+  status=$(cat "$RESULTS_DIR/${name}.status" 2>/dev/null || echo "fail")
+  dur=$(cat "$RESULTS_DIR/${name}.dur" 2>/dev/null || echo "0")
+  case "$status" in
+    ok)   OK=$((OK + 1)) ;;
+    skip) SKIP=$((SKIP + 1)) ;;
+    *)    FAIL=$((FAIL + 1)) ;;
+  esac
+  TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" --arg s "$status" --argjson dur "$dur" \
     '. + [{"name":$n,"dir":$d,"status":$s,"duration_s":$dur}]' <<< "$TRACE_SERVICES")
 done <<< "$SERVICES"
+
+rm -rf "$RESULTS_DIR"
 
 echo ""
 echo "═══════════════════════════════════════════════"
