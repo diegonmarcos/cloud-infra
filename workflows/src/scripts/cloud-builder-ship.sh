@@ -5,7 +5,7 @@
 # ║ Called by cloud-builder.sh, or standalone (Dagu, CLI).           ║
 # ║ Usage: cloud-builder-ship.sh <vm-alias> [service-filter]         ║
 # ╚══════════════════════════════════════════════════════════════════╝
-set -uo pipefail  # no -e: build failures are caught by if/else in the loop
+set -u  # no -e/-o pipefail: parallel jobs must not kill the script on failure
 
 VM="${1:?Usage: ship-vm.sh <vm-alias> [service-filter]}"
 FILTER="${2:-}"
@@ -87,8 +87,8 @@ ship_one() {
   echo "$(( $(date +%s) - svc_start ))" > "$RESULTS_DIR/${name}.dur"
 }
 
-# ── Launch services in parallel ──────────────────────────────────
-RUNNING=0
+# ── Launch services in parallel (xargs-based) ────────────────────
+SHIP_CMDS=$(mktemp)
 
 while IFS='|' read -r dir name has_docker; do
   if [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ]; then
@@ -102,16 +102,17 @@ while IFS='|' read -r dir name has_docker; do
     continue
   fi
 
-  while [ "$RUNNING" -ge "$MAX_PARALLEL" ]; do
-    wait -n 2>/dev/null || true
-    RUNNING=$(jobs -rp | wc -l)
-  done
-
-  ship_one "$dir" "$name" "$has_docker" &
-  RUNNING=$(jobs -rp | wc -l)
+  echo "$dir|$name|$has_docker" >> "$SHIP_CMDS"
 done <<< "$SERVICES"
 
-wait
+export -f ship_one
+export RESULTS_DIR
+
+cat "$SHIP_CMDS" | xargs -P "$MAX_PARALLEL" -I{} bash -c '
+  IFS="|" read -r dir name has_docker <<< "{}"
+  ship_one "$dir" "$name" "$has_docker"
+'
+rm -f "$SHIP_CMDS"
 
 # ── Collect results ──────────────────────────────────────────────
 OK=0; FAIL=0; SKIP=0
