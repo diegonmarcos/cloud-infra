@@ -63,6 +63,7 @@ jobs:
           context: workflows/src/deps
           file: workflows/src/deps/docker/Dockerfile
           push: true
+          no-cache: true
           build-args: |
             DOCKERFILE_B64=${{ steps.dockerfile.outputs.b64 }}
             NIX_SYSTEM=${{ matrix.nix_system }}
