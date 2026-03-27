@@ -147,7 +147,7 @@ step_deploy() {
         # Nix flakes in git repos only see tracked files — force-stage dist/
         git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
         log "Staged dist/ for nix ($(git -C "$DIST_DIR" ls-files "$DIST_DIR" 2>/dev/null | wc -l) files)"
-        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/deps"
+        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
         NIX_BUILD_CMD="nix build --no-link --print-out-paths --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
 
         log "Flake: $DIST_DIR"
@@ -284,7 +284,7 @@ step_docker_package() {
     log "Nix cmd: $NIX_BUILD_CMD"
 
     set +e
-    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/deps"
+    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
     if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
         log "Using deps devShell from $DEPS_FLAKE"
         NIX_OUT=$(nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
