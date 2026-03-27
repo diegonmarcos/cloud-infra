@@ -45,6 +45,11 @@ TOTAL=$(echo "$SERVICES" | wc -l)
 _CORES=$(nproc 2>/dev/null || echo 2)
 MAX_PARALLEL="${SHIP_PARALLEL:-$(( _CORES > 1 ? _CORES - 1 : 1 ))}"  # nproc-1, min 1
 
+# ── Pre-establish SSH multiplex master connection ────────────────
+# One persistent connection — all parallel services reuse it via ControlPath
+SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
+ssh $SSH_OPTS -fNM "$VM" 2>/dev/null && log "SSH multiplex master established to $VM" || log "SSH multiplex: $VM unreachable (will retry per-service)"
+
 # ── Pre-stage cloud-data into all services' src/ (before parallel jobs) ──
 # Parallel builds race on git index — stage everything once, serially.
 CLOUD_DATA_DIR="$REPO_ROOT/cloud-data"
