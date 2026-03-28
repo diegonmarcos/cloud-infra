@@ -134,12 +134,20 @@ let
       ionice -c3 nice -n10 /usr/bin/docker compose "$@"
   '';
 
+  buildxWrapper = ''
+    #!/bin/sh
+    # Wrapper: runs docker buildx inside docker.slice (CPU+mem capped)
+    exec systemd-run --quiet --scope --slice=docker.slice \
+      ionice -c3 nice -n10 /usr/bin/docker buildx "$@"
+  '';
+
 in {
   home.file = dropInFiles // {
     ".local/share/system-protection/connectivity.slice".text = connectivitySlice;
     ".local/share/system-protection/docker.slice".text = dockerSlice;
     ".local/share/system-protection/docker-wrapper.sh" = { text = dockerWrapper; executable = true; };
     ".local/share/system-protection/docker-compose-wrapper.sh" = { text = composeWrapper; executable = true; };
+    ".local/share/system-protection/docker-buildx-wrapper.sh" = { text = buildxWrapper; executable = true; };
   };
 
   home.activation.installScheduler = lib.hm.dag.entryAfter ["installResourceBouncer" "installWatchdogDropbear"] ''
@@ -156,10 +164,11 @@ in {
     $SUDO cp -f "$SRC/connectivity.slice" /etc/systemd/system/connectivity.slice
     $SUDO cp -f "$SRC/docker.slice" /etc/systemd/system/docker.slice
 
-    # Deploy docker wrappers (caps CLI processes in docker.slice)
+    # Deploy docker wrappers (caps ALL docker CLI processes in docker.slice)
     $SUDO cp -f "$SRC/docker-wrapper.sh" /usr/local/bin/docker-capped
     $SUDO cp -f "$SRC/docker-compose-wrapper.sh" /usr/local/bin/docker-compose-capped
-    $SUDO chmod +x /usr/local/bin/docker-capped /usr/local/bin/docker-compose-capped
+    $SUDO cp -f "$SRC/docker-buildx-wrapper.sh" /usr/local/bin/docker-buildx-capped
+    $SUDO chmod +x /usr/local/bin/docker-capped /usr/local/bin/docker-compose-capped /usr/local/bin/docker-buildx-capped
 
     ${deployScript}
 
