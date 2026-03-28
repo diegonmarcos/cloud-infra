@@ -11,42 +11,6 @@
 name: "Ship → oci-apps"
 
 on:
-  push:
-    paths:
-      - "a_solutions/ca-dat_backup-borg/src/**"
-      - "a_solutions/ca-dat_backup-bup/src/**"
-      - "a_solutions/ca-dat_backup-gitea/src/**"
-      - "a_solutions/bc-obs_c3-infra-api/src/**"
-      - "a_solutions/bc-obs_c3-infra-mcp/src/**"
-      - "a_solutions/bc-obs_c3-services-api/src/**"
-      - "a_solutions/bc-obs_c3-services-mcp/src/**"
-      - "a_solutions/bc-obs_cloud-cgc-mcp/src/**"
-      - "a_solutions/bc-obs_cloud-spec/src/**"
-      - "a_solutions/aa-sui_code-server/src/**"
-      - "a_solutions/ac-fin_crawlee-cloud/src/**"
-      - "a_solutions/aa-sui_etherpad/src/**"
-      - "a_solutions/aa-sui_filebrowser/src/**"
-      - "a_solutions/ca-dat_gitea/src/**"
-      - "a_solutions/aa-sui_google-workspace-mcp/src/**"
-      - "a_solutions/aa-sui_grist/src/**"
-      - "a_solutions/aa-sui_hedgedoc/src/**"
-      - "a_solutions/ca-dat_kg-graph/src/**"
-      - "a_solutions/bc-obs_lgtm/src/**"
-      - "a_solutions/aa-sui_mail-mcp/src/**"
-      - "a_solutions/aa-sui_mattermost-bots/src/**"
-      - "a_solutions/aa-sui_mattermost-mcp/src/**"
-      - "a_solutions/bc-obs_nocodb/src/**"
-      - "a_solutions/ad-agi_ollama-hai/src/**"
-      - "a_solutions/bb-sec_orchestrator/src/**"
-      - "a_solutions/aa-sui_photoprism/src/**"
-      - "a_solutions/aa-sui_photos-webhook/src/**"
-      - "a_solutions/ac-fin_quant-lab-light/src/**"
-      - "a_solutions/aa-sui_radicale/src/**"
-      - "a_solutions/aa-sui_revealmd/src/**"
-      - "a_solutions/ad-agi_rig-agentic-hai-1.5bq4/src/**"
-      - "a_solutions/ad-agi_rig-agentic-sonn-14bq8/src/**"
-      - "a_solutions/bc-obs_windmill/src/**"
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -68,17 +32,17 @@ jobs:
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
             -e SSH_HOST='82.70.229.129' \
             -e SSH_USER='ubuntu' \
             -e SSH_ALIAS='oci-apps' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \

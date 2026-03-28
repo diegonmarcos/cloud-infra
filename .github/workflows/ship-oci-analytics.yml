@@ -11,16 +11,6 @@
 name: "Ship → oci-analytics"
 
 on:
-  push:
-    paths:
-      - "a_solutions/bc-obs_alerts-api/src/**"
-      - "a_solutions/bc-obs_dozzle/src/**"
-      - "a_solutions/bc-obs_fluent-bit/src/**"
-      - "a_solutions/bc-obs_matomo/src/**"
-      - "a_solutions/bb-sec_sauron-central/src/**"
-      - "a_solutions/bc-obs_sauron-forwarder/src/**"
-      - "a_solutions/bc-obs_umami/src/**"
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -42,17 +32,17 @@ jobs:
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
             -e SSH_HOST='129.151.228.66' \
             -e SSH_USER='ubuntu' \
             -e SSH_ALIAS='oci-analytics' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \

@@ -10,12 +10,11 @@
 #   - /opt/scripts/container-init.sh (from container-control-init.sh)
 #   - /opt/scripts/cloud-data-home-manager.json (for runtime config)
 #   - /etc/systemd/system/docker.service (nix dockerd path)
-#   - /etc/docker/daemon.json (iptables + DNS)
+#   - /etc/docker/daemon.json → moved to container-control-daemon.nix
 #   - /etc/systemd/system/container-init.service
 { config, pkgs, lib, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
   dockerdBin = "${pkgs.docker}/bin/dockerd";
 in {
   # ── Script: standalone .sh file (no nix interpolation) ──────────────
@@ -45,12 +44,9 @@ in {
     KillMode=process
   '';
 
-  # ── Docker daemon config — single owner (iptables + DNS) ────────────
-  home.file.".local/share/container-init/daemon.json".text = builtins.toJSON {
-    iptables = false;
-    ip6tables = false;
-    dns = [ cloudData.dns.primary cloudData.dns.fallback ];
-  };
+  # ── Docker daemon config → container-control-daemon.nix ─────────────
+  # daemon.json generation and deployment moved to container-control-daemon.nix
+  # which merges settings from modular sub-modules (security, firewall, network).
 
   # ── Systemd unit — resource-limited so SSH never hangs ──────────────
   home.file.".local/share/container-init/container-init.service".text = ''
@@ -104,16 +100,7 @@ in {
       echo "[container-init] docker.service deployed"
     fi
 
-    # Deploy daemon.json (only if changed)
-    DAEMON_SRC="$SRC/daemon.json"
-    DAEMON_DEST="/etc/docker/daemon.json"
-    $SUDO mkdir -p /etc/docker
-    DJNEW=$(cat "$DAEMON_SRC")
-    DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
-    if [ "$DJNEW" != "$DJOLD" ]; then
-      echo "$DJNEW" | $SUDO tee "$DAEMON_DEST" > /dev/null
-      echo "[container-init] daemon.json deployed"
-    fi
+    # daemon.json deployment → container-control-daemon.nix
 
     # Deploy container-init.service (only if changed)
     UNIT_DEST="/etc/systemd/system/container-init.service"
