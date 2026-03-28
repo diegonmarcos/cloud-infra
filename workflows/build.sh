@@ -40,6 +40,13 @@ case "${1:-deploy}" in
             log "Deployed hooks → .github/workflows/hooks/"
         fi
 
+        # Deploy repo-root configs (e.g. .gitmodules)
+        for f in "$DIST_DIR"/.git*; do
+            [ -f "$f" ] || continue
+            cp "$f" "$REPO_ROOT/"
+            log "Deployed $(basename "$f") → repo root"
+        done
+
         log "Done"
         ;;
     *)
