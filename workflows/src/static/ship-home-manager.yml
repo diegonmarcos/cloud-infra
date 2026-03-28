@@ -83,6 +83,7 @@ jobs:
           docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $HOME/.docker:/root/.docker \
             -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
             -e GITHUB_ACTOR='${{ github.actor }}' \
             -e SSH_KEY='${{ secrets[matrix.key_secret] }}' \
