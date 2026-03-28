@@ -1,22 +1,27 @@
 # System Protection — Layer 2: Identity & System Slice Hierarchy
 #
-# Three sub-slices under system.slice, each with a shared CPU budget:
+# LOCAL (system.slice) — daemons started by systemd:
+#   ├── kernel.slice        → NO CAP   — bare minimum for Linux to function
+#   ├── os-essentials.slice → 95% cap  — protection + connectivity daemons
+#   └── workload.slice      → 75% cap  — everything else (catch-all)
 #
-#   system.slice/
-#   ├── kernel.slice       → NO CAP    — bare minimum for Linux to function
-#   ├── os-essentials.slice → 95% cap  — our protection + connectivity daemons
-#   └── workload.slice      → 75% cap  — everything else (docker, containers, etc.)
+# REMOTE (user.slice) — login sessions via OpenSSH:
+#   ├── user-0.slice        → 90% cap  — root SSH (emergency maintenance)
+#   └── user-1000.slice     → 75% cap  — diego SSH (normal operations)
 #
-# CPU budget guarantees (on a 1 vCPU machine):
-#   kernel:        always gets at least 5%  (100% - 95%)
-#   os-essentials: always gets at least 20% (95% - 75%)
-#   workload:      capped at 75% total shared
+# Dropbear (rescue-ssh) sessions stay in os-essentials.slice (95%)
+# because dropbear doesn't use PAM/logind — rescue access by design.
 #
-# Plus: user-{uid}.slice capped at 75% (SSH sessions, compose CLI, etc.)
+# CPU guarantees (1 vCPU):
+#   kernel:        ≥5%  (uncapped, gets what's left)
+#   os-essentials: ≥20% (95% - 75%)
+#   workload:      ≤75% (hard cap, shared)
+#   user-0:        ≤90% (root emergency)
+#   user-1000:     ≤75% (normal ops)
 #
-# Design: enumerate all active services, classify into one of three slices.
-# Anything not explicitly in kernel or os-essentials → workload (capped).
-# Re-runs on every HM activation — new services automatically get classified.
+# Classification: enumerate active services, match against lists.
+# Anything not in kernel or os-essentials → workload (catch-all, capped).
+# Re-runs on every HM activation.
 #
 # Imported by: system-protection.nix (orchestrator)
 #
@@ -29,6 +34,7 @@ let
   # kernel.slice = no cap (implicit 100%)
 
   # ── User slice limits ─────────────────────────────────────────────────
+  # user-1000 (diego): normal operations, same cap as workload
   userCpuQuota = workloadCpuQuota;
   userMemHighMB = ramMB * 75 / 100;
   userMemMaxMB  = ramMB * 85 / 100;
@@ -40,6 +46,20 @@ let
     MemoryHigh=${toString userMemHighMB}M
     MemoryMax=${toString userMemMaxMB}M
     IOWeight=100
+  '';
+
+  # user-0 (root): emergency maintenance, generous but bounded
+  rootCpuQuota = 90;
+  rootMemHighMB = ramMB * 85 / 100;
+  rootMemMaxMB  = ramMB * 95 / 100;
+
+  rootSliceConf = ''
+    [Slice]
+    Description=Root (UID 0) resource limits — emergency SSH maintenance
+    CPUQuota=${toString rootCpuQuota}%
+    MemoryHigh=${toString rootMemHighMB}M
+    MemoryMax=${toString rootMemMaxMB}M
+    IOWeight=200
   '';
 
   # ── Slice definitions ─────────────────────────────────────────────────
@@ -115,8 +135,9 @@ in {
     ".local/share/system-protection/kernel.slice".text = kernelSliceConf;
     ".local/share/system-protection/os-essentials.slice".text = osEssentialsSliceConf;
     ".local/share/system-protection/workload.slice".text = workloadSliceConf;
-    # User slice
+    # User slices
     ".local/share/system-protection/user-${toString userId}-slice-limits.conf".text = userSliceConf;
+    ".local/share/system-protection/user-0-slice-limits.conf".text = rootSliceConf;
     # Classification lists
     ".local/share/system-protection/kernel-services.list".text = kernelListText;
     ".local/share/system-protection/os-essentials-services.list".text = osEssentialsListText;
@@ -137,10 +158,16 @@ in {
     $SUDO cp -f "$SRC/os-essentials.slice" /etc/systemd/system/os-essentials.slice
     $SUDO cp -f "$SRC/workload.slice" /etc/systemd/system/workload.slice
 
-    # ── Deploy user slice cap ────────────────────────────────────────────
+    # ── Deploy user slice caps ───────────────────────────────────────────
+    # user-1000 (diego) — normal operations
     $SUDO mkdir -p "/etc/systemd/system/user-${toString userId}.slice.d"
     $SUDO cp -f "$SRC/user-${toString userId}-slice-limits.conf" \
       "/etc/systemd/system/user-${toString userId}.slice.d/limits.conf"
+
+    # user-0 (root) — emergency maintenance
+    $SUDO mkdir -p "/etc/systemd/system/user-0.slice.d"
+    $SUDO cp -f "$SRC/user-0-slice-limits.conf" \
+      "/etc/systemd/system/user-0.slice.d/limits.conf"
 
     # ── Classify services into slices ────────────────────────────────────
     # Helper: check if service matches any pattern in a list file
@@ -190,6 +217,7 @@ in {
     $SUDO systemctl daemon-reload
 
     echo "[layer2-identity] user-${toString userId}.slice CPU=${toString userCpuQuota}% MemHigh=${toString userMemHighMB}M MemMax=${toString userMemMaxMB}M"
+    echo "[layer2-identity] user-0.slice CPU=${toString rootCpuQuota}% MemHigh=${toString rootMemHighMB}M MemMax=${toString rootMemMaxMB}M"
     echo "[layer2-identity] system slices: kernel=$KERNEL_COUNT (no cap) | os-essentials=$ESSENTIAL_COUNT (${toString osEssentialsCpuQuota}%) | workload=$WORKLOAD_COUNT (${toString workloadCpuQuota}%)"
     ) || echo "[layer2-identity] FAILED — activation continues"
   '';
