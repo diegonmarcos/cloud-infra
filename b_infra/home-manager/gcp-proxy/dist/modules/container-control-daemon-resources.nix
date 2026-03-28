@@ -23,5 +23,31 @@
 { config, pkgs, lib, ... }:
 
 {
-  # Intentionally empty — see comments above for where limits are enforced.
+  home.file.".local/share/system-protection/docker-daemon.json".text = builtins.toJSON {
+    default-ulimits = {
+      nofile = { Name = "nofile"; Hard = 65536; Soft = 65536; };
+    };
+    log-driver = "json-file";
+    log-opts = {
+      max-size = "10m";
+      max-file = "3";
+    };
+  };
+
+  home.activation.installDockerDaemonConfig = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    (
+    SUDO=""
+    for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
+      [ -x "$p" ] && SUDO="$p" && break
+    done
+    [ -z "$SUDO" ] && exit 0
+
+    SRC="$HOME/.local/share/system-protection/docker-daemon.json"
+    if [ -f "$SRC" ]; then
+      $SUDO mkdir -p /etc/docker
+      $SUDO cp -f "$SRC" /etc/docker/daemon.json
+      echo "[docker-daemon] daemon.json deployed"
+    fi
+    ) || echo "[docker-daemon] FAILED"
+  '';
 }
