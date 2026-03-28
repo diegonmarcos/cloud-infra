@@ -54,12 +54,12 @@ jobs:
               chmod 600 ~/.ssh/cloud_data_key
               ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
               export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
-              # Clone repo
-              git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace
-              cd /workspace
+              # Clone repo (path must match GIT_BASE + "cloud")
+              git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /cloud
+              cd /cloud
               git submodule update --remote
               git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
               export GIT_BASE=/
-              export GITHUB_WORKSPACE=/workspace
+              export GITHUB_WORKSPACE=/cloud
               bash .github/workflows/scripts/ship-gen-configs.sh
             '

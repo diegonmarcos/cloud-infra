@@ -508,8 +508,13 @@ case "${1:-all}" in
     docker-push)     step_docker_push ;;
     all)             step_build; step_secrets ;;
     ship)
-        if [ "$HM_DELIVERY" = "docker" ]; then
+        if [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" != "true" ]; then
+            # Docker delivery: build locally → package → push to GHCR → VM pulls
             step_build; step_secrets; step_docker_package; step_docker_push
+        elif [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" = "true" ]; then
+            # ARM: can't cross-compile nix on x86 — remote build + activate on VM
+            log "Remote builder: falling back to deploy+compose (skip docker packaging)"
+            step_build; step_secrets; step_deploy; step_compose
         else
             step_build; step_secrets; step_deploy; step_compose
         fi

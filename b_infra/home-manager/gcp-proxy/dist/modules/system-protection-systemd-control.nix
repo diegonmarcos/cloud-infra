@@ -73,7 +73,9 @@ in {
     BLACKLIST=(${blacklistBash})
     for unit in "''${BLACKLIST[@]}"; do
       if $SUDO systemctl is-enabled "$unit" >/dev/null 2>&1; then
-        $SUDO systemctl disable --now "$unit" 2>/dev/null
+        # disable only — do NOT use --now (would kill running Docker during HM activation)
+        # Docker lifecycle is owned by container-init, which starts it on boot
+        $SUDO systemctl disable "$unit" 2>/dev/null
         DISABLED=$((DISABLED + 1))
         echo "$LOG DISABLED: $unit"
       fi
