@@ -14,6 +14,9 @@ echo "── Committing cloud-data ──"
 cd cloud-data
 git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
 git config user.email "${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}"
+# Switch remote to SSH so deploy key works (submodule was cloned via HTTPS)
+CLOUD_DATA_REPO=$(git remote get-url origin | sed 's|https://github.com/|git@github.com:|')
+git remote set-url origin "$CLOUD_DATA_REPO"
 
 git stash --include-untracked 2>/dev/null || true
 git checkout main 2>/dev/null || true
