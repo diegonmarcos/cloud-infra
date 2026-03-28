@@ -157,6 +157,19 @@ in {
 
     SRC="$HOME/.local/share/system-protection"
 
+    # ── Remove imperative cpu-watchdog (replaced by cgroup slices) ──────
+    if $SUDO systemctl is-active cpu-watchdog.service >/dev/null 2>&1; then
+      $SUDO systemctl stop cpu-watchdog.service 2>/dev/null || true
+      echo "[layer2-identity] stopped imperative cpu-watchdog"
+    fi
+    if [ -f /etc/systemd/system/cpu-watchdog.service ]; then
+      $SUDO systemctl disable cpu-watchdog.service 2>/dev/null || true
+      $SUDO rm -f /etc/systemd/system/cpu-watchdog.service
+      $SUDO rm -f /usr/local/bin/cpu-watchdog.sh
+      $SUDO systemctl daemon-reload
+      echo "[layer2-identity] removed imperative cpu-watchdog (replaced by cgroup slices)"
+    fi
+
     # ── Deploy slice definitions ─────────────────────────────────────────
     $SUDO cp -f "$SRC/kernel.slice" /etc/systemd/system/kernel.slice
     $SUDO cp -f "$SRC/os-essentials.slice" /etc/systemd/system/os-essentials.slice
