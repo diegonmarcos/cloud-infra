@@ -12,11 +12,14 @@ let
   vmData = cloudData.vms.${vmName};
   ramMB = vmData.specs.ram_gb * 1024;
   rescuePort = vmData.rescue_port;
+  userName = vmData.user;
+  userId = 1000;
 in {
   imports = [
     (import ./system-protection-resource-bouncer.nix { inherit config pkgs lib ramMB; })
     (import ./system-protection-watchdog-dropbear.nix { inherit config pkgs lib ramMB rescuePort; })
     (import ./system-protection-scheduler-fifo-rr-cfs.nix { inherit config pkgs lib ramMB; })
+    (import ./system-protection-layer2-identity.nix { inherit config pkgs lib ramMB userName userId; })
     # system-protection-guardrails.nix + system-protection-no-build-guard.nix via shared-all.nix
   ];
 }
