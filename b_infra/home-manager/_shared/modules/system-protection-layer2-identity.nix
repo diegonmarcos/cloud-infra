@@ -25,6 +25,25 @@
 #
 # Imported by: system-protection.nix (orchestrator)
 #
+# ┌─────────────────────────┬────────────────┬──────────┬──────────────┐
+# │ Slice                   │ CPU (×cores)   │ MemHigh  │ MemMax       │
+# ├─────────────────────────┼────────────────┼──────────┼──────────────┤
+# │ kernel.slice            │ uncapped       │ —        │ —            │
+# │ os-essentials.slice     │ 95% of total   │ —        │ —            │
+# │ workload.slice          │ 75% of total   │ —        │ —            │
+# ├─────────────────────────┼────────────────┼──────────┼──────────────┤
+# │ user-{uid} (diego)      │ 75% of total   │ 75% RAM │ 85% RAM      │
+# │ user-0 (root)           │ 90% of total   │ 85% RAM │ 95% RAM      │
+# ├─────────────────────────┼────────────────┼──────────┼──────────────┤
+# │ sshd                    │ FIFO p1        │ —        │ os-essentials│
+# │ wg-quick@*              │ FIFO p1        │ —        │ os-essentials│
+# │ rescue-ssh (dropbear)   │ FIFO p1        │ —        │ os-essentials│
+# │ earlyoom                │ RR p1          │ —        │ os-essentials│
+# │ watchdog-petter         │ RR p1          │ —        │ os-essentials│
+# │ docker, container-init  │ CFS            │ —        │ workload     │
+# │ (catch-all)             │ CFS            │ —        │ workload     │
+# └─────────────────────────┴────────────────┴──────────┴──────────────┘
+#
 { config, pkgs, lib, ramMB, cpus ? 1, userName ? "diego", userId ? 1000, ... }:
 
 let
