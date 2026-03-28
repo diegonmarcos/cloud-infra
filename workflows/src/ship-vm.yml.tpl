@@ -1,6 +1,9 @@
 name: "Ship → {{VM_NAME}}"
 
 on:
+  push:
+    paths:
+{{PATH_FILTERS}}    branches: [main]
   workflow_dispatch:
 
 concurrency:
