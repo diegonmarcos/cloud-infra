@@ -35,25 +35,41 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-          fetch-depth: 0
-          ssh-key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
-
-      - name: Update submodules
-        run: git submodule update --remote
-
-      - uses: ./.github/actions/setup-deps
-        with:
-          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
-
-      - name: Configure main repo push URL
-        run: git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/diegonmarcos/cloud.git"
-
-      - name: Run
-        shell: bash {0}
-        env:
-          GIT_BASE: ${{ github.workspace }}/../
-        run: bash .github/workflows/scripts/ship-gen-configs.sh
+      - name: Generate inside cloud-builder
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
+          docker run --rm \
+            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e CLOUD_DATA_DEPLOY_KEY='${{ secrets.CLOUD_DATA_DEPLOY_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTIONS=true \
+            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_SHA="${{ github.sha }}" \
+            -e GIT_AUTHOR_NAME="github-actions[bot]" \
+            -e GIT_AUTHOR_EMAIL="github-actions[bot]@users.noreply.github.com" \
+            ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
+            bash -c '
+              # Setup SOPS
+              mkdir -p ~/.config/sops/age
+              echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+              export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+              # Setup SSH for cloud-data push
+              mkdir -p ~/.ssh
+              echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
+              chmod 600 ~/.ssh/cloud_data_key
+              ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
+              export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
+              # Clone repo
+              git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace
+              cd /workspace
+              git submodule update --remote
+              git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+              export GIT_BASE=/
+              export GITHUB_WORKSPACE=/workspace
+              bash .github/workflows/scripts/ship-gen-configs.sh
+            '

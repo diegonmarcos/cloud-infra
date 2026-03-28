@@ -11,14 +11,6 @@
 name: "Ship → oci-mail"
 
 on:
-  push:
-    paths:
-      - "a_solutions/bc-obs_dagu/src/**"
-      - "a_solutions/aa-sui_tools-smtp-proxy/src/**"
-      - "a_solutions/aa-sui_snappymail/src/**"
-      - "a_solutions/aa-sui_tools-stalwart/src/**"
-      - "a_solutions/bc-obs_syslog-forwarder/src/**"
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -40,17 +32,17 @@ jobs:
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
             -e SSH_HOST='130.110.251.193' \
             -e SSH_USER='ubuntu' \
             -e SSH_ALIAS='oci-mail' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \

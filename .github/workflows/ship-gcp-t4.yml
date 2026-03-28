@@ -11,10 +11,6 @@
 name: "Ship → gcp-t4"
 
 on:
-  push:
-    paths:
-      - "a_solutions/ad-agi_ollama/src/**"
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -36,17 +32,17 @@ jobs:
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
             -e SSH_HOST='${{ secrets.GCP_T4_HOST }}' \
             -e SSH_USER='${{ secrets.GCP_T4_USER }}' \
             -e SSH_ALIAS='gcp-t4' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \

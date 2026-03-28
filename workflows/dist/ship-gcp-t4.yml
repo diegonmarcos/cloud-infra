@@ -11,10 +11,6 @@
 name: "Ship → gcp-t4"
 
 on:
-  push:
-    paths:
-      - "a_solutions/ad-agi_ollama/src/**"
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -26,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read
+      packages: write
     steps:
       - name: Ship inside cloud-builder
         run: |
@@ -35,20 +31,23 @@ jobs:
           mkdir -p "${{ runner.temp }}/traces"
           docker run --rm \
             -v "${{ runner.temp }}/traces:/traces" \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             -e TRACE_DIR=/traces \
             -e SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
             -e SSH_HOST='${{ secrets.GCP_T4_HOST }}' \
             -e SSH_USER='${{ secrets.GCP_T4_USER }}' \
             -e SSH_ALIAS='gcp-t4' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \
             ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS'
+            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && stdbuf -oL bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS 2>&1 | stdbuf -oL cat'
 
       - name: Push traces to cloud-data
         if: always()

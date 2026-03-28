@@ -1,9 +1,6 @@
 name: "Ship → {{VM_NAME}}"
 
 on:
-  push:
-    paths:
-{{PATH_FILTERS}}    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -35,7 +32,7 @@ jobs:
             -e GITHUB_ACTOR='${{ github.actor }}' \
             -e GITHUB_ACTIONS=true \
             -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
-            -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" \
+            -e GITHUB_REPOSITORY="diegonmarcos/cloud" \
             -e GITHUB_RUN_ID="${{ github.run_id }}" \
             -e GITHUB_SHA="${{ github.sha }}" \
             -e FORCE_DEPLOY=1 \

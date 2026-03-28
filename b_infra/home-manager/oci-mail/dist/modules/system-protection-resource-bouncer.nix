@@ -76,9 +76,8 @@ in {
     Type=simple
     ExecStart=${pkgs.earlyoom}/bin/earlyoom \
       -m 10 -s 10 \
-      -M 5 -S 5 \
-      --prefer "^(containerd-shim|nix-daemon|nix-build|nix)$" \
-      --avoid "^(sshd|ssh|systemd|earlyoom|dbus|wg-quick|wg)$" \
+      --prefer "^(containerd-shim|nix-daemon|nix-build|nix)" \
+      --avoid "^(sshd|ssh|systemd|earlyoom|dbus|wg-quick|wg)" \
       -r 0
     Restart=always
     RestartSec=2
