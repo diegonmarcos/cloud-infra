@@ -113,7 +113,7 @@ let
   dockerSlice = ''
     [Slice]
     Description=Docker workloads slice — daemon, CLI, containers
-    CPUQuota=${toString (if ramMB <= 2048 then 80 else 150)}%
+    CPUQuota=${toString (if ramMB <= 2048 then 75 else 150)}%
     MemoryMax=${toString dockerMaxMB}M
     MemoryHigh=${toString (dockerMaxMB * 9 / 10)}M
     IOWeight=50
