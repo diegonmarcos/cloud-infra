@@ -82,6 +82,8 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
           docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $HOME/.docker/config.json:/root/.docker/config.json:ro \
             -e SSH_KEY='${{ secrets[matrix.key_secret] }}' \
             -e SSH_HOST='${{ steps.resolve.outputs.host }}' \
             -e SSH_USER='${{ steps.resolve.outputs.user }}' \
