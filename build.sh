@@ -516,28 +516,25 @@ cmd_workflow() {
     GH_DIR="$SCRIPT_DIR/.github/workflows"
     mkdir -p "$WF_DIST"
 
-    # Verify templates exist
-    for tpl in ship-vm.yml.tpl ship-ghcr.yml.tpl; do
-        [ -f "$WF_SRC/$tpl" ] || { log_error "Missing template: workflows/src/$tpl"; exit 1; }
-    done
-
-    # ── Copy static workflows first (always works, no dependencies) ──
+    # ── Copy static workflows (ship.yml + health + terraform + etc.) ──
+    # ship.yml uses dynamic VM matrix from cloud-data-gha-config.json at runtime
+    # — no per-VM template generation needed
+    rm -f "$WF_DIST"/*.yml
     for f in "$WF_SRC"/static/*.yml; do
         [ -f "$f" ] || continue
         cp "$f" "$WF_DIST/"
     done
-    log "  Static workflows copied"
+    generated=$(ls "$WF_DIST"/*.yml 2>/dev/null | wc -l)
+    log "  Static workflows copied ($generated files)"
 
-    # ── Read GHA config from cloud-data (source of truth) ──
+    # ── Regenerate cloud-data-gha-config.json (source of truth for ship.yml detect job) ──
     GHA_CONFIG="$SCRIPT_DIR/cloud-data/cloud-data-gha-config.json"
-    # Always regenerate — cloud-data is dynamic, never trust stale files
     {
         log "Generating cloud-data-gha-config.json via tsx..."
         C3_SRC="$SCRIPT_DIR/a_solutions/bc-obs_c3-infra-api/src"
         TOPO_FILE="$SCRIPT_DIR/cloud-data/cloud-data-topology.json"
 
         if [ -f "$TOPO_FILE" ] && [ -f "$C3_SRC/gen-gha-config.ts" ]; then
-            # Run the generator .ts file from the C3 source directory (tsx resolves imports)
             CONFIG_JSON_PATH="$TOPO_FILE" GIT_BASE="${GIT_BASE:-$(dirname "$SCRIPT_DIR")}" \
             tsx "$C3_SRC/gen-gha-config.ts" > "$GHA_CONFIG" 2>/dev/null
 
@@ -549,167 +546,7 @@ cmd_workflow() {
             fi
         fi
     }
-
-    # Final check — if generation failed, deploy static only
-    if [ ! -f "$GHA_CONFIG" ]; then
-        log_error "No cloud-data-gha-config.json and no topology to generate from"
-        log "Deploying static workflows only."
-        for f in "$WF_DIST"/*.yml; do
-            [ -f "$f" ] || continue
-            head -1 "$f" | grep -q 'DO NOT EDIT' || {
-                tmp="$f.tmp"; printf '%s\n' "$HEADER" | cat - "$f" > "$tmp" && mv "$tmp" "$f"
-            }
-        done
-        find "$GH_DIR" -maxdepth 1 -name '*.yml' -type f -exec rm -f {} +
-        cp "$WF_DIST"/*.yml "$GH_DIR/"
-        log "Deployed static workflows only ($(ls "$WF_DIST"/*.yml 2>/dev/null | wc -l) files)"
-        return 0
-    fi
-
-    # Build ssh_map from cloud-data (format: vm_alias|secret_key|host_or_secret|user_or_secret)
-    ssh_map=$(jq -r '.vms | to_entries[] | [
-        .key,
-        .value.ssh_secret,
-        (.value.host // .value.host_secret),
-        (.value.user // .value.user_secret)
-    ] | join("|")' "$GHA_CONFIG")
-
-    # ── Group services by deploy.host from cloud-data ──
-    vm_list=""
-    ghcr_dirs=""
-    rm -f /tmp/wf_vm_*.txt
-
-    # Read services from cloud-data (frozen already excluded by C3 API)
-    for svc in $(jq -r '.services | keys[]' "$GHA_CONFIG"); do
-        dir=$(jq -r ".services[\"$svc\"].dir" "$GHA_CONFIG")
-        vm=$(jq -r ".services[\"$svc\"].vm" "$GHA_CONFIG")
-        has_docker=$(jq -r ".services[\"$svc\"].has_docker" "$GHA_CONFIG")
-
-        case " $vm_list " in *" $vm "*) ;; *) vm_list="$vm_list $vm" ;; esac
-        echo "$dir|$svc|$has_docker" >> "/tmp/wf_vm_${vm}.txt"
-
-        # Track GHCR dirs for docker-only services
-        [ "$has_docker" = "true" ] && ghcr_dirs="$ghcr_dirs $dir"
-    done
-
-    # Clean old dist
-    rm -f "$WF_DIST"/*.yml
-    generated=0
-
-    # ── Per-VM deploy workflows from template ──
-    for vm in $vm_list; do
-        svc_file="/tmp/wf_vm_${vm}.txt"
-        [ -f "$svc_file" ] || continue
-
-        # Lookup SSH config
-        ssh_key=""; ssh_host=""; ssh_user=""
-        echo "$ssh_map" | while IFS='|' read -r alias key host user; do
-            [ "$alias" = "$vm" ] && echo "$key|$host|$user"
-        done | read -r ssh_key ssh_host ssh_user 2>/dev/null || true
-        # Fallback: grep approach for subshell safety
-        if [ -z "$ssh_key" ]; then
-            line=$(echo "$ssh_map" | grep "^${vm}|" || true)
-            ssh_key=$(echo "$line" | awk -F'|' '{print $2}')
-            ssh_host=$(echo "$line" | awk -F'|' '{print $3}')
-            ssh_user=$(echo "$line" | awk -F'|' '{print $4}')
-        fi
-        [ -z "$ssh_key" ] && { log_error "No SSH config for VM: $vm"; continue; }
-
-        # Build data fragments
-        path_filters=""
-        ship_steps=""
-        needs_docker=false
-
-        while IFS='|' read -r dir name has_docker; do
-            path_filters="${path_filters}      - \"a_solutions/${dir}/src/**\"
-"
-            if [ "$has_docker" = "true" ]; then
-                needs_docker=true
-                ship_steps="${ship_steps}
-      - name: Ship ${name}
-        if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        env:
-          REMOTE_BUILD: \"true\"
-        run: bash a_solutions/${dir}/build.sh ship
-"
-            else
-                ship_steps="${ship_steps}
-      - name: Ship ${name}
-        if: contains(steps.changed.outputs.dirs, '${dir}') || github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: bash a_solutions/${dir}/build.sh ship
-"
-            fi
-        done < "$svc_file"
-
-        # SSH secret references (literal value vs secret reference)
-        if echo "$ssh_host" | grep -qE '^[0-9]'; then
-            ssh_host_val="$ssh_host"
-            ssh_user_val="$ssh_user"
-        else
-            ssh_host_val="\${{ secrets.${ssh_host} }}"
-            ssh_user_val="\${{ secrets.${ssh_user} }}"
-        fi
-
-        # Apply template
-        awk -v vm="$vm" \
-            -v paths="$path_filters" \
-            -v ssh_key_secret="$ssh_key" \
-            -v ssh_host_val="$ssh_host_val" \
-            -v ssh_user_val="$ssh_user_val" \
-            '{
-                gsub("{{VM_NAME}}", vm)
-                gsub("{{PATH_FILTERS}}", paths)
-                gsub("{{SSH_KEY_SECRET}}", ssh_key_secret)
-                gsub("{{SSH_HOST_VALUE}}", ssh_host_val)
-                gsub("{{SSH_USER_VALUE}}", ssh_user_val)
-                print
-            }' "$WF_SRC/ship-vm.yml.tpl" > "$WF_DIST/ship-${vm}.yml"
-
-        generated=$((generated + 1))
-        log "  ship-${vm}.yml ($(wc -l < "$svc_file") services)"
-        rm -f "$svc_file"
-    done
-
-    # ── GHCR image build workflow from template ──
-    if [ -n "$ghcr_dirs" ]; then
-        ghcr_paths=""
-        ghcr_steps=""
-        for dir in $ghcr_dirs; do
-            name=$(jq -r '.name // ""' "$SOLUTIONS_DIR/$dir/build.json")
-            image=$(jq -r '.docker.image // ""' "$SOLUTIONS_DIR/$dir/build.json")
-            pkg_name=$(echo "$image" | awk -F/ '{print $NF}')
-            ghcr_paths="${ghcr_paths}      - \"a_solutions/${dir}/src/**\"
-"
-            ghcr_steps="${ghcr_steps}
-      - name: Build ${name}
-        run: bash a_solutions/${dir}/build.sh docker
-
-      - name: Make ${name} public
-        if: always()
-        env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-        run: gh api --method PUT /user/packages/container/${pkg_name}/visibility -f visibility=public 2>/dev/null || true
-"
-        done
-
-        awk -v paths="$ghcr_paths" -v steps="$ghcr_steps" \
-            '{
-                gsub("{{PATH_FILTERS}}", paths)
-                gsub("{{BUILD_STEPS}}", steps)
-                print
-            }' "$WF_SRC/ship-ghcr.yml.tpl" > "$WF_DIST/ship-ghcr.yml"
-
-        generated=$((generated + 1))
-        log "  ship-ghcr.yml ($(echo $ghcr_dirs | wc -w) images)"
-    fi
-
-    # ── Copy static workflows into dist/ (refresh — already copied early) ──
-    for f in "$WF_SRC"/static/*.yml; do
-        [ -f "$f" ] || continue
-        cp "$f" "$WF_DIST/"
-    done
+    [ -f "$GHA_CONFIG" ] && log "  cloud-data-gha-config.json: $(jq '.services | length' "$GHA_CONFIG") services, $(jq '.vms | length' "$GHA_CONFIG") VMs"
 
     # ── Inject header into ALL dist/ files ──
     HEADER="# ┌──────────────────────────────────────────────────────────────┐
@@ -790,8 +627,7 @@ cmd_workflow() {
         log "  Repo gitconfig deployed"
     fi
 
-    log "Generated $generated workflow(s) → workflows/dist/"
-    log "Copied to .github/workflows/"
+    log "Deployed $generated workflow(s) → workflows/dist/ → .github/workflows/"
 }
 
 # Clean all dist/ folders

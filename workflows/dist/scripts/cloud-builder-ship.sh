@@ -35,11 +35,9 @@ if [ -z "$SERVICES" ]; then
   exit 0
 fi
 
-# Detect changed dirs (GHA provides HEAD~1, CLI/Dagu ships all)
-CHANGED_DIRS=""
-if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ]; then
-  CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
-fi
+# CHANGED_DIRS: passed from GHA detect job, or empty = ship all (CLI/Dagu)
+CHANGED_DIRS="${CHANGED_DIRS:-}"
+[ -n "$CHANGED_DIRS" ] && echo "Changed dirs: $CHANGED_DIRS"
 
 TOTAL=$(echo "$SERVICES" | wc -l)
 _CORES=$(nproc 2>/dev/null || echo 2)
