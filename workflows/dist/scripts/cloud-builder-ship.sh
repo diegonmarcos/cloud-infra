@@ -89,6 +89,19 @@ if [ -d "$CLOUD_DATA_DIR" ]; then
   export CLOUD_DATA_PRESTAGED_BY_CI=true
 fi
 
+# ── Deploy container manifest to VM ────────────────────────────
+# Delivers cloud-data-containers-{vm}.json so vm-images-pull-up.sh knows
+# what images to pull and what services to start.
+MANIFEST_FILE="$REPO_ROOT/cloud-data/cloud-data-containers-${VM}.json"
+if [ -f "$MANIFEST_FILE" ]; then
+  echo "Deploying container manifest to $VM"
+  scp $SSH_OPTS "$MANIFEST_FILE" "$VM:/opt/scripts/containers-${VM}.json" 2>/dev/null \
+    && echo "Manifest deployed: containers-${VM}.json" \
+    || echo "WARN: manifest deploy failed (non-fatal)"
+else
+  echo "WARN: No manifest found at $MANIFEST_FILE"
+fi
+
 echo "═══════════════════════════════════════════════"
 echo "Ship → $VM ($TOTAL services, max $MAX_PARALLEL parallel)"
 echo "═══════════════════════════════════════════════"
@@ -184,6 +197,19 @@ while IFS='|' read -r dir name has_docker; do
 done <<< "$SERVICES"
 
 rm -rf "$RESULTS_DIR"
+
+# ── Post-ship: reconciliation via vm-images-pull-up.sh ─────────
+# Ensures all images are pulled and all services are running,
+# even if individual service ships failed during parallel execution.
+MANIFEST_ON_VM="/opt/scripts/containers-${VM}.json"
+if ssh $SSH_OPTS "$VM" "test -f $MANIFEST_ON_VM && test -f /opt/scripts/vm-images-pull-up.sh" 2>/dev/null; then
+  echo "═══════════════════════════════════════════════"
+  echo "Post-ship reconciliation: vm-images-pull-up.sh"
+  echo "═══════════════════════════════════════════════"
+  ssh $SSH_OPTS "$VM" "sudo /opt/scripts/vm-images-pull-up.sh --manifest $MANIFEST_ON_VM" 2>&1 || true
+else
+  echo "SKIP reconciliation: manifest or script not found on $VM"
+fi
 
 echo ""
 echo "═══════════════════════════════════════════════"
