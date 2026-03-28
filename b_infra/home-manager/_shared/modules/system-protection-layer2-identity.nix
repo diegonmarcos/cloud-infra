@@ -25,17 +25,21 @@
 #
 # Imported by: system-protection.nix (orchestrator)
 #
-{ config, pkgs, lib, ramMB, userName ? "diego", userId ? 1000, ... }:
+{ config, pkgs, lib, ramMB, cpus ? 1, userName ? "diego", userId ? 1000, ... }:
 
 let
-  # ── Slice budgets ──────────────────────────────────────────────────────
-  workloadCpuQuota = 75;
-  osEssentialsCpuQuota = 95;
-  # kernel.slice = no cap (implicit 100%)
+  # ── Slice budgets (scaled by core count) ───────────────────────────────
+  # CPUQuota is relative to ONE core (100% = 1 core, 400% = 4 cores)
+  # We express quotas as percentage of TOTAL CPU:
+  #   75% of total = cpus * 75
+  #   95% of total = cpus * 95
+  workloadCpuQuota = cpus * 75;       # 1 core → 75%, 4 cores → 300%
+  osEssentialsCpuQuota = cpus * 95;   # 1 core → 95%, 4 cores → 380%
+  # kernel.slice = no cap (implicit)
 
   # ── User slice limits ─────────────────────────────────────────────────
-  # user-1000 (diego): normal operations, same cap as workload
-  userCpuQuota = workloadCpuQuota;
+  # user-1000 (diego): normal operations, same ratio as workload
+  userCpuQuota = cpus * 75;
   userMemHighMB = ramMB * 75 / 100;
   userMemMaxMB  = ramMB * 85 / 100;
 
@@ -49,7 +53,7 @@ let
   '';
 
   # user-0 (root): emergency maintenance, generous but bounded
-  rootCpuQuota = 90;
+  rootCpuQuota = cpus * 90;
   rootMemHighMB = ramMB * 85 / 100;
   rootMemMaxMB  = ramMB * 95 / 100;
 
