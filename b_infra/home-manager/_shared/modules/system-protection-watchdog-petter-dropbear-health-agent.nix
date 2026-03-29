@@ -237,7 +237,8 @@ in {
     Slice=connectivity.slice
     Type=simple
     ExecStartPre=/opt/scripts/rescue-ssh-setup.sh
-    ExecStart=${dropbearBin} -F -E -p ${toString rescuePort} -r /etc/dropbear/dropbear_ed25519_host_key
+    ExecStartPre=/bin/sh -c 'WG_IP=$(ip -4 addr show wg0 2>/dev/null | grep -oP "inet \\K[\\d.]+" || echo ""); if [ -n "$WG_IP" ]; then echo "DROPBEAR_BIND=$WG_IP" > /run/dropbear-bind; else echo "DROPBEAR_BIND=127.0.0.1" > /run/dropbear-bind; fi'
+    ExecStart=/bin/sh -c '. /run/dropbear-bind; exec ${dropbearBin} -F -E -p $DROPBEAR_BIND:${toString rescuePort} -r /etc/dropbear/dropbear_ed25519_host_key'
     Restart=always
     RestartSec=2
     OOMScoreAdjust=-1000
