@@ -20,5 +20,7 @@
     ./system-protection-no-build-guard.nix
     # docker ops
     ./docker-pull-up.nix
+    # observability
+    ./health-post-logs.nix
   ];
 }
