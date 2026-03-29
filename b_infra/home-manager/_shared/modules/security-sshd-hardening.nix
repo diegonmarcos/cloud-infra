@@ -57,7 +57,7 @@ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
 iptables -A INPUT -p udp --dport 51820 -j ACCEPT
 
-# gcp-proxy (arch-1) is the public front door — needs Caddy + mail ports
+# gcp-proxy (arch-1) — public front door (rescue via gcloud serial console)
 if [ "$VM" = "arch-1" ]; then
   iptables -A INPUT -p tcp --dport 80 -j ACCEPT
   iptables -A INPUT -p tcp --dport 443 -j ACCEPT
@@ -65,7 +65,7 @@ if [ "$VM" = "arch-1" ]; then
   iptables -A INPUT -p tcp --dport 465 -j ACCEPT
   iptables -A INPUT -p tcp --dport 587 -j ACCEPT
   iptables -A INPUT -p tcp --dport 993 -j ACCEPT
-  echo "[firewall] HUB mode — Caddy + mail ports open"
+  echo "[firewall] HUB mode — Caddy + mail + Dropbear(2200) open"
 fi
 
 iptables -P INPUT DROP
