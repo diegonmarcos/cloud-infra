@@ -397,18 +397,21 @@ in {
     $SUDO cp -f "$SRC/disk-watchdog.service" /etc/systemd/system/disk-watchdog.service
     $SUDO cp -f "$SRC/disk-watchdog.timer" /etc/systemd/system/disk-watchdog.timer
     $SUDO cp -f "$SRC/rescue-ssh.service" /etc/systemd/system/rescue-ssh.service
-    $SUDO cp -f "$SRC/watchdog-petter.service" /etc/systemd/system/watchdog-petter.service
+    # watchdog-petter disabled — too aggressive, causes reboot loops
+    $SUDO systemctl stop watchdog-petter.service 2>/dev/null || true
+    $SUDO systemctl disable watchdog-petter.service 2>/dev/null || true
+    $SUDO rm -f /etc/systemd/system/watchdog-petter.service
     $SUDO cp -f "$SRC/health-agent.service" /etc/systemd/system/health-agent.service
     $SUDO cp -f "$SRC/health-agent.timer" /etc/systemd/system/health-agent.timer
     $SUDO cp -f "$SRC/health-httpd.service" /etc/systemd/system/health-httpd.service
 
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable disk-swap.service disk-swap-maintenance.timer disk-watchdog.timer rescue-ssh.service watchdog-petter.service health-agent.timer health-httpd.service 2>/dev/null || true
+    $SUDO systemctl enable disk-swap.service disk-swap-maintenance.timer disk-watchdog.timer rescue-ssh.service health-agent.timer health-httpd.service 2>/dev/null || true
     $SUDO systemctl start disk-swap.service 2>/dev/null || true
     $SUDO systemctl start disk-swap-maintenance.timer 2>/dev/null || true
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
     $SUDO systemctl restart rescue-ssh.service 2>/dev/null || true
-    $SUDO systemctl restart watchdog-petter.service 2>/dev/null || true
+    # watchdog-petter not started (disabled)
     $SUDO systemctl start health-agent.timer 2>/dev/null || true
     $SUDO systemctl start health-agent.service 2>/dev/null || true
     $SUDO systemctl restart health-httpd.service 2>/dev/null || true
