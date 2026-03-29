@@ -109,9 +109,45 @@ let
     '') spec.targets
   ) assignments);
 
+  # ── docker.slice — caps ALL docker processes (daemon + CLI + containers) ──
+  dockerSlice = ''
+    [Slice]
+    Description=Docker workloads slice — daemon, CLI, containers
+    CPUQuota=${toString (if ramMB <= 2048 then 75 else 150)}%
+    MemoryMax=${toString dockerMaxMB}M
+    MemoryHigh=${toString (dockerMaxMB * 9 / 10)}M
+    IOWeight=50
+  '';
+
+  # Wrapper script: /usr/local/bin/docker → runs real docker inside docker.slice
+  dockerWrapper = ''
+    #!/bin/sh
+    # Wrapper: runs docker/docker-compose inside docker.slice (CPU+mem capped)
+    exec systemd-run --quiet --scope --slice=docker.slice \
+      ionice -c3 nice -n10 /usr/bin/docker "$@"
+  '';
+
+  composeWrapper = ''
+    #!/bin/sh
+    # Wrapper: runs docker compose inside docker.slice (CPU+mem capped)
+    exec systemd-run --quiet --scope --slice=docker.slice \
+      ionice -c3 nice -n10 /usr/bin/docker compose "$@"
+  '';
+
+  buildxWrapper = ''
+    #!/bin/sh
+    # Wrapper: runs docker buildx inside docker.slice (CPU+mem capped)
+    exec systemd-run --quiet --scope --slice=docker.slice \
+      ionice -c3 nice -n10 /usr/bin/docker buildx "$@"
+  '';
+
 in {
   home.file = dropInFiles // {
     ".local/share/system-protection/connectivity.slice".text = connectivitySlice;
+    ".local/share/system-protection/docker.slice".text = dockerSlice;
+    ".local/share/system-protection/docker-wrapper.sh" = { text = dockerWrapper; executable = true; };
+    ".local/share/system-protection/docker-compose-wrapper.sh" = { text = composeWrapper; executable = true; };
+    ".local/share/system-protection/docker-buildx-wrapper.sh" = { text = buildxWrapper; executable = true; };
   };
 
   home.activation.installScheduler = lib.hm.dag.entryAfter ["installResourceBouncer" "installWatchdogDropbear"] ''
@@ -124,8 +160,15 @@ in {
 
     SRC="$HOME/.local/share/system-protection"
 
-    # Deploy connectivity.slice — kernel-guaranteed memory for SSH/WG/Dropbear
+    # Deploy slices
     $SUDO cp -f "$SRC/connectivity.slice" /etc/systemd/system/connectivity.slice
+    $SUDO cp -f "$SRC/docker.slice" /etc/systemd/system/docker.slice
+
+    # Deploy docker wrappers (caps ALL docker CLI processes in docker.slice)
+    $SUDO cp -f "$SRC/docker-wrapper.sh" /usr/local/bin/docker-capped
+    $SUDO cp -f "$SRC/docker-compose-wrapper.sh" /usr/local/bin/docker-compose-capped
+    $SUDO cp -f "$SRC/docker-buildx-wrapper.sh" /usr/local/bin/docker-buildx-capped
+    $SUDO chmod +x /usr/local/bin/docker-capped /usr/local/bin/docker-compose-capped /usr/local/bin/docker-buildx-capped
 
     ${deployScript}
 
