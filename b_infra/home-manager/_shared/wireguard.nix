@@ -1,5 +1,5 @@
 # WireGuard mesh configuration module for Home Manager
-# Canonical topology — keys generated on-VM (private key never leaves machine)
+# Private keys owned by vault, deployed via sops secrets pipeline
 { vmName }:
 
 { config, lib, pkgs, ... }:
@@ -124,26 +124,34 @@ in {
       exit 1
     fi
 
-    # 1. Read existing private key (use sudo — /etc/wireguard is 700 root:root)
+    # 1. Read private key from sops secrets (deployed by build.sh secrets)
+    VM_NAME_UPPER=$(echo "${vmName}" | tr '[:lower:]-' '[:upper:]_')
+    SECRETS_DIR="$HOME/.config/home-manager/.secrets.d"
+    SECRET_FILE="$SECRETS_DIR/WG_PRIVATE_KEY_$VM_NAME_UPPER"
+
     PRIVKEY=""
-    if $SUDO test -f "$WG_CONF"; then
+    if [ -f "$SECRET_FILE" ]; then
+      PRIVKEY=$(cat "$SECRET_FILE" | tr -d '[:space:]')
+      echo "$WG_LOG_PREFIX Read private key from secrets ($SECRET_FILE)"
+    fi
+
+    # Fallback: read from existing wg0.conf (migration period only)
+    if [ -z "$PRIVKEY" ] && $SUDO test -f "$WG_CONF"; then
       PRIVKEY=$($SUDO grep -oP '(?<=PrivateKey = ).+' "$WG_CONF" 2>/dev/null || true)
+      if [ -n "$PRIVKEY" ]; then
+        echo "$WG_LOG_PREFIX WARNING: Using existing key from $WG_CONF (secret not found at $SECRET_FILE)"
+        echo "$WG_LOG_PREFIX Ensure sops secrets.yaml has WG_PRIVATE_KEY_$VM_NAME_UPPER and redeploy"
+      fi
     fi
 
     if [ -z "$PRIVKEY" ]; then
-      echo "$WG_LOG_PREFIX No existing PrivateKey in $WG_CONF — generating new keypair"
-      WG_BIN="${pkgs.wireguard-tools}/bin/wg"
-      if [ ! -x "$WG_BIN" ]; then
-        echo "$WG_LOG_PREFIX ERROR: $WG_BIN not found — cannot generate keypair"
-        exit 1
-      fi
-      PRIVKEY=$($WG_BIN genkey)
-      PUBKEY=$(echo "$PRIVKEY" | $WG_BIN pubkey)
-      echo "$WG_LOG_PREFIX Generated new keypair for ${vmName}"
-      echo "$WG_LOG_PREFIX PUBLIC KEY: $PUBKEY"
-      echo "$WG_LOG_PREFIX *** Update wireguard.nix topology publicKey for ${vmName}, then redeploy all VMs ***"
-      $SUDO mkdir -p /etc/wireguard
+      echo "$WG_LOG_PREFIX ERROR: No WG private key found!"
+      echo "$WG_LOG_PREFIX Expected: $SECRET_FILE (from sops secrets.yaml)"
+      echo "$WG_LOG_PREFIX NEVER auto-generating keys — add key to sops secrets.yaml and redeploy"
+      exit 1
     fi
+
+    $SUDO mkdir -p /etc/wireguard
 
     # 2. Generate new config from template with injected key
     TEMPLATE=$(cat <<'WGTEMPLATE'
