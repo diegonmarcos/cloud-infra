@@ -59,17 +59,24 @@ jobs:
         with:
           submodules: true
 
+      - name: Setup WireGuard
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+        run: bash .github/workflows/scripts/setup-wireguard.sh
+
       - name: Resolve SSH + Ship
         if: steps.gate.outputs.skip != 'true'
         run: |
           GHA_CONFIG="cloud-data/cloud-data-gha-config.json"
           VM="${{ matrix.vm }}"
+          # Use WG IPs from cloud-data (SSH via WireGuard mesh)
+          HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
+          USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG")
           case "$VM" in
-            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
-            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
-            *)         KEY="$OCI_SSH_KEY"
-                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].host' "$GHA_CONFIG")
-                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
+            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; USER="${GCP_PROXY_USER:-$USER}" ;;
+            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    USER="${GCP_T4_USER:-$USER}" ;;
+            *)         KEY="$OCI_SSH_KEY" ;;
           esac
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
