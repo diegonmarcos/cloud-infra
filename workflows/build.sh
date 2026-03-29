@@ -87,9 +87,8 @@ do_deploy() {
         log "Deployed $(basename "$f") → repo root"
     done
 
-    # Gitconfig → .git/config include
+    # Gitconfig → include in .git/config
     if [ -f "$DIST_DIR/gitconfig" ]; then
-        cp "$DIST_DIR/gitconfig" "$REPO_ROOT/workflows/dist/gitconfig"
         git -C "$REPO_ROOT" config --local include.path ../workflows/dist/gitconfig 2>/dev/null || true
         log "Deployed gitconfig (included in .git/config)"
     fi
