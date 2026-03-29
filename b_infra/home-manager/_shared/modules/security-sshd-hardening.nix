@@ -44,46 +44,46 @@ ChallengeResponseAuthentication no
 KbdInteractiveAuthentication no
 "
 
-    # Deploy iptables SSH allowlist (port 22 + rescue port)
-    # Allow: WG mesh, VM public IPs, then DROP all others on port 22
+    # Deploy iptables: SSH only via WireGuard mesh (10.0.0.0/24)
     IPTABLES_SCRIPT="/opt/scripts/ssh-firewall.sh"
     $SUDO tee "$IPTABLES_SCRIPT" > /dev/null << 'FWEOF'
 #!/bin/bash
 set -euo pipefail
-# Flush old SSH rules (chain SSH_ALLOW)
+# Flush old SSH rules
 iptables -D INPUT -p tcp --dport 22 -j SSH_ALLOW 2>/dev/null || true
 iptables -D INPUT -p tcp --dport 2200 -j SSH_ALLOW 2>/dev/null || true
 iptables -F SSH_ALLOW 2>/dev/null || true
 iptables -X SSH_ALLOW 2>/dev/null || true
-
-# Create chain
 iptables -N SSH_ALLOW 2>/dev/null || true
 
-# Allow WG mesh
+# ONLY allow WireGuard mesh + localhost — DROP everything else
 iptables -A SSH_ALLOW -s 10.0.0.0/24 -j ACCEPT
-# Allow VM public IPs (inter-VM SSH)
-iptables -A SSH_ALLOW -s 130.110.251.193 -j ACCEPT
-iptables -A SSH_ALLOW -s 129.151.228.66 -j ACCEPT
-iptables -A SSH_ALLOW -s 82.70.229.129 -j ACCEPT
-iptables -A SSH_ALLOW -s 35.226.147.64 -j ACCEPT
-iptables -A SSH_ALLOW -s 34.173.227.250 -j ACCEPT
-# Allow localhost
 iptables -A SSH_ALLOW -s 127.0.0.1 -j ACCEPT
-# Allow GCP internal (for IAP tunnel + metadata)
-iptables -A SSH_ALLOW -s 10.128.0.0/16 -j ACCEPT
-iptables -A SSH_ALLOW -s 35.235.240.0/20 -j ACCEPT
-# Rate limit everyone else: 3 new connections per minute
-iptables -A SSH_ALLOW -m state --state NEW -m recent --set --name SSH
-iptables -A SSH_ALLOW -m state --state NEW -m recent --update --seconds 60 --hitcount 4 --name SSH -j DROP
-# Accept remaining
-iptables -A SSH_ALLOW -j ACCEPT
+iptables -A SSH_ALLOW -j DROP
 
-# Hook into INPUT
 iptables -I INPUT -p tcp --dport 22 -j SSH_ALLOW
 iptables -I INPUT -p tcp --dport 2200 -j SSH_ALLOW
-echo "[ssh-firewall] iptables SSH allowlist active"
+echo "[ssh-firewall] SSH locked to WG mesh only (10.0.0.0/24)"
 FWEOF
     $SUDO chmod +x "$IPTABLES_SCRIPT"
+
+    # Also create systemd service to apply on boot (iptables are non-persistent)
+    $SUDO tee /etc/systemd/system/ssh-firewall.service > /dev/null << 'SVCEOF'
+[Unit]
+Description=SSH firewall — WG mesh only
+After=network.target wireguard.target
+Before=sshd.service ssh.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/scripts/ssh-firewall.sh
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable ssh-firewall.service 2>/dev/null || true
     $SUDO "$IPTABLES_SCRIPT" 2>/dev/null || echo "$SSHD_LOG_PREFIX iptables firewall failed (non-fatal)"
 
     CURRENT=""
