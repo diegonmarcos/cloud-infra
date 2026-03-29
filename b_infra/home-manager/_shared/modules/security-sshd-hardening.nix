@@ -44,26 +44,32 @@ ChallengeResponseAuthentication no
 KbdInteractiveAuthentication no
 "
 
-    # Deploy iptables: SSH only via WireGuard mesh (10.0.0.0/24)
+    # Deploy iptables: full lockdown (WG only) or hub mode (public ports for Caddy)
     IPTABLES_SCRIPT="/opt/scripts/ssh-firewall.sh"
     $SUDO tee "$IPTABLES_SCRIPT" > /dev/null << 'FWEOF'
 #!/bin/bash
 set -euo pipefail
-# Flush old SSH rules
-iptables -D INPUT -p tcp --dport 22 -j SSH_ALLOW 2>/dev/null || true
-iptables -D INPUT -p tcp --dport 2200 -j SSH_ALLOW 2>/dev/null || true
-iptables -F SSH_ALLOW 2>/dev/null || true
-iptables -X SSH_ALLOW 2>/dev/null || true
-iptables -N SSH_ALLOW 2>/dev/null || true
+VM=$(hostname -s 2>/dev/null || echo unknown)
 
-# ONLY allow WireGuard mesh + localhost — DROP everything else
-iptables -A SSH_ALLOW -s 10.0.0.0/24 -j ACCEPT
-iptables -A SSH_ALLOW -s 127.0.0.1 -j ACCEPT
-iptables -A SSH_ALLOW -j DROP
+iptables -F INPUT 2>/dev/null || true
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
+iptables -A INPUT -p udp --dport 51820 -j ACCEPT
 
-iptables -I INPUT -p tcp --dport 22 -j SSH_ALLOW
-iptables -I INPUT -p tcp --dport 2200 -j SSH_ALLOW
-echo "[ssh-firewall] SSH locked to WG mesh only (10.0.0.0/24)"
+# gcp-proxy (arch-1) is the public front door — needs Caddy + mail ports
+if [ "$VM" = "arch-1" ]; then
+  iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+  iptables -A INPUT -p udp --dport 443 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 465 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 587 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 993 -j ACCEPT
+  echo "[firewall] HUB mode — Caddy + mail ports open"
+fi
+
+iptables -P INPUT DROP
+echo "[firewall] $VM locked — WG only $([ "$VM" = "arch-1" ] && echo '+ public Caddy/mail' || echo '(all public DROPPED)')"
 FWEOF
     $SUDO chmod +x "$IPTABLES_SCRIPT"
 
