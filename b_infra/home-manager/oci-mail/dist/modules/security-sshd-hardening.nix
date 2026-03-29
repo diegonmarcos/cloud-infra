@@ -77,12 +77,14 @@ FWEOF
     $SUDO tee /etc/systemd/system/ssh-firewall.service > /dev/null << 'SVCEOF'
 [Unit]
 Description=SSH firewall — WG mesh only
-After=network.target wireguard.target
+After=network-online.target wg-quick@wg0.service
+Wants=wg-quick@wg0.service
 Before=sshd.service ssh.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
+ExecStartPre=/bin/sleep 5
 ExecStart=/opt/scripts/ssh-firewall.sh
 
 [Install]
