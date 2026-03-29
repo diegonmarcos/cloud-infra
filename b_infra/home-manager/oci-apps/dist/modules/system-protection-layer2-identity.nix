@@ -47,20 +47,27 @@
 { config, pkgs, lib, ramMB, cpus ? 1, userName ? "diego", userId ? 1000, ... }:
 
 let
+  # ── Clamp helper: compute from %, then enforce absolute min/max ─────────
+  # Formulas calculate proportional values, clamp enforces sane bounds.
+  # This prevents crazy values from bad cloud-data (0 cpu, 0 ram).
+  clamp = min: max: v: if v < min then min else if v > max then max else v;
+
   # ── Slice budgets (scaled by core count) ───────────────────────────────
   # CPUQuota is relative to ONE core (100% = 1 core, 400% = 4 cores)
-  # We express quotas as percentage of TOTAL CPU:
-  #   75% of total = cpus * 75
-  #   95% of total = cpus * 95
-  workloadCpuQuota = cpus * 75;       # 1 core → 75%, 4 cores → 300%
-  osEssentialsCpuQuota = cpus * 95;   # 1 core → 95%, 4 cores → 380%
+  #   75% of total = cpus * 75          min=50%     max=800%
+  #   95% of total = cpus * 95          min=75%     max=800%
+  workloadCpuQuota     = clamp 50  800 (cpus * 75);
+  osEssentialsCpuQuota = clamp 75  800 (cpus * 95);
   # kernel.slice = no cap (implicit)
 
   # ── User slice limits ─────────────────────────────────────────────────
-  # user-1000 (diego): normal operations, same ratio as workload
-  userCpuQuota = cpus * 75;
-  userMemHighMB = ramMB * 75 / 100;
-  userMemMaxMB  = ramMB * 85 / 100;
+  # user-1000 (diego): normal operations
+  #   CPU:  75% of total                min=50%     max=800%
+  #   MemHigh: 75% of RAM              min=256MB   max=36864MB (192GB)
+  #   MemMax:  85% of RAM              min=384MB   max=36864MB
+  userCpuQuota  = clamp 50   800    (cpus * 75);
+  userMemHighMB = clamp 256  36864 (ramMB * 75 / 100);
+  userMemMaxMB  = clamp 384  36864 (ramMB * 85 / 100);
 
   userSliceConf = ''
     [Slice]
@@ -72,9 +79,12 @@ let
   '';
 
   # user-0 (root): emergency maintenance, generous but bounded
-  rootCpuQuota = cpus * 90;
-  rootMemHighMB = ramMB * 85 / 100;
-  rootMemMaxMB  = ramMB * 95 / 100;
+  #   CPU:  90% of total                min=75%     max=800%
+  #   MemHigh: 85% of RAM              min=384MB   max=36864MB
+  #   MemMax:  95% of RAM              min=448MB   max=36864MB
+  rootCpuQuota  = clamp 75   800    (cpus * 90);
+  rootMemHighMB = clamp 384  36864 (ramMB * 85 / 100);
+  rootMemMaxMB  = clamp 448  36864 (ramMB * 95 / 100);
 
   rootSliceConf = ''
     [Slice]
