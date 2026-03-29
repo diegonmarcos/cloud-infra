@@ -11,12 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VMS="gcp-proxy gcp-t4 oci-apps oci-analytics oci-mail"
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
-  # In GHA: trigger individual workflows
+  # In GHA: trigger unified health workflow + HTTP checks
   REPO="${GITHUB_REPOSITORY:-diegonmarcos/cloud}"
-  for vm in $VMS; do
-    echo "Triggering health-${vm}.yml"
-    gh workflow run "health-${vm}.yml" --repo "$REPO" --ref main || echo "WARN: failed to trigger $vm"
-  done
+  echo "Triggering Health → VMs (all)"
+  gh workflow run "health.yml" --repo "$REPO" --ref main || echo "WARN: failed to trigger health.yml"
   gh workflow run "health-http-public.yml" --repo "$REPO" --ref main || true
   gh workflow run "health-http-private.yml" --repo "$REPO" --ref main || true
 else
