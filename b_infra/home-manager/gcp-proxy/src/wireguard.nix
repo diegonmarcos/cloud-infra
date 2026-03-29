@@ -174,6 +174,11 @@ in {
         echo "$WG_LOG_PREFIX wg-quick@wg0 not active — config written, start manually"
       fi
     fi
+    # Ensure wg-quick@wg0 auto-starts on boot + is running now
+    $SUDO systemctl enable wg-quick@wg0 2>/dev/null || true
+    if ! $SUDO systemctl is-active wg-quick@wg0 >/dev/null 2>&1; then
+      $SUDO systemctl start wg-quick@wg0 2>/dev/null || echo "$WG_LOG_PREFIX wg-quick@wg0 failed to start"
+    fi
     ) || echo "[wireguard] FAILED — see errors above, activation continues"
   '';
 }
