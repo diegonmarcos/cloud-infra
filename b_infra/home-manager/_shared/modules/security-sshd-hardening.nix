@@ -26,8 +26,19 @@
     fi
 
     NEW_CONF="# Managed by home-manager (sshd-hardening.nix) — do not edit
+# Anti brute-force
+PasswordAuthentication no
+PermitRootLogin prohibit-password
+MaxAuthTries 3
+MaxStartups 3:50:10
+LoginGraceTime 20
+# Performance
 UseDNS no
 GSSAPIAuthentication no
+# Key-only auth
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
 "
 
     CURRENT=""
