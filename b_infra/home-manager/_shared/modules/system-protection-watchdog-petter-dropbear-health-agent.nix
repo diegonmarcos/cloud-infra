@@ -352,6 +352,22 @@ in {
     WantedBy=timers.target
   '';
 
+  # ── Health HTTP server (busybox httpd on port 8199, serves /opt/health/) ──
+  home.file.".local/share/system-protection/health-httpd.service".text = ''
+    [Unit]
+    Description=Health HTTP server (busybox httpd :8199 → /opt/health/)
+    After=network.target health-agent.service
+    [Service]
+    Type=simple
+    ExecStartPre=/bin/mkdir -p /opt/health
+    ExecStart=${pkgs.busybox}/bin/busybox httpd -f -p 8199 -h /opt/health
+    Restart=always
+    RestartSec=5
+    User=root
+    [Install]
+    WantedBy=multi-user.target
+  '';
+
   # ── Activation ────────────────────────────────────────────────────────
   home.activation.installWatchdogDropbear = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
@@ -383,9 +399,10 @@ in {
     $SUDO cp -f "$SRC/watchdog-petter.service" /etc/systemd/system/watchdog-petter.service
     $SUDO cp -f "$SRC/health-agent.service" /etc/systemd/system/health-agent.service
     $SUDO cp -f "$SRC/health-agent.timer" /etc/systemd/system/health-agent.timer
+    $SUDO cp -f "$SRC/health-httpd.service" /etc/systemd/system/health-httpd.service
 
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable disk-swap.service disk-swap-maintenance.timer disk-watchdog.timer rescue-ssh.service watchdog-petter.service health-agent.timer 2>/dev/null || true
+    $SUDO systemctl enable disk-swap.service disk-swap-maintenance.timer disk-watchdog.timer rescue-ssh.service watchdog-petter.service health-agent.timer health-httpd.service 2>/dev/null || true
     $SUDO systemctl start disk-swap.service 2>/dev/null || true
     $SUDO systemctl start disk-swap-maintenance.timer 2>/dev/null || true
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
@@ -393,8 +410,9 @@ in {
     $SUDO systemctl restart watchdog-petter.service 2>/dev/null || true
     $SUDO systemctl start health-agent.timer 2>/dev/null || true
     $SUDO systemctl start health-agent.service 2>/dev/null || true
+    $SUDO systemctl restart health-httpd.service 2>/dev/null || true
 
-    echo "[watchdog-dropbear] deployed: disk-swap=${toString diskSwapMB}MB(+24h-maint) rescue-ssh=port${toString rescuePort} watchdog-petter=10min-grace health-agent=5min"
+    echo "[watchdog-dropbear] deployed: disk-swap=${toString diskSwapMB}MB(+24h-maint) rescue-ssh=port${toString rescuePort} watchdog-petter=10min-grace health-agent=5min health-httpd=:8199"
     ) || echo "[watchdog-dropbear] FAILED — activation continues"
   '';
 }
