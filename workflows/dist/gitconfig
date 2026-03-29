@@ -1,0 +1,16 @@
+# Repo-level git config — deployed by build.sh workflow
+# Ensures submodules always sync on push/pull for all contributors + CI
+[push]
+	recurseSubmodules = on-demand
+[submodule]
+	recurse = true
+[fetch]
+	recurseSubmodules = on-demand
+[core]
+	hooksPath = workflows/dist/hooks
+[pull]
+	rebase = true
+[rebase]
+	autoStash = true
+[alias]
+	sync = !git fetch origin && git reset --hard origin/main
