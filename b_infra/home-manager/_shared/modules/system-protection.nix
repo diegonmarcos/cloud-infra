@@ -18,7 +18,7 @@ let
 in {
   imports = [
     (import ./system-protection-resource-bouncer.nix { inherit config pkgs lib ramMB; })
-    (import ./system-protection-watchdog-dropbear-health-agent.nix { inherit config pkgs lib ramMB rescuePort; })
+    (import ./system-protection-watchdog-petter-dropbear-health-agent.nix { inherit config pkgs lib ramMB rescuePort; })
     (import ./system-protection-scheduler-fifo-rr-cfs.nix { inherit config pkgs lib ramMB; })
     (import ./system-protection-layer2-identity.nix { inherit config pkgs lib ramMB cpus userName userId; })
     # system-protection-guardrails.nix + system-protection-no-build-guard.nix via shared-all.nix
