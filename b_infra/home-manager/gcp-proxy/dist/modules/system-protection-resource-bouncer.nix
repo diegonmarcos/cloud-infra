@@ -8,16 +8,26 @@
 { config, pkgs, lib, ramMB, ... }:
 
 let
-  minFreeKB = if ramMB <= 1024 then 65536
-              else if ramMB <= 8192 then 131072
+  # Clamp helper: compute then enforce absolute min/max
+  clamp = min: max: v: if v < min then min else if v > max then max else v;
+
+  # Sane RAM range: 1GB–36GB (cloud-data may return 0 if terraform parsing fails)
+  safeRamMB = clamp 1024 36864 (if ramMB > 0 then ramMB else 1024);
+
+  minFreeKB = if safeRamMB <= 1024 then 65536
+              else if safeRamMB <= 8192 then 131072
               else 262144;
 
-  zramSizeMB = ramMB / 2;
+  # zram: 50% of RAM, min 256MB, max 16GB
+  zramSizeMB = clamp 256 16384 (safeRamMB / 2);
   zramSizeBytes = toString (zramSizeMB * 1024 * 1024);
 
-  dockerMaxMB = if ramMB <= 1024 then ramMB - 350
-                else if ramMB <= 8192 then ramMB - 512
-                else ramMB - 1024;
+  # Docker memory cap: RAM minus OS overhead, min 256MB, max 32GB
+  dockerMaxMB = clamp 256 32768 (
+    if safeRamMB <= 1024 then safeRamMB - 350
+    else if safeRamMB <= 8192 then safeRamMB - 512
+    else safeRamMB - 1024
+  );
 
 in {
   home.packages = [ pkgs.earlyoom pkgs.e2fsprogs ];

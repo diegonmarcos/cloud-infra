@@ -10,15 +10,21 @@
 { config, pkgs, lib, ramMB, ... }:
 
 let
+  # Clamp helper: compute then enforce absolute min/max
+  clamp = min: max: v: if v < min then min else if v > max then max else v;
+
+  # Sane RAM range: 1GB–36GB
+  safeRamMB = clamp 1024 36864 (if ramMB > 0 then ramMB else 1024);
+
   # Memory budgets derived from VM RAM
   # Reserve 150MB for SSH+WG+earlyoom+watchdog+kernel, rest split between docker+container-init
   reservedMB = 150;
-  availableMB = ramMB - reservedMB;
-  containerInitMaxMB = availableMB / 4;     # container-init orchestrator gets 25%
-  dockerMaxMB        = availableMB * 3 / 4; # Docker daemon + containers get 75%
+  availableMB = safeRamMB - reservedMB;
+  containerInitMaxMB = clamp 64  8192  (availableMB / 4);
+  dockerMaxMB        = clamp 128 32768 (availableMB * 3 / 4);
 
   # Total memory reserved for connectivity slice (SSH+WG+Dropbear)
-  connectivityReserveMB = if ramMB <= 1024 then 120 else 200;
+  connectivityReserveMB = clamp 80 512 (if safeRamMB <= 1024 then 120 else 200);
 
   # ── connectivity.slice — kernel-guaranteed memory for SSH/WG/Dropbear ──
   connectivitySlice = ''
@@ -113,7 +119,7 @@ let
   dockerSlice = ''
     [Slice]
     Description=Docker workloads slice — daemon, CLI, containers
-    CPUQuota=${toString (if ramMB <= 2048 then 75 else 150)}%
+    CPUQuota=${toString (clamp 50 800 (if safeRamMB <= 2048 then 75 else 150))}%
     MemoryMax=${toString dockerMaxMB}M
     MemoryHigh=${toString (dockerMaxMB * 9 / 10)}M
     IOWeight=50
