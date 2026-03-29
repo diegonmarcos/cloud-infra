@@ -40,7 +40,11 @@ case "${1:-deploy}" in
             log "Deployed hooks → .github/workflows/hooks/"
         fi
 
-        # Deploy repo-root configs (e.g. .gitmodules)
+        # Build + deploy repo-root configs (src/gitmodules/ → dist/ → repo root)
+        SRC_DIR="$SCRIPT_DIR/src"
+        if [ -d "$SRC_DIR/gitmodules" ]; then
+            cp "$SRC_DIR/gitmodules/"* "$DIST_DIR/" 2>/dev/null || true
+        fi
         for f in "$DIST_DIR"/.git*; do
             [ -f "$f" ] || continue
             cp "$f" "$REPO_ROOT/"
