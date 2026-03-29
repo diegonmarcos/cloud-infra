@@ -1,13 +1,16 @@
 #!/bin/sh
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ Deploy workflows from dist/ to .github/workflows/               ║
+# ║ Workflow engine: build (src→dist) + deploy (dist→.github/)       ║
 # ║                                                                  ║
-# ║ Usage: ./build.sh deploy                                         ║
+# ║ Usage: ./build.sh              # build + deploy (default)        ║
+# ║        ./build.sh build        # src → dist only                 ║
+# ║        ./build.sh deploy       # dist → .github/ + repo root    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SRC_DIR="$SCRIPT_DIR/src"
 DIST_DIR="$SCRIPT_DIR/dist"
 TARGET_DIR="$REPO_ROOT/.github/workflows"
 SCRIPTS_TARGET="$TARGET_DIR/scripts"
@@ -15,45 +18,75 @@ HOOKS_TARGET="$TARGET_DIR/hooks"
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
-case "${1:-deploy}" in
-    deploy)
-        mkdir -p "$TARGET_DIR" "$SCRIPTS_TARGET" "$HOOKS_TARGET"
+do_build() {
+    mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks"
 
-        # Copy workflow YMLs
-        for f in "$DIST_DIR"/*.yml; do
-            [ -f "$f" ] || continue
-            cp "$f" "$TARGET_DIR/"
-        done
-        log "Deployed $(ls "$DIST_DIR"/*.yml 2>/dev/null | wc -l) workflow(s) → .github/workflows/"
+    # Static workflows (src/static/*.yml → dist/)
+    rm -f "$DIST_DIR"/*.yml
+    for f in "$SRC_DIR"/static/*.yml; do
+        [ -f "$f" ] || continue
+        cp "$f" "$DIST_DIR/"
+    done
+    log "Built $(ls "$DIST_DIR"/*.yml 2>/dev/null | wc -l) workflow(s)"
 
-        # Copy scripts
-        if [ -d "$DIST_DIR/scripts" ]; then
-            cp -r "$DIST_DIR/scripts/"* "$SCRIPTS_TARGET/"
-            chmod +x "$SCRIPTS_TARGET/"*.sh 2>/dev/null || true
-            log "Deployed scripts → .github/workflows/scripts/"
-        fi
+    # Scripts (src/scripts/ → dist/scripts/)
+    if [ -d "$SRC_DIR/scripts" ]; then
+        cp -r "$SRC_DIR/scripts/"* "$DIST_DIR/scripts/" 2>/dev/null || true
+        chmod +x "$DIST_DIR/scripts/"*.sh 2>/dev/null || true
+        log "Built scripts"
+    fi
 
-        # Copy hooks
-        if [ -d "$DIST_DIR/hooks" ]; then
-            cp -r "$DIST_DIR/hooks/"* "$HOOKS_TARGET/"
-            chmod +x "$HOOKS_TARGET/"*.sh 2>/dev/null || true
-            log "Deployed hooks → .github/workflows/hooks/"
-        fi
+    # Hooks (src/hooks/ → dist/hooks/)
+    if [ -d "$SRC_DIR/hooks" ]; then
+        cp -r "$SRC_DIR/hooks/"* "$DIST_DIR/hooks/" 2>/dev/null || true
+        chmod +x "$DIST_DIR/hooks/"*.sh 2>/dev/null || true
+        log "Built hooks"
+    fi
 
-        # Build + deploy repo-root configs (src/gitmodules/ → dist/ → repo root)
-        SRC_DIR="$SCRIPT_DIR/src"
-        if [ -d "$SRC_DIR/gitmodules" ]; then
-            cp "$SRC_DIR/gitmodules/"* "$DIST_DIR/" 2>/dev/null || true
-        fi
-        for f in "$DIST_DIR"/.git*; do
-            [ -f "$f" ] || continue
-            cp "$f" "$REPO_ROOT/"
-            log "Deployed $(basename "$f") → repo root"
-        done
+    # Gitmodules (src/gitmodules/ → dist/)
+    if [ -d "$SRC_DIR/gitmodules" ]; then
+        cp "$SRC_DIR/gitmodules/"* "$DIST_DIR/" 2>/dev/null || true
+        log "Built gitmodules"
+    fi
+}
 
-        log "Done"
-        ;;
-    *)
-        echo "Usage: $0 [deploy]"
-        ;;
+do_deploy() {
+    mkdir -p "$TARGET_DIR" "$SCRIPTS_TARGET" "$HOOKS_TARGET"
+
+    # Workflows
+    for f in "$DIST_DIR"/*.yml; do
+        [ -f "$f" ] || continue
+        cp "$f" "$TARGET_DIR/"
+    done
+    log "Deployed $(ls "$DIST_DIR"/*.yml 2>/dev/null | wc -l) workflow(s) → .github/workflows/"
+
+    # Scripts
+    if [ -d "$DIST_DIR/scripts" ]; then
+        cp -r "$DIST_DIR/scripts/"* "$SCRIPTS_TARGET/" 2>/dev/null || true
+        chmod +x "$SCRIPTS_TARGET/"*.sh 2>/dev/null || true
+        log "Deployed scripts"
+    fi
+
+    # Hooks
+    if [ -d "$DIST_DIR/hooks" ]; then
+        cp -r "$DIST_DIR/hooks/"* "$HOOKS_TARGET/" 2>/dev/null || true
+        chmod +x "$HOOKS_TARGET/"*.sh 2>/dev/null || true
+        log "Deployed hooks"
+    fi
+
+    # Repo-root configs (.gitmodules etc)
+    for f in "$DIST_DIR"/.git*; do
+        [ -f "$f" ] || continue
+        cp "$f" "$REPO_ROOT/"
+        log "Deployed $(basename "$f") → repo root"
+    done
+
+    log "Done"
+}
+
+case "${1:-all}" in
+    build)   do_build ;;
+    deploy)  do_deploy ;;
+    all|"")  do_build; do_deploy ;;
+    *)       echo "Usage: $0 [build|deploy|all]" ;;
 esac
