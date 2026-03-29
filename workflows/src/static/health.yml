@@ -1,0 +1,111 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Health check VMs — container status + port checks           │
+# │                                                              │
+# │  Single workflow replaces 5 per-VM health-*.yml files.       │
+# │  VM matrix from cloud-data-gha-config.json at runtime.       │
+# │  Script: workflows/src/scripts/health-check-vm.sh            │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "Health → VMs"
+
+on:
+  workflow_run:
+    workflows: ["Ship"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      vm:
+        description: "Target VM (e.g. gcp-proxy, oci-apps) or empty for all"
+        required: false
+        type: string
+  schedule:
+    - cron: "0 6 * * *"
+
+concurrency:
+  group: health-vms-${{ github.event.inputs.vm || 'all' }}
+  cancel-in-progress: true
+
+jobs:
+  matrix:
+    name: Build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+      has_vms: ${{ steps.build.outputs.has_vms }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build VM matrix
+        id: build
+        run: |
+          VM_FILTER="${{ github.event.inputs.vm }}"
+
+          # Port config per VM (source of truth — could move to cloud-data later)
+          PORTS_JSON='[
+            {"vm":"gcp-proxy","ports":"53,80,443,8090,9091","flaky":""},
+            {"vm":"gcp-t4","ports":"3000","flaky":"","optional":true},
+            {"vm":"oci-apps","ports":"3100,3101,3102,3103,8065,8081","flaky":""},
+            {"vm":"oci-analytics","ports":"8080","flaky":"windmill-worker,alerts-api"},
+            {"vm":"oci-mail","ports":"25,465,587,993,8443,8080,8384","flaky":""}
+          ]'
+
+          MATRIX_JSON=$(printf '%s' "$PORTS_JSON" | jq -c \
+            --arg filter "$VM_FILTER" '
+            map(select($filter == "" or .vm == $filter))
+          ')
+
+          echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
+          COUNT=$(printf '%s' "$MATRIX_JSON" | jq 'length')
+          [ "$COUNT" -gt 0 ] && echo "has_vms=true" >> "$GITHUB_OUTPUT" || echo "has_vms=false" >> "$GITHUB_OUTPUT"
+
+  health:
+    name: "${{ matrix.vm }}"
+    needs: matrix
+    if: needs.matrix.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.optional || false }}
+    strategy:
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+      fail-fast: false
+    env:
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
+      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
+      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
+      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup SSH
+        run: |
+          GHA_CONFIG="cloud-data/cloud-data-gha-config.json"
+          VM="${{ matrix.vm }}"
+          case "$VM" in
+            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
+            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
+            *)         KEY="$OCI_SSH_KEY"
+                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].host' "$GHA_CONFIG")
+                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
+          esac
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host $VM
+            HostName $HOST
+            User $USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Run health check
+        shell: bash {0}
+        run: bash .github/workflows/scripts/health-check-vm.sh "${{ matrix.vm }}" "${{ matrix.ports }}" "${{ matrix.flaky }}"
