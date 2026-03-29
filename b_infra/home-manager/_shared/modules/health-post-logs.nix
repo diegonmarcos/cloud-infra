@@ -36,38 +36,45 @@ let
     UPTIME=$(awk '{printf "%dd %dh", $1/86400, ($1%86400)/3600}' /proc/uptime 2>/dev/null)
 
     # Docker containers as JSON array
-    CONTAINERS="["
-    FIRST=true
-    while IFS='|' read -r name status; do
-      [ -z "$name" ] && continue
-      $FIRST || CONTAINERS="$CONTAINERS,"
-      FIRST=false
-      # Determine health state
-      HEALTH="none"
-      case "$status" in
-        *"(healthy)"*) HEALTH="healthy" ;;
-        *"(unhealthy)"*) HEALTH="unhealthy" ;;
-        *"health: starting"*) HEALTH="starting" ;;
-        Created*) HEALTH="created" ;;
-        Exited*) HEALTH="exited" ;;
-      esac
-      CONTAINERS="$CONTAINERS{\"name\":\"$name\",\"status\":\"$status\",\"health\":\"$HEALTH\"}"
-    done < <(docker ps -a --format '{{.Names}}|{{.Status}}' 2>/dev/null)
-    CONTAINERS="$CONTAINERS]"
-
-    CTR_TOTAL=$(docker ps -a --format '{{.Names}}' 2>/dev/null | wc -l)
-    CTR_RUNNING=$(docker ps --format '{{.Names}}' 2>/dev/null | wc -l)
+    CTR_TOTAL=0
+    CTR_RUNNING=0
+    TMPCTRS=$(mktemp)
+    docker ps -a --format '{{.Names}}|{{.Status}}' 2>/dev/null > "$TMPCTRS" || true
+    CTR_TOTAL=$(wc -l < "$TMPCTRS")
+    CTR_RUNNING=$(docker ps --format '{{.Names}}' 2>/dev/null | wc -l || echo 0)
+    # Build JSON with awk (avoids subshell pipe issue)
+    CONTAINERS=$(awk -F'|' '
+      BEGIN { printf "[" }
+      NR > 1 { printf "," }
+      {
+        h = "none"
+        if ($2 ~ /\(healthy\)/) h = "healthy"
+        else if ($2 ~ /\(unhealthy\)/) h = "unhealthy"
+        else if ($2 ~ /health: starting/) h = "starting"
+        else if ($2 ~ /^Created/) h = "created"
+        else if ($2 ~ /^Exited/) h = "exited"
+        gsub(/"/, "\\\"", $2)
+        printf "{\"name\":\"%s\",\"status\":\"%s\",\"health\":\"%s\"}", $1, $2, h
+      }
+      END { printf "]" }
+    ' "$TMPCTRS")
+    rm -f "$TMPCTRS"
 
     # WG interface check
     WG_UP="false"
     ip link show wg0 >/dev/null 2>&1 && WG_UP="true"
 
-    # Local port checks (nc to localhost for key services)
-    # Ports from cloud-data container manifests would be ideal, but we check common ones
+    # Local port checks — read from cloud-data manifest if available, else common ports
+    MANIFEST="$REPO_DIR/cloud-data-containers-$VM.json"
+    if [ -f "$MANIFEST" ]; then
+      PORT_LIST=$(python3 -c "import json; d=json.load(open('$MANIFEST')); print(' '.join(str(c.get('port','')) for c in d.get('containers',[]) if c.get('port')))" 2>/dev/null || echo "22 80 443 2200")
+    else
+      PORT_LIST="22 80 443 2200 8080 8443 9091"
+    fi
     PORTS_OPEN="["
     PFIRST=true
-    for port in 22 80 443 2200 8080 8443 9091; do
-      nc -zw1 localhost $port 2>/dev/null && {
+    for port in $PORT_LIST; do
+      nc -zw1 localhost "$port" 2>/dev/null && {
         $PFIRST || PORTS_OPEN="$PORTS_OPEN,"
         PFIRST=false
         PORTS_OPEN="$PORTS_OPEN$port"
@@ -140,9 +147,9 @@ in {
         "PATH=${lib.makeBinPath [ pkgs.coreutils pkgs.gawk pkgs.netcat-openbsd pkgs.git pkgs.openssh pkgs.docker-client pkgs.procps pkgs.iproute2 pkgs.util-linux ]}"
         "HOME=${homeDir}"
         "GIT_AUTHOR_NAME=health-agent"
-        "GIT_AUTHOR_EMAIL=health@${vmAlias}"
+        "GIT_AUTHOR_EMAIL=health@vm"
         "GIT_COMMITTER_NAME=health-agent"
-        "GIT_COMMITTER_EMAIL=health@${vmAlias}"
+        "GIT_COMMITTER_EMAIL=health@vm"
       ];
     };
   };
