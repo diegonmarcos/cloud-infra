@@ -18,5 +18,8 @@
     # system-protection
     ./system-protection-guardrails.nix
     ./system-protection-no-build-guard.nix
+    # docker ops
+    ./docker-pull-up.nix
+    # observability: health-agent is in watchdog-dropbear (system-level, not user)
   ];
 }

@@ -25,10 +25,72 @@
       $SUDO rm -f "$SSHD_OLD"
     fi
 
+    # Allowed SSH source IPs (VM mesh + admin + GHA)
+    ALLOWED_IPS="10.0.0.0/24 130.110.251.193 129.151.228.66 82.70.229.129 35.226.147.64 34.173.227.250"
+
     NEW_CONF="# Managed by home-manager (sshd-hardening.nix) — do not edit
+# Anti brute-force
+PasswordAuthentication no
+PermitRootLogin prohibit-password
+MaxAuthTries 3
+MaxStartups 3:50:10
+LoginGraceTime 20
+# Performance
 UseDNS no
 GSSAPIAuthentication no
+# Key-only auth
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
 "
+
+    # Deploy iptables: full lockdown (WG only) or hub mode (public ports for Caddy)
+    IPTABLES_SCRIPT="/opt/scripts/ssh-firewall.sh"
+    $SUDO tee "$IPTABLES_SCRIPT" > /dev/null << 'FWEOF'
+#!/bin/bash
+set -euo pipefail
+VM=$(hostname -s 2>/dev/null || echo unknown)
+
+iptables -F INPUT 2>/dev/null || true
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
+iptables -A INPUT -p udp --dport 51820 -j ACCEPT
+
+# gcp-proxy (arch-1) — public front door (rescue via gcloud serial console)
+if [ "$VM" = "arch-1" ]; then
+  iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+  iptables -A INPUT -p udp --dport 443 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 465 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 587 -j ACCEPT
+  iptables -A INPUT -p tcp --dport 993 -j ACCEPT
+  echo "[firewall] HUB mode — Caddy + mail + Dropbear(2200) open"
+fi
+
+iptables -P INPUT DROP
+echo "[firewall] $VM locked — WG only $([ "$VM" = "arch-1" ] && echo '+ public Caddy/mail' || echo '(all public DROPPED)')"
+FWEOF
+    $SUDO chmod +x "$IPTABLES_SCRIPT"
+
+    # Also create systemd service to apply on boot (iptables are non-persistent)
+    $SUDO tee /etc/systemd/system/ssh-firewall.service > /dev/null << 'SVCEOF'
+[Unit]
+Description=SSH firewall — WG mesh only
+After=network.target wireguard.target
+Before=sshd.service ssh.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/scripts/ssh-firewall.sh
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable ssh-firewall.service 2>/dev/null || true
+    $SUDO "$IPTABLES_SCRIPT" 2>/dev/null || echo "$SSHD_LOG_PREFIX iptables firewall failed (non-fatal)"
 
     CURRENT=""
     if $SUDO test -f "$SSHD_DROP"; then
