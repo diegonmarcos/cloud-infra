@@ -48,6 +48,12 @@ do_build() {
         cp "$SRC_DIR/gitmodules/"* "$DIST_DIR/" 2>/dev/null || true
         log "Built gitmodules"
     fi
+
+    # Gitconfig (src/gitconfig → dist/)
+    if [ -f "$SRC_DIR/gitconfig" ]; then
+        cp "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
+        log "Built gitconfig"
+    fi
 }
 
 do_deploy() {
@@ -80,6 +86,13 @@ do_deploy() {
         cp "$f" "$REPO_ROOT/"
         log "Deployed $(basename "$f") → repo root"
     done
+
+    # Gitconfig → .git/config include
+    if [ -f "$DIST_DIR/gitconfig" ]; then
+        cp "$DIST_DIR/gitconfig" "$REPO_ROOT/workflows/dist/gitconfig"
+        git -C "$REPO_ROOT" config --local include.path ../workflows/dist/gitconfig 2>/dev/null || true
+        log "Deployed gitconfig (included in .git/config)"
+    fi
 
     log "Done"
 }
