@@ -51,27 +51,32 @@ KbdInteractiveAuthentication no
 set -euo pipefail
 VM=$(hostname -s 2>/dev/null || echo unknown)
 
+# SAFETY: abort if WG is not up — applying DROP without WG = total lockout
+# Rescue: gcloud serial console → iptables -F INPUT && iptables -P INPUT ACCEPT
+if ! ip link show wg0 >/dev/null 2>&1; then
+  echo "[firewall] ABORT — wg0 not up, skipping firewall (would lock out VM)"
+  exit 0
+fi
+
 iptables -F INPUT 2>/dev/null || true
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
 iptables -A INPUT -p udp --dport 51820 -j ACCEPT
 
-# gcp-proxy (arch-1) — public front door (rescue via gcloud serial console)
+# gcp-proxy (arch-1) — WG hub + Caddy reverse proxy (rescue via gcloud serial console)
 if [ "$VM" = "arch-1" ]; then
-  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
   iptables -A INPUT -p tcp --dport 80 -j ACCEPT
   iptables -A INPUT -p tcp --dport 443 -j ACCEPT
   iptables -A INPUT -p udp --dport 443 -j ACCEPT
   iptables -A INPUT -p tcp --dport 465 -j ACCEPT
   iptables -A INPUT -p tcp --dport 587 -j ACCEPT
   iptables -A INPUT -p tcp --dport 993 -j ACCEPT
-  iptables -A INPUT -p tcp --dport 2200 -j ACCEPT
-  echo "[firewall] HUB mode — SSH + Caddy + mail + Dropbear(2200) open"
+  echo "[firewall] HUB mode — Caddy + mail open (SSH via WG only, rescue via serial)"
 fi
 
 iptables -P INPUT DROP
-echo "[firewall] $VM locked — WG only $([ "$VM" = "arch-1" ] && echo '+ public Caddy/mail' || echo '(all public DROPPED)')"
+echo "[firewall] $VM locked — WG mesh + $([ "$VM" = "arch-1" ] && echo 'public Caddy/mail' || echo 'zero public ports')"
 FWEOF
     $SUDO chmod +x "$IPTABLES_SCRIPT"
 
