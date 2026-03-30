@@ -8,6 +8,7 @@
 # │  The binary does ALL checks: WG mesh, containers, public   │
 # │  URLs, private URLs, mail, DNS, TLS, drift, security.      │
 # │                                                            │
+# │  No cloud-builder needed — just SSH to oci-apps.           │
 # │  Script: workflows/src/scripts/health-full.sh              │
 # └──────────────────────────────────────────────────────────────┘
 
@@ -38,13 +39,22 @@ jobs:
       - name: Update submodules
         run: git submodule update --remote
 
-      - uses: ./.github/actions/setup-deps
-        with:
-          ssh_key: ${{ secrets.OCI_SSH_KEY }}
-          ssh_host: ${{ secrets.OCI_APPS_HOST }}
-          ssh_user: ubuntu
-          ssh_alias: oci-apps
-          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh/sockets
+          chmod 700 ~/.ssh
+          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host oci-apps
+            HostName ${{ secrets.OCI_APPS_HOST }}
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
@@ -52,6 +62,4 @@ jobs:
 
       - name: Run full health check
         shell: bash {0}
-        env:
-          OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
         run: bash .github/workflows/scripts/health-full.sh
