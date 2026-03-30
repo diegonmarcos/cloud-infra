@@ -48,7 +48,7 @@ jobs:
         env:
           OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
         run: |
-          docker run --rm \
+          docker run --rm --network=host \
             -v "$GITHUB_WORKSPACE:/workspace" \
             -e OIDC_TOKEN="$OIDC_TOKEN" \
             -w /workspace \
