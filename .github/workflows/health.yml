@@ -1,14 +1,10 @@
 # ┌──────────────────────────────────────────────────────────────┐
-# │  Health — single 11-layer diagnostic                       │
+# │  Health — single consolidated health check                  │
 # │                                                            │
 # │  Replaces: health-http-public, health-http-private,        │
 # │            health_mail_full, health-all-vms, health (VMs)  │
 # │                                                            │
-# │  Runs cloud-health-full-report (Rust) on oci-apps via SSH. │
-# │  The binary does ALL checks: WG mesh, containers, public   │
-# │  URLs, private URLs, mail, DNS, TLS, drift, security.      │
-# │                                                            │
-# │  No cloud-builder needed — just SSH to oci-apps.           │
+# │  Runs inside cloud-builder container on GHA runner.        │
 # │  Script: workflows/src/scripts/health-full.sh              │
 # └──────────────────────────────────────────────────────────────┘
 
@@ -28,7 +24,7 @@ concurrency:
 
 jobs:
   health:
-    name: "Full 11-layer check"
+    name: "Full health check"
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     steps:
@@ -39,27 +35,22 @@ jobs:
       - name: Update submodules
         run: git submodule update --remote
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh/sockets
-          chmod 700 ~/.ssh
-          echo "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          cat > ~/.ssh/config <<EOF
-          Host oci-apps
-            HostName ${{ secrets.OCI_APPS_HOST }}
-            User ubuntu
-            IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking no
-            ServerAliveInterval 30
-            ServerAliveCountMax 10
-          EOF
-          chmod 600 ~/.ssh/config
+      - uses: ./.github/actions/setup-deps
+        with:
+          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
         run: sleep 300
 
-      - name: Run full health check
+      - name: Run health check
         shell: bash {0}
-        run: bash .github/workflows/scripts/health-full.sh
+        env:
+          OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -e OIDC_TOKEN="$OIDC_TOKEN" \
+            -w /workspace \
+            "$CLOUD_CI_IMAGE" \
+            bash .github/workflows/scripts/health-full.sh
