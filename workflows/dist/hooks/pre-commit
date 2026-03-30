@@ -81,6 +81,11 @@ add_blocked "grep -iE '\.tfvars$' | grep -v '\.example$'"
 # P15: terraform.tfvars specifically
 add_blocked "grep -E '(^|/)terraform\.tfvars$'"
 
+# ── Submodule paths (read-only, never commit) ──────────────
+
+# P16: submodule directories — commits go to their own repos
+add_blocked "grep -E '^(cloud-data|tools)(/|$)'"
+
 # ── Deduplicate and check ────────────────────────────────
 BLOCKED=$(echo "$BLOCKED" | sort -u | sed '/^$/d')
 
