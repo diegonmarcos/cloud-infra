@@ -13,6 +13,7 @@ in {
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "gcp-t4"; })
     (import ./modules/system-protection-systemd-control.nix {})
+    (import ./modules/container-control-init.nix { vmName = "gcp-t4"; })
   ];
   home.username = vmData.user;
   home.homeDirectory = vmData.home;
