@@ -338,11 +338,12 @@ for dir in $PROJECTS; do
   svc_start=$(date +%s)
   log "  [$svc] starting... mem=$(mem_free)MB free"
 
-  # Strategy: docker start (lightweight) if container exists AND image hasn't changed.
-  # If image was updated by Phase 3 pull, must recreate via docker rm + compose up.
+  # Strategy: REMOTE ALWAYS WINS.
+  # If pulled image ID differs from running container's image → recreate (rm + compose up).
+  # If same image → lightweight docker start (no Go binary).
+  # If no containers exist → compose up (first deploy).
   CONTAINERS_IN_DIR=$(cd "$dir" 2>/dev/null && docker compose ps -a --format '{{.Names}}' 2>/dev/null || true)
 
-  # Check if any container in this service needs image update
   NEEDS_RECREATE=false
   if [ -n "$CONTAINERS_IN_DIR" ]; then
     for cname in $CONTAINERS_IN_DIR; do
@@ -350,8 +351,9 @@ for dir in $PROJECTS; do
       DECLARED_IMG=$(docker inspect --format='{{index .Config.Image}}' "$cname" 2>/dev/null || true)
       if [ -n "$DECLARED_IMG" ]; then
         LATEST_ID=$(docker inspect --format='{{.Id}}' "$DECLARED_IMG" 2>/dev/null || true)
-        if [ -n "$RUNNING_IMG" ] && [ -n "$LATEST_ID" ] && [ "$RUNNING_IMG" != "$LATEST_ID" ]; then
-          log "  [$svc] image updated for $cname — will recreate"
+        # Remote wins: ANY mismatch = recreate. Missing ID = new image = recreate.
+        if [ -z "$RUNNING_IMG" ] || [ -z "$LATEST_ID" ] || [ "$RUNNING_IMG" != "$LATEST_ID" ]; then
+          log "  [$svc] image mismatch for $cname (running=${RUNNING_IMG:-none} latest=${LATEST_ID:-none}) — will recreate"
           NEEDS_RECREATE=true
           break
         fi
