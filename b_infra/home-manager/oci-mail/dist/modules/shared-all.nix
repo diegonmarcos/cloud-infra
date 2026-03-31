@@ -14,6 +14,7 @@
     # security
     ./security-authorized-keys.nix
     ./security-ssh-keys.nix
+    ./security-serial-console-autologin.nix
     ./security-sshd-hardening.nix
     # system-protection
     ./system-protection-guardrails.nix

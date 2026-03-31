@@ -64,15 +64,16 @@ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
 iptables -A INPUT -p udp --dport 51820 -j ACCEPT
 
-# gcp-proxy (arch-1) — WG hub + Caddy reverse proxy (rescue via gcloud serial console)
+# gcp-proxy (arch-1) — WG hub + Caddy reverse proxy + GHA deploy target
 if [ "$VM" = "arch-1" ]; then
+  iptables -A INPUT -p tcp --dport 22 -j ACCEPT
   iptables -A INPUT -p tcp --dport 80 -j ACCEPT
   iptables -A INPUT -p tcp --dport 443 -j ACCEPT
   iptables -A INPUT -p udp --dport 443 -j ACCEPT
   iptables -A INPUT -p tcp --dport 465 -j ACCEPT
   iptables -A INPUT -p tcp --dport 587 -j ACCEPT
   iptables -A INPUT -p tcp --dport 993 -j ACCEPT
-  echo "[firewall] HUB mode — Caddy + mail open (SSH via WG only, rescue via serial)"
+  echo "[firewall] HUB mode — SSH + Caddy + mail open"
 fi
 
 iptables -P INPUT DROP
