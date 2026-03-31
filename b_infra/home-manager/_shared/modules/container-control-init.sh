@@ -309,111 +309,44 @@ else
 fi
 
 # ══════════════════════════════════════════════════════════════════════════
-# PHASE 4: Sequential container startup
+# PHASE 4: Sequential container startup — docker start ONLY (no compose)
 # ══════════════════════════════════════════════════════════════════════════
 log "═══ PHASE 4: Sequential startup ═══"
 STARTED=0
 FAILED=0
 BOOT_RESULTS=""
 
-# Build project list: prefer declared order, fallback to filesystem scan
-if [ -n "$DECLARED_SERVICES" ]; then
-  PROJECTS="$DECLARED_SERVICES"
-else
-  PROJECTS=""
-  for dir in "$CONTAINERS_DIR"/*/; do
-    [ -f "$dir/docker-compose.yml" ] && PROJECTS="$PROJECTS $dir"
-  done
-  for dir in /opt/*/; do
-    [ "$dir" = "$CONTAINERS_DIR/" ] || [ "$dir" = "/opt/scripts/" ] || [ "$dir" = "/opt/ssh-keys/" ] && continue
-    [ -f "$dir/docker-compose.yml" ] && PROJECTS="$PROJECTS $dir"
-  done
-fi
-
-PROJECT_COUNT=$(echo $PROJECTS | wc -w)
-log "Starting $PROJECT_COUNT projects (delay=${START_DELAY}s)..."
-
-for dir in $PROJECTS; do
+# Start all existing containers one service at a time using docker start (no Go binary)
+# If container doesn't exist, skip it — build.sh ship creates containers, not container-init
+for dir in $DECLARED_SERVICES; do
   svc=$(basename "$dir")
   svc_start=$(date +%s)
   log "  [$svc] starting... mem=$(mem_free)MB free"
 
-  # Strategy: REMOTE ALWAYS WINS.
-  # If pulled image ID differs from running container's image → recreate (rm + compose up).
-  # If same image → lightweight docker start (no Go binary).
-  # If no containers exist → compose up (first deploy).
-  CONTAINERS_IN_DIR=$(cd "$dir" 2>/dev/null && docker compose ps -a --format '{{.Names}}' 2>/dev/null || true)
-
-  NEEDS_RECREATE=false
-  if [ -n "$CONTAINERS_IN_DIR" ]; then
-    for cname in $CONTAINERS_IN_DIR; do
-      RUNNING_IMG=$(docker inspect --format='{{.Image}}' "$cname" 2>/dev/null || true)
-      DECLARED_IMG=$(docker inspect --format='{{index .Config.Image}}' "$cname" 2>/dev/null || true)
-      if [ -n "$DECLARED_IMG" ]; then
-        LATEST_ID=$(docker inspect --format='{{.Id}}' "$DECLARED_IMG" 2>/dev/null || true)
-        # Remote wins: ANY mismatch = recreate. Missing ID = new image = recreate.
-        if [ -z "$RUNNING_IMG" ] || [ -z "$LATEST_ID" ] || [ "$RUNNING_IMG" != "$LATEST_ID" ]; then
-          log "  [$svc] image mismatch for $cname (running=${RUNNING_IMG:-none} latest=${LATEST_ID:-none}) — will recreate"
-          NEEDS_RECREATE=true
-          break
-        fi
-      fi
-    done
+  # Get all container names for this service directory
+  CONTAINERS=""
+  for cid in $(docker ps -aq --filter "label=com.docker.compose.project.working_dir=$dir" 2>/dev/null); do
+    CONTAINERS="$CONTAINERS $cid"
+  done
+  # Fallback: match by container name containing service name
+  if [ -z "$CONTAINERS" ]; then
+    CONTAINERS=$(docker ps -aq --filter "name=$svc" 2>/dev/null || true)
   fi
 
-  if [ -n "$CONTAINERS_IN_DIR" ] && [ "$NEEDS_RECREATE" = false ]; then
-    # Containers exist with correct image — lightweight docker start
-    if echo "$CONTAINERS_IN_DIR" | xargs ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker start 2>&1 | while IFS= read -r line; do log "    $line"; done; then
+  if [ -n "$CONTAINERS" ]; then
+    if echo "$CONTAINERS" | xargs docker start 2>&1 | while IFS= read -r line; do log "    $line"; done; then
       svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] started via docker-start (${svc_s}s)"
+      log "  [$svc] started (${svc_s}s)"
       STARTED=$((STARTED + 1))
       BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"start\"},"
     else
       svc_s=$(( $(date +%s) - svc_start ))
-      log_err "  [$svc] docker-start FAILED — trying compose..."
-      # Fallback: remove old containers + compose up
-      echo "$CONTAINERS_IN_DIR" | xargs docker rm -f 2>/dev/null || true
-      if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
-        svc_s=$(( $(date +%s) - svc_start ))
-        log "  [$svc] started via compose-fallback (${svc_s}s)"
-        STARTED=$((STARTED + 1))
-        BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"compose\"},"
-      else
-        svc_s=$(( $(date +%s) - svc_start ))
-        log_err "  [$svc] FAILED (${svc_s}s)"
-        FAILED=$((FAILED + 1))
-        BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"compose\"},"
-      fi
-    fi
-  elif [ -n "$CONTAINERS_IN_DIR" ] && [ "$NEEDS_RECREATE" = true ]; then
-    # Image updated — remove old containers, recreate from new image
-    log "  [$svc] recreating (image updated)..."
-    echo "$CONTAINERS_IN_DIR" | xargs docker rm -f 2>/dev/null || true
-    if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
-      svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] recreated via compose (${svc_s}s)"
-      STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"recreate\"},"
-    else
-      svc_s=$(( $(date +%s) - svc_start ))
       log_err "  [$svc] FAILED (${svc_s}s)"
       FAILED=$((FAILED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"recreate\"},"
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"start\"},"
     fi
   else
-    # No existing containers — must use compose to create them
-    log "  [$svc] no existing containers — using compose"
-    if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
-      svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] created+started via compose (${svc_s}s)"
-      STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"compose-create\"},"
-    else
-      svc_s=$(( $(date +%s) - svc_start ))
-      log_err "  [$svc] FAILED (${svc_s}s)"
-      FAILED=$((FAILED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"compose-create\"},"
-    fi
+    log "  [$svc] no containers found — skipping (needs build.sh ship first)"
   fi
 
   sleep "$START_DELAY"
