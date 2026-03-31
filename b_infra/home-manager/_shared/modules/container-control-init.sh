@@ -131,6 +131,43 @@ DOCKER_ELAPSED=$(( $(date +%s) - BOOT_START ))
 log "Docker ready (${DOCKER_ELAPSED}s)"
 
 # ══════════════════════════════════════════════════════════════════════════
+# PHASE 0.5: Home-Manager self-update (pull + activate latest HM image)
+# ══════════════════════════════════════════════════════════════════════════
+HM_DELIVERY=$(echo "$CONFIG" | jq -r '.hm_delivery // "nix-copy"')
+HM_IMAGE=$(echo "$CONFIG" | jq -r '.hm_image // ""')
+HM_USER=$(echo "$CONFIG" | jq -r '.hm_user // "diego"')
+HM_CONFIG=$(echo "$CONFIG" | jq -r '.hm_config // ""')
+
+if [ "$HM_DELIVERY" = "docker" ] && [ -n "$HM_IMAGE" ]; then
+  log "═══ PHASE 0.5: Home-Manager self-update ═══"
+  log "  delivery=$HM_DELIVERY image=$HM_IMAGE user=$HM_USER"
+
+  # Pull latest HM image
+  OLD_ID=$(docker inspect --format '{{.Id}}' "$HM_IMAGE" 2>/dev/null || echo "none")
+  if ionice -c3 nice -n19 docker pull "$HM_IMAGE" >/dev/null 2>&1; then
+    NEW_ID=$(docker inspect --format '{{.Id}}' "$HM_IMAGE" 2>/dev/null || echo "none")
+    if [ "$OLD_ID" != "$NEW_ID" ]; then
+      log "  HM image updated — activating..."
+      # Extract and activate: run the HM image which copies closure + switches
+      HM_HOME=$(eval echo "~$HM_USER")
+      docker run --rm \
+        -v /nix:/nix \
+        -v "$HM_HOME:$HM_HOME" \
+        -v /etc:/etc \
+        -v /tmp:/tmp \
+        "$HM_IMAGE" 2>&1 | while IFS= read -r line; do log "    $line"; done
+      log "  HM activated from $HM_IMAGE"
+    else
+      log "  HM image unchanged — skipping activation"
+    fi
+  else
+    log "  WARNING: HM image pull failed — using existing config"
+  fi
+else
+  log "═══ PHASE 0.5: HM self-update skipped (delivery=$HM_DELIVERY) ═══"
+fi
+
+# ══════════════════════════════════════════════════════════════════════════
 # PHASE 1: Cloud-data sync (git clone or pull, remote always wins)
 # ══════════════════════════════════════════════════════════════════════════
 log "═══ PHASE 1: Cloud-data sync ═══"
