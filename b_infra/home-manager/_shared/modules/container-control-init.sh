@@ -92,6 +92,43 @@ ntfy() {
 mem_free() { free -m 2>/dev/null | awk '/Mem:/{print $4}'; }
 
 # ══════════════════════════════════════════════════════════════════════════
+# PRE-PHASE: WireGuard IP fix (persists across reboots)
+# ══════════════════════════════════════════════════════════════════════════
+# wg-quick@wg0 may be running but without an IP assigned (known E2 Micro bug)
+# Read WG IP from cloud-data and assign if missing
+if ip link show wg0 >/dev/null 2>&1; then
+  WG_CURRENT=$(ip -4 addr show wg0 2>/dev/null | grep -oP 'inet \K[0-9.]+' || true)
+  if [ -z "$WG_CURRENT" ]; then
+    # Try reading from wg0.conf
+    WG_ADDR=$(grep -oP 'Address\s*=\s*\K[0-9./]+' /etc/wireguard/wg0.conf 2>/dev/null || true)
+    if [ -n "$WG_ADDR" ]; then
+      ip addr add "$WG_ADDR" dev wg0 2>/dev/null || true
+      ip link set wg0 mtu 1280 2>/dev/null || true
+      log "WG IP assigned: $WG_ADDR (was missing after boot)"
+    fi
+  else
+    # Fix MTU if wrong
+    WG_MTU=$(ip link show wg0 2>/dev/null | grep -oP 'mtu \K\d+' || echo 0)
+    if [ "$WG_MTU" != "1280" ]; then
+      ip link set wg0 mtu 1280 2>/dev/null || true
+      log "WG MTU fixed: $WG_MTU → 1280"
+    fi
+  fi
+else
+  # wg-quick not running — try to start it
+  if [ -f /etc/wireguard/wg0.conf ]; then
+    systemctl start wg-quick@wg0 2>/dev/null || true
+    sleep 2
+    WG_ADDR=$(grep -oP 'Address\s*=\s*\K[0-9./]+' /etc/wireguard/wg0.conf 2>/dev/null || true)
+    if [ -n "$WG_ADDR" ] && ! ip -4 addr show wg0 2>/dev/null | grep -q "inet "; then
+      ip addr add "$WG_ADDR" dev wg0 2>/dev/null || true
+    fi
+    ip link set wg0 mtu 1280 2>/dev/null || true
+    log "WG started + IP assigned: $WG_ADDR"
+  fi
+fi
+
+# ══════════════════════════════════════════════════════════════════════════
 # PHASE 0: Docker daemon startup
 # ══════════════════════════════════════════════════════════════════════════
 log "═══ PHASE 0: Docker daemon ═══"
