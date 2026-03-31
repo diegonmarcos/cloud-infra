@@ -1,6 +1,5 @@
-# Serial console autologin — passwordless serial getty for OCI/GCP serial rescue
-# Detects arch: ARM uses ttyAMA0, x86 uses ttyS0
-# Drops a systemd override for serial-getty@<tty> with --autologin
+# Serial console autologin — passwordless ttyS0 for OCI/GCP serial rescue
+# Drops a systemd override for serial-getty@ttyS0 with --autologin
 { config, pkgs, lib, ... }:
 
 {
@@ -21,15 +20,7 @@
     # Detect current user for autologin
     AUTOLOGIN_USER="$(whoami)"
 
-    # Detect TTY: ARM (aarch64) uses ttyAMA0, x86 uses ttyS0
-    ARCH="$(uname -m)"
-    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-      TTY_DEV="ttyAMA0"
-    else
-      TTY_DEV="ttyS0"
-    fi
-
-    OVERRIDE_DIR="/etc/systemd/system/serial-getty@$TTY_DEV.service.d"
+    OVERRIDE_DIR="/etc/systemd/system/serial-getty@ttyS0.service.d"
     OVERRIDE_FILE="$OVERRIDE_DIR/autologin.conf"
 
     DESIRED="[Service]
@@ -40,17 +31,17 @@ ExecStart=-/sbin/agetty --autologin $AUTOLOGIN_USER --noclear --keep-baud 115200
     if $SUDO test -f "$OVERRIDE_FILE"; then
       CURRENT="$($SUDO cat "$OVERRIDE_FILE" 2>/dev/null)"
       if [ "$CURRENT" = "$DESIRED" ]; then
-        echo "$LOG already configured for $AUTOLOGIN_USER on $TTY_DEV"
+        echo "$LOG already configured for $AUTOLOGIN_USER"
         exit 0
       fi
     fi
 
-    echo "$LOG configuring autologin on $TTY_DEV for user $AUTOLOGIN_USER"
+    echo "$LOG configuring autologin on ttyS0 for user $AUTOLOGIN_USER"
     $SUDO mkdir -p "$OVERRIDE_DIR"
     echo "$DESIRED" | $SUDO tee "$OVERRIDE_FILE" >/dev/null
     $SUDO systemctl daemon-reload
-    $SUDO systemctl restart "serial-getty@$TTY_DEV.service" 2>/dev/null || true
-    echo "$LOG done ($TTY_DEV)"
+    $SUDO systemctl restart serial-getty@ttyS0.service 2>/dev/null || true
+    echo "$LOG done"
     )
   '';
 }

@@ -17,6 +17,7 @@ in {
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "oci-apps"; })
     (import ./modules/system-protection-systemd-control.nix {})
+    (import ./modules/container-control-init.nix { vmName = "oci-apps"; })
   ];
   home.username = vmData.user;
   home.homeDirectory = vmData.home;

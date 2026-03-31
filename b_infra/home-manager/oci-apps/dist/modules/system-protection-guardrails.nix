@@ -58,20 +58,33 @@ let
 
   mkWhitelistCheck = cmd: let
     subs = whitelistFor cmd;
-    # Match first non-flag argument against each whitelisted subcommand
-    checks = map (sub: ''
-      ${sub}) _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'') subs;
+    # Split into single-word and two-word subcommands
+    singleWord = builtins.filter (s: !lib.hasInfix " " s) subs;
+    twoWord = builtins.filter (s: lib.hasInfix " " s) subs;
+    # Group two-word subcommands by first word to avoid duplicate case patterns
+    twoWordFirsts = lib.unique (map (s: builtins.elemAt (lib.splitString " " s) 0) twoWord);
+    mkTwoGroup = first: let
+      seconds = map (s: builtins.elemAt (lib.splitString " " s) 1)
+        (builtins.filter (s: builtins.elemAt (lib.splitString " " s) 0 == first) twoWord);
+      conditions = map (sec: ''[ "$_sub2" = "${sec}" ]'') seconds;
+    in ''
+      ${first}) if ${builtins.concatStringsSep " || " conditions}; then _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)"; fi ;;'';
+    mkSingle = sub: ''
+      ${sub}) _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'';
+    singleChecks = map mkSingle singleWord;
+    twoChecks = map mkTwoGroup twoWordFirsts;
   in if subs == [] then "" else ''
-    # Tier 0: WHITELIST — scan past flags to find the subcommand
+    # Tier 0: WHITELIST — scan past flags to find the first two non-flag args
     _sub=""
+    _sub2=""
     for _arg in "$@"; do
       case "$_arg" in
         -*) continue ;;
-        *) _sub="$_arg"; break ;;
+        *) if [ -z "$_sub" ]; then _sub="$_arg"; else _sub2="$_arg"; break; fi ;;
       esac
     done
     case "$_sub" in
-    ${builtins.concatStringsSep "\n    " checks}
+    ${builtins.concatStringsSep "\n    " (twoChecks ++ singleChecks)}
     esac
   '';
 

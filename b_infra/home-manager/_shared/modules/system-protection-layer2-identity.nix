@@ -154,6 +154,8 @@ let
     "watchdog-petter"
     # SWAP/MEMORY (our setup, critical for system stability)
     "zram-setup"
+    # DASHBOARD (web terminal for monitoring — must stay responsive under load)
+    "dashboard-ttyd"
   ];
 
   # Everything else → workload.slice (capped at 75%)
