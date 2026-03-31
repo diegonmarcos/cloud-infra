@@ -69,28 +69,8 @@ in {
     KillMode=process
   '';
 
-  # ── Systemd unit — resource-limited so SSH never hangs ──────────────
-  home.file.".local/share/container-init/container-init.service".text = ''
-    [Unit]
-    Description=Container Init — Docker + data-driven sequential startup
-    After=network-online.target firewall.service disk-swap.service zram-setup.service
-    Wants=network-online.target
-
-    [Service]
-    Type=oneshot
-    RemainAfterExit=yes
-    ExecStart=/opt/scripts/container-init.sh
-    TimeoutStartSec=900
-    StandardOutput=journal+console
-    StandardError=journal+console
-    CPUQuota=70%
-    IOWeight=50
-    Nice=10
-    OOMScoreAdjust=200
-
-    [Install]
-    WantedBy=multi-user.target
-  '';
+  # No systemd service — container-init.sh is run manually or via dtk/cron, not at boot.
+  # Docker is also manual-start only. This avoids boot OOM on E2 Micros.
 
   # ── Activation: deploy to system locations ──────────────────────────
   home.activation.installContainerInit = lib.hm.dag.entryAfter ["linkGeneration"] ''
@@ -123,21 +103,18 @@ in {
       echo "[container-init] docker.service deployed"
     fi
 
-    # Deploy container-init.service (only if changed)
-    UNIT_DEST="/etc/systemd/system/container-init.service"
-    NEW_UNIT=$(cat "$SRC/container-init.service")
-    CURRENT=$($SUDO cat "$UNIT_DEST" 2>/dev/null || true)
-    if [ "$NEW_UNIT" != "$CURRENT" ]; then
-      echo "$NEW_UNIT" | $SUDO tee "$UNIT_DEST" > /dev/null
-      echo "[container-init] systemd unit deployed"
+    # Remove stale container-init.service if it exists (no longer systemd-managed)
+    if [ -f /etc/systemd/system/container-init.service ]; then
+      $SUDO systemctl disable container-init.service 2>/dev/null || true
+      $SUDO rm -f /etc/systemd/system/container-init.service
+      echo "[container-init] removed stale systemd service"
     fi
 
-    # Disable docker from systemd auto-start
+    # Disable docker from systemd auto-start (container-init.sh starts it manually)
     $SUDO systemctl disable docker.service 2>/dev/null || true
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable container-init.service 2>/dev/null || true
 
-    echo "[container-init] deployed: data-driven Docker + sequential startup on boot"
+    echo "[container-init] deployed: script-only (no systemd service, manual start via dtk/cron)"
     ) || echo "[container-init] FAILED — see errors above, activation continues"
   '';
 }
