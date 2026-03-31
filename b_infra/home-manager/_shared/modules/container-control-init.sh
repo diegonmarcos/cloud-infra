@@ -281,32 +281,8 @@ if [ -z "$DRIFT_MISSING" ] && [ -z "$DRIFT_STOPPED" ]; then
   log "No drift detected"
 fi
 
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 3: Image pull (sequential, low-priority, from declared manifest)
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 3: Image pull ═══"
-PULL_COUNT=0
-PULL_FAIL=0
-
-if [ -n "$DECLARED_IMAGES" ]; then
-  IMAGE_COUNT=$(echo "$DECLARED_IMAGES" | wc -l)
-  log "Pulling $IMAGE_COUNT images (nice=$PULL_NICE ionice=$PULL_IONICE)..."
-
-  echo "$DECLARED_IMAGES" | while IFS= read -r img; do
-    [ -z "$img" ] && continue
-    log "  pull: $img (mem=$(mem_free)MB free)"
-    if ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker pull "$img" >/dev/null 2>&1; then
-      PULL_COUNT=$((PULL_COUNT + 1))
-    else
-      log_err "  pull FAILED: $img"
-      PULL_FAIL=$((PULL_FAIL + 1))
-    fi
-    sleep 2
-  done
-  log "Pull complete: $IMAGE_COUNT images"
-else
-  log "No declared images to pull"
-fi
+# PHASE 3: REMOVED — image pull is build.sh ship's job, not container-init's.
+# Images are already on disk from the last ship. docker-run.sh pulls if needed.
 
 # ══════════════════════════════════════════════════════════════════════════
 # PHASE 4: Sequential container startup — docker start ONLY (no compose)
