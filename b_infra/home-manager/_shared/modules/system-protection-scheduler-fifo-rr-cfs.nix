@@ -44,7 +44,7 @@ let
     CPUSchedulingPriority=${toString priority}
     IOSchedulingClass=realtime
     IOSchedulingPriority=0
-    OOMScoreAdjust=-1000
+    OOMScoreAdjust=-900
     OOMPolicy=continue
     MemoryMin=${toString mem}M
     Nice=-20
@@ -82,8 +82,8 @@ let
 
   assignments = {
     # ── FIFO: connectivity (non-negotiable) ───────────────────────────
-    sshd            = { conf = fifoConf 1 50; targets = [ "sshd" "ssh" ]; };
-    wg              = { conf = fifoConf 1 30; targets = [ "wg-quick@wg0" ]; };
+    sshd            = { conf = fifoConf 1 10; targets = [ "sshd" "ssh" ]; };
+    wg              = { conf = fifoConf 1 10; targets = [ "wg-quick@wg0" ]; };
     # rescue-ssh (Dropbear) is set in watchdog-dropbear.nix directly
 
     # ── RR: protection daemons ────────────────────────────────────────
