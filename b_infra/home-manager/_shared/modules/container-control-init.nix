@@ -19,6 +19,13 @@ let
   dockerdBin = "${pkgs.docker}/bin/dockerd";
   cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
   vmData = cloudData.vms.${vmName} or {};
+  # Read HM build.json for this VM (delivery method, image, etc.)
+  hmBuildJsonPath = ../. + "/${vmName}/build.json";
+  hmBuildJson = if builtins.pathExists hmBuildJsonPath
+    then builtins.fromJSON (builtins.readFile hmBuildJsonPath)
+    else {};
+  hmConfig = hmBuildJson.hm or {};
+
   containerInitJson = builtins.toJSON {
     vm_alias = vmName;
     vm_id = vmData.instance_id or "";
@@ -32,6 +39,11 @@ let
     pull_nice = 19;
     pull_ionice = 3;
     git_user = vmData.user or "diego";
+    # HM self-update config
+    hm_delivery = hmConfig.delivery or "nix-copy";
+    hm_image = hmConfig.image or "";
+    hm_user = hmConfig.user or vmData.user or "diego";
+    hm_config = hmConfig.config or "";
   };
 in {
   # ── Script: standalone .sh file (no nix interpolation) ──────────────
