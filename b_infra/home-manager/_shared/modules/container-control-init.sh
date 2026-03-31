@@ -11,8 +11,8 @@
 #   0: Docker daemon startup
 #   1: Cloud-data sync (git clone/pull)
 #   2: Drift detection (declared vs actual containers)
-#   3: Image pull (sequential, ionice/nice)
-#   4: Sequential container startup (docker start, fallback compose)
+#   3: (removed — pull is build.sh ship's job)
+#   4: Sequential container startup (docker start only, no compose)
 #   5: Health verification + logs
 #   6: Report + ntfy
 set -uo pipefail
@@ -133,10 +133,10 @@ log "Docker ready (${DOCKER_ELAPSED}s)"
 # ══════════════════════════════════════════════════════════════════════════
 # PHASE 0.5: Home-Manager self-update (pull + activate latest HM image)
 # ══════════════════════════════════════════════════════════════════════════
-HM_DELIVERY=$(echo "$CONFIG" | jq -r '.hm_delivery // "nix-copy"')
-HM_IMAGE=$(echo "$CONFIG" | jq -r '.hm_image // ""')
-HM_USER=$(echo "$CONFIG" | jq -r '.hm_user // "diego"')
-HM_CONFIG=$(echo "$CONFIG" | jq -r '.hm_config // ""')
+HM_DELIVERY=$(jq -r '.hm_delivery // "nix-copy"' "$CONFIG")
+HM_IMAGE=$(jq -r '.hm_image // ""' "$CONFIG")
+HM_USER=$(jq -r '.hm_user // "diego"' "$CONFIG")
+HM_CONFIG=$(jq -r '.hm_config // ""' "$CONFIG")
 
 if [ "$HM_DELIVERY" = "docker" ] && [ -n "$HM_IMAGE" ]; then
   log "═══ PHASE 0.5: Home-Manager self-update ═══"
@@ -249,8 +249,8 @@ if [ -n "$CONTAINERS_JSON" ] && [ -f "$CONTAINERS_JSON" ]; then
     # Check if container exists
     if ! echo "$ACTUAL_CONTAINERS" | grep -q "^${svc_name}$"; then
       # Maybe container name differs from service name
-      compose_containers=$(cd "$svc_path" 2>/dev/null && docker compose ps --format '{{.Names}}' 2>/dev/null || true)
-      if [ -z "$compose_containers" ]; then
+      svc_containers=$(docker ps -aq --filter "name=$svc_name" 2>/dev/null || true)
+      if [ -z "$svc_containers" ]; then
         DRIFT_MISSING="$DRIFT_MISSING $svc_name(no-container)"
       fi
     fi
@@ -291,6 +291,7 @@ log "═══ PHASE 4: Sequential startup ═══"
 STARTED=0
 FAILED=0
 BOOT_RESULTS=""
+PROJECT_COUNT=$(echo $DECLARED_SERVICES | wc -w)
 
 # Start all existing containers one service at a time using docker start (no Go binary)
 # If container doesn't exist, skip it — build.sh ship creates containers, not container-init
