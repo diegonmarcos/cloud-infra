@@ -336,7 +336,29 @@ for dir in $DECLARED_SERVICES; do
       BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"docker-run\"},"
     fi
   else
-    log "  [$svc] no containers + no docker-run.sh — skipping (needs build.sh ship)"
+    # Last resort: pull configs image from GHCR, extract, then run docker-run.sh
+    CONFIGS_IMG="ghcr.io/diegonmarcos/${svc}-configs:latest"
+    if docker pull "$CONFIGS_IMG" >/dev/null 2>&1; then
+      log "  [$svc] pulled configs image — extracting"
+      docker run --rm -v "$dir:/out" "$CONFIGS_IMG" 2>/dev/null
+      if [ -f "$dir/docker-run.sh" ]; then
+        if (cd "$dir" && sh docker-run.sh 2>&1 | while IFS= read -r line; do log "    $line"; done); then
+          svc_s=$(( $(date +%s) - svc_start ))
+          log "  [$svc] created via configs-image + docker-run.sh (${svc_s}s)"
+          STARTED=$((STARTED + 1))
+          BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"configs-image\"},"
+        else
+          svc_s=$(( $(date +%s) - svc_start ))
+          log_err "  [$svc] FAILED (${svc_s}s)"
+          FAILED=$((FAILED + 1))
+          BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"configs-image\"},"
+        fi
+      else
+        log "  [$svc] configs extracted but no docker-run.sh — skipping"
+      fi
+    else
+      log "  [$svc] no containers, no docker-run.sh, no configs image — skipping"
+    fi
   fi
 
   sleep "$START_DELAY"
