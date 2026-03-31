@@ -178,6 +178,15 @@ in {
 
     ${deployScript}
 
+    # Clean up stale drop-ins from old protection modules (protection.conf, bouncer.conf)
+    # These conflict with the new scheduler.conf and have wrong MemoryMin/OOMScoreAdjust values
+    for svc_dir in /etc/systemd/system/*.service.d; do
+      [ -d "$svc_dir" ] || continue
+      for stale in "$svc_dir/protection.conf" "$svc_dir/bouncer.conf"; do
+        [ -f "$stale" ] && $SUDO rm -f "$stale" && echo "[scheduler] removed stale $(basename "$stale") from $(basename "$svc_dir")"
+      done
+    done
+
     $SUDO systemctl daemon-reload
 
     # Restart sshd to pick up FIFO scheduling (CRITICAL — must apply immediately)
