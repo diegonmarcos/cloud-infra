@@ -345,8 +345,22 @@ for dir in $DECLARED_SERVICES; do
       FAILED=$((FAILED + 1))
       BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"start\"},"
     fi
+  elif [ -f "$dir/docker-run.sh" ]; then
+    # No containers exist but docker-run.sh available — create them (no compose needed)
+    log "  [$svc] no containers — using docker-run.sh"
+    if (cd "$dir" && sh docker-run.sh 2>&1 | while IFS= read -r line; do log "    $line"; done); then
+      svc_s=$(( $(date +%s) - svc_start ))
+      log "  [$svc] created via docker-run.sh (${svc_s}s)"
+      STARTED=$((STARTED + 1))
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"docker-run\"},"
+    else
+      svc_s=$(( $(date +%s) - svc_start ))
+      log_err "  [$svc] FAILED (${svc_s}s)"
+      FAILED=$((FAILED + 1))
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"docker-run\"},"
+    fi
   else
-    log "  [$svc] no containers found — skipping (needs build.sh ship first)"
+    log "  [$svc] no containers + no docker-run.sh — skipping (needs build.sh ship)"
   fi
 
   sleep "$START_DELAY"
