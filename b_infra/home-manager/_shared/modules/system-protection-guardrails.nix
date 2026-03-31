@@ -61,16 +61,18 @@ let
     # Split into single-word and two-word subcommands
     singleWord = builtins.filter (s: !lib.hasInfix " " s) subs;
     twoWord = builtins.filter (s: lib.hasInfix " " s) subs;
+    # Group two-word subcommands by first word to avoid duplicate case patterns
+    twoWordFirsts = lib.unique (map (s: builtins.elemAt (lib.splitString " " s) 0) twoWord);
+    mkTwoGroup = first: let
+      seconds = map (s: builtins.elemAt (lib.splitString " " s) 1)
+        (builtins.filter (s: builtins.elemAt (lib.splitString " " s) 0 == first) twoWord);
+      conditions = map (sec: ''[ "$_sub2" = "${sec}" ]'') seconds;
+    in ''
+      ${first}) if ${builtins.concatStringsSep " || " conditions}; then _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)"; fi ;;'';
     mkSingle = sub: ''
       ${sub}) _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)" ;;'';
-    mkTwo = sub: let
-      parts = lib.splitString " " sub;
-      first = builtins.elemAt parts 0;
-      second = builtins.elemAt parts 1;
-    in ''
-      ${first}) if [ "$_sub2" = "${second}" ]; then _log_guardrail "whitelist"; exec ${cmd} "$@" || _die "exec '${cmd}' failed (whitelist)"; fi ;;'';
     singleChecks = map mkSingle singleWord;
-    twoChecks = map mkTwo twoWord;
+    twoChecks = map mkTwoGroup twoWordFirsts;
   in if subs == [] then "" else ''
     # Tier 0: WHITELIST — scan past flags to find the first two non-flag args
     _sub=""

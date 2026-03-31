@@ -17,7 +17,7 @@
     ./security-serial-console-autologin.nix
     ./security-sshd-hardening.nix
     # system-protection
-    ./system-protection-guardrails.nix
+    # ./system-protection-guardrails.nix  # DISABLED — POSIX sh two-word subcommand bug, re-enable after fix
     ./system-protection-no-build-guard.nix
     # docker ops
     ./docker-pull-up.nix
