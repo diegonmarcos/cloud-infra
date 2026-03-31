@@ -41,12 +41,12 @@ in {
   home.file.".local/share/container-init/container-init.json".text = containerInitJson;
 
   # ── Symlinks in ~/ for easy access ───────────────────────────────────
-  home.file."container-init.sh" = {
-    source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
-  };
-  home.file."containers" = {
-    source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
-  };
+  home.file."container-init.sh".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
+  home.file."container-init.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.json";
+  home.file."container-init-drift.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-drift.json";
+  home.file."container-init-boot.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-boot.json";
+  home.file."containers".source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
+  home.file."scripts".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts";
 
   # ── Docker unit file — NO [Install], container-init starts it ───────
   home.file.".local/share/container-init/docker.service".text = ''
