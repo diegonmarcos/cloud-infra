@@ -43,7 +43,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1380
+    MTU = 1280
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
   '';
@@ -54,7 +54,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1380
+    MTU = 1280
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT
   '';
