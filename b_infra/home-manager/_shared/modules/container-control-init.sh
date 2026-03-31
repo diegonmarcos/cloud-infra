@@ -17,6 +17,11 @@
 #   6: Report + ntfy
 set -uo pipefail
 
+# ── Sudo: escalate if not root ────────────────────────────────────────
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
 # ── PATH: ensure nix binaries available (systemd doesn't have them) ───
 for p in /home/*/nix-profile/bin /home/*/.nix-profile/bin /nix/var/nix/profiles/default/bin; do
   [ -d "$p" ] && export PATH="$p:$PATH"
