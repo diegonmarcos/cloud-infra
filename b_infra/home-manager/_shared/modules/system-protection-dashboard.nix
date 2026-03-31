@@ -64,6 +64,7 @@ let
     ExecStartPre=-${tmuxBin} kill-session -t dashboard
     ExecStart=${ttydBin} \
       --port ${toString ttydPort} \
+      --interface 0.0.0.0 \
       --writable \
       --max-clients 3 \
       --ping-interval 30 \
