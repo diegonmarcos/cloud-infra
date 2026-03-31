@@ -67,6 +67,8 @@ in {
     Nice=10
     OOMScoreAdjust=200
 
+    [Install]
+    WantedBy=multi-user.target
   '';
 
   # ── Activation: deploy to system locations ──────────────────────────
@@ -114,7 +116,7 @@ in {
     # Disable docker from systemd auto-start
     $SUDO systemctl disable docker.service 2>/dev/null || true
     $SUDO systemctl daemon-reload
-    $SUDO systemctl disable container-init.service 2>/dev/null || true
+    $SUDO systemctl enable container-init.service 2>/dev/null || true
 
     # Restart sshd to pick up protection drop-ins
     $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null || true
