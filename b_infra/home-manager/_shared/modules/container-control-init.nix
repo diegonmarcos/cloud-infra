@@ -40,9 +40,12 @@ in {
   # ── Config JSON: VM identity + settings (auto-generated from cloud-data) ──
   home.file.".local/share/container-init/container-init.json".text = containerInitJson;
 
-  # ── Symlink ~/container-init.sh for easy access ─────────────────────
+  # ── Symlinks in ~/ for easy access ───────────────────────────────────
   home.file."container-init.sh" = {
     source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
+  };
+  home.file."containers" = {
+    source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
   };
 
   # ── Docker unit file — NO [Install], container-init starts it ───────
