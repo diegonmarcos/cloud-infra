@@ -301,12 +301,29 @@ for dir in $PROJECTS; do
   svc_start=$(date +%s)
   log "  [$svc] starting... mem=$(mem_free)MB free"
 
-  # Prefer docker start (lightweight) over docker compose (heavy Go binary)
-  # docker start works if containers already exist from a previous compose up
+  # Strategy: docker start (lightweight) if container exists AND image hasn't changed.
+  # If image was updated by Phase 3 pull, must recreate via docker rm + compose up.
   CONTAINERS_IN_DIR=$(cd "$dir" 2>/dev/null && docker compose ps -a --format '{{.Names}}' 2>/dev/null || true)
 
+  # Check if any container in this service needs image update
+  NEEDS_RECREATE=false
   if [ -n "$CONTAINERS_IN_DIR" ]; then
-    # Containers exist — use lightweight docker start
+    for cname in $CONTAINERS_IN_DIR; do
+      RUNNING_IMG=$(docker inspect --format='{{.Image}}' "$cname" 2>/dev/null || true)
+      DECLARED_IMG=$(docker inspect --format='{{index .Config.Image}}' "$cname" 2>/dev/null || true)
+      if [ -n "$DECLARED_IMG" ]; then
+        LATEST_ID=$(docker inspect --format='{{.Id}}' "$DECLARED_IMG" 2>/dev/null || true)
+        if [ -n "$RUNNING_IMG" ] && [ -n "$LATEST_ID" ] && [ "$RUNNING_IMG" != "$LATEST_ID" ]; then
+          log "  [$svc] image updated for $cname — will recreate"
+          NEEDS_RECREATE=true
+          break
+        fi
+      fi
+    done
+  fi
+
+  if [ -n "$CONTAINERS_IN_DIR" ] && [ "$NEEDS_RECREATE" = false ]; then
+    # Containers exist with correct image — lightweight docker start
     if echo "$CONTAINERS_IN_DIR" | xargs ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker start 2>&1 | while IFS= read -r line; do log "    $line"; done; then
       svc_s=$(( $(date +%s) - svc_start ))
       log "  [$svc] started via docker-start (${svc_s}s)"
@@ -315,7 +332,8 @@ for dir in $PROJECTS; do
     else
       svc_s=$(( $(date +%s) - svc_start ))
       log_err "  [$svc] docker-start FAILED — trying compose..."
-      # Fallback to compose
+      # Fallback: remove old containers + compose up
+      echo "$CONTAINERS_IN_DIR" | xargs docker rm -f 2>/dev/null || true
       if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
         svc_s=$(( $(date +%s) - svc_start ))
         log "  [$svc] started via compose-fallback (${svc_s}s)"
@@ -327,6 +345,21 @@ for dir in $PROJECTS; do
         FAILED=$((FAILED + 1))
         BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"compose\"},"
       fi
+    fi
+  elif [ -n "$CONTAINERS_IN_DIR" ] && [ "$NEEDS_RECREATE" = true ]; then
+    # Image updated — remove old containers, recreate from new image
+    log "  [$svc] recreating (image updated)..."
+    echo "$CONTAINERS_IN_DIR" | xargs docker rm -f 2>/dev/null || true
+    if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
+      svc_s=$(( $(date +%s) - svc_start ))
+      log "  [$svc] recreated via compose (${svc_s}s)"
+      STARTED=$((STARTED + 1))
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"recreate\"},"
+    else
+      svc_s=$(( $(date +%s) - svc_start ))
+      log_err "  [$svc] FAILED (${svc_s}s)"
+      FAILED=$((FAILED + 1))
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"recreate\"},"
     fi
   else
     # No existing containers — must use compose to create them
