@@ -25,10 +25,13 @@ let
   };
 
   # Build topology from JSON peers (VMs) + clients (surface, termux)
+  # NEVER silently drop peers — fail the build if any public key is missing
+  allPeerEntries = map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers;
+  missingKeyPeers = builtins.filter (e: e.value.publicKey == null) allPeerEntries;
   peerEntries = builtins.listToAttrs (
-    builtins.filter (e: e.value.publicKey != null) (
-      map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
-    )
+    if missingKeyPeers != [] then
+      builtins.throw "FATAL: WireGuard peers missing public keys: ${builtins.concatStringsSep ", " (map (e: e.name) missingKeyPeers)}. Add wg_public_key to each VM's HM build.json and re-run derive-cloud-data.ts"
+    else allPeerEntries
   );
   clientEntries = lib.mapAttrs toClientEntry cloudData.wireguard.clients;
   topology = peerEntries // clientEntries;
@@ -43,7 +46,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1380
+    MTU = 1280
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
   '';
@@ -54,7 +57,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1380
+    MTU = 1280
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT
   '';

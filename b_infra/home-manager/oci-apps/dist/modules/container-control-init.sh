@@ -1,430 +1,220 @@
 #!/bin/bash
-# Container Init — Docker lifecycle + data-driven sequential container startup
+# Container Init — VM-side mirror of build.sh ship
 # Managed by home-manager — DO NOT EDIT on VM
 # Source: cloud/b_infra/home-manager/_shared/modules/container-control-init.sh
 #
-# Data-driven from container-init.json (identity + config)
-# Clones/pulls cloud-data for declared container manifests
-# Generates drift report comparing declared vs actual
-#
 # Phases:
-#   0: Docker daemon startup
-#   1: Cloud-data sync (git clone/pull)
-#   2: Drift detection (declared vs actual containers)
-#   3: Image pull (sequential, ionice/nice)
-#   4: Sequential container startup (docker start, fallback compose)
-#   5: Health verification + logs
-#   6: Report + ntfy
+#   0:   Start Docker daemon
+#   0.5: HM self-update (pull HM image, activate if changed)
+#   1:   Git pull cloud-data
+#   2:   For each service: pull configs + pull image (parallel), start/recreate
+#   3:   Health check + report
 set -uo pipefail
 
-# ── PATH: ensure nix binaries available (systemd doesn't have them) ───
+# ── Sudo: escalate if not root ──
+if [ "$(id -u)" != "0" ]; then exec sudo "$0" "$@"; fi
+
+# ── PATH: ensure nix + docker binaries available ──
 for p in /home/*/nix-profile/bin /home/*/.nix-profile/bin /nix/var/nix/profiles/default/bin; do
   [ -d "$p" ] && export PATH="$p:$PATH"
 done
 
-# ── Config: read from container-init.json ──────────────────────────────
+# ── Config ──
 CONFIG="/opt/scripts/container-init.json"
-if [ ! -f "$CONFIG" ]; then
-  echo "[container-init] FATAL: $CONFIG not found" >&2
-  exit 1
-fi
-
-# Parse config (jq required)
-if ! command -v jq >/dev/null 2>&1; then
-  echo "[container-init] FATAL: jq not found" >&2
-  exit 1
-fi
+[ -f "$CONFIG" ] || { echo "[container-init] FATAL: $CONFIG not found" >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "[container-init] FATAL: jq not found" >&2; exit 1; }
 
 VM_ALIAS=$(jq -r '.vm_alias' "$CONFIG")
-VM_ID=$(jq -r '.vm_id // ""' "$CONFIG")
 CLOUD_DATA_REPO=$(jq -r '.cloud_data_repo // "https://github.com/diegonmarcos/cloud-data.git"' "$CONFIG")
 CLOUD_DATA_DIR=$(jq -r '.cloud_data_dir // "/home/diego/git/cloud-data"' "$CONFIG")
 CONTAINERS_DIR=$(jq -r '.containers_dir // "/opt/containers"' "$CONFIG")
 NTFY_BASE=$(jq -r '.ntfy_base // "https://rss.diegonmarcos.com"' "$CONFIG")
 NTFY_TOPIC=$(jq -r '.ntfy_topic // "container-init"' "$CONFIG")
 DOCKER_TIMEOUT=$(jq -r '.docker_timeout // 60' "$CONFIG")
-START_DELAY=$(jq -r '.start_delay // 5' "$CONFIG")
-PULL_NICE=$(jq -r '.pull_nice // 19' "$CONFIG")
-PULL_IONICE=$(jq -r '.pull_ionice // 3' "$CONFIG")
+START_DELAY=$(jq -r '.start_delay // 3' "$CONFIG")
 GIT_USER=$(jq -r '.git_user // "diego"' "$CONFIG")
+HM_DELIVERY=$(jq -r '.hm_delivery // "nix-copy"' "$CONFIG")
+HM_IMAGE=$(jq -r '.hm_image // ""' "$CONFIG")
+HM_USER=$(jq -r '.hm_user // "diego"' "$CONFIG")
+REGISTRY="ghcr.io/diegonmarcos"
 
-HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
-NTFY_URL="${NTFY_BASE}/${NTFY_TOPIC}"
+HOSTNAME=$(hostname -s 2>/dev/null || echo "unknown")
 BOOT_START=$(date +%s)
-_LAST_STEP=$BOOT_START
 BOOT_JSON="/var/log/container-init-boot.json"
-DRIFT_JSON="/var/log/container-init-drift.json"
 LOG_FILE="/var/log/container-init.log"
 
-# ── Logging (journal + file + console) ─────────────────────────────────
-log() {
-  local now=$(date +%s)
-  local elapsed=$(( now - BOOT_START ))
-  local step_s=$(( now - _LAST_STEP ))
-  _LAST_STEP=$now
-  local msg="[container-init] +${elapsed}s (+${step_s}s) $*"
-  echo "$msg" | systemd-cat -t container-init -p info 2>/dev/null || true
-  echo "$msg" >&2
-  echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
-}
-
-log_err() {
-  local msg="[container-init] ERROR: $*"
-  echo "$msg" | systemd-cat -t container-init -p err 2>/dev/null || true
-  echo "$msg" >&2
-  echo "$msg" >> "$LOG_FILE" 2>/dev/null || true
-}
-
-ntfy() {
-  local title="$1" body="$2" priority="${3:-default}" tags="${4:-whale}"
-  curl -sf -X POST "$NTFY_URL" \
-    -H "Title: [$HOSTNAME] $title" \
-    -H "Priority: $priority" \
-    -H "Tags: $tags" \
-    -d "$body" >/dev/null 2>&1 || true
-}
-
+# ── Logging ──
+log()     { local msg="[container-init] +$(( $(date +%s) - BOOT_START ))s $*"; echo "$msg" >&2; echo "$msg" >> "$LOG_FILE" 2>/dev/null; }
+log_err() { local msg="[container-init] ERROR: $*"; echo "$msg" >&2; echo "$msg" >> "$LOG_FILE" 2>/dev/null; }
 mem_free() { free -m 2>/dev/null | awk '/Mem:/{print $4}'; }
+ntfy() {
+  curl -sf -X POST "${NTFY_BASE}/${NTFY_TOPIC}" \
+    -H "Title: [$HOSTNAME] $1" -H "Priority: ${3:-default}" -H "Tags: ${4:-whale}" \
+    -d "$2" >/dev/null 2>&1 || true
+}
 
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 0: Docker daemon startup
-# ══════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+# PHASE 0: Docker daemon
+# ══════════════════════════════════════════════════════════════
 log "═══ PHASE 0: Docker daemon ═══"
 log "vm=$VM_ALIAS hostname=$HOSTNAME mem=$(mem_free)MB free"
-DOCKER_OK=false
 
-if docker info >/dev/null 2>&1; then
-  log "Docker already running"
-  DOCKER_OK=true
-else
-  log "Starting Docker daemon..."
-  systemctl start docker 2>&1 | while IFS= read -r line; do log "  dockerd: $line"; done
-
+if ! docker info >/dev/null 2>&1; then
+  log "Starting Docker..."
+  systemctl start docker 2>/dev/null
   for i in $(seq 1 "$DOCKER_TIMEOUT"); do
-    if docker info >/dev/null 2>&1; then
-      DOCKER_OK=true
-      log "Docker healthy after ${i}s"
-      break
-    fi
-    if ! systemctl is-active docker >/dev/null 2>&1; then
-      log_err "Docker process died during startup"
-      break
-    fi
-    [ $((i % 10)) -eq 0 ] && log "  waiting for dockerd... (${i}/${DOCKER_TIMEOUT}s) mem=$(mem_free)MB free"
+    docker info >/dev/null 2>&1 && break
+    [ $((i % 10)) -eq 0 ] && log "  waiting... (${i}s)"
     sleep 1
   done
+  docker info >/dev/null 2>&1 || { log_err "FATAL: Docker failed"; exit 1; }
+fi
+DOCKER_S=$(( $(date +%s) - BOOT_START ))
+log "Docker ready (${DOCKER_S}s)"
+
+# ══════════════════════════════════════════════════════════════
+# PHASE 0.5: HM self-update
+# ══════════════════════════════════════════════════���═══════════
+if [ "$HM_DELIVERY" = "docker" ] && [ -n "$HM_IMAGE" ]; then
+  log "═══ PHASE 0.5: HM self-update ═══"
+  OLD_ID=$(docker inspect --format '{{.Id}}' "$HM_IMAGE" 2>/dev/null || echo "none")
+  if docker pull "$HM_IMAGE" >/dev/null 2>&1; then
+    NEW_ID=$(docker inspect --format '{{.Id}}' "$HM_IMAGE" 2>/dev/null || echo "none")
+    if [ "$OLD_ID" != "$NEW_ID" ]; then
+      log "  HM image updated — activating"
+      HM_HOME=$(eval echo "~$HM_USER")
+      docker run --rm -v /nix:/nix -v "$HM_HOME:$HM_HOME" -v /etc:/etc -v /tmp:/tmp "$HM_IMAGE" 2>&1 | while IFS= read -r l; do log "    $l"; done
+      log "  HM activated"
+    else
+      log "  HM unchanged"
+    fi
+  else
+    log "  HM pull failed — using existing"
+  fi
 fi
 
-if [ "$DOCKER_OK" = false ]; then
-  log_err "FATAL: Docker failed after ${DOCKER_TIMEOUT}s"
-  ntfy "Docker FAILED" "Docker daemon did not start on $HOSTNAME after ${DOCKER_TIMEOUT}s" "urgent" "rotating_light"
-  echo "{\"boot\":\"$(date -Iseconds)\",\"vm\":\"$VM_ALIAS\",\"docker\":\"failed\"}" > "$BOOT_JSON" 2>/dev/null || true
-  exit 1
-fi
-
-DOCKER_ELAPSED=$(( $(date +%s) - BOOT_START ))
-log "Docker ready (${DOCKER_ELAPSED}s)"
-
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 1: Cloud-data sync (git clone or pull, remote always wins)
-# ══════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════
+# PHASE 1: Cloud-data sync
+# ══════════════════════════════════════════════════════════════
 log "═══ PHASE 1: Cloud-data sync ═══"
-CLOUD_DATA_OK=false
-
-# Ensure parent dir exists
 mkdir -p "$(dirname "$CLOUD_DATA_DIR")" 2>/dev/null || true
-
 if [ -d "$CLOUD_DATA_DIR/.git" ]; then
-  log "Pulling cloud-data (remote wins)..."
-  if (cd "$CLOUD_DATA_DIR" && git fetch origin main 2>&1 && git reset --hard origin/main 2>&1) | while IFS= read -r line; do log "  git: $line"; done; then
-    CLOUD_DATA_OK=true
-    log "cloud-data updated"
-  else
-    log_err "git pull failed — using cached data"
-    CLOUD_DATA_OK=true  # stale but usable
-  fi
+  (cd "$CLOUD_DATA_DIR" && git fetch origin main 2>&1 && git reset --hard origin/main 2>&1) >/dev/null 2>&1 && log "cloud-data updated" || log "cloud-data pull failed — using cached"
 else
-  log "Cloning cloud-data..."
-  if git clone --depth 1 "$CLOUD_DATA_REPO" "$CLOUD_DATA_DIR" 2>&1 | while IFS= read -r line; do log "  git: $line"; done; then
-    CLOUD_DATA_OK=true
-    log "cloud-data cloned"
-  else
-    log_err "git clone failed — cannot determine declared containers"
-  fi
+  git clone --depth 1 "$CLOUD_DATA_REPO" "$CLOUD_DATA_DIR" >/dev/null 2>&1 && log "cloud-data cloned" || log_err "cloud-data clone failed"
 fi
 
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 2: Drift detection (declared vs actual containers)
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 2: Drift detection ═══"
-
-# Find VM-specific containers manifest from cloud-data
+# Find VM manifest
 CONTAINERS_JSON=""
-for pattern in "cloud-data-containers-${VM_ALIAS}.json" "cloud-data-containers-*.json"; do
+for pattern in "cloud-data-containers-${VM_ALIAS}.json"; do
   MATCH=$(find "$CLOUD_DATA_DIR" -maxdepth 1 -name "$pattern" 2>/dev/null | head -1)
   [ -n "$MATCH" ] && CONTAINERS_JSON="$MATCH" && break
 done
+[ -z "$CONTAINERS_JSON" ] && { log_err "No manifest for vm=$VM_ALIAS"; exit 1; }
 
-# Copy alongside container-init.json for reference
-if [ -n "$CONTAINERS_JSON" ]; then
-  cp -f "$CONTAINERS_JSON" /opt/scripts/container-init-declared.json 2>/dev/null || true
-  log "Declared containers: $CONTAINERS_JSON"
-else
-  log_err "No containers manifest found for vm=$VM_ALIAS"
-fi
+DECLARED_SERVICES=$(jq -r '.services[].compose_path' "$CONTAINERS_JSON")
+PROJECT_COUNT=$(echo "$DECLARED_SERVICES" | wc -w)
+log "Declared: $PROJECT_COUNT services"
 
-# Build declared list
-DECLARED_SERVICES=""
-DECLARED_IMAGES=""
-DECLARED_COUNT=0
-if [ -n "$CONTAINERS_JSON" ] && [ -f "$CONTAINERS_JSON" ]; then
-  DECLARED_COUNT=$(jq '.services | length' "$CONTAINERS_JSON")
-  DECLARED_SERVICES=$(jq -r '.services[].compose_path' "$CONTAINERS_JSON")
-  DECLARED_IMAGES=$(jq -r '.services[].images[]' "$CONTAINERS_JSON" 2>/dev/null | sort -u)
-  log "Declared: $DECLARED_COUNT services"
-fi
-
-# Build actual list (existing containers on this VM)
-ACTUAL_CONTAINERS=$(docker ps -a --format '{{.Names}}' 2>/dev/null | sort)
-ACTUAL_COUNT=$(echo "$ACTUAL_CONTAINERS" | grep -c . 2>/dev/null || echo 0)
-log "Actual: $ACTUAL_COUNT containers"
-
-# Generate drift report
-DRIFT_MISSING=""
-DRIFT_EXTRA=""
-DRIFT_STOPPED=""
-
-if [ -n "$CONTAINERS_JSON" ] && [ -f "$CONTAINERS_JSON" ]; then
-  # Check each declared service
-  while IFS= read -r svc_json; do
-    svc_name=$(echo "$svc_json" | jq -r '.name')
-    svc_path=$(echo "$svc_json" | jq -r '.compose_path')
-    # Check if compose dir exists
-    if [ ! -d "$svc_path" ]; then
-      DRIFT_MISSING="$DRIFT_MISSING $svc_name(no-dir)"
-      continue
-    fi
-    # Check if container exists
-    if ! echo "$ACTUAL_CONTAINERS" | grep -q "^${svc_name}$"; then
-      # Maybe container name differs from service name
-      compose_containers=$(cd "$svc_path" 2>/dev/null && docker compose ps --format '{{.Names}}' 2>/dev/null || true)
-      if [ -z "$compose_containers" ]; then
-        DRIFT_MISSING="$DRIFT_MISSING $svc_name(no-container)"
-      fi
-    fi
-  done < <(jq -c '.services[]' "$CONTAINERS_JSON" 2>/dev/null)
-
-  # Check for stopped containers
-  DRIFT_STOPPED=$(docker ps -a --filter "status=exited" --filter "status=created" --format '{{.Names}}' 2>/dev/null | tr '\n' ' ')
-fi
-
-# Write drift JSON
-jq -n \
-  --arg vm "$VM_ALIAS" \
-  --arg ts "$(date -Iseconds)" \
-  --argjson declared "$DECLARED_COUNT" \
-  --argjson actual "$ACTUAL_COUNT" \
-  --arg missing "$(echo $DRIFT_MISSING | xargs)" \
-  --arg stopped "$(echo $DRIFT_STOPPED | xargs)" \
-  '{vm: $vm, timestamp: $ts, declared: $declared, actual: $actual, missing: $missing, stopped: $stopped}' \
-  > "$DRIFT_JSON" 2>/dev/null || true
-
-if [ -n "$DRIFT_MISSING" ]; then
-  log "DRIFT: missing services:$DRIFT_MISSING"
-fi
-if [ -n "$DRIFT_STOPPED" ]; then
-  log "DRIFT: stopped containers: $DRIFT_STOPPED"
-fi
-if [ -z "$DRIFT_MISSING" ] && [ -z "$DRIFT_STOPPED" ]; then
-  log "No drift detected"
-fi
-
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 3: Image pull (sequential, low-priority, from declared manifest)
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 3: Image pull ═══"
-PULL_COUNT=0
-PULL_FAIL=0
-
-if [ -n "$DECLARED_IMAGES" ]; then
-  IMAGE_COUNT=$(echo "$DECLARED_IMAGES" | wc -l)
-  log "Pulling $IMAGE_COUNT images (nice=$PULL_NICE ionice=$PULL_IONICE)..."
-
-  echo "$DECLARED_IMAGES" | while IFS= read -r img; do
-    [ -z "$img" ] && continue
-    log "  pull: $img (mem=$(mem_free)MB free)"
-    if ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker pull "$img" >/dev/null 2>&1; then
-      PULL_COUNT=$((PULL_COUNT + 1))
-    else
-      log_err "  pull FAILED: $img"
-      PULL_FAIL=$((PULL_FAIL + 1))
-    fi
-    sleep 2
-  done
-  log "Pull complete: $IMAGE_COUNT images"
-else
-  log "No declared images to pull"
-fi
-
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 4: Sequential container startup
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 4: Sequential startup ═══"
+# ══════════════════════════════════════════════════════════════
+# PHASE 2: For each service — pull configs + image, start/recreate
+# ══════════════════════════════════════════════════════════════
+log "═══ PHASE 2: Pull + Start ($PROJECT_COUNT services) ═══"
 STARTED=0
 FAILED=0
 BOOT_RESULTS=""
 
-# Build project list: prefer declared order, fallback to filesystem scan
-if [ -n "$DECLARED_SERVICES" ]; then
-  PROJECTS="$DECLARED_SERVICES"
-else
-  PROJECTS=""
-  for dir in "$CONTAINERS_DIR"/*/; do
-    [ -f "$dir/docker-compose.yml" ] && PROJECTS="$PROJECTS $dir"
-  done
-  for dir in /opt/*/; do
-    [ "$dir" = "$CONTAINERS_DIR/" ] || [ "$dir" = "/opt/scripts/" ] || [ "$dir" = "/opt/ssh-keys/" ] && continue
-    [ -f "$dir/docker-compose.yml" ] && PROJECTS="$PROJECTS $dir"
-  done
-fi
-
-PROJECT_COUNT=$(echo $PROJECTS | wc -w)
-log "Starting $PROJECT_COUNT projects (delay=${START_DELAY}s)..."
-
-for dir in $PROJECTS; do
+for dir in $DECLARED_SERVICES; do
   svc=$(basename "$dir")
   svc_start=$(date +%s)
-  log "  [$svc] starting... mem=$(mem_free)MB free"
+  log "  [$svc] mem=$(mem_free)MB"
 
-  # Prefer docker start (lightweight) over docker compose (heavy Go binary)
-  # docker start works if containers already exist from a previous compose up
-  CONTAINERS_IN_DIR=$(cd "$dir" 2>/dev/null && docker compose ps -a --format '{{.Names}}' 2>/dev/null || true)
-
-  if [ -n "$CONTAINERS_IN_DIR" ]; then
-    # Containers exist — use lightweight docker start
-    if echo "$CONTAINERS_IN_DIR" | xargs ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker start 2>&1 | while IFS= read -r line; do log "    $line"; done; then
-      svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] started via docker-start (${svc_s}s)"
-      STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"start\"},"
-    else
-      svc_s=$(( $(date +%s) - svc_start ))
-      log_err "  [$svc] docker-start FAILED — trying compose..."
-      # Fallback to compose
-      if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
-        svc_s=$(( $(date +%s) - svc_start ))
-        log "  [$svc] started via compose-fallback (${svc_s}s)"
-        STARTED=$((STARTED + 1))
-        BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"compose\"},"
-      else
-        svc_s=$(( $(date +%s) - svc_start ))
-        log_err "  [$svc] FAILED (${svc_s}s)"
-        FAILED=$((FAILED + 1))
-        BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"compose\"},"
-      fi
+  # ── Pull configs image, extract if changed ──
+  CONFIGS_IMG="${REGISTRY}/${svc}-configs:latest"
+  OLD_CFG_ID=$(docker inspect --format '{{.Id}}' "$CONFIGS_IMG" 2>/dev/null || echo "none")
+  if docker pull "$CONFIGS_IMG" >/dev/null 2>&1; then
+    NEW_CFG_ID=$(docker inspect --format '{{.Id}}' "$CONFIGS_IMG" 2>/dev/null || echo "none")
+    if [ "$OLD_CFG_ID" != "$NEW_CFG_ID" ]; then
+      log "  [$svc] configs updated — extracting"
+      mkdir -p "$dir" 2>/dev/null || true
+      docker run --rm -v "$dir:/out" "$CONFIGS_IMG" 2>/dev/null
     fi
-  else
-    # No existing containers — must use compose to create them
-    log "  [$svc] no existing containers — using compose"
-    if (cd "$dir" && ionice -c"$PULL_IONICE" nice -n"$PULL_NICE" docker compose up -d --no-build 2>&1 | while IFS= read -r line; do log "    $line"; done); then
+  fi
+
+  # ── Run the service's compose script (it owns pull + run) ──
+  COMPOSE_SCRIPT=""
+  [ -f "$dir/build-step-compose-custom.sh" ] && COMPOSE_SCRIPT="build-step-compose-custom.sh"
+  [ -z "$COMPOSE_SCRIPT" ] && [ -f "$dir/docker-run.sh" ] && COMPOSE_SCRIPT="docker-run.sh"
+
+  if [ -n "$COMPOSE_SCRIPT" ]; then
+    if (cd "$dir" && sh "$COMPOSE_SCRIPT") >/dev/null 2>&1; then
       svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] created+started via compose (${svc_s}s)"
+      log "  [$svc] ok (${svc_s}s)"
       STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"compose-create\"},"
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true},"
     else
       svc_s=$(( $(date +%s) - svc_start ))
       log_err "  [$svc] FAILED (${svc_s}s)"
       FAILED=$((FAILED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"compose-create\"},"
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false},"
     fi
+  else
+    log "  [$svc] no compose script — skipping (needs build.sh ship)"
   fi
 
   sleep "$START_DELAY"
 done
 
-STARTUP_ELAPSED=$(( $(date +%s) - BOOT_START ))
-log "Startup: $STARTED ok, $FAILED failed (${STARTUP_ELAPSED}s)"
+STARTUP_S=$(( $(date +%s) - BOOT_START ))
+log "Phase 2: $STARTED ok, $FAILED failed (${STARTUP_S}s)"
 
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 5: Health verification + container logs on failure
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 5: Health verification ═══"
-HEALTH_START=$(date +%s)
-UNHEALTHY=""
-HEALTHY_COUNT=0
-TOTAL_CONTAINERS=0
-RESTARTED=0
-
+# ══════════════════════════════════════════════════════════════
+# PHASE 3: Health check + report
+# ══════════════════════════════════════════════════════════════
+log "═══ PHASE 3: Health check ═══"
 sleep 10
+HEALTHY=0
+TOTAL=0
+UNHEALTHY=""
 
-while IFS= read -r container; do
-  [ -z "$container" ] && continue
-  TOTAL_CONTAINERS=$((TOTAL_CONTAINERS + 1))
-  name=$(docker inspect --format='{{.Name}}' "$container" 2>/dev/null | sed 's/^\///')
-  has_hc=$(docker inspect --format='{{if .Config.Healthcheck}}yes{{else}}no{{end}}' "$container" 2>/dev/null || echo "no")
+for cid in $(docker ps -q 2>/dev/null); do
+  TOTAL=$((TOTAL + 1))
+  name=$(docker inspect --format='{{.Name}}' "$cid" 2>/dev/null | sed 's/^\///')
+  has_hc=$(docker inspect --format='{{if .Config.Healthcheck}}yes{{else}}no{{end}}' "$cid" 2>/dev/null || echo "no")
 
   if [ "$has_hc" = "yes" ]; then
-    health="starting"
-    waited=0
+    health="starting"; waited=0
     while [ "$health" = "starting" ] && [ "$waited" -lt 120 ]; do
-      health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "unknown")
+      health=$(docker inspect --format='{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "unknown")
       [ "$health" = "starting" ] && sleep 5 && waited=$((waited + 5))
     done
-
     if [ "$health" = "healthy" ]; then
-      HEALTHY_COUNT=$((HEALTHY_COUNT + 1))
-      log "  $name: healthy"
+      HEALTHY=$((HEALTHY + 1))
     else
-      log_err "  $name: UNHEALTHY ($health) — logs + restart"
-      # Dump last 20 lines of logs to journal
-      docker logs --tail 20 "$container" 2>&1 | while IFS= read -r line; do
-        echo "[container-init] [$name] $line" | systemd-cat -t container-init -p warning 2>/dev/null || true
-      done
-      docker restart "$container" >/dev/null 2>&1
-      sleep 10
-      health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "unknown")
-      RESTARTED=$((RESTARTED + 1))
-      if [ "$health" = "healthy" ]; then
-        log "  $name: healthy after restart"
-        HEALTHY_COUNT=$((HEALTHY_COUNT + 1))
-      else
-        log_err "  $name: STILL UNHEALTHY ($health)"
-        UNHEALTHY="$UNHEALTHY $name"
-      fi
-    fi
-  else
-    state=$(docker inspect --format='{{.State.Status}}' "$container" 2>/dev/null || echo "unknown")
-    if [ "$state" = "running" ]; then
-      HEALTHY_COUNT=$((HEALTHY_COUNT + 1))
-    else
-      log_err "  $name: NOT RUNNING ($state) — logs:"
-      docker logs --tail 20 "$container" 2>&1 | while IFS= read -r line; do
-        echo "[container-init] [$name] $line" | systemd-cat -t container-init -p warning 2>/dev/null || true
-      done
+      log_err "  $name: UNHEALTHY ($health)"
+      docker restart "$cid" >/dev/null 2>&1
       UNHEALTHY="$UNHEALTHY $name"
     fi
+  else
+    state=$(docker inspect --format='{{.State.Status}}' "$cid" 2>/dev/null || echo "unknown")
+    [ "$state" = "running" ] && HEALTHY=$((HEALTHY + 1)) || UNHEALTHY="$UNHEALTHY $name"
   fi
-done < <(docker ps -q 2>/dev/null)
+done
 
-HEALTH_S=$(( $(date +%s) - HEALTH_START ))
-TOTAL_ELAPSED=$(( $(date +%s) - BOOT_START ))
-log "Health: $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy, $RESTARTED restarted (${HEALTH_S}s)"
+TOTAL_S=$(( $(date +%s) - BOOT_START ))
+log "Health: $HEALTHY/$TOTAL healthy (${TOTAL_S}s)"
 
-# ══════════════════════════════════════════════════════════════════════════
-# PHASE 6: Report + ntfy
-# ══════════════════════════════════════════════════════════════════════════
-log "═══ PHASE 6: Report ═══"
-
+# ── Report ──
 cat > "$BOOT_JSON" 2>/dev/null <<EOF || true
-{"boot":"$(date -Iseconds)","vm":"$VM_ALIAS","hostname":"$HOSTNAME","docker_s":$DOCKER_ELAPSED,"projects":$PROJECT_COUNT,"started":$STARTED,"failed":$FAILED,"containers":$TOTAL_CONTAINERS,"healthy":$HEALTHY_COUNT,"restarted":$RESTARTED,"total_s":$TOTAL_ELAPSED,"detail":[${BOOT_RESULTS%,}]}
+{"boot":"$(date -Iseconds)","vm":"$VM_ALIAS","hostname":"$HOSTNAME","docker_s":$DOCKER_S,"projects":$PROJECT_COUNT,"started":$STARTED,"failed":$FAILED,"containers":$TOTAL,"healthy":$HEALTHY,"total_s":$TOTAL_S,"detail":[${BOOT_RESULTS%,}]}
 EOF
 
 if [ -n "$UNHEALTHY" ]; then
-  ntfy "Boot: UNHEALTHY:$UNHEALTHY" "vm=$VM_ALIAS | Docker:${DOCKER_ELAPSED}s | $STARTED/$PROJECT_COUNT projects | $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy | ${TOTAL_ELAPSED}s" "high" "warning"
+  ntfy "UNHEALTHY:$UNHEALTHY" "$STARTED/$PROJECT_COUNT | $HEALTHY/$TOTAL healthy | ${TOTAL_S}s" "high" "warning"
 elif [ "$FAILED" -gt 0 ]; then
-  ntfy "Boot: $FAILED failed" "vm=$VM_ALIAS | Docker:${DOCKER_ELAPSED}s | $STARTED/$PROJECT_COUNT projects | $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy | ${TOTAL_ELAPSED}s" "high" "warning"
+  ntfy "$FAILED failed" "$STARTED/$PROJECT_COUNT | $HEALTHY/$TOTAL healthy | ${TOTAL_S}s" "high" "warning"
 else
-  ntfy "Boot OK: $PROJECT_COUNT projects" "vm=$VM_ALIAS | Docker:${DOCKER_ELAPSED}s | $HEALTHY_COUNT/$TOTAL_CONTAINERS healthy | ${TOTAL_ELAPSED}s" "default" "white_check_mark"
+  ntfy "OK: $PROJECT_COUNT svcs" "$HEALTHY/$TOTAL healthy | ${TOTAL_S}s" "default" "white_check_mark"
 fi
 
-log "═══ CONTAINER INIT COMPLETE (${TOTAL_ELAPSED}s) ═══"
+log "═══ COMPLETE (${TOTAL_S}s) ═══"
