@@ -24,12 +24,13 @@ BEARER="${OIDC_TOKEN:-}"
 echo ""
 echo "═══ L1: VM Reachability (SSH keyscan) ═══"
 
-for vm in $(jq -r '.vms | to_entries[] | select(.value.ip != "TBD" and .value.wg_ip) | .value.ip' "$TOPO"); do
-  alias=$(jq -r --arg ip "$vm" '.vms | to_entries[] | select(.value.ip == $ip) | .value.ssh_alias // .key' "$TOPO")
-  if ssh-keyscan -T 5 "$vm" >/dev/null 2>&1; then
-    ok "$alias ($vm) — SSH port open"
+for entry in $(jq -r '.vms | to_entries[] | select(.value.wg_ip) | "\(.value.ssh_alias // .key)|\(.value.wg_ip)"' "$TOPO"); do
+  alias="${entry%%|*}"
+  wg_ip="${entry##*|}"
+  if ssh-keyscan -T 5 "$wg_ip" >/dev/null 2>&1; then
+    ok "$alias ($wg_ip) — SSH port open"
   else
-    fail "$alias ($vm) — SSH unreachable"
+    fail "$alias ($wg_ip) — SSH unreachable"
   fi
 done
 
