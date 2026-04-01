@@ -129,11 +129,8 @@ for dir in $DECLARED_SERVICES; do
   svc_start=$(date +%s)
   log "  [$svc] mem=$(mem_free)MB"
 
+  # ── Pull configs image, extract if changed ──
   CONFIGS_IMG="${REGISTRY}/${svc}-configs:latest"
-  SERVICE_IMGS=$(jq -r ".services[] | select(.compose_path==\"$dir\") | .images[]" "$CONTAINERS_JSON" 2>/dev/null || true)
-
-  # ── Job A: Pull configs image, extract if changed ──
-  CONFIGS_CHANGED=false
   OLD_CFG_ID=$(docker inspect --format '{{.Id}}' "$CONFIGS_IMG" 2>/dev/null || echo "none")
   if docker pull "$CONFIGS_IMG" >/dev/null 2>&1; then
     NEW_CFG_ID=$(docker inspect --format '{{.Id}}' "$CONFIGS_IMG" 2>/dev/null || echo "none")
@@ -141,52 +138,28 @@ for dir in $DECLARED_SERVICES; do
       log "  [$svc] configs updated — extracting"
       mkdir -p "$dir" 2>/dev/null || true
       docker run --rm -v "$dir:/out" "$CONFIGS_IMG" 2>/dev/null
-      CONFIGS_CHANGED=true
     fi
   fi
 
-  # ── Job B: Pull service images, check if changed ──
-  IMAGE_CHANGED=false
-  for img in $SERVICE_IMGS; do
-    [ -z "$img" ] && continue
-    OLD_IMG_ID=$(docker inspect --format '{{.Id}}' "$img" 2>/dev/null || echo "none")
-    docker pull "$img" >/dev/null 2>&1 || continue
-    NEW_IMG_ID=$(docker inspect --format '{{.Id}}' "$img" 2>/dev/null || echo "none")
-    [ "$OLD_IMG_ID" != "$NEW_IMG_ID" ] && IMAGE_CHANGED=true
-  done
+  # ── Run the service's compose script (it owns pull + run) ──
+  COMPOSE_SCRIPT=""
+  [ -f "$dir/build-step-compose-custom.sh" ] && COMPOSE_SCRIPT="build-step-compose-custom.sh"
+  [ -z "$COMPOSE_SCRIPT" ] && [ -f "$dir/docker-run.sh" ] && COMPOSE_SCRIPT="docker-run.sh"
 
-  # ── Decide: start vs recreate ──
-  CONTAINERS=$(docker ps -aq --filter "name=$svc" 2>/dev/null || true)
-
-  if [ -n "$CONTAINERS" ] && [ "$IMAGE_CHANGED" = false ] && [ "$CONFIGS_CHANGED" = false ]; then
-    # Nothing changed — lightweight start
-    echo "$CONTAINERS" | xargs docker start >/dev/null 2>&1 && {
+  if [ -n "$COMPOSE_SCRIPT" ]; then
+    if (cd "$dir" && sh "$COMPOSE_SCRIPT") >/dev/null 2>&1; then
       svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] started (${svc_s}s)"
+      log "  [$svc] ok (${svc_s}s)"
       STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"start\"},"
-    } || {
-      svc_s=$(( $(date +%s) - svc_start ))
-      log_err "  [$svc] start FAILED (${svc_s}s)"
-      FAILED=$((FAILED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"start\"},"
-    }
-  elif [ -f "$dir/docker-run.sh" ]; then
-    # Changed or new — recreate via docker-run.sh
-    [ -n "$CONTAINERS" ] && echo "$CONTAINERS" | xargs docker rm -f >/dev/null 2>&1
-    if (cd "$dir" && sh docker-run.sh) >/dev/null 2>&1; then
-      svc_s=$(( $(date +%s) - svc_start ))
-      log "  [$svc] recreated (${svc_s}s)"
-      STARTED=$((STARTED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true,\"method\":\"recreate\"},"
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":true},"
     else
       svc_s=$(( $(date +%s) - svc_start ))
       log_err "  [$svc] FAILED (${svc_s}s)"
       FAILED=$((FAILED + 1))
-      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false,\"method\":\"recreate\"},"
+      BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false},"
     fi
   else
-    log "  [$svc] no docker-run.sh — skipping (needs build.sh ship)"
+    log "  [$svc] no compose script — skipping (needs build.sh ship)"
   fi
 
   sleep "$START_DELAY"

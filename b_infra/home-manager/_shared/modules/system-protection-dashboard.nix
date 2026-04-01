@@ -16,7 +16,7 @@ let
   tmuxBin = "${pkgs.tmux}/bin/tmux";
   btopBin = "${pkgs.btop}/bin/btop";
   htopBin = "${pkgs.htop}/bin/htop";
-  dockerBin = "/usr/bin/docker";
+  dockerBin = "${pkgs.docker-client}/bin/docker";
   journalctlBin = "/usr/bin/journalctl";
 
   dashboardScript = pkgs.writeShellScript "dashboard-tmux.sh" ''

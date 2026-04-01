@@ -76,7 +76,7 @@ REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 # ── Step: Build (prepare dist/ from src/) ─────────────────────────────
 step_build() {
     log "Preparing dist/ from src/"
-    rm -rf "$DIST_DIR"
+    sudo rm -rf "$DIST_DIR"
     mkdir -p "$DIST_DIR"
     cp -rL "$SRC_DIR/"* "$DIST_DIR/"
     chmod -R u+w "$DIST_DIR"
@@ -131,9 +131,9 @@ step_deploy() {
     if [ "$REMOTE_BUILD" = "true" ]; then
         # ── Remote build: rsync full flake to VM ──
         log "Deploying flake to $DEPLOY_HOST (remote build)"
-        ssh "$DEPLOY_HOST" "mkdir -p $REMOTE_PATH"
+        ssh "$DEPLOY_HOST" "bash -c 'mkdir -p $REMOTE_PATH'"
         if command -v rsync >/dev/null 2>&1; then
-            rsync -avz --delete "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
+            rsync -avz --delete --rsync-path="bash -c rsync" "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
                 | grep -v "^sending\|^sent\|^total" || true
         else
             scp -r "$DIST_DIR/"* "$DEPLOY_HOST:$REMOTE_PATH/"
@@ -231,7 +231,7 @@ step_compose() {
         SWITCH_CMD="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true; for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do if ! command -v \$cmd >/dev/null 2>&1; then NIX_BIN=\$(dirname \$(command -v nix)); ln -sf nix \$NIX_BIN/\$cmd 2>/dev/null || sudo ln -sf nix \$NIX_BIN/\$cmd; fi; done; cd $REMOTE_PATH && nix run home-manager/release-24.11 -- switch --flake .#$HM_CONFIG -b backup"
         log "Remote cmd: $SWITCH_CMD"
         set +e
-        ssh "$DEPLOY_HOST" "$SWITCH_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        ssh "$DEPLOY_HOST" "bash -c '$SWITCH_CMD'" 2>&1 | tee -a "$BUILD_LOG_FILE"
         SWITCH_RC=${PIPESTATUS:-$?}
         set -e
         if [ "$SWITCH_RC" -ne 0 ]; then
@@ -249,7 +249,7 @@ step_compose() {
         ACTIVATE_CMD="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true; for cmd in nix-build nix-instantiate; do if ! command -v \$cmd >/dev/null 2>&1; then NIX_BIN=\$(dirname \$(command -v nix)); ln -sf nix \$NIX_BIN/\$cmd 2>/dev/null || sudo ln -sf nix \$NIX_BIN/\$cmd; fi; done; $CLOSURE/activate"
         log "Remote cmd: $ACTIVATE_CMD"
         set +e
-        ssh "$DEPLOY_HOST" "$ACTIVATE_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        ssh "$DEPLOY_HOST" "bash -c '$ACTIVATE_CMD'" 2>&1 | tee -a "$BUILD_LOG_FILE"
         ACTIVATE_RC=${PIPESTATUS:-$?}
         set -e
         if [ "$ACTIVATE_RC" -ne 0 ]; then
@@ -310,8 +310,7 @@ step_docker_package() {
     # Collect runtime closure (only store paths referenced at runtime)
     log "Collecting runtime closure..."
     DOCKER_CTX="$DIST_DIR/docker-ctx"
-    chmod -R u+w "$DOCKER_CTX" 2>/dev/null || true
-    rm -rf "$DOCKER_CTX"
+    sudo rm -rf "$DOCKER_CTX"
     mkdir -p "$DOCKER_CTX/nix-store"
 
     CLOSURE_PATHS=$(nix-store -qR "$RESULT")
@@ -420,10 +419,10 @@ ACTIVATE_EOF
     NAR_COPY=""
     [ -f "$DOCKER_CTX/nix-closure.nar.gz" ] && NAR_COPY="COPY nix-closure.nar.gz /hm/nix-closure.nar.gz"
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
-FROM debian:bookworm-slim
+FROM ghcr.io/diegonmarcos/user-dev-x86-deb-nix-hm:latest
+USER root
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
-RUN apt-get update && apt-get install -y --no-install-recommends bash coreutils sudo gzip && rm -rf /var/lib/apt/lists/*
 COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
 $SECRETS_COPY
