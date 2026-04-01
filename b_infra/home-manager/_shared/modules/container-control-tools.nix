@@ -86,6 +86,16 @@
     source = "${pkgs.pkgsStatic.busybox}/bin/busybox";
   };
 
+  # HM always wins — remove imperative nix profile packages that conflict
+  home.activation.removeImperativePackages = lib.hm.dag.entryBefore ["installPackages"] ''
+    if command -v nix >/dev/null 2>&1 && nix profile list >/dev/null 2>&1; then
+      for pkg in $(nix profile list 2>/dev/null | grep "^Name:" | sed 's/.*Name:[[:space:]]*//' | sed 's/\x1b\[[0-9;]*m//g'); do
+        echo "[hm] Removing imperative nix profile package: $pkg"
+        nix profile remove "$pkg" 2>/dev/null || true
+      done
+    fi
+  '';
+
   # Auto-update git submodules in all repos on activation.
   # Ensures cloud-data submodule is always fresh.
   home.activation.gitSubmoduleUpdate = lib.hm.dag.entryAfter ["linkGeneration"] ''
