@@ -10,6 +10,15 @@
 # exec 3>/dev/watchdog 2>/dev/null || echo "[watchdog] WARNING: /dev/watchdog not available"
 WD_ENABLED=0
 DOCKER_FAIL=0
+
+# Docker CLI is FORBIDDEN in the watchdog — it spawns plugin metadata
+# subprocesses that inherit RT priority and can starve the VM.
+# Use lightweight alternatives: docker socket API via curl, or /proc.
+DOCKER_SOCK="unix:///var/run/docker.sock"
+# Query docker API without spawning any docker CLI process
+dapi() { curl -sf --max-time 5 --unix-socket /var/run/docker.sock "http://localhost$1" 2>/dev/null; }
+# Only for actions (restart/prune) — deprioritized, with timeout
+dcli() { ionice -c3 nice -n 19 timeout 15 docker "$@" 2>/dev/null; }
 DOCKER_FAIL_THRESHOLD=120
 CTR_RESTART_TRACK=""
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
@@ -38,11 +47,12 @@ sysinfo_full() {
   UPTIME=$(awk '{d=int($1/86400); h=int(($1%86400)/3600); m=int(($1%3600)/60); printf "%dd%dh%dm", d, h, m}' /proc/uptime 2>/dev/null)
   DISK=$(df / 2>/dev/null | awk 'NR==2{printf "%s/%s (%s)", $3, $2, $5}')
   CTRS=0; CTRS_HEALTHY=0; CTRS_UNHEALTHY=0; CTRS_RESTARTING=0
-  if docker info >/dev/null 2>&1; then
-    CTRS=$(docker ps -q 2>/dev/null | wc -l)
-    CTRS_HEALTHY=$(docker ps --filter health=healthy -q 2>/dev/null | wc -l)
-    CTRS_UNHEALTHY=$(docker ps --filter health=unhealthy -q 2>/dev/null | wc -l)
-    CTRS_RESTARTING=$(docker ps -a --filter status=restarting -q 2>/dev/null | wc -l)
+  if [ -S /var/run/docker.sock ]; then
+    CTRS_JSON=$(dapi "/containers/json?all=true" || echo "[]")
+    CTRS=$(printf '%s' "$CTRS_JSON" | grep -c '"Id"' || echo 0)
+    CTRS_HEALTHY=$(printf '%s' "$CTRS_JSON" | grep -c '"healthy"' || echo 0)
+    CTRS_UNHEALTHY=$(printf '%s' "$CTRS_JSON" | grep -c '"unhealthy"' || echo 0)
+    CTRS_RESTARTING=$(printf '%s' "$CTRS_JSON" | grep -c '"restarting"' || echo 0)
   fi
   TOP_PROCS=$(ps aux --sort=-%mem 2>/dev/null | awk 'NR>1&&NR<=6{printf "%s(%s%%/%dMB) ", $11, $4, $6/1024}')
   printf "mem=%dM/%dM(%d%%) buf+cache=%dM swap=%dM/%dM | load=%s procs=%s up=%s | psi:mem=%s cpu=%s io=%s | disk=%s | ctrs=%d(ok=%d bad=%d loop=%d) | top: %s" \
@@ -77,8 +87,8 @@ pre_action_report() {
 
   # Docker containers detail (if running)
   DOCKER_DETAIL=""
-  if docker info >/dev/null 2>&1; then
-    DOCKER_DETAIL=$(docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Size}}" 2>/dev/null | head -20)
+  if [ -S /var/run/docker.sock ]; then
+    DOCKER_DETAIL=$(dapi "/containers/json?all=true" | grep -o '"Names":\["/[^"]*"\]' | head -20 || echo "N/A")
   fi
 
   # Swap detail
@@ -154,7 +164,7 @@ while true; do
   fi
 
   # Docker liveness
-  if ! docker info >/dev/null 2>&1; then
+  if ! dapi "/_ping" >/dev/null 2>&1; then
     DOCKER_FAIL=$((DOCKER_FAIL + 1))
     # Log every 12th failure (60s) to avoid spam
     if [ $((DOCKER_FAIL % 12)) -eq 1 ]; then
@@ -174,24 +184,24 @@ while true; do
   DOCKER_FAIL=0
 
   # Restart crash-looping containers
-  for ctr in $(docker ps -a --filter status=restarting --format "{{.Names}}" 2>/dev/null); do
+  for ctr in $(dapi "/containers/json?all=true&filters=%7B%22status%22%3A%5B%22restarting%22%5D%7D" | grep -o '"Names":\["/[^"]*' | cut -d/ -f2); do
     PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true)
     if [ "$PREV" -lt 2 ]; then
       pre_action_report "CONTAINER_RESTART" "Container $ctr is crash-looping (status=restarting)" "$ctr"
       ntfy 3 "Container restart" "$ctr crash-looping" "warning,package"
-      docker restart "$ctr" --time 10 2>/dev/null || true
+      curl -sf --max-time 15 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/$ctr/restart?t=10" >/dev/null 2>&1 || true
       CTR_RESTART_TRACK="$CTR_RESTART_TRACK
 $ctr"
     fi
   done
 
   # Restart unhealthy containers
-  for ctr in $(docker ps --filter health=unhealthy --format "{{.Names}}" 2>/dev/null); do
+  for ctr in $(dapi "/containers/json?filters=%7B%22health%22%3A%5B%22unhealthy%22%5D%7D" | grep -o '"Names":\["/[^"]*' | cut -d/ -f2); do
     PREV=$(echo "$CTR_RESTART_TRACK" | grep -c "^$ctr$" || true)
     if [ "$PREV" -lt 1 ]; then
       pre_action_report "CONTAINER_RESTART" "Container $ctr is unhealthy (health=unhealthy)" "$ctr"
       ntfy 3 "Container unhealthy" "$ctr unhealthy" "warning,heartpulse"
-      docker restart "$ctr" --time 10 2>/dev/null || true
+      curl -sf --max-time 15 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/$ctr/restart?t=10" >/dev/null 2>&1 || true
       CTR_RESTART_TRACK="$CTR_RESTART_TRACK
 $ctr"
     fi
@@ -202,7 +212,8 @@ $ctr"
   if [ "$MEM_AVAIL" -lt 50 ]; then
     pre_action_report "DOCKER_PRUNE" "Low memory: ${MEM_AVAIL}MB available (<50MB threshold)" "docker system prune"
     ntfy 4 "Low memory" "${MEM_AVAIL}MB available" "warning,brain"
-    docker system prune -f 2>/dev/null || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune" >/dev/null 2>&1 || true
   fi
 
   CYCLE=$((CYCLE + 1))

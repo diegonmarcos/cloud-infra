@@ -37,11 +37,11 @@ log() {
 die() { log "FATAL: $1"; exit 1; }
 
 # ── Pre-flight ──────────────────────────────────────────────────
-if ! docker info >/dev/null 2>&1; then
+if ! docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
   log "Docker not running — starting"
   sudo systemctl start docker 2>/dev/null || true
   sleep 3
-  docker info >/dev/null 2>&1 || die "Docker failed to start"
+  docker version --format '{{.Server.Version}}' >/dev/null 2>&1 || die "Docker failed to start"
 fi
 
 # GHCR login

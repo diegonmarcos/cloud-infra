@@ -59,15 +59,15 @@ ntfy() {
 log "═══ PHASE 0: Docker daemon ═══"
 log "vm=$VM_ALIAS hostname=$HOSTNAME mem=$(mem_free)MB free"
 
-if ! docker info >/dev/null 2>&1; then
+if ! docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
   log "Starting Docker..."
   systemctl start docker 2>/dev/null
   for i in $(seq 1 "$DOCKER_TIMEOUT"); do
-    docker info >/dev/null 2>&1 && break
+    docker version --format '{{.Server.Version}}' >/dev/null 2>&1 && break
     [ $((i % 10)) -eq 0 ] && log "  waiting... (${i}s)"
     sleep 1
   done
-  docker info >/dev/null 2>&1 || { log_err "FATAL: Docker failed"; exit 1; }
+  docker version --format '{{.Server.Version}}' >/dev/null 2>&1 || { log_err "FATAL: Docker failed"; exit 1; }
 fi
 DOCKER_S=$(( $(date +%s) - BOOT_START ))
 log "Docker ready (${DOCKER_S}s)"
