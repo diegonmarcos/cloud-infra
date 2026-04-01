@@ -38,6 +38,8 @@
     tree
     lsof
     iftop
+    iotop
+    sysstat      # iostat, mpstat, pidstat, sar
     bc
     inotify-tools
 
