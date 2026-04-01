@@ -32,6 +32,8 @@
     # ── System ──
     htop
     btop
+    tmux
+    ttyd
     ncdu
     tree
     lsof

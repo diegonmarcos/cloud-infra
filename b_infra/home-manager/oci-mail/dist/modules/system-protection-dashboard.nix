@@ -12,12 +12,11 @@
 
 let
   ttydPort = 7681;
-  basePath = "/dash-${vmName}";
   ttydBin = "${pkgs.ttyd}/bin/ttyd";
   tmuxBin = "${pkgs.tmux}/bin/tmux";
   btopBin = "${pkgs.btop}/bin/btop";
   htopBin = "${pkgs.htop}/bin/htop";
-  dockerBin = "/usr/bin/docker";
+  dockerBin = "${pkgs.docker-client}/bin/docker";
   journalctlBin = "/usr/bin/journalctl";
 
   dashboardScript = pkgs.writeShellScript "dashboard-tmux.sh" ''
@@ -65,7 +64,7 @@ let
     ExecStartPre=-${tmuxBin} kill-session -t dashboard
     ExecStart=${ttydBin} \
       --port ${toString ttydPort} \
-      --base-path ${basePath} \
+      --interface 0.0.0.0 \
       --writable \
       --max-clients 3 \
       --ping-interval 30 \
@@ -128,7 +127,7 @@ in {
       $SUDO systemctl start dashboard-ttyd 2>/dev/null || true
       echo "$LOG started"
     fi
-    echo "$LOG ttyd dashboard on port ${toString ttydPort} (base-path: ${basePath})"
+    echo "$LOG ttyd dashboard on port ${toString ttydPort} (${vmName}.app)"
     ) || echo "[dashboard] FAILED — activation continues"
   '';
 }

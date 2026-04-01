@@ -12,6 +12,7 @@ in {
     ./modules/shared-all.nix
     (import ./modules/system-protection.nix { inherit config pkgs lib; vmName = "gcp-proxy"; })
     (import ./modules/system-protection-systemd-control.nix {})
+    (import ./modules/container-control-init.nix { vmName = "gcp-proxy"; })
   ];
   home.username = vmData.user;
   home.homeDirectory = vmData.home;
