@@ -17,13 +17,19 @@ echo "════════════════════════�
 echo "  Ship HM: $VM"
 echo "══════════════════════════════════════════"
 
-# ── 1. Clone fresh ──────────────────────────────────────────────
-echo "[1/5] Cloning $REPO"
+# ── 1. Clone fresh (or use existing workspace) ─────────────────
 mkdir -p ~/.ssh
 ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
 git config --global --add safe.directory "*"
-git clone --depth 2 --recurse-submodules "$REPO" /workspace
-cd /workspace
+if [ -d /workspace/.git ]; then
+  echo "[1/5] Using existing /workspace"
+  cd /workspace
+  git pull --ff-only 2>/dev/null || true
+else
+  echo "[1/5] Cloning $REPO"
+  git clone --depth 2 --recurse-submodules "$REPO" /workspace
+  cd /workspace
+fi
 git submodule update --remote
 # cloud-data: remote always wins
 git -C cloud-data fetch origin main 2>/dev/null && git -C cloud-data reset --hard origin/main 2>/dev/null || true
