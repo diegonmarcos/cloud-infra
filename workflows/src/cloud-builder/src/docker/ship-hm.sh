@@ -60,8 +60,10 @@ chmod 600 ~/.ssh/config
 
 # ── 3. Setup SOPS ──────────────────────────────────────────────
 echo "[3/5] Setting up SOPS"
-mkdir -p ~/.config/sops/age
-echo "${SOPS_AGE_KEY:?}" > ~/.config/sops/age/keys.txt
+if [ ! -f ~/.config/sops/age/keys.txt ]; then
+  mkdir -p ~/.config/sops/age
+  echo "${SOPS_AGE_KEY:?SOPS_AGE_KEY required}" > ~/.config/sops/age/keys.txt
+fi
 export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
 
 # ── 4. Update builder flake.lock (fresh config.json hash) ──────
