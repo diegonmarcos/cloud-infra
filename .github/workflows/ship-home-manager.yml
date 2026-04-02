@@ -11,8 +11,8 @@
 # ┌──────────────────────────────────────────────────────────────┐
 # │  Ship home-manager to VMs                                    │
 # │                                                              │
-# │  Thin GHA wrapper — logic in ship-home-manager.sh            │
-# │  Per-VM matrix from cloud-data-gha-config.json               │
+# │  GHA = WG + secrets + docker run. ALL logic in the engine.   │
+# │  Per-VM matrix, builder container is self-contained.          │
 # └──────────────────────────────────────────────────────────────┘
 
 name: "Ship → home-manager"
@@ -44,14 +44,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    env:
-      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
-      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
-      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
-      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
-      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
-      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
-      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
     steps:
       - name: Gate
         id: gate
@@ -75,28 +67,18 @@ jobs:
           WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
         run: bash .github/workflows/scripts/setup-wireguard.sh
 
-      - name: Resolve SSH + Ship
+      - name: Ship
         if: steps.gate.outputs.skip != 'true'
         run: |
-          GHA_CONFIG="cloud-data/cloud-data-gha-config.json"
-          VM="${{ matrix.vm }}"
-          # Use WG IPs from cloud-data (SSH via WireGuard mesh)
-          HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
-          USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG")
-          case "$VM" in
-            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; USER="${GCP_PROXY_USER:-$USER}" ;;
-            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    USER="${GCP_T4_USER:-$USER}" ;;
-            *)         KEY="$OCI_SSH_KEY" ;;
-          esac
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
-          docker run --rm \
+          docker run --rm --network=host \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $HOME/.docker:/root/.docker \
-            -e SSH_KEY="$KEY" \
-            -e SSH_HOST="$HOST" \
-            -e SSH_USER="$USER" \
-            -e SSH_ALIAS="$VM" \
+            -e VM="${{ matrix.vm }}" \
+            -e OCI_SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
+            -e GCP_PROXY_SSH_KEY='${{ secrets.GCP_PROXY_SSH_KEY }}' \
+            -e GCP_T4_SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
             -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
             -e GITHUB_ACTOR='${{ github.actor }}' \
@@ -104,4 +86,4 @@ jobs:
             -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
             -e GITHUB_SHA='${{ github.sha }}' \
             ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-builder-secrets.sh && bash .github/workflows/scripts/ship-home-manager.sh $SSH_ALIAS 2>&1'
+            bash -c 'bash /opt/cloud-builder/ship-hm.sh'
