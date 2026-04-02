@@ -1,5 +1,14 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/actions/setup-deps/action.yml     │
+# │  Build:  ./build.sh workflow                                   │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+
 name: "Setup Dependencies"
-description: "Pull cloud-builder image + setup SSH/SOPS — all builds run inside container"
+description: "Pull cloud-builder image + setup SSH/SOPS/WG — all builds run inside container"
 
 inputs:
   ssh_key:
@@ -17,6 +26,9 @@ inputs:
     required: false
   sops_age_key:
     description: "SOPS age private key"
+    required: false
+  wg_private_key:
+    description: "WireGuard private key for GHA runner (joins mesh as 10.0.0.200)"
     required: false
 
 runs:
@@ -52,6 +64,13 @@ runs:
           ServerAliveCountMax 10
         EOF
         chmod 600 ~/.ssh/config
+
+    - name: Setup WireGuard
+      if: inputs.wg_private_key != ''
+      shell: bash
+      env:
+        WG_PRIVATE_KEY: ${{ inputs.wg_private_key }}
+      run: bash .github/workflows/scripts/setup-wireguard.sh
 
     - name: Setup SOPS age key
       if: inputs.sops_age_key != ''

@@ -1,4 +1,14 @@
 # ┌──────────────────────────────────────────────────────────────┐
+# │  DO NOT EDIT — this file is generated/deployed by the engine  │
+# │                                                                │
+# │  Source: cloud/workflows/src/  (templates + static)            │
+# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
+# │  Deploy: copies dist/ → .github/workflows/                    │
+# │                                                                │
+# │  Edit the source, run build.sh workflow, then commit.          │
+# └──────────────────────────────────────────────────────────────┘
+
+# ┌──────────────────────────────────────────────────────────────┐
 # │  Health — single consolidated health check                  │
 # │                                                            │
 # │  Replaces: health-http-public, health-http-private,        │
@@ -38,11 +48,7 @@ jobs:
       - uses: ./.github/actions/setup-deps
         with:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
-
-      - name: Setup WireGuard
-        env:
-          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
-        run: bash .github/workflows/scripts/setup-wireguard.sh
+          wg_private_key: ${{ secrets.WG_PRIVATE_KEY }}
 
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
