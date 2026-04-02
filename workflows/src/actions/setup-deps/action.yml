@@ -18,6 +18,9 @@ inputs:
   sops_age_key:
     description: "SOPS age private key"
     required: false
+  wg_private_key:
+    description: "WireGuard private key for GHA runner (joins mesh as 10.0.0.200)"
+    required: false
 
 runs:
   using: "composite"
@@ -52,6 +55,13 @@ runs:
           ServerAliveCountMax 10
         EOF
         chmod 600 ~/.ssh/config
+
+    - name: Setup WireGuard
+      if: inputs.wg_private_key != ''
+      shell: bash
+      env:
+        WG_PRIVATE_KEY: ${{ inputs.wg_private_key }}
+      run: bash .github/workflows/scripts/setup-wireguard.sh
 
     - name: Setup SOPS age key
       if: inputs.sops_age_key != ''
