@@ -148,16 +148,14 @@ step_deploy() {
         git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
         log "Staged dist/ for nix ($(git -C "$DIST_DIR" ls-files "$DIST_DIR" 2>/dev/null | wc -l) files)"
         DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
-        NIX_BUILD_CMD="nix build --no-link --print-out-paths --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
+        NIX_RESULT_LINK="$DIST_DIR/.hm-result"
+        NIX_BUILD_CMD="nix build --out-link $NIX_RESULT_LINK --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
 
         log "Flake: $DIST_DIR"
         log "Nix cmd: $NIX_BUILD_CMD"
 
-        NIX_OUT=""
         NIX_TMP=$(mktemp)
         set +e
-        # Run nix build directly — builder image has all deps, no devShell wrapper needed
-        log "Running: cd $DIST_DIR && $NIX_BUILD_CMD"
         cd "$DIST_DIR"
         eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
         NIX_RC=$?
@@ -173,8 +171,12 @@ step_deploy() {
             return 1
         fi
 
-        # Extract store path (last line of output)
-        RESULT=$(printf '%s\n' "$NIX_OUT" | grep '^/nix/store/' | tail -1)
+        # Resolve store path from symlink (reliable, doesn't depend on stdout)
+        RESULT=""
+        if [ -L "$NIX_RESULT_LINK" ]; then
+            RESULT=$(readlink -f "$NIX_RESULT_LINK")
+            rm -f "$NIX_RESULT_LINK"
+        fi
 
         if [ -z "$RESULT" ] || [ ! -d "$RESULT" ]; then
             log "ERROR: nix build produced no valid store path"
