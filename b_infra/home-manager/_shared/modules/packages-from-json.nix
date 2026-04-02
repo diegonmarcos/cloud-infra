@@ -27,12 +27,7 @@ let
     in lib.filter (p: p != null) resolved
   ) activeGroups;
 
-  # Custom packages — nix files in ../pkgs/ referenced by filename
-  customPackages = lib.concatMap (g:
-    map (filename: pkgs.callPackage (../pkgs + "/${filename}") {}) (g.custom_packages or [])
-  ) activeGroups;
-
-  allPackages = groupPackages ++ customPackages;
+  allPackages = groupPackages;
 
   # Build service → slice classification from groups
   collectServices = sliceName:
