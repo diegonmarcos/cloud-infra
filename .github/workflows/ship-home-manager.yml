@@ -98,7 +98,9 @@ jobs:
               set -e
               mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
               git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace
-              cd /workspace && git submodule update --remote
+              cd /workspace
+              git submodule update --remote
+              git -C cloud-data fetch origin main && git -C cloud-data reset --hard origin/main
               nix flake update config-json --flake /opt/cloud-builder-flake 2>&1 || echo "[builder] flake update skipped"
               bash .github/workflows/scripts/cloud-builder-secrets.sh
               bash .github/workflows/scripts/ship-home-manager.sh $SSH_ALIAS 2>&1
