@@ -94,4 +94,12 @@ jobs:
             -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
             -e GITHUB_SHA='${{ github.sha }}' \
             ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-builder-secrets.sh && bash .github/workflows/scripts/ship-home-manager.sh $SSH_ALIAS 2>&1'
+            bash -c '
+              set -e
+              mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null
+              git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace
+              cd /workspace && git submodule update --remote
+              nix flake update config-json --flake /opt/cloud-builder-flake 2>&1 || echo "[builder] flake update skipped"
+              bash .github/workflows/scripts/cloud-builder-secrets.sh
+              bash .github/workflows/scripts/ship-home-manager.sh $SSH_ALIAS 2>&1
+            '
