@@ -147,7 +147,6 @@ step_deploy() {
         # Nix flakes in git repos only see tracked files — force-stage dist/
         git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
         log "Staged dist/ for nix ($(git -C "$DIST_DIR" ls-files "$DIST_DIR" 2>/dev/null | wc -l) files)"
-        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
         NIX_RESULT_LINK="$DIST_DIR/.hm-result"
         NIX_BUILD_CMD="nix build --out-link $NIX_RESULT_LINK --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
 
@@ -155,10 +154,18 @@ step_deploy() {
         log "Nix cmd: $NIX_BUILD_CMD"
 
         NIX_TMP=$(mktemp)
+        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
         set +e
         cd "$DIST_DIR"
-        eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
-        NIX_RC=$?
+        if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
+            log "Using deps devShell from $DEPS_FLAKE (provides cached flake inputs)"
+            nix develop "$DEPS_FLAKE#" --command bash -c "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
+        else
+            log "Direct nix build (no deps flake)"
+            eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
+        fi
         set -e
         NIX_OUT=$(cat "$NIX_TMP")
         cat "$NIX_TMP" >> "$BUILD_LOG_FILE"
