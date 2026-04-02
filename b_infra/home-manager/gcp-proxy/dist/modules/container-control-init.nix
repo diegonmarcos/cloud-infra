@@ -17,6 +17,7 @@
 
 let
   dockerdBin = "${pkgs.docker}/bin/dockerd";
+  youkiBin = "${pkgs.youki}/bin/youki";
   cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
   vmData = cloudData.vms.${vmName} or {};
   # Read HM build.json for this VM (delivery method, image, etc.)
@@ -59,6 +60,19 @@ in {
   home.file."container-init-boot.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-boot.json";
   home.file."containers".source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
   home.file."scripts".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts";
+
+  # ── Docker daemon.json — youki (Rust) replaces runc (Go) as default runtime ──
+  home.file.".local/share/container-init/daemon.json".text = builtins.toJSON {
+    default-runtime = "youki";
+    runtimes = {
+      youki = { path = youkiBin; };
+    };
+    log-driver = "json-file";
+    log-opts = {
+      max-size = "10m";
+      max-file = "3";
+    };
+  };
 
   # ── Docker unit file — NO [Install], container-init starts it ───────
   home.file.".local/share/container-init/docker.service".text = ''
@@ -104,6 +118,17 @@ in {
     $SUDO cp -f "$SRC/container-init.sh" /opt/scripts/container-init.sh
     $SUDO cp -f "$SRC/container-init.json" /opt/scripts/container-init.json
     $SUDO chmod +x /opt/scripts/container-init.sh
+
+    # Deploy daemon.json (youki runtime + log config)
+    $SUDO mkdir -p /etc/docker
+    DAEMON_JSON="$SRC/daemon.json"
+    DAEMON_DEST="/etc/docker/daemon.json"
+    DJNEW=$(cat "$DAEMON_JSON")
+    DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
+    if [ "$DJNEW" != "$DJOLD" ]; then
+      echo "$DJNEW" | $SUDO tee "$DAEMON_DEST" > /dev/null
+      echo "[container-init] daemon.json deployed (youki runtime)"
+    fi
 
     # Deploy docker.service (only if changed)
     DOCKER_UNIT="$SRC/docker.service"

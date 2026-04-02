@@ -128,7 +128,7 @@ in {
         SWAP_SIZE_MB=$(($(stat -c%s /swapfile 2>/dev/null || echo 0) / 1024 / 1024))
       fi
       DOCKER_SIZE="N/A"
-      if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+      if command -v docker >/dev/null 2>&1 && docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
         DOCKER_SIZE=$(docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
       fi
 

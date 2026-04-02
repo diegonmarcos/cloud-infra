@@ -1,5 +1,5 @@
 # WireGuard mesh configuration module for Home Manager
-# Canonical topology — keys generated on-VM (private key never leaves machine)
+# Private keys owned by vault, deployed via sops secrets pipeline
 { vmName }:
 
 { config, lib, pkgs, ... }:
@@ -25,13 +25,10 @@ let
   };
 
   # Build topology from JSON peers (VMs) + clients (surface, termux)
-  # NEVER silently drop peers — fail the build if any public key is missing
-  allPeerEntries = map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers;
-  missingKeyPeers = builtins.filter (e: e.value.publicKey == null) allPeerEntries;
   peerEntries = builtins.listToAttrs (
-    if missingKeyPeers != [] then
-      builtins.throw "FATAL: WireGuard peers missing public keys: ${builtins.concatStringsSep ", " (map (e: e.name) missingKeyPeers)}. Add wg_public_key to each VM's HM build.json and re-run derive-cloud-data.ts"
-    else allPeerEntries
+    builtins.filter (e: e.value.publicKey != null) (
+      map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
+    )
   );
   clientEntries = lib.mapAttrs toClientEntry cloudData.wireguard.clients;
   topology = peerEntries // clientEntries;
@@ -46,7 +43,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1280
+    MTU = 1380
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.wireguard.subnet} -o wg0 -j MASQUERADE
   '';
@@ -57,7 +54,7 @@ let
     Address = ${vm.address}/24
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
-    MTU = 1280
+    MTU = 1380
     PostUp = iptables -I FORWARD -i wg0 -j ACCEPT; iptables -I FORWARD -o wg0 -j ACCEPT
     PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT
   '';
@@ -127,26 +124,21 @@ in {
       exit 1
     fi
 
-    # 1. Read existing private key (use sudo — /etc/wireguard is 700 root:root)
-    PRIVKEY=""
-    if $SUDO test -f "$WG_CONF"; then
-      PRIVKEY=$($SUDO grep -oP '(?<=PrivateKey = ).+' "$WG_CONF" 2>/dev/null || true)
-    fi
+    # 1. Read private key from sops secrets (deployed by build.sh secrets)
+    VM_NAME_UPPER=$(echo "${vmName}" | tr '[:lower:]-' '[:upper:]_')
+    SECRETS_DIR="$HOME/.config/home-manager/.secrets.d"
+    SECRET_FILE="$SECRETS_DIR/WG_PRIVATE_KEY_$VM_NAME_UPPER"
 
-    if [ -z "$PRIVKEY" ]; then
-      echo "$WG_LOG_PREFIX No existing PrivateKey in $WG_CONF — generating new keypair"
-      WG_BIN="${pkgs.wireguard-tools}/bin/wg"
-      if [ ! -x "$WG_BIN" ]; then
-        echo "$WG_LOG_PREFIX ERROR: $WG_BIN not found — cannot generate keypair"
-        exit 1
-      fi
-      PRIVKEY=$($WG_BIN genkey)
-      PUBKEY=$(echo "$PRIVKEY" | $WG_BIN pubkey)
-      echo "$WG_LOG_PREFIX Generated new keypair for ${vmName}"
-      echo "$WG_LOG_PREFIX PUBLIC KEY: $PUBKEY"
-      echo "$WG_LOG_PREFIX *** Update wireguard.nix topology publicKey for ${vmName}, then redeploy all VMs ***"
-      $SUDO mkdir -p /etc/wireguard
+    # STRICT: key MUST come from sops secrets. No fallback, no generation, no reading existing config.
+    if [ ! -f "$SECRET_FILE" ]; then
+      echo "$WG_LOG_PREFIX FATAL: WG private key not found at $SECRET_FILE"
+      echo "$WG_LOG_PREFIX Fix: ensure sops secrets.yaml has WG_PRIVATE_KEY_$VM_NAME_UPPER and redeploy"
+      exit 1
     fi
+    PRIVKEY=$(cat "$SECRET_FILE" | tr -d '[:space:]')
+    echo "$WG_LOG_PREFIX Read private key from secrets ($SECRET_FILE)"
+
+    $SUDO mkdir -p /etc/wireguard
 
     # 2. Generate new config from template with injected key
     TEMPLATE=$(cat <<'WGTEMPLATE'
@@ -176,11 +168,6 @@ in {
       else
         echo "$WG_LOG_PREFIX wg-quick@wg0 not active — config written, start manually"
       fi
-    fi
-    # Ensure wg-quick@wg0 auto-starts on boot + is running now
-    $SUDO systemctl enable wg-quick@wg0 2>/dev/null || true
-    if ! $SUDO systemctl is-active wg-quick@wg0 >/dev/null 2>&1; then
-      $SUDO systemctl start wg-quick@wg0 2>/dev/null || echo "$WG_LOG_PREFIX wg-quick@wg0 failed to start"
     fi
     ) || echo "[wireguard] FAILED — see errors above, activation continues"
   '';
