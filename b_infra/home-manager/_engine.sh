@@ -154,7 +154,7 @@ step_deploy() {
         log "Nix cmd: $NIX_BUILD_CMD"
 
         NIX_TMP=$(mktemp)
-        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
+        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder/src"
         set +e
         cd "$DIST_DIR"
         if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
