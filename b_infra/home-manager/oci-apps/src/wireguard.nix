@@ -25,15 +25,21 @@ let
   };
 
   # Build topology from JSON peers (VMs) + clients (surface, termux)
-  peerEntries = builtins.listToAttrs (
-    builtins.filter (e: e.value.publicKey != null) (
-      map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
-    )
+  # Keep all peers (even with null keys) so every VM can find itself in the map.
+  # Peers with null keys are excluded later when generating [Peer] blocks.
+  allPeerEntries = builtins.listToAttrs (
+    map (p: { name = p.name; value = toTopoEntry p; }) cloudData.wireguard.peers
   );
   clientEntries = lib.mapAttrs toClientEntry cloudData.wireguard.clients;
-  topology = peerEntries // clientEntries;
+  topology = allPeerEntries // clientEntries;
 
-  thisVm = topology.${vmName};
+  thisVm =
+    if topology ? ${vmName} then topology.${vmName}
+    else throw ''
+      wireguard.nix: VM "${vmName}" not found in cloud-data-home-manager.json wireguard.peers.
+      Available peers: ${builtins.concatStringsSep ", " (builtins.attrNames topology)}
+      Fix: ensure cloud-data submodule is up to date (git submodule update --remote)
+    '';
 
   # ── Config generators ────────────────────────────────────────────────
 
@@ -79,11 +85,11 @@ let
   # Derive hub name from topology (the peer with role == "hub")
   hubName = (lib.findFirst (p: p.role == "hub") { name = "gcp-proxy"; } cloudData.wireguard.peers).name;
 
-  # Hub config: interface + ALL other peers
+  # Hub config: interface + ALL other peers (skip peers with null publicKey)
   mkHubConfig =
     let
       hub = topology.${hubName};
-      peers = lib.filterAttrs (n: _: n != hubName) topology;
+      peers = lib.filterAttrs (n: v: n != hubName && v.publicKey != null) topology;
     in mkHubInterface hub
        + lib.concatStrings (lib.mapAttrsToList mkPeer peers);
 
@@ -96,8 +102,16 @@ let
        + mkPeer hubName hub;
 
   # Select the right config for this VM
+  # Assert this VM's own public key is present (null means stale cloud-data)
   wgTemplate =
-    if thisVm.role == "hub" then mkHubConfig
+    if thisVm.publicKey == null then
+      throw ''
+        wireguard.nix: VM "${vmName}" has null wg_public_key in cloud-data-home-manager.json.
+        This usually means the cloud-data submodule is stale. Fix:
+          1. Regenerate cloud-data (push to cloud-data repo, or run derive-cloud-data)
+          2. Update submodule: git submodule update --remote
+      ''
+    else if thisVm.role == "hub" then mkHubConfig
     else mkSpokeConfig vmName;
 
 in {
