@@ -84,6 +84,8 @@ check_deps() {
     missing_node=""
 
     for bin in $(deps_binaries); do
+        # sudo not needed when running as root (GHA builders, containers)
+        [ "$bin" = "sudo" ] && [ "$(id -u)" = "0" ] && continue
         command -v "$bin" >/dev/null 2>&1 || missing_sys="$missing_sys $bin"
     done
 
