@@ -58,6 +58,7 @@ jobs:
               git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /cloud
               cd /cloud
               git submodule update --remote
+              git -C cloud-data fetch origin main && git -C cloud-data reset --hard origin/main
               git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
               export GIT_BASE=/
               export GITHUB_WORKSPACE=/cloud
