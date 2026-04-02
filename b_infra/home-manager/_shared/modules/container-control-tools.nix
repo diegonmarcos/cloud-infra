@@ -65,6 +65,7 @@
     docker
     docker-compose
     docker-buildx
+    youki            # Rust OCI runtime — replaces runc (Go), lighter per-container overhead
     podman
 
     # ── Database clients (used by db-agent, photos-webhook) ──
