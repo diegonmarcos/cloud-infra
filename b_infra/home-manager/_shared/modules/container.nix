@@ -5,5 +5,6 @@
     ./container-control-daemon.nix
     ./container-control-tools.nix
     ./container-control-no-build-guardrails.nix
+    ./packages-from-json.nix
   ];
 }
