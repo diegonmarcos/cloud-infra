@@ -154,17 +154,21 @@ step_deploy() {
         log "Nix cmd: $NIX_BUILD_CMD"
 
         NIX_OUT=""
+        NIX_TMP=$(mktemp)
         set +e
         if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
             log "Using deps devShell from $DEPS_FLAKE"
-            NIX_OUT=$(nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
-            NIX_RC=${PIPESTATUS:-$?}
+            nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
         else
             log "Using direct nix build (no deps flake)"
-            NIX_OUT=$(eval "$NIX_BUILD_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE")
-            NIX_RC=${PIPESTATUS:-$?}
+            eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
         fi
         set -e
+        NIX_OUT=$(cat "$NIX_TMP")
+        cat "$NIX_TMP" >> "$BUILD_LOG_FILE"
+        rm -f "$NIX_TMP"
 
         if [ "$NIX_RC" -ne 0 ]; then
             log "ERROR: nix build failed (exit $NIX_RC)"
@@ -178,6 +182,8 @@ step_deploy() {
 
         if [ -z "$RESULT" ] || [ ! -d "$RESULT" ]; then
             log "ERROR: nix build produced no valid store path"
+            log "Full nix output:"
+            printf '%s\n' "$NIX_OUT"
             log "Full nix output:"
             printf '%s\n' "$NIX_OUT"
             return 1
