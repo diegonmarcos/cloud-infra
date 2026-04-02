@@ -71,7 +71,7 @@ Host ${e.host}
     User ${e.user}
     IdentityFile ${e.identity_file}
     IdentitiesOnly yes
-
+${lib.optionalString ((e.port or 22) != 22) "    Port ${toString e.port}\n"}
 '') (builtins.filter (e: e.hostname != "TBD" && e.hostname != null) cloudData.ssh_config)}Host github.com
     HostName github.com
     User git
