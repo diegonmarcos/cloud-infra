@@ -49,7 +49,7 @@ COPY --from=builder /nix/store /nix/store
 COPY --from=builder /nix/var /nix/var
 
 # Install Docker CLI AFTER nix store copy (otherwise COPY overwrites it)
-RUN nix profile install nixpkgs#docker-client nixpkgs#docker-compose
+RUN nix profile install nixpkgs#docker-client nixpkgs#docker-compose nixpkgs#sudo
 
 # Copy node_modules
 COPY --from=builder /root/.node_modules /root/.node_modules
