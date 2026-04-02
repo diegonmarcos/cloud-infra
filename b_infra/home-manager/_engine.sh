@@ -310,7 +310,7 @@ step_docker_package() {
     # Collect runtime closure (only store paths referenced at runtime)
     log "Collecting runtime closure..."
     DOCKER_CTX="$DIST_DIR/docker-ctx"
-    sudo rm -rf "$DOCKER_CTX"
+    rm -rf "$DOCKER_CTX"
     mkdir -p "$DOCKER_CTX/nix-store"
 
     CLOSURE_PATHS=$(nix-store -qR "$RESULT")
