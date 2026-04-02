@@ -156,15 +156,11 @@ step_deploy() {
         NIX_OUT=""
         NIX_TMP=$(mktemp)
         set +e
-        if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
-            log "Using deps devShell from $DEPS_FLAKE"
-            nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
-            NIX_RC=$?
-        else
-            log "Using direct nix build (no deps flake)"
-            eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
-            NIX_RC=$?
-        fi
+        # Run nix build directly — builder image has all deps, no devShell wrapper needed
+        log "Running: cd $DIST_DIR && $NIX_BUILD_CMD"
+        cd "$DIST_DIR"
+        eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+        NIX_RC=$?
         set -e
         NIX_OUT=$(cat "$NIX_TMP")
         cat "$NIX_TMP" >> "$BUILD_LOG_FILE"
