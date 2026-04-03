@@ -81,7 +81,7 @@ step_build() {
     cp -rL "$SRC_DIR/"* "$DIST_DIR/"
     chmod -R u+w "$DIST_DIR"
     # Nix flakes ignore untracked files in git repos — stage dist/ so nix can see it
-    git add --force "$DIST_DIR" 2>/dev/null || true
+    git add "$DIST_DIR" 2>/dev/null || true
     log "Built files:"
     find "$DIST_DIR" -type f | while IFS= read -r f; do echo "  ${f#$DIST_DIR/}"; done
 }
@@ -145,7 +145,7 @@ step_deploy() {
         log "Building HM closure locally for $HM_CONFIG"
         cd "$DIST_DIR"
         # Nix flakes in git repos only see tracked files — force-stage dist/
-        git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+        git add "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
         log "Staged dist/ for nix ($(git -C "$DIST_DIR" ls-files "$DIST_DIR" 2>/dev/null | wc -l) files)"
         NIX_RESULT_LINK="$DIST_DIR/.hm-result"
         NIX_BUILD_CMD="nix build --out-link $NIX_RESULT_LINK --option eval-cache false .#homeConfigurations.\"$HM_CONFIG\".activationPackage"
@@ -287,7 +287,7 @@ step_docker_package() {
 
     cd "$DIST_DIR"
     # Nix flakes in git repos only see tracked files
-    git add --force "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+    git add "$DIST_DIR" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
     log "Staged dist/ for nix ($(find "$DIST_DIR" -type f | wc -l) files)"
 
     NIX_RESULT_LINK2="$DIST_DIR/.hm-result"

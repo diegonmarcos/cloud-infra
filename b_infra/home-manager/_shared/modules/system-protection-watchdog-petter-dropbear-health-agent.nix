@@ -231,13 +231,14 @@ in {
   home.file.".local/share/system-protection/rescue-ssh.service".text = ''
     [Unit]
     Description=Rescue SSH (Dropbear on port ${toString rescuePort}) — UNTOUCHABLE
-    After=network.target
+    After=network.target wg-quick@wg0.service
+    Wants=wg-quick@wg0.service
     Before=docker.service
     [Service]
     Slice=connectivity.slice
     Type=simple
     ExecStartPre=/opt/scripts/rescue-ssh-setup.sh
-    ExecStartPre=/bin/sh -c 'WG_IP=$(ip -4 addr show wg0 2>/dev/null | awk "/inet /{split(\$2,a,\"/\"); print a[1]}" || echo ""); if [ -n "$WG_IP" ]; then echo "DROPBEAR_BIND=$WG_IP" > /run/dropbear-bind; else echo "DROPBEAR_BIND=127.0.0.1" > /run/dropbear-bind; fi'
+    ExecStartPre=/opt/scripts/rescue-ssh-bind.sh
     ExecStart=/bin/sh -c '. /run/dropbear-bind; exec ${dropbearBin} -F -E -p $DROPBEAR_BIND:${toString rescuePort} -r /etc/dropbear/dropbear_ed25519_host_key'
     Restart=always
     RestartSec=2
@@ -254,6 +255,19 @@ in {
     [Install]
     WantedBy=multi-user.target
   '';
+
+  home.file.".local/share/system-protection/rescue-ssh-bind.sh" = {
+    executable = true;
+    text = ''
+      #!/bin/sh
+      WG_IP=$(ip -4 addr show wg0 2>/dev/null | awk '/inet / { split($2,a,"/"); print a[1] }' || echo "")
+      if [ -n "$WG_IP" ]; then
+        echo "DROPBEAR_BIND=$WG_IP" > /run/dropbear-bind
+      else
+        echo "DROPBEAR_BIND=127.0.0.1" > /run/dropbear-bind
+      fi
+    '';
+  };
 
   home.file.".local/share/system-protection/rescue-ssh-setup.sh" = {
     executable = true;
@@ -386,6 +400,7 @@ in {
     $SUDO cp -f "$SRC/disk-swap-maintenance.sh" /opt/scripts/disk-swap-maintenance.sh
     $SUDO cp -f "$SRC/disk-watchdog.sh" /opt/scripts/disk-watchdog.sh
     $SUDO cp -f "$SRC/rescue-ssh-setup.sh" /opt/scripts/rescue-ssh-setup.sh
+    $SUDO cp -f "$SRC/rescue-ssh-bind.sh" /opt/scripts/rescue-ssh-bind.sh
     $SUDO cp -f "$SRC/watchdog-petter.sh" /opt/scripts/watchdog-petter.sh
     $SUDO chmod +x /opt/scripts/disk-swap.sh /opt/scripts/disk-swap-maintenance.sh /opt/scripts/disk-watchdog.sh /opt/scripts/rescue-ssh-setup.sh /opt/scripts/watchdog-petter.sh
     $SUDO cp -f "$SRC/health-agent.sh" /opt/scripts/health-agent.sh
