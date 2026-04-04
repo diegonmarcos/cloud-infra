@@ -26,7 +26,7 @@ fi
 SERVICES=$(jq -r --arg vm "$VM" '
   .services | to_entries[]
   | select(.value.vm == $vm)
-  | [.value.dir, .key, (.value.has_docker // false | tostring)]
+  | [.value.dir, .key]
   | join("|")
 ' "$GHA_CONFIG")
 
@@ -54,7 +54,7 @@ CLOUD_DATA_DIR="$REPO_ROOT/cloud-data"
 CLOUD_DATA_PRESTAGED=""
 if [ -d "$CLOUD_DATA_DIR" ]; then
   echo "Pre-staging cloud-data/*.json into services with include_cloud_data=true"
-  while IFS='|' read -r dir name has_docker; do
+  while IFS='|' read -r dir name; do
     SVC_DIR="$REPO_ROOT/a_solutions/$dir"
     BUILD_JSON="$SVC_DIR/build.json"
     [ -f "$BUILD_JSON" ] || continue
@@ -95,7 +95,7 @@ echo "════════════════════════�
 RESULTS_DIR=$(mktemp -d)
 
 ship_one() {
-  local dir="$1" name="$2" has_docker="$3"
+  local dir="$1" name="$2"
   local log_file="$RESULTS_DIR/${name}.log"
   local svc_start
   svc_start=$(date +%s)
@@ -109,12 +109,6 @@ ship_one() {
       echo "skip" > "$RESULTS_DIR/${name}.status"
       echo "0" > "$RESULTS_DIR/${name}.dur"
       return 0
-    fi
-
-    if [ "$has_docker" = "true" ]; then
-      export REMOTE_BUILD="true"
-    else
-      unset REMOTE_BUILD 2>/dev/null || true
     fi
 
     if bash "$BUILD_SH" ship; then
@@ -132,7 +126,7 @@ ship_one() {
 # ── Launch services in parallel (xargs-based) ────────────────────
 SHIP_CMDS=$(mktemp)
 
-while IFS='|' read -r dir name has_docker; do
+while IFS='|' read -r dir name; do
   if [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ]; then
     continue
   fi
@@ -144,15 +138,15 @@ while IFS='|' read -r dir name has_docker; do
     continue
   fi
 
-  echo "$dir|$name|$has_docker" >> "$SHIP_CMDS"
+  echo "$dir|$name" >> "$SHIP_CMDS"
 done <<< "$SERVICES"
 
 export -f ship_one
 export RESULTS_DIR
 
 cat "$SHIP_CMDS" | xargs -P "$MAX_PARALLEL" -I{} bash -c '
-  IFS="|" read -r dir name has_docker <<< "{}"
-  ship_one "$dir" "$name" "$has_docker"
+  IFS="|" read -r dir name <<< "{}"
+  ship_one "$dir" "$name"
 '
 rm -f "$SHIP_CMDS"
 
@@ -168,7 +162,7 @@ fi
 # ── Collect results ──────────────────────────────────────────────
 OK=0; FAIL=0; SKIP=0
 
-while IFS='|' read -r dir name has_docker; do
+while IFS='|' read -r dir name; do
   [ -n "$FILTER" ] && [ "$dir" != "$FILTER" ] && [ "$name" != "$FILTER" ] && continue
   status=$(cat "$RESULTS_DIR/${name}.status" 2>/dev/null || echo "fail")
   dur=$(cat "$RESULTS_DIR/${name}.dur" 2>/dev/null || echo "0")
