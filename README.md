@@ -142,7 +142,7 @@ a_solutions/bc-obs_matomo/build.sh wake    # stops windmill, wakes matomo
 a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo, starts windmill
 
 # Cloudflare DNS (Terraform)
-a_solutions/ba-clo_cloudflare/build.sh
+c_vps/ba-clo_cloudflare/build.sh
 
 # Home Manager deploy (all VMs via GHA, or manual)
 b_infra/home-manager/deploy.sh oci-apps

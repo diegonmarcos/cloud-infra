@@ -148,7 +148,7 @@ resource "oci_core_security_list" "mail_server" {
 
   # HTTP (8080) - SMTP proxy for Cloudflare Worker email delivery
   # Cloudflare Workers use Cloudflare IPs (not GCP), must allow 0.0.0.0/0
-  # Protected by API key (X-API-Key: REDACTED)
+  # Protected by API key (set via sops secrets.yaml)
   ingress_security_rules {
     source    = "0.0.0.0/0"
     protocol  = "6"
