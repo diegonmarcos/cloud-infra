@@ -1,14 +1,4 @@
 # ┌──────────────────────────────────────────────────────────────┐
-# │  DO NOT EDIT — this file is generated/deployed by the engine  │
-# │                                                                │
-# │  Source: cloud/workflows/src/  (templates + static)            │
-# │  Build:  ./build.sh workflow   (generates → workflows/dist/)   │
-# │  Deploy: copies dist/ → .github/workflows/                    │
-# │                                                                │
-# │  Edit the source, run build.sh workflow, then commit.          │
-# └──────────────────────────────────────────────────────────────┘
-
-# ┌──────────────────────────────────────────────────────────────┐
 # │  Ship home-manager to VMs                                    │
 # │                                                              │
 # │  GHA = WG + secrets + docker run. ALL logic in the engine.   │
@@ -71,7 +61,7 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
           docker run --rm --network=host \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $HOME/.docker:/root/.docker \
@@ -85,5 +75,5 @@ jobs:
             -e GITHUB_ACTIONS=true \
             -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
             -e GITHUB_SHA='${{ github.sha }}' \
-            ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
+            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
             bash -c 'bash /opt/cloud-builder/ship-hm.sh'
