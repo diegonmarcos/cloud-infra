@@ -14,7 +14,7 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE: ghcr.io/diegonmarcos/cloud-builder-x86-nixos
+  IMAGE: ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm
 
 jobs:
   build:
@@ -35,13 +35,13 @@ jobs:
 
       - name: Encode Dockerfile for label
         id: dockerfile
-        run: echo "b64=$(base64 -w0 workflows/src/cloud-builder/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
+        run: echo "b64=$(base64 -w0 workflows/src/cloud-builder/src/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
 
       - name: Build and push cloud-builder image
         uses: docker/build-push-action@v6
         with:
-          context: workflows/src/cloud-builder
-          file: workflows/src/cloud-builder/docker/Dockerfile
+          context: workflows/src/cloud-builder/src
+          file: workflows/src/cloud-builder/src/docker/Dockerfile
           push: true
           build-args: |
             DOCKERFILE_B64=${{ steps.dockerfile.outputs.b64 }}

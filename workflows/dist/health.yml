@@ -38,6 +38,7 @@ jobs:
       - uses: ./.github/actions/setup-deps
         with:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
+          wg_private_key: ${{ secrets.WG_PRIVATE_KEY }}
 
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
