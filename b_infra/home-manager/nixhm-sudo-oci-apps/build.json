@@ -1,0 +1,56 @@
+{
+  "name": "nixhm-sudo-oci-apps",
+  "description": "Home Manager system image for oci-apps (C3 API, Crawlee, Gitea, PhotoPrism, etc.)",
+
+  "vm": {
+    "id": "oci-A1-f_0",
+    "alias": "oci-apps",
+    "provider": "oci",
+    "arch": "aarch64-linux",
+    "resources": {
+      "cpus": 4,
+      "ram_mb": 24576,
+      "disk_gb": 100
+    },
+    "network": {
+      "public_ip": "82.70.229.129",
+      "wg_ip": "10.0.0.6",
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "rescue_port": 2200
+    }
+  },
+
+  "hm": {
+    "user": "ubuntu",
+    "config": "ubuntu@oci-apps",
+    "delivery": "docker",
+    "image": "ghcr.io/diegonmarcos/nixhm-sudo-oci-apps",
+    "platform": "linux/arm64",
+    "remote_build": true,
+    "remote_builder": true
+  },
+
+  "firewall": {
+    "public_ports": [
+      { "port": 3010, "proto": "tcp", "desc": "AFFiNE" },
+      { "port": 8081, "proto": "tcp", "desc": "C3 API" },
+      { "port": 3000, "proto": "tcp", "desc": "Crawlee/Gitea/Backup" },
+      { "port": 3001, "proto": "tcp", "desc": "Crawlee API" },
+      { "port": 2222, "proto": "tcp", "desc": "Gitea SSH" },
+      { "port": 2223, "proto": "tcp", "desc": "Backup BUP SSH" },
+      { "port": 2224, "proto": "tcp", "desc": "Backup Borg SSH" },
+      { "port": 8099, "proto": "tcp", "desc": "cloud-spec httpd" }
+    ]
+  },
+
+  "dashboard": {
+    "dns": "oci-apps.app",
+    "port": 7681
+  },
+
+  "deploy": {
+    "host": "oci-apps",
+    "remote_path": "~/.config/home-manager"
+  }
+}
