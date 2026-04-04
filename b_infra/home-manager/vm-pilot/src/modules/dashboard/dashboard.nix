@@ -1,16 +1,16 @@
 # System Protection — Dashboard
 #
-# Web-accessible tmux monitoring dashboard served by ttyd.
-# Two tabs: "monitoring" (btop + docker stats + journal) and "processes" (btop + htop).
-# Accessed via Caddy: https://app.diegonmarcos.com/dash-<vmName>/
+# Two services:
+#   - HTML dashboard on port 7680 (busybox httpd, sidebar + ttyd iframe)
+#   - ttyd web terminal on port 7681 (tmux monitoring, iframe target)
 #
-# Deploys:
-#   - /opt/scripts/dashboard-tmux.sh (tmux layout creator)
-#   - /etc/systemd/system/dashboard-ttyd.service (ttyd web terminal)
+# HTML files sourced from vm-pilot/src/html/
+# Accessed via Caddy: https://<vm>.app/
 { vmName }:
 { config, pkgs, lib, ... }:
 
 let
+  dashboardPort = 7680;
   ttydPort = 7681;
   ttydBin = "${pkgs.ttyd}/bin/ttyd";
   tmuxBin = "${pkgs.tmux}/bin/tmux";
@@ -25,39 +25,42 @@ let
     SESSION="dashboard"
     TMUX="${tmuxBin}"
 
-    # Attach to existing session if available
     if "$TMUX" has-session -t "$SESSION" 2>/dev/null; then
       exec "$TMUX" attach-session -t "$SESSION"
     fi
 
-    # ── Tab 1: monitoring (4 panes) ──
-    # Top-left: btop
+    # Tab 1: monitoring (4 panes)
     "$TMUX" new-session -d -s "$SESSION" -n "monitoring" "${btopBin}"
-
-    # Top-right: journal errors
     "$TMUX" split-window -h -t "$SESSION:monitoring" "${journalctlBin} -p err -f --no-hostname -n 100"
-
-    # Bottom-right: journal all
     "$TMUX" split-window -v -t "$SESSION:monitoring.1" "${journalctlBin} -f --no-hostname -n 50"
-
-    # Bottom-left: docker stats (loop with no-stream for compatibility)
     "$TMUX" select-pane -t "$SESSION:monitoring.0"
     "$TMUX" split-window -v -t "$SESSION:monitoring.0" "bash -c 'while true; do ${dockerBin} stats --no-stream --format \"table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\" 2>/dev/null || echo \"docker not running\"; sleep 3; done'"
 
-    # ── Tab 2: processes (2 panes) ──
+    # Tab 2: processes
     "$TMUX" new-window -t "$SESSION" -n "processes" "${btopBin}"
     "$TMUX" split-window -h -t "$SESSION:processes" "${htopBin}"
 
-    # Select tab 1, attach
     "$TMUX" select-window -t "$SESSION:monitoring"
     exec "$TMUX" attach-session -t "$SESSION"
   '';
 
-  serviceUnit = ''
+in {
+  # ── HTML dashboard files ───────────────────────────────────────────
+  home.file.".local/share/vm-pilot/html/index.html".source = ../../html/index.html;
+  home.file.".local/share/vm-pilot/html/style.css".source = ../../html/style.css;
+  home.file.".local/share/vm-pilot/html/pilot.js".source = ../../html/pilot.js;
+
+  # ── tmux script ────────────────────────────────────────────────────
+  home.file.".local/share/system-protection/dashboard-tmux.sh" = {
+    executable = true;
+    source = dashboardScript;
+  };
+
+  # ── ttyd service (port 7681, iframe target) ────────────────────────
+  home.file.".local/share/system-protection/dashboard-ttyd.service".text = ''
     [Unit]
-    Description=ttyd dashboard — web terminal serving tmux monitoring (${vmName})
+    Description=ttyd terminal — tmux monitoring (${vmName})
     After=network.target
-    Wants=network.target
 
     [Service]
     Type=simple
@@ -68,6 +71,7 @@ let
       --writable \
       --max-clients 3 \
       --ping-interval 30 \
+      --base-path /ttyd \
       ${dashboardScript}
     Restart=always
     RestartSec=5
@@ -78,56 +82,57 @@ let
     WantedBy=multi-user.target
   '';
 
-in {
-  home.file.".local/share/system-protection/dashboard-tmux.sh" = {
-    executable = true;
-    source = dashboardScript;
-  };
+  # ── HTML dashboard service (port 7680) ─────────────────────────────
+  home.file.".local/share/vm-pilot/dashboard-httpd.service".text = ''
+    [Unit]
+    Description=vm-pilot dashboard (busybox httpd :${toString dashboardPort})
+    After=network.target
 
-  home.file.".local/share/system-protection/dashboard-ttyd.service".text = serviceUnit;
+    [Service]
+    Type=simple
+    ExecStartPre=/bin/mkdir -p /opt/pilot/html
+    ExecStart=${pkgs.busybox}/bin/busybox httpd -f -p ${toString dashboardPort} -h /opt/pilot/html
+    Restart=always
+    RestartSec=5
+    MemoryMax=8M
 
+    [Install]
+    WantedBy=multi-user.target
+  '';
+
+  # ── Activation ─────────────────────────────────────────────────────
   home.activation.installDashboard = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     (
     trap 'echo "[dashboard] FAILED at line $LINENO: $BASH_COMMAND" >&2' ERR
-    LOG="[dashboard]"
 
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
       [ -x "$p" ] && SUDO="$p" && break
     done
-    if [ -z "$SUDO" ]; then
-      echo "$LOG WARN: sudo not found — skipping"
-      exit 0
-    fi
+    [ -z "$SUDO" ] && echo "[dashboard] no sudo — skipping" && exit 0
 
-    SRC="$HOME/.local/share/system-protection"
+    SRC_SP="$HOME/.local/share/system-protection"
+    SRC_VP="$HOME/.local/share/vm-pilot"
 
-    # Deploy script
-    $SUDO mkdir -p /opt/scripts
-    $SUDO cp -f "$SRC/dashboard-tmux.sh" /opt/scripts/dashboard-tmux.sh
+    # Deploy tmux script
+    $SUDO mkdir -p /opt/scripts /opt/pilot/html
+    $SUDO cp -f "$SRC_SP/dashboard-tmux.sh" /opt/scripts/dashboard-tmux.sh
     $SUDO chmod +x /opt/scripts/dashboard-tmux.sh
 
-    # Deploy systemd unit (idempotent)
-    UNIT_FILE="/etc/systemd/system/dashboard-ttyd.service"
-    NEW_UNIT="$(cat "$SRC/dashboard-ttyd.service")"
-    CURRENT=""
-    [ -f "$UNIT_FILE" ] && CURRENT="$($SUDO cat "$UNIT_FILE" 2>/dev/null || true)"
+    # Deploy HTML
+    $SUDO cp -f "$SRC_VP/html/index.html" /opt/pilot/html/index.html
+    $SUDO cp -f "$SRC_VP/html/style.css" /opt/pilot/html/style.css
+    $SUDO cp -f "$SRC_VP/html/pilot.js" /opt/pilot/html/pilot.js
 
-    if [ "$NEW_UNIT" != "$CURRENT" ]; then
-      echo "$NEW_UNIT" | $SUDO tee "$UNIT_FILE" > /dev/null
-      $SUDO systemctl daemon-reload
-      echo "$LOG updated systemd unit"
-    fi
+    # Deploy systemd units
+    $SUDO cp -f "$SRC_SP/dashboard-ttyd.service" /etc/systemd/system/dashboard-ttyd.service
+    $SUDO cp -f "$SRC_VP/dashboard-httpd.service" /etc/systemd/system/dashboard-httpd.service
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable dashboard-ttyd.service dashboard-httpd.service 2>/dev/null || true
+    $SUDO systemctl restart dashboard-ttyd.service 2>/dev/null || true
+    $SUDO systemctl restart dashboard-httpd.service 2>/dev/null || true
 
-    $SUDO systemctl enable dashboard-ttyd.service 2>/dev/null || true
-    if $SUDO systemctl is-active dashboard-ttyd >/dev/null 2>&1; then
-      $SUDO systemctl restart dashboard-ttyd
-      echo "$LOG restarted"
-    else
-      $SUDO systemctl start dashboard-ttyd 2>/dev/null || true
-      echo "$LOG started"
-    fi
-    echo "$LOG ttyd dashboard on port ${toString ttydPort} (${vmName}.app)"
+    echo "[dashboard] deployed: html=:${toString dashboardPort} ttyd=:${toString ttydPort} (${vmName}.app)"
     ) || echo "[dashboard] FAILED — activation continues"
   '';
 }
