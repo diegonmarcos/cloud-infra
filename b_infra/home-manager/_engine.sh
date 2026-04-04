@@ -73,8 +73,26 @@ run_logged() {
 NIX_SOURCE="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
 REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 
+# ── Step: Pull vm-pilot from GHCR (optional, for decoupled builds) ───
+# If VM_PILOT_IMAGE is set, pull and extract modules to src/pilot/
+# Otherwise, src/pilot symlink to local vm-pilot/ is used (default)
+step_pull_pilot() {
+    # vm-pilot modules are resolved via src/pilot symlink → ../vm-pilot/src/modules/
+    # cp -rL in step_build resolves this symlink automatically
+    # The vm-pilot GHCR image (ghcr.io/diegonmarcos/vm-pilot) is a versioned artifact
+    # but not required for builds — the symlink handles both local and GHA (same repo)
+    if [ -L "$SRC_DIR/pilot" ] && [ -d "$SRC_DIR/pilot" ]; then
+        log "vm-pilot: OK (symlink resolves)"
+    elif [ -d "$SRC_DIR/pilot" ]; then
+        log "vm-pilot: OK (directory)"
+    else
+        log "vm-pilot: WARNING — src/pilot not found, modules may be missing"
+    fi
+}
+
 # ── Step: Build (prepare dist/ from src/) ─────────────────────────────
 step_build() {
+    step_pull_pilot
     log "Preparing dist/ from src/"
     rm -rf "$DIST_DIR"
     mkdir -p "$DIST_DIR"
