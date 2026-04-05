@@ -5,7 +5,7 @@
 {
   home.file.".local/share/vm-pilot/data-publisher.sh" = {
     executable = true;
-    source = ../../scripts/data-publisher.sh;
+    source = ../scripts/data-publisher.sh;
   };
 
   home.file.".local/share/vm-pilot/data-publisher.service".text = ''
