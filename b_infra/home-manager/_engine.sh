@@ -522,32 +522,9 @@ step_docker_push() {
     fi
 }
 
-# ── Step: Docker activate (SSH to VM, pull image, run activation) ────
-step_docker_activate() {
-    [ -z "$HM_IMAGE" ] && { log "ERROR: hm.image not set"; return 1; }
-    [ -z "$DEPLOY_HOST" ] && { log "ERROR: deploy.host not set"; return 1; }
-
-    HM_USER="$(get_config hm.user)"
-    [ -z "$HM_USER" ] || [ "$HM_USER" = "null" ] && { log "ERROR: hm.user not set in build.json"; return 1; }
-    log "Activating on $DEPLOY_HOST (user=$HM_USER): docker pull + run $HM_IMAGE"
-
-    ssh -o StrictHostKeyChecking=no "$DEPLOY_HOST" "
-        set -e
-        echo '[docker-activate] Pulling $HM_IMAGE:latest'
-        docker pull '$HM_IMAGE:latest' 2>&1 | tail -3
-        echo '[docker-activate] Running activation container'
-        docker run --rm --privileged \
-            -v /:/host \
-            -v /nix:/host/nix \
-            -v /etc:/host/etc \
-            -v /home/$HM_USER:/host/home/$HM_USER \
-            '$HM_IMAGE:latest' 2>&1
-        echo '[docker-activate] Activation complete'
-    "
-    log "Activated on $DEPLOY_HOST"
-}
-
 # ── Main ──────────────────────────────────────────────────────────────
+# NOTE: Docker activation (pull + run on VM) is handled by ship-hm.sh step 6,
+# not the engine. ship-hm.sh has SSH context; the engine doesn't.
 if [ "$HM_DELIVERY" = "docker" ]; then
     STRATEGY="docker image → GHCR → VM pulls"
 elif [ "$REMOTE_BUILD" = "true" ]; then
