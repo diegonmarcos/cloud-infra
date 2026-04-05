@@ -46,9 +46,9 @@ let
 
 in {
   # ── HTML dashboard files ───────────────────────────────────────────
-  home.file.".local/share/vm-pilot/html/index.html".source = ../../html/index.html;
-  home.file.".local/share/vm-pilot/html/style.css".source = ../../html/style.css;
-  home.file.".local/share/vm-pilot/html/pilot.js".source = ../../html/pilot.js;
+  home.file.".local/share/vm-pilot/html/index.html".source = ../html/index.html;
+  home.file.".local/share/vm-pilot/html/style.css".source = ../html/style.css;
+  home.file.".local/share/vm-pilot/html/pilot.js".source = ../html/pilot.js;
 
   # ── tmux script ────────────────────────────────────────────────────
   home.file.".local/share/system-protection/dashboard-tmux.sh" = {

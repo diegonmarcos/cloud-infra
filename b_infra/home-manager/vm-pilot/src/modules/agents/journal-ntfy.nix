@@ -6,7 +6,7 @@
 {
   home.file.".local/share/vm-pilot/journal-ntfy.sh" = {
     executable = true;
-    source = ../../scripts/journal-ntfy.sh;
+    source = ../scripts/journal-ntfy.sh;
   };
 
   home.file.".local/share/vm-pilot/journal-ntfy.service".text = ''
