@@ -435,11 +435,14 @@ if [ -f "/hm/secrets.yaml" ]; then
 fi
 
 # Ensure nix-build/nix-instantiate symlinks exist (HM activate expects them)
-NIX_PROFILE_BIN="$HOST/nix/var/nix/profiles/default/bin"
+# Nix store bin is read-only — create symlinks in /usr/local/bin instead
+NIX_BIN="$HOST/nix/var/nix/profiles/default/bin/nix"
+LOCAL_BIN="$HOST/usr/local/bin"
+mkdir -p "$LOCAL_BIN"
 for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
-    if [ -x "$NIX_PROFILE_BIN/nix" ] && [ ! -e "$NIX_PROFILE_BIN/$cmd" ]; then
-        ln -sf nix "$NIX_PROFILE_BIN/$cmd" 2>/dev/null || true
-        log "Created symlink: $cmd -> nix"
+    if [ -x "$NIX_BIN" ] && [ ! -e "$LOCAL_BIN/$cmd" ]; then
+        ln -sf /nix/var/nix/profiles/default/bin/nix "$LOCAL_BIN/$cmd" 2>/dev/null || true
+        log "Created symlink: /usr/local/bin/$cmd -> nix"
     fi
 done
 
@@ -448,7 +451,7 @@ log "Activating $HM_ACTIVATION_PATH..."
 chroot "$HOST" /bin/bash -c "
     export HOME=/home/$HM_USER
     export USER=$HM_USER
-    export PATH=/nix/var/nix/profiles/default/bin:\$HOME/.nix-profile/bin:/usr/local/bin:/usr/bin:/bin
+    export PATH=/usr/local/bin:/nix/var/nix/profiles/default/bin:\$HOME/.nix-profile/bin:/usr/bin:/bin
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
     $HM_ACTIVATION_PATH/activate
 "
