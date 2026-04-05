@@ -30,10 +30,10 @@
           container_name: ${config.container_name}
           restart: "no"  # container-init handles startup
           network_mode: host
+          env_file: .secrets
           environment:
             - SMTP_HOST=localhost
             - SMTP_PORT=25
-            - API_KEY=REDACTED
             - LISTEN_PORT=${toString config.port}
 
     '';

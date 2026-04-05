@@ -1,0 +1,51 @@
+{ config, pkgs, lib, ... }:
+
+let
+  cloudData = builtins.fromJSON (builtins.readFile ./pilot/cloud-data-home-manager.json);
+  vmData = cloudData.vms."gcp-proxy";
+in {
+  imports = [
+    (import ./pilot/default.nix { vmName = "gcp-proxy"; })
+  ];
+
+  home.username = vmData.user;
+  home.homeDirectory = vmData.home;
+  home.stateVersion = cloudData.home_manager.state_version;
+  programs.home-manager.enable = true;
+
+  # ── VM-specific: GCP Guest Agent ──────────────────────────────────────
+  home.packages = [ pkgs.google-guest-agent ];
+
+  home.file.".local/share/gcp-agent/google-guest-agent.service".text = ''
+    [Unit]
+    Description=Google Guest Agent (nix)
+    After=network-online.target
+    Wants=network-online.target
+
+    [Service]
+    Type=simple
+    ExecStart=${pkgs.google-guest-agent}/bin/google_guest_agent
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+  '';
+
+  home.activation.installGcpAgent = lib.hm.dag.entryAfter ["linkGeneration"] ''
+    (
+    SUDO=""
+    for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
+      [ -x "$p" ] && SUDO="$p" && break
+    done
+    [ -z "$SUDO" ] && exit 0
+
+    SRC="$HOME/.local/share/gcp-agent"
+    $SUDO cp -f "$SRC/google-guest-agent.service" /etc/systemd/system/google-guest-agent.service
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable google-guest-agent.service 2>/dev/null || true
+    $SUDO systemctl restart google-guest-agent.service 2>/dev/null || true
+    echo "[gcp-agent] Google Guest Agent deployed — startup scripts + rescue mode enabled"
+    ) || echo "[gcp-agent] FAILED — see errors above"
+  '';
+}

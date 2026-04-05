@@ -32,7 +32,7 @@ jobs:
       - name: Generate inside cloud-builder
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
           docker run --rm \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
             -e CLOUD_DATA_DEPLOY_KEY='${{ secrets.CLOUD_DATA_DEPLOY_KEY }}' \
@@ -42,7 +42,7 @@ jobs:
             -e GITHUB_SHA="${{ github.sha }}" \
             -e GIT_AUTHOR_NAME="github-actions[bot]" \
             -e GIT_AUTHOR_EMAIL="github-actions[bot]@users.noreply.github.com" \
-            ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
+            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
             bash -c '
               # Setup SOPS
               mkdir -p ~/.config/sops/age
