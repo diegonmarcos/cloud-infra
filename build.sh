@@ -20,6 +20,7 @@ export BUILDSH_GUARDRAIL=1
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$SCRIPT_DIR/config.json"
 ENGINE_FOLDER=$(jq -r ".engine_folder" "$SCRIPT_DIR/config.json" 2>/dev/null)
 ENGINE_DIR="$SOLUTIONS_DIR/$ENGINE_FOLDER/src"
+ENGINES_DIR="$ENGINE_DIR/shared/engines"
 export PATH="$ENGINE_DIR/node_modules/.bin:$PATH"
 
 # =============================================================================
@@ -175,9 +176,9 @@ cmd_deps() {
     fi
 
     # Generate cloud-deps.json (consolidated deps from all services)
-    if command -v tsx >/dev/null 2>&1 && [ -f "$ENGINE_DIR/engines/gen-deps.ts" ]; then
+    if command -v tsx >/dev/null 2>&1 && [ -f "$ENGINES_DIR/gen-deps.ts" ]; then
         log "Generating cloud-deps.json..."
-        tsx "$ENGINE_DIR/engines/gen-deps.ts"
+        tsx "$ENGINES_DIR/gen-deps.ts"
     else
         log "SKIP cloud-deps.json (tsx or gen-deps.ts not available)"
     fi
@@ -493,7 +494,7 @@ cmd_config() {
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
     fi
-    if [ ! -f "$ENGINE_DIR/engines/gen-cloud-data.ts" ] || [ ! -f "$ENGINE_DIR/engines/derive-cloud-data.ts" ]; then
+    if [ ! -f "$ENGINES_DIR/gen-cloud-data.ts" ] || [ ! -f "$ENGINES_DIR/derive-cloud-data.ts" ]; then
         log "SKIP: engine sources not available locally"
         return 1
     fi
@@ -504,9 +505,9 @@ cmd_config() {
     fi
     # v2 pipeline: consolidated → derivation (17 per-consumer JSONs)
     log "Generating _cloud-data-consolidated.json..."
-    tsx "$ENGINE_DIR/engines/gen-cloud-data.ts"
+    tsx "$ENGINES_DIR/gen-cloud-data.ts"
     log "Deriving per-consumer JSONs from consolidated..."
-    tsx "$ENGINE_DIR/engines/derive-cloud-data.ts"
+    tsx "$ENGINES_DIR/derive-cloud-data.ts"
 }
 
 # Generate GHA deploy workflows from build.json + templates
