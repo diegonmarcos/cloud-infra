@@ -528,9 +528,10 @@ step_docker_activate() {
     [ -z "$DEPLOY_HOST" ] && { log "ERROR: deploy.host not set"; return 1; }
 
     HM_USER="$(get_config hm.user)"
-    log "Activating on $DEPLOY_HOST: docker pull + run $HM_IMAGE"
+    [ -z "$HM_USER" ] || [ "$HM_USER" = "null" ] && { log "ERROR: hm.user not set in build.json"; return 1; }
+    log "Activating on $DEPLOY_HOST (user=$HM_USER): docker pull + run $HM_IMAGE"
 
-    ssh "$DEPLOY_HOST" "
+    ssh -o StrictHostKeyChecking=no "$DEPLOY_HOST" "
         set -e
         echo '[docker-activate] Pulling $HM_IMAGE:latest'
         docker pull '$HM_IMAGE:latest' 2>&1 | tail -3
