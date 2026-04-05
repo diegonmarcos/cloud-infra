@@ -522,6 +522,30 @@ step_docker_push() {
     fi
 }
 
+# ── Step: Docker activate (SSH to VM, pull image, run activation) ────
+step_docker_activate() {
+    [ -z "$HM_IMAGE" ] && { log "ERROR: hm.image not set"; return 1; }
+    [ -z "$DEPLOY_HOST" ] && { log "ERROR: deploy.host not set"; return 1; }
+
+    HM_USER="$(get_config hm.user)"
+    log "Activating on $DEPLOY_HOST: docker pull + run $HM_IMAGE"
+
+    ssh "$DEPLOY_HOST" "
+        set -e
+        echo '[docker-activate] Pulling $HM_IMAGE:latest'
+        docker pull '$HM_IMAGE:latest' 2>&1 | tail -3
+        echo '[docker-activate] Running activation container'
+        docker run --rm --privileged \
+            -v /:/host \
+            -v /nix:/host/nix \
+            -v /etc:/host/etc \
+            -v /home/$HM_USER:/host/home/$HM_USER \
+            '$HM_IMAGE:latest' 2>&1
+        echo '[docker-activate] Activation complete'
+    "
+    log "Activated on $DEPLOY_HOST"
+}
+
 # ── Main ──────────────────────────────────────────────────────────────
 if [ "$HM_DELIVERY" = "docker" ]; then
     STRATEGY="docker image → GHCR → VM pulls"
@@ -550,8 +574,8 @@ case "${1:-all}" in
     all)             step_build; step_secrets ;;
     ship)
         if [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" != "true" ]; then
-            # Docker delivery: build locally → package → push to GHCR → VM pulls
-            step_build; step_secrets; step_docker_package; step_docker_push
+            # Docker delivery: build locally → package → push to GHCR → VM pulls + activate
+            step_build; step_secrets; step_docker_package; step_docker_push; step_docker_activate
         elif [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" = "true" ]; then
             # ARM: can't cross-compile nix on x86 — remote build + activate on VM
             log "Remote builder: falling back to deploy+compose (skip docker packaging)"
