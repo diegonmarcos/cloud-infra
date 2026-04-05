@@ -436,7 +436,7 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 | Setting | Value | Status |
 |---------|-------|--------|
 | SMTP_PROXY_URL | http://smtp.diegonmarcos.com:8080/ | ❌ Port 8080 blocked by Oracle |
-| SMTP_PROXY_KEY | stalwart-proxy-key-2025 | - |
+| SMTP_PROXY_KEY | `wrangler secret put` | - |
 | BACKUP_EMAIL | diegonmarcos@live.com | ✅ Configured (2026-02-03) |
 | Fetch Timeout | 5 seconds | ✅ Fast failover to backup |
 
@@ -2912,7 +2912,7 @@ open "https://auth.diegonmarcos.com/api/oidc/authorization?client_id=cli&respons
 
 # 3. Exchange code for tokens
 curl -X POST https://auth.diegonmarcos.com/api/oidc/token \
-  -u "cli:cli-secret-2026-secure-token-for-automation" \
+  -u "cli:<secret-from-sops>" \
   -d "grant_type=authorization_code&code=<CODE>&redirect_uri=http://localhost:8085/callback"
 
 # 4. Use access_token from response
@@ -2925,7 +2925,7 @@ curl -H "Authorization: Bearer $TOKEN" https://db.diegonmarcos.com/api/v2/meta/b
 # In authelia configuration.yml under identity_providers.oidc.clients:
 - client_id: 'cli'
   client_name: 'CLI Client'
-  client_secret: '$pbkdf2-sha512$...'  # cli-secret-2026-secure-token-for-automation
+  client_secret: '$pbkdf2-sha512$...'  # set via secrets.yaml
   public: false
   authorization_policy: 'two_factor'
   scopes: ['openid', 'profile', 'email']

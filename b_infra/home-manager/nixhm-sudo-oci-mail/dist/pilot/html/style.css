@@ -1,0 +1,114 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --sidebar-bg: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --sidebar-w: 280px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hamburger {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 1.4rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.hamburger:hover { background: var(--border); }
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: calc(-1 * var(--sidebar-w));
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  transition: left 0.2s ease;
+  z-index: 999;
+  padding: 16px;
+}
+
+.sidebar.open { left: 0; }
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-header h2 { font-size: 1.1rem; color: var(--accent); }
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.close-btn:hover { color: var(--text); }
+
+.sidebar-section { margin-bottom: 20px; }
+
+.sidebar-section h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.sidebar-section ul { list-style: none; }
+
+.sidebar-section li {
+  padding: 4px 0;
+  font-size: 0.85rem;
+}
+
+.sidebar-section a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.sidebar-section a:hover { text-decoration: underline; }
+
+.sidebar-section .label {
+  color: var(--text-muted);
+  display: inline-block;
+  min-width: 70px;
+}
+
+.content {
+  width: 100%;
+  height: 100vh;
+}
+
+#terminal {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--bg);
+}

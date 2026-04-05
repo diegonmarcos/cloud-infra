@@ -119,7 +119,7 @@ All emails sent via Mailu → OCI Email Delivery relay (`status=sent (250 Ok)`)
 
 ### Email Account
 - Email: me@diegonmarcos.com
-- Password: ogeid1A!
+- Password: <redacted-password>
 
 ### OCI SMTP Relay
 - Host: smtp.email.eu-marseille-1.oci.oraclecloud.com:587

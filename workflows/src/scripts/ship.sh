@@ -162,7 +162,7 @@ ship_vm() {
       -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-diegonmarcos/cloud}" \
       -e GITHUB_RUN_ID="${GITHUB_RUN_ID:-local}" \
       -e GITHUB_SHA="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
-      ghcr.io/diegonmarcos/cloud-builder-x86-nixos:latest \
+      ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
       bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS 2>&1'
   else
     # Run directly (local / Dagu / any runner with nix+ssh)
