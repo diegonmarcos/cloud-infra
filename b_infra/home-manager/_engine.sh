@@ -434,28 +434,11 @@ if [ -f "/hm/secrets.yaml" ]; then
     fi
 fi
 
-# Ensure nix-build/nix-instantiate symlinks exist (HM activate expects them)
-# Nix store bin is read-only — create symlinks in /usr/local/bin instead
-NIX_BIN="$HOST/nix/var/nix/profiles/default/bin/nix"
-LOCAL_BIN="$HOST/usr/local/bin"
-mkdir -p "$LOCAL_BIN"
-for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
-    if [ -x "$NIX_BIN" ] && [ ! -e "$LOCAL_BIN/$cmd" ]; then
-        ln -sf /nix/var/nix/profiles/default/bin/nix "$LOCAL_BIN/$cmd" 2>/dev/null || true
-        log "Created symlink: /usr/local/bin/$cmd -> nix"
-    fi
-done
-
-# Run HM activation via chroot
-log "Activating $HM_ACTIVATION_PATH..."
-chroot "$HOST" /bin/bash -c "
-    export HOME=/home/$HM_USER
-    export USER=$HM_USER
-    export PATH=/usr/local/bin:/nix/var/nix/profiles/default/bin:\$HOME/.nix-profile/bin:/usr/bin:/bin
-    . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true
-    $HM_ACTIVATION_PATH/activate
-"
-log "Activation complete"
+# Write activation path for host-side activation (no chroot needed)
+# The host has nix in PATH natively — just run activate as the user via SSH
+echo "$HM_ACTIVATION_PATH" > "$HOST/tmp/.hm-activation-path"
+log "Activation path written to /tmp/.hm-activation-path: $HM_ACTIVATION_PATH"
+log "Container done — host-side activation will be triggered by ship-hm.sh"
 ACTIVATE_EOF
 
     # Generate Dockerfile
