@@ -1,7 +1,6 @@
 {
   "name": "nixhm-sudo-gcp-proxy",
   "description": "Home Manager system image for gcp-proxy (Caddy, Authelia, Vaultwarden, ntfy, Hickory DNS)",
-
   "vm": {
     "id": "gcp-E2-f_0",
     "alias": "gcp-proxy",
@@ -20,7 +19,6 @@
       "rescue_port": 2200
     }
   },
-
   "hm": {
     "user": "diego",
     "config": "diego@gcp-proxy",
@@ -29,23 +27,44 @@
     "platform": "linux/amd64",
     "remote_build": false
   },
-
   "firewall": {
     "public_ports": [
-      { "port": 80, "proto": "tcp", "desc": "HTTP (Caddy)" },
-      { "port": 443, "proto": "tcp", "desc": "HTTPS (Caddy)" },
-      { "port": 443, "proto": "udp", "desc": "QUIC (Caddy)" },
-      { "port": 993, "proto": "tcp", "desc": "IMAPS (Caddy L4 → oci-mail)" },
-      { "port": 465, "proto": "tcp", "desc": "SMTPS (Caddy L4 → oci-mail)" },
-      { "port": 587, "proto": "tcp", "desc": "SMTP Submission (Caddy L4 → oci-mail)" }
+      {
+        "port": 80,
+        "proto": "tcp",
+        "desc": "HTTP (Caddy)"
+      },
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS (Caddy)"
+      },
+      {
+        "port": 443,
+        "proto": "udp",
+        "desc": "QUIC (Caddy)"
+      },
+      {
+        "port": 993,
+        "proto": "tcp",
+        "desc": "IMAPS (Caddy L4 \u2192 oci-mail)"
+      },
+      {
+        "port": 465,
+        "proto": "tcp",
+        "desc": "SMTPS (Caddy L4 \u2192 oci-mail)"
+      },
+      {
+        "port": 587,
+        "proto": "tcp",
+        "desc": "SMTP Submission (Caddy L4 \u2192 oci-mail)"
+      }
     ]
   },
-
   "dashboard": {
     "dns": "gcp-proxy.app",
-    "port": 7681
+    "port": 7680
   },
-
   "deploy": {
     "host": "gcp-proxy",
     "remote_path": "~/.config/home-manager"
