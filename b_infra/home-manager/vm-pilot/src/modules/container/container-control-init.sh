@@ -9,6 +9,7 @@
 # ║   container-init                    Full boot sequence          ║
 # ║   container-init dockerd-up         Start Docker daemon         ║
 # ║   container-init dockerd-down       Stop Docker daemon          ║
+# ║   container-init nixhm-up           Pull + activate HM image    ║
 # ║   container-init containers-up      Pull + start all services   ║
 # ║   container-init containers-down    Stop all services           ║
 # ║   container-init containers-restart Restart all services        ║
@@ -324,6 +325,7 @@ case "${1:-boot}" in
   boot)               cmd_boot ;;
   dockerd-up)         cmd_dockerd_up ;;
   dockerd-down)       cmd_dockerd_down ;;
+  nixhm-up)           cmd_dockerd_up && cmd_hm_update ;;
   containers-up)      cmd_containers_up ;;
   containers-down)    cmd_containers_down ;;
   containers-restart) cmd_containers_restart ;;
@@ -331,5 +333,5 @@ case "${1:-boot}" in
   service-down)       cmd_service_down "${2:-}" ;;
   health)             cmd_health ;;
   status)             cmd_status ;;
-  *)                  echo "Usage: $0 {boot|dockerd-up|dockerd-down|containers-up|containers-down|containers-restart|service-up <name>|service-down <name>|health|status}" >&2; exit 1 ;;
+  *)                  echo "Usage: $0 {boot|dockerd-up|dockerd-down|nixhm-up|containers-up|containers-down|containers-restart|service-up <name>|service-down <name>|health|status}" >&2; exit 1 ;;
 esac
