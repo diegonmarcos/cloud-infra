@@ -141,13 +141,13 @@ for dir in $DECLARED_SERVICES; do
     fi
   fi
 
-  # ── Run the service's compose script (it owns pull + run) ──
-  COMPOSE_SCRIPT=""
-  [ -f "$dir/build-step-compose-custom.sh" ] && COMPOSE_SCRIPT="build-step-compose-custom.sh"
-  [ -z "$COMPOSE_SCRIPT" ] && [ -f "$dir/docker-run.sh" ] && COMPOSE_SCRIPT="docker-run.sh"
-
-  if [ -n "$COMPOSE_SCRIPT" ]; then
-    if (cd "$dir" && sh "$COMPOSE_SCRIPT") >/dev/null 2>&1; then
+  # ── Pull + run (no build — images are pre-built on GHCR) ──
+  if [ -f "$dir/docker-compose.yml" ]; then
+    ENV_FLAG=""
+    [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file .secrets"
+    # Run pre-hook if exists (e.g. init.sh for secret substitution)
+    [ -f "$dir/init.sh" ] && (cd "$dir" && sh init.sh) 2>&1 | while read -r l; do log "  [$svc] $l"; done
+    if (cd "$dir" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate) >/dev/null 2>&1; then
       svc_s=$(( $(date +%s) - svc_start ))
       log "  [$svc] ok (${svc_s}s)"
       STARTED=$((STARTED + 1))
@@ -159,7 +159,7 @@ for dir in $DECLARED_SERVICES; do
       BOOT_RESULTS="${BOOT_RESULTS}{\"name\":\"$svc\",\"s\":$svc_s,\"ok\":false},"
     fi
   else
-    log "  [$svc] no compose script — skipping (needs build.sh ship)"
+    log "  [$svc] no docker-compose.yml — skipping"
   fi
 
   sleep "$START_DELAY"
