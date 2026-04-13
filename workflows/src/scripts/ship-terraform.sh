@@ -35,8 +35,9 @@ for name in cloudflare gcloud oci aws hetzner; do
 
   # Copy tfvars template if no tfvars exists (gitignored for security)
   if [ ! -f terraform.tfvars ] && [ -f terraform.tfvars.template ]; then
-    cp terraform.tfvars.template terraform.tfvars
-    echo "  Copied terraform.tfvars.template → terraform.tfvars"
+    # Strip placeholder lines — TF_VAR_ env vars from GHA secrets take precedence
+    awk 'index($0, "INJECTED_FROM_SECRETS") == 0' terraform.tfvars.template > terraform.tfvars
+    echo "  Copied terraform.tfvars.template → terraform.tfvars (placeholders stripped)"
   fi
 
   terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
