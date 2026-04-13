@@ -69,7 +69,7 @@ resource "aws_iam_access_key" "ses_smtp" {
 # =============================================================================
 
 output "ses_verification_token" {
-  description = "TXT record value for _amazonses.${local.config.domain}"
+  description = "TXT record value for _amazonses SES domain verification"
   value       = aws_ses_domain_identity.main.verification_token
 }
 

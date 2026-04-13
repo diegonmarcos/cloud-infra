@@ -6,14 +6,13 @@ on:
       - "c_vps/ba-clo_cloudflare/src/**"
       - "c_vps/vps_gcloud/src/**"
       - "c_vps/vps_oci/src/**"
-      - "c_vps/vps_aws/src/**"
       - "c_vps/vps_hetzner/src/**"
       - ".github/workflows/ship-terraform.yml"
     branches: [main]
   workflow_dispatch:
     inputs:
       project:
-        description: "Target project (cloudflare, gcloud, oci, aws, or empty for all changed)"
+        description: "Target project (cloudflare, gcloud, oci, or empty for all changed)"
         required: false
         type: string
 
@@ -25,7 +24,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,8 +46,6 @@ jobs:
               - 'c_vps/vps_gcloud/src/**'
             oci:
               - 'c_vps/vps_oci/src/**'
-            aws:
-              - 'c_vps/vps_aws/src/**'
             hetzner:
               - 'c_vps/vps_hetzner/src/**'
 
@@ -57,7 +54,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           proj="${{ inputs.project }}"
-          for name in cloudflare gcloud oci aws hetzner; do
+          for name in cloudflare gcloud oci hetzner; do
             if [ -z "$proj" ] || [ "$proj" = "$name" ]; then
               echo "$name=true" >> "$GITHUB_OUTPUT"
             fi
@@ -85,20 +82,16 @@ jobs:
           CHANGES_CLOUDFLARE: ${{ steps.changes.outputs.cloudflare }}
           CHANGES_GCLOUD: ${{ steps.changes.outputs.gcloud }}
           CHANGES_OCI: ${{ steps.changes.outputs.oci }}
-          CHANGES_AWS: ${{ steps.changes.outputs.aws }}
           CHANGES_HETZNER: ${{ steps.changes.outputs.hetzner }}
           TF_VAR_cloudflare_api_key: ${{ secrets.CLOUDFLARE_API_KEY }}
           TF_VAR_ssh_public_key: ${{ secrets.GCP_SSH_PUBLIC_KEY }}
           TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
           TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
           TF_VAR_region: ${{ secrets.OCI_REGION }}
-          OCI_CLI_USER: ${{ secrets.OCI_USER_OCID }}
-          OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_OCID }}
-          OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
-          OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
-          OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
           TF_VAR_hcloud_token: ${{ secrets.HETZNER_API_TOKEN }}
         run: bash .github/workflows/scripts/ship-terraform.sh
