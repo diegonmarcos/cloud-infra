@@ -130,6 +130,7 @@ if [ "$STATE_CHANGED" = true ]; then
   if ! git diff --cached --quiet; then
     git -c user.name="github-actions" -c user.email="actions@github.com" \
       commit -m "terraform: update encrypted tfstate"
+    git pull --rebase
     git push
   fi
 fi
