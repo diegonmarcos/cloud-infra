@@ -15,6 +15,12 @@ if ! command -v sops >/dev/null 2>&1; then
   chmod +x /tmp/sops && sudo mv /tmp/sops /usr/local/bin/sops
 fi
 
+if ! command -v terraform >/dev/null 2>&1; then
+  echo "Installing terraform..."
+  curl -fsSL -o /tmp/tf.zip https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+  unzip -o /tmp/tf.zip -d /tmp && sudo mv /tmp/terraform /usr/local/bin/terraform
+fi
+
 declare -A TF_DIRS=(
   [cloudflare]="c_vps/ba-clo_cloudflare/src"
   [gcloud]="c_vps/vps_gcloud/src"

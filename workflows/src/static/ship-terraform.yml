@@ -64,10 +64,6 @@ jobs:
         with:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9"
-
       - name: Authenticate GCP
         if: steps.changes.outputs.gcloud == 'true' || steps.force.outputs.gcloud == 'true'
         uses: google-github-actions/auth@v2
