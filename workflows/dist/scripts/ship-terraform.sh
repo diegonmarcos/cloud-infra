@@ -106,9 +106,10 @@ for name in cloudflare gcloud oci hetzner; do
     echo "  Copied terraform.tfvars.template → terraform.tfvars (placeholders stripped)"
   fi
 
-  terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
-  terraform plan -input=false -out=tfplan || { echo "FAIL $name (plan)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
-  terraform apply -input=false -auto-approve tfplan || { echo "FAIL $name (apply)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
+  tf_cleanup() { rm -f terraform.tfstate terraform.tfstate.backup terraform.tfvars tfplan; rm -rf .terraform; }
+  terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
+  terraform plan -input=false -out=tfplan || { echo "FAIL $name (plan)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
+  terraform apply -input=false -auto-approve tfplan || { echo "FAIL $name (apply)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
 
   # Re-encrypt updated tfstate
   if [ -f terraform.tfstate ] && [ -f terraform.tfstate.enc ]; then
@@ -117,6 +118,8 @@ for name in cloudflare gcloud oci hetzner; do
     STATE_CHANGED=true
     echo "  Re-encrypted terraform.tfstate.enc"
   fi
+
+  tf_cleanup
 
   echo "OK $name"
   OK=$((OK + 1))
