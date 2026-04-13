@@ -33,6 +33,12 @@ for name in cloudflare gcloud oci aws hetzner; do
   echo "── Terraform: $name ($dir) ──"
   cd "$REPO_ROOT/$dir"
 
+  # Copy tfvars template if no tfvars exists (gitignored for security)
+  if [ ! -f terraform.tfvars ] && [ -f terraform.tfvars.template ]; then
+    cp terraform.tfvars.template terraform.tfvars
+    echo "  Copied terraform.tfvars.template → terraform.tfvars"
+  fi
+
   terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
   terraform plan -input=false -out=tfplan || { echo "FAIL $name (plan)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
   terraform apply -input=false -auto-approve tfplan || { echo "FAIL $name (apply)"; FAIL=$((FAIL + 1)); cd "$REPO_ROOT"; continue; }
