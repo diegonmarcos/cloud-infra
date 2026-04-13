@@ -68,7 +68,6 @@ jobs:
           sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
 
       - name: Authenticate GCP
-        if: steps.changes.outputs.gcloud == 'true' || steps.force.outputs.gcloud == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}

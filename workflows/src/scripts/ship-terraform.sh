@@ -38,8 +38,24 @@ declare -A TF_DIRS=(
 
 OK=0; FAIL=0; SKIP=0; STATE_CHANGED=false
 
+# ── Change detection ──
+# On push events, CHANGES_* env vars indicate what changed.
+# On workflow_dispatch, INPUT_PROJECT selects the target.
+# Skip providers with no changes unless explicitly requested.
+should_run() {
+  local name="$1"
+  # Explicit project filter always wins
+  [ -n "$PROJECT" ] && { [ "$PROJECT" = "$name" ] && return 0 || return 1; }
+  # On workflow_dispatch with no project filter, run all
+  [ "${EVENT_NAME:-}" = "workflow_dispatch" ] && return 0
+  # On push, check CHANGES_* env var (uppercase, hyphens to underscores)
+  local var_name="CHANGES_$(echo "$name" | tr '[:lower:]-' '[:upper:]_')"
+  local val="${!var_name:-true}"
+  [ "$val" = "true" ]
+}
+
 # ── Cloudflare Worker (wrangler) ──
-if [ -z "$PROJECT" ] || [ "$PROJECT" = "cf-worker" ]; then
+if should_run "cf-worker"; then
   WORKER_DIR="a_solutions/ba-clo_cloudflare-worker/src"
   if [ -d "$WORKER_DIR" ]; then
     echo "── Wrangler: cf-worker ($WORKER_DIR) ──"
@@ -61,7 +77,7 @@ fi
 
 # ── Terraform providers ──
 for name in cloudflare gcloud oci hetzner; do
-  if [ -n "$PROJECT" ] && [ "$PROJECT" != "$name" ]; then
+  if ! should_run "$name"; then
     continue
   fi
 
@@ -86,7 +102,7 @@ for name in cloudflare gcloud oci hetzner; do
   # Copy tfvars template if no tfvars exists (gitignored for security)
   if [ ! -f terraform.tfvars ] && [ -f terraform.tfvars.template ]; then
     # Strip placeholder lines — TF_VAR_ env vars from GHA secrets take precedence
-    awk 'index($0, "INJECTED_FROM_SECRETS") == 0' terraform.tfvars.template > terraform.tfvars
+    awk 'index($0, "INJECTED_FROM_SECRETS") == 0 && index($0, "CHANGE_ME") == 0' terraform.tfvars.template > terraform.tfvars
     echo "  Copied terraform.tfvars.template → terraform.tfvars (placeholders stripped)"
   fi
 
