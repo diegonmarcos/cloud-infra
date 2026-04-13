@@ -8,6 +8,13 @@ PROJECT="${1:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
+# ── Dependencies ──
+if ! command -v sops >/dev/null 2>&1; then
+  echo "Installing sops..."
+  curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+  chmod +x /tmp/sops && sudo mv /tmp/sops /usr/local/bin/sops
+fi
+
 declare -A TF_DIRS=(
   [cloudflare]="c_vps/ba-clo_cloudflare/src"
   [gcloud]="c_vps/vps_gcloud/src"
