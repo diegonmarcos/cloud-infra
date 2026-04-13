@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
-# ── Run terraform plan+apply for cloud providers ──
+# ── Run terraform plan+apply for cloud providers + wrangler for CF worker ──
 # Usage: ship-terraform.sh [project]
-#   project: cloudflare, gcloud, oci, hetzner (omit for all)
+#   project: cloudflare, gcloud, oci, hetzner, cf-worker (omit for all)
 set -euo pipefail
 
 PROJECT="${1:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-# ── Dependencies ──
-if ! command -v sops >/dev/null 2>&1; then
+# ── Dependencies (installed on demand) ──
+ensure_sops() {
+  command -v sops >/dev/null 2>&1 && return
   echo "Installing sops..."
   curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
   chmod +x /tmp/sops && sudo mv /tmp/sops /usr/local/bin/sops
-fi
+}
 
-if ! command -v terraform >/dev/null 2>&1; then
+ensure_terraform() {
+  command -v terraform >/dev/null 2>&1 && return
   echo "Installing terraform..."
   curl -fsSL -o /tmp/tf.zip https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
   unzip -o /tmp/tf.zip -d /tmp && sudo mv /tmp/terraform /usr/local/bin/terraform
-fi
+}
+
+ensure_wrangler() {
+  command -v wrangler >/dev/null 2>&1 && return
+  echo "Installing wrangler..."
+  npm install -g wrangler
+}
 
 declare -A TF_DIRS=(
   [cloudflare]="c_vps/ba-clo_cloudflare/src"
@@ -30,6 +38,28 @@ declare -A TF_DIRS=(
 
 OK=0; FAIL=0; SKIP=0; STATE_CHANGED=false
 
+# ── Cloudflare Worker (wrangler) ──
+if [ -z "$PROJECT" ] || [ "$PROJECT" = "cf-worker" ]; then
+  WORKER_DIR="a_solutions/ba-clo_cloudflare-worker/src"
+  if [ -d "$WORKER_DIR" ]; then
+    echo "── Wrangler: cf-worker ($WORKER_DIR) ──"
+    ensure_wrangler
+    cd "$REPO_ROOT/$WORKER_DIR"
+    if wrangler deploy; then
+      echo "OK cf-worker"
+      OK=$((OK + 1))
+    else
+      echo "FAIL cf-worker (deploy)"
+      FAIL=$((FAIL + 1))
+    fi
+    cd "$REPO_ROOT"
+  else
+    echo "SKIP cf-worker (dir not found)"
+    SKIP=$((SKIP + 1))
+  fi
+fi
+
+# ── Terraform providers ──
 for name in cloudflare gcloud oci hetzner; do
   if [ -n "$PROJECT" ] && [ "$PROJECT" != "$name" ]; then
     continue
@@ -43,6 +73,8 @@ for name in cloudflare gcloud oci hetzner; do
   fi
 
   echo "── Terraform: $name ($dir) ──"
+  ensure_sops
+  ensure_terraform
   cd "$REPO_ROOT/$dir"
 
   # Decrypt tfstate from sops-encrypted file
