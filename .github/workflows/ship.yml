@@ -102,53 +102,21 @@ jobs:
     concurrency:
       group: ship-${{ matrix.vm }}
       cancel-in-progress: false
-    env:
-      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
-      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
-      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
-      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
-      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
-      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
-      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
-      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-          submodules: true
-
-      - name: Resolve SSH credentials
-        id: ssh
-        run: |
-          GHA_CONFIG="cloud-data/cloud-data-gha-config.json"
-          VM="${{ matrix.vm }}"
-          case "$VM" in
-            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
-            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
-            *)         KEY="$OCI_SSH_KEY"
-                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].host' "$GHA_CONFIG")
-                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
-          esac
-          echo "ssh_key<<EOFKEY" >> "$GITHUB_OUTPUT"
-          printf '%s\n' "$KEY"  >> "$GITHUB_OUTPUT"
-          echo "EOFKEY"         >> "$GITHUB_OUTPUT"
-          echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
-          echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
-
       - name: Ship via cloud-builder
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
           mkdir -p "${{ runner.temp }}/traces"
-          docker run --rm \
+          docker run --rm --network=host --cap-add=NET_ADMIN \
             -v "${{ runner.temp }}/traces:/traces" \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e TRACE_DIR=/traces \
+            -e VM='${{ matrix.vm }}' \
             -e CHANGED_DIRS='${{ matrix.changed_dirs }}' \
-            -e SSH_KEY='${{ steps.ssh.outputs.ssh_key }}' \
-            -e SSH_HOST='${{ steps.ssh.outputs.ssh_host }}' \
-            -e SSH_USER='${{ steps.ssh.outputs.ssh_user }}' \
-            -e SSH_ALIAS='${{ matrix.vm }}' \
+            -e WG_PRIVATE_KEY='${{ secrets.WG_PRIVATE_KEY }}' \
+            -e OCI_SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
+            -e GCP_PROXY_SSH_KEY='${{ secrets.GCP_PROXY_SSH_KEY }}' \
+            -e GCP_T4_SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
             -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
             -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
             -e GITHUB_ACTOR='${{ github.actor }}' \
@@ -158,7 +126,7 @@ jobs:
             -e GITHUB_RUN_ID='${{ github.run_id }}' \
             -e GITHUB_SHA='${{ github.sha }}' \
             ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && stdbuf -oL bash .github/workflows/scripts/cloud-builder.sh ship $SSH_ALIAS 2>&1 | stdbuf -oL cat'
+            bash /opt/cloud-builder/ship-services.sh
 
       - name: Upload trace
         if: always()

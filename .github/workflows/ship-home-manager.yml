@@ -51,21 +51,16 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup WireGuard
-        if: steps.gate.outputs.skip != 'true'
-        env:
-          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
-        run: bash .github/workflows/scripts/setup-wireguard.sh
-
       - name: Ship
         if: steps.gate.outputs.skip != 'true'
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
-          docker run --rm --network=host \
+          docker run --rm --network=host --cap-add=NET_ADMIN \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v $HOME/.docker:/root/.docker \
             -e VM="${{ matrix.vm }}" \
+            -e WG_PRIVATE_KEY='${{ secrets.WG_PRIVATE_KEY }}' \
             -e OCI_SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
             -e GCP_PROXY_SSH_KEY='${{ secrets.GCP_PROXY_SSH_KEY }}' \
             -e GCP_T4_SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
@@ -76,4 +71,4 @@ jobs:
             -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
             -e GITHUB_SHA='${{ github.sha }}' \
             ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
-            bash -c 'bash /opt/cloud-builder/ship-hm.sh'
+            bash /opt/cloud-builder/ship-hm.sh
