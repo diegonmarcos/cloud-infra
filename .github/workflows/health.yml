@@ -28,30 +28,20 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Update submodules
-        run: git submodule update --remote
-
-      - uses: ./.github/actions/setup-deps
-        with:
-          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
-          wg_private_key: ${{ secrets.WG_PRIVATE_KEY }}
-
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
         run: sleep 300
 
       - name: Run health check
         shell: bash {0}
-        env:
-          OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
         run: |
-          docker run --rm --network=host \
-            -v "$GITHUB_WORKSPACE:/workspace" \
-            -e OIDC_TOKEN="$OIDC_TOKEN" \
-            -w /workspace \
-            "$CLOUD_CI_IMAGE" \
-            bash .github/workflows/scripts/health-full.sh
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
+          docker run --rm --network=host --cap-add=NET_ADMIN \
+            -e WG_PRIVATE_KEY='${{ secrets.WG_PRIVATE_KEY }}' \
+            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e OIDC_TOKEN='${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
+            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
+            bash /opt/cloud-builder/health.sh
