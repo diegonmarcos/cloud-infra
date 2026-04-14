@@ -488,19 +488,10 @@
         "desc": "WireGuard mesh status"
       }
     },
-    "docker": {
-      "_comment": "Deps installed via apt in cloud-builder Dockerfile (not available via nix in sandbox=false Docker)",
-      "build-essential": { "apt": "build-essential", "desc": "C/C++ compiler + linker (cc, make — required by cargo/rustc)" },
-      "pkg-config": { "apt": "pkg-config", "desc": "Library path resolution for native Rust crates" },
-      "libssl-dev": { "apt": "libssl-dev", "desc": "OpenSSL headers (required by Rust TLS crates)" },
-      "unzip": { "apt": "unzip", "desc": "Extract terraform zip" },
-      "wireguard-tools": { "apt": "wireguard-tools", "desc": "wg-quick for WG mesh inside container" },
-      "locales": { "apt": "locales", "desc": "en_US.UTF-8 locale" }
-    },
-    "binary": {
-      "_comment": "Direct binary installs — not via nix or apt (unfree or edition issues)",
-      "terraform": { "version": "1.9.8", "url": "https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_amd64.zip", "desc": "IaC — nix go-modules breaks sandbox=false (NixOS/nix#11295)" },
-      "rust": { "version": "1.86.0", "installer": "rustup", "desc": "Rust toolchain — nixos-24.11 ships 1.82, too old for edition2024 crates" }
+    "docker_apt": ["build-essential", "pkg-config", "libssl-dev", "unzip", "wireguard-tools", "locales"],
+    "docker_binary": {
+      "terraform": "1.9.8",
+      "rust": "1.86.0"
     },
     "node": {
       "required": [
