@@ -131,8 +131,9 @@ if [ "$STATE_CHANGED" = true ]; then
   echo "── Committing updated tfstate.enc files ──"
   git add c_vps/*/src/terraform.tfstate.enc
   if ! git diff --cached --quiet; then
-    git -c user.name="github-actions" -c user.email="actions@github.com" \
-      commit -m "terraform: update encrypted tfstate"
+    git config user.name "github-actions"
+    git config user.email "actions@github.com"
+    git commit -m "terraform: update encrypted tfstate"
     git pull --rebase
     git push
   fi
