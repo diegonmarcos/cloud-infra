@@ -1,3 +1,4 @@
+# Engine consolidation test 2026-04-15
 # Auto-import all non-parameterized shared modules
 # Parameterized modules (network-firewall, system-protection, infra-idle-shutdown,
 # httpd, system-protection-systemd-control) must be imported explicitly with their args.
