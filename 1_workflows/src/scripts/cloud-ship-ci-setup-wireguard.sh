@@ -10,6 +10,15 @@ if [ -z "${WG_PRIVATE_KEY:-}" ]; then
 fi
 
 echo "[wireguard] Setting up WireGuard"
+
+# Install wireguard-tools if not present (needed on bare GHA runners)
+if ! command -v wg-quick >/dev/null 2>&1; then
+  echo "[wireguard] Installing wireguard-tools"
+  SUDO=""
+  command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+  $SUDO apt-get update -qq && $SUDO apt-get install -y -qq wireguard-tools >/dev/null 2>&1
+fi
+
 umask 077
 cat > /tmp/wg0.conf << WGEOF
 [Interface]
