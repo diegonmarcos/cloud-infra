@@ -98,16 +98,8 @@ check_deps() {
 
     [ -z "$missing_sys" ] && [ -z "$missing_node" ] && return 0
 
-    echo ""
-    echo "============================================"
-    echo "  MISSING DEPENDENCIES"
-    echo "============================================"
-    [ -n "$missing_sys" ]  && echo "  System:  $missing_sys"
-    [ -n "$missing_node" ] && echo "  Node:    $missing_node"
-    echo ""
-    echo "  Run: ./build.sh deps"
-    echo ""
-    return 1
+    log "WARNING: Missing deps:${missing_sys}${missing_node:+ (node:$missing_node)} — some commands may fail. Run: ./build.sh deps"
+    return 0
 }
 
 # =============================================================================
