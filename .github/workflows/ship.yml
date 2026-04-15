@@ -156,6 +156,23 @@ jobs:
           IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
           docker pull "$IMAGE"
           mkdir -p "$TRACE_DIR"
+          # Write secrets to runner filesystem — compose mounts them :ro into container
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<SSHEOF
+          Host $SSH_ALIAS
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          SSHEOF
+          chmod 600 ~/.ssh/config
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          # Run cloud-builder via compose
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -e TRACE_DIR=/traces \
