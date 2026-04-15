@@ -127,6 +127,7 @@ jobs:
             -e GITHUB_SHA='${{ github.sha }}' \
             ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
             bash /opt/cloud-builder/ship-services.sh
+          chmod -R a+r "${{ runner.temp }}/traces" 2>/dev/null || true
 
       - name: Upload trace
         if: always()
