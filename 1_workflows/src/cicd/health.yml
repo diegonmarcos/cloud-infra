@@ -28,18 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Update submodules
-        run: git submodule update --remote
-
-      - uses: ./.github/actions/setup-deps
-        with:
-          sops_age_key: ${{ secrets.SOPS_AGE_KEY }}
-          wg_private_key: ${{ secrets.WG_PRIVATE_KEY }}
-
       - name: Wait for containers to settle
         if: github.event_name != 'workflow_dispatch'
         run: sleep 300
@@ -48,9 +36,15 @@ jobs:
         shell: bash {0}
         env:
           OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          docker run --rm "$CLOUD_CI_IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          docker pull "$IMAGE"
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
-            -e OIDC_TOKEN="$OIDC_TOKEN" \
-            -v "$GITHUB_WORKSPACE:/workspace" \
+            -e OIDC_TOKEN \
             cloud-builder health
