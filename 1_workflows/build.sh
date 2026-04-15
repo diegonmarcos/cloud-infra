@@ -21,9 +21,9 @@ log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 do_build() {
     mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks"
 
-    # Static workflows (src/static/*.yml → dist/)
+    # Static workflows (src/cicd/*.yml → dist/)
     rm -f "$DIST_DIR"/*.yml
-    for f in "$SRC_DIR"/static/*.yml; do
+    for f in "$SRC_DIR"/cicd/*.yml; do
         [ -f "$f" ] || continue
         cp "$f" "$DIST_DIR/"
     done
@@ -43,9 +43,9 @@ do_build() {
         log "Built hooks"
     fi
 
-    # Gitmodules (src/gitmodules/ → dist/)
-    if [ -d "$SRC_DIR/gitmodules" ]; then
-        cp "$SRC_DIR/gitmodules/"* "$DIST_DIR/" 2>/dev/null || true
+    # Gitmodules (src/modules/gitmodules → dist/.gitmodules)
+    if [ -f "$SRC_DIR/modules/gitmodules" ]; then
+        cp "$SRC_DIR/modules/gitmodules" "$DIST_DIR/.gitmodules" 2>/dev/null || true
         log "Built gitmodules"
     fi
 
