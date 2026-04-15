@@ -49,9 +49,8 @@ jobs:
         env:
           OIDC_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
         run: |
-          docker run --rm --network=host \
-            -v "$GITHUB_WORKSPACE:/workspace" \
+          docker run --rm "$CLOUD_CI_IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -e OIDC_TOKEN="$OIDC_TOKEN" \
-            -w /workspace \
-            "$CLOUD_CI_IMAGE" \
-            bash .github/workflows/scripts/cloud-health-full.sh
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            cloud-builder health
