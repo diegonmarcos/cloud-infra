@@ -43,5 +43,8 @@ step_secrets() {
         log "JWKS key -> $JWKS_DEST_PATH"
     fi
 
+    # Write secrets hash for change detection
+    sha256sum "$DIST_DIR/.secrets" 2>/dev/null | cut -c1-16 > "$SERVICE_DIR/.secrets-hash-new"
+
     log "Secrets decrypted"
 }

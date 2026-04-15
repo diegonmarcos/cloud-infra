@@ -217,14 +217,33 @@ case "${1:-all}" in
         else
             OLD_HASH=$(cat "$SERVICE_DIR/.dist-hash" 2>/dev/null || true)
         fi
-        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$FORCE_DEPLOY" ]; then
+        # Check secrets hash
+        SECRETS_CHANGED=""
+        if [ -f "$SERVICE_DIR/.secrets-hash-new" ]; then
+            NEW_SECRETS_HASH=$(cat "$SERVICE_DIR/.secrets-hash-new")
+            if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
+                OLD_SECRETS_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat '$DEPLOY_PATH/.secrets-hash' 2>/dev/null" 2>/dev/null || true)
+            else
+                OLD_SECRETS_HASH=$(cat "$SERVICE_DIR/.secrets-hash" 2>/dev/null || true)
+            fi
+            [ "$NEW_SECRETS_HASH" != "$OLD_SECRETS_HASH" ] && SECRETS_CHANGED=true
+        fi
+        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "$FORCE_DEPLOY" ]; then
             log "Config unchanged, no image rebuild — skipping deploy+compose"
         else
             step_deploy
             step_compose
+            # Bug #2 fix: hash written AFTER compose succeeds (not after deploy)
             echo "$NEW_HASH" > "$SERVICE_DIR/.dist-hash"
             if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
                 ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_HASH' > '$DEPLOY_PATH/.dist-hash'" 2>/dev/null || true
+            fi
+            if [ -f "$SERVICE_DIR/.secrets-hash-new" ]; then
+                cp "$SERVICE_DIR/.secrets-hash-new" "$SERVICE_DIR/.secrets-hash"
+                if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
+                    ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_SECRETS_HASH' > '$DEPLOY_PATH/.secrets-hash'" 2>/dev/null || true
+                fi
+                rm -f "$SERVICE_DIR/.secrets-hash-new"
             fi
         fi
         ;;
