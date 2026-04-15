@@ -21,6 +21,6 @@ else
   # In CLI/Dagu: run health-check-vm.sh directly
   for vm in $VMS; do
     echo "── Health: $vm ──"
-    bash "$SCRIPT_DIR/health-check-vm.sh" "$vm" || echo "FAIL: $vm"
+    bash "$SCRIPT_DIR/cloud-health-check-vm.sh" "$vm" || echo "FAIL: $vm"
   done
 fi
