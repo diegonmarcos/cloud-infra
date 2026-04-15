@@ -18,8 +18,8 @@ let
               else if safeRamMB <= 8192 then 131072
               else 262144;
 
-  # zram: 50% of RAM, min 256MB, max 16GB
-  zramSizeMB = clamp 256 16384 (safeRamMB / 2);
+  # zram: 100% of RAM, min 2GB, max 8GB (fast compressed swap, priority 100)
+  zramSizeMB = clamp 2048 8192 safeRamMB;
   zramSizeBytes = toString (zramSizeMB * 1024 * 1024);
 
   # Docker memory cap: RAM minus OS overhead, min 256MB, max 32GB

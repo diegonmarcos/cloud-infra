@@ -1,0 +1,213 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Ship services to VMs                                        │
+# │                                                              │
+# │  Thin GHA wrapper around ship.sh — all logic lives in the    │
+# │  POSIX script, making it portable to Dagu, CLI, or any CI.   │
+# │                                                              │
+# │  Script: 1_workflows/src/scripts/ship.sh                       │
+# └──────────────────────────────────────────────────────────────┘
+
+name: Ship
+
+on:
+  push:
+    paths:
+      - "a_solutions/*/src/**"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated service dirs (e.g. bb-sec_caddy,bc-obs_ntfy) or 'all'"
+        required: false
+        default: "all"
+      vm:
+        description: "Target VM (e.g. gcp-proxy, oci-apps) or 'all'"
+        required: false
+        default: "all"
+
+jobs:
+  # ── Detect which VMs have changed services ──────────────────
+  detect:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has_vms: ${{ steps.matrix.outputs.has_vms }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      - name: Build VM matrix
+        id: matrix
+        run: |
+          # Reuse the portable detect logic from ship.sh
+          GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+
+          # ── Resolve args from GHA inputs ──
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_SERVICES="${{ github.event.inputs.services }}"
+            INPUT_VM="${{ github.event.inputs.vm }}"
+            if [ "$INPUT_SERVICES" = "all" ] && [ "$INPUT_VM" = "all" ]; then
+              CHANGED_DIRS=""; VM_FILTER=""
+            elif [ "$INPUT_SERVICES" != "all" ]; then
+              CHANGED_DIRS=$(printf '%s' "$INPUT_SERVICES" | tr ',' ' '); VM_FILTER=""
+            else
+              CHANGED_DIRS=""; VM_FILTER="$INPUT_VM"
+            fi
+          else
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- a_solutions/*/src/ \
+              | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+            VM_FILTER=""
+            if [ -z "$CHANGED_DIRS" ]; then
+              echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              echo "has_vms=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # ── Build matrix JSON ──
+          MATRIX_JSON=$(jq -c \
+            --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" '
+            ($changed | split(" ") | map(select(. != ""))) as $cl |
+            .services | to_entries | group_by(.value.vm)
+            | map({
+                vm: .[0].value.vm,
+                changed: ([.[] | .value.dir] as $a |
+                  if ($cl | length) == 0 then "" else [$cl[] | select(. as $d | $a | any(. == $d))] | join(" ") end)
+              })
+            | map(select(($vm_filter == "" or .vm == $vm_filter) and (($cl | length) == 0 or (.changed | length) > 0)))
+            | map({vm: .vm, changed_dirs: .changed})
+          ' "$GHA_CONFIG")
+
+          echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
+          COUNT=$(printf '%s' "$MATRIX_JSON" | jq 'length')
+          [ "$COUNT" -gt 0 ] && echo "has_vms=true" >> "$GITHUB_OUTPUT" || echo "has_vms=false" >> "$GITHUB_OUTPUT"
+          echo "VMs: $COUNT — $(printf '%s' "$MATRIX_JSON" | jq -r '.[].vm' | tr '\n' ' ')"
+
+  # ── Ship: one matrix job per VM, calls ship.sh per-VM path ──
+  ship:
+    name: "Ship → ${{ matrix.vm }}"
+    needs: detect
+    if: needs.detect.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 5
+    concurrency:
+      group: ship-${{ matrix.vm }}
+      cancel-in-progress: false
+    env:
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
+      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
+      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
+      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      - name: Resolve SSH credentials
+        id: ssh
+        run: |
+          GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+          VM="${{ matrix.vm }}"
+          case "$VM" in
+            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
+            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
+            *)         KEY="$OCI_SSH_KEY"
+                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].host' "$GHA_CONFIG")
+                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
+          esac
+          echo "ssh_key<<EOFKEY" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$KEY"  >> "$GITHUB_OUTPUT"
+          echo "EOFKEY"         >> "$GITHUB_OUTPUT"
+          echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
+
+      - name: Ship via cloud-builder
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
+          mkdir -p "${{ runner.temp }}/traces"
+          docker run --rm \
+            -v "${{ runner.temp }}/traces:/traces" \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e TRACE_DIR=/traces \
+            -e CHANGED_DIRS='${{ matrix.changed_dirs }}' \
+            -e SSH_KEY='${{ steps.ssh.outputs.ssh_key }}' \
+            -e SSH_HOST='${{ steps.ssh.outputs.ssh_host }}' \
+            -e SSH_USER='${{ steps.ssh.outputs.ssh_user }}' \
+            -e SSH_ALIAS='${{ matrix.vm }}' \
+            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
+            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
+            -e GITHUB_ACTOR='${{ github.actor }}' \
+            -e GITHUB_ACTIONS=true \
+            -e GITHUB_EVENT_NAME='${{ github.event_name }}' \
+            -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
+            -e GITHUB_RUN_ID='${{ github.run_id }}' \
+            -e GITHUB_SHA='${{ github.sha }}' \
+            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
+            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && stdbuf -oL bash .github/workflows/scripts/cloud-ship-ci-builder.sh ship $SSH_ALIAS 2>&1 | stdbuf -oL cat'
+
+      - name: Upload trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-${{ matrix.vm }}
+          path: ${{ runner.temp }}/traces/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ── Collect traces: single push to cloud-data ───────────────
+  collect-traces:
+    name: Collect traces
+    needs: ship
+    if: always() && needs.detect.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: trace-*
+          merge-multiple: true
+          path: traces/
+
+      - name: Push traces
+        env:
+          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+        run: |
+          ls traces/*.json 2>/dev/null || { echo "No traces"; exit 0; }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
+          chmod 600 ~/.ssh/cloud_data_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
+          git clone --depth 1 git@github.com:diegonmarcos/cloud-data.git /tmp/cd
+          cd /tmp/cd
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p traces-gha
+          for f in "$GITHUB_WORKSPACE/traces/"*.json; do
+            [ -f "$f" ] || continue
+            VM=$(jq -r '.vm' "$f"); T="traces-gha/${VM}.json"
+            if [ -f "$T" ]; then
+              jq --slurpfile n "$f" '. + $n | .[-200:]' "$T" > "${T}.tmp" && mv "${T}.tmp" "$T"
+            else
+              jq -s '.' "$f" > "$T"
+            fi
+          done
+          git add traces-gha/
+          git diff --cached --quiet && { echo "No changes"; exit 0; }
+          git commit -m "auto: traces [skip ci]"
+          i=0; while [ $i -lt 3 ]; do i=$((i+1)); git push origin main && break
+            echo "Retry $i..."; git pull --rebase origin main 2>/dev/null || true; done
