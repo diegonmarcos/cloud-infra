@@ -89,7 +89,7 @@ do_deploy() {
 
     # Gitconfig → include in .git/config
     if [ -f "$DIST_DIR/gitconfig" ]; then
-        git -C "$REPO_ROOT" config --local include.path ../workflows/dist/gitconfig 2>/dev/null || true
+        git -C "$REPO_ROOT" config --local include.path ../1_workflows/dist/gitconfig 2>/dev/null || true
         log "Deployed gitconfig (included in .git/config)"
     fi
 

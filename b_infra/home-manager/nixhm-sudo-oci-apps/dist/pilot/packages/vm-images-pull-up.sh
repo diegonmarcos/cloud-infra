@@ -122,11 +122,9 @@ if [ -n "$MANIFEST" ]; then
 
     ENV_FLAG=""
     [ -f "$COMPOSE_PATH/.secrets" ] && ENV_FLAG="--env-file $COMPOSE_PATH/.secrets"
-    BUILD_FLAG=""
-    [ "$HAS_BUILD" = "true" ] && BUILD_FLAG="--build"
 
-    log "[$IDX] UP: $NAME (build=$HAS_BUILD)"
-    if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG up -d --force-recreate $BUILD_FLAG 2>&1); then
+    log "[$IDX] UP: $NAME"
+    if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       log "[$IDX] UP OK: $NAME"
       UP_OK=$((UP_OK + 1))
     else
@@ -184,10 +182,8 @@ else
     dir="$CONTAINERS_DIR/$name"
     ENV_FLAG=""
     [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file $dir/.secrets"
-    BUILD_FLAG=""
-    case "$HOSTNAME" in *arm*|*A1*) BUILD_FLAG="--build" ;; esac
     log "[$IDX/$TOTAL] UP: $name"
-    if (cd "$dir" && docker compose $ENV_FLAG up -d --force-recreate $BUILD_FLAG 2>&1); then
+    if (cd "$dir" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       UP_OK=$((UP_OK + 1))
     else
       UP_FAIL=$((UP_FAIL + 1))
