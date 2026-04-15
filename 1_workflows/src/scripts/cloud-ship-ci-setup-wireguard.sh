@@ -23,8 +23,10 @@ AllowedIPs = 10.0.0.0/24
 PersistentKeepalive = 25
 WGEOF
 
-mkdir -p /etc/wireguard
-cp /tmp/wg0.conf /etc/wireguard/wg0.conf
+SUDO=""
+command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+$SUDO mkdir -p /etc/wireguard
+$SUDO cp /tmp/wg0.conf /etc/wireguard/wg0.conf
 rm /tmp/wg0.conf
-wg-quick up wg0
+$SUDO wg-quick up wg0
 ping -c1 -W3 10.0.0.1 >/dev/null 2>&1 && echo "[wireguard] Hub reachable (10.0.0.1)" || echo "[wireguard] Hub not reachable (may need time)"
