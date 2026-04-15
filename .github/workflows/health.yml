@@ -44,6 +44,12 @@ jobs:
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
           docker pull "$IMAGE"
+          # Write secrets to runner fs — compose mounts :ro
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          # Run
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -e OIDC_TOKEN \
