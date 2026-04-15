@@ -1,0 +1,22 @@
+# Step: Build documentation from nix flake #docs output
+# Sourced by cloud-ship-container-engine.sh — do not execute directly
+
+step_docs() {
+    CURRENT_STEP="docs"
+    log "Building documentation..."
+    cd "$SRC_DIR"
+
+    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
+    if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
+        nix develop "$DEPS_FLAKE#" --command bash -c "cd '$SRC_DIR' && nix build --option eval-cache false .#docs --out-link '$SERVICE_DIR/.result-docs'"
+    else
+        nix build --option eval-cache false .#docs --out-link "$SERVICE_DIR/.result-docs"
+    fi
+
+    mkdir -p "$DIST_DIR/docs"
+    cp -rL "$SERVICE_DIR/.result-docs/"* "$DIST_DIR/docs/"
+    chmod -R u+w "$DIST_DIR/docs"
+    rm -f "$SERVICE_DIR/.result-docs"
+
+    log "Documentation built -> dist/docs/"
+}
