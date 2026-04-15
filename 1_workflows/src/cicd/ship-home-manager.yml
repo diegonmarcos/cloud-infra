@@ -51,29 +51,24 @@ jobs:
         with:
           submodules: true
 
-      - name: Setup WireGuard
-        if: steps.gate.outputs.skip != 'true'
-        env:
-          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
-        run: bash .github/workflows/scripts/cloud-ship-ci-setup-wireguard.sh
-
       - name: Ship
         if: steps.gate.outputs.skip != 'true'
+        env:
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+          GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+          GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ACTIONS: true
+          GITHUB_REPOSITORY: diegonmarcos/cloud
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
-          docker run --rm --network=host \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $HOME/.docker:/root/.docker \
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          docker pull "$IMAGE"
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -e VM="${{ matrix.vm }}" \
-            -e OCI_SSH_KEY='${{ secrets.OCI_SSH_KEY }}' \
-            -e GCP_PROXY_SSH_KEY='${{ secrets.GCP_PROXY_SSH_KEY }}' \
-            -e GCP_T4_SSH_KEY='${{ secrets.GCP_T4_SSH_KEY }}' \
-            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
-            -e GITHUB_ACTIONS=true \
-            -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
-            -e GITHUB_SHA='${{ github.sha }}' \
-            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
-            bash -c 'bash /opt/cloud-builder/ship-hm.sh'
+            cloud-builder ship-hm ${{ matrix.vm }}
