@@ -13,8 +13,7 @@
 { config, pkgs, lib, ramMB, ... }:
 
 let
-  # Disk swap: 50% of RAM, min 1GB, max 4GB (slow fallback, priority 10 — zram takes priority)
-  diskSwapMB = let half = ramMB / 2; in if half < 1024 then 1024 else if half > 4096 then 4096 else half;
+  diskSwapMB = if ramMB < 2048 then 2048 else ramMB;
 in {
   # ── Disk swap ─────────────────────────────────────────────────────────
   home.file.".local/share/system-protection/disk-swap.sh" = {
