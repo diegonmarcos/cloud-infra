@@ -136,29 +136,31 @@ jobs:
           echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
 
       - name: Ship via cloud-builder
+        env:
+          CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
+          SSH_HOST: ${{ steps.ssh.outputs.ssh_host }}
+          SSH_USER: ${{ steps.ssh.outputs.ssh_user }}
+          SSH_ALIAS: ${{ matrix.vm }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ACTIONS: true
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REPOSITORY: diegonmarcos/cloud
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          TRACE_DIR: ${{ runner.temp }}/traces
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-          docker pull ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
-          mkdir -p "${{ runner.temp }}/traces"
-          docker run --rm \
-            -v "${{ runner.temp }}/traces:/traces" \
-            -v /var/run/docker.sock:/var/run/docker.sock \
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          docker pull "$IMAGE"
+          mkdir -p "$TRACE_DIR"
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -e TRACE_DIR=/traces \
-            -e CHANGED_DIRS='${{ matrix.changed_dirs }}' \
-            -e SSH_KEY='${{ steps.ssh.outputs.ssh_key }}' \
-            -e SSH_HOST='${{ steps.ssh.outputs.ssh_host }}' \
-            -e SSH_USER='${{ steps.ssh.outputs.ssh_user }}' \
-            -e SSH_ALIAS='${{ matrix.vm }}' \
-            -e SOPS_AGE_KEY='${{ secrets.SOPS_AGE_KEY }}' \
-            -e GITHUB_TOKEN='${{ secrets.GITHUB_TOKEN }}' \
-            -e GITHUB_ACTOR='${{ github.actor }}' \
-            -e GITHUB_ACTIONS=true \
-            -e GITHUB_EVENT_NAME='${{ github.event_name }}' \
-            -e GITHUB_REPOSITORY='diegonmarcos/cloud' \
-            -e GITHUB_RUN_ID='${{ github.run_id }}' \
-            -e GITHUB_SHA='${{ github.sha }}' \
-            ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
-            bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && stdbuf -oL bash .github/workflows/scripts/cloud-ship-ci-builder.sh ship $SSH_ALIAS 2>&1 | stdbuf -oL cat'
+            -v "$TRACE_DIR:/traces" \
+            cloud-builder ship ${{ matrix.vm }}
 
       - name: Upload trace
         if: always()
