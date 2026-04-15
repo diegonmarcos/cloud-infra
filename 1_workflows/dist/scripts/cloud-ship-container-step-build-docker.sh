@@ -109,9 +109,53 @@ NEOF
 
     # Dispatch based on runner
     case "${RUNNER:-auto}" in
-        auto|local)
+        auto)
+            HOST_ARCH=$(uname -m)
+            case "$HOST_ARCH" in
+                x86_64)  HOST_ARCH_DOCKER="amd64" ;;
+                aarch64) HOST_ARCH_DOCKER="arm64" ;;
+                *)       HOST_ARCH_DOCKER="$HOST_ARCH" ;;
+            esac
+
+            if [ "$ARCH" = "$HOST_ARCH_DOCKER" ]; then
+                # Native build — same arch, no QEMU needed
+                log "Auto-runner: native ($HOST_ARCH_DOCKER = $ARCH)"
+            elif [ "$ARCH" = "arm64" ] && ssh -o ConnectTimeout=5 $SSH_OPTS oci-apps true 2>/dev/null; then
+                # ARM build needed, oci-apps reachable — build there natively
+                log "Auto-runner: oci-apps (native arm64)"
+                RUNNER="oci-apps"
+                REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
+                log "Building $FULL_IMAGE on oci-apps (native $ARCH)"
+                ssh $SSH_OPTS "oci-apps" "mkdir -p $REMOTE_BUILD_DIR"
+                rsync -avzL --delete "$BUILD_CONTEXT/" "oci-apps:$REMOTE_BUILD_DIR/"
+                ssh $SSH_OPTS "oci-apps" "cd $REMOTE_BUILD_DIR && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
+                ssh $SSH_OPTS "oci-apps" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
+                ssh $SSH_OPTS "oci-apps" "rm -rf $REMOTE_BUILD_DIR"
+                # Skip the local build below
+                return 0
+            else
+                # Cross-arch build with QEMU
+                log "Auto-runner: local + QEMU (cross-compile $HOST_ARCH_DOCKER → $ARCH)"
+            fi
+
+            # Local build (native or QEMU cross-compile)
             log "Building $FULL_IMAGE — docker build + push"
             DOCKER_BUILDKIT=1 docker build \
+                --platform "$PLATFORM" \
+                --no-cache \
+                --progress=plain \
+                --tag "$FULL_IMAGE:latest" \
+                --tag "$FULL_IMAGE:$SHA_TAG" \
+                --file "$DOCKERFILE_PATH" \
+                "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            ;;
+
+        local)
+            log "Building $FULL_IMAGE — forced local build"
+            DOCKER_BUILDKIT=1 docker build \
+                --platform "$PLATFORM" \
                 --no-cache \
                 --progress=plain \
                 --tag "$FULL_IMAGE:latest" \
