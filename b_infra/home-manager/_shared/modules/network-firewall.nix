@@ -192,6 +192,23 @@ in {
       echo "$NEW" | $SUDO tee /opt/scripts/.firewall.sh.prev > /dev/null
       echo "[firewall] rules applied for ${vmName}"
     fi
+
+    # ── Disable rogue system services that bind to 0.0.0.0 ──
+    # rpcbind (port 111) — NFS portmapper, unused
+    if $SUDO systemctl is-active rpcbind.service >/dev/null 2>&1 || \
+       $SUDO systemctl is-enabled rpcbind.service >/dev/null 2>&1; then
+      $SUDO systemctl disable --now rpcbind.service rpcbind.socket 2>/dev/null || true
+      $SUDO systemctl mask rpcbind.service rpcbind.socket 2>/dev/null || true
+      echo "[firewall] disabled rpcbind (unused NFS portmapper)"
+    fi
+
+    # systemd-resolved LLMNR (port 5355) — unnecessary local discovery
+    if [ ! -f /etc/systemd/resolved.conf.d/no-llmnr.conf ]; then
+      $SUDO mkdir -p /etc/systemd/resolved.conf.d
+      printf '[Resolve]\nLLMNR=no\nMulticastDNS=no\n' | $SUDO tee /etc/systemd/resolved.conf.d/no-llmnr.conf > /dev/null
+      $SUDO systemctl restart systemd-resolved 2>/dev/null || true
+      echo "[firewall] disabled LLMNR + MulticastDNS"
+    fi
     ) || echo "[firewall] FAILED — see errors above, activation continues"
   '';
 }
