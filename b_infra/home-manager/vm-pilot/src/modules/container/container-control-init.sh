@@ -106,7 +106,7 @@ cmd_hm_update() {
     if [ "$_old" != "$_new" ]; then
       log "  HM image updated — activating"
       _hm_home=$(eval echo "~$HM_USER")
-      docker run --rm -v /nix:/nix -v "$_hm_home:$_hm_home" -v /etc:/etc -v /tmp:/tmp "$HM_IMAGE" 2>&1 | while IFS= read -r _l; do log "    $_l"; done
+      docker run --rm -v /:/host -e HM_HOST_ROOT=/host "$HM_IMAGE" 2>&1 | while IFS= read -r _l; do log "    $_l"; done
       log "  HM activated"
     else
       log "  HM unchanged"
