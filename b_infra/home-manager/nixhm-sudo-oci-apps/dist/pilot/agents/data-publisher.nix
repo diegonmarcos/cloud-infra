@@ -1,5 +1,5 @@
 # Data publisher — collect containers.json + journal-errors.json every 5 min
-# Serves /opt/pilot/data/ on port 8198 via busybox httpd
+# Writes to /opt/pilot/data/. Served via dashboard-httpd symlink (no standalone httpd).
 #
 { config, pkgs, lib, ... }:
 {
@@ -32,23 +32,6 @@
     WantedBy=timers.target
   '';
 
-  home.file.".local/share/vm-pilot/data-httpd.service".text = ''
-    [Unit]
-    Description=Data HTTP server (busybox httpd :8198 → /opt/pilot/data/)
-    After=network.target
-
-    [Service]
-    Type=simple
-    ExecStartPre=/bin/mkdir -p /opt/pilot/data
-    ExecStart=${pkgs.busybox}/bin/busybox httpd -f -p 8198 -h /opt/pilot/data
-    Restart=always
-    RestartSec=5
-    User=root
-
-    [Install]
-    WantedBy=multi-user.target
-  '';
-
   home.activation.installDataPublisher = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
     SUDO=""
@@ -63,13 +46,19 @@
     $SUDO chmod +x /opt/scripts/data-publisher.sh
     $SUDO cp -f "$SRC/data-publisher.service" /etc/systemd/system/data-publisher.service
     $SUDO cp -f "$SRC/data-publisher.timer" /etc/systemd/system/data-publisher.timer
-    $SUDO cp -f "$SRC/data-httpd.service" /etc/systemd/system/data-httpd.service
+
+    # Remove legacy standalone httpd (now served via dashboard-httpd symlinks)
+    if $SUDO systemctl is-active data-httpd >/dev/null 2>&1; then
+      $SUDO systemctl stop data-httpd 2>/dev/null || true
+      $SUDO systemctl disable data-httpd 2>/dev/null || true
+    fi
+    $SUDO rm -f /etc/systemd/system/data-httpd.service
+
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable data-publisher.timer data-httpd.service 2>/dev/null || true
+    $SUDO systemctl enable data-publisher.timer 2>/dev/null || true
     $SUDO systemctl start data-publisher.timer 2>/dev/null || true
     $SUDO systemctl start data-publisher.service 2>/dev/null || true
-    $SUDO systemctl restart data-httpd.service 2>/dev/null || true
-    echo "[data-publisher] deployed: timer=5min httpd=:8198"
+    echo "[data-publisher] deployed: timer=5min (served via dashboard-httpd)"
     ) || echo "[data-publisher] FAILED — activation continues"
   '';
 }
