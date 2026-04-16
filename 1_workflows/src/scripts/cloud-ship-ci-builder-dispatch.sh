@@ -11,7 +11,8 @@ shift
 
 # ── Route ship-hm to HM engine ──
 if [ "$CMD" = "ship-hm" ]; then
-    exec bash /opt/cloud-builder/ship-hm.sh "$@"
+    REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
+    exec bash "$REPO_ROOT/.github/workflows/scripts/cloud-ship-orchestrate-homemanager.sh" "$@"
 fi
 
 # ── Container ship engine (existing logic) ──
