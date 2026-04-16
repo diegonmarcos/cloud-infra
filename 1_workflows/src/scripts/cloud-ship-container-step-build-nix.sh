@@ -47,10 +47,8 @@ step_build() {
                 [ -f "$f" ] || continue
                 BASENAME=$(basename "$f")
                 TARGET="$SRC_DIR/$BASENAME"
-                # Skip files already committed in src/ — don't overwrite with submodule copy
-                if git -C "$SERVICE_DIR/../.." ls-files --error-unmatch "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" >/dev/null 2>&1; then
-                    continue
-                fi
+                # Always overwrite with latest cloud-data (even if file is git-tracked)
+                # Nix flakes read from src/ at build time — stale copies cause broken builds
                 cp "$f" "$TARGET"
                 git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
                 CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
@@ -81,8 +79,8 @@ step_build() {
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
         for f in $CLOUD_DATA_STAGED; do
-            git -C "$REPO_ROOT" reset HEAD "$(realpath --relative-to="$REPO_ROOT" "$f")" 2>/dev/null || true
-            rm -f "$f"
+            REL_PATH="$(realpath --relative-to="$REPO_ROOT" "$f")"
+            git -C "$REPO_ROOT" checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
         done
         return 1
     }
@@ -106,12 +104,13 @@ step_build() {
     chmod -R u+w "$DIST_DIR"
     rm -f "$SERVICE_DIR/.result"
 
-    # Post-build: unstage and remove cloud-data files from src/
+    # Post-build: restore cloud-data files in src/ to their committed state
     # In CI, cleanup is handled by cloud-builder-ship.sh after all parallel jobs finish
     if [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         for f in $CLOUD_DATA_STAGED; do
-            git -C "$SERVICE_DIR/../.." reset HEAD "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
-            rm -f "$f"
+            REL_PATH="$(realpath --relative-to="$SERVICE_DIR/../.." "$f")"
+            # Restore to committed version (if tracked), otherwise remove
+            git -C "$SERVICE_DIR/../.." checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
         done
     fi
 
