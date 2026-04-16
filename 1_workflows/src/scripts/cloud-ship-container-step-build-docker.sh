@@ -37,10 +37,10 @@ step_docker() {
     [ -z "$NATIVE_TYPE" ] && NATIVE_TYPE="binary"
 
     if [ -n "$NATIVE_CMD" ]; then
-        log "Native build ($NATIVE_TYPE): $NATIVE_CMD"
-        # CARGO_TARGET_DIR: prevent rust builds from polluting src/
-        export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-/tmp/cargo-target}"
-        (cd "$SRC_DIR" && eval "$NATIVE_CMD") 2>&1 | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
+        # Convert entrypoint string to JSON array: "npx tsx index.ts" → ["npx","tsx","index.ts"]
+        _entrypoint_json() {
+            echo "$1" | node -e "const a=require('fs').readFileSync(0,'utf8').trim().split(/\s+/);console.log(JSON.stringify(a))" 2>/dev/null
+        }
 
         mkdir -p "$DIST_DIR"
         APT_LINE=""
@@ -48,12 +48,40 @@ step_docker() {
         ENV_LINE=""
         [ -n "$NATIVE_ENV" ] && ENV_LINE="ENV $NATIVE_ENV"
 
-        # Convert entrypoint string to JSON array: "npx tsx index.ts" → ["npx","tsx","index.ts"]
-        _entrypoint_json() {
-            echo "$1" | node -e "const a=require('fs').readFileSync(0,'utf8').trim().split(/\s+/);console.log(JSON.stringify(a))" 2>/dev/null
-        }
+        if [ "$NATIVE_TYPE" = "image-wrapper" ]; then
+            # image-wrapper: build happens INSIDE Docker (RUN), not on host
+            # Pulls upstream image, bakes deps, pushes to GHCR — VMs only pull
+            log "Image-wrapper build: $NATIVE_CMD (inside Docker)"
+            CMD_LINE="CMD $(_entrypoint_json "$NATIVE_ENTRYPOINT")"
+            # app_dir scopes which subdirectory to COPY (default: entire context)
+            COPY_SRC="${NATIVE_APP_DIR:-.}"
+            WORKDIR_PATH="/app"
+            # Non-root user for security
+            USER_LINE="RUN useradd -r -u 1000 appuser"
+            USER_SWITCH="USER appuser"
+            cat > "$DIST_DIR/Dockerfile.native" <<NEOF
+FROM ${NATIVE_BASE:-node:22-slim}
+${APT_LINE}
+WORKDIR ${WORKDIR_PATH}
+COPY ${COPY_SRC} ${WORKDIR_PATH}
+RUN ${NATIVE_CMD}
+${USER_LINE}
+${USER_SWITCH}
+${ENV_LINE}
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+${CMD_LINE}
+NEOF
+            # Place Dockerfile in src/ so build context has access to app_dir
+            cp "$DIST_DIR/Dockerfile.native" "$SRC_DIR/Dockerfile.native"
+            DOCKERFILE="Dockerfile.native"
+            BUILD_CONTEXT="$SRC_DIR"
+            log "Image-wrapper packaged (base: ${NATIVE_BASE:-node:22-slim})"
 
-        if [ "$NATIVE_TYPE" = "app" ]; then
+        elif [ "$NATIVE_TYPE" = "app" ]; then
+            # app: build on host, copy result into image (for node/npm where host build is needed)
+            log "Native build (app): $NATIVE_CMD"
+            export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-/tmp/cargo-target}"
+            (cd "$SRC_DIR" && eval "$NATIVE_CMD") 2>&1 | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
             CMD_LINE="CMD $(_entrypoint_json "$NATIVE_ENTRYPOINT")"
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
@@ -93,10 +121,12 @@ NEOF
         fi
     fi
 
-    # Build context: prefer dist/ if Dockerfile exists there, else src/
-    BUILD_CONTEXT="$SRC_DIR"
-    if [ -d "$DIST_DIR" ] && [ -f "$DIST_DIR/$DOCKERFILE" ]; then
-        BUILD_CONTEXT="$DIST_DIR"
+    # Build context: use what image-wrapper set, else prefer dist/ if Dockerfile exists there, else src/
+    if [ -z "${BUILD_CONTEXT:-}" ]; then
+        BUILD_CONTEXT="$SRC_DIR"
+        if [ -d "$DIST_DIR" ] && [ -f "$DIST_DIR/$DOCKERFILE" ]; then
+            BUILD_CONTEXT="$DIST_DIR"
+        fi
     fi
     DOCKERFILE_PATH="$BUILD_CONTEXT/$DOCKERFILE"
 
@@ -141,6 +171,7 @@ NEOF
             # Local build (native or QEMU cross-compile)
             log "Building $FULL_IMAGE — docker build + push"
             DOCKER_BUILDKIT=1 docker build \
+                --network host \
                 --platform "$PLATFORM" \
                 --no-cache \
                 --progress=plain \
@@ -155,6 +186,7 @@ NEOF
         local)
             log "Building $FULL_IMAGE — forced local build"
             DOCKER_BUILDKIT=1 docker build \
+                --network host \
                 --platform "$PLATFORM" \
                 --no-cache \
                 --progress=plain \

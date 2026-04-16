@@ -215,17 +215,17 @@ jobs:
           cd /tmp/cd
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          mkdir -p traces-gha
+          mkdir -p reports/traces-gha
           for f in "$GITHUB_WORKSPACE/traces/"*.json; do
             [ -f "$f" ] || continue
-            VM=$(jq -r '.vm' "$f"); T="traces-gha/${VM}.json"
+            VM=$(jq -r '.vm' "$f"); T="reports/traces-gha/${VM}.json"
             if [ -f "$T" ]; then
               jq --slurpfile n "$f" '. + $n | .[-200:]' "$T" > "${T}.tmp" && mv "${T}.tmp" "$T"
             else
               jq -s '.' "$f" > "$T"
             fi
           done
-          git add traces-gha/
+          git add reports/traces-gha/
           git diff --cached --quiet && { echo "No changes"; exit 0; }
           git commit -m "auto: traces [skip ci]"
           i=0; while [ $i -lt 3 ]; do i=$((i+1)); git push origin main && break

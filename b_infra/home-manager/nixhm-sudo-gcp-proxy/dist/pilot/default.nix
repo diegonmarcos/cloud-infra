@@ -46,6 +46,7 @@ in {
     # ── Agents (new in vm-pilot)
     ./agents/journal-ntfy.nix
     ./agents/data-publisher.nix
+    ./agents/evidence-collector.nix
 
     # ── Shared user config
     (import ./shared/bash-config.nix { inherit vmName; })

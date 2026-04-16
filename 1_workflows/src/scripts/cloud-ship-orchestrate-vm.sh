@@ -107,7 +107,7 @@ echo "Ship → $VM: $OK ok, $FAIL failed, $SKIP skipped (of $TOTAL)"
 RUN_DUR=$(( $(date +%s) - RUN_START ))
 RUN_STATUS="success"; [ "$FAIL" -gt 0 ] && RUN_STATUS="failure"
 
-TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/traces-gha}"
+TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/reports/traces-gha}"
 mkdir -p "$TRACE_DIR"
 
 jq -n \

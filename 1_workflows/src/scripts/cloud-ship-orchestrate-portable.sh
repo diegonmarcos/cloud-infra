@@ -210,7 +210,7 @@ ship_all_vms() {
 # PHASE 3: TRACES — collect and push (optional)
 # ══════════════════════════════════════════════════════════════════
 collect_traces() {
-  _trace_dir="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/traces-gha}"
+  _trace_dir="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/reports/traces-gha}"
   _cloud_data_key="${CLOUD_DATA_DEPLOY_KEY:-}"
 
   # If no deploy key, traces stay local (CLI/Dagu mode)
@@ -242,11 +242,11 @@ collect_traces() {
   git config user.name "github-actions[bot]"
   git config user.email "github-actions[bot]@users.noreply.github.com"
 
-  mkdir -p traces-gha
+  mkdir -p reports/traces-gha
   for _f in $_traces; do
     [ -f "$_f" ] || continue
     _vm=$(jq -r '.vm' "$_f")
-    _target="traces-gha/${_vm}.json"
+    _target="reports/traces-gha/${_vm}.json"
     if [ -f "$_target" ]; then
       jq --slurpfile new "$_f" '. + $new | .[-200:]' "$_target" > "${_target}.tmp" \
         && mv "${_target}.tmp" "$_target"
@@ -255,7 +255,7 @@ collect_traces() {
     fi
   done
 
-  git add traces-gha/
+  git add reports/traces-gha/
   git diff --cached --quiet && { log "No trace changes"; cd "$REPO_ROOT"; rm -rf "$_tmp"; return 0; }
   git commit -m "auto: traces [skip ci]"
   _i=0
