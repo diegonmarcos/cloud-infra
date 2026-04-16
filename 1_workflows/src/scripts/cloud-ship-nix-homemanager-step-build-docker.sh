@@ -98,15 +98,24 @@ cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
 
 # Import nix closure into host's nix DB (so nix recognizes paths)
 log "Importing nix closure into host DB..."
-NIX_STORE_BIN="$HOST/nix/var/nix/profiles/default/bin/nix-store"
+NIX_STORE_BIN=""
+for _p in \
+    "$HOST/nix/var/nix/profiles/default/bin/nix-store" \
+    "$HOST/home/*/nix-profile/bin/nix-store" \
+    "$HOST/home/*/.nix-profile/bin/nix-store"; do
+    # shellcheck disable=SC2086
+    for _f in $_p; do
+        [ -x "$_f" ] && NIX_STORE_BIN="$_f" && break 2
+    done
+done
 if [ -f "/hm/nix-closure.nar.gz" ]; then
     log "NAR file found ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
-    if [ -x "$NIX_STORE_BIN" ]; then
-        # Use host's nix-store binary directly (no chroot needed)
+    if [ -n "$NIX_STORE_BIN" ]; then
+        log "Using nix-store at $NIX_STORE_BIN"
         gunzip -c /hm/nix-closure.nar.gz | "$NIX_STORE_BIN" --import 2>&1 | tail -5
         log "Nix closure imported"
     else
-        log "WARN: nix-store not found at $NIX_STORE_BIN — paths copied but not registered"
+        log "WARN: nix-store not found on host — paths copied but not registered"
     fi
 else
     log "WARN: /hm/nix-closure.nar.gz not found — paths copied but not registered"
@@ -137,10 +146,22 @@ if [ -f "/hm/secrets.yaml" ]; then
 fi
 
 # Create nix-build/nix-instantiate symlinks (HM activate needs them)
-NIX_DIR="$HOST/nix/var/nix/profiles/default/bin"
-for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
-    [ ! -e "$NIX_DIR/$cmd" ] && ln -sf nix "$NIX_DIR/$cmd" && log "Created $cmd symlink"
+# Find the nix binary directory on the host
+NIX_DIR=""
+for _p in \
+    "$HOST/nix/var/nix/profiles/default/bin" \
+    "$HOST/home/*/nix-profile/bin" \
+    "$HOST/home/*/.nix-profile/bin"; do
+    # shellcheck disable=SC2086
+    for _f in $_p; do
+        [ -x "$_f/nix" ] && NIX_DIR="$_f" && break 2
+    done
 done
+if [ -n "$NIX_DIR" ]; then
+    for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
+        [ ! -e "$NIX_DIR/$cmd" ] && ln -sf nix "$NIX_DIR/$cmd" 2>/dev/null && log "Created $cmd symlink in $NIX_DIR"
+    done
+fi
 
 # Write activation path — ship-hm.sh runs activate natively via SSH
 echo "$HM_ACTIVATION_PATH" > "$HOST/tmp/.hm-activation-path"
