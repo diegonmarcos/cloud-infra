@@ -19,7 +19,7 @@ step_compose() {
             docker run --rm -v /:/host -e HM_HOST_ROOT=/host $HM_IMAGE:latest 2>&1
             echo \"[hm-docker] Activating generation\"
             ACTIVATE=\$(cat /tmp/.hm-activation-path 2>/dev/null)
-            if [ -n \"\$ACTIVATE\" ] && [ -x \"/host\$ACTIVATE/activate\" ]; then
+            if [ -n \"\$ACTIVATE\" ] && [ -x \"\$ACTIVATE/activate\" ]; then
                 rm -f /home/$HM_USER_VAR/.local/bin/docker 2>/dev/null
                 sudo -u $HM_USER_VAR HOME=/home/$HM_USER_VAR USER=$HM_USER_VAR \$ACTIVATE/activate 2>&1
             else
