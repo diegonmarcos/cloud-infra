@@ -96,19 +96,20 @@ log() { printf '[hm-activate] %s\n' "$1"; }
 log "Copying nix store paths to host..."
 cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
 
-# Import nix closure into host's nix DB (so nix-build recognizes paths)
+# Import nix closure into host's nix DB (so nix recognizes paths)
 log "Importing nix closure into host DB..."
+NIX_STORE_BIN="$HOST/nix/var/nix/profiles/default/bin/nix-store"
 if [ -f "/hm/nix-closure.nar.gz" ]; then
     log "NAR file found ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
-    # Decompress and import via chroot (uses host's nix-store binary)
-    gunzip -c /hm/nix-closure.nar.gz | chroot "$HOST" /bin/bash -c "
-        export PATH=/nix/var/nix/profiles/default/bin:\$PATH
-        nix-store --import
-    " 2>&1 | tail -5
-    log "Nix closure imported"
+    if [ -x "$NIX_STORE_BIN" ]; then
+        # Use host's nix-store binary directly (no chroot needed)
+        gunzip -c /hm/nix-closure.nar.gz | "$NIX_STORE_BIN" --import 2>&1 | tail -5
+        log "Nix closure imported"
+    else
+        log "WARN: nix-store not found at $NIX_STORE_BIN — paths copied but not registered"
+    fi
 else
-    log "WARN: /hm/nix-closure.nar.gz not found — activation may fail"
-    ls -la /hm/ 2>/dev/null
+    log "WARN: /hm/nix-closure.nar.gz not found — paths copied but not registered"
 fi
 
 # Decrypt secrets using host's age key
