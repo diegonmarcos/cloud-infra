@@ -66,16 +66,32 @@ step_docker_package() {
         cp -a "$storepath" "$DOCKER_CTX/nix-store/" 2>/dev/null || true
     done
 
-    # Export nix closure for import on VM (register paths in nix DB)
-    log "Exporting nix closure registration..."
+    # Export nix path registration (lightweight — just metadata, not file contents)
+    # The actual files are already copied via nix-store/ directory.
+    # This generates the validity info for nix-store --register-validity on the VM.
+    log "Exporting nix path registration..."
+    nix path-info --recursive --json "$RESULT" 2>/dev/null | gzip > "$DOCKER_CTX/nix-path-info.json.gz" || true
+    # Also generate register-validity format (one line per path: path, deriver, narHash, narSize, refs)
+    nix-store --query --requisites "$RESULT" 2>/dev/null | while read -r p; do
+        echo "$p"
+        nix-store --query --deriver "$p" 2>/dev/null || echo "unknown-deriver"
+        echo "0"  # narHash placeholder
+        echo "0"  # narSize placeholder
+        REFS=$(nix-store --query --references "$p" 2>/dev/null | wc -l)
+        echo "$REFS"
+        nix-store --query --references "$p" 2>/dev/null || true
+        echo ""
+    done > "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null || {
+        log "WARN: register-validity export failed — will use nix-store --import fallback"
+    }
+    # Keep NAR as fallback for VMs with enough RAM
     nix-store --export $(nix-store -qR "$RESULT") 2>/dev/null | gzip > "$DOCKER_CTX/nix-closure.nar.gz" || {
         log "WARN: nix-store --export failed"
         rm -f "$DOCKER_CTX/nix-closure.nar.gz"
     }
-    if [ -f "$DOCKER_CTX/nix-closure.nar.gz" ]; then
-        NAR_SIZE=$(du -sh "$DOCKER_CTX/nix-closure.nar.gz" | cut -f1)
-        log "NAR export: $NAR_SIZE (compressed)"
-    fi
+    REG_SIZE=$(du -sh "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null | cut -f1 || echo "?")
+    NAR_SIZE=$(du -sh "$DOCKER_CTX/nix-closure.nar.gz" 2>/dev/null | cut -f1 || echo "none")
+    log "Registration: $REG_SIZE (validity) + $NAR_SIZE (NAR fallback)"
 
     # Copy encrypted secrets if present
     [ -f "$SRC_DIR/secrets.yaml" ] && cp "$SRC_DIR/secrets.yaml" "$DOCKER_CTX/"
@@ -96,8 +112,8 @@ log() { printf '[hm-activate] %s\n' "$1"; }
 log "Copying nix store paths to host..."
 cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
 
-# Import nix closure into host's nix DB (so nix recognizes paths)
-log "Importing nix closure into host DB..."
+# Register nix paths in host's DB (so nix recognizes copied store paths)
+log "Registering nix paths in host DB..."
 NIX_STORE_BIN=""
 for _p in \
     "$HOST/nix/var/nix/profiles/default/bin/nix-store" \
@@ -108,17 +124,22 @@ for _p in \
         [ -x "$_f" ] && NIX_STORE_BIN="$_f" && break 2
     done
 done
-if [ -f "/hm/nix-closure.nar.gz" ]; then
-    log "NAR file found ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
-    if [ -n "$NIX_STORE_BIN" ]; then
-        log "Using nix-store at $NIX_STORE_BIN"
-        gunzip -c /hm/nix-closure.nar.gz | "$NIX_STORE_BIN" --import 2>&1 | tail -5
-        log "Nix closure imported"
+if [ -n "$NIX_STORE_BIN" ]; then
+    log "Using nix-store at $NIX_STORE_BIN"
+    if [ -f "/hm/nix-register-validity.txt" ]; then
+        # Lightweight: register-validity is just metadata (~100KB), no OOM risk
+        "$NIX_STORE_BIN" --register-validity < /hm/nix-register-validity.txt 2>&1 | tail -5 || true
+        log "Paths registered via --register-validity"
+    elif [ -f "/hm/nix-closure.nar.gz" ]; then
+        # Fallback: full NAR import (heavy — may OOM on 1GB VMs)
+        log "Using NAR fallback ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
+        gunzip -c /hm/nix-closure.nar.gz | "$NIX_STORE_BIN" --import 2>&1 | tail -5 || true
+        log "Nix closure imported via NAR"
     else
-        log "WARN: nix-store not found on host — paths copied but not registered"
+        log "WARN: no registration data — paths copied but not registered"
     fi
 else
-    log "WARN: /hm/nix-closure.nar.gz not found — paths copied but not registered"
+    log "WARN: nix-store not found on host — paths copied but not registered"
 fi
 
 # Decrypt secrets using host's age key
@@ -173,6 +194,8 @@ ACTIVATE_EOF
     [ -f "$DOCKER_CTX/secrets.yaml" ] && SECRETS_COPY="COPY secrets.yaml /hm/secrets.yaml"
     NAR_COPY=""
     [ -f "$DOCKER_CTX/nix-closure.nar.gz" ] && NAR_COPY="COPY nix-closure.nar.gz /hm/nix-closure.nar.gz"
+    REG_COPY=""
+    [ -f "$DOCKER_CTX/nix-register-validity.txt" ] && REG_COPY="COPY nix-register-validity.txt /hm/nix-register-validity.txt"
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
 FROM ghcr.io/diegonmarcos/user-dev-x86-deb-nix-hm:latest
 USER root
@@ -182,6 +205,7 @@ COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
 $SECRETS_COPY
 $NAR_COPY
+$REG_COPY
 RUN chmod +x /hm/activate.sh
 ENV HM_ACTIVATION_PATH=/nix/store/$RESULT_BASENAME
 ENV HM_USER=$HM_USER
