@@ -18,7 +18,8 @@ in {
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
   ] ++ lib.optionals (vmName != "oci-apps") [
-    ./protection/no-build-guard.nix  # oci-apps (ARM 24GB) can build — all others are E2 Micro
+    ./protection/no-build-guard.nix        # oci-apps (ARM 24GB) can build — all others are E2 Micro
+    ./container/no-build-guardrails.nix    # docker wrapper: block --build on small VMs
   ] ++ [
     # ./protection/guardrails.nix  # DISABLED — POSIX sh two-word subcommand bug
 
