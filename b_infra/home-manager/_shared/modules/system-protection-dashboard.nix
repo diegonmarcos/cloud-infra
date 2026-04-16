@@ -11,6 +11,8 @@
 { config, pkgs, lib, ... }:
 
 let
+  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  wgIp = cloudData.vms.${vmName}.wg_ip;
   ttydPort = 7681;
   ttydBin = "${pkgs.ttyd}/bin/ttyd";
   tmuxBin = "${pkgs.tmux}/bin/tmux";
@@ -64,7 +66,7 @@ let
     ExecStartPre=-${tmuxBin} kill-session -t dashboard
     ExecStart=${ttydBin} \
       --port ${toString ttydPort} \
-      --interface 0.0.0.0 \
+      --interface ${wgIp} \
       --writable \
       --max-clients 3 \
       --ping-interval 30 \
