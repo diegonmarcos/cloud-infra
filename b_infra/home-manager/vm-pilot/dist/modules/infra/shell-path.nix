@@ -72,6 +72,14 @@ DefaultEnvironment=PATH=$NIX_PATHS:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr
       echo "[shell-path] sudoers secure_path updated with nix paths"
     fi
 
+    # Ensure nix multi-call symlinks exist (HM activate needs nix-build etc.)
+    NIX_BIN="/nix/var/nix/profiles/default/bin"
+    if [ -x "$NIX_BIN/nix" ]; then
+      for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
+        [ ! -e "$NIX_BIN/$cmd" ] && $SUDO ln -sf nix "$NIX_BIN/$cmd" && echo "[shell-path] created $NIX_BIN/$cmd -> nix"
+      done
+    fi
+
     ) || echo "[shell-path] FAILED — see errors above, activation continues"
   '';
 }

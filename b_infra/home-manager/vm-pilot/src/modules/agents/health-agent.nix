@@ -26,8 +26,8 @@
       # Docker containers via awk (POSIX, no subshell issues)
       TMPF=$(mktemp)
       docker ps -a --format '{{.Names}}|{{.Status}}' > "$TMPF" 2>/dev/null || true
-      CTR_TOTAL=$(wc -l < "$TMPF" 2>/dev/null || echo 0)
-      CTR_RUNNING=$(docker ps --format '{{.Names}}' 2>/dev/null | wc -l || echo 0)
+      CTR_TOTAL=$(wc -l < "$TMPF" 2>/dev/null); CTR_TOTAL=''${CTR_TOTAL:-0}
+      CTR_RUNNING=$(docker ps --format '{{.Names}}' 2>/dev/null | wc -l); CTR_RUNNING=''${CTR_RUNNING:-0}
       CONTAINERS=$(awk -F'|' '
         BEGIN { printf "[" }
         NR > 1 { printf "," }

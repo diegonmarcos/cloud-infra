@@ -2,6 +2,7 @@
 #
 # Two services:
 #   - HTML dashboard on port 7680 (busybox httpd, sidebar + ttyd iframe)
+#     Also serves /health/ and /pilot/data/ via symlinks (no separate httpd)
 #   - ttyd web terminal on port 7681 (tmux monitoring, iframe target)
 #
 # HTML files sourced from vm-pilot/src/html/
@@ -123,6 +124,11 @@ in {
     $SUDO cp -f "$SRC_VP/html/index.html" /opt/pilot/html/index.html
     $SUDO cp -f "$SRC_VP/html/style.css" /opt/pilot/html/style.css
     $SUDO cp -f "$SRC_VP/html/pilot.js" /opt/pilot/html/pilot.js
+
+    # Symlink data dirs into HTML root — single httpd serves everything
+    $SUDO mkdir -p /opt/health /opt/pilot/data /opt/pilot/html/pilot
+    $SUDO ln -sfn /opt/health /opt/pilot/html/health
+    $SUDO ln -sfn /opt/pilot/data /opt/pilot/html/pilot/data
 
     # Deploy systemd units
     $SUDO cp -f "$SRC_SP/dashboard-ttyd.service" /etc/systemd/system/dashboard-ttyd.service
