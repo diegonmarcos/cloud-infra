@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ cloud-builder-ship.sh — Ship services to a VM                   ║
+# ║ CI/CD dispatch — routes to container or HM engine                ║
 # ║                                                                  ║
-# ║ Called by cloud-builder.sh, or standalone (Dagu, CLI).           ║
-# ║ Usage: cloud-builder-ship.sh <vm-alias> [service-filter]         ║
+# ║ Usage: dispatch.sh {ship|ship-hm} <vm-alias> [service-filter]   ║
 # ╚══════════════════════════════════════════════════════════════════╝
-set -u  # no -e/-o pipefail: parallel jobs must not kill the script on failure
+set -u
 
-VM="${1:?Usage: ship-vm.sh <vm-alias> [service-filter]}"
+CMD="${1:?Usage: dispatch.sh {ship|ship-hm} <vm>}"
+shift
+
+# ── Route ship-hm to HM engine ──
+if [ "$CMD" = "ship-hm" ]; then
+    exec bash /opt/cloud-builder/ship-hm.sh "$@"
+fi
+
+# ── Container ship engine (existing logic) ──
+VM="${1:?Usage: dispatch.sh ship <vm> [service-filter]}"
 FILTER="${2:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
