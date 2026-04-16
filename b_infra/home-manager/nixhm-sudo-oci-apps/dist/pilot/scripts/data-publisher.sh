@@ -8,11 +8,16 @@ DATA_DIR="/opt/pilot/data"
 mkdir -p "$DATA_DIR"
 
 # Copy cloud-data for dashboard sidebar
-if [ -f /opt/cloud-data/cloud-data-home-manager.json ]; then
-  cp -f /opt/cloud-data/cloud-data-home-manager.json "$DATA_DIR/cloud-data-home-manager.json"
-elif [ -f "$HOME/.config/home-manager/pilot/cloud-data-home-manager.json" ]; then
-  cp -f "$HOME/.config/home-manager/pilot/cloud-data-home-manager.json" "$DATA_DIR/cloud-data-home-manager.json"
-fi
+# Script runs as root — check all known paths for the HM-deployed cloud-data
+HM_JSON=""
+for p in \
+  /opt/cloud-data/cloud-data-home-manager.json \
+  /home/ubuntu/.config/home-manager/pilot/cloud-data-home-manager.json \
+  /home/diego/.config/home-manager/pilot/cloud-data-home-manager.json \
+  "$HOME/.config/home-manager/pilot/cloud-data-home-manager.json"; do
+  [ -f "$p" ] && HM_JSON="$p" && break
+done
+[ -n "$HM_JSON" ] && cp -f "$HM_JSON" "$DATA_DIR/cloud-data-home-manager.json"
 
 # Containers JSON
 if command -v docker >/dev/null 2>&1; then
