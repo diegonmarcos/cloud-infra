@@ -113,8 +113,8 @@ in {
         compose)
           for arg in "$@"; do
             case "$arg" in --build)
-              echo "[no-build-guard] BLOCKED: docker compose --build disabled on this VM" >&2
-              exit 1 ;; esac
+              echo "[no-build-guard] WARNING: docker compose --build on resource-constrained VM — may OOM" >&2
+              ;; esac
           done
           ;;
       esac
