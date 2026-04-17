@@ -1,11 +1,15 @@
 #!/bin/sh
 # Import existing OCI resources into Terraform state.
-# Run AFTER: cd terraform && terraform init
+# Run AFTER: cd src && terraform init
 # Safe: import only reads, never modifies infrastructure.
 # After: terraform plan → should show 0 changes.
 set -eu
 
-cd "$(dirname "$0")/../terraform"
+# Runs from dist/ (engine copies src/ → dist/)
+# Can also run standalone from src/
+cd "$(dirname "$0")"
+
+NS="axpmn3qtq4ig"
 
 echo "=== VCN + Networking ==="
 terraform import oci_core_vcn.main \
@@ -24,47 +28,56 @@ terraform import oci_core_subnet.main \
   ocid1.subnet.oc1.eu-marseille-1.aaaaaaaapz6g4htlyisp45zplqi47t3mms4noceyqebb5huhccrlt432ugeq
 
 echo ""
-echo "=== Compute Instances ==="
-terraform import oci_core_instance.mail_server \
+echo "=== Compute Instances (for_each key = terraform.json .instances[].key) ==="
+terraform import 'oci_core_instance.vms["mail_server"]' \
   ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq
 
-terraform import oci_core_instance.analytics_server \
+terraform import 'oci_core_instance.vms["analytics_server"]' \
   ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq
 
-terraform import oci_core_instance.apps_server \
+terraform import 'oci_core_instance.vms["apps_server"]' \
   ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva
 
 echo ""
-echo "=== Object Storage ==="
-terraform import oci_objectstorage_bucket.archlinux_images \
-  n/axpmn3qtq4ig/b/archlinux-images
+echo "=== Object Storage (for_each key = bucket name) ==="
+terraform import 'oci_objectstorage_bucket.buckets["cloud-backups-binaries-medias"]' \
+  "n/${NS}/b/cloud-backups-binaries-medias"
 
-terraform import oci_objectstorage_bucket.my_photos \
-  n/axpmn3qtq4ig/b/my-photos
+terraform import 'oci_objectstorage_bucket.buckets["cloud-backups-db"]' \
+  "n/${NS}/b/cloud-backups-db"
+
+terraform import 'oci_objectstorage_bucket.buckets["cloud-backups-media"]' \
+  "n/${NS}/b/cloud-backups-media"
+
+terraform import 'oci_objectstorage_bucket.buckets["cloud-backups-non-binaries"]' \
+  "n/${NS}/b/cloud-backups-non-binaries"
+
+terraform import 'oci_objectstorage_bucket.buckets["my-photos"]' \
+  "n/${NS}/b/my-photos"
 
 echo ""
-echo "=== Email Senders (already in state — skip if exists) ==="
-terraform import oci_email_sender.me \
+echo "=== Email Senders (for_each key = email address) ==="
+terraform import 'oci_email_sender.senders["me@diegonmarcos.com"]' \
   ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaaumrpqz622tzkrekelr2qgsspgazxdfmbi4dtmknjay2q \
   2>/dev/null || echo "  me@ already imported"
 
-terraform import oci_email_sender.no_reply \
+terraform import 'oci_email_sender.senders["no-reply@diegonmarcos.com"]' \
   ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaaorpuusj6j7pevcsugax4v47bou6u3drmobzrbzh7ktba \
   2>/dev/null || echo "  no-reply@ already imported"
 
 echo ""
 echo "=== Budget ==="
-terraform import oci_budget_budget.tenancy_budget \
-  ocid1.budget.oc1.eu-marseille-1.amaaaaaauadvczaaufmg3asko2jw26tfsu4gbwfrws6msrt2x7rkuqq7revq
+BUDGET_ID="ocid1.budget.oc1.eu-marseille-1.amaaaaaauadvczaahk3wenhiyffruiliejvkc5uvfgikdpoe7opikgitocta"
+terraform import oci_budget_budget.main "$BUDGET_ID"
 
-terraform import oci_budget_alert_rule.half_budget \
-  ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaahcbpvrzfxj37f7b2jmvw7jwvqszarbgx4zchlwe42oha
+terraform import 'oci_budget_alert_rule.alerts["50pct-spend-alert"]' \
+  "budgets/${BUDGET_ID}/alertRules/ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaam6k7hbckup42jnfi6f4fx7ntqn27onmjrg63ujpd43ca"
 
-terraform import oci_budget_alert_rule.ninety_budget \
-  ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaav3iact36c6swsun5pcqv2ydz3bjxxhy7yrracyykfbwq
+terraform import 'oci_budget_alert_rule.alerts["90pct-spend-alert"]' \
+  "budgets/${BUDGET_ID}/alertRules/ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaag2fpnzkgnrxyg6gse4jhbw4dperqfpuzicgqfb5ss46q"
 
-terraform import oci_budget_alert_rule.full_budget \
-  ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaacd3satuf3nupzcqabzrxkskyyysykpeyens5u6ztqdna
+terraform import 'oci_budget_alert_rule.alerts["100pct-spend-alert"]' \
+  "budgets/${BUDGET_ID}/alertRules/ocid1.alertrule.oc1.eu-marseille-1.amaaaaaauadvczaajyzmliqrvpuchjrnbaoi32c22bueaklesptsh7h2v7nq"
 
 echo ""
 echo "=== Done. Now run: terraform plan ==="

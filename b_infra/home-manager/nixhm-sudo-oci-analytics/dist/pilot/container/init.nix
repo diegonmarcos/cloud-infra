@@ -21,7 +21,9 @@ let
   cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
   vmData = cloudData.vms.${vmName} or {};
   # Read HM build.json for this VM (delivery method, image, etc.)
-  hmBuildJsonPath = ../. + "/${vmName}/build.json";
+  # HM configs live at b_infra/home-manager/nixhm-sudo-<vmName>/build.json
+  # From here (vm-pilot/src/modules/container/), that's ../../../../nixhm-sudo-<vmName>/
+  hmBuildJsonPath = ../../../../. + "/nixhm-sudo-${vmName}/build.json";
   hmBuildJson = if builtins.pathExists hmBuildJsonPath
     then builtins.fromJSON (builtins.readFile hmBuildJsonPath)
     else {};

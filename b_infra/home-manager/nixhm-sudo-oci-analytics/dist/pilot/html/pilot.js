@@ -1,4 +1,4 @@
-// vm-pilot dashboard — reads /pilot/config.json for sidebar data
+// vm-pilot dashboard — sidebar data from health + cloud-data JSONs
 (function () {
   var hamburger = document.getElementById('hamburger');
   var sidebar = document.getElementById('sidebar');
@@ -6,6 +6,12 @@
 
   hamburger.addEventListener('click', function () { sidebar.classList.add('open'); });
   closeBtn.addEventListener('click', function () { sidebar.classList.remove('open'); });
+
+  // ttyd iframe — runs on port 7681 (separate websocket server)
+  var terminal = document.getElementById('terminal');
+  if (terminal) {
+    terminal.src = location.protocol + '//' + location.hostname + ':7681/ttyd/';
+  }
 
   // Load config from health agent JSON
   fetch('/health/latest.json')

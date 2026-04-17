@@ -70,19 +70,9 @@ step_docker_package() {
     # The actual files are already copied via nix-store/ directory.
     # This generates the validity info for nix-store --register-validity on the VM.
     log "Exporting nix path registration..."
-    nix path-info --recursive --json "$RESULT" 2>/dev/null | gzip > "$DOCKER_CTX/nix-path-info.json.gz" || true
-    # Also generate register-validity format (one line per path: path, deriver, narHash, narSize, refs)
-    nix-store --query --requisites "$RESULT" 2>/dev/null | while read -r p; do
-        echo "$p"
-        nix-store --query --deriver "$p" 2>/dev/null || echo "unknown-deriver"
-        echo "0"  # narHash placeholder
-        echo "0"  # narSize placeholder
-        REFS=$(nix-store --query --references "$p" 2>/dev/null | wc -l)
-        echo "$REFS"
-        nix-store --query --references "$p" 2>/dev/null || true
-        echo ""
-    done > "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null || {
-        log "WARN: register-validity export failed — will use nix-store --import fallback"
+    # Use nix-store --dump-db for exact register-validity format (path, hash, size, deriver, refs)
+    nix-store --dump-db $(nix-store -qR "$RESULT") > "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null || {
+        log "WARN: nix-store --dump-db failed — will rely on NAR import"
     }
     # Keep NAR as fallback for VMs with enough RAM
     nix-store --export $(nix-store -qR "$RESULT") 2>/dev/null | gzip > "$DOCKER_CTX/nix-closure.nar.gz" || {
