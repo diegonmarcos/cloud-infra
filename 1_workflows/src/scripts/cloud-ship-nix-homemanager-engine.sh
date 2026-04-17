@@ -1,17 +1,12 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # ╔════════════════════════════════════════════════════════════════╗
 # ║ Universal Home Manager build engine                           ║
 # ║ Symlinked as build.sh in each VM directory                    ║
 # ║ All behavior driven by build.json — zero hardcoded VM names   ║
 # ║                                                               ║
 # ║ Steps are sourced from cloud-ship-nix-homemanager-step-*.sh   ║
-# ║ files.                                                        ║
 # ╚════════════════════════════════════════════════════════════════╝
-#
-# Build strategy (declared in build.json hm.remote_build):
-#   false → nix build on runner → nix copy closure → activate on VM
-#   true  → rsync flake to VM → build + activate on VM
-set -e
+set -euo pipefail
 
 SERVICE_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="$(basename "$SERVICE_DIR")"
@@ -19,15 +14,12 @@ SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
 BUILD_LOG_FILE="$SERVICE_DIR/build.log"
+CURRENT_STEP=""
 
-# ── Config reader (node primary, python3 fallback) ────────────────────
+# ── Config reader ───────────────────────────────────────────────
 get_config() {
     [ ! -f "$CONFIG" ] && return 0
-    if command -v node >/dev/null 2>&1; then
-        node -e "const c=require('$CONFIG'); const v='$1'.split('.').reduce((o,k)=>o&&o[k],c); process.stdout.write(String(v||''))"
-    elif command -v python3 >/dev/null 2>&1; then
-        python3 -c "import json; c=json.load(open('$CONFIG')); v=$( echo "'$1'.split('.')" | sed "s/'/\"/g" ); r=c; exec('for k in v: r=r.get(k,{})'); print(r if isinstance(r,str) else '',end='')"
-    fi
+    node -e "const c=require('$CONFIG'); const v='$1'.split('.').reduce((o,k)=>o&&o[k],c); process.stdout.write(v===false?'false':v===true?'true':String(v!=null?v:''))"
 }
 
 # ── Load config ───────────────────────────────────────────────────────
@@ -40,15 +32,33 @@ if [ -f "$CONFIG" ]; then
     HM_IMAGE="$(get_config hm.image)"
     HM_PLATFORM="$(get_config hm.platform)"
     HM_REMOTE_BUILDER="$(get_config hm.remote_builder)"
+    HM_USER="$(get_config hm.user)"
+else
+    echo "FATAL: $CONFIG not found"
+    exit 1
+fi
+
+# Required field
+if [ -z "$HM_USER" ]; then
+    echo "FATAL: hm.user not set in build.json"
+    exit 1
 fi
 
 # Age key — use dotfile symlink set up by vault/build.sh setup system
 : "${SOPS_AGE_KEY_FILE:=$HOME/.config/sops/age/keys.txt}"
 export SOPS_AGE_KEY_FILE
 
+# ── Error trap ──────────────────────────────────────────────────────
+_on_error() {
+    local rc=$?
+    if [ -n "$CURRENT_STEP" ]; then
+        log "FATAL: step '$CURRENT_STEP' failed (exit $rc)"
+    fi
+    exit "$rc"
+}
+trap _on_error ERR
+
 # ── Logging: console + persistent build.log ───────────────────────────
-# Every run overwrites build.log with full verbose output.
-# Console sees the same output in real-time.
 : > "$BUILD_LOG_FILE"
 
 log() {
@@ -65,7 +75,7 @@ run_logged() {
     log "CMD: $*"
     set +e
     "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
-    _exit=${PIPESTATUS:-$?}
+    _exit=${PIPESTATUS[0]}
     set -e
     if [ "$_exit" -ne 0 ]; then
         log "FAILED (exit $_exit): $_desc"
@@ -75,7 +85,12 @@ run_logged() {
     return 0
 }
 
-NIX_SOURCE="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null ||:"
+# ── SSH multiplexing ────────────────────────────────────────────────
+SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"
+ssh_vm() {
+    ssh $SSH_OPTS "$DEPLOY_HOST" "$@"
+}
+
 REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 
 # ── Source step files ─────────────────────────────────────────────────
@@ -89,8 +104,6 @@ STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && p
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-deploy-push.sh"
 
 # ── Main ──────────────────────────────────────────────────────────────
-# NOTE: Docker activation (pull + run on VM) is handled by ship-hm.sh step 6,
-# not the engine. ship-hm.sh has SSH context; the engine doesn't.
 if [ "$HM_DELIVERY" = "docker" ]; then
     STRATEGY="docker image → GHCR → VM pulls"
 elif [ "$REMOTE_BUILD" = "true" ]; then
@@ -109,23 +122,31 @@ log "  Log: $BUILD_LOG_FILE"
 log "========================================"
 
 case "${1:-all}" in
-    build)           step_build ;;
-    secrets)         step_secrets ;;
-    deploy)          step_deploy ;;
-    compose)         step_compose ;;
-    docker-package)  step_build; step_secrets; step_docker_package ;;
-    docker-push)     step_docker_push ;;
-    all)             step_build; step_secrets ;;
+    build)           CURRENT_STEP=build; step_build ;;
+    secrets)         CURRENT_STEP=secrets; step_secrets ;;
+    deploy)          CURRENT_STEP=deploy; step_deploy ;;
+    compose)         CURRENT_STEP=compose; step_compose ;;
+    docker-package)  CURRENT_STEP=build; step_build; CURRENT_STEP=secrets; step_secrets; CURRENT_STEP=docker-package; step_docker_package ;;
+    docker-push)     CURRENT_STEP=docker-push; step_docker_push ;;
+    all)             CURRENT_STEP=build; step_build; CURRENT_STEP=secrets; step_secrets ;;
     ship)
         if [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" != "true" ]; then
-            # Docker delivery: build locally → package → push → activate on VM
-            step_build; step_secrets; step_docker_package; step_docker_push; step_compose
+            CURRENT_STEP=build;          step_build
+            CURRENT_STEP=secrets;        step_secrets
+            CURRENT_STEP=docker-package; step_docker_package
+            CURRENT_STEP=docker-push;    step_docker_push
+            CURRENT_STEP=compose;        step_compose
         elif [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" = "true" ]; then
-            # ARM: can't cross-compile nix on x86 — remote build + activate on VM
-            log "Remote builder: falling back to deploy+compose (skip docker packaging)"
-            step_build; step_secrets; step_deploy; step_compose
+            log "Remote builder: deploy+compose (skip docker packaging)"
+            CURRENT_STEP=build;   step_build
+            CURRENT_STEP=secrets; step_secrets
+            CURRENT_STEP=deploy;  step_deploy
+            CURRENT_STEP=compose; step_compose
         else
-            step_build; step_secrets; step_deploy; step_compose
+            CURRENT_STEP=build;   step_build
+            CURRENT_STEP=secrets; step_secrets
+            CURRENT_STEP=deploy;  step_deploy
+            CURRENT_STEP=compose; step_compose
         fi
         ;;
     clean)  [ -d "$DIST_DIR" ] && chmod -R u+w "$DIST_DIR" 2>/dev/null || true; rm -rf "$DIST_DIR" "$SERVICE_DIR/.closure-path"; log "Cleaned" ;;
