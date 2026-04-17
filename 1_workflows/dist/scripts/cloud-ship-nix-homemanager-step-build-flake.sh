@@ -4,6 +4,7 @@
 step_build() {
     step_pull_pilot
     log "Preparing dist/ from src/"
+    [ -d "$DIST_DIR" ] && chmod -R u+w "$DIST_DIR" 2>/dev/null || true
     rm -rf "$DIST_DIR"
     mkdir -p "$DIST_DIR"
     cp -rL "$SRC_DIR/"* "$DIST_DIR/"
