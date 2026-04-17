@@ -50,9 +50,10 @@ step_docker_package() {
     fi
     log "Closure built: $RESULT"
 
-    # Collect runtime closure (only store paths referenced at runtime)
+    # ── Collect runtime closure ──
     log "Collecting runtime closure..."
     DOCKER_CTX="$DIST_DIR/docker-ctx"
+    [ -d "$DOCKER_CTX" ] && chmod -R u+w "$DOCKER_CTX" 2>/dev/null || true
     rm -rf "$DOCKER_CTX"
     mkdir -p "$DOCKER_CTX/nix-store"
 
@@ -66,126 +67,62 @@ step_docker_package() {
         cp -a "$storepath" "$DOCKER_CTX/nix-store/" 2>/dev/null || true
     done
 
-    # Export nix path registration (lightweight — just metadata, not file contents)
-    # The actual files are already copied via nix-store/ directory.
-    # This generates the validity info for nix-store --register-validity on the VM.
-    log "Exporting nix path registration..."
-    # Use nix-store --dump-db for exact register-validity format (path, hash, size, deriver, refs)
-    nix-store --dump-db $(nix-store -qR "$RESULT") > "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null || {
-        log "WARN: nix-store --dump-db failed — will rely on NAR import"
+    # ── Nix DB dump (for --load-db on target VM) ──
+    log "Exporting nix DB dump..."
+    nix-store --dump-db $(nix-store -qR "$RESULT") > "$DOCKER_CTX/nix-db-dump.txt" 2>/dev/null || {
+        log "ERROR: nix-store --dump-db failed"
+        return 1
     }
-    # Keep NAR as fallback for VMs with enough RAM
-    nix-store --export $(nix-store -qR "$RESULT") 2>/dev/null | gzip > "$DOCKER_CTX/nix-closure.nar.gz" || {
-        log "WARN: nix-store --export failed"
-        rm -f "$DOCKER_CTX/nix-closure.nar.gz"
-    }
-    REG_SIZE=$(du -sh "$DOCKER_CTX/nix-register-validity.txt" 2>/dev/null | cut -f1 || echo "?")
-    NAR_SIZE=$(du -sh "$DOCKER_CTX/nix-closure.nar.gz" 2>/dev/null | cut -f1 || echo "none")
-    log "Registration: $REG_SIZE (validity) + $NAR_SIZE (NAR fallback)"
+    REG_SIZE=$(du -sh "$DOCKER_CTX/nix-db-dump.txt" 2>/dev/null | cut -f1 || echo "?")
+    log "DB dump: $REG_SIZE"
 
-    # Copy encrypted secrets if present
-    [ -f "$SRC_DIR/secrets.yaml" ] && cp "$SRC_DIR/secrets.yaml" "$DOCKER_CTX/"
-
-    # Generate activate.sh
+    # ── Generate activate.sh ──
     RESULT_BASENAME=$(basename "$RESULT")
-    HM_USER="$(get_config hm.user)"
     cat > "$DOCKER_CTX/activate.sh" <<'ACTIVATE_EOF'
 #!/bin/bash
 set -euo pipefail
 HOST="${HM_HOST_ROOT:-/host}"
-HM_USER="${HM_USER:-ubuntu}"
-HM_HOME="$HOST/home/$HM_USER"
+HM_USER="${HM_USER:?HM_USER env var required}"
 ACTIVATION="$HOST$HM_ACTIVATION_PATH/activate"
 
 log() { printf '[hm-activate] %s\n' "$1"; }
 
+# ── Copy nix store paths to host (skip existing — content-addressed) ──
 log "Copying nix store paths to host..."
-cp -rn /nix/store/* "$HOST/nix/store/" 2>/dev/null || true
-
-# Register nix paths in host's DB (so nix recognizes copied store paths)
-log "Registering nix paths in host DB..."
-NIX_STORE_BIN=""
-for _p in \
-    "$HOST/nix/var/nix/profiles/default/bin/nix-store" \
-    "$HOST/home/*/nix-profile/bin/nix-store" \
-    "$HOST/home/*/.nix-profile/bin/nix-store"; do
-    # shellcheck disable=SC2086
-    for _f in $_p; do
-        [ -x "$_f" ] && NIX_STORE_BIN="$_f" && break 2
-    done
-done
-if [ -n "$NIX_STORE_BIN" ]; then
-    log "Using nix-store at $NIX_STORE_BIN"
-    if [ -f "/hm/nix-register-validity.txt" ]; then
-        # Lightweight: register-validity is just metadata (~100KB), no OOM risk
-        "$NIX_STORE_BIN" --register-validity < /hm/nix-register-validity.txt 2>&1 | tail -5 || true
-        log "Paths registered via --register-validity"
-    elif [ -f "/hm/nix-closure.nar.gz" ]; then
-        # Fallback: full NAR import (heavy — may OOM on 1GB VMs)
-        log "Using NAR fallback ($(du -sh /hm/nix-closure.nar.gz | cut -f1))"
-        gunzip -c /hm/nix-closure.nar.gz | "$NIX_STORE_BIN" --import 2>&1 | tail -5 || true
-        log "Nix closure imported via NAR"
+COPIED=0; SKIPPED=0
+for p in /nix/store/*/; do
+    dest="$HOST/nix/store/$(basename "$p")"
+    if [ -e "$dest" ]; then
+        SKIPPED=$((SKIPPED + 1))
     else
-        log "WARN: no registration data — paths copied but not registered"
+        cp -a "$p" "$HOST/nix/store/" && COPIED=$((COPIED + 1))
     fi
+done
+log "Store paths: $COPIED copied, $SKIPPED skipped (already on host)"
+
+# ── Copy DB dump to host (registration happens natively, not in container) ──
+if [ -f "/hm/nix-db-dump.txt" ]; then
+    cp /hm/nix-db-dump.txt "$HOST/tmp/.hm-nix-db-dump.txt"
+    log "DB dump copied to host /tmp/"
 else
-    log "WARN: nix-store not found on host — paths copied but not registered"
+    log "ERROR: /hm/nix-db-dump.txt not found"
+    exit 1
 fi
 
-# Decrypt secrets using host's age key
-if [ -f "/hm/secrets.yaml" ]; then
-    AGE_KEY="$HM_HOME/.config/sops/age/keys.txt"
-    if [ -f "$AGE_KEY" ] && command -v sops >/dev/null 2>&1; then
-        log "Decrypting secrets..."
-        mkdir -p "$HM_HOME/.config/home-manager/.secrets.d"
-        SOPS_AGE_KEY_FILE="$AGE_KEY" sops -d /hm/secrets.yaml > /tmp/.hm-secrets-raw
-        # Extract KEY=VALUE pairs
-        if command -v yq >/dev/null 2>&1; then
-            : > "$HM_HOME/.config/home-manager/.secrets"
-            for key in $(yq -r 'keys | .[] | select(. != "sops")' /tmp/.hm-secrets-raw); do
-                val=$(yq -r ".[\"$key\"]" /tmp/.hm-secrets-raw)
-                printf '%s=%s\n' "$key" "$val" >> "$HM_HOME/.config/home-manager/.secrets"
-                printf '%s\n' "$val" > "$HM_HOME/.config/home-manager/.secrets.d/$key"
-                chmod 600 "$HM_HOME/.config/home-manager/.secrets.d/$key"
-            done
-            log "Secrets decrypted ($(wc -l < "$HM_HOME/.config/home-manager/.secrets") keys)"
-        fi
-        rm -f /tmp/.hm-secrets-raw
-    else
-        log "WARN: No age key or sops — skipping secrets"
-    fi
-fi
-
-# Create nix-build/nix-instantiate symlinks (HM activate needs them)
-# Find the nix binary directory on the host
-NIX_DIR=""
-for _p in \
-    "$HOST/nix/var/nix/profiles/default/bin" \
-    "$HOST/home/*/nix-profile/bin" \
-    "$HOST/home/*/.nix-profile/bin"; do
-    # shellcheck disable=SC2086
-    for _f in $_p; do
-        [ -x "$_f/nix" ] && NIX_DIR="$_f" && break 2
-    done
-done
-if [ -n "$NIX_DIR" ]; then
+# ── Create nix command symlinks (HM activate needs them) ──
+NIX_DIR="$HOST/nix/var/nix/profiles/default/bin"
+if [ -d "$NIX_DIR" ] && [ -x "$NIX_DIR/nix" ]; then
     for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do
-        [ ! -e "$NIX_DIR/$cmd" ] && ln -sf nix "$NIX_DIR/$cmd" 2>/dev/null && log "Created $cmd symlink in $NIX_DIR"
+        [ ! -e "$NIX_DIR/$cmd" ] && ln -sf nix "$NIX_DIR/$cmd" 2>/dev/null && log "Created $cmd symlink"
     done
 fi
 
-# Write activation path — ship-hm.sh runs activate natively via SSH
+# ── Write activation path for native activate step ──
 echo "$HM_ACTIVATION_PATH" > "$HOST/tmp/.hm-activation-path"
 log "Container done — activation path: $HM_ACTIVATION_PATH"
 ACTIVATE_EOF
 
-    # Generate Dockerfile
-    SECRETS_COPY=""
-    [ -f "$DOCKER_CTX/secrets.yaml" ] && SECRETS_COPY="COPY secrets.yaml /hm/secrets.yaml"
-    NAR_COPY=""
-    [ -f "$DOCKER_CTX/nix-closure.nar.gz" ] && NAR_COPY="COPY nix-closure.nar.gz /hm/nix-closure.nar.gz"
-    REG_COPY=""
-    [ -f "$DOCKER_CTX/nix-register-validity.txt" ] && REG_COPY="COPY nix-register-validity.txt /hm/nix-register-validity.txt"
+    # ── Generate Dockerfile ──
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
 FROM ghcr.io/diegonmarcos/user-dev-x86-deb-nix-hm:latest
 USER root
@@ -193,9 +130,7 @@ LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
 COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
-$SECRETS_COPY
-$NAR_COPY
-$REG_COPY
+COPY nix-db-dump.txt /hm/nix-db-dump.txt
 RUN chmod +x /hm/activate.sh
 ENV HM_ACTIVATION_PATH=/nix/store/$RESULT_BASENAME
 ENV HM_USER=$HM_USER
