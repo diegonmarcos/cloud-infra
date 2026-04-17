@@ -13,25 +13,25 @@ step_secrets() {
     log "Decrypting secrets -> dist/.secrets"
     mkdir -p "$DIST_DIR"
 
-    # sops decrypt → JSON (handles all types: str, int, bool) → dotenv
+    # Decrypt once to JSON — all extraction done by jq, never parse secret values as text
+    _secrets_json=$(sops -d --output-type json "$secrets_file")
+
+    # Generate .secrets dotenv (newlines escaped for docker-compose env_file compatibility)
     # Single-quote values containing $ so compose doesn't interpolate them
-    sops -d --output-type json "$secrets_file" \
-      | jq -r 'to_entries[] | if (.value | tostring | test("[$]"))
-          then "\(.key)='"'"'\(.value | tostring)'"'"'"
-          else "\(.key)=\(.value | tostring)"
+    echo "$_secrets_json" \
+      | jq -r 'to_entries[] | .value = (.value | tostring | gsub("\n"; "\\n")) |
+          if (.value | test("[$]"))
+          then "\(.key)='"'"'\(.value)'"'"'"
+          else "\(.key)=\(.value)"
           end' \
       > "$DIST_DIR/.secrets"
 
-    # Split .secrets into per-file .secrets.d/ (one file per KEY, content = VALUE)
-    # Enables Docker/Authelia _FILE suffix pattern: SECRET_FILE=/config/.secrets.d/KEY
+    # Write each secret as individual file — jq extracts values directly, NO text parsing
     mkdir -p "$DIST_DIR/.secrets.d"
-    while IFS='=' read -r key val; do
-        case "$key" in ""|\#*) continue ;; esac
-        # Strip surrounding single quotes from compose-escaped values
-        val="${val#\'}"
-        val="${val%\'}"
-        printf '%s' "$val" > "$DIST_DIR/.secrets.d/$key"
-    done < "$DIST_DIR/.secrets"
+    for key in $(echo "$_secrets_json" | jq -r 'keys[]'); do
+        echo "$_secrets_json" | jq -r --arg k "$key" '.[$k] | tostring' > "$DIST_DIR/.secrets.d/$key"
+    done
+    unset _secrets_json
     log "Secrets split -> .secrets.d/ ($(ls "$DIST_DIR/.secrets.d" | wc -l) files)"
 
     # Extract JWKS key as PEM file (multi-line value can't go in env_file)

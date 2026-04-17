@@ -32,11 +32,18 @@ step_terraform() {
         log "terraform.tfvars ready ($(grep -c '=' "$DIST_DIR/terraform.tfvars") vars)"
     fi
 
+    # Decrypt state if encrypted version exists
+    _tf_state_decrypt
+
     log "terraform init"
     (cd "$DIST_DIR" && terraform init -upgrade -input=false)
     log "terraform plan"
     (cd "$DIST_DIR" && terraform plan)
     log "terraform apply -auto-approve"
     (cd "$DIST_DIR" && terraform apply -auto-approve)
+
+    # Re-encrypt state
+    _tf_state_encrypt
+
     log "Terraform applied"
 }

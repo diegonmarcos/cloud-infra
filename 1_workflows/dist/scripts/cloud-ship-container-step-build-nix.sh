@@ -30,34 +30,55 @@ step_build() {
         return 0
     fi
 
-    # Pre-build: update cloud-data submodule + copy files into src/
-    # (nix flakes can't see git submodule contents — this bridges the gap)
+    # Pre-build: ensure cloud-data is available in src/ for nix build
+    # Nix flakes can't see git submodule content, so symlinks to I_cloud-data/
+    # must be resolved to real files before nix build. Symlinks in src/ serve as
+    # declarative markers — the engine detects them and copies the real data.
+    #
+    # Detection: if src/ has cloud-data symlinks OR include_cloud_data=true
     CLOUD_DATA_STAGED=""
-    if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
-        # In CI, cloud-builder-ship.sh pre-stages all files before parallel dispatch
-        # to avoid git index race conditions. Only do this in local/serial builds.
-        CLOUD_DATA_DIR="$SERVICE_DIR/../../I_cloud-data"
-        # Auto-update submodule to latest remote
-        if [ -f "$SERVICE_DIR/../../.gitmodules" ]; then
-            log "Updating cloud-data submodule to latest"
-            git -C "$SERVICE_DIR/../.." submodule update --remote --init I_cloud-data 2>/dev/null || true
-        fi
+    CLOUD_DATA_DIR="$SERVICE_DIR/../../I_cloud-data"
+    HAS_CLOUD_DATA_SYMLINKS=false
+
+    # Check if src/ has any cloud-data symlinks
+    for f in "$SRC_DIR"/cloud-data-*.json; do
+        [ -L "$f" ] && HAS_CLOUD_DATA_SYMLINKS=true && break
+    done
+
+    # Always update submodule to latest
+    if [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; }; then
+        log "Updating cloud-data submodule to latest"
+        git -C "$SERVICE_DIR/../.." submodule update --remote --init I_cloud-data 2>/dev/null || true
+    fi
+
+    if { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         if [ -d "$CLOUD_DATA_DIR" ]; then
-            for f in "$CLOUD_DATA_DIR"/*.json; do
-                [ -f "$f" ] || continue
-                BASENAME=$(basename "$f")
-                TARGET="$SRC_DIR/$BASENAME"
-                # Skip files already committed in src/ — don't overwrite with submodule copy
-                if git -C "$SERVICE_DIR/../.." ls-files --error-unmatch "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" >/dev/null 2>&1; then
-                    continue
+            # Resolve symlinks to real files (nix can't follow symlinks into submodules)
+            for f in "$SRC_DIR"/cloud-data-*.json "$SRC_DIR"/_cloud-data-*.json; do
+                [ -L "$f" ] || continue
+                REAL_TARGET=$(readlink -f "$f")
+                if [ -f "$REAL_TARGET" ]; then
+                    rm "$f"
+                    cp "$REAL_TARGET" "$f"
+                    git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
+                    CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
                 fi
-                cp "$f" "$TARGET"
-                git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
-                CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
             done
-            log "Staged I_cloud-data/*.json into src/ for nix build"
+            # Also copy any cloud-data files not already in src/ (include_cloud_data legacy)
+            if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
+                for f in "$CLOUD_DATA_DIR"/*.json; do
+                    [ -f "$f" ] || continue
+                    BASENAME=$(basename "$f")
+                    TARGET="$SRC_DIR/$BASENAME"
+                    [ -f "$TARGET" ] && continue  # already resolved or copied
+                    cp "$f" "$TARGET"
+                    git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
+                    CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
+                done
+            fi
+            log "Resolved cloud-data for nix build (${HAS_CLOUD_DATA_SYMLINKS:+symlinks}${INCLUDE_CLOUD_DATA:+ +flag})"
         fi
-    elif [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
+    elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; }; then
         log "cloud-data already pre-staged by CI — skipping"
     fi
 
@@ -81,8 +102,8 @@ step_build() {
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
         for f in $CLOUD_DATA_STAGED; do
-            git -C "$REPO_ROOT" reset HEAD "$(realpath --relative-to="$REPO_ROOT" "$f")" 2>/dev/null || true
-            rm -f "$f"
+            REL_PATH="$(realpath --relative-to="$REPO_ROOT" "$f")"
+            git -C "$REPO_ROOT" checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
         done
         return 1
     }
@@ -106,12 +127,13 @@ step_build() {
     chmod -R u+w "$DIST_DIR"
     rm -f "$SERVICE_DIR/.result"
 
-    # Post-build: unstage and remove cloud-data files from src/
+    # Post-build: restore cloud-data files in src/ to their committed state
     # In CI, cleanup is handled by cloud-builder-ship.sh after all parallel jobs finish
     if [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         for f in $CLOUD_DATA_STAGED; do
-            git -C "$SERVICE_DIR/../.." reset HEAD "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
-            rm -f "$f"
+            REL_PATH="$(realpath --relative-to="$SERVICE_DIR/../.." "$f")"
+            # Restore to committed version (if tracked), otherwise remove
+            git -C "$SERVICE_DIR/../.." checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
         done
     fi
 

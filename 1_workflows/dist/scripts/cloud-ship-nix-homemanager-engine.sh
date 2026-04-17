@@ -118,9 +118,8 @@ case "${1:-all}" in
     all)             step_build; step_secrets ;;
     ship)
         if [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" != "true" ]; then
-            # Docker delivery: build locally → package → push to GHCR
-            # Activation (docker pull + run) is done by ship-hm.sh which has SSH context
-            step_build; step_secrets; step_docker_package; step_docker_push
+            # Docker delivery: build locally → package → push → activate on VM
+            step_build; step_secrets; step_docker_package; step_docker_push; step_compose
         elif [ "$HM_DELIVERY" = "docker" ] && [ "$HM_REMOTE_BUILDER" = "true" ]; then
             # ARM: can't cross-compile nix on x86 — remote build + activate on VM
             log "Remote builder: falling back to deploy+compose (skip docker packaging)"

@@ -141,6 +141,7 @@ STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && p
 . "$STEPS_DIR/cloud-ship-container-step-wrangler.sh"
 . "$STEPS_DIR/cloud-ship-container-step-terraform-apply.sh"
 . "$STEPS_DIR/cloud-ship-container-step-terraform-plan.sh"
+. "$STEPS_DIR/cloud-ship-container-step-terraform-import.sh"
 . "$STEPS_DIR/cloud-ship-container-step-clean.sh"
 . "$STEPS_DIR/cloud-ship-container-step-build-compose.sh"
 
@@ -250,6 +251,7 @@ case "${1:-all}" in
     wrangler) step_wrangler ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
+    tf-import) step_build; step_secrets; step_terraform_import ;;
     redeploy) step_build; step_secrets; step_deploy; step_compose ;;
     clean)    rm -rf "$DIST_DIR" "$SERVICE_DIR/.result" "$SERVICE_DIR/.result-docs" "$SERVICE_DIR/.dist-hash"; log "Cleaned" ;;
     clean-remote) step_clean_remote "${2:-}" ;;
@@ -269,6 +271,7 @@ case "${1:-all}" in
             echo "  wrangler     Deploy Cloudflare Worker via wrangler"
             echo "  terraform    Terraform init + apply in dist/"
             echo "  tf-plan      build + secrets + terraform plan"
+            echo "  tf-import    build + secrets + terraform import (from src/import.sh)"
             echo "  all          build + docs + secrets (default)"
             echo "  ship         docker + build + secrets + deploy + compose (skips if unchanged)"
             echo "  redeploy     build + secrets + deploy + compose (skip docker)"

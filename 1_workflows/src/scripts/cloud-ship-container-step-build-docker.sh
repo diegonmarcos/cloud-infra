@@ -89,10 +89,14 @@ ${APT_LINE}
 ${ENV_LINE}
 WORKDIR /app
 COPY . /app
+ENTRYPOINT []
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 ${CMD_LINE}
 NEOF
+            # Place Dockerfile in src/ so build context has access to app files
+            cp "$DIST_DIR/Dockerfile.native" "$SRC_DIR/Dockerfile.native"
             DOCKERFILE="Dockerfile.native"
+            BUILD_CONTEXT="$SRC_DIR"
             log "Native app packaged (type=app)"
         else
             if [ -z "$NATIVE_BINARY" ]; then
@@ -161,7 +165,9 @@ NEOF
                 ssh $SSH_OPTS "oci-apps" "cd $REMOTE_BUILD_DIR && DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
                 ssh $SSH_OPTS "oci-apps" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
                 ssh $SSH_OPTS "oci-apps" "rm -rf $REMOTE_BUILD_DIR"
-                # Skip the local build below
+                log "Pushed $FULL_IMAGE:latest (from oci-apps)"
+                echo "$LOCAL_HASH" > "$SERVICE_DIR/.docker-src-hash-new"
+                touch "$SERVICE_DIR/.image-changed"
                 return 0
             else
                 # Cross-arch build with QEMU
