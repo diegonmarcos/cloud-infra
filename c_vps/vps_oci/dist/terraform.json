@@ -1,0 +1,118 @@
+{
+  "provider": {
+    "name": "oci",
+    "version": "~> 5.0",
+    "region": "eu-marseille-1"
+  },
+
+  "network": {
+    "vcn_name": "web-server-vcn",
+    "vcn_cidr": "10.0.0.0/16",
+    "igw_name": "web-server-igw",
+    "subnet_name": "web-server-subnet",
+    "subnet_cidr": "10.0.1.0/24",
+    "availability_domain": "bRpM:EU-MARSEILLE-1-AD-1"
+  },
+
+  "gcp_proxy_ip": "35.226.147.64",
+  "os_namespace": "axpmn3qtq4ig",
+
+  "security_rules": {
+    "egress": [
+      { "destination": "0.0.0.0/0", "protocol": "all", "stateless": false }
+    ],
+    "ingress": [
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 22,    "description": "SSH" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 2200,  "description": "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 80,    "description": "HTTP" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 443,   "description": "HTTPS" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8080,  "description": "HTTP alt" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8081,  "description": "Matomo Analytics" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 81,    "description": "HTTP alt" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 5678,  "description": "n8n" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8384,  "description": "Syncthing" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 22000, "description": "Syncthing TCP" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 5000,  "description": "Flask API" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8888,  "description": "Snappymail Webmail" },
+      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8088,  "description": "SMTP Proxy for Cloudflare Worker" },
+      { "source": "0.0.0.0/0",          "protocol": "17", "port": 51820, "description": "WireGuard VPN" },
+      { "source": "gcp_proxy",          "protocol": "6",  "port": 5232,  "description": "Radicale" },
+      { "source": "gcp_proxy",          "protocol": "6",  "port": 3010,  "description": "AFFiNE from NPM" },
+      { "source": "gcp_proxy",          "protocol": "6",  "port": 8443,  "description": "Code-Server from NPM" },
+      { "source": "gcp_proxy",          "protocol": "6",  "port": 8085,  "description": "NocoDB from NPM" }
+    ]
+  },
+
+  "instances": [
+    {
+      "key": "mail_server",
+      "display_name": "oci-E2-f_0",
+      "alias": "oci-mail",
+      "description": "Mail Server",
+      "shape": "VM.Standard.E2.1.Micro",
+      "ocpus": 1,
+      "memory_in_gbs": null,
+      "fault_domain": "FAULT-DOMAIN-2",
+      "image_id": "ocid1.image.oc1.eu-marseille-1.aaaaaaaaroyr7dd2stfnhbjmqrqrbvhoa77i6o3eap6er6cd5rxjzxgu73oq",
+      "boot_volume_size_gb": 47,
+      "vnic_display_name": "web-server",
+      "ip": "130.110.251.193",
+      "ocid": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
+    },
+    {
+      "key": "analytics_server",
+      "display_name": "oci-E2-f_1",
+      "alias": "oci-analytics",
+      "description": "Analytics + Workflows",
+      "shape": "VM.Standard.E2.1.Micro",
+      "ocpus": 1,
+      "memory_in_gbs": null,
+      "fault_domain": "FAULT-DOMAIN-1",
+      "image_id": "ocid1.image.oc1.eu-marseille-1.aaaaaaaaroyr7dd2stfnhbjmqrqrbvhoa77i6o3eap6er6cd5rxjzxgu73oq",
+      "boot_volume_size_gb": 50,
+      "vnic_display_name": "services-server",
+      "ip": "129.151.228.66",
+      "ocid": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
+    },
+    {
+      "key": "apps_server",
+      "display_name": "oci-A1-f_0",
+      "alias": "oci-apps",
+      "description": "Consolidated Apps Server",
+      "shape": "VM.Standard.A1.Flex",
+      "ocpus": 4,
+      "memory_in_gbs": 24,
+      "fault_domain": "FAULT-DOMAIN-2",
+      "image_id": "ocid1.image.oc1.eu-marseille-1.aaaaaaaar3pm2xlih5tqkjwr7ykfgzixjytjivkacgmqrlxi66vzlf5a2wlq",
+      "boot_volume_size_gb": 100,
+      "vnic_display_name": "arm-server-1",
+      "ip": "82.70.229.129",
+      "ocid": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
+    }
+  ],
+
+  "buckets": [
+    { "name": "cloud-backups-binaries-medias", "access_type": "NoPublicAccess", "storage_tier": "Standard" },
+    { "name": "cloud-backups-db",              "access_type": "NoPublicAccess", "storage_tier": "Standard" },
+    { "name": "cloud-backups-media",           "access_type": "NoPublicAccess", "storage_tier": "Archive" },
+    { "name": "cloud-backups-non-binaries",    "access_type": "NoPublicAccess", "storage_tier": "Standard" },
+    { "name": "my-photos",                     "access_type": "NoPublicAccess", "storage_tier": "Standard" }
+  ],
+
+  "email_senders": [
+    "me@diegonmarcos.com",
+    "no-reply@diegonmarcos.com"
+  ],
+
+  "budget": {
+    "amount": 30,
+    "reset_period": "MONTHLY",
+    "display_name": "OCI-Free-Tier-30EUR",
+    "description": "Alert if OCI spend exceeds free tier expectations",
+    "alert_thresholds": [
+      { "name": "50pct-spend-alert",  "threshold": 50 },
+      { "name": "90pct-spend-alert",  "threshold": 90 },
+      { "name": "100pct-spend-alert", "threshold": 100 }
+    ]
+  }
+}
