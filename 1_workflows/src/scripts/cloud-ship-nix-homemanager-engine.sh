@@ -128,7 +128,7 @@ case "${1:-all}" in
             step_build; step_secrets; step_deploy; step_compose
         fi
         ;;
-    clean)  rm -rf "$DIST_DIR" "$SERVICE_DIR/.closure-path"; log "Cleaned" ;;
+    clean)  [ -d "$DIST_DIR" ] && chmod -R u+w "$DIST_DIR" 2>/dev/null || true; rm -rf "$DIST_DIR" "$SERVICE_DIR/.closure-path"; log "Cleaned" ;;
     *)
         echo "Usage: $0 [build|secrets|deploy|compose|docker-package|docker-push|all|ship|clean]"
         echo ""
