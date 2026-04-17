@@ -17,7 +17,8 @@
       HOSTNAME=$(hostname -s 2>/dev/null || echo "unknown")
 
       echo "[evidence-collector] Starting capture for $HOSTNAME ($DATE)"
-      mkdir -p "$EVIDENCE_DIR"
+      sudo mkdir -p "$EVIDENCE_DIR"
+      sudo chown "$(id -u):$(id -g)" "$EVIDENCE_DIR"
 
       # ── Phase 1: Container filesystem exports (parallel, backgrounded) ──
       CONTAINERS=$(docker ps --format '{{.Names}}' 2>/dev/null || true)
