@@ -90,12 +90,13 @@ log() { printf '[hm-activate] %s\n' "$1"; }
 # ── Copy nix store paths to host (skip existing — content-addressed) ──
 log "Copying nix store paths to host..."
 COPIED=0; SKIPPED=0
-for p in /nix/store/*/; do
-    dest="$HOST/nix/store/$(basename "$p")"
-    if [ -e "$dest" ]; then
+for p in /nix/store/*; do
+    [ ! -e "$p" ] && continue
+    base=$(basename "$p")
+    if [ -e "$HOST/nix/store/$base" ]; then
         SKIPPED=$((SKIPPED + 1))
     else
-        cp -a "$p" "$HOST/nix/store/" && COPIED=$((COPIED + 1))
+        cp -a "$p" "$HOST/nix/store/$base" && COPIED=$((COPIED + 1))
     fi
 done
 log "Store paths: $COPIED copied, $SKIPPED skipped (already on host)"
