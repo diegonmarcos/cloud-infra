@@ -74,7 +74,7 @@
     mariadb
 
     # ── Backup ──
-    bup
+    rustic-rs
 
     # ── WireGuard ──
     wireguard-tools
