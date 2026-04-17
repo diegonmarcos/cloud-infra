@@ -1,14 +1,11 @@
 # Guardrails: PATH wrapper scripts in ~/.local/bin/
-# Four-tier command protection:
-#   WHITELIST → read-only / safe subcommands — pass through immediately
-#   BLOCKED   → dangerous flag combos that wipe databases/volumes — hard stop
-#   CONFIRM   → declarative reminder + ask y/N (auto-confirmed by build.sh)
-#   WARNING   → reminder banner, then run
+# Two-tier command protection (WARNING-ONLY — nothing is blocked or prompted):
+#   WHITELIST → read-only / safe subcommands — pass through silently (no banner)
+#   WARNING   → print reminder banner, log, then run the command
 #
-# Flow: whitelist? → pass | blocked? → stop | confirm/warning? → prompt | else → pass
+# Flow: whitelist? → pass silently | else → print warning + log + pass
 #
-# BUILDSH_GUARDRAIL=1 bypasses all prompts (re-entry + auto-confirm).
-# BLOCKED is never bypassed, not even by build.sh.
+# BUILDSH_GUARDRAIL=1 bypasses all banners (re-entry guard).
 # All wrappers are POSIX sh — no bash required.
 { config, lib, ... }:
 
@@ -88,8 +85,8 @@ let
     esac
   '';
 
-  # ── Tier 1: BLOCKED — flag patterns that destroy data ──────────────
-  # The COMMAND is fine. The ARGS are the problem.
+  # ── Tier 1: DANGEROUS — flag patterns that could destroy data ──────
+  # WARNING ONLY — prints a danger banner, logs it, then runs the command.
   blocked = [
     { cmd = "docker";         match = "compose down -v";           reason = "'-v' wipes Docker volumes — databases, state, everything persistent"; }
     { cmd = "docker";         match = "compose down --volumes";    reason = "'--volumes' wipes Docker volumes — databases, state, everything persistent"; }
@@ -101,7 +98,7 @@ let
     { cmd = "rsync";          match = "--delete";                  reason = "'--delete' removes remote files not in source — use build.sh deploy instead"; }
   ];
 
-  # ── Tier 2: CONFIRM — show declarative reminder + ask y/N ──────────
+  # ── Tier 2: WARN — show declarative reminder, then run ─────────────
   # All commands that were already wrapped (the original 24)
   confirmCmds = [
     "npm" "npx" "apt" "apt-get" "pkg" "pip" "pip3" "nix-env"
@@ -129,9 +126,9 @@ let
       if printf " %s " "$ARGS" | grep -qiF -- "${rule.match}"; then
         printf "\n"
         printf "\033[1;31m  ╔══════════════════════════════════════════════════════════════╗\033[0m\n"
-        printf "\033[1;31m  ║  ✖ BLOCKED — DESTRUCTIVE OPERATION                          ║\033[0m\n"
+        printf "\033[1;31m  ║  ⚠ DANGER — DESTRUCTIVE OPERATION                           ║\033[0m\n"
         printf "\033[1;31m  ╠══════════════════════════════════════════════════════════════╣\033[0m\n"
-        printf "\033[1;31m  ║  The command itself is fine. The flags are the problem:      ║\033[0m\n"
+        printf "\033[1;31m  ║  The command itself is fine. The flags are dangerous:        ║\033[0m\n"
         printf "\033[1;31m  ║                                                              ║\033[0m\n"
         printf "\033[1;33m  ║  ${rule.reason}\033[0m\n"
         printf "\033[1;31m  ║                                                              ║\033[0m\n"
@@ -139,16 +136,14 @@ let
         printf "\033[1;31m  ║                                                              ║\033[0m\n"
         printf "\033[0;33m  ║  Use build.sh for safe deploy/compose operations.            ║\033[0m\n"
         printf "\033[1;31m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
-        _log_guardrail "blocked"
+        _log_guardrail "danger"
         printf "\n"
-        exit 1
       fi
     '';
   in builtins.concatStringsSep "\n" (map mkCheck rules);
 
   # ── Wrapper generator ──────────────────────────────────────────────
   mkWrapper = cmd: let
-    isWarning = builtins.elem cmd warningCmds;
     blockChecks = mkBlockChecks cmd;
     whitelistCheck = mkWhitelistCheck cmd;
   in {
@@ -195,10 +190,10 @@ let
         ARGS="$*"
         ${whitelistCheck}
         ${blockChecks}
-      '' + (if isWarning then ''
+      '' + ''
         printf "\n"
         printf "\033[0;33m  ╔══════════════════════════════════════════════════════════════╗\033[0m\n"
-        printf "\033[0;33m  ║  ⚠ REMINDER                                                 ║\033[0m\n"
+        printf "\033[0;33m  ║  ⚠ REMINDER — DECLARATIVE ENVIRONMENT                       ║\033[0m\n"
         printf "\033[0;33m  ╠══════════════════════════════════════════════════════════════╣\033[0m\n"
         printf "\033[0;33m  ║  build.sh is the preferred interface for builds and deps.    ║\033[0m\n"
         printf "\033[0;33m  ║  Direct use is fine for quick tasks — just be aware.         ║\033[0m\n"
@@ -206,47 +201,7 @@ let
         printf "\n"
         _log_guardrail "warning"
         exec ${cmd} "$@" || _die "exec '${cmd}' failed"
-      '' else ''
-        printf "\n"
-        printf "\033[1;31m  ╔══════════════════════════════════════════════════════════════╗\033[0m\n"
-        printf "\033[1;31m  ║  ⚠ CONFIRM — DECLARATIVE ENVIRONMENT                        ║\033[0m\n"
-        printf "\033[1;31m  ╠══════════════════════════════════════════════════════════════╣\033[0m\n"
-        printf "\033[1;31m  ║  1) DECLARATIVE ONLY                                         ║\033[0m\n"
-        printf "\033[1;31m  ║     THIS IS A FULL DECLARATIVE ENVIRONMENT, NIX-FLAKES WAY  ║\033[0m\n"
-        printf "\033[1;31m  ╠══════════════════════════════════════════════════════════════╣\033[0m\n"
-        printf "\033[1;33m  ║  2) BUILD.SH ALWAYS                                          ║\033[0m\n"
-        printf "\033[1;33m  ║     JS deps  → build.sh deps | Build → build.sh build        ║\033[0m\n"
-        printf "\033[1;33m  ╠══════════════════════════════════════════════════════════════╣\033[0m\n"
-        printf "\033[1;35m  ║  3) NO HARDCODE EASY FIX                                     ║\033[0m\n"
-        printf "\033[1;35m  ║     Always report a bug in the build.sh engine               ║\033[0m\n"
-        printf "\033[1;35m  ╚══════════════════════════════════════════════════════════════╝\033[0m\n"
-        printf "\n"
-        # Non-interactive (no TTY) — explain how to approve via env var
-        if ! [ -e /dev/tty ]; then
-          printf "\033[1;33m  ┌─────────────────────────────────────────────────────────────┐\033[0m\n"
-          printf "\033[1;33m  │  NO TTY — cannot prompt for confirmation.                   │\033[0m\n"
-          printf "\033[1;33m  │                                                             │\033[0m\n"
-          printf "\033[1;37m  │  To approve, re-run with:                                   │\033[0m\n"
-          printf "\033[1;36m  │    BUILDSH_GUARDRAIL=1 ${cmd} %s\033[0m\n" "$ARGS"
-          printf "\033[1;33m  │                                                             │\033[0m\n"
-          printf "\033[0;37m  │  Or use build.sh which auto-approves guardrails.            │\033[0m\n"
-          printf "\033[1;33m  └─────────────────────────────────────────────────────────────┘\033[0m\n"
-          printf "\n"
-          exit 1
-        fi
-        printf "\033[1;37m  Proceed? [y/N] \033[0m"
-        if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
-          printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
-          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n" >&2
-          exit 1
-        fi
-        if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
-          printf "\033[0;31m  Aborted.\033[0m\n"
-          exit 1
-        fi
-        _log_guardrail "confirm"
-        exec ${cmd} "$@" || _die "exec '${cmd}' failed after confirmation"
-      '')); };
+      ''); };
     };
   };
 
