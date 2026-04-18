@@ -9,20 +9,19 @@ cmd_config() {
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
     fi
-    if [ ! -f "$ENGINES_DIR/gen-cloud-data.ts" ] || [ ! -f "$ENGINES_DIR/derive-cloud-data.ts" ]; then
-        log "SKIP: engine sources not available locally"
+    CD_SCRIPTS="$CLOUD_ROOT/I_cloud-data/1_workflows/src/scripts"
+    CD_MASTER="$CD_SCRIPTS/cloud-data-config.ts"
+    if [ ! -f "$CD_MASTER" ]; then
+        log "SKIP: cloud-data engine not available at $CD_MASTER"
         return 1
     fi
     # ESM resolution ignores NODE_PATH — symlink shared node_modules so tsx finds packages
     SHARED_NM="$HOME/.node_modules/node_modules"
-    if [ -d "$SHARED_NM" ] && [ ! -e "$ENGINE_DIR/node_modules" ]; then
-        ln -s "$SHARED_NM" "$ENGINE_DIR/node_modules"
+    if [ -d "$SHARED_NM" ] && [ ! -e "$CD_SCRIPTS/node_modules" ]; then
+        ln -s "$SHARED_NM" "$CD_SCRIPTS/node_modules"
     fi
-    # v2 pipeline: consolidated → derivation (17 per-consumer JSONs)
-    log "Generating _cloud-data-consolidated.json..."
-    tsx "$ENGINES_DIR/gen-cloud-data.ts"
-    log "Deriving per-consumer JSONs from consolidated..."
-    tsx "$ENGINES_DIR/derive-cloud-data.ts"
+    log "Running cloud-data master (consolidated + derive)..."
+    tsx "$CD_MASTER"
 }
 
 cmd_config "$@"

@@ -59,7 +59,7 @@ This test plan covers verification and validation of the Cloud IaC platform: bui
 - [ ] Firewall rules match cloud-data-firewall-rules.json
 
 ### 4.5 Cloud-Data Generation
-- [ ] `derive-cloud-data.ts` produces all 26 JSON files
+- [ ] `cloud-data-config-derive.ts` produces all 26 JSON files
 - [ ] Output matches `manifest.json` index
 - [ ] Per-VM container specs are accurate
 - [ ] Caddy routes, Authelia ACLs, DNS records are consistent

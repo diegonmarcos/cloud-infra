@@ -17,7 +17,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 - 58 service + 5 HM symlinks updated
 - Cross-references updated (script-to-script, cicd/*.yml, Dagu partial)
 - `build.sh workflow`: src→dist→deploy for ALL files, header injection, symlink always recreated
-- TS engine symlinks added (gen-cloud-data.ts, derive-cloud-data.ts, gen-gha-config.ts)
+- TS engines moved to cloud-data/1_workflows/src/scripts/ and renamed: cloud-data-config-consolidated.ts, cloud-data-config-derive.ts, master cloud-data-config.ts (+ gen-gha-config.ts remaining as symlink)
 - `.gitmodules` uses HTTPS (not SSH)
 - `setup-wireguard.sh` created (was missing)
 - `config.json` bug fixed (`iproute2` → `ip`)

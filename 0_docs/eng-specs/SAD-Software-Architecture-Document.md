@@ -186,8 +186,9 @@ Client → Cloudflare → gcp-proxy:443
 
 ```
 git push → pre-push hook (git.yaml)
-    → derive-cloud-data.ts reads all build.json + config.json
-    → gen-cloud-data.ts produces 26 JSON files
+    → cloud-data-config-consolidated.ts reads all build.json + config.json → _cloud-data-consolidated.json
+    → cloud-data-config-derive.ts produces per-consumer JSON files
+    (orchestrated by cloud-data-config.ts in cloud-data/1_workflows/src/scripts/)
     → committed to I_cloud-data/
     → GHA ship-gen-configs.yml detects changes → deploys consumers
 ```
