@@ -14,8 +14,5 @@ in {
   programs.home-manager.enable = true;
 
   # VM-specific aliases (analytics tools)
-  programs.bash.shellAliases = {
-    wmlogs = "docker logs -f windmill-server";
-    wmworker = "docker logs -f windmill-worker";
-  };
+  programs.bash.shellAliases = { };
 }

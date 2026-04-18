@@ -65,7 +65,7 @@ Commercial cloud services (Google Workspace, iCloud, Notion, etc.) create vendor
 | DEV-01 | As a developer, I can code from any browser | Code Server |
 | DEV-02 | As a developer, I can host git repos with CI | Gitea |
 | DEV-03 | As a developer, I can manage databases via web UI | DBGate |
-| DEV-04 | As a developer, I can orchestrate workflows | Windmill, Dagu |
+| DEV-04 | As a developer, I can orchestrate workflows | Dagu |
 | DEV-05 | As a developer, I can scrape and extract web data | Crawlee Cloud |
 | DEV-06 | As a developer, I can run quantitative analysis | Quant Lab |
 
@@ -114,7 +114,7 @@ Commercial cloud services (Google Workspace, iCloud, Notion, etc.) create vendor
 
 ### P2 — Useful (regular use)
 - MCP servers (C3 Infra, CGC, Services)
-- Workflows (Windmill, Dagu)
+- Workflows (Dagu)
 - Monitoring (LGTM, Dozzle, Sauron)
 - AI (Ollama, Rig Agentic)
 - Scraping (Crawlee Cloud)

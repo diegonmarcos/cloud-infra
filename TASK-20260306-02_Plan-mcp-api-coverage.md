@@ -13,7 +13,6 @@
 - [ ] matomo — analytics queries
 - [ ] gitea — repo/issue management
 - [ ] ollama — AI inference directly from MCP
-- [ ] windmill — trigger workflows from MCP
 - [ ] authelia — user/token management
 - [ ] syncthing — sync status/control
 
@@ -66,7 +65,6 @@
 | matomo | analytics.diegonmarcos.com | oci-analytics | yes | no | `/index.php?module=API` | Full analytics REST API |
 | nocodb | db.diegonmarcos.com | oci-apps | yes | no | `/api/v1/` | Airtable-like REST API |
 | ntfy | rss.diegonmarcos.com | gcp-proxy | yes | no | `/docs` | Push notification API |
-| windmill | windmill.diegonmarcos.com | oci-analytics | yes | no | `/api/docs` | Workflow automation REST API |
 | dagu | workflows.diegonmarcos.com | oci-mail | yes | no | `/api/v1/` | DAG scheduler REST API |
 | dozzle | app.diegonmarcos.com/dozzle | gcp-proxy | no | no | — | Read-only log viewer, no API |
 | lgtm (Grafana) | — | oci-apps | yes | no | `/api/` | Grafana + Loki + Prometheus APIs |
@@ -113,7 +111,7 @@
 |--------|-------|----------|
 | Has API + MCP tool | 2 | c3-api, crawlee-cloud |
 | Has API, partial MCP | 3 | rust-api, mailu (mailu-mcp), mattermost (mattermost-mcp) |
-| Has API, no MCP tool | 20 | affine, etherpad, filebrowser, grist, hedgedoc, photoprism, syncthing, authelia, vaultwarden, matomo, nocodb, ntfy, windmill, dagu, gitea, ollama, ollama-arm, postlite, lgtm, rig-agentic |
+| Has API, no MCP tool | 19 | affine, etherpad, filebrowser, grist, hedgedoc, photoprism, syncthing, authelia, vaultwarden, matomo, nocodb, ntfy, dagu, gitea, ollama, ollama-arm, postlite, lgtm, rig-agentic |
 | No REST API | 8 | radicale, revealmd, caddy (internal), redis, dozzle, hickory-dns, backup-borg, db-agent |
 
 ### Priority candidates for new MCP tools
@@ -121,9 +119,8 @@
 2. **matomo** — analytics queries useful in agent context
 3. **gitea** — repo/issue management
 4. **ollama** — AI inference directly from MCP
-5. **windmill** — trigger workflows from MCP
-6. **authelia** — user/token management
-7. **syncthing** — sync status/control
+5. **authelia** — user/token management
+6. **syncthing** — sync status/control
 
 ---
 

@@ -133,14 +133,14 @@ Independent:
 **Delivers**:
 - Vaultwarden SQLite backup (systemd timer)
 - PhotoPrism, Etherpad, HedgeDoc, Mattermost backups
-- Matomo + Windmill backups
+- Matomo backups
 - All declared in home-manager/service flakes (never imperative)
 
 #### TASK-01: Mail Direct SMTP
 **Status**: Blocked on OCI port 25 outbound
 
 #### TASK-02: MCP API Coverage
-**Status**: Pending — ntfy, Matomo, Gitea, Ollama, Windmill, Authelia, Syncthing
+**Status**: Pending — ntfy, Matomo, Gitea, Ollama, Authelia, Syncthing
 
 ---
 

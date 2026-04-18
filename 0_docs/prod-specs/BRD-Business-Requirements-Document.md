@@ -48,7 +48,7 @@ Build and maintain a fully self-hosted cloud platform that replaces commercial S
 | Google Analytics | Matomo, Umami | ~$108/yr |
 | GitHub Codespaces | Code Server | ~$48/yr |
 | Grafana Cloud | LGTM (self-hosted) | ~$120/yr |
-| n8n/Zapier | Windmill, Dagu | ~$240/yr |
+| n8n/Zapier | Dagu | ~$240/yr |
 | Apify (scraping) | Crawlee Cloud | ~$49/yr |
 | OpenAI API | Ollama (local LLMs) | Variable |
 | CalDAV/CardDAV | Radicale | ~$36/yr |
