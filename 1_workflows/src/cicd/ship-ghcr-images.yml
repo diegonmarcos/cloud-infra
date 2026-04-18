@@ -19,7 +19,25 @@ permissions:
   packages: write
 
 jobs:
+  preflight-symlinks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Fail on broken symlinks in build contexts
+        run: |
+          set -e
+          broken=$(find a_solutions -xtype l -not -path "*/.git/*" 2>/dev/null || true)
+          if [ -n "$broken" ]; then
+            echo "::error::Broken symlinks found:"
+            echo "$broken"
+            exit 1
+          fi
+          echo "No broken symlinks in a_solutions/."
+
   build:
+    needs: preflight-symlinks
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
