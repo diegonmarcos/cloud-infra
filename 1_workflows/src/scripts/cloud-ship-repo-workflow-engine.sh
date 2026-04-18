@@ -19,6 +19,9 @@ HOOKS_TARGET="$TARGET_DIR/hooks"
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
 do_build() {
+    # Clean dist/ first so deletions in src/ propagate (otherwise orphaned
+    # scripts/hooks linger forever, including broken symlinks).
+    rm -rf "$DIST_DIR"
     mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks"
 
     # Static workflows (src/cicd/*.yml → dist/)
