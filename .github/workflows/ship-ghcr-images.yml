@@ -34,7 +34,8 @@ jobs:
             -not -path "*/.git/*" \
             -not -path "*/dist/*" \
             -not -path "*/target/*" \
-            -not -path "*/node_modules/*" 2>/dev/null || true)
+            -not -path "*/node_modules/*" \
+            -not -path "*/z_archive/*" 2>/dev/null || true)
           if [ -n "$broken" ]; then
             echo "::error::Broken symlinks found in a_solutions/ source:"
             echo "$broken"
