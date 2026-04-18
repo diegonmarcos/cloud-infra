@@ -61,10 +61,29 @@ SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPer
 
 # ── Pre-stage cloud-data into all services' src/ (before parallel jobs) ──
 # Parallel builds race on git index — stage everything once, serially.
+# Two passes: 1) resolve symlinks to real files, 2) copy for include_cloud_data
 CLOUD_DATA_DIR="$REPO_ROOT/I_cloud-data"
 CLOUD_DATA_PRESTAGED=""
 if [ -d "$CLOUD_DATA_DIR" ]; then
-  echo "Pre-staging I_cloud-data/*.json into services with include_cloud_data=true"
+  echo "Pre-staging cloud-data: resolving symlinks + copying flagged services"
+
+  # Pass 1: Resolve cloud-data symlinks in ALL services' src/ to real files
+  # Nix flakes can't follow symlinks into submodules — must be real files
+  while IFS='|' read -r dir name; do
+    SRC="$REPO_ROOT/a_solutions/$dir/src"
+    [ -d "$SRC" ] || continue
+    for f in "$SRC"/cloud-data-*.json "$SRC"/_cloud-data-*.json; do
+      [ -L "$f" ] || continue
+      REAL_TARGET=$(readlink -f "$f")
+      if [ -f "$REAL_TARGET" ]; then
+        rm "$f"
+        cp "$REAL_TARGET" "$f"
+        CLOUD_DATA_PRESTAGED="$CLOUD_DATA_PRESTAGED $f"
+      fi
+    done
+  done <<< "$SERVICES"
+
+  # Pass 2: Copy cloud-data for services with include_cloud_data=true
   while IFS='|' read -r dir name; do
     SVC_DIR="$REPO_ROOT/a_solutions/$dir"
     BUILD_JSON="$SVC_DIR/build.json"
@@ -77,16 +96,13 @@ if [ -d "$CLOUD_DATA_DIR" ]; then
       [ -f "$f" ] || continue
       BASENAME=$(basename "$f")
       TARGET="$SRC/$BASENAME"
-      # Skip files already committed in src/
-      REL=$(realpath --relative-to="$REPO_ROOT" "$TARGET")
-      if git -C "$REPO_ROOT" ls-files --error-unmatch "$REL" >/dev/null 2>&1; then
-        continue
-      fi
+      [ -f "$TARGET" ] && continue  # already resolved in pass 1
       cp "$f" "$TARGET"
       CLOUD_DATA_PRESTAGED="$CLOUD_DATA_PRESTAGED $TARGET"
     done
   done <<< "$SERVICES"
-  # Single git add for all files — no index race
+
+  # Single git add for all resolved/copied files — no index race
   if [ -n "$CLOUD_DATA_PRESTAGED" ]; then
     RELS=""
     for t in $CLOUD_DATA_PRESTAGED; do
