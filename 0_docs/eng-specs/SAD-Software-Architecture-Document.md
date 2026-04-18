@@ -132,7 +132,7 @@ cloud/
 | AI/AGI | `ad-agi_` | 4 | ollama, ollama-arm, ollama-hai, rig-agentic (x2) |
 | Cloud | `ba-clo_` | 3 | cloudflare-worker, gcloud, hickory-dns |
 | Security | `bb-sec_` | 6 | authelia, caddy, caddy-l4-image, introspect-proxy, orchestrator, sauron-central |
-| Observability | `bc-obs_` | 19 | c3-infra-api/mcp, cloud-cgc-mcp, matomo, dagu, lgtm, windmill |
+| Observability | `bc-obs_` | 18 | c3-infra-api/mcp, cloud-cgc-mcp, matomo, dagu, lgtm |
 | Data | `ca-dat_` | 8 | gitea, kg-graph, redis, backup-borg/bup, db-agent |
 
 ### Level 3: Single Service Internals

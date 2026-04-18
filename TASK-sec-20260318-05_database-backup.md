@@ -16,7 +16,6 @@
 - [ ] Add GitHub token for private repo mirrors (front, vault)
 - [ ] Test database restore from bup
 - [ ] Add Matomo mysqldump cron on oci-analytics
-- [ ] Add Windmill pg_dump cron on oci-analytics
 - [ ] All backup jobs declared in home-manager or service flakes (NEVER imperative cron)
 
 ---
@@ -37,7 +36,6 @@
 | | Mattermost | PostgreSQL | mattermost-db | :x: | No backup configured |
 | | Redis | Redis | redis | :x: | AOF enabled, no offsite |
 | **oci-analytics** | Matomo | MariaDB 10.11 | matomo-db | :x: | No cron, no backup scripts |
-| | Windmill | PostgreSQL 16 | windmill-db | :x: | No backup configured |
 
 ## Summary
 
@@ -55,7 +53,6 @@
 2. **Mattermost PostgreSQL** (oci-apps) — Chat history
 3. **PhotoPrism MariaDB** (oci-apps) — Photo metadata/indexes
 4. **Matomo MariaDB** (oci-analytics) — Analytics data
-5. **Windmill PostgreSQL** (oci-analytics) — Workflow configurations
 
 ---
 

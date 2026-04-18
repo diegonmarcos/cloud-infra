@@ -108,7 +108,6 @@ SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`
 | ntfy | rss.diegonmarcos.com | Push notification server |
 | DBGate | db.diegonmarcos.com | Universal database manager |
 | LGTM | grafana.diegonmarcos.com | Grafana + Loki + Tempo + Mimir observability |
-| Windmill | windmill.diegonmarcos.com | Workflow orchestration |
 | KG Graph | — | SurrealDB hybrid knowledge graph |
 | Sauron Central | — | Central syslog collector + SIEM API |
 | Google Workspace MCP | — | Gmail, Calendar, Drive, Docs, Sheets via MCP |
@@ -205,10 +204,6 @@ curl -H "Authorization: Bearer $TOKEN" https://photos.diegonmarcos.com/api/v1/st
 # Deploy any service
 a_solutions/<service>/build.sh ship
 
-# Matomo hybrid toggle (1GB VM constraint)
-a_solutions/bc-obs_matomo/build.sh wake    # stops windmill, wakes matomo
-a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo, starts windmill
-
 # Cloudflare DNS (Terraform)
 c_vps/ba-clo_cloudflare/build.sh
 
@@ -231,7 +226,7 @@ cloud/
 │   ├── ad-agi_*                  AI/AGI (Ollama, Rig Agentic)
 │   ├── ba-clo_*                  Cloud providers (Cloudflare Worker, gcloud, Hickory DNS)
 │   ├── bb-sec_*                  Security (Authelia, Caddy, Orchestrator, Sauron)
-│   ├── bc-obs_*                  Observability (C3 API/MCP, Matomo, Dagu, LGTM, Windmill)
+│   ├── bc-obs_*                  Observability (C3 API/MCP, Matomo, Dagu, LGTM)
 │   ├── ca-dat_*                  Data (Gitea, KG Graph, Redis, Backups, DB Agent)
 │   ├── _engine.sh                Shared build engine (all build.sh symlink here)
 │   ├── _shared/                  Shared Nix libs (docker.nix, templates)
@@ -531,15 +526,15 @@ Available as MCP tools via `dtk_*` commands (see DTK MCP server).
 
 ### B.13 Matomo Hybrid Architecture
 
-oci-analytics (1GB RAM) can't run Matomo + Windmill simultaneously. Matomo uses a hybrid container:
+oci-analytics (1GB RAM) uses a hybrid container for Matomo:
 
 - **Awake**: MariaDB + Matomo PHP + Nginx (~160MB). Tracking goes direct to DB.
 - **Sleeping**: Only receiver-nginx + receiver-php-fpm (~7MB). Tracking buffered to `/inbox/` JSON files.
-- **Wake**: Imports buffered payloads, starts full Matomo, stops Windmill.
+- **Wake**: Imports buffered payloads, starts full Matomo.
 
 ```bash
-a_solutions/bc-obs_matomo/build.sh wake    # stops windmill, wakes matomo
-a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo, starts windmill
+a_solutions/bc-obs_matomo/build.sh wake    # wakes matomo
+a_solutions/bc-obs_matomo/build.sh sleep   # sleeps matomo
 ```
 
 ---

@@ -34,6 +34,6 @@
 | Development | DEV-01 | Code Server | oci-apps | IDE loads |
 | Development | DEV-02 | Gitea | oci-apps | Git push/pull |
 | Development | DEV-03 | DBGate | oci-apps | DB query execution |
-| Development | DEV-04 | Windmill, Dagu | oci-apps, oci-analytics | Workflow execution |
+| Development | DEV-04 | Dagu | oci-analytics | Workflow execution |
 | Development | DEV-05 | Crawlee Cloud | oci-apps | Scrape job completes |
 | Development | DEV-06 | Quant Lab | oci-apps | Notebook execution |

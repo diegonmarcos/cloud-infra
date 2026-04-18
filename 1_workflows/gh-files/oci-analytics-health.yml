@@ -33,9 +33,8 @@ jobs:
           ssh oci-analytics 'docker ps --format "{{.Names}}\t{{.Status}}" 2>&1' | tee /tmp/containers.txt
 
           # Known-flaky containers: warn but don't fail the workflow
-          # windmill-worker: restarts briefly during startup / job execution
           # alerts-api: custom-built, may be unhealthy after deploy until image is rebuilt
-          KNOWN_FLAKY="windmill-worker alerts-api"
+          KNOWN_FLAKY="alerts-api"
 
           failed=0
           warned=0
