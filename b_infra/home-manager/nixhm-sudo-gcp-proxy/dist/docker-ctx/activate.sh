@@ -6,10 +6,19 @@ ACTIVATION="$HOST$HM_ACTIVATION_PATH/activate"
 
 log() { printf '[hm-activate] %s\n' "$1"; }
 
-# ── Copy nix store paths to host ──
+# ── Copy nix store paths to host (skip existing — content-addressed) ──
 log "Copying nix store paths to host..."
-cp -rn /nix/store/* "$HOST/nix/store/" 2>&1 | tail -5
-log "Store paths copied"
+COPIED=0; SKIPPED=0
+for p in /nix/store/*; do
+    [ ! -e "$p" ] && continue
+    base=$(basename "$p")
+    if [ -e "$HOST/nix/store/$base" ]; then
+        SKIPPED=$((SKIPPED + 1))
+    else
+        cp -a "$p" "$HOST/nix/store/$base" && COPIED=$((COPIED + 1))
+    fi
+done
+log "Store paths: $COPIED copied, $SKIPPED skipped (already on host)"
 
 # ── Copy DB dump to host (registration happens natively, not in container) ──
 if [ -f "/hm/nix-db-dump.txt" ]; then

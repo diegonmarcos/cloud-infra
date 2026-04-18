@@ -6,6 +6,6 @@ COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
 COPY nix-db-dump.txt /hm/nix-db-dump.txt
 RUN chmod +x /hm/activate.sh
-ENV HM_ACTIVATION_PATH=/nix/store/dz4fh0g5xmddvdf56hv9kx5d35l23byv-home-manager-generation
+ENV HM_ACTIVATION_PATH=/nix/store/y8g7lf2hi0wxfk493v9pbbwxaga6657c-home-manager-generation
 ENV HM_USER=diego
 ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]
