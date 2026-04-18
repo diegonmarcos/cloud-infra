@@ -1,1 +1,0 @@
-../../../a_solutions/bc-obs_c3-infra-api/src/shared/engines/gen-cloud-data.ts
