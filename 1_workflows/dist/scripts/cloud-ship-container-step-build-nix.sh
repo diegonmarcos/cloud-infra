@@ -64,13 +64,15 @@ step_build() {
                     CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
                 fi
             done
-            # Also copy any cloud-data files not already in src/ (include_cloud_data legacy)
+            # Always refresh cloud-data files from I_cloud-data when include_cloud_data=true
+            # (was: skip if file existed — caused stale data to persist forever)
             if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
                 for f in "$CLOUD_DATA_DIR"/*.json; do
                     [ -f "$f" ] || continue
                     BASENAME=$(basename "$f")
                     TARGET="$SRC_DIR/$BASENAME"
-                    [ -f "$TARGET" ] && continue  # already resolved or copied
+                    # Skip only if target is a symlink (already handled by resolve-symlinks pass above)
+                    [ -L "$TARGET" ] && continue
                     cp "$f" "$TARGET"
                     git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
                     CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
