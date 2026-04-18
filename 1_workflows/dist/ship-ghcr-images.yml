@@ -28,13 +28,19 @@ jobs:
       - name: Fail on broken symlinks in build contexts
         run: |
           set -e
-          broken=$(find a_solutions -xtype l -not -path "*/.git/*" 2>/dev/null || true)
+          # Skip dist/ and build outputs — they can legitimately hold
+          # machine-local symlinks that don't affect the docker build context.
+          broken=$(find a_solutions -xtype l \
+            -not -path "*/.git/*" \
+            -not -path "*/dist/*" \
+            -not -path "*/target/*" \
+            -not -path "*/node_modules/*" 2>/dev/null || true)
           if [ -n "$broken" ]; then
-            echo "::error::Broken symlinks found:"
+            echo "::error::Broken symlinks found in a_solutions/ source:"
             echo "$broken"
             exit 1
           fi
-          echo "No broken symlinks in a_solutions/."
+          echo "No broken symlinks in a_solutions/ source tree."
 
   build:
     needs: preflight-symlinks
