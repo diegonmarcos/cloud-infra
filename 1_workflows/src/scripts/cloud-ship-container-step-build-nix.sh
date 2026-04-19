@@ -45,10 +45,14 @@ step_build() {
         [ -L "$f" ] && HAS_CLOUD_DATA_SYMLINKS=true && break
     done
 
-    # Always update submodule to latest
+    # Always update submodule to latest (checkout strategy — ignores local diverged state)
+    # Use --force so uncommitted/diverged submodule history never blocks a ship.
     if [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; }; then
-        log "Updating cloud-data submodule to latest"
-        git -C "$SERVICE_DIR/../.." submodule update --remote --init I_cloud-data 2>/dev/null || true
+        log "Updating cloud-data submodule to latest (--remote --force)"
+        if ! git -C "$SERVICE_DIR/../.." -c submodule."I_cloud-data".update=checkout \
+             submodule update --remote --init --force I_cloud-data 2>&1 | while IFS= read -r line; do log "  $line"; done; then
+            log "WARN: I_cloud-data update failed — ship will use the pinned commit (may be stale)"
+        fi
     fi
 
     if { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
