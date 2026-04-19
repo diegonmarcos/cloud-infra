@@ -202,13 +202,10 @@ case "${1:-all}" in
 
         log "═══ Parallel jobs done ═══"
 
-        # Read image-changed flags from background jobs (subshells write files)
+        # Read image-changed signal from background step_docker
         if [ -f "$SERVICE_DIR/.image-changed" ]; then
             DOCKER_IMAGE_CHANGED=true
             rm -f "$SERVICE_DIR/.image-changed"
-        fi
-        if [ -f "$SERVICE_DIR/.docker-src-hash-new" ]; then
-            DOCKER_IMAGE_CHANGED=true
         fi
 
         # ── Phase 3: DEPLOY TO VM (skip if unchanged) ──

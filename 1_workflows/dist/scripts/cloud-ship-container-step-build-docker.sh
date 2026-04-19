@@ -175,7 +175,8 @@ NEOF
                 ssh $SSH_OPTS "oci-apps" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
                 ssh $SSH_OPTS "oci-apps" "rm -rf $REMOTE_BUILD_DIR"
                 log "Pushed $FULL_IMAGE:latest (from oci-apps cloud-builder-x)"
-                echo "$LOCAL_HASH" > "$SERVICE_DIR/.docker-src-hash-new"
+                mkdir -p "$DIST_DIR"
+                echo "$LOCAL_HASH" > "$DIST_DIR/.docker-src-hash"
                 touch "$SERVICE_DIR/.image-changed"
                 return 0
             else
@@ -249,7 +250,9 @@ NEOF
         fi
     fi
 
-    echo "$LOCAL_HASH" > "$SERVICE_DIR/.docker-src-hash-new"
+    mkdir -p "$DIST_DIR"
+    echo "$LOCAL_HASH" > "$DIST_DIR/.docker-src-hash"
+    touch "$SERVICE_DIR/.image-changed"
     DOCKER_IMAGE_CHANGED=true
 
     # Extract binary if needed (e.g. Rust binaries)
