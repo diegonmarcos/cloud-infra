@@ -38,6 +38,12 @@ run_lifecycle() {
             stats)
                 ssh $SSH_OPTS "$VM" "free -h && echo '---' && docker stats --no-stream --format 'table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}'"
                 ;;
+            ssh_run)
+                # Run a script on the VM host (outside any container)
+                # $SCRIPT is an absolute path on the VM (must be deployed there first)
+                log "  ssh_run on $VM: $SCRIPT"
+                ssh $SSH_OPTS "$VM" "sh $SCRIPT"
+                ;;
         esac
     done
 
