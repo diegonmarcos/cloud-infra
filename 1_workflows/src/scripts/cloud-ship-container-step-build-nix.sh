@@ -30,24 +30,29 @@ step_build() {
         return 0
     fi
 
-    # Pre-build: ensure cloud-data is available in src/ for nix build
-    # Nix flakes can't see git submodule content, so symlinks to I_cloud-data/
-    # must be resolved to real files before nix build. Symlinks in src/ serve as
-    # declarative markers — the engine detects them and copies the real data.
-    #
-    # Detection: if src/ has cloud-data symlinks OR include_cloud_data=true
+    # Pre-build: resolve any *.json symlink in src/ pointing OUTSIDE the service
+    # dir. Nix flakes can't follow symlinks into submodules/parent dirs, so the
+    # engine materialises them as real files before nix build and restores them
+    # afterwards. Generic: no hardcoded filename patterns — src/ is the contract.
     CLOUD_DATA_STAGED=""
     CLOUD_DATA_DIR="$SERVICE_DIR/../../I_cloud-data"
-    HAS_CLOUD_DATA_SYMLINKS=false
+    HAS_EXTERNAL_SYMLINKS=false
 
-    # Check if src/ has any cloud-data symlinks
-    for f in "$SRC_DIR"/cloud-data-*.json; do
-        [ -L "$f" ] && HAS_CLOUD_DATA_SYMLINKS=true && break
+    # Detect any *.json symlink in src/ whose target is outside the service dir
+    for f in "$SRC_DIR"/*.json; do
+        [ -L "$f" ] || continue
+        target=$(readlink -f "$f" 2>/dev/null || true)
+        case "$target" in
+            "$SERVICE_DIR"/*) ;;  # within service (e.g. build.json -> ../build.json) — nix can follow
+            *)
+                HAS_EXTERNAL_SYMLINKS=true
+                break
+                ;;
+        esac
     done
 
-    # Always update submodule to latest (checkout strategy — ignores local diverged state)
-    # Use --force so uncommitted/diverged submodule history never blocks a ship.
-    if [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; }; then
+    # Update cloud-data submodule to latest if anything depends on it
+    if [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
         log "Updating cloud-data submodule to latest (--remote --force)"
         if ! git -C "$SERVICE_DIR/../.." -c submodule."I_cloud-data".update=checkout \
              submodule update --remote --init --force I_cloud-data 2>&1 | while IFS= read -r line; do log "  $line"; done; then
@@ -55,36 +60,35 @@ step_build() {
         fi
     fi
 
-    if { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
-        if [ -d "$CLOUD_DATA_DIR" ]; then
-            # Resolve symlinks to real files (nix can't follow symlinks into submodules)
-            for f in "$SRC_DIR"/cloud-data-*.json "$SRC_DIR"/_cloud-data-*.json; do
-                [ -L "$f" ] || continue
-                REAL_TARGET=$(readlink -f "$f")
-                if [ -f "$REAL_TARGET" ]; then
-                    rm "$f"
-                    cp "$REAL_TARGET" "$f"
-                    git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
-                    CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
-                fi
+    if { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
+        # Resolve every external *.json symlink to a real file
+        for f in "$SRC_DIR"/*.json; do
+            [ -L "$f" ] || continue
+            target=$(readlink -f "$f" 2>/dev/null || true)
+            case "$target" in
+                "$SERVICE_DIR"/*) continue ;;
+            esac
+            [ -f "$target" ] || continue
+            rm "$f"
+            cp "$target" "$f"
+            git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
+            CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
+        done
+        # include_cloud_data=true: also copy every I_cloud-data/*.json into src/ (for services
+        # that need the whole dataset at runtime, e.g. c3-infra-mcp-api)
+        if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -d "$CLOUD_DATA_DIR" ]; then
+            for f in "$CLOUD_DATA_DIR"/*.json; do
+                [ -f "$f" ] || continue
+                BASENAME=$(basename "$f")
+                TARGET="$SRC_DIR/$BASENAME"
+                [ -L "$TARGET" ] && continue  # already handled above
+                cp "$f" "$TARGET"
+                git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
+                CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
             done
-            # Always refresh cloud-data files from I_cloud-data when include_cloud_data=true
-            # (was: skip if file existed — caused stale data to persist forever)
-            if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
-                for f in "$CLOUD_DATA_DIR"/*.json; do
-                    [ -f "$f" ] || continue
-                    BASENAME=$(basename "$f")
-                    TARGET="$SRC_DIR/$BASENAME"
-                    # Skip only if target is a symlink (already handled by resolve-symlinks pass above)
-                    [ -L "$TARGET" ] && continue
-                    cp "$f" "$TARGET"
-                    git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
-                    CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
-                done
-            fi
-            log "Resolved cloud-data for nix build (${HAS_CLOUD_DATA_SYMLINKS:+symlinks}${INCLUDE_CLOUD_DATA:+ +flag})"
         fi
-    elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_CLOUD_DATA_SYMLINKS" = "true" ]; }; then
+        log "Resolved cloud-data for nix build (${HAS_EXTERNAL_SYMLINKS:+symlinks}${INCLUDE_CLOUD_DATA:+ +flag})"
+    elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
         log "cloud-data already pre-staged by CI — skipping"
     fi
 
