@@ -147,11 +147,6 @@ step_build() {
         done
     fi
 
-    # Carry over docker source hash from step_docker (if image was rebuilt)
-    if [ -f "$SERVICE_DIR/.docker-src-hash-new" ]; then
-        mv "$SERVICE_DIR/.docker-src-hash-new" "$DIST_DIR/.docker-src-hash"
-    fi
-
     # Include I_cloud-data/ files in dist/ for runtime use (e.g. C3 API needs topology)
     if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
         CLOUD_DATA_DIR="$SERVICE_DIR/../../I_cloud-data"

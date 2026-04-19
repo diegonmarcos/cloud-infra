@@ -38,7 +38,10 @@ step_compose() {
 
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
+        # Generated in a tmpdir (ship transient — never pollutes dist/ or git working tree).
         SCRIPT_NAME="build-step-compose-custom.sh"
+        TMP_SCRIPT="$(mktemp -t compose-custom.XXXXXX.sh)"
+        trap 'rm -f "$TMP_SCRIPT"' EXIT
         log "Generating $SCRIPT_NAME (flags: $COMPOSE_UP_FLAGS)"
         {
             cat <<'COMPOSE_HEADER'
@@ -56,12 +59,14 @@ COMPOSE_HEADER
             [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
             echo 'docker compose $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             echo "docker compose \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
-        } > "$DIST_DIR/$SCRIPT_NAME"
-        chmod +x "$DIST_DIR/$SCRIPT_NAME"
+        } > "$TMP_SCRIPT"
+        chmod +x "$TMP_SCRIPT"
 
         log "Deploying + running $SCRIPT_NAME on $DEPLOY_HOST"
-        rsync -az "$DIST_DIR/$SCRIPT_NAME" "$DEPLOY_HOST:$DEPLOY_PATH/$SCRIPT_NAME"
-        ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && sh $SCRIPT_NAME"
+        rsync -az "$TMP_SCRIPT" "$DEPLOY_HOST:$DEPLOY_PATH/$SCRIPT_NAME"
+        ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && sh $SCRIPT_NAME && rm -f $SCRIPT_NAME"
+        rm -f "$TMP_SCRIPT"
+        trap - EXIT
     else
         # ── Standard: direct docker compose up ──
         ENV_FILE_FLAG="\$([ -f .secrets ] && echo '--env-file .secrets')"
