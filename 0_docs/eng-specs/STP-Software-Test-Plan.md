@@ -48,7 +48,7 @@ This test plan covers verification and validation of the Cloud IaC platform: bui
 ### 4.3 Networking
 - [ ] WireGuard mesh connectivity between all 5 VMs
 - [ ] Hickory DNS resolves `*.app` zones over WireGuard
-- [ ] Caddy routes match cloud-data-caddy-routes.json
+- [ ] Caddy routes match build-proxy-caddy-routes.json
 - [ ] Cloudflare → Caddy → WG → container path works
 
 ### 4.4 Security

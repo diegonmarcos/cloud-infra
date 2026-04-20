@@ -8,7 +8,7 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 cd "$REPO_ROOT"
 
 TOPO="I_cloud-data/cloud-data-topology.json"
-ROUTES="I_cloud-data/cloud-data-caddy-routes.json"
+ROUTES="I_cloud-data/build-proxy-caddy-routes.json"
 [ ! -f "$TOPO" ] && echo "ERROR: $TOPO not found" >&2 && exit 1
 
 PASS=0; FAIL=0; WARN=0; TOTAL=0
