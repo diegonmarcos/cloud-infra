@@ -147,6 +147,18 @@ NEOF
     fi
     DOCKERFILE_PATH="$BUILD_CONTEXT/$DOCKERFILE"
 
+    # Data-driven skip: services using compose `dockerfile_inline` (mkGhcrBuild)
+    # produce the Dockerfile as a string inside dist/docker-compose.yml, not as
+    # a physical file. step_docker has nothing to build here — compose-build
+    # owns the image. No physical Dockerfile + no native_build.cmd = declarative
+    # no-op. Covers authelia, hickory-dns, caddy, umami, redis — they all
+    # declare docker.image (so the earlier null-guard doesn't fire) but have
+    # no src/Dockerfile because the inline content lives in compose.
+    if [ ! -f "$DOCKERFILE_PATH" ] && [ -z "$NATIVE_CMD" ]; then
+        log "No Dockerfile at $DOCKERFILE_PATH and no native_build.cmd -- compose-build owns image; skipping"
+        return 0
+    fi
+
     # GHCR login
     if [ -n "${GITHUB_TOKEN:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null

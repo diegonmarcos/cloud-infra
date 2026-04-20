@@ -20,6 +20,18 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
+echo "── A1: stronger guard — skip when no Dockerfile AND no NATIVE_CMD ──"
+
+# The dockerfile_inline case: DOCKER_IMAGE set, DOCKERFILE_PATH missing,
+# NATIVE_CMD empty → step_docker must skip (compose-build owns the image).
+if grep -q 'compose-build owns image' "$DOCKER_STEP" \
+   && grep -q '! -f "\$DOCKERFILE_PATH" \] && \[ -z "\$NATIVE_CMD"' "$DOCKER_STEP"; then
+    pass "step_docker skips when DOCKERFILE_PATH missing + no NATIVE_CMD"
+else
+    fail "step_docker lacks the dockerfile_inline skip guard"
+fi
+
+echo ""
 echo "── A: step_docker skip guard covers '' and 'null' ──"
 
 # Source the step in a sub-shell with stubs and test two inputs
