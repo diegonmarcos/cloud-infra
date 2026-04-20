@@ -10,7 +10,10 @@ step_deploy() {
         log "Deploying flake to $DEPLOY_HOST (remote build)"
         ssh "$DEPLOY_HOST" "bash -c 'mkdir -p $REMOTE_PATH'"
         if command -v rsync >/dev/null 2>&1; then
-            rsync -avz --delete --rsync-path="bash -c rsync" "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
+            # `--rsync-path="bash -c rsync"` was previously used but invoked
+            # rsync with NO arguments on the remote side → silent partial copy.
+            # Rely on remote PATH (nix profile) finding rsync directly.
+            rsync -avz --delete "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
                 | grep -v "^sending\|^sent\|^total" || true
         else
             scp -r "$DIST_DIR/"* "$DEPLOY_HOST:$REMOTE_PATH/"
