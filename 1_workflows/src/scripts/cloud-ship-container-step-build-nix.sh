@@ -51,8 +51,12 @@ step_build() {
         esac
     done
 
-    # Update cloud-data submodule to latest if anything depends on it
-    if [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
+    # Update cloud-data submodule to latest if anything depends on it.
+    # In CI, dispatch already did this ONCE under flock — per-service updates
+    # race on the submodule config lock, so we skip when CI pre-staged.
+    if [ -n "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
+        log "cloud-data submodule already updated by CI dispatch — skipping"
+    elif [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
         log "Updating cloud-data submodule to latest (--remote --force)"
         if ! git -C "$SERVICE_DIR/../.." -c submodule."I_cloud-data".update=checkout \
              submodule update --remote --init --force I_cloud-data 2>&1 | while IFS= read -r line; do log "  $line"; done; then
