@@ -42,6 +42,18 @@ jobs:
             exit 1
           fi
           echo "No broken symlinks in a_solutions/ source tree."
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Phase 0 — dispatch + nix-step hygiene
+        run: bash 1_workflows/src/test/test_dispatch_hygiene.sh
+      - name: Phase 1 — arch → runner routing
+        run: bash 1_workflows/src/test/test_arch_runner_routing.sh
+      - name: Phase 2 — step_docker guards (inline skip + rust binary)
+        run: bash 1_workflows/src/test/test_step_docker_guards.sh
+      - name: Phase 3D — mattermost base image is multi-arch
+        run: bash 1_workflows/src/test/test_mattermost_multiarch.sh
+      - name: Phase 3E — npm ci services ship a lockfile
+        run: bash 1_workflows/src/test/test_npm_lockfile_present.sh
 
   build:
     needs: preflight-symlinks

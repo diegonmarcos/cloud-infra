@@ -2,7 +2,10 @@
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
 step_docker() {
-    [ -z "$DOCKER_IMAGE" ] && { log "No docker.image in build.json -- skipping"; return 0; }
+    # jq returns the literal "null" for missing paths; treat both as empty.
+    case "${DOCKER_IMAGE:-}" in
+        ""|null) log "No docker.image in build.json -- skipping"; return 0 ;;
+    esac
 
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
@@ -105,12 +108,20 @@ NEOF
                 log_error "native_build.binary required for type=binary"
                 return 1
             fi
-            # Check CARGO_TARGET_DIR first (if set), then src/ relative
+            # Run the native build command (missing in the original — the
+            # binary-path check below was checking for an output that was
+            # never produced). For Rust this is `cargo build --release`.
+            export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$SRC_DIR/target}"
+            log "Native build (binary): $NATIVE_CMD (CARGO_TARGET_DIR=$CARGO_TARGET_DIR)"
+            (cd "$SRC_DIR" && eval "$NATIVE_CMD") 2>&1 \
+                | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
+
+            # Check CARGO_TARGET_DIR first (cargo writes there), then src/ relative
             BINARY_PATH="$SRC_DIR/$NATIVE_BINARY"
-            [ -n "${CARGO_TARGET_DIR:-}" ] && [ -f "$CARGO_TARGET_DIR/release/$(basename "$NATIVE_BINARY")" ] && \
-                BINARY_PATH="$CARGO_TARGET_DIR/release/$(basename "$NATIVE_BINARY")"
+            _CARGO_BIN="$CARGO_TARGET_DIR/release/$(basename "$NATIVE_BINARY")"
+            [ -f "$_CARGO_BIN" ] && BINARY_PATH="$_CARGO_BIN"
             if [ ! -f "$BINARY_PATH" ]; then
-                log_error "Native build produced no binary at $NATIVE_BINARY (also checked $CARGO_TARGET_DIR)"
+                log_error "Native build produced no binary at $NATIVE_BINARY (also checked $_CARGO_BIN)"
                 return 1
             fi
             cp "$BINARY_PATH" "$DIST_DIR/"
@@ -143,96 +154,81 @@ NEOF
         gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>/dev/null
     fi
 
-    # Dispatch based on runner
-    case "${RUNNER:-auto}" in
-        auto)
-            HOST_ARCH=$(uname -m)
-            case "$HOST_ARCH" in
-                x86_64)  HOST_ARCH_DOCKER="amd64" ;;
-                aarch64) HOST_ARCH_DOCKER="arm64" ;;
-                *)       HOST_ARCH_DOCKER="$HOST_ARCH" ;;
-            esac
+    # ── Resolve runner from cloud-data-runners.json (data-driven) ─────────
+    # Declared architecture matrix: amd64 → local GHA, arm64 → oci-apps cloud-builder-x.
+    # No QEMU. No cross-arch fallback. If the declared runner is unreachable
+    # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
+    # of exec-format-error builds.
+    RUNNERS_JSON=""
+    for _p in \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/I_cloud-data/cloud-data-runners.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
+        "$SRC_DIR/cloud-data-runners.json"; do
+        [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
+    done
+    if [ -z "$RUNNERS_JSON" ]; then
+        log_error "cloud-data-runners.json not found — cannot resolve runner for arch=$ARCH"
+        return 1
+    fi
 
-            if [ "$ARCH" = "$HOST_ARCH_DOCKER" ]; then
-                # Native build — same arch, no QEMU needed
-                log "Auto-runner: native ($HOST_ARCH_DOCKER = $ARCH)"
-            elif [ "$ARCH" = "arm64" ] && ssh -o ConnectTimeout=5 $SSH_OPTS oci-apps true 2>/dev/null; then
-                # ARM build needed, oci-apps reachable — build there via cloud-builder-x
-                # (host docker build is blocked by wrapper; container bypasses via mounted socket)
-                log "Auto-runner: oci-apps cloud-builder-x (native arm64)"
-                RUNNER="oci-apps"
-                REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
-                BUILDER_IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
-                log "Building $FULL_IMAGE on oci-apps via $BUILDER_IMAGE"
-                ssh $SSH_OPTS "oci-apps" "mkdir -p $REMOTE_BUILD_DIR"
-                rsync -avzL --delete "$BUILD_CONTEXT/" "oci-apps:$REMOTE_BUILD_DIR/"
-                ssh $SSH_OPTS "oci-apps" "docker run --rm \
-                    -v /var/run/docker.sock:/var/run/docker.sock \
-                    -v \$HOME/.docker/config.json:/root/.docker/config.json:ro \
-                    -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
-                    $BUILDER_IMAGE \
-                    docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x] %s\n" "$line"; done
-                ssh $SSH_OPTS "oci-apps" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-oci-apps] %s\n" "$line"; done
-                ssh $SSH_OPTS "oci-apps" "rm -rf $REMOTE_BUILD_DIR"
-                log "Pushed $FULL_IMAGE:latest (from oci-apps cloud-builder-x)"
-                mkdir -p "$DIST_DIR"
-                echo "$LOCAL_HASH" > "$DIST_DIR/.docker-src-hash"
-                touch "$SERVICE_DIR/.image-changed"
-                return 0
-            else
-                # Cross-arch build with QEMU
-                log "Auto-runner: local + QEMU (cross-compile $HOST_ARCH_DOCKER → $ARCH)"
+    RUNNER_TYPE="$(jq -r --arg a "$ARCH" '.runners[$a].type // empty' "$RUNNERS_JSON")"
+    RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
+    RUNNER_IMAGE="$(jq -r --arg a "$ARCH" '.runners[$a].builder_image // empty' "$RUNNERS_JSON")"
+
+    if [ -z "$RUNNER_TYPE" ]; then
+        log_error "No runner declared for arch=$ARCH in $(basename "$RUNNERS_JSON"). Add .runners[\"$ARCH\"] or change docker.arch in build.json."
+        return 1
+    fi
+
+    log "Runner for arch=$ARCH: type=$RUNNER_TYPE${RUNNER_HOST:+ host=$RUNNER_HOST}"
+
+    case "$RUNNER_TYPE" in
+        local)
+            log "Local build: $FULL_IMAGE"
+            DOCKER_BUILDKIT=1 docker build \
+                --network host \
+                --platform "$PLATFORM" \
+                --no-cache \
+                --progress=plain \
+                --tag "$FULL_IMAGE:latest" \
+                --tag "$FULL_IMAGE:$SHA_TAG" \
+                --file "$DOCKERFILE_PATH" \
+                "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            ;;
+
+        ssh)
+            [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
+            [ -z "$RUNNER_IMAGE" ] && { log_error "runners[$ARCH].builder_image missing in $(basename "$RUNNERS_JSON")"; return 1; }
+
+            # Readiness flag set by dispatch's multiplex warmup; fall back to a
+            # live probe for out-of-CI invocations (CLI / Dagu). NO silent
+            # degradation — if the host is dead, we exit 1.
+            _ready_var="CLOUD_BUILDER_$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')_READY"
+            if [ "$(eval "echo \${$_ready_var:-}")" != "1" ]; then
+                if ! ssh $SSH_OPTS "$RUNNER_HOST" true 2>/dev/null; then
+                    log_error "cloud-builder for arch=$ARCH unreachable (host=$RUNNER_HOST). This is an illegal state — not falling back."
+                    return 1
+                fi
             fi
 
-            # Local build (native or QEMU cross-compile)
-            log "Building $FULL_IMAGE — docker build + push"
-            DOCKER_BUILDKIT=1 docker build \
-                --network host \
-                --platform "$PLATFORM" \
-                --no-cache \
-                --progress=plain \
-                --tag "$FULL_IMAGE:latest" \
-                --tag "$FULL_IMAGE:$SHA_TAG" \
-                --file "$DOCKERFILE_PATH" \
-                "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            ;;
-
-        local)
-            log "Building $FULL_IMAGE — forced local build"
-            DOCKER_BUILDKIT=1 docker build \
-                --network host \
-                --platform "$PLATFORM" \
-                --no-cache \
-                --progress=plain \
-                --tag "$FULL_IMAGE:latest" \
-                --tag "$FULL_IMAGE:$SHA_TAG" \
-                --file "$DOCKERFILE_PATH" \
-                "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            ;;
-
-        oci-apps|oci-apps-1|oci-apps-2)
-            # Build on ARM VM via cloud-builder-x container (bypasses host docker wrapper)
             REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
-            BUILDER_IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
-            log "Building $FULL_IMAGE on $RUNNER via $BUILDER_IMAGE"
-            ssh $SSH_OPTS "$RUNNER" "mkdir -p $REMOTE_BUILD_DIR"
-            rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER:$REMOTE_BUILD_DIR/"
-            ssh $SSH_OPTS "$RUNNER" "docker run --rm \
+            log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
+            ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
+            rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 -v \$HOME/.docker/config.json:/root/.docker/config.json:ro \
                 -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
-                $BUILDER_IMAGE \
-                docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER] %s\n" "$line"; done
-            ssh $SSH_OPTS "$RUNNER" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER] %s\n" "$line"; done
-            ssh $SSH_OPTS "$RUNNER" "rm -rf $REMOTE_BUILD_DIR"
+                $RUNNER_IMAGE \
+                docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
+            ssh $SSH_OPTS "$RUNNER_HOST" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER_HOST] %s\n" "$line"; done
+            ssh $SSH_OPTS "$RUNNER_HOST" "rm -rf $REMOTE_BUILD_DIR"
             ;;
 
         *)
-            log_error "Unknown runner: $RUNNER (valid: auto, local, oci-apps)"
+            log_error "Unknown runner type '$RUNNER_TYPE' in $(basename "$RUNNERS_JSON") for arch=$ARCH (valid: local, ssh)"
             return 1
             ;;
     esac

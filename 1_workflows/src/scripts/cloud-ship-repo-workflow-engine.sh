@@ -22,7 +22,7 @@ do_build() {
     # Clean dist/ first so deletions in src/ propagate (otherwise orphaned
     # scripts/hooks linger forever, including broken symlinks).
     rm -rf "$DIST_DIR"
-    mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks"
+    mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks" "$DIST_DIR/test"
 
     # Static workflows (src/cicd/*.yml → dist/)
     rm -f "$DIST_DIR"/*.yml
@@ -44,6 +44,13 @@ do_build() {
         cp -r "$SRC_DIR/hooks/"* "$DIST_DIR/hooks/" 2>/dev/null || true
         chmod +x "$DIST_DIR/hooks/"*.sh 2>/dev/null || true
         log "Built hooks"
+    fi
+
+    # Tests (src/test/ → dist/test/) — preflight testers invoked by ship-ci-image.yml
+    if [ -d "$SRC_DIR/test" ]; then
+        cp -r "$SRC_DIR/test/"* "$DIST_DIR/test/" 2>/dev/null || true
+        chmod +x "$DIST_DIR/test/"*.sh 2>/dev/null || true
+        log "Built tests"
     fi
 
     # Gitmodules (src/modules/gitmodules → dist/.gitmodules)
