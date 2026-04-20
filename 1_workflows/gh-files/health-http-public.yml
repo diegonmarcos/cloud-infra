@@ -29,7 +29,7 @@ jobs:
       - name: Build URL list from Caddy routes
         id: urls
         run: |
-          R="a_solutions/bb-sec_caddy/src/caddy-routes.json"
+          R="a_solutions/bb-sec_caddy/src/build-proxy-caddy-routes.json"
           [ ! -f "$R" ] && echo "::error::$R not found" && exit 1
           URLS="/tmp/urls.txt"
           > "$URLS"
@@ -97,7 +97,7 @@ jobs:
           wait
 
           # Also check L4 TCP ports in parallel
-          jq -r '.l4_routes[]? | "\(.port)|\(.comment // "port")"' "a_solutions/bb-sec_caddy/src/caddy-routes.json" | while IFS='|' read -r port comment; do
+          jq -r '.l4_routes[]? | "\(.port)|\(.comment // "port")"' "a_solutions/bb-sec_caddy/src/build-proxy-caddy-routes.json" | while IFS='|' read -r port comment; do
             (
               if timeout 3 bash -c "echo > /dev/tcp/mail.diegonmarcos.com/$port" 2>/dev/null; then
                 echo "PASS|L4 :$port $comment|tcp://$port|OK" > "$RESULTS/l4_$port"
