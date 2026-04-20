@@ -107,6 +107,13 @@ in {
       [ -f "$_w" ] && $SUDO rm -f "$_w" && echo "[scheduler] removed stale wrapper: $_w"
     done
 
+    # Remove stale guardrails docker wrapper from nix profile (ionice/nice/docker-real — guardrails.nix disabled)
+    _hm_user=$(id -un 2>/dev/null || echo diego)
+    _nix_docker="/home/$_hm_user/.nix-profile/bin/docker"
+    if [ -f "$_nix_docker" ] && head -2 "$_nix_docker" 2>/dev/null | grep -q 'docker-real'; then
+      rm -f "$_nix_docker" && echo "[scheduler] removed stale guardrails docker wrapper from nix-profile"
+    fi
+
     ${deployScript}
 
     # Remove ALL stale drop-ins from old FIFO/RR/protection modules
