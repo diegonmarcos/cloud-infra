@@ -21,6 +21,13 @@ FILTER="${2:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
+# ── Source shared lib (log, log_error, helpers) ──
+# Must happen before first `log` call below. Lib lives next to this script
+# in dist/scripts/ (deployed via build.sh).
+_DISPATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=cloud-ship-lib.sh
+. "$_DISPATCH_DIR/cloud-ship-lib.sh"
+
 # ── Trace collection ─────────────────────────────────────────────
 RUN_START=$(date +%s)
 TRACE_SERVICES="[]"
@@ -59,6 +66,62 @@ ssh $SSH_OPTS -fNM "$VM" 2>/dev/null && log "SSH multiplex master established to
 # Workers must REUSE the master, never race to create one
 SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 
+# ── Warm declared arch runners (for cross-arch docker builds) ────
+# Services with docker.arch != HOST_ARCH need a remote builder (e.g. arm64
+# → oci-apps cloud-builder-x). Source of truth: cloud-data-runners.json.
+# Export CLOUD_BUILDER_<ARCH>_READY=1 so step_docker skips its live probe.
+RUNNERS_JSON=""
+for _p in \
+    "$REPO_ROOT/I_cloud-data/cloud-data-runners.json" \
+    "$REPO_ROOT/cloud-data-runners.json"; do
+    [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
+done
+if [ -n "$RUNNERS_JSON" ]; then
+    _HOST_ARCH=$(uname -m)
+    case "$_HOST_ARCH" in
+        x86_64)  _HOST_ARCH_DOCKER="amd64" ;;
+        aarch64) _HOST_ARCH_DOCKER="arm64" ;;
+        *)       _HOST_ARCH_DOCKER="$_HOST_ARCH" ;;
+    esac
+    # Collect distinct docker.arch values across matching services
+    _ARCHES=$(while IFS='|' read -r dir _; do
+        bj="$REPO_ROOT/a_solutions/$dir/build.json"
+        [ -f "$bj" ] || continue
+        jq -r '.docker.arch // empty' "$bj" 2>/dev/null
+    done <<< "$SERVICES" | sort -u)
+    for _arch in $_ARCHES; do
+        [ "$_arch" = "$_HOST_ARCH_DOCKER" ] && continue
+        _type=$(jq -r --arg a "$_arch" '.runners[$a].type // empty' "$RUNNERS_JSON")
+        _host=$(jq -r --arg a "$_arch" '.runners[$a].host // empty' "$RUNNERS_JSON")
+        [ "$_type" = "ssh" ] || continue
+        [ -z "$_host" ] && continue
+        if ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -fNM "$_host" 2>/dev/null; then
+            log "Runner for arch=$_arch warmed: $_host"
+            export "CLOUD_BUILDER_$(echo "$_arch" | tr '[:lower:]' '[:upper:]')_READY=1"
+        else
+            log_error "Runner for arch=$_arch UNREACHABLE (host=$_host). ship for arm64 services will fail."
+        fi
+    done
+fi
+
+# ── Update cloud-data submodule ONCE (locked, before parallel workers) ──
+# Per-service parallel updates race on .git/modules/cloud-data/config lock
+# and each one prints every unstaged file — huge log spam + "File exists"
+# lock errors. Run serially here; per-service nix step is gated by the
+# CLOUD_DATA_PRESTAGED_BY_CI flag set below.
+if [ -f "$REPO_ROOT/.gitmodules" ] && [ -d "$REPO_ROOT/I_cloud-data" ]; then
+  _CD_LOCK=/tmp/cloud-data-submodule.lock
+  (
+    flock -w 60 9 || { log_error "Could not acquire cloud-data submodule lock after 60s"; exit 1; }
+    log "Updating I_cloud-data submodule (once, serialized for parallel ship jobs)"
+    if ! git -C "$REPO_ROOT" -c submodule."I_cloud-data".update=checkout \
+         submodule update --remote --init --force I_cloud-data 2>&1 \
+         | while IFS= read -r line; do log "  $line"; done; then
+      log "WARN: I_cloud-data update failed — ship will use the pinned commit (may be stale)"
+    fi
+  ) 9>"$_CD_LOCK"
+fi
+
 # ── Pre-stage cloud-data into all services' src/ (before parallel jobs) ──
 # Parallel builds race on git index — stage everything once, serially.
 # Two passes: 1) resolve symlinks to real files, 2) copy for include_cloud_data
@@ -67,14 +130,21 @@ CLOUD_DATA_PRESTAGED=""
 if [ -d "$CLOUD_DATA_DIR" ]; then
   echo "Pre-staging cloud-data: resolving symlinks + copying flagged services"
 
-  # Pass 1: Resolve cloud-data symlinks in ALL services' src/ to real files
-  # Nix flakes can't follow symlinks into submodules — must be real files
+  # Pass 1: Resolve external *.json symlinks in ALL services' src/ to real files.
+  # Nix flakes can't follow symlinks into submodules — must be real files.
+  # Matches any symlink whose target is OUTSIDE the service directory
+  # (covers cloud-data-*.json, _cloud-data-*.json, and build-{container}.json).
+  # The `case` guard skips intra-service symlinks like build.json → ../build.json.
   while IFS='|' read -r dir name; do
     SRC="$REPO_ROOT/a_solutions/$dir/src"
+    SVC_DIR="$REPO_ROOT/a_solutions/$dir"
     [ -d "$SRC" ] || continue
-    for f in "$SRC"/cloud-data-*.json "$SRC"/_cloud-data-*.json; do
+    for f in "$SRC"/*.json; do
       [ -L "$f" ] || continue
-      REAL_TARGET=$(readlink -f "$f")
+      REAL_TARGET=$(readlink -f "$f" 2>/dev/null || true)
+      case "$REAL_TARGET" in
+        "$SVC_DIR"/*) continue ;;  # intra-service — nix can follow
+      esac
       if [ -f "$REAL_TARGET" ]; then
         rm "$f"
         cp "$REAL_TARGET" "$f"
