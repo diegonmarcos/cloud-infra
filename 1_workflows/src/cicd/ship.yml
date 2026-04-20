@@ -143,6 +143,11 @@ jobs:
           SSH_USER: ${{ steps.ssh.outputs.ssh_user }}
           SSH_ALIAS: ${{ matrix.vm }}
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          # WG is required for *.wg_ip targets (oci-mail 10.0.0.3, oci-apps
+          # 10.0.0.2, etc.). Without it the entrypoint's wg-quick block skips
+          # and every ssh to a WG-only VM times out. ship-home-manager.yml has
+          # passed this secret since day 1 — ship.yml was missing it.
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_ACTIONS: true

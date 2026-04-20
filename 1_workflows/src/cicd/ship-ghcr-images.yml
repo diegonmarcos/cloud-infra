@@ -58,6 +58,8 @@ jobs:
         run: bash 1_workflows/src/test/test_build_container_json_pattern.sh
       - name: Phase 5 — cloud-builder SSH mount safety
         run: bash 1_workflows/src/test/test_cloud_builder_ssh_safety.sh
+      - name: Phase 6 — ship.yml passes WG_PRIVATE_KEY
+        run: bash 1_workflows/src/test/test_ship_wireguard_secret.sh
 
   build:
     needs: preflight-symlinks
