@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=1200">
 <title>C3 Cloud Data</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 </head>
 <body>
 
@@ -133,10 +135,19 @@ async function loadPage(page, silent) {
       h2.appendChild(document.createTextNode(' '));
       h2.appendChild(badge);
       main.appendChild(h2);
-      const pre = document.createElement('pre');
-      pre.className = 'report-content';
-      pre.textContent = md;
-      main.appendChild(pre);
+      // Rendered markdown via marked + sanitized by DOMPurify.
+      // Fallback to <pre> if the CDN libs failed to load.
+      if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+        const div = document.createElement('div');
+        div.className = 'report-content markdown-body';
+        div.innerHTML = DOMPurify.sanitize(marked.parse(md));
+        main.appendChild(div);
+      } else {
+        const pre = document.createElement('pre');
+        pre.className = 'report-content';
+        pre.textContent = md;
+        main.appendChild(pre);
+      }
       document.getElementById('meta').textContent = 'Updated: ' + new Date().toLocaleTimeString();
       return;
     }
