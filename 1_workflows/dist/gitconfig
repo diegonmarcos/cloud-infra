@@ -13,4 +13,8 @@
 [rebase]
 	autoStash = true
 [alias]
-	sync = !git fetch origin && git reset --hard origin/main && git submodule update --init --recursive --remote --rebase
+	# smart, non-destructive sync — see 1_workflows/src/scripts/cloud-git-sync.sh
+	#   git sync           → remote wins on conflict (default)
+	#   git sync remote    → remote wins on conflict
+	#   git sync local     → local commits win on conflict
+	sync = !./1_workflows/dist/scripts/cloud-git-sync.sh
