@@ -101,36 +101,27 @@ cmd_decrypt() {
     local out_env="$DIST_DIR/${base}.secrets"
     local out_json="$DIST_DIR/${base}.json.secrets"
 
-    if decrypted=$(sops -d "$yaml" 2>/dev/null); then
-      # 1. KEY=VALUE env file
-      echo "$decrypted" | awk '
-        /^sops:/ { stop=1 }
-        !stop && /^[A-Za-z_][A-Za-z0-9_]*:/ {
-          key = $0
-          sub(/:.*/, "", key)
-          val = $0
-          sub(/^[^:]*: */, "", val)
-          if (val ~ /^".*"$/) { val = substr(val, 2, length(val)-2) }
-          if (val ~ /^'"'"'.*'"'"'$/) { val = substr(val, 2, length(val)-2) }
-          print key "=" val
-        }
-      ' > "$out_env"
+    # Decrypt directly to JSON — no text parsing of YAML, structured data only.
+    # This aggregator is a human-facing viewer (NOT a container deploy pipeline),
+    # so it exports *everything* including _-prefixed metadata like _credentials.
+    # The per-service container engine (1_workflows/.../step-secrets-decrypt.sh)
+    # applies the _-prefix filter when producing .secrets for VMs.
+    if SERVICE_JSON=$(sops -d --output-type json "$yaml" 2>/dev/null); then
 
-      # 2. JSON object
-      local SERVICE_JSON
-      SERVICE_JSON=$(echo "$decrypted" | awk '
-        /^sops:/ { stop=1 }
-        !stop && /^[A-Za-z_][A-Za-z0-9_]*:/ {
-          key = $0
-          sub(/:.*/, "", key)
-          val = $0
-          sub(/^[^:]*: */, "", val)
-          if (val ~ /^".*"$/) { val = substr(val, 2, length(val)-2) }
-          if (val ~ /^'"'"'.*'"'"'$/) { val = substr(val, 2, length(val)-2) }
-          printf "%s\t%s\n", key, val
-        }
-      ' | jq -Rn '[inputs | split("\t") | {(.[0]): .[1]}] | add // {}')
+      # 1. KEY=VALUE env file — flatten nested objects with dotted keys so
+      #    _credentials.admin.password lands as a visible line. Values with $
+      #    are single-quoted for docker-compose env_file compatibility.
+      echo "$SERVICE_JSON" \
+        | jq -r '
+            [paths(scalars) as $p | {key: ($p|join(".")), value: (getpath($p) | tostring | gsub("\n"; "\\n"))}] |
+            .[] |
+            if (.value | test("[$]"))
+            then "\(.key)='"'"'\(.value)'"'"'"
+            else "\(.key)=\(.value)"
+            end' \
+        > "$out_env"
 
+      # 2. JSON object — full nested structure preserved
       echo "$SERVICE_JSON" > "$out_json"
 
       # 3. Add to consolidated
