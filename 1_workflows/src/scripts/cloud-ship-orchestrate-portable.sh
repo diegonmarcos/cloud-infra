@@ -48,7 +48,7 @@ done
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT" || die "Cannot cd to $REPO_ROOT"
 
-GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
 [ -f "$GHA_CONFIG" ] || die "$GHA_CONFIG not found"
 
 SCRIPTS_DIR=".github/workflows/scripts"
@@ -210,7 +210,7 @@ ship_all_vms() {
 # PHASE 3: TRACES — collect and push (optional)
 # ══════════════════════════════════════════════════════════════════
 collect_traces() {
-  _trace_dir="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/reports/traces-gha}"
+  _trace_dir="${TRACE_DIR:-$REPO_ROOT/2_configs/dist/reports/traces-gha}"
   _cloud_data_key="${CLOUD_DATA_DEPLOY_KEY:-}"
 
   # If no deploy key, traces stay local (CLI/Dagu mode)

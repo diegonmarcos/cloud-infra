@@ -173,7 +173,7 @@ NEOF
     # of exec-format-error builds.
     RUNNERS_JSON=""
     for _p in \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/I_cloud-data/cloud-data-runners.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
         "$SRC_DIR/cloud-data-runners.json"; do
         [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
