@@ -18,22 +18,31 @@ MANIFEST="$SCRIPT_DIR/manifest.json"
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
 generate_manifest() {
-    # Source of truth is cloud-data/reports/manifest.json (produced by
-    # cloud-data's reports engine). Transform its paths from
-    # 'reports/dist/foo.md' → 'dist/foo.md' for the cloud/ dashboard.
-    UPSTREAM="$(cd "$SCRIPT_DIR/../.." && pwd)/cloud-data/reports/manifest.json"
-    if [ ! -f "$UPSTREAM" ]; then
-        log "upstream manifest not found ($UPSTREAM) — emitting empty"
+    # Walk cloud-data/reports/dist/ directly for every *.md and *.html
+    # (upstream reports/manifest.json only lists .md — we include .html too).
+    UPSTREAM_DIST="$(cd "$SCRIPT_DIR/../.." && pwd)/cloud-data/reports/dist"
+    if [ ! -d "$UPSTREAM_DIST" ]; then
+        log "upstream dist not found ($UPSTREAM_DIST) — emitting empty"
         printf '[]\n' > "$MANIFEST"
         return 0
     fi
-    if ! command -v jq >/dev/null 2>&1; then
-        log "jq not in PATH — copying upstream verbatim"
-        cp "$UPSTREAM" "$MANIFEST"
-        return 0
-    fi
-    jq 'map({file: (.file | sub("^reports/"; "")), name: .name})' "$UPSTREAM" > "$MANIFEST"
-    log "Regenerated manifest.json from upstream ($(jq length "$MANIFEST") entries)"
+    printf '[\n' > "$MANIFEST"
+    first=true
+    for f in "$UPSTREAM_DIST"/*.md "$UPSTREAM_DIST"/*.html; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        name=$(basename "$base" | sed -E 's/\.(md|html)$//' | tr '_' ' ')
+        ext="${base##*.}"
+        # Tag html entries with (HTML) so the dashboard distinguishes formats
+        case "$ext" in
+            html) name="$name (HTML)" ;;
+        esac
+        file="dist/$base"
+        if [ "$first" = true ]; then first=false; else printf ',\n' >> "$MANIFEST"; fi
+        printf '  {"file": "%s", "name": "%s"}' "$file" "$name" >> "$MANIFEST"
+    done
+    printf '\n]\n' >> "$MANIFEST"
+    log "Regenerated manifest.json ($(command grep -c '{"file' "$MANIFEST") entries: .md + .html)"
 }
 
 case "${1:-manifest}" in

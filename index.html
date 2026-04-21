@@ -115,6 +115,7 @@ async function loadPage(page, silent) {
   const main = document.getElementById('main');
   isSecretPage = page.file.startsWith('3_secrets/');
   isReportPage = page.file.startsWith('4_reports/') && page.file.endsWith('.md');
+  const isReportHtml = page.file.startsWith('4_reports/') && page.file.endsWith('.html');
 
   if (!silent) main.innerHTML = '<div class="loading">Loading ' + page.name + '...</div>';
 
@@ -136,6 +137,30 @@ async function loadPage(page, silent) {
       pre.className = 'report-content';
       pre.textContent = md;
       main.appendChild(pre);
+      document.getElementById('meta').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      return;
+    }
+
+    if (isReportHtml) {
+      main.innerHTML = '';
+      const h2 = document.createElement('h2');
+      h2.textContent = page.name;
+      const badge = document.createElement('span');
+      badge.className = 'report-badge';
+      badge.textContent = 'REPORT (HTML)';
+      h2.appendChild(document.createTextNode(' '));
+      h2.appendChild(badge);
+      main.appendChild(h2);
+      // Sandbox the report in an iframe — auto-generated HTML is trusted
+      // but stylesheet isolation + script-disable still wise.
+      const frame = document.createElement('iframe');
+      frame.className = 'report-iframe';
+      frame.src = page.file + '?t=' + Date.now();
+      frame.sandbox = 'allow-same-origin';
+      frame.style.width = '100%';
+      frame.style.minHeight = '80vh';
+      frame.style.border = '0';
+      main.appendChild(frame);
       document.getElementById('meta').textContent = 'Updated: ' + new Date().toLocaleTimeString();
       return;
     }
