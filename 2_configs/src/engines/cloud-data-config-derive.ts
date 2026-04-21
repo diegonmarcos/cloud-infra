@@ -1806,8 +1806,12 @@ function main() {
       name: f.name.replace(/\.json$/, "").replace(/cloud-data-/, "cloud data ").replace(/-/g, " "),
     })),
   ];
+  // dist/manifest.json — paths relative to dist/ (for tooling that reads dist directly)
   const manifestJson = JSON.stringify(manifestEntries, null, 2) + "\n";
   writeFileSync(join(CLOUD_DATA_DIR, "manifest.json"), manifestJson);
+  // 2_configs/manifest.json — paths with dist/ prefix (for dashboard at cloud/ root)
+  const rootManifest = manifestEntries.map((e) => ({ ...e, file: `dist/${e.file}` }));
+  writeFileSync(join(CONFIGS_DIR, "manifest.json"), JSON.stringify(rootManifest, null, 2) + "\n");
 
   console.log(`cloud-data-config-derive: wrote ${derived.length} files + manifest.json:\n`);
   for (const line of summary) {
