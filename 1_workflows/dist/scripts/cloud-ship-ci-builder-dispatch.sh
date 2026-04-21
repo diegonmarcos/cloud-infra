@@ -32,7 +32,7 @@ _DISPATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN_START=$(date +%s)
 TRACE_SERVICES="[]"
 
-GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
 if [ ! -f "$GHA_CONFIG" ]; then
   echo "ERROR: $GHA_CONFIG not found" >&2
   exit 1
@@ -72,7 +72,7 @@ SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPer
 # Export CLOUD_BUILDER_<ARCH>_READY=1 so step_docker skips its live probe.
 RUNNERS_JSON=""
 for _p in \
-    "$REPO_ROOT/I_cloud-data/cloud-data-runners.json" \
+    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
     "$REPO_ROOT/cloud-data-runners.json"; do
     [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
 done
@@ -109,15 +109,15 @@ fi
 # and each one prints every unstaged file — huge log spam + "File exists"
 # lock errors. Run serially here; per-service nix step is gated by the
 # CLOUD_DATA_PRESTAGED_BY_CI flag set below.
-if [ -f "$REPO_ROOT/.gitmodules" ] && [ -d "$REPO_ROOT/I_cloud-data" ]; then
+if [ -f "$REPO_ROOT/.gitmodules" ] && [ -d "$REPO_ROOT/2_configs/dist" ]; then
   _CD_LOCK=/tmp/cloud-data-submodule.lock
   (
     flock -w 60 9 || { log_error "Could not acquire cloud-data submodule lock after 60s"; exit 1; }
-    log "Updating I_cloud-data submodule (once, serialized for parallel ship jobs)"
-    if ! git -C "$REPO_ROOT" -c submodule."I_cloud-data".update=checkout \
-         submodule update --remote --init --force I_cloud-data 2>&1 \
+    log "Updating 2_configs/dist submodule (once, serialized for parallel ship jobs)"
+    if ! git -C "$REPO_ROOT" -c submodule."2_configs/dist".update=checkout \
+         submodule update --remote --init --force 2_configs/dist 2>&1 \
          | while IFS= read -r line; do log "  $line"; done; then
-      log "WARN: I_cloud-data update failed — ship will use the pinned commit (may be stale)"
+      log "WARN: 2_configs/dist update failed — ship will use the pinned commit (may be stale)"
     fi
   ) 9>"$_CD_LOCK"
 fi
@@ -125,7 +125,7 @@ fi
 # ── Pre-stage cloud-data into all services' src/ (before parallel jobs) ──
 # Parallel builds race on git index — stage everything once, serially.
 # Two passes: 1) resolve symlinks to real files, 2) copy for include_cloud_data
-CLOUD_DATA_DIR="$REPO_ROOT/I_cloud-data"
+CLOUD_DATA_DIR="$REPO_ROOT/2_configs/dist"
 CLOUD_DATA_PRESTAGED=""
 if [ -d "$CLOUD_DATA_DIR" ]; then
   echo "Pre-staging cloud-data: resolving symlinks + copying flagged services"
@@ -178,7 +178,7 @@ if [ -d "$CLOUD_DATA_DIR" ]; then
     for t in $CLOUD_DATA_PRESTAGED; do
       RELS="$RELS $(realpath --relative-to="$REPO_ROOT" "$t")"
     done
-    git -C "$REPO_ROOT" add -f $RELS
+    git -C "$REPO_ROOT" add $RELS
     echo "Staged $(echo $CLOUD_DATA_PRESTAGED | wc -w) cloud-data files across services"
   fi
   export CLOUD_DATA_PRESTAGED_BY_CI=true
@@ -283,7 +283,7 @@ echo "Ship → $VM: $OK ok, $FAIL failed, $SKIP skipped (of $TOTAL)"
 RUN_DUR=$(( $(date +%s) - RUN_START ))
 RUN_STATUS="success"; [ "$FAIL" -gt 0 ] && RUN_STATUS="failure"
 
-TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/reports/traces-gha}"
+TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/2_configs/dist/reports/traces-gha}"
 mkdir -p "$TRACE_DIR"
 
 jq -n \

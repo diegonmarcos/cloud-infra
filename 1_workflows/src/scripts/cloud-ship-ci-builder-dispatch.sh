@@ -178,7 +178,7 @@ if [ -d "$CLOUD_DATA_DIR" ]; then
     for t in $CLOUD_DATA_PRESTAGED; do
       RELS="$RELS $(realpath --relative-to="$REPO_ROOT" "$t")"
     done
-    git -C "$REPO_ROOT" add -f $RELS
+    git -C "$REPO_ROOT" add $RELS
     echo "Staged $(echo $CLOUD_DATA_PRESTAGED | wc -w) cloud-data files across services"
   fi
   export CLOUD_DATA_PRESTAGED_BY_CI=true
