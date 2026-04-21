@@ -13,6 +13,16 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -uo pipefail
 
+# ── Safer-alternative reminder ──────────────────────────────────────
+if [ -t 2 ]; then
+  printf '\033[33m\n┌─ git push ─ tip ──────────────────────────────────────────────┐\n' >&2
+  printf   '│ Prefer `git sync` — safer: auto-stash + rebase + submodules.  │\n' >&2
+  printf   '│   git sync remote   (origin wins on conflict, default)        │\n' >&2
+  printf   '│   git sync local    (local commits win on conflict)           │\n' >&2
+  printf   '│   script: 1_workflows/dist/scripts/cloud-git-sync.sh          │\n' >&2
+  printf   '└───────────────────────────────────────────────────────────────┘\033[0m\n' >&2
+fi
+
 # Skip during interactive rebase / merge / bisect — don't compound state.
 if [ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] \
    || [ -d "$(git rev-parse --git-path rebase-apply 2>/dev/null)" ] \
