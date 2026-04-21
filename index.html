@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<title>C3 Cloud Data</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<button id="menu-toggle" aria-label="Toggle menu">&#9776;</button>
+<div id="sidebar">
+  <h1>C3 Cloud Data</h1>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Search..." autocomplete="off">
+    <div class="search-toggles">
+      <label><input type="radio" name="search-mode" value="filename" checked> Filename</label>
+      <label><input type="radio" name="search-mode" value="content"> Content</label>
+    </div>
+  </div>
+  <div class="nav-section-label reports-label">Cloud Reports</div>
+  <nav id="nav-reports"></nav>
+  <div class="nav-section-label">Cloud Data</div>
+  <nav id="nav-data"></nav>
+  <div class="nav-section-label secrets-label">Secrets (Decrypted)</div>
+  <nav id="nav-secrets"></nav>
+  <div class="meta" id="meta">Loading...</div>
+</div>
+
+<div id="main">
+  <div class="loading">Loading manifests...</div>
+</div>
+
+<script>
+const REFRESH_MS = 300000;
+let reportsManifest = [];
+let dataManifest = [];
+let secretsManifest = [];
+let currentPage = null;
+let isSecretPage = false;
+let isReportPage = false;
+
+async function init() {
+  // Helper: fetch a manifest from a sub-folder and prefix each entry's
+  // file path so it resolves correctly from cloud/ root.
+  async function fetchManifest(folder) {
+    try {
+      const res = await fetch(folder + '/manifest.json?t=' + Date.now());
+      const entries = await res.json();
+      return entries.map(e => ({ ...e, file: folder + '/' + e.file }));
+    } catch { return []; }
+  }
+
+  reportsManifest = await fetchManifest('4_reports');
+  dataManifest = await fetchManifest('2_configs');
+  secretsManifest = await fetchManifest('3_secrets');
+
+  if (!reportsManifest.length && !dataManifest.length && !secretsManifest.length) {
+    document.getElementById('main').innerHTML = '<div class="error">No data found</div>';
+    return;
+  }
+
+  buildSidebar();
+  setupSearch();
+  window.addEventListener('hashchange', onHashChange);
+  onHashChange();
+  setInterval(() => loadPage(currentPage, true), REFRESH_MS);
+}
+
+function buildSidebar() {
+  const navReports = document.getElementById('nav-reports');
+  navReports.innerHTML = reportsManifest.map(p =>
+    '<a href="#' + slug(p.file) + '" class="report-link">' + p.name + '</a>'
+  ).join('');
+
+  const navData = document.getElementById('nav-data');
+  navData.innerHTML = dataManifest.map(p =>
+    '<a href="#' + slug(p.file) + '">' + p.name + '</a>'
+  ).join('');
+
+  const navSecrets = document.getElementById('nav-secrets');
+  navSecrets.innerHTML = secretsManifest.map(p =>
+    '<a href="#' + slug(p.file) + '" class="secret-link">' + p.name + '</a>'
+  ).join('');
+}
+
+function slug(file) {
+  return file.replace(/\//g, '_').replace('.json', '').replace('.md', '').replace('.secrets', '');
+}
+
+function setActive(file) {
+  document.querySelectorAll('#nav-reports a, #nav-data a, #nav-secrets a').forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + slug(file));
+  });
+}
+
+function allPages() {
+  return [...reportsManifest, ...dataManifest, ...secretsManifest];
+}
+
+function onHashChange() {
+  const hash = location.hash.slice(1);
+  const page = allPages().find(p => slug(p.file) === hash);
+  if (page) {
+    loadPage(page);
+  } else if (allPages().length) {
+    location.hash = '#' + slug(allPages()[0].file);
+  }
+}
+
+async function loadPage(page, silent) {
+  if (!page) return;
+  currentPage = page;
+  setActive(page.file);
+  const main = document.getElementById('main');
+  isSecretPage = page.file.startsWith('3_secrets/');
+  isReportPage = page.file.startsWith('4_reports/') && page.file.endsWith('.md');
+
+  if (!silent) main.innerHTML = '<div class="loading">Loading ' + page.name + '...</div>';
+
+  try {
+    const res = await fetch(page.file + '?t=' + Date.now());
+
+    if (isReportPage) {
+      const md = await res.text();
+      main.innerHTML = '';
+      const h2 = document.createElement('h2');
+      h2.textContent = page.name;
+      const badge = document.createElement('span');
+      badge.className = 'report-badge';
+      badge.textContent = 'REPORT';
+      h2.appendChild(document.createTextNode(' '));
+      h2.appendChild(badge);
+      main.appendChild(h2);
+      const pre = document.createElement('pre');
+      pre.className = 'report-content';
+      pre.textContent = md;
+      main.appendChild(pre);
+      document.getElementById('meta').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+      return;
+    }
+
+    const data = await res.json();
+    main.innerHTML = '';
+
+    const h2 = document.createElement('h2');
+    h2.textContent = page.name;
+    if (isSecretPage) {
+      const badge = document.createElement('span');
+      badge.className = 'secret-badge';
+      badge.textContent = 'DECRYPTED';
+      h2.appendChild(document.createTextNode(' '));
+      h2.appendChild(badge);
+    }
+    main.appendChild(h2);
+
+    renderData(main, data);
+    document.getElementById('meta').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    if (!silent) main.innerHTML = '<div class="error">Failed to load ' + page.file + '</div>';
+  }
+}
+
+function renderData(container, data) {
+  if (Array.isArray(data)) {
+    container.appendChild(renderArrayTable(data));
+  } else if (typeof data === 'object' && data !== null) {
+    // Secrets are flat {KEY: "value"} — render as KV table directly
+    const vals = Object.values(data);
+    const isFlat = vals.length && vals.every(v => typeof v !== 'object' || v === null);
+    if (isFlat && isSecretPage) {
+      container.appendChild(renderKVTable(data));
+    } else {
+      renderObjectSections(container, data);
+    }
+  } else {
+    container.appendChild(document.createTextNode(String(data)));
+  }
+}
+
+function renderArrayTable(arr) {
+  if (!arr.length) return document.createTextNode('(empty)');
+  if (typeof arr[0] !== 'object') {
+    const ul = document.createElement('div');
+    ul.className = 'val-array';
+    ul.textContent = arr.join(', ');
+    return ul;
+  }
+
+  const keys = [...new Set(arr.flatMap(obj => Object.keys(obj)))];
+  const cols = keys.filter(k => k !== '_meta');
+  const table = document.createElement('table');
+
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  cols.forEach(k => {
+    const th = document.createElement('th');
+    th.textContent = prettyKey(k);
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  arr.forEach(obj => {
+    const tr = document.createElement('tr');
+    cols.forEach(k => {
+      const td = document.createElement('td');
+      td.appendChild(renderValue(obj[k]));
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return table;
+}
+
+function renderObjectSections(container, obj) {
+  for (const [key, val] of Object.entries(obj)) {
+    if (key === '_meta') { renderMeta(container, val); continue; }
+
+    const section = document.createElement('div');
+    section.className = 'section';
+    const h3 = document.createElement('h3');
+    h3.textContent = prettyKey(key);
+    section.appendChild(h3);
+
+    if (Array.isArray(val)) {
+      section.appendChild(renderArrayTable(val));
+    } else if (typeof val === 'object' && val !== null) {
+      const subKeys = Object.keys(val);
+      if (subKeys.length && typeof val[subKeys[0]] === 'object' && !Array.isArray(val[subKeys[0]])) {
+        subKeys.forEach(sk => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          const h4 = document.createElement('h4');
+          h4.textContent = sk;
+          card.appendChild(h4);
+          card.appendChild(renderKVTable(val[sk]));
+          section.appendChild(card);
+        });
+      } else {
+        section.appendChild(renderKVTable(val));
+      }
+    } else {
+      const p = document.createElement('p');
+      p.appendChild(renderValue(val));
+      section.appendChild(p);
+    }
+    container.appendChild(section);
+  }
+}
+
+function renderKVTable(obj) {
+  const table = document.createElement('table');
+  const tbody = document.createElement('tbody');
+  for (const [k, v] of Object.entries(obj)) {
+    const tr = document.createElement('tr');
+    const th = document.createElement('td');
+    th.innerHTML = '<strong>' + escHtml(prettyKey(k)) + '</strong>';
+    tr.appendChild(th);
+    const td = document.createElement('td');
+    td.appendChild(renderValue(v));
+    if (isSecretPage) {
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.innerHTML = '&#x2398;';
+      btn.title = 'Copy value';
+      const raw = typeof v === 'object' ? JSON.stringify(v) : String(v ?? '');
+      btn.addEventListener('click', () => copyToClipboard(btn, raw));
+      td.appendChild(btn);
+    }
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  return table;
+}
+
+function copyToClipboard(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '&#x2713;';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '&#x2398;'; }, 1500);
+  });
+}
+
+// Double-click any table row to copy its value (second cell)
+document.addEventListener('dblclick', (e) => {
+  const tr = e.target.closest('tbody tr');
+  if (!tr) return;
+  const cells = tr.querySelectorAll('td');
+  if (cells.length < 2) return;
+  // Get raw text from value cell (skip copy button text)
+  const valCell = cells[1];
+  const text = Array.from(valCell.childNodes)
+    .filter(n => !n.classList || !n.classList.contains('copy-btn'))
+    .map(n => n.textContent).join('').trim();
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    tr.classList.add('row-copied');
+    setTimeout(() => tr.classList.remove('row-copied'), 800);
+  });
+});
+
+function renderValue(val) {
+  const span = document.createElement('span');
+  if (val === null || val === undefined) {
+    span.className = 'val-null';
+    span.textContent = '—';
+  } else if (typeof val === 'boolean') {
+    span.className = val ? 'val-bool-true' : 'val-bool-false';
+    span.textContent = String(val);
+  } else if (typeof val === 'number') {
+    span.className = 'val-number';
+    span.textContent = String(val);
+  } else if (Array.isArray(val)) {
+    if (!val.length) { span.className = 'val-null'; span.textContent = '—'; }
+    else if (typeof val[0] === 'object') return renderArrayTable(val);
+    else { span.className = 'val-array'; span.textContent = val.join(', '); }
+  } else if (typeof val === 'object') {
+    span.className = 'val-object';
+    span.textContent = JSON.stringify(val);
+  } else {
+    span.textContent = String(val);
+  }
+  return span;
+}
+
+function renderMeta(container, meta) {
+  const div = document.createElement('div');
+  div.className = 'section';
+  div.style.opacity = '0.6';
+  div.style.fontSize = '11px';
+  const parts = Object.entries(meta).map(([k, v]) => prettyKey(k) + ': ' + v);
+  div.textContent = parts.join(' | ');
+  container.appendChild(div);
+}
+
+// ── Search ──
+let contentCache = {};
+
+function setupSearch() {
+  const input = document.getElementById('search');
+  let debounce;
+  input.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => runSearch(input.value.trim()), 200);
+  });
+}
+
+function getSearchMode() {
+  return document.querySelector('input[name="search-mode"]:checked').value;
+}
+
+async function runSearch(query) {
+  const navData = document.getElementById('nav-data');
+  const navSecrets = document.getElementById('nav-secrets');
+
+  if (!query) {
+    buildSidebar();
+    return;
+  }
+
+  const q = query.toLowerCase();
+  const mode = getSearchMode();
+
+  const navReports = document.getElementById('nav-reports');
+
+  if (mode === 'filename') {
+    navReports.innerHTML = reportsManifest
+      .filter(p => p.name.toLowerCase().includes(q) || p.file.toLowerCase().includes(q))
+      .map(p => '<a href="#' + slug(p.file) + '" class="report-link">' + p.name + '</a>').join('');
+    navData.innerHTML = dataManifest
+      .filter(p => p.name.toLowerCase().includes(q) || p.file.toLowerCase().includes(q))
+      .map(p => '<a href="#' + slug(p.file) + '">' + p.name + '</a>').join('');
+    navSecrets.innerHTML = secretsManifest
+      .filter(p => p.name.toLowerCase().includes(q) || p.file.toLowerCase().includes(q))
+      .map(p => '<a href="#' + slug(p.file) + '" class="secret-link">' + p.name + '</a>').join('');
+  } else {
+    // Content search: fetch and cache all files, then filter
+    const results = [];
+    for (const p of allPages()) {
+      if (!contentCache[p.file]) {
+        try {
+          const res = await fetch(p.file + '?t=' + Date.now());
+          contentCache[p.file] = await res.text();
+        } catch { contentCache[p.file] = ''; }
+      }
+      if (contentCache[p.file].toLowerCase().includes(q)) {
+        results.push(p);
+      }
+    }
+    const reportResults = results.filter(p => p.file.startsWith('4_reports/'));
+    const dataResults = results.filter(p => !p.file.startsWith('3_secrets/') && !p.file.startsWith('4_reports/'));
+    const secretResults = results.filter(p => p.file.startsWith('3_secrets/'));
+    navReports.innerHTML = reportResults
+      .map(p => '<a href="#' + slug(p.file) + '" class="report-link">' + p.name + '</a>').join('');
+    navData.innerHTML = dataResults
+      .map(p => '<a href="#' + slug(p.file) + '">' + p.name + '</a>').join('');
+    navSecrets.innerHTML = secretResults
+      .map(p => '<a href="#' + slug(p.file) + '" class="secret-link">' + p.name + '</a>').join('');
+  }
+
+  // Re-apply active state
+  if (currentPage) setActive(currentPage.file);
+}
+
+function prettyKey(k) {
+  return k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+document.getElementById('menu-toggle').addEventListener('click', function() {
+  document.body.classList.toggle('sidebar-collapsed');
+});
+
+init();
+</script>
+</body>
+</html>

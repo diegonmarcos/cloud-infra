@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-21T09:21:29.079Z",
+  "_generated": "2026-04-21T10:21:23.218Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -1148,36 +1148,47 @@
     {
       "kind": "redirect",
       "service": "maddy.app",
-      "redirect_to": "https://maddy-null.app",
+      "redirect_to": "https://maddy-tls-993.app",
       "container": "maddy",
       "container_key": "app",
       "svc": "maddy",
       "vm": "oci-E2-f_0"
     },
     {
-      "kind": "portless",
-      "service": "maddy-null.app",
+      "kind": "canonical",
+      "service": "maddy-tls-993.app",
       "container": "maddy",
       "container_key": "app",
       "svc": "maddy",
-      "vm": "oci-E2-f_0"
+      "vm": "oci-E2-f_0",
+      "port": 993,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:993",
+      "source": "proxy.primary.l4_ports"
     },
     {
-      "kind": "redirect",
-      "service": "maddy-sorter.app",
-      "redirect_to": "https://maddy-sorter-null.app",
-      "container": "maddy-sorter",
-      "container_key": "sorter",
+      "kind": "canonical",
+      "service": "maddy-tls-465.app",
+      "container": "maddy",
+      "container_key": "app",
       "svc": "maddy",
-      "vm": "oci-E2-f_0"
+      "vm": "oci-E2-f_0",
+      "port": 465,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:465",
+      "source": "proxy.primary.l4_ports"
     },
     {
-      "kind": "portless",
-      "service": "maddy-sorter-null.app",
-      "container": "maddy-sorter",
-      "container_key": "sorter",
+      "kind": "canonical",
+      "service": "maddy-starttls-587.app",
+      "container": "maddy",
+      "container_key": "app",
       "svc": "maddy",
-      "vm": "oci-E2-f_0"
+      "vm": "oci-E2-f_0",
+      "port": 587,
+      "protocol": "starttls",
+      "upstream": "10.0.0.3:587",
+      "source": "proxy.primary.l4_ports"
     },
     {
       "kind": "redirect",
@@ -3741,6 +3752,36 @@
       "notes": null
     },
     {
+      "host": "maddy-tls-993.app",
+      "path": null,
+      "upstream": "10.0.0.3:993",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "maddy",
+      "notes": null
+    },
+    {
+      "host": "maddy-tls-465.app",
+      "path": null,
+      "upstream": "10.0.0.3:465",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "maddy",
+      "notes": null
+    },
+    {
+      "host": "maddy-starttls-587.app",
+      "path": null,
+      "upstream": "10.0.0.3:587",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "maddy",
+      "notes": null
+    },
+    {
       "host": "smtp-proxy-http-8080.app",
       "path": null,
       "upstream": "10.0.0.3:8080",
@@ -4260,26 +4301,6 @@
       "tls": "on_demand",
       "zone": "app",
       "service": "photos-webhook",
-      "notes": null
-    },
-    {
-      "host": "maddy-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "maddy",
-      "notes": null
-    },
-    {
-      "host": "maddy-sorter-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "maddy",
       "notes": null
     },
     {
