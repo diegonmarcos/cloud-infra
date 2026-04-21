@@ -1,0 +1,1485 @@
+{
+  "_meta": {
+    "description": "Protocol-inference draft for port declarations. Review entries with review=true and correct their protocol. Then run apply-port-protocols.ts to write back into build.json files.",
+    "generated": "2026-04-18T13:51:49.288Z",
+    "enum_values": [
+      "http",
+      "https",
+      "tls",
+      "starttls",
+      "tcp",
+      "udp"
+    ],
+    "stats": {
+      "services": 50,
+      "containers": 79,
+      "ports": 71,
+      "to_review": 50,
+      "by_protocol": {
+        "http": 50,
+        "https": 3,
+        "tls": 4,
+        "starttls": 2,
+        "tcp": 11,
+        "udp": 1
+      }
+    }
+  },
+  "services": [
+    {
+      "service": "code-server",
+      "vm": "oci-apps",
+      "folder": "aa-sui_code-server",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "code-server",
+          "image": "linuxserver/code-server:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8443,
+              "protocol": "https",
+              "reason": "port 8443 is a well-known HTTPS port",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "etherpad",
+      "vm": "oci-apps",
+      "folder": "aa-sui_etherpad",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "etherpad_app",
+          "image": "etherpad/etherpad:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3012,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "etherpad_postgres",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5436,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "filebrowser",
+      "vm": "oci-apps",
+      "folder": "aa-sui_filebrowser",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "filebrowser_app",
+          "image": "filebrowser/filebrowser:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3015,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "google-workspace-mcp",
+      "vm": "oci-apps",
+      "folder": "aa-sui_google-workspace-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "google-workspace-mcp",
+          "image": "ghcr.io/diegonmarcos/google-workspace-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3104,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "grist",
+      "vm": "oci-apps",
+      "folder": "aa-sui_grist",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "grist_app",
+          "image": "gristlabs/grist:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3011,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "hedgedoc",
+      "vm": "oci-apps",
+      "folder": "aa-sui_hedgedoc",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "hedgedoc_app",
+          "image": "quay.io/hedgedoc/hedgedoc:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3018,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "hedgedoc_postgres",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5439,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "mail-mcp",
+      "vm": "oci-apps",
+      "folder": "aa-sui_mail-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "mail-mcp",
+          "image": "ghcr.io/diegonmarcos/mail-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3103,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "mattermost-bots",
+      "vm": "oci-apps",
+      "folder": "aa-sui_mattermost-bots",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "mattermost",
+          "image": "ngrie/mattermost-team-edition-arm:10.11",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8065,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "mattermost-postgres",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5435,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        },
+        {
+          "container_key": "bots",
+          "container_name": "mattermost-bots",
+          "image": "python:3.12-slim",
+          "ports": []
+        }
+      ]
+    },
+    {
+      "service": "mattermost-mcp",
+      "vm": "oci-apps",
+      "folder": "aa-sui_mattermost-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "mattermost-mcp",
+          "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3102,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "photoprism",
+      "vm": "oci-apps",
+      "folder": "aa-sui_photoprism",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "photoprism_app",
+          "image": "photoprism/photoprism:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3013,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "photoprism_mariadb",
+          "image": "mariadb:11",
+          "ports": []
+        },
+        {
+          "container_key": "rclone",
+          "container_name": "photoprism_rclone",
+          "image": "rclone/rclone:latest",
+          "ports": []
+        }
+      ]
+    },
+    {
+      "service": "photos-webhook",
+      "vm": "oci-apps",
+      "folder": "aa-sui_photos-webhook",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "photos-webhook",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 5002,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "radicale",
+      "vm": "oci-apps",
+      "folder": "aa-sui_radicale",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "radicale",
+          "image": "tomsquest/docker-radicale:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 5232,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "revealmd",
+      "vm": "oci-apps",
+      "folder": "aa-sui_revealmd",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "revealmd_app",
+          "image": "webpronl/reveal-md:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3014,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "snappymail",
+      "vm": "oci-mail",
+      "folder": "aa-sui_snappymail",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "snappymail",
+          "image": "djmaze/snappymail:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8888,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "maddy",
+      "vm": "oci-mail",
+      "folder": "aa-sui_tools-maddy",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "maddy",
+          "image": "ghcr.io/diegonmarcos/maddy:latest",
+          "ports": [
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 993,
+              "protocol": "tls",
+              "reason": "l4_comment matches TLS term (\"IMAPS\")",
+              "review": false,
+              "comment": "IMAPS"
+            },
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 465,
+              "protocol": "tls",
+              "reason": "l4_comment matches TLS term (\"SMTPS\")",
+              "review": false,
+              "comment": "SMTPS"
+            },
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 587,
+              "protocol": "starttls",
+              "reason": "l4_comment matches STARTTLS term (\"SMTP Submission\")",
+              "review": false,
+              "comment": "SMTP Submission"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "smtp-proxy",
+      "vm": "oci-mail",
+      "folder": "aa-sui_tools-smtp-proxy",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "smtp-proxy",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8080,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "stalwart",
+      "vm": "oci-mail",
+      "folder": "aa-sui_tools-stalwart",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "stalwart",
+          "image": "stalwartlabs/stalwart:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 2443,
+              "protocol": "https",
+              "reason": "port 2443 is a well-known HTTPS port",
+              "review": false
+            },
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 2993,
+              "protocol": "tls",
+              "reason": "l4_comment matches TLS term (\"IMAPS (Stalwart)\")",
+              "review": false,
+              "comment": "IMAPS (Stalwart)"
+            },
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 2465,
+              "protocol": "tls",
+              "reason": "l4_comment matches TLS term (\"SMTPS (Stalwart)\")",
+              "review": false,
+              "comment": "SMTPS (Stalwart)"
+            },
+            {
+              "location": "l4",
+              "location_path": "proxy.primary.l4_ports[]",
+              "port": 2587,
+              "protocol": "starttls",
+              "reason": "l4_comment matches STARTTLS term (\"SMTP Submission (Stalwart)\")",
+              "review": false,
+              "comment": "SMTP Submission (Stalwart)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "vaultwarden",
+      "vm": "oci-apps",
+      "folder": "ab-mic_vaultwarden",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "vaultwarden",
+          "image": "vaultwarden/server:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8880,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "crawlee-cloud",
+      "vm": "oci-apps",
+      "folder": "ac-fin_crawlee-cloud",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "crawlee_api",
+          "image": "crawlee-cloud-api:local",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3000,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "runner",
+          "container_name": "crawlee_runner",
+          "image": "crawlee-cloud-runner:local",
+          "ports": []
+        },
+        {
+          "container_key": "dashboard",
+          "container_name": "crawlee_dashboard",
+          "image": "crawlee-cloud-dashboard:local",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.dashboard.port",
+              "port": 3001,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "scheduler",
+          "container_name": "crawlee_scheduler",
+          "image": "crawlee-cloud-api:local",
+          "ports": []
+        },
+        {
+          "container_key": "db",
+          "container_name": "crawlee_db",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5433,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        },
+        {
+          "container_key": "redis",
+          "container_name": "crawlee_redis",
+          "image": "redis:7-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.redis.port",
+              "port": 6381,
+              "protocol": "tcp",
+              "reason": "image \"redis:7-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        },
+        {
+          "container_key": "minio",
+          "container_name": "crawlee_minio",
+          "image": "minio/minio:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.minio.port",
+              "port": 9000,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "quant-lab-full",
+      "vm": "oci-apps",
+      "folder": "ac-fin_quant-lab-full",
+      "containers": [
+        {
+          "container_key": "research",
+          "container_name": "quant_full_research",
+          "image": "quay.io/jupyter/scipy-notebook:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.research.port",
+              "port": 8890,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "analytics",
+          "container_name": "quant_full_analytics",
+          "image": "python:3.12-slim",
+          "ports": []
+        },
+        {
+          "container_key": "ml_brain",
+          "container_name": "quant_full_ml",
+          "image": "python:3.12-slim",
+          "ports": []
+        },
+        {
+          "container_key": "risk_manager",
+          "container_name": "quant_full_risk",
+          "image": "python:3.12-slim",
+          "ports": []
+        },
+        {
+          "container_key": "execution_engine",
+          "container_name": "quant_full_engine",
+          "image": "python:3.12-slim",
+          "ports": []
+        },
+        {
+          "container_key": "db",
+          "container_name": "quant_full_db",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5437,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "quant-lab-light",
+      "vm": "oci-apps",
+      "folder": "ac-fin_quant-lab-light",
+      "containers": [
+        {
+          "container_key": "research",
+          "container_name": "quant_light_research",
+          "image": "quay.io/jupyter/scipy-notebook:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.research.port",
+              "port": 8889,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "engine",
+          "container_name": "quant_light_engine",
+          "image": "python:3.12-slim",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.engine.port",
+              "port": 5001,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "quant_light_db",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5443,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "ollama",
+      "vm": "gcp-t4",
+      "folder": "ad-agi_ollama",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "ollama",
+          "image": "ollama/ollama:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 11434,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "ollama-arm",
+      "vm": "oci-apps-2",
+      "folder": "ad-agi_ollama-arm",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "ollama-arm",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 11434,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "ollama-hai",
+      "vm": "oci-apps",
+      "folder": "ad-agi_ollama-hai",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "ollama-hai",
+          "image": "ollama/ollama:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 11435,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "rig-agentic-hai-1.5bq4",
+      "vm": "oci-apps",
+      "folder": "ad-agi_rig-agentic-hai-1.5bq4",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "rig-agentic-hai",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8091,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "rig-agentic-sonn-14bq8",
+      "vm": "oci-apps",
+      "folder": "ad-agi_rig-agentic-sonn-14bq8",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "rig-agentic-sonn-14bq8",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8091,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "hickory-dns",
+      "vm": "gcp-proxy",
+      "folder": "ba-clo_hickory-dns",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "hickory-dns",
+          "image": "hickorydns/hickory-dns:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 53,
+              "protocol": "udp",
+              "reason": "port 53 is DNS (UDP primary)",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "authelia",
+      "vm": "gcp-proxy",
+      "folder": "bb-sec_authelia",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "authelia",
+          "image": "authelia/authelia:4.39.15",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 9091,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "redis",
+          "container_name": "authelia-redis",
+          "image": "redis:7-bookworm",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.redis.port",
+              "port": 6380,
+              "protocol": "tcp",
+              "reason": "image \"redis:7-bookworm\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "caddy",
+      "vm": "gcp-proxy",
+      "folder": "bb-sec_caddy",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "caddy",
+          "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 443,
+              "protocol": "https",
+              "reason": "port 443 is a well-known HTTPS port",
+              "review": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "introspect-proxy",
+      "vm": "gcp-proxy",
+      "folder": "bb-sec_introspect-proxy",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "introspect-proxy",
+          "image": "ghcr.io/diegonmarcos/introspect-proxy:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 4182,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "c3-infra-api",
+      "vm": "oci-apps",
+      "folder": "bc-obs_c3-infra-api",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "c3-infra-api",
+          "image": "ghcr.io/diegonmarcos/c3-infra-api:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8081,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "c3-infra-mcp",
+      "vm": "oci-apps",
+      "folder": "bc-obs_c3-infra-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "c3-infra-mcp",
+          "image": "ghcr.io/diegonmarcos/c3-infra-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3100,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "c3-services-api",
+      "vm": "oci-apps",
+      "folder": "bc-obs_c3-services-api",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "c3-services-api",
+          "image": "ghcr.io/diegonmarcos/c3-services-api:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8082,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "c3-services-mcp",
+      "vm": "oci-apps",
+      "folder": "bc-obs_c3-services-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "c3-services-mcp",
+          "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3101,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "cloud-cgc-mcp",
+      "vm": "oci-apps",
+      "folder": "bc-obs_cloud-cgc-mcp",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "cloud-cgc-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3105,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "cloud-spec",
+      "vm": "oci-apps",
+      "folder": "bc-obs_cloud-spec",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "cloud-spec",
+          "image": "busybox:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3080,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "dagu",
+      "vm": "oci-analytics",
+      "folder": "bc-obs_dagu",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "dagu",
+          "image": "ghcr.io/diegonmarcos/dagu:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8070,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "dbgate",
+      "vm": "oci-apps",
+      "folder": "bc-obs_dbgate",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "dbgate",
+          "image": "dbgate/dbgate:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8086,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "dozzle",
+      "vm": "oci-analytics",
+      "folder": "bc-obs_dozzle",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "dozzle",
+          "image": "amir20/dozzle:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 9999,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "fluent-bit",
+      "vm": "oci-analytics",
+      "folder": "bc-obs_fluent-bit",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "fluent-bit",
+          "image": "fluent/fluent-bit:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 2020,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "lgtm",
+      "vm": "oci-apps",
+      "folder": "bc-obs_lgtm",
+      "containers": [
+        {
+          "container_key": "grafana",
+          "container_name": "lgtm_grafana",
+          "image": "grafana/grafana:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.grafana.port",
+              "port": 3200,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "loki",
+          "container_name": "lgtm_loki",
+          "image": "grafana/loki:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.loki.port",
+              "port": 3110,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "tempo",
+          "container_name": "lgtm_tempo",
+          "image": "grafana/tempo:2.7.2",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.tempo.port",
+              "port": 3210,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "mimir",
+          "container_name": "lgtm_mimir",
+          "image": "grafana/mimir:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.mimir.port",
+              "port": 9009,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "matomo",
+      "vm": "oci-apps",
+      "folder": "bc-obs_matomo",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "matomo-hybrid",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8084,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "ntfy",
+      "vm": "oci-apps",
+      "folder": "bc-obs_ntfy",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "ntfy",
+          "image": "binwiederhier/ntfy",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8090,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "syslog-bridge",
+          "container_name": "syslog-bridge",
+          "image": "python:3.11-slim",
+          "ports": []
+        },
+        {
+          "container_key": "github-rss",
+          "container_name": "github-rss",
+          "image": "python:3.11-slim",
+          "ports": []
+        }
+      ]
+    },
+    {
+      "service": "umami",
+      "vm": "oci-apps",
+      "folder": "bc-obs_umami",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "umami",
+          "image": "ghcr.io/umami-software/umami:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3006,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "umami-db",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5442,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        },
+        {
+          "container_key": "setup",
+          "container_name": "umami-setup",
+          "image": "curlimages/curl:latest",
+          "ports": []
+        }
+      ]
+    },
+    {
+      "service": "windmill",
+      "vm": "oci-apps",
+      "folder": "bc-obs_windmill",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "windmill-server",
+          "image": "ghcr.io/windmill-labs/windmill:main",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8000,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        },
+        {
+          "container_key": "db",
+          "container_name": "windmill-db",
+          "image": "postgres:16-alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.db.port",
+              "port": 5440,
+              "protocol": "tcp",
+              "reason": "image \"postgres:16-alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        },
+        {
+          "container_key": "worker",
+          "container_name": "windmill-worker",
+          "image": "ghcr.io/windmill-labs/windmill:main",
+          "ports": []
+        }
+      ]
+    },
+    {
+      "service": "backup-borg",
+      "vm": "oci-apps",
+      "folder": "ca-dat_backup-borg",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "borg-server",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 2224,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "backup-bup",
+      "vm": "oci-apps",
+      "folder": "ca-dat_backup-bup",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "bup-server",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 2223,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "gitea",
+      "vm": "oci-apps",
+      "folder": "ca-dat_gitea",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "gitea",
+          "image": "gitea/gitea:latest",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 3002,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "kg-graph",
+      "vm": "oci-apps",
+      "folder": "ca-dat_kg-graph",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "surrealdb",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 8001,
+              "protocol": "http",
+              "reason": "no heuristic matched — defaulted to http (REVIEW)",
+              "review": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "service": "redis",
+      "vm": "gcp-proxy",
+      "folder": "ca-dat_redis",
+      "containers": [
+        {
+          "container_key": "app",
+          "container_name": "redis",
+          "image": "redis:alpine",
+          "ports": [
+            {
+              "location": "primary",
+              "location_path": "containers.app.port",
+              "port": 6379,
+              "protocol": "tcp",
+              "reason": "image \"redis:alpine\" matches DB regex",
+              "review": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
