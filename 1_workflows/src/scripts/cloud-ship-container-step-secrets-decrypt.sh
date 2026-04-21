@@ -17,25 +17,29 @@ step_secrets() {
     _secrets_json=$(sops -d --output-type json "$secrets_file")
 
     # Generate .secrets dotenv (newlines escaped for docker-compose env_file compatibility)
-    # Single-quote values containing $ so compose doesn't interpolate them
+    # Single-quote values containing $ so compose doesn't interpolate them.
+    # Top-level keys starting with "_" are metadata (e.g. _credentials with url/user/password
+    # companions for hashed secrets) — filtered out so they never reach the VM/container.
     echo "$_secrets_json" \
-      | jq -r 'to_entries[] | .value = (.value | tostring | gsub("\n"; "\\n")) |
+      | jq -r 'to_entries[] | select(.key | startswith("_") | not) |
+          .value = (.value | tostring | gsub("\n"; "\\n")) |
           if (.value | test("[$]"))
           then "\(.key)='"'"'\(.value)'"'"'"
           else "\(.key)=\(.value)"
           end' \
       > "$DIST_DIR/.secrets"
 
-    # Write each secret as individual file — jq extracts values directly, NO text parsing
+    # Write each secret as individual file — jq extracts values directly, NO text parsing.
+    # Same _-prefix filter: metadata never materialises as a file on the VM.
     mkdir -p "$DIST_DIR/.secrets.d"
-    for key in $(echo "$_secrets_json" | jq -r 'keys[]'); do
+    for key in $(echo "$_secrets_json" | jq -r 'keys[] | select(startswith("_") | not)'); do
         echo "$_secrets_json" | jq -r --arg k "$key" '.[$k] | tostring' > "$DIST_DIR/.secrets.d/$key"
     done
     unset _secrets_json
     log "Secrets split -> .secrets.d/ ($(ls "$DIST_DIR/.secrets.d" | wc -l) files)"
 
     # Extract JWKS key as PEM file (multi-line value can't go in env_file)
-    if [ -n "$JWKS_FILE" ] && [ -f "$SRC_DIR/$JWKS_FILE" ]; then
+    if [ -n "${JWKS_FILE:-}" ] && [ -f "$SRC_DIR/$JWKS_FILE" ]; then
         JWKS_DEST_PATH="${JWKS_DEST:-config/oidc_jwks.pem}"
         mkdir -p "$DIST_DIR/$(dirname "$JWKS_DEST_PATH")"
         sops -d --extract '["key"]' "$SRC_DIR/$JWKS_FILE" > "$DIST_DIR/$JWKS_DEST_PATH"
