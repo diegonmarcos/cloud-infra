@@ -24,7 +24,7 @@ step_secrets() {
     KEY_COUNT=0
     : > "$DIST_DIR/.secrets"
 
-    for key in $(printf '%s' "$DECRYPTED" | yq -r 'keys | .[] | select(. != "sops")'); do
+    for key in $(printf '%s' "$DECRYPTED" | yq -r 'keys | .[] | select(. != "sops" and (. | test("^_") | not))'); do
         val=$(printf '%s' "$DECRYPTED" | yq -r ".[\"$key\"]")
         # .secrets.d/KEY — raw file
         printf '%s\n' "$val" > "$DIST_DIR/.secrets.d/$key"
