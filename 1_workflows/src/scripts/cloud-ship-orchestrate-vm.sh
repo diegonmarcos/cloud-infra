@@ -15,7 +15,7 @@ cd "$REPO_ROOT"
 RUN_START=$(date +%s)
 TRACE_SERVICES="[]"
 
-GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
 if [ ! -f "$GHA_CONFIG" ]; then
   echo "ERROR: $GHA_CONFIG not found" >&2
   exit 1
@@ -107,7 +107,7 @@ echo "Ship → $VM: $OK ok, $FAIL failed, $SKIP skipped (of $TOTAL)"
 RUN_DUR=$(( $(date +%s) - RUN_START ))
 RUN_STATUS="success"; [ "$FAIL" -gt 0 ] && RUN_STATUS="failure"
 
-TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/I_cloud-data/reports/traces-gha}"
+TRACE_DIR="${TRACE_DIR:-$REPO_ROOT/2_configs/dist/reports/traces-gha}"
 mkdir -p "$TRACE_DIR"
 
 jq -n \

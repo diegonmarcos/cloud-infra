@@ -43,7 +43,7 @@ jobs:
         id: matrix
         run: |
           # Reuse the portable detect logic from ship.sh
-          GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
 
           # ── Resolve args from GHA inputs ──
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -120,7 +120,7 @@ jobs:
       - name: Resolve SSH credentials
         id: ssh
         run: |
-          GHA_CONFIG="I_cloud-data/cloud-data-gha-config.json"
+          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
           VM="${{ matrix.vm }}"
           case "$VM" in
             gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
