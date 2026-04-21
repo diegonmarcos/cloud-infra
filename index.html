@@ -125,7 +125,10 @@ async function loadPage(page, silent) {
   if (!silent) main.innerHTML = '<div class="loading">Loading ' + page.name + '...</div>';
 
   try {
-    const res = await fetch(page.file + '?t=' + Date.now());
+    // Markdown: append ?raw=1 so the server returns raw markdown
+    // (default response wraps it in an HTML render page).
+    const fetchUrl = page.file + (isReportPage ? '?raw=1&t=' : '?t=') + Date.now();
+    const res = await fetch(fetchUrl);
 
     if (isReportPage) {
       const md = await res.text();
@@ -142,7 +145,7 @@ async function loadPage(page, silent) {
       // Fallback to <pre> if the CDN libs failed to load.
       if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
         const div = document.createElement('div');
-        div.className = 'report-content markdown-body';
+        div.className = 'markdown-body';
         div.innerHTML = DOMPurify.sanitize(marked.parse(md));
         main.appendChild(div);
       } else {
