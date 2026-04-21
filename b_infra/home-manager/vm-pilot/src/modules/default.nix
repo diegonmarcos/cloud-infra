@@ -17,6 +17,9 @@ in {
     #    watchdog, rescue-ssh, scheduler, layer2-identity, dashboard, health-agent)
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
+  ] ++ lib.optionals (vmName != "oci-apps") [
+    ./protection/no-build-guard.nix        # WARNING: small VM — remind operators not to build
+    ./container/no-build-guardrails.nix    # WARNING: docker wrapper — warns on build/--build
   ] ++ [
     # ── Container (container orchestrator imports: daemon, tools)
     (import ./container/init.nix { inherit vmName; })
