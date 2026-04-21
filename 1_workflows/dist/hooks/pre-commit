@@ -16,6 +16,36 @@ STAGED=$(git diff --cached --name-only)
 
 BLOCKED=""
 
+# ── UNIVERSAL GITIGNORE-BYPASS DETECTOR ──────────────────
+# Catches ANY file staged despite a matching .gitignore rule (i.e.
+# force-staged via `git add -f`). Highest-value defence — gitignore
+# exists precisely to keep secrets out; `-f` is the common leak vector.
+# --no-index forces evaluation of gitignore rules as if unindexed
+# (git check-ignore otherwise silently skips files in the index).
+# Only fire for files NOT in HEAD (tracked-path edits are fine).
+FORCED=""
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  [ -e "$f" ] || continue
+  if git check-ignore --no-index -q -- "$f" 2>/dev/null \
+     && ! git cat-file -e "HEAD:$f" 2>/dev/null; then
+    FORCED="${FORCED}${f}"$'\n'
+  fi
+done <<< "$STAGED"
+
+if [ -n "$FORCED" ]; then
+  echo "══════════════════════════════════════════════════" >&2
+  echo "BLOCKED: gitignored files force-staged (git add -f)" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  echo "$FORCED" | sort -u | sed '/^$/d' | while IFS= read -r f; do
+    rule=$(git check-ignore --no-index -v -- "$f" 2>/dev/null | head -1)
+    echo "  - $f" >&2
+    [ -n "$rule" ] && echo "      matches: $rule" >&2
+  done
+  echo "NEVER use 'git add -f' / '--force' to override gitignore." >&2
+  exit 1
+fi
+
 add_blocked() {
   local matches
   matches=$(echo "$STAGED" | eval "$1" || true)
@@ -85,6 +115,58 @@ add_blocked "grep -E '(^|/)terraform\.tfvars$'"
 
 # P16: submodule directories — commits go to their own repos
 add_blocked "grep -E '^(cloud-data|tools)(/|$)'"
+
+# P17: dist layout v2 gitignored sub-dirs
+add_blocked "grep -E 'dist/(secrets|sensitive|\.build)/'"
+
+# ── CONTENT-SCAN: secret-named file MUST be sops-encrypted ─────────
+# Filename alone is insufficient — the 2026-04-17 stalwart leak was a
+# `secrets.yaml.new` with plaintext content committed to a public repo.
+# Right defense: if filename contains secret-like tokens, the content
+# MUST contain `ENC[AES` or `sops:` markers. Otherwise → BLOCK.
+# This ALLOWS secrets.yaml/.new/.draft/etc. — as long as sops-encrypted.
+LEAKY=""
+while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    [ -f "$f" ] || continue
+    echo "$f" | grep -iqE '(secret|credential|password|token|jwks|dkim|\.pem$|\.key$)' || continue
+    # sops-encrypted? (ENC[AES...] somewhere OR a sops footer with ENC[)
+    grep -q 'ENC\[AES' "$f" 2>/dev/null && continue
+    grep -q '^sops:' "$f" 2>/dev/null && grep -q 'ENC\[' "$f" 2>/dev/null && continue
+    # Allow-listed filename patterns (references/templates, not values)
+    case "$f" in
+        *.example|*.template|*.tpl|*.pub|*_PUB) continue ;;
+        */.secrets-hash*|*/.secrets-env-var-names*) continue ;;
+        *secrets-env-var-names*.json|*cloud-data-secrets-env-var-names.json) continue ;;
+        *secrets-subst.nix) continue ;;
+    esac
+    # Code files: only flag if contain obvious inline values
+    case "$f" in
+        *.sh|*.py|*.nix|*.ts|*.js|*.go|*.rs|*.md|*.json)
+            if grep -qiE '^[[:space:]]*(password|admin_password|private_key|api_key|secret)[[:space:]]*[:=][[:space:]]*[^{$_-]' "$f" 2>/dev/null; then
+                LEAKY="${LEAKY}${f} (code file with inline secret pattern)"$'\n'
+            fi
+            continue
+        ;;
+    esac
+    # YAML/TOML/etc. with secret-ish name and no sops markers → LEAK
+    LEAKY="${LEAKY}${f}"$'\n'
+done <<< "$STAGED"
+
+if [ -n "$LEAKY" ]; then
+  echo "══════════════════════════════════════════════════" >&2
+  echo "BLOCKED: secret-named file staged WITHOUT sops encryption" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  echo "$LEAKY" | sort -u | sed '/^$/d' | while IFS= read -r f; do
+    echo "  - $f" >&2
+  done
+  echo "" >&2
+  echo "The file matches (secret|credential|password|token|jwks|dkim|*.pem|*.key)." >&2
+  echo "It MUST be sops-encrypted (ENC[AES...]) before commit." >&2
+  echo "Fix: sops -e -i <file>   OR   git reset HEAD <file>" >&2
+  echo "══════════════════════════════════════════════════" >&2
+  exit 1
+fi
 
 # ── Deduplicate and check ────────────────────────────────
 BLOCKED=$(echo "$BLOCKED" | sort -u | sed '/^$/d')

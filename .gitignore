@@ -14,6 +14,10 @@
 **/.secrets
 .secrets.d/
 **/.secrets.d/
+## NOTE: secrets.yaml (+ .new / .draft / .bak variants) are ALLOWED
+## to be tracked — but ONLY when sops-encrypted. The pre-commit hook's
+## content-scan blocks any secret-named file lacking `ENC[AES...]` or
+## `sops:` markers. Fix workflow: sops -e -i secrets.yaml → commit OK.
 ## Environment files
 .env
 .env.*
