@@ -102,3 +102,29 @@ if [ -n "$BLOCKED" ]; then
   echo "══════════════════════════════════════════════════" >&2
   exit 1
 fi
+
+# ══════════════════════════════════════════════════════════
+# Regenerate 2_configs/dist/ if any engine input changed
+# Triggers on staged changes to: engine code, per-service build.json,
+# per-VM home-manager build.json, or root config.json.
+# Auto-stages any resulting diffs so dist/ stays in sync with src/.
+# Skip when already inside a regen commit (guard against hook re-entry).
+# ══════════════════════════════════════════════════════════
+if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
+   && echo "$STAGED" | grep -qE '^(2_configs/src/engines/|a_solutions/[^/]+/build\.json$|b_infra/home-manager/[^/]+/build\.json$|config\.json$)'; then
+  REPO_ROOT="$(git rev-parse --show-toplevel)"
+  BUILD_SH="$REPO_ROOT/2_configs/build.sh"
+  if [ -x "$BUILD_SH" ]; then
+    echo "[pre-commit] engine input staged — regenerating 2_configs/dist/"
+    if ! SKIP_CONFIGS_REGEN=1 "$BUILD_SH" all >/tmp/configs-regen.log 2>&1; then
+      echo "[pre-commit] 2_configs/build.sh failed — aborting commit. See /tmp/configs-regen.log" >&2
+      tail -20 /tmp/configs-regen.log >&2
+      exit 1
+    fi
+    # Auto-stage regenerated dist files (only if content actually changed)
+    if ! git diff --quiet -- 2_configs/dist/; then
+      git add 2_configs/dist/
+      echo "[pre-commit] 2_configs/dist/ updated + staged."
+    fi
+  fi
+fi
