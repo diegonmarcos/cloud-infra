@@ -64,7 +64,15 @@ step_build() {
         fi
     fi
 
-    if { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
+    # v2 engine flake reads 2_configs/dist/ directly; skip src/ injection
+    IS_V2_ENGINE_PRE="false"
+    if [ -f "$SRC_DIR/flake.nix" ] && grep -q '_shared/engine.nix' "$SRC_DIR/flake.nix"; then
+        IS_V2_ENGINE_PRE="true"
+    fi
+
+    if [ "$IS_V2_ENGINE_PRE" = "true" ]; then
+        log "v2 engine flake — cloud-data accessed via 2_configs/dist, no src/ resolve needed"
+    elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         # Resolve every external *.json symlink to a real file
         for f in "$SRC_DIR"/*.json; do
             [ -L "$f" ] || continue
@@ -75,7 +83,7 @@ step_build() {
             [ -f "$target" ] || continue
             rm "$f"
             cp "$target" "$f"
-            git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
+            git -C "$SERVICE_DIR/../.." add "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
             CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
         done
         # include_cloud_data=true: also copy every 2_configs/dist/*.json into src/ (for services
@@ -87,7 +95,7 @@ step_build() {
                 TARGET="$SRC_DIR/$BASENAME"
                 [ -L "$TARGET" ] && continue  # already handled above
                 cp "$f" "$TARGET"
-                git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
+                git -C "$SERVICE_DIR/../.." add "$(realpath --relative-to="$SERVICE_DIR/../.." "$TARGET")" 2>/dev/null || true
                 CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $TARGET"
             done
         fi
@@ -99,7 +107,7 @@ step_build() {
     # build.json: src/build.json is a symlink to ../build.json (root is source of truth)
     if [ -f "$SERVICE_DIR/build.json" ] && [ ! -L "$SRC_DIR/build.json" ]; then
         ln -sf ../build.json "$SRC_DIR/build.json"
-        git -C "$SERVICE_DIR/../.." add -f "$(realpath --relative-to="$SERVICE_DIR/../.." "$SRC_DIR/build.json")" 2>/dev/null || true
+        git -C "$SERVICE_DIR/../.." add "$(realpath --relative-to="$SERVICE_DIR/../.." "$SRC_DIR/build.json")" 2>/dev/null || true
         log "Created build.json symlink in src/"
     fi
 
@@ -151,8 +159,17 @@ step_build() {
         done
     fi
 
+    # v2 layout: flake reads 2_configs/dist directly via builtins.readDir;
+    # NO duplication into dist/. Legacy v1 flat-dump retained for v1 services.
+    IS_V2_ENGINE="false"
+    if [ -f "$SRC_DIR/flake.nix" ] && grep -q '_shared/engine.nix' "$SRC_DIR/flake.nix"; then
+        IS_V2_ENGINE="true"
+        log "v2 engine flake detected — skipping cloud-data injection into dist/"
+    fi
+
     # Include 2_configs/dist/ files in dist/ for runtime use (e.g. C3 API needs topology)
-    if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
+    # Legacy v1 behaviour only; v2 engine handles its own layout.
+    if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ "$IS_V2_ENGINE" = "false" ]; then
         CLOUD_DATA_DIR="$SERVICE_DIR/../../2_configs/dist"
         FRONT_DATA_DIR="$SERVICE_DIR/../../front-data"
         REPO_ROOT="$SERVICE_DIR/../.."

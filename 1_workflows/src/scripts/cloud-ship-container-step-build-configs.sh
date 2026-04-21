@@ -4,7 +4,7 @@
 step_configs_push() {
     CURRENT_STEP="configs-push"
     [ ! -d "$DIST_DIR" ] && { log "No dist/ — skipping configs push"; return 0; }
-    [ ! -f "$DIST_DIR/docker-compose.yml" ] && { log "No docker-compose.yml — skipping configs push"; return 0; }
+    [ ! -f "$COMPOSE_FILE" ] && { log "No compose file ($COMPOSE_FILE) — skipping configs push"; return 0; }
 
     CONFIGS_IMAGE="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}/${SERVICE_NAME}-configs:latest"
 
