@@ -81,7 +81,7 @@ gcloud compute ssh arch-1 --zone=us-central1-a
 
 **Credentials:**
 - User: `me@diegonmarcos.com`
-- Token: `<REDACTED-LEAK-2026-04-21>`
+- Token: `REDACTED_STALWART_ADMIN_PW`
 
 ---
 
