@@ -12,9 +12,31 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENGINES="$SCRIPT_DIR/src/engines"
+BUILDS="$SCRIPT_DIR/src/builds"
 DIST="$SCRIPT_DIR/dist"
+CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
+
+# Mirror every a_solutions/<folder>/build.json as
+# 2_configs/src/builds/build-<folder>.json (symlink). Declarative index —
+# one place to list every service's raw build.json.
+link_builds() {
+    mkdir -p "$BUILDS"
+    # Drop stale build-*.json symlinks first
+    command find "$BUILDS" -maxdepth 1 -name 'build-*.json' -type l -delete 2>/dev/null
+    count=0
+    for svc in "$SOLUTIONS_DIR"/*/; do
+        [ -d "$svc" ] || continue
+        folder=$(basename "$svc")
+        bj="$svc/build.json"
+        [ -f "$bj" ] || [ -L "$bj" ] || continue
+        ln -s "../../../a_solutions/$folder/build.json" "$BUILDS/build-$folder.json"
+        count=$((count + 1))
+    done
+    log "Linked $count a_solutions/*/build.json → src/builds/build-{folder}.json"
+}
 
 consolidate() {
     mkdir -p "$DIST"
@@ -46,11 +68,12 @@ clean() {
 }
 
 case "${1:-all}" in
+    link-builds) link_builds ;;
     consolidate) consolidate ;;
     derive)      derive ;;
     test)        run_tests ;;
     clean)       clean ;;
-    all)         consolidate; derive ;;
-    ship)        consolidate; derive; run_tests ;;
-    *)           echo "Usage: $0 [all|consolidate|derive|test|clean|ship]"; exit 1 ;;
+    all)         link_builds; consolidate; derive ;;
+    ship)        link_builds; consolidate; derive; run_tests ;;
+    *)           echo "Usage: $0 [all|link-builds|consolidate|derive|test|clean|ship]"; exit 1 ;;
 esac
