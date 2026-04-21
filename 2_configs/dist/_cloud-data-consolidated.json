@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-21T10:21:22.980Z",
+    "generated_at": "2026-04-21T18:06:09.403Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -348,6 +348,11 @@
       "ssh_alias": "gcp-proxy",
       "rescue_port": 2200,
       "public_ports": [
+        {
+          "port": 22,
+          "proto": "tcp",
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+        },
         {
           "port": 80,
           "proto": "tcp",
@@ -5569,7 +5574,8 @@
             "app"
           ],
           "resources": null,
-          "read_only": false
+          "read_only": false,
+          "init_job": true
         }
       },
       "container_names": [
@@ -6242,6 +6248,11 @@
         }
       ],
       "gcp-proxy": [
+        {
+          "port": 22,
+          "proto": "tcp",
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+        },
         {
           "port": 80,
           "proto": "tcp",
@@ -7457,6 +7468,11 @@
           "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
         },
         "public_ports": [
+          {
+            "port": 22,
+            "proto": "tcp",
+            "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+          },
           {
             "port": 80,
             "proto": "tcp",

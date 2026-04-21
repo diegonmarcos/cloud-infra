@@ -60,6 +60,13 @@ jobs:
         run: bash 1_workflows/src/test/test_cloud_builder_ssh_safety.sh
       - name: Phase 6 — ship.yml passes WG_PRIVATE_KEY
         run: bash 1_workflows/src/test/test_ship_wireguard_secret.sh
+      - name: Phase 8 — GHCR packages public (report-only)
+        # Private packages block ship ("write_package denied") but the
+        # flip is a GitHub-UI action, not a repo change. Report only.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash 1_workflows/src/test/test_ghcr_visibility.sh
 
   build:
     needs: preflight-symlinks
