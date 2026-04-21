@@ -17,13 +17,8 @@ in {
     #    watchdog, rescue-ssh, scheduler, layer2-identity, dashboard, health-agent)
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
-  ] ++ lib.optionals (vmName != "oci-apps") [
-    ./protection/no-build-guard.nix        # oci-apps (ARM 24GB) can build — all others are E2 Micro
-    ./container/no-build-guardrails.nix    # docker wrapper: block --build on small VMs
   ] ++ [
-    # ./protection/guardrails.nix  # DISABLED — POSIX sh two-word subcommand bug
-
-    # ── Container (container orchestrator imports: daemon, tools, no-build-guardrails)
+    # ── Container (container orchestrator imports: daemon, tools)
     (import ./container/init.nix { inherit vmName; })
     ./container/container.nix
 
