@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ post-merge — rebase submodules after pull/merge                  ║
+# ║                                                                  ║
+# ║ Source: cloud/1_workflows/src/hooks/post-merge                   ║
+# ║ Active via [core] hooksPath = 1_workflows/dist/hooks             ║
+# ║                                                                  ║
+# ║ Fires after `git pull` and `git merge`. Pulls each submodule     ║
+# ║ worktree onto its upstream HEAD (rebased) so local submodule     ║
+# ║ contents always reflect upstream immediately after a pull.       ║
+# ║ Non-blocking: never fails the merge result.                      ║
+# ╚══════════════════════════════════════════════════════════════════╝
+set -uo pipefail
+
+[ -f .gitmodules ] || exit 0
+
+echo "[post-merge] rebasing submodules onto upstream HEAD..."
+git submodule update --init --recursive --remote --rebase \
+  || echo "[post-merge] submodule rebase reported errors (non-blocking)." >&2
+exit 0
