@@ -1,43 +1,28 @@
 #!/bin/sh
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ cloud/3_secrets — aggregated secrets index                      ║
-# ║                                                                  ║
-# ║ Symlinks every a_solutions/<folder>/src/secrets.yaml as         ║
-# ║   <folder>-secrets.yaml                                         ║
-# ║ Single-pane view of every sops-encrypted service secret.       ║
-# ║                                                                  ║
-# ║ Usage: ./build.sh [link|clean]                                  ║
+# ║ cloud/3_secrets — aggregated secrets engine                      ║
+# ║                                                                   ║
+# ║ sync:    collect every a_solutions/*/src/secrets*.yaml            ║
+# ║          + b_infra/**/secrets*.yaml → src/builds/                 ║
+# ║ decrypt: sops -d src/builds/*.yaml → dist/*.secrets +             ║
+# ║          dist/*.json.secrets + dist/cloud-secrets.json.secrets    ║
+# ║ all:     sync + decrypt                                            ║
+# ║                                                                   ║
+# ║ Usage: ./build.sh [all|sync|decrypt|clean]                        ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
+ENGINE="$SCRIPT_DIR/src/engines/secrets.sh"
+DIST="$SCRIPT_DIR/dist"
+BUILDS="$SCRIPT_DIR/src/builds"
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
-link_secrets() {
-    # Drop stale <folder>-secrets.yaml symlinks
-    command find "$SCRIPT_DIR" -maxdepth 1 -name '*-secrets.yaml' -type l -delete 2>/dev/null
-    count=0
-    for svc in "$SOLUTIONS_DIR"/*/; do
-        [ -d "$svc" ] || continue
-        folder=$(basename "$svc")
-        sec="$svc/src/secrets.yaml"
-        [ -f "$sec" ] || continue
-        ln -s "../a_solutions/$folder/src/secrets.yaml" "$SCRIPT_DIR/$folder-secrets.yaml"
-        count=$((count + 1))
-    done
-    log "Linked $count secrets.yaml → $SCRIPT_DIR/{folder}-secrets.yaml"
-}
-
-clean() {
-    command find "$SCRIPT_DIR" -maxdepth 1 -name '*-secrets.yaml' -type l -delete
-    log "Cleaned $SCRIPT_DIR/*-secrets.yaml symlinks"
-}
-
-case "${1:-link}" in
-    link)  link_secrets ;;
-    clean) clean ;;
-    *)     echo "Usage: $0 [link|clean]"; exit 1 ;;
+case "${1:-all}" in
+    sync)    "$ENGINE" sync "${2:-}" ;;
+    decrypt) "$ENGINE" decrypt ;;
+    all|ship)"$ENGINE" all "${2:-}" ;;
+    clean)   rm -rf "$DIST"/* "$BUILDS"/*.yaml; log "Cleaned dist/ and src/builds/" ;;
+    *)       echo "Usage: $0 [all|sync|decrypt|clean]"; exit 1 ;;
 esac

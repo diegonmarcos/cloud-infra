@@ -1,0 +1,12 @@
+{
+  "name": "3_secrets",
+  "description": "Aggregated secrets engine: syncs every a_solutions/*/src/secrets*.yaml into src/builds/, sops-decrypts them into dist/*.secrets (env) + *.json.secrets (JSON) + cloud-secrets.json.secrets (consolidated). Moved from cloud-data/secrets/.",
+  "build": {
+    "type": "script-only",
+    "entry": "build.sh"
+  },
+  "deploy": {
+    "host": "local",
+    "note": "dist/ holds decrypted secrets — NEVER commit, gitignored."
+  }
+}
