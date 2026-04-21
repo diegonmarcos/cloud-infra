@@ -3,9 +3,17 @@
 
 step_docs() {
     CURRENT_STEP="docs"
-    log "Building documentation..."
     cd "$SRC_DIR"
 
+    # Skip gracefully if flake doesn't expose a `docs` output (v2 services
+    # typically omit mdBook generation — optional).
+    if ! nix eval --impure ".#docs.drvPath" >/dev/null 2>&1 \
+       && ! nix eval --impure ".#packages.x86_64-linux.docs.drvPath" >/dev/null 2>&1; then
+        log "No .docs output in flake — skipping docs step (optional)"
+        return 0
+    fi
+
+    log "Building documentation..."
     DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
     if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
         nix develop "$DEPS_FLAKE#" --command bash -c "cd '$SRC_DIR' && nix build --option eval-cache false .#docs --out-link '$SERVICE_DIR/.result-docs'"

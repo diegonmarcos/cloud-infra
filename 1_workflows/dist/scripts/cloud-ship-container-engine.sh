@@ -107,6 +107,26 @@ if [ -n "${CLOUD_PROFILE:-}" ]; then
     fi
 fi
 
+# ── Layout version detection (v1 flat vs v2 categorised) ─────────────
+# v2: dist/manifest.json._meta.layout_version == 2 → compose at dist/compose/
+# v1: legacy flat layout → compose at dist/docker-compose.yml
+LAYOUT_V2=0
+COMPOSE_FILE="$DIST_DIR/docker-compose.yml"
+REMOTE_COMPOSE_REL="docker-compose.yml"
+if [ -f "$DIST_DIR/manifest.json" ] && command -v jq >/dev/null 2>&1; then
+    # v1 manifest is an array; ._meta on array would crash under set -e.
+    # Guard: only query _meta when manifest.json is a JSON object.
+    if jq -e 'type == "object"' "$DIST_DIR/manifest.json" >/dev/null 2>&1; then
+        LV=$(jq -r '._meta.layout_version // 1' "$DIST_DIR/manifest.json" 2>/dev/null || echo 1)
+        if [ "$LV" = "2" ]; then
+            LAYOUT_V2=1
+            COMPOSE_FILE="$DIST_DIR/compose/docker-compose.yml"
+            REMOTE_COMPOSE_REL="compose/docker-compose.yml"
+        fi
+    fi
+fi
+export LAYOUT_V2 COMPOSE_FILE REMOTE_COMPOSE_REL
+
 # SSH multiplexing: one connection reused across all steps, kept alive 120s
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 

@@ -6,7 +6,7 @@
 step_compose_build() {
     CURRENT_STEP="compose-build"
     [ ! -d "$DIST_DIR" ] && { log "No dist/ -- run build first"; return 1; }
-    [ ! -f "$DIST_DIR/docker-compose.yml" ] && { log "No docker-compose.yml in dist/"; return 1; }
+    [ ! -f "$COMPOSE_FILE" ] && { log "No compose file ($COMPOSE_FILE)"; return 1; }
 
     # Docker CLI required (installed in cloud-builder image)
     if ! command -v docker >/dev/null 2>&1; then
@@ -15,7 +15,7 @@ step_compose_build() {
     fi
 
     # Check if docker-compose.yml has any build: sections
-    if ! grep -q 'dockerfile_inline:' "$DIST_DIR/docker-compose.yml" 2>/dev/null; then
+    if ! grep -q 'dockerfile_inline:' "$COMPOSE_FILE" 2>/dev/null; then
         log "No dockerfile_inline in docker-compose.yml -- skipping compose-build"
         return 0
     fi
@@ -40,10 +40,10 @@ step_compose_build() {
     log "compose-build platform: $PLATFORM (from docker.arch)"
     # Build + push all services with build: sections (verbose output)
     log "── dockerfile_inline content ──"
-    grep -A20 'dockerfile_inline:' "$DIST_DIR/docker-compose.yml" || true
+    grep -A20 'dockerfile_inline:' "$COMPOSE_FILE" || true
     log "── docker compose build --push ──"
     COMPOSE_BUILD_OK=""
-    if DOCKER_BUILDKIT=1 docker compose -f "$DIST_DIR/docker-compose.yml" build --no-cache --push 2>&1 | while IFS= read -r line; do
+    if DOCKER_BUILDKIT=1 docker compose -f "$COMPOSE_FILE" build --no-cache --push 2>&1 | while IFS= read -r line; do
         printf "[compose-build] %s\n" "$line"
     done; then
         COMPOSE_BUILD_OK=true
@@ -61,7 +61,7 @@ step_compose_build() {
 
     # Verify all pushed packages are public (CRITICAL)
     if command -v gh >/dev/null 2>&1; then
-        grep -o 'ghcr.io/diegonmarcos/[^:]*' "$DIST_DIR/docker-compose.yml" 2>/dev/null | sort -u | while read -r img; do
+        grep -o 'ghcr.io/diegonmarcos/[^:]*' "$COMPOSE_FILE" 2>/dev/null | sort -u | while read -r img; do
             PKG_NAME=$(echo "$img" | awk -F/ '{print $NF}')
             PKG_VIS=$(gh api "/user/packages/container/${PKG_NAME}" --jq '.visibility' 2>/dev/null || echo "unknown")
             if [ "$PKG_VIS" = "private" ]; then

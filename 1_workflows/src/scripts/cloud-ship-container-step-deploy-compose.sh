@@ -19,7 +19,7 @@ step_compose() {
 
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then
-        if ssh $SSH_OPTS "$DEPLOY_HOST" "grep -q 'entrypoint.*$COMPOSE_PRE_HOOK' $DEPLOY_PATH/docker-compose.yml 2>/dev/null"; then
+        if ssh $SSH_OPTS "$DEPLOY_HOST" "grep -q 'entrypoint.*$COMPOSE_PRE_HOOK' $DEPLOY_PATH/$REMOTE_COMPOSE_REL 2>/dev/null"; then
             log "Skipping pre_hook '$COMPOSE_PRE_HOOK' — container entrypoint"
         else
             log "Running pre-hook: $COMPOSE_PRE_HOOK"
@@ -56,9 +56,11 @@ fi
 ENV_FILE_FLAG=""
 [ -f .secrets ] && ENV_FILE_FLAG="--env-file .secrets"
 COMPOSE_HEADER
-            [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
-            echo 'docker compose $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
-            echo "docker compose \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            # v2: compose at compose/ subdir; force project-dir=CWD for env_file/volumes resolution
+            echo "COMPOSE_FILE_FLAG='-f $REMOTE_COMPOSE_REL --project-directory .'"
+            [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
+            echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
+            echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         } > "$TMP_SCRIPT"
         chmod +x "$TMP_SCRIPT"
 
@@ -70,11 +72,12 @@ COMPOSE_HEADER
     else
         # ── Standard: direct docker compose up ──
         ENV_FILE_FLAG="\$([ -f .secrets ] && echo '--env-file .secrets')"
-        log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH"
+        CF="-f $REMOTE_COMPOSE_REL --project-directory ."
+        log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH (compose=$REMOTE_COMPOSE_REL)"
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose \$ENV_FILE_FLAG pull --quiet && docker compose \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
     fi
 
