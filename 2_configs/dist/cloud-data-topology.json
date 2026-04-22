@@ -22,6 +22,7 @@
         "host_literal": true
       },
       "containers": [
+        "mail-puller",
         "snappymail",
         "maddy",
         "smtp-proxy",
@@ -279,14 +280,14 @@
         "vast-RTX-p_0"
       ],
       "description": "On-demand GPU rental for LLM fallback when GCP spot is unavailable",
-      "has_terraform": false
+      "has_terraform": true
     },
     "hetzner": {
       "has_terraform": true,
       "folder": "c_vps/vps_hetzner"
     },
     "nvidia-llm-api": {
-      "has_terraform": false,
+      "has_terraform": true,
       "folder": "c_vps/vps_nvidia-llm-api"
     },
     "resend": {
@@ -1694,6 +1695,74 @@
       },
       "declared_ports": {
         "app": 3103
+      }
+    },
+    "mail-puller": {
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "folder": "aa-sui_mail-puller",
+      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "domain": "mail-puller.diegonmarcos.com",
+      "dns": "mail-puller.app",
+      "containers": {
+        "app": {
+          "container_name": "mail-puller",
+          "image": "ghcr.io/diegonmarcos/mail-puller-binaries:latest",
+          "port": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "volumes": [
+            "mail_puller_state:/var/lib/mail-puller"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "128M"
+            },
+            "reservations": {
+              "memory": "16M"
+            }
+          },
+          "read_only": false,
+          "embedded_dbs": [
+            {
+              "engine": "sqlite",
+              "path": "/var/lib/mail-puller/state.db"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "mail-puller"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": null,
+        "app_hub": false,
+        "mail_hub": false
+      },
+      "declared_ports": {
+        "app": null
+      },
+      "health": {
+        "path": null
+      },
+      "monitoring": {
+        "container_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mail_puller_state"
+        ]
       }
     },
     "mattermost-bots": {
@@ -4720,9 +4789,7 @@
       "all_ports": [],
       "all_dns": [],
       "compose": {
-        "containers": [
-          "cloud-builder-x-cloud-builder-1"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-22T13:02:12.706Z",
+    "generated_at": "2026-04-22T17:43:16.410Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -122,12 +122,13 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
       "services": [
+        "mail-puller",
         "snappymail",
         "maddy",
         "smtp-proxy",
         "stalwart"
       ],
-      "container_count": 5
+      "container_count": 6
     },
     "oci-E2-f_1": {
       "ip": "129.151.228.66",
@@ -492,14 +493,14 @@
         "vast-RTX-p_0"
       ],
       "description": "On-demand GPU rental for LLM fallback when GCP spot is unavailable",
-      "has_terraform": false
+      "has_terraform": true
     },
     "hetzner": {
       "has_terraform": true,
       "folder": "c_vps/vps_hetzner"
     },
     "nvidia-llm-api": {
-      "has_terraform": false,
+      "has_terraform": true,
       "folder": "c_vps/vps_nvidia-llm-api"
     },
     "resend": {
@@ -1402,6 +1403,93 @@
         "STALWART_ME_PASSWORD",
         "MADDY_NOREPLY_USER",
         "MADDY_NOREPLY_PASSWORD"
+      ]
+    },
+    "mail-puller": {
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "folder": "aa-sui_mail-puller",
+      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "enabled": true,
+      "domain": "mail-puller.diegonmarcos.com",
+      "dns": "mail-puller.app",
+      "containers": {
+        "app": {
+          "container_name": "mail-puller",
+          "image": "ghcr.io/diegonmarcos/mail-puller-binaries:latest",
+          "port": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "volumes": [
+            "mail_puller_state:/var/lib/mail-puller"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "128M"
+            },
+            "reservations": {
+              "memory": "16M"
+            }
+          },
+          "read_only": false,
+          "embedded_dbs": [
+            {
+              "engine": "sqlite",
+              "path": "/var/lib/mail-puller/state.db"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "mail-puller"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": null,
+        "app_hub": false,
+        "mail_hub": false
+      },
+      "declared_ports": {
+        "app": null
+      },
+      "health": {
+        "path": null
+      },
+      "monitoring": {
+        "container_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mail_puller_state"
+        ]
+      },
+      "upstream_image": "debian:bookworm-slim",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "secret_env_vars": [
+        "GMAIL_CLIENT_ID",
+        "GMAIL_CLIENT_SECRET",
+        "GMAIL_REFRESH_TOKEN",
+        "OUTLOOK_CLIENT_ID",
+        "OUTLOOK_CLIENT_SECRET",
+        "OUTLOOK_REFRESH_TOKEN",
+        "LOCAL_DELIVERY_USER",
+        "LOCAL_DELIVERY_PASSWORD"
       ]
     },
     "mattermost-bots": {
@@ -5321,9 +5409,7 @@
       "all_ports": [],
       "all_dns": [],
       "compose": {
-        "containers": [
-          "cloud-builder-x-cloud-builder-1"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -6477,6 +6563,7 @@
         ],
         "idle_shutdown": null,
         "containers": [
+          "mail-puller",
           "snappymail",
           "maddy",
           "smtp-proxy",
@@ -6959,6 +7046,11 @@
       "mail-mcp": {
         "dir": "aa-sui_mail-mcp",
         "vm": "oci-apps",
+        "has_docker": true
+      },
+      "mail-puller": {
+        "dir": "aa-sui_mail-puller",
+        "vm": "oci-mail",
         "has_docker": true
       },
       "mattermost-bots": {

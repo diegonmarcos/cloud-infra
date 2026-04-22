@@ -17,7 +17,14 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-FLAKE="$REPO_ROOT/a_solutions/aa-sui_mattermost-bots/src/flake.nix"
+SVC_DIR="$REPO_ROOT/a_solutions/aa-sui_mattermost-bots"
+FLAKE="$SVC_DIR/src/flake.nix"
+# Image declaration now lives in auto-generated build-mattermost.json (derived
+# from cloud-data-consolidated); flake.nix just readFile's it. Assert on the
+# full set of source files that could carry the image reference.
+# -L follows symlinks (build-*.json files are symlinks to ../../../2_configs/dist/)
+SEARCH_FILES=$(find -L "$SVC_DIR/src" -maxdepth 2 -type f \
+    \( -name 'flake.nix' -o -name 'build-*.json' -o -name 'build.json' -o -name 'compose.nix' \) 2>/dev/null)
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -25,26 +32,26 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
 echo "── mattermost-bots base image ──"
 
-if [ ! -f "$FLAKE" ]; then
-    fail "flake.nix not found at $FLAKE"
+if [ -z "$SEARCH_FILES" ]; then
+    fail "no flake.nix / build-*.json found under $SVC_DIR/src"
 else
     # The forbidden fork tag — ngrie/mattermost-team-edition-arm only publishes
-    # amd64. Match executable code only (skip '#'-comment lines so the swap
-    # note in flake.nix explaining WHY we switched doesn't trip the test).
-    if grep -nE 'ngrie/mattermost-team-edition-arm' "$FLAKE" \
-        | grep -vE '^\s*[0-9]+:\s*#' \
+    # amd64. Match executable code only (skip '#'- and '//'-comment lines so the
+    # swap note explaining WHY we switched doesn't trip the test).
+    if grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES 2>/dev/null \
+        | grep -vE ':\s*(#|//)' \
         | grep -q .; then
-        fail "flake.nix still references ngrie/mattermost-team-edition-arm (amd64-only, breaks oci-apps):"
-        grep -nE 'ngrie/mattermost-team-edition-arm' "$FLAKE" \
-            | grep -vE '^\s*[0-9]+:\s*#' >&2 || true
+        fail "source still references ngrie/mattermost-team-edition-arm (amd64-only, breaks oci-apps):"
+        grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES \
+            | grep -vE ':\s*(#|//)' >&2 || true
     else
-        pass "flake.nix does not reference the ngrie fork in code"
+        pass "no reference to ngrie fork in code"
     fi
 
-    if grep -qE 'mattermost/mattermost-team-edition:[0-9]' "$FLAKE"; then
-        pass "flake.nix uses upstream multi-arch mattermost/mattermost-team-edition"
+    if grep -qE 'mattermost/mattermost-team-edition:[0-9]' $SEARCH_FILES; then
+        pass "source declares upstream multi-arch mattermost/mattermost-team-edition"
     else
-        fail "flake.nix does not reference upstream mattermost/mattermost-team-edition — cannot guarantee multi-arch"
+        fail "source does not reference upstream mattermost/mattermost-team-edition — cannot guarantee multi-arch"
     fi
 fi
 

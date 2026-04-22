@@ -18,7 +18,7 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-GHA_CONFIG="$REPO_ROOT/I_cloud-data/cloud-data-gha-config.json"
+GHA_CONFIG="$REPO_ROOT/2_configs/dist/cloud-data-gha-config.json"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -27,7 +27,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 echo "── Any VM with wg_ip requires ship.yml to pass WG_PRIVATE_KEY ──"
 
 if [ ! -f "$GHA_CONFIG" ]; then
-    echo "  (I_cloud-data not present — nothing to assert)"
+    echo "  (2_configs/dist not present — nothing to assert)"
     exit 0
 fi
 

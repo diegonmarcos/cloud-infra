@@ -27,7 +27,7 @@ echo "ok" > README.md && git add README.md && git commit -qm seed
 # Case 1: plaintext secrets.yaml.new (the actual leak)
 cat > secrets.yaml.new <<'EOF'
 # Stalwart Mail Server Secrets
-ADMIN_PASSWORD: <REDACTED-LEAK-2026-04-21>
+ADMIN_PASSWORD: x1NdureaBojGCVvkGuCKv1EDOn9JUham
 DKIM_PRIVATE_KEY_B64: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t
 EOF
 git add secrets.yaml.new

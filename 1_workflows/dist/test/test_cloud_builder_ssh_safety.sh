@@ -65,7 +65,7 @@ echo ""
 echo "── 3: entrypoint.sh copies /mnt/host-ssh/* → /root/.ssh with chown ──"
 
 if grep -qE '/mnt/host-ssh' "$ENTRYPOINT" \
-   && grep -qE 'chown root:root .*ssh' "$ENTRYPOINT"; then
+   && grep -qiE 'chown root:root .*(ssh|SSH_DIR)' "$ENTRYPOINT"; then
     pass "entrypoint copies from /mnt/host-ssh and re-owns to root"
 else
     fail "entrypoint does not copy /mnt/host-ssh → /root/.ssh with chown"
@@ -74,7 +74,7 @@ fi
 echo ""
 echo "── 4: entrypoint.sh always chmod 700 /root/.ssh ──"
 
-if grep -qE 'chmod 700 /root/\.ssh|chmod 700 \$\{?HOME\}?/\.ssh|chmod 700 ~/\.ssh' "$ENTRYPOINT"; then
+if grep -qE 'chmod 700 /root/\.ssh|chmod 700 \$\{?HOME\}?/\.ssh|chmod 700 ~/\.ssh|chmod 700 "\$SSH_DIR"' "$ENTRYPOINT"; then
     pass "entrypoint enforces chmod 700 on /root/.ssh"
 else
     fail "entrypoint does not chmod 700 /root/.ssh — SSH will reject loose dir perms"

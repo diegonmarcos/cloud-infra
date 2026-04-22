@@ -7,8 +7,8 @@ set -uo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-TOPO="I_cloud-data/cloud-data-topology.json"
-ROUTES="I_cloud-data/build-caddy.json"
+TOPO="2_configs/dist/cloud-data-topology.json"
+ROUTES="2_configs/dist/build-caddy.json"
 [ ! -f "$TOPO" ] && echo "ERROR: $TOPO not found" >&2 && exit 1
 
 PASS=0; FAIL=0; WARN=0; TOTAL=0
