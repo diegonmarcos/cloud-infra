@@ -38,6 +38,8 @@
 | A2.2 | **Maddy ports not listening on WG 10.0.0.3**: 993/465/587/4190/8443/22000 | Iptables or Maddy bind addresses — `10.0.0.0/24` blocked |
 | A2.3 | **Hickory DNS 10.0.0.1 not answering** A-queries | Restart hickory on gcp-proxy; check route for internal zone |
 | A2.4 | **mail-mcp SMTP_NO_AUTH** | Set `SMTP_USERNAME`/`SMTP_PASSWORD` in mail-mcp secrets |
+| A2.5 | **Disk defense — desktop (Surface)** ✅ DONE 2026-04-22 | Declarative module shipped. `cloud-data-disk-protection.json` (cloud-data), `configuration_system-protection-disk.nix` (unix/aa_nixos-surface_host), `build.sh sync_cloud_data` wiring, NixOS switch applied. `disk-watchdog-v2.timer` + `disk-housekeeping-weekly.timer` active. systemd-tmpfiles rules + journald caps live. tmpfs reclaimed 92%→70%. |
+| A2.6 | **Disk defense — VMs (P2 follow-up)** | `cloud/b_infra/home-manager/_shared/modules/system-protection-watchdog-petter-dropbear-health-agent.nix` has an existing `disk-watchdog.sh` but thresholds are hardcoded (not reading `cloud-data-disk-protection.json`). The *existing* module is a known-working shape; refactor to data-driven + re-ship to 4 VMs is a separate change. A3.4 failure-to-start is likely a deploy gap — recheck after `cd cloud/b_infra/home-manager && ./build.sh ship`. |
 
 ### A3. Security
 | # | Issue | Detail |
