@@ -1,0 +1,14 @@
+{
+  "_comment": "Declarative arch → builder runner mapping. Consumed by 1_workflows/src/scripts/cloud-ship-container-step-build-docker.sh and cloud-ship-ci-builder-dispatch.sh. amd64 = local GHA/host. arm64 = remote ssh runner on oci-apps (cloud-builder-x image).",
+  "_source": "cloud-data/cloud-data-runners.json (static, hand-edited)",
+  "runners": {
+    "amd64": {
+      "type": "local"
+    },
+    "arm64": {
+      "type": "ssh",
+      "host": "oci-apps",
+      "builder_image": "ghcr.io/diegonmarcos/cloud-builder-x:latest"
+    }
+  }
+}
