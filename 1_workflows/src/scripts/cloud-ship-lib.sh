@@ -1,28 +1,6 @@
 # cloud-ship-lib.sh — Shared library for cloud-ship scripts
 # Sourced, not executed directly. No shebang.
 
-# ── Ensure jq (and the rest of the HM toolchain) is on PATH ──
-# When cloud-builder-x is invoked via `docker compose run` → non-interactive
-# bash → /etc/profile isn't sourced → ~/.nix-profile is missing from PATH even
-# though the image has jq installed under the home-manager profile. This shim
-# repairs PATH declaratively (no hardcoded bin dir). Safe on host + in-container.
-if ! command -v jq >/dev/null 2>&1; then
-    for _p in \
-        "${HOME:-/root}/.local/state/nix/profiles/home-manager/home-path/bin" \
-        "${HOME:-/root}/.nix-profile/bin" \
-        /nix/var/nix/profiles/default/bin; do
-        [ -d "$_p" ] && PATH="$_p:$PATH"
-    done
-    export PATH
-    unset _p
-fi
-command -v jq >/dev/null 2>&1 || {
-    echo "[cloud-ship-lib] FATAL: jq not found on PATH after repair attempt." >&2
-    echo "[cloud-ship-lib]   PATH=$PATH" >&2
-    echo "[cloud-ship-lib]   HOME=$HOME" >&2
-    exit 1
-}
-
 CLOUD_ROOT="${CLOUD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../../.." && pwd)}"
 
 # =============================================================================
