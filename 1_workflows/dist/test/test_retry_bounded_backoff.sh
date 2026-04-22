@@ -25,42 +25,70 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-echo "── 1: exponential backoff state exists ──"
+echo "── 1: exponential backoff driven by build.json (data-driven) ──"
 
-# Look for the three canonical markers of exponential backoff.
-if grep -q 'RETRY_INITIAL_MS' "$PROXY_TS" \
-   && grep -q 'RETRY_MAX_MS' "$PROXY_TS" \
-   && grep -qE 'intervalMs\s*\*\s*2|Math\.min.*intervalMs' "$PROXY_TS"; then
-    pass "backoff constants + doubling logic present"
+# New shape (2026-04-22 refactor): retry config lives in build.json, not as
+# in-file constants. Assert the config exists + proxy-mcp.ts reads it +
+# applies both doubling AND the bounded-LRU cap.
+init_ms=$(jq -r '.proxied_mcps.retry.initial_ms // empty' "$BUILD_JSON")
+max_ms=$(jq -r '.proxied_mcps.retry.max_ms // empty' "$BUILD_JSON")
+cap=$(jq -r '.proxied_mcps.retry.max_retry_state_entries // empty' "$BUILD_JSON")
+if [ -n "$init_ms" ] && [ -n "$max_ms" ] && [ -n "$cap" ]; then
+    pass "build.json declares retry.initial_ms=$init_ms, max_ms=$max_ms, max_retry_state_entries=$cap"
 else
-    fail "proxy-mcp.ts missing exponential backoff markers (RETRY_INITIAL_MS/RETRY_MAX_MS + doubling)"
+    fail "build.json .proxied_mcps.retry missing initial_ms / max_ms / max_retry_state_entries"
 fi
 
-# Per-child state map (otherwise one child failing resets everyone's clock).
-if grep -q 'retryState' "$PROXY_TS" || grep -q 'Map<string' "$PROXY_TS"; then
-    pass "per-child retry state"
+if grep -qE 'process\.env\.PROXIED_MCPS|loadConfig' "$PROXY_TS" \
+   && grep -qE 'initial_ms|max_ms' "$PROXY_TS"; then
+    pass "proxy-mcp.ts loads PROXIED_MCPS env + uses declared initial_ms/max_ms"
 else
-    fail "proxy-mcp.ts has a single shared retry interval — needs per-child state"
+    fail "proxy-mcp.ts doesn't appear to consume build.json retry config"
+fi
+
+if grep -qE 'Math\.min.*max_ms|intervalMs\s*\*\s*2' "$PROXY_TS"; then
+    pass "exponential doubling capped by max_ms"
+else
+    fail "proxy-mcp.ts missing exponential doubling against max_ms"
 fi
 
 echo ""
-echo "── 2: transport/client cleanup on connect failure ──"
+echo "── 2: retry-state map is bounded (LRU cap) ──"
+
+if grep -qE 'max_retry_state_entries|retryState\.size\s*>' "$PROXY_TS" \
+   && grep -qE 'retryState\.delete|touchRetryEntry' "$PROXY_TS"; then
+    pass "retry-state LRU: eviction on size>cap"
+else
+    fail "retry-state Map is unbounded — OOM regression risk"
+fi
+
+echo ""
+echo "── 3: single-timer guard across session recreates ──"
+
+if grep -qE 'retryTimer\s*!==\s*null|if\s*\(retryTimer\)' "$PROXY_TS"; then
+    pass "retryTimer guard prevents duplicate setInterval on each server recreate"
+else
+    fail "startProxyRetryLoop may spawn a new setInterval on every call — timer leak"
+fi
+
+echo ""
+echo "── 4: transport/client cleanup on connect failure ──"
 
 if grep -A6 'await client.connect' "$PROXY_TS" \
    | grep -qE 'transport\.close|client\.close'; then
     pass "failure path closes transport / client"
 else
-    fail "connect failure does not close transport/client — leaks accumulate under upstream outage"
+    fail "connect failure does not close transport/client — leaks accumulate"
 fi
 
 echo ""
-echo "── 3: build.json declares resources + restart_policy ──"
+echo "── 5: build.json declares resources + restart_policy ──"
 
 mem=$(jq -r '.containers.app.resources.mem_limit // empty' "$BUILD_JSON")
 if [ -n "$mem" ]; then
     pass "containers.app.resources.mem_limit = $mem"
 else
-    fail "containers.app.resources.mem_limit not declared — container will use default (unbounded → host pressure)"
+    fail "containers.app.resources.mem_limit not declared"
 fi
 
 policy=$(jq -r '.containers.app.restart_policy // empty' "$BUILD_JSON")
