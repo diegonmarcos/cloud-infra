@@ -138,7 +138,6 @@
         "surrealdb"
       ],
       "ports": [
-        "10.0.0.6:3015:8080",
         "10.0.0.6:3103:3103",
         "10.0.0.6:3102:3102",
         "10.0.0.6:5232:5232",
@@ -218,12 +217,8 @@
         "introspect-proxy",
         "redis"
       ],
-      "ports": [
-        "10.0.0.1:9091:9091"
-      ],
-      "networks": [
-        "auth-net"
-      ],
+      "ports": [],
+      "networks": [],
       "specs": {
         "cpu": 2,
         "ram_gb": 2,
@@ -496,6 +491,11 @@
       ],
       "gcp-proxy": [
         {
+          "port": 22,
+          "proto": "tcp",
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+        },
+        {
           "port": 80,
           "proto": "tcp",
           "desc": "HTTP (Caddy)"
@@ -678,6 +678,11 @@
     ],
     "gcp-proxy": [
       {
+        "port": 22,
+        "proto": "tcp",
+        "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+      },
+      {
         "port": 80,
         "proto": "tcp",
         "desc": "HTTP (Caddy)"
@@ -797,28 +802,7 @@
     }
   },
   "dns": {
-    "internal_zones": [
-      {
-        "name": "app",
-        "records": [
-          {
-            "name": "*",
-            "type": "A",
-            "value": "10.0.0.1"
-          }
-        ]
-      },
-      {
-        "name": "db",
-        "records": [
-          {
-            "name": "*",
-            "type": "A",
-            "value": "10.0.0.1"
-          }
-        ]
-      }
-    ],
+    "internal_zones": [],
     "derived_entries": [
       {
         "name": "code-server.app",
@@ -1220,9 +1204,7 @@
         "code-server.app"
       ],
       "compose": {
-        "containers": [
-          "code-server"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -1404,19 +1386,14 @@
         "filebrowser_app"
       ],
       "all_ports": [
-        "3015",
-        "10.0.0.6:3015:8080"
+        "3015"
       ],
       "all_dns": [
         "filebrowser.app"
       ],
       "compose": {
-        "containers": [
-          "filebrowser_app"
-        ],
-        "ports": [
-          "10.0.0.6:3015:8080"
-        ],
+        "containers": [],
+        "ports": [],
         "networks": []
       },
       "proxy": {
@@ -1849,11 +1826,7 @@
         "mattermost-bots.app"
       ],
       "compose": {
-        "containers": [
-          "mattermost",
-          "mattermost-bots",
-          "mattermost-postgres"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2461,9 +2434,7 @@
         "smtp-proxy.app"
       ],
       "compose": {
-        "containers": [
-          "smtp-proxy"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2652,9 +2623,7 @@
         "vaultwarden.app"
       ],
       "compose": {
-        "containers": [
-          "vaultwarden"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3265,9 +3234,7 @@
         "hickory-dns.app"
       ],
       "compose": {
-        "containers": [
-          "hickory-dns"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3366,24 +3333,16 @@
       ],
       "all_ports": [
         "9091",
-        "6380",
-        "10.0.0.1:9091:9091"
+        "6380"
       ],
       "all_dns": [
         "authelia.app",
         "authelia-redis.app"
       ],
       "compose": {
-        "containers": [
-          "authelia",
-          "authelia-redis"
-        ],
-        "ports": [
-          "10.0.0.1:9091:9091"
-        ],
-        "networks": [
-          "auth-net"
-        ]
+        "containers": [],
+        "ports": [],
+        "networks": []
       },
       "proxy": {
         "primary": {
@@ -3841,7 +3800,12 @@
           "volumes": [],
           "env_file": true,
           "depends_on": [],
-          "resources": null,
+          "resources": {
+            "mem_limit": "1G",
+            "mem_reservation": "128M",
+            "pids_limit": 256
+          },
+          "restart_policy": "unless-stopped",
           "read_only": false,
           "protocol": "http"
         }
@@ -4223,9 +4187,7 @@
         "dozzle.app"
       ],
       "compose": {
-        "containers": [
-          "dozzle"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -4693,11 +4655,7 @@
         "ntfy.app"
       ],
       "compose": {
-        "containers": [
-          "github-rss",
-          "ntfy",
-          "syslog-bridge"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -4891,7 +4849,8 @@
             "app"
           ],
           "resources": null,
-          "read_only": false
+          "read_only": false,
+          "init_job": true
         }
       },
       "container_names": [

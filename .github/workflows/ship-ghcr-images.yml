@@ -67,6 +67,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash 1_workflows/src/test/test_ghcr_visibility.sh
+      - name: Phase 9 — proxy-mcp retry is bounded (no OOM leak)
+        run: bash 1_workflows/src/test/test_retry_bounded_backoff.sh
 
   build:
     needs: preflight-symlinks
