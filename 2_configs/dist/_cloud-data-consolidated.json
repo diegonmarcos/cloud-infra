@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-21T10:21:22.980Z",
+    "generated_at": "2026-04-22T07:48:07.052Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -348,6 +348,11 @@
       "ssh_alias": "gcp-proxy",
       "rescue_port": 2200,
       "public_ports": [
+        {
+          "port": 22,
+          "proto": "tcp",
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+        },
         {
           "port": 80,
           "proto": "tcp",
@@ -962,9 +967,7 @@
         "code-server.app"
       ],
       "compose": {
-        "containers": [
-          "code-server"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -1172,19 +1175,14 @@
         "filebrowser_app"
       ],
       "all_ports": [
-        "3015",
-        "10.0.0.6:3015:8080"
+        "3015"
       ],
       "all_dns": [
         "filebrowser.app"
       ],
       "compose": {
-        "containers": [
-          "filebrowser_app"
-        ],
-        "ports": [
-          "10.0.0.6:3015:8080"
-        ],
+        "containers": [],
+        "ports": [],
         "networks": []
       },
       "proxy": {
@@ -1696,11 +1694,7 @@
         "mattermost-bots.app"
       ],
       "compose": {
-        "containers": [
-          "mattermost",
-          "mattermost-bots",
-          "mattermost-postgres"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2459,9 +2453,7 @@
         "smtp-proxy.app"
       ],
       "compose": {
-        "containers": [
-          "smtp-proxy"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2683,9 +2675,7 @@
         "vaultwarden.app"
       ],
       "compose": {
-        "containers": [
-          "vaultwarden"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3492,9 +3482,7 @@
         "hickory-dns.app"
       ],
       "compose": {
-        "containers": [
-          "hickory-dns"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3601,24 +3589,16 @@
       ],
       "all_ports": [
         "9091",
-        "6380",
-        "10.0.0.1:9091:9091"
+        "6380"
       ],
       "all_dns": [
         "authelia.app",
         "authelia-redis.app"
       ],
       "compose": {
-        "containers": [
-          "authelia",
-          "authelia-redis"
-        ],
-        "ports": [
-          "10.0.0.1:9091:9091"
-        ],
-        "networks": [
-          "auth-net"
-        ]
+        "containers": [],
+        "ports": [],
+        "networks": []
       },
       "proxy": {
         "primary": {
@@ -4367,7 +4347,12 @@
           "volumes": [],
           "env_file": true,
           "depends_on": [],
-          "resources": null,
+          "resources": {
+            "mem_limit": "1G",
+            "mem_reservation": "128M",
+            "pids_limit": 256
+          },
+          "restart_policy": "unless-stopped",
           "read_only": false,
           "protocol": "http"
         }
@@ -4662,7 +4647,11 @@
         "healthcheck_paths": [
           "/"
         ]
-      }
+      },
+      "secret_env_vars": [
+        "DAGU_ADMIN_USERNAME",
+        "DAGU_ADMIN_PASSWORD"
+      ]
     },
     "dbgate": {
       "category": "tools",
@@ -4808,9 +4797,7 @@
         "dozzle.app"
       ],
       "compose": {
-        "containers": [
-          "dozzle"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -5331,11 +5318,7 @@
         "ntfy.app"
       ],
       "compose": {
-        "containers": [
-          "github-rss",
-          "ntfy",
-          "syslog-bridge"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -5569,7 +5552,8 @@
             "app"
           ],
           "resources": null,
-          "read_only": false
+          "read_only": false,
+          "init_job": true
         }
       },
       "container_names": [
@@ -6243,6 +6227,11 @@
       ],
       "gcp-proxy": [
         {
+          "port": 22,
+          "proto": "tcp",
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+        },
+        {
           "port": 80,
           "proto": "tcp",
           "desc": "HTTP (Caddy)"
@@ -6351,28 +6340,7 @@
     }
   ],
   "dns": {
-    "internal_zones": [
-      {
-        "name": "app",
-        "records": [
-          {
-            "name": "*",
-            "type": "A",
-            "value": "10.0.0.1"
-          }
-        ]
-      },
-      {
-        "name": "db",
-        "records": [
-          {
-            "name": "*",
-            "type": "A",
-            "value": "10.0.0.1"
-          }
-        ]
-      }
-    ],
+    "internal_zones": [],
     "derived_entries": [
       {
         "name": "code-server.app",
@@ -6978,149 +6946,6 @@
     },
     "authelia": {
       "acl": []
-    },
-    "ntfy": {
-      "topics": [
-        {
-          "name": "all",
-          "category": "all",
-          "desc": "Every message from every channel",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "dev_commits",
-          "category": "dev",
-          "desc": "Push/commit events",
-          "publishers": [
-            "github-rss"
-          ]
-        },
-        {
-          "name": "dev_pull-requests",
-          "category": "dev",
-          "desc": "PR open/close/merge events",
-          "publishers": [
-            "github-rss"
-          ]
-        },
-        {
-          "name": "dev_releases",
-          "category": "dev",
-          "desc": "Issues, releases, tags, forks",
-          "publishers": [
-            "github-rss"
-          ]
-        },
-        {
-          "name": "deploy_ship",
-          "category": "deploy",
-          "desc": "build.sh ship / GHA deploys",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "deploy_containers",
-          "category": "deploy",
-          "desc": "Container restarts, image pulls",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "health_mesh",
-          "category": "health",
-          "desc": "WireGuard mesh connectivity",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "health_endpoints",
-          "category": "health",
-          "desc": "HTTP service endpoint checks",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "health_dns",
-          "category": "health",
-          "desc": "DNS resolution checks",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "health_resources",
-          "category": "health",
-          "desc": "VM disk/memory/CPU usage",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "health_containers",
-          "category": "health",
-          "desc": "Docker container health",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "ops_backups",
-          "category": "ops",
-          "desc": "Backup freshness status",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "ops_reports",
-          "category": "ops",
-          "desc": "Daily/weekly summaries",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "sec_audit",
-          "category": "sec",
-          "desc": "Auth log analysis & brute-force detection",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "sec_tls",
-          "category": "sec",
-          "desc": "TLS certificate expiry warnings",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "sec_connections",
-          "category": "sec",
-          "desc": "SSH/sudo/connection events across VMs",
-          "publishers": [
-            "system"
-          ]
-        },
-        {
-          "name": "sec_yara",
-          "category": "sec",
-          "desc": "YARA malware scanner alerts & status",
-          "publishers": [
-            "system"
-          ]
-        }
-      ],
-      "users": [],
-      "enable_login": true,
-      "auth_default_access": "read-write"
     }
   },
   "_home_manager": {
@@ -7457,6 +7282,11 @@
           "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
         },
         "public_ports": [
+          {
+            "port": 22,
+            "proto": "tcp",
+            "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+          },
           {
             "port": 80,
             "proto": "tcp",
