@@ -16,9 +16,9 @@
 | # | Leak | Original commits (pre-rewrite SHAs) |
 |---|------|-----|
 | 1 | Stalwart admin/me@/noreply passwords + DKIM RSA key — `a_solutions/aa-sui_tools-stalwart/src/secrets.yaml.new` | `038bafcd7` |
-| 2 | OCI S3 access key `<REDACTED-LEAK-2026-04-21>` | `4170cbd8`, `93ec2869`, `ba68e5b1`, `c4559ba2`, `d81a7546` |
-| 3 | C3_BEARER_TOKEN JWT (prefix `<REDACTED-LEAK-2026-04-21>`) | `29e874bd`, `3205ba93` |
-| 4 | C3_API_KEY `<REDACTED-LEAK-2026-04-21>` | `3943cd07` |
+| 2 | OCI S3 access key `21dd4572b47aaf91fc5d3f9cabcc88f9e6e7984e` | `4170cbd8`, `93ec2869`, `ba68e5b1`, `c4559ba2`, `d81a7546` |
+| 3 | C3_BEARER_TOKEN JWT (prefix `eyJhbGciOiJSUzI1NiIsImtpZCI6Im1haW4iLCJ0eXAiOiJhdCtqd3QifQ`) | `29e874bd`, `3205ba93` |
+| 4 | C3_API_KEY `hL6Fez-xT8CFo6njTAYiGuvpUN_Vl_blwFGm9t2Ah2s` | `3943cd07` |
 
 ### Paths affected
 
@@ -36,9 +36,9 @@ a_solutions/ba-clo_cloudflare-worker/{src,dist}/wrangler.toml     (redact 2 stri
 ```bash
 cd ~/git/cloud
 # Blob file already written at /tmp/leak-blobs.txt containing:
-#   <REDACTED-LEAK-2026-04-21>==>REDACTED_OCI_S3_KEY
-#   <REDACTED-LEAK-2026-04-21>==>REDACTED_C3_BEARER_PREFIX
-#   <REDACTED-LEAK-2026-04-21>==>REDACTED_C3_API_KEY
+#   21dd4572b47aaf91fc5d3f9cabcc88f9e6e7984e==>REDACTED_OCI_S3_KEY
+#   eyJhbGciOiJSUzI1NiIsImtpZCI6Im1haW4iLCJ0eXAiOiJhdCtqd3QifQ==>REDACTED_C3_BEARER_PREFIX
+#   hL6Fez-xT8CFo6njTAYiGuvpUN_Vl_blwFGm9t2Ah2s==>REDACTED_C3_API_KEY
 
 git filter-repo \
   --replace-text /tmp/leak-blobs.txt \
@@ -67,14 +67,14 @@ git push --force-with-lease origin main
 
 ```bash
 # Search local history for each leak string — all should return empty
-git log --all -S'<REDACTED-LEAK-2026-04-21>' --oneline
-git log --all -S'<REDACTED-LEAK-2026-04-21>' --oneline
-git log --all -S'<REDACTED-LEAK-2026-04-21>' --oneline
+git log --all -S'21dd4572b47aaf91fc5d3f9cabcc88f9e6e7984e' --oneline
+git log --all -S'hL6Fez-xT8CFo6njTAYiGuvpUN_Vl_blwFGm9t2Ah2s' --oneline
+git log --all -S'eyJhbGciOiJSUzI1NiIsImtpZCI6Im1haW4iLCJ0eXAiOiJhdCtqd3QifQ' --oneline
 git log --all --oneline -- a_solutions/aa-sui_tools-stalwart/src/secrets.yaml.new
 
 # Verify remote too (after force-push)
 git fetch origin && \
-git log origin/main -S'<REDACTED-LEAK-2026-04-21>' --oneline
+git log origin/main -S'21dd4572b47aaf91fc5d3f9cabcc88f9e6e7984e' --oneline
 ```
 
 ---
