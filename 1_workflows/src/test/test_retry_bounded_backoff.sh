@@ -18,7 +18,15 @@ set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 SVC_DIR="$REPO_ROOT/a_solutions/bc-obs_c3-services-mcp"
-PROXY_TS="$SVC_DIR/src/mcp/tools/proxy-mcp.ts"
+# v2 engine cutover (2026-04-22) moved code under src/code/. Keep backward-
+# compatible resolution so the tester still works if either layout is used.
+PROXY_TS=""
+for _p in \
+    "$SVC_DIR/src/code/mcp/tools/proxy-mcp.ts" \
+    "$SVC_DIR/src/mcp/tools/proxy-mcp.ts"; do
+    [ -f "$_p" ] && { PROXY_TS="$_p"; break; }
+done
+[ -z "$PROXY_TS" ] && { echo "  ✗ proxy-mcp.ts not found under src/code/ or src/" >&2; exit 1; }
 BUILD_JSON="$SVC_DIR/build.json"
 
 FAIL=0
