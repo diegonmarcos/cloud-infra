@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-22T07:48:07.423Z",
+  "_generated": "2026-04-22T08:04:20.366Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -617,10 +617,6 @@
     {
       "service": "dozzle.app",
       "upstream": "10.0.0.4:9999"
-    },
-    {
-      "service": "fluent-bit.app",
-      "upstream": "10.0.0.4:2020"
     },
     {
       "service": "grafana.app",
@@ -1945,27 +1941,6 @@
     },
     {
       "kind": "redirect",
-      "service": "fluent-bit.app",
-      "redirect_to": "https://fluent-bit-http-2020.app",
-      "container": "fluent-bit",
-      "container_key": "app",
-      "svc": "fluent-bit",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "canonical",
-      "service": "fluent-bit-http-2020.app",
-      "container": "fluent-bit",
-      "container_key": "app",
-      "svc": "fluent-bit",
-      "vm": "oci-E2-f_1",
-      "port": 2020,
-      "protocol": "http",
-      "upstream": "10.0.0.4:2020",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "lgtm_grafana.app",
       "redirect_to": "https://lgtm_grafana-http-3200.app",
       "container": "lgtm_grafana",
@@ -2157,23 +2132,6 @@
       "container_key": "app",
       "svc": "sauron-forwarder",
       "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "redirect",
-      "service": "syslog-forwarder.app",
-      "redirect_to": "https://syslog-forwarder-null.app",
-      "container": "syslog-forwarder",
-      "container_key": "app",
-      "svc": "syslog-forwarder",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "syslog-forwarder-null.app",
-      "container": "syslog-forwarder",
-      "container_key": "app",
-      "svc": "syslog-forwarder",
-      "vm": "oci-E2-f_0"
     },
     {
       "kind": "redirect",
@@ -3420,16 +3378,6 @@
       "notes": null
     },
     {
-      "host": "fluent-bit.app",
-      "path": null,
-      "upstream": "10.0.0.4:2020",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "grafana.app",
       "path": null,
       "upstream": "10.0.0.6:3200",
@@ -4122,16 +4070,6 @@
       "notes": null
     },
     {
-      "host": "fluent-bit-http-2020.app",
-      "path": null,
-      "upstream": "10.0.0.4:2020",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "fluent-bit",
-      "notes": null
-    },
-    {
       "host": "lgtm_grafana-http-3200.app",
       "path": null,
       "upstream": "10.0.0.6:3200",
@@ -4401,16 +4339,6 @@
       "tls": "on_demand",
       "zone": "app",
       "service": "sauron-forwarder",
-      "notes": null
-    },
-    {
-      "host": "syslog-forwarder-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "syslog-forwarder",
       "notes": null
     },
     {
