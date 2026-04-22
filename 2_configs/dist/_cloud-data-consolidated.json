@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-22T07:49:13.768Z",
+    "generated_at": "2026-04-22T08:01:18.634Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -707,7 +707,7 @@
           "@fastify/swagger": "^9.4.0",
           "@fastify/swagger-ui": "^5.2.0",
           "@modelcontextprotocol/sdk": "^1.12.0",
-          "better-sqlite3": "^11.7.0",
+          "better-sqlite3": "^11.0.0",
           "fast-xml-parser": "^4.5.0",
           "fastify": "^5.2.0",
           "fastify-plugin": "^5.0.0",
@@ -723,7 +723,7 @@
         "devDependencies": {
           "@types/better-sqlite3": "^7.6.13",
           "@types/mailparser": "^3.4.6",
-          "@types/node": "^22.10.0",
+          "@types/node": "^22.0.0",
           "@types/nodemailer": "^6.4.23",
           "@types/nunjucks": "^3.2.6",
           "tsx": "^4.19.0",
@@ -872,21 +872,6 @@
           "devDependencies": {
             "@types/better-sqlite3": "^7.6.13",
             "@types/node": "^22.0.0",
-            "tsx": "^4.19.0",
-            "typescript": "^5.7.0"
-          }
-        },
-        {
-          "service": "news-gdelt",
-          "folder": "bc-obs_news-gdelt",
-          "category": "tools",
-          "dependencies": {
-            "better-sqlite3": "^11.7.0",
-            "fastify": "^5.2.0"
-          },
-          "devDependencies": {
-            "@types/better-sqlite3": "^7.6.12",
-            "@types/node": "^22.10.0",
             "tsx": "^4.19.0",
             "typescript": "^5.7.0"
           }
@@ -1078,14 +1063,9 @@
         "etherpad-db.app"
       ],
       "compose": {
-        "containers": [
-          "etherpad_app",
-          "etherpad_postgres"
-        ],
+        "containers": [],
         "ports": [],
-        "networks": [
-          "etherpad_net"
-        ]
+        "networks": []
       },
       "proxy": {
         "primary": {
@@ -1342,9 +1322,7 @@
         "grist.app"
       ],
       "compose": {
-        "containers": [
-          "grist_app"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -1460,10 +1438,7 @@
         "hedgedoc-db.app"
       ],
       "compose": {
-        "containers": [
-          "hedgedoc_app",
-          "hedgedoc_postgres"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -1920,11 +1895,7 @@
         "photoprism.app"
       ],
       "compose": {
-        "containers": [
-          "photoprism_app",
-          "photoprism_mariadb",
-          "photoprism_rclone"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2092,22 +2063,15 @@
         "radicale"
       ],
       "all_ports": [
-        "5232",
-        "10.0.0.6:5232:5232"
+        "5232"
       ],
       "all_dns": [
         "radicale.app"
       ],
       "compose": {
-        "containers": [
-          "radicale"
-        ],
-        "ports": [
-          "10.0.0.6:5232:5232"
-        ],
-        "networks": [
-          "default"
-        ]
+        "containers": [],
+        "ports": [],
+        "networks": []
       },
       "proxy": {
         "primary": {
@@ -2180,9 +2144,7 @@
         "revealmd.app"
       ],
       "compose": {
-        "containers": [
-          "revealmd_app"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -2337,8 +2299,7 @@
       ],
       "compose": {
         "containers": [
-          "maddy",
-          "maddy-sorter"
+          "maddy"
         ],
         "ports": [],
         "networks": []
@@ -3096,9 +3057,7 @@
         "ollama.app"
       ],
       "compose": {
-        "containers": [
-          "ollama"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3203,9 +3162,7 @@
         "ollama-hai.app"
       ],
       "compose": {
-        "containers": [
-          "ollama-hai"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3260,9 +3217,7 @@
       ],
       "all_dns": [],
       "compose": {
-        "containers": [
-          "rig-agentic-hai"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3341,9 +3296,7 @@
       ],
       "all_dns": [],
       "compose": {
-        "containers": [
-          "rig-agentic-sonn-14bq8"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -4211,6 +4164,12 @@
       "health": {
         "path": "/mcp"
       },
+      "runtime": {
+        "init": true,
+        "pids_limit": 1024,
+        "_why_init": "c3-infra-mcp spawns ssh/git/curl/dig children concurrently via execAsync. Without docker-init (tini) as PID 1, zombie reaping doesn't happen and pids_limit is exhausted within days -> 'sh: 0: Cannot fork' on healthcheck.",
+        "_why_pids_limit": "ssh-exec + git-clone + curl all fan out concurrently across ~24 VM/service targets. Default 256 is too tight; 1024 leaves safe headroom with tini reaping orphans."
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -4387,6 +4346,44 @@
       },
       "health": {
         "path": "/mcp"
+      },
+      "runtime": {
+        "init": true,
+        "pids_limit": 512,
+        "_why_init": "proxy-mcp spawns no children, but tini is cheap insurance against future regressions and unblocks Node SIGTERM handling."
+      },
+      "proxied_mcps": {
+        "_note": "URLs resolved at flake build time from cloud-data services{}. Container runs in bridge mode, so 127.0.0.1 will NOT reach host-bound services — we MUST use the WG IP (10.0.0.6) of whichever VM hosts the child MCP.",
+        "infra": [
+          {
+            "name": "cloud-cgc-mcp",
+            "service": "cloud-cgc-mcp",
+            "path": "/mcp"
+          }
+        ],
+        "user": [
+          {
+            "name": "mattermost-mcp",
+            "service": "mattermost-mcp",
+            "path": "/mcp"
+          },
+          {
+            "name": "mail-mcp",
+            "service": "mail-mcp",
+            "path": "/mcp"
+          },
+          {
+            "name": "google-workspace-mcp",
+            "service": "google-workspace-mcp",
+            "path": "/mcp"
+          }
+        ],
+        "retry": {
+          "initial_ms": 10000,
+          "max_ms": 120000,
+          "max_retry_state_entries": 32,
+          "_why": "Bounded LRU so the retry-state Map can never grow beyond the declared child count (OOM H1 root cause). max_ms caps exponential backoff per child."
+        }
       },
       "api": {
         "has_api": false,
@@ -4706,9 +4703,7 @@
         "dbgate.app"
       ],
       "compose": {
-        "containers": [
-          "dbgate"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -5129,6 +5124,9 @@
       "declared_ports": {
         "app": 3019
       },
+      "health": {
+        "path": "/health"
+      },
       "timezone": "Europe/Paris",
       "api": {
         "has_api": false,
@@ -5328,6 +5326,7 @@
         "ports": [],
         "networks": []
       },
+      "upstream_image": "debian:bookworm-slim",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -5546,6 +5545,7 @@
         "ports": [],
         "networks": []
       },
+      "on_demand": true,
       "registry": "ghcr.io/diegonmarcos",
       "images": {
         "cloud-builder-x-deb-nixhm": {
