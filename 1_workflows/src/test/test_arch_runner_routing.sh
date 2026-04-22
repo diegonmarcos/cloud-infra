@@ -98,6 +98,10 @@ cp "$RUNNERS_JSON" "$tmp/runners.json"
 jq '.runners.arm64.host = "nonexistent-host.invalid"' "$RUNNERS_JSON" > "$tmp/runners.json.new"
 mv "$tmp/runners.json.new" "$tmp/runners.json"
 
+# Dockerfile must exist, otherwise step_docker takes the compose-build-owns-image
+# skip (line ~157) and returns 0 before reaching the ssh probe we want to assert.
+printf 'FROM scratch\n' > "$tmp/Dockerfile"
+
 if bash -c "
     set -u
     log() { :; }
