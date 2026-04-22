@@ -11,7 +11,7 @@ echo "── Generating cloud-data ──"
 bash build.sh config
 
 echo "── Committing cloud-data ──"
-cd I_cloud-data
+cd 2_configs/dist
 git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
 git config user.email "${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}"
 # Switch remote to SSH so deploy key works (submodule was cloned via HTTPS)
@@ -37,7 +37,7 @@ cd "$REPO_ROOT"
 git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
 git config user.email "${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}"
 git checkout -- . 2>/dev/null || true
-git add I_cloud-data
+git add 2_configs/dist
 if git diff --cached --quiet; then
   echo "main repo: submodule ref unchanged"
   exit 0

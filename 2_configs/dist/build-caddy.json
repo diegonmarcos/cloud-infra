@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-22T13:02:13.105Z",
+  "_generated": "2026-04-22T17:43:16.894Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -872,6 +872,23 @@
       "protocol": "http",
       "upstream": "10.0.0.6:3103",
       "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "mail-puller.app",
+      "redirect_to": "https://mail-puller-null.app",
+      "container": "mail-puller",
+      "container_key": "app",
+      "svc": "mail-puller",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "portless",
+      "service": "mail-puller-null.app",
+      "container": "mail-puller",
+      "container_key": "app",
+      "svc": "mail-puller",
+      "vm": "oci-E2-f_0"
     },
     {
       "kind": "redirect",
@@ -2316,6 +2333,17 @@
       "engine": "postgres",
       "port": 5439,
       "upstream": "10.0.0.6:5439"
+    },
+    {
+      "kind": "embedded",
+      "service": "mail-puller-sqlite-null.db",
+      "container": "mail-puller",
+      "container_key": "app",
+      "svc": "mail-puller",
+      "vm": "oci-E2-f_0",
+      "engine": "sqlite",
+      "port": null,
+      "path": "/var/lib/mail-puller/state.db"
     },
     {
       "kind": "container",
@@ -4116,6 +4144,16 @@
   ],
   "private_A2_app_portless": [
     {
+      "host": "mail-puller-null.app",
+      "path": null,
+      "upstream": "204",
+      "kind": "portless",
+      "tls": "on_demand",
+      "zone": "app",
+      "service": "mail-puller",
+      "notes": null
+    },
+    {
       "host": "mattermost-bots-null.app",
       "path": null,
       "upstream": "204",
@@ -4306,6 +4344,16 @@
       "zone": "db",
       "service": "hedgedoc",
       "notes": "engine=postgres vm=oci-A1-f_0 underscore → TLS broken"
+    },
+    {
+      "host": "mail-puller-sqlite-null.db",
+      "path": "/var/lib/mail-puller/state.db",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "mail-puller",
+      "notes": "engine=sqlite vm=oci-E2-f_0"
     },
     {
       "host": "mattermost-postgres-postgres-5435.db",

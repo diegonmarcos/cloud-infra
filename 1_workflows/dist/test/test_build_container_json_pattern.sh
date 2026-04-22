@@ -11,7 +11,7 @@
 # ║                                                                  ║
 # ║ Declarative contract:                                            ║
 # ║   a_solutions/<dir>/src/build-<container>.json  ──▶              ║
-# ║   ../../../I_cloud-data/build-<container>.json (real file)       ║
+# ║   ../../../2_configs/dist/build-<container>.json (real file)       ║
 # ║   OR  ../build-<container>.json (service-local real file)        ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_build_container_json_pattern.sh

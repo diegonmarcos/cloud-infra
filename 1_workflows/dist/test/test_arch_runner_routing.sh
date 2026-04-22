@@ -20,7 +20,7 @@ DISPATCH="$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"
 
 RUNNERS_JSON=""
 for p in \
-    "$REPO_ROOT/I_cloud-data/cloud-data-runners.json" \
+    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
     "$REPO_ROOT/cloud-data-runners.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
@@ -32,7 +32,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 echo "── 1: runners.json exists and matches every declared docker.arch ──"
 
 if [ -z "$RUNNERS_JSON" ]; then
-    fail "cloud-data-runners.json not found under I_cloud-data/ or repo root"
+    fail "cloud-data-runners.json not found under 2_configs/dist/ or repo root"
 else
     pass "runners.json found at $RUNNERS_JSON"
     # Collect distinct docker.arch values from every service build.json
@@ -98,6 +98,10 @@ cp "$RUNNERS_JSON" "$tmp/runners.json"
 jq '.runners.arm64.host = "nonexistent-host.invalid"' "$RUNNERS_JSON" > "$tmp/runners.json.new"
 mv "$tmp/runners.json.new" "$tmp/runners.json"
 
+# Dockerfile must exist, otherwise step_docker takes the compose-build-owns-image
+# skip (line ~157) and returns 0 before reaching the ssh probe we want to assert.
+printf 'FROM scratch\n' > "$tmp/Dockerfile"
+
 if bash -c "
     set -u
     log() { :; }
@@ -108,8 +112,8 @@ if bash -c "
     SRC_DIR=$tmp
     DIST_DIR=$tmp
     CLOUD_ROOT=$tmp
-    mkdir -p $tmp/I_cloud-data
-    cp $tmp/runners.json $tmp/I_cloud-data/cloud-data-runners.json
+    mkdir -p $tmp/2_configs/dist
+    cp $tmp/runners.json $tmp/2_configs/dist/cloud-data-runners.json
     DOCKER_IMAGE=ghcr.io/x/fake
     DOCKER_REGISTRY=
     DOCKER_ARCH=arm64

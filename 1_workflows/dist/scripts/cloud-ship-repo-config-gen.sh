@@ -9,19 +9,19 @@ cmd_config() {
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
     fi
-    # cloud-data may be either a populated submodule (I_cloud-data/) or a
+    # cloud-data may be either a populated submodule (2_configs/dist/) or a
     # sibling checkout (../cloud-data/ from CLOUD_ROOT). Pick whichever has
     # the engine, env override wins.
     _cd_base="${CLOUD_DATA_DIR:-}"
     if [ -z "$_cd_base" ]; then
-        for _p in "$CLOUD_ROOT/I_cloud-data" "$(dirname "$CLOUD_ROOT")/cloud-data" "/root/git/cloud-data"; do
+        for _p in "$CLOUD_ROOT/2_configs/dist" "$(dirname "$CLOUD_ROOT")/cloud-data" "/root/git/cloud-data"; do
             [ -f "$_p/1_workflows/src/scripts/cloud-data-config.ts" ] && { _cd_base="$_p"; break; }
         done
     fi
     CD_SCRIPTS="$_cd_base/1_workflows/src/scripts"
     CD_MASTER="$CD_SCRIPTS/cloud-data-config.ts"
     if [ -z "$_cd_base" ] || [ ! -f "$CD_MASTER" ]; then
-        log "SKIP: cloud-data engine not found (tried I_cloud-data, sibling, /root/git/cloud-data)"
+        log "SKIP: cloud-data engine not found (tried 2_configs/dist, sibling, /root/git/cloud-data)"
         return 1
     fi
     log "Using cloud-data engine: $_cd_base"

@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   H) dispatch sources cloud-ship-lib.sh so `log` exists          ║
-# ║   I) only dispatch updates I_cloud-data submodule; nix step      ║
+# ║   I) only dispatch updates 2_configs/dist submodule; nix step      ║
 # ║      honours CLOUD_DATA_PRESTAGED_BY_CI flag                     ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_dispatch_hygiene.sh        ║
@@ -45,7 +45,7 @@ else
     fail "dispatch.sh missing flock — parallel jobs will race on .git/modules/cloud-data/config"
 fi
 
-if grep -q 'submodule update --remote --init --force I_cloud-data' "$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"; then
+if grep -q 'submodule update --remote --init --force 2_configs/dist' "$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"; then
     pass "dispatch.sh runs the submodule update itself"
 else
     fail "dispatch.sh does not run submodule update — workers will race"

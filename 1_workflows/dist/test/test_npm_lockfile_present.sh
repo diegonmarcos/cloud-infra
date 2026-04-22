@@ -29,11 +29,17 @@ for bj in "$REPO_ROOT"/a_solutions/*/build.json; do
             any_checked=1
             svc_dir=$(dirname "$bj")
             svc_name=$(basename "$svc_dir")
-            lockfile="$svc_dir/src/package-lock.json"
-            if [ -f "$lockfile" ]; then
-                pass "$svc_name has package-lock.json"
+            # v2 engine cutover moved code under src/code/ — accept either layout.
+            lockfile=""
+            for _p in \
+                "$svc_dir/src/code/package-lock.json" \
+                "$svc_dir/src/package-lock.json"; do
+                [ -f "$_p" ] && { lockfile="$_p"; break; }
+            done
+            if [ -n "$lockfile" ]; then
+                pass "$svc_name has package-lock.json (${lockfile#$svc_dir/})"
             else
-                fail "$svc_name declares 'npm ci' but lacks src/package-lock.json"
+                fail "$svc_name declares 'npm ci' but lacks package-lock.json under src/ or src/code/"
             fi
             ;;
     esac
