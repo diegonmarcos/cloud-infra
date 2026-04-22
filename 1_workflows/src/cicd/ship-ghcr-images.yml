@@ -69,6 +69,11 @@ jobs:
         run: bash 1_workflows/src/test/test_ghcr_visibility.sh
       - name: Phase 9 — proxy-mcp retry is bounded (no OOM leak)
         run: bash 1_workflows/src/test/test_retry_bounded_backoff.sh
+      - name: Phase 10 — no live refs to z_archive/ services (report-only)
+        # Pre-existing drift reported but not blocking; cleanup happens
+        # in the same PR as each service's retirement.
+        continue-on-error: true
+        run: bash 1_workflows/src/test/test_no_retired_service_refs.sh
 
   build:
     needs: preflight-symlinks

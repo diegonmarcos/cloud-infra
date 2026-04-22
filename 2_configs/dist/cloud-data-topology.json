@@ -26,8 +26,7 @@
         "maddy",
         "smtp-proxy",
         "stalwart",
-        "stalwart-sorter",
-        "syslog-forwarder"
+        "stalwart-sorter"
       ],
       "ports": [],
       "networks": [],
@@ -53,7 +52,6 @@
       "containers": [
         "dagu",
         "dozzle",
-        "fluent-bit",
         "sauron-forwarder"
       ],
       "ports": [],
@@ -1115,12 +1113,6 @@
         "type": "A",
         "value": "10.0.0.4",
         "service": "sauron-forwarder"
-      },
-      {
-        "name": "syslog-forwarder.app",
-        "type": "A",
-        "value": "10.0.0.3",
-        "service": "syslog-forwarder"
       },
       {
         "name": "umami.app",
@@ -4203,54 +4195,6 @@
         "app": 9999
       }
     },
-    "fluent-bit": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_fluent-bit",
-      "description": "Log processor and forwarder",
-      "port": 2020,
-      "dns": "fluent-bit.app",
-      "upstream": "10.0.0.4:2020",
-      "containers": {
-        "app": {
-          "container_name": "fluent-bit",
-          "image": "fluent/fluent-bit:latest",
-          "port": 2020,
-          "port_env": null,
-          "dns": null,
-          "public": false,
-          "proxy": null,
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "/opt/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro",
-            "/opt/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf:ro",
-            "/var/lib/docker/containers:/var/lib/docker/containers:ro",
-            "/var/log:/var/log:ro",
-            "fluent-bit-db:/fluent-bit/db"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "fluent-bit"
-      ],
-      "all_ports": [
-        "2020"
-      ],
-      "all_dns": [],
-      "compose": {
-        "containers": [
-          "fluent-bit"
-        ],
-        "ports": [],
-        "networks": []
-      }
-    },
     "lgtm": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -4730,35 +4674,6 @@
         "containers": [
           "sauron",
           "sauron-forwarder"
-        ],
-        "ports": [],
-        "networks": []
-      }
-    },
-    "syslog-forwarder": {
-      "category": "tools",
-      "vm": "oci-E2-f_0",
-      "folder": "bc-obs_syslog-forwarder",
-      "description": "",
-      "dns": "syslog-forwarder.app",
-      "containers": {
-        "app": {
-          "container_name": "syslog-forwarder",
-          "image": "",
-          "public": false,
-          "dns": "syslog-forwarder.app"
-        }
-      },
-      "container_names": [
-        "syslog-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [
-        "syslog-forwarder.app"
-      ],
-      "compose": {
-        "containers": [
-          "syslog-forwarder"
         ],
         "ports": [],
         "networks": []
