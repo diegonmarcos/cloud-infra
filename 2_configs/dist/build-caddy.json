@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-22T08:23:11.069Z",
+  "_generated": "2026-04-22T12:59:36.256Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -313,26 +313,6 @@
           "base_path": "/dozzle",
           "upstream": "10.0.0.4:9999",
           "comment": "Dozzle - Real-time Docker log viewer"
-        },
-        {
-          "base_path": "/revealmd",
-          "upstream": "10.0.0.6:3014",
-          "comment": ""
-        },
-        {
-          "base_path": "/grafana",
-          "upstream": "10.0.0.6:3016",
-          "comment": ""
-        },
-        {
-          "base_path": "/gitea",
-          "upstream": "10.0.0.6:3017",
-          "comment": ""
-        },
-        {
-          "base_path": "/crawlee",
-          "upstream": "10.0.0.6:3001",
-          "comment": ""
         }
       ],
       "comment": "App hub -- path-based routing",
@@ -355,14 +335,6 @@
           "base_path": "/services",
           "upstream": "10.0.0.6:8082",
           "comment": "C3 Services REST API — service API gateway Fastify API"
-        },
-        {
-          "base_path": "/dash",
-          "upstream": "diegonmarcos.github.io",
-          "type": "github_pages",
-          "github_path": "dash",
-          "redirect_bare": true,
-          "comment": ""
         }
       ],
       "comment": "API hub -- path-based routing to backend APIs",
@@ -423,9 +395,7 @@
         },
         {
           "base_path": "/c3-infra-mcp",
-          "upstream": {
-            "mattermost_url": "http://mattermost.app"
-          }
+          "upstream": "10.0.0.6:3100"
         },
         {
           "base_path": "/c3-services-mcp",
@@ -586,9 +556,7 @@
     },
     {
       "service": "c3-infra-mcp.app",
-      "upstream": {
-        "mattermost_url": "http://mattermost.app"
-      }
+      "upstream": "10.0.0.6:3100"
     },
     {
       "service": "c3-services-api.app",
@@ -2638,9 +2606,7 @@
     {
       "host": "mcp.diegonmarcos.com",
       "path": "/c3-infra-mcp",
-      "upstream": {
-        "mattermost_url": "http://mattermost.app"
-      },
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2698,16 +2664,6 @@
       "zone": "com",
       "service": null,
       "notes": "C3 Services REST API — service API gateway Fastify API"
-    },
-    {
-      "host": "api.diegonmarcos.com",
-      "path": "/dash",
-      "upstream": "diegonmarcos.github.io",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": ""
     }
   ],
   "public_C_app_paths": [
@@ -2750,46 +2706,6 @@
       "zone": "com",
       "service": null,
       "notes": "Dozzle - Real-time Docker log viewer"
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/revealmd",
-      "upstream": "10.0.0.6:3014",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": ""
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/grafana",
-      "upstream": "10.0.0.6:3016",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": ""
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/gitea",
-      "upstream": "10.0.0.6:3017",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": ""
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/crawlee",
-      "upstream": "10.0.0.6:3001",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": ""
     }
   ],
   "public_D_others": [
@@ -3298,9 +3214,7 @@
     {
       "host": "c3-infra-mcp.app",
       "path": null,
-      "upstream": {
-        "mattermost_url": "http://mattermost.app"
-      },
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",

@@ -48,6 +48,23 @@ derive() {
     mkdir -p "$DIST"
     log "Deriving per-concern + per-container JSONs → $DIST/"
     tsx "$ENGINES/cloud-data-config-derive.ts"
+    copy_static
+}
+
+# Static cloud-data-*.json files — hand-edited in cloud-data repo
+# (e.g. cloud-data-runners.json). Not derived, just passed through.
+# Preference order: sibling clone (live edits) → in-repo submodule (committed).
+copy_static() {
+    for f in cloud-data-runners.json; do
+        for _srcdir in "$CLOUD_ROOT/../cloud-data" "$CLOUD_ROOT/I_cloud-data"; do
+            _src="$_srcdir/$f"
+            if [ -f "$_src" ]; then
+                cp -f "$_src" "$DIST/$f"
+                log "Copied static: $f (from $_srcdir)"
+                break
+            fi
+        done
+    done
 }
 
 run_tests() {
