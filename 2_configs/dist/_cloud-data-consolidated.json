@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-22T08:23:10.680Z",
+    "generated_at": "2026-04-22T12:59:35.824Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -3477,10 +3477,7 @@
         "caddy.app"
       ],
       "compose": {
-        "containers": [
-          "caddy",
-          "introspect-proxy"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },
@@ -3903,9 +3900,7 @@
       "flake": "c3-infra-mcp",
       "port": 3100,
       "dns": "c3-infra-mcp.app",
-      "upstream": {
-        "mattermost_url": "http://mattermost.app"
-      },
+      "upstream": "10.0.0.6:3100",
       "containers": {
         "app": {
           "container_name": "c3-infra-mcp",
@@ -3963,6 +3958,9 @@
       },
       "health": {
         "path": "/mcp"
+      },
+      "env_config": {
+        "mattermost_url": "http://mattermost.app"
       },
       "runtime": {
         "init": true,
@@ -5313,6 +5311,7 @@
       "containers": {
         "app": {
           "container_name": "cloud-builder-x",
+          "image": "",
           "public": false
         }
       },
@@ -5329,8 +5328,6 @@
         "networks": []
       },
       "on_demand": true,
-      "timezone": "Europe/Madrid",
-      "upstream_image": "ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest",
       "registry": "ghcr.io/diegonmarcos",
       "images": {
         "cloud-builder-x-deb-nixhm": {
@@ -6373,254 +6370,7 @@
   },
   "configs": {
     "caddy": {
-      "routes": [
-        {
-          "domain": "ide.diegonmarcos.com",
-          "upstream": "10.0.0.6:8443",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "sheets.diegonmarcos.com",
-          "upstream": "10.0.0.6:3011",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "chat.diegonmarcos.com",
-          "upstream": "10.0.0.6:8065",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "photos.diegonmarcos.com",
-          "upstream": "10.0.0.6:3013",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "cal.diegonmarcos.com",
-          "upstream": "10.0.0.6:5232",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "webmail.diegonmarcos.com",
-          "upstream": "10.0.0.3:8888",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "smtp.diegonmarcos.com",
-          "upstream": "10.0.0.3:8080",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "mail-stalwart.diegonmarcos.com",
-          "upstream": "10.0.0.3:2443",
-          "auth": "none",
-          "tls_skip": true,
-          "public_paths": []
-        },
-        {
-          "domain": "vault.diegonmarcos.com",
-          "upstream": "10.0.0.6:8880",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "auth.diegonmarcos.com",
-          "upstream": "10.0.0.1:9091",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "workflows.diegonmarcos.com",
-          "upstream": "10.0.0.4:8070",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "db.diegonmarcos.com",
-          "upstream": "10.0.0.6:8086",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "grafana.diegonmarcos.com",
-          "upstream": "10.0.0.6:3200",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "git.diegonmarcos.com",
-          "upstream": "10.0.0.6:3002",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/etherpad",
-          "upstream": "10.0.0.6:3012",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/filebrowser",
-          "upstream": "10.0.0.6:3015",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/hedgedoc",
-          "upstream": "10.0.0.6:3018",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/dozzle",
-          "upstream": "10.0.0.4:9999",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/revealmd",
-          "upstream": "10.0.0.6:3014",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/grafana",
-          "upstream": "10.0.0.6:3016",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/gitea",
-          "upstream": "10.0.0.6:3017",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "app.diegonmarcos.com/crawlee",
-          "upstream": "10.0.0.6:3001",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "api.diegonmarcos.com/crawlee",
-          "upstream": "10.0.0.6:3000",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "api.diegonmarcos.com/c3-api",
-          "upstream": "10.0.0.6:8081",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "api.diegonmarcos.com/services",
-          "upstream": "10.0.0.6:8082",
-          "auth": "authelia+bearer",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "api.diegonmarcos.com/dash",
-          "upstream": "diegonmarcos.github.io",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "cloud.diegonmarcos.com",
-          "upstream": "10.0.0.6:3080",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": [
-            "/spec/*"
-          ]
-        },
-        {
-          "domain": "mcp.diegonmarcos.com",
-          "upstream": "10.0.0.6:3104",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "mail.diegonmarcos.com",
-          "upstream": "static",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "analytics.diegonmarcos.com",
-          "upstream": "10.0.0.6:8084",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": [
-            "/matomo.js",
-            "/matomo.php",
-            "/piwik.js",
-            "/piwik.php",
-            "/collect.php",
-            "/api.php",
-            "/track.php",
-            "/js/*",
-            "/umami/script.js",
-            "/umami/api/send",
-            "/umami/*",
-            "/umami"
-          ]
-        },
-        {
-          "domain": "rss.diegonmarcos.com",
-          "upstream": "10.0.0.6:8090",
-          "auth": "3-tier",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "proxy.diegonmarcos.com",
-          "upstream": "static",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        },
-        {
-          "domain": "mta-sts.diegonmarcos.com",
-          "upstream": "static",
-          "auth": "none",
-          "tls_skip": false,
-          "public_paths": []
-        }
-      ]
+      "routes": []
     },
     "authelia": {
       "acl": []
