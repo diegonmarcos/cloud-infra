@@ -91,31 +91,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Context + Dockerfile live under src/code/ after the v2 engine cutover
+        # (2026-04-22). Symlinks inside src/code/ to sibling src/code/shared and
+        # src/code/registry are resolved in the "Resolve symlinks" step below so
+        # the docker build context is self-contained.
         include:
           - name: google-workspace-mcp
-            context: a_solutions/aa-sui_google-workspace-mcp/src
-            file: a_solutions/aa-sui_google-workspace-mcp/src/Dockerfile
+            context: a_solutions/aa-sui_google-workspace-mcp/src/code
+            file: a_solutions/aa-sui_google-workspace-mcp/src/code/Dockerfile
           - name: mail-mcp
-            context: a_solutions/aa-sui_mail-mcp/src
-            file: a_solutions/aa-sui_mail-mcp/src/Dockerfile
+            context: a_solutions/aa-sui_mail-mcp/src/code
+            file: a_solutions/aa-sui_mail-mcp/src/code/Dockerfile
           - name: mattermost-mcp
-            context: a_solutions/aa-sui_mattermost-mcp/src
-            file: a_solutions/aa-sui_mattermost-mcp/src/Dockerfile
+            context: a_solutions/aa-sui_mattermost-mcp/src/code
+            file: a_solutions/aa-sui_mattermost-mcp/src/code/Dockerfile
           - name: introspect-proxy
-            context: a_solutions/bb-sec_introspect-proxy/src
-            file: a_solutions/bb-sec_introspect-proxy/src/Dockerfile
+            context: a_solutions/bb-sec_introspect-proxy/src/code
+            file: a_solutions/bb-sec_introspect-proxy/src/code/Dockerfile
           - name: c3-infra-mcp
-            context: a_solutions/bc-obs_c3-infra-mcp/src
-            file: a_solutions/bc-obs_c3-infra-mcp/src/Dockerfile
+            context: a_solutions/bc-obs_c3-infra-mcp/src/code
+            file: a_solutions/bc-obs_c3-infra-mcp/src/code/Dockerfile
           - name: c3-infra-api
-            context: a_solutions/bc-obs_c3-infra-api/src
-            file: a_solutions/bc-obs_c3-infra-api/src/Dockerfile
+            context: a_solutions/bc-obs_c3-infra-api/src/code
+            file: a_solutions/bc-obs_c3-infra-api/src/code/Dockerfile
           - name: c3-services-mcp
-            context: a_solutions/bc-obs_c3-services-mcp/src
-            file: a_solutions/bc-obs_c3-services-mcp/src/Dockerfile
+            context: a_solutions/bc-obs_c3-services-mcp/src/code
+            file: a_solutions/bc-obs_c3-services-mcp/src/code/Dockerfile
           - name: c3-services-api
-            context: a_solutions/bc-obs_c3-services-api/src
-            file: a_solutions/bc-obs_c3-services-api/src/Dockerfile
+            context: a_solutions/bc-obs_c3-services-api/src/code
+            file: a_solutions/bc-obs_c3-services-api/src/code/Dockerfile
     steps:
       - uses: actions/checkout@v4
         with:
