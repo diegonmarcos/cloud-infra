@@ -79,6 +79,11 @@ jobs:
         # cleanup happens per service.
         continue-on-error: true
         run: bash 1_workflows/src/test/test_container_name_matches_declaration.sh
+      - name: Phase 12 — health-report engine B5+B7 semantics (report-only)
+        # Checks cloud-data submodule copy; hard-passes only after auto-sync
+        # propagates the cloud-data commit.
+        continue-on-error: true
+        run: bash 1_workflows/src/test/test_health_report_semantics.sh
 
   build:
     needs: preflight-symlinks
