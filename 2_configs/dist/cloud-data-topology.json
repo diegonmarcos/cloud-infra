@@ -138,11 +138,15 @@
       "ports": [
         "10.0.0.6:3103:3103",
         "10.0.0.6:3102:3102",
+        "10.0.0.6:5232:5232",
         "10.0.0.6:3101:3101",
         "10.0.0.6:8084:8080",
         "10.0.0.6:3006:3006"
       ],
-      "networks": [],
+      "networks": [
+        "etherpad_net",
+        "default"
+      ],
       "specs": {
         "cpu": 4,
         "ram_gb": 24,
@@ -1290,9 +1294,14 @@
         "etherpad-db.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "etherpad_app",
+          "etherpad_postgres"
+        ],
         "ports": [],
-        "networks": []
+        "networks": [
+          "etherpad_net"
+        ]
       },
       "proxy": {
         "primary": {
@@ -1513,7 +1522,9 @@
         "grist.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "grist_app"
+        ],
         "ports": [],
         "networks": []
       },
@@ -1617,7 +1628,10 @@
         "hedgedoc-db.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "hedgedoc_app",
+          "hedgedoc_postgres"
+        ],
         "ports": [],
         "networks": []
       },
@@ -1988,7 +2002,11 @@
         "photoprism.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "photoprism_app",
+          "photoprism_mariadb",
+          "photoprism_rclone"
+        ],
         "ports": [],
         "networks": []
       },
@@ -2112,15 +2130,22 @@
         "radicale"
       ],
       "all_ports": [
-        "5232"
+        "5232",
+        "10.0.0.6:5232:5232"
       ],
       "all_dns": [
         "radicale.app"
       ],
       "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
+        "containers": [
+          "radicale"
+        ],
+        "ports": [
+          "10.0.0.6:5232:5232"
+        ],
+        "networks": [
+          "default"
+        ]
       },
       "proxy": {
         "primary": {
@@ -2179,7 +2204,9 @@
         "revealmd.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "revealmd_app"
+        ],
         "ports": [],
         "networks": []
       },
@@ -2306,7 +2333,8 @@
       ],
       "compose": {
         "containers": [
-          "maddy"
+          "maddy",
+          "maddy-sorter"
         ],
         "ports": [],
         "networks": []
@@ -2945,7 +2973,9 @@
         "ollama.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "ollama"
+        ],
         "ports": [],
         "networks": []
       },
@@ -3029,7 +3059,9 @@
         "ollama-hai.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "ollama-hai"
+        ],
         "ports": [],
         "networks": []
       },
@@ -3061,7 +3093,9 @@
       ],
       "all_dns": [],
       "compose": {
-        "containers": [],
+        "containers": [
+          "rig-agentic-hai"
+        ],
         "ports": [],
         "networks": []
       },
@@ -3093,7 +3127,9 @@
       ],
       "all_dns": [],
       "compose": {
-        "containers": [],
+        "containers": [
+          "rig-agentic-sonn-14bq8"
+        ],
         "ports": [],
         "networks": []
       },
@@ -4065,7 +4101,9 @@
         "dbgate.app"
       ],
       "compose": {
-        "containers": [],
+        "containers": [
+          "dbgate"
+        ],
         "ports": [],
         "networks": []
       },
@@ -4438,9 +4476,6 @@
       },
       "declared_ports": {
         "app": 3019
-      },
-      "health": {
-        "path": "/health"
       }
     },
     "ntfy": {
@@ -5303,7 +5338,7 @@
           "@fastify/swagger": "^9.4.0",
           "@fastify/swagger-ui": "^5.2.0",
           "@modelcontextprotocol/sdk": "^1.12.0",
-          "better-sqlite3": "^11.0.0",
+          "better-sqlite3": "^11.7.0",
           "fast-xml-parser": "^4.5.0",
           "fastify": "^5.2.0",
           "fastify-plugin": "^5.0.0",
@@ -5319,7 +5354,7 @@
         "devDependencies": {
           "@types/better-sqlite3": "^7.6.13",
           "@types/mailparser": "^3.4.6",
-          "@types/node": "^22.0.0",
+          "@types/node": "^22.10.0",
           "@types/nodemailer": "^6.4.23",
           "@types/nunjucks": "^3.2.6",
           "tsx": "^4.19.0",
@@ -5468,6 +5503,21 @@
           "devDependencies": {
             "@types/better-sqlite3": "^7.6.13",
             "@types/node": "^22.0.0",
+            "tsx": "^4.19.0",
+            "typescript": "^5.7.0"
+          }
+        },
+        {
+          "service": "news-gdelt",
+          "folder": "bc-obs_news-gdelt",
+          "category": "tools",
+          "dependencies": {
+            "better-sqlite3": "^11.7.0",
+            "fastify": "^5.2.0"
+          },
+          "devDependencies": {
+            "@types/better-sqlite3": "^7.6.12",
+            "@types/node": "^22.10.0",
             "tsx": "^4.19.0",
             "typescript": "^5.7.0"
           }
