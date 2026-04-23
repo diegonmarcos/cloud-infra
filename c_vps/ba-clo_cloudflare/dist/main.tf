@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : c_vps/ba-clo_cloudflare/src/main.tf
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Cloudflare DNS, Email Routing, Tunnel — data-driven from terraform.json
 # All record values live in terraform.json; this file is a pure template.
 
@@ -42,8 +54,8 @@ variable "cloudflare_zone_id" {
   type        = string
 }
 
-variable "dkim_stalwart_public_key" {
-  description = "Stalwart DKIM public key (dkim._domainkey)"
+variable "dkim_maddy_public_key" {
+  description = "Maddy DKIM public key (default._domainkey)"
   type        = string
 }
 
@@ -84,7 +96,7 @@ variable "ses_dkim_token_3" {
 # Map variable names to values for dynamic DKIM lookup
 locals {
   dkim_vars = {
-    dkim_stalwart_public_key = var.dkim_stalwart_public_key
+    dkim_maddy_public_key = var.dkim_maddy_public_key
     dkim_cf_public_key       = var.dkim_cf_public_key
     dkim_google_public_key   = var.dkim_google_public_key
   }

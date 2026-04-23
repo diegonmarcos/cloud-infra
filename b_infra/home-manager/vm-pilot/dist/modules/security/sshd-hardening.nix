@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : src/modules/security/sshd-hardening.nix
+# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # SSH daemon hardening — drops a config snippet into /etc/ssh/sshd_config.d/
 # Fixes 50s+ SSH delays caused by reverse DNS lookups (UseDNS)
 { config, pkgs, lib, ... }:

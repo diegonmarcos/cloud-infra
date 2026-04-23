@@ -139,6 +139,14 @@ while IFS= read -r f; do
         */.secrets-hash*|*/.secrets-env-var-names*) continue ;;
         *secrets-env-var-names*.json|*cloud-data-secrets-env-var-names.json) continue ;;
         *secrets-subst.nix) continue ;;
+        # GitHub Actions workflow YAMLs (engine paths): named-about-secrets
+        # files here (e.g. lint-secrets-coverage.yml) define CI lint/audit
+        # jobs — never secret containers. Required GHA shape: on: + jobs:.
+        .github/workflows/*.yml|1_workflows/src/cicd/*.yml|1_workflows/dist/*.yml)
+            if grep -qE '^on:' "$f" 2>/dev/null && grep -qE '^jobs:' "$f" 2>/dev/null; then
+                continue
+            fi
+            ;;
     esac
     # Code files: only flag if contain obvious inline values
     case "$f" in

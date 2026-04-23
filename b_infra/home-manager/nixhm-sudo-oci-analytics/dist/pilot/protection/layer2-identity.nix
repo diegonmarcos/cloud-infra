@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-oci-analytics/src/pilot/protection/layer2-identity.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # System Protection — Layer 2: Identity & System Slice Hierarchy
 #
 # LOCAL (system.slice) — daemons started by systemd:

@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : src/modules/protection/scheduler.nix
+# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # system-protection-slices.nix — cgroup slice isolation (slices only, no FIFO/RR)
 #
 # Two slices, kernel-enforced:

@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : src/modules/protection/guardrails.nix
+# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Guardrails: PATH wrapper scripts in ~/.local/bin/
 # Four-tier command protection:
 #   WHITELIST → read-only / safe subcommands — pass through immediately

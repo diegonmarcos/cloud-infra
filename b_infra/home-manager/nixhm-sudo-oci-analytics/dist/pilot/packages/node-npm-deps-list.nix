@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-oci-analytics/src/pilot/packages/node-npm-deps-list.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Static list of all known npm dependencies — always installed.
 # This is the declarative baseline. Snapshot from 2026-03-24.
 # Merged from: cloud-data-deps.json + front-deps.json + essential tools.

@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/scripts/cloud-ship-container-step-build-compose.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Step: Compose build + push — builds GHCR images from dockerfile_inline
 # Builds all services in docker-compose.yml that have a build: section
 # and pushes them to GHCR. Requires GHCR login before calling.

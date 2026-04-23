@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : src/modules/agents/evidence-collector.nix
+# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Evidence Collector — LIGHTWEIGHT daily metadata capture.
 #
 # Produces /var/backups/evidence/<date>/ containing ONLY the files

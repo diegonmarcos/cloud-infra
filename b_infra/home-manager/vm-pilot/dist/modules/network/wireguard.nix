@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : src/modules/network/wireguard.nix
+# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # WireGuard mesh configuration module for Home Manager
 # Private keys owned by vault, deployed via sops secrets pipeline
 { vmName }:

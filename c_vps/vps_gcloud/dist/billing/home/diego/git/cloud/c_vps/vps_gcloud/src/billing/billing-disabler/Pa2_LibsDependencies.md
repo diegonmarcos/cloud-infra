@@ -1,0 +1,3705 @@
+# Installed Libraries and Dependencies
+
+## Summary
+This document lists all installed packages on the system, categorized by package manager and type.
+
+### Package Optimization - Complete Overview
+All packages have been analyzed and tagged with `[MANUAL]` (manually installed) or `[AUTO]` (auto-installed as dependencies).
+
+| Package Manager | Total Packages | Manual | Auto/Dependencies | Reduction |
+|----------------|----------------|---------|-------------------|-----------|
+| **APT**        | 3,276         | 157     | 3,119            | 95.2%     |
+| **Python pip** | 126           | 94      | 32               | 25.4%     |
+| **Node.js npm**| 4             | 2       | 2                | 50.0%     |
+| **Snap**       | 25            | 11      | 14 runtimes      | 56.0%     |
+| **RubyGems**   | 129           | 9       | 120              | 93.0%     |
+| **VS Code**    | 48            | 48      | 0                | 0%        |
+| **TOTAL**      | **3,608**     | **321** | **3,287**        | **91.1%** |
+
+### Installation Summary
+Instead of running **3,608+ installation commands**, you only need **321 commands**!
+That's a **91.1% reduction** in installation complexity.
+
+### Package Legend
+- `[MANUAL]` - Package was explicitly installed by user (INSTALL THESE)
+- `[AUTO]` - Package was automatically installed as a dependency (SKIP THESE)
+
+### Quick Installation Options
+
+#### Option 1: Master Script (RECOMMENDED)
+Install everything at once:
+```bash
+bash /path/to/install_all_packages.sh
+```
+
+#### Option 2: Individual Package Manager Scripts
+Install by category:
+```bash
+bash install_apt_packages.sh       # APT packages
+bash install_pip_packages.sh       # Python packages
+bash install_npm_packages.sh       # Node.js packages
+bash install_snap_packages.sh      # Snap applications
+bash install_gem_packages.sh       # RubyGems
+bash install_vscode_extensions.sh  # VS Code extensions
+```
+
+#### Option 3: Manual Review
+Review the markdown file and install only packages marked with `[MANUAL]`.
+
+### Installation Scripts Created
+All scripts are in the repository:
+- `install_all_packages.sh` - Master script (runs all below)
+- `install_apt_packages.sh` - 157 APT packages
+- `install_pip_packages.sh` - 94 Python packages
+- `install_npm_packages.sh` - 2 Node.js packages
+- `install_snap_packages.sh` - 11 Snap applications
+- `install_gem_packages.sh` - 9 RubyGems
+- `install_vscode_extensions.sh` - 48 VS Code extensions
+- `manual_packages_list.txt` - APT packages reference list
+
+---
+
+## Python Packages (pip)
+- `[MANUAL] pip install aiodns==3.1.1`: **aiodns** (3.1.1) - An asynchronous DNS resolver.
+- `[MANUAL] pip install aiohttp==3.9.1`: **aiohttp** (3.9.1) - An asynchronous HTTP client/server framework.
+- `[MANUAL] pip install aiosignal==1.3.1`: **aiosignal** (1.3.1) - A library for aiohttp signals.
+- `[AUTO] pip install argcomplete==3.1.4`: **argcomplete** (3.1.4) - Bash tab completion for argparse.
+- `[MANUAL] pip install asn1crypto==1.5.1`: **asn1crypto** (1.5.1) - A Python library for parsing and serializing ASN.1 structures.
+- `[MANUAL] pip install async-timeout==4.0.3`: **async-timeout** (4.0.3) - An asynchronous timeout context manager.
+- `[MANUAL] pip install attrs==23.2.0`: **attrs** (23.2.0) - Classes without boilerplate.
+- `[MANUAL] pip install Babel==2.10.3`: **Babel** (2.10.3) - An internationalization library for Python.
+- `[MANUAL] pip install bcc==0.29.1`: **bcc** (0.29.1) - A toolkit for creating efficient kernel tracing and manipulation programs.
+- `[MANUAL] pip install bcrypt==3.2.2`: **bcrypt** (3.2.2) - A password hashing library.
+- `[MANUAL] pip install blinker==1.7.0`: **blinker** (1.7.0) - A fast, simple way to add object-to-object and broadcast signals to your Python applications.
+- `[MANUAL] pip install Brlapi==0.8.5`: **Brlapi** (0.8.5) - A Python binding for BrlAPI.
+- `[AUTO] pip install Brotli==1.1.0`: **Brotli** (1.1.0) - A Python binding for the Brotli compression algorithm.
+- `[AUTO] pip install certifi==2023.11.17`: **certifi** (2023.11.17) - A carefully curated collection of Root Certificates for validating the trustworthiness of SSL certificates.
+- `[MANUAL] pip install chardet==5.2.0`: **chardet** (5.2.0) - Universal character encoding detector.
+- `[AUTO] pip install click==8.1.6`: **click** (8.1.6) - A composable command line interface toolkit.
+- `[MANUAL] pip install colorama==0.4.6`: **colorama** (0.4.6) - Cross-platform colored terminal text.
+- `[MANUAL] pip install command-not-found==0.3`: **command-not-found** (0.3) - Suggests installation of packages in interactive bash sessions.
+- `[AUTO] pip install cryptography==41.0.7`: **cryptography** (41.0.7) - A Python library for cryptographic recipes and primitives.
+- `[MANUAL] pip install cupshelpers==1.0`: **cupshelpers** (1.0) - Helper utilities for CUPS.
+- `[MANUAL] pip install dbus-fast==2.44.1`: **dbus-fast** (2.44.1) - A fast D-Bus library for Python.
+- `[MANUAL] pip install dbus-python==1.3.2`: **dbus-python** (1.3.2) - Python bindings for the D-Bus message bus system.
+- `[MANUAL] pip install defer==1.0.6`: **defer** (1.0.6) - A Python library for deferred execution.
+- `[MANUAL] pip install distro==1.9.0`: **distro** (1.9.0) - Linux OS distribution information.
+- `[MANUAL] pip install distro-info==1.7+build1`: **distro-info** (1.7+build1) - Provides information about the distributions' releases.
+- `[AUTO] pip install et_xmlfile==2.0.0`: **et_xmlfile** (2.0.0) - An efficient way to write large XML files.
+- `[MANUAL] pip install fido2==1.1.2`: **fido2** (1.1.2) - A Python library for FIDO2.
+- `[MANUAL] pip install frozenlist==1.4.0`: **frozenlist** (1.4.0) - A list-like structure that can be made immutable.
+- `[MANUAL] pip install fuse-python==1.0.7`: **fuse-python** (1.0.7) - Python bindings for FUSE.
+- `[MANUAL] pip install GDAL==3.8.4`: **GDAL** (3.8.4) - Geospatial Data Abstraction Library.
+- `[MANUAL] pip install gpg==1.18.0`: **gpg** (1.18.0) - A Python wrapper for GnuPG.
+- `[MANUAL] pip install gyp==0.1`: **gyp** (0.1) - Generate Your Projects.
+- `[MANUAL] pip install html5lib==1.1`: **html5lib** (1.1) - A Python library for parsing HTML.
+- `[AUTO] pip install httplib2==0.20.4`: **httplib2** (0.20.4) - A comprehensive HTTP client library.
+- `[MANUAL] pip install idna==3.6`: **idna** (3.6) - Internationalized Domain Names in Applications (IDNA).
+- `[MANUAL] pip install importlib-metadata==4.12.0`: **importlib-metadata** (4.12.0) - Read metadata from Python packages.
+- `[AUTO] pip install jaraco.classes==3.2.1`: **jaraco.classes** (3.2.1) - A collection of Python classes.
+- `[AUTO] pip install jeepney==0.8.0`: **jeepney** (0.8.0) - A pure Python D-Bus library.
+- `[MANUAL] pip install Jinja2==3.1.2`: **Jinja2** (3.1.2) - A modern and designer-friendly templating language for Python.
+- `[MANUAL] pip install keyring==24.3.1`: **keyring** (24.3.1) - Access the system keyring service.
+- `[MANUAL] pip install language-selector==0.1`: **language-selector** (0.1) - Language selector for Ubuntu.
+- `[MANUAL] pip install launchpadlib==1.11.0`: **launchpadlib** (1.11.0) - A Python client library for Launchpad.
+- `[AUTO] pip install lazr.restfulclient==0.14.6`: **lazr.restfulclient** (0.14.6) - A Python client for RESTful web services.
+- `[AUTO] pip install lazr.uri==1.0.6`: **lazr.uri** (1.0.6) - A Python library for URI manipulation.
+- `[MANUAL] pip install libvirt-python==10.0.0`: **libvirt-python** (10.0.0) - Python bindings for the libvirt virtualization management library.
+- `[MANUAL] pip install louis==3.29.0`: **louis** (3.29.0) - Python bindings for Liblouis Braille translator.
+- `[AUTO] pip install lxml==6.0.2`: **lxml** (6.0.2) - A Pythonic XML and HTML processing library.
+- `[MANUAL] pip install Markdown==3.5.2`: **Markdown** (3.5.2) - A Python implementation of John Gruber's Markdown.
+- `[AUTO] pip install markdown-it-py==3.0.0`: **markdown-it-py** (3.0.0) - Markdown parser done right. Fast and easy to extend.
+- `[MANUAL] pip install MarkupSafe==2.1.5`: **MarkupSafe** (2.1.5) - Implements a MarkupSafe string class that can be used to escape strings.
+- `[AUTO] pip install mdurl==0.1.2`: **mdurl** (0.1.2) - Markdown URL parsing and encoding.
+- `[MANUAL] pip install mechanize==0.4.9`: **mechanize** (0.4.9) - Stateful programmatic web browsing.
+- `[AUTO] pip install more-itertools==10.2.0`: **more-itertools** (10.2.0) - More routines for operating on iterables than `itertools`.
+- `[MANUAL] pip install multidict==6.0.4`: **multidict** (6.0.4) - Multidict implementation.
+- `[AUTO] pip install mutagen==1.46.0`: **mutagen** (1.46.0) - Python module to handle audio metadata.
+- `[MANUAL] pip install netaddr==0.8.0`: **netaddr** (0.8.0) - A Python library for network address manipulation.
+- `[MANUAL] pip install netifaces==0.11.0`: **netifaces** (0.11.0) - Portable network interface information.
+- `[AUTO] pip install numpy==1.26.4`: **numpy** (1.26.4) - Fundamental package for scientific computing with Python.
+- `[MANUAL] pip install oauthlib==3.2.2`: **oauthlib** (3.2.2) - A generic, spec-compliant, thorough implementation of the OAuth request signing logic.
+- `[MANUAL] pip install olefile==0.46`: **olefile** (0.46) - Python package to parse, read and write Microsoft OLE2 files.
+- `[MANUAL] pip install openpyxl==3.1.5`: **openpyxl** (3.1.5) - A Python library to read/write Excel 2010 xlsx/xlsm files.
+- `[AUTO] pip install packaging==24.0`: **packaging** (24.0) - Core utilities for Python packages.
+- `[MANUAL] pip install pexpect==4.9.0`: **pexpect** (4.9.0) - Pexpect allows easy control of interactive console applications.
+- `[MANUAL] pip install pillow==10.2.0`: **pillow** (10.2.0) - The friendly PIL fork (Python Imaging Library).
+- `[MANUAL] pip install pip==24.0`: **pip** (24.0) - The package installer for Python.
+- `[MANUAL] pip install pipx==1.4.3`: **pipx** (1.4.3) - Install and run Python applications in isolated environments.
+- `[AUTO] pip install platformdirs==4.2.0`: **platformdirs** (4.2.0) - A Python library for determining platform-specific directories.
+- `[MANUAL] pip install proton-core==0.7.0`: **proton-core** (0.7.0) - Core components for Proton applications.
+- `[MANUAL] pip install proton-keyring-linux==0.2.0`: **proton-keyring-linux** (0.2.0) - Linux keyring integration for Proton applications.
+- `[MANUAL] pip install proton-vpn-api-core==0.46.1`: **proton-vpn-api-core** (0.46.1) - Core API for Proton VPN.
+- `[MANUAL] pip install proton-vpn-daemon==0.13.2`: **proton-vpn-daemon** (0.13.2) - Daemon for Proton VPN.
+- `[MANUAL] pip install proton-vpn-gtk-app==4.11.0`: **proton-vpn-gtk-app** (4.11.0) - GTK application for Proton VPN.
+- `[MANUAL] pip install proton-vpn-lib==0.1.1`: **proton-vpn-lib** (0.1.1) - Library for Proton VPN.
+- `[MANUAL] pip install proton-vpn-network-manager==0.13.0`: **proton-vpn-network-manager** (0.13.0) - Network manager integration for Proton VPN.
+- `[MANUAL] pip install psutil==5.9.8`: **psutil** (5.9.8) - Cross-platform process and system utilities.
+- `[MANUAL] pip install ptyprocess==0.7.0`: **ptyprocess** (0.7.0) - Run a subprocess in a pseudo terminal.
+- `[MANUAL] pip install pycairo==1.25.1`: **pycairo** (1.25.1) - Python bindings for Cairo.
+- `[MANUAL] pip install pycares==4.4.0`: **pycares** (4.4.0) - Python interface for c-ares.
+- `[AUTO] pip install pycryptodomex==3.20.0`: **pycryptodomex** (3.20.0) - A self-contained Python package of cryptographic primitives.
+- `[MANUAL] pip install pycups==2.0.1`: **pycups** (2.0.1) - Python bindings for CUPS.
+- `[AUTO] pip install Pygments==2.17.2`: **Pygments** (2.17.2) - A generic syntax highlighter.
+- `[MANUAL] pip install PyGObject==3.48.2`: **PyGObject** (3.48.2) - Python bindings for GObject.
+- `[MANUAL] pip install PyJWT==2.7.0`: **PyJWT** (2.7.0) - JSON Web Token implementation in Python.
+- `[MANUAL] pip install pylibacl==0.7.0`: **pylibacl** (0.7.0) - Python bindings for POSIX access control lists.
+- `[MANUAL] pip install PyNaCl==1.5.0`: **PyNaCl** (1.5.0) - Python binding to the Networking and Cryptography (NaCl) library.
+- `[MANUAL] pip install pyOpenSSL==23.2.0`: **pyOpenSSL** (23.2.0) - Python wrapper around a subset of the OpenSSL library.
+- `[AUTO] pip install pyparsing==3.1.1`: **pyparsing** (3.1.1) - A powerful, flexible, and extensible parsing library for Python.
+- `[MANUAL] pip install PyQt5==5.15.10`: **PyQt5** (5.15.10) - Python bindings for the Qt cross-platform application and UI framework.
+- `[AUTO] pip install PyQt5-sip==12.13.0`: **PyQt5-sip** (12.13.0) - Python bindings for SIP.
+- `[MANUAL] pip install python-apt==2.7.7+ubuntu5`: **python-apt** (2.7.7+ubuntu5) - Python bindings for APT.
+- `[MANUAL] pip install python-debian==0.1.49+ubuntu2`: **python-debian** (0.1.49+ubuntu2) - Python modules for Debian-specific things.
+- `[MANUAL] pip install python-docx==1.2.0`: **python-docx** (1.2.0) - Create and modify Word documents (.docx).
+- `[MANUAL] pip install python-gnupg==0.5.2`: **python-gnupg** (0.5.2) - A Python wrapper for GnuPG.
+- `[MANUAL] pip install pytz==2024.1`: **pytz** (2024.1) - World timezone definitions for Python.
+- `[MANUAL] pip install pyxattr==0.8.1`: **pyxattr** (0.8.1) - Python bindings for extended attributes.
+- `[MANUAL] pip install pyxdg==0.28`: **pyxdg** (0.28) - Python library for XDG Base Directory Specification.
+- `[MANUAL] pip install PyYAML==6.0.1`: **PyYAML** (6.0.1) - YAML parser and emitter for Python.
+- `[AUTO] pip install requests==2.31.0`: **requests** (2.31.0) - Python HTTP for Humans.
+- `[MANUAL] pip install reverse_geocoder==1.5.1`: **reverse_geocoder** (1.5.1) - A fast, offline reverse geocoder.
+- `[MANUAL] pip install rich==13.7.1`: **rich** (13.7.1) - A Python library for rich text and beautiful formatting in the terminal.
+- `[AUTO] pip install scipy==1.16.2`: **scipy** (1.16.2) - Scientific tools for Python.
+- `[AUTO] pip install SecretStorage==3.3.3`: **SecretStorage** (3.3.3) - Python bindings for the Secret Service API.
+- `[MANUAL] pip install sentry-sdk==1.39.2`: **sentry-sdk** (1.39.2) - Sentry SDK for Python.
+- `[MANUAL] pip install setuptools==68.1.2`: **setuptools** (68.1.2) - Easily download, build, install, upgrade, and uninstall Python packages.
+- `[AUTO] pip install six==1.16.0`: **six** (1.16.0) - Python 2 and 3 compatibility utilities.
+- `[MANUAL] pip install systemd-python==235`: **systemd-python** (235) - Python bindings for systemd.
+- `[MANUAL] pip install tornado==6.4`: **tornado** (6.4) - A Python web framework and asynchronous networking library.
+- `[AUTO] pip install typing_extensions==4.10.0`: **typing_extensions** (4.10.0) - Backported and experimental type hints for Python.
+- `[MANUAL] pip install ubuntu-drivers-common==0.0.0`: **ubuntu-drivers-common** (0.0.0) - Common utilities for Ubuntu drivers.
+- `[MANUAL] pip install ubuntu-pro-client==8001`: **ubuntu-pro-client** (8001) - Client for Ubuntu Pro.
+- `[MANUAL] pip install ufw==0.36.2`: **ufw** (0.36.2) - Uncomplicated Firewall.
+- `[MANUAL] pip install unattended-upgrades==0.1`: **unattended-upgrades** (0.1) - Automatic installation of security (and other) updates.
+- `[AUTO] pip install urllib3==2.0.7`: **urllib3** (2.0.7) - A powerful, user-friendly HTTP client for Python.
+- `[MANUAL] pip install usb-creator==0.3.16`: **usb-creator** (0.3.16) - Create a bootable USB startup disk.
+- `[AUTO] pip install userpath==1.9.1`: **userpath** (1.9.1) - Cross-platform tool for managing the user's PATH.
+- `[MANUAL] pip install vboxapi==1.0`: **vboxapi** (1.0) - VirtualBox API.
+- `[MANUAL] pip install wadllib==1.3.6`: **wadllib** (1.3.6) - Python library for parsing WADL documents.
+- `[MANUAL] pip install webencodings==0.5.1`: **webencodings** (0.5.1) - Character encoding aliases for legacy web content.
+- `[AUTO] pip install websockets==10.4`: **websockets** (10.4) - A library for building WebSocket servers and clients.
+- `[MANUAL] pip install wheel==0.42.0`: **wheel** (0.42.0) - A built-package format for Python.
+- `[MANUAL] pip install xdg==5`: **xdg** (5) - Python library for XDG Base Directory Specification.
+- `[MANUAL] pip install xkit==0.0.0`: **xkit** (0.0.0) - X.Org X server utilities.
+- `[MANUAL] pip install yarl==1.8.2`: **yarl** (1.8.2) - Yet another URL library.
+- `[MANUAL] pip install yt-dlp==2024.4.9`: **yt-dlp** (2024.4.9) - A youtube-dl fork with additional features and fixes.
+- `[AUTO] pip install zipp==1.0.0`: **zipp** (1.0.0) - Pathlib-compatible object wrapper for zip files.
+
+## Node.js Packages (npm)
+- `[MANUAL] npm install -g @anthropic-ai/claude-code@2.0.26`: **@anthropic-ai/claude-code** (2.0.26) - Anthropic AI Claude Code package.
+- `[MANUAL] npm install -g @google/gemini-cli@0.10.0`: **@google/gemini-cli** (0.10.0) - Google Gemini CLI package.
+- `[MANUAL] npm install -g corepack@0.34.0`: **corepack** (0.34.0) - Corepack manages your package managers.
+- `[MANUAL] npm install -g npm@10.9.3`: **npm** (10.9.3) - Node.js package manager.
+
+## Snap Packages
+- `[MANUAL] snap install bare`: **bare** (1.0) - A minimal snap package.
+- `[MANUAL] snap install core18`: **core18** (20250910) - Core snap runtime for Ubuntu 18.04 LTS.
+- `[MANUAL] snap install core20`: **core20** (20250730) - Core snap runtime for Ubuntu 20.04 LTS.
+- `[MANUAL] snap install core22`: **core22** (20250923) - Core snap runtime for Ubuntu 22.04 LTS.
+- `[MANUAL] snap install core24`: **core24** (20251001) - Core snap runtime for Ubuntu 24.04 LTS.
+- `[MANUAL] snap install curl`: **curl** (8.16.0) - Command-line tool for transferring data with URL syntax.
+- `[MANUAL] snap install custom-screen-resolution`: **custom-screen-resolution** (2.0.0) - Custom screen resolution utility.
+- `[MANUAL] snap install element-desktop`: **element-desktop** (1.12.2) - Desktop client for Element (Matrix chat).
+- `[MANUAL] snap install ffmpeg-2204`: **ffmpeg-2204** (7.0) - Multimedia framework for audio and video processing.
+- `[MANUAL] snap install firmware-updater`: **firmware-updater** (0+git.0052f6b) - Utility for updating firmware.
+- `[MANUAL] snap install gnome-3-34-1804`: **gnome-3-34-1804** (0+git.3556cb3) - GNOME 3.34 runtime for snaps on Ubuntu 18.04.
+- `[MANUAL] snap install gnome-3-38-2004`: **gnome-3-38-2004** (0+git.efb213a) - GNOME 3.38 runtime for snaps on Ubuntu 20.04.
+- `[MANUAL] snap install gnome-42-2204`: **gnome-42-2204** (0+git.38ea591) - GNOME 42 runtime for snaps on Ubuntu 22.04.
+- `[MANUAL] snap install gnome-46-2404`: **gnome-46-2404** (0+git.4ca00c0-sdk0+git.df43897) - GNOME 46 runtime for snaps on Ubuntu 24.04.
+- `[MANUAL] snap install google-cloud-cli`: **google-cloud-cli** (544.0.0) - Command-line interface for Google Cloud.
+- `[MANUAL] snap install gtk-common-themes`: **gtk-common-themes** (0.1-81-g442e511) - Common GTK themes for snaps.
+- `[MANUAL] snap install htop`: **htop** (3.4.1) - Interactive process viewer.
+- `[MANUAL] snap install kf5-5-113-qt-5-15-11-core22`: **kf5-5-113-qt-5-15-11-core22** (5.113) - KDE Frameworks 5 runtime for snaps.
+- `[MANUAL] snap install kf5-core22`: **kf5-core22** (5.116.0) - KDE Frameworks 5 core runtime for snaps.
+- `[MANUAL] snap install krita`: **krita** (5.2.11) - Digital painting and sketching application.
+- `[MANUAL] snap install mesa-2404`: **mesa-2404** (24.2.8-snap185) - Mesa 3D graphics library for snaps.
+- `[MANUAL] snap install ollama`: **ollama** (v0.12.3) - Ollama AI model runner.
+- `[MANUAL] snap install slack`: **slack** (4.46.99) - Slack desktop application.
+- `[MANUAL] snap install snapd`: **snapd** (2.72) - Snap daemon for managing snap packages.
+- `[MANUAL] snap install thunderbird`: **thunderbird** (140.3.1esr-1) - Thunderbird email client.
+
+## RubyGems Packages (gem)
+- `[MANUAL] gem install abbrev -v 0.1.1`: **abbrev** (0.1.1) - A Ruby library for abbreviating strings.
+- `[MANUAL] gem install addressable -v 2.8.5`: **addressable** (2.8.5) - A Ruby library for URI manipulation.
+- `[MANUAL] gem install base64 -v 0.1.1`: **base64** (0.1.1) - A Ruby library for Base64 encoding/decoding.
+- `[MANUAL] gem install benchmark -v 0.2.1`: **benchmark** (0.2.1) - A Ruby library for benchmarking code.
+- `[MANUAL] gem install bigdecimal -v 3.1.3`: **bigdecimal** (3.1.3) - A Ruby library for arbitrary-precision decimal floating-point arithmetic.
+- `[MANUAL] gem install bundler -v 2.4.20`: **bundler** (2.4.20) - The best way to manage your Ruby application's dependencies.
+- `[MANUAL] gem install cgi -v 0.3.6`: **cgi** (0.3.6) - A Ruby library for CGI programming.
+- `[MANUAL] gem install classifier-reborn -v 2.2.0`: **classifier-reborn** (2.2.0) - A general purpose classifier library for Ruby.
+- `[MANUAL] gem install coderay -v 1.1.3`: **coderay** (1.1.3) - Fast and easy syntax highlighting for Ruby.
+- `[MANUAL] gem install colorator -v 1.1.0`: **colorator** (1.1.0) - Colorize your Ruby output.
+- `[MANUAL] gem install concurrent-ruby -v 1.2.3`: **concurrent-ruby** (1.2.3) - Modern concurrency tools for Ruby.
+- `[MANUAL] gem install concurrent-ruby-edge -v 0.7.0`: **concurrent-ruby-edge** (0.7.0) - Edge features for concurrent-ruby.
+- `[MANUAL] gem install csv -v 3.2.6`: **csv** (3.2.6) - A Ruby library for CSV parsing and generation.
+- `[MANUAL] gem install date -v 3.3.3`: **date** (3.3.3) - A Ruby library for date and time manipulation.
+- `[MANUAL] gem install debug -v 1.7.1`: **debug** (1.7.1) - A Ruby debugger.
+- `[MANUAL] gem install delegate -v 0.3.0`: **delegate** (0.3.0) - A Ruby library for delegation.
+- `[MANUAL] gem install did_you_mean -v 1.6.3`: **did_you_mean** (1.6.3) - A Ruby library for suggesting possible corrections for typos.
+- `[MANUAL] gem install digest -v 3.1.1`: **digest** (3.1.1) - A Ruby library for cryptographic digests.
+- `[MANUAL] gem install drb -v 2.1.1`: **drb** (2.1.1) - A Ruby library for distributed Ruby.
+- `[MANUAL] gem install em-websocket -v 0.5.1`: **em-websocket** (0.5.1) - EventMachine-based WebSocket server and client.
+- `[MANUAL] gem install english -v 0.7.2`: **english** (0.7.2) - A Ruby library for English language utilities.
+- `[MANUAL] gem install erb -v 4.0.2`: **erb** (4.0.2) - Embedded Ruby.
+- `[MANUAL] gem install error_highlight -v 0.5.1`: **error_highlight** (0.5.1) - A Ruby library for highlighting errors.
+- `[MANUAL] gem install etc -v 1.4.2`: **etc** (1.4.2) - A Ruby library for accessing system information.
+- `[MANUAL] gem install eventmachine -v 1.3.0.dev.1`: **eventmachine** (1.3.0.dev.1) - A Ruby event-driven I/O and concurrency library.
+- `[MANUAL] gem install fast-stemmer -v 1.0.2`: **fast-stemmer** (1.0.2) - A fast stemmer for Ruby.
+- `[MANUAL] gem install fcntl -v 1.0.2`: **fcntl** (1.0.2) - A Ruby library for fcntl.
+- `[MANUAL] gem install ffi -v 1.16.3`: **ffi** (1.16.3) - Ruby FFI library.
+- `[MANUAL] gem install fiddle -v 1.1.1`: **fiddle** (1.1.1) - A Ruby library for Fiddle.
+- `[MANUAL] gem install fileutils -v 1.7.0`: **fileutils** (1.7.0) - A Ruby library for file utility methods.
+- `[MANUAL] gem install find -v 0.1.1`: **find** (0.1.1) - A Ruby library for finding files.
+- `[MANUAL] gem install forwardable -v 1.3.3`: **forwardable** (1.3.3) - A Ruby library for delegation.
+- `[MANUAL] gem install forwardable-extended -v 2.6.0`: **forwardable-extended** (2.6.0) - Extended Forwardable module for Ruby.
+- `[MANUAL] gem install getoptlong -v 0.2.0`: **getoptlong** (0.2.0) - A Ruby library for parsing command-line options.
+- `[MANUAL] gem install http_parser.rb -v 0.6.0`: **http_parser.rb** (0.6.0) - A Ruby wrapper for the Node.js HTTP parser.
+- `[MANUAL] gem install i18n -v 1.14.1`: **i18n** (1.14.1) - Ruby Internationalization library.
+- `[MANUAL] gem install io-console -v 0.6.0`: **io-console** (0.6.0) - A Ruby library for console I/O.
+- `[MANUAL] gem install io-nonblock -v 0.2.0`: **io-nonblock** (0.2.0) - A Ruby library for non-blocking I/O.
+- `[MANUAL] gem install io-wait -v 0.3.0`: **io-wait** (0.3.0) - A Ruby library for waiting on I/O.
+- `[MANUAL] gem install ipaddr -v 1.2.5`: **ipaddr** (1.2.5) - A Ruby library for IP address manipulation.
+- `[MANUAL] gem install irb -v 1.6.2`: **irb** (1.6.2) - Interactive Ruby.
+- `[MANUAL] gem install jekyll -v 4.3.2`: **jekyll** (4.3.2) - A simple, blog-aware, static site generator in Ruby.
+- `[MANUAL] gem install jekyll-feed -v 0.17.0`: **jekyll-feed** (0.17.0) - A Jekyll plugin to generate an Atom feed.
+- `[MANUAL] gem install jekyll-sass-converter -v 2.2.0`: **jekyll-sass-converter** (2.2.0) - A Jekyll plugin for Sass conversion.
+- `[MANUAL] gem install jekyll-seo-tag -v 2.8.0`: **jekyll-seo-tag** (2.8.0) - A Jekyll plugin to add SEO metadata to your site.
+- `[MANUAL] gem install jekyll-watch -v 2.2.1`: **jekyll-watch** (2.2.1) - A Jekyll plugin for watching file changes.
+- `[MANUAL] gem install json -v 2.6.3`: **json** (2.6.3) - A Ruby library for JSON parsing and generation.
+- `[MANUAL] gem install kramdown -v 2.4.0`: **kramdown** (2.4.0) - A free MIT-licensed Ruby library for parsing and converting a subset of Markdown.
+- `[MANUAL] gem install kramdown-parser-gfm -v 1.1.0`: **kramdown-parser-gfm** (1.1.0) - A Kramdown parser for GitHub Flavored Markdown.
+- `[MANUAL] gem install liquid -v 5.4.0`: **liquid** (5.4.0) - A Ruby templating language.
+- `[MANUAL] gem install listen -v 3.9.0`: **listen** (3.9.0) - Listens to file modifications.
+- `[MANUAL] gem install logger -v 1.5.3`: **logger** (1.5.3) - A Ruby library for logging.
+- `[MANUAL] gem install matrix -v 0.4.2`: **matrix** (0.4.2) - A Ruby library for matrix operations.
+- `[MANUAL] gem install mercenary -v 0.4.0`: **mercenary** (0.4.0) - A Ruby library for building command-line tools.
+- `[MANUAL] gem install mime-types -v 3.5.2`: **mime-types** (3.5.2) - A Ruby library for MIME type manipulation.
+- `[MANUAL] gem install mime-types-data -v 3.2024.0206`: **mime-types-data** (3.2024.0206) - Data for the mime-types library.
+- `[MANUAL] gem install minima -v 2.5.1`: **minima** (2.5.1) - A beautiful, minimal, and responsive Jekyll theme.
+- `[MANUAL] gem install minitest -v 5.16.3`: **minitest** (5.16.3) - A Ruby testing framework.
+- `[MANUAL] gem install mutex_m -v 0.1.2`: **mutex_m** (0.1.2) - A Ruby library for mutexes.
+- `[MANUAL] gem install net-ftp -v 0.2.1`: **net-ftp** (0.2.1) - A Ruby library for FTP.
+- `[MANUAL] gem install net-http -v 0.4.1`: **net-http** (0.4.1) - A Ruby library for HTTP.
+- `[MANUAL] gem install net-imap -v 0.3.4.1`: **net-imap** (0.3.4.1) - A Ruby library for IMAP.
+- `[MANUAL] gem install net-pop -v 0.1.2`: **net-pop** (0.1.2) - A Ruby library for POP3.
+- `[MANUAL] gem install net-protocol -v 0.2.1`: **net-protocol** (0.2.1) - A Ruby library for network protocols.
+- `[MANUAL] gem install net-smtp -v 0.3.4`: **net-smtp** (0.3.4) - A Ruby library for SMTP.
+- `[MANUAL] gem install net-telnet -v 0.2.0`: **net-telnet** (0.2.0) - A Ruby library for Telnet.
+- `[MANUAL] gem install nkf -v 0.1.2`: **nkf** (0.1.2) - A Ruby library for Network Kanji Filter.
+- `[MANUAL] gem install observer -v 0.1.1`: **observer** (0.1.1) - A Ruby library for the Observer pattern.
+- `[MANUAL] gem install open-uri -v 0.3.0`: **open-uri** (0.3.0) - A Ruby library for opening URIs.
+- `[MANUAL] gem install open3 -v 0.1.2`: **open3** (0.1.2) - A Ruby library for opening subprocesses.
+- `[MANUAL] gem install openssl -v 3.1.0`: **openssl** (3.1.0) - A Ruby library for OpenSSL.
+- `[MANUAL] gem install optparse -v 0.3.1`: **optparse** (0.3.1) - A Ruby library for parsing command-line options.
+- `[MANUAL] gem install ostruct -v 0.5.5`: **ostruct** (0.5.5) - A Ruby library for OpenStruct.
+- `[MANUAL] gem install pathname -v 0.2.1`: **pathname** (0.2.1) - A Ruby library for path manipulation.
+- `[MANUAL] gem install pathutil -v 0.16.1`: **pathutil** (0.16.1) - A Ruby library for path utilities.
+- `[MANUAL] gem install power_assert -v 2.0.3`: **power_assert** (2.0.3) - A Ruby library for power assertions.
+- `[MANUAL] gem install pp -v 0.4.0`: **pp** (0.4.0) - A Ruby library for pretty printing.
+- `[MANUAL] gem install prettyprint -v 0.1.1`: **prettyprint** (0.1.1) - A Ruby library for pretty printing.
+- `[MANUAL] gem install prime -v 0.1.2`: **prime** (0.1.2) - A Ruby library for prime numbers.
+- `[MANUAL] gem install pstore -v 0.1.2`: **pstore** (0.1.2) - A Ruby library for persistent storage.
+- `[MANUAL] gem install psych -v 5.0.1`: **psych** (5.0.1) - A YAML parser and emitter for Ruby.
+- `[MANUAL] gem install public_suffix -v 4.0.6`: **public_suffix** (4.0.6) - A Ruby library for public suffix list.
+- `[MANUAL] gem install pygments.rb -v 2.4.1`: **pygments.rb** (2.4.1) - A Ruby wrapper for Pygments.
+- `[MANUAL] gem install racc -v 1.6.2`: **racc** (1.6.2) - A Ruby LALR parser generator.
+- `[MANUAL] gem install rake -v 13.0.6`: **rake** (13.0.6) - A Ruby build program with capabilities similar to Make.
+- `[MANUAL] gem install rb-inotify -v 0.10.1`: **rb-inotify** (0.10.1) - A Ruby wrapper for inotify.
+- `[MANUAL] gem install rbs -v 2.8.2`: **rbs** (2.8.2) - A Ruby type signature language.
+- `[MANUAL] gem install rdiscount -v 2.1.8`: **rdiscount** (2.1.8) - A Ruby wrapper for Discount, a Markdown parser.
+- `[MANUAL] gem install rdoc -v 6.5.0`: **rdoc** (6.5.0) - Ruby documentation system.
+- `[MANUAL] gem install readline -v 0.0.3`: **readline** (0.0.3) - A Ruby library for Readline.
+- `[MANUAL] gem install readline-ext -v 0.1.5`: **readline-ext** (0.1.5) - A Ruby library for Readline extensions.
+- `[MANUAL] gem install redcarpet -v 3.6.0`: **redcarpet** (3.6.0) - A fast, safe and extensible Markdown to HTML parser for Ruby.
+- `[MANUAL] gem install reline -v 0.3.2`: **reline** (0.3.2) - A Ruby library for Readline-like functionality.
+- `[MANUAL] gem install resolv -v 0.2.2`: **resolv** (0.2.2) - A Ruby library for DNS resolution.
+- `[MANUAL] gem install resolv-replace -v 0.1.1`: **resolv-replace** (0.1.1) - A Ruby library for replacing Resolv.
+- `[MANUAL] gem install rexml -v 3.2.5`: **rexml** (3.2.5) - A Ruby library for XML parsing.
+- `[MANUAL] gem install rinda -v 0.1.1`: **rinda** (0.1.1) - A Ruby library for Rinda.
+- `[MANUAL] gem install rouge -v 4.2.0`: **rouge** (4.2.0) - A pure Ruby code highlighter.
+- `[MANUAL] gem install rss -v 0.2.9`: **rss** (0.2.9) - A Ruby library for RSS parsing.
+- `[MANUAL] gem install ruby2_keywords -v 0.0.5`: **ruby2_keywords** (0.0.5) - A Ruby library for Ruby 2 keywords.
+- `[MANUAL] gem install rubygems-update -v 3.4.20`: **rubygems-update** (3.4.20) - Updates RubyGems.
+- `[MANUAL] gem install sassc -v 2.4.0`: **sassc** (2.4.0) - A Ruby wrapper for LibSass.
+- `[MANUAL] gem install sdbm -v 1.0.0`: **sdbm** (1.0.0) - A Ruby library for SDBM.
+- `[MANUAL] gem install securerandom -v 0.2.2`: **securerandom** (0.2.2) - A Ruby library for secure random number generation.
+- `[MANUAL] gem install set -v 0.1.1`: **set** (0.1.1) - A Ruby library for Set.
+- `[MANUAL] gem install singleton -v 0.1.1`: **singleton** (0.1.1) - A Ruby library for the Singleton pattern.
+- `[MANUAL] gem install stringio -v 3.0.4`: **stringio** (3.0.4) - A Ruby library for StringIO.
+- `[MANUAL] gem install strscan -v 3.0.5`: **strscan** (3.0.5) - A Ruby library for StringScanner.
+- `[MANUAL] gem install syntax_suggest -v 1.1.0`: **syntax_suggest** (1.1.0) - A Ruby library for syntax suggestions.
+- `[MANUAL] gem install syslog -v 0.1.1`: **syslog** (0.1.1) - A Ruby library for syslog.
+- `[MANUAL] gem install tempfile -v 0.1.3`: **tempfile** (0.1.3) - A Ruby library for temporary files.
+- `[MANUAL] gem install terminal-table -v 3.0.2`: **terminal-table** (3.0.2) - A Ruby library for creating tables in the terminal.
+- `[MANUAL] gem install test-unit -v 3.5.7`: **test-unit** (3.5.7) - A Ruby testing framework.
+- `[MANUAL] gem install time -v 0.2.2`: **time** (0.2.2) - A Ruby library for time manipulation.
+- `[MANUAL] gem install timeout -v 0.3.1`: **timeout** (0.3.1) - A Ruby library for timeouts.
+- `[MANUAL] gem install tmpdir -v 0.1.3`: **tmpdir** (0.1.3) - A Ruby library for temporary directories.
+- `[MANUAL] gem install tomlrb -v 1.3.0`: **tomlrb** (1.3.0) - A Ruby TOML parser.
+- `[MANUAL] gem install tsort -v 0.1.1`: **tsort** (0.1.1) - A Ruby library for topological sort.
+- `[MANUAL] gem install typeprof -v 0.21.3`: **typeprof** (0.21.3) - A Ruby type profiler.
+- `[MANUAL] gem install un -v 0.2.1`: **un** (0.2.1) - A Ruby library for un.
+- `[MANUAL] gem install unicode-display_width -v 1.6.1`: **unicode-display_width** (1.6.1) - A Ruby library for Unicode display width.
+- `[MANUAL] gem install uri -v 0.12.2`: **uri** (0.12.2) - A Ruby library for URI manipulation.
+- `[MANUAL] gem install weakref -v 0.1.2`: **weakref** (0.1.2) - A Ruby library for weak references.
+- `[MANUAL] gem install webrick -v 1.8.1`: **webrick** (1.8.1) - A Ruby library for WEBrick.
+- `[MANUAL] gem install xmlrpc -v 0.3.2`: **xmlrpc** (0.3.2) - A Ruby library for XML-RPC.
+- `[MANUAL] gem install yajl-ruby -v 1.4.3`: **yajl-ruby** (1.4.3) - A Ruby wrapper for YAJL.
+- `[MANUAL] gem install yaml -v 0.2.1`: **yaml** (0.2.1) - A Ruby library for YAML parsing and generation.
+- `[MANUAL] gem install zlib -v 3.0.0`: **zlib** (3.0.0) - A Ruby library for Zlib.
+
+## Essential Tools
+- `[AUTO] apt install git`: **git** (version 2.43.0) - Version control system for tracking changes in computer files.
+- `[MANUAL] apt install docker.io`: **docker** (version 28.2.2, build 28.2.2-0ubuntu1~24.04.1) - Platform for developing, shipping, and running applications in containers.
+- `[MANUAL] apt install nodejs`: **node** (v22.20.0) - JavaScript runtime built on Chrome's V8 JavaScript engine.
+- `[MANUAL] apt install openjdk-21-jdk`: **java** (openjdk version "21.0.8" 2025-07-15) - Programming language and computing platform.
+- `[MANUAL] apt install gcc`: **gcc** (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0 - GNU Compiler Collection for C.
+- `[MANUAL] apt install g++`: **g++** (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0 - GNU Compiler Collection for C++.
+- `[MANUAL] apt install make`: **make** (GNU Make 4.3) - A utility for directing compilation.
+- `[MANUAL] apt install cmake`: **cmake** (version 3.28.3) - Cross-platform family of tools designed to build, test, and package software.
+- `[MANUAL] apt install curl`: **curl** (8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.7) - Command-line tool for transferring data with URL syntax.
+- `[AUTO] apt install wget`: **wget** (GNU Wget 1.21.4 built on linux-gnu.) - Free utility for non-interactive download of files from the web.
+- `[AUTO] apt install vim`: **vim** (VIM - Vi IMproved 9.1 (2024 Jan 02, compiled Sep 05 2025 19:44:46)) - Highly configurable text editor.
+- `[MANUAL] snap install code --classic`: **code** (1.105.1) - Visual Studio Code, a code editor redefined and optimized for building and debugging modern web and cloud applications.
+
+## VS Code Extensions
+- `[MANUAL] code --install-extension anthropic.claude-code`: **anthropic.claude-code** (2.0.26-linux-x64) - Claude Code extension for Anthropic AI.
+- `[MANUAL] code --install-extension bierner.markdown-mermaid`: **bierner.markdown-mermaid** (1.29.0) - Markdown Mermaid extension for VS Code.
+- `[MANUAL] code --install-extension cs128.cs128-clang-tidy`: **cs128.cs128-clang-tidy** (0.5.1) - Clang-Tidy integration for CS128.
+- `[MANUAL] code --install-extension cschlosser.doxdocgen`: **cschlosser.doxdocgen** (1.4.0) - Doxygen documentation generator.
+- `[MANUAL] code --install-extension docker.docker`: **docker.docker** (0.18.0-linux-x64) - Docker extension for VS Code.
+- `[MANUAL] code --install-extension dokca.42-ft-count-line`: **dokca.42-ft-count-line** (0.5.0) - 42-ft-count-line extension for VS Code.
+- `[MANUAL] code --install-extension donjayamanne.githistory`: **donjayamanne.githistory** (0.6.20) - Git History extension for VS Code.
+- `[MANUAL] code --install-extension eamodio.gitlens`: **eamodio.gitlens** (17.6.2) - GitLens extension for VS Code.
+- `[MANUAL] code --install-extension evilcat.norminette-42`: **evilcat.norminette-42** (1.0.8) - Norminette 42 extension for VS Code.
+- `[MANUAL] code --install-extension geddski.macros`: **geddski.macros** (1.2.1) - Macros extension for VS Code.
+- `[MANUAL] code --install-extension github.copilot`: **github.copilot** (1.387.0) - GitHub Copilot extension for VS Code.
+- `[MANUAL] code --install-extension github.copilot-chat`: **github.copilot-chat** (0.32.3) - GitHub Copilot Chat extension for VS Code.
+- `[MANUAL] code --install-extension golang.go`: **golang.go** (0.50.0) - Go language support for VS Code.
+- `[MANUAL] code --install-extension google.gemini-cli-vscode-ide-companion`: **google.gemini-cli-vscode-ide-companion** (0.7.0) - Gemini CLI VS Code IDE Companion.
+- `[MANUAL] code --install-extension google.geminicodeassist`: **google.geminicodeassist** (2.55.0) - Gemini Code Assist extension for VS Code.
+- `[MANUAL] code --install-extension hars.cppsnippets`: **hars.cppsnippets** (0.0.15) - C++ snippets for VS Code.
+- `[MANUAL] code --install-extension hediet.debug-visualizer`: **hediet.debug-visualizer** (2.4.0) - Debug Visualizer extension for VS Code.
+- `[MANUAL] code --install-extension hediet.realtime-debugging`: **hediet.realtime-debugging** (0.1.0) - Realtime Debugging extension for VS Code.
+- `[MANUAL] code --install-extension jakub-beranek.memviz`: **jakub-beranek.memviz** (0.3.1-linux-x64) - Memory Visualizer extension for VS Code.
+- `[MANUAL] code --install-extension jurajstefanic.md-commands`: **jurajstefanic.md-commands** (0.0.16) - Markdown Commands extension for VS Code.
+- `[MANUAL] code --install-extension kube.42header`: **kube.42header** (0.42.9) - 42 Header extension for VS Code.
+- `[MANUAL] code --install-extension llvm-vs-code-extensions.lldb-dap`: **llvm-vs-code-extensions.lldb-dap** (0.2.18) - LLDB-DAP extension for VS Code.
+- `[MANUAL] code --install-extension lwxyfer.new-markdown-editor`: **lwxyfer.new-markdown-editor** (1.0.3) - New Markdown Editor extension for VS Code.
+- `[MANUAL] code --install-extension mariusvanwijk-joppekoers.codam-norminette-3`: **mariusvanwijk-joppekoers.codam-norminette-3** (4.7.0) - Codam Norminette 3 extension for VS Code.
+- `[MANUAL] code --install-extension ms-azuretools.vscode-containers`: **ms-azuretools.vscode-containers** (2.2.0) - VS Code Containers extension for Azure Tools.
+- `[MANUAL] code --install-extension ms-azuretools.vscode-docker`: **ms-azuretools.vscode-docker** (2.0.0) - VS Code Docker extension for Azure Tools.
+- `[MANUAL] code --install-extension ms-python.debugpy`: **ms-python.debugpy** (2025.14.1-linux-x64) - Debugger for Python in VS Code.
+- `[MANUAL] code --install-extension ms-python.python`: **ms-python.python** (2025.16.0-linux-x64) - Python extension for VS Code.
+- `[MANUAL] code --install-extension ms-python.vscode-pylance`: **ms-python.vscode-pylance** (2025.9.1) - Pylance extension for VS Code.
+- `[MANUAL] code --install-extension ms-python.vscode-python-envs`: **ms-python.vscode-python-envs** (1.10.0-linux-x64) - Python Environments extension for VS Code.
+- `[MANUAL] code --install-extension ms-toolsai.jupyter`: **ms-toolsai.jupyter** (2025.9.1-linux-x64) - Jupyter extension for VS Code.
+- `[MANUAL] code --install-extension ms-toolsai.jupyter-keymap`: **ms-toolsai.jupyter-keymap** (1.1.2) - Jupyter Keymap extension for VS Code.
+- `[MANUAL] code --install-extension ms-toolsai.jupyter-renderers`: **ms-toolsai.jupyter-renderers** (1.3.0) - Jupyter Renderers extension for VS Code.
+- `[MANUAL] code --install-extension ms-toolsai.vscode-jupyter-cell-tags`: **ms-toolsai.vscode-jupyter-cell-tags** (0.1.9) - Jupyter Cell Tags extension for VS Code.
+- `[MANUAL] code --install-extension ms-toolsai.vscode-jupyter-slideshow`: **ms-toolsai.vscode-jupyter-slideshow** (0.1.6) - Jupyter Slideshow extension for VS Code.
+- `[MANUAL] code --install-extension ms-vscode-remote.remote-containers`: **ms-vscode-remote.remote-containers** (0.427.0) - Remote - Containers extension for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.cmake-tools`: **ms-vscode.cmake-tools** (1.21.36) - CMake Tools extension for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.cpptools`: **ms-vscode.cpptools** (1.28.3-linux-x64) - C/C++ extension for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.cpptools-extension-pack`: **ms-vscode.cpptools-extension-pack** (1.3.1) - C/C++ Extension Pack for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.cpptools-themes`: **ms-vscode.cpptools-themes** (2.0.0) - C/C++ Themes for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.live-server`: **ms-vscode.live-server** (0.4.16) - Live Server extension for VS Code.
+- `[MANUAL] code --install-extension ms-vscode.makefile-tools`: **ms-vscode.makefile-tools** (0.12.17) - Makefile Tools extension for VS Code.
+- `[MANUAL] code --install-extension psioniq.psi-header`: **psioniq.psi-header** (1.25.1) - PSI Header extension for VS Code.
+- `[MANUAL] code --install-extension ritwickdey.liveserver`: **ritwickdey.liveserver** (5.7.9) - Live Server extension for VS Code.
+- `[MANUAL] code --install-extension technosophos.vscode-make`: **technosophos.vscode-make** (1.0.2) - Make extension for VS Code.
+- `[MANUAL] code --install-extension tomoki1207.pdf`: **tomoki1207.pdf** (1.2.2) - PDF Viewer extension for VS Code.
+- `[MANUAL] code --install-extension twxs.cmake`: **twxs.cmake** (0.0.17) - CMake extension for VS Code.
+- `[MANUAL] code --install-extension vadimcn.vscode-lldb`: **vadimcn.vscode-lldb** (1.11.4) - LLDB Debugger extension for VS Code.
+- `[MANUAL] code --install-extension wakatime.vscode-wakatime`: **wakatime.vscode-wakatime** (25.3.3) - WakaTime extension for VS Code.
+
+## Development Tools
+- `[AUTO] apt install autoconf`
+- `[AUTO] apt install automake`
+- `[MANUAL] apt install bear`
+- `[AUTO] apt install binutils`
+- `[AUTO] apt install binutils-common`
+- `[AUTO] apt install binutils-x86-64-linux-gnu`
+- `[MANUAL] apt install build-essential`
+- `[MANUAL] apt install clang`
+- `[AUTO] apt install clang-18`
+- `[MANUAL] apt install clang-tidy`
+- `[AUTO] apt install clang-tidy-18`
+- `[AUTO] apt install clang-tools-18`
+- `[MANUAL] apt install cmake`
+- `[AUTO] apt install cmake-data`
+- `[AUTO] apt install cpp`
+- `[AUTO] apt install cpp-13`
+- `[AUTO] apt install cpp-13-x86-64-linux-gnu`
+- `[AUTO] apt install cpp-x86-64-linux-gnu`
+- `[MANUAL] apt install doxygen`
+- `[MANUAL] apt install doxygen-gui`
+- `[MANUAL] apt install g++`
+- `[AUTO] apt install g++-13`
+- `[AUTO] apt install g++-13-x86-64-linux-gnu`
+- `[AUTO] apt install g++-x86-64-linux-gnu`
+- `[MANUAL] apt install gcc`
+- `[AUTO] apt install gcc-13`
+- `[AUTO] apt install gcc-13-base`
+- `[AUTO] apt install gcc-13-x86-64-linux-gnu`
+- `[AUTO] apt install gcc-14-base`
+- `[AUTO] apt install gcc-x86-64-linux-gnu`
+- `[AUTO] apt install gdb`
+- `[MANUAL] apt install gobjc`
+- `[AUTO] apt install gobjc-13`
+- `[AUTO] apt install gobjc-13-x86-64-linux-gnu`
+- `[AUTO] apt install gobjc-x86-64-linux-gnu`
+- `[AUTO] apt install lib32gcc-s1`
+- `[AUTO] apt install libbinutils`
+- `[AUTO] apt install libclang-18-dev`
+- `[AUTO] apt install libclang-common-18-dev`
+- `[AUTO] apt install libclang-cpp18`
+- `[MANUAL] apt install libclang-dev`
+- `[AUTO] apt install libclang-rt-18-dev`
+- `[AUTO] apt install libclang1-18`
+- `[AUTO] apt install libear`
+- `[AUTO] apt install libgcc-13-dev`
+- `[AUTO] apt install libgcc-s1`
+- `[AUTO] apt install libgdbm-compat4t64`
+- `[AUTO] apt install libgdbm6t64`
+- `[AUTO] apt install libhdf5-cpp-103-1t64`
+- `[AUTO] apt install libhdf5-hl-cpp-100t64`
+- `[AUTO] apt install libjsoncpp25`
+- `[AUTO] apt install libllvm18`
+- `[AUTO] apt install libllvm19`
+- `[AUTO] apt install libllvm20`
+- `[AUTO] apt install libmpeg2encpp-2.1-0t64`
+- `[AUTO] apt install libpagemaker-0.0-0`
+- `[AUTO] apt install libpoppler-cpp0t64`
+- `[AUTO] apt install libqhullcpp8.0`
+- `[AUTO] apt install libresid-builder0c2a`
+- `[AUTO] apt install libtool`
+- `[AUTO] apt install libuno-cppu3t64`
+- `[AUTO] apt install libuno-cppuhelpergcc3-3t64`
+- `[AUTO] apt install libuno-purpenvhelpergcc3-3t64`
+- `[AUTO] apt install libuno-salhelpergcc3-3t64`
+- `[MANUAL] apt install libyaml-cpp0.8`
+- `[AUTO] apt install llvm-18`
+- `[AUTO] apt install llvm-18-dev`
+- `[AUTO] apt install llvm-18-linker-tools`
+- `[AUTO] apt install llvm-18-runtime`
+- `[AUTO] apt install llvm-18-tools`
+- `[MANUAL] apt install make`
+- `[AUTO] apt install node-make-dir`
+- `[AUTO] apt install pkg-config`
+- `[AUTO] apt install python3-gdbm`
+- `[MANUAL] apt install valgrind`
+- `[AUTO] apt install wireless-regdb`
+
+## Libraries
+- `[AUTO] apt install bind9-libs`
+- `[MANUAL] apt install cracklib-runtime`
+- `[AUTO] apt install default-libmysqlclient-dev`
+- `[AUTO] apt install geocode-glib-common`
+- `[AUTO] apt install gir1.2-accountsservice-1.0`
+- `[AUTO] apt install gir1.2-adw-1`
+- `[AUTO] apt install gir1.2-atk-1.0`
+- `[AUTO] apt install gir1.2-atspi-2.0`
+- `[MANUAL] apt install gir1.2-ayatanaappindicator3-0.1`
+- `[AUTO] apt install gir1.2-freedesktop`
+- `[AUTO] apt install gir1.2-gck-2`
+- `[AUTO] apt install gir1.2-gcr-4`
+- `[AUTO] apt install gir1.2-gdesktopenums-3.0`
+- `[AUTO] apt install gir1.2-gdkpixbuf-2.0`
+- `[AUTO] apt install gir1.2-gdm-1.0`
+- `[AUTO] apt install gir1.2-geoclue-2.0`
+- `[AUTO] apt install gir1.2-girepository-2.0`
+- `[AUTO] apt install gir1.2-glib-2.0`
+- `[AUTO] apt install gir1.2-gnomebg-4.0`
+- `[AUTO] apt install gir1.2-gnomebluetooth-3.0`
+- `[AUTO] apt install gir1.2-gnomedesktop-4.0`
+- `[AUTO] apt install gir1.2-graphene-1.0`
+- `[AUTO] apt install gir1.2-gstreamer-1.0`
+- `[AUTO] apt install gir1.2-gtk-3.0`
+- `[AUTO] apt install gir1.2-gtk-4.0`
+- `[AUTO] apt install gir1.2-gtk-vnc-2.0`
+- `[AUTO] apt install gir1.2-gtksource-4`
+- `[AUTO] apt install gir1.2-gweather-4.0`
+- `[AUTO] apt install gir1.2-harfbuzz-0.0`
+- `[AUTO] apt install gir1.2-ibus-1.0`
+- `[AUTO] apt install gir1.2-javascriptcoregtk-6.0`
+- `[AUTO] apt install gir1.2-libosinfo-1.0`
+- `[AUTO] apt install gir1.2-libvirt-glib-1.0`
+- `[AUTO] apt install gir1.2-mutter-14`
+- `[AUTO] apt install gir1.2-nm-1.0`
+- `[AUTO] apt install gir1.2-nma4-1.0`
+- `[AUTO] apt install gir1.2-notify-0.7`
+- `[AUTO] apt install gir1.2-packagekitglib-1.0`
+- `[AUTO] apt install gir1.2-pango-1.0`
+- `[AUTO] apt install gir1.2-polkit-1.0`
+- `[AUTO] apt install gir1.2-rsvg-2.0`
+- `[AUTO] apt install gir1.2-secret-1`
+- `[AUTO] apt install gir1.2-soup-3.0`
+- `[AUTO] apt install gir1.2-spiceclientglib-2.0`
+- `[AUTO] apt install gir1.2-spiceclientgtk-3.0`
+- `[AUTO] apt install gir1.2-udisks-2.0`
+- `[AUTO] apt install gir1.2-upowerglib-1.0`
+- `[AUTO] apt install gir1.2-vte-2.91`
+- `[AUTO] apt install gir1.2-webkit-6.0`
+- `[AUTO] apt install gir1.2-wnck-3.0`
+- `[AUTO] apt install glib-networking`
+- `[AUTO] apt install glib-networking-common`
+- `[AUTO] apt install glib-networking-services`
+- `[AUTO] apt install gvfs-libs`
+- `[AUTO] apt install klibc-utils`
+- `[AUTO] apt install lib32stdc++6`
+- `[AUTO] apt install liba52-0.7.4`
+- `[AUTO] apt install libaa1`
+- `[AUTO] apt install libaacs0`
+- `[AUTO] apt install libabsl20220623t64`
+- `[AUTO] apt install libabw-0.1-1`
+- `[AUTO] apt install libaccounts-glib0`
+- `[AUTO] apt install libaccounts-qt5-1`
+- `[AUTO] apt install libaccountsservice0`
+- `[AUTO] apt install libacl1`
+- `[AUTO] apt install libadwaita-1-0`
+- `[AUTO] apt install libaec-dev`
+- `[AUTO] apt install libaec0`
+- `[MANUAL] apt install libagg-dev`
+- `[MANUAL] apt install libaio1t64`
+- `[AUTO] apt install libalgorithm-diff-perl`
+- `[AUTO] apt install libalgorithm-diff-xs-perl`
+- `[AUTO] apt install libalgorithm-merge-perl`
+- `[AUTO] apt install libann0`
+- `[AUTO] apt install libao-common`
+- `[AUTO] apt install libao4`
+- `[AUTO] apt install libaom-dev`
+- `[AUTO] apt install libaom3`
+- `[AUTO] apt install libaperture-0-0`
+- `[AUTO] apt install libapparmor1`
+- `[AUTO] apt install libappimage1.0abi1t64`
+- `[AUTO] apt install libappmenu-gtk3-parser0`
+- `[AUTO] apt install libappstream5`
+- `[AUTO] apt install libappstreamqt5-3`
+- `[AUTO] apt install libapt-pkg6.0t64`
+- `[AUTO] apt install libarchive13t64`
+- `[AUTO] apt install libargon2-1`
+- `[AUTO] apt install libaribb24-0t64`
+- `[AUTO] apt install libarmadillo-dev`
+- `[AUTO] apt install libarmadillo12`
+- `[AUTO] apt install libarpack2-dev`
+- `[AUTO] apt install libarpack2t64`
+- `[AUTO] apt install libasan8`
+- `[AUTO] apt install libasound2-data`
+- `[AUTO] apt install libasound2t64`
+- `[AUTO] apt install libaspell15`
+- `[AUTO] apt install libass9`
+- `[AUTO] apt install libassuan0`
+- `[AUTO] apt install libasyncns0`
+- `[AUTO] apt install libatasmart4`
+- `[AUTO] apt install libatk-bridge2.0-0t64`
+- `[AUTO] apt install libatk-wrapper-java`
+- `[AUTO] apt install libatk-wrapper-java-jni`
+- `[AUTO] apt install libatk1.0-0t64`
+- `[AUTO] apt install libatm1t64`
+- `[AUTO] apt install libatomic1`
+- `[AUTO] apt install libatopology2t64`
+- `[AUTO] apt install libatspi2.0-0t64`
+- `[AUTO] apt install libattr1`
+- `[AUTO] apt install libaudit-common`
+- `[AUTO] apt install libaudit1`
+- `[AUTO] apt install libauparse0t64`
+- `[AUTO] apt install libauthen-sasl-perl`
+- `[AUTO] apt install libavahi-client3`
+- `[AUTO] apt install libavahi-common-data`
+- `[AUTO] apt install libavahi-common3`
+- `[AUTO] apt install libavahi-core7`
+- `[AUTO] apt install libavahi-glib1`
+- `[AUTO] apt install libavc1394-0`
+- `[AUTO] apt install libavcodec60`
+- `[AUTO] apt install libavdevice60`
+- `[AUTO] apt install libavfilter9`
+- `[AUTO] apt install libavformat60`
+- `[AUTO] apt install libavif16`
+- `[AUTO] apt install libavtp0`
+- `[AUTO] apt install libavutil58`
+- `[MANUAL] apt install libayatana-appindicator3-1`
+- `[AUTO] apt install libayatana-ido3-0.4-0`
+- `[AUTO] apt install libayatana-indicator3-7`
+- `[AUTO] apt install libb2-1`
+- `[AUTO] apt install libbabeltrace1`
+- `[AUTO] apt install libbdplus0`
+- `[AUTO] apt install libblas-dev`
+- `[AUTO] apt install libblas3`
+- `[AUTO] apt install libblkid1`
+- `[AUTO] apt install libblockdev-crypto3`
+- `[AUTO] apt install libblockdev-fs3`
+- `[AUTO] apt install libblockdev-loop3`
+- `[AUTO] apt install libblockdev-mdraid3`
+- `[AUTO] apt install libblockdev-nvme3`
+- `[AUTO] apt install libblockdev-part3`
+- `[AUTO] apt install libblockdev-swap3`
+- `[AUTO] apt install libblockdev-utils3`
+- `[AUTO] apt install libblockdev3`
+- `[AUTO] apt install libblosc-dev`
+- `[AUTO] apt install libblosc1`
+- `[AUTO] apt install libbluetooth3`
+- `[AUTO] apt install libbluray2`
+- `[AUTO] apt install libboost-chrono1.83.0t64`
+- `[AUTO] apt install libboost-dev`
+- `[AUTO] apt install libboost-filesystem1.83.0`
+- `[AUTO] apt install libboost-iostreams1.83.0`
+- `[AUTO] apt install libboost-locale1.83.0`
+- `[AUTO] apt install libboost-program-options1.83.0`
+- `[AUTO] apt install libboost-thread1.83.0`
+- `[AUTO] apt install libboost1.83-dev`
+- `[AUTO] apt install libbpf1`
+- `[AUTO] apt install libbpfcc`
+- `[AUTO] apt install libbrlapi0.8`
+- `[AUTO] apt install libbrotli-dev`
+- `[AUTO] apt install libbrotli1`
+- `[AUTO] apt install libbs2b0`
+- `[MANUAL] apt install libbsd-dev`
+- `[AUTO] apt install libbsd0`
+- `[AUTO] apt install libburn4t64`
+- `[AUTO] apt install libbytesize-common`
+- `[AUTO] apt install libbytesize1`
+- `[AUTO] apt install libbz2-1.0`
+- `[AUTO] apt install libbz2-dev`
+- `[AUTO] apt install libc-bin`
+- `[AUTO] apt install libc-dev-bin`
+- `[AUTO] apt install libc-devtools`
+- `[AUTO] apt install libc6`
+- `[AUTO] apt install libc6-dbg`
+- `[AUTO] apt install libc6-dev`
+- `[AUTO] apt install libc6-i386`
+- `[AUTO] apt install libcaca0`
+- `[AUTO] apt install libcacard0`
+- `[AUTO] apt install libcairo-gobject2`
+- `[AUTO] apt install libcairo-script-interpreter2`
+- `[AUTO] apt install libcairo2`
+- `[AUTO] apt install libcairomm-1.0-1v5`
+- `[AUTO] apt install libcamel-1.2-64t64`
+- `[AUTO] apt install libcanberra-gtk3-0t64`
+- `[AUTO] apt install libcanberra-gtk3-module`
+- `[AUTO] apt install libcanberra-pulse`
+- `[AUTO] apt install libcanberra0t64`
+- `[AUTO] apt install libcap-ng0`
+- `[AUTO] apt install libcap2`
+- `[AUTO] apt install libcap2-bin`
+- `[AUTO] apt install libcares2`
+- `[AUTO] apt install libcbor0.10`
+- `[AUTO] apt install libcc1-0`
+- `[AUTO] apt install libcddb2`
+- `[AUTO] apt install libcdio-cdda2t64`
+- `[AUTO] apt install libcdio-paranoia2t64`
+- `[AUTO] apt install libcdio19t64`
+- `[AUTO] apt install libcdparanoia0`
+- `[AUTO] apt install libcdr-0.1-1`
+- `[AUTO] apt install libcdt5`
+- `[AUTO] apt install libcfitsio-dev`
+- `[AUTO] apt install libcfitsio10t64`
+- `[AUTO] apt install libcgraph6`
+- `[AUTO] apt install libchm1`
+- `[AUTO] apt install libchromaprint1`
+- `[AUTO] apt install libcjson1`
+- `[AUTO] apt install libclone-perl`
+- `[AUTO] apt install libclucene-contribs1t64`
+- `[AUTO] apt install libclucene-core1t64`
+- `[AUTO] apt install libcmark0.30.2`
+- `[AUTO] apt install libcodec2-1.2`
+- `[AUTO] apt install libcoin80t64`
+- `[AUTO] apt install libcolamd3`
+- `[AUTO] apt install libcollada-dom2.5-dp0`
+- `[AUTO] apt install libcolorcorrect5`
+- `[AUTO] apt install libcolord-gtk4-1t64`
+- `[AUTO] apt install libcolord2`
+- `[AUTO] apt install libcolorhug2`
+- `[AUTO] apt install libcom-err2`
+- `[MANUAL] apt install libcrack2`
+- `[AUTO] apt install libcrypt-dev`
+- `[AUTO] apt install libcrypt1`
+- `[AUTO] apt install libcryptsetup12`
+- `[AUTO] apt install libctf-nobfd0`
+- `[AUTO] apt install libctf0`
+- `[AUTO] apt install libcups2t64`
+- `[AUTO] apt install libcupsfilters2-common`
+- `[AUTO] apt install libcupsfilters2t64`
+- `[AUTO] apt install libcupsimage2t64`
+- `[AUTO] apt install libcurl3t64-gnutls`
+- `[AUTO] apt install libcurl4-openssl-dev`
+- `[AUTO] apt install libcurl4t64`
+- `[AUTO] apt install libcwidget4`
+- `[AUTO] apt install libdaemon0`
+- `[AUTO] apt install libdata-dump-perl`
+- `[AUTO] apt install libdatrie1`
+- `[AUTO] apt install libdav1d-dev`
+- `[AUTO] apt install libdav1d7`
+- `[AUTO] apt install libdaxctl1`
+- `[AUTO] apt install libdb5.3t64`
+- `[AUTO] apt install libdbus-1-3`
+- `[AUTO] apt install libdbus-glib-1-2`
+- `[AUTO] apt install libdbusmenu-glib4`
+- `[AUTO] apt install libdbusmenu-gtk3-4`
+- `[AUTO] apt install libdbusmenu-qt5-2`
+- `[AUTO] apt install libdc1394-25`
+- `[AUTO] apt install libdca0`
+- `[AUTO] apt install libdconf1`
+- `[AUTO] apt install libde265-0`
+- `[AUTO] apt install libde265-dev`
+- `[AUTO] apt install libdebconf-kde1`
+- `[AUTO] apt install libdebconfclient0`
+- `[AUTO] apt install libdebuginfod-common`
+- `[AUTO] apt install libdebuginfod1t64`
+- `[AUTO] apt install libdecor-0-0`
+- `[AUTO] apt install libdecor-0-plugin-1-gtk`
+- `[AUTO] apt install libdeflate-dev`
+- `[AUTO] apt install libdeflate0`
+- `[MANUAL] apt install libdevmapper-event1.02.1`
+- `[AUTO] apt install libdevmapper1.02.1`
+- `[AUTO] apt install libdirectfb-1.7-7t64`
+- `[AUTO] apt install libdjvulibre-text`
+- `[AUTO] apt install libdjvulibre21`
+- `[MANUAL] apt install libdmraid1.0.0.rc16`
+- `[AUTO] apt install libdmtx0t64`
+- `[AUTO] apt install libdolphinvcs5`
+- `[AUTO] apt install libdotconf0`
+- `[AUTO] apt install libdouble-conversion3`
+- `[AUTO] apt install libdpkg-perl`
+- `[AUTO] apt install libdrm-amdgpu1`
+- `[AUTO] apt install libdrm-common`
+- `[AUTO] apt install libdrm-intel1`
+- `[AUTO] apt install libdrm-nouveau2`
+- `[AUTO] apt install libdrm-radeon1`
+- `[AUTO] apt install libdrm2`
+- `[AUTO] apt install libduktape207`
+- `[AUTO] apt install libdv4t64`
+- `[AUTO] apt install libdvbpsi10`
+- `[AUTO] apt install libdvdnav4`
+- `[AUTO] apt install libdvdread8t64`
+- `[AUTO] apt install libdw1t64`
+- `[AUTO] apt install libe-book-0.1-1`
+- `[AUTO] apt install libebackend-1.2-11t64`
+- `[AUTO] apt install libebml5`
+- `[AUTO] apt install libebook-1.2-21t64`
+- `[AUTO] apt install libebook-contacts-1.2-4t64`
+- `[AUTO] apt install libecal-2.0-3`
+- `[AUTO] apt install libedata-book-1.2-27t64`
+- `[AUTO] apt install libedata-cal-2.0-2t64`
+- `[AUTO] apt install libedataserver-1.2-27t64`
+- `[AUTO] apt install libedataserverui-1.2-4t64`
+- `[AUTO] apt install libedit2`
+- `[AUTO] apt install libeditorconfig0`
+- `[AUTO] apt install libefiboot1t64`
+- `[AUTO] apt install libefivar1t64`
+- `[AUTO] apt install libegl-dev`
+- `[AUTO] apt install libegl-mesa0`
+- `[AUTO] apt install libegl1`
+- `[AUTO] apt install libegl1-mesa-dev`
+- `[AUTO] apt install libei1`
+- `[AUTO] apt install libeis1`
+- `[AUTO] apt install libelf1t64`
+- `[AUTO] apt install libenchant-2-2`
+- `[AUTO] apt install libencode-locale-perl`
+- `[AUTO] apt install libeot0`
+- `[AUTO] apt install libepoxy0`
+- `[AUTO] apt install libepub0`
+- `[AUTO] apt install libepubgen-0.1-1`
+- `[AUTO] apt install liberror-perl`
+- `[AUTO] apt install libespeak-ng1`
+- `[AUTO] apt install libestr0`
+- `[AUTO] apt install libetonyek-0.1-1`
+- `[AUTO] apt install libevdev2`
+- `[AUTO] apt install libevent-2.1-7t64`
+- `[AUTO] apt install libexif12`
+- `[AUTO] apt install libexiv2-27`
+- `[AUTO] apt install libexpat1`
+- `[AUTO] apt install libexpat1-dev`
+- `[AUTO] apt install libext2fs2t64`
+- `[AUTO] apt install libexttextcat-2.0-0`
+- `[AUTO] apt install libexttextcat-data`
+- `[AUTO] apt install libfaad2`
+- `[AUTO] apt install libfakekey0`
+- `[AUTO] apt install libfakeroot`
+- `[AUTO] apt install libfastjson4`
+- `[AUTO] apt install libfcitx5-qt-data`
+- `[AUTO] apt install libfcitx5-qt1`
+- `[AUTO] apt install libfcitx5-qt6-1`
+- `[AUTO] apt install libfcitx5config6`
+- `[AUTO] apt install libfcitx5core7`
+- `[AUTO] apt install libfcitx5gclient2`
+- `[AUTO] apt install libfcitx5utils2`
+- `[AUTO] apt install libfdisk1`
+- `[AUTO] apt install libfdt1`
+- `[AUTO] apt install libffi-dev`
+- `[AUTO] apt install libffi8`
+- `[AUTO] apt install libfftw3-double3`
+- `[AUTO] apt install libfftw3-single3`
+- `[AUTO] apt install libfido2-1`
+- `[AUTO] apt install libfile-basedir-perl`
+- `[AUTO] apt install libfile-desktopentry-perl`
+- `[AUTO] apt install libfile-fcntllock-perl`
+- `[AUTO] apt install libfile-listing-perl`
+- `[AUTO] apt install libfile-mimeinfo-perl`
+- `[AUTO] apt install libflac12t64`
+- `[AUTO] apt install libflashrom1`
+- `[AUTO] apt install libflite1`
+- `[AUTO] apt install libfluidsynth3`
+- `[AUTO] apt install libfmt9`
+- `[AUTO] apt install libfreeaptx0`
+- `[AUTO] apt install libfreecell-solver0`
+- `[AUTO] apt install libfreehand-0.1-1`
+- `[AUTO] apt install libfreerdp-client2-2t64`
+- `[AUTO] apt install libfreerdp-server3-3`
+- `[AUTO] apt install libfreerdp2-2t64`
+- `[AUTO] apt install libfreerdp3-3`
+- `[MANUAL] apt install libfreetype-dev`
+- `[AUTO] apt install libfreetype6`
+- `[AUTO] apt install libfreexl-dev`
+- `[AUTO] apt install libfreexl1`
+- `[AUTO] apt install libfribidi0`
+- `[AUTO] apt install libftdi1-2`
+- `[AUTO] apt install libfuse2t64`
+- `[AUTO] apt install libfuse3-3`
+- `[AUTO] apt install libfwupd2`
+- `[AUTO] apt install libfyba-dev`
+- `[AUTO] apt install libfyba0t64`
+- `[AUTO] apt install libgail-common`
+- `[AUTO] apt install libgail18t64`
+- `[AUTO] apt install libgav1-1`
+- `[AUTO] apt install libgbm1`
+- `[AUTO] apt install libgc1`
+- `[AUTO] apt install libgck-1-0`
+- `[AUTO] apt install libgck-2-2`
+- `[AUTO] apt install libgcr-4-4`
+- `[AUTO] apt install libgcr-base-3-1`
+- `[AUTO] apt install libgcr-ui-3-1`
+- `[AUTO] apt install libgcrypt20`
+- `[AUTO] apt install libgd3`
+- `[MANUAL] apt install libgdal-dev`
+- `[AUTO] apt install libgdal34t64`
+- `[AUTO] apt install libgdata-common`
+- `[AUTO] apt install libgdata22`
+- `[AUTO] apt install libgdk-pixbuf-2.0-0`
+- `[AUTO] apt install libgdk-pixbuf2.0-bin`
+- `[AUTO] apt install libgdk-pixbuf2.0-common`
+- `[AUTO] apt install libgdm1`
+- `[AUTO] apt install libgee-0.8-2`
+- `[AUTO] apt install libgeoclue-2-0`
+- `[AUTO] apt install libgeocode-glib-2-0`
+- `[AUTO] apt install libgeos-c1t64`
+- `[AUTO] apt install libgeos-dev`
+- `[AUTO] apt install libgeos3.12.1t64`
+- `[AUTO] apt install libgeotiff-dev`
+- `[AUTO] apt install libgeotiff5`
+- `[AUTO] apt install libgfortran5`
+- `[AUTO] apt install libgif-dev`
+- `[AUTO] apt install libgif7`
+- `[AUTO] apt install libgirepository-1.0-1`
+- `[AUTO] apt install libgit2-1.7`
+- `[AUTO] apt install libgjs0g`
+- `[AUTO] apt install libgl-dev`
+- `[AUTO] apt install libgl1`
+- `[AUTO] apt install libgl1-amber-dri`
+- `[MANUAL] apt install libgl1-mesa-dev`
+- `[AUTO] apt install libgl1-mesa-dri`
+- `[AUTO] apt install libglapi-amber`
+- `[AUTO] apt install libgles-dev`
+- `[AUTO] apt install libgles1`
+- `[AUTO] apt install libgles2`
+- `[AUTO] apt install libglfw3`
+- `[MANUAL] apt install libglfw3-dev`
+- `[AUTO] apt install libglib2.0-0t64`
+- `[AUTO] apt install libglib2.0-bin`
+- `[AUTO] apt install libglib2.0-data`
+- `[AUTO] apt install libglu1-mesa`
+- `[MANUAL] apt install libglu1-mesa-dev`
+- `[AUTO] apt install libglut-dev`
+- `[AUTO] apt install libglut3.12`
+- `[AUTO] apt install libglvnd-core-dev`
+- `[AUTO] apt install libglvnd-dev`
+- `[AUTO] apt install libglvnd0`
+- `[AUTO] apt install libglx-dev`
+- `[AUTO] apt install libglx-mesa0`
+- `[AUTO] apt install libglx0`
+- `[AUTO] apt install libgme0`
+- `[AUTO] apt install libgmp-dev`
+- `[AUTO] apt install libgmp10`
+- `[AUTO] apt install libgmpxx4ldbl`
+- `[AUTO] apt install libgnome-autoar-0-0`
+- `[AUTO] apt install libgnome-bg-4-2t64`
+- `[AUTO] apt install libgnome-bluetooth-3.0-13`
+- `[AUTO] apt install libgnome-bluetooth-ui-3.0-13`
+- `[AUTO] apt install libgnome-desktop-3-20t64`
+- `[AUTO] apt install libgnome-desktop-4-2t64`
+- `[AUTO] apt install libgnome-rr-4-2t64`
+- `[AUTO] apt install libgnomekbd-common`
+- `[AUTO] apt install libgnomekbd8`
+- `[AUTO] apt install libgnustep-base1.29`
+- `[AUTO] apt install libgnutls-dane0t64`
+- `[AUTO] apt install libgnutls30t64`
+- `[AUTO] apt install libgoa-1.0-0b`
+- `[AUTO] apt install libgoa-1.0-common`
+- `[AUTO] apt install libgoa-backend-1.0-2`
+- `[AUTO] apt install libgomp1`
+- `[AUTO] apt install libgpg-error-l10n`
+- `[AUTO] apt install libgpg-error0`
+- `[AUTO] apt install libgpgme11t64`
+- `[AUTO] apt install libgpgmepp6t64`
+- `[AUTO] apt install libgphoto2-6t64`
+- `[AUTO] apt install libgphoto2-l10n`
+- `[AUTO] apt install libgphoto2-port12t64`
+- `[AUTO] apt install libgpm2`
+- `[AUTO] apt install libgprofng0`
+- `[AUTO] apt install libgps30t64`
+- `[AUTO] apt install libgrantlee-templates5`
+- `[AUTO] apt install libgraphene-1.0-0`
+- `[AUTO] apt install libgraphicsmagick-q16-3t64`
+- `[AUTO] apt install libgraphite2-3`
+- `[AUTO] apt install libgrpc++1.51t64`
+- `[AUTO] apt install libgrpc29t64`
+- `[AUTO] apt install libgs-common`
+- `[AUTO] apt install libgs10`
+- `[AUTO] apt install libgs10-common`
+- `[AUTO] apt install libgsettings-qt1`
+- `[AUTO] apt install libgsm1`
+- `[AUTO] apt install libgsound0t64`
+- `[AUTO] apt install libgssapi-krb5-2`
+- `[AUTO] apt install libgssdp-1.6-0`
+- `[AUTO] apt install libgstreamer-gl1.0-0`
+- `[AUTO] apt install libgstreamer-plugins-bad1.0-0`
+- `[AUTO] apt install libgstreamer-plugins-base1.0-0`
+- `[AUTO] apt install libgstreamer-plugins-good1.0-0`
+- `[AUTO] apt install libgstreamer1.0-0`
+- `[AUTO] apt install libgtk-3-0t64`
+- `[AUTO] apt install libgtk-3-bin`
+- `[AUTO] apt install libgtk-3-common`
+- `[AUTO] apt install libgtk-4-1`
+- `[AUTO] apt install libgtk-4-bin`
+- `[AUTO] apt install libgtk-4-common`
+- `[AUTO] apt install libgtk-4-media-gstreamer`
+- `[AUTO] apt install libgtk-vnc-2.0-0`
+- `[AUTO] apt install libgtk2.0-0t64`
+- `[AUTO] apt install libgtk2.0-bin`
+- `[AUTO] apt install libgtk2.0-common`
+- `[AUTO] apt install libgtksourceview-4-0`
+- `[AUTO] apt install libgtksourceview-4-common`
+- `[AUTO] apt install libgtop-2.0-11`
+- `[AUTO] apt install libgtop2-common`
+- `[AUTO] apt install libgts-0.7-5t64`
+- `[AUTO] apt install libgts-bin`
+- `[AUTO] apt install libgudev-1.0-0`
+- `[AUTO] apt install libgumbo2`
+- `[AUTO] apt install libgupnp-1.6-0`
+- `[AUTO] apt install libgupnp-av-1.0-3`
+- `[AUTO] apt install libgupnp-dlna-2.0-4`
+- `[AUTO] apt install libgupnp-igd-1.6-0`
+- `[AUTO] apt install libgusb2`
+- `[AUTO] apt install libgutenprint-common`
+- `[AUTO] apt install libgutenprint9`
+- `[AUTO] apt install libgvc6`
+- `[AUTO] apt install libgvnc-1.0-0`
+- `[AUTO] apt install libgvpr2`
+- `[AUTO] apt install libgweather-4-0t64`
+- `[AUTO] apt install libgweather-4-common`
+- `[AUTO] apt install libhandy-1-0`
+- `[AUTO] apt install libharfbuzz-gobject0`
+- `[AUTO] apt install libharfbuzz-icu0`
+- `[AUTO] apt install libharfbuzz-subset0`
+- `[AUTO] apt install libharfbuzz0b`
+- `[AUTO] apt install libhdf4-0-alt`
+- `[AUTO] apt install libhdf4-alt-dev`
+- `[AUTO] apt install libhdf5-103-1t64`
+- `[AUTO] apt install libhdf5-dev`
+- `[AUTO] apt install libhdf5-fortran-102t64`
+- `[AUTO] apt install libhdf5-hl-100t64`
+- `[AUTO] apt install libhdf5-hl-fortran-100t64`
+- `[AUTO] apt install libheif-dev`
+- `[AUTO] apt install libheif-plugin-aomdec`
+- `[AUTO] apt install libheif-plugin-aomenc`
+- `[AUTO] apt install libheif-plugin-libde265`
+- `[AUTO] apt install libheif-plugin-x265`
+- `[AUTO] apt install libheif1`
+- `[AUTO] apt install libhfstospell11`
+- `[AUTO] apt install libhogweed6t64`
+- `[AUTO] apt install libhpmud0`
+- `[AUTO] apt install libhtml-form-perl`
+- `[AUTO] apt install libhtml-format-perl`
+- `[AUTO] apt install libhtml-parser-perl`
+- `[AUTO] apt install libhtml-tagset-perl`
+- `[AUTO] apt install libhtml-tree-perl`
+- `[AUTO] apt install libhttp-cookies-perl`
+- `[AUTO] apt install libhttp-daemon-perl`
+- `[AUTO] apt install libhttp-date-perl`
+- `[AUTO] apt install libhttp-message-perl`
+- `[AUTO] apt install libhttp-negotiate-perl`
+- `[AUTO] apt install libhttp-parser2.9`
+- `[AUTO] apt install libhunspell-1.7-0`
+- `[AUTO] apt install libhwasan0`
+- `[AUTO] apt install libhwy1t64`
+- `[AUTO] apt install libhyphen0`
+- `[AUTO] apt install libibus-1.0-5`
+- `[AUTO] apt install libibverbs1`
+- `[AUTO] apt install libical3t64`
+- `[AUTO] apt install libice-dev`
+- `[AUTO] apt install libice6`
+- `[AUTO] apt install libicu-dev`
+- `[AUTO] apt install libicu74`
+- `[AUTO] apt install libidn12`
+- `[AUTO] apt install libidn2-0`
+- `[AUTO] apt install libiec61883-0`
+- `[AUTO] apt install libieee1284-3t64`
+- `[AUTO] apt install libigdgmm12`
+- `[AUTO] apt install libijs-0.35`
+- `[AUTO] apt install libimagequant0`
+- `[AUTO] apt install libimath-3-1-29t64`
+- `[AUTO] apt install libime-bin`
+- `[AUTO] apt install libime-data`
+- `[AUTO] apt install libime-data-language-model`
+- `[AUTO] apt install libimecore0`
+- `[AUTO] apt install libimepinyin0`
+- `[AUTO] apt install libimetable0`
+- `[AUTO] apt install libimobiledevice6`
+- `[MANUAL] apt install libinih1`
+- `[AUTO] apt install libinput-bin`
+- `[AUTO] apt install libinput10`
+- `[AUTO] apt install libinstpatch-1.0-2`
+- `[AUTO] apt install libio-html-perl`
+- `[AUTO] apt install libio-socket-ssl-perl`
+- `[AUTO] apt install libio-stringy-perl`
+- `[AUTO] apt install libip4tc2`
+- `[AUTO] apt install libip6tc2`
+- `[AUTO] apt install libipc-system-simple-perl`
+- `[AUTO] apt install libipt2`
+- `[AUTO] apt install libiscsi7`
+- `[AUTO] apt install libisl23`
+- `[AUTO] apt install libisoburn1t64`
+- `[AUTO] apt install libisofs6t64`
+- `[AUTO] apt install libitm1`
+- `[AUTO] apt install libiw30t64`
+- `[AUTO] apt install libixml11t64`
+- `[AUTO] apt install libjack-jackd2-0`
+- `[AUTO] apt install libjansson4`
+- `[AUTO] apt install libjavascriptcoregtk-4.1-0`
+- `[AUTO] apt install libjavascriptcoregtk-6.0-1`
+- `[AUTO] apt install libjbig-dev`
+- `[AUTO] apt install libjbig0`
+- `[AUTO] apt install libjbig2dec0`
+- `[AUTO] apt install libjcat1`
+- `[AUTO] apt install libjpeg-dev`
+- `[AUTO] apt install libjpeg-turbo8`
+- `[AUTO] apt install libjpeg-turbo8-dev`
+- `[AUTO] apt install libjpeg8`
+- `[AUTO] apt install libjpeg8-dev`
+- `[AUTO] apt install libjq1`
+- `[AUTO] apt install libjs-async`
+- `[AUTO] apt install libjs-events`
+- `[AUTO] apt install libjs-inherits`
+- `[AUTO] apt install libjs-is-typedarray`
+- `[AUTO] apt install libjs-jquery`
+- `[AUTO] apt install libjs-katex`
+- `[AUTO] apt install libjs-prettify`
+- `[AUTO] apt install libjs-regenerate`
+- `[AUTO] apt install libjs-source-map`
+- `[AUTO] apt install libjs-sprintf-js`
+- `[AUTO] apt install libjs-typedarray-to-buffer`
+- `[AUTO] apt install libjs-underscore`
+- `[AUTO] apt install libjs-util`
+- `[AUTO] apt install libjson-c-dev`
+- `[AUTO] apt install libjson-c5`
+- `[AUTO] apt install libjson-glib-1.0-0`
+- `[AUTO] apt install libjson-glib-1.0-common`
+- `[AUTO] apt install libjxl0.7`
+- `[AUTO] apt install libjxr-tools`
+- `[AUTO] apt install libjxr0t64`
+- `[AUTO] apt install libk5crypto3`
+- `[AUTO] apt install libkaccounts2`
+- `[AUTO] apt install libkate1`
+- `[AUTO] apt install libkcolorpicker0`
+- `[AUTO] apt install libkdecorations2-5v5`
+- `[AUTO] apt install libkdecorations2private10`
+- `[AUTO] apt install libkdsoap1`
+- `[AUTO] apt install libkeyutils1`
+- `[AUTO] apt install libkf5activities5`
+- `[AUTO] apt install libkf5activitiesstats1`
+- `[AUTO] apt install libkf5archive-data`
+- `[AUTO] apt install libkf5archive5`
+- `[AUTO] apt install libkf5attica5`
+- `[AUTO] apt install libkf5auth-data`
+- `[AUTO] apt install libkf5auth5`
+- `[AUTO] apt install libkf5authcore5`
+- `[AUTO] apt install libkf5baloo5`
+- `[AUTO] apt install libkf5balooengine5`
+- `[AUTO] apt install libkf5baloowidgets-bin`
+- `[AUTO] apt install libkf5baloowidgets-data`
+- `[AUTO] apt install libkf5baloowidgets5`
+- `[AUTO] apt install libkf5bluezqt-data`
+- `[AUTO] apt install libkf5bluezqt6`
+- `[AUTO] apt install libkf5bookmarks-data`
+- `[AUTO] apt install libkf5bookmarks5`
+- `[AUTO] apt install libkf5calendarevents5`
+- `[AUTO] apt install libkf5cddb5`
+- `[AUTO] apt install libkf5codecs-data`
+- `[AUTO] apt install libkf5codecs5`
+- `[AUTO] apt install libkf5compactdisc5`
+- `[AUTO] apt install libkf5completion-data`
+- `[AUTO] apt install libkf5completion5`
+- `[AUTO] apt install libkf5config-bin`
+- `[AUTO] apt install libkf5config-data`
+- `[AUTO] apt install libkf5configcore5`
+- `[AUTO] apt install libkf5configgui5`
+- `[AUTO] apt install libkf5configqml5`
+- `[AUTO] apt install libkf5configwidgets-data`
+- `[AUTO] apt install libkf5configwidgets5`
+- `[AUTO] apt install libkf5contacts-data`
+- `[AUTO] apt install libkf5contacts5`
+- `[AUTO] apt install libkf5coreaddons-data`
+- `[AUTO] apt install libkf5coreaddons5`
+- `[AUTO] apt install libkf5crash5`
+- `[AUTO] apt install libkf5dbusaddons-bin`
+- `[AUTO] apt install libkf5dbusaddons-data`
+- `[AUTO] apt install libkf5dbusaddons5`
+- `[AUTO] apt install libkf5declarative-data`
+- `[AUTO] apt install libkf5declarative5`
+- `[AUTO] apt install libkf5dnssd-data`
+- `[AUTO] apt install libkf5dnssd5`
+- `[AUTO] apt install libkf5doctools5`
+- `[AUTO] apt install libkf5filemetadata-bin`
+- `[AUTO] apt install libkf5filemetadata-data`
+- `[AUTO] apt install libkf5filemetadata3`
+- `[AUTO] apt install libkf5globalaccel-bin`
+- `[AUTO] apt install libkf5globalaccel-data`
+- `[AUTO] apt install libkf5globalaccel5`
+- `[AUTO] apt install libkf5globalaccelprivate5`
+- `[AUTO] apt install libkf5guiaddons-bin`
+- `[AUTO] apt install libkf5guiaddons-data`
+- `[AUTO] apt install libkf5guiaddons5`
+- `[AUTO] apt install libkf5holidays-data`
+- `[AUTO] apt install libkf5holidays5`
+- `[AUTO] apt install libkf5i18n-data`
+- `[AUTO] apt install libkf5i18n5`
+- `[AUTO] apt install libkf5i18nlocaledata5`
+- `[AUTO] apt install libkf5iconthemes-bin`
+- `[AUTO] apt install libkf5iconthemes-data`
+- `[AUTO] apt install libkf5iconthemes5`
+- `[AUTO] apt install libkf5idletime5`
+- `[AUTO] apt install libkf5itemmodels5`
+- `[AUTO] apt install libkf5itemviews-data`
+- `[AUTO] apt install libkf5itemviews5`
+- `[AUTO] apt install libkf5jobwidgets-data`
+- `[AUTO] apt install libkf5jobwidgets5`
+- `[AUTO] apt install libkf5js5t64`
+- `[AUTO] apt install libkf5kcmutils-data`
+- `[AUTO] apt install libkf5kcmutils5`
+- `[AUTO] apt install libkf5kcmutilscore5`
+- `[AUTO] apt install libkf5kdcraw5`
+- `[AUTO] apt install libkf5kdegames-data`
+- `[AUTO] apt install libkf5kdegames7`
+- `[AUTO] apt install libkf5kdelibs4support-data`
+- `[AUTO] apt install libkf5kdelibs4support5`
+- `[AUTO] apt install libkf5kdelibs4support5-bin`
+- `[AUTO] apt install libkf5kexiv2-15.0.0`
+- `[AUTO] apt install libkf5khtml-bin`
+- `[AUTO] apt install libkf5khtml-data`
+- `[AUTO] apt install libkf5khtml5`
+- `[AUTO] apt install libkf5kiocore5`
+- `[AUTO] apt install libkf5kiofilewidgets5`
+- `[AUTO] apt install libkf5kiogui5`
+- `[AUTO] apt install libkf5kiontlm5`
+- `[AUTO] apt install libkf5kiowidgets5`
+- `[AUTO] apt install libkf5kirigami2-5`
+- `[AUTO] apt install libkf5kmahjongglib5`
+- `[AUTO] apt install libkf5konq6`
+- `[AUTO] apt install libkf5modemmanagerqt6`
+- `[AUTO] apt install libkf5networkmanagerqt6`
+- `[AUTO] apt install libkf5newstuff-data`
+- `[AUTO] apt install libkf5newstuff5`
+- `[AUTO] apt install libkf5newstuffcore5`
+- `[AUTO] apt install libkf5newstuffwidgets5`
+- `[AUTO] apt install libkf5notifications-data`
+- `[AUTO] apt install libkf5notifications5`
+- `[AUTO] apt install libkf5notifyconfig-data`
+- `[AUTO] apt install libkf5notifyconfig5`
+- `[AUTO] apt install libkf5package-data`
+- `[AUTO] apt install libkf5package5`
+- `[AUTO] apt install libkf5parts-data`
+- `[AUTO] apt install libkf5parts-plugins`
+- `[AUTO] apt install libkf5parts5`
+- `[AUTO] apt install libkf5people-data`
+- `[AUTO] apt install libkf5people5`
+- `[AUTO] apt install libkf5peoplebackend5`
+- `[AUTO] apt install libkf5peoplewidgets5`
+- `[AUTO] apt install libkf5plasma5`
+- `[AUTO] apt install libkf5plasmaquick5`
+- `[AUTO] apt install libkf5prison5`
+- `[AUTO] apt install libkf5pty-data`
+- `[AUTO] apt install libkf5pty5`
+- `[AUTO] apt install libkf5pulseaudioqt3`
+- `[AUTO] apt install libkf5purpose-bin`
+- `[AUTO] apt install libkf5purpose5`
+- `[AUTO] apt install libkf5quickaddons5`
+- `[AUTO] apt install libkf5runner5`
+- `[AUTO] apt install libkf5sane-data`
+- `[AUTO] apt install libkf5sane5`
+- `[AUTO] apt install libkf5screen-bin`
+- `[AUTO] apt install libkf5screen-data`
+- `[AUTO] apt install libkf5screen8`
+- `[AUTO] apt install libkf5screendpms8`
+- `[AUTO] apt install libkf5service-bin`
+- `[AUTO] apt install libkf5service-data`
+- `[AUTO] apt install libkf5service5`
+- `[AUTO] apt install libkf5solid5`
+- `[AUTO] apt install libkf5solid5-data`
+- `[AUTO] apt install libkf5sonnet5-data`
+- `[AUTO] apt install libkf5sonnetcore5`
+- `[AUTO] apt install libkf5sonnetui5`
+- `[AUTO] apt install libkf5style5`
+- `[AUTO] apt install libkf5su-bin`
+- `[AUTO] apt install libkf5su-data`
+- `[AUTO] apt install libkf5su5`
+- `[AUTO] apt install libkf5syndication5abi1`
+- `[AUTO] apt install libkf5syntaxhighlighting-data`
+- `[AUTO] apt install libkf5syntaxhighlighting5`
+- `[AUTO] apt install libkf5sysguard-bin`
+- `[AUTO] apt install libkf5sysguard-data`
+- `[AUTO] apt install libkf5texteditor-bin`
+- `[AUTO] apt install libkf5texteditor5`
+- `[AUTO] apt install libkf5textwidgets-data`
+- `[AUTO] apt install libkf5textwidgets5`
+- `[AUTO] apt install libkf5threadweaver5`
+- `[AUTO] apt install libkf5unitconversion-data`
+- `[AUTO] apt install libkf5unitconversion5`
+- `[AUTO] apt install libkf5wallet-bin`
+- `[AUTO] apt install libkf5wallet-data`
+- `[AUTO] apt install libkf5wallet5`
+- `[AUTO] apt install libkf5waylandclient5`
+- `[AUTO] apt install libkf5widgetsaddons-data`
+- `[AUTO] apt install libkf5widgetsaddons5`
+- `[AUTO] apt install libkf5windowsystem-data`
+- `[AUTO] apt install libkf5windowsystem5`
+- `[AUTO] apt install libkf5xmlgui-bin`
+- `[AUTO] apt install libkf5xmlgui-data`
+- `[AUTO] apt install libkf5xmlgui5`
+- `[AUTO] apt install libkimageannotator-common`
+- `[AUTO] apt install libkimageannotator0`
+- `[AUTO] apt install libklibc`
+- `[AUTO] apt install libkml-dev`
+- `[AUTO] apt install libkmlbase1t64`
+- `[AUTO] apt install libkmlconvenience1t64`
+- `[AUTO] apt install libkmldom1t64`
+- `[AUTO] apt install libkmlengine1t64`
+- `[AUTO] apt install libkmlregionator1t64`
+- `[AUTO] apt install libkmlxsd1t64`
+- `[AUTO] apt install libkmod2`
+- `[AUTO] apt install libkpathsea6`
+- `[AUTO] apt install libkpim5gapi-data`
+- `[AUTO] apt install libkpim5gapicore5`
+- `[AUTO] apt install libkpim5gapidrive5`
+- `[AUTO] apt install libkpipewire5`
+- `[AUTO] apt install libkpipewiredmabuf5`
+- `[AUTO] apt install libkpipewirerecord5`
+- `[AUTO] apt install libkpmcore12`
+- `[AUTO] apt install libkrb5-3`
+- `[AUTO] apt install libkrb5support0`
+- `[AUTO] apt install libksanecore1`
+- `[AUTO] apt install libksba8`
+- `[AUTO] apt install libkscreenlocker5`
+- `[AUTO] apt install libksgrd9`
+- `[AUTO] apt install libksignalplotter9`
+- `[AUTO] apt install libksysguardformatter1`
+- `[AUTO] apt install libksysguardsensorfaces1`
+- `[AUTO] apt install libksysguardsensors1`
+- `[AUTO] apt install libksysguardsystemstats1`
+- `[AUTO] apt install libkubuntu1`
+- `[AUTO] apt install libkuserfeedback-l10n`
+- `[AUTO] apt install libkuserfeedbackcore1`
+- `[AUTO] apt install libkuserfeedbackwidgets1`
+- `[AUTO] apt install libkwalletbackend5-5`
+- `[AUTO] apt install libkwineffects14`
+- `[AUTO] apt install libkwinglutils14`
+- `[AUTO] apt install libkworkspace5-5`
+- `[AUTO] apt install liblab-gamut1`
+- `[AUTO] apt install liblangtag-common`
+- `[AUTO] apt install liblangtag1`
+- `[AUTO] apt install liblapack-dev`
+- `[AUTO] apt install liblapack3`
+- `[AUTO] apt install liblayershellqtinterface5`
+- `[AUTO] apt install liblc3-1`
+- `[AUTO] apt install liblcms2-2`
+- `[AUTO] apt install liblcms2-utils`
+- `[AUTO] apt install libldacbt-abr2`
+- `[AUTO] apt install libldacbt-enc2`
+- `[AUTO] apt install libldap-common`
+- `[AUTO] apt install libldap2`
+- `[AUTO] apt install libldb2`
+- `[AUTO] apt install liblept5`
+- `[AUTO] apt install liblerc-dev`
+- `[AUTO] apt install liblerc4`
+- `[AUTO] apt install liblilv-0-0`
+- `[AUTO] apt install liblirc-client0t64`
+- `[AUTO] apt install liblldb-18`
+- `[AUTO] apt install liblmdb0`
+- `[AUTO] apt install liblocale-gettext-perl`
+- `[AUTO] apt install liblouis-data`
+- `[AUTO] apt install liblouis20`
+- `[AUTO] apt install liblouisutdml-bin`
+- `[AUTO] apt install liblouisutdml-data`
+- `[AUTO] apt install liblouisutdml9t64`
+- `[AUTO] apt install liblqr-1-0`
+- `[AUTO] apt install liblrdf0`
+- `[AUTO] apt install liblsan0`
+- `[AUTO] apt install liblsofui9`
+- `[AUTO] apt install libltc11`
+- `[AUTO] apt install libltdl-dev`
+- `[AUTO] apt install libltdl7`
+- `[AUTO] apt install liblua5.2-0`
+- `[AUTO] apt install liblua5.3-0`
+- `[AUTO] apt install liblua5.4-0`
+- `[MANUAL] apt install liblvm2cmd2.03`
+- `[AUTO] apt install liblwp-mediatypes-perl`
+- `[AUTO] apt install liblwp-protocol-https-perl`
+- `[AUTO] apt install liblz4-1`
+- `[AUTO] apt install liblz4-dev`
+- `[MANUAL] apt install liblzf1`
+- `[AUTO] apt install liblzma-dev`
+- `[AUTO] apt install liblzma5`
+- `[AUTO] apt install liblzo2-2`
+- `[AUTO] apt install libmad0`
+- `[AUTO] apt install libmagic-mgc`
+- `[AUTO] apt install libmagic1t64`
+- `[AUTO] apt install libmagickcore-6.q16-7-extra`
+- `[AUTO] apt install libmagickcore-6.q16-7t64`
+- `[AUTO] apt install libmagickwand-6.q16-7t64`
+- `[AUTO] apt install libmailtools-perl`
+- `[AUTO] apt install libmalcontent-0-0`
+- `[AUTO] apt install libmanette-0.2-0`
+- `[AUTO] apt install libmarisa0`
+- `[AUTO] apt install libmarkdown2`
+- `[AUTO] apt install libmatroska7`
+- `[AUTO] apt install libmaxminddb0`
+- `[AUTO] apt install libmbedcrypto7t64`
+- `[AUTO] apt install libmbim-glib4`
+- `[AUTO] apt install libmbim-proxy`
+- `[AUTO] apt install libmbim-utils`
+- `[AUTO] apt install libmd-dev`
+- `[AUTO] apt install libmd0`
+- `[AUTO] apt install libmd4c0`
+- `[AUTO] apt install libmediaart-2.0-0`
+- `[AUTO] apt install libmfx1`
+- `[AUTO] apt install libmhash2`
+- `[AUTO] apt install libminizip-dev`
+- `[AUTO] apt install libminizip1t64`
+- `[AUTO] apt install libmjpegutils-2.1-0t64`
+- `[AUTO] apt install libmm-glib0`
+- `[AUTO] apt install libmng2`
+- `[AUTO] apt install libmnl0`
+- `[AUTO] apt install libmodplug1`
+- `[AUTO] apt install libmount1`
+- `[AUTO] apt install libmozjs-115-0t64`
+- `[AUTO] apt install libmp3lame0`
+- `[AUTO] apt install libmpc3`
+- `[AUTO] apt install libmpcdec6`
+- `[AUTO] apt install libmpeg2-4`
+- `[AUTO] apt install libmpfr6`
+- `[AUTO] apt install libmpg123-0t64`
+- `[AUTO] apt install libmplex2-2.1-0t64`
+- `[AUTO] apt install libmpv2`
+- `[AUTO] apt install libmsgraph-0-1`
+- `[AUTO] apt install libmspub-0.1-1`
+- `[AUTO] apt install libmtdev1t64`
+- `[AUTO] apt install libmtp-common`
+- `[AUTO] apt install libmtp-runtime`
+- `[AUTO] apt install libmtp9t64`
+- `[AUTO] apt install libmujs3`
+- `[AUTO] apt install libmusicbrainz5cc2v5`
+- `[AUTO] apt install libmutter-14-0`
+- `[AUTO] apt install libmwaw-0.3-3`
+- `[AUTO] apt install libmysofa1`
+- `[AUTO] apt install libmysqlclient-dev`
+- `[AUTO] apt install libmysqlclient21`
+- `[AUTO] apt install libmythes-1.2-0`
+- `[MANUAL] apt install libncurses-dev`
+- `[AUTO] apt install libncurses6`
+- `[AUTO] apt install libncursesw6`
+- `[AUTO] apt install libndctl6`
+- `[AUTO] apt install libndp0`
+- `[AUTO] apt install libneon27t64`
+- `[AUTO] apt install libneon27t64-gnutls`
+- `[AUTO] apt install libnet-dbus-perl`
+- `[AUTO] apt install libnet-http-perl`
+- `[AUTO] apt install libnet-smtp-ssl-perl`
+- `[AUTO] apt install libnet-ssleay-perl`
+- `[AUTO] apt install libnetcdf-dev`
+- `[AUTO] apt install libnetcdf19t64`
+- `[AUTO] apt install libnetfilter-conntrack3`
+- `[AUTO] apt install libnetplan1`
+- `[AUTO] apt install libnettle8t64`
+- `[AUTO] apt install libnewt0.52`
+- `[AUTO] apt install libnfnetlink0`
+- `[AUTO] apt install libnfs14`
+- `[AUTO] apt install libnftables1`
+- `[AUTO] apt install libnftnl11`
+- `[AUTO] apt install libnghttp2-14`
+- `[AUTO] apt install libnice10`
+- `[AUTO] apt install libnl-3-200`
+- `[AUTO] apt install libnl-genl-3-200`
+- `[AUTO] apt install libnl-route-3-200`
+- `[AUTO] apt install libnm0`
+- `[AUTO] apt install libnma-common`
+- `[AUTO] apt install libnma-gtk4-0`
+- `[AUTO] apt install libnma0`
+- `[AUTO] apt install libnode-dev`
+- `[AUTO] apt install libnode109`
+- `[AUTO] apt install libnorm1t64`
+- `[AUTO] apt install libnotificationmanager1`
+- `[AUTO] apt install libnotify-bin`
+- `[AUTO] apt install libnotify4`
+- `[AUTO] apt install libnpth0t64`
+- `[AUTO] apt install libnspr4`
+- `[AUTO] apt install libnss-mdns`
+- `[AUTO] apt install libnss-mymachines`
+- `[AUTO] apt install libnss-systemd`
+- `[AUTO] apt install libnss3`
+- `[AUTO] apt install libntfs-3g89t64`
+- `[AUTO] apt install libnuma1`
+- `[AUTO] apt install libnvme1t64`
+- `[AUTO] apt install libobjc-13-dev`
+- `[AUTO] apt install libobjc4`
+- `[AUTO] apt install libodbc2`
+- `[AUTO] apt install libodbccr2`
+- `[AUTO] apt install libodbcinst2`
+- `[AUTO] apt install libodfgen-0.1-1`
+- `[AUTO] apt install libogdi-dev`
+- `[AUTO] apt install libogdi4.1`
+- `[AUTO] apt install libogg0`
+- `[AUTO] apt install libokular5core11`
+- `[AUTO] apt install libolm-dev`
+- `[AUTO] apt install libolm3`
+- `[AUTO] apt install libonig5`
+- `[AUTO] apt install libopenal-data`
+- `[AUTO] apt install libopenal1`
+- `[AUTO] apt install libopencc-data`
+- `[AUTO] apt install libopencc1.1`
+- `[AUTO] apt install libopenconnect5`
+- `[AUTO] apt install libopenexr-3-1-30`
+- `[AUTO] apt install libopengl-dev`
+- `[AUTO] apt install libopengl0`
+- `[AUTO] apt install libopenh264-7`
+- `[AUTO] apt install libopenjp2-7`
+- `[AUTO] apt install libopenjp2-7-dev`
+- `[AUTO] apt install libopenmpt-modplug1`
+- `[AUTO] apt install libopenmpt0t64`
+- `[AUTO] apt install libopenni2-0`
+- `[AUTO] apt install libopenscenegraph161`
+- `[AUTO] apt install libopenthreads21`
+- `[AUTO] apt install libopus0`
+- `[AUTO] apt install liborc-0.4-0t64`
+- `[AUTO] apt install liborcus-0.18-0`
+- `[AUTO] apt install liborcus-parser-0.18-0`
+- `[AUTO] apt install libosinfo-1.0-0`
+- `[AUTO] apt install libosinfo-l10n`
+- `[AUTO] apt install liboxygenstyle5-5`
+- `[AUTO] apt install liboxygenstyleconfig5-5`
+- `[AUTO] apt install libp11-kit0`
+- `[AUTO] apt install libpackagekit-glib2-18`
+- `[AUTO] apt install libpackagekitqt5-1`
+- `[AUTO] apt install libpam-cap`
+- `[AUTO] apt install libpam-gnome-keyring`
+- `[AUTO] apt install libpam-kwallet-common`
+- `[AUTO] apt install libpam-kwallet5`
+- `[AUTO] apt install libpam-modules`
+- `[AUTO] apt install libpam-modules-bin`
+- `[AUTO] apt install libpam-runtime`
+- `[AUTO] apt install libpam-systemd`
+- `[AUTO] apt install libpam0g`
+- `[AUTO] apt install libpango-1.0-0`
+- `[AUTO] apt install libpangocairo-1.0-0`
+- `[AUTO] apt install libpangoft2-1.0-0`
+- `[AUTO] apt install libpangoxft-1.0-0`
+- `[AUTO] apt install libpaper-utils`
+- `[AUTO] apt install libpaper1`
+- `[AUTO] apt install libparted2t64`
+- `[AUTO] apt install libpathplan4`
+- `[AUTO] apt install libpcap0.8t64`
+- `[AUTO] apt install libpcaudio0`
+- `[AUTO] apt install libpci3`
+- `[AUTO] apt install libpciaccess0`
+- `[AUTO] apt install libpcre2-16-0`
+- `[AUTO] apt install libpcre2-32-0`
+- `[AUTO] apt install libpcre2-8-0`
+- `[AUTO] apt install libpcre2-dev`
+- `[AUTO] apt install libpcre2-posix3`
+- `[AUTO] apt install libpcre3`
+- `[AUTO] apt install libpcsclite1`
+- `[AUTO] apt install libperl5.38t64`
+- `[AUTO] apt install libpfm4`
+- `[AUTO] apt install libpgm-5.3-0t64`
+- `[AUTO] apt install libphodav-3.0-0`
+- `[AUTO] apt install libphodav-3.0-common`
+- `[AUTO] apt install libphonenumber8`
+- `[AUTO] apt install libphonon-l10n`
+- `[AUTO] apt install libphonon4qt5-4t64`
+- `[AUTO] apt install libpipeline1`
+- `[AUTO] apt install libpipewire-0.3-0t64`
+- `[AUTO] apt install libpipewire-0.3-common`
+- `[AUTO] apt install libpipewire-0.3-modules`
+- `[AUTO] apt install libpixman-1-0`
+- `[AUTO] apt install libpkgconf3`
+- `[AUTO] apt install libplacebo338`
+- `[AUTO] apt install libplasma-geolocation-interface5`
+- `[AUTO] apt install libplist-2.0-4`
+- `[AUTO] apt install libplymouth5`
+- `[AUTO] apt install libpmem1`
+- `[AUTO] apt install libpmemobj1`
+- `[AUTO] apt install libpng-dev`
+- `[AUTO] apt install libpng-tools`
+- `[AUTO] apt install libpng16-16t64`
+- `[AUTO] apt install libpocketsphinx3`
+- `[AUTO] apt install libpodofo0.9.8t64`
+- `[AUTO] apt install libpolkit-agent-1-0`
+- `[AUTO] apt install libpolkit-gobject-1-0`
+- `[AUTO] apt install libpolkit-qt5-1-1`
+- `[AUTO] apt install libpoppler-dev`
+- `[AUTO] apt install libpoppler-glib8t64`
+- `[AUTO] apt install libpoppler-private-dev`
+- `[AUTO] apt install libpoppler-qt5-1t64`
+- `[AUTO] apt install libpoppler134`
+- `[AUTO] apt install libpopt0`
+- `[AUTO] apt install libpostproc57`
+- `[MANUAL] apt install libpotrace-dev`
+- `[AUTO] apt install libpotrace0`
+- `[AUTO] apt install libpowerdevilcore2`
+- `[AUTO] apt install libpowerdevilui5`
+- `[AUTO] apt install libppd2`
+- `[AUTO] apt install libppd2-common`
+- `[MANUAL] apt install libpq-dev`
+- `[AUTO] apt install libpq5`
+- `[AUTO] apt install libproc2-0`
+- `[AUTO] apt install libprocesscore9`
+- `[AUTO] apt install libprocessui9`
+- `[AUTO] apt install libproj-dev`
+- `[AUTO] apt install libproj25`
+- `[AUTO] apt install libprotobuf-c1`
+- `[AUTO] apt install libprotobuf-lite32t64`
+- `[AUTO] apt install libprotobuf32t64`
+- `[AUTO] apt install libprotoc32t64`
+- `[AUTO] apt install libproxy-tools`
+- `[AUTO] apt install libproxy1v5`
+- `[AUTO] apt install libpskc0t64`
+- `[AUTO] apt install libpsl5t64`
+- `[AUTO] apt install libptexenc1`
+- `[AUTO] apt install libpthread-stubs0-dev`
+- `[AUTO] apt install libpulse-mainloop-glib0`
+- `[AUTO] apt install libpulse0`
+- `[MANUAL] apt install libpwquality-common`
+- `[MANUAL] apt install libpwquality1`
+- `[AUTO] apt install libpython3-dev`
+- `[AUTO] apt install libpython3-stdlib`
+- `[AUTO] apt install libpython3.12-dev`
+- `[AUTO] apt install libpython3.12-minimal`
+- `[AUTO] apt install libpython3.12-stdlib`
+- `[AUTO] apt install libpython3.12t64`
+- `[AUTO] apt install libqaccessibilityclient-qt5-0`
+- `[AUTO] apt install libqalculate-data`
+- `[AUTO] apt install libqalculate22t64`
+- `[AUTO] apt install libqapt3`
+- `[AUTO] apt install libqapt3-runtime`
+- `[AUTO] apt install libqca-qt5-2`
+- `[AUTO] apt install libqca-qt5-2-plugins`
+- `[AUTO] apt install libqhull-dev`
+- `[AUTO] apt install libqhull-r8.0`
+- `[AUTO] apt install libqhull8.0`
+- `[AUTO] apt install libqmi-glib5`
+- `[AUTO] apt install libqmi-proxy`
+- `[AUTO] apt install libqmi-utils`
+- `[AUTO] apt install libqmobipocket2`
+- `[AUTO] apt install libqpdf29t64`
+- `[AUTO] apt install libqrencode4`
+- `[AUTO] apt install libqrtr-glib0`
+- `[AUTO] apt install libqt5charts5`
+- `[AUTO] apt install libqt5concurrent5t64`
+- `[AUTO] apt install libqt5core5t64`
+- `[AUTO] apt install libqt5dbus5t64`
+- `[AUTO] apt install libqt5designer5`
+- `[AUTO] apt install libqt5gui5t64`
+- `[AUTO] apt install libqt5help5`
+- `[AUTO] apt install libqt5hunspellinputmethod5`
+- `[AUTO] apt install libqt5keychain1`
+- `[AUTO] apt install libqt5location5`
+- `[AUTO] apt install libqt5location5-plugins`
+- `[AUTO] apt install libqt5multimedia5`
+- `[AUTO] apt install libqt5multimedia5-plugins`
+- `[AUTO] apt install libqt5multimediagsttools5`
+- `[AUTO] apt install libqt5multimediaquick5`
+- `[AUTO] apt install libqt5multimediawidgets5`
+- `[AUTO] apt install libqt5network5t64`
+- `[AUTO] apt install libqt5opengl5t64`
+- `[AUTO] apt install libqt5positioning5`
+- `[AUTO] apt install libqt5positioning5-plugins`
+- `[AUTO] apt install libqt5positioningquick5`
+- `[AUTO] apt install libqt5printsupport5t64`
+- `[AUTO] apt install libqt5qml5`
+- `[AUTO] apt install libqt5qmlmodels5`
+- `[AUTO] apt install libqt5qmlworkerscript5`
+- `[AUTO] apt install libqt5quick5`
+- `[AUTO] apt install libqt5quickcontrols2-5`
+- `[AUTO] apt install libqt5quickparticles5`
+- `[AUTO] apt install libqt5quickshapes5`
+- `[AUTO] apt install libqt5quicktemplates2-5`
+- `[AUTO] apt install libqt5quickwidgets5`
+- `[AUTO] apt install libqt5sensors5`
+- `[AUTO] apt install libqt5serialport5`
+- `[AUTO] apt install libqt5sql5-sqlite`
+- `[AUTO] apt install libqt5sql5t64`
+- `[AUTO] apt install libqt5svg5`
+- `[AUTO] apt install libqt5test5t64`
+- `[AUTO] apt install libqt5texttospeech5`
+- `[AUTO] apt install libqt5virtualkeyboard5`
+- `[AUTO] apt install libqt5waylandclient5`
+- `[AUTO] apt install libqt5waylandcompositor5`
+- `[AUTO] apt install libqt5webchannel5`
+- `[AUTO] apt install libqt5webengine-data`
+- `[AUTO] apt install libqt5webengine5`
+- `[AUTO] apt install libqt5webenginecore5`
+- `[AUTO] apt install libqt5webenginewidgets5`
+- `[AUTO] apt install libqt5webkit5`
+- `[AUTO] apt install libqt5webview5`
+- `[AUTO] apt install libqt5widgets5t64`
+- `[AUTO] apt install libqt5x11extras5`
+- `[AUTO] apt install libqt5xml5t64`
+- `[AUTO] apt install libqt5xmlpatterns5`
+- `[AUTO] apt install libqt6core6t64`
+- `[AUTO] apt install libqt6dbus6t64`
+- `[AUTO] apt install libqt6gui6t64`
+- `[MANUAL] apt install libqt6help6`
+- `[AUTO] apt install libqt6network6t64`
+- `[AUTO] apt install libqt6opengl6t64`
+- `[MANUAL] apt install libqt6printsupport6t64`
+- `[AUTO] apt install libqt6qml6`
+- `[AUTO] apt install libqt6qmlmodels6`
+- `[AUTO] apt install libqt6quick6`
+- `[AUTO] apt install libqt6sql6-sqlite`
+- `[AUTO] apt install libqt6sql6t64`
+- `[MANUAL] apt install libqt6statemachine6`
+- `[AUTO] apt install libqt6waylandclient6`
+- `[AUTO] apt install libqt6waylandcompositor6`
+- `[AUTO] apt install libqt6waylandeglclienthwintegration6`
+- `[AUTO] apt install libqt6waylandeglcompositorhwintegration6`
+- `[AUTO] apt install libqt6widgets6t64`
+- `[AUTO] apt install libqt6wlshellintegration6`
+- `[MANUAL] apt install libqt6xml6t64`
+- `[AUTO] apt install libquadmath0`
+- `[AUTO] apt install libquotient0.7`
+- `[AUTO] apt install libqxp-0.0-0`
+- `[AUTO] apt install librabbitmq4`
+- `[AUTO] apt install librados2`
+- `[AUTO] apt install libraptor2-0`
+- `[AUTO] apt install libraqm0`
+- `[AUTO] apt install librasqal3t64`
+- `[AUTO] apt install librav1e0`
+- `[AUTO] apt install libraw1394-11`
+- `[AUTO] apt install libraw23t64`
+- `[AUTO] apt install librbd1`
+- `[AUTO] apt install librdf0t64`
+- `[AUTO] apt install librdmacm1t64`
+- `[AUTO] apt install libre2-10`
+- `[AUTO] apt install libreadline8t64`
+- `[MANUAL] apt install libreiserfscore0t64`
+- `[AUTO] apt install libreoffice-base-core`
+- `[AUTO] apt install libreoffice-calc`
+- `[AUTO] apt install libreoffice-common`
+- `[AUTO] apt install libreoffice-core`
+- `[AUTO] apt install libreoffice-draw`
+- `[AUTO] apt install libreoffice-impress`
+- `[AUTO] apt install libreoffice-kf5`
+- `[AUTO] apt install libreoffice-math`
+- `[AUTO] apt install libreoffice-plasma`
+- `[AUTO] apt install libreoffice-qt5`
+- `[AUTO] apt install libreoffice-style-breeze`
+- `[AUTO] apt install libreoffice-style-colibre`
+- `[AUTO] apt install libreoffice-uiconfig-calc`
+- `[AUTO] apt install libreoffice-uiconfig-common`
+- `[AUTO] apt install libreoffice-uiconfig-draw`
+- `[AUTO] apt install libreoffice-uiconfig-impress`
+- `[AUTO] apt install libreoffice-uiconfig-math`
+- `[AUTO] apt install libreoffice-uiconfig-writer`
+- `[AUTO] apt install libreoffice-writer`
+- `[AUTO] apt install librest-1.0-0`
+- `[AUTO] apt install librevenge-0.0-0`
+- `[AUTO] apt install librhash0`
+- `[AUTO] apt install librist4`
+- `[AUTO] apt install libroc0.3`
+- `[AUTO] apt install librsvg2-2`
+- `[AUTO] apt install librsvg2-common`
+- `[AUTO] apt install librtmp1`
+- `[AUTO] apt install librttopo-dev`
+- `[AUTO] apt install librttopo1`
+- `[AUTO] apt install librubberband2`
+- `[AUTO] apt install libruby`
+- `[AUTO] apt install libruby3.2`
+- `[AUTO] apt install librygel-core-2.8-0`
+- `[AUTO] apt install librygel-db-2.8-0`
+- `[AUTO] apt install librygel-renderer-2.8-0`
+- `[AUTO] apt install librygel-server-2.8-0`
+- `[AUTO] apt install libsamplerate0`
+- `[AUTO] apt install libsane-common`
+- `[AUTO] apt install libsane-hpaio`
+- `[AUTO] apt install libsane1`
+- `[AUTO] apt install libsasl2-2`
+- `[AUTO] apt install libsasl2-modules`
+- `[AUTO] apt install libsasl2-modules-db`
+- `[AUTO] apt install libsass-dev`
+- `[AUTO] apt install libsass1`
+- `[AUTO] apt install libsbc1`
+- `[AUTO] apt install libscim8v5`
+- `[AUTO] apt install libsdl2-2.0-0`
+- `[AUTO] apt install libseccomp2`
+- `[AUTO] apt install libsecret-1-0`
+- `[AUTO] apt install libsecret-common`
+- `[AUTO] apt install libselinux1`
+- `[AUTO] apt install libsemanage-common`
+- `[AUTO] apt install libsemanage2`
+- `[AUTO] apt install libsensors-config`
+- `[AUTO] apt install libsensors5`
+- `[AUTO] apt install libsepol2`
+- `[AUTO] apt install libserd-0-0`
+- `[AUTO] apt install libsframe1`
+- `[AUTO] apt install libsharpyuv-dev`
+- `[AUTO] apt install libsharpyuv0`
+- `[AUTO] apt install libshine3`
+- `[AUTO] apt install libshout3`
+- `[AUTO] apt install libsidplay2`
+- `[AUTO] apt install libsigc++-2.0-0v5`
+- `[AUTO] apt install libsignon-extension1`
+- `[AUTO] apt install libsignon-plugins-common1`
+- `[AUTO] apt install libsignon-qt5-1`
+- `[AUTO] apt install libsixel1`
+- `[AUTO] apt install libslang2`
+- `[AUTO] apt install libslirp0`
+- `[AUTO] apt install libsm-dev`
+- `[AUTO] apt install libsm6`
+- `[AUTO] apt install libsmartcols1`
+- `[AUTO] apt install libsmbclient0`
+- `[AUTO] apt install libsnapd-glib-2-1`
+- `[AUTO] apt install libsnapd-qt-2-1`
+- `[AUTO] apt install libsnappy1v5`
+- `[AUTO] apt install libsndfile1`
+- `[AUTO] apt install libsndio7.0`
+- `[AUTO] apt install libsnmp-base`
+- `[AUTO] apt install libsnmp40t64`
+- `[AUTO] apt install libsodium23`
+- `[AUTO] apt install libsonic0`
+- `[AUTO] apt install libsord-0-0`
+- `[AUTO] apt install libsoundtouch1`
+- `[AUTO] apt install libsoup-2.4-1`
+- `[AUTO] apt install libsoup-3.0-0`
+- `[AUTO] apt install libsoup-3.0-common`
+- `[AUTO] apt install libsoup2.4-common`
+- `[AUTO] apt install libsource-highlight-common`
+- `[AUTO] apt install libsource-highlight4t64`
+- `[AUTO] apt install libsoxr0`
+- `[AUTO] apt install libspa-0.2-bluetooth`
+- `[AUTO] apt install libspa-0.2-modules`
+- `[AUTO] apt install libspandsp2t64`
+- `[AUTO] apt install libspatialaudio0t64`
+- `[AUTO] apt install libspatialite-dev`
+- `[AUTO] apt install libspatialite8t64`
+- `[AUTO] apt install libspdlog1.12`
+- `[AUTO] apt install libspectre1`
+- `[AUTO] apt install libspeechd2`
+- `[AUTO] apt install libspeex1`
+- `[AUTO] apt install libspeexdsp1`
+- `[AUTO] apt install libsphinxbase3t64`
+- `[AUTO] apt install libspice-client-glib-2.0-8`
+- `[AUTO] apt install libspice-client-gtk-3.0-5`
+- `[AUTO] apt install libspice-server1`
+- `[AUTO] apt install libsqlite3-0`
+- `[AUTO] apt install libsqlite3-dev`
+- `[AUTO] apt install libsquashfuse0`
+- `[AUTO] apt install libsratom-0-0`
+- `[AUTO] apt install libsrt1.5-gnutls`
+- `[AUTO] apt install libsrtp2-1`
+- `[AUTO] apt install libss2`
+- `[AUTO] apt install libssh-4`
+- `[AUTO] apt install libssh-gcrypt-4`
+- `[AUTO] apt install libssh2-1t64`
+- `[AUTO] apt install libssl-dev`
+- `[AUTO] apt install libssl3t64`
+- `[AUTO] apt install libstartup-notification0`
+- `[AUTO] apt install libstdc++-13-dev`
+- `[AUTO] apt install libstdc++6`
+- `[AUTO] apt install libstemmer0d`
+- `[AUTO] apt install libstoken1t64`
+- `[AUTO] apt install libsuitesparseconfig7`
+- `[AUTO] apt install libsuperlu-dev`
+- `[AUTO] apt install libsuperlu6`
+- `[AUTO] apt install libsvtav1enc1d1`
+- `[AUTO] apt install libswresample4`
+- `[AUTO] apt install libswscale7`
+- `[AUTO] apt install libsynctex2`
+- `[AUTO] apt install libsystemd-shared`
+- `[AUTO] apt install libsystemd0`
+- `[AUTO] apt install libsz2`
+- `[AUTO] apt install libtag1v5`
+- `[AUTO] apt install libtag1v5-vanilla`
+- `[AUTO] apt install libtalloc2`
+- `[AUTO] apt install libtaskmanager6`
+- `[AUTO] apt install libtasn1-6`
+- `[AUTO] apt install libtcl8.6`
+- `[AUTO] apt install libtdb1`
+- `[AUTO] apt install libteamdctl0`
+- `[AUTO] apt install libteckit0`
+- `[AUTO] apt install libtesseract5`
+- `[AUTO] apt install libtevent0t64`
+- `[AUTO] apt install libtexlua53-5`
+- `[AUTO] apt install libtext-charwidth-perl`
+- `[AUTO] apt install libtext-iconv-perl`
+- `[AUTO] apt install libtext-wrapi18n-perl`
+- `[AUTO] apt install libthai-data`
+- `[AUTO] apt install libthai0`
+- `[AUTO] apt install libtheora0`
+- `[AUTO] apt install libtie-ixhash-perl`
+- `[AUTO] apt install libtiff-dev`
+- `[AUTO] apt install libtiff6`
+- `[AUTO] apt install libtiffxx6`
+- `[AUTO] apt install libtimedate-perl`
+- `[AUTO] apt install libtinfo6`
+- `[AUTO] apt install libtirpc-common`
+- `[AUTO] apt install libtirpc-dev`
+- `[AUTO] apt install libtirpc3t64`
+- `[AUTO] apt install libtk8.6`
+- `[AUTO] apt install libtomcrypt1`
+- `[AUTO] apt install libtommath1`
+- `[AUTO] apt install libtpms0`
+- `[AUTO] apt install libtraceevent1`
+- `[AUTO] apt install libtraceevent1-plugin`
+- `[AUTO] apt install libtracefs1`
+- `[AUTO] apt install libtry-tiny-perl`
+- `[AUTO] apt install libts0t64`
+- `[AUTO] apt install libtsan2`
+- `[AUTO] apt install libtss2-esys-3.0.2-0t64`
+- `[AUTO] apt install libtss2-mu-4.0.1-0t64`
+- `[AUTO] apt install libtss2-rc0t64`
+- `[AUTO] apt install libtss2-sys1t64`
+- `[AUTO] apt install libtss2-tcti-cmd0t64`
+- `[AUTO] apt install libtss2-tcti-device0t64`
+- `[AUTO] apt install libtss2-tcti-libtpms0t64`
+- `[AUTO] apt install libtss2-tcti-mssim0t64`
+- `[AUTO] apt install libtss2-tcti-swtpm0t64`
+- `[AUTO] apt install libtss2-tctildr0t64`
+- `[AUTO] apt install libtwolame0`
+- `[AUTO] apt install libu2f-udev`
+- `[AUTO] apt install libubsan1`
+- `[AUTO] apt install libuchardet0`
+- `[MANUAL] apt install libudev-dev`
+- `[AUTO] apt install libudev1`
+- `[AUTO] apt install libudfread0`
+- `[AUTO] apt install libudisks2-0`
+- `[AUTO] apt install libunbound8`
+- `[AUTO] apt install libunibreak5`
+- `[AUTO] apt install libuniconf4.6t64`
+- `[AUTO] apt install libunistring5`
+- `[AUTO] apt install libuno-sal3t64`
+- `[AUTO] apt install libunwind8`
+- `[AUTO] apt install libupnp17t64`
+- `[AUTO] apt install libupower-glib3`
+- `[MANUAL] apt install liburcu8t64`
+- `[AUTO] apt install liburi-perl`
+- `[AUTO] apt install liburing2`
+- `[AUTO] apt install liburiparser-dev`
+- `[AUTO] apt install liburiparser1`
+- `[AUTO] apt install libusb-1.0-0`
+- `[AUTO] apt install libusbmuxd6`
+- `[AUTO] apt install libusbredirhost1t64`
+- `[AUTO] apt install libusbredirparser1t64`
+- `[AUTO] apt install libuuid1`
+- `[AUTO] apt install libuv1-dev`
+- `[AUTO] apt install libuv1t64`
+- `[AUTO] apt install libv4l-0t64`
+- `[AUTO] apt install libv4lconvert0t64`
+- `[AUTO] apt install libva-drm2`
+- `[AUTO] apt install libva-wayland2`
+- `[AUTO] apt install libva-x11-2`
+- `[AUTO] apt install libva2`
+- `[AUTO] apt install libvdpau1`
+- `[AUTO] apt install libvidstab1.1`
+- `[AUTO] apt install libvirglrenderer1`
+- `[AUTO] apt install libvirt-clients`
+- `[AUTO] apt install libvirt-daemon`
+- `[AUTO] apt install libvirt-daemon-config-network`
+- `[AUTO] apt install libvirt-daemon-config-nwfilter`
+- `[AUTO] apt install libvirt-daemon-driver-qemu`
+- `[AUTO] apt install libvirt-daemon-system`
+- `[AUTO] apt install libvirt-daemon-system-systemd`
+- `[AUTO] apt install libvirt-glib-1.0-0`
+- `[AUTO] apt install libvirt-glib-1.0-data`
+- `[AUTO] apt install libvirt-l10n`
+- `[AUTO] apt install libvirt0`
+- `[AUTO] apt install libvisio-0.1-1`
+- `[AUTO] apt install libvisual-0.4-0`
+- `[AUTO] apt install libvlc-bin`
+- `[AUTO] apt install libvlc5`
+- `[AUTO] apt install libvlccore9`
+- `[AUTO] apt install libvncclient1`
+- `[AUTO] apt install libvo-aacenc0`
+- `[AUTO] apt install libvo-amrwbenc0`
+- `[AUTO] apt install libvoikko1`
+- `[AUTO] apt install libvolume-key1`
+- `[AUTO] apt install libvorbis0a`
+- `[AUTO] apt install libvorbisenc2`
+- `[AUTO] apt install libvorbisfile3`
+- `[AUTO] apt install libvpl2`
+- `[AUTO] apt install libvpx9`
+- `[AUTO] apt install libvte-2.91-0`
+- `[AUTO] apt install libvte-2.91-common`
+- `[AUTO] apt install libvulkan-dev`
+- `[AUTO] apt install libvulkan1`
+- `[AUTO] apt install libwacom-bin-surface`
+- `[AUTO] apt install libwacom-common-surface`
+- `[MANUAL] apt install libwacom-surface`
+- `[AUTO] apt install libwacom2-surface`
+- `[AUTO] apt install libwacom9-surface`
+- `[AUTO] apt install libwavpack1`
+- `[AUTO] apt install libwayland-bin`
+- `[AUTO] apt install libwayland-client0`
+- `[AUTO] apt install libwayland-cursor0`
+- `[AUTO] apt install libwayland-dev`
+- `[AUTO] apt install libwayland-egl1`
+- `[AUTO] apt install libwayland-server0`
+- `[AUTO] apt install libwbclient0`
+- `[AUTO] apt install libweather-ion7`
+- `[AUTO] apt install libwebkit2gtk-4.1-0`
+- `[AUTO] apt install libwebkitgtk-6.0-4`
+- `[AUTO] apt install libwebp-dev`
+- `[AUTO] apt install libwebp7`
+- `[AUTO] apt install libwebpdecoder3`
+- `[AUTO] apt install libwebpdemux2`
+- `[AUTO] apt install libwebpmux3`
+- `[AUTO] apt install libwebrtc-audio-processing1`
+- `[AUTO] apt install libwhoopsie-preferences0`
+- `[AUTO] apt install libwhoopsie0`
+- `[AUTO] apt install libwildmidi2`
+- `[AUTO] apt install libwinpr2-2t64`
+- `[AUTO] apt install libwinpr3-3`
+- `[AUTO] apt install libwireplumber-0.4-0`
+- `[AUTO] apt install libwmflite-0.2-7`
+- `[AUTO] apt install libwnck-3-0`
+- `[AUTO] apt install libwnck-3-common`
+- `[AUTO] apt install libwoff1`
+- `[AUTO] apt install libwpd-0.10-10`
+- `[AUTO] apt install libwpg-0.3-3`
+- `[AUTO] apt install libwps-0.4-4`
+- `[AUTO] apt install libwrap0`
+- `[AUTO] apt install libwvstreams4.6t64-base`
+- `[AUTO] apt install libwvstreams4.6t64-extras`
+- `[AUTO] apt install libwww-perl`
+- `[AUTO] apt install libwww-robotrules-perl`
+- `[AUTO] apt install libx11-6`
+- `[AUTO] apt install libx11-data`
+- `[MANUAL] apt install libx11-dev`
+- `[AUTO] apt install libx11-protocol-perl`
+- `[AUTO] apt install libx11-xcb1`
+- `[AUTO] apt install libx264-164`
+- `[AUTO] apt install libx265-199`
+- `[AUTO] apt install libx265-dev`
+- `[AUTO] apt install libxapian30`
+- `[AUTO] apt install libxatracker2`
+- `[AUTO] apt install libxau-dev`
+- `[AUTO] apt install libxau6`
+- `[AUTO] apt install libxaw7`
+- `[AUTO] apt install libxcb-composite0`
+- `[AUTO] apt install libxcb-cursor0`
+- `[AUTO] apt install libxcb-damage0`
+- `[AUTO] apt install libxcb-dpms0`
+- `[AUTO] apt install libxcb-dri2-0`
+- `[AUTO] apt install libxcb-dri3-0`
+- `[AUTO] apt install libxcb-ewmh2`
+- `[AUTO] apt install libxcb-glx0`
+- `[AUTO] apt install libxcb-icccm4`
+- `[AUTO] apt install libxcb-image0`
+- `[AUTO] apt install libxcb-imdkit1`
+- `[AUTO] apt install libxcb-keysyms1`
+- `[AUTO] apt install libxcb-present0`
+- `[AUTO] apt install libxcb-randr0`
+- `[AUTO] apt install libxcb-record0`
+- `[AUTO] apt install libxcb-render-util0`
+- `[AUTO] apt install libxcb-render0`
+- `[AUTO] apt install libxcb-res0`
+- `[AUTO] apt install libxcb-shape0`
+- `[AUTO] apt install libxcb-shm0`
+- `[AUTO] apt install libxcb-sync1`
+- `[AUTO] apt install libxcb-util1`
+- `[AUTO] apt install libxcb-xfixes0`
+- `[AUTO] apt install libxcb-xinerama0`
+- `[AUTO] apt install libxcb-xinput0`
+- `[AUTO] apt install libxcb-xkb1`
+- `[AUTO] apt install libxcb-xv0`
+- `[AUTO] apt install libxcb1`
+- `[AUTO] apt install libxcb1-dev`
+- `[AUTO] apt install libxcomposite1`
+- `[AUTO] apt install libxcursor1`
+- `[AUTO] apt install libxcvt0`
+- `[AUTO] apt install libxdamage1`
+- `[AUTO] apt install libxdgutilsbasedir1.0.1`
+- `[AUTO] apt install libxdgutilsdesktopentry1.0.1`
+- `[AUTO] apt install libxdmcp-dev`
+- `[AUTO] apt install libxdmcp6`
+- `[AUTO] apt install libxdo3`
+- `[AUTO] apt install libxerces-c-dev`
+- `[AUTO] apt install libxerces-c3.2t64`
+- `[MANUAL] apt install libxext-dev`
+- `[AUTO] apt install libxext6`
+- `[AUTO] apt install libxfixes3`
+- `[AUTO] apt install libxft2`
+- `[AUTO] apt install libxi6`
+- `[AUTO] apt install libxinerama1`
+- `[AUTO] apt install libxkbcommon-x11-0`
+- `[AUTO] apt install libxkbcommon0`
+- `[AUTO] apt install libxkbfile1`
+- `[AUTO] apt install libxkbregistry0`
+- `[AUTO] apt install libxklavier16`
+- `[AUTO] apt install libxml-parser-perl`
+- `[AUTO] apt install libxml-twig-perl`
+- `[AUTO] apt install libxml-xpathengine-perl`
+- `[AUTO] apt install libxml2`
+- `[AUTO] apt install libxml2-dev`
+- `[AUTO] apt install libxml2-utils`
+- `[AUTO] apt install libxmlb2`
+- `[AUTO] apt install libxmlsec1t64`
+- `[AUTO] apt install libxmlsec1t64-nss`
+- `[AUTO] apt install libxmlsec1t64-openssl`
+- `[AUTO] apt install libxmu6`
+- `[AUTO] apt install libxmuu1`
+- `[AUTO] apt install libxpm4`
+- `[AUTO] apt install libxpresent1`
+- `[MANUAL] apt install libxrandr-dev`
+- `[AUTO] apt install libxrandr2`
+- `[AUTO] apt install libxrender-dev`
+- `[AUTO] apt install libxrender1`
+- `[AUTO] apt install libxres1`
+- `[AUTO] apt install libxshmfence1`
+- `[AUTO] apt install libxslt1.1`
+- `[AUTO] apt install libxss1`
+- `[AUTO] apt install libxt-dev`
+- `[AUTO] apt install libxt6t64`
+- `[AUTO] apt install libxtables12`
+- `[AUTO] apt install libxtst6`
+- `[AUTO] apt install libxv1`
+- `[AUTO] apt install libxvidcore4`
+- `[AUTO] apt install libxvmc1`
+- `[AUTO] apt install libxxf86dga1`
+- `[AUTO] apt install libxxf86vm1`
+- `[AUTO] apt install libxxhash0`
+- `[AUTO] apt install libyajl2`
+- `[AUTO] apt install libyaml-0-2`
+- `[AUTO] apt install libyelp0`
+- `[AUTO] apt install libyuv0`
+- `[AUTO] apt install libz3-4`
+- `[AUTO] apt install libz3-dev`
+- `[AUTO] apt install libzbar0t64`
+- `[AUTO] apt install libzimg2`
+- `[AUTO] apt install libzip4t64`
+- `[AUTO] apt install libzix-0-0`
+- `[AUTO] apt install libzmf-0.0-0`
+- `[AUTO] apt install libzmq5`
+- `[AUTO] apt install libzstd-dev`
+- `[AUTO] apt install libzstd1`
+- `[AUTO] apt install libzvbi-common`
+- `[AUTO] apt install libzvbi0t64`
+- `[AUTO] apt install libzxing3`
+- `[AUTO] apt install libzzip-0-13t64`
+- `[AUTO] apt install linux-libc-dev`
+- `[AUTO] apt install mesa-libgallium`
+- `[AUTO] apt install node-tslib`
+- `[AUTO] apt install ocl-icd-libopencl1`
+- `[AUTO] apt install python3-html5lib`
+- `[AUTO] apt install python3-httplib2`
+- `[AUTO] apt install python3-importlib-metadata`
+- `[AUTO] apt install python3-launchpadlib`
+- `[AUTO] apt install python3-libvirt`
+- `[AUTO] apt install python3-libxml2`
+- `[AUTO] apt install python3-oauthlib`
+- `[AUTO] apt install python3-proton-vpn-lib`
+- `[AUTO] apt install python3-pylibacl`
+- `[AUTO] apt install python3-urllib3`
+- `[AUTO] apt install python3-wadllib`
+- `[AUTO] apt install samba-libs`
+- `[AUTO] apt install uno-libs-private`
+- `[AUTO] apt install xserver-xorg-input-libinput`
+- `[AUTO] apt install zlib1g`
+- `[MANUAL] apt install zlib1g-dev`
+
+## System Utilities
+- `[AUTO] apt install 7zip`
+- `[AUTO] apt install acl`
+- `[AUTO] apt install adduser`
+- `[AUTO] apt install alsa-utils`
+- `[AUTO] apt install anacron`
+- `[AUTO] apt install apt`
+- `[AUTO] apt install apt-config-icons`
+- `[AUTO] apt install apt-config-icons-hidpi`
+- `[AUTO] apt install apt-config-icons-large`
+- `[AUTO] apt install apt-config-icons-large-hidpi`
+- `[MANUAL] apt install apt-transport-https`
+- `[AUTO] apt install apt-utils`
+- `[AUTO] apt install aptdaemon`
+- `[AUTO] apt install aptdaemon-data`
+- `[AUTO] apt install aptitude`
+- `[AUTO] apt install aptitude-common`
+- `[AUTO] apt install at-spi2-common`
+- `[AUTO] apt install at-spi2-core`
+- `[AUTO] apt install base-passwd`
+- `[MANUAL] apt install bash`
+- `[MANUAL] apt install bash-completion`
+- `[AUTO] apt install bind9-dnsutils`
+- `[AUTO] apt install bridge-utils`
+- `[AUTO] apt install bsdextrautils`
+- `[MANUAL] apt install bsdutils`
+- `[AUTO] apt install busybox-static`
+- `[AUTO] apt install bzip2`
+- `[AUTO] apt install ca-certificates`
+- `[AUTO] apt install ca-certificates-java`
+- `[AUTO] apt install colord-data`
+- `[AUTO] apt install coreutils`
+- `[AUTO] apt install cron`
+- `[AUTO] apt install cron-daemon-common`
+- `[MANUAL] apt install cryptsetup`
+- `[AUTO] apt install cryptsetup-bin`
+- `[AUTO] apt install cryptsetup-initramfs`
+- `[AUTO] apt install cups-browsed`
+- `[AUTO] apt install cups-ipp-utils`
+- `[MANUAL] apt install curl`
+- `[AUTO] apt install dbus`
+- `[AUTO] apt install dbus-bin`
+- `[AUTO] apt install dbus-daemon`
+- `[AUTO] apt install dbus-session-bus-common`
+- `[AUTO] apt install dbus-system-bus-common`
+- `[AUTO] apt install dbus-user-session`
+- `[AUTO] apt install debianutils`
+- `[MANUAL] apt install diffutils`
+- `[AUTO] apt install dmsetup`
+- `[AUTO] apt install dns-root-data`
+- `[AUTO] apt install dpkg`
+- `[AUTO] apt install dpkg-dev`
+- `[AUTO] apt install espeak-ng-data`
+- `[AUTO] apt install evolution-data-server`
+- `[AUTO] apt install evolution-data-server-common`
+- `[AUTO] apt install fcitx5-chinese-addons-data`
+- `[AUTO] apt install fcitx5-data`
+- `[MANUAL] apt install fcitx5-material-color`
+- `[AUTO] apt install fcitx5-module-punctuation`
+- `[MANUAL] apt install findutils`
+- `[MANUAL] apt install fish`
+- `[AUTO] apt install foomatic-db-compressed-ppds`
+- `[AUTO] apt install frameworkintegration`
+- `[AUTO] apt install gdal-data`
+- `[AUTO] apt install git`
+- `[AUTO] apt install gnupg-utils`
+- `[MANUAL] apt install grep`
+- `[MANUAL] apt install grsync`
+- `[MANUAL] apt install gzip`
+- `[AUTO] apt install hplip-data`
+- `[AUTO] apt install hwdata`
+- `[AUTO] apt install ibus-data`
+- `[AUTO] apt install ieee-data`
+- `[AUTO] apt install inetutils-telnet`
+- `[AUTO] apt install inputattach`
+- `[AUTO] apt install iputils-ping`
+- `[AUTO] apt install iputils-tracepath`
+- `[AUTO] apt install ipxe-qemu-256k-compat-efi-roms`
+- `[MANUAL] apt install jfsutils`
+- `[AUTO] apt install kaccounts-integration`
+- `[AUTO] apt install keyboard-configuration`
+- `[MANUAL] apt install keyutils`
+- `[AUTO] apt install kfind`
+- `[AUTO] apt install khotkeys-data`
+- `[AUTO] apt install kimageformat-plugins`
+- `[AUTO] apt install kio-extras-data`
+- `[AUTO] apt install kirigami-addons-data`
+- `[AUTO] apt install konversation`
+- `[AUTO] apt install konversation-data`
+- `[AUTO] apt install kpat`
+- `[AUTO] apt install ksshaskpass`
+- `[AUTO] apt install ksudoku`
+- `[AUTO] apt install ksystemstats`
+- `[AUTO] apt install ktexteditor-data`
+- `[AUTO] apt install laptop-detect`
+- `[MANUAL] apt install login`
+- `[AUTO] apt install logrotate`
+- `[MANUAL] apt install lvm2`
+- `[AUTO] apt install mawk`
+- `[AUTO] apt install mesa-utils`
+- `[AUTO] apt install mesa-utils-bin`
+- `[MANUAL] apt install mokutil`
+- `[AUTO] apt install nano`
+- `[AUTO] apt install neochat`
+- `[AUTO] apt install netcat-openbsd`
+- `[AUTO] apt install netplan-generator`
+- `[AUTO] apt install networkd-dispatcher`
+- `[AUTO] apt install node-anymatch`
+- `[AUTO] apt install node-babel-plugin-polyfill-regenerator`
+- `[AUTO] apt install node-balanced-match`
+- `[AUTO] apt install node-cli-truncate`
+- `[AUTO] apt install node-concat-stream`
+- `[AUTO] apt install node-core-js-compat`
+- `[AUTO] apt install node-core-util-is`
+- `[AUTO] apt install node-data-uri-to-buffer`
+- `[AUTO] apt install node-delegates`
+- `[AUTO] apt install node-eslint-utils`
+- `[AUTO] apt install node-esutils`
+- `[AUTO] apt install node-find-cache-dir`
+- `[AUTO] apt install node-find-up`
+- `[AUTO] apt install node-flat-cache`
+- `[AUTO] apt install node-flatted`
+- `[AUTO] apt install node-fs-write-stream-atomic`
+- `[AUTO] apt install node-fs.realpath`
+- `[AUTO] apt install node-icss-utils`
+- `[AUTO] apt install node-is-binary-path`
+- `[AUTO] apt install node-is-path-cwd`
+- `[AUTO] apt install node-is-path-inside`
+- `[AUTO] apt install node-locate-path`
+- `[AUTO] apt install node-micromatch`
+- `[AUTO] apt install node-minimatch`
+- `[AUTO] apt install node-negotiator`
+- `[AUTO] apt install node-normalize-package-data`
+- `[AUTO] apt install node-normalize-path`
+- `[AUTO] apt install node-npm-run-path`
+- `[AUTO] apt install node-optionator`
+- `[AUTO] apt install node-p-locate`
+- `[AUTO] apt install node-path-dirname`
+- `[AUTO] apt install node-path-exists`
+- `[AUTO] apt install node-path-is-absolute`
+- `[AUTO] apt install node-path-is-inside`
+- `[AUTO] apt install node-path-type`
+- `[AUTO] apt install node-regenerate`
+- `[AUTO] apt install node-regenerate-unicode-properties`
+- `[AUTO] apt install node-regenerator-runtime`
+- `[AUTO] apt install node-regenerator-transform`
+- `[AUTO] apt install node-repeat-string`
+- `[AUTO] apt install node-schema-utils`
+- `[AUTO] apt install node-set-immediate-shim`
+- `[AUTO] apt install node-stack-utils`
+- `[AUTO] apt install node-tar`
+- `[AUTO] apt install node-unicode-match-property-ecmascript`
+- `[AUTO] apt install node-unicode-match-property-value-ecmascript`
+- `[AUTO] apt install node-util`
+- `[AUTO] apt install node-util-deprecate`
+- `[AUTO] apt install node-validate-npm-package-license`
+- `[AUTO] apt install node-validate-npm-package-name`
+- `[AUTO] apt install node-watchpack`
+- `[AUTO] apt install node-write-file-atomic`
+- `[MANUAL] apt install openoffice.org-hyphenation`
+- `[AUTO] apt install openssh-client`
+- `[AUTO] apt install p7zip-full`
+- `[AUTO] apt install passwd`
+- `[AUTO] apt install patch`
+- `[AUTO] apt install pciutils`
+- `[AUTO] apt install pcmciautils`
+- `[AUTO] apt install plocate`
+- `[AUTO] apt install poppler-data`
+- `[AUTO] apt install poppler-utils`
+- `[AUTO] apt install powerdevil-data`
+- `[AUTO] apt install proj-data`
+- `[AUTO] apt install python-apt-common`
+- `[AUTO] apt install python-babel-localedata`
+- `[AUTO] apt install python3-apt`
+- `[AUTO] apt install python3-aptdaemon`
+- `[AUTO] apt install python3-attr`
+- `[AUTO] apt install python3-dbus`
+- `[AUTO] apt install python3-dbus-fast`
+- `[AUTO] apt install python3-nacl`
+- `[AUTO] apt install python3-platformdirs`
+- `[AUTO] apt install python3-psutil`
+- `[AUTO] apt install python3-pyxattr`
+- `[AUTO] apt install python3-systemd`
+- `[AUTO] apt install python3-userpath`
+- `[AUTO] apt install python3-zipp`
+- `[AUTO] apt install qapt-batch`
+- `[AUTO] apt install qapt-deb-installer`
+- `[AUTO] apt install qemu-system-data`
+- `[AUTO] apt install qemu-utils`
+- `[MANUAL] apt install rsync`
+- `[AUTO] apt install ruby-colorator`
+- `[AUTO] apt install ruby-jekyll-watch`
+- `[AUTO] apt install ruby-mime-types-data`
+- `[AUTO] apt install ruby-pathutil`
+- `[AUTO] apt install rubygems-integration`
+- `[AUTO] apt install sane-utils`
+- `[AUTO] apt install scribus-data`
+- `[AUTO] apt install sed`
+- `[AUTO] apt install sensible-utils`
+- `[AUTO] apt install session-migration`
+- `[AUTO] apt install sgml-data`
+- `[AUTO] apt install socat`
+- `[AUTO] apt install speech-dispatcher`
+- `[AUTO] apt install speech-dispatcher-audio-plugins`
+- `[AUTO] apt install speech-dispatcher-espeak-ng`
+- `[AUTO] apt install sshfs`
+- `[AUTO] apt install sudo`
+- `[AUTO] apt install sysstat`
+- `[AUTO] apt install system-config-printer-udev`
+- `[AUTO] apt install systemd`
+- `[AUTO] apt install systemd-container`
+- `[AUTO] apt install systemd-dev`
+- `[AUTO] apt install systemd-hwe-hwdb`
+- `[MANUAL] apt install systemd-oomd`
+- `[AUTO] apt install systemd-resolved`
+- `[AUTO] apt install systemd-sysv`
+- `[AUTO] apt install systemd-timesyncd`
+- `[AUTO] apt install sysvinit-utils`
+- `[AUTO] apt install t1utils`
+- `[AUTO] apt install tar`
+- `[AUTO] apt install texlive-latex-base`
+- `[AUTO] apt install texlive-latex-recommended`
+- `[AUTO] apt install tpm-udev`
+- `[AUTO] apt install tzdata`
+- `[AUTO] apt install tzdata-legacy`
+- `[AUTO] apt install udev`
+- `[AUTO] apt install unattended-upgrades`
+- `[AUTO] apt install unzip`
+- `[AUTO] apt install update-inetd`
+- `[AUTO] apt install update-notifier-common`
+- `[AUTO] apt install usb-creator-common`
+- `[AUTO] apt install usb-modeswitch-data`
+- `[AUTO] apt install usbutils`
+- `[AUTO] apt install util-linux`
+- `[AUTO] apt install util-linux-extra`
+- `[AUTO] apt install vim`
+- `[AUTO] apt install vim-common`
+- `[AUTO] apt install vim-runtime`
+- `[AUTO] apt install vim-tiny`
+- `[AUTO] apt install wget`
+- `[AUTO] apt install xdg-dbus-proxy`
+- `[AUTO] apt install xdg-utils`
+- `[AUTO] apt install xkb-data`
+- `[AUTO] apt install xserver-xorg-video-ati`
+- `[AUTO] apt install xz-utils`
+- `[AUTO] apt install zip`
+
+## Applications/GUI
+- `[AUTO] apt install appmenu-gtk-module-common`
+- `[AUTO] apt install appmenu-gtk3-module`
+- `[AUTO] apt install apport-kde`
+- `[AUTO] apt install ark`
+- `[AUTO] apt install baloo-kf5`
+- `[MANUAL] apt install brave-browser`
+- `[AUTO] apt install brave-keyring`
+- `[AUTO] apt install breeze`
+- `[AUTO] apt install breeze-cursor-theme`
+- `[AUTO] apt install breeze-gtk-theme`
+- `[AUTO] apt install breeze-icon-theme`
+- `[AUTO] apt install dbus-x11`
+- `[AUTO] apt install debconf-kde-data`
+- `[AUTO] apt install desktop-file-utils`
+- `[MANUAL] apt install discord`
+- `[AUTO] apt install dolphin`
+- `[AUTO] apt install dolphin-plugins`
+- `[AUTO] apt install drkonqi`
+- `[AUTO] apt install elisa`
+- `[AUTO] apt install fcitx5-config-qt`
+- `[AUTO] apt install fcitx5-frontend-gtk3`
+- `[AUTO] apt install fcitx5-frontend-gtk4`
+- `[AUTO] apt install fcitx5-frontend-qt5`
+- `[AUTO] apt install fcitx5-frontend-qt6`
+- `[MANUAL] apt install filelight`
+- `[AUTO] apt install firefox`
+- `[AUTO] apt install freerdp2-x11`
+- `[AUTO] apt install gnome-bluetooth-3-common`
+- `[AUTO] apt install gnome-bluetooth-sendto`
+- `[AUTO] apt install gnome-control-center`
+- `[AUTO] apt install gnome-control-center-data`
+- `[AUTO] apt install gnome-control-center-faces`
+- `[AUTO] apt install gnome-desktop3-data`
+- `[AUTO] apt install gnome-keyring`
+- `[AUTO] apt install gnome-keyring-pkcs11`
+- `[AUTO] apt install gnome-menus`
+- `[AUTO] apt install gnome-online-accounts`
+- `[AUTO] apt install gnome-remote-desktop`
+- `[AUTO] apt install gnome-session-bin`
+- `[AUTO] apt install gnome-session-common`
+- `[AUTO] apt install gnome-settings-daemon`
+- `[AUTO] apt install gnome-settings-daemon-common`
+- `[AUTO] apt install gnome-shell`
+- `[AUTO] apt install gnome-shell-common`
+- `[MANUAL] apt install gnome-shell-extension-appindicator`
+- `[AUTO] apt install gnome-startup-applications`
+- `[MANUAL] apt install google-chrome-stable`
+- `[AUTO] apt install grub-theme-breeze`
+- `[AUTO] apt install gsettings-desktop-schemas`
+- `[AUTO] apt install gstreamer1.0-gtk3`
+- `[AUTO] apt install gtk-update-icon-cache`
+- `[AUTO] apt install gtk2-engines-pixbuf`
+- `[AUTO] apt install gwenview`
+- `[AUTO] apt install ibus-gtk`
+- `[AUTO] apt install ibus-gtk3`
+- `[AUTO] apt install ibus-gtk4`
+- `[AUTO] apt install kactivitymanagerd`
+- `[AUTO] apt install kate`
+- `[AUTO] apt install kate5-data`
+- `[AUTO] apt install kde-cli-tools`
+- `[AUTO] apt install kde-cli-tools-data`
+- `[MANUAL] apt install kde-config-fcitx5`
+- `[AUTO] apt install kde-config-gtk-style`
+- `[AUTO] apt install kde-config-gtk-style-preview`
+- `[AUTO] apt install kde-config-plymouth`
+- `[AUTO] apt install kde-config-screenlocker`
+- `[AUTO] apt install kde-config-sddm`
+- `[AUTO] apt install kde-config-tablet`
+- `[AUTO] apt install kde-config-updates`
+- `[AUTO] apt install kde-config-whoopsie`
+- `[AUTO] apt install kde-spectacle`
+- `[AUTO] apt install kde-style-breeze`
+- `[AUTO] apt install kde-style-oxygen-qt5`
+- `[AUTO] apt install kdeconnect`
+- `[AUTO] apt install kded5`
+- `[AUTO] apt install kdegames-card-data-kf5`
+- `[AUTO] apt install kdegames-mahjongg-data-kf5`
+- `[AUTO] apt install kdegraphics-thumbnailers`
+- `[AUTO] apt install kdenetwork-filesharing`
+- `[AUTO] apt install kdeplasma-addons-data`
+- `[AUTO] apt install keditbookmarks`
+- `[AUTO] apt install konsole`
+- `[AUTO] apt install konsole-kpart`
+- `[AUTO] apt install kscreen`
+- `[AUTO] apt install ktexteditor-katepart`
+- `[MANUAL] apt install kubuntu-desktop`
+- `[AUTO] apt install kubuntu-settings-desktop`
+- `[AUTO] apt install kwalletmanager`
+- `[AUTO] apt install kwayland-data`
+- `[AUTO] apt install kwayland-integration`
+- `[AUTO] apt install kwin-addons`
+- `[AUTO] apt install kwin-common`
+- `[AUTO] apt install kwin-data`
+- `[AUTO] apt install kwin-decoration-oxygen`
+- `[AUTO] apt install kwin-style-breeze`
+- `[AUTO] apt install kwin-wayland`
+- `[AUTO] apt install kwin-x11`
+- `[MANUAL] apt install language-pack-gnome-en`
+- `[AUTO] apt install language-pack-gnome-en-base`
+- `[AUTO] apt install language-selector-gnome`
+- `[AUTO] apt install layer-shell-qt`
+- `[AUTO] apt install modemmanager`
+- `[AUTO] apt install node-chrome-trace-event`
+- `[AUTO] apt install okular`
+- `[AUTO] apt install okular-extra-backends`
+- `[AUTO] apt install oxygen-sounds`
+- `[AUTO] apt install partitionmanager`
+- `[AUTO] apt install phonon-backend-vlc-common`
+- `[AUTO] apt install phonon4qt5`
+- `[AUTO] apt install phonon4qt5-backend-vlc`
+- `[AUTO] apt install phonon4qt5settings`
+- `[AUTO] apt install pinentry-gnome3`
+- `[AUTO] apt install pinentry-qt`
+- `[AUTO] apt install plasma-browser-integration`
+- `[AUTO] apt install plasma-calendar-addons`
+- `[AUTO] apt install plasma-dataengines-addons`
+- `[AUTO] apt install plasma-desktop`
+- `[AUTO] apt install plasma-desktop-data`
+- `[AUTO] apt install plasma-discover`
+- `[AUTO] apt install plasma-discover-backend-fwupd`
+- `[AUTO] apt install plasma-discover-backend-snap`
+- `[AUTO] apt install plasma-discover-common`
+- `[AUTO] apt install plasma-discover-notifier`
+- `[AUTO] apt install plasma-disks`
+- `[AUTO] apt install plasma-distro-release-notifier`
+- `[AUTO] apt install plasma-firewall`
+- `[AUTO] apt install plasma-framework`
+- `[AUTO] apt install plasma-integration`
+- `[AUTO] apt install plasma-nm`
+- `[AUTO] apt install plasma-pa`
+- `[AUTO] apt install plasma-systemmonitor`
+- `[AUTO] apt install plasma-theme-oxygen`
+- `[AUTO] apt install plasma-thunderbolt`
+- `[AUTO] apt install plasma-vault`
+- `[AUTO] apt install plasma-wallpapers-addons`
+- `[AUTO] apt install plasma-welcome`
+- `[AUTO] apt install plasma-widgets-addons`
+- `[AUTO] apt install plasma-workspace`
+- `[AUTO] apt install plasma-workspace-data`
+- `[AUTO] apt install plasma-workspace-wallpapers`
+- `[AUTO] apt install plymouth-theme-breeze`
+- `[AUTO] apt install policykit-desktop-privileges`
+- `[AUTO] apt install polkit-kde-agent-1`
+- `[MANUAL] apt install proton-vpn-gnome-desktop`
+- `[AUTO] apt install proton-vpn-gtk-app`
+- `[AUTO] apt install python3-aptdaemon.gtk3widgets`
+- `[AUTO] apt install python3-dbus.mainloop.pyqt5`
+- `[AUTO] apt install python3-markdown`
+- `[AUTO] apt install python3-markdown-it`
+- `[AUTO] apt install python3-markupsafe`
+- `[AUTO] apt install python3-pyqt5`
+- `[AUTO] apt install python3-pyqt5.sip`
+- `[AUTO] apt install qdbus-qt5`
+- `[AUTO] apt install qml-module-org-kde-activities`
+- `[AUTO] apt install qml-module-org-kde-bluezqt`
+- `[AUTO] apt install qml-module-org-kde-draganddrop`
+- `[AUTO] apt install qml-module-org-kde-kaccounts`
+- `[AUTO] apt install qml-module-org-kde-kcm`
+- `[AUTO] apt install qml-module-org-kde-kcmutils`
+- `[AUTO] apt install qml-module-org-kde-kconfig`
+- `[AUTO] apt install qml-module-org-kde-kcoreaddons`
+- `[AUTO] apt install qml-module-org-kde-kholidays`
+- `[AUTO] apt install qml-module-org-kde-kio`
+- `[AUTO] apt install qml-module-org-kde-kirigami-addons-components`
+- `[AUTO] apt install qml-module-org-kde-kirigami-addons-delegates`
+- `[AUTO] apt install qml-module-org-kde-kirigami-addons-labs-components`
+- `[AUTO] apt install qml-module-org-kde-kirigami-addons-labs-mobileform`
+- `[AUTO] apt install qml-module-org-kde-kirigami2`
+- `[AUTO] apt install qml-module-org-kde-kitemmodels`
+- `[AUTO] apt install qml-module-org-kde-kquickcontrols`
+- `[AUTO] apt install qml-module-org-kde-kquickcontrolsaddons`
+- `[AUTO] apt install qml-module-org-kde-kquickimageeditor`
+- `[AUTO] apt install qml-module-org-kde-ksysguard`
+- `[AUTO] apt install qml-module-org-kde-kwindowsystem`
+- `[AUTO] apt install qml-module-org-kde-newstuff`
+- `[AUTO] apt install qml-module-org-kde-notifications`
+- `[AUTO] apt install qml-module-org-kde-people`
+- `[AUTO] apt install qml-module-org-kde-pipewire`
+- `[AUTO] apt install qml-module-org-kde-prison`
+- `[AUTO] apt install qml-module-org-kde-purpose`
+- `[AUTO] apt install qml-module-org-kde-qqc2breezestyle`
+- `[AUTO] apt install qml-module-org-kde-qqc2desktopstyle`
+- `[AUTO] apt install qml-module-org-kde-quickcharts`
+- `[AUTO] apt install qml-module-org-kde-runnermodel`
+- `[AUTO] apt install qml-module-org-kde-solid`
+- `[AUTO] apt install qml-module-org-kde-sonnet`
+- `[AUTO] apt install qml-module-org-kde-syntaxhighlighting`
+- `[AUTO] apt install qml-module-org-kde-userfeedback`
+- `[AUTO] apt install qml-module-qt-labs-folderlistmodel`
+- `[AUTO] apt install qml-module-qt-labs-platform`
+- `[AUTO] apt install qml-module-qt-labs-qmlmodels`
+- `[AUTO] apt install qml-module-qt-labs-settings`
+- `[AUTO] apt install qml-module-qtgraphicaleffects`
+- `[AUTO] apt install qml-module-qtlocation`
+- `[AUTO] apt install qml-module-qtmultimedia`
+- `[AUTO] apt install qml-module-qtpositioning`
+- `[AUTO] apt install qml-module-qtqml`
+- `[AUTO] apt install qml-module-qtqml-models2`
+- `[AUTO] apt install qml-module-qtquick-controls`
+- `[AUTO] apt install qml-module-qtquick-controls2`
+- `[AUTO] apt install qml-module-qtquick-dialogs`
+- `[AUTO] apt install qml-module-qtquick-layouts`
+- `[AUTO] apt install qml-module-qtquick-particles2`
+- `[AUTO] apt install qml-module-qtquick-privatewidgets`
+- `[AUTO] apt install qml-module-qtquick-shapes`
+- `[AUTO] apt install qml-module-qtquick-templates2`
+- `[AUTO] apt install qml-module-qtquick-virtualkeyboard`
+- `[AUTO] apt install qml-module-qtquick-window2`
+- `[AUTO] apt install qml-module-qtquick-xmllistmodel`
+- `[AUTO] apt install qml-module-qtquick2`
+- `[AUTO] apt install qml-module-qtwebengine`
+- `[AUTO] apt install qt5-gtk-platformtheme`
+- `[AUTO] apt install qt5-image-formats-plugins`
+- `[AUTO] apt install qt6-gtk-platformtheme`
+- `[AUTO] apt install qt6-qpa-plugins`
+- `[AUTO] apt install qt6-translations-l10n`
+- `[AUTO] apt install qt6-wayland`
+- `[AUTO] apt install qtchooser`
+- `[AUTO] apt install qtspeech5-flite-plugin`
+- `[AUTO] apt install qtspeech5-speechd-plugin`
+- `[AUTO] apt install qttranslations5-l10n`
+- `[AUTO] apt install qtvirtualkeyboard-plugin`
+- `[AUTO] apt install qtwayland5`
+- `[AUTO] apt install sddm-theme-breeze`
+- `[AUTO] apt install signon-ui-x11`
+- `[MANUAL] apt install slack-desktop`
+- `[AUTO] apt install software-properties-qt`
+- `[AUTO] apt install sound-theme-freedesktop`
+- `[AUTO] apt install ubuntu-release-upgrader-qt`
+- `[AUTO] apt install usb-creator-kde`
+- `[AUTO] apt install vlc-data`
+- `[AUTO] apt install vlc-plugin-base`
+- `[AUTO] apt install vlc-plugin-video-output`
+- `[AUTO] apt install wayland-utils`
+- `[AUTO] apt install x11-apps`
+- `[AUTO] apt install x11-common`
+- `[AUTO] apt install x11-session-utils`
+- `[AUTO] apt install x11-utils`
+- `[AUTO] apt install x11-xkb-utils`
+- `[AUTO] apt install x11-xserver-utils`
+- `[AUTO] apt install x11proto-dev`
+- `[AUTO] apt install xdg-desktop-portal`
+- `[AUTO] apt install xdg-desktop-portal-gtk`
+- `[AUTO] apt install xdg-desktop-portal-kde`
+- `[AUTO] apt install xwayland`
+- `[AUTO] apt install yaru-theme-gnome-shell`
+
+## Fonts
+- `[AUTO] apt install fontconfig`
+- `[AUTO] apt install fontconfig-config`
+- `[AUTO] apt install fonts-dejavu`
+- `[AUTO] apt install fonts-dejavu-core`
+- `[AUTO] apt install fonts-dejavu-extra`
+- `[AUTO] apt install fonts-dejavu-mono`
+- `[AUTO] apt install fonts-droid-fallback`
+- `[AUTO] apt install fonts-hack`
+- `[AUTO] apt install fonts-ibm-plex`
+- `[AUTO] apt install fonts-katex`
+- `[AUTO] apt install fonts-lato`
+- `[AUTO] apt install fonts-league-spartan`
+- `[AUTO] apt install fonts-liberation`
+- `[AUTO] apt install fonts-liberation-sans-narrow`
+- `[AUTO] apt install fonts-liberation2`
+- `[AUTO] apt install fonts-lmodern`
+- `[AUTO] apt install fonts-noto-cjk`
+- `[AUTO] apt install fonts-noto-color-emoji`
+- `[AUTO] apt install fonts-noto-core`
+- `[AUTO] apt install fonts-noto-hinted`
+- `[AUTO] apt install fonts-noto-mono`
+- `[AUTO] apt install fonts-noto-ui-core`
+- `[AUTO] apt install fonts-noto-unhinted`
+- `[AUTO] apt install fonts-opensymbol`
+- `[AUTO] apt install fonts-texgyre`
+- `[AUTO] apt install fonts-texgyre-math`
+- `[AUTO] apt install fonts-ubuntu`
+- `[AUTO] apt install fonts-urw-base35`
+- `[AUTO] apt install libfont-afm-perl`
+- `[AUTO] apt install libfontconfig1`
+- `[AUTO] apt install libfontenc1`
+- `[AUTO] apt install libkfontinst5`
+- `[AUTO] apt install libkfontinstui5`
+- `[AUTO] apt install libxfont2`
+- `[AUTO] apt install python3-commandnotfound`
+- `[AUTO] apt install texlive-fonts-recommended`
+- `[AUTO] apt install timgm6mb-soundfont`
+- `[AUTO] apt install xfonts-base`
+- `[AUTO] apt install xfonts-encodings`
+- `[AUTO] apt install xfonts-scalable`
+- `[AUTO] apt install xfonts-utils`
+
+## Documentation
+- `[AUTO] apt install bup-doc`
+- `[AUTO] apt install bzip2-doc`
+- `[AUTO] apt install catdoc`
+- `[AUTO] apt install clinfo`
+- `[AUTO] apt install cups-pk-helper`
+- `[AUTO] apt install debconf-kde-helper`
+- `[AUTO] apt install distro-info`
+- `[AUTO] apt install distro-info-data`
+- `[AUTO] apt install git-man`
+- `[MANUAL] apt install gnome-power-manager`
+- `[AUTO] apt install gnome-user-docs`
+- `[AUTO] apt install hdf5-helpers`
+- `[AUTO] apt install info`
+- `[AUTO] apt install init-system-helpers`
+- `[AUTO] apt install install-info`
+- `[AUTO] apt install kubuntu-notification-helper`
+- `[AUTO] apt install kuserfeedback-doc`
+- `[AUTO] apt install libcfitsio-doc`
+- `[AUTO] apt install libjs-sphinxdoc`
+- `[AUTO] apt install libpkcs11-helper1t64`
+- `[AUTO] apt install libtss2-tcti-spi-helper0t64`
+- `[AUTO] apt install media-player-info`
+- `[AUTO] apt install mobile-broadband-provider-info`
+- `[AUTO] apt install network-manager`
+- `[AUTO] apt install network-manager-gnome`
+- `[AUTO] apt install network-manager-openconnect`
+- `[AUTO] apt install network-manager-openvpn`
+- `[AUTO] apt install network-manager-openvpn-gnome`
+- `[AUTO] apt install network-manager-pptp`
+- `[AUTO] apt install node-babel-helper-define-polyfill-provider`
+- `[AUTO] apt install node-ci-info`
+- `[AUTO] apt install node-doctrine`
+- `[AUTO] apt install node-hosted-git-info`
+- `[AUTO] apt install nodejs-doc`
+- `[AUTO] apt install print-manager`
+- `[AUTO] apt install python3-distro-info`
+- `[AUTO] apt install python3-proton-vpn-network-manager`
+- `[AUTO] apt install python3-update-manager`
+- `[AUTO] apt install ruby3.2-doc`
+- `[AUTO] apt install shared-mime-info`
+- `[AUTO] apt install spice-client-glib-usb-acl-helper`
+- `[AUTO] apt install ubuntu-docs`
+- `[AUTO] apt install update-manager-core`
+- `[MANUAL] apt install virt-manager`
+- `[AUTO] apt install xorg-docs-core`
+- `[AUTO] apt install xorg-sgml-doctools`
+
+## Other/Miscellaneous
+- `[AUTO] apt install accountsservice`
+- `[AUTO] apt install adwaita-icon-theme`
+- `[AUTO] apt install aha`
+- `[AUTO] apt install alsa-base`
+- `[AUTO] apt install alsa-topology-conf`
+- `[AUTO] apt install alsa-ucm-conf`
+- `[AUTO] apt install amd64-microcode`
+- `[AUTO] apt install apg`
+- `[AUTO] apt install apparmor`
+- `[AUTO] apt install apport`
+- `[AUTO] apt install apport-core-dump-handler`
+- `[AUTO] apt install apport-symptoms`
+- `[AUTO] apt install appstream`
+- `[AUTO] apt install aspell`
+- `[AUTO] apt install aspell-en`
+- `[MANUAL] apt install auditd`
+- `[AUTO] apt install autotools-dev`
+- `[AUTO] apt install avahi-daemon`
+- `[MANUAL] apt install base-files`
+- `[AUTO] apt install bc`
+- `[AUTO] apt install bind9-host`
+- `[AUTO] apt install blt`
+- `[AUTO] apt install bluedevil`
+- `[AUTO] apt install bluez`
+- `[AUTO] apt install bluez-cups`
+- `[AUTO] apt install bluez-obexd`
+- `[AUTO] apt install bolt`
+- `[AUTO] apt install bpfcc-tools`
+- `[AUTO] apt install bpftrace`
+- `[MANUAL] apt install btrfs-progs`
+- `[AUTO] apt install bubblewrap`
+- `[AUTO] apt install bup`
+- `[AUTO] apt install busybox-initramfs`
+- `[MANUAL] apt install code`
+- `[AUTO] apt install colord`
+- `[AUTO] apt install command-not-found`
+- `[AUTO] apt install console-setup`
+- `[AUTO] apt install console-setup-linux`
+- `[AUTO] apt install containerd`
+- `[AUTO] apt install cpio`
+- `[AUTO] apt install cpu-checker`
+- `[AUTO] apt install cryfs`
+- `[AUTO] apt install cups`
+- `[AUTO] apt install cups-bsd`
+- `[AUTO] apt install cups-client`
+- `[AUTO] apt install cups-common`
+- `[AUTO] apt install cups-core-drivers`
+- `[AUTO] apt install cups-daemon`
+- `[AUTO] apt install cups-filters`
+- `[AUTO] apt install cups-filters-core-drivers`
+- `[AUTO] apt install cups-ppdc`
+- `[AUTO] apt install cups-server-common`
+- `[MANUAL] apt install dash`
+- `[AUTO] apt install dc`
+- `[AUTO] apt install dconf-cli`
+- `[AUTO] apt install dconf-gsettings-backend`
+- `[AUTO] apt install dconf-service`
+- `[AUTO] apt install debconf`
+- `[AUTO] apt install debconf-i18n`
+- `[AUTO] apt install dhcpcd-base`
+- `[AUTO] apt install dictionaries-common`
+- `[AUTO] apt install dirmngr`
+- `[MANUAL] apt install dmeventd`
+- `[AUTO] apt install dmidecode`
+- `[MANUAL] apt install dmraid`
+- `[AUTO] apt install dnsmasq-base`
+- `[AUTO] apt install docbook-xml`
+- `[AUTO] apt install docbook-xsl`
+- `[MANUAL] apt install docker.io`
+- `[AUTO] apt install dosfstools`
+- `[AUTO] apt install dracut-install`
+- `[AUTO] apt install dvisvgm`
+- `[AUTO] apt install e2fsprogs`
+- `[AUTO] apt install e2fsprogs-l10n`
+- `[AUTO] apt install ed`
+- `[MANUAL] apt install efibootmgr`
+- `[AUTO] apt install eject`
+- `[AUTO] apt install emacsen-common`
+- `[AUTO] apt install enchant-2`
+- `[AUTO] apt install eslint`
+- `[AUTO] apt install ethtool`
+- `[AUTO] apt install fakeroot`
+- `[AUTO] apt install fcitx5`
+- `[MANUAL] apt install fcitx5-chinese-addons`
+- `[AUTO] apt install fcitx5-chinese-addons-bin`
+- `[MANUAL] apt install fcitx5-frontend-all`
+- `[AUTO] apt install fcitx5-module-chttrans`
+- `[AUTO] apt install fcitx5-module-cloudpinyin`
+- `[AUTO] apt install fcitx5-module-fullwidth`
+- `[AUTO] apt install fcitx5-module-lua`
+- `[AUTO] apt install fcitx5-module-lua-common`
+- `[AUTO] apt install fcitx5-module-pinyinhelper`
+- `[AUTO] apt install fcitx5-modules`
+- `[AUTO] apt install fcitx5-pinyin`
+- `[AUTO] apt install fcitx5-pinyin-gui`
+- `[AUTO] apt install fcitx5-table`
+- `[AUTO] apt install fdisk`
+- `[AUTO] apt install ffmpeg`
+- `[AUTO] apt install ffmpegthumbs`
+- `[AUTO] apt install file`
+- `[AUTO] apt install firmware-sof-signed`
+- `[MANUAL] apt install freeglut3-dev`
+- `[AUTO] apt install friendly-recovery`
+- `[AUTO] apt install ftp`
+- `[AUTO] apt install fuse3`
+- `[AUTO] apt install fwupd`
+- `[AUTO] apt install fwupd-signed`
+- `[AUTO] apt install gcr`
+- `[AUTO] apt install gcr4`
+- `[MANUAL] apt install gdal-bin`
+- `[AUTO] apt install gdal-plugins`
+- `[AUTO] apt install gdm3`
+- `[AUTO] apt install genisoimage`
+- `[AUTO] apt install geoclue-2.0`
+- `[AUTO] apt install gettext-base`
+- `[AUTO] apt install ghostscript`
+- `[AUTO] apt install gkbd-capplet`
+- `[AUTO] apt install gnupg`
+- `[AUTO] apt install gnupg-agent`
+- `[AUTO] apt install gnupg-l10n`
+- `[AUTO] apt install gnustep-base-common`
+- `[AUTO] apt install gnustep-base-runtime`
+- `[AUTO] apt install gnustep-common`
+- `[AUTO] apt install gnutls-bin`
+- `[AUTO] apt install go-mtpfs`
+- `[AUTO] apt install gpg`
+- `[AUTO] apt install gpg-agent`
+- `[AUTO] apt install gpg-wks-client`
+- `[AUTO] apt install gpgconf`
+- `[AUTO] apt install gpgsm`
+- `[AUTO] apt install gpgv`
+- `[MANUAL] apt install graphviz`
+- `[AUTO] apt install groff-base`
+- `[AUTO] apt install grub-common`
+- `[MANUAL] apt install grub-efi-amd64-bin`
+- `[MANUAL] apt install grub-efi-amd64-signed`
+- `[MANUAL] apt install grub-gfxpayload-lists`
+- `[MANUAL] apt install grub-pc`
+- `[MANUAL] apt install grub-pc-bin`
+- `[MANUAL] apt install grub2-common`
+- `[AUTO] apt install gstreamer1.0-gl`
+- `[AUTO] apt install gstreamer1.0-pipewire`
+- `[AUTO] apt install gstreamer1.0-plugins-bad`
+- `[AUTO] apt install gstreamer1.0-plugins-base`
+- `[AUTO] apt install gstreamer1.0-plugins-good`
+- `[AUTO] apt install gstreamer1.0-x`
+- `[AUTO] apt install gvfs`
+- `[AUTO] apt install gvfs-backends`
+- `[AUTO] apt install gvfs-common`
+- `[AUTO] apt install gvfs-daemons`
+- `[AUTO] apt install gyp`
+- `[AUTO] apt install handlebars`
+- `[AUTO] apt install haruna`
+- `[AUTO] apt install hdparm`
+- `[AUTO] apt install heif-gdk-pixbuf`
+- `[AUTO] apt install heif-thumbnailer`
+- `[AUTO] apt install hicolor-icon-theme`
+- `[MANUAL] apt install hostname`
+- `[AUTO] apt install hplip`
+- `[AUTO] apt install humanity-icon-theme`
+- `[AUTO] apt install hunspell-en-us`
+- `[MANUAL] apt install hyphen-en-ca`
+- `[MANUAL] apt install hyphen-fi`
+- `[MANUAL] apt install hyphen-ga`
+- `[MANUAL] apt install hyphen-id`
+- `[AUTO] apt install i965-va-driver`
+- `[AUTO] apt install ibus`
+- `[AUTO] apt install ibverbs-providers`
+- `[AUTO] apt install icc-profiles-free`
+- `[AUTO] apt install icu-devtools`
+- `[AUTO] apt install iio-sensor-proxy`
+- `[AUTO] apt install im-config`
+- `[AUTO] apt install imagemagick-6-common`
+- `[MANUAL] apt install init`
+- `[AUTO] apt install initramfs-tools`
+- `[AUTO] apt install initramfs-tools-bin`
+- `[AUTO] apt install initramfs-tools-core`
+- `[AUTO] apt install intel-media-va-driver`
+- `[AUTO] apt install intel-microcode`
+- `[AUTO] apt install ipp-usb`
+- `[AUTO] apt install iproute2`
+- `[AUTO] apt install iptables`
+- `[MANUAL] apt install iptsd`
+- `[AUTO] apt install ipxe-qemu`
+- `[AUTO] apt install iso-codes`
+- `[AUTO] apt install iucode-tool`
+- `[AUTO] apt install java-common`
+- `[AUTO] apt install javascript-common`
+- `[MANUAL] apt install jekyll`
+- `[AUTO] apt install jekyll-theme-minima`
+- `[AUTO] apt install jq`
+- `[AUTO] apt install kaccounts-providers`
+- `[AUTO] apt install kactivities-bin`
+- `[AUTO] apt install kamera`
+- `[AUTO] apt install kbd`
+- `[AUTO] apt install kcalc`
+- `[AUTO] apt install kcharselect`
+- `[AUTO] apt install kdialog`
+- `[AUTO] apt install kdoctools5`
+- `[AUTO] apt install kerneloops`
+- `[AUTO] apt install keyboxd`
+- `[AUTO] apt install kgamma5`
+- `[AUTO] apt install khelpcenter`
+- `[AUTO] apt install khotkeys`
+- `[AUTO] apt install kinfocenter`
+- `[AUTO] apt install kinit`
+- `[AUTO] apt install kio`
+- `[AUTO] apt install kio-admin`
+- `[AUTO] apt install kio-audiocd`
+- `[AUTO] apt install kio-extras`
+- `[AUTO] apt install kio-fuse`
+- `[AUTO] apt install kio-gdrive`
+- `[AUTO] apt install kmahjongg`
+- `[AUTO] apt install kmenuedit`
+- `[AUTO] apt install kmines`
+- `[AUTO] apt install kmod`
+- `[MANUAL] apt install konqueror`
+- `[AUTO] apt install kpackagelauncherqml`
+- `[AUTO] apt install kpackagetool5`
+- `[MANUAL] apt install kpartx`
+- `[MANUAL] apt install kpartx-boot`
+- `[AUTO] apt install kpeople-vcard`
+- `[AUTO] apt install krb5-locales`
+- `[AUTO] apt install krdc`
+- `[AUTO] apt install ksystemlog`
+- `[MANUAL] apt install kubuntu-wallpapers`
+- `[AUTO] apt install kubuntu-web-shortcuts`
+- `[AUTO] apt install kup-backup`
+- `[AUTO] apt install kwrited`
+- `[AUTO] apt install lame`
+- `[MANUAL] apt install language-pack-en`
+- `[MANUAL] apt install language-pack-en-base`
+- `[AUTO] apt install language-selector-common`
+- `[AUTO] apt install less`
+- `[AUTO] apt install linux-base`
+- `[AUTO] apt install linux-firmware`
+- `[MANUAL] apt install linux-generic`
+- `[AUTO] apt install linux-headers-6.10.10-surface-1`
+- `[AUTO] apt install linux-headers-6.12.3-surface-2`
+- `[AUTO] apt install linux-headers-6.13.6-surface-1`
+- `[AUTO] apt install linux-headers-6.14.2-surface-1`
+- `[AUTO] apt install linux-headers-6.17.1-surface-2`
+- `[AUTO] apt install linux-headers-6.8.0-85`
+- `[AUTO] apt install linux-headers-6.8.0-85-generic`
+- `[AUTO] apt install linux-headers-generic`
+- `[MANUAL] apt install linux-headers-surface`
+- `[AUTO] apt install linux-image-6.10.10-surface-1`
+- `[AUTO] apt install linux-image-6.12.3-surface-2`
+- `[AUTO] apt install linux-image-6.13.6-surface-1`
+- `[AUTO] apt install linux-image-6.14.2-surface-1`
+- `[AUTO] apt install linux-image-6.17.1-surface-2`
+- `[AUTO] apt install linux-image-6.8.0-85-generic`
+- `[AUTO] apt install linux-image-generic`
+- `[MANUAL] apt install linux-image-surface`
+- `[AUTO] apt install linux-modules-6.8.0-85-generic`
+- `[AUTO] apt install linux-modules-extra-6.8.0-85-generic`
+- `[AUTO] apt install linux-sound-base`
+- `[MANUAL] apt install linux-surface-secureboot-mok`
+- `[AUTO] apt install linux-tools-6.8.0-85`
+- `[AUTO] apt install linux-tools-6.8.0-85-generic`
+- `[MANUAL] apt install linux-tools-common`
+- `[MANUAL] apt install linux-tools-generic`
+- `[MANUAL] apt install lldb`
+- `[AUTO] apt install lldb-18`
+- `[AUTO] apt install lmodern`
+- `[AUTO] apt install locales`
+- `[AUTO] apt install logsave`
+- `[AUTO] apt install lp-solve`
+- `[AUTO] apt install lsb-release`
+- `[AUTO] apt install lshw`
+- `[AUTO] apt install lsof`
+- `[AUTO] apt install lto-disabled-list`
+- `[AUTO] apt install m4`
+- `[AUTO] apt install man-db`
+- `[AUTO] apt install manpages`
+- `[AUTO] apt install manpages-dev`
+- `[AUTO] apt install mdevctl`
+- `[AUTO] apt install media-types`
+- `[AUTO] apt install memtest86+`
+- `[AUTO] apt install mesa-va-drivers`
+- `[AUTO] apt install mesa-vdpau-drivers`
+- `[AUTO] apt install mesa-vulkan-drivers`
+- `[AUTO] apt install milou`
+- `[AUTO] apt install mount`
+- `[AUTO] apt install mscompress`
+- `[AUTO] apt install msr-tools`
+- `[AUTO] apt install mtr-tiny`
+- `[AUTO] apt install mupdf-tools`
+- `[AUTO] apt install mutter-common`
+- `[AUTO] apt install mutter-common-bin`
+- `[AUTO] apt install mysql-common`
+- `[MANUAL] apt install ncurses-base`
+- `[MANUAL] apt install ncurses-bin`
+- `[AUTO] apt install netbase`
+- `[AUTO] apt install netplan.io`
+- `[AUTO] apt install nftables`
+- `[AUTO] apt install node-abbrev`
+- `[AUTO] apt install node-acorn`
+- `[AUTO] apt install node-agent-base`
+- `[AUTO] apt install node-ajv`
+- `[AUTO] apt install node-ajv-keywords`
+- `[AUTO] apt install node-ampproject-remapping`
+- `[AUTO] apt install node-ansi-escapes`
+- `[AUTO] apt install node-ansi-regex`
+- `[AUTO] apt install node-ansi-styles`
+- `[AUTO] apt install node-aproba`
+- `[AUTO] apt install node-archy`
+- `[AUTO] apt install node-are-we-there-yet`
+- `[AUTO] apt install node-argparse`
+- `[AUTO] apt install node-arrify`
+- `[AUTO] apt install node-assert`
+- `[AUTO] apt install node-async`
+- `[AUTO] apt install node-async-each`
+- `[AUTO] apt install node-auto-bind`
+- `[AUTO] apt install node-babel-plugin-add-module-exports`
+- `[AUTO] apt install node-babel-plugin-lodash`
+- `[AUTO] apt install node-babel-plugin-polyfill-corejs2`
+- `[AUTO] apt install node-babel-plugin-polyfill-corejs3`
+- `[AUTO] apt install node-babel7`
+- `[AUTO] apt install node-babel7-runtime`
+- `[AUTO] apt install node-base`
+- `[AUTO] apt install node-base64-js`
+- `[AUTO] apt install node-binary-extensions`
+- `[AUTO] apt install node-brace-expansion`
+- `[AUTO] apt install node-braces`
+- `[AUTO] apt install node-browserslist`
+- `[AUTO] apt install node-builtins`
+- `[AUTO] apt install node-busboy`
+- `[AUTO] apt install node-cacache`
+- `[AUTO] apt install node-cache-base`
+- `[AUTO] apt install node-camelcase`
+- `[AUTO] apt install node-caniuse-lite`
+- `[AUTO] apt install node-chalk`
+- `[AUTO] apt install node-chokidar`
+- `[AUTO] apt install node-chownr`
+- `[AUTO] apt install node-cjs-module-lexer`
+- `[AUTO] apt install node-cli-boxes`
+- `[AUTO] apt install node-cli-cursor`
+- `[AUTO] apt install node-cli-table`
+- `[AUTO] apt install node-cliui`
+- `[AUTO] apt install node-clone`
+- `[AUTO] apt install node-clone-deep`
+- `[AUTO] apt install node-collection-visit`
+- `[AUTO] apt install node-color-convert`
+- `[AUTO] apt install node-color-name`
+- `[AUTO] apt install node-colors`
+- `[AUTO] apt install node-columnify`
+- `[AUTO] apt install node-commander`
+- `[AUTO] apt install node-commondir`
+- `[AUTO] apt install node-console-control-strings`
+- `[AUTO] apt install node-convert-source-map`
+- `[AUTO] apt install node-copy-concurrently`
+- `[AUTO] apt install node-core-js`
+- `[AUTO] apt install node-core-js-pure`
+- `[AUTO] apt install node-coveralls`
+- `[AUTO] apt install node-css-loader`
+- `[AUTO] apt install node-css-selector-tokenizer`
+- `[AUTO] apt install node-debbundle-es-to-primitive`
+- `[AUTO] apt install node-debug`
+- `[AUTO] apt install node-decamelize`
+- `[AUTO] apt install node-decompress-response`
+- `[AUTO] apt install node-deep-equal`
+- `[AUTO] apt install node-deep-is`
+- `[AUTO] apt install node-defaults`
+- `[AUTO] apt install node-define-properties`
+- `[AUTO] apt install node-define-property`
+- `[AUTO] apt install node-defined`
+- `[AUTO] apt install node-del`
+- `[AUTO] apt install node-depd`
+- `[AUTO] apt install node-diff`
+- `[AUTO] apt install node-electron-to-chromium`
+- `[AUTO] apt install node-encoding`
+- `[AUTO] apt install node-end-of-stream`
+- `[AUTO] apt install node-enhanced-resolve`
+- `[AUTO] apt install node-err-code`
+- `[AUTO] apt install node-errno`
+- `[AUTO] apt install node-error-ex`
+- `[AUTO] apt install node-es-abstract`
+- `[AUTO] apt install node-es-module-lexer`
+- `[AUTO] apt install node-es6-error`
+- `[AUTO] apt install node-escape-string-regexp`
+- `[AUTO] apt install node-escodegen`
+- `[AUTO] apt install node-eslint-scope`
+- `[AUTO] apt install node-eslint-visitor-keys`
+- `[AUTO] apt install node-espree`
+- `[AUTO] apt install node-esprima`
+- `[AUTO] apt install node-esquery`
+- `[AUTO] apt install node-esrecurse`
+- `[AUTO] apt install node-estraverse`
+- `[AUTO] apt install node-events`
+- `[AUTO] apt install node-fancy-log`
+- `[AUTO] apt install node-fast-deep-equal`
+- `[AUTO] apt install node-fast-levenshtein`
+- `[AUTO] apt install node-fetch`
+- `[AUTO] apt install node-file-entry-cache`
+- `[AUTO] apt install node-fill-range`
+- `[AUTO] apt install node-for-in`
+- `[AUTO] apt install node-for-own`
+- `[AUTO] apt install node-foreground-child`
+- `[AUTO] apt install node-fs-readdir-recursive`
+- `[AUTO] apt install node-function-bind`
+- `[AUTO] apt install node-functional-red-black-tree`
+- `[AUTO] apt install node-gauge`
+- `[AUTO] apt install node-get-caller-file`
+- `[AUTO] apt install node-get-stream`
+- `[AUTO] apt install node-get-value`
+- `[AUTO] apt install node-glob`
+- `[AUTO] apt install node-glob-parent`
+- `[AUTO] apt install node-globals`
+- `[AUTO] apt install node-globby`
+- `[AUTO] apt install node-got`
+- `[AUTO] apt install node-graceful-fs`
+- `[AUTO] apt install node-growl`
+- `[AUTO] apt install node-gyp`
+- `[AUTO] apt install node-has-flag`
+- `[AUTO] apt install node-has-unicode`
+- `[AUTO] apt install node-has-value`
+- `[AUTO] apt install node-has-values`
+- `[AUTO] apt install node-http-proxy-agent`
+- `[AUTO] apt install node-https-proxy-agent`
+- `[AUTO] apt install node-iconv-lite`
+- `[AUTO] apt install node-ieee754`
+- `[AUTO] apt install node-iferr`
+- `[AUTO] apt install node-ignore`
+- `[AUTO] apt install node-imurmurhash`
+- `[AUTO] apt install node-indent-string`
+- `[AUTO] apt install node-inflight`
+- `[AUTO] apt install node-inherits`
+- `[AUTO] apt install node-ini`
+- `[AUTO] apt install node-interpret`
+- `[AUTO] apt install node-ip`
+- `[AUTO] apt install node-ip-regex`
+- `[AUTO] apt install node-is-arrayish`
+- `[AUTO] apt install node-is-buffer`
+- `[AUTO] apt install node-is-descriptor`
+- `[AUTO] apt install node-is-extendable`
+- `[AUTO] apt install node-is-extglob`
+- `[AUTO] apt install node-is-glob`
+- `[AUTO] apt install node-is-number`
+- `[AUTO] apt install node-is-plain-obj`
+- `[AUTO] apt install node-is-plain-object`
+- `[AUTO] apt install node-is-primitive`
+- `[AUTO] apt install node-is-stream`
+- `[AUTO] apt install node-is-typedarray`
+- `[AUTO] apt install node-is-windows`
+- `[AUTO] apt install node-isarray`
+- `[AUTO] apt install node-isexe`
+- `[AUTO] apt install node-isobject`
+- `[AUTO] apt install node-istanbul`
+- `[AUTO] apt install node-jest-debbundle`
+- `[AUTO] apt install node-jest-worker`
+- `[AUTO] apt install node-js-tokens`
+- `[AUTO] apt install node-js-yaml`
+- `[AUTO] apt install node-jsesc`
+- `[AUTO] apt install node-json-buffer`
+- `[AUTO] apt install node-json-parse-better-errors`
+- `[AUTO] apt install node-json-schema`
+- `[AUTO] apt install node-json-schema-traverse`
+- `[AUTO] apt install node-json-stable-stringify`
+- `[AUTO] apt install node-json5`
+- `[AUTO] apt install node-jsonify`
+- `[AUTO] apt install node-jsonparse`
+- `[AUTO] apt install node-kind-of`
+- `[AUTO] apt install node-lcov-parse`
+- `[AUTO] apt install node-levn`
+- `[AUTO] apt install node-loader-runner`
+- `[AUTO] apt install node-lodash`
+- `[AUTO] apt install node-lodash-packages`
+- `[AUTO] apt install node-log-driver`
+- `[AUTO] apt install node-lowercase-keys`
+- `[AUTO] apt install node-lru-cache`
+- `[AUTO] apt install node-map-visit`
+- `[AUTO] apt install node-memfs`
+- `[AUTO] apt install node-memory-fs`
+- `[AUTO] apt install node-merge-stream`
+- `[AUTO] apt install node-mime`
+- `[AUTO] apt install node-mime-types`
+- `[AUTO] apt install node-mimic-response`
+- `[AUTO] apt install node-minimist`
+- `[AUTO] apt install node-minipass`
+- `[AUTO] apt install node-mixin-deep`
+- `[AUTO] apt install node-mkdirp`
+- `[AUTO] apt install node-move-concurrently`
+- `[AUTO] apt install node-ms`
+- `[AUTO] apt install node-mute-stream`
+- `[AUTO] apt install node-n3`
+- `[AUTO] apt install node-neo-async`
+- `[AUTO] apt install node-nopt`
+- `[AUTO] apt install node-npm-bundled`
+- `[AUTO] apt install node-npm-package-arg`
+- `[AUTO] apt install node-npmlog`
+- `[AUTO] apt install node-object-assign`
+- `[AUTO] apt install node-object-inspect`
+- `[AUTO] apt install node-object-visit`
+- `[AUTO] apt install node-once`
+- `[AUTO] apt install node-opener`
+- `[AUTO] apt install node-optimist`
+- `[AUTO] apt install node-osenv`
+- `[AUTO] apt install node-p-cancelable`
+- `[AUTO] apt install node-p-limit`
+- `[AUTO] apt install node-p-map`
+- `[AUTO] apt install node-parse-json`
+- `[AUTO] apt install node-pascalcase`
+- `[AUTO] apt install node-picocolors`
+- `[AUTO] apt install node-pify`
+- `[AUTO] apt install node-pkg-dir`
+- `[AUTO] apt install node-postcss`
+- `[AUTO] apt install node-postcss-modules-extract-imports`
+- `[AUTO] apt install node-postcss-modules-values`
+- `[AUTO] apt install node-postcss-value-parser`
+- `[AUTO] apt install node-prelude-ls`
+- `[AUTO] apt install node-process-nextick-args`
+- `[AUTO] apt install node-progress`
+- `[AUTO] apt install node-promise-inflight`
+- `[AUTO] apt install node-promise-retry`
+- `[AUTO] apt install node-promzard`
+- `[AUTO] apt install node-prr`
+- `[AUTO] apt install node-pump`
+- `[AUTO] apt install node-punycode`
+- `[AUTO] apt install node-quick-lru`
+- `[AUTO] apt install node-randombytes`
+- `[AUTO] apt install node-re2`
+- `[AUTO] apt install node-read`
+- `[AUTO] apt install node-read-package-json`
+- `[AUTO] apt install node-read-pkg`
+- `[AUTO] apt install node-readable-stream`
+- `[AUTO] apt install node-readdirp`
+- `[AUTO] apt install node-rechoir`
+- `[AUTO] apt install node-regexpp`
+- `[AUTO] apt install node-regexpu-core`
+- `[AUTO] apt install node-regjsgen`
+- `[AUTO] apt install node-regjsparser`
+- `[AUTO] apt install node-require-directory`
+- `[AUTO] apt install node-require-from-string`
+- `[AUTO] apt install node-resolve`
+- `[AUTO] apt install node-resolve-cwd`
+- `[AUTO] apt install node-resolve-from`
+- `[AUTO] apt install node-restore-cursor`
+- `[AUTO] apt install node-resumer`
+- `[AUTO] apt install node-retry`
+- `[AUTO] apt install node-rimraf`
+- `[AUTO] apt install node-run-queue`
+- `[AUTO] apt install node-safe-buffer`
+- `[AUTO] apt install node-sellside-emitter`
+- `[AUTO] apt install node-semver`
+- `[AUTO] apt install node-serialize-javascript`
+- `[AUTO] apt install node-set-blocking`
+- `[AUTO] apt install node-set-value`
+- `[AUTO] apt install node-shebang-command`
+- `[AUTO] apt install node-shebang-regex`
+- `[AUTO] apt install node-shell-quote`
+- `[AUTO] apt install node-signal-exit`
+- `[AUTO] apt install node-slash`
+- `[AUTO] apt install node-slice-ansi`
+- `[AUTO] apt install node-source-list-map`
+- `[AUTO] apt install node-source-map`
+- `[AUTO] apt install node-source-map-support`
+- `[AUTO] apt install node-spdx-correct`
+- `[AUTO] apt install node-spdx-exceptions`
+- `[AUTO] apt install node-spdx-expression-parse`
+- `[AUTO] apt install node-spdx-license-ids`
+- `[AUTO] apt install node-sprintf-js`
+- `[AUTO] apt install node-ssri`
+- `[AUTO] apt install node-string-decoder`
+- `[AUTO] apt install node-string-width`
+- `[AUTO] apt install node-strip-ansi`
+- `[AUTO] apt install node-strip-bom`
+- `[AUTO] apt install node-strip-json-comments`
+- `[AUTO] apt install node-supports-color`
+- `[AUTO] apt install node-tap`
+- `[AUTO] apt install node-tap-mocha-reporter`
+- `[AUTO] apt install node-tap-parser`
+- `[AUTO] apt install node-tapable`
+- `[AUTO] apt install node-tape`
+- `[AUTO] apt install node-terser`
+- `[AUTO] apt install node-text-table`
+- `[AUTO] apt install node-through`
+- `[AUTO] apt install node-time-stamp`
+- `[AUTO] apt install node-to-fast-properties`
+- `[AUTO] apt install node-to-regex-range`
+- `[AUTO] apt install node-type-check`
+- `[AUTO] apt install node-typedarray`
+- `[AUTO] apt install node-typedarray-to-buffer`
+- `[AUTO] apt install node-undici`
+- `[AUTO] apt install node-unicode-canonical-property-names-ecmascript`
+- `[AUTO] apt install node-unicode-property-aliases-ecmascript`
+- `[AUTO] apt install node-union-value`
+- `[AUTO] apt install node-unique-filename`
+- `[AUTO] apt install node-unset-value`
+- `[AUTO] apt install node-uri-js`
+- `[AUTO] apt install node-uuid`
+- `[AUTO] apt install node-v8-compile-cache`
+- `[AUTO] apt install node-v8flags`
+- `[AUTO] apt install node-wcwidth.js`
+- `[AUTO] apt install node-webassemblyjs`
+- `[AUTO] apt install node-webpack-sources`
+- `[AUTO] apt install node-which`
+- `[AUTO] apt install node-wide-align`
+- `[AUTO] apt install node-widest-line`
+- `[AUTO] apt install node-wordwrap`
+- `[AUTO] apt install node-wrap-ansi`
+- `[AUTO] apt install node-wrappy`
+- `[AUTO] apt install node-write`
+- `[AUTO] apt install node-ws`
+- `[AUTO] apt install node-xtend`
+- `[AUTO] apt install node-y18n`
+- `[AUTO] apt install node-yallist`
+- `[AUTO] apt install node-yaml`
+- `[AUTO] apt install node-yargs`
+- `[AUTO] apt install node-yargs-parser`
+- `[MANUAL] apt install nodejs`
+- `[MANUAL] apt install npm`
+- `[AUTO] apt install ntfs-3g`
+- `[AUTO] apt install numactl`
+- `[MANUAL] apt install obsidian`
+- `[AUTO] apt install openconnect`
+- `[MANUAL] apt install openjdk-21-jdk`
+- `[AUTO] apt install openjdk-21-jdk-headless`
+- `[AUTO] apt install openjdk-21-jre`
+- `[AUTO] apt install openjdk-21-jre-headless`
+- `[AUTO] apt install openprinting-ppds`
+- `[AUTO] apt install openssl`
+- `[AUTO] apt install openvpn`
+- `[AUTO] apt install orca`
+- `[AUTO] apt install os-prober`
+- `[AUTO] apt install osinfo-db`
+- `[AUTO] apt install ovmf`
+- `[AUTO] apt install p11-kit`
+- `[AUTO] apt install p11-kit-modules`
+- `[AUTO] apt install packagekit`
+- `[AUTO] apt install packagekit-tools`
+- `[AUTO] apt install par2`
+- `[AUTO] apt install parted`
+- `[AUTO] apt install pastebinit`
+- `[AUTO] apt install pci.ids`
+- `[AUTO] apt install perl`
+- `[AUTO] apt install perl-base`
+- `[AUTO] apt install perl-modules-5.38`
+- `[AUTO] apt install perl-openssl-defaults`
+- `[AUTO] apt install pigz`
+- `[MANUAL] apt install pinhole`
+- `[AUTO] apt install pipewire`
+- `[AUTO] apt install pipewire-alsa`
+- `[AUTO] apt install pipewire-audio`
+- `[AUTO] apt install pipewire-bin`
+- `[AUTO] apt install pipewire-pulse`
+- `[MANUAL] apt install pipx`
+- `[AUTO] apt install pkexec`
+- `[AUTO] apt install pkgconf`
+- `[AUTO] apt install pkgconf-bin`
+- `[AUTO] apt install plymouth`
+- `[AUTO] apt install plymouth-label`
+- `[AUTO] apt install plymouth-theme-kubuntu-logo`
+- `[AUTO] apt install plymouth-theme-kubuntu-text`
+- `[AUTO] apt install plymouth-theme-spinner`
+- `[AUTO] apt install plymouth-theme-ubuntu-text`
+- `[AUTO] apt install pocketsphinx-en-us`
+- `[AUTO] apt install policykit-1`
+- `[AUTO] apt install polkitd`
+- `[MANUAL] apt install potrace`
+- `[AUTO] apt install power-profiles-daemon`
+- `[AUTO] apt install powerdevil`
+- `[AUTO] apt install powermgmt-base`
+- `[AUTO] apt install ppa-purge`
+- `[AUTO] apt install ppp`
+- `[AUTO] apt install pptp-linux`
+- `[AUTO] apt install printer-driver-brlaser`
+- `[AUTO] apt install printer-driver-c2esp`
+- `[AUTO] apt install printer-driver-foo2zjs`
+- `[AUTO] apt install printer-driver-foo2zjs-common`
+- `[AUTO] apt install printer-driver-gutenprint`
+- `[AUTO] apt install printer-driver-hpcups`
+- `[AUTO] apt install printer-driver-m2300w`
+- `[AUTO] apt install printer-driver-min12xxw`
+- `[AUTO] apt install printer-driver-pnm2ppa`
+- `[AUTO] apt install printer-driver-postscript-hp`
+- `[AUTO] apt install printer-driver-ptouch`
+- `[AUTO] apt install printer-driver-pxljr`
+- `[AUTO] apt install printer-driver-sag-gdi`
+- `[AUTO] apt install printer-driver-splix`
+- `[AUTO] apt install procps`
+- `[AUTO] apt install proj-bin`
+- `[AUTO] apt install proton-vpn-daemon`
+- `[MANUAL] apt install protonvpn-stable-release`
+- `[AUTO] apt install psmisc`
+- `[AUTO] apt install publicsuffix`
+- `[AUTO] apt install python3`
+- `[AUTO] apt install python3-aiodns`
+- `[AUTO] apt install python3-aiohttp`
+- `[AUTO] apt install python3-aiosignal`
+- `[AUTO] apt install python3-apport`
+- `[AUTO] apt install python3-argcomplete`
+- `[AUTO] apt install python3-asn1crypto`
+- `[AUTO] apt install python3-async-timeout`
+- `[AUTO] apt install python3-babel`
+- `[AUTO] apt install python3-bcrypt`
+- `[AUTO] apt install python3-blinker`
+- `[AUTO] apt install python3-bpfcc`
+- `[AUTO] apt install python3-brlapi`
+- `[AUTO] apt install python3-brotli`
+- `[AUTO] apt install python3-cairo`
+- `[AUTO] apt install python3-certifi`
+- `[AUTO] apt install python3-cffi-backend`
+- `[AUTO] apt install python3-chardet`
+- `[AUTO] apt install python3-click`
+- `[AUTO] apt install python3-colorama`
+- `[AUTO] apt install python3-cryptography`
+- `[AUTO] apt install python3-cups`
+- `[AUTO] apt install python3-cupshelpers`
+- `[AUTO] apt install python3-debconf`
+- `[AUTO] apt install python3-debian`
+- `[AUTO] apt install python3-defer`
+- `[MANUAL] apt install python3-dev`
+- `[AUTO] apt install python3-distro`
+- `[AUTO] apt install python3-distupgrade`
+- `[AUTO] apt install python3-fido2`
+- `[AUTO] apt install python3-frozenlist`
+- `[AUTO] apt install python3-fuse`
+- `[AUTO] apt install python3-gdal`
+- `[AUTO] apt install python3-gi`
+- `[AUTO] apt install python3-gi-cairo`
+- `[AUTO] apt install python3-gnupg`
+- `[AUTO] apt install python3-gpg`
+- `[AUTO] apt install python3-ibus-1.0`
+- `[AUTO] apt install python3-idna`
+- `[AUTO] apt install python3-jaraco.classes`
+- `[AUTO] apt install python3-jeepney`
+- `[AUTO] apt install python3-jinja2`
+- `[AUTO] apt install python3-jwt`
+- `[AUTO] apt install python3-keyring`
+- `[AUTO] apt install python3-lazr.restfulclient`
+- `[AUTO] apt install python3-lazr.uri`
+- `[AUTO] apt install python3-ldb`
+- `[AUTO] apt install python3-lldb-18`
+- `[AUTO] apt install python3-louis`
+- `[AUTO] apt install python3-mdurl`
+- `[AUTO] apt install python3-mechanize`
+- `[AUTO] apt install python3-minimal`
+- `[AUTO] apt install python3-more-itertools`
+- `[AUTO] apt install python3-multidict`
+- `[AUTO] apt install python3-mutagen`
+- `[AUTO] apt install python3-netaddr`
+- `[AUTO] apt install python3-netifaces`
+- `[AUTO] apt install python3-netplan`
+- `[AUTO] apt install python3-numpy`
+- `[AUTO] apt install python3-olefile`
+- `[AUTO] apt install python3-openssl`
+- `[AUTO] apt install python3-packaging`
+- `[AUTO] apt install python3-pexpect`
+- `[AUTO] apt install python3-pil`
+- `[MANUAL] apt install python3-pip`
+- `[AUTO] apt install python3-pip-whl`
+- `[AUTO] apt install python3-pkg-resources`
+- `[AUTO] apt install python3-problem-report`
+- `[AUTO] apt install python3-proton-core`
+- `[AUTO] apt install python3-proton-keyring-linux`
+- `[AUTO] apt install python3-proton-vpn-api-core`
+- `[AUTO] apt install python3-proton-vpn-local-agent`
+- `[AUTO] apt install python3-ptyprocess`
+- `[AUTO] apt install python3-pycares`
+- `[AUTO] apt install python3-pycryptodome`
+- `[AUTO] apt install python3-pygments`
+- `[AUTO] apt install python3-pyparsing`
+- `[AUTO] apt install python3-requests`
+- `[AUTO] apt install python3-rich`
+- `[AUTO] apt install python3-samba`
+- `[AUTO] apt install python3-secretstorage`
+- `[AUTO] apt install python3-sentry-sdk`
+- `[MANUAL] apt install python3-setuptools`
+- `[AUTO] apt install python3-setuptools-whl`
+- `[AUTO] apt install python3-six`
+- `[AUTO] apt install python3-software-properties`
+- `[AUTO] apt install python3-speechd`
+- `[AUTO] apt install python3-talloc`
+- `[AUTO] apt install python3-tdb`
+- `[AUTO] apt install python3-tk`
+- `[AUTO] apt install python3-tornado`
+- `[AUTO] apt install python3-typing-extensions`
+- `[AUTO] apt install python3-tz`
+- `[AUTO] apt install python3-uno`
+- `[MANUAL] apt install python3-venv`
+- `[AUTO] apt install python3-webencodings`
+- `[AUTO] apt install python3-websockets`
+- `[MANUAL] apt install python3-wheel`
+- `[AUTO] apt install python3-xdg`
+- `[AUTO] apt install python3-xkit`
+- `[AUTO] apt install python3-yaml`
+- `[AUTO] apt install python3-yarl`
+- `[AUTO] apt install python3.12`
+- `[AUTO] apt install python3.12-dev`
+- `[AUTO] apt install python3.12-minimal`
+- `[AUTO] apt install python3.12-venv`
+- `[AUTO] apt install qemu-block-extra`
+- `[AUTO] apt install qemu-system-common`
+- `[AUTO] apt install qemu-system-gui`
+- `[AUTO] apt install qemu-system-modules-opengl`
+- `[AUTO] apt install qemu-system-modules-spice`
+- `[AUTO] apt install qemu-system-x86`
+- `[AUTO] apt install qml-module-gsettings1.0`
+- `[AUTO] apt install qml-module-sso-onlineaccounts`
+- `[AUTO] apt install qml-module-ubuntu-onlineaccounts`
+- `[AUTO] apt install rake`
+- `[MANUAL] apt install rclone`
+- `[AUTO] apt install readline-common`
+- `[MANUAL] apt install reiserfsprogs`
+- `[AUTO] apt install rfkill`
+- `[AUTO] apt install ri`
+- `[AUTO] apt install rpcsvc-proto`
+- `[AUTO] apt install rsyslog`
+- `[AUTO] apt install rtkit`
+- `[MANUAL] apt install ruby`
+- `[AUTO] apt install ruby-addressable`
+- `[AUTO] apt install ruby-bundler`
+- `[AUTO] apt install ruby-classifier-reborn`
+- `[AUTO] apt install ruby-coderay`
+- `[AUTO] apt install ruby-concurrent`
+- `[AUTO] apt install ruby-dev`
+- `[AUTO] apt install ruby-em-websocket`
+- `[AUTO] apt install ruby-eventmachine`
+- `[AUTO] apt install ruby-fast-stemmer`
+- `[AUTO] apt install ruby-ffi`
+- `[AUTO] apt install ruby-forwardable-extended`
+- `[MANUAL] apt install ruby-full`
+- `[AUTO] apt install ruby-http-parser.rb`
+- `[AUTO] apt install ruby-i18n`
+- `[AUTO] apt install ruby-jekyll-feed`
+- `[AUTO] apt install ruby-jekyll-sass-converter`
+- `[AUTO] apt install ruby-jekyll-seo-tag`
+- `[AUTO] apt install ruby-kramdown`
+- `[AUTO] apt install ruby-kramdown-parser-gfm`
+- `[AUTO] apt install ruby-liquid`
+- `[AUTO] apt install ruby-listen`
+- `[AUTO] apt install ruby-mercenary`
+- `[AUTO] apt install ruby-mime-types`
+- `[AUTO] apt install ruby-net-telnet`
+- `[AUTO] apt install ruby-public-suffix`
+- `[AUTO] apt install ruby-pygments.rb`
+- `[AUTO] apt install ruby-rb-inotify`
+- `[AUTO] apt install ruby-rdiscount`
+- `[AUTO] apt install ruby-redcarpet`
+- `[AUTO] apt install ruby-rouge`
+- `[AUTO] apt install ruby-rubygems`
+- `[AUTO] apt install ruby-sassc`
+- `[AUTO] apt install ruby-sdbm`
+- `[AUTO] apt install ruby-terminal-table`
+- `[AUTO] apt install ruby-tomlrb`
+- `[AUTO] apt install ruby-unicode-display-width`
+- `[AUTO] apt install ruby-webrick`
+- `[AUTO] apt install ruby-xmlrpc`
+- `[AUTO] apt install ruby-yajl`
+- `[AUTO] apt install ruby3.2`
+- `[AUTO] apt install ruby3.2-dev`
+- `[AUTO] apt install runc`
+- `[AUTO] apt install rygel`
+- `[AUTO] apt install samba-common`
+- `[AUTO] apt install samba-common-bin`
+- `[AUTO] apt install samba-dsdb-modules`
+- `[AUTO] apt install sane-airscan`
+- `[AUTO] apt install sbsigntool`
+- `[MANUAL] apt install scribus`
+- `[AUTO] apt install sddm`
+- `[AUTO] apt install seabios`
+- `[AUTO] apt install secureboot-db`
+- `[AUTO] apt install sgml-base`
+- `[MANUAL] apt install shim-signed`
+- `[AUTO] apt install signon-kwallet-extension`
+- `[AUTO] apt install signon-plugin-oauth2`
+- `[AUTO] apt install signon-plugin-password`
+- `[AUTO] apt install signon-ui-service`
+- `[AUTO] apt install signond`
+- `[AUTO] apt install skanlite`
+- `[AUTO] apt install skanpage`
+- `[AUTO] apt install smartmontools`
+- `[AUTO] apt install smbclient`
+- `[MANUAL] apt install snapd`
+- `[AUTO] apt install software-properties-common`
+- `[AUTO] apt install sonnet-plugins`
+- `[AUTO] apt install sound-icons`
+- `[AUTO] apt install spice-vdagent`
+- `[AUTO] apt install squashfs-tools`
+- `[AUTO] apt install ssl-cert`
+- `[MANUAL] apt install stacer`
+- `[AUTO] apt install strace`
+- `[AUTO] apt install switcheroo-control`
+- `[AUTO] apt install swtpm`
+- `[AUTO] apt install swtpm-tools`
+- `[AUTO] apt install system-config-printer-common`
+- `[AUTO] apt install systemsettings`
+- `[AUTO] apt install tcl`
+- `[AUTO] apt install tcl8.6`
+- `[AUTO] apt install tcpdump`
+- `[AUTO] apt install tecla`
+- `[AUTO] apt install telnet`
+- `[AUTO] apt install terser`
+- `[AUTO] apt install tex-common`
+- `[AUTO] apt install tex-gyre`
+- `[MANUAL] apt install texlive`
+- `[AUTO] apt install texlive-base`
+- `[AUTO] apt install texlive-binaries`
+- `[AUTO] apt install thermald`
+- `[MANUAL] apt install thin-provisioning-tools`
+- `[AUTO] apt install time`
+- `[AUTO] apt install tipa`
+- `[AUTO] apt install tk8.6-blt2.5`
+- `[AUTO] apt install tnftp`
+- `[AUTO] apt install trace-cmd`
+- `[AUTO] apt install ubuntu-drivers-common`
+- `[AUTO] apt install ubuntu-fan`
+- `[AUTO] apt install ubuntu-kernel-accessories`
+- `[AUTO] apt install ubuntu-keyring`
+- `[MANUAL] apt install ubuntu-minimal`
+- `[AUTO] apt install ubuntu-mono`
+- `[AUTO] apt install ubuntu-pro-client`
+- `[AUTO] apt install ubuntu-pro-client-l10n`
+- `[AUTO] apt install ubuntu-release-upgrader-core`
+- `[AUTO] apt install ubuntu-session`
+- `[MANUAL] apt install ubuntu-standard`
+- `[AUTO] apt install ubuntu-wallpapers`
+- `[AUTO] apt install ubuntu-wallpapers-noble`
+- `[AUTO] apt install ucf`
+- `[AUTO] apt install udisks2`
+- `[AUTO] apt install ufw`
+- `[AUTO] apt install unar`
+- `[AUTO] apt install unixodbc-common`
+- `[AUTO] apt install unixodbc-dev`
+- `[AUTO] apt install upower`
+- `[AUTO] apt install ure`
+- `[AUTO] apt install usb-modeswitch`
+- `[AUTO] apt install usb.ids`
+- `[AUTO] apt install usbmuxd`
+- `[AUTO] apt install uuid-runtime`
+- `[AUTO] apt install va-driver-all`
+- `[AUTO] apt install vdpau-driver-all`
+- `[AUTO] apt install virt-viewer`
+- `[AUTO] apt install virtinst`
+- `[MANUAL] apt install virtualbox-7.0`
+- `[AUTO] apt install vpnc-scripts`
+- `[AUTO] apt install vulkan-tools`
+- `[MANUAL] apt install wamerican`
+- `[MANUAL] apt install wbritish`
+- `[AUTO] apt install webp-pixbuf-loader`
+- `[AUTO] apt install webpack`
+- `[AUTO] apt install whiptail`
+- `[AUTO] apt install whoopsie`
+- `[AUTO] apt install whoopsie-preferences`
+- `[AUTO] apt install wireguard-tools`
+- `[AUTO] apt install wireless-tools`
+- `[AUTO] apt install wireplumber`
+- `[MANUAL] apt install wmctrl`
+- `[AUTO] apt install wpasupplicant`
+- `[AUTO] apt install wvdial`
+- `[AUTO] apt install xauth`
+- `[AUTO] apt install xbitmaps`
+- `[AUTO] apt install xbrlapi`
+- `[AUTO] apt install xcvt`
+- `[AUTO] apt install xdg-user-dirs`
+- `[MANUAL] apt install xdotool`
+- `[MANUAL] apt install xfsprogs`
+- `[AUTO] apt install xinit`
+- `[AUTO] apt install xinput`
+- `[AUTO] apt install xml-core`
+- `[MANUAL] apt install xorg`
+- `[AUTO] apt install xorriso`
+- `[AUTO] apt install xsel`
+- `[AUTO] apt install xserver-common`
+- `[AUTO] apt install xserver-xephyr`
+- `[AUTO] apt install xserver-xorg`
+- `[AUTO] apt install xserver-xorg-core`
+- `[AUTO] apt install xserver-xorg-input-all`
+- `[AUTO] apt install xserver-xorg-input-wacom`
+- `[AUTO] apt install xserver-xorg-legacy`
+- `[AUTO] apt install xserver-xorg-video-all`
+- `[AUTO] apt install xserver-xorg-video-amdgpu`
+- `[AUTO] apt install xserver-xorg-video-fbdev`
+- `[AUTO] apt install xserver-xorg-video-intel`
+- `[AUTO] apt install xserver-xorg-video-nouveau`
+- `[AUTO] apt install xserver-xorg-video-qxl`
+- `[AUTO] apt install xserver-xorg-video-radeon`
+- `[AUTO] apt install xserver-xorg-video-vesa`
+- `[AUTO] apt install xserver-xorg-video-vmware`
+- `[AUTO] apt install xsettingsd`
+- `[AUTO] apt install xtrans-dev`
+- `[AUTO] apt install xxd`
+- `[AUTO] apt install yelp`
+- `[AUTO] apt install yelp-xsl`
+- `[AUTO] apt install yt-dlp`
+- `[AUTO] apt install zenity`
+- `[AUTO] apt install zenity-common`
+- `[MANUAL] apt install zsh`
+- `[AUTO] apt install zsh-common`
+- `[AUTO] apt install zstd`

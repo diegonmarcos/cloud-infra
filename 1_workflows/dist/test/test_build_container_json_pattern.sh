@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/test/test_build_container_json_pattern.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Phase 4 tester — build-{container}.json pattern integrity        ║
 # ║                                                                  ║

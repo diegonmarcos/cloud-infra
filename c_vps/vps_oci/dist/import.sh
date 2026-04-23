@@ -1,4 +1,17 @@
 #!/bin/sh
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : c_vps/vps_oci/src/import.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Import existing OCI resources into Terraform state.
 # Run AFTER: cd src && terraform init
 # Safe: import only reads, never modifies infrastructure.

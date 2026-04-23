@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/shared/httpd.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Lightweight static HTTP server module for Home Manager
 # Uses busybox httpd — ~100KB RAM per site
 # Pattern: shared module, per-VM config via `sites` parameter

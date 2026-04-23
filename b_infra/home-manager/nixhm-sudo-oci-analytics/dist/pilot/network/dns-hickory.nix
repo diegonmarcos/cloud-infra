@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-oci-analytics/src/pilot/network/dns-hickory.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Configure DNS resolvers for all VMs — reads from cloud-data-home-manager.json
 # Uses resolvconf to maintain proper DNS hierarchy:
 #   Tier 1: Hickory (10.0.0.1) — .app private domains + forwarding

@@ -1,3 +1,15 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║                                                                  ║
+// ║   GENERATED FILE — DO NOT EDIT                                   ║
+// ║                                                                  ║
+// ║   Source : src/modules/html/pilot.js
+// ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+// ║   Rebuild: ./1_workflows/build.sh
+// ║                                                                  ║
+// ║   Manual edits will be overwritten on next build.                ║
+// ║                                                                  ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 // vm-pilot dashboard — sidebar data from health + cloud-data JSONs
 (function () {
   var hamburger = document.getElementById('hamburger');

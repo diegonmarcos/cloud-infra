@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-proxy/src/pilot/protection/systemd-control.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # systemd-control.nix — Disable Docker + Ubuntu bloat from systemd
 #
 # Two categories:

@@ -1,0 +1,28 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : c_vps/vps_gcloud/src/billing/billing-disabler/budget-config.yaml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+displayName: "Daily $5 Budget Alert"
+budgetFilter:
+  projects:
+    - "projects/1029464172302"
+  creditTypesTreatment: INCLUDE_ALL_CREDITS
+amount:
+  specifiedAmount:
+    currencyCode: "USD"
+    units: "150"
+thresholdRules:
+  - thresholdPercent: 1.0
+    spendBasis: CURRENT_SPEND
+notificationsRule:
+  pubsubTopic: "projects/gen-lang-client-0167192380/topics/budget-disable-trigger"
+  monitoringNotificationChannels: []
+  disableDefaultIamRecipients: false

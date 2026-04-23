@@ -7,7 +7,9 @@ step_build() {
     [ -d "$DIST_DIR" ] && chmod -R u+w "$DIST_DIR" 2>/dev/null || true
     rm -rf "$DIST_DIR"
     mkdir -p "$DIST_DIR"
-    cp -rL "$SRC_DIR/"* "$DIST_DIR/"
+    # Stamp every copied file with the GENERATED-FILE banner. The lib
+    # dereferences symlinks internally (same as `cp -L`) via find/cp.
+    "$INJECT_HEADER" tree "$SRC_DIR" "$DIST_DIR"
     chmod -R u+w "$DIST_DIR"
     # Nix flakes ignore untracked files in git repos — stage dist/ so nix can see it
     git add "$DIST_DIR" 2>/dev/null || true

@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/scripts/cloud-ship-container-step-build-nix.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Step: Build nix flake (or copy-only for non-nix services)
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
@@ -18,7 +30,9 @@ step_build() {
         fi
         rm -rf "$DIST_DIR"
         mkdir -p "$DIST_DIR"
-        cp -r "$SRC_DIR/"* "$DIST_DIR/"
+        # Stamp every copied file with the GENERATED-FILE banner
+        # (dist/ is engine output — must be distinguishable from src/).
+        "$INJECT_HEADER" tree "$SRC_DIR" "$DIST_DIR"
         # Restore terraform state
         if [ -n "${TF_BACKUP:-}" ] && [ -d "$TF_BACKUP" ]; then
             cp -a "$TF_BACKUP/"* "$DIST_DIR/" 2>/dev/null || true
@@ -210,9 +224,9 @@ step_build() {
             [ -z "$pattern" ] && continue
             # Handle directories (ending with /)
             if [ -d "$SRC_DIR/$pattern" ]; then
-                cp -r "$SRC_DIR/$pattern" "$DIST_DIR/$pattern"
+                "$INJECT_HEADER" tree "$SRC_DIR/$pattern" "$DIST_DIR/$pattern"
             elif [ -f "$SRC_DIR/$pattern" ]; then
-                cp "$SRC_DIR/$pattern" "$DIST_DIR/$pattern"
+                "$INJECT_HEADER" file "$SRC_DIR/$pattern" "$DIST_DIR/$pattern"
             fi
             log "Copied extra: $pattern"
         done

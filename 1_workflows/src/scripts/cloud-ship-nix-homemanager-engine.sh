@@ -95,6 +95,10 @@ REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 
 # ── Source step files ─────────────────────────────────────────────────
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+# Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+INJECT_HEADER="$STEPS_DIR/../libs/inject-header.sh"
+ENGINE_NAME="1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh"
+export INJECT_HEADER ENGINE_NAME
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-pull-pilot.sh"
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-build-flake.sh"
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-secrets-decrypt.sh"

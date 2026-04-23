@@ -1,40 +1,54 @@
-# container-control-no-build-guardrails.nix — Block docker build on VMs
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-oci-apps/src/pilot/container/no-build-guardrails.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# container-control-no-build-guardrails.nix — WARNING wrapper for docker
 #
-# Ensures `docker compose up` NEVER triggers builds.
-# All images must be pre-built via GHCR or on oci-apps (ARM).
-# Wraps docker to intercept build commands.
+# Prints loud warnings when docker build/--build is used on small VMs.
+# Does NOT block execution — just warns so operators notice.
+# All images should be pre-built via GHCR or on oci-apps (ARM).
 { config, pkgs, lib, ... }:
 
-let
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
-in {
-  # Deploy docker wrapper that blocks build subcommands
-  home.file.".local/share/container-control/docker-no-build-wrapper.sh" = {
+{
+  # Docker wrapper: warns on build commands, passes everything through
+  home.file.".local/bin/docker" = {
     executable = true;
     text = ''
-      #!/bin/bash
-      # Block docker build/buildx on this VM — images must be pre-built via GHCR
-      # Managed by container-control-no-build-guardrails.nix
-      REAL_DOCKER="$(command -v docker.real 2>/dev/null || echo "")"
-      [ -z "$REAL_DOCKER" ] && REAL_DOCKER="$(readlink -f /usr/bin/docker 2>/dev/null || echo "")"
-
-      for arg in "$@"; do
-        case "$arg" in
-          build|buildx)
-            echo "[BLOCKED] docker $arg is disabled on this VM." >&2
-            echo "  Images must be pre-built via GHCR or on oci-apps." >&2
-            echo "  Use: build.sh docker  (builds + pushes to GHCR)" >&2
-            exit 1
-            ;;
-          --build)
-            echo "[BLOCKED] docker compose --build is disabled on this VM." >&2
-            echo "  Use: docker compose up -d --no-build" >&2
-            exit 1
-            ;;
-        esac
-      done
-
-      exec "$REAL_DOCKER" "$@"
+      #!/bin/sh
+      case "$1" in
+        build|buildx)
+          echo "" >&2
+          echo "╔══════════════════════════════════════════════════════════════╗" >&2
+          echo "║  ⚠  WARNING: docker $1 on a small VM (<2GB RAM)           ║" >&2
+          echo "║  This WILL likely OOM and freeze the VM.                   ║" >&2
+          echo "║  Use GHCR pre-built images or build on oci-apps (24GB).   ║" >&2
+          echo "╚══════════════════════════════════════════════════════════════╝" >&2
+          ;;
+        compose)
+          for arg in "$@"; do
+            case "$arg" in
+              --build)
+                echo "" >&2
+                echo "╔══════════════════════════════════════════════════════════════╗" >&2
+                echo "║  ⚠  WARNING: --build on a small VM — may OOM!             ║" >&2
+                echo "║  Use: docker compose up -d --no-build                      ║" >&2
+                echo "╚══════════════════════════════════════════════════════════════╝" >&2
+                ;;
+            esac
+          done
+          ;;
+      esac
+      # Strip .local/bin from PATH to find the real docker, then exec it
+      PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
+      exec docker "$@"
     '';
   };
 }

@@ -1,6 +1,22 @@
-# AWS SES — SMTP relay for Mailu outbound email
-# Domain: diegonmarcos.com | Region: us-east-1
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : c_vps/vps_aws/src/main.tf
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# AWS SES — data-driven from terraform.json
+# SMTP relay for Mailu outbound email
 # Outputs SMTP credentials + DNS verification tokens for Cloudflare
+
+locals {
+  config = jsondecode(file("${path.module}/terraform.json"))
+}
 
 terraform {
   required_providers {
@@ -12,15 +28,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
-}
-
-variable "region" {
-  default = "us-east-1"
-}
-
-variable "domain" {
-  default = "diegonmarcos.com"
+  region = local.config.provider.region
 }
 
 # =============================================================================
@@ -28,18 +36,16 @@ variable "domain" {
 # =============================================================================
 
 resource "aws_ses_domain_identity" "main" {
-  domain = var.domain
+  domain = local.config.domain
 }
 
-# Easy DKIM — SES generates 3 CNAME records
 resource "aws_ses_domain_dkim" "main" {
   domain = aws_ses_domain_identity.main.domain
 }
 
-# Custom MAIL FROM (bounce subdomain)
 resource "aws_ses_domain_mail_from" "main" {
   domain           = aws_ses_domain_identity.main.domain
-  mail_from_domain = "mail.${var.domain}"
+  mail_from_domain = "${local.config.mail_from_subdomain}.${local.config.domain}"
 }
 
 # =============================================================================
@@ -47,11 +53,11 @@ resource "aws_ses_domain_mail_from" "main" {
 # =============================================================================
 
 resource "aws_iam_user" "ses_smtp" {
-  name = "ses-smtp-mailu"
+  name = local.config.iam_user.name
 }
 
 resource "aws_iam_user_policy" "ses_smtp" {
-  name = "ses-send-email"
+  name = local.config.iam_user.policy_name
   user = aws_iam_user.ses_smtp.name
 
   policy = jsonencode({
@@ -75,18 +81,18 @@ resource "aws_iam_access_key" "ses_smtp" {
 # =============================================================================
 
 output "ses_verification_token" {
-  description = "TXT record value for _amazonses.diegonmarcos.com"
+  description = "TXT record value for _amazonses SES domain verification"
   value       = aws_ses_domain_identity.main.verification_token
 }
 
 output "ses_dkim_tokens" {
-  description = "3 DKIM CNAME tokens: <token>._domainkey → <token>.dkim.amazonses.com"
+  description = "3 DKIM CNAME tokens"
   value       = aws_ses_domain_dkim.main.dkim_tokens
 }
 
 output "smtp_endpoint" {
   description = "SES SMTP endpoint"
-  value       = "email-smtp.${var.region}.amazonaws.com"
+  value       = "email-smtp.${local.config.provider.region}.amazonaws.com"
 }
 
 output "smtp_username" {
@@ -102,7 +108,7 @@ output "smtp_password" {
 
 output "mail_from_mx" {
   description = "MX record for custom MAIL FROM subdomain"
-  value       = "feedback-smtp.${var.region}.amazonses.com"
+  value       = "feedback-smtp.${local.config.provider.region}.amazonses.com"
 }
 
 output "mail_from_spf" {
