@@ -4,12 +4,44 @@
     "description": "maddy container config (service=maddy, role=app)",
     "format_version": 1
   },
-  "_generated": "2026-04-22T17:43:16.896Z",
+  "_generated": "2026-04-23T11:05:59.543Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "maddy",
     "image": "ghcr.io/diegonmarcos/maddy:latest",
     "port": null,
+    "extra_ports": [
+      {
+        "port": 25,
+        "protocol": "tcp",
+        "bind": "0.0.0.0",
+        "desc": "MX (inbound — must be public)"
+      },
+      {
+        "port": 465,
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "SMTPS — WG-only"
+      },
+      {
+        "port": 587,
+        "protocol": "starttls",
+        "bind": "10.0.0.3",
+        "desc": "Submission — WG-only"
+      },
+      {
+        "port": 993,
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "IMAPS — WG-only"
+      },
+      {
+        "port": 143,
+        "protocol": "tcp",
+        "bind": "10.0.0.3",
+        "desc": "IMAP plain — WG-only"
+      }
+    ],
     "dns": "maddy.app",
     "public": false,
     "proxy": null,
