@@ -59,6 +59,12 @@ do_build() {
         log "Built gitmodules"
     fi
 
+    # Gitignore (src/gitignore → dist/.gitignore)
+    if [ -f "$SRC_DIR/gitignore" ]; then
+        cp "$SRC_DIR/gitignore" "$DIST_DIR/.gitignore" 2>/dev/null || true
+        log "Built gitignore"
+    fi
+
     # Gitconfig (src/gitconfig → dist/)
     if [ -f "$SRC_DIR/gitconfig" ]; then
         cp "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
