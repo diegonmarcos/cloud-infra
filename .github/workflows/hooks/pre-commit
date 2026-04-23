@@ -126,8 +126,16 @@ add_blocked "grep -E '(^|/)terraform\.tfvars$'"
 
 # ── Submodule paths (read-only, never commit) ──────────────
 
-# P16: submodule directories — commits go to their own repos
-add_blocked "grep -E '^(cloud-data|tools)(/|$)'"
+# P16: submodule directories — commits go to their own repos.
+# Data-driven: read submodule paths from .gitmodules so this hook
+# is portable across any repo without hardcoding submodule names.
+if [ -f .gitmodules ]; then
+    while read -r _sm_key _sm_path; do
+        [ -n "$_sm_path" ] || continue
+        add_blocked "grep -E '^${_sm_path}(/|\$)'"
+    done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null)
+    unset _sm_key _sm_path
+fi
 
 # P17: dist layout v2 gitignored sub-dirs
 add_blocked "grep -E 'dist/(secrets|sensitive|\.build)/'"
