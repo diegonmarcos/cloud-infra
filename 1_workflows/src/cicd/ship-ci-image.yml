@@ -21,16 +21,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true   # needed for cloud-data-runners.json
+          submodules: true   # cloud-data → cloud-data-runners.json
 
-      - name: Checkout unix (Dockerfile source)
+      - name: Checkout unix (Dockerfile + build.sh source)
         uses: actions/checkout@v4
         with:
           repository: diegonmarcos/unix
           path: unix-repo
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ship cloud-builder via existing cloud-builder container
+      - name: Ship cloud-builder (native multi-arch via oci-apps)
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
@@ -39,49 +39,50 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          # Use the existing :latest cloud-builder image as the runtime — it
-          # already has nix/docker/ssh/jq + the entrypoint's WG setup. Bootstrap
-          # constraint: the very first cloud-builder ever had to be built some
-          # other way (QEMU or native on oci-apps). After that, every rebuild
-          # uses the previous :latest as the build host → native everywhere.
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
           docker pull "$IMAGE"
 
-          # Secrets on the runner FS — compose mounts them read-only; the
-          # entrypoint copies them into the container's /root/.ssh, /root/.config.
+          # Secrets on runner FS — compose mounts them :ro, entrypoint copies into place
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "$OCI_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
-          cat > ~/.ssh/config <<'EOF'
-          Host oci-apps
-            HostName 10.0.0.6
-            User ubuntu
-            IdentityFile /root/.ssh/id_deploy
-            StrictHostKeyChecking accept-new
-            ServerAliveInterval 30
-            ServerAliveCountMax 10
-          EOF
-          chmod 600 ~/.ssh/config
           mkdir -p ~/.config/sops/age
           echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
 
-          # Extract the container's compose.yaml (contains cap_add: NET_ADMIN
-          # for wg-quick). Mount the unix repo AND this cloud checkout into
-          # the container so build.sh can find cloud-data-runners.json.
-          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cb.yaml
+          # Write the compose.yaml IN THE WORKFLOW (self-contained, does not
+          # depend on the baked compose inside the currently-published image —
+          # which may predate compose.yaml changes like cap_add: NET_ADMIN).
+          # This is the declarative source used for the bootstrap rebuild.
+          cat > /tmp/cb.yaml <<'YML'
+          services:
+            cloud-builder:
+              image: ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest
+              container_name: cloud-builder-x-ship-ci
+              network_mode: host
+              cap_add:
+                - NET_ADMIN
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock
+                - ${HOME}/.ssh:/mnt/host-ssh:ro
+                - ${HOME}/.config/sops:/mnt/host-sops:ro
+                - ${HOME}/.docker/config.json:/root/.docker/config.json:ro
+              environment:
+                - GITHUB_TOKEN
+                - GITHUB_ACTOR
+                - GITHUB_SHA
+                - WG_PRIVATE_KEY
+                - SOPS_AGE_KEY
+          YML
 
+          # Mount cloud + unix repos so entrypoint + build.sh find sources
+          # at stable paths. entrypoint.sh runs WG setup, then our sh -c runs
+          # build.sh which delegates arm64 → oci-apps (WG-reachable from inside
+          # container).
           docker compose -f /tmp/cb.yaml run --rm \
-            -v "$GITHUB_WORKSPACE:/root/git/cloud-gha-ws" \
-            -v "$GITHUB_WORKSPACE/unix-repo:/root/git/unix" \
-            -e CLOUD_DATA_RUNNERS_JSON=/root/git/cloud-gha-ws/2_configs/dist/cloud-data-runners.json \
-            -e CLOUD_CONFIG=/root/git/cloud-gha-ws/config.json \
-            -e GITHUB_SHA \
-            -e GITHUB_TOKEN \
-            -e GITHUB_ACTOR \
-            -e SSH_ALIAS=oci-apps \
-            -e SSH_HOST=10.0.0.6 \
-            -e SSH_USER=ubuntu \
-            -e SSH_KEY -e WG_PRIVATE_KEY -e SOPS_AGE_KEY \
-            --entrypoint /opt/cloud-builder/entrypoint.sh \
-            cloud-builder sh -c "cd /root/git/unix/cb_containers-builders && sh build.sh ship cloud-builder-x-deb-nixhm"
+            -v "$GITHUB_WORKSPACE:/root/git/cloud-gha" \
+            -v "$GITHUB_WORKSPACE/unix-repo:/root/git/unix-gha" \
+            -e CLOUD_DATA_RUNNERS_JSON=/root/git/cloud-gha/2_configs/dist/cloud-data-runners.json \
+            -e CLOUD_CONFIG=/root/git/cloud-gha/config.json \
+            cloud-builder \
+            sh -c "cd /root/git/unix-gha/cb_containers-builders && sh build.sh ship cloud-builder-x-deb-nixhm"
