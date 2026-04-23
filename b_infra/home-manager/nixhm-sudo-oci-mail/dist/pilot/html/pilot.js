@@ -1,3 +1,15 @@
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║                                                                  ║
+// ║   GENERATED FILE — DO NOT EDIT                                   ║
+// ║                                                                  ║
+// ║   Source : b_infra/home-manager/nixhm-sudo-oci-mail/src/pilot/html/pilot.js
+// ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+// ║   Rebuild: ./1_workflows/build.sh
+// ║                                                                  ║
+// ║   Manual edits will be overwritten on next build.                ║
+// ║                                                                  ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 // vm-pilot dashboard — sidebar data from health + cloud-data JSONs
 (function () {
   var hamburger = document.getElementById('hamburger');

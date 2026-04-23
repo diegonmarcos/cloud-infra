@@ -1,9 +1,21 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/ship-ci-image.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 name: "Ship → CI image"
 
 on:
   push:
     paths:
-      - "1_1_workflows/src/cloud-builder/**"
+      - "1_workflows/src/cicd/ship-ci-image.yml"
       - "config.json"
     branches: [main]
   workflow_dispatch:
@@ -11,10 +23,6 @@ on:
 concurrency:
   group: ci-image-build
   cancel-in-progress: true
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE: ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm
 
 jobs:
   build:
@@ -24,27 +32,29 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout cloud (config.json)
+        uses: actions/checkout@v4
+
+      - name: Checkout unix (Dockerfile source)
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/unix
+          path: unix-repo
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Encode Dockerfile for label
-        id: dockerfile
-        run: echo "b64=$(base64 -w0 1_workflows/src/cloud-builder/src/docker/Dockerfile)" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push cloud-builder image
-        uses: docker/build-push-action@v6
-        with:
-          context: 1_workflows/src/cloud-builder/src
-          file: 1_workflows/src/cloud-builder/src/docker/Dockerfile
-          push: true
-          build-args: |
-            DOCKERFILE_B64=${{ steps.dockerfile.outputs.b64 }}
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+      - name: Ship cloud-builder-x-deb-nixhm image
+        run: |
+          CLOUD_CONFIG="$GITHUB_WORKSPACE/config.json" \
+          cd unix-repo/cb_containers-builders && sh build.sh ship cloud-builder-x-deb-nixhm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}

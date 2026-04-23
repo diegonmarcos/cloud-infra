@@ -23,6 +23,22 @@
         "proxied": true,
         "ttl": 1,
         "comment": "Cloudflare Tunnel → smtp-proxy on oci-mail"
+      },
+      {
+        "key": "mta_sts",
+        "name": "mta-sts",
+        "content": "diegonmarcos.com",
+        "proxied": true,
+        "ttl": 1,
+        "comment": "MTA-STS policy endpoint — Caddy serves /.well-known/mta-sts.txt"
+      },
+      {
+        "key": "oci_dkim",
+        "name": "oci-mrs-202604._domainkey",
+        "content": "oci-mrs-202604.diegonmarcos.com.dkim.mrs1.oracleemaildelivery.com",
+        "proxied": false,
+        "ttl": 300,
+        "comment": "OCI Email Delivery DKIM — relay signs outbound"
       }
     ],
 
@@ -47,11 +63,25 @@
         "content": "v=spf1 include:amazonses.com ~all",
         "ttl": 300,
         "comment": "AWS SES custom MAIL FROM - SPF for bounce subdomain"
+      },
+      {
+        "key": "mta_sts",
+        "name": "_mta-sts",
+        "content": "v=STSv1; id=20260414",
+        "ttl": 300,
+        "comment": "MTA-STS: enforce TLS for inbound mail delivery"
+      },
+      {
+        "key": "tls_rpt",
+        "name": "_smtp._tls",
+        "content": "v=TLSRPTv1; rua=mailto:postmaster@diegonmarcos.com",
+        "ttl": 300,
+        "comment": "TLS-RPT: receive reports on TLS delivery failures"
       }
     ],
 
     "dkim_records": [
-      { "key": "dkim_stalwart",   "name": "dkim._domainkey",     "var": "dkim_stalwart_public_key", "ttl": 300, "comment": "Stalwart DKIM - selector: dkim" },
+      { "key": "dkim_maddy",      "name": "default._domainkey",  "var": "dkim_maddy_public_key",    "ttl": 300, "comment": "Maddy DKIM - selector: default" },
       { "key": "dkim_cloudflare", "name": "cf2024-1._domainkey", "var": "dkim_cf_public_key",       "ttl": 1,   "comment": "Cloudflare Email Routing DKIM (auto-managed by CF)" },
       { "key": "dkim_google",     "name": "google._domainkey",   "var": "dkim_google_public_key",   "ttl": 1,   "comment": "Google Workspace DKIM (legacy)" }
     ],

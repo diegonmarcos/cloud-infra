@@ -1,4 +1,17 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Workflow engine: build (src→dist) + deploy (dist→.github/)       ║
 # ║                                                                  ║
@@ -16,6 +29,13 @@ TARGET_DIR="$REPO_ROOT/.github/workflows"
 SCRIPTS_TARGET="$TARGET_DIR/scripts"
 HOOKS_TARGET="$TARGET_DIR/hooks"
 
+# Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+# Template + prefix map live in $SRC_DIR/libs/generated-header.json.
+export REPO_ROOT
+export ENGINE_NAME="1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh"
+# shellcheck source=../libs/inject-header.sh
+. "$SRC_DIR/libs/inject-header.sh"
+
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
 do_build() {
@@ -25,49 +45,45 @@ do_build() {
     mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks" "$DIST_DIR/test"
 
     # Static workflows (src/cicd/*.yml → dist/)
-    rm -f "$DIST_DIR"/*.yml
     for f in "$SRC_DIR"/cicd/*.yml; do
         [ -f "$f" ] || continue
-        cp "$f" "$DIST_DIR/"
+        inject_header "$f" "$DIST_DIR/$(basename "$f")"
     done
     log "Built $(ls "$DIST_DIR"/*.yml 2>/dev/null | wc -l) workflow(s)"
 
     # Scripts (src/scripts/ → dist/scripts/)
     if [ -d "$SRC_DIR/scripts" ]; then
-        cp -r "$SRC_DIR/scripts/"* "$DIST_DIR/scripts/" 2>/dev/null || true
-        chmod +x "$DIST_DIR/scripts/"*.sh 2>/dev/null || true
+        inject_header_tree "$SRC_DIR/scripts" "$DIST_DIR/scripts"
         log "Built scripts"
     fi
 
     # Hooks (src/hooks/ → dist/hooks/)
     if [ -d "$SRC_DIR/hooks" ]; then
-        cp -r "$SRC_DIR/hooks/"* "$DIST_DIR/hooks/" 2>/dev/null || true
-        chmod +x "$DIST_DIR/hooks/"*.sh 2>/dev/null || true
+        inject_header_tree "$SRC_DIR/hooks" "$DIST_DIR/hooks"
         log "Built hooks"
     fi
 
     # Tests (src/test/ → dist/test/) — preflight testers invoked by ship-ci-image.yml
     if [ -d "$SRC_DIR/test" ]; then
-        cp -r "$SRC_DIR/test/"* "$DIST_DIR/test/" 2>/dev/null || true
-        chmod +x "$DIST_DIR/test/"*.sh 2>/dev/null || true
+        inject_header_tree "$SRC_DIR/test" "$DIST_DIR/test"
         log "Built tests"
     fi
 
     # Gitmodules (src/modules/gitmodules → dist/.gitmodules)
     if [ -f "$SRC_DIR/modules/gitmodules" ]; then
-        cp "$SRC_DIR/modules/gitmodules" "$DIST_DIR/.gitmodules" 2>/dev/null || true
+        inject_header "$SRC_DIR/modules/gitmodules" "$DIST_DIR/.gitmodules"
         log "Built gitmodules"
     fi
 
     # Gitignore (src/gitignore → dist/.gitignore)
     if [ -f "$SRC_DIR/gitignore" ]; then
-        cp "$SRC_DIR/gitignore" "$DIST_DIR/.gitignore" 2>/dev/null || true
+        inject_header "$SRC_DIR/gitignore" "$DIST_DIR/.gitignore"
         log "Built gitignore"
     fi
 
     # Gitconfig (src/gitconfig → dist/)
     if [ -f "$SRC_DIR/gitconfig" ]; then
-        cp "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
+        inject_header "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
         log "Built gitconfig"
     fi
 }

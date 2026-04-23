@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : c_vps/vps_hetzner/src/main.tf
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Hetzner Cloud Infrastructure — data-driven from terraform.json
 # Currently placeholder — no active resources.
 # Add instances/resources to terraform.json when provisioning.

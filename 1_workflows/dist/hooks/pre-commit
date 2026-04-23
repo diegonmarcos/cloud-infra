@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/hooks/pre-commit
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ pre-commit — block secrets from ever reaching a commit           ║
 # ║                                                                  ║
@@ -139,6 +152,14 @@ while IFS= read -r f; do
         */.secrets-hash*|*/.secrets-env-var-names*) continue ;;
         *secrets-env-var-names*.json|*cloud-data-secrets-env-var-names.json) continue ;;
         *secrets-subst.nix) continue ;;
+        # GitHub Actions workflow YAMLs (engine paths): named-about-secrets
+        # files here (e.g. lint-secrets-coverage.yml) define CI lint/audit
+        # jobs — never secret containers. Required GHA shape: on: + jobs:.
+        .github/workflows/*.yml|1_workflows/src/cicd/*.yml|1_workflows/dist/*.yml)
+            if grep -qE '^on:' "$f" 2>/dev/null && grep -qE '^jobs:' "$f" 2>/dev/null; then
+                continue
+            fi
+            ;;
     esac
     # Code files: only flag if contain obvious inline values
     case "$f" in

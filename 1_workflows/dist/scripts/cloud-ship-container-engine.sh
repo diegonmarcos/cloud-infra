@@ -1,4 +1,17 @@
 #!/bin/sh
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/scripts/cloud-ship-container-engine.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Container Engine — dispatcher + config                          ║
 # ║                                                                  ║
@@ -149,6 +162,11 @@ trap 'if [ -n "$CURRENT_STEP" ]; then log_error "Step '\''$CURRENT_STEP'\'' fail
 # ── Source all step files ─────────────────────────────────────────────
 # Steps are in the same directory as this engine (1_workflows/src/scripts/)
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+# Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+# Template + prefix map live in 1_workflows/src/libs/generated-header.json.
+INJECT_HEADER="$STEPS_DIR/../libs/inject-header.sh"
+ENGINE_NAME="1_workflows/src/scripts/cloud-ship-container-engine.sh"
+export INJECT_HEADER ENGINE_NAME
 . "$STEPS_DIR/cloud-ship-container-step-build-docker.sh"
 . "$STEPS_DIR/cloud-ship-container-step-build-configs.sh"
 . "$STEPS_DIR/cloud-ship-container-step-build-nix.sh"

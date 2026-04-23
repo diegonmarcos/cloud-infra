@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/default.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # vm-pilot: Single entry point for all shared VM modules
 # Usage: (import ./modules/default.nix { vmName = "oci-apps"; })
 #
@@ -18,12 +30,10 @@ in {
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
   ] ++ lib.optionals (vmName != "oci-apps") [
-    ./protection/no-build-guard.nix        # oci-apps (ARM 24GB) can build — all others are E2 Micro
-    ./container/no-build-guardrails.nix    # docker wrapper: block --build on small VMs
+    ./protection/no-build-guard.nix        # WARNING: small VM — remind operators not to build
+    ./container/no-build-guardrails.nix    # WARNING: docker wrapper — warns on build/--build
   ] ++ [
-    # ./protection/guardrails.nix  # DISABLED — POSIX sh two-word subcommand bug
-
-    # ── Container (container orchestrator imports: daemon, tools, no-build-guardrails)
+    # ── Container (container orchestrator imports: daemon, tools)
     (import ./container/init.nix { inherit vmName; })
     ./container/container.nix
 

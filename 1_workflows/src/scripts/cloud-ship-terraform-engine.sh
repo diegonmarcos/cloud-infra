@@ -24,6 +24,10 @@ DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
 STEPS_DIR="$(cd "$(dirname "$0")/../../1_workflows/src/scripts" 2>/dev/null && pwd)"
 [ -z "$STEPS_DIR" ] && STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+# Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+INJECT_HEADER="$STEPS_DIR/../libs/inject-header.sh"
+ENGINE_NAME="1_workflows/src/scripts/cloud-ship-terraform-engine.sh"
+export INJECT_HEADER ENGINE_NAME
 
 log()       { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1" >&2; }
@@ -49,15 +53,16 @@ step_build() {
     log "Build: $SERVICE_NAME (terraform)"
     mkdir -p "$DIST_DIR"
     # Copy *.tf, *.json, *.template, *.sh, *.tfstate.enc, oci-config.template, etc.
+    # Banner is injected for every copied file (dist/ is engine output).
     for f in "$SRC_DIR"/*.tf "$SRC_DIR"/*.json "$SRC_DIR"/*.template "$SRC_DIR"/*.tpl "$SRC_DIR"/*.sh "$SRC_DIR"/*.tfstate.enc "$SRC_DIR"/secrets.yaml; do
         [ -e "$f" ] || continue
-        cp "$f" "$DIST_DIR/$(basename "$f")"
+        "$INJECT_HEADER" file "$f" "$DIST_DIR/$(basename "$f")"
     done
     # Recursively copy subdirs (e.g. billing/ for vps_gcloud)
     for d in "$SRC_DIR"/*/; do
         [ -d "$d" ] || continue
         name=$(basename "$d")
-        cp -r "$d" "$DIST_DIR/$name"
+        "$INJECT_HEADER" tree "$d" "$DIST_DIR/$name"
     done
     log "src/ → dist/ done"
 }
