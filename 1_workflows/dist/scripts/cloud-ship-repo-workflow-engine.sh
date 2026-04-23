@@ -86,6 +86,23 @@ do_build() {
         inject_header "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
         log "Built gitconfig"
     fi
+
+    # GHA actions (src/actions/ → dist/actions/)
+    if [ -d "$SRC_DIR/actions" ]; then
+        inject_header_tree "$SRC_DIR/actions" "$DIST_DIR/actions"
+        log "Built actions"
+    fi
+
+    # GHA flake (src/flake.nix, src/flake.lock → dist/)
+    # flake.lock is in skip_basenames (inject-header.sh) → copied verbatim.
+    if [ -f "$SRC_DIR/flake.nix" ]; then
+        inject_header "$SRC_DIR/flake.nix" "$DIST_DIR/flake.nix"
+        log "Built flake.nix"
+    fi
+    if [ -f "$SRC_DIR/flake.lock" ]; then
+        inject_header "$SRC_DIR/flake.lock" "$DIST_DIR/flake.lock"
+        log "Built flake.lock"
+    fi
 }
 
 do_deploy() {
@@ -111,6 +128,21 @@ do_deploy() {
         chmod +x "$HOOKS_TARGET/"*.sh 2>/dev/null || true
         log "Deployed hooks"
     fi
+
+    # GHA actions (dist/actions/ → .github/actions/)
+    if [ -d "$DIST_DIR/actions" ]; then
+        mkdir -p "$REPO_ROOT/.github/actions"
+        cp -r "$DIST_DIR/actions/"* "$REPO_ROOT/.github/actions/" 2>/dev/null || true
+        log "Deployed actions → .github/actions/"
+    fi
+
+    # GHA flake (dist/flake.{nix,lock} → .github/)
+    for f in flake.nix flake.lock; do
+        if [ -f "$DIST_DIR/$f" ]; then
+            cp "$DIST_DIR/$f" "$REPO_ROOT/.github/$f"
+            log "Deployed $f → .github/"
+        fi
+    done
 
     # Repo-root configs (.gitmodules etc)
     for f in "$DIST_DIR"/.git*; do
@@ -145,7 +177,23 @@ do_deploy() {
     fi
 
     # Gitconfig → include in .git/config
+    # Reconcile: unset any local keys owned by dist/gitconfig so they cannot
+    # shadow the declared config (last-wins makes post-include entries win).
     if [ -f "$DIST_DIR/gitconfig" ]; then
+        _gc_section=""
+        while IFS= read -r line; do
+            case "$line" in
+                \[*\])
+                    _gc_section=$(printf '%s' "$line" | sed 's/^\[\([^]]*\)\]$/\1/' | tr '[:upper:]' '[:lower:]')
+                    ;;
+                *=*)
+                    [ -z "$_gc_section" ] && continue
+                    _gc_key=$(printf '%s' "$line" | sed -n 's/^[[:space:]]*\([a-zA-Z][a-zA-Z0-9]*\)[[:space:]]*=.*/\1/p' | tr '[:upper:]' '[:lower:]')
+                    [ -n "$_gc_key" ] && git -C "$REPO_ROOT" config --local --unset "${_gc_section}.${_gc_key}" 2>/dev/null || true
+                    ;;
+            esac
+        done < "$DIST_DIR/gitconfig"
+        unset _gc_section _gc_key
         git -C "$REPO_ROOT" config --local include.path ../1_workflows/dist/gitconfig 2>/dev/null || true
         log "Deployed gitconfig (included in .git/config)"
     fi
