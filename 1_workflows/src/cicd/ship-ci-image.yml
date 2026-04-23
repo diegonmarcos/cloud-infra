@@ -43,10 +43,27 @@ jobs:
           IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
           docker pull "$IMAGE"
 
-          # Secrets on runner FS — compose mounts them :ro, entrypoint copies into place
+          # Secrets on runner FS — compose mounts them :ro at /mnt/host-ssh,
+          # entrypoint copies into /root/.ssh/ inside the container. Include
+          # the Host oci-apps alias so build.sh can `ssh oci-apps` for the
+          # arm64 native build (IP derived from cloud-data-gha-config.json).
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "$OCI_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          OCI_APPS_IP=$(jq -r '.vms["oci-apps"].wg_ip // .vms["oci-apps"].host' \
+            2_configs/dist/cloud-data-gha-config.json)
+          OCI_APPS_USER=$(jq -r '.vms["oci-apps"].user // "ubuntu"' \
+            2_configs/dist/cloud-data-gha-config.json)
+          cat > ~/.ssh/config <<EOF
+          Host oci-apps
+            HostName ${OCI_APPS_IP}
+            User ${OCI_APPS_USER}
+            IdentityFile /root/.ssh/id_deploy
+            StrictHostKeyChecking accept-new
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          EOF
+          chmod 600 ~/.ssh/config
           mkdir -p ~/.config/sops/age
           echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
 
