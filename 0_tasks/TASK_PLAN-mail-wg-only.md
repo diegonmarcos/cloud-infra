@@ -47,19 +47,22 @@ Outbound paths unaffected:
 | **CF Worker ingress** 8080 | public on oci-mail | public on oci-mail (no change — Cloudflare has no WG) |
 | **Stalwart MX** 2025 | public on oci-mail | public on oci-mail *(only if Stalwart is receiving external MX — see A.7)* |
 | **User client ports**: 465, 587, 993, 2443, 2465, 2587, 2993, 4190, 6190, 8443, 22000, 21027 | public on oci-mail **and** public on gcp-proxy (Caddy L4) | WG-only — apps bind to `10.0.0.3` on wg0 |
-| Caddy L4 layer4 block | 7 mail routes | empty (removed) |
+| Caddy L4 layer4 block | 7 mail routes | auto-empty (data), mapping preserved (code) |
 
 External port scan of oci-mail's public IP and gcp-proxy's public IP for any of the "user client" ports MUST return `filtered`/`closed`.
 
+**Authority on WG-only is the container bind.** Caddy L4 mapping stays declared in the derive engine — if we ever decide to re-expose mail publicly, re-adding the ports to gcp-proxy `public_ports[]` is enough. The `l4Map` dict is infrastructure-as-code for reversibility; deleting it would force a refactor to un-do. Keep it.
+
 ## A.2 Design
 
-Three coordinated changes:
+Two coordinated changes:
 
 1. **`config.json`**: delete user-facing mail ports from `gcp-proxy.public_ports[]` and from `oci-mail.public_ports[]`. Keep only the three M2M ports on oci-mail.
 2. **Mail service configs**: parametrise the listener address in Maddy + Stalwart + smtp-proxy templates. Default bind = `10.0.0.3` (oci-mail's wg0 IP). MX/CFW ports keep `0.0.0.0`.
-3. **Derive engine**: delete the `l4Map` block — `l4_routes[]` auto-empties once gcp-proxy has no mail ports.
 
 Firewall change: **none**. `firewall.nix` already has `iptables -A INPUT -i wg0 -j ACCEPT` — WG peers will reach any WG-bound listener without new rules. Removing ports from `public_ports[]` automatically removes their INPUT ACCEPT on eth0 (belt). The app binding to `10.0.0.3` (suspenders).
+
+Derive engine change: **none**. The `l4Map` block in `cloud-data-config-derive.ts` stays as-is. Since `l4_routes[]` is derived from `public_ports[]`, removing mail ports from gcp-proxy `public_ports[]` auto-empties `l4_routes[]` for mail. The mapping dict is preserved so a future re-expose is one data edit away.
 
 Caddy change: **none**. Empty `l4_routes[]` → empty `layer4 {}` block → renderer emits nothing.
 
@@ -118,15 +121,13 @@ Replace every `bind = "[::]:PORT"` with `bind = "@BIND_PORT@:PORT"`. Same substi
 
 Rule of thumb: **every listener line in every template must be data-driven from `build.json`**. No literal IP anywhere in a template.
 
-## A.5 Derive engine cleanup
+## A.5 Derive engine — no change
 
-`cloud/2_configs/src/engines/cloud-data-config-derive.ts` lines ~334-360 — delete the block that hardcodes:
+`cloud/2_configs/src/engines/cloud-data-config-derive.ts` stays as-is. The `l4Map` block is the declared mapping between a gcp-proxy public port and its Caddy L4 upstream. Once mail ports are removed from gcp-proxy `public_ports[]` (§ A.6), `l4Map` has nothing to look up → `l4_routes[]` renders empty → Caddy layer4 is empty.
 
-```ts
-const l4Map: Record<number, string> = { 993: "IMAPS …", 465: "SMTPS …", … };
-```
+**Do not delete `l4Map`.** It is the reversibility contract: if mail returns to public-facing, one data edit (re-add the port to `public_ports[]`) restores Caddy L4 routing. Deleting the mapping would turn that data edit into a code+data change.
 
-Replace with a generic pass-through: `l4Routes` is populated only from gcp-proxy `public_ports[]` entries that carry an explicit `l4_upstream` field (currently none after Phase A). Once gcp-proxy has no mail ports, `l4Routes` is `[]` automatically — no hardcoded mapping survives.
+A later cleanup (out of scope for Phase A) can generalise `l4Map` into a per-port field in `public_ports[]` (e.g., `{"port": 993, "proto": "tcp", "l4_upstream": "oci-mail:993"}`) so the mapping moves from a hardcoded dict into data. That's a refactor, not a delete.
 
 ## A.6 config.json edits
 
@@ -163,15 +164,14 @@ Look in: Cloudflare Worker source (`ba-clo_cloudflare-worker/src/`), maddy routi
 6. Edit `stalwart/config.toml.tpl` — replace `[::]` in each `bind = "[::]:PORT"` with `@BIND_<port>@`.
 7. Edit smtp-proxy template equivalently.
 8. Edit `aa-sui_tools-{maddy,stalwart,smtp-proxy}/src/flake.nix` — extend the substitution map to export `BIND_<port>` for each `extra_ports[].bind` entry (fallback `0.0.0.0`).
-9. Edit `cloud/2_configs/src/engines/cloud-data-config-derive.ts` — delete the `l4Map` block. Keep the fallback (empty result).
-10. Edit `cloud/config.json` — delete mail ports per A.6.
-11. Regenerate derived JSONs: `cd /home/diego/git/cloud/2_configs && ./build.sh`.
-12. Commit + push. GHA deploys in order:
+9. Edit `cloud/config.json` — delete mail ports per A.6. **Do not touch `cloud-data-config-derive.ts`.**
+10. Regenerate derived JSONs: `cd /home/diego/git/cloud/2_configs && ./build.sh`.
+11. Commit + push. GHA deploys in order:
     - `ship-gen-configs.yml` — regenerates cloud-data outputs.
     - `ship-oci-mail.yml` — rebuilds maddy + stalwart + smtp-proxy with new bind addresses.
-    - `ship-gcp-proxy.yml` — Caddy re-renders with empty `layer4 {}`.
+    - `ship-gcp-proxy.yml` — Caddy re-renders with empty `layer4 {}` (l4Map still present in code, but no input data to map).
     - `home-manager.yml` — updates firewalls (INPUT ACCEPT removed for dropped ports).
-13. Verify § A.9. On failure, revert the commit (§ A.10).
+12. Verify § A.9. On failure, revert the commit (§ A.10).
 
 Do **not** `ssh vm 'systemctl restart maddy'`, `sed`, `docker compose up`, or any other imperative action on the VM. Engine or nothing.
 
@@ -198,10 +198,13 @@ S=../a_solutions/aa-sui_tools-stalwart/dist/config.toml
 grep -E 'bind\s*=\s*"10\.0\.0\.3:2993"' "$S"
 grep -E 'bind\s*=\s*"10\.0\.0\.3:2465"' "$S"
 
-# Caddy has no mail L4 routes
+# Caddy has no mail L4 routes (auto-empty because gcp-proxy public_ports has no mail)
 jq -e '.l4_routes | length == 0' ../2_configs/dist/build-caddy.json
 
-echo "[PASS] mail listeners bind to 10.0.0.3; Caddy l4_routes empty"
+# l4Map code still present — reversibility contract
+grep -q 'const l4Map' ../2_configs/src/engines/cloud-data-config-derive.ts
+
+echo "[PASS] mail listeners bind to 10.0.0.3; Caddy l4_routes empty; l4Map preserved"
 ```
 Wire into the consolidated test runner (`cloud/2_configs/build.sh test` or `1_workflows` preflight).
 
@@ -244,8 +247,8 @@ Revert the merge commit. GHA re-runs — config.json re-opens ports, build.json 
 - [ ] `config.json` has no mail ports on gcp-proxy and only `[25, 8080(, 2025?)]` on oci-mail.
 - [ ] `build.json` for maddy/stalwart/smtp-proxy has a `bind` per `extra_ports[]` entry.
 - [ ] Templates substitute `@BIND_<port>@` for every listener; zero literal IPs.
-- [ ] Derive engine has no `l4Map` literal.
-- [ ] `dist/build-caddy.json` → `l4_routes: []`.
+- [ ] `cloud-data-config-derive.ts` is untouched — `l4Map` block preserved (reversibility contract).
+- [ ] `dist/build-caddy.json` → `l4_routes: []` (auto-empty because no mail in gcp-proxy `public_ports[]`).
 - [ ] `dist/maddy.conf` shows `10.0.0.3` for user ports, `0.0.0.0` for MX.
 - [ ] `dist/stalwart/config.toml` shows `10.0.0.3:PORT` for user ports.
 - [ ] All tests in § A.9 pass.

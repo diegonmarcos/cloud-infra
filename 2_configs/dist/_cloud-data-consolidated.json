@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-22T17:43:16.410Z",
+    "generated_at": "2026-04-23T11:05:59.301Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -43,67 +43,12 @@
         {
           "port": 25,
           "proto": "tcp",
-          "desc": "SMTP (Maddy)"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Maddy via Caddy L4)"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP submission (Maddy via Caddy L4)"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Maddy via Caddy L4)"
-        },
-        {
-          "port": 4190,
-          "proto": "tcp",
-          "desc": "ManageSieve (Maddy)"
+          "desc": "SMTP (Maddy MX — must be public, RFC)"
         },
         {
           "port": 8080,
           "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress)"
-        },
-        {
-          "port": 8443,
-          "proto": "tcp",
-          "desc": "Maddy web admin HTTPS"
-        },
-        {
-          "port": 2025,
-          "proto": "tcp",
-          "desc": "SMTP inbound (Stalwart shadow)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Stalwart)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Stalwart)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Stalwart)"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "Stalwart web admin HTTPS"
-        },
-        {
-          "port": 6190,
-          "proto": "tcp",
-          "desc": "ManageSieve (Stalwart)"
+          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
         },
         {
           "port": 22000,
@@ -366,41 +311,6 @@
           "port": 443,
           "proto": "udp",
           "desc": "QUIC (Caddy)"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
         }
       ],
       "gha": {
@@ -2174,6 +2084,38 @@
           "container_name": "maddy",
           "image": "ghcr.io/diegonmarcos/maddy:latest",
           "port": null,
+          "extra_ports": [
+            {
+              "port": 25,
+              "protocol": "tcp",
+              "bind": "0.0.0.0",
+              "desc": "MX (inbound — must be public)"
+            },
+            {
+              "port": 465,
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "SMTPS — WG-only"
+            },
+            {
+              "port": 587,
+              "protocol": "starttls",
+              "bind": "10.0.0.3",
+              "desc": "Submission — WG-only"
+            },
+            {
+              "port": 993,
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "IMAPS — WG-only"
+            },
+            {
+              "port": 143,
+              "protocol": "tcp",
+              "bind": "10.0.0.3",
+              "desc": "IMAP plain — WG-only"
+            }
+          ],
           "dns": "maddy.app",
           "public": false,
           "proxy": null,
@@ -2368,23 +2310,39 @@
           "extra_ports": [
             {
               "port": 2025,
-              "protocol": "starttls"
+              "protocol": "starttls",
+              "bind": "127.0.0.1",
+              "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)"
+            },
+            {
+              "port": 2443,
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "HTTPS admin/JMAP — WG-only"
             },
             {
               "port": 2465,
-              "protocol": "tls"
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "SMTPS — WG-only"
             },
             {
               "port": 2587,
-              "protocol": "starttls"
+              "protocol": "starttls",
+              "bind": "10.0.0.3",
+              "desc": "Submission — WG-only"
             },
             {
               "port": 2993,
-              "protocol": "tls"
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "IMAPS — WG-only"
             },
             {
               "port": 6190,
-              "protocol": "tls"
+              "protocol": "tls",
+              "bind": "10.0.0.3",
+              "desc": "ManageSieve — WG-only"
             }
           ],
           "port_env": null,
@@ -5877,67 +5835,12 @@
         {
           "port": 25,
           "proto": "tcp",
-          "desc": "SMTP (Maddy)"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Maddy via Caddy L4)"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP submission (Maddy via Caddy L4)"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Maddy via Caddy L4)"
-        },
-        {
-          "port": 4190,
-          "proto": "tcp",
-          "desc": "ManageSieve (Maddy)"
+          "desc": "SMTP (Maddy MX — must be public, RFC)"
         },
         {
           "port": 8080,
           "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress)"
-        },
-        {
-          "port": 8443,
-          "proto": "tcp",
-          "desc": "Maddy web admin HTTPS"
-        },
-        {
-          "port": 2025,
-          "proto": "tcp",
-          "desc": "SMTP inbound (Stalwart shadow)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Stalwart)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Stalwart)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Stalwart)"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "Stalwart web admin HTTPS"
-        },
-        {
-          "port": 6190,
-          "proto": "tcp",
-          "desc": "ManageSieve (Stalwart)"
+          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
         },
         {
           "port": 22000,
@@ -6012,41 +5915,6 @@
           "port": 443,
           "proto": "udp",
           "desc": "QUIC (Caddy)"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
         }
       ]
     },
@@ -6488,67 +6356,12 @@
           {
             "port": 25,
             "proto": "tcp",
-            "desc": "SMTP (Maddy)"
-          },
-          {
-            "port": 465,
-            "proto": "tcp",
-            "desc": "SMTPS (Maddy via Caddy L4)"
-          },
-          {
-            "port": 587,
-            "proto": "tcp",
-            "desc": "SMTP submission (Maddy via Caddy L4)"
-          },
-          {
-            "port": 993,
-            "proto": "tcp",
-            "desc": "IMAPS (Maddy via Caddy L4)"
-          },
-          {
-            "port": 4190,
-            "proto": "tcp",
-            "desc": "ManageSieve (Maddy)"
+            "desc": "SMTP (Maddy MX — must be public, RFC)"
           },
           {
             "port": 8080,
             "proto": "tcp",
-            "desc": "SMTP proxy (CF Worker ingress)"
-          },
-          {
-            "port": 8443,
-            "proto": "tcp",
-            "desc": "Maddy web admin HTTPS"
-          },
-          {
-            "port": 2025,
-            "proto": "tcp",
-            "desc": "SMTP inbound (Stalwart shadow)"
-          },
-          {
-            "port": 2465,
-            "proto": "tcp",
-            "desc": "SMTPS (Stalwart)"
-          },
-          {
-            "port": 2587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Stalwart)"
-          },
-          {
-            "port": 2993,
-            "proto": "tcp",
-            "desc": "IMAPS (Stalwart)"
-          },
-          {
-            "port": 2443,
-            "proto": "tcp",
-            "desc": "Stalwart web admin HTTPS"
-          },
-          {
-            "port": 6190,
-            "proto": "tcp",
-            "desc": "ManageSieve (Stalwart)"
+            "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
           },
           {
             "port": 22000,
@@ -6814,41 +6627,6 @@
             "port": 443,
             "proto": "udp",
             "desc": "QUIC (Caddy)"
-          },
-          {
-            "port": 993,
-            "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → oci-mail)"
-          },
-          {
-            "port": 465,
-            "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → oci-mail)"
-          },
-          {
-            "port": 587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-          },
-          {
-            "port": 2993,
-            "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-          },
-          {
-            "port": 2465,
-            "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-          },
-          {
-            "port": 2587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
-          },
-          {
-            "port": 2443,
-            "proto": "tcp",
-            "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
           }
         ],
         "idle_shutdown": null,

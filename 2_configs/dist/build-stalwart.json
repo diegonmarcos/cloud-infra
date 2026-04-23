@@ -4,7 +4,7 @@
     "description": "stalwart container config (service=stalwart, role=app)",
     "format_version": 1
   },
-  "_generated": "2026-04-22T17:43:16.896Z",
+  "_generated": "2026-04-23T11:05:59.543Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "stalwart",
@@ -13,23 +13,39 @@
     "extra_ports": [
       {
         "port": 2025,
-        "protocol": "starttls"
+        "protocol": "starttls",
+        "bind": "127.0.0.1",
+        "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)"
+      },
+      {
+        "port": 2443,
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "HTTPS admin/JMAP — WG-only"
       },
       {
         "port": 2465,
-        "protocol": "tls"
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "SMTPS — WG-only"
       },
       {
         "port": 2587,
-        "protocol": "starttls"
+        "protocol": "starttls",
+        "bind": "10.0.0.3",
+        "desc": "Submission — WG-only"
       },
       {
         "port": 2993,
-        "protocol": "tls"
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "IMAPS — WG-only"
       },
       {
         "port": 6190,
-        "protocol": "tls"
+        "protocol": "tls",
+        "bind": "10.0.0.3",
+        "desc": "ManageSieve — WG-only"
       }
     ],
     "port_env": null,

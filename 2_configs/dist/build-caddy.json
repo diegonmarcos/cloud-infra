@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-22T17:43:16.894Z",
+  "_generated": "2026-04-23T11:05:59.542Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -164,43 +164,7 @@
     "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
-  "l4_routes": [
-    {
-      "port": 993,
-      "upstream": "10.0.0.3:993",
-      "comment": "IMAPS -- TLS passthrough to maddy"
-    },
-    {
-      "port": 465,
-      "upstream": "10.0.0.3:465",
-      "comment": "SMTPS -- TLS passthrough to maddy"
-    },
-    {
-      "port": 587,
-      "upstream": "10.0.0.3:587",
-      "comment": "SMTP Submission -- TLS passthrough to maddy"
-    },
-    {
-      "port": 2993,
-      "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS -- TLS passthrough to stalwart"
-    },
-    {
-      "port": 2465,
-      "upstream": "10.0.0.3:2465",
-      "comment": "SMTPS -- TLS passthrough to stalwart"
-    },
-    {
-      "port": 2587,
-      "upstream": "10.0.0.3:2587",
-      "comment": "SMTP Submission -- TLS passthrough to stalwart"
-    },
-    {
-      "port": 2443,
-      "upstream": "10.0.0.3:2443",
-      "comment": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
-    }
-  ],
+  "l4_routes": [],
   "redirects": [
     {
       "domain": "mail.diegonmarcos.com",
@@ -1129,7 +1093,7 @@
     {
       "kind": "redirect",
       "service": "maddy.app",
-      "redirect_to": "https://maddy-tls-993.app",
+      "redirect_to": "https://maddy-tcp-25.app",
       "container": "maddy",
       "container_key": "app",
       "svc": "maddy",
@@ -1137,15 +1101,15 @@
     },
     {
       "kind": "canonical",
-      "service": "maddy-tls-993.app",
+      "service": "maddy-tcp-25.app",
       "container": "maddy",
       "container_key": "app",
       "svc": "maddy",
       "vm": "oci-E2-f_0",
-      "port": 993,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:993",
-      "source": "proxy.primary.l4_ports"
+      "port": 25,
+      "protocol": "tcp",
+      "upstream": "10.0.0.3:25",
+      "source": "containers.app.extra_ports"
     },
     {
       "kind": "canonical",
@@ -1157,7 +1121,7 @@
       "port": 465,
       "protocol": "tls",
       "upstream": "10.0.0.3:465",
-      "source": "proxy.primary.l4_ports"
+      "source": "containers.app.extra_ports"
     },
     {
       "kind": "canonical",
@@ -1169,7 +1133,31 @@
       "port": 587,
       "protocol": "starttls",
       "upstream": "10.0.0.3:587",
-      "source": "proxy.primary.l4_ports"
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "maddy-tls-993.app",
+      "container": "maddy",
+      "container_key": "app",
+      "svc": "maddy",
+      "vm": "oci-E2-f_0",
+      "port": 993,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:993",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "maddy-tcp-143.app",
+      "container": "maddy",
+      "container_key": "app",
+      "svc": "maddy",
+      "vm": "oci-E2-f_0",
+      "port": 143,
+      "protocol": "tcp",
+      "upstream": "10.0.0.3:143",
+      "source": "containers.app.extra_ports"
     },
     {
       "kind": "redirect",
@@ -3642,9 +3630,9 @@
       "notes": null
     },
     {
-      "host": "maddy-tls-993.app",
+      "host": "maddy-tcp-25.app",
       "path": null,
-      "upstream": "10.0.0.3:993",
+      "upstream": "10.0.0.3:25",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -3665,6 +3653,26 @@
       "host": "maddy-starttls-587.app",
       "path": null,
       "upstream": "10.0.0.3:587",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "maddy",
+      "notes": null
+    },
+    {
+      "host": "maddy-tls-993.app",
+      "path": null,
+      "upstream": "10.0.0.3:993",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "maddy",
+      "notes": null
+    },
+    {
+      "host": "maddy-tcp-143.app",
+      "path": null,
+      "upstream": "10.0.0.3:143",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -4638,78 +4646,7 @@
       "notes": "OCI bucket: my-photos"
     }
   ],
-  "l4_listeners": [
-    {
-      "host": ":993",
-      "path": null,
-      "upstream": "10.0.0.3:993",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "IMAPS -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":465",
-      "path": null,
-      "upstream": "10.0.0.3:465",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTPS -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":587",
-      "path": null,
-      "upstream": "10.0.0.3:587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":2993",
-      "path": null,
-      "upstream": "10.0.0.3:2993",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "IMAPS -- TLS passthrough to stalwart"
-    },
-    {
-      "host": ":2465",
-      "path": null,
-      "upstream": "10.0.0.3:2465",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTPS -- TLS passthrough to stalwart"
-    },
-    {
-      "host": ":2587",
-      "path": null,
-      "upstream": "10.0.0.3:2587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission -- TLS passthrough to stalwart"
-    },
-    {
-      "host": ":2443",
-      "path": null,
-      "upstream": "10.0.0.3:2443",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
-    }
-  ],
+  "l4_listeners": [],
   "others": [
     {
       "host": "<global>",
