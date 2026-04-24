@@ -75,6 +75,17 @@ check "caddy: l4_routes has 7 mail entries" \
 check "caddy: all l4_routes upstream 10.0.0.3 (oci-mail WG IP)" \
   jq -e 'all(.l4_routes[]; .upstream | startswith("10.0.0.3:"))' "$CADDY_JSON"
 
+# ── listen_scope knob: with default config (no listen_scope) no listen field ──
+check "derive: no listen field emitted when listen_scope absent (default public)" \
+  jq -e 'all(.l4_routes[]; has("listen") | not)' "$CADDY_JSON"
+
+# ── Derive engine: listen_scope + listen field wiring present ────────────────
+check "derive: listen_scope branch present in source" \
+  grep -q 'listen_scope === "wg"' "$DERIVE_SRC"
+
+check "caddy template: mkL4Block honors route.listen" \
+  grep -q 'route.listen or' "../a_solutions/bb-sec_caddy/src/caddyfile.nix"
+
 # ── Derive engine: l4Map code still present (reversibility contract) ──────────
 check "derive: l4Map block preserved" \
   grep -q 'const l4Map' "$DERIVE_SRC"

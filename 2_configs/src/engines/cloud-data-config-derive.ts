@@ -341,21 +341,34 @@ function deriveCaddy(c: any): DerivedFile {
     2587: "SMTP Submission -- TLS passthrough to stalwart",
     2443: "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)",
   };
-  // Find oci-mail's WG IP for upstream (Caddy L4 runs inside WG mesh)
+  // Find oci-mail's WG IP (L4 upstream) and gcp-proxy's WG IP (optional listen scope).
   let ociMailIp = "";
+  let gcpProxyWgIp = "";
   for (const vm of Object.values(vms) as any[]) {
-    if (vm.ssh_alias === "oci-mail") { ociMailIp = vm.wg_ip ?? vm.ip; break; }
+    if (vm.ssh_alias === "oci-mail") ociMailIp = vm.wg_ip ?? vm.ip;
+    if (vm.ssh_alias === "gcp-proxy") gcpProxyWgIp = vm.wg_ip ?? "";
   }
   for (const vm of Object.values(vms) as any[]) {
     if (vm.ssh_alias !== "gcp-proxy") continue;
     for (const pp of vm.public_ports ?? []) {
-      if (l4Map[pp.port]) {
-        l4Routes.push({
-          port: pp.port,
-          upstream: `${ociMailIp}:${pp.port}`,
-          comment: l4Map[pp.port],
-        });
+      if (!l4Map[pp.port]) continue;
+      const route: any = {
+        port: pp.port,
+        upstream: `${ociMailIp}:${pp.port}`,
+        comment: l4Map[pp.port],
+      };
+      // listen_scope = "wg" → Caddy binds only on gcp-proxy's WG IP, not all
+      // interfaces. This is the declarative knob for "mail reachable only from
+      // WG peers" without dropping the route (Caddy stays the router).
+      // Omitted / "public" (default) → route has no `listen` field → Caddy's
+      // default = all interfaces = current public behavior.
+      if (pp.listen_scope === "wg") {
+        if (!gcpProxyWgIp) {
+          throw new Error(`listen_scope=wg on port ${pp.port} but gcp-proxy has no wg_ip in config.json`);
+        }
+        route.listen = `${gcpProxyWgIp}:${pp.port}`;
       }
+      l4Routes.push(route);
     }
   }
 
@@ -524,6 +537,7 @@ function deriveCaddy(c: any): DerivedFile {
   // ── Internal routes: all services with upstream + dns → Caddy HTTP:80 listener ──
   const internalRoutes: any[] = [];
   for (const [, svc] of Object.entries(services)) {
+    if (svc.enabled === false) continue;
     if (!svc.upstream || !svc.dns) continue;
     internalRoutes.push({
       service: svc.dns,
@@ -579,6 +593,7 @@ function deriveCaddy(c: any): DerivedFile {
   // Protocol is read from build.json (containers.<x>.protocol / extra_ports[].protocol / l4_ports[].protocol).
   const allAppUrls: any[] = [];
   for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
+    if (svc.enabled === false) continue;
     const vm = vms[svc.vm];
     if (!vm?.wg_ip) continue;
     const containers = svc.containers ?? {};
@@ -586,6 +601,7 @@ function deriveCaddy(c: any): DerivedFile {
     const isSingle = containerEntries.length === 1;
     for (const [ck, c] of containerEntries) {
       if (!c.container_name) continue;
+      if (c.public === false) continue;
       const ports: Array<{ port: number; protocol: string; source: string }> = [];
       const seen = new Set<number>();
       const add = (p: number, proto: string, source: string) => {
@@ -655,10 +671,12 @@ function deriveCaddy(c: any): DerivedFile {
   // Zero regex. Zero port-to-engine guessing. Zero hardcoded tables.
   const allDbUrls: any[] = [];
   for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
+    if (svc.enabled === false) continue;
     const vm = vms[svc.vm];
     if (!vm?.wg_ip) continue;
     for (const [ck, c] of Object.entries(svc.containers ?? {}) as [string, any][]) {
       if (!c.container_name) continue;
+      if (c.public === false) continue;
       const common = { container: c.container_name, container_key: ck, svc: svcName, vm: svc.vm };
 
       // A) Declared DB container
