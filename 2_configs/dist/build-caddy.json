@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-23T13:02:42.724Z",
+  "_generated": "2026-04-24T13:41:46.560Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -164,7 +164,43 @@
     "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
-  "l4_routes": [],
+  "l4_routes": [
+    {
+      "port": 993,
+      "upstream": "10.0.0.3:993",
+      "comment": "IMAPS -- TLS passthrough to maddy"
+    },
+    {
+      "port": 465,
+      "upstream": "10.0.0.3:465",
+      "comment": "SMTPS -- TLS passthrough to maddy"
+    },
+    {
+      "port": 587,
+      "upstream": "10.0.0.3:587",
+      "comment": "SMTP Submission -- TLS passthrough to maddy"
+    },
+    {
+      "port": 2993,
+      "upstream": "10.0.0.3:2993",
+      "comment": "IMAPS -- TLS passthrough to stalwart"
+    },
+    {
+      "port": 2465,
+      "upstream": "10.0.0.3:2465",
+      "comment": "SMTPS -- TLS passthrough to stalwart"
+    },
+    {
+      "port": 2587,
+      "upstream": "10.0.0.3:2587",
+      "comment": "SMTP Submission -- TLS passthrough to stalwart"
+    },
+    {
+      "port": 2443,
+      "upstream": "10.0.0.3:2443",
+      "comment": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
+    }
+  ],
   "redirects": [
     {
       "domain": "mail.diegonmarcos.com",
@@ -455,10 +491,6 @@
       "upstream": "10.0.0.6:5232"
     },
     {
-      "service": "revealmd.app",
-      "upstream": "10.0.0.6:3014"
-    },
-    {
       "service": "snappymail.app",
       "upstream": "10.0.0.3:8888"
     },
@@ -489,10 +521,6 @@
     {
       "service": "ollama-hai.app",
       "upstream": "10.0.0.6:11435"
-    },
-    {
-      "service": "rig-agentic-hai-1.5bq4.app",
-      "upstream": "10.0.0.6:8091"
     },
     {
       "service": "rig-agentic-sonn-14bq8.app",
@@ -571,20 +599,8 @@
       "upstream": "10.0.0.6:3006"
     },
     {
-      "service": "backup-borg.app",
-      "upstream": "10.0.0.6:2224"
-    },
-    {
-      "service": "backup-bup.app",
-      "upstream": "10.0.0.6:2223"
-    },
-    {
       "service": "gitea.app",
       "upstream": "10.0.0.6:3002"
-    },
-    {
-      "service": "kg-graph.app",
-      "upstream": "10.0.0.6:8001"
     },
     {
       "service": "redis.app",
@@ -692,27 +708,6 @@
     },
     {
       "kind": "redirect",
-      "service": "etherpad_postgres.app",
-      "redirect_to": "https://etherpad_postgres-tcp-5436.app",
-      "container": "etherpad_postgres",
-      "container_key": "db",
-      "svc": "etherpad",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "etherpad_postgres-tcp-5436.app",
-      "container": "etherpad_postgres",
-      "container_key": "db",
-      "svc": "etherpad",
-      "vm": "oci-A1-f_0",
-      "port": 5436,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:5436",
-      "source": "containers.db.port"
-    },
-    {
-      "kind": "redirect",
       "service": "filebrowser_app.app",
       "redirect_to": "https://filebrowser_app-http-3015.app",
       "container": "filebrowser_app",
@@ -797,27 +792,6 @@
     },
     {
       "kind": "redirect",
-      "service": "hedgedoc_postgres.app",
-      "redirect_to": "https://hedgedoc_postgres-tcp-5439.app",
-      "container": "hedgedoc_postgres",
-      "container_key": "db",
-      "svc": "hedgedoc",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "hedgedoc_postgres-tcp-5439.app",
-      "container": "hedgedoc_postgres",
-      "container_key": "db",
-      "svc": "hedgedoc",
-      "vm": "oci-A1-f_0",
-      "port": 5439,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:5439",
-      "source": "containers.db.port"
-    },
-    {
-      "kind": "redirect",
       "service": "mail-mcp.app",
       "redirect_to": "https://mail-mcp-http-3103.app",
       "container": "mail-mcp",
@@ -839,23 +813,6 @@
     },
     {
       "kind": "redirect",
-      "service": "mail-puller.app",
-      "redirect_to": "https://mail-puller-null.app",
-      "container": "mail-puller",
-      "container_key": "app",
-      "svc": "mail-puller",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "mail-puller-null.app",
-      "container": "mail-puller",
-      "container_key": "app",
-      "svc": "mail-puller",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "redirect",
       "service": "mattermost.app",
       "redirect_to": "https://mattermost-http-8065.app",
       "container": "mattermost",
@@ -874,44 +831,6 @@
       "protocol": "http",
       "upstream": "10.0.0.6:8065",
       "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost-postgres.app",
-      "redirect_to": "https://mattermost-postgres-tcp-5435.app",
-      "container": "mattermost-postgres",
-      "container_key": "db",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mattermost-postgres-tcp-5435.app",
-      "container": "mattermost-postgres",
-      "container_key": "db",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0",
-      "port": 5435,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:5435",
-      "source": "containers.db.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost-bots.app",
-      "redirect_to": "https://mattermost-bots-null.app",
-      "container": "mattermost-bots",
-      "container_key": "bots",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "mattermost-bots-null.app",
-      "container": "mattermost-bots",
-      "container_key": "bots",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0"
     },
     {
       "kind": "redirect",
@@ -954,40 +873,6 @@
       "protocol": "http",
       "upstream": "10.0.0.6:3013",
       "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "photoprism_mariadb.app",
-      "redirect_to": "https://photoprism_mariadb-null.app",
-      "container": "photoprism_mariadb",
-      "container_key": "db",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "photoprism_mariadb-null.app",
-      "container": "photoprism_mariadb",
-      "container_key": "db",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "photoprism_rclone.app",
-      "redirect_to": "https://photoprism_rclone-null.app",
-      "container": "photoprism_rclone",
-      "container_key": "rclone",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "photoprism_rclone-null.app",
-      "container": "photoprism_rclone",
-      "container_key": "rclone",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0"
     },
     {
       "kind": "redirect",
@@ -1050,27 +935,6 @@
     },
     {
       "kind": "redirect",
-      "service": "revealmd_app.app",
-      "redirect_to": "https://revealmd_app-http-3014.app",
-      "container": "revealmd_app",
-      "container_key": "app",
-      "svc": "revealmd",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "revealmd_app-http-3014.app",
-      "container": "revealmd_app",
-      "container_key": "app",
-      "svc": "revealmd",
-      "vm": "oci-A1-f_0",
-      "port": 3014,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3014",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "snappymail.app",
       "redirect_to": "https://snappymail-http-8888.app",
       "container": "snappymail",
@@ -1089,75 +953,6 @@
       "protocol": "http",
       "upstream": "10.0.0.3:8888",
       "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "maddy.app",
-      "redirect_to": "https://maddy-tcp-25.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "maddy-tcp-25.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "port": 25,
-      "protocol": "tcp",
-      "upstream": "10.0.0.3:25",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "maddy-tls-465.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "port": 465,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:465",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "maddy-starttls-587.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "port": 587,
-      "protocol": "starttls",
-      "upstream": "10.0.0.3:587",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "maddy-tls-993.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "port": 993,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:993",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "maddy-tcp-143.app",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "port": 143,
-      "protocol": "tcp",
-      "upstream": "10.0.0.3:143",
-      "source": "containers.app.extra_ports"
     },
     {
       "kind": "redirect",
@@ -1322,124 +1117,6 @@
     },
     {
       "kind": "redirect",
-      "service": "crawlee_runner.app",
-      "redirect_to": "https://crawlee_runner-null.app",
-      "container": "crawlee_runner",
-      "container_key": "runner",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "crawlee_runner-null.app",
-      "container": "crawlee_runner",
-      "container_key": "runner",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_dashboard.app",
-      "redirect_to": "https://crawlee_dashboard-http-3001.app",
-      "container": "crawlee_dashboard",
-      "container_key": "dashboard",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_dashboard-http-3001.app",
-      "container": "crawlee_dashboard",
-      "container_key": "dashboard",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 3001,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3001",
-      "source": "containers.dashboard.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_scheduler.app",
-      "redirect_to": "https://crawlee_scheduler-null.app",
-      "container": "crawlee_scheduler",
-      "container_key": "scheduler",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "crawlee_scheduler-null.app",
-      "container": "crawlee_scheduler",
-      "container_key": "scheduler",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_db.app",
-      "redirect_to": "https://crawlee_db-tcp-5433.app",
-      "container": "crawlee_db",
-      "container_key": "db",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_db-tcp-5433.app",
-      "container": "crawlee_db",
-      "container_key": "db",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 5433,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:5433",
-      "source": "containers.db.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_redis.app",
-      "redirect_to": "https://crawlee_redis-tcp-6381.app",
-      "container": "crawlee_redis",
-      "container_key": "redis",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_redis-tcp-6381.app",
-      "container": "crawlee_redis",
-      "container_key": "redis",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 6381,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:6381",
-      "source": "containers.redis.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_minio.app",
-      "redirect_to": "https://crawlee_minio-http-9000.app",
-      "container": "crawlee_minio",
-      "container_key": "minio",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_minio-http-9000.app",
-      "container": "crawlee_minio",
-      "container_key": "minio",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 9000,
-      "protocol": "http",
-      "upstream": "10.0.0.6:9000",
-      "source": "containers.minio.port"
-    },
-    {
-      "kind": "redirect",
       "service": "fincept-server.app",
       "redirect_to": "https://fincept-server-http-8340.app",
       "container": "fincept-server",
@@ -1457,69 +1134,6 @@
       "port": 8340,
       "protocol": "http",
       "upstream": "10.0.0.6:8340",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "ollama.app",
-      "redirect_to": "https://ollama-http-11434.app",
-      "container": "ollama",
-      "container_key": "app",
-      "svc": "ollama",
-      "vm": "gcp-T4-p_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "ollama-http-11434.app",
-      "container": "ollama",
-      "container_key": "app",
-      "svc": "ollama",
-      "vm": "gcp-T4-p_0",
-      "port": 11434,
-      "protocol": "http",
-      "upstream": "10.0.0.8:11434",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "ollama-hai.app",
-      "redirect_to": "https://ollama-hai-http-11435.app",
-      "container": "ollama-hai",
-      "container_key": "app",
-      "svc": "ollama-hai",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "ollama-hai-http-11435.app",
-      "container": "ollama-hai",
-      "container_key": "app",
-      "svc": "ollama-hai",
-      "vm": "oci-A1-f_0",
-      "port": 11435,
-      "protocol": "http",
-      "upstream": "10.0.0.6:11435",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "rig-agentic-hai.app",
-      "redirect_to": "https://rig-agentic-hai-http-8091.app",
-      "container": "rig-agentic-hai",
-      "container_key": "app",
-      "svc": "rig-agentic-hai-1.5bq4",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "rig-agentic-hai-http-8091.app",
-      "container": "rig-agentic-hai",
-      "container_key": "app",
-      "svc": "rig-agentic-hai-1.5bq4",
-      "vm": "oci-A1-f_0",
-      "port": 8091,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8091",
       "source": "containers.app.port"
     },
     {
@@ -1545,27 +1159,6 @@
     },
     {
       "kind": "redirect",
-      "service": "hickory-dns.app",
-      "redirect_to": "https://hickory-dns-udp-53.app",
-      "container": "hickory-dns",
-      "container_key": "app",
-      "svc": "hickory-dns",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "hickory-dns-udp-53.app",
-      "container": "hickory-dns",
-      "container_key": "app",
-      "svc": "hickory-dns",
-      "vm": "gcp-E2-f_0",
-      "port": 53,
-      "protocol": "udp",
-      "upstream": "10.0.0.1:53",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "authelia.app",
       "redirect_to": "https://authelia-http-9091.app",
       "container": "authelia",
@@ -1587,44 +1180,6 @@
     },
     {
       "kind": "redirect",
-      "service": "authelia-redis.app",
-      "redirect_to": "https://authelia-redis-tcp-6380.app",
-      "container": "authelia-redis",
-      "container_key": "redis",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "authelia-redis-tcp-6380.app",
-      "container": "authelia-redis",
-      "container_key": "redis",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0",
-      "port": 6380,
-      "protocol": "tcp",
-      "upstream": "10.0.0.1:6380",
-      "source": "containers.redis.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "postlite-authelia.app",
-      "redirect_to": "https://postlite-authelia-null.app",
-      "container": "postlite-authelia",
-      "container_key": "postlite",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "postlite-authelia-null.app",
-      "container": "postlite-authelia",
-      "container_key": "postlite",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "redirect",
       "service": "caddy.app",
       "redirect_to": "https://caddy-https-443.app",
       "container": "caddy",
@@ -1643,85 +1198,6 @@
       "protocol": "https",
       "upstream": "10.0.0.1:443",
       "source": "containers.app.port"
-    },
-    {
-      "kind": "canonical",
-      "service": "caddy-http-80.app",
-      "container": "caddy",
-      "container_key": "app",
-      "svc": "caddy",
-      "vm": "gcp-E2-f_0",
-      "port": 80,
-      "protocol": "http",
-      "upstream": "10.0.0.1:80",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "caddy-http-2019.app",
-      "container": "caddy",
-      "container_key": "app",
-      "svc": "caddy",
-      "vm": "gcp-E2-f_0",
-      "port": 2019,
-      "protocol": "http",
-      "upstream": "10.0.0.1:2019",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "redirect",
-      "service": "introspect-proxy.app",
-      "redirect_to": "https://introspect-proxy-http-4182.app",
-      "container": "introspect-proxy",
-      "container_key": "app",
-      "svc": "introspect-proxy",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "introspect-proxy-http-4182.app",
-      "container": "introspect-proxy",
-      "container_key": "app",
-      "svc": "introspect-proxy",
-      "vm": "gcp-E2-f_0",
-      "port": 4182,
-      "protocol": "http",
-      "upstream": "10.0.0.1:4182",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "syslog-central.app",
-      "redirect_to": "https://syslog-central-null.app",
-      "container": "syslog-central",
-      "container_key": "syslog",
-      "svc": "sauron-central",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "syslog-central-null.app",
-      "container": "syslog-central",
-      "container_key": "syslog",
-      "svc": "sauron-central",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "siem-api.app",
-      "redirect_to": "https://siem-api-null.app",
-      "container": "siem-api",
-      "container_key": "api",
-      "svc": "sauron-central",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "siem-api-null.app",
-      "container": "siem-api",
-      "container_key": "api",
-      "svc": "sauron-central",
-      "vm": "oci-A1-f_0"
     },
     {
       "kind": "redirect",
@@ -1935,69 +1411,6 @@
     },
     {
       "kind": "redirect",
-      "service": "lgtm_loki.app",
-      "redirect_to": "https://lgtm_loki-http-3110.app",
-      "container": "lgtm_loki",
-      "container_key": "loki",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "lgtm_loki-http-3110.app",
-      "container": "lgtm_loki",
-      "container_key": "loki",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "port": 3110,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3110",
-      "source": "containers.loki.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "lgtm_tempo.app",
-      "redirect_to": "https://lgtm_tempo-http-3210.app",
-      "container": "lgtm_tempo",
-      "container_key": "tempo",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "lgtm_tempo-http-3210.app",
-      "container": "lgtm_tempo",
-      "container_key": "tempo",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "port": 3210,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3210",
-      "source": "containers.tempo.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "lgtm_mimir.app",
-      "redirect_to": "https://lgtm_mimir-http-9009.app",
-      "container": "lgtm_mimir",
-      "container_key": "mimir",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "lgtm_mimir-http-9009.app",
-      "container": "lgtm_mimir",
-      "container_key": "mimir",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "port": 9009,
-      "protocol": "http",
-      "upstream": "10.0.0.6:9009",
-      "source": "containers.mimir.port"
-    },
-    {
-      "kind": "redirect",
       "service": "matomo-hybrid.app",
       "redirect_to": "https://matomo-hybrid-http-8084.app",
       "container": "matomo-hybrid",
@@ -2057,57 +1470,6 @@
     },
     {
       "kind": "redirect",
-      "service": "syslog-bridge.app",
-      "redirect_to": "https://syslog-bridge-null.app",
-      "container": "syslog-bridge",
-      "container_key": "syslog-bridge",
-      "svc": "ntfy",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "syslog-bridge-null.app",
-      "container": "syslog-bridge",
-      "container_key": "syslog-bridge",
-      "svc": "ntfy",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "github-rss.app",
-      "redirect_to": "https://github-rss-null.app",
-      "container": "github-rss",
-      "container_key": "github-rss",
-      "svc": "ntfy",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "github-rss-null.app",
-      "container": "github-rss",
-      "container_key": "github-rss",
-      "svc": "ntfy",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "sauron-forwarder.app",
-      "redirect_to": "https://sauron-forwarder-null.app",
-      "container": "sauron-forwarder",
-      "container_key": "app",
-      "svc": "sauron-forwarder",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "portless",
-      "service": "sauron-forwarder-null.app",
-      "container": "sauron-forwarder",
-      "container_key": "app",
-      "svc": "sauron-forwarder",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "redirect",
       "service": "umami.app",
       "redirect_to": "https://umami-http-3006.app",
       "container": "umami",
@@ -2125,103 +1487,6 @@
       "port": 3006,
       "protocol": "http",
       "upstream": "10.0.0.6:3006",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "umami-db.app",
-      "redirect_to": "https://umami-db-tcp-5442.app",
-      "container": "umami-db",
-      "container_key": "db",
-      "svc": "umami",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "umami-db-tcp-5442.app",
-      "container": "umami-db",
-      "container_key": "db",
-      "svc": "umami",
-      "vm": "oci-A1-f_0",
-      "port": 5442,
-      "protocol": "tcp",
-      "upstream": "10.0.0.6:5442",
-      "source": "containers.db.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "umami-setup.app",
-      "redirect_to": "https://umami-setup-null.app",
-      "container": "umami-setup",
-      "container_key": "setup",
-      "svc": "umami",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "umami-setup-null.app",
-      "container": "umami-setup",
-      "container_key": "setup",
-      "svc": "umami",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "cloud-builder-x.app",
-      "redirect_to": "https://cloud-builder-x-null.app",
-      "container": "cloud-builder-x",
-      "container_key": "app",
-      "svc": "cloud-builder-x",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "cloud-builder-x-null.app",
-      "container": "cloud-builder-x",
-      "container_key": "app",
-      "svc": "cloud-builder-x",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "borg-server.app",
-      "redirect_to": "https://borg-server-http-2224.app",
-      "container": "borg-server",
-      "container_key": "app",
-      "svc": "backup-borg",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "borg-server-http-2224.app",
-      "container": "borg-server",
-      "container_key": "app",
-      "svc": "backup-borg",
-      "vm": "oci-A1-f_0",
-      "port": 2224,
-      "protocol": "http",
-      "upstream": "10.0.0.6:2224",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "bup-server.app",
-      "redirect_to": "https://bup-server-http-2223.app",
-      "container": "bup-server",
-      "container_key": "app",
-      "svc": "backup-bup",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "bup-server-http-2223.app",
-      "container": "bup-server",
-      "container_key": "app",
-      "svc": "backup-bup",
-      "vm": "oci-A1-f_0",
-      "port": 2223,
-      "protocol": "http",
-      "upstream": "10.0.0.6:2223",
       "source": "containers.app.port"
     },
     {
@@ -2244,62 +1509,9 @@
       "protocol": "http",
       "upstream": "10.0.0.6:3002",
       "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "surrealdb.app",
-      "redirect_to": "https://surrealdb-http-8001.app",
-      "container": "surrealdb",
-      "container_key": "app",
-      "svc": "kg-graph",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "surrealdb-http-8001.app",
-      "container": "surrealdb",
-      "container_key": "app",
-      "svc": "kg-graph",
-      "vm": "oci-A1-f_0",
-      "port": 8001,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8001",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "redis.app",
-      "redirect_to": "https://redis-tcp-6379.app",
-      "container": "redis",
-      "container_key": "app",
-      "svc": "redis",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "redis-tcp-6379.app",
-      "container": "redis",
-      "container_key": "app",
-      "svc": "redis",
-      "vm": "gcp-E2-f_0",
-      "port": 6379,
-      "protocol": "tcp",
-      "upstream": "10.0.0.1:6379",
-      "source": "containers.app.port"
     }
   ],
   "all_db_urls": [
-    {
-      "kind": "container",
-      "service": "etherpad_postgres-postgres-5436.db",
-      "container": "etherpad_postgres",
-      "container_key": "db",
-      "svc": "etherpad",
-      "vm": "oci-A1-f_0",
-      "engine": "postgres",
-      "port": 5436,
-      "upstream": "10.0.0.6:5436"
-    },
     {
       "kind": "embedded",
       "service": "filebrowser_app-sqlite-null.db",
@@ -2310,50 +1522,6 @@
       "engine": "sqlite",
       "port": null,
       "path": "/data/filebrowser.db"
-    },
-    {
-      "kind": "container",
-      "service": "hedgedoc_postgres-postgres-5439.db",
-      "container": "hedgedoc_postgres",
-      "container_key": "db",
-      "svc": "hedgedoc",
-      "vm": "oci-A1-f_0",
-      "engine": "postgres",
-      "port": 5439,
-      "upstream": "10.0.0.6:5439"
-    },
-    {
-      "kind": "embedded",
-      "service": "mail-puller-sqlite-null.db",
-      "container": "mail-puller",
-      "container_key": "app",
-      "svc": "mail-puller",
-      "vm": "oci-E2-f_0",
-      "engine": "sqlite",
-      "port": null,
-      "path": "/var/lib/mail-puller/state.db"
-    },
-    {
-      "kind": "container",
-      "service": "mattermost-postgres-postgres-5435.db",
-      "container": "mattermost-postgres",
-      "container_key": "db",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0",
-      "engine": "postgres",
-      "port": 5435,
-      "upstream": "10.0.0.6:5435"
-    },
-    {
-      "kind": "container",
-      "service": "photoprism_mariadb-mariadb-null.db",
-      "container": "photoprism_mariadb",
-      "container_key": "db",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0",
-      "engine": "mariadb",
-      "port": null,
-      "note": "DB container on docker-internal network only (no host port)"
     },
     {
       "kind": "embedded",
@@ -2379,17 +1547,6 @@
     },
     {
       "kind": "embedded",
-      "service": "maddy-sqlite-null.db",
-      "container": "maddy",
-      "container_key": "app",
-      "svc": "maddy",
-      "vm": "oci-E2-f_0",
-      "engine": "sqlite",
-      "port": null,
-      "path": "/data/imapsql.db"
-    },
-    {
-      "kind": "embedded",
       "service": "stalwart-rocksdb-null.db",
       "container": "stalwart",
       "container_key": "app",
@@ -2411,39 +1568,6 @@
       "path": "/data/db.sqlite3"
     },
     {
-      "kind": "container",
-      "service": "crawlee_db-postgres-5433.db",
-      "container": "crawlee_db",
-      "container_key": "db",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "engine": "postgres",
-      "port": 5433,
-      "upstream": "10.0.0.6:5433"
-    },
-    {
-      "kind": "container",
-      "service": "crawlee_redis-redis-6381.db",
-      "container": "crawlee_redis",
-      "container_key": "redis",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "engine": "redis",
-      "port": 6381,
-      "upstream": "10.0.0.6:6381"
-    },
-    {
-      "kind": "container",
-      "service": "crawlee_minio-minio-9000.db",
-      "container": "crawlee_minio",
-      "container_key": "minio",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "engine": "minio",
-      "port": 9000,
-      "upstream": "10.0.0.6:9000"
-    },
-    {
       "kind": "embedded",
       "service": "authelia-sqlite-null.db",
       "container": "authelia",
@@ -2453,17 +1577,6 @@
       "engine": "sqlite",
       "port": null,
       "path": "/var/lib/authelia/db.sqlite3"
-    },
-    {
-      "kind": "container",
-      "service": "authelia-redis-redis-6380.db",
-      "container": "authelia-redis",
-      "container_key": "redis",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0",
-      "engine": "redis",
-      "port": 6380,
-      "upstream": "10.0.0.1:6380"
     },
     {
       "kind": "embedded",
@@ -2486,39 +1599,6 @@
       "engine": "sqlite",
       "port": null,
       "path": "/var/lib/grafana/grafana.db"
-    },
-    {
-      "kind": "embedded",
-      "service": "lgtm_loki-boltdb-null.db",
-      "container": "lgtm_loki",
-      "container_key": "loki",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "engine": "boltdb",
-      "port": null,
-      "path": "/loki/index"
-    },
-    {
-      "kind": "embedded",
-      "service": "lgtm_tempo-wal-null.db",
-      "container": "lgtm_tempo",
-      "container_key": "tempo",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "engine": "wal",
-      "port": null,
-      "path": "/var/tempo"
-    },
-    {
-      "kind": "embedded",
-      "service": "lgtm_mimir-tsdb-null.db",
-      "container": "lgtm_mimir",
-      "container_key": "mimir",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "engine": "tsdb",
-      "port": null,
-      "path": "/var/mimir"
     },
     {
       "kind": "bundled",
@@ -2544,17 +1624,6 @@
       "path": "/var/cache/ntfy/cache.db"
     },
     {
-      "kind": "container",
-      "service": "umami-db-postgres-5442.db",
-      "container": "umami-db",
-      "container_key": "db",
-      "svc": "umami",
-      "vm": "oci-A1-f_0",
-      "engine": "postgres",
-      "port": 5442,
-      "upstream": "10.0.0.6:5442"
-    },
-    {
       "kind": "embedded",
       "service": "gitea-sqlite-null.db",
       "container": "gitea",
@@ -2564,28 +1633,6 @@
       "engine": "sqlite",
       "port": null,
       "path": "/data/gitea/gitea.db"
-    },
-    {
-      "kind": "container",
-      "service": "surrealdb-surrealdb-8001.db",
-      "container": "surrealdb",
-      "container_key": "app",
-      "svc": "kg-graph",
-      "vm": "oci-A1-f_0",
-      "engine": "surrealdb",
-      "port": 8001,
-      "upstream": "10.0.0.6:8001"
-    },
-    {
-      "kind": "container",
-      "service": "redis-redis-6379.db",
-      "container": "redis",
-      "container_key": "app",
-      "svc": "redis",
-      "vm": "gcp-E2-f_0",
-      "engine": "redis",
-      "port": 6379,
-      "upstream": "10.0.0.1:6379"
     }
   ],
   "public_A_mcp": [
@@ -3068,16 +2115,6 @@
       "notes": null
     },
     {
-      "host": "revealmd.app",
-      "path": null,
-      "upstream": "10.0.0.6:3014",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "snappymail.app",
       "path": null,
       "upstream": "10.0.0.3:8888",
@@ -3151,16 +2188,6 @@
       "host": "ollama-hai.app",
       "path": null,
       "upstream": "10.0.0.6:11435",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "rig-agentic-hai-1.5bq4.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3358,39 +2385,9 @@
       "notes": null
     },
     {
-      "host": "backup-borg.app",
-      "path": null,
-      "upstream": "10.0.0.6:2224",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "backup-bup.app",
-      "path": null,
-      "upstream": "10.0.0.6:2223",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "gitea.app",
       "path": null,
       "upstream": "10.0.0.6:3002",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "kg-graph.app",
-      "path": null,
-      "upstream": "10.0.0.6:8001",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3480,16 +2477,6 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "etherpad_postgres-tcp-5436.app",
-      "path": null,
-      "upstream": "10.0.0.6:5436",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "etherpad",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "filebrowser_app-http-3015.app",
       "path": null,
       "upstream": "10.0.0.6:3015",
@@ -3530,16 +2517,6 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "hedgedoc_postgres-tcp-5439.app",
-      "path": null,
-      "upstream": "10.0.0.6:5439",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "hedgedoc",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "mail-mcp-http-3103.app",
       "path": null,
       "upstream": "10.0.0.6:3103",
@@ -3553,16 +2530,6 @@
       "host": "mattermost-http-8065.app",
       "path": null,
       "upstream": "10.0.0.6:8065",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mattermost-bots",
-      "notes": null
-    },
-    {
-      "host": "mattermost-postgres-tcp-5435.app",
-      "path": null,
-      "upstream": "10.0.0.6:5435",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -3610,16 +2577,6 @@
       "notes": null
     },
     {
-      "host": "revealmd_app-http-3014.app",
-      "path": null,
-      "upstream": "10.0.0.6:3014",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "revealmd",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "snappymail-http-8888.app",
       "path": null,
       "upstream": "10.0.0.3:8888",
@@ -3627,56 +2584,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "snappymail",
-      "notes": null
-    },
-    {
-      "host": "maddy-tcp-25.app",
-      "path": null,
-      "upstream": "10.0.0.3:25",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "maddy",
-      "notes": null
-    },
-    {
-      "host": "maddy-tls-465.app",
-      "path": null,
-      "upstream": "10.0.0.3:465",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "maddy",
-      "notes": null
-    },
-    {
-      "host": "maddy-starttls-587.app",
-      "path": null,
-      "upstream": "10.0.0.3:587",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "maddy",
-      "notes": null
-    },
-    {
-      "host": "maddy-tls-993.app",
-      "path": null,
-      "upstream": "10.0.0.3:993",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "maddy",
-      "notes": null
-    },
-    {
-      "host": "maddy-tcp-143.app",
-      "path": null,
-      "upstream": "10.0.0.3:143",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "maddy",
       "notes": null
     },
     {
@@ -3770,46 +2677,6 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "crawlee_dashboard-http-3001.app",
-      "path": null,
-      "upstream": "10.0.0.6:3001",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_db-tcp-5433.app",
-      "path": null,
-      "upstream": "10.0.0.6:5433",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_redis-tcp-6381.app",
-      "path": null,
-      "upstream": "10.0.0.6:6381",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_minio-http-9000.app",
-      "path": null,
-      "upstream": "10.0.0.6:9000",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "fincept-server-http-8340.app",
       "path": null,
       "upstream": "10.0.0.6:8340",
@@ -3817,36 +2684,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "fincept-server",
-      "notes": null
-    },
-    {
-      "host": "ollama-http-11434.app",
-      "path": null,
-      "upstream": "10.0.0.8:11434",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "ollama",
-      "notes": null
-    },
-    {
-      "host": "ollama-hai-http-11435.app",
-      "path": null,
-      "upstream": "10.0.0.6:11435",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "ollama-hai",
-      "notes": null
-    },
-    {
-      "host": "rig-agentic-hai-http-8091.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "rig-agentic-hai-1.5bq4",
       "notes": null
     },
     {
@@ -3860,29 +2697,9 @@
       "notes": null
     },
     {
-      "host": "hickory-dns-udp-53.app",
-      "path": null,
-      "upstream": "10.0.0.1:53",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "hickory-dns",
-      "notes": null
-    },
-    {
       "host": "authelia-http-9091.app",
       "path": null,
       "upstream": "10.0.0.1:9091",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "authelia",
-      "notes": null
-    },
-    {
-      "host": "authelia-redis-tcp-6380.app",
-      "path": null,
-      "upstream": "10.0.0.1:6380",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -3897,36 +2714,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "caddy",
-      "notes": null
-    },
-    {
-      "host": "caddy-http-80.app",
-      "path": null,
-      "upstream": "10.0.0.1:80",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "caddy",
-      "notes": null
-    },
-    {
-      "host": "caddy-http-2019.app",
-      "path": null,
-      "upstream": "10.0.0.1:2019",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "caddy",
-      "notes": null
-    },
-    {
-      "host": "introspect-proxy-http-4182.app",
-      "path": null,
-      "upstream": "10.0.0.1:4182",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "introspect-proxy",
       "notes": null
     },
     {
@@ -4030,36 +2817,6 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "lgtm_loki-http-3110.app",
-      "path": null,
-      "upstream": "10.0.0.6:3110",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "lgtm",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "lgtm_tempo-http-3210.app",
-      "path": null,
-      "upstream": "10.0.0.6:3210",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "lgtm",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "lgtm_mimir-http-9009.app",
-      "path": null,
-      "upstream": "10.0.0.6:9009",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "lgtm",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "matomo-hybrid-http-8084.app",
       "path": null,
       "upstream": "10.0.0.6:8084",
@@ -4090,36 +2847,6 @@
       "notes": null
     },
     {
-      "host": "umami-db-tcp-5442.app",
-      "path": null,
-      "upstream": "10.0.0.6:5442",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "umami",
-      "notes": null
-    },
-    {
-      "host": "borg-server-http-2224.app",
-      "path": null,
-      "upstream": "10.0.0.6:2224",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "backup-borg",
-      "notes": null
-    },
-    {
-      "host": "bup-server-http-2223.app",
-      "path": null,
-      "upstream": "10.0.0.6:2223",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "backup-bup",
-      "notes": null
-    },
-    {
       "host": "gitea-http-3002.app",
       "path": null,
       "upstream": "10.0.0.6:3002",
@@ -4128,69 +2855,9 @@
       "zone": "com",
       "service": "gitea",
       "notes": null
-    },
-    {
-      "host": "surrealdb-http-8001.app",
-      "path": null,
-      "upstream": "10.0.0.6:8001",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "kg-graph",
-      "notes": null
-    },
-    {
-      "host": "redis-tcp-6379.app",
-      "path": null,
-      "upstream": "10.0.0.1:6379",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "redis",
-      "notes": null
     }
   ],
   "private_A2_app_portless": [
-    {
-      "host": "mail-puller-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "mail-puller",
-      "notes": null
-    },
-    {
-      "host": "mattermost-bots-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "mattermost-bots",
-      "notes": null
-    },
-    {
-      "host": "photoprism_mariadb-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "photoprism",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "photoprism_rclone-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "photoprism",
-      "notes": "underscore → TLS broken"
-    },
     {
       "host": "photos-db-null.app",
       "path": null,
@@ -4212,56 +2879,6 @@
       "notes": null
     },
     {
-      "host": "crawlee_runner-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_scheduler-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "postlite-authelia-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "authelia",
-      "notes": null
-    },
-    {
-      "host": "syslog-central-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "sauron-central",
-      "notes": null
-    },
-    {
-      "host": "siem-api-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "sauron-central",
-      "notes": null
-    },
-    {
       "host": "news-gdelt-null.app",
       "path": null,
       "upstream": "204",
@@ -4270,69 +2887,9 @@
       "zone": "app",
       "service": "news-gdelt",
       "notes": null
-    },
-    {
-      "host": "syslog-bridge-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "ntfy",
-      "notes": null
-    },
-    {
-      "host": "github-rss-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "ntfy",
-      "notes": null
-    },
-    {
-      "host": "sauron-forwarder-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "sauron-forwarder",
-      "notes": null
-    },
-    {
-      "host": "umami-setup-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "umami",
-      "notes": null
-    },
-    {
-      "host": "cloud-builder-x-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "cloud-builder-x",
-      "notes": null
     }
   ],
   "private_B0_db": [
-    {
-      "host": "etherpad_postgres-postgres-5436.db",
-      "path": null,
-      "upstream": "10.0.0.6:5436",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "etherpad",
-      "notes": "engine=postgres vm=oci-A1-f_0 underscore → TLS broken"
-    },
     {
       "host": "filebrowser_app-sqlite-null.db",
       "path": "/data/filebrowser.db",
@@ -4342,46 +2899,6 @@
       "zone": "db",
       "service": "filebrowser",
       "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "hedgedoc_postgres-postgres-5439.db",
-      "path": null,
-      "upstream": "10.0.0.6:5439",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "hedgedoc",
-      "notes": "engine=postgres vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "mail-puller-sqlite-null.db",
-      "path": "/var/lib/mail-puller/state.db",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "mail-puller",
-      "notes": "engine=sqlite vm=oci-E2-f_0"
-    },
-    {
-      "host": "mattermost-postgres-postgres-5435.db",
-      "path": null,
-      "upstream": "10.0.0.6:5435",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "mattermost-bots",
-      "notes": "engine=postgres vm=oci-A1-f_0"
-    },
-    {
-      "host": "photoprism_mariadb-mariadb-null.db",
-      "path": null,
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "photoprism",
-      "notes": "engine=mariadb vm=oci-A1-f_0 underscore → TLS broken DB container on docker-internal network only (no host port)"
     },
     {
       "host": "radicale-files-null.db",
@@ -4404,16 +2921,6 @@
       "notes": "engine=files vm=oci-E2-f_0"
     },
     {
-      "host": "maddy-sqlite-null.db",
-      "path": "/data/imapsql.db",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "maddy",
-      "notes": "engine=sqlite vm=oci-E2-f_0"
-    },
-    {
       "host": "stalwart-rocksdb-null.db",
       "path": "/opt/stalwart-mail/data",
       "upstream": "embedded",
@@ -4434,36 +2941,6 @@
       "notes": "engine=sqlite vm=oci-A1-f_0"
     },
     {
-      "host": "crawlee_db-postgres-5433.db",
-      "path": null,
-      "upstream": "10.0.0.6:5433",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "crawlee-cloud",
-      "notes": "engine=postgres vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_redis-redis-6381.db",
-      "path": null,
-      "upstream": "10.0.0.6:6381",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "crawlee-cloud",
-      "notes": "engine=redis vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "crawlee_minio-minio-9000.db",
-      "path": null,
-      "upstream": "10.0.0.6:9000",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "crawlee-cloud",
-      "notes": "engine=minio vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
       "host": "authelia-sqlite-null.db",
       "path": "/var/lib/authelia/db.sqlite3",
       "upstream": "embedded",
@@ -4472,16 +2949,6 @@
       "zone": "db",
       "service": "authelia",
       "notes": "engine=sqlite vm=gcp-E2-f_0"
-    },
-    {
-      "host": "authelia-redis-redis-6380.db",
-      "path": null,
-      "upstream": "10.0.0.1:6380",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "authelia",
-      "notes": "engine=redis vm=gcp-E2-f_0"
     },
     {
       "host": "dagu-sqlite-null.db",
@@ -4504,36 +2971,6 @@
       "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
     },
     {
-      "host": "lgtm_loki-boltdb-null.db",
-      "path": "/loki/index",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "lgtm",
-      "notes": "engine=boltdb vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "lgtm_tempo-wal-null.db",
-      "path": "/var/tempo",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "lgtm",
-      "notes": "engine=wal vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "lgtm_mimir-tsdb-null.db",
-      "path": "/var/mimir",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "lgtm",
-      "notes": "engine=tsdb vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
       "host": "matomo-hybrid-mariadb-3306.db",
       "path": "/var/lib/mysql",
       "upstream": "10.0.0.6:3306",
@@ -4554,16 +2991,6 @@
       "notes": "engine=sqlite vm=oci-A1-f_0"
     },
     {
-      "host": "umami-db-postgres-5442.db",
-      "path": null,
-      "upstream": "10.0.0.6:5442",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "umami",
-      "notes": "engine=postgres vm=oci-A1-f_0"
-    },
-    {
       "host": "gitea-sqlite-null.db",
       "path": "/data/gitea/gitea.db",
       "upstream": "embedded",
@@ -4572,26 +2999,6 @@
       "zone": "db",
       "service": "gitea",
       "notes": "engine=sqlite vm=oci-A1-f_0"
-    },
-    {
-      "host": "surrealdb-surrealdb-8001.db",
-      "path": null,
-      "upstream": "10.0.0.6:8001",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "kg-graph",
-      "notes": "engine=surrealdb vm=oci-A1-f_0"
-    },
-    {
-      "host": "redis-redis-6379.db",
-      "path": null,
-      "upstream": "10.0.0.1:6379",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "redis",
-      "notes": "engine=redis vm=gcp-E2-f_0"
     }
   ],
   "private_B1_s3": [
@@ -4646,7 +3053,78 @@
       "notes": "OCI bucket: my-photos"
     }
   ],
-  "l4_listeners": [],
+  "l4_listeners": [
+    {
+      "host": ":993",
+      "path": null,
+      "upstream": "10.0.0.3:993",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "IMAPS -- TLS passthrough to maddy"
+    },
+    {
+      "host": ":465",
+      "path": null,
+      "upstream": "10.0.0.3:465",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTPS -- TLS passthrough to maddy"
+    },
+    {
+      "host": ":587",
+      "path": null,
+      "upstream": "10.0.0.3:587",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTP Submission -- TLS passthrough to maddy"
+    },
+    {
+      "host": ":2993",
+      "path": null,
+      "upstream": "10.0.0.3:2993",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "IMAPS -- TLS passthrough to stalwart"
+    },
+    {
+      "host": ":2465",
+      "path": null,
+      "upstream": "10.0.0.3:2465",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTPS -- TLS passthrough to stalwart"
+    },
+    {
+      "host": ":2587",
+      "path": null,
+      "upstream": "10.0.0.3:2587",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTP Submission -- TLS passthrough to stalwart"
+    },
+    {
+      "host": ":2443",
+      "path": null,
+      "upstream": "10.0.0.3:2443",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
+    }
+  ],
   "others": [
     {
       "host": "<global>",

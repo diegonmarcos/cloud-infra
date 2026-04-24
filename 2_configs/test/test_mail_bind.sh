@@ -66,9 +66,14 @@ check "stalwart compose: shadow SMTP 2025 maps to 127.0.0.1 (loopback)" \
 check "stalwart compose: no 0.0.0.0 on user-facing ports" \
   bash -c '! grep -E "0\.0\.0\.0:(2465|2587|2993|2443|6190)" '"$STALWART_COMPOSE"
 
-# ── Caddy: l4_routes empty (gcp-proxy public_ports has no mail) ──────────────
-check "caddy: l4_routes is empty array" \
-  jq -e '.l4_routes | length == 0' "$CADDY_JSON"
+# ── Caddy: l4_routes = 7 (Phase 0 restored — gcp-proxy proxies mail publicly) ─
+# Phase A's container WG-bind is the real security boundary; L4 on gcp-proxy
+# is the trusted WG-peer ingress. Drop-to-0 is a future Phase (WG-peer-only).
+check "caddy: l4_routes has 7 mail entries" \
+  jq -e '.l4_routes | length == 7' "$CADDY_JSON"
+
+check "caddy: all l4_routes upstream 10.0.0.3 (oci-mail WG IP)" \
+  jq -e 'all(.l4_routes[]; .upstream | startswith("10.0.0.3:"))' "$CADDY_JSON"
 
 # ── Derive engine: l4Map code still present (reversibility contract) ──────────
 check "derive: l4Map block preserved" \

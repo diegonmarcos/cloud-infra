@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-23T13:02:42.466Z",
+    "generated_at": "2026-04-24T13:41:45.008Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -311,6 +311,41 @@
           "port": 443,
           "proto": "udp",
           "desc": "QUIC (Caddy)"
+        },
+        {
+          "port": 993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 2993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2443,
+          "proto": "tcp",
+          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
         }
       ],
       "gha": {
@@ -3475,16 +3510,7 @@
           "container_name": "caddy",
           "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
           "port": 443,
-          "extra_ports": [
-            {
-              "port": 80,
-              "protocol": "http"
-            },
-            {
-              "port": 2019,
-              "protocol": "http"
-            }
-          ],
+          "extra_ports": [],
           "port_env": null,
           "dns": "caddy.app",
           "public": true,
@@ -4147,8 +4173,8 @@
           "env_file": true,
           "depends_on": [],
           "resources": {
-            "mem_limit": "1G",
-            "mem_reservation": "128M",
+            "mem_limit": "2G",
+            "mem_reservation": "256M",
             "pids_limit": 256
           },
           "restart_policy": "unless-stopped",
@@ -5915,6 +5941,41 @@
           "port": 443,
           "proto": "udp",
           "desc": "QUIC (Caddy)"
+        },
+        {
+          "port": 993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
+        },
+        {
+          "port": 2993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+        },
+        {
+          "port": 2443,
+          "proto": "tcp",
+          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
         }
       ]
     },
@@ -6627,6 +6688,41 @@
             "port": 443,
             "proto": "udp",
             "desc": "QUIC (Caddy)"
+          },
+          {
+            "port": 993,
+            "proto": "tcp",
+            "desc": "IMAPS (Caddy L4 → oci-mail)"
+          },
+          {
+            "port": 465,
+            "proto": "tcp",
+            "desc": "SMTPS (Caddy L4 → oci-mail)"
+          },
+          {
+            "port": 587,
+            "proto": "tcp",
+            "desc": "SMTP Submission (Caddy L4 → oci-mail)"
+          },
+          {
+            "port": 2993,
+            "proto": "tcp",
+            "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
+          },
+          {
+            "port": 2465,
+            "proto": "tcp",
+            "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
+          },
+          {
+            "port": 2587,
+            "proto": "tcp",
+            "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+          },
+          {
+            "port": 2443,
+            "proto": "tcp",
+            "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
           }
         ],
         "idle_shutdown": null,
