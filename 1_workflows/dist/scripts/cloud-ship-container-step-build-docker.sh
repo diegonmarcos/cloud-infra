@@ -106,16 +106,29 @@ NEOF
 
         elif [ "$NATIVE_TYPE" = "app" ]; then
             # app: build on host, copy result into image (for node/npm where host build is needed)
-            log "Native build (app): $NATIVE_CMD"
+            #
+            # app_dir = subdirectory inside src/ that holds package.json /
+            # package-lock.json / source files (default: "." — src/ itself).
+            # Without this, services that nest their code under src/code/
+            # (mail-mcp, mattermost-mcp, google-personal-mcp, …) hit
+            # `npm ci: no package-lock.json` because cwd defaults to $SRC_DIR.
+            APP_DIR_REL="${NATIVE_APP_DIR:-.}"
+            BUILD_CWD="$SRC_DIR"
+            [ "$APP_DIR_REL" != "." ] && BUILD_CWD="$SRC_DIR/$APP_DIR_REL"
+            if [ ! -d "$BUILD_CWD" ]; then
+                log_error "native_build.app_dir='$APP_DIR_REL' not found at $BUILD_CWD"
+                return 1
+            fi
+            log "Native build (app): $NATIVE_CMD (cwd=$BUILD_CWD)"
             export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-/tmp/cargo-target}"
-            (cd "$SRC_DIR" && eval "$NATIVE_CMD") 2>&1 | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
+            (cd "$BUILD_CWD" && eval "$NATIVE_CMD") 2>&1 | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
             CMD_LINE="CMD $(_entrypoint_json "$NATIVE_ENTRYPOINT")"
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
 ${APT_LINE}
 ${ENV_LINE}
 WORKDIR /app
-COPY . /app
+COPY ${APP_DIR_REL} /app
 ENTRYPOINT []
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 ${CMD_LINE}
