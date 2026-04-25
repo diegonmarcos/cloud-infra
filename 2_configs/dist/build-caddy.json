@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-25T09:50:49.604Z",
+  "_generated": "2026-04-25T10:24:44.205Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -382,6 +382,10 @@
       "parent_domain": "mcp.diegonmarcos.com",
       "endpoints": [
         {
+          "base_path": "/g-personal",
+          "upstream": "10.0.0.6:3105"
+        },
+        {
           "base_path": "/g-workspace",
           "upstream": "10.0.0.6:3104"
         },
@@ -407,7 +411,7 @@
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp"
     }
   ],
   "special": {
@@ -453,6 +457,10 @@
     {
       "service": "filebrowser.app",
       "upstream": "10.0.0.6:3015"
+    },
+    {
+      "service": "g-personal-mcp.app",
+      "upstream": "10.0.0.6:3105"
     },
     {
       "service": "g-workspace-mcp.app",
@@ -725,6 +733,27 @@
       "port": 3015,
       "protocol": "http",
       "upstream": "10.0.0.6:3015",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "google-personal-mcp.app",
+      "redirect_to": "https://google-personal-mcp-http-3105.app",
+      "container": "google-personal-mcp",
+      "container_key": "app",
+      "svc": "google-personal-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "google-personal-mcp-http-3105.app",
+      "container": "google-personal-mcp",
+      "container_key": "app",
+      "svc": "google-personal-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3105,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3105",
       "source": "containers.app.port"
     },
     {
@@ -1638,6 +1667,16 @@
   "public_A_mcp": [
     {
       "host": "mcp.diegonmarcos.com",
+      "path": "/g-personal",
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
       "path": "/g-workspace",
       "upstream": "10.0.0.6:3104",
       "kind": "reverse_proxy",
@@ -2018,6 +2057,16 @@
       "host": "filebrowser.app",
       "path": null,
       "upstream": "10.0.0.6:3015",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "g-personal-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2485,6 +2534,16 @@
       "zone": "com",
       "service": "filebrowser",
       "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "google-personal-mcp-http-3105.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "google-personal-mcp",
+      "notes": null
     },
     {
       "host": "google-workspace-mcp-http-3104.app",

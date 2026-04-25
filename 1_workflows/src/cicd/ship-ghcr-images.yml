@@ -3,6 +3,7 @@ name: "Ship → GHCR images"
 on:
   push:
     paths:
+      - "a_solutions/aa-sui_google-personal-mcp/src/**"
       - "a_solutions/aa-sui_google-workspace-mcp/src/**"
       - "a_solutions/aa-sui_mail-mcp/src/**"
       - "a_solutions/aa-sui_mattermost-mcp/src/**"
@@ -96,6 +97,9 @@ jobs:
         # src/code/registry are resolved in the "Resolve symlinks" step below so
         # the docker build context is self-contained.
         include:
+          - name: google-personal-mcp
+            context: a_solutions/aa-sui_google-personal-mcp/src/code
+            file: a_solutions/aa-sui_google-personal-mcp/src/code/Dockerfile
           - name: google-workspace-mcp
             context: a_solutions/aa-sui_google-workspace-mcp/src/code
             file: a_solutions/aa-sui_google-workspace-mcp/src/code/Dockerfile
@@ -155,5 +159,46 @@ jobs:
           tags: |
             ghcr.io/diegonmarcos/${{ matrix.name }}:latest
             ghcr.io/diegonmarcos/${{ matrix.name }}:${{ github.sha }}
+          # Force the OCI source label so GHCR auto-links the package to
+          # this repo on first push. Without this link, GITHUB_TOKEN cannot
+          # change package visibility.
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.repository.updated_at }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
+
+      # ── Flip GHCR package visibility to public ──
+      # Idempotent. Uses the same `/visibility` PUT form already proven in
+      # cloud-ship-orchestrate-ghcr.sh and cloud-ship-nix-homemanager-step-deploy-push.sh.
+      # GITHUB_TOKEN works because the image carries
+      # org.opencontainers.image.source=https://github.com/${{ github.repository }}
+      # which links the package to this repo on first push.
+      - name: Set GHCR package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG: ${{ matrix.name }}
+        run: |
+          set -e
+          for attempt in 1 2 3 4 5; do
+            current=$(gh api "/user/packages/container/${PKG}" --jq '.visibility' 2>/dev/null || echo "missing")
+            case "$current" in
+              public)
+                echo "Package $PKG already public — nothing to do."
+                exit 0
+                ;;
+              private|internal)
+                echo "Package $PKG is $current — flipping to public (attempt $attempt)..."
+                if gh api --method PUT "/user/packages/container/${PKG}/visibility" -f visibility=public >/dev/null 2>&1; then
+                  echo "Package $PKG → public"
+                  exit 0
+                fi
+                ;;
+              missing)
+                echo "Package $PKG not yet visible to API (attempt $attempt) — waiting 6s..."
+                ;;
+            esac
+            sleep 6
+          done
+          echo "::warning::Could not confirm $PKG is public after 5 attempts; flip manually with: gh api --method PUT /user/packages/container/${PKG}/visibility -f visibility=public"

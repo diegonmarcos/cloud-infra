@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-25T09:50:46.355Z",
+    "generated_at": "2026-04-25T10:24:37.764Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -183,6 +183,7 @@
         "code-server",
         "etherpad",
         "filebrowser",
+        "google-personal-mcp",
         "google-workspace-mcp",
         "grist",
         "hedgedoc",
@@ -218,7 +219,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 51
+      "container_count": 52
     },
     "gcp-T4-p_0": {
       "ip": "34.173.227.250",
@@ -976,6 +977,97 @@
           "/health"
         ]
       }
+    },
+    "google-personal-mcp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_google-personal-mcp",
+      "description": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
+      "enabled": true,
+      "domain": "mcp.diegonmarcos.com",
+      "port": 3105,
+      "dns": "g-personal-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "containers": {
+        "app": {
+          "container_name": "google-personal-mcp",
+          "image": "ghcr.io/diegonmarcos/google-personal-mcp:latest",
+          "port": 3105,
+          "port_env": "PORT",
+          "dns": "g-personal-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/g-personal"
+          },
+          "healthcheck": "/health",
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "google-personal-mcp"
+      ],
+      "all_ports": [
+        "3105"
+      ],
+      "all_dns": [
+        "g-personal-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/g-personal"
+        }
+      },
+      "declared_ports": {
+        "app": 3105
+      },
+      "health": {
+        "path": "/health"
+      },
+      "auth": {
+        "mode": "app_password",
+        "imap_host": "imap.gmail.com",
+        "imap_port": 993,
+        "smtp_host": "smtp.gmail.com",
+        "smtp_port": 465,
+        "tls": true
+      },
+      "accounts": [
+        {
+          "alias": "diego1",
+          "email": "diegonmarcos1@gmail.com",
+          "secret_env": "DIEGO1_APP_PASSWORD",
+          "default": true
+        }
+      ],
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      },
+      "secret_env_vars": [
+        "DIEGO1_APP_PASSWORD"
+      ]
     },
     "google-workspace-mcp": {
       "category": "app",
@@ -6064,6 +6156,12 @@
         "service": "filebrowser"
       },
       {
+        "name": "g-personal-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "google-personal-mcp"
+      },
+      {
         "name": "g-workspace-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -6558,6 +6656,7 @@
           "code-server",
           "etherpad",
           "filebrowser",
+          "google-personal-mcp",
           "google-workspace-mcp",
           "grist",
           "hedgedoc",
@@ -6900,6 +6999,11 @@
       },
       "filebrowser": {
         "dir": "aa-sui_filebrowser",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "google-personal-mcp": {
+        "dir": "aa-sui_google-personal-mcp",
         "vm": "oci-apps",
         "has_docker": true
       },
