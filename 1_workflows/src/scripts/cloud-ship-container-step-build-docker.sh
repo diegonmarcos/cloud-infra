@@ -24,10 +24,20 @@ step_docker() {
     if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
         REMOTE_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.docker-src-hash 2>/dev/null" 2>/dev/null || true)
         if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
-            log "Docker src unchanged ($LOCAL_HASH) — skipping"
-            return 0
+            # Trust the hash ONLY if the binaries image actually exists on GHCR.
+            # A prior failed-push deploy still rsyncs .docker-src-hash to the VM,
+            # so without this check we'd short-circuit forever and step_compose
+            # would fail on the VM with "denied: denied" pulling a missing image.
+            BINARIES_IMG="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}${DOCKER_IMAGE}-binaries:latest"
+            if docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
+                log "Docker src unchanged ($LOCAL_HASH) — skipping"
+                return 0
+            else
+                log "Docker src unchanged ($LOCAL_HASH) but $BINARIES_IMG missing on GHCR — forcing rebuild"
+            fi
+        else
+            [ -n "$REMOTE_HASH" ] && log "Docker src changed ($REMOTE_HASH -> $LOCAL_HASH)"
         fi
-        [ -n "$REMOTE_HASH" ] && log "Docker src changed ($REMOTE_HASH -> $LOCAL_HASH)"
     fi
 
     # ── Native build: build inside cloud-builder, package into minimal image ──
