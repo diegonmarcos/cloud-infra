@@ -75,6 +75,10 @@ jobs:
         # in the same PR as each service's retirement.
         continue-on-error: true
         run: bash 1_workflows/src/test/test_no_retired_service_refs.sh
+      - name: Phase 13 — every flake.nix has a committed flake.lock
+        run: bash 1_workflows/src/test/test_flake_lock_present.sh
+      - name: Phase 14 — proxied_mcps children resolve to real services
+        run: bash 1_workflows/src/test/test_proxied_mcps_resolution.sh
       - name: Phase 11 — container_name matches build.json (report-only)
         # Pending unix submodule sync + pre-existing drift cases;
         # cleanup happens per service.
