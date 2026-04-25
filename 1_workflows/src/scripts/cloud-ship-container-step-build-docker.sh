@@ -263,14 +263,31 @@ NEOF
             log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
             ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
             rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            # Build + login + push happen INSIDE the cloud-builder-x container,
+            # which mounts the full ~/git/vault read-only (see
+            # bd-cloud-builder-x/src/compose.nix). Auth comes fresh from
+            # vault on every build — replaces the stale host
+            # ~/.docker/config.json that previously caused "denied: denied".
+            #
+            # The vault path is data-driven from cloud-data-runners.json (or
+            # falls back to the canonical layout). Only the token file is
+            # parameterised; everything else uses fixed paths inside the
+            # container as declared by compose.nix.
+            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-/home/diego/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+            GHCR_USER="${GHCR_USER:-diegonmarcos}"
+
             ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
-                -v \$HOME/.docker/config.json:/root/.docker/config.json:ro \
+                -v \$HOME/git/vault:/home/diego/git/vault:ro \
                 -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
                 $RUNNER_IMAGE \
-                docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
-            ssh $SSH_OPTS "$RUNNER_HOST" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER_HOST] %s\n" "$line"; done
-            ssh $SSH_OPTS "$RUNNER_HOST" "ionice -c3 nice -n19 docker push $BINARIES_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER_HOST] %s\n" "$line"; done
+                sh -c 'set -e; \
+                    cat $VAULT_GHCR_TOKEN_PATH | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
+                    echo \"[ghcr] login ok (vault token)\" && \
+                    docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
+                    docker push $FULL_IMAGE:latest && \
+                    docker push $BINARIES_IMAGE:latest && \
+                    docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
             ssh $SSH_OPTS "$RUNNER_HOST" "rm -rf $REMOTE_BUILD_DIR"
             ;;
 

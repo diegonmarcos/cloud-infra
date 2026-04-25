@@ -39,14 +39,17 @@ step_compose() {
         fi
     fi
 
-    # Determine compose up flags: --build --pull always if compose_flags includes --build,
-    # otherwise pull explicitly first (tolerant), then up with --pull never to avoid
-    # double-pull (engine pre-pulls; up should use whatever's locally cached).
+    # Compose up policy: NEVER build on the deploy VM. All images are pre-built
+    # by the engine and pushed to GHCR (step_docker). VMs only PULL — they never
+    # rebuild. This keeps 1GB e2-micro VMs alive (compose `build` would OOM)
+    # and guarantees the running image matches what was tested in CI.
+    #
+    # `--build` in build.json's deploy.compose_flags is IGNORED at compose-up
+    # time; the engine logs a warning so the legacy flag can be cleaned up.
     COMPOSE_UP_FLAGS="--no-build --pull never --force-recreate"
     COMPOSE_PULL_FIRST="true"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
-        COMPOSE_UP_FLAGS="--build --pull always --force-recreate"
-        COMPOSE_PULL_FIRST="false"
+        log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
     fi
 
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
