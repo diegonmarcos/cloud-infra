@@ -108,24 +108,50 @@ if [ -n "${CLOUD_PROFILE:-}" ]; then
 fi
 
 # ── Layout version detection (v1 flat vs v2 categorised) ─────────────
-# v2: dist/manifest.json._meta.layout_version == 2 → compose at dist/compose/
-# v1: legacy flat layout → compose at dist/docker-compose.yml
-LAYOUT_V2=0
-COMPOSE_FILE="$DIST_DIR/docker-compose.yml"
-REMOTE_COMPOSE_REL="docker-compose.yml"
-if [ -f "$DIST_DIR/manifest.json" ] && command -v jq >/dev/null 2>&1; then
-    # v1 manifest is an array; ._meta on array would crash under set -e.
-    # Guard: only query _meta when manifest.json is a JSON object.
-    if jq -e 'type == "object"' "$DIST_DIR/manifest.json" >/dev/null 2>&1; then
-        LV=$(jq -r '._meta.layout_version // 1' "$DIST_DIR/manifest.json" 2>/dev/null || echo 1)
-        if [ "$LV" = "2" ]; then
-            LAYOUT_V2=1
-            COMPOSE_FILE="$DIST_DIR/compose/docker-compose.yml"
-            REMOTE_COMPOSE_REL="compose/docker-compose.yml"
+# v2: layout_version == 2 → compose at dist/compose/docker-compose.yml
+# v1: legacy flat layout    → compose at dist/docker-compose.yml
+#
+# Detection order — first match wins:
+#   1) dist/manifest.json._meta.layout_version  (post-build truth)
+#   2) src/flake.nix imports _shared/engine.nix (source-side signal — needed
+#      for FIRST-EVER ship, when dist/ doesn't exist yet)
+#   3) v1 fallback
+#
+# Idempotent function — call at engine init for standalone subcommands like
+# `compose`, and again after step_build so the post-build truth wins.
+detect_layout() {
+    LAYOUT_V2=0
+    COMPOSE_FILE="$DIST_DIR/docker-compose.yml"
+    REMOTE_COMPOSE_REL="docker-compose.yml"
+
+    # 1) Prefer dist/manifest.json (authoritative once built)
+    if [ -f "$DIST_DIR/manifest.json" ] && command -v jq >/dev/null 2>&1; then
+        # v1 manifest is an array; ._meta on array would crash under set -e.
+        if jq -e 'type == "object"' "$DIST_DIR/manifest.json" >/dev/null 2>&1; then
+            LV=$(jq -r '._meta.layout_version // 1' "$DIST_DIR/manifest.json" 2>/dev/null || echo 1)
+            if [ "$LV" = "2" ]; then
+                LAYOUT_V2=1
+                COMPOSE_FILE="$DIST_DIR/compose/docker-compose.yml"
+                REMOTE_COMPOSE_REL="compose/docker-compose.yml"
+                export LAYOUT_V2 COMPOSE_FILE REMOTE_COMPOSE_REL
+                return 0
+            fi
         fi
     fi
-fi
-export LAYOUT_V2 COMPOSE_FILE REMOTE_COMPOSE_REL
+
+    # 2) Fall back to src/flake.nix import — required for first-ever ship,
+    #    where step_build has not yet produced dist/manifest.json. Every v2
+    #    service imports `../../_shared/engine.nix`; v1 services do not.
+    if [ -f "$SRC_DIR/flake.nix" ] && grep -q "_shared/engine.nix" "$SRC_DIR/flake.nix" 2>/dev/null; then
+        LAYOUT_V2=1
+        COMPOSE_FILE="$DIST_DIR/compose/docker-compose.yml"
+        REMOTE_COMPOSE_REL="compose/docker-compose.yml"
+    fi
+
+    export LAYOUT_V2 COMPOSE_FILE REMOTE_COMPOSE_REL
+}
+
+detect_layout
 
 # SSH multiplexing: one connection reused across all steps, kept alive 120s
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
