@@ -87,6 +87,8 @@ jobs:
         # Will flip to hard fail once steady-state.
         continue-on-error: true
         run: bash 1_workflows/src/test/test_binaries_image_published.sh
+      - name: Phase 17 — runners[].builder_image is published on GHCR
+        run: bash 1_workflows/src/test/test_runners_image_published.sh
       - name: Phase 11 — container_name matches build.json (report-only)
         # Pending unix submodule sync + pre-existing drift cases;
         # cleanup happens per service.
