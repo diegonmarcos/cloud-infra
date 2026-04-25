@@ -74,7 +74,9 @@ in {
       SWAP_MB=${toString diskSwapMB}
 
       # Check disk has room to recreate (need SWAP_MB + 1GB headroom)
-      AVAIL_MB=$(df / --output=avail | tail -1 | tr -d ' ')
+      # POSIX df -P: portable across GNU coreutils + BusyBox.
+      # Format: Filesystem 1024-blocks Used Available Capacity Mounted-on
+      AVAIL_MB=$(df -P / | awk 'NR==2 { print $4 }')
       AVAIL_MB=$((AVAIL_MB / 1024))
       NEED_MB=$((SWAP_MB + 1024))
       if [ "$AVAIL_MB" -lt "$NEED_MB" ]; then
@@ -132,7 +134,9 @@ in {
         DOCKER_SIZE=$(docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
       fi
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      # POSIX df -P: portable across GNU coreutils + BusyBox.
+      # Format: Filesystem 1024-blocks Used Available Capacity Mounted-on
+      USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
       echo "[disk-watchdog] Root: ''${USAGE}% | swap=''${SWAP_SIZE_MB}MB | docker=$DOCKER_SIZE"
       [ "$USAGE" -lt "$WARN" ] && exit 0
 
@@ -148,7 +152,7 @@ in {
         docker system prune -f --filter "until=72h" 2>/dev/null || true
       fi
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
       [ "$USAGE" -lt "$CRIT" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
 
       # ── CRIT (90%) — aggressive prune (swap untouched) ──────────────
@@ -157,13 +161,25 @@ in {
       command -v docker >/dev/null 2>&1 && docker image prune -af 2>/dev/null && docker volume prune -f 2>/dev/null || true
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage --delete-older-than 3d 2>/dev/null || true
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
       [ "$USAGE" -lt "$EMERG" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
 
-      # ── EMERG (95%) — remove swapfile entirely + last resort ─────────
+      # ── EMERG (95%) — release ballast → swapfile → log truncation ────
+      # Order matters: ballast is reversible (recreated by ballast.timer),
+      # swapfile removal is last resort (exposes processes to OOM).
       echo "[disk-watchdog] EMERGENCY (''${USAGE}%) — last resort"
 
-      # Remove swapfile entirely to free maximum disk space
+      # 1. Release disk ballast (reversible — ballast.timer recreates when /<70%)
+      BALLAST="/var/disk-reserve/ballast.bin"
+      if [ -f "$BALLAST" ]; then
+        FREED_MB=$(($(stat -c%s "$BALLAST" 2>/dev/null || echo 0) / 1024 / 1024))
+        echo "[disk-watchdog] Releasing ballast to free ''${FREED_MB}MB"
+        rm -f "$BALLAST"
+        USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
+        [ "$USAGE" -lt "$EMERG" ] && echo "[disk-watchdog] Resolved by ballast: ''${USAGE}%" && exit 0
+      fi
+
+      # 2. Last resort: remove swapfile (exposes OOM)
       SWAPFILE="/swapfile"
       if [ -f "$SWAPFILE" ]; then
         FREED_MB=$(($(stat -c%s "$SWAPFILE" 2>/dev/null || echo 0) / 1024 / 1024))
@@ -176,7 +192,7 @@ in {
       find /var/log -name "*.gz" -delete 2>/dev/null || true
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage -d 2>/dev/null || true
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
       echo "[disk-watchdog] Final: ''${USAGE}%"
     '';
   };
