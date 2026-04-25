@@ -1,0 +1,83 @@
+name: "Fetch Vault Secrets"
+description: |
+  Clones diegonmarcos/vault via VAULT_DEPLOY_KEY (read-only SSH deploy key)
+  and runs vault/build.sh env to generate ~/git/vault/vault-keys-bash.env. All
+  infrastructure secrets (SSH keys, SOPS age, WG privatekey, GHCR token)
+  land in that one file, which cloud-builder's compose.yaml mounts via
+  env_file. After this action, the only GHA-provided secret needed for
+  downstream steps is GITHUB_TOKEN (built-in) + VAULT_DEPLOY_KEY (this one).
+
+inputs:
+  vault_deploy_key:
+    description: "SSH private key with read access to diegonmarcos/vault"
+    required: true
+  vault_ref:
+    description: "Branch/tag/SHA in vault repo to check out"
+    required: false
+    default: "main"
+
+outputs:
+  vault_env_file:
+    description: "Absolute path to the generated vault-keys-bash.env"
+    value: ${{ steps.generate.outputs.env_file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Clone vault (read-only deploy key)
+      shell: bash
+      env:
+        VAULT_DEPLOY_KEY: ${{ inputs.vault_deploy_key }}
+      run: |
+        set -eu
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        printf '%s\n' "$VAULT_DEPLOY_KEY" > ~/.ssh/vault_deploy
+        chmod 600 ~/.ssh/vault_deploy
+        ssh-keyscan github.com 2>/dev/null >> ~/.ssh/known_hosts
+        GIT_SSH_COMMAND="ssh -i ~/.ssh/vault_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+          git clone --depth 1 --branch "${{ inputs.vault_ref }}" \
+            git@github.com:diegonmarcos/vault.git \
+            "$HOME/git/vault"
+        echo "Vault cloned at $HOME/git/vault @ $(git -C "$HOME/git/vault" rev-parse --short HEAD)"
+
+    - name: Generate vault-keys-bash.env
+      id: generate
+      shell: bash
+      run: |
+        set -eu
+        cd "$HOME/git/vault"
+        # build.sh env = generate_env — reads every provider + env_from_files
+        bash ./build.sh env
+        ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
+        [ -f "$ENV_FILE" ] || { echo "::error::vault-keys-bash.env not generated"; exit 1; }
+        KEYS=$(grep -cvE '^(#|$)' "$ENV_FILE" || true)
+        echo "vault-keys-bash.env generated: $KEYS keys"
+        echo "env_file=$ENV_FILE" >> "$GITHUB_OUTPUT"
+
+    - name: Verify infrastructure keys present
+      shell: bash
+      run: |
+        set -eu
+        ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
+        MISSING=""
+        for k in SOPS_AGE_KEY WG_PRIVATE_KEY GITHUB_TOKEN OCI_SSH_KEY GCP_PROXY_SSH_KEY GCP_T4_SSH_KEY; do
+          grep -q "^${k}=" "$ENV_FILE" || MISSING="$MISSING $k"
+        done
+        if [ -n "$MISSING" ]; then
+          echo "::error::Missing required infra keys in vault-keys-bash.env:$MISSING"
+          exit 1
+        fi
+        echo "All 6 required infra keys present in vault-keys-bash.env"
+
+    - name: Export SOPS_AGE_KEY_FILE for downstream steps
+      shell: bash
+      run: |
+        # Materialise age key as a file so sops commands that use SOPS_AGE_KEY_FILE
+        # (not just SOPS_AGE_KEY env) work identically to local dev.
+        mkdir -p ~/.config/sops/age
+        # Extract value from vault-keys-bash.env (shell-quoted, may span lines)
+        # shellcheck disable=SC1091
+        set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+        printf '%s\n' "${SOPS_AGE_KEY:-}" > ~/.config/sops/age/keys.txt
+        chmod 600 ~/.config/sops/age/keys.txt
+        echo "SOPS_AGE_KEY_FILE=$HOME/.config/sops/age/keys.txt" >> "$GITHUB_ENV"

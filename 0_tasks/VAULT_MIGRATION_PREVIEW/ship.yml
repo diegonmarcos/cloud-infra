@@ -1,0 +1,196 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ PREVIEW — ship.yml rewritten for Option 4 (vault-only secrets)   ║
+# ║                                                                  ║
+# ║ Replaces 8 per-workflow secrets with 1 (VAULT_DEPLOY_KEY).       ║
+# ║ Runs fetch-vault composite → populates vault-keys-bash.env → compose   ║
+# ║ env_file picks it up.                                             ║
+# ║                                                                  ║
+# ║ Apply by copying to 1_workflows/src/cicd/ship.yml once            ║
+# ║ VAULT_DEPLOY_KEY is set in cloud-repo GHA secrets.                ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+name: Ship
+
+on:
+  push:
+    paths:
+      - "a_solutions/*/src/**"
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated service dirs (or 'all')"
+        required: false
+        default: "all"
+      vm:
+        description: "Target VM or 'all'"
+        required: false
+        default: "all"
+
+jobs:
+  detect:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has_vms: ${{ steps.matrix.outputs.has_vms }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      - name: Build VM matrix
+        id: matrix
+        run: |
+          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_SERVICES="${{ github.event.inputs.services }}"
+            INPUT_VM="${{ github.event.inputs.vm }}"
+            if [ "$INPUT_SERVICES" = "all" ] && [ "$INPUT_VM" = "all" ]; then
+              CHANGED_DIRS=""; VM_FILTER=""
+            elif [ "$INPUT_SERVICES" != "all" ]; then
+              CHANGED_DIRS=$(printf '%s' "$INPUT_SERVICES" | tr ',' ' '); VM_FILTER=""
+            else
+              CHANGED_DIRS=""; VM_FILTER="$INPUT_VM"
+            fi
+          else
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- a_solutions/*/src/ \
+              | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+            VM_FILTER=""
+            if [ -z "$CHANGED_DIRS" ]; then
+              echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              echo "has_vms=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          MATRIX_JSON=$(jq -c \
+            --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" '
+            ($changed | split(" ") | map(select(. != ""))) as $cl |
+            .services | to_entries | group_by(.value.vm)
+            | map({
+                vm: .[0].value.vm,
+                changed: ([.[] | .value.dir] as $a |
+                  if ($cl | length) == 0 then "" else [$cl[] | select(. as $d | $a | any(. == $d))] | join(" ") end)
+              })
+            | map(select(($vm_filter == "" or .vm == $vm_filter) and (($cl | length) == 0 or (.changed | length) > 0)))
+            | map({vm: .vm, changed_dirs: .changed})
+          ' "$GHA_CONFIG")
+          echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
+          COUNT=$(printf '%s' "$MATRIX_JSON" | jq 'length')
+          [ "$COUNT" -gt 0 ] && echo "has_vms=true" >> "$GITHUB_OUTPUT" || echo "has_vms=false" >> "$GITHUB_OUTPUT"
+
+  ship:
+    name: Ship → ${{ matrix.vm }}
+    needs: detect
+    if: needs.detect.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      fail-fast: false
+      max-parallel: 5
+    concurrency:
+      group: ship-${{ matrix.vm }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: true
+
+      # ── Vault = single source of secrets ──────────────────────────
+      # Fetches vault/vault-keys-bash.env which contains SSH keys, SOPS age,
+      # WG privatekey, GHCR token, and all service secrets.
+      - name: Fetch vault
+        uses: ./.github/actions/fetch-vault
+        with:
+          vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
+
+      - name: Resolve SSH + target info (data-driven from cloud-data + vault)
+        id: ssh
+        run: |
+          set -eu
+          # Load vault env so OCI_SSH_KEY, GCP_PROXY_SSH_KEY, GCP_T4_SSH_KEY are present
+          set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+
+          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
+          VM="${{ matrix.vm }}"
+
+          # ssh_secret name comes from cloud-data (config.json vms[*].gha.ssh_secret);
+          # look up the env var with that name from the vault-loaded shell.
+          SSH_SECRET_NAME=$(jq -r --arg vm "$VM" '.vms[$vm].gha.ssh_secret // "OCI_SSH_KEY"' "$GHA_CONFIG")
+          KEY=$(eval "printf '%s' \"\${${SSH_SECRET_NAME}:-}\"")
+          if [ -z "$KEY" ]; then
+            echo "::error::SSH secret $SSH_SECRET_NAME is empty in vault-keys-bash.env for VM=$VM"; exit 1
+          fi
+
+          HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
+          USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG")
+
+          echo "ssh_key<<EOFKEY" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$KEY"  >> "$GITHUB_OUTPUT"
+          echo "EOFKEY"         >> "$GITHUB_OUTPUT"
+          echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
+
+      - name: Ship via cloud-builder
+        env:
+          CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          SSH_KEY:   ${{ steps.ssh.outputs.ssh_key }}
+          SSH_HOST:  ${{ steps.ssh.outputs.ssh_host }}
+          SSH_USER:  ${{ steps.ssh.outputs.ssh_user }}
+          SSH_ALIAS: ${{ matrix.vm }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ACTIONS: true
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REPOSITORY: diegonmarcos/cloud
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          TRACE_DIR: ${{ runner.temp }}/traces
+        run: |
+          set -eu
+          # Load vault env so GITHUB_TOKEN, WG_PRIVATE_KEY, SOPS_AGE_KEY flow to container
+          set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+          export GITHUB_TOKEN WG_PRIVATE_KEY SOPS_AGE_KEY
+
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          docker pull "$IMAGE"
+          mkdir -p "$TRACE_DIR"
+
+          # Stage host SSH config for the container's /mnt/host-ssh mount
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<SSHEOF
+          Host $SSH_ALIAS
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile /root/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 30
+            ServerAliveCountMax 10
+          SSHEOF
+          chmod 600 ~/.ssh/config
+
+          # compose.yaml inside the image already has:
+          #   env_file: ~/git/vault/vault-keys-bash.env (required: false)
+          #   cap_add:  NET_ADMIN
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cb.yaml
+          docker compose -f /tmp/cb.yaml run --rm \
+            --cap-add NET_ADMIN \
+            -v "$HOME/git/vault:/root/git/vault:ro" \
+            -e TRACE_DIR=/traces \
+            -v "$TRACE_DIR:/traces" \
+            cloud-builder ship ${{ matrix.vm }}
+
+      - name: Upload trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-${{ matrix.vm }}
+          path: ${{ runner.temp }}/traces/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # collect-traces job unchanged (trims vault step — traces don't need secrets)
