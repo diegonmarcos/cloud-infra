@@ -48,6 +48,18 @@ let
     hm_user = hmConfig.user or vmData.user or "diego";
     hm_config = hmConfig.config or "";
   };
+
+  # Boot-time auto-start of Docker + containers.
+  # OPT-IN per VM via nixhm-sudo-<vm>/build.json → hm.docker_autostart = true.
+  # E2 Micros (1GB) leave it false to avoid boot OOM. A1 Flex (24GB) and
+  # similar can safely enable it so a reboot brings the stack back up
+  # without manual `dtk container-init`.
+  dockerAutostart = hmConfig.docker_autostart or false;
+  installSection = if dockerAutostart then ''
+
+    [Install]
+    WantedBy=multi-user.target
+  '' else "";
 in {
   # ── Script: standalone .sh file (no nix interpolation) ──────────────
   home.file.".local/share/container-init/container-init.sh".source = ./container-control-init.sh;
@@ -76,7 +88,11 @@ in {
     };
   };
 
-  # ── Docker unit file — NO [Install], container-init starts it ───────
+  # ── Docker unit file ─────────────────────────────────────────────────
+  # [Install] section is appended only when hm.docker_autostart is true
+  # in the VM's nixhm-sudo-<vm>/build.json. Otherwise Docker stays
+  # manual-start (safe for E2 Micros — boot Docker via dtk/container-init
+  # only when memory headroom allows).
   home.file.".local/share/container-init/docker.service".text = ''
     [Unit]
     Description=Docker Application Container Engine (nix)
@@ -95,10 +111,32 @@ in {
     CPUQuota=80%
     Delegate=yes
     KillMode=process
-  '';
+  '' + installSection;
 
-  # No systemd service — container-init.sh is run manually or via dtk/cron, not at boot.
-  # Docker is also manual-start only. This avoids boot OOM on E2 Micros.
+  # ── Container bring-up unit (only when docker_autostart) ─────────────
+  # When Docker auto-starts at boot, also auto-bring-up containers in
+  # /opt/containers/*/. Runs once per boot, after docker.service is up.
+  # No-op when dockerAutostart=false (file not deployed).
+  home.file.".local/share/container-init/container-up.service" = lib.mkIf dockerAutostart {
+    text = ''
+      [Unit]
+      Description=Bring up all containers in /opt/containers (post Docker start)
+      After=docker.service
+      Requires=docker.service
+      ConditionPathExists=/opt/scripts/vm-images-pull-up.sh
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/opt/scripts/vm-images-pull-up.sh
+      TimeoutStartSec=20m
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+    '';
+  };
 
   # ── Activation: deploy to system locations ──────────────────────────
   home.activation.installContainerInit = lib.hm.dag.entryAfter ["linkGeneration"] ''
@@ -149,11 +187,29 @@ in {
       echo "[container-init] removed stale systemd service"
     fi
 
-    # Disable docker from systemd auto-start (container-init.sh starts it manually)
-    $SUDO systemctl disable docker.service 2>/dev/null || true
-    $SUDO systemctl daemon-reload
+    # Boot-time auto-start: parameterized by hm.docker_autostart in
+    # nixhm-sudo-<vm>/build.json (rendered into installSection above and
+    # gating the container-up.service file existence).
+    if [ "${if dockerAutostart then "true" else "false"}" = "true" ]; then
+      # Deploy and enable container-up.service (brings containers up after Docker)
+      $SUDO cp -f "$SRC/container-up.service" /etc/systemd/system/container-up.service
+      # Ensure vm-images-pull-up.sh script lives at /opt/scripts (deploy hook)
+      if [ -f "$HOME/.local/share/container-init/vm-images-pull-up.sh" ]; then
+        $SUDO cp -f "$HOME/.local/share/container-init/vm-images-pull-up.sh" /opt/scripts/vm-images-pull-up.sh
+        $SUDO chmod +x /opt/scripts/vm-images-pull-up.sh
+      fi
+      $SUDO systemctl daemon-reload
+      $SUDO systemctl enable docker.service 2>/dev/null || true
+      $SUDO systemctl enable container-up.service 2>/dev/null || true
+      echo "[container-init] AUTOSTART: docker.service + container-up.service enabled (per hm.docker_autostart=true)"
+    else
+      $SUDO systemctl disable container-up.service 2>/dev/null || true
+      $SUDO rm -f /etc/systemd/system/container-up.service
+      $SUDO systemctl disable docker.service 2>/dev/null || true
+      $SUDO systemctl daemon-reload
+      echo "[container-init] manual-start mode (set hm.docker_autostart=true in build.json to enable boot-up)"
+    fi
 
-    echo "[container-init] deployed: script-only (no systemd service, manual start via dtk/cron)"
     ) || echo "[container-init] FAILED — see errors above, activation continues"
   '';
 }
