@@ -86,8 +86,10 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
           mkdir -p ~/.config/sops/age
           echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
-          # Run
+          # Run — --cap-add NET_ADMIN bootstraps wg-quick inside the container
+          # until new cloud-builder images ship with cap_add baked in compose.yaml.
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
+            --cap-add NET_ADMIN \
             -e VM="${{ matrix.vm }}" \
             cloud-builder ship-hm ${{ matrix.vm }}
