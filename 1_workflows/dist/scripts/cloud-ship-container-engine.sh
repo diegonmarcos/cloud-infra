@@ -198,6 +198,7 @@ export INJECT_HEADER ENGINE_NAME
 . "$STEPS_DIR/cloud-ship-container-step-build-nix.sh"
 . "$STEPS_DIR/cloud-ship-container-step-docs.sh"
 . "$STEPS_DIR/cloud-ship-container-step-secrets-decrypt.sh"
+. "$STEPS_DIR/cloud-ship-container-step-verify-secret-consumption.sh"
 . "$STEPS_DIR/cloud-ship-container-step-deploy-rsync.sh"
 . "$STEPS_DIR/cloud-ship-container-step-deploy-compose.sh"
 . "$STEPS_DIR/cloud-ship-container-step-deploy-health.sh"
@@ -219,12 +220,13 @@ case "${1:-all}" in
     build)    step_build ;;
     docs)     step_docs ;;
     secrets)  step_secrets ;;
+    verify)   step_verify_secrets ;;
     deploy)   step_deploy ;;
     compose)  step_compose ;;
     compose-build) step_compose_build ;;
     configs-push) step_configs_push ;;
     health)   step_health ;;
-    all)      step_build; step_docs; step_secrets ;;
+    all)      step_build; step_docs; step_secrets; step_verify_secrets ;;
     ship)
         # Runner: where to build Docker images (auto, local, oci-apps, gha)
         RUNNER="${2:-auto}"
@@ -271,6 +273,12 @@ case "${1:-all}" in
             DOCKER_IMAGE_CHANGED=true
             rm -f "$SERVICE_DIR/.image-changed"
         fi
+
+        # ── Phase 2.5: VERIFY secret consumption (warn-mode in Phase 0) ──
+        # Runs after both step_build (dist/configs/, dist/docker-compose.yml) AND
+        # step_secrets (dist/.secrets*) have produced the artifacts the gate scans.
+        # Mode is warn until repo-wide cleanup completes (Phase 8 flips to fail).
+        step_verify_secrets || log_warn "verify-secrets reported offenders (warn mode)"
 
         # ── Phase 3: DEPLOY TO VM (skip if unchanged) ──
         NEW_HASH=$(find "$DIST_DIR" -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
