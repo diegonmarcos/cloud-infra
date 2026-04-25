@@ -216,6 +216,15 @@ NEOF
 
     log "Runner for arch=$ARCH: type=$RUNNER_TYPE${RUNNER_HOST:+ host=$RUNNER_HOST}"
 
+    # The compose layer (compose.nix in every service) references
+    # `${buildJson.name}-binaries:latest` per the manifest schema in
+    # _shared/engine.nix (images.binaries.repo). The engine MUST push both
+    # tags — `<name>:latest` (canonical) and `<name>-binaries:latest`
+    # (referenced by every dist/compose/docker-compose.yml). Without the
+    # second push, first-ever ship of any v2 service hits "denied: denied"
+    # on the VM at `docker compose pull` time.
+    BINARIES_IMAGE="${FULL_IMAGE}-binaries"
+
     case "$RUNNER_TYPE" in
         local)
             log "Local build: $FULL_IMAGE"
@@ -226,10 +235,12 @@ NEOF
                 --progress=plain \
                 --tag "$FULL_IMAGE:latest" \
                 --tag "$FULL_IMAGE:$SHA_TAG" \
+                --tag "$BINARIES_IMAGE:latest" \
                 --file "$DOCKERFILE_PATH" \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$BINARIES_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             ;;
 
         ssh)
@@ -256,8 +267,9 @@ NEOF
                 -v \$HOME/.docker/config.json:/root/.docker/config.json:ro \
                 -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
                 $RUNNER_IMAGE \
-                docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
+                docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
             ssh $SSH_OPTS "$RUNNER_HOST" "ionice -c3 nice -n19 docker push $FULL_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER_HOST] %s\n" "$line"; done
+            ssh $SSH_OPTS "$RUNNER_HOST" "ionice -c3 nice -n19 docker push $BINARIES_IMAGE:latest 2>&1" | while IFS= read -r line; do printf "[docker-$RUNNER_HOST] %s\n" "$line"; done
             ssh $SSH_OPTS "$RUNNER_HOST" "rm -rf $REMOTE_BUILD_DIR"
             ;;
 
@@ -268,17 +280,37 @@ NEOF
     esac
 
     log "Pushed $FULL_IMAGE:latest"
+    log "Pushed $BINARIES_IMAGE:latest"
 
-    # Ensure GHCR package is public
+    # Ensure both GHCR packages are public — flip via gh API if not already.
+    # GITHUB_TOKEN works because both images carry the
+    # org.opencontainers.image.source label that links them to this repo.
+    _ensure_public() {
+        local pkg="$1"
+        if ! command -v gh >/dev/null 2>&1; then return 0; fi
+        local vis
+        vis=$(gh api "/user/packages/container/${pkg}" --jq '.visibility' 2>/dev/null || echo "unknown")
+        case "$vis" in
+            public)
+                log "Package $pkg: public ✓"
+                ;;
+            private|internal)
+                log "Package $pkg: $vis — flipping to public"
+                if gh api --method PUT "/user/packages/container/${pkg}/visibility" -f visibility=public >/dev/null 2>&1; then
+                    log "Package $pkg → public"
+                else
+                    log_warn "Package $pkg: could not flip to public (may need manual fix via GitHub UI)"
+                fi
+                ;;
+            unknown|"")
+                log_warn "Package $pkg: visibility check skipped (gh API unavailable)"
+                ;;
+        esac
+    }
     PKG_NAME=$(echo "$FULL_IMAGE" | awk -F/ '{print $NF}')
-    if command -v gh >/dev/null 2>&1; then
-        PKG_VIS=$(gh api "/user/packages/container/${PKG_NAME}" --jq '.visibility' 2>/dev/null || echo "unknown")
-        if [ "$PKG_VIS" = "public" ]; then
-            log "Package $PKG_NAME: public ✓"
-        elif [ "$PKG_VIS" = "private" ]; then
-            log_error "PRIVATE PACKAGE: $PKG_NAME — needs GHA push to make public"
-        fi
-    fi
+    BINARIES_PKG_NAME=$(echo "$BINARIES_IMAGE" | awk -F/ '{print $NF}')
+    _ensure_public "$PKG_NAME"
+    _ensure_public "$BINARIES_PKG_NAME"
 
     mkdir -p "$DIST_DIR"
     echo "$LOCAL_HASH" > "$DIST_DIR/.docker-src-hash"

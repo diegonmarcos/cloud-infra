@@ -93,6 +93,12 @@ jobs:
         run: bash 1_workflows/src/test/test_proxied_mcps_resolution.sh
       - name: Phase 15 — engine layout detection works pre-build
         run: bash 1_workflows/src/test/test_layout_detection_pre_build.sh
+      - name: Phase 16 — every published image also has -binaries tag (report-only)
+        # Report-only until all 30+ services redeploy with the new engine —
+        # they self-heal as their next ship pushes the missing -binaries tag.
+        # Will flip to hard fail once steady-state.
+        continue-on-error: true
+        run: bash 1_workflows/src/test/test_binaries_image_published.sh
       - name: Phase 11 — container_name matches build.json (report-only)
         # Pending unix submodule sync + pre-existing drift cases;
         # cleanup happens per service.

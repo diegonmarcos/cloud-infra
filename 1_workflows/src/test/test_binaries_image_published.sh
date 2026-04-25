@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ Phase 16 tester — every compose.nix `binariesImage` reference    ║
+# ║ MUST resolve to a real GHCR package after deploy.                ║
+# ║                                                                  ║
+# ║ Convention (declared in _shared/engine.nix manifest schema):     ║
+# ║   compose layer references ghcr.io/diegonmarcos/<name>-binaries  ║
+# ║   The engine MUST push BOTH `<name>:latest` AND                  ║
+# ║   `<name>-binaries:latest` so docker compose pull on VM works.   ║
+# ║                                                                  ║
+# ║ Without this match: first-ever ship of any v2 service hits       ║
+# ║ "denied: denied" pulling the missing -binaries image.            ║
+# ║                                                                  ║
+# ║ Data-driven (FIRE RULE 3): walks every build.json with           ║
+# ║ docker.image set, checks both packages on GHCR. Skipped when     ║
+# ║ gh is unauthenticated (local dev) or if the service has not yet  ║
+# ║ been deployed (binaries pkg may not yet exist for new services). ║
+# ║                                                                  ║
+# ║ Usage:                                                           ║
+# ║   bash 1_workflows/src/test/test_binaries_image_published.sh     ║
+# ╚══════════════════════════════════════════════════════════════════╝
+set -eo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+
+FAIL=0
+pass() { printf "  ✓ %s\n" "$1"; }
+warn() { printf "  ! %s\n" "$1" >&2; }
+fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
+
+echo "── For every declared docker.image, both <name> and <name>-binaries must exist on GHCR ──"
+
+if ! command -v gh >/dev/null 2>&1; then
+    echo "  ⚠ gh CLI not installed — skipping (not a failure)"
+    exit 0
+fi
+if ! gh auth status >/dev/null 2>&1; then
+    echo "  ⚠ gh not authenticated — skipping (not a failure)"
+    exit 0
+fi
+
+_pkg_visibility() {
+    # Returns "public", "private", "absent" (404), or empty on other error.
+    local pkg="$1"
+    local body http
+    body=$(gh api "/user/packages/container/$pkg" 2>/dev/null) || {
+        http=$(gh api -i "/user/packages/container/$pkg" 2>/dev/null | head -1 || echo "")
+        case "$http" in *404*) echo "absent"; return 0 ;; esac
+        return 1
+    }
+    echo "$body" | jq -r '.visibility // empty'
+}
+
+CHECKED=0
+NEW_SERVICES=0
+while IFS= read -r build_json; do
+    image=$(jq -r '.docker.image // empty' "$build_json" 2>/dev/null)
+    registry=$(jq -r '.docker.registry // empty' "$build_json" 2>/dev/null)
+    [ -z "$image" ] && continue
+    [ "$registry" != "ghcr.io/diegonmarcos" ] && continue
+
+    primary_vis=$(_pkg_visibility "$image" || echo "")
+    binaries_vis=$(_pkg_visibility "${image}-binaries" || echo "")
+
+    case "$primary_vis" in
+        public)
+            case "$binaries_vis" in
+                public)
+                    pass "$image (both public)"
+                    CHECKED=$((CHECKED + 1))
+                    ;;
+                private|internal)
+                    fail "$image: -binaries package is $binaries_vis — flip via: gh api --method PUT /user/packages/container/${image}-binaries/visibility -f visibility=public"
+                    ;;
+                absent)
+                    fail "$image: published, but ${image}-binaries is MISSING — engine must push both tags (cloud-ship-container-step-build-docker.sh)"
+                    ;;
+                *)
+                    warn "$image: -binaries visibility check failed (skipped)"
+                    ;;
+            esac
+            ;;
+        absent)
+            warn "$image: never published — service may be new/unpushed (no fail)"
+            NEW_SERVICES=$((NEW_SERVICES + 1))
+            ;;
+        private|internal)
+            fail "$image: primary package is $primary_vis (should be public)"
+            ;;
+        *)
+            warn "$image: visibility check failed (skipped)"
+            ;;
+    esac
+done < <(find "$REPO_ROOT/a_solutions" -maxdepth 2 -name build.json -not -path "*/z_archive/*" 2>/dev/null)
+
+echo ""
+if [ "$FAIL" -eq 0 ]; then
+    echo "Phase 16 binaries image: PASS ($CHECKED services with both tags public; $NEW_SERVICES new/unpushed)"
+    exit 0
+else
+    echo "Phase 16 binaries image: FAIL"
+    exit 1
+fi
