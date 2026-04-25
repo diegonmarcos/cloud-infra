@@ -40,8 +40,9 @@ step_compose() {
     fi
 
     # Determine compose up flags: --build --pull always if compose_flags includes --build,
-    # otherwise pull from registry and --no-build
-    COMPOSE_UP_FLAGS="--no-build --force-recreate"
+    # otherwise pull explicitly first (tolerant), then up with --pull never to avoid
+    # double-pull (engine pre-pulls; up should use whatever's locally cached).
+    COMPOSE_UP_FLAGS="--no-build --pull never --force-recreate"
     COMPOSE_PULL_FIRST="true"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
         COMPOSE_UP_FLAGS="--build --pull always --force-recreate"
@@ -87,7 +88,9 @@ COMPOSE_HEADER
         CF="-f $REMOTE_COMPOSE_REL --project-directory ."
         log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH (compose=$REMOTE_COMPOSE_REL)"
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
+            # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
+            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
             ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
