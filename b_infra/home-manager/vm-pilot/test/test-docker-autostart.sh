@@ -17,7 +17,7 @@
 
 set -u
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-HM_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"   # → cloud/b_infra/home-manager/
+HM_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"   # vm-pilot/test → home-manager/
 
 PASS=0; FAIL=0
 red()   { printf '\033[0;31m%s\033[0m\n' "$*"; }
