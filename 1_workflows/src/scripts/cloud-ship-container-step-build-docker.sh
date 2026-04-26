@@ -131,16 +131,23 @@ NEOF
                 log_error "native_build.binary required for type=binary"
                 return 1
             fi
-            # Run the native build command (missing in the original — the
-            # binary-path check below was checking for an output that was
-            # never produced). For Rust this is `cargo build --release`.
-            export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$SRC_DIR/target}"
-            log "Native build (binary): $NATIVE_CMD (CARGO_TARGET_DIR=$CARGO_TARGET_DIR)"
-            (cd "$SRC_DIR" && eval "$NATIVE_CMD") 2>&1 \
+            # Run the native build command. Honours optional native_build.app_dir
+            # for projects where the Cargo workspace lives under a subdir of src/
+            # (e.g. fin-api with workspace at src/code/Cargo.toml).
+            APP_DIR_REL="${NATIVE_APP_DIR:-.}"
+            BUILD_CWD="$SRC_DIR"
+            [ "$APP_DIR_REL" != "." ] && BUILD_CWD="$SRC_DIR/$APP_DIR_REL"
+            if [ ! -d "$BUILD_CWD" ]; then
+                log_error "native_build.app_dir='$APP_DIR_REL' not found at $BUILD_CWD"
+                return 1
+            fi
+            export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$BUILD_CWD/target}"
+            log "Native build (binary): $NATIVE_CMD (cwd=$BUILD_CWD, CARGO_TARGET_DIR=$CARGO_TARGET_DIR)"
+            (cd "$BUILD_CWD" && eval "$NATIVE_CMD") 2>&1 \
                 | while IFS= read -r line; do printf "[native] %s\n" "$line"; done
 
-            # Check CARGO_TARGET_DIR first (cargo writes there), then src/ relative
-            BINARY_PATH="$SRC_DIR/$NATIVE_BINARY"
+            # Check CARGO_TARGET_DIR first (cargo writes there), then BUILD_CWD relative
+            BINARY_PATH="$BUILD_CWD/$NATIVE_BINARY"
             _CARGO_BIN="$CARGO_TARGET_DIR/release/$(basename "$NATIVE_BINARY")"
             [ -f "$_CARGO_BIN" ] && BINARY_PATH="$_CARGO_BIN"
             if [ ! -f "$BINARY_PATH" ]; then
@@ -182,8 +189,8 @@ NEOF
         return 0
     fi
 
-    # GHCR login
-    if [ -n "${GITHUB_TOKEN:-}" ]; then
+    # GHCR login (CI provides GITHUB_TOKEN+GITHUB_ACTOR; locally fall back to `gh` CLI)
+    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null
     elif command -v gh >/dev/null 2>&1; then
         gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>/dev/null

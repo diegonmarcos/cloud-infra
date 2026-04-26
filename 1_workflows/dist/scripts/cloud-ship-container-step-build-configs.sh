@@ -28,8 +28,8 @@ step_configs_push() {
         return 0
     fi
 
-    # GHCR login
-    if [ -n "${GITHUB_TOKEN:-}" ]; then
+    # GHCR login (CI provides GITHUB_TOKEN+GITHUB_ACTOR; locally fall back to `gh` CLI)
+    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null
     elif command -v gh >/dev/null 2>&1; then
         gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>/dev/null

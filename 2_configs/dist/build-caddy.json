@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-25T12:54:21.722Z",
+  "_generated": "2026-04-26T15:07:47.955Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -181,9 +181,9 @@
       "comment": "SMTP Submission -- TLS passthrough to maddy"
     },
     {
-      "port": 2993,
-      "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS -- TLS passthrough to stalwart"
+      "port": 2443,
+      "upstream": "10.0.0.3:2443",
+      "comment": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
     },
     {
       "port": 2465,
@@ -196,9 +196,9 @@
       "comment": "SMTP Submission -- TLS passthrough to stalwart"
     },
     {
-      "port": 2443,
-      "upstream": "10.0.0.3:2443",
-      "comment": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
+      "port": 2993,
+      "upstream": "10.0.0.3:2993",
+      "comment": "IMAPS -- TLS passthrough to stalwart"
     }
   ],
   "redirects": [
@@ -258,11 +258,6 @@
       "upstream": "10.0.0.6:8880",
       "auth": "none",
       "comment": "Bitwarden password manager"
-    },
-    {
-      "domain": "fincept-api.diegonmarcos.com",
-      "upstream": "10.0.0.6:8340",
-      "comment": "Fincept Terminal backend — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     },
     {
       "domain": "auth.diegonmarcos.com",
@@ -327,12 +322,17 @@
           "comment": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
         },
         {
-          "base_path": "/c3-api",
+          "base_path": "/fin-api",
+          "upstream": "10.0.0.6:8340",
+          "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+        },
+        {
+          "base_path": "/c3-infra-api",
           "upstream": "10.0.0.6:8081",
           "comment": "C3 REST API — Cloud Control Center Fastify API"
         },
         {
-          "base_path": "/services",
+          "base_path": "/c3-services-api",
           "upstream": "10.0.0.6:8082",
           "comment": "C3 Services REST API — service API gateway Fastify API"
         }
@@ -519,7 +519,7 @@
       "upstream": "10.0.0.6:3000"
     },
     {
-      "service": "fincept-api.app",
+      "service": "fin-api.app",
       "upstream": "10.0.0.6:8340"
     },
     {
@@ -1146,19 +1146,19 @@
     },
     {
       "kind": "redirect",
-      "service": "fincept-server.app",
-      "redirect_to": "https://fincept-server-http-8340.app",
-      "container": "fincept-server",
+      "service": "fin-api.app",
+      "redirect_to": "https://fin-api-http-8340.app",
+      "container": "fin-api",
       "container_key": "app",
-      "svc": "fincept-server",
+      "svc": "fin-api",
       "vm": "oci-A1-f_0"
     },
     {
       "kind": "canonical",
-      "service": "fincept-server-http-8340.app",
-      "container": "fincept-server",
+      "service": "fin-api-http-8340.app",
+      "container": "fin-api",
       "container_key": "app",
-      "svc": "fincept-server",
+      "svc": "fin-api",
       "vm": "oci-A1-f_0",
       "port": 8340,
       "protocol": "http",
@@ -1749,7 +1749,17 @@
     },
     {
       "host": "api.diegonmarcos.com",
-      "path": "/c3-api",
+      "path": "/fin-api",
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/c3-infra-api",
       "upstream": "10.0.0.6:8081",
       "kind": "reverse_proxy",
       "tls": "public",
@@ -1759,7 +1769,7 @@
     },
     {
       "host": "api.diegonmarcos.com",
-      "path": "/services",
+      "path": "/c3-services-api",
       "upstream": "10.0.0.6:8082",
       "kind": "reverse_proxy",
       "tls": "public",
@@ -1900,16 +1910,6 @@
       "zone": "com",
       "service": null,
       "notes": "Bitwarden password manager"
-    },
-    {
-      "host": "fincept-api.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8340",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Fincept Terminal backend — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     },
     {
       "host": "auth.diegonmarcos.com",
@@ -2214,7 +2214,7 @@
       "notes": null
     },
     {
-      "host": "fincept-api.app",
+      "host": "fin-api.app",
       "path": null,
       "upstream": "10.0.0.6:8340",
       "kind": "reverse_proxy",
@@ -2736,13 +2736,13 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "fincept-server-http-8340.app",
+      "host": "fin-api-http-8340.app",
       "path": null,
       "upstream": "10.0.0.6:8340",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
-      "service": "fincept-server",
+      "service": "fin-api",
       "notes": null
     },
     {
@@ -3144,14 +3144,14 @@
       "notes": "SMTP Submission -- TLS passthrough to maddy"
     },
     {
-      "host": ":2993",
+      "host": ":2443",
       "path": null,
-      "upstream": "10.0.0.3:2993",
+      "upstream": "10.0.0.3:2443",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "IMAPS -- TLS passthrough to stalwart"
+      "notes": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
     },
     {
       "host": ":2465",
@@ -3174,14 +3174,14 @@
       "notes": "SMTP Submission -- TLS passthrough to stalwart"
     },
     {
-      "host": ":2443",
+      "host": ":2993",
       "path": null,
-      "upstream": "10.0.0.3:2443",
+      "upstream": "10.0.0.3:2993",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
+      "notes": "IMAPS -- TLS passthrough to stalwart"
     }
   ],
   "others": [
