@@ -3,15 +3,40 @@ set -e
 CLOUD_ROOT="${CLOUD_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
 . "$CLOUD_ROOT/1_workflows/src/scripts/cloud-ship-lib.sh"
 
-# Generate cloud-topology.json/md + cloud-configs.json/md from sources
+# Generate cloud-data configs (cloud-data-*.json + per-container build-*.json).
+#
+# Engine layout (current, post-2026-04 reorg):
+#   cloud/2_configs/build.sh            <- universal entry (link-builds + consolidate + derive)
+#   cloud/2_configs/src/engines/        <- the .ts engines (cloud-data-config.ts, derive, etc.)
+#   cloud/2_configs/dist/               <- output (build-*.json, cloud-data-*.json, _cloud-data-consolidated.json)
+#
+# Legacy layout (pre-reorg, kept as fallback for older clones):
+#   cloud-data/1_workflows/src/scripts/cloud-data-config.ts
+#
+# Strategy: prefer the canonical 2_configs/build.sh interface. Fall back to
+# the legacy direct-tsx invocation only if 2_configs/ isn't present.
 cmd_config() {
     if ! command -v tsx >/dev/null 2>&1; then
         log "SKIP: tsx not installed (npm install -g tsx)"
         return 1
     fi
-    # cloud-data may be either a populated submodule (2_configs/dist/) or a
-    # sibling checkout (../cloud-data/ from CLOUD_ROOT). Pick whichever has
-    # the engine, env override wins.
+    # ── Path A (current): cloud/2_configs/build.sh ──────────────────
+    if [ -x "$CLOUD_ROOT/2_configs/build.sh" ]; then
+        log "Using engine: 2_configs/build.sh all"
+        # ESM resolution ignores NODE_PATH — symlink shared node_modules so
+        # tsx finds packages from inside the engine dir.
+        SHARED_NM="$HOME/.node_modules/node_modules"
+        ENGINES_DIR="$CLOUD_ROOT/2_configs/src/engines"
+        if [ -d "$SHARED_NM" ] && [ ! -e "$ENGINES_DIR/node_modules" ]; then
+            ln -s "$SHARED_NM" "$ENGINES_DIR/node_modules"
+        fi
+        # build.sh all = link-builds + consolidate + derive (full pipeline).
+        # Output lands in cloud/2_configs/dist/, which the next steps
+        # (orchestrate-gen-configs) commit + push to cloud-data submodule.
+        bash "$CLOUD_ROOT/2_configs/build.sh" all
+        return 0
+    fi
+    # ── Path B (legacy fallback): cloud-data submodule with its own engine ──
     _cd_base="${CLOUD_DATA_DIR:-}"
     if [ -z "$_cd_base" ]; then
         for _p in "$CLOUD_ROOT/2_configs/dist" "$(dirname "$CLOUD_ROOT")/cloud-data" "/root/git/cloud-data"; do
@@ -21,11 +46,12 @@ cmd_config() {
     CD_SCRIPTS="$_cd_base/1_workflows/src/scripts"
     CD_MASTER="$CD_SCRIPTS/cloud-data-config.ts"
     if [ -z "$_cd_base" ] || [ ! -f "$CD_MASTER" ]; then
-        log "SKIP: cloud-data engine not found (tried 2_configs/dist, sibling, /root/git/cloud-data)"
+        log "SKIP: neither 2_configs/build.sh nor cloud-data legacy engine found"
+        log "  2_configs/build.sh:    $CLOUD_ROOT/2_configs/build.sh"
+        log "  legacy candidates:    $CLOUD_ROOT/2_configs/dist, $(dirname "$CLOUD_ROOT")/cloud-data, /root/git/cloud-data"
         return 1
     fi
-    log "Using cloud-data engine: $_cd_base"
-    # ESM resolution ignores NODE_PATH — symlink shared node_modules so tsx finds packages
+    log "Using legacy cloud-data engine: $_cd_base"
     SHARED_NM="$HOME/.node_modules/node_modules"
     if [ -d "$SHARED_NM" ] && [ ! -e "$CD_SCRIPTS/node_modules" ]; then
         ln -s "$SHARED_NM" "$CD_SCRIPTS/node_modules"
