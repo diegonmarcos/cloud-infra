@@ -158,6 +158,9 @@ export interface BuildJsonEntry {
   notifications?: NotificationsConfig;
   // Multi-container declarations (new schema)
   containers?: Record<string, ContainerSpec>;
+  // Declarative API / MCP surfaces (consumed by cloud-data-c3-services-api.json derive)
+  api?: Record<string, unknown>;
+  mcp?: Record<string, unknown>;
   // Deploy overrides
   fallback_vm?: string;          // deploy.fallback_host → resolved to VM ID
   // Pass-through: any extra top-level fields from build.json (models, notes, etc.)
@@ -243,8 +246,23 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
           dns = primary.dns ?? undefined;
           if (primary.proxy?.domain) primaryDomain = primary.proxy.domain;
           if (primary.proxy) primaryProxy = { primary: primary.proxy };
-          if (primary.healthcheck) primaryHealth = { path: primary.healthcheck };
-          if (primary.monitoring) primaryMonitoring = primary.monitoring;
+          // health.path is a URL path for HTTP probing.
+          // primary.healthcheck is the docker HEALTHCHECK directive — usually
+          // a shell command (`wget -qO …`, `curl -f …`, `redis-cli ping`).
+          // They are NOT interchangeable. Only adopt the container healthcheck
+          // as health.path if (a) build.json did not declare its own health and
+          // (b) the value is a URL path (starts with "/"). Anything else is a
+          // shell command and would corrupt downstream URL construction
+          // (https://${domain}${health.path}).
+          if (!primaryHealth && primary.healthcheck && primary.healthcheck.startsWith("/")) {
+            primaryHealth = { path: primary.healthcheck };
+          }
+          // Same precedence as health: top-level monitoring is the service
+          // contract (tls_check/dns_check/endpoint_check). Container-level
+          // monitoring is a per-container concern (e.g. only the public app
+          // gets tls_check). If both are present, top-level wins; otherwise
+          // fall back to the primary container's spec.
+          if (!primaryMonitoring && primary.monitoring) primaryMonitoring = primary.monitoring;
         }
       }
       // Fallback: top-level port/dns override empty container-level values
@@ -262,6 +280,7 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
         "ports", "proxy", "health", "monitoring", "backup", "notifications",
         "docker", "secrets", "build", "compose", "lifecycle", "terraform",
         "multi_vm", "frozen", "version", "containers", "enabled",
+        "api", "mcp",
       ]);
       const extra: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(bj)) {
@@ -289,6 +308,9 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
         ...(bj.notifications ? { notifications: bj.notifications } : {}),
         // Multi-container declarations (new schema)
         ...(containers ? { containers } : {}),
+        // Declarative API / MCP surfaces
+        ...(bj.api ? { api: bj.api } : {}),
+        ...(bj.mcp ? { mcp: bj.mcp } : {}),
         // Deploy overrides
         ...(fallbackHost ? { fallback_vm: fallbackHost } : {}),
         // Extra service-specific fields (models, notes, etc.)

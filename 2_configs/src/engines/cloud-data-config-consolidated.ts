@@ -104,6 +104,22 @@ function resolveVmId(host: string, aliasMap: Record<string, string>, vms: Record
   return host;
 }
 
+// public_ports source-of-truth = b_infra/home-manager/nixhm-sudo-<alias>/build.json.firewall.public_ports
+// Per loyal-firewalling-marmot.md the home-manager sudo deploy that owns wg0+iptables also owns the port catalog.
+// Fallback signature kept for safety; in practice config.json no longer holds public_ports (deleted in Phase 2).
+function loadVmPublicPorts(alias: string | undefined, cloudRoot: string, fallback: any[]): any[] {
+  if (!alias) return fallback;
+  const hmBuildPath = join(cloudRoot, "b_infra", "home-manager", `nixhm-sudo-${alias}`, "build.json");
+  if (!existsSync(hmBuildPath)) return fallback;
+  try {
+    const bj = JSON.parse(readFileSync(hmBuildPath, "utf-8"));
+    const ports = bj.firewall?.public_ports;
+    return Array.isArray(ports) ? ports : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Main
 // ═══════════════════════════════════════════════════════════════════════════
@@ -188,7 +204,9 @@ function main() {
       ip: vm.ip,
       specs: mergedSpecs,
       description: vm.description ?? "",
-      // Config.json owns: wg, ssh, user, home, method, rescue, gha, public_ports
+      // Config.json owns: wg, ssh, user, home, method, rescue, gha
+      // public_ports MOVED to b_infra/home-manager/nixhm-sudo-<alias>/build.json.firewall.public_ports
+      // (loyal-firewalling-marmot.md Phase 1 — the home-manager sudo deploy that owns wg0+iptables also owns the port catalog)
       wg_ip: vm.wg_ip,
       wg_public_key: vaultWgKeys[vm.ssh_alias] ?? null,  // vault is source of truth
       wg_port: vm.wg_port ?? 51820,
@@ -198,7 +216,7 @@ function main() {
       method: vm.method ?? "key",
       ssh_alias: vm.ssh_alias,
       rescue_port: vm.rescue_port ?? 2200,
-      public_ports: vm.public_ports ?? [],
+      public_ports: loadVmPublicPorts(vm.ssh_alias, CLOUD_ROOT, vm.public_ports ?? []),
       gha: vm.gha ?? null,
       // Optional provider/provisioning fields
       ...(vm.provider ? { provider: vm.provider } : {}),
@@ -288,61 +306,53 @@ function main() {
       ...(entry.extra ?? {}),
     };
 
-    // ── Derive API + Web UI classification ──────────────────────────────────
-    // Priority: build.json api_path > healthcheck /api pattern > known conventions
+    // ── API + MCP + Web UI classification (declarative) ────────────────────
+    // Sourced from entry.api and entry.mcp (declared per service in its build.json,
+    // schema in a_solutions/build.schema.json). Replaces the previous KNOWN_API_PATHS
+    // hardcoded map, the name-based hasApi heuristic, and the healthcheck-regex
+    // api-path extraction. Adding a new API now requires zero engine edits.
     const healthchecks: string[] = Object.values(containers)
       .map((c: any) => c.healthcheck ?? "")
       .filter(Boolean);
 
-    // Extract API path from healthcheck patterns
-    let derivedApiPath: string | null = null;
-    for (const h of healthchecks) {
-      const m = h.match(/(\/api[^\s"']*)/);
-      if (m) { derivedApiPath = m[1]; break; }
-    }
+    const apiDecl = (entry.api ?? null) as Record<string, unknown> | null;
+    const mcpDecl = (entry.mcp ?? null) as Record<string, unknown> | null;
 
-    // Known API conventions (when healthcheck doesn't reveal the path)
-    const KNOWN_API_PATHS: Record<string, string> = {
-      // Our APIs
-      "c3-infra-api": "/docs",
-      "c3-services-api": "/docs",
-      // Third-party services with REST APIs
-      "gitea": "/api/v1",
-      "vaultwarden": "/api",
-      "ntfy": "/v1",
-      "matomo": "/?module=API",
-      "umami": "/api",
-      "windmill": "/api",
-      "etherpad": "/api/1",
-      "hedgedoc": "/api",
-      "grist": "/api",
-      "filebrowser": "/api",
-      "dagu": "/api/v2",
-      "crawlee-cloud": "/api",
-      "radicale": "/.well-known/caldav",
-      "ollama": "/api",
-      "ollama-arm": "/api",
-      "ollama-hai": "/api",
-    };
+    const hasApi = !!apiDecl && apiDecl.type !== "no-api";
+    // For OpenAPI: spec_path is the canonical entry; for custom-rest: base_path.
+    const apiPath = (apiDecl?.spec_path as string | undefined)
+      ?? (apiDecl?.base_path as string | undefined)
+      ?? null;
+    const apiUrl = (apiDecl?.spec_url as string | undefined)
+      ?? (apiPath && entry.domain ? `https://${entry.domain}${apiPath}` : null);
 
-    // build.json can override with explicit api_path
-    const apiPath = entry.api_path ?? derivedApiPath ?? KNOWN_API_PATHS[entry.name] ?? null;
-    const isMcp = entry.name.includes("mcp");
-    const hasApi = !isMcp && !!(apiPath || entry.name.includes("api") || healthchecks.some((h: string) =>
-      h.includes("/api") || h.includes("/health") || h.includes("/docs")
-    ));
+    const mcpPath = (mcpDecl?.endpoint_path as string | undefined) ?? null;
+    const mcpUrl = mcpPath && entry.domain ? `https://${entry.domain}${mcpPath}` : null;
 
-    // Web UI = has a domain AND not an MCP/proxy-only service
-    const WEB_UI_EXCLUSIONS = ["introspect-proxy", "smtp-proxy", "hickory-dns"];
-    const hasWebUi = !!(entry.domain && !entry.name.includes("mcp") && !WEB_UI_EXCLUSIONS.includes(entry.name));
+    // Web UI = has a domain AND not an MCP-only service.
+    // "MCP-only" is now derived from declarations, not name-regex.
+    const WEB_UI_EXCLUSIONS = new Set(["introspect-proxy", "smtp-proxy", "hickory-dns"]);
+    const isMcpOnly = !!mcpDecl && !apiDecl;
+    const hasWebUi = !!(entry.domain && !isMcpOnly && !WEB_UI_EXCLUSIONS.has(entry.name));
 
     svc.api = {
+      // Stable contract preserved for existing consumers (health, monitoring, dashboard):
       has_api: hasApi,
       has_web_ui: hasWebUi,
       api_path: apiPath,
-      api_url: apiPath && entry.domain ? `https://${entry.domain}${apiPath}` : null,
+      api_url: apiUrl,
       healthcheck_paths: healthchecks.filter((h: string) => h.startsWith("/")),
+      // Pass-through of the declared block (added fields, no removals):
+      ...(apiDecl ?? {}),
     };
+
+    if (mcpDecl) {
+      svc.mcp = {
+        has_mcp: mcpDecl.transport !== "stdio",
+        mcp_url: mcpUrl,
+        ...mcpDecl,
+      };
+    }
 
     // Extract secret env var names from src/secrets.yaml (keys are plaintext in sops)
     const secretsPath = join(SOLUTIONS_DIR, entry.folder, "src", "secrets.yaml");
@@ -395,7 +405,7 @@ function main() {
     firewalls.terraform[fw.provider].push({ scope: fw.scope, rules: fw.rules });
   }
 
-  // OS firewalls: per-vm public_ports from config.json
+  // OS firewalls: per-vm public_ports — sourced via loadVmPublicPorts (per-VM home-manager build.json)
   for (const [vmId, vm] of Object.entries(vms)) {
     if (vm.public_ports?.length > 0) {
       firewalls.os[vm.ssh_alias || vmId] = vm.public_ports;
