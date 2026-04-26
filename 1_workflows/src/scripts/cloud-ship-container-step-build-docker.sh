@@ -202,7 +202,12 @@ NEOF
     # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
     # of exec-format-error builds.
     RUNNERS_JSON=""
+    # cloud-data-*.json files are on the deprecation track and now live under
+    # 2_configs/dist/deprecated/ (see 2_configs/dist/deprecated/README.md). The
+    # legacy paths remain in the search list so out-of-tree clones / older
+    # checkouts keep working until every consumer migrates.
     for _p in \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/deprecated/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
         "$SRC_DIR/cloud-data-runners.json"; do
@@ -236,10 +241,21 @@ NEOF
     case "$RUNNER_TYPE" in
         local)
             log "Local build: $FULL_IMAGE"
+            # Layer-cache strategy: pull the previous published image and pass
+            # it as --cache-from. Docker compares each instruction's layer hash
+            # against the pulled image; identical layers are reused without
+            # rebuild. `|| true` tolerates the first-ever build (no cached
+            # image yet) — self-bootstraps from the second build onwards.
+            # Single-stage Dockerfiles get ~90% cache hit; multi-stage (Rust)
+            # only caches the final stage (cargo intermediate stage isn't in
+            # the published image — accepted trade-off, no extra cache infra).
+            docker pull "$FULL_IMAGE:latest" 2>/dev/null || true
+            docker pull "$BINARIES_IMAGE:latest" 2>/dev/null || true
             DOCKER_BUILDKIT=1 docker build \
                 --network host \
                 --platform "$PLATFORM" \
-                --no-cache \
+                --cache-from "$FULL_IMAGE:latest" \
+                --cache-from "$BINARIES_IMAGE:latest" \
                 --progress=plain \
                 --tag "$FULL_IMAGE:latest" \
                 --tag "$FULL_IMAGE:$SHA_TAG" \
@@ -283,6 +299,8 @@ NEOF
             VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-/home/diego/git/vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
 
+            # Same --cache-from strategy as the `local` branch — pull existing
+            # GHCR image, use as cache source. `|| true` tolerates first build.
             ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
                 -v \$HOME/git/vault:/home/diego/git/vault:ro \
@@ -291,7 +309,9 @@ NEOF
                 sh -c 'set -e; \
                     cat $VAULT_GHCR_TOKEN_PATH | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
                     echo \"[ghcr] login ok (vault token)\" && \
-                    docker build --no-cache --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
+                    (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
+                    (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
+                    docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
                     docker push $FULL_IMAGE:latest && \
                     docker push $BINARIES_IMAGE:latest && \
                     docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
