@@ -158,7 +158,8 @@ export interface BuildJsonEntry {
   notifications?: NotificationsConfig;
   // Multi-container declarations (new schema)
   containers?: Record<string, ContainerSpec>;
-  // Declarative API / MCP surfaces (consumed by cloud-data-c3-services-api.json derive)
+  // Declarative API / MCP surfaces — flow into services.<name>.{api,mcp} of every
+  // per-container build-{name}.json via deriveServiceConnections.
   api?: Record<string, unknown>;
   mcp?: Record<string, unknown>;
   // Deploy overrides

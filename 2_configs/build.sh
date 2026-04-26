@@ -48,19 +48,28 @@ derive() {
     mkdir -p "$DIST"
     log "Deriving per-concern + per-container JSONs → $DIST/"
     tsx "$ENGINES/cloud-data-config-derive.ts"
-    copy_static
+    cache_download_generator
 }
 
-# Static cloud-data-*.json files — hand-edited in cloud-data repo
-# (e.g. cloud-data-runners.json). Not derived, just passed through.
-# Preference order: sibling clone (live edits) → in-repo submodule (committed).
-copy_static() {
+# ══════════════════════════════════════════════════════════════════════
+# cache_download_generator — engines-ship cache step
+# ══════════════════════════════════════════════════════════════════════
+# Pulls hand-edited / externally-cached fixtures from the cloud-data
+# submodule into dist/. Acts like the "secrets" step (sops decryption →
+# dist/.secrets) but for cached/static data files rather than encrypted
+# secrets — the engine treats both as inputs the build pipeline must
+# materialise into dist/ before downstream consumers (image build,
+# deploy) can run.
+#
+# Source preference: sibling clone (live edits) → in-repo submodule
+# (committed). Each entry can declare its own source if needed.
+cache_download_generator() {
     for f in cloud-data-runners.json; do
         for _srcdir in "$CLOUD_ROOT/../cloud-data" "$CLOUD_ROOT/I_cloud-data"; do
             _src="$_srcdir/$f"
             if [ -f "$_src" ]; then
                 cp -f "$_src" "$DIST/$f"
-                log "Copied static: $f (from $_srcdir)"
+                log "cache_download_generator: $f ← $_srcdir"
                 break
             fi
         done
