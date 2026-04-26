@@ -4,7 +4,7 @@
     "description": "db-agent container config (service=db-agent, role=app)",
     "format_version": 1
   },
-  "_generated": "2026-04-26T18:43:57.174Z",
+  "_generated": "2026-04-26T20:23:58.682Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "db-agent",
@@ -22,7 +22,18 @@
       "ports": {
         "app": 8443
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "ide.diegonmarcos.com",
+      "description": "VS Code IDE (ide.diegonmarcos.com)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ]
+      }
     },
     "etherpad": {
       "ip": "10.0.0.6",
@@ -30,35 +41,131 @@
         "app": 3012,
         "db": 5436
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "pad.diegonmarcos.com",
+      "description": "Etherpad collaborative editor",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/1",
+        "api_url": "https://pad.diegonmarcos.com/api/1",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api/1",
+        "display_name": "Etherpad",
+        "description": "Collaborative real-time text editor with HTTP API.",
+        "auth": "api-key"
+      }
     },
     "filebrowser": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3015
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "files.diegonmarcos.com",
+      "description": "FileBrowser web file manager (NEW - not deployed yet)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://files.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "FileBrowser",
+        "description": "Web-based file manager with REST API.",
+        "auth": "bearer"
+      }
     },
     "google-personal-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3106
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com",
+      "description": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 9,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Google Personal MCP",
+        "description": "IMAP/SMTP access for personal Google accounts via App Password, multi-account support.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "google-workspace-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3104
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com",
+      "description": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 114,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Google Workspace MCP",
+        "description": "Gmail, Calendar, Drive, Docs, Sheets, Forms, Slides, Chat, Tasks, Contacts, Search, Apps Script via OAuth 2.0/2.1.",
+        "auth": "oidc",
+        "sdk": "fastmcp@3.1.1"
+      }
     },
     "grist": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3011
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "sheets.diegonmarcos.com",
+      "description": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://sheets.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "Grist",
+        "description": "Self-hosted spreadsheet and database with REST API.",
+        "auth": "api-key"
+      }
     },
     "hedgedoc": {
       "ip": "10.0.0.6",
@@ -66,19 +173,66 @@
         "app": 3018,
         "db": 5439
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "doc.diegonmarcos.com",
+      "description": "Collaborative markdown editor",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/v1",
+        "api_url": "https://doc.diegonmarcos.com/api/v1",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api/v1",
+        "display_name": "HedgeDoc",
+        "description": "Collaborative markdown editor with REST API.",
+        "auth": "bearer"
+      }
     },
     "mail-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3103
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com",
+      "description": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 28,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Mail MCP",
+        "description": "IMAP/SMTP/Admin via Stalwart REST API; proxies google-personal-mcp tools.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "mail-puller": {
       "ip": "10.0.0.3",
       "ports": {},
-      "vm": "oci-mail"
+      "vm": "oci-mail",
+      "domain": "mail-puller.diegonmarcos.com",
+      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "mattermost-bots": {
       "ip": "10.0.0.6",
@@ -86,49 +240,145 @@
         "app": 8065,
         "db": 5435
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "chat.diegonmarcos.com",
+      "description": "Mattermost team chat with ntfy bridge and C3 command bot",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/v4",
+        "api_url": "https://chat.diegonmarcos.com/api/v4",
+        "healthcheck_paths": [
+          "/api/v4/system/ping"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api/v4",
+        "display_name": "Mattermost",
+        "description": "Open-source team chat platform with REST API.",
+        "auth": "bearer"
+      }
     },
     "mattermost-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3102
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Mattermost MCP server — chat tools via HTTP transport",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 10,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Mattermost MCP",
+        "description": "Mattermost chat read, post, react, channel management via Mattermost API.",
+        "auth": "bearer",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "photoprism": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3013
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "photos.diegonmarcos.com",
+      "description": "PhotoPrism AI-powered photo management (oci-flex-1)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/v1",
+        "api_url": "https://photos.diegonmarcos.com/api/v1",
+        "healthcheck_paths": [
+          "/api/v1/status"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api/v1",
+        "display_name": "PhotoPrism",
+        "description": "AI-powered photo management system with REST API.",
+        "auth": "bearer"
+      }
     },
     "photos-webhook": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 5002
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "PhotoPrism Webhook + S3 Processor",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "radicale": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 5232
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "cal.diegonmarcos.com",
+      "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/.well-known/caldav",
+        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
+        "healthcheck_paths": [
+          "/.web/"
+        ],
+        "type": "custom-protocol",
+        "base_path": "/.well-known/caldav",
+        "display_name": "Radicale CalDAV/CardDAV Server",
+        "description": "WebDAV-based CalDAV/CardDAV server for calendar and contact synchronization.",
+        "auth": "basic"
+      }
     },
     "revealmd": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3014
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Reveal.js markdown presentations (not deployed)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "snappymail": {
       "ip": "10.0.0.3",
       "ports": {
         "app": 8888
       },
-      "vm": "oci-mail"
+      "vm": "oci-mail",
+      "domain": "webmail.diegonmarcos.com",
+      "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ]
+      }
     },
     "maddy": {
       "ip": "10.0.0.3",
@@ -137,28 +387,73 @@
         "smtp": 465,
         "imap": 993
       },
-      "vm": "oci-mail"
+      "vm": "oci-mail",
+      "domain": "mail.diegonmarcos.com",
+      "description": "Maddy Mail Server (mail.diegonmarcos.com)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "smtp-proxy": {
       "ip": "10.0.0.3",
       "ports": {
         "app": 8080
       },
-      "vm": "oci-mail"
+      "vm": "oci-mail",
+      "domain": "smtp.diegonmarcos.com",
+      "description": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "stalwart": {
       "ip": "10.0.0.3",
       "ports": {
         "app": 2443
       },
-      "vm": "oci-mail"
+      "vm": "oci-mail",
+      "domain": "mail-stalwart.diegonmarcos.com",
+      "description": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ]
+      }
     },
     "vaultwarden": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8880
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "vault.diegonmarcos.com",
+      "description": "Bitwarden password manager",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://vault.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/alive"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "Vaultwarden",
+        "description": "Bitwarden-compatible password manager with REST API.",
+        "auth": "bearer"
+      }
     },
     "crawlee-cloud": {
       "ip": "10.0.0.6",
@@ -170,42 +465,118 @@
         "minio": 9000,
         "minio_console": 9001
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "api.diegonmarcos.com",
+      "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/openapi.json",
+        "api_url": "https://api.diegonmarcos.com/openapi.json",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/openapi.json",
+        "base_path": "/v2",
+        "endpoint_count": 74,
+        "display_name": "Crawlee Cloud Apify-Compatible API",
+        "description": "Self-hosted Apify-compatible web scraping platform with actors, runs, datasets, queues, and schedules.",
+        "auth": "api-key"
+      }
     },
     "fin-api": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8340
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "api.diegonmarcos.com/fin-api",
+      "description": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/fin-api",
+        "api_url": "https://api.diegonmarcos.com/fin-api/fin-api",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/fin-api",
+        "display_name": "Fincept Terminal (Rust)",
+        "description": "Bloomberg-class financial intelligence platform with 35 data connectors, 7 analytics modules, 17 brokers, and 6 investor personas.",
+        "auth": "bearer"
+      }
     },
     "ollama": {
       "ip": "10.0.0.8",
       "ports": {
         "app": 11434
       },
-      "vm": "gcp-t4"
+      "vm": "gcp-t4",
+      "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/api",
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "endpoint_count": 16,
+        "display_name": "Ollama LLM API (gcp-t4)",
+        "description": "REST API for LLM inference, embeddings, model management, and version information.",
+        "auth": "none"
+      }
     },
     "ollama-hai": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 11435
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode",
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/api",
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "endpoint_count": 16,
+        "display_name": "Ollama LLM API (HAI)",
+        "description": "REST API for LLM inference and embeddings for HAI agent and octocode support.",
+        "auth": "none"
+      }
     },
     "rig-agentic-hai-1.5bq4": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8091
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Rig Agentic AI (HAI) — Lightweight Qwen 1.5B Q4 agent with strict allowlist guardrails",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "rig-agentic-sonn-14bq8": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8091
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "hickory-dns": {
       "ip": "10.0.0.1",
@@ -213,7 +584,16 @@
         "dns": 53,
         "app": 53
       },
-      "vm": "gcp-proxy"
+      "vm": "gcp-proxy",
+      "domain": "dns.internal",
+      "description": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "authelia": {
       "ip": "10.0.0.1",
@@ -221,89 +601,288 @@
         "app": 9091,
         "redis": 6380
       },
-      "vm": "gcp-proxy"
+      "vm": "gcp-proxy",
+      "domain": "auth.diegonmarcos.com",
+      "description": "SSO and 2FA authentication portal",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://auth.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/api/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "Authelia Auth API",
+        "description": "OpenID Connect/OAuth2 authorization and 2FA authentication server with WebAuthn support.",
+        "auth": "oidc"
+      }
     },
     "caddy": {
       "ip": "10.0.0.1",
       "ports": {
         "app": 443
       },
-      "vm": "gcp-proxy"
+      "vm": "gcp-proxy",
+      "domain": "proxy.diegonmarcos.com",
+      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "introspect-proxy": {
       "ip": "10.0.0.1",
       "ports": {
         "app": 4182
       },
-      "vm": "gcp-proxy"
+      "vm": "gcp-proxy",
+      "description": "OIDC token introspection sidecar for Caddy Bearer auth",
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/",
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/",
+        "endpoint_count": 2,
+        "display_name": "JWT Introspection Proxy",
+        "description": "Validates bearer JWT tokens locally using Authelia JWKS public keys for Caddy forward_auth.",
+        "auth": "bearer"
+      }
     },
     "sauron-central": {
       "ip": "10.0.0.6",
       "ports": {},
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Central Syslog Collector + SIEM API",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "c3-infra-api": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8081
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "api.diegonmarcos.com/c3-infra-api",
+      "description": "C3 REST API — Cloud Control Center Fastify API",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/docs/json",
+        "api_url": "https://api.diegonmarcos.com/c3-infra-api/docs/json",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "openapi",
+        "spec_path": "/docs/json",
+        "base_path": "/c3-infra-api",
+        "endpoint_count": 100,
+        "display_name": "C3 Cloud Control Center API",
+        "description": "REST API for cloud infrastructure operations, lifecycle control, and observability across inventory, operations, security, and FinOps.",
+        "auth": "bearer"
+      }
     },
     "c3-infra-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3100
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+      "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/c3-infra-mcp/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 109,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "C3 Infra MCP",
+        "description": "Cloud health, DevOps operations, workflows, cost tracking, security scanning, observability, front-end deployment.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "c3-services-api": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8082
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "api.diegonmarcos.com/c3-services-api",
+      "description": "C3 Services REST API — service API gateway Fastify API",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/docs/json",
+        "api_url": "https://api.diegonmarcos.com/c3-services-api/docs/json",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "openapi",
+        "spec_path": "/docs/json",
+        "base_path": "/c3-services-api",
+        "endpoint_count": 25,
+        "display_name": "C3 Services API Gateway",
+        "description": "Unified service API gateway that proxies and wraps OpenAPI services and custom REST/protocol endpoints.",
+        "auth": "bearer"
+      }
     },
     "c3-services-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3101
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 127,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "C3 Services MCP",
+        "description": "Unified service API gateway: Grafana, Matomo, Umami, Ntfy, Syncthing, Crawlee, Authelia, NocoDB, PhotoPrism, Gitea, Grist, HedgeDoc, Etherpad, Vaultwarden; proxies infra and user MCPs.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "cloud-cgc-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3105
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 48,
+        "resources_count": 2,
+        "prompts_count": 0,
+        "display_name": "Cloud CGC MCP",
+        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
     },
     "cloud-spec": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3080
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Unified Cloud Documentation Portal",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "dagu": {
       "ip": "10.0.0.4",
       "ports": {
         "app": 8070
       },
-      "vm": "oci-analytics"
+      "vm": "oci-analytics",
+      "domain": "workflows.diegonmarcos.com",
+      "description": "Dagu - Lightweight DAG-based workflow scheduler",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/v2",
+        "api_url": "https://workflows.diegonmarcos.com/api/v2",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api/v2",
+        "display_name": "Dagu Workflow Scheduler",
+        "description": "Lightweight DAG-based workflow scheduler for orchestrating cloud infrastructure automation.",
+        "auth": "none"
+      }
     },
     "dbgate": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8086
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "db.diegonmarcos.com",
+      "description": "DBGate - Universal database manager for all cloud databases",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ]
+      }
     },
     "dozzle": {
       "ip": "10.0.0.4",
       "ports": {
         "app": 9999
       },
-      "vm": "oci-analytics"
+      "vm": "oci-analytics",
+      "domain": "logs.diegonmarcos.com",
+      "description": "Dozzle - Real-time Docker log viewer",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "lgtm": {
       "ip": "10.0.0.6",
@@ -313,33 +892,96 @@
         "mimir": 9009,
         "tempo": 3210
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "grafana.diegonmarcos.com",
+      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api/docs/swagger",
+        "api_url": "https://grafana.diegonmarcos.com/api/docs/swagger",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/api/docs/swagger",
+        "base_path": "/grafana",
+        "display_name": "Grafana HTTP API",
+        "description": "Observability stack with Grafana UI and REST API, backed by Loki logs, Mimir metrics, and Tempo traces.",
+        "auth": "none"
+      }
     },
     "matomo": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8084
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "analytics.diegonmarcos.com",
+      "description": "Matomo hybrid analytics (oci-apps)",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/?module=API",
+        "display_name": "Matomo Reporting API",
+        "description": "Web analytics platform with Matomo Reporting API for tracking and admin operations.",
+        "auth": "api-key"
+      }
     },
     "news-gdelt": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3019
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "GDELT News Aggregator — Fastify API with SQLite cache",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "ntfy": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8090
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "rss.diegonmarcos.com",
+      "description": "Push notification server",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/v1",
+        "api_url": "https://rss.diegonmarcos.com/v1",
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "custom-rest",
+        "base_path": "/v1",
+        "display_name": "ntfy Push Notifications",
+        "description": "Push notification server with HTTP POST interface for sending messages to topics.",
+        "auth": "bearer"
+      }
     },
     "sauron-forwarder": {
       "ip": "10.0.0.4",
       "ports": {},
-      "vm": "oci-analytics"
+      "vm": "oci-analytics",
+      "description": "Alert forwarding to central sauron",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "umami": {
       "ip": "10.0.0.6",
@@ -347,47 +989,116 @@
         "app": 3006,
         "db": 5442
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "analytics.diegonmarcos.com",
+      "description": "Umami Analytics - lightweight privacy-focused web analytics",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/umami",
+        "api_url": "https://analytics.diegonmarcos.com/umami",
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/umami",
+        "display_name": "Umami Analytics API",
+        "description": "Lightweight privacy-focused web analytics with tracking API and admin interface.",
+        "auth": "bearer"
+      }
     },
     "cloud-builder-x": {
       "ip": "10.0.0.6",
       "ports": {},
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "CI/CD builder images — deployed to oci-apps, source in unix repo",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "backup-borg": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 2224
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Media Backups SSH Server (Borg deduplication)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "backup-bup": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 2223
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "Database Backups SSH Server (bup)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "gitea": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3002
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "domain": "git.diegonmarcos.com",
+      "description": "Self-hosted Git service",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/swagger.v1.json",
+        "api_url": "https://git.diegonmarcos.com/swagger.v1.json",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/swagger.v1.json",
+        "base_path": "/api/v1",
+        "display_name": "Gitea",
+        "description": "Self-hosted Git service with REST API and repository management.",
+        "auth": "bearer"
+      }
     },
     "kg-graph": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 8001
       },
-      "vm": "oci-apps"
+      "vm": "oci-apps",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "redis": {
       "ip": "10.0.0.1",
       "ports": {
         "app": 6379
       },
-      "vm": "gcp-proxy"
+      "vm": "gcp-proxy",
+      "description": "In-memory data store",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     }
   }
 }

@@ -18,6 +18,14 @@ const CONFIGS_DIR = resolve(ENGINE_DIR, "../..");
 const CLOUD_ROOT = resolve(CONFIGS_DIR, "..");
 const GIT_BASE = process.env.GIT_BASE ?? resolve(CLOUD_ROOT, "..");
 const CLOUD_DATA_DIR = join(CONFIGS_DIR, "dist");             // sole write target (cloud/2_configs/dist)
+// `cloud-data-{name}.json` files are on a soft-deprecation track — the
+// preferred pattern is per-container `build-{name}.json` (each container
+// reads only its own file, already symlinked into its src/). The cloud-data
+// files keep generating into dist/ alongside build-*.json so unmigrated
+// consumers continue working until each one is individually moved off.
+// Do NOT add new derive functions whose output starts with "cloud-data-";
+// enrich `deriveContainerConfigs` / `deriveServiceConnections` instead so
+// the data flows into every build-{name}.json.
 const INPUT_JSON = join(CLOUD_DATA_DIR, "_cloud-data-consolidated.json");
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1689,14 +1697,25 @@ function deriveDeps(c: any): DerivedFile {
 // Main
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** Per-service connection data — resolves service name → IP + port from deploy.host + build.json */
+/** Per-service connection data — resolves service name → IP + port from deploy.host + build.json.
+ *
+ * Each entry carries enough metadata for any peer-service to introspect another:
+ *   { ip, ports, vm }                       — base connectivity (always present)
+ *   { domain, description }                 — when declared
+ *   { api: { has_api, type, ... } }         — when the peer has an `api` block in its build.json
+ *   { mcp: { has_mcp, transport, ... } }    — when the peer has an `mcp` block in its build.json
+ *
+ * This map flows into every `build-{container}.json` via `deriveContainerConfigs` so any
+ * container that wants to introspect peers (e.g. c3-services-api building its API/MCP
+ * registry) just reads its own build-{name}.json — no shared cloud-data file needed.
+ */
 function deriveServiceConnections(c: any): DerivedFile {
   const vms = c.vms as Record<string, any>;
   const services = c.services as Record<string, any>;
   const aliasMap = buildAliasToVm(vms);
 
-  // For each service: resolve deploy.host (ssh alias) → VM → wg_ip, include ports
-  const svcMap: Record<string, { ip: string; ports: Record<string, number>; vm: string }> = {};
+  // For each service: resolve deploy.host (ssh alias) → VM → wg_ip, include ports + api/mcp
+  const svcMap: Record<string, any> = {};
 
   for (const [svcName, svc] of Object.entries(services)) {
     const vmEntry = vms[svc.vm];
@@ -1719,6 +1738,10 @@ function deriveServiceConnections(c: any): DerivedFile {
       ip: vmEntry.wg_ip,
       ports,
       vm: vmEntry.ssh_alias ?? svc.vm,
+      ...(svc.domain ? { domain: svc.domain } : {}),
+      ...(svc.description ? { description: svc.description } : {}),
+      ...(svc.api ? { api: svc.api } : {}),
+      ...(svc.mcp ? { mcp: svc.mcp } : {}),
     };
   }
 
@@ -1738,72 +1761,6 @@ function deriveServiceConnections(c: any): DerivedFile {
       _generated: now(),
       services: svcMap,
       vms: vmList,
-    },
-  };
-}
-
-// ── c3-services-api registry ─────────────────────────────────────────────
-// Emits cloud-data-c3-services-api.json — the canonical registry of network-
-// reachable APIs and MCPs, consumed by bc-obs_c3-services-api at startup.
-//
-// Selection rules (declarative, no hardcoded names):
-//   - svc.api.has_api === true  → include as kind="api"
-//   - svc.mcp.has_mcp === true  → include as kind="mcp" (transport != stdio)
-//   - service must resolve to a VM with a wg_ip and have a port
-//
-// Adding a new API/MCP is a build.json-only change after this lands.
-function deriveC3ServicesApi(c: any): DerivedFile {
-  const vms = c.vms as Record<string, any>;
-  const services: Record<string, any> = {};
-
-  for (const [name, svc] of Object.entries<any>(c.services ?? {})) {
-    const vmEntry = vms[svc.vm];
-    if (!vmEntry?.wg_ip) continue;
-    if (!svc.port) continue;
-
-    const hasApi = svc.api?.has_api === true;
-    const hasMcp = svc.mcp?.has_mcp === true;
-    if (!hasApi && !hasMcp) continue;
-
-    const baseUrl = `http://${vmEntry.wg_ip}:${svc.port}`;
-    const entry: any = {
-      vm: vmEntry.ssh_alias ?? svc.vm,
-      wg_ip: vmEntry.wg_ip,
-      port: svc.port,
-      base_url: baseUrl,
-      ...(svc.domain ? { domain: svc.domain.split("/")[0] } : {}),
-      ...(svc.description ? { description: svc.description } : {}),
-    };
-    if (hasApi) {
-      entry.api = {
-        ...svc.api,
-        // Internal URL via wg_ip (for c3-services-api inside the VPN); api_url is the public one.
-        internal_url: svc.api.spec_path
-          ? `${baseUrl}${svc.api.spec_path}`
-          : svc.api.base_path
-            ? `${baseUrl}${svc.api.base_path}`
-            : baseUrl,
-      };
-    }
-    if (hasMcp) {
-      entry.mcp = {
-        ...svc.mcp,
-        internal_url: svc.mcp.endpoint_path ? `${baseUrl}${svc.mcp.endpoint_path}` : baseUrl,
-      };
-    }
-    services[name] = entry;
-  }
-
-  return {
-    name: "cloud-data-c3-services-api.json",
-    data: {
-      _meta: {
-        description: "Service registry consumed by bc-obs_c3-services-api at startup. Lists every network-reachable API and MCP. Sourced from each service's build.json `api` / `mcp` declaration.",
-        format_version: 1,
-      },
-      _generated: now(),
-      _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/c3-services-api",
-      services,
     },
   };
 }
@@ -1848,7 +1805,6 @@ function main() {
     deriveDeps(consolidated),
     deriveDatabases(consolidated),
     deriveSecretsEnvVarNames(consolidated),
-    deriveC3ServicesApi(consolidated),
   ];
 
   // Write all files (inject DO NOT EDIT header into each)

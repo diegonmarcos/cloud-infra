@@ -202,12 +202,7 @@ NEOF
     # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
     # of exec-format-error builds.
     RUNNERS_JSON=""
-    # cloud-data-*.json files are on the deprecation track and now live under
-    # 2_configs/dist/deprecated/ (see 2_configs/dist/deprecated/README.md). The
-    # legacy paths remain in the search list so out-of-tree clones / older
-    # checkouts keep working until every consumer migrates.
     for _p in \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/deprecated/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
         "$SRC_DIR/cloud-data-runners.json"; do
