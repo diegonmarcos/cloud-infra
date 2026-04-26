@@ -47,11 +47,19 @@ runs:
         set -eu
         cd "$HOME/git/vault"
         # build.sh env = generate_env — reads every provider + env_from_files
+        # and writes 6 dialect files: bash.env, fish.fish, systemd.envfile,
+        # docker.envfile, systemd.yaml, pub.json. Failing to generate any of
+        # them is a hard error (downstream cloud-builder mounts docker.envfile
+        # via compose env_file: — silent miss = the original CI breakage).
         bash ./build.sh env
         ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
-        [ -f "$ENV_FILE" ] || { echo "::error::vault-keys-bash.env not generated"; exit 1; }
+        DOCKER_ENV="$HOME/git/vault/vault-keys-docker.envfile"
+        [ -f "$ENV_FILE" ]   || { echo "::error::vault-keys-bash.env not generated";   exit 1; }
+        [ -f "$DOCKER_ENV" ] || { echo "::error::vault-keys-docker.envfile not generated (cloud-builder compose.yaml mounts this — Ship/gen-configs will abort downstream)"; exit 1; }
         KEYS=$(grep -cvE '^(#|$)' "$ENV_FILE" || true)
+        DOCKER_KEYS=$(grep -cvE '^(#|$)' "$DOCKER_ENV" || true)
         echo "vault-keys-bash.env generated: $KEYS keys"
+        echo "vault-keys-docker.envfile generated: $DOCKER_KEYS keys"
         echo "env_file=$ENV_FILE" >> "$GITHUB_OUTPUT"
 
     - name: Verify infrastructure keys present
@@ -59,6 +67,7 @@ runs:
       run: |
         set -eu
         ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
+        DOCKER_ENV="$HOME/git/vault/vault-keys-docker.envfile"
         MISSING=""
         for k in SOPS_AGE_KEY WG_PRIVATE_KEY GITHUB_TOKEN OCI_SSH_KEY GCP_PROXY_SSH_KEY GCP_T4_SSH_KEY; do
           grep -q "^${k}=" "$ENV_FILE" || MISSING="$MISSING $k"
@@ -68,6 +77,19 @@ runs:
           exit 1
         fi
         echo "All 6 required infra keys present in vault-keys-bash.env"
+
+        # Sanity: docker.envfile must carry at least the scalar (single-line)
+        # secrets that cloud-builder's compose env_file: passes through. The
+        # multi-line PEM keys come via parent-shell envvars, not env_file.
+        DOCKER_MISSING=""
+        for k in GITHUB_TOKEN WG_PRIVATE_KEY; do
+          grep -q "^${k}=" "$DOCKER_ENV" || DOCKER_MISSING="$DOCKER_MISSING $k"
+        done
+        if [ -n "$DOCKER_MISSING" ]; then
+          echo "::error::Missing scalar keys in vault-keys-docker.envfile:$DOCKER_MISSING"
+          exit 1
+        fi
+        echo "Docker envfile has required scalar keys"
 
     - name: Export SOPS_AGE_KEY_FILE for downstream steps
       shell: bash
