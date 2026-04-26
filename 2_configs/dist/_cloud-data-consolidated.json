@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-26T15:07:46.651Z",
+    "generated_at": "2026-04-26T15:35:06.285Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -881,10 +881,10 @@
       },
       "upstream_image": "etherpad/etherpad:latest",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/1",
-        "api_url": "https://pad.diegonmarcos.com/api/1",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -973,10 +973,10 @@
       },
       "upstream_image": "filebrowser/filebrowser:latest",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://files.diegonmarcos.com/api",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/health"
         ]
@@ -1060,9 +1060,20 @@
           "default": true
         }
       ],
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 9,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Google Personal MCP",
+        "description": "IMAP/SMTP access for personal Google accounts via App Password, multi-account support.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
-        "has_web_ui": false,
+        "has_web_ui": true,
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": [
@@ -1138,9 +1149,20 @@
         "path": "/health"
       },
       "user_google_email": "me@diegonmarcos.com",
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 114,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Google Workspace MCP",
+        "description": "Gmail, Calendar, Drive, Docs, Sheets, Forms, Slides, Chat, Tasks, Contacts, Search, Apps Script via OAuth 2.0/2.1.",
+        "auth": "oidc",
+        "sdk": "fastmcp@3.1.1"
+      },
       "api": {
         "has_api": false,
-        "has_web_ui": false,
+        "has_web_ui": true,
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": [
@@ -1230,10 +1252,10 @@
       "upstream_image": "gristlabs/grist:latest",
       "grist_admin_email": "admin@diegonmarcos.com",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://sheets.diegonmarcos.com/api",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -1345,10 +1367,10 @@
       },
       "upstream_image": "quay.io/hedgedoc/hedgedoc:latest",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://doc.diegonmarcos.com/api",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -1439,9 +1461,20 @@
         "stalwart_smtp": 2465,
         "stalwart_jmap_https": 2443
       },
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 28,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Mail MCP",
+        "description": "IMAP/SMTP/Admin via Stalwart REST API; proxies google-personal-mcp tools.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
-        "has_web_ui": false,
+        "has_web_ui": true,
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
@@ -1683,10 +1716,10 @@
         "model": "deepseek-r1:14b-qwen-distill-q8_0"
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/v4/system/ping",
-        "api_url": "https://chat.diegonmarcos.com/api/v4/system/ping",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/api/v4/system/ping"
         ]
@@ -1761,6 +1794,17 @@
         "app": 3102
       },
       "upstream_image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 10,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Mattermost MCP",
+        "description": "Mattermost chat read, post, react, channel management via Mattermost API.",
+        "auth": "bearer",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -1910,10 +1954,10 @@
         "user": "photoprism"
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/v1/status",
-        "api_url": "https://photos.diegonmarcos.com/api/v1/status",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/api/v1/status"
         ]
@@ -2064,10 +2108,10 @@
       },
       "upstream_image": "tomsquest/docker-radicale:latest",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/.well-known/caldav",
-        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/.web/"
         ]
@@ -2684,10 +2728,10 @@
         "mem_reservation": "32M"
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://vault.diegonmarcos.com/api",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/alive"
         ]
@@ -2914,10 +2958,10 @@
         "s3_force_path_style": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://api.diegonmarcos.com/api",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": []
       },
       "secret_env_vars": [
@@ -3012,7 +3056,7 @@
         "enabled": false
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
         "api_path": null,
         "api_url": null,
@@ -3084,9 +3128,9 @@
       ],
       "notes": "Primary: GCP Spot T4. Fallback: Vast.ai on-demand. WireGuard only (10.0.0.8).",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": false,
-        "api_path": "/api",
+        "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
       }
@@ -3124,9 +3168,9 @@
         "app": 11434
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": false,
-        "api_path": "/api",
+        "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
       }
@@ -3198,9 +3242,9 @@
         "mem_limit": "6G"
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": false,
-        "api_path": "/api",
+        "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
       }
@@ -3587,10 +3631,10 @@
       },
       "timezone": "Europe/Madrid",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/health",
-        "api_url": "https://auth.diegonmarcos.com/api/health",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/api/health"
         ]
@@ -3946,7 +3990,7 @@
         "mem_reservation": "16M"
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": false,
         "api_path": null,
         "api_url": null,
@@ -4069,10 +4113,10 @@
         "endpoint_check": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/docs",
-        "api_url": "https://api.diegonmarcos.com/c3-infra-api/docs",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/health"
         ]
@@ -4166,9 +4210,20 @@
         "_why_init": "c3-infra-mcp spawns ssh/git/curl/dig children concurrently via execAsync. Without docker-init (tini) as PID 1, zombie reaping doesn't happen and pids_limit is exhausted within days -> 'sh: 0: Cannot fork' on healthcheck.",
         "_why_pids_limit": "ssh-exec + git-clone + curl all fan out concurrently across ~24 VM/service targets. Default 256 is too tight; 1024 leaves safe headroom with tini reaping orphans."
       },
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 109,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "C3 Infra MCP",
+        "description": "Cloud health, DevOps operations, workflows, cost tracking, security scanning, observability, front-end deployment.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
-        "has_web_ui": false,
+        "has_web_ui": true,
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": [
@@ -4260,10 +4315,10 @@
         "endpoint_check": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/docs",
-        "api_url": "https://api.diegonmarcos.com/c3-services-api/docs",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/health"
         ]
@@ -4379,6 +4434,17 @@
           "_why": "Bounded LRU so the retry-state Map can never grow beyond the declared child count (OOM H1 root cause). max_ms caps exponential backoff per child."
         }
       },
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 127,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "C3 Services MCP",
+        "description": "Unified service API gateway: Grafana, Matomo, Umami, Ntfy, Syncthing, Crawlee, Authelia, NocoDB, PhotoPrism, Gitea, Grist, HedgeDoc, Etherpad, Vaultwarden; proxies infra and user MCPs.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -4460,6 +4526,17 @@
       "runtime": {
         "git_root": "/home/diego/Mounts/Git",
         "data_path": "/data"
+      },
+      "mcp": {
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 48,
+        "resources_count": 2,
+        "prompts_count": 0,
+        "display_name": "Cloud CGC MCP",
+        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       },
       "api": {
         "has_api": false,
@@ -4623,10 +4700,10 @@
         "endpoint_check": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/v2",
-        "api_url": "https://workflows.diegonmarcos.com/api/v2",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -4964,10 +5041,10 @@
         "endpoint_check": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/health",
-        "api_url": "https://grafana.diegonmarcos.com/api/health",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": []
       },
       "secret_env_vars": [
@@ -5063,10 +5140,10 @@
         ]
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -5270,10 +5347,10 @@
       },
       "timezone": "Europe/Paris",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/v1",
-        "api_url": "https://rss.diegonmarcos.com/v1",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": [
           "/"
         ]
@@ -5498,10 +5575,10 @@
         "enabled": true
       },
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/heartbeat",
-        "api_url": "https://analytics.diegonmarcos.com/api/heartbeat",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": []
       },
       "secret_env_vars": [
@@ -5678,6 +5755,16 @@
         "ports": [],
         "networks": []
       },
+      "mcp": {
+        "transport": "stdio",
+        "tools_count": 16,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Diego Personal Data MCP",
+        "description": "READ-ONLY personal data access: vault metadata, identity docs, communications, media, finance, health (redacted).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -5842,10 +5929,10 @@
       },
       "upstream_image": "gitea/gitea:latest",
       "api": {
-        "has_api": true,
+        "has_api": false,
         "has_web_ui": true,
-        "api_path": "/api/v1",
-        "api_url": "https://git.diegonmarcos.com/api/v1",
+        "api_path": null,
+        "api_url": null,
         "healthcheck_paths": []
       },
       "secret_env_vars": [
