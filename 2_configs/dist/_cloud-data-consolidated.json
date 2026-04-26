@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-25T14:24:46.965Z",
+    "generated_at": "2026-04-26T15:07:46.651Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -43,22 +43,16 @@
         {
           "port": 25,
           "proto": "tcp",
-          "desc": "SMTP (Maddy MX — must be public, RFC)"
+          "desc": "SMTP (Maddy MX — must be public, RFC)",
+          "source": "0.0.0.0/0",
+          "owned_by": "maddy"
         },
         {
           "port": 8080,
           "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
-        },
-        {
-          "port": 22000,
-          "proto": "tcp",
-          "desc": "Syncthing transfer"
-        },
-        {
-          "port": 21027,
-          "proto": "udp",
-          "desc": "Syncthing discovery"
+          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
+          "source": "0.0.0.0/0",
+          "owned_by": "smtp-proxy"
         }
       ],
       "gha": {
@@ -134,44 +128,32 @@
       "rescue_port": 2200,
       "public_ports": [
         {
-          "port": 3010,
-          "proto": "tcp",
-          "desc": "AFFiNE"
-        },
-        {
           "port": 8081,
           "proto": "tcp",
-          "desc": "C3 API"
+          "desc": "C3 API",
+          "source": "0.0.0.0/0",
+          "owned_by": "c3-infra-api"
         },
         {
           "port": 3000,
           "proto": "tcp",
-          "desc": "Crawlee/Gitea/Backup"
-        },
-        {
-          "port": 3001,
-          "proto": "tcp",
-          "desc": "Crawlee API"
+          "desc": "Crawlee dashboard/API",
+          "source": "0.0.0.0/0",
+          "owned_by": "crawlee-cloud"
         },
         {
           "port": 2222,
           "proto": "tcp",
-          "desc": "Gitea SSH"
-        },
-        {
-          "port": 2223,
-          "proto": "tcp",
-          "desc": "Backup BUP SSH"
-        },
-        {
-          "port": 2224,
-          "proto": "tcp",
-          "desc": "Backup Borg SSH"
+          "desc": "Gitea SSH",
+          "source": "0.0.0.0/0",
+          "owned_by": "gitea"
         },
         {
           "port": 8099,
           "proto": "tcp",
-          "desc": "cloud-spec httpd"
+          "desc": "cloud-spec httpd",
+          "source": "0.0.0.0/0",
+          "owned_by": "cloud-spec"
         }
       ],
       "gha": {
@@ -196,7 +178,7 @@
         "revealmd",
         "vaultwarden",
         "crawlee-cloud",
-        "fincept-server",
+        "fin-api",
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
@@ -296,57 +278,79 @@
         {
           "port": 22,
           "proto": "tcp",
-          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
+          "source": "0.0.0.0/0",
+          "owned_by": "system"
         },
         {
           "port": 80,
           "proto": "tcp",
-          "desc": "HTTP (Caddy)"
+          "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "tcp",
-          "desc": "HTTPS (Caddy)"
+          "desc": "HTTPS (Caddy)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "udp",
-          "desc": "QUIC (Caddy)"
+          "desc": "QUIC (Caddy)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 993,
           "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)"
+          "desc": "IMAPS (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 465,
           "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)"
+          "desc": "SMTPS (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 587,
           "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+          "desc": "SMTP Submission (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 2443,
           "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
+          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         }
       ],
       "gha": {
@@ -960,7 +964,7 @@
         "app": 3015
       },
       "health": {
-        "path": "/health"
+        "path": "/"
       },
       "monitoring": {
         "tls_check": true,
@@ -1659,7 +1663,9 @@
         "path": "/api/v4/system/ping"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true,
@@ -2559,7 +2565,9 @@
         "path": "/"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true,
@@ -2884,10 +2892,12 @@
         "minio_console": 9001
       },
       "health": {
-        "path": "wget -qO /dev/null http://127.0.0.1:3000/health || exit 1"
+        "path": "/"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true
@@ -2922,27 +2932,29 @@
         "RUNNER_TOKEN"
       ]
     },
-    "fincept-server": {
+    "fin-api": {
       "category": "fin",
       "vm": "oci-A1-f_0",
-      "folder": "ac-fin_fincept-server",
-      "description": "Fincept Terminal backend — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
+      "folder": "ac-fin_fin-api",
+      "description": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
       "enabled": true,
-      "domain": "fincept-api.diegonmarcos.com",
+      "domain": "api.diegonmarcos.com/fin-api",
       "port": 8340,
-      "dns": "fincept-api.app",
+      "dns": "fin-api.app",
       "upstream": "10.0.0.6:8340",
       "containers": {
         "app": {
-          "container_name": "fincept-server",
-          "image": "ghcr.io/diegonmarcos/fincept-server:latest",
+          "container_name": "fin-api",
+          "image": "ghcr.io/diegonmarcos/fin-api:latest",
           "port": 8340,
-          "port_env": "FINCEPT_PORT",
-          "dns": "fincept-api.app",
+          "port_env": "FIN_API_PORT",
+          "dns": "fin-api.app",
           "public": true,
           "proxy": {
-            "domain": "fincept-api.diegonmarcos.com",
-            "auth": "default"
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/fin-api",
+            "auth": "two_factor"
           },
           "healthcheck": "/health",
           "monitoring": {
@@ -2964,13 +2976,13 @@
         }
       },
       "container_names": [
-        "fincept-server"
+        "fin-api"
       ],
       "all_ports": [
         "8340"
       ],
       "all_dns": [
-        "fincept-api.app"
+        "fin-api.app"
       ],
       "compose": {
         "containers": [],
@@ -2979,18 +2991,22 @@
       },
       "proxy": {
         "primary": {
-          "domain": "fincept-api.diegonmarcos.com",
-          "auth": "default"
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/fin-api",
+          "auth": "two_factor"
         }
       },
       "declared_ports": {
         "app": 8340
       },
       "health": {
-        "path": "/health"
+        "path": "/fin-api/health"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": false
@@ -3562,7 +3578,9 @@
         "path": "/api/health"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true
@@ -3978,7 +3996,7 @@
       "folder": "bc-obs_c3-infra-api",
       "description": "C3 REST API — Cloud Control Center Fastify API",
       "enabled": true,
-      "domain": "api.diegonmarcos.com/c3-api",
+      "domain": "api.diegonmarcos.com/c3-infra-api",
       "flake": "c3-infra-api",
       "port": 8081,
       "dns": "c3-infra-api.app",
@@ -3994,7 +4012,7 @@
           "proxy": {
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/c3-api",
+            "base_path": "/c3-infra-api",
             "auth": "two_factor"
           },
           "healthcheck": "/health",
@@ -4035,7 +4053,7 @@
         "primary": {
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/c3-api",
+          "base_path": "/c3-infra-api",
           "auth": "two_factor"
         }
       },
@@ -4043,7 +4061,7 @@
         "app": 8081
       },
       "health": {
-        "path": "/health"
+        "path": "/c3-infra-api/health"
       },
       "monitoring": {
         "tls_check": true,
@@ -4054,7 +4072,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/docs",
-        "api_url": "https://api.diegonmarcos.com/c3-api/docs",
+        "api_url": "https://api.diegonmarcos.com/c3-infra-api/docs",
         "healthcheck_paths": [
           "/health"
         ]
@@ -4175,7 +4193,7 @@
       "folder": "bc-obs_c3-services-api",
       "description": "C3 Services REST API — service API gateway Fastify API",
       "enabled": true,
-      "domain": "api.diegonmarcos.com/services",
+      "domain": "api.diegonmarcos.com/c3-services-api",
       "flake": "c3-services-api",
       "port": 8082,
       "dns": "c3-services-api.app",
@@ -4191,7 +4209,7 @@
           "proxy": {
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/services",
+            "base_path": "/c3-services-api",
             "auth": "two_factor"
           },
           "healthcheck": "/health",
@@ -4226,7 +4244,7 @@
         "primary": {
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/services",
+          "base_path": "/c3-services-api",
           "auth": "two_factor"
         }
       },
@@ -4234,7 +4252,7 @@
         "app": 8082
       },
       "health": {
-        "path": "/health"
+        "path": "/c3-services-api/health"
       },
       "monitoring": {
         "tls_check": true,
@@ -4245,7 +4263,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/docs",
-        "api_url": "https://api.diegonmarcos.com/services/docs",
+        "api_url": "https://api.diegonmarcos.com/c3-services-api/docs",
         "healthcheck_paths": [
           "/health"
         ]
@@ -4938,10 +4956,12 @@
         "tempo": 3210
       },
       "health": {
-        "path": "wget -q --spider http://localhost:3200/api/health"
+        "path": "/"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "api": {
         "has_api": true,
@@ -5032,7 +5052,9 @@
         "path": "/"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true,
@@ -5469,9 +5491,6 @@
         "app": 3006,
         "db": 5442
       },
-      "health": {
-        "path": "curl -sf http://localhost:3000/api/heartbeat || exit 1"
-      },
       "monitoring": {
         "tls_check": true
       },
@@ -5779,10 +5798,12 @@
         "app": 3002
       },
       "health": {
-        "path": "curl -f http://localhost:3002/"
+        "path": "/"
       },
       "monitoring": {
-        "tls_check": true
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
       },
       "backup": {
         "enabled": true,
@@ -5929,9 +5950,6 @@
       "declared_ports": {
         "app": 6379
       },
-      "health": {
-        "path": "redis-cli ping"
-      },
       "backup": {
         "enabled": true,
         "databases": [
@@ -5980,121 +5998,125 @@
         {
           "port": 25,
           "proto": "tcp",
-          "desc": "SMTP (Maddy MX — must be public, RFC)"
+          "desc": "SMTP (Maddy MX — must be public, RFC)",
+          "source": "0.0.0.0/0",
+          "owned_by": "maddy"
         },
         {
           "port": 8080,
           "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
-        },
-        {
-          "port": 22000,
-          "proto": "tcp",
-          "desc": "Syncthing transfer"
-        },
-        {
-          "port": 21027,
-          "proto": "udp",
-          "desc": "Syncthing discovery"
+          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
+          "source": "0.0.0.0/0",
+          "owned_by": "smtp-proxy"
         }
       ],
       "oci-apps": [
         {
-          "port": 3010,
-          "proto": "tcp",
-          "desc": "AFFiNE"
-        },
-        {
           "port": 8081,
           "proto": "tcp",
-          "desc": "C3 API"
+          "desc": "C3 API",
+          "source": "0.0.0.0/0",
+          "owned_by": "c3-infra-api"
         },
         {
           "port": 3000,
           "proto": "tcp",
-          "desc": "Crawlee/Gitea/Backup"
-        },
-        {
-          "port": 3001,
-          "proto": "tcp",
-          "desc": "Crawlee API"
+          "desc": "Crawlee dashboard/API",
+          "source": "0.0.0.0/0",
+          "owned_by": "crawlee-cloud"
         },
         {
           "port": 2222,
           "proto": "tcp",
-          "desc": "Gitea SSH"
-        },
-        {
-          "port": 2223,
-          "proto": "tcp",
-          "desc": "Backup BUP SSH"
-        },
-        {
-          "port": 2224,
-          "proto": "tcp",
-          "desc": "Backup Borg SSH"
+          "desc": "Gitea SSH",
+          "source": "0.0.0.0/0",
+          "owned_by": "gitea"
         },
         {
           "port": 8099,
           "proto": "tcp",
-          "desc": "cloud-spec httpd"
+          "desc": "cloud-spec httpd",
+          "source": "0.0.0.0/0",
+          "owned_by": "cloud-spec"
         }
       ],
       "gcp-proxy": [
         {
           "port": 22,
           "proto": "tcp",
-          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
+          "source": "0.0.0.0/0",
+          "owned_by": "system"
         },
         {
           "port": 80,
           "proto": "tcp",
-          "desc": "HTTP (Caddy)"
+          "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "tcp",
-          "desc": "HTTPS (Caddy)"
+          "desc": "HTTPS (Caddy)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "udp",
-          "desc": "QUIC (Caddy)"
+          "desc": "QUIC (Caddy)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 993,
           "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)"
+          "desc": "IMAPS (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 465,
           "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)"
+          "desc": "SMTPS (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 587,
           "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+          "desc": "SMTP Submission (Caddy L4 → oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         },
         {
           "port": 2443,
           "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
+          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2465,
+          "proto": "tcp",
+          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2587,
+          "proto": "tcp",
+          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 2993,
+          "proto": "tcp",
+          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
         }
       ]
     },
@@ -6332,10 +6354,10 @@
         "service": "crawlee-cloud"
       },
       {
-        "name": "fincept-api.app",
+        "name": "fin-api.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "fincept-server"
+        "service": "fin-api"
       },
       {
         "name": "ollama.app",
@@ -6542,22 +6564,16 @@
           {
             "port": 25,
             "proto": "tcp",
-            "desc": "SMTP (Maddy MX — must be public, RFC)"
+            "desc": "SMTP (Maddy MX — must be public, RFC)",
+            "source": "0.0.0.0/0",
+            "owned_by": "maddy"
           },
           {
             "port": 8080,
             "proto": "tcp",
-            "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
-          },
-          {
-            "port": 22000,
-            "proto": "tcp",
-            "desc": "Syncthing transfer"
-          },
-          {
-            "port": 21027,
-            "proto": "udp",
-            "desc": "Syncthing discovery"
+            "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
+            "source": "0.0.0.0/0",
+            "owned_by": "smtp-proxy"
           }
         ],
         "idle_shutdown": null,
@@ -6637,44 +6653,32 @@
         },
         "public_ports": [
           {
-            "port": 3010,
-            "proto": "tcp",
-            "desc": "AFFiNE"
-          },
-          {
             "port": 8081,
             "proto": "tcp",
-            "desc": "C3 API"
+            "desc": "C3 API",
+            "source": "0.0.0.0/0",
+            "owned_by": "c3-infra-api"
           },
           {
             "port": 3000,
             "proto": "tcp",
-            "desc": "Crawlee/Gitea/Backup"
-          },
-          {
-            "port": 3001,
-            "proto": "tcp",
-            "desc": "Crawlee API"
+            "desc": "Crawlee dashboard/API",
+            "source": "0.0.0.0/0",
+            "owned_by": "crawlee-cloud"
           },
           {
             "port": 2222,
             "proto": "tcp",
-            "desc": "Gitea SSH"
-          },
-          {
-            "port": 2223,
-            "proto": "tcp",
-            "desc": "Backup BUP SSH"
-          },
-          {
-            "port": 2224,
-            "proto": "tcp",
-            "desc": "Backup Borg SSH"
+            "desc": "Gitea SSH",
+            "source": "0.0.0.0/0",
+            "owned_by": "gitea"
           },
           {
             "port": 8099,
             "proto": "tcp",
-            "desc": "cloud-spec httpd"
+            "desc": "cloud-spec httpd",
+            "source": "0.0.0.0/0",
+            "owned_by": "cloud-spec"
           }
         ],
         "idle_shutdown": null,
@@ -6695,7 +6699,7 @@
           "revealmd",
           "vaultwarden",
           "crawlee-cloud",
-          "fincept-server",
+          "fin-api",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
@@ -6798,57 +6802,79 @@
           {
             "port": 22,
             "proto": "tcp",
-            "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
+            "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
+            "source": "0.0.0.0/0",
+            "owned_by": "system"
           },
           {
             "port": 80,
             "proto": "tcp",
-            "desc": "HTTP (Caddy)"
+            "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 443,
             "proto": "tcp",
-            "desc": "HTTPS (Caddy)"
+            "desc": "HTTPS (Caddy)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 443,
             "proto": "udp",
-            "desc": "QUIC (Caddy)"
+            "desc": "QUIC (Caddy)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 993,
             "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → oci-mail)"
+            "desc": "IMAPS (Caddy L4 → oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 465,
             "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → oci-mail)"
+            "desc": "SMTPS (Caddy L4 → oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 587,
             "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → oci-mail)"
-          },
-          {
-            "port": 2993,
-            "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)"
-          },
-          {
-            "port": 2465,
-            "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)"
-          },
-          {
-            "port": 2587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)"
+            "desc": "SMTP Submission (Caddy L4 → oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           },
           {
             "port": 2443,
             "proto": "tcp",
-            "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)"
+            "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 2465,
+            "proto": "tcp",
+            "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 2587,
+            "proto": "tcp",
+            "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 2993,
+            "proto": "tcp",
+            "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy"
           }
         ],
         "idle_shutdown": null,
@@ -7118,8 +7144,8 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "fincept-server": {
-        "dir": "ac-fin_fincept-server",
+      "fin-api": {
+        "dir": "ac-fin_fin-api",
         "vm": "oci-apps",
         "has_docker": true
       },
