@@ -309,39 +309,55 @@ NEOF
             fi
 
             REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
+            REMOTE_TOKEN_FILE="/tmp/${SERVICE_NAME}-ghcr-token"
             log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
             ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
             rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
-            # Build + login + push happen INSIDE the cloud-builder-x container,
-            # which mounts the full ~/git/vault read-only (see
-            # bd-cloud-builder-x/src/compose.nix). Auth comes fresh from
-            # vault on every build — replaces the stale host
-            # ~/.docker/config.json that previously caused "denied: denied".
-            #
-            # The vault path is data-driven from cloud-data-runners.json (or
-            # falls back to the canonical layout). Only the token file is
-            # parameterised; everything else uses fixed paths inside the
-            # container as declared by compose.nix.
+
+            # GHCR token: read where vault IS available (this side — runner-side
+            # cloud-builder has ~/git/vault mounted by ship.yml), then ship to
+            # the remote VM via SSH stdin. Avoids requiring vault on every VM
+            # that hosts cloud-builder-x. Surfaced 2026-04-27 (ship run
+            # 24998852451): /home/ubuntu/git/vault on oci-apps was an empty
+            # stub dir; cat'ing the token inside cloud-builder-x silently
+            # failed → docker login failed → build/push failed → engine
+            # logged misleading "Pushed" because the SSH | while-read pipe
+            # swallowed the non-zero exit (no pipefail).
             VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-/home/diego/git/vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
+            GHCR_TOKEN_VAL=""
+            if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+                GHCR_TOKEN_VAL=$(cat "$VAULT_GHCR_TOKEN_PATH")
+            elif [ -n "${GITHUB_TOKEN:-}" ]; then
+                GHCR_TOKEN_VAL="$GITHUB_TOKEN"
+            else
+                log_error "no GHCR token available (vault: $VAULT_GHCR_TOKEN_PATH missing AND GITHUB_TOKEN unset)"
+                return 1
+            fi
+            ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
 
-            # Same --cache-from strategy as the `local` branch — pull existing
-            # GHCR image, use as cache source. `|| true` tolerates first build.
+            # Build + login + push happen INSIDE the cloud-builder-x container.
+            # Token is mounted from the SSH-staged file (no vault dep on VM).
+            # `set -o pipefail` so any failure in the | while-read pipe propagates
+            # — without it, SSH-side build/push failures returned exit 0 and the
+            # engine continued as if the push succeeded.
+            set -o pipefail
             ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
-                -v \$HOME/git/vault:/home/diego/git/vault:ro \
+                -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
                 -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
                 $RUNNER_IMAGE \
                 sh -c 'set -e; \
-                    cat $VAULT_GHCR_TOKEN_PATH | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
-                    echo \"[ghcr] login ok (vault token)\" && \
+                    cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
+                    echo \"[ghcr] login ok\" && \
                     (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
                     (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
                     docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
                     docker push $FULL_IMAGE:latest && \
                     docker push $BINARIES_IMAGE:latest && \
                     docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
-            ssh $SSH_OPTS "$RUNNER_HOST" "rm -rf $REMOTE_BUILD_DIR"
+            set +o pipefail
+            ssh $SSH_OPTS "$RUNNER_HOST" "rm -f $REMOTE_TOKEN_FILE; rm -rf $REMOTE_BUILD_DIR"
             ;;
 
         *)
