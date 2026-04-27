@@ -180,22 +180,39 @@ STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && p
 INJECT_HEADER="$STEPS_DIR/../libs/inject-header.sh"
 ENGINE_NAME="1_workflows/src/scripts/cloud-ship-container-engine.sh"
 export INJECT_HEADER ENGINE_NAME
-. "$STEPS_DIR/cloud-ship-container-step-build-docker.sh"
-. "$STEPS_DIR/cloud-ship-container-step-build-configs.sh"
-. "$STEPS_DIR/cloud-ship-container-step-build-nix.sh"
-. "$STEPS_DIR/cloud-ship-container-step-docs.sh"
-. "$STEPS_DIR/cloud-ship-container-step-secrets-decrypt.sh"
-. "$STEPS_DIR/cloud-ship-container-step-verify-secret-consumption.sh"
-. "$STEPS_DIR/cloud-ship-container-step-deploy-rsync.sh"
-. "$STEPS_DIR/cloud-ship-container-step-deploy-compose.sh"
-. "$STEPS_DIR/cloud-ship-container-step-deploy-health.sh"
-. "$STEPS_DIR/cloud-ship-container-step-lifecycle.sh"
-. "$STEPS_DIR/cloud-ship-container-step-wrangler.sh"
-. "$STEPS_DIR/cloud-ship-container-step-terraform-apply.sh"
-. "$STEPS_DIR/cloud-ship-container-step-terraform-plan.sh"
-. "$STEPS_DIR/cloud-ship-container-step-terraform-import.sh"
-. "$STEPS_DIR/cloud-ship-container-step-clean.sh"
-. "$STEPS_DIR/cloud-ship-container-step-build-compose.sh"
+# Source step files — tolerate any missing step (graceful degradation).
+# A step file may be absent inside cloud-builder when its /root/git/cloud
+# clone is older than the engine's expected fileset (e.g. cloud-builder
+# image baked before a new step script landed in the cloud repo, and the
+# entrypoint's sync silently failed). Without `-f` guards, a missing file
+# aborts the engine before it even prints the service name. Failure mode
+# proven 2026-04-27 ship run 24994988037 — verify-secret-consumption.sh
+# absent → 2 services failed before any step ran.
+for _step in \
+    cloud-ship-container-step-build-docker.sh \
+    cloud-ship-container-step-build-configs.sh \
+    cloud-ship-container-step-build-nix.sh \
+    cloud-ship-container-step-docs.sh \
+    cloud-ship-container-step-secrets-decrypt.sh \
+    cloud-ship-container-step-verify-secret-consumption.sh \
+    cloud-ship-container-step-deploy-rsync.sh \
+    cloud-ship-container-step-deploy-compose.sh \
+    cloud-ship-container-step-deploy-health.sh \
+    cloud-ship-container-step-lifecycle.sh \
+    cloud-ship-container-step-wrangler.sh \
+    cloud-ship-container-step-terraform-apply.sh \
+    cloud-ship-container-step-terraform-plan.sh \
+    cloud-ship-container-step-terraform-import.sh \
+    cloud-ship-container-step-clean.sh \
+    cloud-ship-container-step-build-compose.sh; do
+    if [ -f "$STEPS_DIR/$_step" ]; then
+        # shellcheck disable=SC1090
+        . "$STEPS_DIR/$_step"
+    else
+        log_warn "step file missing — skipping: $_step (engine drift; bump cloud-builder image)"
+    fi
+done
+unset _step
 
 # ── Main ─────────────────────────────────────────────────────────────
 echo "========================================"
