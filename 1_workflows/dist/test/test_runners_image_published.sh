@@ -49,12 +49,14 @@ if ! gh auth status >/dev/null 2>&1; then
     exit 0
 fi
 
-# Resolve runners.json — prefer derived dist/, fall back to cloud-data submodule
+# Resolve runners.json — prefer in-image bundled, then derived dist/, fall back to cloud-data submodule
 RUNNERS_JSON=""
 for p in \
-    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
-    "$REPO_ROOT/I_cloud-data/cloud-data-runners.json" \
-    "$REPO_ROOT/cloud-data/cloud-data-runners.json"; do
+    "/app/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/I_cloud-data/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
 if [ -z "$RUNNERS_JSON" ]; then

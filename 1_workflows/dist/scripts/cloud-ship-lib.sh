@@ -20,7 +20,20 @@ CLOUD_ROOT="${CLOUD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/../../.." && 
 # =============================================================================
 
 SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
-CONFIG_FILE="$CLOUD_ROOT/cloud-data-topology.json"
+# 2026-04-27 migrated: cloud-data-topology.json -> _cloud-data-consolidated.json
+# Consolidated is a superset of topology (same .services / .vms keys).
+CONFIG_FILE=""
+for _p in \
+    "/app/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/2_configs/dist/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/cloud-data/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/_cloud-data-consolidated.json" \
+    "/app/cloud-data-topology.json" \
+    "$CLOUD_ROOT/2_configs/dist/cloud-data-topology.json" \
+    "$CLOUD_ROOT/cloud-data/cloud-data-topology.json" \
+    "$CLOUD_ROOT/cloud-data-topology.json"; do
+    [ -f "$_p" ] && { CONFIG_FILE="$_p"; break; }
+done
 
 # Shared node_modules — ESM (tsx) does not respect NODE_PATH, but CJS fallback does.
 # Set here so all tsx calls in this script find packages from the shared install.
