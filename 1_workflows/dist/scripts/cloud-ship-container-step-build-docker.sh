@@ -19,6 +19,24 @@ step_docker() {
         ""|null) log "No docker.image in build.json -- skipping"; return 0 ;;
     esac
 
+    # Diagnostic: surface silent step_docker deaths.
+    # The engine has `set -e`, and step_docker runs backgrounded with `&` —
+    # any non-zero command outside `||`/`&&` chains aborts the function with
+    # zero output, leaving the parent's `wait $PID_DOCKER` to log only
+    # "docker build failed" with no clue WHERE. Surfaced 2026-04-27 (ship
+    # run 24995653483): both c3-services-mcp + mail-mcp died ~0.5s after
+    # `Native app packaged` with no log between that and the parent's error.
+    #
+    # ERR trap fires on every set -e exit; prints line + command + exit
+    # code. RETURN trap clears both on function exit so traps don't leak
+    # into other steps in the parallel block.
+    _docker_err() {
+        log_error "step_docker died at line $1 (exit $2): $3"
+        return "$2"
+    }
+    trap '_docker_err "$LINENO" "$?" "$BASH_COMMAND"' ERR
+    trap 'trap - ERR RETURN' RETURN
+
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
     DOCKERFILE="${DOCKER_FILE:-Dockerfile}"
@@ -214,13 +232,10 @@ NEOF
     # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
     # of exec-format-error builds.
     RUNNERS_JSON=""
-    # cloud-data-*.json files are on the deprecation track and now live under
-    # 2_configs/dist/deprecated/ (see 2_configs/dist/deprecated/README.md). The
-    # legacy paths remain in the search list so out-of-tree clones / older
-    # checkouts keep working until every consumer migrates.
     for _p in \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/deprecated/cloud-data-runners.json" \
+        "/app/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data/cloud-data-runners.json" \
         "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
         "$SRC_DIR/cloud-data-runners.json"; do
         [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
