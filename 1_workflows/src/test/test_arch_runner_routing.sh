@@ -20,8 +20,10 @@ DISPATCH="$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"
 
 RUNNERS_JSON=""
 for p in \
-    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
-    "$REPO_ROOT/cloud-data-runners.json"; do
+    "/app/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
 

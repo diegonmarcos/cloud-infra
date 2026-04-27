@@ -12,11 +12,19 @@ in {
   };
 
   # Activation: read cloud-data-deps.json → populate nodeNpmDeps.cloud
+  # Path-priority chain: in-image bundle > runtime deploy dir > legacy clone
   config.home.activation.mergeCloudDeps = lib.hm.dag.entryBefore ["sharedNodeModules"] ''
-    CLOUD_DEPS="$HOME/git/cloud/cloud-data/cloud-data-deps.json"
+    CLOUD_DEPS=""
+    for _p in \
+      /app/cloud-data-deps.json \
+      /opt/containers/cloud-data/cloud-data-deps.json \
+      "$HOME/git/cloud/2_configs/dist/cloud-data-deps.json" \
+      "$HOME/git/cloud/cloud-data/cloud-data-deps.json"; do
+      [ -f "$_p" ] && CLOUD_DEPS="$_p" && break
+    done
     CLOUD_OUT="$HOME/.node_modules/.cloud-deps-merged.json"
 
-    if [ -f "$CLOUD_DEPS" ]; then
+    if [ -n "$CLOUD_DEPS" ] && [ -f "$CLOUD_DEPS" ]; then
       PATH="${nodejs}/bin:$PATH" ${nodejs}/bin/node -e "
         const fs = require('fs');
         const deps = {};

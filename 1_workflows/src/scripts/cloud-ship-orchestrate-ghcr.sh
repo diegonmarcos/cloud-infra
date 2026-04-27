@@ -8,9 +8,16 @@ FILTER="${1:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
-if [ ! -f "$GHA_CONFIG" ]; then
-  echo "ERROR: $GHA_CONFIG not found" >&2
+GHA_CONFIG=""
+for _p in \
+    "/app/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+    [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+done
+if [ -z "$GHA_CONFIG" ]; then
+  echo "FATAL: cloud-data-gha-config.json not found" >&2
   exit 1
 fi
 

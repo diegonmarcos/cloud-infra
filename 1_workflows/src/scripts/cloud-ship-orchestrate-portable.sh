@@ -48,8 +48,15 @@ done
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT" || die "Cannot cd to $REPO_ROOT"
 
-GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
-[ -f "$GHA_CONFIG" ] || die "$GHA_CONFIG not found"
+GHA_CONFIG=""
+for _p in \
+    "/app/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+    [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+done
+[ -n "$GHA_CONFIG" ] || die "cloud-data-gha-config.json not found"
 
 SCRIPTS_DIR=".github/workflows/scripts"
 

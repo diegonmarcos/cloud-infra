@@ -88,8 +88,16 @@ let
     ${portRules}
 
     # Dynamic ports from cloud-data-firewall-rules.json
-    FW_JSON="/opt/containers/cloud-data/cloud-data-firewall-rules.json"
-    if [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
+    # Path-priority chain: in-image bundle > runtime deploy dir > legacy clone
+    FW_JSON=""
+    for _p in \
+      /app/cloud-data-firewall-rules.json \
+      /opt/containers/cloud-data/cloud-data-firewall-rules.json \
+      "$HOME/git/cloud/2_configs/dist/cloud-data-firewall-rules.json" \
+      "$HOME/git/cloud/cloud-data/cloud-data-firewall-rules.json"; do
+      [ -f "$_p" ] && FW_JSON="$_p" && break
+    done
+    if [ -n "$FW_JSON" ] && [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
       DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.vms[$vm].ingress[]? | "\(.port):\(.proto // "tcp"):\(.service // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
       for entry in $DYNAMIC_PORTS; do
         PORT=''${entry%%:*}
