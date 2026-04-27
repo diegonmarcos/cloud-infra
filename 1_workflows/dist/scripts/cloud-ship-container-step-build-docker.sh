@@ -353,6 +353,14 @@ NEOF
             # `set -o pipefail` so any failure in the | while-read pipe propagates
             # — without it, SSH-side build/push failures returned exit 0 and the
             # engine continued as if the push succeeded.
+            #
+            # `cd /workspace &&` — REQUIRED because cloud-builder-x's entrypoint
+            # (cb_containers-builders/src/docker/entrypoint.sh:248-249) does
+            # `cd $GIT_ROOT/cloud` before exec'ing the user command, OVERRIDING
+            # docker's -w flag. Without the explicit cd, docker build runs from
+            # /root/git/cloud and can't find Dockerfile.native (rsync'd to
+            # /workspace). Surfaced 2026-04-27 (ship run 25000440517):
+            # "ERROR: failed to read dockerfile: open Dockerfile.native: no such file or directory".
             set -o pipefail
             ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
                 -v /var/run/docker.sock:/var/run/docker.sock \
@@ -360,8 +368,9 @@ NEOF
                 -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
                 $RUNNER_IMAGE \
                 sh -c 'set -e; \
+                    cd /workspace && \
                     cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
-                    echo \"[ghcr] login ok\" && \
+                    echo \"[ghcr] login ok (cwd=\$(pwd))\" && \
                     (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
                     (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
                     docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \

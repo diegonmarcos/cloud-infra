@@ -1,6 +1,7 @@
 # System Protection — Orchestrator
 #
-# Reads VM specs from cloud-data-home-manager.json (ram_gb, rescue_port)
+# Reads VM specs from _cloud-data-consolidated.json[._home_manager.vms] (ram_gb, rescue_port)
+# 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms]
 # Imports sub-modules with derived parameters.
 #
 # Usage in VM config:
@@ -8,7 +9,10 @@
 { config, pkgs, lib, vmName, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  consolidated = builtins.fromJSON (builtins.readFile ./_cloud-data-consolidated.json);
+  cloudData = {
+    vms = consolidated._home_manager.vms or {};
+  };
   vmData = cloudData.vms.${vmName};
   ramMB = vmData.specs.ram_gb * 1024;
   cpus = vmData.specs.cpu;

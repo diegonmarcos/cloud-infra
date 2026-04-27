@@ -141,26 +141,33 @@ cmd_decrypt() {
   # Write consolidated
   echo "$CONSOLIDATED" | jq '.' > "$DIST_DIR/cloud-secrets.json.secrets"
 
-  # Symlink env var names schema (2026-04-27 resolution chain):
-  #   1. /app/cloud-data-secrets-env-var-names.json                    — bundled in-image
-  #   2. $CLOUD_ROOT/2_configs/dist/cloud-data-secrets-env-var-names.json — dev
-  #   3. $CLOUD_ROOT/cloud-data/cloud-data-secrets-env-var-names.json  — legacy clone
-  #   4. $CLOUD_ROOT/cloud-data-secrets-env-var-names.json             — legacy root
-  local ENV_VARS_JSON=""
+  # 2026-04-27 migrated: cloud-data-secrets-env-var-names.json → _cloud-data-consolidated.json[.services.*.secret_env_vars]
+  # Derive a {services: [{service, env_vars}]} schema from consolidated (per-service secret_env_vars arrays).
+  local CONSOLIDATED_JSON=""
   for _candidate in \
-    "/app/cloud-data-secrets-env-var-names.json" \
-    "$CLOUD_ROOT/2_configs/dist/cloud-data-secrets-env-var-names.json" \
-    "$CLOUD_ROOT/cloud-data/cloud-data-secrets-env-var-names.json" \
-    "$CLOUD_ROOT/cloud-data-secrets-env-var-names.json"
+    "/app/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/2_configs/dist/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/cloud-data/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/_cloud-data-consolidated.json"
   do
     if [ -f "$_candidate" ]; then
-      ENV_VARS_JSON="$_candidate"
+      CONSOLIDATED_JSON="$_candidate"
       break
     fi
   done
-  if [ -n "$ENV_VARS_JSON" ]; then
-    ln -sf "$ENV_VARS_JSON" "$DIST_DIR/cloud-data-secrets-env-var-names.json"
-    echo "Linked: dist/cloud-data-secrets-env-var-names.json (from $ENV_VARS_JSON)"
+  if [ -n "$CONSOLIDATED_JSON" ]; then
+    jq '{
+      _generated: now | todate,
+      _source: "_cloud-data-consolidated.json[.services.*.secret_env_vars]",
+      services: (.services | to_entries | map({
+        service: .key,
+        folder: (.value.folder // null),
+        vm: (.value.vm // null),
+        env_vars: (.value.secret_env_vars // []),
+        count: (.value.secret_env_vars // [] | length)
+      }))
+    }' "$CONSOLIDATED_JSON" > "$DIST_DIR/secrets-env-var-names.json"
+    echo "Derived: dist/secrets-env-var-names.json (from $CONSOLIDATED_JSON[.services.*.secret_env_vars])"
   fi
 
   # Generate manifest.json

@@ -6,7 +6,9 @@
 { config, pkgs, lib, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json (data unused — kept for parity)
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = consolidated;
 in {
   programs.bash = {
     enable = true;
