@@ -31,28 +31,6 @@
         "arch": "x86_64",
         "shape": "VM.Standard.E2.1.Micro"
       },
-      "public_ports": [
-        {
-          "port": 25,
-          "proto": "tcp",
-          "desc": "SMTP (Maddy MX — must be public, RFC)"
-        },
-        {
-          "port": 8080,
-          "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)"
-        },
-        {
-          "port": 22000,
-          "proto": "tcp",
-          "desc": "Syncthing transfer"
-        },
-        {
-          "port": 21027,
-          "proto": "udp",
-          "desc": "Syncthing discovery"
-        }
-      ],
       "gha": {
         "ssh_secret": "OCI_SSH_KEY",
         "host_literal": true
@@ -77,7 +55,6 @@
         "arch": "x86_64",
         "shape": "VM.Standard.E2.1.Micro"
       },
-      "public_ports": [],
       "gha": {
         "ssh_secret": "OCI_SSH_KEY",
         "host_literal": true
@@ -94,7 +71,7 @@
       "method": "key",
       "ssh_alias": "oci-apps",
       "rescue_port": 2200,
-      "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) \u2014 Consolidated",
+      "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated",
       "specs": {
         "cpu": 4,
         "ram_gb": 24,
@@ -102,48 +79,6 @@
         "arch": "aarch64",
         "shape": "VM.Standard.A1.Flex"
       },
-      "public_ports": [
-        {
-          "port": 3010,
-          "proto": "tcp",
-          "desc": "AFFiNE"
-        },
-        {
-          "port": 8081,
-          "proto": "tcp",
-          "desc": "C3 API"
-        },
-        {
-          "port": 3000,
-          "proto": "tcp",
-          "desc": "Crawlee/Gitea/Backup"
-        },
-        {
-          "port": 3001,
-          "proto": "tcp",
-          "desc": "Crawlee API"
-        },
-        {
-          "port": 2222,
-          "proto": "tcp",
-          "desc": "Gitea SSH"
-        },
-        {
-          "port": 2223,
-          "proto": "tcp",
-          "desc": "Backup BUP SSH"
-        },
-        {
-          "port": 2224,
-          "proto": "tcp",
-          "desc": "Backup Borg SSH"
-        },
-        {
-          "port": 8099,
-          "proto": "tcp",
-          "desc": "cloud-spec httpd"
-        }
-      ],
       "gha": {
         "ssh_secret": "OCI_SSH_KEY",
         "host_literal": true
@@ -172,7 +107,6 @@
         "gpu": "NVIDIA T4",
         "vram_gb": 16
       },
-      "public_ports": [],
       "provider": "gcp",
       "provisioning": "spot",
       "idle_shutdown": {
@@ -209,63 +143,6 @@
         "arch": "x86_64",
         "shape": "e2-micro"
       },
-      "public_ports": [
-        {
-          "port": 22,
-          "proto": "tcp",
-          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended"
-        },
-        {
-          "port": 80,
-          "proto": "tcp",
-          "desc": "HTTP (Caddy)"
-        },
-        {
-          "port": 443,
-          "proto": "tcp",
-          "desc": "HTTPS (Caddy)"
-        },
-        {
-          "port": 443,
-          "proto": "udp",
-          "desc": "QUIC (Caddy)"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 \u2192 oci-mail)"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 \u2192 oci-mail)"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 \u2192 oci-mail)"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 \u2192 stalwart on oci-mail)"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 \u2192 stalwart on oci-mail)"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 \u2192 stalwart on oci-mail)"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 \u2192 stalwart on oci-mail)"
-        }
-      ],
       "gha": {
         "ssh_secret": "GCP_PROXY_SSH_KEY",
         "host_secret": "GCP_PROXY_HOST",
@@ -291,7 +168,6 @@
         "gpu": "RTX A4000",
         "vram_gb": 16
       },
-      "public_ports": [],
       "provider": "vast.ai",
       "provisioning": "on-demand",
       "notes": "Dynamic IP/port - update after rental from Vast.ai console"
@@ -300,7 +176,7 @@
   "native": {
     "wireguard": {
       "vm": "all",
-      "description": "WireGuard VPN mesh \u2014 managed via home-manager (not Docker)",
+      "description": "WireGuard VPN mesh — managed via home-manager (not Docker)",
       "subnet": "10.0.0.0/24",
       "port": 51820,
       "wg_hub": "gcp-E2-f_0",
@@ -498,16 +374,25 @@
         "desc": "WireGuard mesh status"
       }
     },
-    "docker_apt": ["build-essential", "pkg-config", "libssl-dev", "unzip", "wireguard-tools", "locales"],
+    "docker_apt": [
+      "build-essential",
+      "pkg-config",
+      "libssl-dev",
+      "unzip",
+      "wireguard-tools",
+      "locales"
+    ],
     "docker_binary": {
       "terraform": "1.9.8",
       "rust": "1.86.0"
     },
     "node": {
       "required": [
+        "ajv",
+        "ajv-formats",
+        "nunjucks",
         "tsx",
-        "yaml",
-        "nunjucks"
+        "yaml"
       ]
     },
     "install": {
