@@ -41,13 +41,13 @@ link_builds() {
 consolidate() {
     mkdir -p "$DIST"
     log "Consolidating → $DIST/_cloud-data-consolidated.json"
-    tsx "$ENGINES/cloud-data-config-consolidated.ts"
+    npx tsx "$ENGINES/cloud-data-config-consolidated.ts"
 }
 
 derive() {
     mkdir -p "$DIST"
     log "Deriving per-concern + per-container JSONs → $DIST/"
-    tsx "$ENGINES/cloud-data-config-derive.ts"
+    npx tsx "$ENGINES/cloud-data-config-derive.ts"
     cache_download_generator
 }
 
