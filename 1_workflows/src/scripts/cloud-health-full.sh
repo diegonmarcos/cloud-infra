@@ -7,9 +7,16 @@ set -uo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-TOPO="2_configs/dist/cloud-data-topology.json"
+TOPO=""
+for _p in \
+    "/app/cloud-data-topology.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-topology.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-topology.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-topology.json"; do
+    [ -f "$_p" ] && { TOPO="$_p"; break; }
+done
+[ -n "$TOPO" ] || { echo "FATAL: cloud-data-topology.json not found" >&2; exit 1; }
 ROUTES="2_configs/dist/build-caddy.json"
-[ ! -f "$TOPO" ] && echo "ERROR: $TOPO not found" >&2 && exit 1
 
 PASS=0; FAIL=0; WARN=0; TOTAL=0
 ok()   { PASS=$((PASS+1)); TOTAL=$((TOTAL+1)); printf "  ✓ %s\n" "$*"; }

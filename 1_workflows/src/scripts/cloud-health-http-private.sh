@@ -7,8 +7,15 @@ set -euo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-DNS_FILE="2_configs/dist/cloud-data-dns-services.json"
-[ ! -f "$DNS_FILE" ] && echo "ERROR: $DNS_FILE not found" >&2 && exit 1
+DNS_FILE=""
+for _p in \
+    "/app/cloud-data-dns-services.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-dns-services.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-dns-services.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-dns-services.json"; do
+    [ -f "$_p" ] && { DNS_FILE="$_p"; break; }
+done
+[ -n "$DNS_FILE" ] || { echo "FATAL: cloud-data-dns-services.json not found" >&2; exit 1; }
 
 NAMES=$(jq -r '.services | keys[]' "$DNS_FILE" | sort)
 TOTAL=$(echo "$NAMES" | wc -w)

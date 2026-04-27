@@ -141,11 +141,26 @@ cmd_decrypt() {
   # Write consolidated
   echo "$CONSOLIDATED" | jq '.' > "$DIST_DIR/cloud-secrets.json.secrets"
 
-  # Symlink env var names schema from 2_configs
-  local ENV_VARS_JSON="$CLOUD_ROOT/2_configs/dist/cloud-data-secrets-env-var-names.json"
-  if [ -f "$ENV_VARS_JSON" ]; then
+  # Symlink env var names schema (2026-04-27 resolution chain):
+  #   1. /app/cloud-data-secrets-env-var-names.json                    — bundled in-image
+  #   2. $CLOUD_ROOT/2_configs/dist/cloud-data-secrets-env-var-names.json — dev
+  #   3. $CLOUD_ROOT/cloud-data/cloud-data-secrets-env-var-names.json  — legacy clone
+  #   4. $CLOUD_ROOT/cloud-data-secrets-env-var-names.json             — legacy root
+  local ENV_VARS_JSON=""
+  for _candidate in \
+    "/app/cloud-data-secrets-env-var-names.json" \
+    "$CLOUD_ROOT/2_configs/dist/cloud-data-secrets-env-var-names.json" \
+    "$CLOUD_ROOT/cloud-data/cloud-data-secrets-env-var-names.json" \
+    "$CLOUD_ROOT/cloud-data-secrets-env-var-names.json"
+  do
+    if [ -f "$_candidate" ]; then
+      ENV_VARS_JSON="$_candidate"
+      break
+    fi
+  done
+  if [ -n "$ENV_VARS_JSON" ]; then
     ln -sf "$ENV_VARS_JSON" "$DIST_DIR/cloud-data-secrets-env-var-names.json"
-    echo "Linked: dist/cloud-data-secrets-env-var-names.json"
+    echo "Linked: dist/cloud-data-secrets-env-var-names.json (from $ENV_VARS_JSON)"
   fi
 
   # Generate manifest.json

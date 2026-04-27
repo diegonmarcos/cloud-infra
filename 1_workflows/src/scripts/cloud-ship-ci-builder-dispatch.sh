@@ -32,9 +32,16 @@ _DISPATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN_START=$(date +%s)
 TRACE_SERVICES="[]"
 
-GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
-if [ ! -f "$GHA_CONFIG" ]; then
-  echo "ERROR: $GHA_CONFIG not found" >&2
+GHA_CONFIG=""
+for _p in \
+    "/app/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+    [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+done
+if [ -z "$GHA_CONFIG" ]; then
+  echo "FATAL: cloud-data-gha-config.json not found" >&2
   exit 1
 fi
 
@@ -72,8 +79,10 @@ SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPer
 # Export CLOUD_BUILDER_<ARCH>_READY=1 so step_docker skips its live probe.
 RUNNERS_JSON=""
 for _p in \
-    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
-    "$REPO_ROOT/cloud-data-runners.json"; do
+    "/app/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
     [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
 done
 if [ -n "$RUNNERS_JSON" ]; then
