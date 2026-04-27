@@ -1,7 +1,11 @@
 { config, pkgs, lib, vmName, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms]
+  consolidated = builtins.fromJSON (builtins.readFile ./_cloud-data-consolidated.json);
+  cloudData = {
+    vms = consolidated._home_manager.vms or {};
+  };
   vmData = cloudData.vms.${vmName};
   idleCfg = vmData.idle_shutdown;
   idleTimeoutHours = if idleCfg != null then idleCfg.timeout_hours else 4;
@@ -14,7 +18,7 @@ let
   idleShutdownScript = pkgs.writeShellScriptBin "idle-shutdown.sh" ''
     #!/bin/bash
     # idle-shutdown.sh - Auto-shutdown VM after ${toString idleTimeoutHours} hours of inactivity
-    # Managed by Home Manager — thresholds from cloud-data-home-manager.json
+    # Managed by Home Manager — thresholds from _cloud-data-consolidated.json (._home_manager.vms.<vm>.idle_shutdown)
 
     set -euo pipefail
 

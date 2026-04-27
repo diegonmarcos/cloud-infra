@@ -1,6 +1,7 @@
 #!/bin/sh
 # data-publisher — collect VM data JSONs every 5 minutes
-# Outputs: /opt/pilot/data/containers.json, journal-errors.json, cloud-data-home-manager.json
+# Outputs: /opt/pilot/data/containers.json, journal-errors.json, _cloud-data-consolidated.json
+# 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json
 # POSIX sh only
 set -eu
 
@@ -11,13 +12,13 @@ mkdir -p "$DATA_DIR"
 # Script runs as root — check all known paths for the HM-deployed cloud-data
 HM_JSON=""
 for p in \
-  /opt/cloud-data/cloud-data-home-manager.json \
-  /home/ubuntu/.config/home-manager/pilot/cloud-data-home-manager.json \
-  /home/diego/.config/home-manager/pilot/cloud-data-home-manager.json \
-  "$HOME/.config/home-manager/pilot/cloud-data-home-manager.json"; do
+  /opt/cloud-data/_cloud-data-consolidated.json \
+  /home/ubuntu/.config/home-manager/pilot/_cloud-data-consolidated.json \
+  /home/diego/.config/home-manager/pilot/_cloud-data-consolidated.json \
+  "$HOME/.config/home-manager/pilot/_cloud-data-consolidated.json"; do
   [ -f "$p" ] && HM_JSON="$p" && break
 done
-[ -n "$HM_JSON" ] && cp -f "$HM_JSON" "$DATA_DIR/cloud-data-home-manager.json"
+[ -n "$HM_JSON" ] && cp -f "$HM_JSON" "$DATA_DIR/_cloud-data-consolidated.json"
 
 # Containers JSON
 if command -v docker >/dev/null 2>&1; then

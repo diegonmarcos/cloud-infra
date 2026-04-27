@@ -22,7 +22,13 @@
 { config, lib, pkgs, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[.native.docker + .native.wireguard]
+  # 2026-04-27 migrated: cloud-data-firewall-rules.json → _cloud-data-consolidated.json[.firewalls.os.<vm>]
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = {
+    docker = consolidated.native.docker or {};
+    wireguard = consolidated.native.wireguard or {};
+  };
   dockerSubnet = cloudData.docker.subnet;
   wgSubnet = cloudData.wireguard.subnet;
 
@@ -87,18 +93,18 @@ let
     # VM-specific public ports (static from nix)
     ${portRules}
 
-    # Dynamic ports from cloud-data-firewall-rules.json
+    # Dynamic ports from _cloud-data-consolidated.json[.firewalls.os.<vm>]
     # Path-priority chain: in-image bundle > runtime deploy dir > legacy clone
     FW_JSON=""
     for _p in \
-      /app/cloud-data-firewall-rules.json \
-      /opt/containers/cloud-data/cloud-data-firewall-rules.json \
-      "$HOME/git/cloud/2_configs/dist/cloud-data-firewall-rules.json" \
-      "$HOME/git/cloud/cloud-data/cloud-data-firewall-rules.json"; do
+      /app/_cloud-data-consolidated.json \
+      /opt/containers/cloud-data/_cloud-data-consolidated.json \
+      "$HOME/git/cloud/2_configs/dist/_cloud-data-consolidated.json" \
+      "$HOME/git/cloud/cloud-data/_cloud-data-consolidated.json"; do
       [ -f "$_p" ] && FW_JSON="$_p" && break
     done
     if [ -n "$FW_JSON" ] && [ -f "$FW_JSON" ] && command -v jq >/dev/null 2>&1; then
-      DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.vms[$vm].ingress[]? | "\(.port):\(.proto // "tcp"):\(.service // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
+      DYNAMIC_PORTS=$(jq -r --arg vm "${vmName}" '.firewalls.os[$vm][]? | "\(.port):\(.proto // "tcp"):\(.owned_by // .desc // "dynamic")"' "$FW_JSON" 2>/dev/null || true)
       for entry in $DYNAMIC_PORTS; do
         PORT=''${entry%%:*}
         REST=''${entry#*:}

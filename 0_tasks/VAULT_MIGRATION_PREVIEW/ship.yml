@@ -43,7 +43,9 @@ jobs:
       - name: Build VM matrix
         id: matrix
         run: |
-          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
+          # 2026-04-27 migrated: cloud-data-gha-config.json → _cloud-data-consolidated.json[._gha]
+          jq '._gha' "2_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
+          GHA_CONFIG="/tmp/_gha-config.json"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             INPUT_SERVICES="${{ github.event.inputs.services }}"
             INPUT_VM="${{ github.event.inputs.vm }}"
@@ -113,7 +115,9 @@ jobs:
           # Load vault env so OCI_SSH_KEY, GCP_PROXY_SSH_KEY, GCP_T4_SSH_KEY are present
           set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
 
-          GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
+          # 2026-04-27 migrated: cloud-data-gha-config.json → _cloud-data-consolidated.json[._gha]
+          jq '._gha' "2_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
+          GHA_CONFIG="/tmp/_gha-config.json"
           VM="${{ matrix.vm }}"
 
           # ssh_secret name comes from cloud-data (config.json vms[*].gha.ssh_secret);

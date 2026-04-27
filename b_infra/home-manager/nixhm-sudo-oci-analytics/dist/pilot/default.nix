@@ -45,7 +45,7 @@ in {
     # ── Security
     ./security/ssh-keys.nix
     ./security/authorized-keys.nix
-    ./security/sshd-hardening.nix
+    (import ./security/sshd-hardening.nix { inherit vmName; })
     ./security/serial-console.nix
 
     # ── Infra

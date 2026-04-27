@@ -4,7 +4,11 @@
 { config, pkgs, lib, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[.owner]
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = {
+    owner = consolidated.owner or {};
+  };
 in {
   programs.git = {
     enable = true;

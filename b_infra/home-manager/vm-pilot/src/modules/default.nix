@@ -7,7 +7,11 @@
 { vmName }:
 { config, pkgs, lib, ... }:
 let
-  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms]
+  consolidated = builtins.fromJSON (builtins.readFile ./_cloud-data-consolidated.json);
+  cloudData = {
+    vms = consolidated._home_manager.vms or {};
+  };
   vmData = cloudData.vms.${vmName};
   publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
     ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }];
@@ -33,7 +37,7 @@ in {
     # ── Security
     ./security/ssh-keys.nix
     ./security/authorized-keys.nix
-    ./security/sshd-hardening.nix
+    (import ./security/sshd-hardening.nix { inherit vmName; })
     ./security/serial-console.nix
 
     # ── Infra

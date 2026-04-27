@@ -1,7 +1,7 @@
 # Evidence Collector — LIGHTWEIGHT daily metadata capture.
 #
 # Produces /var/backups/evidence/<date>/ containing ONLY the files
-# cloud-sec-data-report consumes (see cloud-data-sec-scan.json → evidence_files):
+# cloud-sec-data-report consumes (runtime sec-scan output → evidence_files; not in _cloud-data-consolidated.json):
 #
 #   manifest.json           — hostname + per-container image_id / ports / labels
 #   diff.json               — vs. yesterday (new / modified / removed containers)

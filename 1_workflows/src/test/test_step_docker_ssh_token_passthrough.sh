@@ -68,6 +68,17 @@ else
     FAIL=1
 fi
 
+# 7) sh -c body must `cd /workspace` before docker build. Cloud-builder-x's
+#    entrypoint cd's to /root/git/cloud BEFORE exec'ing the user command,
+#    overriding docker's -w flag. Without explicit cd, docker build runs from
+#    /root/git/cloud and can't find Dockerfile rsync'd to /workspace.
+if grep -qE "cd /workspace && \\\\?$" "$SCRIPT" || grep -qE 'cd /workspace &&' "$SCRIPT"; then
+    printf "  OK  sh -c body explicitly cd's to /workspace (entrypoint cwd guard)\n"
+else
+    printf "  FAIL sh -c body does not cd to /workspace — entrypoint's cd \$GIT_ROOT/cloud overrides -w\n"
+    FAIL=1
+fi
+
 if [ "$FAIL" -eq 1 ]; then
     echo
     echo "::error::step_docker SSH token passthrough regression"

@@ -3,7 +3,7 @@
 # Architecture:
 #   node-npm-deps.nix          ← this file (orchestrator: merge + install)
 #   ├── node-npm-deps-list.nix  ← static known deps (tsx, MCP SDK, fastify, etc.)
-#   ├── node-npm-deps-cloud.nix ← auto-merged from cloud-data-deps.json
+#   ├── node-npm-deps-cloud.nix ← auto-merged from _cloud-data-consolidated.json[.deps] (2026-04-27 migrated)
 #   └── node-npm-deps-front.nix ← auto-merged from front-data/front-deps.json
 #
 # Resolution: static list always wins → cloud deps → front deps → npm install

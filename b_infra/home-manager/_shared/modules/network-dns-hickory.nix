@@ -1,4 +1,5 @@
-# Configure DNS resolvers for all VMs — reads from cloud-data-home-manager.json
+# Configure DNS resolvers for all VMs — reads from _cloud-data-consolidated.json
+# 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[.native.dns]
 # Uses resolvconf to maintain proper DNS hierarchy:
 #   Tier 1: Hickory (10.0.0.1) — .app private domains + forwarding
 #   Tier 2: Cloudflare (1.1.1.1, 1.0.0.1) — fallback
@@ -7,7 +8,10 @@
 { config, lib, pkgs, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ./cloud-data-home-manager.json);
+  consolidated = builtins.fromJSON (builtins.readFile ./_cloud-data-consolidated.json);
+  cloudData = {
+    dns = consolidated.native.dns or {};
+  };
   primaryDns = cloudData.dns.primary;
   fallbackDns = cloudData.dns.fallback;
 in {
