@@ -111,3 +111,5 @@ jobs:
         run: bash 1_workflows/src/test/test_step_docker_login_tolerant.sh
       - name: Phase 28 — step_docker SSH branch ships GHCR token via stdin + uses pipefail
         run: bash 1_workflows/src/test/test_step_docker_ssh_token_passthrough.sh
+      - name: Phase 29 — SSH-builder docker run pins cwd to /workspace (entrypoint-cd guard)
+        run: bash 1_workflows/src/test/test_ssh_builder_pins_workspace.sh
