@@ -4,7 +4,7 @@
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3
   },
-  "_generated": "2026-04-27T17:17:56.161Z",
+  "_generated": "2026-04-27T17:47:52.056Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -215,6 +215,11 @@
       "comment": "VS Code IDE (ide.diegonmarcos.com)"
     },
     {
+      "domain": "webmail.diegonmarcos.com",
+      "upstream": "10.0.0.3:8889",
+      "comment": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
+    },
+    {
       "domain": "sheets.diegonmarcos.com",
       "upstream": "10.0.0.6:3011",
       "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
@@ -234,11 +239,6 @@
       "domain": "cal.diegonmarcos.com",
       "upstream": "10.0.0.6:5232",
       "comment": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
-    },
-    {
-      "domain": "webmail.diegonmarcos.com",
-      "upstream": "10.0.0.3:8888",
-      "comment": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
     },
     {
       "domain": "smtp.diegonmarcos.com",
@@ -449,6 +449,10 @@
     {
       "service": "code-server.app",
       "upstream": "10.0.0.6:8443"
+    },
+    {
+      "service": "cypht.app",
+      "upstream": "10.0.0.3:8889"
     },
     {
       "service": "etherpad.app",
@@ -691,6 +695,27 @@
       "port": 8443,
       "protocol": "https",
       "upstream": "10.0.0.6:8443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cypht.app",
+      "redirect_to": "https://cypht-http-8889.app",
+      "container": "cypht",
+      "container_key": "app",
+      "svc": "cypht",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cypht-http-8889.app",
+      "container": "cypht",
+      "container_key": "app",
+      "svc": "cypht",
+      "vm": "oci-E2-f_0",
+      "port": 8889,
+      "protocol": "http",
+      "upstream": "10.0.0.3:8889",
       "source": "containers.app.port"
     },
     {
@@ -1832,6 +1857,16 @@
       "notes": "VS Code IDE (ide.diegonmarcos.com)"
     },
     {
+      "host": "webmail.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.3:8889",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
+    },
+    {
       "host": "sheets.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3011",
@@ -1870,16 +1905,6 @@
       "zone": "com",
       "service": null,
       "notes": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
-    },
-    {
-      "host": "webmail.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
     },
     {
       "host": "smtp.diegonmarcos.com",
@@ -2037,6 +2062,16 @@
       "host": "code-server.app",
       "path": null,
       "upstream": "10.0.0.6:8443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cypht.app",
+      "path": null,
+      "upstream": "10.0.0.3:8889",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2513,6 +2548,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "code-server",
+      "notes": null
+    },
+    {
+      "host": "cypht-http-8889.app",
+      "path": null,
+      "upstream": "10.0.0.3:8889",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cypht",
       "notes": null
     },
     {

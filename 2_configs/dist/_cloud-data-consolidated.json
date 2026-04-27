@@ -1,7 +1,7 @@
 {
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-27T17:17:54.152Z",
+    "generated_at": "2026-04-27T17:47:49.356Z",
     "generated_by": "cloud-data-config-consolidated.ts"
   },
   "owner": {
@@ -61,13 +61,14 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
       "services": [
+        "cypht",
         "mail-puller",
         "snappymail",
         "maddy",
         "smtp-proxy",
         "stalwart"
       ],
-      "container_count": 6
+      "container_count": 8
     },
     "oci-E2-f_1": {
       "ip": "129.151.228.66",
@@ -774,6 +775,124 @@
       "secret_env_vars": [
         "CODE_SERVER_PASSWORD"
       ]
+    },
+    "cypht": {
+      "category": "app",
+      "vm": "oci-E2-f_0",
+      "folder": "aa-sui_cypht",
+      "description": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
+      "enabled": true,
+      "domain": "webmail.diegonmarcos.com",
+      "port": 8889,
+      "dns": "cypht.app",
+      "upstream": "10.0.0.3:8889",
+      "containers": {
+        "app": {
+          "container_name": "cypht",
+          "image": "cypht/cypht:latest",
+          "port": 8889,
+          "port_env": null,
+          "dns": "cypht.app",
+          "public": true,
+          "proxy": {
+            "domain": "webmail.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/",
+          "monitoring": null,
+          "volumes": [
+            "cypht_data:/var/lib/hm3"
+          ],
+          "env_file": true,
+          "depends_on": [
+            "cypht-postgres"
+          ],
+          "resources": {
+            "mem_limit": "256M",
+            "mem_reservation": "64M"
+          },
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": []
+        },
+        "db": {
+          "container_name": "cypht-postgres",
+          "image": "postgres:16-alpine",
+          "port": null,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "cypht_pgdata:/var/lib/postgresql/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "128M",
+            "mem_reservation": "32M"
+          },
+          "read_only": false,
+          "protocol": "tcp",
+          "extra_ports": [
+            {
+              "port": 5432,
+              "protocol": "tcp",
+              "bind": "127.0.0.1",
+              "desc": "PostgreSQL — loopback only (cypht co-located via host network)"
+            }
+          ],
+          "embedded_dbs": [
+            {
+              "engine": "postgres",
+              "path": "/var/lib/postgresql/data"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "cypht",
+        "cypht-postgres"
+      ],
+      "all_ports": [
+        "8889"
+      ],
+      "all_dns": [
+        "cypht.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "webmail.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 8889
+      },
+      "health": {
+        "path": "/"
+      },
+      "upstream_image": "cypht/cypht:latest",
+      "resources": {
+        "mem_limit": "256M",
+        "mem_reservation": "64M"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ]
+      }
     },
     "etherpad": {
       "category": "app",
@@ -2237,10 +2356,7 @@
           "port_env": null,
           "dns": "snappymail.app",
           "public": true,
-          "proxy": {
-            "domain": "webmail.diegonmarcos.com",
-            "auth": "two_factor"
-          },
+          "proxy": null,
           "healthcheck": "/",
           "monitoring": null,
           "volumes": [
@@ -2277,10 +2393,8 @@
         "networks": []
       },
       "proxy": {
-        "primary": {
-          "domain": "webmail.diegonmarcos.com",
-          "auth": "two_factor"
-        }
+        "_demoted_2026-04-27": "Public webmail.diegonmarcos.com handed off to aa-sui_cypht (pure-kindling-pixel.md). SnappyMail keeps running on internal snappymail.app route only — fallback in case Cypht has issues. Re-promote by restoring primary + mail_hub fields and re-shipping caddy.",
+        "primary": null
       },
       "declared_ports": {
         "app": 8888
@@ -6416,6 +6530,12 @@
         "service": "code-server"
       },
       {
+        "name": "cypht.app",
+        "type": "A",
+        "value": "10.0.0.3",
+        "service": "cypht"
+      },
+      {
         "name": "etherpad.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -6808,6 +6928,7 @@
         ],
         "idle_shutdown": null,
         "containers": [
+          "cypht",
           "mail-puller",
           "snappymail",
           "maddy",
@@ -7272,6 +7393,11 @@
       "code-server": {
         "dir": "aa-sui_code-server",
         "vm": "oci-apps",
+        "has_docker": true
+      },
+      "cypht": {
+        "dir": "aa-sui_cypht",
+        "vm": "oci-mail",
         "has_docker": true
       },
       "etherpad": {
