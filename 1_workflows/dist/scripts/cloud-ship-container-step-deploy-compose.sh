@@ -69,8 +69,17 @@ if ! docker info >/dev/null 2>&1; then
   sleep 5
   docker info >/dev/null 2>&1 || { echo "[compose-custom] ERROR: Docker failed to start" >&2; exit 1; }
 fi
+# v2 layout: secrets live at compose/.secrets (alongside docker-compose.yml).
+# But --project-directory . forces docker-compose's env_file resolution to
+# ./.secrets at project root. Symlink so env_file: [".secrets"] in the YAML
+# AND --env-file CLI both resolve to the same file.
 ENV_FILE_FLAG=""
-[ -f .secrets ] && ENV_FILE_FLAG="--env-file .secrets"
+if [ -f compose/.secrets ]; then
+  [ -e .secrets ] || ln -sf compose/.secrets .secrets
+  ENV_FILE_FLAG="--env-file .secrets"
+elif [ -f .secrets ]; then
+  ENV_FILE_FLAG="--env-file .secrets"
+fi
 COMPOSE_HEADER
             # v2: compose at compose/ subdir; force project-dir=CWD for env_file/volumes resolution
             echo "COMPOSE_FILE_FLAG='-f $REMOTE_COMPOSE_REL --project-directory .'"
@@ -87,7 +96,8 @@ COMPOSE_HEADER
         trap - EXIT
     else
         # ── Standard: direct docker compose up ──
-        ENV_FILE_FLAG="\$([ -f .secrets ] && echo '--env-file .secrets')"
+        # v2 layout: prefer compose/.secrets; fall back to ./.secrets.
+        ENV_FILE_FLAG="\$([ -f compose/.secrets ] && echo '--env-file compose/.secrets' || ([ -f .secrets ] && echo '--env-file .secrets'))"
         CF="-f $REMOTE_COMPOSE_REL --project-directory ."
         log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH (compose=$REMOTE_COMPOSE_REL)"
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then

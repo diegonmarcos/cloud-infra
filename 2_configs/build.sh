@@ -19,6 +19,52 @@ SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
 
 log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 
+# ══════════════════════════════════════════════════════════════════════
+# ensure_node_deps — self-bootstrap engines' node toolchain
+# ══════════════════════════════════════════════════════════════════════
+# 2_configs/ TypeScript engines (consolidate, derive) are run via tsx and
+# import yaml + nunjucks. On hosts without the cloud-builder image (bare
+# GHA runners, fresh clones, dev laptops), these aren't installed. This
+# function checks PATH for tsx; if missing, installs config.json:
+# .deps.node.required at $CLOUD_ROOT/node_modules and prepends
+# $CLOUD_ROOT/node_modules/.bin to PATH so tsx is found AND yaml/nunjucks
+# resolve via normal node_modules walk-up from any subdir.
+#
+# Surfaced 2026-04-27 across multiple ship runs (25011200839, 25013604449,
+# 25014061872): tsx not found, yaml ESM resolution failed. Fix lives in
+# the engine itself, not in every workflow that calls it (FIRE rule 1:
+# "Always fix the engine — never bypass with one-liners").
+ensure_node_deps() {
+    if command -v tsx >/dev/null 2>&1; then
+        return 0
+    fi
+    if [ -x "$CLOUD_ROOT/node_modules/.bin/tsx" ]; then
+        export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"
+        return 0
+    fi
+    log "ensure_node_deps: tsx not on PATH — bootstrapping engine deps"
+    if ! command -v npm >/dev/null 2>&1; then
+        log "ensure_node_deps: ERROR npm not found — node 18+ required on host"
+        return 1
+    fi
+    if ! command -v jq >/dev/null 2>&1; then
+        log "ensure_node_deps: ERROR jq not found — required to read config.json"
+        return 1
+    fi
+    PKGS=$(jq -r '.deps.node.required[]?' "$CLOUD_ROOT/config.json" 2>/dev/null | tr '\n' ' ')
+    # Fallback mirrors config.json:.deps.node.required so a stale config.json
+    # (missing ajv/ajv-formats) still gets all engine deps installed.
+    [ -z "$PKGS" ] && PKGS="tsx yaml nunjucks ajv ajv-formats"
+    (
+        cd "$CLOUD_ROOT" && npm install --silent --no-save $PKGS
+    ) || {
+        log "ensure_node_deps: ERROR npm install failed (PKGS=$PKGS)"
+        return 1
+    }
+    export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"
+    log "ensure_node_deps: bootstrapped $PKGS at $CLOUD_ROOT/node_modules"
+}
+
 # Mirror every a_solutions/<folder>/build.json as
 # 2_configs/src/builds/build-<folder>.json (symlink). Declarative index —
 # one place to list every service's raw build.json.
@@ -39,15 +85,17 @@ link_builds() {
 }
 
 consolidate() {
+    ensure_node_deps
     mkdir -p "$DIST"
     log "Consolidating → $DIST/_cloud-data-consolidated.json"
-    npx tsx "$ENGINES/cloud-data-config-consolidated.ts"
+    tsx "$ENGINES/cloud-data-config-consolidated.ts"
 }
 
 derive() {
+    ensure_node_deps
     mkdir -p "$DIST"
     log "Deriving per-concern + per-container JSONs → $DIST/"
-    npx tsx "$ENGINES/cloud-data-config-derive.ts"
+    tsx "$ENGINES/cloud-data-config-derive.ts"
     cache_download_generator
 }
 
