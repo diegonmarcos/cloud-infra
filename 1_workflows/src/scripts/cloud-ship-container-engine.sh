@@ -167,10 +167,18 @@ log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 log_warn() { printf "\033[0;33m[%s] WARNING: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 
-# Global error handler: print step name on failure
+# Global error handler: print step name on failure ONLY.
+# Captures $? FIRST (any subsequent command resets it), then fires the
+# error log only when actually exiting non-zero. Without the exit-status
+# guard the trap fires on every successful exit too, with whatever $?
+# happens to be (often 0 from a preceding subshell), producing the
+# misleading "Step <last-step> failed (exit 0)" message that for hours
+# masked real silent successes vs real failures across the engine.
+# CURRENT_STEP is set by each step but never cleared between steps —
+# kept that way intentionally, the exit-status guard now does the work.
 CURRENT_STEP=""
 DOCKER_IMAGE_CHANGED=""
-trap 'if [ -n "$CURRENT_STEP" ]; then log_error "Step '\''$CURRENT_STEP'\'' failed (exit $?)"; fi' EXIT
+trap '_exit_status=$?; if [ -n "$CURRENT_STEP" ] && [ "$_exit_status" -ne 0 ]; then log_error "Step '\''$CURRENT_STEP'\'' failed (exit $_exit_status)"; fi' EXIT
 
 # ── Source all step files ─────────────────────────────────────────────
 # Steps are in the same directory as this engine (1_workflows/src/scripts/)
