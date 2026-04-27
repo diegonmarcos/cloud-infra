@@ -47,6 +47,10 @@ jobs:
       - name: Update submodules
         run: git submodule update --remote
 
+      # Always regenerate dist/ from build.json sources
+      - name: Regenerate dist/ from build.json sources
+        run: bash 2_configs/build.sh config
+
       - name: Detect changes
         id: changes
         uses: dorny/paths-filter@v3
