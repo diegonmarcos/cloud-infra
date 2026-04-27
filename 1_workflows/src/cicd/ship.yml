@@ -45,21 +45,42 @@ jobs:
       # commit lands without dist/ updated, ship still runs against fresh
       # data.
       - name: Regenerate dist/ from build.json sources
-        run: bash 2_configs/build.sh all
+        # 2_configs/build.sh invokes tsx directly — install on the runner.
+        # Surfaced 2026-04-27 ship run 25011200839: tsx: command not found.
+        run: npm install -g --silent tsx 2>/dev/null && bash 2_configs/build.sh all
 
       - name: Build VM matrix
         id: matrix
         run: |
           # Reuse the portable detect logic from ship.sh
+          # 2026-04-27 migrated: cloud-data-gha-config.json -> _cloud-data-consolidated.json[._gha]
           GHA_CONFIG=""
+          _CONS=""
           for _p in \
-              "/app/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
-              [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+              "/app/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/2_configs/dist/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+              [ -f "$_p" ] && { _CONS="$_p"; break; }
           done
-          [ -n "$GHA_CONFIG" ] || { echo "FATAL: cloud-data-gha-config.json not found" >&2; exit 1; }
+          if [ -n "$_CONS" ]; then
+              GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+              jq '
+                ._gha as $g
+                | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                | $g
+                | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+              ' "$_CONS" > "$GHA_CONFIG"
+          else
+              for _p in \
+                  "/app/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
+                  [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+              done
+          fi
+          [ -n "$GHA_CONFIG" ] || { echo "FATAL: _cloud-data-consolidated.json (or legacy cloud-data-gha-config.json) not found" >&2; exit 1; }
 
           # ── Resolve args from GHA inputs ──
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -138,7 +159,9 @@ jobs:
       # the bundled dist/ files in the image come from THIS step, not
       # from the cloud repo's HEAD checkout.
       - name: Regenerate dist/ from build.json sources
-        run: bash 2_configs/build.sh all
+        # 2_configs/build.sh invokes tsx directly — install on the runner.
+        # Surfaced 2026-04-27 ship run 25011200839: tsx: command not found.
+        run: npm install -g --silent tsx 2>/dev/null && bash 2_configs/build.sh all
 
       # Vault clone — provides ~/git/vault/vault-keys-docker.envfile that
       # cloud-builder's compose.yaml references via env_file:. Without it,
@@ -178,15 +201,34 @@ jobs:
       - name: Resolve SSH credentials
         id: ssh
         run: |
+          # 2026-04-27 migrated: cloud-data-gha-config.json -> _cloud-data-consolidated.json[._gha]
           GHA_CONFIG=""
+          _CONS=""
           for _p in \
-              "/app/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
-              "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
-              [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+              "/app/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/2_configs/dist/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+              [ -f "$_p" ] && { _CONS="$_p"; break; }
           done
-          [ -n "$GHA_CONFIG" ] || { echo "FATAL: cloud-data-gha-config.json not found" >&2; exit 1; }
+          if [ -n "$_CONS" ]; then
+              GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+              jq '
+                ._gha as $g
+                | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                | $g
+                | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+              ' "$_CONS" > "$GHA_CONFIG"
+          else
+              for _p in \
+                  "/app/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
+                  [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+              done
+          fi
+          [ -n "$GHA_CONFIG" ] || { echo "FATAL: _cloud-data-consolidated.json (or legacy cloud-data-gha-config.json) not found" >&2; exit 1; }
           VM="${{ matrix.vm }}"
           case "$VM" in
             gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
