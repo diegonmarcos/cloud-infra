@@ -26,10 +26,12 @@ jobs:
       # Always regenerate dist/ from build.json sources before ship
       - name: Regenerate dist/ from build.json sources
         run: |
+          # Install engine deps at repo root so tsx's ESM resolver finds them via
+          # normal node_modules walk-up. NODE_PATH does NOT cover ESM main-field
+          # resolution in node 20+ (surfaced run 25013604449: yaml package found
+          # but "Did you mean to import yaml/dist/index.js?").
           PKGS=$(jq -r '.deps.node.required[]?' config.json | tr '\n' ' ')
-          npm install --silent --prefix "$HOME/.node_modules" $PKGS
-          export NODE_PATH="$HOME/.node_modules/node_modules"
-          export PATH="$HOME/.node_modules/node_modules/.bin:$PATH"
+          npm install --silent --no-save $PKGS
           bash 2_configs/build.sh all
 
       - name: Checkout unix (Dockerfile + build.sh source)
