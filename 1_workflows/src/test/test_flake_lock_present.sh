@@ -24,14 +24,23 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 echo "── Every flake.nix MUST ship a sibling flake.lock ──"
 
 CHECKED=0
+cd "$REPO_ROOT"
+# Filesystem `[ -f ]` checks pass on the dev disk even when flake.lock is
+# untracked — but CI checks out only tracked files, so the same lock would
+# be missing there. Use `git ls-files` so the local run matches CI's view
+# and a developer catches the bug pre-push instead of in GHA.
 while IFS= read -r flake; do
   dir=$(dirname "$flake")
   rel=${flake#"$REPO_ROOT/"}
-  if [ -f "$dir/flake.lock" ]; then
+  lock="$dir/flake.lock"
+  rel_lock=${lock#"$REPO_ROOT/"}
+  if git ls-files --error-unmatch "$rel_lock" >/dev/null 2>&1; then
     pass "$rel"
     CHECKED=$((CHECKED + 1))
+  elif [ -f "$lock" ]; then
+    fail "$rel — $rel_lock exists on disk but is UNTRACKED (run: git add $rel_lock)"
   else
-    fail "$rel — missing $dir/flake.lock (run: cd $dir && nix flake lock)"
+    fail "$rel — missing $rel_lock (run: cd $dir && nix flake lock && git add flake.lock)"
   fi
 done < <(find "$REPO_ROOT/a_solutions" -maxdepth 4 -name flake.nix \
     -not -path "*/z_archive/*" \
