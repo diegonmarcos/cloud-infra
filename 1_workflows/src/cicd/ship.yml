@@ -148,6 +148,33 @@ jobs:
         with:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
+      # ── Cache warming: cargo registry/git + target dir ─────────────────
+      # Rust services (fin-api, mail-puller, rig-agentic-*, smtp-proxy)
+      # run a host-side `cargo build` inside cloud-builder. Without cache,
+      # every build re-downloads ~500MB of crates and recompiles from scratch
+      # (5-10 min per service). We restore ~/.cargo/{registry,git} keyed on
+      # all Cargo.lock files in the repo, plus a per-arch shared target/
+      # dir at $RUNNER_TEMP/cargo-target. Mounted into cloud-builder at
+      # /root/.cargo and /cargo-target via -v flags in the run step below.
+      - name: Restore Rust cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ runner.temp }}/cargo-target
+          key: ${{ runner.os }}-cargo-${{ matrix.vm }}-${{ hashFiles('a_solutions/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.vm }}-
+            ${{ runner.os }}-cargo-
+
+      # ── Cache warming: pre-pull cloud-builder image (single docker layer pull) ──
+      - name: Prepare cloud-builder + cache mounts
+        run: |
+          mkdir -p "$HOME/.cargo/registry" "$HOME/.cargo/git" "${{ runner.temp }}/cargo-target"
+          # Avoid permission churn on cache restore — cloud-builder runs as root
+          chmod -R a+rwX "$HOME/.cargo" "${{ runner.temp }}/cargo-target" 2>/dev/null || true
+
       - name: Resolve SSH credentials
         id: ssh
         run: |
@@ -227,6 +254,10 @@ jobs:
             -v "$HOME/git/vault:/root/git/vault:ro" \
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
+            -v "$HOME/.cargo:/root/.cargo" \
+            -v "${{ runner.temp }}/cargo-target:/cargo-target" \
+            -e CARGO_HOME=/root/.cargo \
+            -e CARGO_TARGET_DIR=/cargo-target \
             cloud-builder ship ${{ matrix.vm }}
 
       - name: Upload trace
