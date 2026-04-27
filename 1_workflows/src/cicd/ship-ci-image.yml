@@ -23,16 +23,9 @@ jobs:
         with:
           submodules: true   # cloud-data → cloud-data-runners.json
 
-      # Always regenerate dist/ from build.json sources before ship
+      # 2_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing.
       - name: Regenerate dist/ from build.json sources
-        run: |
-          # Install engine deps at repo root so tsx's ESM resolver finds them via
-          # normal node_modules walk-up. NODE_PATH does NOT cover ESM main-field
-          # resolution in node 20+ (surfaced run 25013604449: yaml package found
-          # but "Did you mean to import yaml/dist/index.js?").
-          PKGS=$(jq -r '.deps.node.required[]?' config.json | tr '\n' ' ')
-          npm install --silent --no-save $PKGS
-          bash 2_configs/build.sh all
+        run: bash 2_configs/build.sh all
 
       - name: Checkout unix (Dockerfile + build.sh source)
         uses: actions/checkout@v4
@@ -69,34 +62,44 @@ jobs:
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           echo "$OCI_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || true
-          # 2026-04-27 migrated: cloud-data-gha-config.json -> _cloud-data-consolidated.json[._gha]
+          # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
           GHA_CFG=""
-          _CONS=""
           for _p in \
-              "/app/_cloud-data-consolidated.json" \
-              "${CLOUD_ROOT:-$PWD}/2_configs/dist/_cloud-data-consolidated.json" \
-              "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
-              "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
-              [ -f "$_p" ] && { _CONS="$_p"; break; }
+              "/app/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/2_configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
+              [ -f "$_p" ] && { GHA_CFG="$_p"; break; }
           done
-          if [ -n "$_CONS" ]; then
-              GHA_CFG="${RUNNER_TEMP:-/tmp}/gha-config.json"
-              jq '
-                ._gha as $g
-                | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
-                | $g
-                | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
-              ' "$_CONS" > "$GHA_CFG"
-          else
+          if [ -z "$GHA_CFG" ]; then
+              # Fallback: extract _gha slice from consolidated.
+              _CONS=""
               for _p in \
-                  "/app/cloud-data-gha-config.json" \
-                  "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
-                  "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
-                  "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
-                  [ -f "$_p" ] && { GHA_CFG="$_p"; break; }
+                  "/app/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/2_configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+                  [ -f "$_p" ] && { _CONS="$_p"; break; }
               done
+              if [ -n "$_CONS" ]; then
+                  GHA_CFG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+                  jq '
+                    ._gha as $g
+                    | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                    | $g
+                    | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+                  ' "$_CONS" > "$GHA_CFG"
+              else
+                  for _p in \
+                      "/app/cloud-data-gha-config.json" \
+                      "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
+                      "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
+                      "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
+                      [ -f "$_p" ] && { GHA_CFG="$_p"; break; }
+                  done
+              fi
           fi
-          [ -n "$GHA_CFG" ] || { echo "FATAL: _cloud-data-consolidated.json (or legacy cloud-data-gha-config.json) not found" >&2; exit 1; }
+          [ -n "$GHA_CFG" ] || { echo "FATAL: build-gha.json (or legacy fallbacks) not found" >&2; exit 1; }
           OCI_APPS_IP=$(jq -r '.vms["oci-apps"].wg_ip // .vms["oci-apps"].host' "$GHA_CFG")
           OCI_APPS_USER=$(jq -r '.vms["oci-apps"].user // "ubuntu"' "$GHA_CFG")
           cat > ~/.ssh/config <<EOF
