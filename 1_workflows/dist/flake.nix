@@ -11,7 +11,7 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 {
-  description = "GHA CI/CD build environment — reads deps from cloud-data-deps.json";
+  description = "GHA CI/CD build environment — reads deps from _cloud-data-consolidated.json[.deps] (2026-04-27 migrated)";
   # ┌──────────────────────────────────────────────────────────────────┐
   # │ ARCHITECTURE: Two-layer nix store strategy                       │
   # │                                                                  │

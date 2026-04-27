@@ -45,9 +45,49 @@ _DISPATCH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUN_START=$(date +%s)
 TRACE_SERVICES="[]"
 
-GHA_CONFIG="2_configs/dist/cloud-data-gha-config.json"
-if [ ! -f "$GHA_CONFIG" ]; then
-  echo "ERROR: $GHA_CONFIG not found" >&2
+# 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
+# We accept either the canonical build-gha.json (preferred) or materialise
+# the _gha slice from consolidated into a tmpfile (with wg_ip joined from
+# .vms[].ssh_alias) so downstream jq filters operating on .vms[VM].
+# {wg_ip,host,user,ssh_secret} keep working.
+GHA_CONFIG=""
+for _p in \
+    "/app/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/build-gha.json"; do
+    [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+done
+if [ -z "$GHA_CONFIG" ]; then
+    # Fallback: extract _gha slice from consolidated.
+    _CONS_FOR_GHA=""
+    for _p in \
+        "/app/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
+        [ -f "$_p" ] && { _CONS_FOR_GHA="$_p"; break; }
+    done
+    if [ -n "$_CONS_FOR_GHA" ]; then
+        GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+        jq '
+          ._gha as $g
+          | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+          | $g
+          | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+        ' "$_CONS_FOR_GHA" > "$GHA_CONFIG"
+    else
+        for _p in \
+            "/app/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+            [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+        done
+    fi
+fi
+if [ -z "$GHA_CONFIG" ]; then
+  echo "FATAL: build-gha.json (or legacy fallbacks) not found" >&2
   exit 1
 fi
 
@@ -85,8 +125,10 @@ SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPer
 # Export CLOUD_BUILDER_<ARCH>_READY=1 so step_docker skips its live probe.
 RUNNERS_JSON=""
 for _p in \
-    "$REPO_ROOT/2_configs/dist/cloud-data-runners.json" \
-    "$REPO_ROOT/cloud-data-runners.json"; do
+    "/app/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
     [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
 done
 if [ -n "$RUNNERS_JSON" ]; then

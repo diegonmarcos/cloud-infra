@@ -98,6 +98,71 @@ run_logged() {
     return 0
 }
 
+# run_with_retry: wrap a command with timeout + retry loop + optional recovery hook.
+# Defeats two failure modes:
+#   1. Stalled command (no progress, no exit) — `timeout` enforces a wall-clock deadline.
+#   2. Stale state across retries (e.g. buildkit cached digest from a previous killed push
+#      that the registry never received) — RETRY_RECOVERY_CMD runs between failed attempts
+#      to reset state.
+#
+# Knobs (read from build.json, with safe defaults):
+#   build.retry.attempts       — total attempts (default 3)
+#   build.retry.timeout_secs   — per-attempt deadline (default 1200 = 20 min)
+#   build.retry.backoff_secs   — sleep between attempts (default 30)
+#
+# Recovery hook (env var, NOT in build.json — set by the caller per-step):
+#   RETRY_RECOVERY_CMD         — shell command run between failed attempts
+#                                (e.g. `docker restart buildx_buildkit_multiarch0` for
+#                                 docker buildx --push to clear stale push tracker state)
+#
+# Usage: run_with_retry <description> <command> [args...]
+run_with_retry() {
+    _desc="$1"; shift
+    _attempts="$(get_config build.retry.attempts)"; [ -z "$_attempts" ] && _attempts=3
+    _timeout="$(get_config build.retry.timeout_secs)"; [ -z "$_timeout" ] && _timeout=1200
+    _backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_backoff" ] && _backoff=30
+
+    _try=0
+    while [ "$_try" -lt "$_attempts" ]; do
+        _try=$(( _try + 1 ))
+        log "RUN: $_desc (attempt $_try/$_attempts, timeout ${_timeout}s)"
+        log "CMD: $*"
+        set +e
+        # --kill-after=30s: SIGKILL children 30s after SIGTERM if still alive
+        timeout --kill-after=30s "${_timeout}s" "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        _exit=${PIPESTATUS[0]}
+        set -e
+
+        if [ "$_exit" -eq 0 ]; then
+            log "OK: $_desc (attempt $_try)"
+            return 0
+        fi
+
+        # exit 124 = SIGTERM from timeout, 137 = SIGKILL from --kill-after
+        if [ "$_exit" -eq 124 ] || [ "$_exit" -eq 137 ]; then
+            log "TIMEOUT (exit $_exit) after ${_timeout}s: $_desc (attempt $_try/$_attempts)"
+        else
+            log "FAILED (exit $_exit): $_desc (attempt $_try/$_attempts)"
+        fi
+
+        if [ "$_try" -lt "$_attempts" ]; then
+            if [ -n "${RETRY_RECOVERY_CMD:-}" ]; then
+                log "Recovery hook: $RETRY_RECOVERY_CMD"
+                set +e
+                bash -c "$RETRY_RECOVERY_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+                _rec_exit=${PIPESTATUS[0]}
+                set -e
+                log "Recovery hook exit: $_rec_exit"
+            fi
+            log "Retrying in ${_backoff}s..."
+            sleep "$_backoff"
+        fi
+    done
+
+    log "FAILED after $_attempts attempts: $_desc"
+    return "$_exit"
+}
+
 # ── SSH multiplexing ────────────────────────────────────────────────
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"
 ssh_vm() {

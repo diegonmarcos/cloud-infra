@@ -12,7 +12,18 @@
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
-# ── Generate cloud-data configs from build.json + topology ──
+# ── Generate per-container build-{name}.json + cloud-data-{name}.json ──
+#
+# Runs `bash build.sh config` to regenerate dist/ from a_solutions/*/build.json.
+# The regenerated files are committed by the standard ci flow (the workflow
+# caller commits + pushes), not from inside this script.
+#
+# 2026-04-27: removed the previous `cd 2_configs/dist && git push` block. It
+# assumed 2_configs/dist/ was the cloud-data submodule — it is NOT (it is a
+# regular subdir of the cloud repo). The push was either a no-op (no changes)
+# or hit the cloud repo's own origin. The cloud-data submodule (I_cloud-data/)
+# is now frozen — every container reads its own build-{containername}.json.
+#
 # Usage: ship-gen-configs.sh
 set -euo pipefail
 
@@ -20,45 +31,6 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 cd "$REPO_ROOT"
 export GIT_BASE="${GIT_BASE:-$(dirname "$REPO_ROOT")}"
 
-echo "── Generating cloud-data ──"
+echo "── Generating cloud-data + build-{name}.json ──"
 bash build.sh config
-
-echo "── Committing cloud-data ──"
-cd 2_configs/dist
-git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
-git config user.email "${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}"
-# Switch remote to SSH so deploy key works (submodule was cloned via HTTPS)
-CLOUD_DATA_REPO=$(git remote get-url origin | sed 's|https://github.com/|git@github.com:|')
-git remote set-url origin "$CLOUD_DATA_REPO"
-
-git stash --include-untracked 2>/dev/null || true
-git checkout main 2>/dev/null || true
-git pull --rebase origin main 2>/dev/null || true
-git stash pop 2>/dev/null || true
-
-git add -A *.json *.md 2>/dev/null || true
-if git diff --cached --quiet; then
-  echo "cloud-data: no changes"
-  exit 0
-fi
-
-git commit -m "auto: regenerate cloud-data [skip ci]"
-git push origin main
-
-echo "── Updating submodule ref ──"
-cd "$REPO_ROOT"
-git config user.name "${GIT_AUTHOR_NAME:-github-actions[bot]}"
-git config user.email "${GIT_AUTHOR_EMAIL:-github-actions[bot]@users.noreply.github.com}"
-git checkout -- . 2>/dev/null || true
-git add 2_configs/dist
-if git diff --cached --quiet; then
-  echo "main repo: submodule ref unchanged"
-  exit 0
-fi
-git commit -m "auto: update cloud-data submodule ref [skip ci]"
-# Retry push with pull-rebase (race condition with other workflows)
-for i in 1 2 3; do
-  git push origin main && break
-  echo "Push attempt $i failed — pulling and retrying..."
-  git pull --rebase origin main 2>/dev/null || true
-done
+echo "── Done. Generated files staged in dist/ — caller commits + pushes. ──"

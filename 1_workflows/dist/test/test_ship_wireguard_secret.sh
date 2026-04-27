@@ -31,7 +31,33 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-GHA_CONFIG="$REPO_ROOT/2_configs/dist/cloud-data-gha-config.json"
+# 2026-04-27 migrated: cloud-data-gha-config.json -> _cloud-data-consolidated.json[._gha]
+GHA_CONFIG=""
+_CONS_FOR_GHA=""
+for _p in \
+    "/app/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
+    [ -f "$_p" ] && { _CONS_FOR_GHA="$_p"; break; }
+done
+if [ -n "$_CONS_FOR_GHA" ]; then
+    GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+    jq '
+      ._gha as $g
+      | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+      | $g
+      | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+    ' "$_CONS_FOR_GHA" > "$GHA_CONFIG"
+else
+    for _p in \
+        "/app/cloud-data-gha-config.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+        [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+    done
+fi
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -39,8 +65,8 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
 echo "── Any VM with wg_ip requires ship.yml to pass WG_PRIVATE_KEY ──"
 
-if [ ! -f "$GHA_CONFIG" ]; then
-    echo "  (2_configs/dist not present — nothing to assert)"
+if [ -z "$GHA_CONFIG" ]; then
+    echo "  (_cloud-data-consolidated.json / cloud-data-gha-config.json not present — nothing to assert)"
     exit 0
 fi
 
