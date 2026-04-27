@@ -219,11 +219,22 @@ NEOF
         return 0
     fi
 
-    # GHCR login (CI provides GITHUB_TOKEN+GITHUB_ACTOR; locally fall back to `gh` CLI)
+    # GHCR login — best-effort.
+    # The login is REDUNDANT inside cloud-builder: the GHA runner already
+    # logged in before `docker compose run`, and ${HOME}/.docker/config.json
+    # is bind-mounted RO into cloud-builder per cb_containers-builders compose.yaml.
+    # The re-login fails with "permission denied" trying to write the RO
+    # mount → previously aborted step_docker silently because of `2>/dev/null`
+    # combined with set -e. Now: stderr is preserved (for debuggability) and
+    # `|| true` keeps the pipeline going since downstream `docker push` will
+    # surface its own error if auth is genuinely broken.
+    # Surfaced 2026-04-27 (ship run 24998359368) by step_docker ERR trap.
     if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
-        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null
+        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     elif command -v gh >/dev/null 2>&1; then
-        gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>/dev/null
+        gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     fi
 
     # ── Resolve runner from cloud-data-runners.json (data-driven) ─────────
