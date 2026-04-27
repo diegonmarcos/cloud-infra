@@ -10,7 +10,7 @@
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
-# Step: Decrypt secrets.yaml via sops -> dist[/compose]/.secrets + .secrets.d/ + .secrets.json
+# Step: Decrypt secrets.yaml via sops -> dist/.secrets + .secrets.d/ + .secrets.json
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 #
 # Three lossless materialisations of the same decrypted material — every container
@@ -20,11 +20,13 @@
 #   .secrets.json   {"KEY":"value", ...}          → /run/secrets.json
 # All written mode 0600 so SSH keys / strict-perm consumers work without entrypoint chmod.
 #
-# Layout-aware (LAYOUT_V2 exported by cloud-ship-container-engine.sh):
-#   v1 — secrets land at dist/.secrets (compose at dist/docker-compose.yml — relative env_file resolves)
-#   v2 — secrets land at dist/compose/.secrets (compose at dist/compose/docker-compose.yml).
-#        Without this, `env_file: [".secrets"]` in the v2 compose resolves to compose/.secrets
-#        and aborts: "env file ... not found". Bug surfaced 2026-04-27 on c3-services-mcp + mail-mcp.
+# Path: $DIST_DIR/.secrets (NOT $DIST_DIR/compose/.secrets).
+# step_compose forces `--project-directory .` (deploy-compose.sh:89), pinning the
+# compose project root to the SERVICE directory regardless of v1/v2 layout. With
+# that flag, docker-compose resolves the YAML's `env_file: [".secrets"]` relative
+# to the project root → /opt/containers/<svc>/.secrets. Putting secrets inside
+# compose/ would only work if --project-directory pointed at the compose-file
+# directory; it doesn't. Verified 2026-04-27 (ship run 24998852451).
 
 step_secrets() {
     CURRENT_STEP="secrets"
@@ -35,12 +37,10 @@ step_secrets() {
         return 0
     fi
 
-    # Layout-aware secrets dir — sibling to compose YAML so env_file: [".secrets"] resolves.
     SECRETS_DIR="$DIST_DIR"
-    [ "${LAYOUT_V2:-0}" = "1" ] && SECRETS_DIR="$DIST_DIR/compose"
     mkdir -p "$SECRETS_DIR"
 
-    log "Decrypting secrets -> ${SECRETS_DIR#$SERVICE_DIR/}/.secrets{,.d/,.json}"
+    log "Decrypting secrets -> dist/.secrets{,.d/,.json}"
 
     # Decrypt once to JSON — all extraction done by jq, never parse secret values as text
     _secrets_json=$(sops -d --output-type json "$secrets_file")
