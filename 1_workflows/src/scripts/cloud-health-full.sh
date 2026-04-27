@@ -7,15 +7,21 @@ set -uo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
+# 2026-04-27 migrated: cloud-data-topology.json -> _cloud-data-consolidated.json
+# Consolidated is a superset of topology (same .services / .vms / .owner keys).
 TOPO=""
 for _p in \
+    "/app/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json" \
     "/app/cloud-data-topology.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-topology.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-topology.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-topology.json"; do
     [ -f "$_p" ] && { TOPO="$_p"; break; }
 done
-[ -n "$TOPO" ] || { echo "FATAL: cloud-data-topology.json not found" >&2; exit 1; }
+[ -n "$TOPO" ] || { echo "FATAL: _cloud-data-consolidated.json (or legacy cloud-data-topology.json) not found" >&2; exit 1; }
 ROUTES="2_configs/dist/build-caddy.json"
 
 PASS=0; FAIL=0; WARN=0; TOTAL=0
