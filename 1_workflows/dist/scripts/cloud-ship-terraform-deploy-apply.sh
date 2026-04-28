@@ -20,27 +20,41 @@ set -euo pipefail
 PROJECT="${1:-}"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
+export CLOUD_ROOT="$REPO_ROOT"  # ensure-deps.sh / cloud-paths.sh read this
 
-# ── Dependencies (installed on demand) ──
-ensure_sops() {
-  command -v sops >/dev/null 2>&1 && return
-  echo "Installing sops..."
-  curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
-  chmod +x /tmp/sops && sudo mv /tmp/sops /usr/local/bin/sops
-}
+# ── Dependencies — sourced from shared lib ────────────────────────
+# Was 3 inline `ensure_*` functions; consolidated into
+# 1_workflows/src/libs/ensure-deps.sh on 2026-04-28 so any future engine
+# (terraform, ship, gen-configs, …) gets the same idempotent bootstrap.
+LIB_DIR="$REPO_ROOT/1_workflows/src/libs"
+# shellcheck source=../libs/ensure-deps.sh
+[ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 
-ensure_terraform() {
-  command -v terraform >/dev/null 2>&1 && return
-  echo "Installing terraform..."
-  curl -fsSL -o /tmp/tf.zip https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
-  unzip -o /tmp/tf.zip -d /tmp && sudo mv /tmp/terraform /usr/local/bin/terraform
-}
-
-ensure_wrangler() {
-  command -v wrangler >/dev/null 2>&1 && return
-  echo "Installing wrangler..."
-  npm install -g wrangler
-}
+# Local fallback for fresh clones where libs/ might not be deployed yet —
+# defensive only; happy path uses the shared functions above.
+if ! command -v ensure_sops >/dev/null 2>&1; then
+  ensure_sops() {
+    command -v sops >/dev/null 2>&1 && return
+    echo "Installing sops..."
+    curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+    chmod +x /tmp/sops && sudo mv /tmp/sops /usr/local/bin/sops
+  }
+fi
+if ! command -v ensure_terraform >/dev/null 2>&1; then
+  ensure_terraform() {
+    command -v terraform >/dev/null 2>&1 && return
+    echo "Installing terraform..."
+    curl -fsSL -o /tmp/tf.zip https://releases.hashicorp.com/terraform/1.9.8/terraform_1.9.8_linux_amd64.zip
+    unzip -o /tmp/tf.zip -d /tmp && sudo mv /tmp/terraform /usr/local/bin/terraform
+  }
+fi
+if ! command -v ensure_wrangler >/dev/null 2>&1; then
+  ensure_wrangler() {
+    command -v wrangler >/dev/null 2>&1 && return
+    echo "Installing wrangler..."
+    npm install -g wrangler
+  }
+fi
 
 declare -A TF_DIRS=(
   [cloudflare]="c_vps/ba-clo_cloudflare/src"

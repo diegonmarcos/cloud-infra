@@ -1005,6 +1005,79 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
   return files;
 }
 
+/** Emit one build-{name}.json per external consumer registered in
+ *  2_configs/src/external-consumers.json. Same shape as the per-container
+ *  build-{name}.json files (deriveContainerConfigs), but for non-container
+ *  services in other repos (unix/ba_flakes_desktop, cb_containers-builders,
+ *  cloud-data/secrets, etc.).
+ *
+ *  Each registry entry declares which top-level (or dotted) keys of the
+ *  consolidated file it wants. The slice's data is extracted via getDeep()
+ *  and stamped into the build-{name}.json under the declared `key`.
+ *
+ *  Special filter `map_to_env_vars`: for the secrets consumer, emits
+ *  { <service>: <secret_env_var_names[]> } extracted from services[*].
+ */
+function getDeep(obj: any, dotPath: string): any {
+  if (!dotPath) return obj;
+  return dotPath.split(".").reduce((acc: any, k: string) =>
+    (acc != null && typeof acc === "object") ? acc[k] : undefined, obj);
+}
+
+function deriveExternalConsumers(c: any): DerivedFile[] {
+  const REGISTRY = join(CONFIGS_DIR, "src", "external-consumers.json");
+  if (!existsSync(REGISTRY)) {
+    console.error(`[deriveExternalConsumers] registry not found at ${REGISTRY} — skipping`);
+    return [];
+  }
+  let registry: any;
+  try {
+    registry = JSON.parse(readFileSync(REGISTRY, "utf-8"));
+  } catch (e) {
+    console.error(`[deriveExternalConsumers] failed to parse ${REGISTRY}:`, e);
+    return [];
+  }
+
+  const out: DerivedFile[] = [];
+  for (const consumer of registry.consumers ?? []) {
+    const slices: Record<string, any> = {};
+    for (const sliceDef of consumer.slices ?? []) {
+      const { key, from, filter } = sliceDef;
+      const raw = getDeep(c, from);
+      if (filter === "map_to_env_vars") {
+        // services[*].secret_env_vars → { <svc>: <names[]> }
+        const out2: Record<string, string[]> = {};
+        if (raw && typeof raw === "object") {
+          for (const [svcName, svc] of Object.entries<any>(raw)) {
+            if (Array.isArray(svc?.secret_env_vars) && svc.secret_env_vars.length > 0) {
+              out2[svcName] = svc.secret_env_vars;
+            }
+          }
+        }
+        slices[key] = out2;
+      } else {
+        slices[key] = raw ?? null;
+      }
+    }
+    out.push({
+      name: `build-${consumer.name}.json`,
+      data: {
+        _meta: {
+          description: `${consumer.name} external consumer build (${consumer.description ?? ""})`,
+          format_version: 1,
+          consumer_path: consumer.consumer_path ?? null,
+          replaces: consumer.replaces ?? [],
+        },
+        _generated: now(),
+        _source: "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
+        consumer: consumer.name,
+        ...slices,
+      },
+    });
+  }
+  return out;
+}
+
 function deriveHomeManager(c: any): DerivedFile {
   const hmData = c._home_manager ?? {};
   const vms = hmData.vms ?? {};
@@ -1314,16 +1387,119 @@ function deriveBuildReports(c: any): DerivedFile {
       user: vm.user,
     }));
 
+  // ── Sections derived from consolidated.json (no extra inputs) ──────
+  // services summary — for cross-checks, drift, status flags.
+  const servicesSummary: Record<string, any> = {};
+  for (const [svcName, svc] of Object.entries(services)) {
+    servicesSummary[svcName] = {
+      name: svcName,
+      vm: svc.vm,
+      domain: svc.domain ?? null,
+      enabled: svc.enabled !== false,
+      category: svc.category ?? null,
+      ports: svc.declared_ports ?? svc.ports ?? null,
+      health: svc.health ?? null,
+    };
+  }
+  // dns_services — from svc.dns + svc.containers[*].dns
+  const dnsServices: any[] = [];
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (svc.dns) dnsServices.push({ service: svcName, dns: svc.dns });
+    if (svc.containers && typeof svc.containers === "object") {
+      for (const [ctrKey, ctr] of Object.entries(svc.containers as Record<string, any>)) {
+        if (ctr.dns) dnsServices.push({ service: svcName, container: ctrKey, dns: ctr.dns });
+      }
+    }
+  }
+  // databases — every container with db_engine OR svc.databases inferred
+  const databases: any[] = [];
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (svc.containers && typeof svc.containers === "object") {
+      for (const [ctrKey, ctr] of Object.entries(svc.containers as Record<string, any>)) {
+        if (ctr.db_engine) {
+          databases.push({
+            service: svcName,
+            container: ctrKey,
+            engine: ctr.db_engine,
+            port: ctr.port ?? null,
+            db_name: ctr.db_name ?? null,
+            db_user: ctr.db_user ?? null,
+          });
+        }
+      }
+    }
+  }
+  // topology summary — vms[] with services[] indexed for the report's
+  // health_full2 cross-checks.
+  const topology: Record<string, any> = {
+    vms: Object.fromEntries(
+      Object.entries(vms).map(([vmName, vm]: [string, any]) => [
+        vmName,
+        {
+          alias: vm.ssh_alias ?? vmName,
+          wg_ip: vm.wg_ip ?? null,
+          public_ip: vm.public_ip ?? null,
+          user: vm.user ?? null,
+          provider: vm.provider ?? null,
+          services: Object.entries(services)
+            .filter(([_, svc]: [string, any]) => svc.vm === vmName)
+            .map(([svcName, _]) => svcName),
+        },
+      ])
+    ),
+    services: servicesSummary,
+  };
+
+  // ── Sections sourced from inputs/reports-*.json (engine-owned configs) ──
+  // These were hand-edited in the legacy cloud-data-{url-health,workflows,
+  // repo-scan,sec-scan}.json files. Engine now owns them under
+  // 2_configs/src/inputs/reports-*.json. Read verbatim and embed.
+  const ENGINE_DIR = import.meta.dirname!;
+  const INPUTS_DIR = resolve(ENGINE_DIR, "../inputs");
+  const readInput = (file: string): any | undefined => {
+    const path = join(INPUTS_DIR, file);
+    if (!existsSync(path)) return undefined;
+    try {
+      return JSON.parse(readFileSync(path, "utf-8"));
+    } catch (e) {
+      console.error(`[deriveBuildReports] failed to parse ${path}:`, e);
+      return undefined;
+    }
+  };
+  const urlHealth = readInput("reports-url-health.json");
+  const workflows = readInput("reports-workflows.json");
+  const repoScan = readInput("reports-repo-scan.json");
+  const secScan = readInput("reports-sec-scan.json");
+
   return {
     name: "build-reports.json",
     data: {
       _generated: now(),
-      _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/build-reports",
-      _replaces: ["cloud-data-monitoring-targets.json"],
+      _source: "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
+      _replaces: [
+        "cloud-data-monitoring-targets.json",
+        "cloud-data-topology.json",
+        "cloud-data-databases.json",
+        "cloud-data-dns-services.json",
+        "cloud-data-url-health.json",
+        "cloud-data-workflows.json",
+        "cloud-data-repo-scan.json",
+        "cloud-data-sec-scan.json",
+      ],
+      // Derived from consolidated
       endpoint_checks: endpointChecks,
       dns_checks: dnsChecks,
       tls_checks: tlsChecks,
       vms: vmList,
+      services: servicesSummary,
+      dns_services: dnsServices,
+      databases: databases,
+      topology: topology,
+      // Embedded from engine-owned input configs
+      url_health: urlHealth,
+      workflows: workflows,
+      repo_scan: repoScan,
+      sec_scan: secScan,
     },
   };
 }
@@ -1932,6 +2108,7 @@ function main() {
     deriveDeps(consolidated),
     deriveDatabases(consolidated),
     deriveSecretsEnvVarNames(consolidated),
+    ...deriveExternalConsumers(consolidated),
   ];
 
   // Write all files (inject the rich DO NOT EDIT header + pipeline metadata into each).
