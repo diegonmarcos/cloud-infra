@@ -1,8 +1,28 @@
 {
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-28T09:39:40.943Z",
-    "generated_by": "cloud-data-config-consolidated.ts"
+    "generated_at": "2026-04-28T09:46:20.764Z",
+    "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/home-manager/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+        "derive": "2_configs/src/engines/cloud-data-config-derive.ts"
+      },
+      "outputs": {
+        "master": "2_configs/dist/_cloud-data-consolidated.json (this file)",
+        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container in topology, plus one for each container-less service)",
+        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 2_configs/build.sh all"
+    }
   },
   "owner": {
     "name": "Diego Marcos",
