@@ -176,10 +176,12 @@ check "seed-accounts.php: rejects TODO_ placeholder secrets" \
 SEED_SH="$CYPHT_DIR/src/seed-accounts.sh"
 check "seed-accounts.sh: invokes seed-accounts.php" \
     grep -q "seed-accounts.php" "$SEED_SH"
-check "seed-accounts.sh: uses PHP for postgres probe (pg_isready not in cypht image)" \
-    grep -q 'fsockopen.*5432' "$SEED_SH"
-check "seed-accounts.sh: NO pg_isready call (would silently fail)" \
-    bash -c "! grep -qE '^[[:space:]]*pg_isready' '$SEED_SH'"
+check "seed-accounts.sh: uses pg_isready for postgres probe (apt-installed via runtime_packages)" \
+    grep -qE '^[[:space:]]*pg_isready' "$SEED_SH"
+check "build.json: docker.runtime_packages.apt includes jq + postgresql-client" \
+    bash -c "jq -e '.docker.runtime_packages.apt | contains(\"jq\") and contains(\"postgresql-client\")' '$CYPHT_DIR/build.json' >/dev/null"
+check "dist/Dockerfile: apt-get install jq + postgresql-client (auto-injected by engine)" \
+    bash -c "grep -qE 'apt-get install.*jq.*postgresql-client|apt-get install.*postgresql-client.*jq' '$CYPHT_DIR/dist/code/amd64/Dockerfile'"
 
 # flake registers all three assets
 FLAKE="$CYPHT_DIR/src/flake.nix"
