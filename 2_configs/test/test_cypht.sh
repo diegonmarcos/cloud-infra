@@ -176,6 +176,10 @@ check "seed-accounts.php: rejects TODO_ placeholder secrets" \
 SEED_SH="$CYPHT_DIR/src/seed-accounts.sh"
 check "seed-accounts.sh: invokes seed-accounts.php" \
     grep -q "seed-accounts.php" "$SEED_SH"
+check "seed-accounts.sh: uses PHP for postgres probe (pg_isready not in cypht image)" \
+    grep -q 'fsockopen.*5432' "$SEED_SH"
+check "seed-accounts.sh: NO pg_isready call (would silently fail)" \
+    bash -c "! grep -qE '^[[:space:]]*pg_isready' '$SEED_SH'"
 
 # flake registers all three assets
 FLAKE="$CYPHT_DIR/src/flake.nix"
