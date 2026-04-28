@@ -191,7 +191,9 @@ check "flake.nix: extraAssets includes seed-accounts.php" \
 # compose mounts the PHP seeder
 COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
 check "compose.nix: mounts seed-accounts.php" \
-    grep -q "assets/seed-accounts.php:/opt/cypht-config/seed-accounts.php" "$COMPOSE_NIX"
+    grep -q "assets/seed-accounts.php:/tmp/cypht-config/seed-accounts.php" "$COMPOSE_NIX"
+check "compose.nix: mount target is /tmp/cypht-config (PHP open_basedir allows /tmp)" \
+    bash -c "! grep -q '/opt/cypht-config' '$COMPOSE_NIX'"
 
 SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
 check "seed: primary email = me@diegonmarcos.com" \
