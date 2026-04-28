@@ -153,8 +153,8 @@ fi
 # Compose mounts the override
 COMPOSE_YML="$CYPHT_DIR/dist/compose/docker-compose.yml"
 if [ -f "$COMPOSE_YML" ]; then
-    check "compose: mounts php-fpm-www.conf override" \
-        grep -q 'php-fpm-www.conf:/usr/local/etc/php-fpm.d/www.conf' "$COMPOSE_YML"
+    check "compose: mounts php-fpm-www.conf as zzz-cypht.conf (loads last, wins over zz-docker.conf)" \
+        grep -q 'php-fpm-www.conf:/usr/local/etc/php-fpm.d/zzz-cypht.conf' "$COMPOSE_YML"
 fi
 
 # ── 4. seed-accounts inventory ───────────────────────────────────────────────
