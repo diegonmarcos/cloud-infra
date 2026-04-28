@@ -16,54 +16,46 @@ BUILDS="$SCRIPT_DIR/src/builds"
 DIST="$SCRIPT_DIR/dist"
 CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
+export CLOUD_ROOT  # cloud-paths.sh / ensure-deps.sh read this
 
-log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
+# Source shared engine libs (idempotent, guard against double-source).
+LIB_DIR="$CLOUD_ROOT/1_workflows/src/libs"
+# shellcheck source=../1_workflows/src/libs/engine-traps.sh
+[ -f "$LIB_DIR/engine-traps.sh" ] && . "$LIB_DIR/engine-traps.sh"
+# shellcheck source=../1_workflows/src/libs/cloud-paths.sh
+[ -f "$LIB_DIR/cloud-paths.sh" ] && . "$LIB_DIR/cloud-paths.sh"
+# shellcheck source=../1_workflows/src/libs/ensure-deps.sh
+[ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 
-# ══════════════════════════════════════════════════════════════════════
-# ensure_node_deps — self-bootstrap engines' node toolchain
-# ══════════════════════════════════════════════════════════════════════
-# 2_configs/ TypeScript engines (consolidate, derive) are run via tsx and
-# import yaml + nunjucks. On hosts without the cloud-builder image (bare
-# GHA runners, fresh clones, dev laptops), these aren't installed. This
-# function checks PATH for tsx; if missing, installs config.json:
-# .deps.node.required at $CLOUD_ROOT/node_modules and prepends
-# $CLOUD_ROOT/node_modules/.bin to PATH so tsx is found AND yaml/nunjucks
-# resolve via normal node_modules walk-up from any subdir.
-#
-# Surfaced 2026-04-27 across multiple ship runs (25011200839, 25013604449,
-# 25014061872): tsx not found, yaml ESM resolution failed. Fix lives in
-# the engine itself, not in every workflow that calls it (FIRE rule 1:
-# "Always fix the engine — never bypass with one-liners").
-ensure_node_deps() {
-    if command -v tsx >/dev/null 2>&1; then
-        return 0
-    fi
-    if [ -x "$CLOUD_ROOT/node_modules/.bin/tsx" ]; then
+# log defined by engine-traps.sh; define a fallback if libs are unavailable
+# (e.g. running this script before the libs are deployed in someone's
+# checkout — defensive, lib loading is the happy path).
+if ! command -v log >/dev/null 2>&1; then
+    log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
+fi
+
+# ensure_node_deps now lives in 1_workflows/src/libs/ensure-deps.sh
+# (sourced above). Define a thin local fallback so this script still
+# works on a fresh clone where libs/ might not yet be deployed.
+if ! command -v ensure_node_deps >/dev/null 2>&1; then
+    ensure_node_deps() {
+        if command -v tsx >/dev/null 2>&1; then return 0; fi
+        if [ -x "$CLOUD_ROOT/node_modules/.bin/tsx" ]; then
+            export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"; return 0
+        fi
+        if ! command -v npm >/dev/null 2>&1; then
+            log "ensure_node_deps: ERROR npm not found"; return 1
+        fi
+        log "ensure_node_deps (fallback): bootstrapping engine deps"
+        PKGS=""
+        if [ -f "$CLOUD_ROOT/config.json" ] && command -v jq >/dev/null 2>&1; then
+            PKGS=$(jq -r '.deps.node.required[]?' "$CLOUD_ROOT/config.json" 2>/dev/null | tr '\n' ' ')
+        fi
+        [ -z "$PKGS" ] && PKGS="tsx yaml nunjucks ajv ajv-formats"
+        (cd "$CLOUD_ROOT" && npm install --silent --no-save $PKGS) || return 1
         export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"
-        return 0
-    fi
-    log "ensure_node_deps: tsx not on PATH — bootstrapping engine deps"
-    if ! command -v npm >/dev/null 2>&1; then
-        log "ensure_node_deps: ERROR npm not found — node 18+ required on host"
-        return 1
-    fi
-    if ! command -v jq >/dev/null 2>&1; then
-        log "ensure_node_deps: ERROR jq not found — required to read config.json"
-        return 1
-    fi
-    PKGS=$(jq -r '.deps.node.required[]?' "$CLOUD_ROOT/config.json" 2>/dev/null | tr '\n' ' ')
-    # Fallback mirrors config.json:.deps.node.required so a stale config.json
-    # (missing ajv/ajv-formats) still gets all engine deps installed.
-    [ -z "$PKGS" ] && PKGS="tsx yaml nunjucks ajv ajv-formats"
-    (
-        cd "$CLOUD_ROOT" && npm install --silent --no-save $PKGS
-    ) || {
-        log "ensure_node_deps: ERROR npm install failed (PKGS=$PKGS)"
-        return 1
     }
-    export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"
-    log "ensure_node_deps: bootstrapped $PKGS at $CLOUD_ROOT/node_modules"
-}
+fi
 
 # Mirror every a_solutions/<folder>/build.json as
 # 2_configs/src/builds/build-<folder>.json (symlink). Declarative index —
