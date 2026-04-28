@@ -1,0 +1,64 @@
+{
+  "_comment": "Declarative config for the workflow-status audit in reports. Fire rule 3: no hardcoded repo/host names in engine code. Consumed by cloud-health-full-daily (GHA + Dagu fetchers). Evidence goes to reports-logs/dist/workflows/.",
+  "enabled": true,
+  "window_hours": 24,
+  "github": {
+    "enabled": true,
+    "repos": [
+      "diegonmarcos/cloud",
+      "diegonmarcos/cloud-data",
+      "diegonmarcos/unix",
+      "diegonmarcos/front",
+      "diegonmarcos/tools"
+    ],
+    "max_runs_per_repo": 50,
+    "token_sources": ["env:GITHUB_TOKEN", "vault:~/.config/gh/hosts.yml"],
+    "fail_threshold_per_workflow": 1,
+    "emit_severity": {
+      "failure":   "critical",
+      "cancelled": "warning",
+      "timed_out": "warning",
+      "action_required": "warning",
+      "startup_failure": "critical"
+    }
+  },
+  "dagu": {
+    "enabled": true,
+    "api_base": "https://api.diegonmarcos.com/dagu",
+    "auth_header_source": "vault:bearer_jwt",
+    "max_runs_per_dag": 20,
+    "fail_threshold_per_dag": 1,
+    "emit_severity": {
+      "failed":    "critical",
+      "cancelled": "warning",
+      "timeout":   "warning"
+    }
+  },
+  "summary": {
+    "group_by":       ["source", "repo_or_host", "workflow", "conclusion"],
+    "include_urls":   true,
+    "max_rows_per_group": 10
+  },
+  "testers": {
+    "checks": [
+      {
+        "id": "workflows_window_respected",
+        "description": "Only failures within `window_hours` appear in report",
+        "command": "jq '.workflow_failures | map(select(.age_hours <= 24)) | length' dist/cloud_health_daily.json",
+        "expect_nonzero_ok": true
+      },
+      {
+        "id": "github_repos_from_json",
+        "description": "Code does not hardcode any of the repos from this JSON",
+        "command": "grep -RE 'diegonmarcos/(cloud|unix|front|tools|cloud-data)' reports/src/cloud-health-full-daily/src/ | grep -v 'cloud-data-workflows'",
+        "expect_empty": true
+      },
+      {
+        "id": "dagu_endpoint_reachable",
+        "description": "Dagu API responds 200 on /health",
+        "command": "curl -sS -o /dev/null -w '%{http_code}' $DAGU_BASE/health",
+        "expect": "200"
+      }
+    ]
+  }
+}
