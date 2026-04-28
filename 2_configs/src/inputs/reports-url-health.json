@@ -1,0 +1,38 @@
+{
+  "_comment": "cloud-url-health-report runtime config. Passwords NEVER live here — NOREPLY_PASSWORD + ME_PASSWORD come from env (sops-decrypted upstream).",
+  "concurrency": {
+    "public": 16,
+    "private": 16
+  },
+  "timeouts": {
+    "http_connect_secs": 3,
+    "http_total_secs": 5,
+    "tcp_secs": 3
+  },
+  "targets": {
+    "_comment": "Ports that are not HTTP servers — probe via TcpStream::connect only, skip HTTP GET.",
+    "tcp_only_ports": [
+      25, 53, 143, 443, 465, 587, 993, 4190,
+      2222, 2223, 2224, 2443,
+      3306, 5432, 5433, 5434, 5435, 5436, 5437, 5438, 5439, 5440, 5441, 5442, 5443,
+      6379, 6380, 6381,
+      8001,
+      11434
+    ]
+  },
+  "email": {
+    "smtp": {
+      "host": "10.0.0.3",
+      "port": 587,
+      "username": "no-reply@diegonmarcos.com"
+    },
+    "imap": {
+      "host": "10.0.0.3",
+      "port": 993,
+      "username": "me@diegonmarcos.com"
+    },
+    "timeout_secs": 10,
+    "poll_interval_ms": 500,
+    "subject_prefix": "[url-health-e2e]"
+  }
+}
