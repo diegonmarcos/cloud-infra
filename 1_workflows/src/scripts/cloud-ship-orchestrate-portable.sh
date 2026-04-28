@@ -48,34 +48,44 @@ done
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT" || die "Cannot cd to $REPO_ROOT"
 
-# 2026-04-27 migrated: cloud-data-gha-config.json -> _cloud-data-consolidated.json[._gha]
+# 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
 GHA_CONFIG=""
-_CONS_FOR_GHA=""
 for _p in \
-    "/app/_cloud-data-consolidated.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/_cloud-data-consolidated.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
-    [ -f "$_p" ] && { _CONS_FOR_GHA="$_p"; break; }
+    "/app/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/build-gha.json"; do
+    [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
 done
-if [ -n "$_CONS_FOR_GHA" ]; then
-    GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
-    jq '
-      ._gha as $g
-      | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
-      | $g
-      | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
-    ' "$_CONS_FOR_GHA" > "$GHA_CONFIG"
-else
+if [ -z "$GHA_CONFIG" ]; then
+    # Fallback: extract _gha slice from consolidated.
+    _CONS_FOR_GHA=""
     for _p in \
-        "/app/cloud-data-gha-config.json" \
-        "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
-        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
-        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
-        [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+        "/app/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
+        [ -f "$_p" ] && { _CONS_FOR_GHA="$_p"; break; }
     done
+    if [ -n "$_CONS_FOR_GHA" ]; then
+        GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+        jq '
+          ._gha as $g
+          | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+          | $g
+          | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+        ' "$_CONS_FOR_GHA" > "$GHA_CONFIG"
+    else
+        for _p in \
+            "/app/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
+            [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+        done
+    fi
 fi
-[ -n "$GHA_CONFIG" ] || die "_cloud-data-consolidated.json (or legacy cloud-data-gha-config.json) not found"
+[ -n "$GHA_CONFIG" ] || die "build-gha.json (or legacy fallbacks) not found"
 
 SCRIPTS_DIR=".github/workflows/scripts"
 
