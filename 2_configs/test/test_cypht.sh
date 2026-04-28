@@ -98,8 +98,14 @@ if [ -f "$CYPHT_ENV" ]; then
         bash -c "! grep -vE '^[[:space:]]*#' '$CYPHT_ENV' | grep -qE '@[A-Z_]+@'"
     check "cypht.env: DB_DRIVER=pgsql" \
         grep -q '^DB_DRIVER=pgsql' "$CYPHT_ENV"
+    check "cypht.env: DB_CONNECTION_TYPE=host (upstream-required)" \
+        grep -q '^DB_CONNECTION_TYPE=host' "$CYPHT_ENV"
     check "cypht.env: DB_HOST=127.0.0.1" \
         grep -q '^DB_HOST=127.0.0.1' "$CYPHT_ENV"
+    check "cypht.env: DB_PASS (NOT DB_PASSWORD — upstream var name)" \
+        grep -qE '^DB_PASS=' "$CYPHT_ENV"
+    check "cypht.env: no DB_PASSWORD (wrong var name)" \
+        bash -c "! grep -qE '^DB_PASSWORD=' '$CYPHT_ENV'"
     check "cypht.env: CYPHT_MODULES contains jmap" \
         grep -q 'CYPHT_MODULES=.*jmap' "$CYPHT_ENV"
     check "cypht.env: CYPHT_MODULES contains feeds (RSS)" \
