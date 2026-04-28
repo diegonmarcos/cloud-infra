@@ -129,8 +129,30 @@ if [ -f "$NGINX_CONF" ]; then
         bash -c "! grep -E '^[[:space:]]+listen[[:space:]]+0\.0\.0\.0' '$NGINX_CONF'"
     check "nginx.conf: no bare 'listen 80;' fallback" \
         bash -c "! grep -E '^[[:space:]]+listen 80;' '$NGINX_CONF'"
+    check "nginx.conf: fastcgi_pass to unix socket (NOT TCP :9000 — collides with snappymail)" \
+        grep -qE 'fastcgi_pass unix:/run/cypht-php-fpm\.sock' "$NGINX_CONF"
+    check "nginx.conf: no fastcgi_pass to 127.0.0.1:9000 (snappymail conflict)" \
+        bash -c "! grep -qE 'fastcgi_pass 127\.0\.0\.1:9000' '$NGINX_CONF'"
 else
     fail_with "nginx.conf missing — run aa-sui_cypht/build.sh build first"
+fi
+
+# ── 3c. php-fpm-www.conf override (no TCP collision) ─────────────────────────
+PHPFPM_CONF="$CYPHT_DIR/dist/configs/php-fpm-www.conf"
+if [ -f "$PHPFPM_CONF" ]; then
+    check "php-fpm-www.conf: listen on unix socket /run/cypht-php-fpm.sock" \
+        grep -qE '^listen[[:space:]]*=[[:space:]]*/run/cypht-php-fpm\.sock' "$PHPFPM_CONF"
+    check "php-fpm-www.conf: no TCP listen (would collide with snappymail)" \
+        bash -c "! grep -qE '^listen[[:space:]]*=[[:space:]]*[0-9]' '$PHPFPM_CONF'"
+else
+    fail_with "php-fpm-www.conf missing — run aa-sui_cypht/build.sh build first"
+fi
+
+# Compose mounts the override
+COMPOSE_YML="$CYPHT_DIR/dist/compose/docker-compose.yml"
+if [ -f "$COMPOSE_YML" ]; then
+    check "compose: mounts php-fpm-www.conf override" \
+        grep -q 'php-fpm-www.conf:/usr/local/etc/php-fpm.d/www.conf' "$COMPOSE_YML"
 fi
 
 # ── 4. seed-accounts inventory ───────────────────────────────────────────────
