@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-04-28T09:59:23.300Z",
+    "generated_at": "2026-04-28T11:17:34.674Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-04-28T09:59:23.086Z",
+  "_generated": "2026-04-28T11:17:34.166Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -1273,6 +1273,30 @@
       "protocol": "https",
       "upstream": "10.0.0.1:443",
       "source": "containers.app.port"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-http-80.app",
+      "container": "caddy",
+      "container_key": "app",
+      "svc": "caddy",
+      "vm": "gcp-E2-f_0",
+      "port": 80,
+      "protocol": "http",
+      "upstream": "10.0.0.1:80",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-http-2019.app",
+      "container": "caddy",
+      "container_key": "app",
+      "svc": "caddy",
+      "vm": "gcp-E2-f_0",
+      "port": 2019,
+      "protocol": "http",
+      "upstream": "10.0.0.1:2019",
+      "source": "containers.app.extra_ports"
     },
     {
       "kind": "redirect",
@@ -2835,6 +2859,26 @@
       "host": "caddy-https-443.app",
       "path": null,
       "upstream": "10.0.0.1:443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy",
+      "notes": null
+    },
+    {
+      "host": "caddy-http-80.app",
+      "path": null,
+      "upstream": "10.0.0.1:80",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy",
+      "notes": null
+    },
+    {
+      "host": "caddy-http-2019.app",
+      "path": null,
+      "upstream": "10.0.0.1:2019",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
