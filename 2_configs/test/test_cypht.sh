@@ -144,6 +144,8 @@ if [ -f "$PHPFPM_CONF" ]; then
         grep -qE '^listen[[:space:]]*=[[:space:]]*/run/cypht-php-fpm\.sock' "$PHPFPM_CONF"
     check "php-fpm-www.conf: no TCP listen (would collide with snappymail)" \
         bash -c "! grep -qE '^listen[[:space:]]*=[[:space:]]*[0-9]' '$PHPFPM_CONF'"
+    check "php-fpm-www.conf: comments use ; not # (php-fpm parser)" \
+        bash -c "! grep -qE '^[[:space:]]*#' '$PHPFPM_CONF'"
 else
     fail_with "php-fpm-www.conf missing — run aa-sui_cypht/build.sh build first"
 fi
