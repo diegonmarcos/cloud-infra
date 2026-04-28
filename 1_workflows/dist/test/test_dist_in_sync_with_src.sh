@@ -34,8 +34,14 @@ REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
 
+# Snapshot dist/ verbatim. .github/workflows has symlinks (scripts/, hooks/,
+# test/) into dist — so we snapshot only .yml files, not the symlinked dirs.
+# The dirs themselves are part of the dist/ check above; double-comparing
+# them via the symlink fails with "No such file or directory" when cp
+# behaves oddly with broken/replaced symlinks.
 cp -r "$REPO_ROOT/1_workflows/dist" "$TMP/dist-before" 2>/dev/null || true
-cp -r "$REPO_ROOT/.github/workflows" "$TMP/wf-before" 2>/dev/null || true
+mkdir -p "$TMP/wf-before"
+find "$REPO_ROOT/.github/workflows" -maxdepth 1 -name '*.yml' -exec cp {} "$TMP/wf-before/" \; 2>/dev/null || true
 
 # Re-emit dist + .github/workflows from src/.
 ( cd "$REPO_ROOT" && bash 1_workflows/build.sh ) >/dev/null 2>&1 || {
@@ -55,14 +61,29 @@ if ! diff -rq "$TMP/dist-before" "$REPO_ROOT/1_workflows/dist" >/tmp/dist-drift 
     fi
 fi
 
-if ! diff -rq "$TMP/wf-before" "$REPO_ROOT/.github/workflows" >/tmp/wf-drift 2>&1; then
-    if [ -s /tmp/wf-drift ]; then
-        echo "::error::.github/workflows/ is out of sync with 1_workflows/src/cicd/"
-        echo "Drift:"
-        head -20 /tmp/wf-drift | sed 's/^/  /'
-        echo "Fix: run 'bash 1_workflows/build.sh' and commit the .github/workflows/ changes."
-        DRIFT=1
-    fi
+# Compare only the .yml workflow files; symlinked subdirs (scripts, hooks,
+# test) are validated as part of the dist/ check above.
+WF_DRIFT=$(
+    for f in "$REPO_ROOT/.github/workflows/"*.yml; do
+        [ -f "$f" ] || continue
+        bn=$(basename "$f")
+        before="$TMP/wf-before/$bn"
+        if [ ! -f "$before" ] || ! cmp -s "$before" "$f"; then
+            echo "  $bn drifts"
+        fi
+    done
+    for f in "$TMP/wf-before/"*.yml; do
+        [ -f "$f" ] || continue
+        bn=$(basename "$f")
+        [ -f "$REPO_ROOT/.github/workflows/$bn" ] || echo "  $bn removed by build but still in .github/workflows/ snapshot"
+    done
+)
+if [ -n "$WF_DRIFT" ]; then
+    echo "::error::.github/workflows/ is out of sync with 1_workflows/src/cicd/"
+    echo "Drift:"
+    printf '%s\n' "$WF_DRIFT"
+    echo "Fix: run 'bash 1_workflows/build.sh' and commit the .github/workflows/ changes."
+    DRIFT=1
 fi
 
 [ "$DRIFT" -eq 1 ] && exit 1
