@@ -161,6 +161,32 @@ fi
 echo ""
 echo "==> 4. seed-accounts.json inventory"
 
+# PHP seeder — encrypts + persists IMAP/SMTP/JMAP backends server-side
+SEED_PHP="$CYPHT_DIR/src/seed-accounts.php"
+check "seed-accounts.php: present (declarative backend seeder)" \
+    test -f "$SEED_PHP"
+check "seed-accounts.php: uses Hm_User_Config_DB (cypht's own crypto)" \
+    grep -q "Hm_User_Config_DB" "$SEED_PHP"
+check "seed-accounts.php: writes imap_servers + smtp_servers" \
+    bash -c "grep -q 'imap_servers' '$SEED_PHP' && grep -q 'smtp_servers' '$SEED_PHP'"
+check "seed-accounts.php: rejects TODO_ placeholder secrets" \
+    grep -q "TODO_" "$SEED_PHP"
+
+# Invocation chain: seed-accounts.sh must call seed-accounts.php
+SEED_SH="$CYPHT_DIR/src/seed-accounts.sh"
+check "seed-accounts.sh: invokes seed-accounts.php" \
+    grep -q "seed-accounts.php" "$SEED_SH"
+
+# flake registers all three assets
+FLAKE="$CYPHT_DIR/src/flake.nix"
+check "flake.nix: extraAssets includes seed-accounts.php" \
+    grep -q "seed-accounts.php" "$FLAKE"
+
+# compose mounts the PHP seeder
+COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
+check "compose.nix: mounts seed-accounts.php" \
+    grep -q "assets/seed-accounts.php:/opt/cypht-config/seed-accounts.php" "$COMPOSE_NIX"
+
 SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
 check "seed: primary email = me@diegonmarcos.com" \
     bash -c "[ \"\$(jq -r .primary.email '$SEED_JSON')\" = 'me@diegonmarcos.com' ]"
