@@ -300,6 +300,11 @@ function main() {
       ...(entry.monitoring ? { monitoring: entry.monitoring } : {}),
       ...(entry.backup ? { backup: entry.backup } : {}),
       ...(entry.notifications ? { notifications: entry.notifications } : {}),
+      // Cross-service declarative SoTs — each service's own build.json owns
+      // these. The derive engine joins them into peer build-{name}.json files
+      // (deriveServiceConnections + deriveMailAccounts).
+      ...(entry.users ? { users: entry.users } : {}),
+      ...(entry.mail_clients ? { mail_clients: entry.mail_clients } : {}),
       // Deploy overrides
       ...(entry.fallback_vm ? { fallback_vm: resolveVmId(entry.fallback_vm, aliasMap, vms) } : {}),
       // Extra service-specific fields

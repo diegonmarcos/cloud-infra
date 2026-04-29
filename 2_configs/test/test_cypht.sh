@@ -177,9 +177,22 @@ COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
 check "compose.nix: mount target is /tmp/cypht-config (PHP open_basedir allows /tmp)" \
     bash -c "! grep -q '/opt/cypht-config' '$COMPOSE_NIX'"
 
-SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
-check "seed: primary email = me@diegonmarcos.com" \
-    bash -c "[ \"\$(jq -r .primary.email '$SEED_JSON')\" = 'me@diegonmarcos.com' ]"
+# Phase 6: src/seed-accounts.json + src/cypht-api/configs.json DELETED.
+# Both files are now DERIVED at flake build time from build-cypht.json#mail_accounts
+# (which itself is derived by the engine from cypht/build.json#mail_clients +
+# maddy.users + stalwart.users + extra_ports[].service).
+# Source files MUST NOT exist (regression guard against re-introducing duplicates).
+check "src: seed-accounts.json must NOT exist (now derived)" \
+    bash -c "[ ! -e '$CYPHT_DIR/src/seed-accounts.json' ]"
+check "src: cypht-api/configs.json must NOT exist (now derived)" \
+    bash -c "[ ! -e '$CYPHT_DIR/src/cypht-api/configs.json' ]"
+
+# All assertions below operate on the DERIVED dist/assets/ files.
+SEED_JSON="$CYPHT_DIR/dist/assets/seed-accounts.json"
+check "dist seed-accounts.json present (derived from build-cypht.json#mail_accounts)" \
+    test -f "$SEED_JSON"
+check "dist seed-accounts.json carries _generated_from provenance" \
+    bash -c "jq -e '._generated_from | test(\"build-cypht.json#mail_accounts\")' '$SEED_JSON' >/dev/null"
 
 check "seed: extras count == 6 (Maddy IMAP, JMAP-Stalwart, Stalwart STARTTLS, no-reply, Outlook, Gmail — IMAP-Stalwart dropped)" \
     bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '6' ]"
@@ -212,9 +225,11 @@ check "seed: includes Outlook account" \
 check "seed: includes Gmail account" \
     bash -c "jq -e '.extras[] | select(.imap.host == \"imap.gmail.com\")' '$SEED_JSON'"
 
-# Each pass_env documented in secrets.schema.md
+# Each pass_env documented in secrets.schema.md (derived seed has no .primary
+# key — primary user lives in cypht-api/configs.json#primary_user).
 SCHEMA="$CYPHT_DIR/src/secrets.schema.md"
-for env_var in $(jq -r '.primary.pass_env, .extras[].pass_env' "$SEED_JSON" | sort -u); do
+for env_var in $(jq -r '.extras[].pass_env' "$SEED_JSON" | sort -u; jq -r '.primary_user.pass_env' "$CFG_JSON"); do
+    [ -z "$env_var" ] && continue
     check "schema: $env_var documented" grep -q "$env_var" "$SCHEMA"
 done
 
@@ -256,7 +271,8 @@ echo ""
 echo "==> 7. cypht-api/ sidecar layout + configs.json + ntfy-topics canonical-equality + uniqid shape"
 
 API_DIR="$CYPHT_DIR/src/cypht-api"
-CFG_JSON="$API_DIR/configs.json"
+# configs.json is now DERIVED — assert against dist/, not src/.
+CFG_JSON="$CYPHT_DIR/dist/assets/cypht-api/configs.json"
 NTFY_TOPICS="$CYPHT_DIR/src/ntfy-topics.json"
 NTFY_CANONICAL="$CLOUD_ROOT/I_cloud-data/ntfy-api/src/topics.json"
 
@@ -285,8 +301,8 @@ check "configs.json: carddav.radicale.server_template defined" \
     bash -c "jq -e '.carddav.radicale.server_template' '$CFG_JSON' >/dev/null"
 check "configs.json: carddav.radicale.pass_env = ME_PASSWORD" \
     bash -c "[ \"\$(jq -r '.carddav.radicale.pass_env' '$CFG_JSON')\" = 'ME_PASSWORD' ]"
-check "configs.json: feeds.source = ../ntfy-topics.json" \
-    bash -c "[ \"\$(jq -r '.feeds.source' '$CFG_JSON')\" = '../ntfy-topics.json' ]"
+check "configs.json: feeds.url_template references rss.diegonmarcos.com (derived)" \
+    bash -c "jq -r '.feeds.url_template' '$CFG_JSON' | grep -q 'rss.diegonmarcos.com'"
 check "configs.json: feeds.url_template references rss.diegonmarcos.com" \
     bash -c "jq -r '.feeds.url_template' '$CFG_JSON' | grep -q 'rss.diegonmarcos.com'"
 check "configs.json: settings.theme_setting = darkly" \
@@ -361,12 +377,62 @@ check "verify.php: emits profiles_count" \
 
 # ── 7f. flake.nix registration ──
 FLAKE_NIX="$CYPHT_DIR/src/flake.nix"
-check "flake.nix: extraAssets includes seed-accounts.json" \
-    grep -q "./seed-accounts.json" "$FLAKE_NIX"
+check "flake.nix: emits derived seed-accounts.json from build-cypht.json#mail_accounts" \
+    bash -c "grep -q 'derivedSeedAccountsJson' '$FLAKE_NIX' && grep -q 'mailAccounts.extras' '$FLAKE_NIX'"
+check "flake.nix: emits derived cypht-api/configs.json from build-cypht.json#mail_accounts" \
+    bash -c "grep -q 'derivedCyphtApiConfigsJson' '$FLAKE_NIX' && grep -q 'mailAccounts.profiles' '$FLAKE_NIX'"
 check "flake.nix: extraAssets includes ntfy-topics.json" \
     grep -q "./ntfy-topics.json" "$FLAKE_NIX"
 check "flake.nix: extraAssets includes ./cypht-api directory" \
     grep -q "./cypht-api" "$FLAKE_NIX"
+check "flake.nix: NO Nix-path ref './seed-accounts.json' (Phase-6 deleted; only the derived dest name remains)" \
+    bash -c "! grep -E '(^|[^.])\\./seed-accounts\\.json' '$FLAKE_NIX' >/dev/null"
+
+# ── 7h. Cross-service SoT singularity (Phase 1 + 7-8) ──
+echo ""
+echo "==> 7h. Cross-service SoT singularity — no duplicate mailbox declarations"
+
+MADDY_BJ="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/build.json"
+STAL_BJ="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/build.json"
+MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/src/templates/init.sh.tpl"
+STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/src/templates/activate.sh.tpl"
+BC_JSON="$CLOUD_ROOT/2_configs/dist/build-cypht.json"
+
+check "maddy/build.json: declares users{admin,noreply} with name+pass_env" \
+    bash -c "jq -e '.users.admin.name == \"me\" and .users.admin.pass_env == \"ME_PASSWORD\" and .users.noreply.name == \"no-reply\" and .users.noreply.pass_env == \"NOREPLY_PASSWORD\"' '$MADDY_BJ' >/dev/null"
+check "stalwart/build.json: declares same users{admin,noreply} (each service owns its own)" \
+    bash -c "jq -e '.users.admin.name == \"me\" and .users.admin.pass_env == \"ME_PASSWORD\" and .users.noreply.name == \"no-reply\" and .users.noreply.pass_env == \"NOREPLY_PASSWORD\"' '$STAL_BJ' >/dev/null"
+check "maddy/build.json: extra_ports[].service labels populated (imap_ssl, smtp_ssl, smtp_starttls)" \
+    bash -c "jq -e '.containers.app.extra_ports | map(.service) | (index(\"imap_ssl\") != null and index(\"smtp_ssl\") != null and index(\"smtp_starttls\") != null)' '$MADDY_BJ' >/dev/null"
+check "stalwart/build.json: extra_ports[].service labels (jmap_tls, smtp_ssl, smtp_starttls, imap_ssl)" \
+    bash -c "jq -e '.containers.app.extra_ports | map(.service) | (index(\"jmap_tls\") != null and index(\"smtp_ssl\") != null and index(\"smtp_starttls\") != null and index(\"imap_ssl\") != null)' '$STAL_BJ' >/dev/null"
+
+# Templates must NOT hardcode mailbox addresses anymore — rely on userBlock substitution
+MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/src/templates/init.sh.tpl"
+STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/src/templates/activate.sh.tpl"
+
+check "maddy/init.sh.tpl: contains @USER_CREATION_BLOCK@ placeholder (no hardcoded me@/no-reply@)" \
+    bash -c "grep -q '@USER_CREATION_BLOCK@' '$MADDY_INIT_TPL' && ! grep -qE 'creds (create|password)\\s+(me|no-reply)@' '$MADDY_INIT_TPL'"
+check "stalwart/activate.sh.tpl: contains @USER_CREATION_BLOCK@ placeholder (no hardcoded me@/no-reply@)" \
+    bash -c "grep -q '@USER_CREATION_BLOCK@' '$STAL_ACT_TPL' && ! grep -qE '\"name\":\"(me|no-reply)@@BASE_DOMAIN@\"' '$STAL_ACT_TPL'"
+
+# cypht/build.json#mail_clients shape
+CYPHT_BJ="$CYPHT_DIR/build.json"
+check "cypht/build.json: mail_clients block present" \
+    bash -c "jq -e '.mail_clients' '$CYPHT_BJ' >/dev/null"
+check "cypht/build.json: mail_clients.via_internal[] uses user_ref + receive_via/send_via labels (no inline hosts)" \
+    bash -c "jq -e '.mail_clients.via_internal | all(has(\"user_ref\"))' '$CYPHT_BJ' >/dev/null"
+check "cypht/build.json: NO inline mail server hosts in mail_clients.via_internal" \
+    bash -c "! jq -e '.mail_clients.via_internal[] | (.imap.host? // .smtp.host? // .jmap.host? // null) | values' '$CYPHT_BJ' >/dev/null"
+
+# Derived build-cypht.json#mail_accounts contains all 6 fully-resolved entries
+BC_JSON="$CLOUD_ROOT/2_configs/dist/build-cypht.json"
+check "build-cypht.json: mail_accounts.extras length == 6" \
+    bash -c "[ \"\$(jq -r '.mail_accounts.extras | length' '$BC_JSON')\" = '6' ]"
+check "build-cypht.json: every internal extra has resolved host+port (no nulls)" \
+    bash -c "jq -e '[.mail_accounts.extras[] | select(.email | endswith(\"@diegonmarcos.com\") or endswith(\"@stalwart\")) | (.imap.host // .jmap.host // .smtp.host) != null and (.imap.host // .jmap.host // .smtp.host) != \"\"] | all' '$BC_JSON' >/dev/null"
+check "build-cypht.json: profiles.diego.match resolves to a real seeded extra name" \
+    bash -c "MATCH=\$(jq -r '.mail_accounts.profiles.diego.match' '$BC_JSON'); jq -e --arg m \"\$MATCH\" '.mail_accounts.extras[] | select(.name == \$m)' '$BC_JSON' >/dev/null"
 
 # ── 7g. compose.nix mount + entrypoint ──
 COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
