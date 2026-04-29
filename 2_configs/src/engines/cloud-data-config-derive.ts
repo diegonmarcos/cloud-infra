@@ -945,6 +945,205 @@ function deriveRedis(c: any): DerivedFile {
  *  Adding a new container/service auto-creates its build-{name}.json on the
  *  next derive run — zero engine edits required.
  */
+/**
+ * Resolve a service's mail_clients block into a fully-resolved mail_accounts
+ * block. Looks up peers' users{} + extra_ports{service: <label>} to materialise
+ * {host, port, secure, login, pass_env} for each via_internal entry.
+ *
+ * Returns null if the service has no mail_clients block (most services).
+ *
+ * Source-of-truth contract:
+ *  - peer.users[K]               → SoT for mailbox identity (name + pass_env)
+ *  - peer.extra_ports[N].service → SoT for protocol channel (port + secure)
+ *  - peer.domain                 → SoT for hostname
+ *  - cypht.mail_clients (caller) → SoT for which combos cypht consumes
+ */
+function resolveMailAccounts(svcName: string, services: Record<string, any>): any | null {
+  const svc = services[svcName];
+  const mc = svc?.mail_clients;
+  if (!mc) return null;
+
+  const PROTO_SECURE: Record<string, string> = {
+    "tls": "SSL", "starttls": "STARTTLS", "ssl": "SSL", "tcp": "PLAIN",
+  };
+
+  // Find an extra_ports entry by service label; return resolved channel info.
+  const lookupChannel = (peerName: string, label: string): { host: string; port: number; secure: string } | null => {
+    const peer = services[peerName];
+    if (!peer || !peer.domain) return null;
+    const ep = peer.extra_ports ?? {};
+    for (const [portStr, info] of Object.entries<any>(ep)) {
+      if (info?.service === label) {
+        return {
+          host:   peer.domain,
+          port:   parseInt(portStr, 10),
+          secure: PROTO_SECURE[(info.protocol ?? "tls").toLowerCase()] ?? "SSL",
+        };
+      }
+    }
+    return null;
+  };
+
+  // Resolve "<service>.users.<key>" → {address, pass_env, name, peer}
+  const resolveUserRef = (ref: string): { address: string; pass_env: string; name: string; peer: string; userKey: string } | null => {
+    const parts = (ref ?? "").split(".");
+    if (parts.length !== 3 || parts[1] !== "users") return null;
+    const [peerName, , userKey] = parts;
+    const peer = services[peerName];
+    const u = peer?.users?.[userKey];
+    if (!u || !peer.domain) return null;
+    return {
+      address:  `${u.name}@${peer.domain.split(".").slice(-2).join(".") === peer.domain ? peer.domain.split(".").slice(1).join(".") : peer.domain}`,
+      // Address heuristic: maddy.diegonmarcos.com has "me" → me@diegonmarcos.com.
+      // Strip the service prefix subdomain (mail., mail-stalwart.) to get the
+      // base domain. Done via cutting first label off.
+      pass_env: u.pass_env,
+      name:     u.name,
+      peer:     peerName,
+      userKey,
+    };
+  };
+
+  // Address resolver — strip subdomain prefix to land on base_domain
+  const addressOf = (peerName: string, userName: string): string => {
+    const peer = services[peerName];
+    if (!peer?.domain) return userName;
+    // Take everything AFTER the first dot if the domain has 3+ labels
+    // (e.g. "mail.diegonmarcos.com" → "diegonmarcos.com").
+    const labels = peer.domain.split(".");
+    const base = labels.length >= 3 ? labels.slice(1).join(".") : peer.domain;
+    return `${userName}@${base}`;
+  };
+
+  const renderLabel = (tpl: string, address: string): string => {
+    // {addr_short} = local part of email (before @) — UI-friendly.
+    // Convention: dnm.com is shorthand for diegonmarcos.com (per user request).
+    const SHORTHAND: Record<string, string> = { "diegonmarcos.com": "dnm.com" };
+    const [local, dom] = address.split("@");
+    const shortDom = SHORTHAND[dom] ?? dom;
+    return tpl.replace(/\{addr_short\}/g, `${local}@${shortDom}`)
+              .replace(/\{address\}/g,    address);
+  };
+
+  // ── primary_user ────────────────────────────────────────────────────
+  const primaryRef = resolveUserRef(mc.primary_user?.user_ref ?? "");
+  const primary_user = primaryRef ? {
+    email:    addressOf(primaryRef.peer, primaryRef.name),
+    pass_env: mc.primary_user.pass_env,
+  } : null;
+
+  // ── via_internal[] (resolved) + via_external[] (passthrough) → extras
+  const extras: any[] = [];
+  for (const entry of (mc.via_internal ?? []) as any[]) {
+    const userInfo = resolveUserRef(entry.user_ref ?? "");
+    if (!userInfo) continue;
+    const address = addressOf(userInfo.peer, userInfo.name);
+    const label   = renderLabel(entry.label_template ?? "", address);
+    const out: any = {
+      name:     label,
+      email:    entry.alias_email ?? address,
+      login:    address,
+      pass_env: userInfo.pass_env,
+    };
+    if (entry.receive_via) {
+      const rec = lookupChannel(entry.receive_via.service, entry.receive_via.via);
+      if (rec) {
+        // Decide IMAP vs JMAP by service label
+        if (entry.receive_via.via.startsWith("jmap")) {
+          out.jmap = rec;
+        } else {
+          out.imap = rec;
+        }
+      }
+    }
+    if (entry.send_via) {
+      const snd = lookupChannel(entry.send_via.service, entry.send_via.via);
+      if (snd) out.smtp = snd;
+    }
+    extras.push(out);
+  }
+  for (const ext of (mc.via_external ?? []) as any[]) {
+    // Skip pure-doc placeholder entries (those that ONLY contain _doc).
+    // Real entries have email + pass_env alongside any sibling _doc annotation.
+    if (!ext || typeof ext !== "object" || !ext.email) continue;
+    extras.push({
+      name:     ext.label ?? ext.email,
+      email:    ext.email,
+      login:    ext.login ?? ext.email,
+      pass_env: ext.pass_env,
+      ...(ext.imap ? { imap: ext.imap } : {}),
+      ...(ext.smtp ? { smtp: ext.smtp } : {}),
+      ...(ext.jmap ? { jmap: ext.jmap } : {}),
+    });
+  }
+
+  // ── carddav (resolve service_ref → peer.domain) ────────────────────
+  const carddav: Record<string, any> = {};
+  for (const [k, v] of Object.entries<any>(mc.carddav ?? {})) {
+    if (k.startsWith("_") || !v || typeof v !== "object") continue;
+    const peer = services[v.service_ref];
+    const peerUser = resolveUserRef(v.user_ref ?? "");
+    if (!peer?.domain) continue;
+    carddav[k] = {
+      server_template: `https://${peer.domain}${v.path_template ?? "/"}`,
+      user_env:        peerUser ? "PRIMARY_EMAIL" : (v.user_env ?? "PRIMARY_EMAIL"),
+      pass_env:        v.pass_env,
+    };
+  }
+
+  // ── feeds (resolve service_ref → peer.domain) ──────────────────────
+  let feeds: any = null;
+  if (mc.feeds && mc.feeds.service_ref) {
+    const peer = services[mc.feeds.service_ref];
+    if (peer?.domain) {
+      feeds = {
+        url_template:  `https://${peer.domain}${mc.feeds.url_path_template ?? "/{topic}"}`,
+        topics_source: mc.feeds.topics_source ?? null,
+      };
+    }
+  }
+
+  // ── profiles (resolve user_ref + render match_template) ─────────────
+  const profiles: Record<string, any> = {};
+  for (const [k, p] of Object.entries<any>(mc.profiles ?? {})) {
+    if (k.startsWith("_") || !p || typeof p !== "object") continue;
+    const userInfo = resolveUserRef(p.user_ref ?? "");
+    const address  = userInfo ? addressOf(userInfo.peer, userInfo.name) : "";
+    profiles[k] = {
+      name:    p.name,
+      address,
+      replyto: p.replyto ?? address,
+      sig:     p.sig ?? "",
+      rmk:     p.rmk ?? "",
+      type:    p.type ?? "imap",
+      default: !!p.default,
+      match:   renderLabel(p.match_template ?? "", address),
+    };
+  }
+
+  // ── settings (passthrough, strip _doc) ──────────────────────────────
+  const settings: Record<string, any> = {};
+  for (const [k, v] of Object.entries(mc.settings ?? {})) {
+    if (!k.startsWith("_")) settings[k] = v;
+  }
+
+  return {
+    primary_user,
+    extras,
+    carddav,
+    feeds,
+    profiles,
+    settings,
+    _generated_from: {
+      via_internal_count: (mc.via_internal ?? []).length,
+      via_external_count: (mc.via_external ?? []).filter((e: any) => e && !e._doc).length,
+      peers_referenced:   Array.from(new Set(
+        (mc.via_internal ?? []).map((e: any) => e.user_ref?.split(".")[0]).filter(Boolean)
+      )),
+    },
+  };
+}
+
 function deriveContainerConfigs(c: any): DerivedFile[] {
   const serviceConnections = deriveServiceConnections(c).data as any;
   const services = c.services as Record<string, any>;
@@ -981,6 +1180,11 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
       continue;
     }
 
+    // Resolve mail_accounts ONCE per service (only emitted when a service has
+    // a mail_clients block, e.g. cypht). Same value attached to every
+    // container of that service for consistency.
+    const mailAccounts = resolveMailAccounts(svcName, serviceConnections.services ?? {});
+
     for (const [role, ct] of containerEntries) {
       const containerName = ct.container_name || svcName;
       if (SPECIAL_CASES.has(containerName)) continue;
@@ -998,6 +1202,7 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
           role,
           vm: vmAlias,
           services: serviceConnections.services ?? {},
+          ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
         },
       });
     }
@@ -2033,6 +2238,25 @@ function deriveServiceConnections(c: any): DerivedFile {
       if (port && !ports[role]) ports[role] = port;
     }
 
+    // Surface extra_ports from container entries — needed by peers (e.g. cypht
+    // referencing stalwart's 2443/2465/2587/2993). Shape: { <port>: <descriptor>, ... }
+    // The `service` field is the declarative SoT for protocol-channel labels
+    // (e.g. "imap_ssl", "jmap_tls", "smtp_starttls") — peers join against it.
+    const extraPorts: Record<string, any> = {};
+    for (const [role, ct] of Object.entries(svc.containers ?? {})) {
+      for (const ep of ((ct as any).extra_ports ?? []) as any[]) {
+        if (ep && typeof ep.port === "number") {
+          extraPorts[String(ep.port)] = {
+            protocol: ep.protocol ?? "tcp",
+            bind:     ep.bind ?? null,
+            desc:     ep.desc ?? null,
+            ...(ep.service ? { service: ep.service } : {}),
+            role,
+          };
+        }
+      }
+    }
+
     svcMap[svcName] = {
       ip: vmEntry.wg_ip,
       ports,
@@ -2041,6 +2265,10 @@ function deriveServiceConnections(c: any): DerivedFile {
       ...(svc.description ? { description: svc.description } : {}),
       ...(svc.api ? { api: svc.api } : {}),
       ...(svc.mcp ? { mcp: svc.mcp } : {}),
+      // Cross-service declarative SoTs (each service's own build.json):
+      ...(svc.users ? { users: svc.users } : {}),
+      ...(svc.mail_clients ? { mail_clients: svc.mail_clients } : {}),
+      ...(Object.keys(extraPorts).length > 0 ? { extra_ports: extraPorts } : {}),
     };
   }
 

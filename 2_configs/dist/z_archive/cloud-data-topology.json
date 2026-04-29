@@ -2396,30 +2396,35 @@
               "port": 25,
               "protocol": "tcp",
               "bind": "0.0.0.0",
+              "service": "smtp_mx",
               "desc": "MX (inbound — must be public)"
             },
             {
               "port": 465,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "smtp_ssl",
               "desc": "SMTPS — WG-only"
             },
             {
               "port": 587,
               "protocol": "starttls",
               "bind": "10.0.0.3",
+              "service": "smtp_starttls",
               "desc": "Submission — WG-only"
             },
             {
               "port": 993,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "imap_ssl",
               "desc": "IMAPS — WG-only"
             },
             {
               "port": 143,
               "protocol": "tcp",
               "bind": "10.0.0.3",
+              "service": "imap_plain",
               "desc": "IMAP plain — WG-only"
             }
           ],
@@ -2583,36 +2588,42 @@
               "port": 2025,
               "protocol": "starttls",
               "bind": "127.0.0.1",
+              "service": "smtp_shadow",
               "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)"
             },
             {
               "port": 2443,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "jmap_tls",
               "desc": "HTTPS admin/JMAP — WG-only"
             },
             {
               "port": 2465,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "smtp_ssl",
               "desc": "SMTPS — WG-only"
             },
             {
               "port": 2587,
               "protocol": "starttls",
               "bind": "10.0.0.3",
+              "service": "smtp_starttls",
               "desc": "Submission — WG-only"
             },
             {
               "port": 2993,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "imap_ssl",
               "desc": "IMAPS — WG-only"
             },
             {
               "port": 6190,
               "protocol": "tls",
               "bind": "10.0.0.3",
+              "service": "manage_sieve",
               "desc": "ManageSieve — WG-only"
             }
           ],
@@ -5454,7 +5465,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-04-29T20:52:23.860Z",
+    "generated_at": "2026-04-29T21:10:56.401Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

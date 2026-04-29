@@ -3,7 +3,7 @@
   "_meta": {
     "description": "c3-services-api container config (service=c3-services-api, role=app)",
     "format_version": 1,
-    "generated_at": "2026-04-29T20:52:23.849Z",
+    "generated_at": "2026-04-29T21:10:56.383Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-04-29T20:52:23.812Z",
+  "_generated": "2026-04-29T21:10:56.333Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "c3-services-api",
@@ -91,6 +91,143 @@
         "healthcheck_paths": [
           "/"
         ]
+      },
+      "mail_clients": {
+        "_doc": "Cypht-only declarations. Cross-service data (mail server hosts/ports, mailbox identities) is JOINED at engine derive time from peers' build.json (services.<peer>.users + .domain + .ports/extra_ports). Output lands in build-cypht.json#mail_accounts (resolved). The cypht flake reads build-cypht.json and emits dist/assets/seed-accounts.json + dist/assets/cypht-api/configs.json — no hand-written duplicates.",
+        "primary_user": {
+          "_doc": "Cypht UI master login (Hm_Auth_DB). INDEPENDENT from the mailbox passwords (those come from peers' users{}.pass_env). Cypht-only data — owned by cypht.",
+          "user_ref": "maddy.users.admin",
+          "pass_env": "CYPHT_LOGIN_PASSWORD"
+        },
+        "via_internal": [
+          {
+            "_doc": "Each entry references a peer service's users{} entry + service labels for receive/send channels. Engine resolves user_ref → {address, pass_env}, receive_via → {host, port, secure}, send_via → {host, port, secure} by looking up the matching extra_ports[].service on the peer.",
+            "label_template": "{addr_short} | IMAP-Maddy",
+            "user_ref": "maddy.users.admin",
+            "receive_via": {
+              "service": "maddy",
+              "via": "imap_ssl"
+            },
+            "send_via": {
+              "service": "maddy",
+              "via": "smtp_ssl"
+            }
+          },
+          {
+            "label_template": "{addr_short} | JMAP-Stalwart",
+            "user_ref": "stalwart.users.admin",
+            "receive_via": {
+              "service": "stalwart",
+              "via": "jmap_tls"
+            },
+            "send_via": {
+              "service": "stalwart",
+              "via": "smtp_ssl"
+            },
+            "alias_email": "me-jmap@stalwart"
+          },
+          {
+            "label_template": "{addr_short} | SMTP-Stalwart-STARTTLS",
+            "user_ref": "stalwart.users.admin",
+            "receive_via": null,
+            "send_via": {
+              "service": "stalwart",
+              "via": "smtp_starttls"
+            },
+            "alias_email": "me-starttls@stalwart"
+          },
+          {
+            "label_template": "{addr_short} | IMAP-Maddy",
+            "user_ref": "maddy.users.noreply",
+            "receive_via": {
+              "service": "maddy",
+              "via": "imap_ssl"
+            },
+            "send_via": {
+              "service": "maddy",
+              "via": "smtp_ssl"
+            }
+          }
+        ],
+        "via_external": [
+          {
+            "_doc": "External providers (no internal SoT exists). Hosts/ports declared inline because no peer service owns them.",
+            "label": "diegonmarcos@livecom | IMAP-outlook",
+            "email": "diegonmarcos@live.com",
+            "pass_env": "LIVE_APP_PASSWORD",
+            "imap": {
+              "host": "outlook.office365.com",
+              "port": 993,
+              "secure": "SSL"
+            },
+            "smtp": {
+              "host": "smtp-mail.outlook.com",
+              "port": 587,
+              "secure": "TLS"
+            }
+          },
+          {
+            "label": "diegonmarcos1@gmail.com | IMAP-gaccount",
+            "email": "diegonmarcos1@gmail.com",
+            "pass_env": "GMAIL_APP_PASSWORD",
+            "imap": {
+              "host": "imap.gmail.com",
+              "port": 993,
+              "secure": "SSL"
+            },
+            "smtp": {
+              "host": "smtp.gmail.com",
+              "port": 587,
+              "secure": "TLS"
+            }
+          }
+        ],
+        "carddav": {
+          "_doc": "CardDAV providers. Engine resolves service_ref → services.radicale.domain at derive time.",
+          "radicale": {
+            "service_ref": "radicale",
+            "path_template": "/{user_url_encoded}/",
+            "user_ref": "maddy.users.admin",
+            "pass_env": "ME_PASSWORD"
+          }
+        },
+        "feeds": {
+          "_doc": "RSS feeds. Engine resolves service_ref → services.ntfy.domain. topics_source is a path (relative to cypht src/) to a topics list — itself a build-time copy of the canonical I_cloud-data/ntfy-api/src/topics.json.",
+          "service_ref": "ntfy",
+          "topics_source": "../ntfy-topics.json",
+          "url_path_template": "/{topic}/json?poll=1"
+        },
+        "profiles": {
+          "_doc": "Cypht send-as profiles (Hm_Profiles, modules/profiles). Profile is a CYPHT-ONLY concept — owned by cypht. match_template is rendered after via_internal labels are resolved; engine wires smtp_id/imap_id by name lookup at apply-time.",
+          "diego": {
+            "name": "Diego",
+            "user_ref": "maddy.users.admin",
+            "match_template": "{addr_short} | IMAP-Maddy",
+            "default": true,
+            "sig": "",
+            "rmk": ""
+          }
+        },
+        "settings": {
+          "_doc": "Per-user UI prefs. Each key MUST end in _setting (Cypht convention). Cypht-only — owned by cypht.",
+          "theme_setting": "darkly",
+          "start_page_setting": "unread",
+          "enable_sieve_filter_setting": true,
+          "enable_snooze_setting": true,
+          "smtp_compose_type_setting": 1,
+          "enable_attachment_reminder_setting": true,
+          "enable_compose_delivery_receipt_setting": true,
+          "mailto_handler_setting": true,
+          "enable_collect_address_on_send_setting": true
+        }
+      },
+      "extra_ports": {
+        "5432": {
+          "protocol": "tcp",
+          "bind": "127.0.0.1",
+          "desc": "PostgreSQL — loopback only (cypht co-located via host network)",
+          "role": "db"
+        }
       }
     },
     "etherpad": {
@@ -454,6 +591,56 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
+      },
+      "users": {
+        "admin": {
+          "name": "me",
+          "pass_env": "ME_PASSWORD"
+        },
+        "noreply": {
+          "name": "no-reply",
+          "pass_env": "NOREPLY_PASSWORD",
+          "aliases": [
+            "noreply"
+          ]
+        }
+      },
+      "extra_ports": {
+        "25": {
+          "protocol": "tcp",
+          "bind": "0.0.0.0",
+          "desc": "MX (inbound — must be public)",
+          "service": "smtp_mx",
+          "role": "app"
+        },
+        "143": {
+          "protocol": "tcp",
+          "bind": "10.0.0.3",
+          "desc": "IMAP plain — WG-only",
+          "service": "imap_plain",
+          "role": "app"
+        },
+        "465": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "SMTPS — WG-only",
+          "service": "smtp_ssl",
+          "role": "app"
+        },
+        "587": {
+          "protocol": "starttls",
+          "bind": "10.0.0.3",
+          "desc": "Submission — WG-only",
+          "service": "smtp_starttls",
+          "role": "app"
+        },
+        "993": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "IMAPS — WG-only",
+          "service": "imap_ssl",
+          "role": "app"
+        }
       }
     },
     "smtp-proxy": {
@@ -488,6 +675,63 @@
         "healthcheck_paths": [
           "/"
         ]
+      },
+      "users": {
+        "admin": {
+          "name": "me",
+          "pass_env": "ME_PASSWORD"
+        },
+        "noreply": {
+          "name": "no-reply",
+          "pass_env": "NOREPLY_PASSWORD",
+          "aliases": [
+            "noreply"
+          ]
+        }
+      },
+      "extra_ports": {
+        "2025": {
+          "protocol": "starttls",
+          "bind": "127.0.0.1",
+          "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)",
+          "service": "smtp_shadow",
+          "role": "app"
+        },
+        "2443": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "HTTPS admin/JMAP — WG-only",
+          "service": "jmap_tls",
+          "role": "app"
+        },
+        "2465": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "SMTPS — WG-only",
+          "service": "smtp_ssl",
+          "role": "app"
+        },
+        "2587": {
+          "protocol": "starttls",
+          "bind": "10.0.0.3",
+          "desc": "Submission — WG-only",
+          "service": "smtp_starttls",
+          "role": "app"
+        },
+        "2993": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "IMAPS — WG-only",
+          "service": "imap_ssl",
+          "role": "app"
+        },
+        "6190": {
+          "protocol": "tls",
+          "bind": "10.0.0.3",
+          "desc": "ManageSieve — WG-only",
+          "service": "manage_sieve",
+          "role": "app"
+        }
       }
     },
     "vaultwarden": {
@@ -691,6 +935,20 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
+      },
+      "extra_ports": {
+        "80": {
+          "protocol": "http",
+          "bind": null,
+          "desc": null,
+          "role": "app"
+        },
+        "2019": {
+          "protocol": "http",
+          "bind": null,
+          "desc": null,
+          "role": "app"
+        }
       }
     },
     "introspect-proxy": {
