@@ -262,8 +262,10 @@ done
 # ── 7b. configs.json schema ──
 check "configs.json: primary_user.email = me@diegonmarcos.com" \
     bash -c "[ \"\$(jq -r '.primary_user.email' '$CFG_JSON')\" = 'me@diegonmarcos.com' ]"
-check "configs.json: primary_user.pass_env = ME_PASSWORD" \
-    bash -c "[ \"\$(jq -r '.primary_user.pass_env' '$CFG_JSON')\" = 'ME_PASSWORD' ]"
+check "configs.json: primary_user.pass_env = CYPHT_LOGIN_PASSWORD (independent from Maddy ME_PASSWORD)" \
+    bash -c "[ \"\$(jq -r '.primary_user.pass_env' '$CFG_JSON')\" = 'CYPHT_LOGIN_PASSWORD' ]"
+check "sidecar.sh: detects password rotation (auth probe + DELETE on EXISTS:AUTH_FAIL)" \
+    bash -c "grep -q 'EXISTS:AUTH_FAIL' '$API_DIR/sidecar.sh' && grep -q 'DELETE FROM hm_user' '$API_DIR/sidecar.sh'"
 check "configs.json: accounts.source points to ../seed-accounts.json" \
     bash -c "[ \"\$(jq -r '.accounts.source' '$CFG_JSON')\" = '../seed-accounts.json' ]"
 check "configs.json: carddav.radicale.server_template defined" \
