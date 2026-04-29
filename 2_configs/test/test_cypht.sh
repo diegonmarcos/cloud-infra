@@ -300,6 +300,10 @@ check "bootstrap.php::repoEntity() sets object=>false + connected=>false" \
     bash -c "grep -qF \"'object'\" '$BOOT_PHP' && grep -qF \"'connected'\" '$BOOT_PHP'"
 check "accounts.php: NO flat-list append" \
     bash -c "! grep -qE '\\\$(imap|smtp|jmap)Servers\\[\\]\\s*=' '$ACC_PHP'"
+check "accounts.php: JMAP entries merged INTO imap_servers (Cypht convention)" \
+    bash -c "grep -A2 'buildJmap' '$ACC_PHP' | grep -q 'imap\\[\\\$id\\]'"
+check "accounts.php: clears legacy jmap_servers key" \
+    grep -q "set('jmap_servers', \\[\\])" "$ACC_PHP"
 
 # ── 7e. apply.php dispatch ──
 APPLY_PHP="$API_DIR/apply.php"
