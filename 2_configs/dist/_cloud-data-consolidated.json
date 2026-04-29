@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-29T16:05:06.664Z",
+    "generated_at": "2026-04-29T19:41:00.998Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -926,7 +926,8 @@
         "ME_PASSWORD_STALWART",
         "NOREPLY_PASSWORD",
         "LIVE_APP_PASSWORD",
-        "GMAIL_APP_PASSWORD"
+        "GMAIL_APP_PASSWORD",
+        "CYPHT_LOGIN_PASSWORD"
       ]
     },
     "etherpad": {
@@ -3975,7 +3976,9 @@
           "debug": true,
           "admin_bind": "localhost:2019",
           "order": "respond before handle",
-          "auto_https": "disable_redirects"
+          "auto_https": "disable_redirects",
+          "_doc_wg_bind_ip": "Caddy's WG IP — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip) so Hickory's *.diegonmarcos.com → 10.0.0.1 fast-path lands on the same routing table the public listener uses. Without this, WG-internal traffic hits the *:443 listener that's shadowed by the more-specific 10.0.0.1:443 listener (created by *.app blocks), and unmatched hosts get an empty 200 response.",
+          "wg_bind_ip": "10.0.0.1"
         },
         "on_demand_tls": {
           "ask_bind": "127.0.0.1:2020",

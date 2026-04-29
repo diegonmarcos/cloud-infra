@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-04-29T16:05:06.992Z",
+    "generated_at": "2026-04-29T19:41:01.300Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-04-29T16:05:06.954Z",
+  "_generated": "2026-04-29T19:41:01.265Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -854,7 +854,8 @@
         "ME_PASSWORD_STALWART",
         "NOREPLY_PASSWORD",
         "LIVE_APP_PASSWORD",
-        "GMAIL_APP_PASSWORD"
+        "GMAIL_APP_PASSWORD",
+        "CYPHT_LOGIN_PASSWORD"
       ]
     },
     "etherpad": {
@@ -3903,7 +3904,9 @@
           "debug": true,
           "admin_bind": "localhost:2019",
           "order": "respond before handle",
-          "auto_https": "disable_redirects"
+          "auto_https": "disable_redirects",
+          "_doc_wg_bind_ip": "Caddy's WG IP — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip) so Hickory's *.diegonmarcos.com → 10.0.0.1 fast-path lands on the same routing table the public listener uses. Without this, WG-internal traffic hits the *:443 listener that's shadowed by the more-specific 10.0.0.1:443 listener (created by *.app blocks), and unmatched hosts get an empty 200 response.",
+          "wg_bind_ip": "10.0.0.1"
         },
         "on_demand_tls": {
           "ask_bind": "127.0.0.1:2020",
