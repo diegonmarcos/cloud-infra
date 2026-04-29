@@ -181,8 +181,12 @@ SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
 check "seed: primary email = me@diegonmarcos.com" \
     bash -c "[ \"\$(jq -r .primary.email '$SEED_JSON')\" = 'me@diegonmarcos.com' ]"
 
-check "seed: extras count == 7 (added Stalwart 2587 STARTTLS submission)" \
-    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '7' ]"
+check "seed: extras count == 6 (Maddy IMAP, JMAP-Stalwart, Stalwart STARTTLS, no-reply, Outlook, Gmail — IMAP-Stalwart dropped)" \
+    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '6' ]"
+check "seed: NO IMAP-Stalwart entry (richer JMAP-Stalwart kept instead — port 2993 dropped)" \
+    bash -c "! jq -e '.extras[] | select(.name | test(\"IMAP-Stalwart\"))' '$SEED_JSON' >/dev/null"
+check "seed: NO Stalwart IMAP port 2993 anywhere (only JMAP 2443 + SMTPs 2465/2587)" \
+    bash -c "! jq -e '.extras[] | select(.imap.port == 2993)' '$SEED_JSON' >/dev/null"
 check "seed: includes Stalwart STARTTLS submission (port 2587)" \
     bash -c "jq -e '.extras[] | select(.smtp.port == 2587 and .smtp.secure == \"STARTTLS\")' '$SEED_JSON' >/dev/null"
 check "seed: env-var padronization — NO ME_PASSWORD_STALWART (renamed to ME_PASSWORD)" \
@@ -195,9 +199,6 @@ check "seed: every extra has display 'name' field (UI label convention)" \
     bash -c "jq -e '.extras | all(has(\"name\"))' '$SEED_JSON' >/dev/null"
 check "seed: name convention follows '<email> | <PROTO>-<backend>' (Maddy/Stalwart/outlook/gaccount)" \
     bash -c "jq -e '.extras | all(.name | test(\"\\\\|\\\\s+(IMAP|JMAP|SMTP)-(Maddy|Stalwart|outlook|gaccount)\"))' '$SEED_JSON' >/dev/null"
-
-check "seed: includes Stalwart IMAP (port 2993)" \
-    bash -c "jq -e '.extras[] | select(.imap.port == 2993)' '$SEED_JSON'"
 
 check "seed: includes Stalwart JMAP (port 2443)" \
     bash -c "jq -e '.extras[] | select(.jmap.port == 2443)' '$SEED_JSON'"
@@ -267,7 +268,7 @@ check "cypht-api/sidecar.sh present + executable" \
 check "cypht-api/apply.php present" test -f "$API_DIR/apply.php"
 check "cypht-api/verify.php present" test -f "$API_DIR/verify.php"
 check "cypht-api/README.md present" test -f "$API_DIR/README.md"
-for mod in bootstrap accounts carddav feeds settings; do
+for mod in bootstrap accounts profiles carddav feeds settings; do
     check "cypht-api/lib/$mod.php present" test -f "$API_DIR/lib/$mod.php"
 done
 
@@ -292,6 +293,16 @@ check "configs.json: settings.theme_setting = darkly" \
     bash -c "[ \"\$(jq -r '.settings.theme_setting' '$CFG_JSON')\" = 'darkly' ]"
 check "configs.json: all settings keys (excl. _doc) end in _setting" \
     bash -c "jq -e '.settings | to_entries | map(select(.key | startswith(\"_\") | not)) | all(.key | endswith(\"_setting\"))' '$CFG_JSON' >/dev/null"
+
+# ── profiles block (Cypht Hm_Profiles send-as identities) ──
+check "configs.json: profiles.diego.name = 'Diego'" \
+    bash -c "[ \"\$(jq -r '.profiles.diego.name' '$CFG_JSON')\" = 'Diego' ]"
+check "configs.json: profiles.diego.address = me@diegonmarcos.com" \
+    bash -c "[ \"\$(jq -r '.profiles.diego.address' '$CFG_JSON')\" = 'me@diegonmarcos.com' ]"
+check "configs.json: profiles.diego.default = true" \
+    bash -c "[ \"\$(jq -r '.profiles.diego.default' '$CFG_JSON')\" = 'true' ]"
+check "configs.json: profiles.diego.match references a real seed-accounts.json entry" \
+    bash -c "MATCH=\$(jq -r '.profiles.diego.match' '$CFG_JSON'); jq -e --arg m \"\$MATCH\" '.extras[] | select(.name == \$m)' '$SEED_JSON' >/dev/null"
 
 # ── 7c. ntfy-topics.json — canonical-equality ──
 check "ntfy-topics.json: present (regular file, not broken symlink)" \
@@ -321,12 +332,32 @@ check "accounts.php: clears legacy jmap_servers key" \
 
 # ── 7e. apply.php dispatch ──
 APPLY_PHP="$API_DIR/apply.php"
-for module in AccountsApi CardDavApi FeedsApi SettingsApi; do
+for module in AccountsApi ProfilesApi CardDavApi FeedsApi SettingsApi; do
     check "apply.php: dispatches to $module" \
         grep -qE "${module}\\s*::\\s*apply" "$APPLY_PHP"
 done
 check "apply.php: single \$userConfig->save() call" \
     bash -c "[ \"\$(grep -c '\\\$userConfig->save(' '$APPLY_PHP')\" = '1' ]"
+check "apply.php: ProfilesApi runs AFTER AccountsApi (consumes seeded server-id index)" \
+    bash -c "ACC=\$(grep -n 'AccountsApi::apply' '$APPLY_PHP' | head -1 | cut -d: -f1); PROF=\$(grep -n 'ProfilesApi::apply' '$APPLY_PHP' | head -1 | cut -d: -f1); [ -n \"\$ACC\" ] && [ -n \"\$PROF\" ] && [ \"\$ACC\" -lt \"\$PROF\" ]"
+
+# ── 7e2. profiles.php — Hm_Profiles wiring ──
+PROF_PHP="$API_DIR/lib/profiles.php"
+check "profiles.php: uses repoEntity() helper (uniqid keys)" \
+    grep -q 'repoEntity(' "$PROF_PHP"
+check "profiles.php: writes user_config 'profiles' key (Hm_Profiles storage)" \
+    grep -qF "set('profiles'," "$PROF_PHP"
+check "profiles.php: emits required Hm_Profiles fields (name/address/replyto/sig/smtp_id/imap_id/default)" \
+    bash -c "for f in name address replyto sig smtp_id imap_id default; do grep -q \"'\$f'\" '$PROF_PHP' || exit 1; done"
+check "profiles.php: looks up smtp_id/imap_id by name (no manual id wiring)" \
+    bash -c "grep -q 'by_name_imap' '$PROF_PHP' && grep -q 'by_name_smtp' '$PROF_PHP'"
+check "accounts.php: exports by_name_imap + by_name_smtp index for ProfilesApi" \
+    bash -c "grep -q 'by_name_imap' '$ACC_PHP' && grep -q 'by_name_smtp' '$ACC_PHP'"
+
+# ── 7e3. verify.php reads profiles ──
+VERIFY_PHP="$API_DIR/verify.php"
+check "verify.php: emits profiles_count" \
+    grep -q 'profiles_count=' "$VERIFY_PHP"
 
 # ── 7f. flake.nix registration ──
 FLAKE_NIX="$CYPHT_DIR/src/flake.nix"
