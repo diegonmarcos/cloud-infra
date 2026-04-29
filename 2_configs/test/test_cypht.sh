@@ -181,8 +181,10 @@ SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
 check "seed: primary email = me@diegonmarcos.com" \
     bash -c "[ \"\$(jq -r .primary.email '$SEED_JSON')\" = 'me@diegonmarcos.com' ]"
 
-check "seed: extras count == 5" \
-    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '5' ]"
+check "seed: extras count == 6" \
+    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '6' ]"
+check "seed: includes me@diegonmarcos.com Maddy IMAP (port 993)" \
+    bash -c "jq -e '.extras[] | select(.email == \"me@diegonmarcos.com\" and .imap.port == 993)' '$SEED_JSON' >/dev/null"
 
 check "seed: includes Stalwart IMAP (port 2993)" \
     bash -c "jq -e '.extras[] | select(.imap.port == 2993)' '$SEED_JSON'"
