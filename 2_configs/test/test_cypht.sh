@@ -98,6 +98,12 @@ if [ -f "$CYPHT_ENV" ]; then
         bash -c "! grep -vE '^[[:space:]]*#' '$CYPHT_ENV' | grep -qE '@[A-Z_]+@'"
     check "cypht.env: DB_DRIVER=pgsql" \
         grep -q '^DB_DRIVER=pgsql' "$CYPHT_ENV"
+    check "cypht.env: SESSION_TYPE=DB (UPPERCASE — Cypht switches on 'DB' literal)" \
+        grep -q '^SESSION_TYPE=DB$' "$CYPHT_ENV"
+    check "cypht.env: USER_CONFIG_TYPE=DB (UPPERCASE — file fallback otherwise)" \
+        grep -q '^USER_CONFIG_TYPE=DB$' "$CYPHT_ENV"
+    check "cypht.env: NO 'database' (lowercase) on TYPE keys" \
+        bash -c "! grep -qE '^(SESSION_TYPE|USER_CONFIG_TYPE)=database' '$CYPHT_ENV'"
     check "cypht.env: DB_CONNECTION_TYPE=host (upstream-required)" \
         grep -q '^DB_CONNECTION_TYPE=host' "$CYPHT_ENV"
     check "cypht.env: DB_HOST=127.0.0.1" \
