@@ -161,37 +161,13 @@ fi
 echo ""
 echo "==> 4. seed-accounts.json inventory"
 
-# PHP seeder — encrypts + persists IMAP/SMTP/JMAP backends server-side
-SEED_PHP="$CYPHT_DIR/src/seed-accounts.php"
-check "seed-accounts.php: present (declarative backend seeder)" \
-    test -f "$SEED_PHP"
-check "seed-accounts.php: uses Hm_User_Config_DB (cypht's own crypto)" \
-    grep -q "Hm_User_Config_DB" "$SEED_PHP"
-check "seed-accounts.php: writes imap_servers + smtp_servers" \
-    bash -c "grep -q 'imap_servers' '$SEED_PHP' && grep -q 'smtp_servers' '$SEED_PHP'"
-check "seed-accounts.php: rejects TODO_ placeholder secrets" \
-    grep -q "TODO_" "$SEED_PHP"
-
-# Invocation chain: seed-accounts.sh must call seed-accounts.php
-SEED_SH="$CYPHT_DIR/src/seed-accounts.sh"
-check "seed-accounts.sh: invokes seed-accounts.php" \
-    grep -q "seed-accounts.php" "$SEED_SH"
-check "seed-accounts.sh: uses pg_isready for postgres probe (apt-installed via runtime_packages)" \
-    grep -qE '^[[:space:]]*pg_isready' "$SEED_SH"
+# PHP seeder logic now lives under cypht-api/ — see Section 7 below.
+# Cross-cutting checks shared with cypht-api still belong here.
 check "build.json: docker.runtime_packages.apt includes jq + postgresql-client" \
     bash -c "jq -e '.docker.runtime_packages.apt | contains(\"jq\") and contains(\"postgresql-client\")' '$CYPHT_DIR/build.json' >/dev/null"
 check "dist/Dockerfile: apt-get install jq + postgresql-client (auto-injected by engine)" \
     bash -c "grep -qE 'apt-get install.*jq.*postgresql-client|apt-get install.*postgresql-client.*jq' '$CYPHT_DIR/dist/code/amd64/Dockerfile'"
-
-# flake registers all three assets
-FLAKE="$CYPHT_DIR/src/flake.nix"
-check "flake.nix: extraAssets includes seed-accounts.php" \
-    grep -q "seed-accounts.php" "$FLAKE"
-
-# compose mounts the PHP seeder
 COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
-check "compose.nix: mounts seed-accounts.php" \
-    grep -q "assets/seed-accounts.php:/tmp/cypht-config/seed-accounts.php" "$COMPOSE_NIX"
 check "compose.nix: mount target is /tmp/cypht-config (PHP open_basedir allows /tmp)" \
     bash -c "! grep -q '/opt/cypht-config' '$COMPOSE_NIX'"
 
@@ -256,73 +232,113 @@ echo "==> 6. cypht-postgres loopback enforcement"
 check "build.json: postgres extra_ports[0].bind == 127.0.0.1" \
     bash -c "[ \"\$(jq -r '.containers.db.extra_ports[0].bind' '$CYPHT_DIR/build.json')\" = '127.0.0.1' ]"
 
-# ── 7. Phase 7 — declarative seed-config (CardDAV + feeds + UI settings) ────
+# ── 7. cypht-api sidecar (declarative accounts + CardDAV + feeds + settings) ─
 echo ""
-echo "==> 7. seed-config.json + ntfy-topics.json + uniqid-keyed shape"
+echo "==> 7. cypht-api/ sidecar layout + configs.json + ntfy-topics canonical-equality + uniqid shape"
 
-SEED_CONFIG="$CYPHT_DIR/src/seed-config.json"
+API_DIR="$CYPHT_DIR/src/cypht-api"
+CFG_JSON="$API_DIR/configs.json"
 NTFY_TOPICS="$CYPHT_DIR/src/ntfy-topics.json"
 NTFY_CANONICAL="$CLOUD_ROOT/I_cloud-data/ntfy-api/src/topics.json"
 
-check "seed-config.json: present" test -f "$SEED_CONFIG"
-check "seed-config.json: declares carddav.radicale.server_template" \
-    bash -c "jq -e '.carddav.radicale.server_template' '$SEED_CONFIG' >/dev/null"
-check "seed-config.json: declares carddav.radicale.pass_env=ME_PASSWORD" \
-    bash -c "[ \"\$(jq -r '.carddav.radicale.pass_env' '$SEED_CONFIG')\" = 'ME_PASSWORD' ]"
-check "seed-config.json: declares feeds.source=ntfy_topics_json" \
-    bash -c "[ \"\$(jq -r '.feeds.source' '$SEED_CONFIG')\" = 'ntfy_topics_json' ]"
-check "seed-config.json: feeds.url_template references rss.diegonmarcos.com" \
-    bash -c "jq -r '.feeds.url_template' '$SEED_CONFIG' | grep -q 'rss.diegonmarcos.com'"
-check "seed-config.json: settings.theme_setting=darkly" \
-    bash -c "[ \"\$(jq -r '.settings.theme_setting' '$SEED_CONFIG')\" = 'darkly' ]"
-check "seed-config.json: all 9 setting keys end in _setting" \
-    bash -c "jq -e '.settings | keys | map(select(. != \"_note\")) | all(. | endswith(\"_setting\"))' '$SEED_CONFIG' >/dev/null"
+# ── 7a. cypht-api/ directory layout ──
+check "cypht-api/ directory present" test -d "$API_DIR"
+check "cypht-api/configs.json present" test -f "$CFG_JSON"
+check "cypht-api/sidecar.sh present + executable" \
+    bash -c "[ -x '$API_DIR/sidecar.sh' ]"
+check "cypht-api/apply.php present" test -f "$API_DIR/apply.php"
+check "cypht-api/verify.php present" test -f "$API_DIR/verify.php"
+check "cypht-api/README.md present" test -f "$API_DIR/README.md"
+for mod in bootstrap accounts carddav feeds settings; do
+    check "cypht-api/lib/$mod.php present" test -f "$API_DIR/lib/$mod.php"
+done
 
-# ntfy-topics.json content matches the canonical I_cloud-data file
-check "ntfy-topics.json: present (regular file, not broken symlink)" test -f "$NTFY_TOPICS"
+# ── 7b. configs.json schema ──
+check "configs.json: primary_user.email = me@diegonmarcos.com" \
+    bash -c "[ \"\$(jq -r '.primary_user.email' '$CFG_JSON')\" = 'me@diegonmarcos.com' ]"
+check "configs.json: primary_user.pass_env = ME_PASSWORD" \
+    bash -c "[ \"\$(jq -r '.primary_user.pass_env' '$CFG_JSON')\" = 'ME_PASSWORD' ]"
+check "configs.json: accounts.source points to ../seed-accounts.json" \
+    bash -c "[ \"\$(jq -r '.accounts.source' '$CFG_JSON')\" = '../seed-accounts.json' ]"
+check "configs.json: carddav.radicale.server_template defined" \
+    bash -c "jq -e '.carddav.radicale.server_template' '$CFG_JSON' >/dev/null"
+check "configs.json: carddav.radicale.pass_env = ME_PASSWORD" \
+    bash -c "[ \"\$(jq -r '.carddav.radicale.pass_env' '$CFG_JSON')\" = 'ME_PASSWORD' ]"
+check "configs.json: feeds.source = ../ntfy-topics.json" \
+    bash -c "[ \"\$(jq -r '.feeds.source' '$CFG_JSON')\" = '../ntfy-topics.json' ]"
+check "configs.json: feeds.url_template references rss.diegonmarcos.com" \
+    bash -c "jq -r '.feeds.url_template' '$CFG_JSON' | grep -q 'rss.diegonmarcos.com'"
+check "configs.json: settings.theme_setting = darkly" \
+    bash -c "[ \"\$(jq -r '.settings.theme_setting' '$CFG_JSON')\" = 'darkly' ]"
+check "configs.json: all settings keys (excl. _doc) end in _setting" \
+    bash -c "jq -e '.settings | to_entries | map(select(.key | startswith(\"_\") | not)) | all(.key | endswith(\"_setting\"))' '$CFG_JSON' >/dev/null"
+
+# ── 7c. ntfy-topics.json — canonical-equality ──
+check "ntfy-topics.json: present (regular file, not broken symlink)" \
+    bash -c "[ -f '$NTFY_TOPICS' ] && [ ! -L '$NTFY_TOPICS' ]"
 check "ntfy-topics.json: content matches I_cloud-data canonical" \
     bash -c "diff -q '$NTFY_TOPICS' '$NTFY_CANONICAL' >/dev/null"
 check "ntfy-topics.json: declares 'topics' array" \
     bash -c "jq -e '.topics | type == \"array\"' '$NTFY_TOPICS' >/dev/null"
 
-# seed-accounts.php — uniqid shape (the bug fix from Phase 7)
-SEED_PHP="$CYPHT_DIR/src/seed-accounts.php"
-check "seed-accounts.php: uses uniqid() for entity ids (Hm_Repository shape)" \
-    grep -q 'uniqid()' "$SEED_PHP"
-check "seed-accounts.php: writes 'id' field on entities" \
-    grep -qE "\\\$entity\\['id'\\]\\s*=\\s*\\\$id" "$SEED_PHP"
-check "seed-accounts.php: writes 'object'=>false (Hm_Server_List::add shape)" \
-    bash -c "grep -qE \"'object'\\s*=>\\s*false\" '$SEED_PHP'"
-check "seed-accounts.php: writes 'connected'=>false (Hm_Server_List::add shape)" \
-    bash -c "grep -qE \"'connected'\\s*=>\\s*false\" '$SEED_PHP'"
-check "seed-accounts.php: NO flat-list append (\\\$list[] = ...)" \
-    bash -c "! grep -qE '\\\$(imap|smtp|jmap)Servers\\[\\]\\s*=' '$SEED_PHP'"
-check "seed-accounts.php: handles carddav_contacts_auth_setting" \
-    grep -q 'carddav_contacts_auth_setting' "$SEED_PHP"
-check "seed-accounts.php: writes feeds key" \
-    grep -q "set('feeds'" "$SEED_PHP"
-check "seed-accounts.php: applies UI settings (loops settings block)" \
-    grep -q "str_ends_with.*_setting" "$SEED_PHP"
+# ── 7d. accounts.php — uniqid-keyed shape (the bug fix) ──
+ACC_PHP="$API_DIR/lib/accounts.php"
+check "accounts.php: uses repoEntity() helper from bootstrap.php" \
+    grep -q 'repoEntity(' "$ACC_PHP"
+BOOT_PHP="$API_DIR/lib/bootstrap.php"
+check "bootstrap.php::repoEntity() generates uniqid()" \
+    grep -q 'uniqid()' "$BOOT_PHP"
+check "bootstrap.php::repoEntity() sets entity['id']" \
+    grep -qF "\$entity['id']" "$BOOT_PHP"
+check "bootstrap.php::repoEntity() sets object=>false + connected=>false" \
+    bash -c "grep -qF \"'object'\" '$BOOT_PHP' && grep -qF \"'connected'\" '$BOOT_PHP'"
+check "accounts.php: NO flat-list append" \
+    bash -c "! grep -qE '\\\$(imap|smtp|jmap)Servers\\[\\]\\s*=' '$ACC_PHP'"
 
-# flake.nix registers all new assets
+# ── 7e. apply.php dispatch ──
+APPLY_PHP="$API_DIR/apply.php"
+for module in AccountsApi CardDavApi FeedsApi SettingsApi; do
+    check "apply.php: dispatches to $module" \
+        grep -qE "${module}\\s*::\\s*apply" "$APPLY_PHP"
+done
+check "apply.php: single \$userConfig->save() call" \
+    bash -c "[ \"\$(grep -c '\\\$userConfig->save(' '$APPLY_PHP')\" = '1' ]"
+
+# ── 7f. flake.nix registration ──
 FLAKE_NIX="$CYPHT_DIR/src/flake.nix"
-check "flake.nix: extraAssets includes seed-config.json" \
-    grep -q "seed-config.json" "$FLAKE_NIX"
+check "flake.nix: extraAssets includes seed-accounts.json" \
+    grep -q "./seed-accounts.json" "$FLAKE_NIX"
 check "flake.nix: extraAssets includes ntfy-topics.json" \
-    grep -q "ntfy-topics.json" "$FLAKE_NIX"
+    grep -q "./ntfy-topics.json" "$FLAKE_NIX"
+check "flake.nix: extraAssets includes ./cypht-api directory" \
+    grep -q "./cypht-api" "$FLAKE_NIX"
 
-# compose.nix mounts both new files at /tmp/cypht-config/
+# ── 7g. compose.nix mount + entrypoint ──
 COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
-check "compose.nix: mounts seed-config.json at /tmp/cypht-config/" \
-    grep -q 'seed-config.json:/tmp/cypht-config/seed-config.json' "$COMPOSE_NIX"
-check "compose.nix: mounts ntfy-topics.json at /tmp/cypht-config/" \
-    grep -q 'ntfy-topics.json:/tmp/cypht-config/ntfy-topics.json' "$COMPOSE_NIX"
+check "compose.nix: mounts cypht-api at /tmp/cypht-config/cypht-api" \
+    grep -q 'cypht-api:/tmp/cypht-config/cypht-api' "$COMPOSE_NIX"
+check "compose.nix: entrypoint invokes /tmp/cypht-config/cypht-api/sidecar.sh" \
+    grep -q '/tmp/cypht-config/cypht-api/sidecar.sh' "$COMPOSE_NIX"
 
-# dist/ has both files copied through engine
-check "dist/assets/seed-config.json: present" test -f "$CYPHT_DIR/dist/assets/seed-config.json"
-check "dist/assets/ntfy-topics.json: present" test -f "$CYPHT_DIR/dist/assets/ntfy-topics.json"
-check "dist/compose: mounts seed-config + ntfy-topics" \
-    bash -c "grep -q 'seed-config.json' '$CYPHT_DIR/dist/compose/docker-compose.yml' && grep -q 'ntfy-topics.json' '$CYPHT_DIR/dist/compose/docker-compose.yml'"
+# ── 7h. dist/ output ──
+check "dist/assets/cypht-api/configs.json: present" \
+    test -f "$CYPHT_DIR/dist/assets/cypht-api/configs.json"
+check "dist/assets/cypht-api/sidecar.sh: present" \
+    test -f "$CYPHT_DIR/dist/assets/cypht-api/sidecar.sh"
+check "dist/assets/cypht-api/apply.php: present" \
+    test -f "$CYPHT_DIR/dist/assets/cypht-api/apply.php"
+check "dist/assets/cypht-api/lib/bootstrap.php: present" \
+    test -f "$CYPHT_DIR/dist/assets/cypht-api/lib/bootstrap.php"
+check "dist/compose: mounts cypht-api directory" \
+    grep -q 'cypht-api' "$CYPHT_DIR/dist/compose/docker-compose.yml"
+
+# Old monolithic files MUST NOT exist (regression guard)
+check "old seed-accounts.sh removed" \
+    bash -c "[ ! -f '$CYPHT_DIR/src/seed-accounts.sh' ]"
+check "old seed-accounts.php removed" \
+    bash -c "[ ! -f '$CYPHT_DIR/src/seed-accounts.php' ]"
+check "old seed-config.json removed (replaced by cypht-api/configs.json)" \
+    bash -c "[ ! -f '$CYPHT_DIR/src/seed-config.json' ]"
 
 # ── Summary ─────────────────────────────────────────────────────────────────
 echo ""
