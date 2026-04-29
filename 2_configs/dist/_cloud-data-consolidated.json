@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-29T19:41:00.998Z",
+    "generated_at": "2026-04-29T20:52:23.574Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -923,7 +923,6 @@
         "CYPHT_2FA_SECRET",
         "CYPHT_ADMIN_PASSWORD",
         "ME_PASSWORD",
-        "ME_PASSWORD_STALWART",
         "NOREPLY_PASSWORD",
         "LIVE_APP_PASSWORD",
         "GMAIL_APP_PASSWORD",
@@ -2593,6 +2592,19 @@
           "maddy_data"
         ]
       },
+      "users": {
+        "admin": {
+          "name": "me",
+          "pass_env": "ME_PASSWORD"
+        },
+        "noreply": {
+          "name": "no-reply",
+          "pass_env": "NOREPLY_PASSWORD",
+          "aliases": [
+            "noreply"
+          ]
+        }
+      },
       "upstream_image": "foxcpp/maddy:0.9",
       "oci_relay": {
         "host": "smtp.email.eu-marseille-1.oci.oraclecloud.com",
@@ -2814,8 +2826,19 @@
       },
       "upstream_image": "stalwartlabs/stalwart:latest",
       "timezone": "Europe/Madrid",
-      "admin_user": "me",
-      "noreply_user": "no-reply",
+      "users": {
+        "admin": {
+          "name": "me",
+          "pass_env": "ME_PASSWORD"
+        },
+        "noreply": {
+          "name": "no-reply",
+          "pass_env": "NOREPLY_PASSWORD",
+          "aliases": [
+            "noreply"
+          ]
+        }
+      },
       "api": {
         "has_api": false,
         "has_web_ui": true,
