@@ -329,8 +329,8 @@ check "compose.nix: mounts cypht-api at /tmp/cypht-config/cypht-api" \
     grep -q 'cypht-api:/tmp/cypht-config/cypht-api' "$COMPOSE_NIX"
 check "compose.nix: entrypoint invokes /tmp/cypht-config/cypht-api/sidecar.sh" \
     grep -q '/tmp/cypht-config/cypht-api/sidecar.sh' "$COMPOSE_NIX"
-check "compose.nix: extra_hosts overrides mail-stalwart → 10.0.0.3" \
-    grep -q 'mail-stalwart.diegonmarcos.com:10.0.0.3' "$COMPOSE_NIX"
+check "compose.nix: NO per-container extra_hosts (routing is Caddy's job, hickory wildcards to it)" \
+    bash -c "! grep -qE '^[[:space:]]*extra_hosts' '$COMPOSE_NIX'"
 
 # ── 7h. dist/ output ──
 check "dist/assets/cypht-api/configs.json: present" \
