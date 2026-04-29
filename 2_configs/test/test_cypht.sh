@@ -185,6 +185,10 @@ check "seed: extras count == 6" \
     bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '6' ]"
 check "seed: includes me@diegonmarcos.com Maddy IMAP (port 993)" \
     bash -c "jq -e '.extras[] | select(.email == \"me@diegonmarcos.com\" and .imap.port == 993)' '$SEED_JSON' >/dev/null"
+check "seed: every extra has display 'name' field (UI label convention)" \
+    bash -c "jq -e '.extras | all(has(\"name\"))' '$SEED_JSON' >/dev/null"
+check "seed: name convention follows '<email> | <PROTO>-<backend>' (Maddy/Stalwart/outlook/gaccount)" \
+    bash -c "jq -e '.extras | all(.name | test(\"\\\\|\\\\s+(IMAP|JMAP|SMTP)-(Maddy|Stalwart|outlook|gaccount)\"))' '$SEED_JSON' >/dev/null"
 
 check "seed: includes Stalwart IMAP (port 2993)" \
     bash -c "jq -e '.extras[] | select(.imap.port == 2993)' '$SEED_JSON'"
