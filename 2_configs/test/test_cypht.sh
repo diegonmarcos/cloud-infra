@@ -256,6 +256,74 @@ echo "==> 6. cypht-postgres loopback enforcement"
 check "build.json: postgres extra_ports[0].bind == 127.0.0.1" \
     bash -c "[ \"\$(jq -r '.containers.db.extra_ports[0].bind' '$CYPHT_DIR/build.json')\" = '127.0.0.1' ]"
 
+# ── 7. Phase 7 — declarative seed-config (CardDAV + feeds + UI settings) ────
+echo ""
+echo "==> 7. seed-config.json + ntfy-topics.json + uniqid-keyed shape"
+
+SEED_CONFIG="$CYPHT_DIR/src/seed-config.json"
+NTFY_TOPICS="$CYPHT_DIR/src/ntfy-topics.json"
+NTFY_CANONICAL="$CLOUD_ROOT/I_cloud-data/ntfy-api/src/topics.json"
+
+check "seed-config.json: present" test -f "$SEED_CONFIG"
+check "seed-config.json: declares carddav.radicale.server_template" \
+    bash -c "jq -e '.carddav.radicale.server_template' '$SEED_CONFIG' >/dev/null"
+check "seed-config.json: declares carddav.radicale.pass_env=ME_PASSWORD" \
+    bash -c "[ \"\$(jq -r '.carddav.radicale.pass_env' '$SEED_CONFIG')\" = 'ME_PASSWORD' ]"
+check "seed-config.json: declares feeds.source=ntfy_topics_json" \
+    bash -c "[ \"\$(jq -r '.feeds.source' '$SEED_CONFIG')\" = 'ntfy_topics_json' ]"
+check "seed-config.json: feeds.url_template references rss.diegonmarcos.com" \
+    bash -c "jq -r '.feeds.url_template' '$SEED_CONFIG' | grep -q 'rss.diegonmarcos.com'"
+check "seed-config.json: settings.theme_setting=darkly" \
+    bash -c "[ \"\$(jq -r '.settings.theme_setting' '$SEED_CONFIG')\" = 'darkly' ]"
+check "seed-config.json: all 9 setting keys end in _setting" \
+    bash -c "jq -e '.settings | keys | map(select(. != \"_note\")) | all(. | endswith(\"_setting\"))' '$SEED_CONFIG' >/dev/null"
+
+# ntfy-topics.json content matches the canonical I_cloud-data file
+check "ntfy-topics.json: present (regular file, not broken symlink)" test -f "$NTFY_TOPICS"
+check "ntfy-topics.json: content matches I_cloud-data canonical" \
+    bash -c "diff -q '$NTFY_TOPICS' '$NTFY_CANONICAL' >/dev/null"
+check "ntfy-topics.json: declares 'topics' array" \
+    bash -c "jq -e '.topics | type == \"array\"' '$NTFY_TOPICS' >/dev/null"
+
+# seed-accounts.php — uniqid shape (the bug fix from Phase 7)
+SEED_PHP="$CYPHT_DIR/src/seed-accounts.php"
+check "seed-accounts.php: uses uniqid() for entity ids (Hm_Repository shape)" \
+    grep -q 'uniqid()' "$SEED_PHP"
+check "seed-accounts.php: writes 'id' field on entities" \
+    grep -qE "\\\$entity\\['id'\\]\\s*=\\s*\\\$id" "$SEED_PHP"
+check "seed-accounts.php: writes 'object'=>false (Hm_Server_List::add shape)" \
+    bash -c "grep -qE \"'object'\\s*=>\\s*false\" '$SEED_PHP'"
+check "seed-accounts.php: writes 'connected'=>false (Hm_Server_List::add shape)" \
+    bash -c "grep -qE \"'connected'\\s*=>\\s*false\" '$SEED_PHP'"
+check "seed-accounts.php: NO flat-list append (\\\$list[] = ...)" \
+    bash -c "! grep -qE '\\\$(imap|smtp|jmap)Servers\\[\\]\\s*=' '$SEED_PHP'"
+check "seed-accounts.php: handles carddav_contacts_auth_setting" \
+    grep -q 'carddav_contacts_auth_setting' "$SEED_PHP"
+check "seed-accounts.php: writes feeds key" \
+    grep -q "set('feeds'" "$SEED_PHP"
+check "seed-accounts.php: applies UI settings (loops settings block)" \
+    grep -q "str_ends_with.*_setting" "$SEED_PHP"
+
+# flake.nix registers all new assets
+FLAKE_NIX="$CYPHT_DIR/src/flake.nix"
+check "flake.nix: extraAssets includes seed-config.json" \
+    grep -q "seed-config.json" "$FLAKE_NIX"
+check "flake.nix: extraAssets includes ntfy-topics.json" \
+    grep -q "ntfy-topics.json" "$FLAKE_NIX"
+
+# compose.nix mounts both new files at /tmp/cypht-config/
+COMPOSE_NIX="$CYPHT_DIR/src/compose.nix"
+check "compose.nix: mounts seed-config.json at /tmp/cypht-config/" \
+    grep -q 'seed-config.json:/tmp/cypht-config/seed-config.json' "$COMPOSE_NIX"
+check "compose.nix: mounts ntfy-topics.json at /tmp/cypht-config/" \
+    grep -q 'ntfy-topics.json:/tmp/cypht-config/ntfy-topics.json' "$COMPOSE_NIX"
+
+# dist/ has both files copied through engine
+check "dist/assets/seed-config.json: present" test -f "$CYPHT_DIR/dist/assets/seed-config.json"
+check "dist/assets/ntfy-topics.json: present" test -f "$CYPHT_DIR/dist/assets/ntfy-topics.json"
+check "dist/compose: mounts seed-config + ntfy-topics" \
+    bash -c "grep -q 'seed-config.json' '$CYPHT_DIR/dist/compose/docker-compose.yml' && grep -q 'ntfy-topics.json' '$CYPHT_DIR/dist/compose/docker-compose.yml'"
+
 # ── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
