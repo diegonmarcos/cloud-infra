@@ -181,8 +181,14 @@ SEED_JSON="$CYPHT_DIR/src/seed-accounts.json"
 check "seed: primary email = me@diegonmarcos.com" \
     bash -c "[ \"\$(jq -r .primary.email '$SEED_JSON')\" = 'me@diegonmarcos.com' ]"
 
-check "seed: extras count == 6" \
-    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '6' ]"
+check "seed: extras count == 7 (added Stalwart 2587 STARTTLS submission)" \
+    bash -c "[ \"\$(jq -r '.extras | length' '$SEED_JSON')\" = '7' ]"
+check "seed: includes Stalwart STARTTLS submission (port 2587)" \
+    bash -c "jq -e '.extras[] | select(.smtp.port == 2587 and .smtp.secure == \"STARTTLS\")' '$SEED_JSON' >/dev/null"
+check "seed: env-var padronization — NO ME_PASSWORD_STALWART (renamed to ME_PASSWORD)" \
+    bash -c "! jq -r '.extras[].pass_env' '$SEED_JSON' | grep -q ME_PASSWORD_STALWART"
+check "seed: every Stalwart extra uses canonical ME_PASSWORD env var" \
+    bash -c "jq -e '[.extras[] | select(.imap.host // .jmap.host // .smtp.host // \"\" | test(\"stalwart\"))] | all(.pass_env == \"ME_PASSWORD\")' '$SEED_JSON' >/dev/null"
 check "seed: includes me@diegonmarcos.com Maddy IMAP (port 993)" \
     bash -c "jq -e '.extras[] | select(.email == \"me@diegonmarcos.com\" and .imap.port == 993)' '$SEED_JSON' >/dev/null"
 check "seed: every extra has display 'name' field (UI label convention)" \
