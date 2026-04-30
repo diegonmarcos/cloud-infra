@@ -190,6 +190,26 @@ in {
 
       find /var/log -name "*.log" -size +10M -exec truncate -s 1M {} \; 2>/dev/null || true
       find /var/log -name "*.gz" -delete 2>/dev/null || true
+
+      # ── Container log truncation (EMERG-only, last resort) ──────────
+      # Defense for legacy containers that pre-date the fleet-wide
+      # max-size/max-file defaults from a_solutions/_shared/compose-defaults.json.
+      # New containers built after 2026-04-30 get logging defaults from the
+      # shared engine and never reach this branch. Truncate-via-shell has
+      # a sparse-file race vs the writer's open fd, but at 95% disk usage
+      # data loss is already accepted (matches the /var/log truncation
+      # immediately above this block).
+      if command -v docker >/dev/null 2>&1 && docker version --format "{{.Server.Version}}" >/dev/null 2>&1; then
+        for CTR in $(docker ps -q 2>/dev/null); do
+          LP=$(docker inspect -f "{{.LogPath}}" "$CTR" 2>/dev/null) || continue
+          [ -f "$LP" ] || continue
+          SZ=$(stat -c%s "$LP" 2>/dev/null || echo 0)
+          if [ "$SZ" -gt 52428800 ]; then  # 50 MB — only catches misconfigured legacy
+            : > "$LP"
+            echo "[disk-watchdog] EMERG truncated container log: $CTR ($((SZ/1024/1024))MB)"
+          fi
+        done
+      fi
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage -d 2>/dev/null || true
 
       USAGE=$(df -P / | awk 'NR==2 { gsub("%","",$5); print $5 }')
