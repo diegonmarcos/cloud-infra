@@ -47,17 +47,18 @@ check "maddy: MX 25 stays on 0.0.0.0 (public)" \
 check "maddy: no 0.0.0.0 on user-facing ports (465/587/993)" \
   bash -c '! grep -E "0\.0\.0\.0:(465|587|993)" '"$MADDY_CONF"
 
-# ── Maddy: also binds 127.0.0.1 for co-located SnappyMail (network_mode: host) ──
-check "maddy: IMAPS 993 ALSO binds 127.0.0.1 (loopback for snappymail)" \
-  grep -qE 'tls://127\.0\.0\.1:993' "$MADDY_CONF"
+# ── Maddy: NO loopback listeners (Caddy is sole route owner) ──────────────────
+# Co-located clients reach Maddy via mail.diegonmarcos.com → Hickory (10.0.0.1)
+# → Caddy L4 → 10.0.0.3:993/465/587. Loopback shortcuts removed; /etc/hosts
+# hijack stripped by vm-pilot/network/etc-hosts-clean.nix.
+check "maddy: NO loopback bind on submission (127.0.0.1:465/587 forbidden)" \
+  bash -c "! grep -qE 'tls://127\\.0\\.0\\.1:(465|587)' '$MADDY_CONF'"
 
-check "maddy: SMTPS 465 ALSO binds 127.0.0.1 (loopback for snappymail)" \
-  grep -qE 'tls://127\.0\.0\.1:465' "$MADDY_CONF"
+check "maddy: NO loopback bind on IMAP (127.0.0.1:993/143 forbidden)" \
+  bash -c "! grep -qE 'tls://127\\.0\\.0\\.1:(993|143)' '$MADDY_CONF'"
 
-# ── SnappyMail: domain.ini uses mail.diegonmarcos.com (matches cert) ──────────
-# /etc/hosts on oci-mail overrides it to 127.0.0.1 (loopback). With Maddy
-# dual-bind (10.0.0.3 + 127.0.0.1), PHP IMAPS to mail.diegonmarcos.com:993
-# resolves loopback and hits Maddy's local listener.
+# ── SnappyMail: domain.ini uses mail.diegonmarcos.com (cert-matching public name)
+# Resolves via Hickory → Caddy L4 → Maddy's WG bind. No loopback shortcut.
 SNAPPY_DOMAIN="../a_solutions/aa-sui_snappymail/dist/configs/domain.ini"
 check "snappymail: imap_host = mail.diegonmarcos.com (cert-matching public name)" \
   grep -qE '^imap_host = "mail\.diegonmarcos\.com"' "$SNAPPY_DOMAIN"
