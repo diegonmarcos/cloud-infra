@@ -19,7 +19,11 @@
 # ║                                                               ║
 # ║ Steps are sourced from cloud-ship-nix-homemanager-step-*.sh   ║
 # ╚════════════════════════════════════════════════════════════════╝
-set -euo pipefail
+# -E (errtrace): inherit ERR trap into command substitutions, subshells
+# and PIPELINES. Without it, `set -e + pipefail` exits silently on a
+# pipeline failure (e.g. `echo $T | docker login`) and the ERR trap below
+# never fires — leading to "FAIL <vm> (exit 1)" with no FATAL log line.
+set -Eeuo pipefail
 
 SERVICE_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="$(basename "$SERVICE_DIR")"
@@ -162,6 +166,65 @@ run_with_retry() {
     log "FAILED after $_attempts attempts: $_desc"
     return "$_exit"
 }
+
+# ── SSH config (data-driven from build.json — Fire Rule #4) ─────────
+# Inside cloud-builder container, ~/.ssh/config has no Host alias for
+# DEPLOY_HOST (e.g. "gcp-proxy"). step_compose / step_deploy do
+# `ssh "$DEPLOY_HOST"` and fail with "Could not resolve hostname".
+# Write a Host stanza from build.json's vm.network.wg_ip + hm.user once
+# at engine-load time. Idempotent: if the Host alias already exists in
+# ~/.ssh/config, do not duplicate.
+ensure_ssh_host_alias() {
+    [ -z "${DEPLOY_HOST:-}" ] && return 0
+    [ "$DEPLOY_HOST" = "local" ] && return 0
+    local wg_ip user pub_ip
+    wg_ip="$(get_config vm.network.wg_ip)"
+    pub_ip="$(get_config vm.network.public_ip)"
+    user="${HM_USER:-ubuntu}"
+    # Prefer wg_ip (works when WireGuard is up); fall back to public_ip.
+    local host="${wg_ip:-$pub_ip}"
+    [ -z "$host" ] && return 0
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    # Resolve the right private key from cloud-data's consolidated JSON.
+    # vms[*].gha.ssh_secret names the env var (e.g. GCP_PROXY_SSH_KEY).
+    # The runner only writes id_deploy from OCI_SSH_KEY, so for non-OCI VMs
+    # id_deploy is the wrong key; we materialise the correct one here.
+    local cons="" cand secret key_val key_file="$HOME/.ssh/id_deploy"
+    for cand in /root/git/cloud/2_configs/dist/_cloud-data-consolidated.json \
+                /root/git/cloud-data/_cloud-data-consolidated.json \
+                /home/diego/git/cloud/2_configs/dist/_cloud-data-consolidated.json; do
+        [ -f "$cand" ] && cons="$cand" && break
+    done
+    if [ -n "$cons" ] && command -v jq >/dev/null 2>&1; then
+        secret=$(jq -r --arg a "$DEPLOY_HOST" '.vms | to_entries[] | select(.value.ssh_alias==$a) | .value.gha.ssh_secret // empty' "$cons" 2>/dev/null | head -1)
+        if [ -n "$secret" ]; then
+            eval "key_val=\${$secret:-}"
+            if [ -n "$key_val" ]; then
+                key_file="$HOME/.ssh/id_${secret}"
+                printf '%s\n' "$key_val" > "$key_file"
+                chmod 600 "$key_file"
+            fi
+        fi
+    fi
+    if [ -f "$HOME/.ssh/config" ] && grep -q "^Host ${DEPLOY_HOST}\$" "$HOME/.ssh/config" 2>/dev/null; then
+        return 0
+    fi
+    cat >> "$HOME/.ssh/config" <<EOF
+Host ${DEPLOY_HOST}
+  HostName ${host}
+  User ${user}
+  IdentityFile ${key_file}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ServerAliveInterval 30
+  ServerAliveCountMax 10
+
+EOF
+    chmod 600 "$HOME/.ssh/config"
+    log "[ssh] Host ${DEPLOY_HOST} → ${user}@${host} (key=${key_file##*/})"
+}
+ensure_ssh_host_alias
 
 # ── SSH multiplexing ────────────────────────────────────────────────
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"

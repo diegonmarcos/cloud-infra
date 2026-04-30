@@ -6,7 +6,11 @@
 # ║                                                               ║
 # ║ Steps are sourced from cloud-ship-nix-homemanager-step-*.sh   ║
 # ╚════════════════════════════════════════════════════════════════╝
-set -euo pipefail
+# -E (errtrace): inherit ERR trap into command substitutions, subshells
+# and PIPELINES. Without it, `set -e + pipefail` exits silently on a
+# pipeline failure (e.g. `echo $T | docker login`) and the ERR trap below
+# never fires — leading to "FAIL <vm> (exit 1)" with no FATAL log line.
+set -Eeuo pipefail
 
 SERVICE_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="$(basename "$SERVICE_DIR")"
@@ -84,6 +88,130 @@ run_logged() {
     log "OK: $_desc"
     return 0
 }
+
+# run_with_retry: wrap a command with timeout + retry loop + optional recovery hook.
+# Defeats two failure modes:
+#   1. Stalled command (no progress, no exit) — `timeout` enforces a wall-clock deadline.
+#   2. Stale state across retries (e.g. buildkit cached digest from a previous killed push
+#      that the registry never received) — RETRY_RECOVERY_CMD runs between failed attempts
+#      to reset state.
+#
+# Knobs (read from build.json, with safe defaults):
+#   build.retry.attempts       — total attempts (default 3)
+#   build.retry.timeout_secs   — per-attempt deadline (default 1200 = 20 min)
+#   build.retry.backoff_secs   — sleep between attempts (default 30)
+#
+# Recovery hook (env var, NOT in build.json — set by the caller per-step):
+#   RETRY_RECOVERY_CMD         — shell command run between failed attempts
+#                                (e.g. `docker restart buildx_buildkit_multiarch0` for
+#                                 docker buildx --push to clear stale push tracker state)
+#
+# Usage: run_with_retry <description> <command> [args...]
+run_with_retry() {
+    _desc="$1"; shift
+    _attempts="$(get_config build.retry.attempts)"; [ -z "$_attempts" ] && _attempts=3
+    _timeout="$(get_config build.retry.timeout_secs)"; [ -z "$_timeout" ] && _timeout=1200
+    _backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_backoff" ] && _backoff=30
+
+    _try=0
+    while [ "$_try" -lt "$_attempts" ]; do
+        _try=$(( _try + 1 ))
+        log "RUN: $_desc (attempt $_try/$_attempts, timeout ${_timeout}s)"
+        log "CMD: $*"
+        set +e
+        # --kill-after=30s: SIGKILL children 30s after SIGTERM if still alive
+        timeout --kill-after=30s "${_timeout}s" "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
+        _exit=${PIPESTATUS[0]}
+        set -e
+
+        if [ "$_exit" -eq 0 ]; then
+            log "OK: $_desc (attempt $_try)"
+            return 0
+        fi
+
+        # exit 124 = SIGTERM from timeout, 137 = SIGKILL from --kill-after
+        if [ "$_exit" -eq 124 ] || [ "$_exit" -eq 137 ]; then
+            log "TIMEOUT (exit $_exit) after ${_timeout}s: $_desc (attempt $_try/$_attempts)"
+        else
+            log "FAILED (exit $_exit): $_desc (attempt $_try/$_attempts)"
+        fi
+
+        if [ "$_try" -lt "$_attempts" ]; then
+            if [ -n "${RETRY_RECOVERY_CMD:-}" ]; then
+                log "Recovery hook: $RETRY_RECOVERY_CMD"
+                set +e
+                bash -c "$RETRY_RECOVERY_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
+                _rec_exit=${PIPESTATUS[0]}
+                set -e
+                log "Recovery hook exit: $_rec_exit"
+            fi
+            log "Retrying in ${_backoff}s..."
+            sleep "$_backoff"
+        fi
+    done
+
+    log "FAILED after $_attempts attempts: $_desc"
+    return "$_exit"
+}
+
+# ── SSH config (data-driven from build.json — Fire Rule #4) ─────────
+# Inside cloud-builder container, ~/.ssh/config has no Host alias for
+# DEPLOY_HOST (e.g. "gcp-proxy"). step_compose / step_deploy do
+# `ssh "$DEPLOY_HOST"` and fail with "Could not resolve hostname".
+# Write a Host stanza from build.json's vm.network.wg_ip + hm.user once
+# at engine-load time. Idempotent: if the Host alias already exists in
+# ~/.ssh/config, do not duplicate.
+ensure_ssh_host_alias() {
+    [ -z "${DEPLOY_HOST:-}" ] && return 0
+    [ "$DEPLOY_HOST" = "local" ] && return 0
+    local wg_ip user pub_ip
+    wg_ip="$(get_config vm.network.wg_ip)"
+    pub_ip="$(get_config vm.network.public_ip)"
+    user="${HM_USER:-ubuntu}"
+    # Prefer wg_ip (works when WireGuard is up); fall back to public_ip.
+    local host="${wg_ip:-$pub_ip}"
+    [ -z "$host" ] && return 0
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+    # Resolve the right private key from cloud-data's consolidated JSON.
+    # vms[*].gha.ssh_secret names the env var (e.g. GCP_PROXY_SSH_KEY).
+    # The runner only writes id_deploy from OCI_SSH_KEY, so for non-OCI VMs
+    # id_deploy is the wrong key; we materialise the correct one here.
+    local cons="" cand secret key_val key_file="$HOME/.ssh/id_deploy"
+    for cand in /root/git/cloud/2_configs/dist/_cloud-data-consolidated.json \
+                /root/git/cloud-data/_cloud-data-consolidated.json \
+                /home/diego/git/cloud/2_configs/dist/_cloud-data-consolidated.json; do
+        [ -f "$cand" ] && cons="$cand" && break
+    done
+    if [ -n "$cons" ] && command -v jq >/dev/null 2>&1; then
+        secret=$(jq -r --arg a "$DEPLOY_HOST" '.vms | to_entries[] | select(.value.ssh_alias==$a) | .value.gha.ssh_secret // empty' "$cons" 2>/dev/null | head -1)
+        if [ -n "$secret" ]; then
+            eval "key_val=\${$secret:-}"
+            if [ -n "$key_val" ]; then
+                key_file="$HOME/.ssh/id_${secret}"
+                printf '%s\n' "$key_val" > "$key_file"
+                chmod 600 "$key_file"
+            fi
+        fi
+    fi
+    if [ -f "$HOME/.ssh/config" ] && grep -q "^Host ${DEPLOY_HOST}\$" "$HOME/.ssh/config" 2>/dev/null; then
+        return 0
+    fi
+    cat >> "$HOME/.ssh/config" <<EOF
+Host ${DEPLOY_HOST}
+  HostName ${host}
+  User ${user}
+  IdentityFile ${key_file}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+  ServerAliveInterval 30
+  ServerAliveCountMax 10
+
+EOF
+    chmod 600 "$HOME/.ssh/config"
+    log "[ssh] Host ${DEPLOY_HOST} → ${user}@${host} (key=${key_file##*/})"
+}
+ensure_ssh_host_alias
 
 # ── SSH multiplexing ────────────────────────────────────────────────
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"
