@@ -77,9 +77,16 @@ check "maddy.conf.tpl.tpl: NO old mail-filter command" \
 
 # 6. build.json#lifecycle uses post-hoc-* entries
 BJ="$MADDY/build.json"
-for sub in integrity-check recover-headers integrity-fix apply-rules dedupe cleanup-mailboxes all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes all; do
     check "build.json#lifecycle.post-hoc-$sub present" \
         bash -c "jq -e '.lifecycle.\"post-hoc-$sub\"' '$BJ' >/dev/null"
+done
+# recover-headers / apply-rules INTENTIONALLY removed (see build.json _doc):
+# cachedHeader is populated at delivery by maddy; missing-body rows can't be
+# recovered, only dropped via integrity-fix.
+for sub in recover-headers apply-rules; do
+    check "build.json#lifecycle.post-hoc-$sub INTENTIONALLY absent" \
+        bash -c "[ \"\$(jq -r '.lifecycle.\"post-hoc-$sub\" // \"absent\"' '$BJ')\" = 'absent' ]"
 done
 check "build.json#lifecycle has NO old 'cleanup' entry" \
     bash -c "[ \"\$(jq -r '.lifecycle.cleanup // \"absent\"' '$BJ')\" = 'absent' ]"
@@ -101,7 +108,7 @@ check "post-hoc script: sh -n syntax check" \
 # 9. Post-hoc --help advertises all subcommands
 HELP_FILE="$(mktemp)"
 "$SRC/mail-sieve-subset-post-hoc.sh" --help >"$HELP_FILE" 2>&1 || true
-for sub in integrity-check integrity-fix recover-headers apply-rules dedupe cleanup-mailboxes all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes all; do
     check "post-hoc --help advertises subcommand: $sub" \
         grep -q "$sub" "$HELP_FILE"
 done
