@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-04-29T21:10:55.926Z",
+    "generated_at": "2026-04-30T14:12:01.334Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -2611,28 +2611,28 @@
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "smtp_ssl",
-              "desc": "SMTPS — WG-only"
+              "desc": "SMTPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
             },
             {
               "port": 587,
               "protocol": "starttls",
               "bind": "10.0.0.3",
               "service": "smtp_starttls",
-              "desc": "Submission — WG-only"
+              "desc": "Submission — wg0 bind, reached via Caddy L4 from gcp-proxy"
             },
             {
               "port": 993,
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "imap_ssl",
-              "desc": "IMAPS — WG-only"
+              "desc": "IMAPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
             },
             {
               "port": 143,
               "protocol": "tcp",
               "bind": "10.0.0.3",
               "service": "imap_plain",
-              "desc": "IMAP plain — WG-only"
+              "desc": "IMAP plain — wg0 bind"
             }
           ],
           "dns": "maddy.app",
@@ -2852,35 +2852,35 @@
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "jmap_tls",
-              "desc": "HTTPS admin/JMAP — WG-only"
+              "desc": "HTTPS admin/JMAP — wg0 bind, reached via Caddy L4"
             },
             {
               "port": 2465,
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "smtp_ssl",
-              "desc": "SMTPS — WG-only"
+              "desc": "SMTPS — wg0 bind, reached via Caddy L4"
             },
             {
               "port": 2587,
               "protocol": "starttls",
               "bind": "10.0.0.3",
               "service": "smtp_starttls",
-              "desc": "Submission — WG-only"
+              "desc": "Submission — wg0 bind, reached via Caddy L4"
             },
             {
               "port": 2993,
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "imap_ssl",
-              "desc": "IMAPS — WG-only"
+              "desc": "IMAPS — wg0 bind, reached via Caddy L4"
             },
             {
               "port": 6190,
               "protocol": "tls",
               "bind": "10.0.0.3",
               "service": "manage_sieve",
-              "desc": "ManageSieve — WG-only"
+              "desc": "ManageSieve — wg0 bind, reached via Caddy L4"
             }
           ],
           "port_env": null,
