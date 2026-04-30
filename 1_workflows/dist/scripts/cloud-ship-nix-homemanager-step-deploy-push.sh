@@ -22,9 +22,15 @@ step_docker_push() {
     PLATFORM="${HM_PLATFORM:-linux/amd64}"
     SHA_TAG="$(git rev-parse --short HEAD 2>/dev/null || echo 'latest')"
 
-    # Login to GHCR if token available
+    # Login to GHCR if token available.
+    # NOTE: must NOT swallow stderr (no `2>/dev/null`) — under set -e + pipefail
+    # an auth failure exits the script silently and the run shows
+    # "FAIL <vm> (exit 1)" with zero diagnostics. Surface the error explicitly.
     if [ -n "${GITHUB_TOKEN:-}" ]; then
-        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin 2>/dev/null
+        if ! echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin; then
+            log "ERROR: docker login to ghcr.io failed (user=${GITHUB_ACTOR:-diegonmarcos})"
+            return 1
+        fi
     fi
 
     log "Building + pushing $HM_IMAGE ($PLATFORM)"
