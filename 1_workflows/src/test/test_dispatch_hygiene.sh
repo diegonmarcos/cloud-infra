@@ -63,6 +63,20 @@ else
 fi
 
 echo ""
+echo "── J: ship-hm routing actually fires (regression: bash \${var:?msg} parses } early) ──"
+# Pre-2026-04-25 dispatch had `CMD="${1:?Usage: dispatch.sh {ship|ship-hm} <vm>}"`
+# — the embedded `}` inside `{ship|ship-hm}` terminated the parameter expansion,
+# so CMD was "ship-hm <vm>}" not "ship-hm" and the routing branch never matched.
+# This test calls dispatch.sh ship-hm in dry-run mode and asserts CMD parses
+# clean. We trace the script and grep for the assignment.
+_TRACE=$(bash -x "$SCRIPTS/cloud-ship-ci-builder-dispatch.sh" ship-hm noop 2>&1 | head -10 || true)
+if echo "$_TRACE" | grep -qE "^\+ CMD=ship-hm$"; then
+    pass "CMD parses cleanly to 'ship-hm' (no trailing literal)"
+else
+    fail "CMD parsing regressed — trace shows: $(echo "$_TRACE" | grep -E '^\+ CMD=' | head -1)"
+fi
+
+echo ""
 echo "── H+I: shellcheck dispatch + nix-step ──"
 # Executable scripts (have shebang): default shell detection.
 # Sourced step files (no shebang by design — invoked via `.`/source): force --shell=bash.

@@ -6,7 +6,15 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -u
 
-CMD="${1:?Usage: dispatch.sh {ship|ship-hm} <vm>}"
+# NOTE: bash's ${var:?msg} parser terminates the message at the FIRST `}`.
+# Embedding `{ship|ship-hm}` inside the message causes premature termination,
+# leaving CMD with the trailing literal " <vm>}" appended (and the ship-hm
+# routing below silently never matches). Use an explicit guard instead.
+if [ "$#" -lt 1 ]; then
+    echo "Usage: dispatch.sh ship-or-ship-hm vm-alias [service-filter]" >&2
+    exit 1
+fi
+CMD="$1"
 shift
 
 # ── Route ship-hm to HM engine ──
