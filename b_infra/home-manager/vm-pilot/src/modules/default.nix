@@ -33,6 +33,7 @@ in {
     (import ./network/wireguard.nix { inherit vmName; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
     ./network/dns-hickory.nix
+    ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
 
     # ── Security
     ./security/ssh-keys.nix
