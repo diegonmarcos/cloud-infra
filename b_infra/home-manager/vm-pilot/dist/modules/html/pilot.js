@@ -47,14 +47,15 @@
     });
 
   // Load cloud-data for services + other VMs
-  fetch('/pilot/data/cloud-data-home-manager.json')
+  // 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms]
+  fetch('/pilot/data/_cloud-data-consolidated.json')
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var hostname = location.hostname.replace('.app', '');
       var vmAlias = hostname;
 
       // Find current VM in data
-      var vms = data.vms || {};
+      var vms = (data._home_manager && data._home_manager.vms) || data.vms || {};
       var servicesList = document.getElementById('services-list');
       var otherVms = document.getElementById('other-vms');
 

@@ -10,12 +10,17 @@ step_docker_push() {
     PLATFORM="${HM_PLATFORM:-linux/amd64}"
     SHA_TAG="$(git rev-parse --short HEAD 2>/dev/null || echo 'latest')"
 
-    # Login to GHCR if token available.
-    # NOTE: must NOT swallow stderr (no `2>/dev/null`) — under set -e + pipefail
-    # an auth failure exits the script silently and the run shows
-    # "FAIL <vm> (exit 1)" with zero diagnostics. Surface the error explicitly.
+    # Login to GHCR. The cloud-builder container mounts the host's
+    # ${HOME}/.docker/config.json :ro (per cb_containers-builders/src/docker/
+    # compose.yaml), so the runner's prior `docker login` is already present.
+    # A new in-container `docker login` would write to /root/.docker/config.json
+    # which is read-only → "Error saving credentials: ... device or resource
+    # busy" and the script aborts with set -e + pipefail.
+    # Skip re-login if ghcr.io credentials are already in the mounted config.
     if [ -n "${GITHUB_TOKEN:-}" ]; then
-        if ! echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin; then
+        if grep -q '"ghcr.io"' "${HOME}/.docker/config.json" 2>/dev/null; then
+            log "GHCR auth: reusing host-mounted ~/.docker/config.json (skipping re-login)"
+        elif ! echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin; then
             log "ERROR: docker login to ghcr.io failed (user=${GITHUB_ACTOR:-diegonmarcos})"
             return 1
         fi
