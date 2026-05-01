@@ -39,6 +39,12 @@ jobs:
   deploy:
     strategy:
       fail-fast: false
+      # max-parallel: 1 — all matrix jobs share the same WireGuard address
+      # (10.0.0.200/24, hardcoded in cloud-builder entrypoint). When run in
+      # parallel, the hub kicks all but one peer → SSH tunnels drop mid-pull
+      # with exit 255. Serialising avoids the collision; total wall-clock
+      # is ~30% slower but every VM gets a clean tunnel.
+      max-parallel: 1
       matrix:
         vm: [gcp-proxy, gcp-t4, oci-mail, oci-analytics, oci-apps]
     runs-on: ubuntu-latest
@@ -63,6 +69,18 @@ jobs:
         with:
           submodules: true
 
+      # Detect transient VMs (Spot/preemptible) — failure is non-fatal.
+      # Source of truth: build.json:.vm.transient (data-driven per Fire Rule #4).
+      # Used to set continue-on-error on the Ship step below.
+      - name: Detect transient VM
+        id: transient
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          BJ="b_infra/home-manager/nixhm-sudo-${{ matrix.vm }}/build.json"
+          T=$(jq -r '.vm.transient // false' "$BJ" 2>/dev/null)
+          echo "transient=${T}" >> "$GITHUB_OUTPUT"
+          [ "$T" = "true" ] && echo "::notice::${{ matrix.vm }} is transient — failure non-fatal" || true
+
       # 2_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing.
       - name: Regenerate dist/ from build.json sources
         if: steps.gate.outputs.skip != 'true'
@@ -79,6 +97,11 @@ jobs:
 
       - name: Ship
         if: steps.gate.outputs.skip != 'true'
+        # Transient VMs (Spot instances, preemptible, manually stopped) are
+        # often unreachable. continue-on-error makes the matrix green even
+        # when their job fails — the persistent VMs are what gates the
+        # workflow's overall conclusion.
+        continue-on-error: ${{ steps.transient.outputs.transient == 'true' }}
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
