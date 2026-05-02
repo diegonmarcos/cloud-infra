@@ -173,6 +173,46 @@ step_compose() {
         [ -z "$HM_IMAGE" ] && { log "ERROR: hm.image not set"; return 1; }
         log "Docker delivery: activating $HM_IMAGE on $DEPLOY_HOST"
 
+        # ── Pre-flight: ensure VM has disk headroom for activation ──
+        # HM activation is a 3-stage pipeline that all writes to the VM's /:
+        #   1. docker pull HM image (~2-5GB compressed → overlay2)
+        #   2. activation container cp -aR /nix/store → host (~5-7GB)
+        #   3. nix-build derivations in /tmp/nix-build-* (~1-3GB transient)
+        # Cumulative peak: ~10-15GB headroom required. Without it the
+        # activation hits ENOSPC at nix-build mkdir (incident 2026-05-02
+        # on oci-mail: 7.8GB free → activation peaks at 100% disk usage →
+        # error: creating directory ... No space left on device).
+        # Fix: pre-flight prune docker + truncate runaway logs + journal
+        # vacuum before any pull/cp/activate runs. Data-driven threshold:
+        #   build.json:.vm.disk.activation_min_free_gb (default 10).
+        MIN_FREE_GB="$(get_config vm.disk.activation_min_free_gb)"
+        : "${MIN_FREE_GB:=10}"
+        log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
+        # POSIX df: column 4 is Available KB. Convert to GB.
+        FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
+        : "${FREE_KB:=0}"
+        FREE_GB=$(( FREE_KB / 1024 / 1024 ))
+        log "  free: ${FREE_GB}GB / threshold: ${MIN_FREE_GB}GB"
+        if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
+            log "  insufficient — running cleanup (docker prune + log truncate + journal vacuum)"
+            ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
+                    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
+                    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
+                    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/build/prune?all=true' >/dev/null 2>&1 || true; \
+                    sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
+                    sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+            FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
+            : "${FREE_KB:=0}"
+            FREE_GB=$(( FREE_KB / 1024 / 1024 ))
+            log "  after cleanup: ${FREE_GB}GB free"
+            if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
+                log "ERROR: $DEPLOY_HOST still under disk threshold (${FREE_GB}GB < ${MIN_FREE_GB}GB)"
+                log "       activation would fail with ENOSPC at nix-build mkdir."
+                log "       Free disk manually or increase VM disk size, then retry."
+                return 1
+            fi
+        fi
+
         # Deploy pre-decrypted secrets to VM via SSH
         if [ -f "$DIST_DIR/.secrets" ]; then
             log "Deploying secrets to $DEPLOY_HOST"
