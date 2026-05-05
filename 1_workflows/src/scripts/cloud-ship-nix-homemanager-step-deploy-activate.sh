@@ -142,11 +142,37 @@ else
 fi
 
 # ── Step 5: Activate generation ──
+# HM's activate script does `nix-build --quiet --expr '{}'` as a sanity check
+# (line 170 of generation/activate). sudo -u strips PATH; nix-build is normally
+# at /nix/var/nix/profiles/default/bin (multi-user) or ~/.nix-profile/bin
+# (single-user). On VMs where the previous generation never linked nix into
+# the user's profile (oci-mail, 2026-05-05), the bare default PATH lacks
+# nix-build → activate dies "command not found". Resolve nix-build's actual
+# directory at runtime and prepend it to the activation PATH.
 echo "[hm-docker] Activating generation"
 ACTIVATE=$(cat /tmp/.hm-activation-path 2>/dev/null)
 if [ -n "$ACTIVATE" ] && [ -x "$ACTIVATE/activate" ]; then
     rm -f "/home/$HM_USER/.local/bin/docker" 2>/dev/null
-    sudo -u "$HM_USER" HOME="/home/$HM_USER" USER="$HM_USER" "$ACTIVATE/activate" 2>&1
+    NIX_BIN_DIR=""
+    for _candidate in /nix/var/nix/profiles/default/bin /home/$HM_USER/.nix-profile/bin /nix/var/nix/profiles/per-user/$HM_USER/profile/bin; do
+        if [ -x "$_candidate/nix-build" ]; then
+            NIX_BIN_DIR="$_candidate"
+            break
+        fi
+    done
+    if [ -z "$NIX_BIN_DIR" ]; then
+        # Fallback: scan /nix/store for the newest nix-2.* package.
+        NIX_BIN_DIR=$(ls -1d /nix/store/*-nix-2.*/bin 2>/dev/null | grep -v -- '-man' | sort -V | tail -1)
+    fi
+    if [ -n "$NIX_BIN_DIR" ] && [ -x "$NIX_BIN_DIR/nix-build" ]; then
+        echo "[hm-docker] Using nix-build from $NIX_BIN_DIR"
+        sudo -u "$HM_USER" HOME="/home/$HM_USER" USER="$HM_USER" \
+            PATH="$NIX_BIN_DIR:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+            "$ACTIVATE/activate" 2>&1
+    else
+        echo "[hm-docker] WARN: no nix-build found — activation may fail"
+        sudo -u "$HM_USER" HOME="/home/$HM_USER" USER="$HM_USER" "$ACTIVATE/activate" 2>&1
+    fi
     echo "[hm-docker] Generation activated successfully"
 else
     echo "[hm-docker] ERROR: activation path not found or not executable: $ACTIVATE"
