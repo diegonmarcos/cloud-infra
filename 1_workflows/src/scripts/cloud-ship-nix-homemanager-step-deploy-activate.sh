@@ -183,10 +183,25 @@ step_compose() {
         log "  free: ${FREE_GB}GB / threshold: ${MIN_FREE_GB}GB"
         if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
             log "  insufficient — running cleanup (docker prune + log truncate + journal vacuum)"
+            # Prune list, in order of safety (most-conservative → most-aggressive):
+            #   1. truncate runaway container json-log files (>50M)
+            #   2. /containers/prune          — stopped containers only
+            #   3. /images/prune dangling     — only <none> tagged images
+            #   4. /build/prune?all=true      — buildkit cache (rare on non-builder VMs)
+            #   5. /images/prune until=720h   — UNUSED tagged images older than 30d.
+            #      Surfaced 2026-05-05 (oci-mail incident): /var/lib/containerd
+            #      held 12 GB of old tagged-but-unreferenced images that the prior
+            #      4 steps couldn't touch. `until=720h` filter only removes images
+            #      with no running/stopped container referencing them AND last
+            #      used > 30 days ago — safe for steady-state VMs, cleans the
+            #      historical pulls that accumulate over months.
+            #   6. journalctl --vacuum-size=50M
+            #   7. rm /var/disk-reserve/ballast.bin (engineered safety net)
             ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/build/prune?all=true' >/dev/null 2>&1 || true; \
+                    curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22until%22%3A%5B%22720h%22%5D%7D' >/dev/null 2>&1 || true; \
                     sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
                     sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
