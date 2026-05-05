@@ -79,7 +79,9 @@ step_docker() {
     NATIVE_ENTRYPOINT="$(get_config docker.native_build.entrypoint)"
     NATIVE_APP_DIR="$(get_config docker.native_build.app_dir)"
     NATIVE_ENV="$(get_config docker.native_build.env)"
+    NATIVE_USER="$(get_config docker.native_build.user)"  # appuser (default) | root
     [ -z "$NATIVE_TYPE" ] && NATIVE_TYPE="binary"
+    [ -z "$NATIVE_USER" ] && NATIVE_USER="appuser"
 
     if [ -n "$NATIVE_CMD" ]; then
         # Convert entrypoint string to JSON array: "npx tsx index.ts" → ["npx","tsx","index.ts"]
@@ -97,13 +99,42 @@ step_docker() {
             # image-wrapper: build happens INSIDE Docker (RUN), not on host
             # Pulls upstream image, bakes deps, pushes to GHCR — VMs only pull
             log "Image-wrapper build: $NATIVE_CMD (inside Docker)"
+            # Strip any stale host-side node_modules from the build context.
+            # image-wrapper does the install inside the container; carrying a
+            # stale node_modules across the rsync (which uses -L) breaks
+            # intra-tree symlinks like node_modules/.bin/tsx → ../tsx/dist/cli.mjs
+            # because dereferencing copies the bundled JS into .bin/ where its
+            # sibling-relative imports no longer resolve. 2026-05-05.
+            APP_DIR_REL_CLEAN="${NATIVE_APP_DIR:-.}"
+            CLEAN_BASE="$SRC_DIR"
+            [ "$APP_DIR_REL_CLEAN" != "." ] && CLEAN_BASE="$SRC_DIR/$APP_DIR_REL_CLEAN"
+            if [ -d "$CLEAN_BASE/node_modules" ]; then
+                log "Removing stale host node_modules: $CLEAN_BASE/node_modules"
+                rm -rf "$CLEAN_BASE/node_modules"
+            fi
             CMD_LINE="CMD $(_entrypoint_json "$NATIVE_ENTRYPOINT")"
             # app_dir scopes which subdirectory to COPY (default: entire context)
             COPY_SRC="${NATIVE_APP_DIR:-.}"
             WORKDIR_PATH="/app"
-            # Non-root user for security
-            USER_LINE="RUN useradd -r -u 1000 appuser"
-            USER_SWITCH="USER appuser"
+            # User switch is data-driven via build.json native_build.user.
+            # Default "appuser" (non-root, security best practice).
+            # Set "root" for services that need root inside the container
+            # (e.g. /root/.ssh chown, host-uid:gid mounts that require root).
+            if [ "$NATIVE_USER" = "root" ]; then
+                USER_LINE=""
+                USER_SWITCH=""
+            else
+                # UID 10001 + idempotent + -m (create home dir): avoids
+                # collision with node:* base images that ship a `node` user
+                # at UID 1000. -m gives appuser /home/appuser, which npx
+                # needs for ~/.npm/_logs (without it npx errors with
+                # "EACCES /home/appuser/.npm/_logs"). HOME env var is set
+                # explicitly so it works even when the user-switch path
+                # doesn't initialize HOME.
+                USER_LINE="RUN id -u ${NATIVE_USER} >/dev/null 2>&1 || useradd -r -m -u 10001 ${NATIVE_USER}"
+                USER_SWITCH="USER ${NATIVE_USER}
+ENV HOME=/home/${NATIVE_USER}"
+            fi
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
 ${APT_LINE}
@@ -186,6 +217,24 @@ NEOF
             fi
             cp "$BINARY_PATH" "$DIST_DIR/"
             BINARY_NAME=$(basename "$NATIVE_BINARY")
+
+            # Patch ELF interpreter from nix-store path to debian's standard.
+            # Cargo builds on a NixOS host link the binary to a nix-store
+            # ld-linux (/nix/store/.../glibc-2.x/lib/ld-linux-x86-64.so.2),
+            # which doesn't exist inside debian:bookworm-slim → exec returns
+            # "not found" with exit 127 (mail-puller regression, fixed
+            # 2026-05-05). patchelf retargets to debian's standard path.
+            # No-op if the binary already points to a debian-friendly ld.
+            if command -v patchelf >/dev/null 2>&1; then
+                _CUR_INTERP=$(patchelf --print-interpreter "$DIST_DIR/$BINARY_NAME" 2>/dev/null || echo "")
+                if echo "$_CUR_INTERP" | grep -q '/nix/store/'; then
+                    patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 "$DIST_DIR/$BINARY_NAME"
+                    log "Patched ELF interpreter: $_CUR_INTERP -> /lib64/ld-linux-x86-64.so.2"
+                fi
+            else
+                log "patchelf not on host PATH — binary may fail in container if linker path is nix-store"
+            fi
+
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-debian:bookworm-slim}
 ${APT_LINE}
@@ -194,6 +243,13 @@ LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 CMD ["${BINARY_NAME}"]
 NEOF
             DOCKERFILE="Dockerfile.native"
+            # Pin context to DIST_DIR — the binary AND the Dockerfile.native
+            # both live there. Without this, the default-context block below
+            # fires the v2-engine path (dist/code/$ARCH/) when upstream_image
+            # is set, which doesn't contain Dockerfile.native — docker build
+            # then fails with "open Dockerfile.native: no such file or
+            # directory" (mail-puller regression, fixed 2026-05-05).
+            BUILD_CONTEXT="$DIST_DIR"
             log "Native binary packaged: $BINARY_NAME ($(du -sh "$DIST_DIR/$BINARY_NAME" | cut -f1))"
         fi
     fi
@@ -422,7 +478,10 @@ NEOF
                     docker push $BINARIES_IMAGE:latest && \
                     docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
             set +o pipefail
-            ssh $SSH_OPTS "$RUNNER_HOST" "rm -f $REMOTE_TOKEN_FILE; rm -rf $REMOTE_BUILD_DIR"
+            # chmod -R u+w: rsync -L dereferences nix-store-rooted symlinks
+            # into read-only files (mode 444); without u+w, rm -rf fails and
+            # masks the build's success with a fatal cleanup error.
+            ssh $SSH_OPTS "$RUNNER_HOST" "rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR"
             ;;
 
         *)
