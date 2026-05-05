@@ -329,7 +329,7 @@ NEOF
 
         ssh)
             [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
-            [ -z "$RUNNER_IMAGE" ] && { log_error "runners[$ARCH].builder_image missing in $(basename "$RUNNERS_JSON")"; return 1; }
+            [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked III_unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
 
             # Readiness flag set by dispatch's multiplex warmup; fall back to a
             # live probe for out-of-CI invocations (CLI / Dagu). NO silent
