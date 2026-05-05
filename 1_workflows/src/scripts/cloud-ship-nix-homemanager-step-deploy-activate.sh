@@ -300,6 +300,21 @@ step_compose() {
                 log "  after cleanup pass 2: ${FREE_GB}GB free"
             fi
 
+            # Pass 3 (last resort): nix-store --gc on orphan store paths.
+            # When prior failed ships' activation containers crashed mid-cp,
+            # they left ~5GB of /nix/store paths with no HM generation root —
+            # docker prune can't see them, only nix can. Resolve nix-store
+            # binary at runtime (HM-managed VMs vary).
+            if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
+                log "  pass 3 (nix GC): collecting orphan /nix/store paths"
+                ssh_vm "NIX_STORE_BIN=\$(ls -1d /nix/store/*-nix-2.*/bin/nix-store 2>/dev/null | grep -v -- '-man' | sort -V | tail -1); \
+                        [ -x \"\$NIX_STORE_BIN\" ] && sudo \"\$NIX_STORE_BIN\" --gc 2>&1 | tail -3 || echo '[hm-preflight] no nix-store binary found'" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+                FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
+                : "${FREE_KB:=0}"
+                FREE_GB=$(( FREE_KB / 1024 / 1024 ))
+                log "  after cleanup pass 3: ${FREE_GB}GB free"
+            fi
+
             if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
                 log "ERROR: $DEPLOY_HOST still under disk threshold (${FREE_GB}GB < ${MIN_FREE_GB}GB)"
                 log "       activation would fail with ENOSPC at nix-build mkdir."
