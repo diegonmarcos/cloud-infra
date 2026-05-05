@@ -18,6 +18,7 @@ for _p in \
     "$CLOUD_ROOT/_cloud-data-consolidated.json" \
     "/app/cloud-data-topology.json" \
     "$CLOUD_ROOT/2_configs/dist/cloud-data-topology.json" \
+    "$CLOUD_ROOT/2_configs/dist/z_archive/cloud-data-topology.json" \
     "$CLOUD_ROOT/cloud-data/cloud-data-topology.json" \
     "$CLOUD_ROOT/cloud-data-topology.json"; do
     [ -f "$_p" ] && { CONFIG_FILE="$_p"; break; }
