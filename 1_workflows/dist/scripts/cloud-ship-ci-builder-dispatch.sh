@@ -88,6 +88,7 @@ if [ -z "$GHA_CONFIG" ]; then
         for _p in \
             "/app/cloud-data-gha-config.json" \
             "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-gha-config.json" \
+            "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/z_archive/cloud-data-gha-config.json" \
             "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-gha-config.json" \
             "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-gha-config.json"; do
             [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }

@@ -148,6 +148,11 @@ jobs:
         # Stale source tree (hardcoded literals); active source is
         # III_unix/1_workflows/src/cicd/. Skipped if III_unix not checked out.
         run: bash 1_workflows/src/test/test_no_legacy_unix_static_workflows.sh
+      - name: Phase 40 — cloud-data-*.json consumers probe dist/z_archive/
+        # Derive script archives deprecated cloud-data-*.json slices to
+        # dist/z_archive/. Every consumer's probe chain MUST include a
+        # dist/z_archive/<file> candidate or it silently 404s.
+        run: bash 1_workflows/src/test/test_cloud_data_zarchive_probe.sh
       - name: Phase 33 — dist/ + .github/workflows/ in sync with src/ (no agent drift)
         # report-only: false-positives in CI when local + origin match but
         # CI's freshly-built dist differs (likely env-dependent — node/npm

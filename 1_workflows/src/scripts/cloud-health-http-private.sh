@@ -38,6 +38,7 @@ else
     for _p in \
         "/app/cloud-data-dns-services.json" \
         "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-dns-services.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/z_archive/cloud-data-dns-services.json" \
         "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-dns-services.json" \
         "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-dns-services.json"; do
         [ -f "$_p" ] && { DNS_FILE="$_p"; break; }
