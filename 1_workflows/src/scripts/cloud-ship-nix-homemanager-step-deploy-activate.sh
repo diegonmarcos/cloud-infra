@@ -37,15 +37,18 @@ else
 fi
 
 # ── Transport detection ──
-if command -v docker >/dev/null 2>&1; then
+# A `command -v docker` hit isn't enough — there might be a wrapper that exec's
+# a stale docker-real or a now-purged nix-profile target. Probe `docker version`
+# to verify the binary chain actually resolves before choosing the CLI path.
+if command -v docker >/dev/null 2>&1 && docker version >/dev/null 2>&1; then
     USE_CLI=true
     echo "[hm-docker] Transport: docker CLI"
 else
     USE_CLI=false
     if command -v curl >/dev/null 2>&1; then
-        echo "[hm-docker] Transport: socket API (docker CLI not found)"
+        echo "[hm-docker] Transport: socket API (docker CLI missing or broken)"
     else
-        echo "[hm-docker] ERROR: neither docker CLI nor curl+socket available"
+        echo "[hm-docker] ERROR: neither working docker CLI nor curl+socket available"
         exit 1
     fi
 fi
