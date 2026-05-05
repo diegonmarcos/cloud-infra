@@ -58,9 +58,17 @@ in {
   # ── Config JSON: VM identity + settings (auto-generated from cloud-data) ──
   home.file.".local/share/container-init/container-init.json".text = containerInitJson;
 
+  # ── Per-VM service manifest: emitted by deriveBuildVm() in
+  #    cloud-data-config-derive.ts → cloud/2_configs/dist/build-vm-{vm}.json,
+  #    symlinked into b_infra/home-manager/nixhm-sudo-{vm}/src/. The
+  #    container-init script reads this for "which services to start". ──
+  home.file.".local/share/container-init/build-vm-${vmName}.json".source =
+    ../../. + "/nixhm-sudo-${vmName}/src/build-vm-${vmName}.json";
+
   # ── Symlinks in ~/ for easy access ───────────────────────────────────
   home.file."container-init.sh".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
   home.file."container-init.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.json";
+  home.file."build-vm.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/build-vm.json";
   home.file."container-init-drift.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-drift.json";
   home.file."container-init-boot.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-boot.json";
   home.file."containers".source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
@@ -118,10 +126,11 @@ in {
 
     SRC="$HOME/.local/share/container-init"
 
-    # Deploy script + config JSON
+    # Deploy script + config JSON + per-VM service manifest
     $SUDO mkdir -p /opt/scripts
     $SUDO cp -f "$SRC/container-init.sh" /opt/scripts/container-init.sh
     $SUDO cp -f "$SRC/container-init.json" /opt/scripts/container-init.json
+    $SUDO cp -fL "$SRC/build-vm-${vmName}.json" /opt/scripts/build-vm.json
     $SUDO chmod +x /opt/scripts/container-init.sh
 
     # Deploy daemon.json (youki runtime + log config)
