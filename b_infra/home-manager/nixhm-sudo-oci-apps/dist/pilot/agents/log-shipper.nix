@@ -85,9 +85,15 @@
       echo "[log-shipper] FATAL: .secrets not readable at $SECRETS — skipping"
       exit 0
     fi
-    ZO_TOKEN="$($AWK -F= '/^ZO_INGEST_TOKEN=/ {sub(/^ZO_INGEST_TOKEN=/,""); gsub(/^"|"$/,""); print; exit}' "$SECRETS")"
-    if [ -z "$ZO_TOKEN" ]; then
-      echo "[log-shipper] FATAL: ZO_INGEST_TOKEN missing/empty in $SECRETS — skipping"
+    # Reads root-user creds from .secrets — OpenObserve admin credentials
+    # (bootstrapped from bc-obs_openobserve/src/secrets.yaml at OO install
+    # time). HTTP basic-auth is the OO-supported ingest auth dialect; the
+    # earlier ZO_INGEST_TOKEN bearer-token path required minting a real
+    # org-scoped token via OO admin API which we'll defer to v2.
+    ZO_USER="$($AWK -F= '/^ZO_ROOT_USER_EMAIL=/ {sub(/^ZO_ROOT_USER_EMAIL=/,""); gsub(/^"|"$/,""); print; exit}' "$SECRETS")"
+    ZO_PASS="$($AWK -F= '/^ZO_ROOT_USER_PASSWORD=/ {sub(/^ZO_ROOT_USER_PASSWORD=/,""); gsub(/^"|"$/,""); print; exit}' "$SECRETS")"
+    if [ -z "$ZO_USER" ] || [ -z "$ZO_PASS" ]; then
+      echo "[log-shipper] FATAL: ZO_ROOT_USER_EMAIL or ZO_ROOT_USER_PASSWORD missing/empty in $SECRETS — skipping"
       exit 0
     fi
     HOSTNAME_SHORT="$($HOSTNAME_BIN -s 2>/dev/null || echo unknown)"
@@ -97,11 +103,13 @@
     # Same substitution pattern used by secrets-subst.nix.
     CONF_TPL="$SRC/log-shipper.conf.tpl"
     CONF_OUT_TMP="$($SUDO $MKTEMP /tmp/log-shipper.conf.XXXXXX)"
-    "$AWK" -v tok="$ZO_TOKEN" -v hst="$HOSTNAME_SHORT" -v pf="$PARSERS_FILE" '
+    "$AWK" -v zu="$ZO_USER" -v zp="$ZO_PASS" -v hst="$HOSTNAME_SHORT" -v pf="$PARSERS_FILE" '
       {
         line = $0
-        while ((i = index(line, "{ZO_INGEST_TOKEN}")) > 0)
-          line = substr(line,1,i-1) tok substr(line,i+length("{ZO_INGEST_TOKEN}"))
+        while ((i = index(line, "{ZO_USER}")) > 0)
+          line = substr(line,1,i-1) zu substr(line,i+length("{ZO_USER}"))
+        while ((i = index(line, "{ZO_PASS}")) > 0)
+          line = substr(line,1,i-1) zp substr(line,i+length("{ZO_PASS}"))
         while ((i = index(line, "{HOSTNAME}")) > 0)
           line = substr(line,1,i-1) hst substr(line,i+length("{HOSTNAME}"))
         while ((i = index(line, "{PARSERS_FILE}")) > 0)
