@@ -12,7 +12,7 @@
 
 # Static list of all known npm dependencies — always installed.
 # This is the declarative baseline. Snapshot from 2026-03-24.
-# Merged from: cloud-data-deps.json + front-deps.json + essential tools.
+# Merged from: _cloud-data-consolidated.json[.deps] + front-deps.json + essential tools (2026-04-27 migrated).
 # Dynamic cloud/front modules add NEW packages on top; this list is the baseline.
 { lib, ... }:
 

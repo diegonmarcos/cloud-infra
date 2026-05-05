@@ -30,7 +30,12 @@
 let
   dockerdBin = "${pkgs.docker}/bin/dockerd";
   youkiBin = "${pkgs.youki}/bin/youki";
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms + .native.monitoring]
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = {
+    vms = consolidated._home_manager.vms or {};
+    monitoring = consolidated.native.monitoring or {};
+  };
   vmData = cloudData.vms.${vmName} or {};
   # Read HM build.json for this VM (delivery method, image, etc.)
   # HM configs live at b_infra/home-manager/nixhm-sudo-<vmName>/build.json
