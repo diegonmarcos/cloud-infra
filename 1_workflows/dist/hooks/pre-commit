@@ -24,6 +24,17 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -uo pipefail  # no -e: grep exit codes are handled by || true
 
+# Helper: invoke git in a submodule with parent-git env unset.
+# Git sets GIT_INDEX_FILE / GIT_DIR / GIT_WORK_TREE when calling hooks;
+# if those leak into `git -C <submodule>` calls, the submodule lookup
+# fails because it tries to open <submodule>/.git/index, but a submodule's
+# .git is a FILE-pointer, not a directory. Result: silent failure → the
+# whole submodule-dirty-check goes blind. Always invoke nested submodule
+# git ops via this helper.
+sm_git() {
+  env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE git "$@"
+}
+
 STAGED=$(git diff --cached --name-only)
 [ -z "$STAGED" ] && exit 0
 
@@ -59,42 +70,57 @@ if [ -n "$FORCED" ]; then
   exit 1
 fi
 
-# ── SUBMODULE GITLINK AUTO-UNSTAGE ───────────────────────
-# Submodule pointer changes (mode 160000) belong in the submodule's
-# own repo; the parent repo gets bumped via auto-sync GHA, not by
-# manual commits. Auto-unstage rather than block so the rest of the
-# commit can proceed. Data-driven from .gitmodules — no hardcoded
-# names, portable across any repo.
+# ── SUBMODULES ARE READ-ONLY FROM PARENT REPO — SILENT IGNORE ──
+# Policy: any attempt to add/commit anything related to submodules is
+# silently dropped. The user never sees an error or banner; the commit
+# proceeds with submodule-related changes filtered out and dirty submodule
+# worktrees auto-nuked.
+#
+# Two enforcements (data-driven from .gitmodules — portable across any repo):
+#
+#   (a) Staged paths inside submodule directory or the gitlink itself
+#       are silently auto-unstaged (`git reset HEAD <path>`).
+#
+#   (b) Dirty submodule worktrees are silently auto-nuked
+#       (cloud-git-nuke.sh = fetch + reset --hard origin + clean -fdx).
+#
+# All output suppressed via stderr+stdout redirect to /dev/null.
 if [ -f .gitmodules ]; then
   SUBMODULE_PATHS=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}')
+
+  # (a) Silently auto-unstage submodule paths
   if [ -n "$SUBMODULE_PATHS" ]; then
-    UNSTAGED_SUBS=""
     while IFS= read -r _sm_path; do
       [ -n "$_sm_path" ] || continue
       while IFS= read -r f; do
         [ -n "$f" ] || continue
         case "$f" in
           "$_sm_path"|"$_sm_path"/*)
-            UNSTAGED_SUBS="${UNSTAGED_SUBS}${f}"$'\n'
-            git reset -q HEAD -- "$f"
+            git reset -q HEAD -- "$f" >/dev/null 2>&1
             ;;
         esac
       done <<< "$STAGED"
     done <<< "$SUBMODULE_PATHS"
     unset _sm_path
+    # Refresh STAGED list — paths may have been unstaged
+    STAGED=$(git diff --cached --name-only)
+    [ -z "$STAGED" ] && exit 0
+  fi
 
-    if [ -n "$UNSTAGED_SUBS" ]; then
-      echo "──────────────────────────────────────────────────" >&2
-      echo "INFO: auto-unstaged submodule pointers (sync via GHA)" >&2
-      echo "──────────────────────────────────────────────────" >&2
-      echo "$UNSTAGED_SUBS" | sort -u | sed '/^$/d' | while IFS= read -r f; do
-        echo "  - $f" >&2
-      done
-      echo "Continuing with remaining staged changes." >&2
-      echo "──────────────────────────────────────────────────" >&2
-      STAGED=$(git diff --cached --name-only)
-      [ -z "$STAGED" ] && exit 0
-    fi
+  # (b) Silently auto-nuke any dirty submodule worktree
+  if [ -n "$SUBMODULE_PATHS" ]; then
+    NUKE="$(git rev-parse --show-toplevel 2>/dev/null)/1_workflows/dist/scripts/cloud-git-nuke.sh"
+    while IFS= read -r _sm_path; do
+      [ -n "$_sm_path" ] || continue
+      [ -d "$_sm_path/.git" ] || [ -f "$_sm_path/.git" ] || continue
+      # sm_git unsets GIT_INDEX_FILE etc — see helper at top of hook.
+      _dirty=$(sm_git -C "$_sm_path" status --porcelain 2>/dev/null | head -1)
+      if [ -n "$_dirty" ] && [ -f "$NUKE" ]; then
+        (cd "$_sm_path" && env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE \
+            bash "$NUKE" -q >/dev/null 2>&1) || true
+      fi
+    done <<< "$SUBMODULE_PATHS"
+    unset _sm_path _dirty NUKE
   fi
 fi
 

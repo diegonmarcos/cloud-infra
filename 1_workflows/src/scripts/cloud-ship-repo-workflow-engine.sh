@@ -161,6 +161,31 @@ do_deploy() {
             log "submodule: $line"
         done
         log "Synced submodules"
+
+        # Install read-only pre-commit hook in each submodule's gitdir.
+        # Submodules are read-only — commits inside them desync the parent
+        # gitlink. This hook hard-blocks any `git commit` from inside a
+        # submodule worktree. Source: cloud-submodule-readonly-pre-commit.sh.
+        RO_HOOK_SRC="$DIST_DIR/scripts/cloud-submodule-readonly-pre-commit.sh"
+        if [ -f "$RO_HOOK_SRC" ]; then
+            git -C "$REPO_ROOT" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | while read -r _key _path; do
+                [ -n "$_path" ] || continue
+                [ -d "$REPO_ROOT/$_path/.git" ] || [ -f "$REPO_ROOT/$_path/.git" ] || continue
+                _sm_hooks=$(git -C "$REPO_ROOT/$_path" rev-parse --git-path hooks 2>/dev/null)
+                [ -n "$_sm_hooks" ] || continue
+                # rev-parse may return relative path (relative to the submodule
+                # worktree). Normalize to absolute.
+                case "$_sm_hooks" in
+                    /*) _hooks_abs="$_sm_hooks" ;;
+                    *)  _hooks_abs="$REPO_ROOT/$_path/$_sm_hooks" ;;
+                esac
+                mkdir -p "$_hooks_abs"
+                cp -f "$RO_HOOK_SRC" "$_hooks_abs/pre-commit"
+                chmod +x "$_hooks_abs/pre-commit"
+                log "submodule '$_path' → installed read-only pre-commit"
+            done
+            unset _key _path _sm_hooks _hooks_abs
+        fi
     fi
 
     # Gitconfig → include in .git/config
