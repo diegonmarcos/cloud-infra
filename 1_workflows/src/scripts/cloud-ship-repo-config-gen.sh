@@ -37,9 +37,11 @@ cmd_config() {
         return 0
     fi
     # ── Path B (legacy fallback): cloud-data submodule with its own engine ──
+    # Workspace root: env override > /root/git default (CI mount path).
+    _ws="${WORKSPACE:-/root/git}"
     _cd_base="${CLOUD_DATA_DIR:-}"
     if [ -z "$_cd_base" ]; then
-        for _p in "$CLOUD_ROOT/2_configs/dist" "$(dirname "$CLOUD_ROOT")/cloud-data" "/root/git/cloud-data"; do
+        for _p in "$CLOUD_ROOT/2_configs/dist" "$(dirname "$CLOUD_ROOT")/cloud-data" "$_ws/cloud-data"; do
             [ -f "$_p/1_workflows/src/scripts/cloud-data-config.ts" ] && { _cd_base="$_p"; break; }
         done
     fi
@@ -48,7 +50,7 @@ cmd_config() {
     if [ -z "$_cd_base" ] || [ ! -f "$CD_MASTER" ]; then
         log "SKIP: neither 2_configs/build.sh nor cloud-data legacy engine found"
         log "  2_configs/build.sh:    $CLOUD_ROOT/2_configs/build.sh"
-        log "  legacy candidates:    $CLOUD_ROOT/2_configs/dist, $(dirname "$CLOUD_ROOT")/cloud-data, /root/git/cloud-data"
+        log "  legacy candidates:    $CLOUD_ROOT/2_configs/dist, $(dirname "$CLOUD_ROOT")/cloud-data, $_ws/cloud-data"
         return 1
     fi
     log "Using legacy cloud-data engine: $_cd_base"

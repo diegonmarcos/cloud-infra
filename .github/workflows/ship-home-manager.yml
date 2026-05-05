@@ -95,6 +95,10 @@ jobs:
         with:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
+      - name: Resolve builder image
+        if: steps.gate.outputs.skip != 'true'
+        uses: ./.github/actions/resolve-builder-image
+
       - name: Ship
         if: steps.gate.outputs.skip != 'true'
         # Transient VMs (Spot instances, preemptible, manually stopped) are
@@ -115,7 +119,9 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
+          # which reads III_unix/cb_containers-builders/build.json (master).
+          IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           # Write secrets to runner fs — compose mounts ~/.ssh and ~/.config/sops as :ro
           mkdir -p ~/.ssh && chmod 700 ~/.ssh

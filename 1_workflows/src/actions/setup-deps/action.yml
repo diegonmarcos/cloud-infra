@@ -25,13 +25,19 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Resolve image from III_unix/cb_containers-builders/build.json (master).
+    # Sister action so a single call site stays the source of truth; both
+    # CLOUD_CI_IMAGE and BUILDER_IMAGE env vars get set here for back-compat
+    # with downstream steps that read either name.
+    - name: Resolve builder image
+      uses: ./.github/actions/resolve-builder-image
+
     - name: Pull cloud-builder image
       shell: bash
       run: |
-        CI_IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
-        if docker pull "$CI_IMAGE" 2>/dev/null; then
-          echo "CLOUD_CI_IMAGE=$CI_IMAGE" >> "$GITHUB_ENV"
-          echo "Pulled cloud-builder image — all builds run inside this container"
+        if docker pull "$BUILDER_IMAGE" 2>/dev/null; then
+          echo "CLOUD_CI_IMAGE=$BUILDER_IMAGE" >> "$GITHUB_ENV"
+          echo "Pulled cloud-builder image $BUILDER_IMAGE — all builds run inside this container"
         else
           echo "::error::cloud-builder image not available — cannot build"
           exit 1

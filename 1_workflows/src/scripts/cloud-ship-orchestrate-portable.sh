@@ -48,6 +48,17 @@ done
 REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT" || die "Cannot cd to $REPO_ROOT"
 
+# ── Resolve cloud-builder image from unix master ──────────────
+# Source of truth: III_unix/cb_containers-builders/build.json (.images key).
+# Never paste the literal — it drifts when unix renames the image.
+resolve_builder_image() {
+  _master="$REPO_ROOT/III_unix/cb_containers-builders/build.json"
+  [ -f "$_master" ] || die "III_unix/cb_containers-builders/build.json not found — run 'git submodule update --init III_unix'"
+  _ghcr=$(jq -r '.images["cloud-builder-x-deb-nixhm"].ghcr // empty' "$_master" 2>/dev/null)
+  [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] || die "No .images['cloud-builder-x-deb-nixhm'].ghcr in $_master"
+  printf '%s:latest' "$_ghcr"
+}
+
 # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
 GHA_CONFIG=""
 for _p in \
@@ -180,6 +191,7 @@ ship_vm() {
     # Run inside cloud-builder container (GHA / CI)
     _trace_dir="${TRACE_DIR:-$(mktemp -d)}"
     mkdir -p "$_trace_dir"
+    _builder_image=$(resolve_builder_image)
 
     docker run --rm \
       -v "$_trace_dir:/traces" \
@@ -198,7 +210,7 @@ ship_vm() {
       -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-diegonmarcos/cloud}" \
       -e GITHUB_RUN_ID="${GITHUB_RUN_ID:-local}" \
       -e GITHUB_SHA="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
-      ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest \
+      "$_builder_image" \
       bash -c 'mkdir -p ~/.ssh && ssh-keyscan github.com >>~/.ssh/known_hosts 2>/dev/null && git clone --depth 2 --recurse-submodules https://github.com/$GITHUB_REPOSITORY.git /workspace && cd /workspace && git submodule update --remote && bash .github/workflows/scripts/cloud-ship-ci-builder.sh ship $SSH_ALIAS 2>&1'
   else
     # Run directly (local / Dagu / any runner with nix+ssh)

@@ -46,6 +46,45 @@ if [ -n "$FORCED" ]; then
   exit 1
 fi
 
+# ── SUBMODULE GITLINK AUTO-UNSTAGE ───────────────────────
+# Submodule pointer changes (mode 160000) belong in the submodule's
+# own repo; the parent repo gets bumped via auto-sync GHA, not by
+# manual commits. Auto-unstage rather than block so the rest of the
+# commit can proceed. Data-driven from .gitmodules — no hardcoded
+# names, portable across any repo.
+if [ -f .gitmodules ]; then
+  SUBMODULE_PATHS=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}')
+  if [ -n "$SUBMODULE_PATHS" ]; then
+    UNSTAGED_SUBS=""
+    while IFS= read -r _sm_path; do
+      [ -n "$_sm_path" ] || continue
+      while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        case "$f" in
+          "$_sm_path"|"$_sm_path"/*)
+            UNSTAGED_SUBS="${UNSTAGED_SUBS}${f}"$'\n'
+            git reset -q HEAD -- "$f"
+            ;;
+        esac
+      done <<< "$STAGED"
+    done <<< "$SUBMODULE_PATHS"
+    unset _sm_path
+
+    if [ -n "$UNSTAGED_SUBS" ]; then
+      echo "──────────────────────────────────────────────────" >&2
+      echo "INFO: auto-unstaged submodule pointers (sync via GHA)" >&2
+      echo "──────────────────────────────────────────────────" >&2
+      echo "$UNSTAGED_SUBS" | sort -u | sed '/^$/d' | while IFS= read -r f; do
+        echo "  - $f" >&2
+      done
+      echo "Continuing with remaining staged changes." >&2
+      echo "──────────────────────────────────────────────────" >&2
+      STAGED=$(git diff --cached --name-only)
+      [ -z "$STAGED" ] && exit 0
+    fi
+  fi
+fi
+
 add_blocked() {
   local matches
   matches=$(echo "$STAGED" | eval "$1" || true)
@@ -110,19 +149,6 @@ add_blocked "grep -iE '\.tfvars$' | grep -v '\.example$'"
 
 # P15: terraform.tfvars specifically
 add_blocked "grep -E '(^|/)terraform\.tfvars$'"
-
-# ── Submodule paths (read-only, never commit) ──────────────
-
-# P16: submodule directories — commits go to their own repos.
-# Data-driven: read submodule paths from .gitmodules so this hook
-# is portable across any repo without hardcoding submodule names.
-if [ -f .gitmodules ]; then
-    while read -r _sm_key _sm_path; do
-        [ -n "$_sm_path" ] || continue
-        add_blocked "grep -E '^${_sm_path}(/|\$)'"
-    done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null)
-    unset _sm_key _sm_path
-fi
 
 # P17: dist layout v2 gitignored sub-dirs
 add_blocked "grep -E 'dist/(secrets|sensitive|\.build)/'"

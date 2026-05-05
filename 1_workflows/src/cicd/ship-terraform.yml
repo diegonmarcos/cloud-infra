@@ -64,6 +64,9 @@ jobs:
         with:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
+      - name: Resolve builder image
+        uses: ./.github/actions/resolve-builder-image
+
       # GCP auth — writes a service-account JSON to $GOOGLE_APPLICATION_CREDENTIALS
       # on the runner. Mounted into cloud-builder below at a stable path.
       - name: Authenticate GCP
@@ -102,7 +105,9 @@ jobs:
         run: |
           set -eu
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
+          # which reads III_unix/cb_containers-builders/build.json (master).
+          IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           # Pull the canonical compose.yaml from the image, then run terraform
           # inside it. Engine script (cloud-ship-terraform-deploy-apply.sh) is
