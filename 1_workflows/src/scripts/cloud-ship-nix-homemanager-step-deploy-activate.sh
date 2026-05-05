@@ -312,10 +312,29 @@ step_compose() {
             if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
                 log "  pass 3 (nix GC): collecting orphan /nix/store paths"
                 NIX_GC_SCRIPT='#!/bin/bash
-NIX_STORE_BIN=$(ls -1d /nix/store/*-nix-2.*/bin/nix-store 2>/dev/null | grep -v -- "-man" | sort -V | tail -1)
+# Prefer profile-wrapper bins (env baked in via patchelf rpath), fallback to
+# raw store binary with LD_LIBRARY_PATH from the same -nix-2.x package lib.
+# Direct invocation of /nix/store/*-nix-2.*/bin/nix-store fails with
+# `libseccomp.so.2: cannot open shared object file` because sudo strips
+# the env that would normally let the dynamic linker find it.
+NIX_STORE_BIN=""
+for _candidate in /nix/var/nix/profiles/default/bin/nix-store /home/'"$HM_USER"'/.nix-profile/bin/nix-store /nix/var/nix/profiles/per-user/'"$HM_USER"'/profile/bin/nix-store /nix/var/nix/profiles/per-user/root/profile/bin/nix-store; do
+  if [ -x "$_candidate" ]; then NIX_STORE_BIN="$_candidate"; break; fi
+done
+if [ -z "$NIX_STORE_BIN" ]; then
+  # Fallback: raw store binary + LD_LIBRARY_PATH derived from same package
+  NIX_STORE_BIN=$(ls -1d /nix/store/*-nix-2.*/bin/nix-store 2>/dev/null | grep -v -- "-man" | sort -V | tail -1)
+  if [ -x "$NIX_STORE_BIN" ]; then
+    NIX_LIB_DIR="$(dirname "$(dirname "$NIX_STORE_BIN")")/lib"
+    # Discover libseccomp from /nix/store
+    LIBSECCOMP_DIR=$(ls -1d /nix/store/*-libseccomp-*/lib 2>/dev/null | sort -V | tail -1)
+    export LD_LIBRARY_PATH="$NIX_LIB_DIR:$LIBSECCOMP_DIR:${LD_LIBRARY_PATH:-}"
+    echo "[hm-preflight] LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+  fi
+fi
 if [ -x "$NIX_STORE_BIN" ]; then
   echo "[hm-preflight] running $NIX_STORE_BIN --gc"
-  sudo "$NIX_STORE_BIN" --gc 2>&1 | tail -3
+  sudo LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}" "$NIX_STORE_BIN" --gc 2>&1 | tail -5
 else
   echo "[hm-preflight] no nix-store binary found"
 fi'
