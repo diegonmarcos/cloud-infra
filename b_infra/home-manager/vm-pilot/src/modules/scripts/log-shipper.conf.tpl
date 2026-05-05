@@ -55,7 +55,8 @@
     Format           json
     Json_Date_Key    _timestamp
     Json_Date_Format iso8601
-    Header           Authorization Bearer {ZO_INGEST_TOKEN}
+    http_User        {ZO_USER}
+    http_Passwd      {ZO_PASS}
     Retry_Limit      3
     net.keepalive    on
 
@@ -68,7 +69,8 @@
     Format           json
     Json_Date_Key    _timestamp
     Json_Date_Format iso8601
-    Header           Authorization Bearer {ZO_INGEST_TOKEN}
+    http_User        {ZO_USER}
+    http_Passwd      {ZO_PASS}
     Retry_Limit      3
     net.keepalive    on
 
