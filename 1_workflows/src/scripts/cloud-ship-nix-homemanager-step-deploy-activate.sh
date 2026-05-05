@@ -265,7 +265,26 @@ step_compose() {
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
             : "${FREE_KB:=0}"
             FREE_GB=$(( FREE_KB / 1024 / 1024 ))
-            log "  after cleanup: ${FREE_GB}GB free"
+            log "  after cleanup pass 1: ${FREE_GB}GB free"
+
+            # Pass 2 (aggressive): if still under threshold, prune ALL unused
+            # images regardless of age. "Unused" = no container references it
+            # (running OR stopped). Running containers' images stay; everything
+            # else — old HM image versions, prior pulls — is fair game.
+            # Triggered ONLY when pass 1 left us short, so steady-state VMs
+            # are unaffected.
+            if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
+                log "  pass 2 (aggressive): pruning all unused images + nix GC roots"
+                ssh_vm "curl -sf --max-time 120 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune' >/dev/null 2>&1 || true; \
+                        sudo find /nix/var/nix/gcroots/auto -maxdepth 1 -type l -mtime +7 -delete 2>/dev/null || true; \
+                        sudo find /var/cache -mindepth 2 -type f -atime +14 -delete 2>/dev/null || true; \
+                        sudo find /var/backups/evidence -maxdepth 1 -mindepth 1 -type d -mtime +3 -exec rm -rf {} + 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+                FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
+                : "${FREE_KB:=0}"
+                FREE_GB=$(( FREE_KB / 1024 / 1024 ))
+                log "  after cleanup pass 2: ${FREE_GB}GB free"
+            fi
+
             if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
                 log "ERROR: $DEPLOY_HOST still under disk threshold (${FREE_GB}GB < ${MIN_FREE_GB}GB)"
                 log "       activation would fail with ENOSPC at nix-build mkdir."
