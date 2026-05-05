@@ -44,6 +44,7 @@ in {
     # ── Infra
     ./infra/shell-path.nix
     ./infra/system-cleanup.nix
+    ./infra/prune-maintenance.nix
 
     # ── Packages
     ./packages/node-npm-deps.nix
