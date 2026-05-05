@@ -84,22 +84,17 @@ confirm() {
     [ "$answer" = "y" ] || [ "$answer" = "Y" ]
 }
 
-# Install nix packages — shell (ephemeral) or profile (persistent)
+# Install nix packages — ephemeral (shell-style), never via `nix profile install`.
+# The profile branch was removed 2026-05-05: zero consumers ever set
+# DEPS_NIX_METHOD=profile (default was always "shell"), and `nix profile install`
+# violates the "no host-state mutation" rule that applies to every other path
+# in this engine. If you need persistence, declare the dep in a flake.
 nix_install() {
-    case "$DEPS_NIX_METHOD" in
-        profile)
-            log "Nix (profile): installing $*"
-            nix profile install $*
-            ;;
-        shell|*)
-            log "Nix (shell): adding $*"
-            # Add to current PATH via nix shell (ephemeral, no profile pollution)
-            for pkg in $*; do
-                pkg_path=$(nix build --no-link --print-out-paths "$pkg" 2>/dev/null) || continue
-                export PATH="$pkg_path/bin:$PATH"
-            done
-            ;;
-    esac
+    log "Nix (shell): adding $*"
+    for pkg in $*; do
+        pkg_path=$(nix build --no-link --print-out-paths "$pkg" 2>/dev/null) || continue
+        export PATH="$pkg_path/bin:$PATH"
+    done
 }
 
 # Check what's missing — prints status, returns 1 if anything missing
