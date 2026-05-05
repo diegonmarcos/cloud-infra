@@ -104,20 +104,29 @@ log() { printf '[hm-activate] %s\n' "$1"; }
 # establishes the hard links via .links/ later. Plus fail-loud explicit
 # error handling — a real cp failure now aborts and is visible.
 log "Copying nix store paths to host..."
-COPIED=0; SKIPPED=0; FAILED=0
+COPIED=0; SKIPPED=0; FAILED=0; REPAIRED=0
 for p in /nix/store/*; do
     [ ! -e "$p" ] && continue
     base=$(basename "$p")
-    if [ -e "$HOST/nix/store/$base" ]; then
-        SKIPPED=$((SKIPPED + 1))
-        continue
+    HOST_PATH="$HOST/nix/store/$base"
+    # Skip ONLY if host has a non-empty path. A partial path from a prior
+    # failed ship would otherwise be silently kept and break activation.
+    if [ -e "$HOST_PATH" ]; then
+        if [ -d "$HOST_PATH" ] && [ -z "$(ls -A "$HOST_PATH" 2>/dev/null)" ]; then
+            # empty dir — recopy
+            rm -rf "$HOST_PATH"
+            REPAIRED=$((REPAIRED + 1))
+        else
+            SKIPPED=$((SKIPPED + 1))
+            continue
+        fi
     fi
-    if cp -aR --no-preserve=links "$p" "$HOST/nix/store/$base" 2>/dev/null; then
+    if cp -aR --no-preserve=links "$p" "$HOST_PATH" 2>/dev/null; then
         COPIED=$((COPIED + 1))
     else
         # Retry without any link preservation — full content copy.
-        rm -rf "$HOST/nix/store/$base" 2>/dev/null
-        if cp -rL "$p" "$HOST/nix/store/$base" 2>/dev/null; then
+        rm -rf "$HOST_PATH" 2>/dev/null
+        if cp -rL "$p" "$HOST_PATH" 2>/dev/null; then
             COPIED=$((COPIED + 1))
         else
             FAILED=$((FAILED + 1))
@@ -125,11 +134,26 @@ for p in /nix/store/*; do
         fi
     fi
 done
-log "Store paths: $COPIED copied, $SKIPPED skipped (already on host), $FAILED failed"
+log "Store paths: $COPIED copied, $SKIPPED skipped (already on host), $REPAIRED empty repaired, $FAILED failed"
 # Sanity: the activation path MUST be on host before we proceed.
+# If the per-path loop missed it (e.g. cp returned 0 but produced no output
+# under transient disk pressure, or the path existed as a stale partial from
+# a prior failed ship), force a fresh copy here as a last resort.
+if [ -n "${HM_ACTIVATION_PATH:-}" ] && [ ! -e "$HOST$HM_ACTIVATION_PATH" ]; then
+    log "WARN: activation path missing on host after main loop — forcing copy"
+    rm -rf "$HOST$HM_ACTIVATION_PATH" 2>/dev/null
+    if cp -aR --no-preserve=links "$HM_ACTIVATION_PATH" "$HOST$HM_ACTIVATION_PATH"; then
+        log "Forced copy succeeded: $HM_ACTIVATION_PATH"
+    elif cp -rL "$HM_ACTIVATION_PATH" "$HOST$HM_ACTIVATION_PATH"; then
+        log "Forced copy (deref) succeeded: $HM_ACTIVATION_PATH"
+    fi
+fi
 if [ -n "${HM_ACTIVATION_PATH:-}" ] && [ ! -e "$HOST$HM_ACTIVATION_PATH" ]; then
     log "ERROR: activation path missing on host: $HM_ACTIVATION_PATH"
     log "       this is unrecoverable — the host cannot run the activation."
+    log "       Diagnostic: container source: $(ls -la "$HM_ACTIVATION_PATH" 2>&1 | head -3)"
+    log "                   host destination: $(ls -la "$HOST$HM_ACTIVATION_PATH" 2>&1 | head -3)"
+    log "                   host disk: $(df -h "$HOST" | tail -1)"
     exit 1
 fi
 [ "$FAILED" -gt 0 ] && log "ERROR: $FAILED store paths failed — activation may be incomplete" && exit 1
