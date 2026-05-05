@@ -53,6 +53,7 @@ in {
     ./agents/journal-ntfy.nix
     ./agents/data-publisher.nix
     ./agents/evidence-collector.nix
+    ./agents/log-shipper.nix
 
     # ── Shared user config
     (import ./shared/bash-config.nix { inherit vmName; })
