@@ -1,0 +1,122 @@
+{
+  "name": "nixhm-sudo-gcp-proxy",
+  "description": "Home Manager system image for gcp-proxy (Caddy, Authelia, Vaultwarden, ntfy, Hickory DNS)",
+  "vm": {
+    "id": "gcp-E2-f_0",
+    "alias": "gcp-proxy",
+    "provider": "gcp",
+    "arch": "x86_64-linux",
+    "resources": {
+      "cpus": 1,
+      "ram_mb": 1024,
+      "disk_gb": 30
+    },
+    "network": {
+      "public_ip": "35.226.147.64",
+      "wg_ip": "10.0.0.1",
+      "wg_port": 51820,
+      "wg_role": "hub",
+      "rescue_port": 2200
+    }
+  },
+  "hm": {
+    "user": "diego",
+    "config": "diego@gcp-proxy",
+    "delivery": "docker",
+    "image": "ghcr.io/diegonmarcos/nixhm-sudo-gcp-proxy",
+    "platform": "linux/amd64",
+    "remote_build": false
+  },
+  "firewall": {
+    "public_ports": [
+      {
+        "port": 22,
+        "proto": "tcp",
+        "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
+        "source": "0.0.0.0/0",
+        "owned_by": "system"
+      },
+      {
+        "port": 80,
+        "proto": "tcp",
+        "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS (Caddy)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "udp",
+        "desc": "QUIC (Caddy)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 993,
+        "proto": "tcp",
+        "desc": "IMAPS (Caddy L4 → oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 465,
+        "proto": "tcp",
+        "desc": "SMTPS (Caddy L4 → oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 587,
+        "proto": "tcp",
+        "desc": "SMTP Submission (Caddy L4 → oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 2443,
+        "proto": "tcp",
+        "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 2465,
+        "proto": "tcp",
+        "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 2587,
+        "proto": "tcp",
+        "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 2993,
+        "proto": "tcp",
+        "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      }
+    ]
+  },
+  "dashboard": {
+    "dns": "gcp-proxy.app",
+    "port": 7680
+  },
+  "deploy": {
+    "host": "gcp-proxy",
+    "remote_path": "~/.config/home-manager"
+  },
+  "build": {
+    "headers_enforced": true
+  }
+}
