@@ -195,24 +195,28 @@ step_compose() {
             #      with no running/stopped container referencing them AND last
             #      used > 30 days ago — safe for steady-state VMs, cleans the
             #      historical pulls that accumulate over months.
-            #   6. orphan /var/lib/containerd content store — ONLY when the
-            #      containerd systemd unit isn't installed/known (service file
-            #      doesn't exist). Surfaced 2026-05-05 (oci-mail incident):
-            #      12 GB of leftover blobs in
-            #      /var/lib/containerd/io.containerd.content.v1.content/
-            #      from a prior containerd install that's been removed; modern
-            #      docker uses an embedded containerd path inside /var/lib/docker
-            #      and never references /var/lib/containerd. The
-            #      `systemctl cat containerd.service` evidence-gate ensures we
-            #      only delete when no installed unit could possibly own the data.
-            #   7. journalctl --vacuum-size=50M
-            #   8. rm /var/disk-reserve/ballast.bin (engineered safety net)
+            #   6. journalctl --vacuum-size=50M
+            #   7. rm /var/disk-reserve/ballast.bin (engineered safety net)
+            #
+            # REVERTED 2026-05-05: an "orphan /var/lib/containerd" cleanup step
+            # was added between (5) and (6) on the assumption that the absence
+            # of a `containerd.service` systemd unit meant the directory was
+            # leftover from a removed install. That assumption is FALSE on
+            # modern docker installs: dockerd ships an embedded containerd
+            # binary that does NOT register a separate systemd unit but still
+            # uses /var/lib/containerd as its content store. The cleanup
+            # destroyed docker's image cache and forced a re-pull on every
+            # ship — directly counterproductive on the disk-pressure VMs the
+            # cleanup was meant to help. Real fix for runaway containerd
+            # content store: docker's own /images/prune (steps 3+5 above) GCs
+            # via the containerd content reference graph; if that's not
+            # reclaiming, the issue is upstream (manifest staleness) and
+            # outside engine scope.
             ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/build/prune?all=true' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22until%22%3A%5B%22720h%22%5D%7D' >/dev/null 2>&1 || true; \
-                    sh -c 'if ! systemctl cat containerd.service >/dev/null 2>&1 && [ -d /var/lib/containerd/io.containerd.content.v1.content ]; then echo \"[pre-flight] orphan containerd detected (no service unit) — pruning content store\"; sudo rm -rf /var/lib/containerd 2>/dev/null || true; fi' || true; \
                     sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
                     sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
