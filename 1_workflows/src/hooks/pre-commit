@@ -173,6 +173,9 @@ while IFS= read -r f; do
         */.secrets-hash*|*/.secrets-env-var-names*) continue ;;
         *secrets-env-var-names*.json|*cloud-data-secrets-env-var-names.json) continue ;;
         *secrets-subst.nix) continue ;;
+        # Git metadata files are never secret containers, even when their
+        # path includes a "secret*" segment (e.g. 3_secrets/.gitignore).
+        */.gitignore|.gitignore|*/.gitkeep|.gitkeep|*/.gitattributes|.gitattributes|*/.gitmodules|.gitmodules) continue ;;
         # GitHub Actions workflow YAMLs (engine paths): named-about-secrets
         # files here (e.g. lint-secrets-coverage.yml) define CI lint/audit
         # jobs — never secret containers. Required GHA shape: on: + jobs:.
