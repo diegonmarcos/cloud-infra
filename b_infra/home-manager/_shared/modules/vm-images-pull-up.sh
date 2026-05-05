@@ -93,7 +93,7 @@ if [ -n "$MANIFEST" ]; then
       ENV_FLAG=""
       [ -f "$COMPOSE_PATH/.secrets" ] && ENV_FLAG="--env-file $COMPOSE_PATH/.secrets"
       log "[$IDX] PULL IMAGES: $NAME"
-      if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do ionice -c3 nice -n19 docker pull "$img" 2>/dev/null || true; done); then
+      if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
         PULL_OK=$((PULL_OK + 1))
       else
         PULL_FAIL=$((PULL_FAIL + 1))
@@ -164,7 +164,7 @@ else
     ENV_FLAG=""
     [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file $dir/.secrets"
     log "[$IDX/$TOTAL] PULL: $name"
-    if (cd "$dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do ionice -c3 nice -n19 docker pull "$img" 2>/dev/null || true; done); then
+    if (cd "$dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
       PULL_OK=$((PULL_OK + 1))
     else
       PULL_FAIL=$((PULL_FAIL + 1))
