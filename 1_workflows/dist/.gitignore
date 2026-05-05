@@ -26,6 +26,14 @@
 **/.secrets
 .secrets.d/
 **/.secrets.d/
+## .secrets.json — JSON dumps of decrypted env (build engine output).
+## NOT matched by *.secrets glob (which only matches files literally
+## ending in .secrets, not .secrets.json). Found 2026-05-05 leaking
+## AUTHELIA_CLI_SECRET / CF_API_TOKEN / NTFY_ADMIN_AUTH from dist/.
+.secrets.json
+*.secrets.json
+**/.secrets.json
+**/dist/.secrets.json
 ## NOTE: secrets.yaml (+ .new / .draft / .bak variants) are ALLOWED
 ## to be tracked — but ONLY when sops-encrypted. The pre-commit hook's
 ## content-scan blocks any secret-named file lacking `ENC[AES...]` or
