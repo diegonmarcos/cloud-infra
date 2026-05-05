@@ -1,15 +1,36 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-05T17:36:42.154Z",
-  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/ntfy-acl",
-  "base_url": "https://rss.diegonmarcos.com",
-  "auth_default_access": "read-write",
-  "users": [],
-  "all_topics": "",
-  "categories": {},
-  "topics": {},
+  "vm": "oci-analytics",
+  "vm_id": "oci-E2-f_1",
+  "services": [
+    {
+      "name": "dagu",
+      "dir": "bc-obs_dagu",
+      "compose_path": "/opt/containers/dagu",
+      "images": [
+        "ghcr.io/diegonmarcos/dagu:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "dozzle",
+      "dir": "bc-obs_dozzle",
+      "compose_path": "/opt/containers/dozzle",
+      "images": [
+        "amir20/dozzle:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "sauron-forwarder",
+      "dir": "bc-obs_sauron-forwarder",
+      "compose_path": "/opt/containers/sauron-forwarder",
+      "images": [],
+      "has_docker_build": true
+    }
+  ],
   "_meta": {
-    "generated_at": "2026-05-05T17:36:42.217Z",
+    "generated_at": "2026-05-05T17:36:42.172Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
