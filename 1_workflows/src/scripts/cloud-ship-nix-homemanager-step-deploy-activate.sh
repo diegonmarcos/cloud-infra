@@ -78,9 +78,15 @@ else
 fi
 
 # ── Step 2: Clean up any previous hm-activate container ──
+# Kill EVERY hm-activate-* container, not just the same-PID one. Orphans
+# from prior failed/interrupted ships otherwise race the new one for
+# /nix/store writes and corrupt the cp -aR (oci-mail incident 2026-05-06).
 CONTAINER_NAME="hm-activate-$$"
 if [ "$USE_CLI" = true ]; then
-    docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+    OLD_IDS=$(docker ps -a --filter name=hm-activate --format '{{.ID}}' 2>/dev/null || true)
+    for _cid in $OLD_IDS; do
+        docker rm -f "$_cid" 2>/dev/null || true
+    done
 else
     OLD_IDS=$(dock_api GET '/containers/json?all=true&filters={"name":["hm-activate"]}' 2>/dev/null \
         | grep -o '"Id":"[^"]*"' | sed 's/"Id":"//;s/"//' || true)
