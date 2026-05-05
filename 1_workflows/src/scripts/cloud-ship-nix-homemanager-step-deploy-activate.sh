@@ -273,9 +273,18 @@ step_compose() {
             # else — old HM image versions, prior pulls — is fair game.
             # Triggered ONLY when pass 1 left us short, so steady-state VMs
             # are unaffected.
+            #
+            # KEY DETAIL: Docker's /images/prune defaults to dangling-only.
+            # To prune ALL unused (including tagged), pass dangling=false:
+            #   filters={"dangling":["false"]}
+            #     URL-encoded: %7B%22dangling%22%3A%5B%22false%22%5D%7D
+            # This DOES catch the prior failed-ship HM image (tagged
+            # ghcr.io/diegonmarcos/nixhm-sudo-<vm>:latest) when no exited
+            # activation container still references it.
             if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
-                log "  pass 2 (aggressive): pruning all unused images + nix GC roots"
-                ssh_vm "curl -sf --max-time 120 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune' >/dev/null 2>&1 || true; \
+                log "  pass 2 (aggressive): pruning ALL unused images (incl. tagged) + gcroots + caches"
+                ssh_vm "curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/containers/prune?filters=%7B%22until%22%3A%5B%221m%22%5D%7D' >/dev/null 2>&1 || true; \
+                        curl -sf --max-time 180 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%5B%22false%22%5D%7D' >/dev/null 2>&1 || true; \
                         sudo find /nix/var/nix/gcroots/auto -maxdepth 1 -type l -mtime +7 -delete 2>/dev/null || true; \
                         sudo find /var/cache -mindepth 2 -type f -atime +14 -delete 2>/dev/null || true; \
                         sudo find /var/backups/evidence -maxdepth 1 -mindepth 1 -type d -mtime +3 -exec rm -rf {} + 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
