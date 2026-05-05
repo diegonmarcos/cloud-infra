@@ -88,6 +88,7 @@ jobs:
                   [ -f "$_p" ] && { _CONS="$_p"; break; }
               done
               if [ -n "$_CONS" ]; then
+                  echo "::warning::build-gha.json not found; deriving from $_CONS — run 2_configs/build.sh to materialise the canonical file."
                   GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
                   jq '
                     ._gha as $g
@@ -95,17 +96,9 @@ jobs:
                     | $g
                     | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
                   ' "$_CONS" > "$GHA_CONFIG"
-              else
-                  for _p in \
-                      "/app/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
-                      [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
-                  done
               fi
           fi
-          [ -n "$GHA_CONFIG" ] || { echo "FATAL: build-gha.json (or legacy fallbacks) not found" >&2; exit 1; }
+          [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 2_configs/build.sh" >&2; exit 1; }
 
           # ── Resolve args from GHA inputs ──
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -223,6 +216,9 @@ jobs:
           # Avoid permission churn on cache restore — cloud-builder runs as root
           chmod -R a+rwX "$HOME/.cargo" "${{ runner.temp }}/cargo-target" 2>/dev/null || true
 
+      - name: Resolve builder image
+        uses: ./.github/actions/resolve-builder-image
+
       - name: Resolve SSH credentials
         id: ssh
         run: |
@@ -246,6 +242,7 @@ jobs:
                   [ -f "$_p" ] && { _CONS="$_p"; break; }
               done
               if [ -n "$_CONS" ]; then
+                  echo "::warning::build-gha.json not found; deriving from $_CONS — run 2_configs/build.sh to materialise the canonical file."
                   GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
                   jq '
                     ._gha as $g
@@ -253,17 +250,9 @@ jobs:
                     | $g
                     | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
                   ' "$_CONS" > "$GHA_CONFIG"
-              else
-                  for _p in \
-                      "/app/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/2_configs/dist/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/cloud-data/cloud-data-gha-config.json" \
-                      "${CLOUD_ROOT:-$PWD}/cloud-data-gha-config.json"; do
-                      [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
-                  done
               fi
           fi
-          [ -n "$GHA_CONFIG" ] || { echo "FATAL: build-gha.json (or legacy fallbacks) not found" >&2; exit 1; }
+          [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 2_configs/build.sh" >&2; exit 1; }
           VM="${{ matrix.vm }}"
           case "$VM" in
             gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
@@ -301,7 +290,9 @@ jobs:
           TRACE_DIR: ${{ runner.temp }}/traces
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
+          # which reads III_unix/cb_containers-builders/build.json (master).
+          IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           mkdir -p "$TRACE_DIR"
           # Write secrets to runner filesystem — compose mounts them :ro into container

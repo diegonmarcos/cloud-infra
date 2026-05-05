@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-02T13:24:36.737Z",
+    "generated_at": "2026-05-05T13:45:53.294Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-02T13:24:36.692Z",
+  "_generated": "2026-05-05T13:45:53.233Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -368,10 +368,10 @@
         "cloud-cgc-mcp",
         "cloud-spec",
         "dbgate",
-        "lgtm",
         "matomo",
         "news-gdelt",
         "ntfy",
+        "openobserve",
         "umami",
         "cloud-builder-x",
         "backup-borg",
@@ -379,7 +379,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 52
+      "container_count": 49
     },
     "gcp-T4-p_0": {
       "ip": "34.173.227.250",
@@ -5186,180 +5186,6 @@
         "healthcheck_paths": []
       }
     },
-    "lgtm": {
-      "category": "tools",
-      "vm": "oci-A1-f_0",
-      "folder": "bc-obs_lgtm",
-      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
-      "enabled": true,
-      "domain": "grafana.diegonmarcos.com",
-      "port": 3200,
-      "dns": "grafana.app",
-      "upstream": "10.0.0.6:3200",
-      "containers": {
-        "grafana": {
-          "container_name": "lgtm_grafana",
-          "image": "grafana/grafana:latest",
-          "port": 3200,
-          "port_env": "GF_SERVER_HTTP_PORT",
-          "dns": "grafana.app",
-          "public": true,
-          "proxy": {
-            "domain": "grafana.diegonmarcos.com",
-            "auth": "two_factor"
-          },
-          "healthcheck": "wget -q --spider http://localhost:3200/api/health",
-          "monitoring": {
-            "tls_check": true
-          },
-          "volumes": [
-            "grafana_data:/var/lib/grafana"
-          ],
-          "env_file": false,
-          "depends_on": [
-            "loki"
-          ],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "sqlite",
-              "path": "/var/lib/grafana/grafana.db"
-            }
-          ]
-        },
-        "loki": {
-          "container_name": "lgtm_loki",
-          "image": "grafana/loki:latest",
-          "port": 3110,
-          "port_env": null,
-          "dns": "lgtm-loki.app",
-          "public": false,
-          "healthcheck": "busybox wget -qO /dev/null http://127.0.0.1:3110/ready",
-          "volumes": [
-            "loki_data:/loki",
-            "/home/ubuntu/bin/busybox-static:/usr/local/bin/busybox:ro"
-          ],
-          "env_file": false,
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "boltdb",
-              "path": "/loki/index"
-            }
-          ]
-        },
-        "tempo": {
-          "container_name": "lgtm_tempo",
-          "image": "grafana/tempo:2.7.2",
-          "port": 3210,
-          "port_env": null,
-          "dns": "lgtm-tempo.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [
-            "tempo_data:/var/tempo",
-            "./config/tempo.yaml:/etc/tempo/tempo.yaml:ro"
-          ],
-          "env_file": false,
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "wal",
-              "path": "/var/tempo"
-            }
-          ]
-        },
-        "mimir": {
-          "container_name": "lgtm_mimir",
-          "image": "grafana/mimir:latest",
-          "port": 9009,
-          "port_env": null,
-          "dns": "lgtm-mimir.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [
-            "mimir_data:/data",
-            "./config/mimir.yaml:/etc/mimir/mimir.yaml:ro"
-          ],
-          "env_file": false,
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "tsdb",
-              "path": "/var/mimir"
-            }
-          ]
-        }
-      },
-      "container_names": [
-        "lgtm_grafana",
-        "lgtm_loki",
-        "lgtm_tempo",
-        "lgtm_mimir"
-      ],
-      "all_ports": [
-        "3200",
-        "3110",
-        "3210",
-        "9009"
-      ],
-      "all_dns": [
-        "grafana.app",
-        "lgtm-loki.app",
-        "lgtm-tempo.app",
-        "lgtm-mimir.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "domain": "grafana.diegonmarcos.com",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "grafana": 3200,
-        "loki": 3110,
-        "mimir": 9009,
-        "tempo": 3210
-      },
-      "health": {
-        "path": "/"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/api/docs/swagger",
-        "api_url": "https://grafana.diegonmarcos.com/api/docs/swagger",
-        "healthcheck_paths": [],
-        "type": "openapi",
-        "spec_path": "/api/docs/swagger",
-        "base_path": "/grafana",
-        "display_name": "Grafana HTTP API",
-        "description": "Observability stack with Grafana UI and REST API, backed by Loki logs, Mimir metrics, and Tempo traces.",
-        "auth": "none"
-      },
-      "secret_env_vars": [
-        "GF_SECURITY_ADMIN_USER",
-        "GF_SECURITY_ADMIN_PASSWORD"
-      ]
-    },
     "matomo": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5676,6 +5502,104 @@
       "secret_env_vars": [
         "NTFY_ADMIN_PASSWORD",
         "NTFY_USER_PASSWORD"
+      ]
+    },
+    "openobserve": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "bc-obs_openobserve",
+      "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+      "enabled": true,
+      "domain": "grafana.diegonmarcos.com",
+      "port": 5080,
+      "dns": "openobserve.app",
+      "upstream": "10.0.0.6:5080",
+      "containers": {
+        "app": {
+          "container_name": "openobserve",
+          "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+          "port": 5080,
+          "port_env": "ZO_HTTP_PORT",
+          "dns": "openobserve.app",
+          "public": true,
+          "proxy": {
+            "type": "domain",
+            "domain": "grafana.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": null,
+          "monitoring": {
+            "tls_check": true
+          },
+          "volumes": [
+            "openobserve_data:/data"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "512m"
+          },
+          "read_only": false,
+          "port_format": "colon",
+          "protocol": "http",
+          "embedded_dbs": [
+            {
+              "engine": "parquet",
+              "path": "/data"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "openobserve"
+      ],
+      "all_ports": [
+        "5080"
+      ],
+      "all_dns": [
+        "openobserve.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "domain",
+          "domain": "grafana.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 5080
+      },
+      "health": {
+        "path": "/healthz"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "upstream_image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/swagger/index.html",
+        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/swagger/index.html",
+        "base_path": "/api",
+        "display_name": "OpenObserve HTTP API",
+        "description": "Logs/metrics/traces/RUM ingest + SQL query API. OTLP-compatible. Auth via Bearer tokens (issued by OO admin).",
+        "auth": "bearer"
+      },
+      "secret_env_vars": [
+        "ZO_ROOT_USER_EMAIL",
+        "ZO_ROOT_USER_PASSWORD",
+        "ZO_INGEST_TOKEN"
       ]
     },
     "sauron-forwarder": {

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-02T13:24:36.694Z",
+    "generated_at": "2026-05-05T13:45:53.234Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-02T13:24:36.677Z",
+  "_generated": "2026-05-05T13:45:53.216Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -299,8 +299,8 @@
     },
     {
       "domain": "grafana.diegonmarcos.com",
-      "upstream": "10.0.0.6:3200",
-      "comment": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)"
+      "upstream": "10.0.0.6:5080",
+      "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     },
     {
       "domain": "git.diegonmarcos.com",
@@ -614,10 +614,6 @@
       "upstream": "10.0.0.4:9999"
     },
     {
-      "service": "grafana.app",
-      "upstream": "10.0.0.6:3200"
-    },
-    {
       "service": "matomo.app",
       "upstream": "10.0.0.6:8084"
     },
@@ -628,6 +624,10 @@
     {
       "service": "ntfy.app",
       "upstream": "10.0.0.6:8090"
+    },
+    {
+      "service": "openobserve.app",
+      "upstream": "10.0.0.6:5080"
     },
     {
       "service": "umami.app",
@@ -1491,27 +1491,6 @@
     },
     {
       "kind": "redirect",
-      "service": "lgtm_grafana.app",
-      "redirect_to": "https://lgtm_grafana-http-3200.app",
-      "container": "lgtm_grafana",
-      "container_key": "grafana",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "lgtm_grafana-http-3200.app",
-      "container": "lgtm_grafana",
-      "container_key": "grafana",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "port": 3200,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3200",
-      "source": "containers.grafana.port"
-    },
-    {
-      "kind": "redirect",
       "service": "matomo-hybrid.app",
       "redirect_to": "https://matomo-hybrid-http-8084.app",
       "container": "matomo-hybrid",
@@ -1567,6 +1546,27 @@
       "port": 8090,
       "protocol": "http",
       "upstream": "10.0.0.6:8090",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "openobserve.app",
+      "redirect_to": "https://openobserve-http-5080.app",
+      "container": "openobserve",
+      "container_key": "app",
+      "svc": "openobserve",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "openobserve-http-5080.app",
+      "container": "openobserve",
+      "container_key": "app",
+      "svc": "openobserve",
+      "vm": "oci-A1-f_0",
+      "port": 5080,
+      "protocol": "http",
+      "upstream": "10.0.0.6:5080",
       "source": "containers.app.port"
     },
     {
@@ -1691,17 +1691,6 @@
       "path": "/var/lib/dagu/dagu.db"
     },
     {
-      "kind": "embedded",
-      "service": "lgtm_grafana-sqlite-null.db",
-      "container": "lgtm_grafana",
-      "container_key": "grafana",
-      "svc": "lgtm",
-      "vm": "oci-A1-f_0",
-      "engine": "sqlite",
-      "port": null,
-      "path": "/var/lib/grafana/grafana.db"
-    },
-    {
       "kind": "bundled",
       "service": "matomo-hybrid-mariadb-3306.db",
       "container": "matomo-hybrid",
@@ -1723,6 +1712,17 @@
       "engine": "sqlite",
       "port": null,
       "path": "/var/cache/ntfy/cache.db"
+    },
+    {
+      "kind": "embedded",
+      "service": "openobserve-parquet-null.db",
+      "container": "openobserve",
+      "container_key": "app",
+      "svc": "openobserve",
+      "vm": "oci-A1-f_0",
+      "engine": "parquet",
+      "port": null,
+      "path": "/data"
     },
     {
       "kind": "embedded",
@@ -2016,12 +2016,12 @@
     {
       "host": "grafana.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.6:3200",
+      "upstream": "10.0.0.6:5080",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)"
+      "notes": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     },
     {
       "host": "git.diegonmarcos.com",
@@ -2466,16 +2466,6 @@
       "notes": null
     },
     {
-      "host": "grafana.app",
-      "path": null,
-      "upstream": "10.0.0.6:3200",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "matomo.app",
       "path": null,
       "upstream": "10.0.0.6:8084",
@@ -2499,6 +2489,16 @@
       "host": "ntfy.app",
       "path": null,
       "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "openobserve.app",
+      "path": null,
+      "upstream": "10.0.0.6:5080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2978,16 +2978,6 @@
       "notes": null
     },
     {
-      "host": "lgtm_grafana-http-3200.app",
-      "path": null,
-      "upstream": "10.0.0.6:3200",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "lgtm",
-      "notes": "underscore → TLS broken"
-    },
-    {
       "host": "matomo-hybrid-http-8084.app",
       "path": null,
       "upstream": "10.0.0.6:8084",
@@ -3005,6 +2995,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "ntfy",
+      "notes": null
+    },
+    {
+      "host": "openobserve-http-5080.app",
+      "path": null,
+      "upstream": "10.0.0.6:5080",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "openobserve",
       "notes": null
     },
     {
@@ -3132,16 +3132,6 @@
       "notes": "engine=sqlite vm=oci-E2-f_1"
     },
     {
-      "host": "lgtm_grafana-sqlite-null.db",
-      "path": "/var/lib/grafana/grafana.db",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "lgtm",
-      "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
       "host": "matomo-hybrid-mariadb-3306.db",
       "path": "/var/lib/mysql",
       "upstream": "10.0.0.6:3306",
@@ -3160,6 +3150,16 @@
       "zone": "db",
       "service": "ntfy",
       "notes": "engine=sqlite vm=oci-A1-f_0"
+    },
+    {
+      "host": "openobserve-parquet-null.db",
+      "path": "/data",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "openobserve",
+      "notes": "engine=parquet vm=oci-A1-f_0"
     },
     {
       "host": "gitea-sqlite-null.db",

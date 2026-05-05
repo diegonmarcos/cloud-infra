@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-02T13:24:36.683Z",
+  "_generated": "2026-05-05T13:45:53.221Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -86,16 +86,16 @@
       "url": "https://db.diegonmarcos.com/"
     },
     {
-      "service": "lgtm",
-      "url": "https://grafana.diegonmarcos.com/"
-    },
-    {
       "service": "matomo",
       "url": "https://analytics.diegonmarcos.com/"
     },
     {
       "service": "ntfy",
       "url": "https://rss.diegonmarcos.com/"
+    },
+    {
+      "service": "openobserve",
+      "url": "https://grafana.diegonmarcos.com/healthz"
     },
     {
       "service": "gitea",
@@ -176,16 +176,16 @@
       "domain": "db.diegonmarcos.com"
     },
     {
-      "service": "lgtm",
-      "domain": "grafana.diegonmarcos.com"
-    },
-    {
       "service": "matomo",
       "domain": "analytics.diegonmarcos.com"
     },
     {
       "service": "ntfy",
       "domain": "rss.diegonmarcos.com"
+    },
+    {
+      "service": "openobserve",
+      "domain": "grafana.diegonmarcos.com"
     },
     {
       "service": "gitea",
@@ -266,16 +266,16 @@
       "domain": "db.diegonmarcos.com"
     },
     {
-      "service": "lgtm",
-      "domain": "grafana.diegonmarcos.com"
-    },
-    {
       "service": "matomo",
       "domain": "analytics.diegonmarcos.com"
     },
     {
       "service": "ntfy",
       "domain": "rss.diegonmarcos.com"
+    },
+    {
+      "service": "openobserve",
+      "domain": "grafana.diegonmarcos.com"
     },
     {
       "service": "umami",
@@ -862,22 +862,6 @@
       },
       "health": null
     },
-    "lgtm": {
-      "name": "lgtm",
-      "vm": "oci-A1-f_0",
-      "domain": "grafana.diegonmarcos.com",
-      "enabled": true,
-      "category": "tools",
-      "ports": {
-        "grafana": 3200,
-        "loki": 3110,
-        "mimir": 9009,
-        "tempo": 3210
-      },
-      "health": {
-        "path": "/"
-      }
-    },
     "matomo": {
       "name": "matomo",
       "vm": "oci-A1-f_0",
@@ -913,6 +897,19 @@
       },
       "health": {
         "path": "/"
+      }
+    },
+    "openobserve": {
+      "name": "openobserve",
+      "vm": "oci-A1-f_0",
+      "domain": "grafana.diegonmarcos.com",
+      "enabled": true,
+      "category": "tools",
+      "ports": {
+        "app": 5080
+      },
+      "health": {
+        "path": "/healthz"
       }
     },
     "sauron-forwarder": {
@@ -1431,30 +1428,6 @@
       "dns": "dozzle.app"
     },
     {
-      "service": "lgtm",
-      "dns": "grafana.app"
-    },
-    {
-      "service": "lgtm",
-      "container": "grafana",
-      "dns": "grafana.app"
-    },
-    {
-      "service": "lgtm",
-      "container": "loki",
-      "dns": "lgtm-loki.app"
-    },
-    {
-      "service": "lgtm",
-      "container": "tempo",
-      "dns": "lgtm-tempo.app"
-    },
-    {
-      "service": "lgtm",
-      "container": "mimir",
-      "dns": "lgtm-mimir.app"
-    },
-    {
       "service": "matomo",
       "dns": "matomo.app"
     },
@@ -1475,6 +1448,15 @@
       "service": "ntfy",
       "container": "app",
       "dns": "ntfy.app"
+    },
+    {
+      "service": "openobserve",
+      "dns": "openobserve.app"
+    },
+    {
+      "service": "openobserve",
+      "container": "app",
+      "dns": "openobserve.app"
     },
     {
       "service": "sauron-forwarder",
@@ -1689,10 +1671,10 @@
           "cloud-cgc-mcp",
           "cloud-spec",
           "dbgate",
-          "lgtm",
           "matomo",
           "news-gdelt",
           "ntfy",
+          "openobserve",
           "umami",
           "cloud-builder-x",
           "backup-borg",
@@ -2283,22 +2265,6 @@
         },
         "health": null
       },
-      "lgtm": {
-        "name": "lgtm",
-        "vm": "oci-A1-f_0",
-        "domain": "grafana.diegonmarcos.com",
-        "enabled": true,
-        "category": "tools",
-        "ports": {
-          "grafana": 3200,
-          "loki": 3110,
-          "mimir": 9009,
-          "tempo": 3210
-        },
-        "health": {
-          "path": "/"
-        }
-      },
       "matomo": {
         "name": "matomo",
         "vm": "oci-A1-f_0",
@@ -2334,6 +2300,19 @@
         },
         "health": {
           "path": "/"
+        }
+      },
+      "openobserve": {
+        "name": "openobserve",
+        "vm": "oci-A1-f_0",
+        "domain": "grafana.diegonmarcos.com",
+        "enabled": true,
+        "category": "tools",
+        "ports": {
+          "app": 5080
+        },
+        "health": {
+          "path": "/healthz"
         }
       },
       "sauron-forwarder": {
@@ -3176,7 +3155,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-02T13:24:36.731Z",
+    "generated_at": "2026-05-05T13:45:53.287Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

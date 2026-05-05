@@ -3,7 +3,7 @@
   "_meta": {
     "description": "rig-agentic-sonn-14bq8 container config (service=rig-agentic-sonn-14bq8, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-02T13:24:36.714Z",
+    "generated_at": "2026-05-05T13:45:53.263Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-02T13:24:36.680Z",
+  "_generated": "2026-05-05T13:45:53.219Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "rig-agentic-sonn-14bq8",
@@ -1180,31 +1180,6 @@
         "healthcheck_paths": []
       }
     },
-    "lgtm": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "grafana": 3200,
-        "loki": 3110,
-        "mimir": 9009,
-        "tempo": 3210
-      },
-      "vm": "oci-apps",
-      "domain": "grafana.diegonmarcos.com",
-      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/api/docs/swagger",
-        "api_url": "https://grafana.diegonmarcos.com/api/docs/swagger",
-        "healthcheck_paths": [],
-        "type": "openapi",
-        "spec_path": "/api/docs/swagger",
-        "base_path": "/grafana",
-        "display_name": "Grafana HTTP API",
-        "description": "Observability stack with Grafana UI and REST API, backed by Loki logs, Mimir metrics, and Tempo traces.",
-        "auth": "none"
-      }
-    },
     "matomo": {
       "ip": "10.0.0.6",
       "ports": {
@@ -1263,6 +1238,28 @@
         "base_path": "/v1",
         "display_name": "ntfy Push Notifications",
         "description": "Push notification server with HTTP POST interface for sending messages to topics.",
+        "auth": "bearer"
+      }
+    },
+    "openobserve": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 5080
+      },
+      "vm": "oci-apps",
+      "domain": "grafana.diegonmarcos.com",
+      "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/swagger/index.html",
+        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/swagger/index.html",
+        "base_path": "/api",
+        "display_name": "OpenObserve HTTP API",
+        "description": "Logs/metrics/traces/RUM ingest + SQL query API. OTLP-compatible. Auth via Bearer tokens (issued by OO admin).",
         "auth": "bearer"
       }
     },

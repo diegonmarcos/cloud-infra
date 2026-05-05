@@ -1,13 +1,13 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-02T13:24:36.692Z",
+  "_generated": "2026-05-05T13:45:53.232Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 30,
+  "total": 27,
   "summary": {
     "postgres": 6,
     "mariadb": 2,
     "redis": 3,
-    "sqlite": 10,
+    "sqlite": 9,
     "surrealdb": 1,
     "custom": 1,
     "mongo": 0,
@@ -19,9 +19,7 @@
     "files": 2,
     "rocksdb": 1,
     "minio": 1,
-    "boltdb": 1,
-    "wal": 1,
-    "tsdb": 1
+    "parquet": 1
   },
   "databases": [
     {
@@ -458,83 +456,6 @@
       "backup": false
     },
     {
-      "service": "lgtm",
-      "container": "lgtm_grafana",
-      "container_key": "grafana",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "grafana/grafana:latest",
-      "port": 3200,
-      "dns": "grafana.app",
-      "healthcheck": "wget -q --spider http://localhost:3200/api/health",
-      "volumes": [
-        "grafana_data:/var/lib/grafana"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
-      "service": "lgtm",
-      "container": "lgtm_loki",
-      "container_key": "loki",
-      "type": "boltdb",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "grafana/loki:latest",
-      "port": 3110,
-      "dns": "lgtm-loki.app",
-      "healthcheck": "busybox wget -qO /dev/null http://127.0.0.1:3110/ready",
-      "volumes": [
-        "loki_data:/loki",
-        "/home/ubuntu/bin/busybox-static:/usr/local/bin/busybox:ro"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
-      "service": "lgtm",
-      "container": "lgtm_tempo",
-      "container_key": "tempo",
-      "type": "wal",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "grafana/tempo:2.7.2",
-      "port": 3210,
-      "dns": "lgtm-tempo.app",
-      "volumes": [
-        "tempo_data:/var/tempo",
-        "./config/tempo.yaml:/etc/tempo/tempo.yaml:ro"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
-      "service": "lgtm",
-      "container": "lgtm_mimir",
-      "container_key": "mimir",
-      "type": "tsdb",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "grafana/mimir:latest",
-      "port": 9009,
-      "dns": "lgtm-mimir.app",
-      "volumes": [
-        "mimir_data:/data",
-        "./config/mimir.yaml:/etc/mimir/mimir.yaml:ro"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
       "service": "matomo",
       "container": "matomo-hybrid",
       "container_key": "app",
@@ -590,6 +511,26 @@
         }
       },
       "backup": true
+    },
+    {
+      "service": "openobserve",
+      "container": "openobserve",
+      "container_key": "app",
+      "type": "parquet",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+      "port": 5080,
+      "dns": "openobserve.app",
+      "volumes": [
+        "openobserve_data:/data"
+      ],
+      "resources": {
+        "mem_limit": "512m"
+      },
+      "backup": false
     },
     {
       "service": "umami",
@@ -979,25 +920,6 @@
         "backup": false
       },
       {
-        "service": "lgtm",
-        "container": "lgtm_grafana",
-        "container_key": "grafana",
-        "type": "sqlite",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "grafana/grafana:latest",
-        "port": 3200,
-        "dns": "grafana.app",
-        "healthcheck": "wget -q --spider http://localhost:3200/api/health",
-        "volumes": [
-          "grafana_data:/var/lib/grafana"
-        ],
-        "resources": null,
-        "backup": false
-      },
-      {
         "service": "ntfy",
         "container": "ntfy",
         "container_key": "app",
@@ -1276,67 +1198,25 @@
         "backup": true
       }
     ],
-    "boltdb": [
+    "parquet": [
       {
-        "service": "lgtm",
-        "container": "lgtm_loki",
-        "container_key": "loki",
-        "type": "boltdb",
+        "service": "openobserve",
+        "container": "openobserve",
+        "container_key": "app",
+        "type": "parquet",
         "enabled": true,
         "vm": "oci-A1-f_0",
         "vm_alias": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "image": "grafana/loki:latest",
-        "port": 3110,
-        "dns": "lgtm-loki.app",
-        "healthcheck": "busybox wget -qO /dev/null http://127.0.0.1:3110/ready",
+        "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+        "port": 5080,
+        "dns": "openobserve.app",
         "volumes": [
-          "loki_data:/loki",
-          "/home/ubuntu/bin/busybox-static:/usr/local/bin/busybox:ro"
+          "openobserve_data:/data"
         ],
-        "resources": null,
-        "backup": false
-      }
-    ],
-    "wal": [
-      {
-        "service": "lgtm",
-        "container": "lgtm_tempo",
-        "container_key": "tempo",
-        "type": "wal",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "grafana/tempo:2.7.2",
-        "port": 3210,
-        "dns": "lgtm-tempo.app",
-        "volumes": [
-          "tempo_data:/var/tempo",
-          "./config/tempo.yaml:/etc/tempo/tempo.yaml:ro"
-        ],
-        "resources": null,
-        "backup": false
-      }
-    ],
-    "tsdb": [
-      {
-        "service": "lgtm",
-        "container": "lgtm_mimir",
-        "container_key": "mimir",
-        "type": "tsdb",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "grafana/mimir:latest",
-        "port": 9009,
-        "dns": "lgtm-mimir.app",
-        "volumes": [
-          "mimir_data:/data",
-          "./config/mimir.yaml:/etc/mimir/mimir.yaml:ro"
-        ],
-        "resources": null,
+        "resources": {
+          "mem_limit": "512m"
+        },
         "backup": false
       }
     ],
@@ -1740,83 +1620,6 @@
           "backup": true
         },
         {
-          "service": "lgtm",
-          "container": "lgtm_grafana",
-          "container_key": "grafana",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "grafana/grafana:latest",
-          "port": 3200,
-          "dns": "grafana.app",
-          "healthcheck": "wget -q --spider http://localhost:3200/api/health",
-          "volumes": [
-            "grafana_data:/var/lib/grafana"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "lgtm",
-          "container": "lgtm_loki",
-          "container_key": "loki",
-          "type": "boltdb",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "grafana/loki:latest",
-          "port": 3110,
-          "dns": "lgtm-loki.app",
-          "healthcheck": "busybox wget -qO /dev/null http://127.0.0.1:3110/ready",
-          "volumes": [
-            "loki_data:/loki",
-            "/home/ubuntu/bin/busybox-static:/usr/local/bin/busybox:ro"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "lgtm",
-          "container": "lgtm_tempo",
-          "container_key": "tempo",
-          "type": "wal",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "grafana/tempo:2.7.2",
-          "port": 3210,
-          "dns": "lgtm-tempo.app",
-          "volumes": [
-            "tempo_data:/var/tempo",
-            "./config/tempo.yaml:/etc/tempo/tempo.yaml:ro"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "lgtm",
-          "container": "lgtm_mimir",
-          "container_key": "mimir",
-          "type": "tsdb",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "grafana/mimir:latest",
-          "port": 9009,
-          "dns": "lgtm-mimir.app",
-          "volumes": [
-            "mimir_data:/data",
-            "./config/mimir.yaml:/etc/mimir/mimir.yaml:ro"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
           "service": "matomo",
           "container": "matomo-hybrid",
           "container_key": "app",
@@ -1872,6 +1675,26 @@
             }
           },
           "backup": true
+        },
+        {
+          "service": "openobserve",
+          "container": "openobserve",
+          "container_key": "app",
+          "type": "parquet",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+          "port": 5080,
+          "dns": "openobserve.app",
+          "volumes": [
+            "openobserve_data:/data"
+          ],
+          "resources": {
+            "mem_limit": "512m"
+          },
+          "backup": false
         },
         {
           "service": "umami",
@@ -2168,7 +1991,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-02T13:24:36.735Z",
+    "generated_at": "2026-05-05T13:45:53.291Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

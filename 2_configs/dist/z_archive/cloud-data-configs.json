@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-02T13:24:36.691Z",
+    "generated_at": "2026-05-05T13:45:53.231Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -434,21 +434,6 @@
       ]
     },
     {
-      "name": "lgtm",
-      "category": "tools",
-      "vm": "oci-A1-f_0",
-      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
-      "domain": "grafana.diegonmarcos.com",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "lgtm_grafana",
-        "lgtm_loki",
-        "lgtm_tempo",
-        "lgtm_mimir"
-      ]
-    },
-    {
       "name": "maddy",
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -582,6 +567,18 @@
       "networks": [],
       "containers": [
         "ollama-hai"
+      ]
+    },
+    {
+      "name": "openobserve",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+      "domain": "grafana.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "openobserve"
       ]
     },
     {
@@ -1017,21 +1014,6 @@
       ]
     },
     {
-      "name": "lgtm",
-      "category": "tools",
-      "vm": "oci-A1-f_0",
-      "description": "LGTM observability stack (Grafana, Loki, Tempo, Mimir) (NEW - not deployed yet)",
-      "domain": "grafana.diegonmarcos.com",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "lgtm_grafana",
-        "lgtm_loki",
-        "lgtm_tempo",
-        "lgtm_mimir"
-      ]
-    },
-    {
       "name": "matomo",
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -1067,6 +1049,18 @@
         "ntfy",
         "syslog-bridge",
         "github-rss"
+      ]
+    },
+    {
+      "name": "openobserve",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+      "domain": "grafana.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "openobserve"
       ]
     },
     {

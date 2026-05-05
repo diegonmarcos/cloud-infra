@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-02T13:24:36.673Z",
+  "_generated": "2026-05-05T13:45:53.211Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/vm-container-manifests",
   "vm": "oci-apps",
   "vm_id": "oci-A1-f_0",
@@ -261,18 +261,6 @@
       "has_docker_build": true
     },
     {
-      "name": "lgtm",
-      "dir": "bc-obs_lgtm",
-      "compose_path": "/opt/containers/lgtm",
-      "images": [
-        "grafana/grafana:latest",
-        "grafana/loki:latest",
-        "grafana/tempo:2.7.2",
-        "grafana/mimir:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "matomo",
       "dir": "bc-obs_matomo",
       "compose_path": "/opt/containers/matomo",
@@ -296,6 +284,15 @@
         "binwiederhier/ntfy",
         "python:3.11-slim",
         "python:3.11-slim"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "openobserve",
+      "dir": "bc-obs_openobserve",
+      "compose_path": "/opt/containers/openobserve",
+      "images": [
+        "public.ecr.aws/zinclabs/openobserve:v0.14.7"
       ],
       "has_docker_build": true
     },
@@ -351,7 +348,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-02T13:24:36.693Z",
+    "generated_at": "2026-05-05T13:45:53.233Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

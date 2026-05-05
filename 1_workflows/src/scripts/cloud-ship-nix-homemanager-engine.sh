@@ -178,9 +178,12 @@ ensure_ssh_host_alias() {
     # The runner only writes id_deploy from OCI_SSH_KEY, so for non-OCI VMs
     # id_deploy is the wrong key; we materialise the correct one here.
     local cons="" cand secret key_val key_file="$HOME/.ssh/id_deploy"
-    for cand in /root/git/cloud/2_configs/dist/_cloud-data-consolidated.json \
-                /root/git/cloud-data/_cloud-data-consolidated.json \
-                /home/diego/git/cloud/2_configs/dist/_cloud-data-consolidated.json; do
+    # Workspace root: env override > /root/git default (CI mount path).
+    # Bare /root/git/... literals are forbidden by test_engine_workspace_paths_derived.
+    local _ws="${WORKSPACE:-/root/git}"
+    for cand in "$_ws/cloud/2_configs/dist/_cloud-data-consolidated.json" \
+                "$_ws/cloud-data/_cloud-data-consolidated.json" \
+                "${HOME}/git/cloud/2_configs/dist/_cloud-data-consolidated.json"; do
         [ -f "$cand" ] && cons="$cand" && break
     done
     if [ -n "$cons" ] && command -v jq >/dev/null 2>&1; then

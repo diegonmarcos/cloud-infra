@@ -186,10 +186,25 @@ NEOF
         fi
     fi
 
-    # Build context: use what image-wrapper set, else prefer dist/ if Dockerfile exists there, else src/
+    # Build context: use what image-wrapper set, else prefer the v2-engine
+    # arch-specific path (dist/code/<arch>/Dockerfile, emitted by
+    # _shared/engine.nix mkCodeDockerfile) — but ONLY when build.json declares
+    # an explicit `upstream_image`. Without an explicit upstream the engine
+    # falls back to `alpine:latest` and emits a stub Dockerfile that has no
+    # binary, which would silently push an empty image and break the service
+    # (regression introduced 2026-05-02 — caused Caddy to exit immediately
+    # because the binary wasn't in PATH). For services that use
+    # `dockerfile_inline` in compose.nix (mkGhcrBuild pattern), compose-build
+    # owns the image; this step is a no-op for them and the existing skip at
+    # line ~205 handles it.
+    UPSTREAM_DECL="$(get_config upstream_image)"
     if [ -z "${BUILD_CONTEXT:-}" ]; then
         BUILD_CONTEXT="$SRC_DIR"
-        if [ -d "$DIST_DIR" ] && [ -f "$DIST_DIR/$DOCKERFILE" ]; then
+        if [ -n "$UPSTREAM_DECL" ] \
+           && [ -d "$DIST_DIR/code/$ARCH" ] \
+           && [ -f "$DIST_DIR/code/$ARCH/Dockerfile" ]; then
+            BUILD_CONTEXT="$DIST_DIR/code/$ARCH"
+        elif [ -d "$DIST_DIR" ] && [ -f "$DIST_DIR/$DOCKERFILE" ]; then
             BUILD_CONTEXT="$DIST_DIR"
         fi
     fi
@@ -246,7 +261,26 @@ NEOF
 
     RUNNER_TYPE="$(jq -r --arg a "$ARCH" '.runners[$a].type // empty' "$RUNNERS_JSON")"
     RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
-    RUNNER_IMAGE="$(jq -r --arg a "$ARCH" '.runners[$a].builder_image // empty' "$RUNNERS_JSON")"
+    # Image identity: prefer III_unix/cb_containers-builders/build.json (the
+    # producer's master). Back-compat: fall back to legacy
+    # .runners[$a].builder_image in cloud-data-runners.json if master not
+    # checked out. The legacy field may be removed once all consumers are
+    # migrated; this fallback then becomes the only path that matters.
+    RUNNER_IMAGE=""
+    UNIX_MASTER=""
+    for _u in \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/III_unix/cb_containers-builders/build.json" \
+        "$SRC_DIR/III_unix/cb_containers-builders/build.json"; do
+        [ -f "$_u" ] && { UNIX_MASTER="$_u"; break; }
+    done
+    if [ -n "$UNIX_MASTER" ]; then
+        _ghcr=$(jq -r '.images["cloud-builder-x-deb-nixhm"].ghcr // empty' "$UNIX_MASTER" 2>/dev/null)
+        [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] && RUNNER_IMAGE="${_ghcr}:latest"
+    fi
+    if [ -z "$RUNNER_IMAGE" ]; then
+        # Legacy fallback — runners.json mirror, kept for back-compat
+        RUNNER_IMAGE="$(jq -r --arg a "$ARCH" '.runners[$a].builder_image // empty' "$RUNNERS_JSON")"
+    fi
 
     if [ -z "$RUNNER_TYPE" ]; then
         log_error "No runner declared for arch=$ARCH in $(basename "$RUNNERS_JSON"). Add .runners[\"$ARCH\"] or change docker.arch in build.json."
@@ -335,6 +369,16 @@ NEOF
                 return 1
             fi
             ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
+
+            # Ensure HOST docker daemon (which executes the `docker run` for
+            # the runner image below) has fresh ghcr.io auth — the inner
+            # cloud-builder-x container login (line 367) only authenticates
+            # the container's own client, not the daemon that pulls the
+            # runner image. Without this, first-ever `docker run` of the
+            # cloud-builder-x runner on a VM whose ~/.docker/config.json
+            # holds a stale ghs_* token fails with "denied: denied" pulling
+            # the runner image, before any inside-container step can run.
+            ssh $SSH_OPTS "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
 
             # Build + login + push happen INSIDE the cloud-builder-x container.
             # Token is mounted from the SSH-staged file (no vault dep on VM).

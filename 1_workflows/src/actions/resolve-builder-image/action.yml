@@ -1,0 +1,54 @@
+name: "Resolve cloud-builder image"
+description: "Read the canonical cloud-builder-x image ref from III_unix/cb_containers-builders/build.json. Single source of truth for the multi-arch CI builder image."
+
+# Why this exists:
+#   The cloud-builder-x-deb-nixhm image is owned by the unix repo
+#   (cb_containers-builders/build.json declares the GHCR ref). Cloud is a
+#   consumer — workflows here used to hardcode the literal `ghcr.io/.../...:latest`,
+#   which drifted when unix renamed the image. This action extracts it once
+#   from the master at job start, exporting BUILDER_IMAGE for downstream
+#   steps. No literal IS allowed in any wrapper after this lands.
+#
+# Prerequisites:
+#   - Caller must have run actions/checkout@v4 with submodules: true,
+#     so III_unix/ is populated. Action fails loud if it isn't.
+
+inputs:
+  variant:
+    description: "Image variant key in unix build.json .images (e.g. cloud-builder-x-deb-nixhm, cloud-builder-x-deb-apt)"
+    required: false
+    default: "cloud-builder-x-deb-nixhm"
+  tag:
+    description: "Image tag to append"
+    required: false
+    default: "latest"
+
+outputs:
+  image:
+    description: "Fully-qualified image ref resolved from unix master (registry/owner/<variant>:<tag>)"
+    value: ${{ steps.resolve.outputs.image }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve image from III_unix/cb_containers-builders/build.json
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        master="$GITHUB_WORKSPACE/III_unix/cb_containers-builders/build.json"
+        if [ ! -f "$master" ]; then
+          echo "::error::Master image source not found: $master"
+          echo "::error::Did the workflow check out submodules? (actions/checkout@v4 with submodules: true)"
+          exit 1
+        fi
+        ghcr=$(jq -r --arg v "${{ inputs.variant }}" '.images[$v].ghcr // empty' "$master")
+        if [ -z "$ghcr" ] || [ "$ghcr" = "null" ]; then
+          echo "::error::Variant '${{ inputs.variant }}' not found in $master .images"
+          echo "::error::Available variants: $(jq -r '.images | keys | join(", ")' "$master")"
+          exit 1
+        fi
+        image="${ghcr}:${{ inputs.tag }}"
+        echo "Resolved BUILDER_IMAGE=$image (master: III_unix/cb_containers-builders/build.json)"
+        echo "BUILDER_IMAGE=$image" >> "$GITHUB_ENV"
+        echo "image=$image" >> "$GITHUB_OUTPUT"
