@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-05T13:45:53.221Z",
+  "_generated": "2026-05-05T14:58:28.790Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -1015,6 +1015,24 @@
       },
       "health": null
     },
+    "postlite": {
+      "name": "postlite",
+      "vm": "gcp-E2-f_0",
+      "domain": null,
+      "enabled": false,
+      "category": "data",
+      "ports": {
+        "npm_rest": 8890,
+        "vaultwarden_rest": 8891,
+        "ntfy_rest": 8892,
+        "authelia_rest": 8893,
+        "npm_pg": 5433,
+        "vaultwarden_pg": 5434,
+        "ntfy_pg": 5435,
+        "authelia_pg": 5436
+      },
+      "health": null
+    },
     "redis": {
       "name": "redis",
       "vm": "gcp-E2-f_0",
@@ -1704,6 +1722,7 @@
           "authelia",
           "caddy",
           "introspect-proxy",
+          "postlite",
           "redis"
         ]
       },
@@ -2415,6 +2434,24 @@
         "category": "data",
         "ports": {
           "app": 8001
+        },
+        "health": null
+      },
+      "postlite": {
+        "name": "postlite",
+        "vm": "gcp-E2-f_0",
+        "domain": null,
+        "enabled": false,
+        "category": "data",
+        "ports": {
+          "npm_rest": 8890,
+          "vaultwarden_rest": 8891,
+          "ntfy_rest": 8892,
+          "authelia_rest": 8893,
+          "npm_pg": 5433,
+          "vaultwarden_pg": 5434,
+          "ntfy_pg": 5435,
+          "authelia_pg": 5436
         },
         "health": null
       },
@@ -3155,7 +3192,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-05T13:45:53.287Z",
+    "generated_at": "2026-05-05T14:58:28.844Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

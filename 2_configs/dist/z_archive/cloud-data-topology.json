@@ -204,6 +204,7 @@
         "postlite-authelia",
         "caddy",
         "introspect-proxy",
+        "postlite",
         "redis"
       ],
       "ports": [],
@@ -5070,6 +5071,48 @@
         "enabled": true
       }
     },
+    "postlite": {
+      "category": "data",
+      "vm": "gcp-E2-f_0",
+      "folder": "ca-dat_postlite",
+      "description": "SQLite REST API (WireGuard only)",
+      "containers": {
+        "app": {
+          "container_name": "postlite",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "postlite"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [
+          "postlite-authelia",
+          "postlite-npm",
+          "postlite-ntfy",
+          "postlite-vaultwarden",
+          "sqlite-authelia",
+          "sqlite-npm",
+          "sqlite-ntfy",
+          "sqlite-vaultwarden"
+        ],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "npm_rest": 8890,
+        "vaultwarden_rest": 8891,
+        "ntfy_rest": 8892,
+        "authelia_rest": 8893,
+        "npm_pg": 5433,
+        "vaultwarden_pg": 5434,
+        "ntfy_pg": 5435,
+        "authelia_pg": 5436
+      }
+    },
     "redis": {
       "category": "data",
       "vm": "gcp-E2-f_0",
@@ -5366,7 +5409,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-05T13:45:53.289Z",
+    "generated_at": "2026-05-05T14:58:28.845Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

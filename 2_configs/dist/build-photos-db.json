@@ -3,7 +3,7 @@
   "_meta": {
     "description": "photos-db container config (service=photos-webhook, role=db)",
     "format_version": 1,
-    "generated_at": "2026-05-05T13:45:53.250Z",
+    "generated_at": "2026-05-05T14:58:28.814Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-05T13:45:53.219Z",
+  "_generated": "2026-05-05T14:58:28.788Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "photos-db",
@@ -1370,6 +1370,28 @@
       },
       "vm": "oci-apps",
       "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "postlite": {
+      "ip": "10.0.0.1",
+      "ports": {
+        "npm_rest": 8890,
+        "vaultwarden_rest": 8891,
+        "ntfy_rest": 8892,
+        "authelia_rest": 8893,
+        "npm_pg": 5433,
+        "vaultwarden_pg": 5434,
+        "ntfy_pg": 5435,
+        "authelia_pg": 5436
+      },
+      "vm": "gcp-proxy",
+      "description": "SQLite REST API (WireGuard only)",
       "api": {
         "has_api": false,
         "has_web_ui": false,

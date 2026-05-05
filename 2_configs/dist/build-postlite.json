@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "crawlee_minio container config (service=crawlee-cloud, role=minio)",
+    "description": "postlite container config (service=postlite, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-05T14:58:28.823Z",
+    "generated_at": "2026-05-05T14:58:28.843Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,25 +28,13 @@
   "_generated": "2026-05-05T14:58:28.788Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "crawlee_minio",
-    "image": "minio/minio:latest",
-    "port": 9000,
-    "port_env": null,
-    "dns": "crawlee-minio.app",
-    "public": false,
-    "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-    "volumes": [
-      "crawlee_minio:/data"
-    ],
-    "env_file": true,
-    "resources": null,
-    "read_only": false,
-    "protocol": "http",
-    "db_engine": "minio"
+    "container_name": "postlite",
+    "image": "",
+    "public": false
   },
-  "service": "crawlee-cloud",
-  "role": "minio",
-  "vm": "oci-apps",
+  "service": "postlite",
+  "role": "app",
+  "vm": "gcp-proxy",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",
