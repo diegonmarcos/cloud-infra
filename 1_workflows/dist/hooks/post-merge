@@ -40,4 +40,23 @@ fi
 echo "[post-merge] rebasing submodules onto upstream HEAD..."
 git submodule update --init --recursive --remote --rebase \
   || echo "[post-merge] submodule rebase reported errors (non-blocking)." >&2
+
+# ── Auto-nuke any dirty submodule ───────────────────────────────────
+# Submodules are read-only from this repo. See post-checkout for rationale.
+NUKE="$(git rev-parse --show-toplevel 2>/dev/null)/1_workflows/dist/scripts/cloud-git-nuke.sh"
+if [ -x "$NUKE" ] || [ -f "$NUKE" ]; then
+  git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null \
+    | awk '{print $2}' \
+    | while IFS= read -r _sm; do
+        [ -n "$_sm" ] || continue
+        [ -d "$_sm/.git" ] || [ -f "$_sm/.git" ] || continue
+        # Unset GIT_INDEX_FILE / GIT_DIR / GIT_WORK_TREE — they leak from
+        # the parent git invocation and break submodule .git pointer-file lookups.
+        if [ -n "$(env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE git -C "$_sm" status --porcelain 2>/dev/null | head -1)" ]; then
+          echo "[post-merge] dirty submodule '$_sm' — auto-nuking..." >&2
+          (cd "$_sm" && env -u GIT_INDEX_FILE -u GIT_DIR -u GIT_WORK_TREE bash "$NUKE" -q 2>/dev/null) \
+            || echo "[post-merge] nuke failed for '$_sm' (non-blocking)." >&2
+        fi
+      done
+fi
 exit 0

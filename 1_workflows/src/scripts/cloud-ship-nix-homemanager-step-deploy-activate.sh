@@ -245,6 +245,45 @@ step_compose() {
             fi
         fi
 
+        # ── Pre-flight: NUKE every docker-real wrapper anywhere on the VM ──
+        # The retired guardrails.nix used to install a `pkgs.writeShellScriptBin
+        # "docker"` overlay that exec'd `nice /usr/local/bin/docker-real "$@"`.
+        # `docker-real` was a system-side wrapper that has since been removed
+        # (commit a0774f4ce). On VMs whose nix-profile still points to that
+        # stale 2-line wrapper (or whose /nix/store/.../docker file got
+        # overwritten in place — yes that happened on gcp-proxy), the engine's
+        # `docker pull` step dies with
+        #   nice: '/usr/local/bin/docker-real': No such file or directory
+        # BEFORE the activation container runs, so scheduler.nix's cleanup
+        # hook is unreachable. Run the nuke here, every ship, idempotent on
+        # healthy VMs (the grep filter returns nothing → nothing removed).
+        # Targets:
+        #   1. PATH-visible wrappers (~/.nix-profile/bin/docker, /usr/local/bin/docker*)
+        #   2. The mutated /nix/store/*-docker-*/bin/docker file the wrapper
+        #      points to — purge it so HM activation re-instantiates a clean
+        #      docker derivation. (chmod +w needed: /nix/store is RO by default.)
+        #   3. Any /usr/local/bin/docker-real* leftovers (broken targets).
+        log "Pre-flight: nuking docker-real wrappers on $DEPLOY_HOST"
+        ssh_vm "set +e
+                # 1. Remove every PATH-visible wrapper that exec's docker-real
+                for _p in /home/$HM_USER/.nix-profile/bin/docker /usr/local/bin/docker /usr/local/bin/docker-real /usr/local/bin/docker-capped /usr/local/bin/docker-compose-capped /usr/local/bin/docker-buildx-capped; do
+                  if [ -e \"\$_p\" ] && head -2 \"\$_p\" 2>/dev/null | grep -q 'docker-real'; then
+                    sudo rm -f \"\$_p\" && echo \"[hm-preflight] purged wrapper: \$_p\"
+                  fi
+                done
+                # 2. Hunt mutated docker-real bytes inside /nix/store and rm so HM rebuilds clean.
+                #    nix-store paths are content-addressed; if contents drift, the path is corrupt.
+                for _p in /nix/store/*-docker-*/bin/docker; do
+                  [ -e \"\$_p\" ] || continue
+                  if head -2 \"\$_p\" 2>/dev/null | grep -q 'docker-real'; then
+                    sudo chmod -R +w \"\$(dirname \"\$_p\")\" 2>/dev/null
+                    sudo rm -f \"\$_p\" && echo \"[hm-preflight] purged corrupted nix-store wrapper: \$_p\"
+                  fi
+                done
+                # 3. Remove broken docker-real targets entirely
+                sudo rm -f /usr/local/bin/docker-real* 2>/dev/null
+                exit 0" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
+
         # Deploy pre-decrypted secrets to VM via SSH
         if [ -f "$DIST_DIR/.secrets" ]; then
             log "Deploying secrets to $DEPLOY_HOST"
