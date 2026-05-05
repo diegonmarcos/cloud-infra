@@ -126,7 +126,9 @@
       # Activation awk-substitutes both placeholders with values from .secrets.
       # If creds were absent the values become empty strings — skip the push.
       if [ -n "$ZO_USER" ] && [ -n "$ZO_PASS" ]; then
-        EV_PAYLOAD=$(jq -n \
+        # docker-inspect.json on hub VMs runs to several MB — passing JSON via
+        # `-d "$VAR"` overflows ARG_MAX. Pipe through stdin via `--data @-`.
+        jq -n \
           --arg vm "$HOSTNAME" \
           --arg date "$DATE" \
           --slurpfile manifest "$EVIDENCE_DIR/manifest.json" \
@@ -134,15 +136,13 @@
           --slurpfile inspect "$EVIDENCE_DIR/docker-inspect.json" \
           --rawfile processes "$EVIDENCE_DIR/processes.txt" \
           --rawfile connections "$EVIDENCE_DIR/connections.txt" \
-          '{vm:$vm,date:$date,manifest:($manifest[0]//{}),diff:($diff[0]//{}),docker_inspect:($inspect[0]//[]),processes:$processes,connections:$connections,schema:"vm_evidence-v1"}' 2>/dev/null)
-        if [ -n "$EV_PAYLOAD" ]; then
-          curl -fsS --max-time 30 -u "$ZO_USER:$ZO_PASS" \
-            -H 'Content-Type: application/json' \
-            -X POST "http://$OO_HOST:$OO_PORT/api/default/vm_evidence/_json" \
-            -d "[$EV_PAYLOAD]" >/dev/null \
-            && echo "[evidence-collector] pushed to OO vm_evidence ($HOSTNAME/$DATE)" \
-            || echo "[evidence-collector] OO push failed (non-fatal)"
-        fi
+          '[{vm:$vm,date:$date,manifest:($manifest[0]//{}),diff:($diff[0]//{}),docker_inspect:($inspect[0]//[]),processes:$processes,connections:$connections,schema:"vm_evidence-v1"}]' 2>/dev/null \
+          | curl -fsS --max-time 30 -u "$ZO_USER:$ZO_PASS" \
+              -H 'Content-Type: application/json' \
+              -X POST "http://$OO_HOST:$OO_PORT/api/default/vm_evidence/_json" \
+              --data-binary @- >/dev/null \
+              && echo "[evidence-collector] pushed to OO vm_evidence ($HOSTNAME/$DATE)" \
+              || echo "[evidence-collector] OO push failed (non-fatal)"
       else
         echo "[evidence-collector] OO creds missing — skipping push"
       fi
