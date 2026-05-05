@@ -67,7 +67,9 @@ step_docker() {
     NATIVE_ENTRYPOINT="$(get_config docker.native_build.entrypoint)"
     NATIVE_APP_DIR="$(get_config docker.native_build.app_dir)"
     NATIVE_ENV="$(get_config docker.native_build.env)"
+    NATIVE_USER="$(get_config docker.native_build.user)"  # appuser (default) | root
     [ -z "$NATIVE_TYPE" ] && NATIVE_TYPE="binary"
+    [ -z "$NATIVE_USER" ] && NATIVE_USER="appuser"
 
     if [ -n "$NATIVE_CMD" ]; then
         # Convert entrypoint string to JSON array: "npx tsx index.ts" → ["npx","tsx","index.ts"]
@@ -85,13 +87,34 @@ step_docker() {
             # image-wrapper: build happens INSIDE Docker (RUN), not on host
             # Pulls upstream image, bakes deps, pushes to GHCR — VMs only pull
             log "Image-wrapper build: $NATIVE_CMD (inside Docker)"
+            # Strip any stale host-side node_modules from the build context.
+            # image-wrapper does the install inside the container; carrying a
+            # stale node_modules across the rsync (which uses -L) breaks
+            # intra-tree symlinks like node_modules/.bin/tsx → ../tsx/dist/cli.mjs
+            # because dereferencing copies the bundled JS into .bin/ where its
+            # sibling-relative imports no longer resolve. 2026-05-05.
+            APP_DIR_REL_CLEAN="${NATIVE_APP_DIR:-.}"
+            CLEAN_BASE="$SRC_DIR"
+            [ "$APP_DIR_REL_CLEAN" != "." ] && CLEAN_BASE="$SRC_DIR/$APP_DIR_REL_CLEAN"
+            if [ -d "$CLEAN_BASE/node_modules" ]; then
+                log "Removing stale host node_modules: $CLEAN_BASE/node_modules"
+                rm -rf "$CLEAN_BASE/node_modules"
+            fi
             CMD_LINE="CMD $(_entrypoint_json "$NATIVE_ENTRYPOINT")"
             # app_dir scopes which subdirectory to COPY (default: entire context)
             COPY_SRC="${NATIVE_APP_DIR:-.}"
             WORKDIR_PATH="/app"
-            # Non-root user for security
-            USER_LINE="RUN useradd -r -u 1000 appuser"
-            USER_SWITCH="USER appuser"
+            # User switch is data-driven via build.json native_build.user.
+            # Default "appuser" (non-root, security best practice).
+            # Set "root" for services that need root inside the container
+            # (e.g. /root/.ssh chown, host-uid:gid mounts that require root).
+            if [ "$NATIVE_USER" = "root" ]; then
+                USER_LINE=""
+                USER_SWITCH=""
+            else
+                USER_LINE="RUN useradd -r -u 1000 ${NATIVE_USER}"
+                USER_SWITCH="USER ${NATIVE_USER}"
+            fi
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
 ${APT_LINE}

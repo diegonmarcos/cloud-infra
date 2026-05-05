@@ -229,6 +229,49 @@ $ctr"
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune" >/dev/null 2>&1 || true
   fi
 
+  # ── Disk pressure: tiered response (data-driven via DISK_WARN/HIGH/EMERG env) ──
+  # The HM image (~2.6GB compressed → ~6GB unpacked) needs ~6GB free for
+  # docker pull to succeed. Without this block, oci-mail filled to 89% and
+  # HM ship failed with "no space left on device" (incident 2026-04-30).
+  # Tiers:
+  #   WARN  (≥80%): prune containers + dangling images
+  #   HIGH  (≥85%): + images + buildkit cache
+  #   EMERG (≥90%): + release ballast + volumes prune + journal vacuum
+  # Also truncate any container json log >50MB to keep them bounded even
+  # before the daemon-config max-size=10m takes effect (containers started
+  # before that policy keep their old log file).
+  DISK_PCT=$(df -P / 2>/dev/null | awk 'NR==2 { gsub("%","",$5); print $5 }')
+  : "${DISK_PCT:=0}"
+  DISK_WARN=${DISK_WARN:-80}
+  DISK_HIGH=${DISK_HIGH:-85}
+  DISK_EMERG=${DISK_EMERG:-90}
+  if [ "$DISK_PCT" -ge "$DISK_WARN" ]; then
+    # Always truncate runaway container logs at any disk-pressure tier.
+    find /var/lib/docker/containers -name "*-json.log" -size +50M \
+      -exec truncate -s 0 {} + 2>/dev/null || true
+  fi
+  if [ "$DISK_PCT" -ge "$DISK_EMERG" ]; then
+    pre_action_report "DISK_EMERG" "Disk usage ${DISK_PCT}% (≥${DISK_EMERG}%)" "ballast+prune-aggressive"
+    ntfy 5 "DISK EMERG" "${DISK_PCT}% used — releasing ballast + aggressive prune" "rotating_light,floppy_disk"
+    rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/build/prune?all=true" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/volumes/prune" >/dev/null 2>&1 || true
+    journalctl --vacuum-size=50M >/dev/null 2>&1 || true
+  elif [ "$DISK_PCT" -ge "$DISK_HIGH" ]; then
+    pre_action_report "DISK_HIGH" "Disk usage ${DISK_PCT}% (≥${DISK_HIGH}%)" "prune+buildcache"
+    ntfy 4 "Disk high" "${DISK_PCT}% used — pruning images+buildcache" "warning,floppy_disk"
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/build/prune?all=true" >/dev/null 2>&1 || true
+  elif [ "$DISK_PCT" -ge "$DISK_WARN" ]; then
+    pre_action_report "DISK_WARN" "Disk usage ${DISK_PCT}% (≥${DISK_WARN}%)" "prune-containers+dangling"
+    ntfy 3 "Disk warn" "${DISK_PCT}% used — pruning containers+dangling images" "warning,floppy_disk"
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune" >/dev/null 2>&1 || true
+    curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D" >/dev/null 2>&1 || true
+  fi
+
   CYCLE=$((CYCLE + 1))
   if [ "$CYCLE" -ge 10 ]; then
     CTR_RESTART_TRACK=""
