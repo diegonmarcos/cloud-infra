@@ -212,11 +212,25 @@ step_compose() {
             # via the containerd content reference graph; if that's not
             # reclaiming, the issue is upstream (manifest staleness) and
             # outside engine scope.
+            # Additional safe prunes (added 2026-05-05 from oci-mail incident
+            # post-mortem: 38 GB used, 4 GB free, blocked HM activation):
+            #   - vm-system.tar.gz from /var/backups/evidence/* — these are
+            #     legacy heavy snapshots from the pre-2026-04-20 evidence-
+            #     collector script. The .nix source has been refactored to
+            #     a lightweight version that doesn't write vm-system.tar.gz,
+            #     but VMs whose HM ship has been failing still run the OLD
+            #     deployed script (oci-mail had 4×793 MB = 3.2 GB of these
+            #     orphan files). Safe to remove: lightweight script never
+            #     regenerates them; heavy script's existing 7-day retention
+            #     handles the next cycle if ship continues to fail.
+            #   - apt cache (apt-get clean) — regenerable, cheap to clear.
             ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/build/prune?all=true' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22until%22%3A%5B%22720h%22%5D%7D' >/dev/null 2>&1 || true; \
+                    sudo find /var/backups/evidence -name 'vm-system.tar.gz' -delete 2>/dev/null || true; \
+                    sudo apt-get clean -qq 2>/dev/null || true; \
                     sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
                     sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
