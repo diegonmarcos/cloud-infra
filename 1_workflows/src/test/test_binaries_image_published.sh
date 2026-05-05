@@ -53,11 +53,29 @@ _pkg_visibility() {
 
 CHECKED=0
 NEW_SERVICES=0
+SKIPPED_COMPOSE_BUILD=0
 while IFS= read -r build_json; do
     image=$(jq -r '.docker.image // empty' "$build_json" 2>/dev/null)
     registry=$(jq -r '.docker.registry // empty' "$build_json" 2>/dev/null)
     [ -z "$image" ] && continue
     [ "$registry" != "ghcr.io/diegonmarcos" ] && continue
+
+    # Filter out compose-build services. step_docker (cloud-ship-container-
+    # step-build-docker.sh:220-223) skips when there's no src/Dockerfile and
+    # no docker.native_build.cmd — those services use dockerfile_inline in
+    # compose, so docker-compose builds the image at deploy time on the VM.
+    # They never ship a -binaries package to GHCR by design; the compose
+    # `image:` ref serves as a tag for the locally-built image, not a pull
+    # target. Without this filter the test over-reaches and reports 40+
+    # false positives. Match the engine's skip predicate exactly.
+    svc_dir=$(dirname "$build_json")
+    has_dockerfile=0
+    [ -f "$svc_dir/src/Dockerfile" ] && has_dockerfile=1
+    native_cmd=$(jq -r '.docker.native_build.cmd // empty' "$build_json" 2>/dev/null)
+    if [ "$has_dockerfile" = 0 ] && [ -z "$native_cmd" ]; then
+        SKIPPED_COMPOSE_BUILD=$((SKIPPED_COMPOSE_BUILD + 1))
+        continue
+    fi
 
     primary_vis=$(_pkg_visibility "$image" || echo "")
     binaries_vis=$(_pkg_visibility "${image}-binaries" || echo "")
@@ -95,9 +113,9 @@ done < <(find "$REPO_ROOT/a_solutions" -maxdepth 2 -name build.json -not -path "
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then
-    echo "Phase 16 binaries image: PASS ($CHECKED services with both tags public; $NEW_SERVICES new/unpushed)"
+    echo "Phase 16 binaries image: PASS ($CHECKED services with both tags public; $NEW_SERVICES new/unpushed; $SKIPPED_COMPOSE_BUILD compose-build skipped)"
     exit 0
 else
-    echo "Phase 16 binaries image: FAIL"
+    echo "Phase 16 binaries image: FAIL ($CHECKED checked; $SKIPPED_COMPOSE_BUILD compose-build skipped)"
     exit 1
 fi

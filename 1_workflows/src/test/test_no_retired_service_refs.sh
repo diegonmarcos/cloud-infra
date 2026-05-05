@@ -50,11 +50,28 @@ for svc in $retired; do
     while IFS= read -r f; do
         # Skip files under z_archive/
         case "$f" in */z_archive/*) continue ;; esac
-        # Exclude image-URL hits (ghcr.io/<org>/<svc>:tag) by stripping those
-        # lines before the wholeword check.
-        if grep -wE -- "$svc" "$f" 2>/dev/null \
+        # Skip successor services that legitimately reuse the retired name
+        # in descriptions / container_names (e.g. sauron-central, sauron-lite,
+        # sauron-forwarder all derive from retired bb-sec_sauron and reference
+        # "sauron" in prose / as container_name).
+        consumer_dir=$(dirname "$f" | sed -E 's|.*/(a_solutions/[^/]+).*|\1|')
+        consumer_name=$(basename "$consumer_dir" | sed -E 's/^[a-z]{2}-[a-z]{3}_//')
+        case "$consumer_name" in
+            "$svc"-*|*-"$svc"|"$svc")
+                # Successor or self — name carries the retired prefix/suffix legitimately.
+                continue
+                ;;
+        esac
+        # Filter chain — each step works on the prior's output. Note grep's
+        # `-n` output prefix is `LINE:` so comment-line filters must account
+        # for that prefix.
+        if grep -nwE -- "$svc" "$f" 2>/dev/null \
             | grep -vE "ghcr\.io/[^ /]+/$svc" \
-            | grep -vE "^\s*#|^\s*//" \
+            | grep -vE "^[0-9]+:\s*#|^[0-9]+:\s*//" \
+            | grep -vE "[a-zA-Z0-9_/-]$svc|$svc[a-zA-Z0-9_/-]" \
+            | grep -vE '"(cmd|entrypoint|command|args|binary|apt|app_dir)"\s*:' \
+            | grep -vE 'sed -i.*'"$svc"'|"\\bsed\\b.*'"$svc" \
+            | grep -vE '"(action|path)"\s*:.*(compose_down|path_remove|path_create)|/opt/containers/'"$svc" \
             | grep -q .; then
             refs="${refs}${f}"$'\n'
         fi
