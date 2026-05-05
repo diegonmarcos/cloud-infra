@@ -123,7 +123,9 @@
       ZO_PASS="{ZO_PASS}"
       OO_HOST="10.0.0.6"
       OO_PORT="5080"
-      if [ -n "$ZO_USER" ] && [ "$ZO_USER" != "{ZO_USER}" ]; then
+      # Activation awk-substitutes both placeholders with values from .secrets.
+      # If creds were absent the values become empty strings — skip the push.
+      if [ -n "$ZO_USER" ] && [ -n "$ZO_PASS" ]; then
         EV_PAYLOAD=$(jq -n \
           --arg vm "$HOSTNAME" \
           --arg date "$DATE" \
