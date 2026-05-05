@@ -29,33 +29,41 @@ let
 in
 {
   home.activation.etcHostsCleanCaddySoT = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    set -eu
-    HOSTS=/etc/hosts
-    [ -w "$HOSTS" ] || { echo "[etc-hosts-clean] /etc/hosts not writable, skipping"; exit 0; }
+    # Subshell isolates `exit` so the not-writable early-return doesn't kill
+    # the whole HM activation script (which would silently skip every later
+    # activation entry — `home.activation.installLogShipper`,
+    # `installJournalNtfy`, `installDataPublisher`, `installEvidenceCollector`,
+    # ...). Surfaced 2026-05-05: log-shipper deployment failed to land
+    # because etcHostsCleanCaddySoT's `exit 0` terminated `activate` early.
+    (
+      set -eu
+      HOSTS=/etc/hosts
+      [ -w "$HOSTS" ] || { echo "[etc-hosts-clean] /etc/hosts not writable, skipping"; exit 0; }
 
-    # Match any line where the second token (or later) ends in diegonmarcos.com
-    # and is not in the allow-list. Strip those lines in-place.
-    TMP=$(${pkgs.coreutils}/bin/mktemp)
-    ${pkgs.gawk}/bin/awk '
-      {
-        keep = 1
-        for (i = 2; i <= NF; i++) {
-          if ($i ~ /\.diegonmarcos\.com$/) {
-            ${lib.concatMapStringsSep "\n            "
-              (h: "if ($i == \"${h}\") continue;")
-              allowedHosts}
-            keep = 0
-            break
+      # Match any line where the second token (or later) ends in diegonmarcos.com
+      # and is not in the allow-list. Strip those lines in-place.
+      TMP=$(${pkgs.coreutils}/bin/mktemp)
+      ${pkgs.gawk}/bin/awk '
+        {
+          keep = 1
+          for (i = 2; i <= NF; i++) {
+            if ($i ~ /\.diegonmarcos\.com$/) {
+              ${lib.concatMapStringsSep "\n              "
+                (h: "if ($i == \"${h}\") continue;")
+                allowedHosts}
+              keep = 0
+              break
+            }
           }
+          if (keep) print
         }
-        if (keep) print
-      }
-    ' "$HOSTS" > "$TMP"
+      ' "$HOSTS" > "$TMP"
 
-    if ! ${pkgs.diffutils}/bin/cmp -s "$TMP" "$HOSTS"; then
-      ${pkgs.coreutils}/bin/cat "$TMP" | ${pkgs.coreutils}/bin/install -m 644 /dev/stdin "$HOSTS"
-      echo "[etc-hosts-clean] stripped *.diegonmarcos.com hijacks from /etc/hosts (Caddy is sole route owner)"
-    fi
-    ${pkgs.coreutils}/bin/rm -f "$TMP"
+      if ! ${pkgs.diffutils}/bin/cmp -s "$TMP" "$HOSTS"; then
+        ${pkgs.coreutils}/bin/cat "$TMP" | ${pkgs.coreutils}/bin/install -m 644 /dev/stdin "$HOSTS"
+        echo "[etc-hosts-clean] stripped *.diegonmarcos.com hijacks from /etc/hosts (Caddy is sole route owner)"
+      fi
+      ${pkgs.coreutils}/bin/rm -f "$TMP"
+    ) || echo "[etc-hosts-clean] failed — activation continues"
   '';
 }
