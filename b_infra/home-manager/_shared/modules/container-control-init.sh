@@ -104,15 +104,19 @@ else
   git clone --depth 1 "$CLOUD_DATA_REPO" "$CLOUD_DATA_DIR" >/dev/null 2>&1 && log "cloud-data cloned" || log_err "cloud-data clone failed"
 fi
 
-# Find VM manifest. The modern source is build-vm-{alias}.json (dist/ root);
-# the deprecated cloud-data-containers-{alias}.json is kept as a back-compat
-# fallback only — it has been removed from the derive pipeline.
+# Find VM manifest. The canonical location is /opt/scripts/build-vm.json,
+# deployed by home-manager (sourced from cloud/2_configs/dist/build-vm-{vm}.json
+# via a symlink in b_infra/home-manager/nixhm-sudo-{vm}/src/). cloud-data
+# fallbacks are kept only for historical migrations — the file does NOT live
+# in the cloud-data repo anymore.
 CONTAINERS_JSON=""
-for pattern in "build-vm-${VM_ALIAS}.json" "cloud-data-containers-${VM_ALIAS}.json"; do
-  MATCH=$(find "$CLOUD_DATA_DIR" -maxdepth 2 -name "$pattern" 2>/dev/null | head -1)
-  [ -n "$MATCH" ] && CONTAINERS_JSON="$MATCH" && break
+for candidate in \
+    "/opt/scripts/build-vm.json" \
+    "$CLOUD_DATA_DIR/build-vm-${VM_ALIAS}.json" \
+    "$CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json"; do
+  [ -f "$candidate" ] && CONTAINERS_JSON="$candidate" && break
 done
-[ -z "$CONTAINERS_JSON" ] && { log_err "No manifest for vm=$VM_ALIAS (looked for build-vm-${VM_ALIAS}.json)"; exit 1; }
+[ -z "$CONTAINERS_JSON" ] && { log_err "No manifest for vm=$VM_ALIAS (expected /opt/scripts/build-vm.json from home-manager)"; exit 1; }
 
 DECLARED_SERVICES=$(jq -r '.services[].compose_path' "$CONTAINERS_JSON")
 PROJECT_COUNT=$(echo "$DECLARED_SERVICES" | wc -w)
