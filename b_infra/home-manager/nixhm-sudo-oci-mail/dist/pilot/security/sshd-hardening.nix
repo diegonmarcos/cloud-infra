@@ -13,8 +13,9 @@
 # SSH daemon hardening + boot-time SSH firewall.
 #
 # Phase 3 of loyal-firewalling-marmot.md: the public-port list embedded in the
-# generated ssh-firewall.sh is now derived from cloud-data-home-manager.json
+# generated ssh-firewall.sh is now derived from _cloud-data-consolidated.json[._home_manager.vms]
 # (sourced from b_infra/home-manager/nixhm-sudo-<vmName>/build.json.firewall.public_ports).
+# 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.vms]
 # Replaces the previous hardcoded hub-mode block (per-host hostname check + fixed port list).
 #
 # The companion vm-pilot/network/firewall.nix runs earlier in boot (before
@@ -25,7 +26,10 @@
 { config, pkgs, lib, ... }:
 
 let
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = {
+    vms = consolidated._home_manager.vms or {};
+  };
   vmData = cloudData.vms.${vmName} or null;
   publicPorts = if vmData == null then [] else (vmData.public_ports or []);
 

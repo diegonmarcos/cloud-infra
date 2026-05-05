@@ -17,17 +17,33 @@
 { config, lib, pkgs, ... }:
 
 let
-  # ── Mesh topology from cloud-data ─────────────────────────────────────
+  # ── Mesh topology from _cloud-data-consolidated.json[.native.wireguard] ────
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[.native.wireguard]
   # Hub-and-spoke: all spokes connect to hub, hub routes between them
-  cloudData = builtins.fromJSON (builtins.readFile ../cloud-data-home-manager.json);
-
-  toTopoEntry = p: {
-    address   = p.wg_ip;
-    endpoint  = p.public_ip;
-    port      = p.wg_port;
-    publicKey = p.wg_public_key;
-    role      = p.role;
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  cloudData = {
+    wireguard = consolidated.native.wireguard or {};
   };
+
+  # Endpoint in consolidated is "host:port" — split if public_ip/wg_port not present
+  splitEndpoint = ep:
+    let
+      epStr = if ep == null then "" else ep;
+      parts = lib.splitString ":" epStr;
+    in {
+      host = if (builtins.length parts) >= 1 then builtins.elemAt parts 0 else "";
+      port = if (builtins.length parts) >= 2 then lib.toInt (builtins.elemAt parts 1) else 51820;
+    };
+
+  toTopoEntry = p:
+    let ep = splitEndpoint (p.endpoint or null);
+    in {
+      address   = p.wg_ip;
+      endpoint  = p.public_ip or (if ep.host == "" then null else ep.host);
+      port      = p.wg_port or ep.port;
+      publicKey = p.wg_public_key;
+      role      = p.role;
+    };
   toClientEntry = name: c: {
     address   = c.wg_ip;
     endpoint  = null;
@@ -48,7 +64,7 @@ let
   thisVm =
     if topology ? ${vmName} then topology.${vmName}
     else throw ''
-      wireguard.nix: VM "${vmName}" not found in cloud-data-home-manager.json wireguard.peers.
+      wireguard.nix: VM "${vmName}" not found in _cloud-data-consolidated.json wireguard.peers.
       Available peers: ${builtins.concatStringsSep ", " (builtins.attrNames topology)}
       Fix: ensure cloud-data submodule is up to date (git submodule update --remote)
     '';
@@ -118,7 +134,7 @@ let
   wgTemplate =
     if thisVm.publicKey == null then
       throw ''
-        wireguard.nix: VM "${vmName}" has null wg_public_key in cloud-data-home-manager.json.
+        wireguard.nix: VM "${vmName}" has null wg_public_key in _cloud-data-consolidated.json.
         This usually means the cloud-data submodule is stale. Fix:
           1. Regenerate cloud-data (push to cloud-data repo, or run derive-cloud-data)
           2. Update submodule: git submodule update --remote
