@@ -1,15 +1,65 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-05T17:36:42.154Z",
-  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/ntfy-acl",
-  "base_url": "https://rss.diegonmarcos.com",
-  "auth_default_access": "read-write",
-  "users": [],
-  "all_topics": "",
-  "categories": {},
-  "topics": {},
+  "vm": "oci-mail",
+  "vm_id": "oci-E2-f_0",
+  "services": [
+    {
+      "name": "cypht",
+      "dir": "aa-sui_cypht",
+      "compose_path": "/opt/containers/cypht",
+      "images": [
+        "cypht/cypht:latest",
+        "postgres:16-alpine"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "mail-puller",
+      "dir": "aa-sui_mail-puller",
+      "compose_path": "/opt/containers/mail-puller",
+      "images": [
+        "ghcr.io/diegonmarcos/mail-puller-binaries:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "snappymail",
+      "dir": "aa-sui_snappymail",
+      "compose_path": "/opt/containers/snappymail",
+      "images": [
+        "djmaze/snappymail:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "maddy",
+      "dir": "aa-sui_tools-maddy",
+      "compose_path": "/opt/containers/maddy",
+      "images": [
+        "ghcr.io/diegonmarcos/maddy:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "smtp-proxy",
+      "dir": "aa-sui_tools-smtp-proxy",
+      "compose_path": "/opt/containers/smtp-proxy",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "stalwart",
+      "dir": "aa-sui_tools-stalwart",
+      "compose_path": "/opt/containers/stalwart",
+      "images": [
+        "stalwartlabs/stalwart:latest",
+        "python:3-alpine"
+      ],
+      "has_docker_build": true
+    }
+  ],
   "_meta": {
-    "generated_at": "2026-05-05T17:36:42.217Z",
+    "generated_at": "2026-05-05T17:36:42.172Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

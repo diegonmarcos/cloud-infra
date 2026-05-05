@@ -1964,14 +1964,17 @@ function deriveNtfyAcl(c: any): DerivedFile {
   };
 }
 
-// Per-VM container manifests for docker-pull-up.sh
-// Produces one cloud-data-containers-{alias}.json per VM
-function deriveVmContainerManifests(c: any): DerivedFile[] {
+// Per-VM container manifest in the modern build-* family (lives at dist/ root).
+// Replaces the deprecated cloud-data-containers-{alias}.json (which lives in
+// dist/z_archive/ per the deprecation policy at the top of this file).
+//
+// Consumed by /opt/scripts/container-init.sh on each VM after it git-pulls
+// cloud-data — it reads build-vm-{vm}.json to know which services to start.
+function deriveBuildVm(c: any): DerivedFile[] {
   const vms = c.vms as Record<string, any>;
   const services = c.services as Record<string, any>;
   const gha = c._gha ?? {};
   const ghaServices = gha.services ?? {};
-  const vmIdToAlias = buildVmIdToAlias(vms);
 
   const files: DerivedFile[] = [];
 
@@ -1983,7 +1986,6 @@ function deriveVmContainerManifests(c: any): DerivedFile[] {
     for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
       if (svc.vm !== vmId) continue;
 
-      // Collect all images from containers
       const images: string[] = [];
       for (const ct of Object.values(svc.containers ?? {})) {
         const img = (ct as any).image;
@@ -1992,7 +1994,6 @@ function deriveVmContainerManifests(c: any): DerivedFile[] {
         }
       }
 
-      // Get has_docker from GHA config
       const ghaEntry = ghaServices[svcName] ?? {};
       const hasDockerBuild = ghaEntry.has_docker ?? false;
       const dir = ghaEntry.dir ?? svc.folder ?? svcName;
@@ -2009,10 +2010,8 @@ function deriveVmContainerManifests(c: any): DerivedFile[] {
     if (vmServices.length === 0) continue;
 
     files.push({
-      name: `cloud-data-containers-${alias}.json`,
+      name: `build-vm-${alias}.json`,
       data: {
-        _generated: now(),
-        _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/vm-container-manifests",
         vm: alias,
         vm_id: vmId,
         services: vmServices,
@@ -2022,6 +2021,8 @@ function deriveVmContainerManifests(c: any): DerivedFile[] {
 
   return files;
 }
+
+// (deprecated deriveVmContainerManifests removed 2026-05-05 — replaced by deriveBuildVm above)
 
 function deriveTopology(c: any): DerivedFile {
   // Backward compat: produce the old topology format from consolidated data
@@ -2309,9 +2310,9 @@ function main() {
     mkdirSync(ARCHIVE_DIR, { recursive: true });
   }
 
-  // Run all derivations (19 + per-VM container manifests)
+  // Run all derivations
   const derived: DerivedFile[] = [
-    ...deriveVmContainerManifests(consolidated),
+    ...deriveBuildVm(consolidated),                  // dist/build-vm-{vm}.json — per-VM service manifest
     deriveServiceConnections(consolidated),
     deriveDnsServices(consolidated),
     deriveCaddy(consolidated),

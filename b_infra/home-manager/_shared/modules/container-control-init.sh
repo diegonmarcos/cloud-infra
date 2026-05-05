@@ -104,13 +104,15 @@ else
   git clone --depth 1 "$CLOUD_DATA_REPO" "$CLOUD_DATA_DIR" >/dev/null 2>&1 && log "cloud-data cloned" || log_err "cloud-data clone failed"
 fi
 
-# Find VM manifest
+# Find VM manifest. The modern source is build-vm-{alias}.json (dist/ root);
+# the deprecated cloud-data-containers-{alias}.json is kept as a back-compat
+# fallback only — it has been removed from the derive pipeline.
 CONTAINERS_JSON=""
-for pattern in "cloud-data-containers-${VM_ALIAS}.json"; do
-  MATCH=$(find "$CLOUD_DATA_DIR" -maxdepth 1 -name "$pattern" 2>/dev/null | head -1)
+for pattern in "build-vm-${VM_ALIAS}.json" "cloud-data-containers-${VM_ALIAS}.json"; do
+  MATCH=$(find "$CLOUD_DATA_DIR" -maxdepth 2 -name "$pattern" 2>/dev/null | head -1)
   [ -n "$MATCH" ] && CONTAINERS_JSON="$MATCH" && break
 done
-[ -z "$CONTAINERS_JSON" ] && { log_err "No manifest for vm=$VM_ALIAS"; exit 1; }
+[ -z "$CONTAINERS_JSON" ] && { log_err "No manifest for vm=$VM_ALIAS (looked for build-vm-${VM_ALIAS}.json)"; exit 1; }
 
 DECLARED_SERVICES=$(jq -r '.services[].compose_path' "$CONTAINERS_JSON")
 PROJECT_COUNT=$(echo "$DECLARED_SERVICES" | wc -w)
