@@ -7,7 +7,7 @@
     "replaces": [
       "cloud-data-gha-config.json (vm wg_ip/host/user lookup + service matrix for ship-services.sh)"
     ],
-    "generated_at": "2026-05-05T13:45:53.296Z",
+    "generated_at": "2026-05-05T14:58:28.851Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -29,7 +29,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-05T13:45:53.233Z",
+  "_generated": "2026-05-05T14:58:28.800Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "builders",
   "gha": {
@@ -321,6 +321,11 @@
       "kg-graph": {
         "dir": "ca-dat_kg-graph",
         "vm": "oci-apps",
+        "has_docker": true
+      },
+      "postlite": {
+        "dir": "ca-dat_postlite",
+        "vm": "gcp-proxy",
         "has_docker": true
       },
       "redis": {
