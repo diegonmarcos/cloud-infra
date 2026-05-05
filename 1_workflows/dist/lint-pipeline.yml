@@ -72,10 +72,11 @@ jobs:
         run: bash 1_workflows/src/test/test_ghcr_visibility.sh
       - name: Phase 9 — proxy-mcp retry is bounded (no OOM leak)
         run: bash 1_workflows/src/test/test_retry_bounded_backoff.sh
-      - name: Phase 10 — no live refs to z_archive/ services (report-only)
-        # Pre-existing drift reported but not blocking; cleanup happens
-        # in the same PR as each service's retirement.
-        continue-on-error: true
+      - name: Phase 10 — no live refs to z_archive/ services
+        # 2026-05-05: flipped from continue-on-error to hard-fail. The test's
+        # filter chain now correctly excludes false positives (compound
+        # names, shell-command fields, retirement-cleanup hooks, successor
+        # services) so a hit is a real drift bug.
         run: bash 1_workflows/src/test/test_no_retired_service_refs.sh
       - name: Phase 13 — every flake.nix has a committed flake.lock
         run: bash 1_workflows/src/test/test_flake_lock_present.sh
@@ -84,9 +85,11 @@ jobs:
       - name: Phase 15 — engine layout detection works pre-build
         run: bash 1_workflows/src/test/test_layout_detection_pre_build.sh
       - name: Phase 16 — every published image also has -binaries tag (report-only)
-        # Report-only until all 30+ services redeploy with the new engine —
-        # they self-heal as their next ship pushes the missing -binaries tag.
-        # Will flip to hard fail once steady-state.
+        # 2026-05-05: scope-fixed to skip compose-build services (those use
+        # dockerfile_inline so the image is built on the VM, never shipped to
+        # GHCR — out of scope). Remaining ~9 hits are services awaiting
+        # next-ship to push the new -binaries tag (self-heal).
+        # Will flip to hard fail once those services next ship.
         continue-on-error: true
         run: bash 1_workflows/src/test/test_binaries_image_published.sh
       - name: Phase 17 — runners[].builder_image is published on GHCR
@@ -149,6 +152,14 @@ jobs:
         # Top-level _comment + _source + runners; per-runner type/host contract.
         # Image identity NOT in this file — lives in unix master.
         run: bash 1_workflows/src/test/test_runners_json_schema.sh
+      - name: Phase 38 — no dead `nix profile install` branch in engine
+        # Host-state mutation forbidden in engine scripts. nix_install must use
+        # `nix shell` / `nix build` only (audit follow-up 2026-05-05).
+        run: bash 1_workflows/src/test/test_no_dead_nix_install_branch.sh
+      - name: Phase 39 — legacy unix workflows/src/static/ removed
+        # Stale source tree (hardcoded literals); active source is
+        # III_unix/1_workflows/src/cicd/. Skipped if III_unix not checked out.
+        run: bash 1_workflows/src/test/test_no_legacy_unix_static_workflows.sh
       - name: Phase 33 — dist/ + .github/workflows/ in sync with src/ (no agent drift)
         # report-only: false-positives in CI when local + origin match but
         # CI's freshly-built dist differs (likely env-dependent — node/npm
