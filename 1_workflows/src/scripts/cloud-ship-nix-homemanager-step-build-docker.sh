@@ -121,12 +121,18 @@ for p in /nix/store/*; do
             continue
         fi
     fi
-    if cp -aR --no-preserve=links "$p" "$HOST_PATH" 2>/dev/null; then
+    cp -aR --no-preserve=links "$p" "$HOST_PATH" 2>/dev/null
+    # Verify by file presence (with content), NOT cp's exit code. Concurrent
+    # activation containers (orphaned from prior failed ships) write to the
+    # same /nix/store and race; cp can return non-zero when the target was
+    # just successfully written by the other process. Trust the filesystem.
+    if [ -e "$HOST_PATH" ] && { [ ! -d "$HOST_PATH" ] || [ -n "$(ls -A "$HOST_PATH" 2>/dev/null)" ]; }; then
         COPIED=$((COPIED + 1))
     else
-        # Retry without any link preservation — full content copy.
+        # cp -rL fallback (full content copy, no hardlink preservation).
         rm -rf "$HOST_PATH" 2>/dev/null
-        if cp -rL "$p" "$HOST_PATH" 2>/dev/null; then
+        cp -rL "$p" "$HOST_PATH" 2>/dev/null
+        if [ -e "$HOST_PATH" ] && { [ ! -d "$HOST_PATH" ] || [ -n "$(ls -A "$HOST_PATH" 2>/dev/null)" ]; }; then
             COPIED=$((COPIED + 1))
         else
             FAILED=$((FAILED + 1))
