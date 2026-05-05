@@ -1,0 +1,63 @@
+{
+  "name": "nixhm-sudo-oci-mail",
+  "description": "Home Manager system image for oci-mail (Stalwart, SnappyMail, Maddy, Dagu)",
+  "vm": {
+    "id": "oci-E2-f_0",
+    "alias": "oci-mail",
+    "provider": "oci",
+    "arch": "x86_64-linux",
+    "resources": {
+      "cpus": 1,
+      "ram_mb": 1024,
+      "disk_gb": 47
+    },
+    "disk": {
+      "activation_min_free_gb": 7,
+      "_comment": "HM activation peak revised 2026-05-05: full peak (~10GB) only on first-ever pull; subsequent ships hit cache (image already in /var/lib/docker overlay2 from prior pulls) and peak is ~6-7GB (cp -aR /nix/store + nix-build /tmp). VM only has 47GB and runs full mail stack (~33GB committed after pre-flight engine prunes vm-system.tar.gz orphans + apt-cache + image pruning)."
+    },
+    "network": {
+      "public_ip": "130.110.251.193",
+      "wg_ip": "10.0.0.3",
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "rescue_port": 2200
+    }
+  },
+  "hm": {
+    "user": "ubuntu",
+    "config": "ubuntu@oci-mail",
+    "delivery": "docker",
+    "image": "ghcr.io/diegonmarcos/nixhm-sudo-oci-mail",
+    "platform": "linux/amd64",
+    "remote_build": false
+  },
+  "firewall": {
+    "public_ports": [
+      {
+        "port": 25,
+        "proto": "tcp",
+        "desc": "SMTP (Maddy MX — must be public, RFC)",
+        "source": "0.0.0.0/0",
+        "owned_by": "maddy"
+      },
+      {
+        "port": 8080,
+        "proto": "tcp",
+        "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
+        "source": "0.0.0.0/0",
+        "owned_by": "smtp-proxy"
+      }
+    ]
+  },
+  "dashboard": {
+    "dns": "oci-mail.app",
+    "port": 7680
+  },
+  "deploy": {
+    "host": "oci-mail",
+    "remote_path": "~/.config/home-manager"
+  },
+  "build": {
+    "headers_enforced": true
+  }
+}
