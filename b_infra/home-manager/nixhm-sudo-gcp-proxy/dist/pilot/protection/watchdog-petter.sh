@@ -30,8 +30,8 @@ DOCKER_FAIL=0
 DOCKER_SOCK="unix:///var/run/docker.sock"
 # Query docker API without spawning any docker CLI process
 dapi() { curl -sf --max-time 5 --unix-socket /var/run/docker.sock "http://localhost$1" 2>/dev/null; }
-# Only for actions (restart/prune) — deprioritized, with timeout
-dcli() { ionice -c3 nice -n 19 timeout 15 docker "$@" 2>/dev/null; }
+# Only for actions (restart/prune) — with timeout (no nice/ionice wrapping; docker-real wrapper retired)
+dcli() { timeout 15 docker "$@" 2>/dev/null; }
 DOCKER_FAIL_THRESHOLD=120
 CTR_RESTART_TRACK=""
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
