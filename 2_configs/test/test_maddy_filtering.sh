@@ -137,6 +137,13 @@ check "post-hoc: dispatch case has 'apply-rules' branch" \
 check "post-hoc: apply-rules delegates to mail-sieve-subset-delivery-time" \
     grep -q 'mail-sieve-subset-delivery-time' "$SRC/mail-sieve-subset-post-hoc.sh"
 
+# 12d. apply-rules reads scan via input redirection, NOT a pipeline.
+# Pipeline + `set -e` + `[ ] &&` short-circuit at EOF causes the script
+# to exit silently right after the last row (SCANNED % 200 != 0 → exit 1).
+# Asserts the loop is `done < "$SCAN"`, not `sq … | while`.
+check "post-hoc: apply-rules scan loop uses input redirection (not pipeline)" \
+    grep -qE 'done < "\$SCAN"' "$SRC/mail-sieve-subset-post-hoc.sh"
+
 # 13. Embedded jq program compiles. `sh -n` only validates POSIX shell;
 # the jq script lives inside a single-quoted heredoc and was historically
 # broken (missing `;` between `def` definitions caused jq to error at EOF
