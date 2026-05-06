@@ -127,6 +127,25 @@ check "delivery-time: pins schema_version=2" \
 check "delivery-time: single jq -n (combined ctx + eval — no two-jq chain)" \
     bash -c "[ \"\$(grep -c '^OUT=' '$SRC/mail-sieve-subset-delivery-time.sh')\" = '1' ]"
 
+# 12-busybox. delivery-time runs in the maddy alpine container — busybox
+# awk only. Forbid gawk-only builtins (strtonum, gensub, asorti, …) in
+# code (excludes lines starting with `#`, which are POSIX-shell comments
+# documenting WHY we avoid those builtins). Calling any of these aborts
+# the awk process and `set -e` kills the filter, dropping every
+# non-ASCII-subject message into INBOX.
+check "delivery-time: NO gawk-only builtins in code (strtonum/gensub/asorti/…)" \
+    bash -c "! grep -vE '^[[:space:]]*#' '$SRC/mail-sieve-subset-delivery-time.sh' | grep -wE 'strtonum|gensub|asorti|systime|mktime'"
+
+# 12-busybox-2. End-to-end smoke: decode_2047 on a real RFC 2047
+# Q-encoded subject must succeed. Without the busybox-safe hex2num
+# replacement this would fail with "Call to undefined function".
+check "delivery-time: decode_2047 handles RFC 2047 Q-encoded subject without gawk" \
+    bash -c '
+        eval "$(awk "/^decode_2047\\(\\) \\{/,/^\\}/" '"'$SRC/mail-sieve-subset-delivery-time.sh'"')"
+        out="$(decode_2047 "=?utf-8?q?[diegonmarcos/cloud]_Run_failed?=")"
+        [ "$out" = "[diegonmarcos/cloud] Run failed" ]
+    '
+
 # 12b. post-hoc dispatch case includes apply-rules (catches removed-branch
 # regression: lifecycle entry could exist while the script silently fails).
 check "post-hoc: dispatch case has 'apply-rules' branch" \
