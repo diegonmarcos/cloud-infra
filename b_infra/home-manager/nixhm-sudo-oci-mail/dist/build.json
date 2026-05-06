@@ -11,10 +11,6 @@
       "ram_mb": 1024,
       "disk_gb": 47
     },
-    "disk": {
-      "activation_min_free_gb": 6,
-      "_comment": "HM activation peak revised 2026-05-06: lowered 7→6 after the engine's 3-pass prune (pass 1 dangling, pass 2 unused tagged dangling=false, pass 3 nix-store --gc) consistently leaves oci-mail at 5-6 GB free. /var/lib/docker accounts for 12GB (mail stack: stalwart, maddy, cypht, postgres, snappymail, smtp-proxy, mail-puller, stalwart-sorter — each with persistent layers). Activation typically peaks at ~5GB transient (cp -aR /nix/store + nix-build /tmp) when the latest HM image was already in overlay2 from the prior failed-ship pull. 6GB threshold lets us proceed without manual intervention; first-ever pulls (~10GB peak) still need a 47GB VM with bare-minimum mail data."
-    },
     "network": {
       "public_ip": "130.110.251.193",
       "wg_ip": "10.0.0.3",

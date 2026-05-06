@@ -94,35 +94,33 @@
       ss -tnp 2>/dev/null > "$EVIDENCE_DIR/connections.txt" || true
 
       # ── Phase 5: Diff vs yesterday ─────────────────────────────────────
-      # Metadata diff only — compare image_id per container name.
+      # Pure-jq implementation: handles empty container sets, missing fields,
+      # and never emits malformed JSON. Replaces the prior shell-loop logic
+      # that emitted a leading `,` when the new manifest had zero containers.
       DIFF_FILE="$EVIDENCE_DIR/diff.json"
       if [ -f "$PREV_DIR/manifest.json" ]; then
-        {
-          echo "{"
-          echo "  \"baseline\": \"$(basename "$PREV_DIR")\","
-          echo "  \"current\": \"$DATE\","
-          echo "  \"containers\": {"
-          FIRST=true
-          for key in $(jq -r '.containers | keys[]' "$EVIDENCE_DIR/manifest.json" 2>/dev/null); do
-            NEW_ID=$(jq -r ".containers.\"$key\".image_id // \"new\"" "$EVIDENCE_DIR/manifest.json")
-            OLD_ID=$(jq -r ".containers.\"$key\".image_id // \"missing\"" "$PREV_DIR/manifest.json" 2>/dev/null || echo "missing")
-            STATUS="unchanged"
-            [ "$OLD_ID" = "missing" ] && STATUS="new"
-            [ "$OLD_ID" != "$NEW_ID" ] && [ "$OLD_ID" != "missing" ] && STATUS="modified"
-            [ "$FIRST" = true ] && FIRST=false || echo ","
-            echo -n "    \"$key\": \"$STATUS\""
-          done
-          for key in $(jq -r '.containers | keys[]' "$PREV_DIR/manifest.json" 2>/dev/null); do
-            EXISTS=$(jq -r ".containers.\"$key\" // \"gone\"" "$EVIDENCE_DIR/manifest.json")
-            if [ "$EXISTS" = "gone" ]; then
-              echo ","
-              echo -n "    \"$key\": \"deleted\""
-            fi
-          done
-          echo ""
-          echo "  }"
-          echo "}"
-        } > "$DIFF_FILE"
+        jq -n \
+          --arg baseline "$(basename "$PREV_DIR")" \
+          --arg current  "$DATE" \
+          --slurpfile cur  "$EVIDENCE_DIR/manifest.json" \
+          --slurpfile prev "$PREV_DIR/manifest.json" \
+          '
+          ($cur[0].containers  // {}) as $c |
+          ($prev[0].containers // {}) as $p |
+          {
+            baseline: $baseline,
+            current: $current,
+            containers: (
+              ([ $c | keys[] | { (.): (
+                  if   ($p[.] // null) == null              then "new"
+                  elif ($p[.].image_id != $c[.].image_id)   then "modified"
+                  else "unchanged" end
+                ) } ] + [ $p | keys[] | select(. as $k | ($c[$k] // null) == null) | { (.): "deleted" } ])
+                | add // {}
+            )
+          }
+          ' > "$DIFF_FILE" 2>/dev/null \
+          || echo "{\"baseline\":\"$(basename "$PREV_DIR")\",\"current\":\"$DATE\",\"containers\":{}}" > "$DIFF_FILE"
       else
         echo "{\"baseline\":null,\"current\":\"$DATE\",\"containers\":{}}" > "$DIFF_FILE"
       fi
@@ -140,15 +138,27 @@
       if [ -n "$ZO_USER" ] && [ -n "$ZO_PASS" ]; then
         # docker-inspect.json on hub VMs runs to several MB — passing JSON via
         # `-d "$VAR"` overflows ARG_MAX. Pipe through stdin via `--data @-`.
+        # Use --rawfile + fromjson? // {} so a malformed input file (legacy
+        # diff.json bug, partial write) still produces a valid envelope
+        # instead of empty output that triggers HTTP 400.
         jq -n \
           --arg vm "$HOSTNAME" \
           --arg date "$DATE" \
-          --slurpfile manifest "$EVIDENCE_DIR/manifest.json" \
-          --slurpfile diff "$EVIDENCE_DIR/diff.json" \
-          --slurpfile inspect "$EVIDENCE_DIR/docker-inspect.json" \
+          --rawfile manifest_raw "$EVIDENCE_DIR/manifest.json" \
+          --rawfile diff_raw "$EVIDENCE_DIR/diff.json" \
+          --rawfile inspect_raw "$EVIDENCE_DIR/docker-inspect.json" \
           --rawfile processes "$EVIDENCE_DIR/processes.txt" \
           --rawfile connections "$EVIDENCE_DIR/connections.txt" \
-          '[{vm:$vm,date:$date,manifest:($manifest[0]//{}),diff:($diff[0]//{}),docker_inspect:($inspect[0]//[]),processes:$processes,connections:$connections,schema:"vm_evidence-v1"}]' 2>/dev/null \
+          '[{
+            vm:$vm,
+            date:$date,
+            manifest: ($manifest_raw | (fromjson? // {})),
+            diff: ($diff_raw | (fromjson? // {})),
+            docker_inspect: ($inspect_raw | (fromjson? // [])),
+            processes:$processes,
+            connections:$connections,
+            schema:"vm_evidence-v1"
+          }]' 2>/dev/null \
           | curl -fsS --max-time 30 -u "$ZO_USER:$ZO_PASS" \
               -H 'Content-Type: application/json' \
               -X POST "http://$OO_HOST:$OO_PORT/api/default/vm_evidence/_json" \

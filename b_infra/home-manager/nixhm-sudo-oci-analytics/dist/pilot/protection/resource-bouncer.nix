@@ -138,12 +138,12 @@ in {
     $SUDO chmod 644 /etc/sysctl.d/99-system-protection.conf
     $SUDO sysctl --system > /dev/null 2>&1 || true
 
-    # Ext4 reserved blocks
-    ROOT_DEV=$($SUDO findmnt -n -o SOURCE / 2>/dev/null) || true
-    ROOT_DEV=$(echo "$ROOT_DEV" | while read -r line; do echo "$line"; break; done)
-    if [ -n "$ROOT_DEV" ] && $SUDO tune2fs -l "$ROOT_DEV" >/dev/null 2>&1; then
-      $SUDO tune2fs -m 5 "$ROOT_DEV" 2>/dev/null || true
-    fi
+    # Ext4 reserved blocks: REMOVED 2026-05-06 — disk-ballast.nix is the
+    # single source of truth for disk reservation now (universal across
+    # ext4 + btrfs, declarative size, root-deletable on demand by the
+    # engine pre-flight). resource-bouncer setting -m 5 here was undoing
+    # disk-ballast's `-m 0` and double-reserving disk we already own
+    # via the userland ballast file.
 
     # SSH/WG/Docker scheduler drop-ins handled by system-protection-scheduler-fifo-rr-cfs.nix
 

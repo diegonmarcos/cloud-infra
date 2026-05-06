@@ -1,65 +1,36 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "vm": "gcp-proxy",
-  "vm_id": "gcp-E2-f_0",
+  "vm": "oci-analytics",
+  "vm_id": "oci-E2-f_1",
   "services": [
     {
-      "name": "hickory-dns",
-      "dir": "ba-clo_hickory-dns",
-      "compose_path": "/opt/containers/hickory-dns",
+      "name": "dagu",
+      "dir": "bc-obs_dagu",
+      "compose_path": "/opt/containers/dagu",
       "images": [
-        "hickorydns/hickory-dns:latest"
+        "ghcr.io/diegonmarcos/dagu:latest"
       ],
       "has_docker_build": true
     },
     {
-      "name": "authelia",
-      "dir": "bb-sec_authelia",
-      "compose_path": "/opt/containers/authelia",
+      "name": "dozzle",
+      "dir": "bc-obs_dozzle",
+      "compose_path": "/opt/containers/dozzle",
       "images": [
-        "authelia/authelia:4.39.15",
-        "redis:7-bookworm",
-        "ghcr.io/diegonmarcos/postlite:latest"
+        "amir20/dozzle:latest"
       ],
       "has_docker_build": true
     },
     {
-      "name": "caddy",
-      "dir": "bb-sec_caddy",
-      "compose_path": "/opt/containers/caddy",
-      "images": [
-        "ghcr.io/diegonmarcos/caddy-l4:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "introspect-proxy",
-      "dir": "bb-sec_introspect-proxy",
-      "compose_path": "/opt/containers/introspect-proxy",
-      "images": [
-        "ghcr.io/diegonmarcos/introspect-proxy:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "postlite",
-      "dir": "ca-dat_postlite",
-      "compose_path": "/opt/containers/postlite",
+      "name": "sauron-forwarder",
+      "dir": "bc-obs_sauron-forwarder",
+      "compose_path": "/opt/containers/sauron-forwarder",
       "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "redis",
-      "dir": "ca-dat_redis",
-      "compose_path": "/opt/containers/redis",
-      "images": [
-        "redis:alpine"
-      ],
       "has_docker_build": true
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-06T11:05:11.230Z",
+    "generated_at": "2026-05-06T11:05:11.227Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

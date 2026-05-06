@@ -1,0 +1,44 @@
+{
+  "name": "nixhm-sudo-oci-analytics",
+  "description": "Home Manager system image for oci-analytics (Matomo, Umami, Dozzle)",
+  "vm": {
+    "id": "oci-E2-f_1",
+    "alias": "oci-analytics",
+    "provider": "oci",
+    "arch": "x86_64-linux",
+    "resources": {
+      "cpus": 1,
+      "ram_mb": 1024,
+      "disk_gb": 47
+    },
+    "network": {
+      "public_ip": "129.151.228.66",
+      "wg_ip": "10.0.0.4",
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "rescue_port": 2200
+    }
+  },
+  "hm": {
+    "user": "ubuntu",
+    "config": "ubuntu@oci-analytics",
+    "delivery": "docker",
+    "image": "ghcr.io/diegonmarcos/nixhm-sudo-oci-analytics",
+    "platform": "linux/amd64",
+    "remote_build": false
+  },
+  "firewall": {
+    "public_ports": []
+  },
+  "dashboard": {
+    "dns": "oci-analytics.app",
+    "port": 7680
+  },
+  "deploy": {
+    "host": "oci-analytics",
+    "remote_path": "~/.config/home-manager"
+  },
+  "build": {
+    "headers_enforced": true
+  }
+}

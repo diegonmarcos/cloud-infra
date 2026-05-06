@@ -136,6 +136,24 @@ else
     fi
 fi
 
+# ── Step 3.5: Reclaim image overlay BEFORE native activate ──
+# The activation container has finished cp'ing the closure to host's /nix/store.
+# Native activate (step 5) only needs files on host — never reaches back into
+# the image's overlay. Removing the image NOW (before nix-build /tmp/* runs)
+# frees ~6 GB right when nix-build wants peak transient room. Drops cumulative
+# peak from ~11 GB to ~8 GB.
+if [ "$USE_CLI" = true ]; then
+    docker rmi -f "$FULL_IMAGE" >/dev/null 2>&1 \
+      && echo "[hm-docker] Reclaimed image overlay (pre-activate): $FULL_IMAGE" \
+      || echo "[hm-docker] Image rmi non-fatal (still referenced)"
+else
+    IMG_ID=$(dock_api GET "/images/json?filters=%7B%22reference%22%3A%5B%22${IMAGE}%22%5D%7D" 2>/dev/null \
+        | grep -o '"Id":"[^"]*"' | head -1 | sed 's/"Id":"//;s/"//')
+    [ -n "$IMG_ID" ] && dock_api DELETE "/images/${IMG_ID}?force=true" >/dev/null 2>&1 \
+      && echo "[hm-docker] Reclaimed image overlay (pre-activate, socket): $IMG_ID" \
+      || true
+fi
+
 # ── Step 4: Register nix paths in host DB (native, not container) ──
 echo "[hm-docker] Registering nix paths (native)..."
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
@@ -180,24 +198,7 @@ if [ -n "$ACTIVATE" ] && [ -x "$ACTIVATE/activate" ]; then
         sudo -u "$HM_USER" HOME="/home/$HM_USER" USER="$HM_USER" "$ACTIVATE/activate" 2>&1
     fi
     echo "[hm-docker] Generation activated successfully"
-
-    # ── Step 6: Reclaim image overlay (closure is already on host /nix/store) ──
-    # The image was a transport for the closure. After activation succeeds, the
-    # closure lives in host's /nix/store and the image's ~6 GB in
-    # /var/lib/docker/overlay2 is pure waste. Removing it makes ship i/o
-    # incremental (only new closure paths persist on host), eliminating the
-    # 12 GB peak that forced the disk-ballast + 3-pass prune routine.
-    if [ "$USE_CLI" = true ]; then
-        docker rmi -f "$FULL_IMAGE" >/dev/null 2>&1 \
-          && echo "[hm-docker] Reclaimed image overlay: $FULL_IMAGE" \
-          || echo "[hm-docker] Image rmi non-fatal (still referenced by another container?)"
-    else
-        IMG_ID=$(dock_api GET '/images/json' 2>/dev/null \
-            | grep -o '"Id":"[^"]*"' | head -1 | sed 's/"Id":"//;s/"//')
-        [ -n "$IMG_ID" ] && dock_api DELETE "/images/${IMG_ID}?force=true" >/dev/null 2>&1 \
-          && echo "[hm-docker] Reclaimed image overlay (socket): $IMG_ID" \
-          || true
-    fi
+    # Image already reclaimed at step 3.5 (before native nix-build). Nothing to do here.
 else
     echo "[hm-docker] ERROR: activation path not found or not executable: $ACTIVATE"
     exit 1
@@ -227,11 +228,16 @@ step_compose() {
         # vacuum before any pull/cp/activate runs. Data-driven threshold:
         #   build.json:.vm.disk.activation_min_free_gb (default 10).
         # The engine OWNS the activation peak need — not per-VM build.json.
+        # Peak math (post 2026-05-06 optimization, image rmi'd before nix-build):
+        #   docker pull   +6 GB → peak 6  (image in overlay2)
+        #   cp -aR        +2 GB → peak 8  (closure delta written to host /nix/store)
+        #   docker rmi    -6 GB → drops to 2  (image gone, BEFORE nix-build)
+        #   nix-build     +3 GB → peak ~5 GB during native activate
+        # Worst-case crossover: 8 GB during cp. Adding 1 GB safety = 8 GB MIN.
         # Cross-reference: vm-pilot/src/modules/protection/disk-ballast.nix
-        # (ballastGB ? 10) MUST equal this number; the ballast is sized to
-        # exactly the activation requirement so engine pre-flight `rm -f
-        # /var/disk-reserve/ballast.bin` frees exactly enough.
-        MIN_FREE_GB=10
+        # (ballastGB ? 8) MUST equal this number — the ballast releases
+        # exactly the activation peak so engine pre-flight frees just enough.
+        MIN_FREE_GB=8
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
         # POSIX df: column 4 is Available KB. Convert to GB.
         FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
