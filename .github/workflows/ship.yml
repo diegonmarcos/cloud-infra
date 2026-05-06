@@ -21,10 +21,13 @@
 
 name: Ship
 
+# Ordering: gen-configs MUST run first so origin/main has the regenerated
+# 2_configs/dist/_cloud-data-consolidated.json + per-service build-*.json
+# committed before any service ships. workflow_run gates this.
 on:
-  push:
-    paths:
-      - "a_solutions/*/src/**"
+  workflow_run:
+    workflows: ["Ship → gen-configs (cloud-data)"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -42,6 +45,8 @@ jobs:
   detect:
     name: Detect changes
     runs-on: ubuntu-latest
+    # Skip when triggered by gen-configs failure
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       has_vms: ${{ steps.matrix.outputs.has_vms }}
@@ -50,19 +55,27 @@ jobs:
         with:
           fetch-depth: 2
           submodules: true
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      # Always regenerate dist/build-{name}.json + cloud-data-*.json from
-      # the latest a_solutions/*/build.json before reading anything from
-      # dist/. Cheap (a few seconds), removes drift entirely. Even if a
-      # commit lands without dist/ updated, ship still runs against fresh
-      # data.
-      # 2_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing
-      # (engine-side ensure_node_deps — fix lives in the engine, not here).
-      - name: Regenerate dist/ from build.json sources
-        run: bash 2_configs/build.sh all
+      # Path-relevance: skip if upstream commit didn't touch a_solutions/
+      - name: Path relevance gate
+        id: paths
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^a_solutions/' | head -1 || true)
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::skip — no a_solutions/ changes in upstream commit"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      # NO local dist/ regen — gen-configs already ran first and committed
+      # the canonical dist/ to origin/main, which actions/checkout pulled.
 
       - name: Build VM matrix
         id: matrix
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         run: |
           # Reuse the portable detect logic from ship.sh
           # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json

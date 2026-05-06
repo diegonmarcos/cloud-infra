@@ -12,15 +12,12 @@
 
 name: "Ship → terraform"
 
+# Ordering: gen-configs MUST run first so c_vps/**/main.tf changes are
+# reflected in the regenerated 2_configs/dist/ before terraform applies.
 on:
-  push:
-    paths:
-      - "c_vps/ba-clo_cloudflare/src/**"
-      - "c_vps/vps_gcloud/src/**"
-      - "c_vps/vps_oci/src/**"
-      - "c_vps/vps_hetzner/src/**"
-      - "a_solutions/ba-clo_cloudflare-worker/src/**"
-      - "1_workflows/src/cicd/ship-terraform.yml"
+  workflow_run:
+    workflows: ["Ship → gen-configs (cloud-data)"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -36,6 +33,7 @@ concurrency:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
     steps:
@@ -43,19 +41,37 @@ jobs:
         with:
           submodules: true
           fetch-depth: 2
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Path relevance gate
+        id: paths
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^(c_vps/|a_solutions/ba-clo_cloudflare-worker/)' | head -1 || true)
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::skip — no c_vps/ or cloudflare-worker changes in upstream commit"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Update submodules
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         run: git submodule update --remote
 
-      # 2_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing.
-      - name: Regenerate dist/ from build.json sources
-        run: bash 2_configs/build.sh all
+      # NO local dist/ regen — gen-configs already ran first and committed
+      # the canonical dist/ to origin/main, which actions/checkout pulled.
 
+      # Per-project path detection (replaces my coarse gate above when
+      # workflow_run is the trigger; dorny needs the SHA committed in main
+      # which actions/checkout above already fetched).
       - name: Detect changes
         id: changes
         uses: dorny/paths-filter@v3
-        if: github.event_name == 'push'
+        if: ${{ steps.paths.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_run') }}
         with:
+          base: HEAD~1
+          ref: HEAD
           filters: |
             cloudflare:
               - 'c_vps/ba-clo_cloudflare/src/**'
