@@ -233,11 +233,12 @@ step_compose() {
         #   cp -aR        +2 GB → peak 8  (closure delta written to host /nix/store)
         #   docker rmi    -6 GB → drops to 2  (image gone, BEFORE nix-build)
         #   nix-build     +3 GB → peak ~5 GB during native activate
-        # Worst-case crossover: 8 GB during cp. Adding 1 GB safety = 8 GB MIN.
+        # Steady-state peak: 8 GB. With 20% safety margin: 8 × 1.2 = 9.6 → 10 GB.
         # Cross-reference: vm-pilot/src/modules/protection/disk-ballast.nix
-        # (ballastGB ? 8) MUST equal this number — the ballast releases
-        # exactly the activation peak so engine pre-flight frees just enough.
-        MIN_FREE_GB=8
+        # (ballastGB ? 10) MUST equal this number — the ballast releases
+        # exactly the activation reservation so engine pre-flight frees just
+        # enough headroom for cp + nix-build with safety margin.
+        MIN_FREE_GB=10
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
         # POSIX df: column 4 is Available KB. Convert to GB.
         FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
