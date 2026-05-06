@@ -1,3 +1,15 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-proxy/src/pilot/protection/disk-ballast.nix
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # System Protection — Disk Ballast (declarative reserve, replaces ext4 -m 5)
 #
 # Ports the orphan _shared/modules/system-protection-disk-ballast.nix into
@@ -25,16 +37,10 @@
 #
 # Imported by: system-protection.nix orchestrator
 #
-# Ballast size MUST match the engine's HM-activation peak need (8 GB).
+# Ballast size MUST match the engine's HM-activation peak need (10 GB).
 # Source-of-truth for that value is the engine itself (cloud-ship-nix-homemanager-step-deploy-activate.sh
-# constant `MIN_FREE_GB=8`). Cross-reference both sites if you change one.
-#
-# Why 8 (post 2026-05-06 optimization): the engine now `docker rmi`s the HM
-# image immediately after the activation container exits — BEFORE the native
-# nix-build step. That eliminates the 6 GB image-overlay parallel-with-nix-build
-# overlap that previously pushed peak to 11 GB. New peak math:
-#   pull  +6 → cp +2 (peak 8) → rmi -6 → nix-build +3 (peak 5) → done
-{ config, pkgs, lib, ballastGB ? 8, ... }:
+# constant `MIN_FREE_GB=10`). Cross-reference both sites if you change one.
+{ config, pkgs, lib, ballastGB ? 10, ... }:
 
 let
   ballastPath = "/var/disk-reserve/ballast.bin";
