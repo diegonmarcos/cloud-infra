@@ -45,7 +45,7 @@ restart ? "on-failure",
 
 ### Step 3: Create `vm-init.nix` module
 
-**New file**: `b_infra/home-manager/_shared/modules/vm-init.nix`
+**New file**: `b_infra/_shared/modules/vm-init.nix`
 
 **Replaces**: `container-init.nix`
 
@@ -161,9 +161,9 @@ Remove after vm-init.nix is deployed and verified on all VMs.
 | File | Action |
 |------|--------|
 | `a_solutions/_shared/docker.nix` | Change default restart: `unless-stopped` → `on-failure` |
-| `b_infra/home-manager/_shared/modules/vm-init.nix` | **CREATE** — new declarative init module |
-| `b_infra/home-manager/_shared/modules/container-init.nix` | **DELETE** after migration |
-| `b_infra/home-manager/*/src/*.nix` (all 6 VMs) | Replace container-init with vm-init |
+| `b_infra/_shared/modules/vm-init.nix` | **CREATE** — new declarative init module |
+| `b_infra/_shared/modules/container-init.nix` | **DELETE** after migration |
+| `b_infra/*/src/*.nix` (all 6 VMs) | Replace container-init with vm-init |
 | Raw YAML flakes (hedgedoc, mattermost-bots, etc.) | Fix restart policy |
 
 ## Rollout

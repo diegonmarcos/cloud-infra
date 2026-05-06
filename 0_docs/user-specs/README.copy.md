@@ -208,7 +208,7 @@ a_solutions/<service>/build.sh ship
 c_vps/ba-clo_cloudflare/build.sh
 
 # Home Manager deploy (all VMs via GHA, or manual per-VM)
-b_infra/home-manager/nixhm-sudo-oci-apps/_engine.sh ship
+b_infra/nixhm-sudo-oci-apps/_engine.sh ship
 ```
 
 ---
@@ -414,7 +414,7 @@ Unified ship workflow (`ship.yml`) replaces per-VM workflows:
 |----------|---------|--------|
 | `ship.yml` | `a_solutions/*/src/**` push to main | Auto-detects target VM from build.json |
 | `ship-gen-configs.yml` | cloud-data regeneration | Commits updated JSONs |
-| `ship-home-manager.yml` | `b_infra/home-manager/` | all VMs |
+| `ship-home-manager.yml` | `b_infra/` | all VMs |
 | `ship-terraform.yml` | `c_vps/ba-clo_cloudflare/` | Cloudflare DNS |
 | `health.yml` | scheduled / manual | Health checks |
 | `sync-submodules.yml` | scheduled / manual | Submodule sync |
@@ -444,7 +444,7 @@ All support `workflow_dispatch` for manual triggering with optional service/VM f
 All VMs use Nix Home Manager for reproducible user environments. Deployed as Docker images via GHCR.
 
 ```
-b_infra/home-manager/
+b_infra/
 ├── _engine.sh              HM build engine
 ├── _shared/                40+ shared modules
 │   ├── modules/            System protection, containers, security, networking

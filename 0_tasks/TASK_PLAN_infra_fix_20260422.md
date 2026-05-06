@@ -200,7 +200,7 @@ No independent fix. Recovers when A1.3 lands.
 
 **Declarative fix**:
 1. fail2ban jail config is declared but not catching — verify `cloud-data-system-protection.json`-equivalent for fail2ban (or add one).
-2. Update `~/git/cloud/b_infra/home-manager/_shared/modules/` to ship fail2ban with `sshd` jail enabled (`findtime=10m, maxretry=3, bantime=1h`).
+2. Update `~/git/cloud/b_infra/_shared/modules/` to ship fail2ban with `sshd` jail enabled (`findtime=10m, maxretry=3, bantime=1h`).
 3. Cloudflare WAF: GEO-block / IP-block the top 10 offender IPs at edge (via `cloud-data-cloudflare-dns.json` → `firewall_rules[]`).
 
 **Tester**:
@@ -215,7 +215,7 @@ No independent fix. Recovers when A1.3 lands.
 
 **Declarative fix**:
 1. Root cause: `earlyoom.service` doesn't have `MemoryMin` big enough OR wrong `OOMScoreAdjust`.
-2. Check existing nix: `cloud/b_infra/home-manager/_shared/modules/system-protection-scheduler-fifo-rr-cfs.nix` — verify earlyoom has `OOMScoreAdjust=-999` + `MemoryMin=20M`.
+2. Check existing nix: `cloud/b_infra/_shared/modules/system-protection-scheduler-fifo-rr-cfs.nix` — verify earlyoom has `OOMScoreAdjust=-999` + `MemoryMin=20M`.
 3. If missing: add to the module.
 4. Re-ship.
 
@@ -244,8 +244,8 @@ No independent fix. Recovers when A1.3 lands.
 **Evidence**: 50 systemd failures logged; disk-watchdog among them.
 
 **Declarative fix**:
-1. Already exists in `cloud/b_infra/home-manager/_shared/modules/system-protection-watchdog-petter-dropbear-health-agent.nix` but not deployed or binary missing.
-2. `cd ~/git/cloud/b_infra/home-manager && ./build.sh ship` — redeploy HM to all 4 VMs.
+1. Already exists in `cloud/b_infra/_shared/modules/system-protection-watchdog-petter-dropbear-health-agent.nix` but not deployed or binary missing.
+2. `cd ~/git/cloud/b_infra && ./build.sh ship` — redeploy HM to all 4 VMs.
 3. Verify on each VM: `ssh <vm> 'systemctl is-active disk-watchdog.service'` → `active` or `inactive` (for oneshot waiting on timer).
 4. **Follow-up refactor** (A2.6): make this module data-driven by reading `cloud-data-disk-protection.json` (same JSON desktop now uses). Separate change, lower priority.
 

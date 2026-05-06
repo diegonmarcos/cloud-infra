@@ -27,8 +27,8 @@ Phase A MUST ship and run clean for at least one week before Phase B starts.
 | smtp-proxy listener | `cloud/a_solutions/aa-sui_tools-smtp-proxy/` | audit during implementation — currently public on :8080 |
 | Caddy L4 renderer | `cloud/a_solutions/bb-sec_caddy/src/caddyfile.nix` lines 168-189 | `mkL4Section` no-ops when `l4_routes == []` — no Caddy edit needed |
 | Derive | `cloud/2_configs/src/engines/cloud-data-config-derive.ts` lines ~334-360 | builds `l4_routes[]` by picking mail ports out of gcp-proxy `public_ports[]` via a hardcoded `l4Map` dict. Drop this block once gcp-proxy has no mail ports. |
-| Firewall module | `cloud/b_infra/home-manager/vm-pilot/src/modules/network/firewall.nix` | owns ALL chains, `iptables -A INPUT -i wg0 -j ACCEPT` already present. |
-| WireGuard module | `cloud/b_infra/home-manager/vm-pilot/src/modules/network/wireguard.nix` | single-interface. Phase B refactors it to multi-interface. |
+| Firewall module | `cloud/b_infra/_shared/vm-pilot/src/modules/network/firewall.nix` | owns ALL chains, `iptables -A INPUT -i wg0 -j ACCEPT` already present. |
+| WireGuard module | `cloud/b_infra/_shared/vm-pilot/src/modules/network/wireguard.nix` | single-interface. Phase B refactors it to multi-interface. |
 | Vault WG keys | `cloud/../vault/A0_keys/providers/wireguard/` | per-VM keys for wg0 |
 | Webmail | `aa-sui_snappymail` (oci-apps) | connects to IMAP backend via `10.0.0.3:993` (WG internal already) |
 
@@ -309,7 +309,7 @@ The existing flat `wireguard.{peers, clients}` keys are deprecated after this ch
 
 ## B.3 `wireguard.nix` refactor
 
-`cloud/b_infra/home-manager/vm-pilot/src/modules/network/wireguard.nix` changes from single-interface to multi-interface. Per interface in `cloudData.wireguard.interfaces`:
+`cloud/b_infra/_shared/vm-pilot/src/modules/network/wireguard.nix` changes from single-interface to multi-interface. Per interface in `cloudData.wireguard.interfaces`:
 - Render `/etc/wireguard/<name>.conf`.
 - Emit a systemd override file for `wg-quick@<name>.service`.
 - Apply the interface's MASQUERADE rule (per-interface POSTROUTING).

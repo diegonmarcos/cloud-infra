@@ -144,7 +144,7 @@ GHA workflow YAML definitions. Deployed to `.github/workflows/`.
 | `ship-ci-image.yml` | Push to `1_workflows/src/cloud-builder/` | Rebuild cloud-builder Docker image |
 | `ship-gen-configs.yml` | Push to config sources | Regenerate cloud-data configs |
 | `ship-ghcr-images.yml` | Manual | Build + push all Docker images to GHCR |
-| `ship-home-manager.yml` | Push to `b_infra/home-manager/` | Deploy HM to VMs |
+| `ship-home-manager.yml` | Push to `b_infra/` | Deploy HM to VMs |
 | `ship-terraform.yml` | Push to terraform sources | Terraform apply |
 | `health.yml` | Cron + manual | Consolidated health check |
 | `sync-submodules.yml` | Push | Sync cloud-data + tools submodules |
@@ -219,5 +219,5 @@ Git configuration files deployed to repo root.
 | From | To | Count |
 |------|----|-------|
 | `a_solutions/*/build.sh` | `../../1_workflows/src/scripts/cloud-ship-container-engine.sh` | 58 |
-| `b_infra/home-manager/*/build.sh` | `../../../1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh` | 5 |
+| `b_infra/*/build.sh` | `../../../1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh` | 5 |
 | `.github/workflows/scripts` | `../../1_workflows/dist/scripts` | 1 |

@@ -22,7 +22,7 @@ name: "Ship → home-manager"
 on:
   push:
     paths:
-      - "b_infra/home-manager/**"
+      - "b_infra/**"
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -76,7 +76,7 @@ jobs:
         id: transient
         if: steps.gate.outputs.skip != 'true'
         run: |
-          BJ="b_infra/home-manager/nixhm-sudo-${{ matrix.vm }}/build.json"
+          BJ="b_infra/nixhm-sudo-${{ matrix.vm }}/build.json"
           T=$(jq -r '.vm.transient // false' "$BJ" 2>/dev/null)
           echo "transient=${T}" >> "$GITHUB_OUTPUT"
           [ "$T" = "true" ] && echo "::notice::${{ matrix.vm }} is transient — failure non-fatal" || true

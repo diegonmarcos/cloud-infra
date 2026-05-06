@@ -3,7 +3,7 @@
 # ║ cloud/2_configs — consolidate + derive every cloud-data JSON    ║
 # ║                                                                  ║
 # ║ Reads: cloud/a_solutions/*/build.json, cloud/config.json,       ║
-# ║        cloud/b_infra/home-manager/*/build.json, vault/**        ║
+# ║        cloud/b_infra/*/build.json, vault/**        ║
 # ║ Writes: cloud/2_configs/dist/*.json                             ║
 # ║                                                                  ║
 # ║ Usage: ./build.sh [all|consolidate|derive|test|clean]           ║

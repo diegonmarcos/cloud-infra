@@ -24,8 +24,8 @@ check() {
 }
 
 CLOUD_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-MOD="$CLOUD_ROOT/b_infra/home-manager/vm-pilot/src/modules/network/etc-hosts-clean.nix"
-DEFAULT="$CLOUD_ROOT/b_infra/home-manager/vm-pilot/src/modules/default.nix"
+MOD="$CLOUD_ROOT/b_infra/_shared/vm-pilot/src/modules/network/etc-hosts-clean.nix"
+DEFAULT="$CLOUD_ROOT/b_infra/_shared/vm-pilot/src/modules/default.nix"
 
 # ── Build-time: module source + wiring ──────────────────────────────────────
 echo "==> 1. Build-time: module source + wiring"

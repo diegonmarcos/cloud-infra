@@ -23,7 +23,7 @@ This test plan covers verification and validation of the Cloud IaC platform: bui
 | Build Engine | current | `a_solutions/_engine.sh` |
 | Service Flakes | per-service | `a_solutions/*/src/flake.nix` |
 | Cloud-Data Engines | current | `I_cloud-data/engines/` |
-| Home Manager Modules | current | `b_infra/home-manager/_shared/modules/` |
+| Home Manager Modules | current | `b_infra/_shared/modules/` |
 | CI/CD Workflows | current | `.github/workflows/` |
 | MCP Servers | current | `bc-obs_c3-infra-*/`, `bc-obs_cloud-cgc-mcp/` |
 

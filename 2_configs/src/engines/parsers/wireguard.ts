@@ -1,8 +1,8 @@
 // wireguard.ts — Parse WireGuard topology + OS firewall rules from home-manager nix configs
 //
 // Sources:
-//   b_infra/home-manager/_shared/wireguard.nix   → mesh topology (peers, IPs, roles)
-//   b_infra/home-manager/*/src/{vm}.nix          → firewall.nix import (per-VM public ports)
+//   b_infra/_shared/wireguard.nix   → mesh topology (peers, IPs, roles)
+//   b_infra/*/src/{vm}.nix          → firewall.nix import (per-VM public ports)
 
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join } from "path";

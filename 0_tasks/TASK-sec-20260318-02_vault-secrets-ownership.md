@@ -166,7 +166,7 @@ done
 | `vault/E0_secrets/.sops.yaml` | NEW — sops config |
 | `cloud/a_solutions/*/src/secrets.yaml` (x32) | File -> symlink |
 | `cloud/a_solutions/bb-sec_authelia/src/jwks_key.yaml` | File -> symlink |
-| `cloud/b_infra/home-manager/_shared/secrets.yaml` | File -> symlink |
+| `cloud/b_infra/_shared/secrets.yaml` | File -> symlink |
 | `cloud/.sops.yaml` | Removed (moved to vault) |
 | `cloud/.github/actions/setup-deps/action.yml` | Add vault clone step |
 | `cloud/.github/workflows/ship-*.yml` (x6) | Pass vault_deploy_key |
