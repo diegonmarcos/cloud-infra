@@ -193,7 +193,11 @@ ACTIVATE_EOF
 
     # ── Generate Dockerfile ──
     cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
-FROM ghcr.io/diegonmarcos/user-dev-x86-deb-nix-hm:latest
+# nix-hm-runtime is the minimal HM-transport base: debian + nix multi-user
+# only, no Diego dev profile, no cloned repos, no fish/rust/go/etc.
+# (Source: unix/cb_containers-builders/src/Dockerfile.hm-runtime)
+# Saves ~2.3 GB per VM vs. the user-dev-x86-deb-nix-hm dev environment.
+FROM ghcr.io/diegonmarcos/nix-hm-runtime:latest
 USER root
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
