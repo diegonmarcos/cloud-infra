@@ -180,6 +180,24 @@ if [ -n "$ACTIVATE" ] && [ -x "$ACTIVATE/activate" ]; then
         sudo -u "$HM_USER" HOME="/home/$HM_USER" USER="$HM_USER" "$ACTIVATE/activate" 2>&1
     fi
     echo "[hm-docker] Generation activated successfully"
+
+    # ── Step 6: Reclaim image overlay (closure is already on host /nix/store) ──
+    # The image was a transport for the closure. After activation succeeds, the
+    # closure lives in host's /nix/store and the image's ~6 GB in
+    # /var/lib/docker/overlay2 is pure waste. Removing it makes ship i/o
+    # incremental (only new closure paths persist on host), eliminating the
+    # 12 GB peak that forced the disk-ballast + 3-pass prune routine.
+    if [ "$USE_CLI" = true ]; then
+        docker rmi -f "$FULL_IMAGE" >/dev/null 2>&1 \
+          && echo "[hm-docker] Reclaimed image overlay: $FULL_IMAGE" \
+          || echo "[hm-docker] Image rmi non-fatal (still referenced by another container?)"
+    else
+        IMG_ID=$(dock_api GET '/images/json' 2>/dev/null \
+            | grep -o '"Id":"[^"]*"' | head -1 | sed 's/"Id":"//;s/"//')
+        [ -n "$IMG_ID" ] && dock_api DELETE "/images/${IMG_ID}?force=true" >/dev/null 2>&1 \
+          && echo "[hm-docker] Reclaimed image overlay (socket): $IMG_ID" \
+          || true
+    fi
 else
     echo "[hm-docker] ERROR: activation path not found or not executable: $ACTIVATE"
     exit 1
@@ -208,8 +226,12 @@ step_compose() {
         # Fix: pre-flight prune docker + truncate runaway logs + journal
         # vacuum before any pull/cp/activate runs. Data-driven threshold:
         #   build.json:.vm.disk.activation_min_free_gb (default 10).
-        MIN_FREE_GB="$(get_config vm.disk.activation_min_free_gb)"
-        : "${MIN_FREE_GB:=10}"
+        # The engine OWNS the activation peak need — not per-VM build.json.
+        # Cross-reference: vm-pilot/src/modules/protection/disk-ballast.nix
+        # (ballastGB ? 10) MUST equal this number; the ballast is sized to
+        # exactly the activation requirement so engine pre-flight `rm -f
+        # /var/disk-reserve/ballast.bin` frees exactly enough.
+        MIN_FREE_GB=10
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
         # POSIX df: column 4 is Available KB. Convert to GB.
         FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
