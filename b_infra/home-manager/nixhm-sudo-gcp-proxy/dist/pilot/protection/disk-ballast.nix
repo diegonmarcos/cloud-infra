@@ -37,12 +37,15 @@
 #
 # Imported by: system-protection.nix orchestrator
 #
-# Ballast size MUST match the engine's HM-activation peak need (10 GB).
-# Source-of-truth for that value is the engine itself (cloud-ship-nix-homemanager-step-deploy-activate.sh
-# constant `MIN_FREE_GB=10`). Cross-reference both sites if you change one.
-{ config, pkgs, lib, ballastGB ? 10, ... }:
+# Single source of truth for the ballast/activation-reservation size:
+#   1_workflows/src/data/hm-config.json :: .min_size_ballast_file_gb
+# Symlinked into vm-pilot via _shared/modules/hm-config.json.
+# Engine pre-flight reads the same JSON. ONE field, ONE place.
+{ config, pkgs, lib, ... }:
 
 let
+  hmConfig = builtins.fromJSON (builtins.readFile ../hm-config.json);
+  ballastGB = hmConfig.min_size_ballast_file_gb;
   ballastPath = "/var/disk-reserve/ballast.bin";
   recreateThreshold = 70;  # only allocate when /<70%
 in {
