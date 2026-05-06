@@ -77,7 +77,7 @@ check "maddy.conf.tpl.tpl: NO old mail-filter command" \
 
 # 6. build.json#lifecycle uses post-hoc-* entries
 BJ="$MADDY/build.json"
-for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules apply-rules-dry-run all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules apply-rules-dry-run reseed-inbox-archive reseed-inbox-archive-dry-run all; do
     check "build.json#lifecycle.post-hoc-$sub present" \
         bash -c "jq -e '.lifecycle.\"post-hoc-$sub\"' '$BJ' >/dev/null"
 done
@@ -105,7 +105,7 @@ check "post-hoc script: sh -n syntax check" \
 # 9. Post-hoc --help advertises all subcommands
 HELP_FILE="$(mktemp)"
 "$SRC/mail-sieve-subset-post-hoc.sh" --help >"$HELP_FILE" 2>&1 || true
-for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules reseed-inbox-archive all; do
     check "post-hoc --help advertises subcommand: $sub" \
         grep -q "$sub" "$HELP_FILE"
 done
@@ -163,19 +163,51 @@ check "post-hoc: apply-rules delegates to mail-sieve-subset-delivery-time" \
 check "post-hoc: apply-rules scan loop uses input redirection (not pipeline)" \
     grep -qE 'done < "\$SCAN"' "$SRC/mail-sieve-subset-post-hoc.sh"
 
-# 12d2. Same protection for the moves loop. `awk … | sort | while …; done`
-# runs the body in a subshell; MOVED_TOTAL/SKIPPED_TOTAL increments are
-# discarded and the summary reports moved=0 even though moves succeeded
-# (observed: real run moved 2010 msgs but logged moved=0 of 2010).
-check "post-hoc: apply-rules moves loop uses input redirection (not pipeline)" \
-    grep -qE 'done < "\$TARGETS"' "$SRC/mail-sieve-subset-post-hoc.sh"
+# 12d2. Same protection for the per-target loop. `awk … | sort | while …`
+# runs the body in a subshell; counter increments + per-msg state are
+# discarded. Asserts the per-target loop reads via redirection from a
+# temp file, never directly from a pipe.
+check "post-hoc: apply-rules per-target loop uses input redirection (not pipeline)" \
+    grep -qE 'done < "\$TARGETS_FILE"' "$SRC/mail-sieve-subset-post-hoc.sh"
 
 # 12d3. apply-rules recomputes mboxes.msgsCount after the moves. Maddy
 # updates that counter lazily on its own write paths; SQL-direct + CLI
 # moves bypass it, leaving IMAP clients showing stale per-folder totals.
 # Two-line match (UPDATE on one line, SELECT COUNT on the next).
-check "post-hoc: apply-rules resyncs mboxes.msgsCount from canonical msgs" \
+check "post-hoc: msgsCount resync helper (_resync_msgs_count) present" \
     bash -c "grep -qPzo 'UPDATE mboxes SET msgsCount = \\(\\s*SELECT COUNT' '$SRC/mail-sieve-subset-post-hoc.sh'"
+
+# 12e1. UNIFIED-INBOX model: delivery-time output is data-driven by
+# `delivery_strategy` from mail-rules.json, with MAIL_SIEVE_STRATEGY env
+# override so apply-rules can recover the routing decision in split
+# mode. Both must be wired.
+check "delivery-time: reads delivery_strategy from mail-rules.json" \
+    grep -q 'delivery_strategy' "$SRC/mail-sieve-subset-delivery-time.sh"
+check "delivery-time: MAIL_SIEVE_STRATEGY env override (apply-rules contract)" \
+    grep -q 'MAIL_SIEVE_STRATEGY' "$SRC/mail-sieve-subset-delivery-time.sh"
+check "post-hoc: apply-rules invokes filter with MAIL_SIEVE_STRATEGY=split" \
+    grep -q 'MAIL_SIEVE_STRATEGY=split' "$SRC/mail-sieve-subset-post-hoc.sh"
+
+# 12e2. apply-rules COPY semantic: must INSERT into msgs (target row) and
+# tag the INBOX original with $distributed. Catches accidental revert to
+# the old MOVE behavior.
+check "post-hoc: apply-rules SQL inserts into msgs (COPY, not MOVE)" \
+    grep -qE 'INSERT INTO msgs' "$SRC/mail-sieve-subset-post-hoc.sh"
+check "post-hoc: apply-rules tags INBOX original with \$distributed" \
+    grep -qF '$distributed' "$SRC/mail-sieve-subset-post-hoc.sh"
+check "post-hoc: apply-rules does NOT use 'maddy imap-msgs move' (legacy MOVE)" \
+    bash -c "! grep -qE 'maddy imap-msgs move' '$SRC/mail-sieve-subset-post-hoc.sh'"
+
+# 12e3. reseed subcommand: dispatch entry, dedup-by-Message-Id.
+check "post-hoc: dispatch case has 'reseed-inbox-archive' branch" \
+    grep -qE '^[[:space:]]*reseed-inbox-archive\)' "$SRC/mail-sieve-subset-post-hoc.sh"
+check "post-hoc: reseed dedupes by Message-Id from cachedHeader" \
+    bash -c "grep -qE 'Message-Id' '$SRC/mail-sieve-subset-post-hoc.sh' && grep -qE 'json_extract.*cachedHeader' '$SRC/mail-sieve-subset-post-hoc.sh'"
+
+# 12e4. Renderer (_shared/lib/mail-rules.nix) emits delivery_strategy.
+RULES_NIX="$CLOUD_ROOT/a_solutions/_shared/lib/mail-rules.nix"
+check "_shared/lib/mail-rules.nix toMaddyJson emits delivery_strategy" \
+    grep -q 'delivery_strategy' "$RULES_NIX"
 
 # 12e. apply-rules converts cachedHeader JSON → RFC822 before piping to
 # delivery-time. go-imap-sql stores headers as `{"From":["…"], …}`, but
