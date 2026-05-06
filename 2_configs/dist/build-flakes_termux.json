@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-06T13:46:19.434Z",
+    "generated_at": "2026-05-06T14:27:43.403Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-06T13:46:19.182Z",
+  "_generated": "2026-05-06T14:27:43.257Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -6121,6 +6121,94 @@
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb",
+      "kg": {
+        "namespace": "infra",
+        "database": "production",
+        "embedder": {
+          "enabled": false,
+          "model": "nomic-embed-text",
+          "dim": 768,
+          "index_type": "MTREE",
+          "vector_dtype": "F32"
+        },
+        "ingest": {
+          "endpoint": "/import",
+          "idempotent": true,
+          "stale_strategy": "mark"
+        },
+        "node_tables": [
+          {
+            "table": "vm",
+            "key_source": "ssh_alias"
+          },
+          {
+            "table": "service",
+            "key_source": "name"
+          },
+          {
+            "table": "container",
+            "key_source": "container_name"
+          },
+          {
+            "table": "domain",
+            "key_source": "fqdn"
+          },
+          {
+            "table": "log",
+            "key_source": "auto"
+          },
+          {
+            "table": "documentation",
+            "key_source": "path"
+          },
+          {
+            "table": "audit_log",
+            "key_source": "auto"
+          }
+        ],
+        "edge_tables": [
+          {
+            "table": "hosted_on",
+            "in": "service",
+            "out": "vm"
+          },
+          {
+            "table": "runs_container",
+            "in": "service",
+            "out": "container"
+          },
+          {
+            "table": "depends_on",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "proxied_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "authenticated_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "connected_to",
+            "in": "vm",
+            "out": "vm"
+          },
+          {
+            "table": "routes_to",
+            "in": "domain",
+            "out": "service"
+          },
+          {
+            "table": "caused_by",
+            "in": "log",
+            "out": "any"
+          }
+        ]
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,

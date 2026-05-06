@@ -98,10 +98,10 @@ for bj in "$REPO_ROOT"/a_solutions/*/build.json; do
     check_service "$(dirname "$bj")"
 done
 
-if [ -d "$REPO_ROOT/b_infra/home-manager" ]; then
+if [ -d "$REPO_ROOT/b_infra" ]; then
     echo ""
-    echo "── b_infra/home-manager/*/dist/ (HM engine) ──"
-    for d in "$REPO_ROOT"/b_infra/home-manager/*/; do
+    echo "── b_infra/*/dist/ (HM engine) ──"
+    for d in "$REPO_ROOT"/b_infra/*/; do
         check_service "${d%/}"
     done
 fi
