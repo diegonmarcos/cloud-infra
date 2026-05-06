@@ -144,6 +144,20 @@ check "post-hoc: apply-rules delegates to mail-sieve-subset-delivery-time" \
 check "post-hoc: apply-rules scan loop uses input redirection (not pipeline)" \
     grep -qE 'done < "\$SCAN"' "$SRC/mail-sieve-subset-post-hoc.sh"
 
+# 12d2. Same protection for the moves loop. `awk … | sort | while …; done`
+# runs the body in a subshell; MOVED_TOTAL/SKIPPED_TOTAL increments are
+# discarded and the summary reports moved=0 even though moves succeeded
+# (observed: real run moved 2010 msgs but logged moved=0 of 2010).
+check "post-hoc: apply-rules moves loop uses input redirection (not pipeline)" \
+    grep -qE 'done < "\$TARGETS"' "$SRC/mail-sieve-subset-post-hoc.sh"
+
+# 12d3. apply-rules recomputes mboxes.msgsCount after the moves. Maddy
+# updates that counter lazily on its own write paths; SQL-direct + CLI
+# moves bypass it, leaving IMAP clients showing stale per-folder totals.
+# Two-line match (UPDATE on one line, SELECT COUNT on the next).
+check "post-hoc: apply-rules resyncs mboxes.msgsCount from canonical msgs" \
+    bash -c "grep -qPzo 'UPDATE mboxes SET msgsCount = \\(\\s*SELECT COUNT' '$SRC/mail-sieve-subset-post-hoc.sh'"
+
 # 12e. apply-rules converts cachedHeader JSON → RFC822 before piping to
 # delivery-time. go-imap-sql stores headers as `{"From":["…"], …}`, but
 # delivery-time's awk get_header expects raw `Field: value\n`. Without
