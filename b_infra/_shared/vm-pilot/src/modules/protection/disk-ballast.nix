@@ -1,8 +1,8 @@
 # System Protection — Disk Ballast (declarative reserve, replaces ext4 -m 5)
 #
-# Ports the orphan _shared/modules/system-protection-disk-ballast.nix into
-# vm-pilot. Pre-allocates ${ballastPercent}% of / as a userland file at
-# /var/disk-reserve/ballast.bin. Acts as the universal buffer area:
+# Pre-allocates a userland file at /var/disk-reserve/ballast.bin sized to the
+# HM-activation reservation declared in 1_workflows/src/data/hm-config.json
+# (single SoT, also read by the engine). Acts as the universal buffer area:
 #
 #   1. HM activation pre-flight (cloud-ship-nix-homemanager-step-deploy-activate.sh:264)
 #      `rm -f /var/disk-reserve/ballast.bin` releases N% instantly when the
