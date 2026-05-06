@@ -77,17 +77,14 @@ check "maddy.conf.tpl.tpl: NO old mail-filter command" \
 
 # 6. build.json#lifecycle uses post-hoc-* entries
 BJ="$MADDY/build.json"
-for sub in integrity-check integrity-fix dedupe cleanup-mailboxes all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules apply-rules-dry-run all; do
     check "build.json#lifecycle.post-hoc-$sub present" \
         bash -c "jq -e '.lifecycle.\"post-hoc-$sub\"' '$BJ' >/dev/null"
 done
-# recover-headers / apply-rules INTENTIONALLY removed (see build.json _doc):
-# cachedHeader is populated at delivery by maddy; missing-body rows can't be
-# recovered, only dropped via integrity-fix.
-for sub in recover-headers apply-rules; do
-    check "build.json#lifecycle.post-hoc-$sub INTENTIONALLY absent" \
-        bash -c "[ \"\$(jq -r '.lifecycle.\"post-hoc-$sub\" // \"absent\"' '$BJ')\" = 'absent' ]"
-done
+# recover-headers stays INTENTIONALLY absent: missing-body rows are
+# unrecoverable; integrity-fix is the right action (see build.json _doc).
+check "build.json#lifecycle.post-hoc-recover-headers INTENTIONALLY absent" \
+    bash -c "[ \"\$(jq -r '.lifecycle.\"post-hoc-recover-headers\" // \"absent\"' '$BJ')\" = 'absent' ]"
 check "build.json#lifecycle has NO old 'cleanup' entry" \
     bash -c "[ \"\$(jq -r '.lifecycle.cleanup // \"absent\"' '$BJ')\" = 'absent' ]"
 check "build.json#lifecycle has NO old 'dedupe' entry" \
@@ -108,7 +105,7 @@ check "post-hoc script: sh -n syntax check" \
 # 9. Post-hoc --help advertises all subcommands
 HELP_FILE="$(mktemp)"
 "$SRC/mail-sieve-subset-post-hoc.sh" --help >"$HELP_FILE" 2>&1 || true
-for sub in integrity-check integrity-fix dedupe cleanup-mailboxes all; do
+for sub in integrity-check integrity-fix dedupe cleanup-mailboxes apply-rules all; do
     check "post-hoc --help advertises subcommand: $sub" \
         grep -q "$sub" "$HELP_FILE"
 done
@@ -129,6 +126,16 @@ check "delivery-time: pins schema_version=2" \
 # 12. Single jq invocation (combined eval) — no chained two-jq pattern
 check "delivery-time: single jq -n (combined ctx + eval — no two-jq chain)" \
     bash -c "[ \"\$(grep -c '^OUT=' '$SRC/mail-sieve-subset-delivery-time.sh')\" = '1' ]"
+
+# 12b. post-hoc dispatch case includes apply-rules (catches removed-branch
+# regression: lifecycle entry could exist while the script silently fails).
+check "post-hoc: dispatch case has 'apply-rules' branch" \
+    grep -qE '^[[:space:]]*apply-rules\)' "$SRC/mail-sieve-subset-post-hoc.sh"
+
+# 12c. apply-rules delegates rule evaluation to delivery-time (single SoT) —
+# detects future regressions that re-implement the jq logic in post-hoc.
+check "post-hoc: apply-rules delegates to mail-sieve-subset-delivery-time" \
+    grep -q 'mail-sieve-subset-delivery-time' "$SRC/mail-sieve-subset-post-hoc.sh"
 
 # 13. Embedded jq program compiles. `sh -n` only validates POSIX shell;
 # the jq script lives inside a single-quoted heredoc and was historically
