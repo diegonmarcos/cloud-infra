@@ -122,17 +122,22 @@ for p in /nix/store/*; do
         fi
     fi
     cp -aR --no-preserve=links "$p" "$HOST_PATH" 2>/dev/null
-    # Verify by file presence (with content), NOT cp's exit code. Concurrent
-    # activation containers (orphaned from prior failed ships) write to the
-    # same /nix/store and race; cp can return non-zero when the target was
+    # Verify by file presence, NOT cp's exit code. Concurrent activation
+    # containers (orphaned from prior failed ships) write to the same
+    # /nix/store and race; cp can return non-zero when the target was
     # just successfully written by the other process. Trust the filesystem.
-    if [ -e "$HOST_PATH" ] && { [ ! -d "$HOST_PATH" ] || [ -n "$(ls -A "$HOST_PATH" 2>/dev/null)" ]; }; then
+    # Don't require non-empty: nix packages like `empty-directory`
+    # legitimately contain nothing — that's the whole point. Partial-cp
+    # detection is handled by the at-loop-entry empty-vs-needed check
+    # above, plus the closure determinism (a non-empty source always
+    # produces a non-empty target when cp returns 0).
+    if [ -e "$HOST_PATH" ]; then
         COPIED=$((COPIED + 1))
     else
         # cp -rL fallback (full content copy, no hardlink preservation).
         rm -rf "$HOST_PATH" 2>/dev/null
         cp -rL "$p" "$HOST_PATH" 2>/dev/null
-        if [ -e "$HOST_PATH" ] && { [ ! -d "$HOST_PATH" ] || [ -n "$(ls -A "$HOST_PATH" 2>/dev/null)" ]; }; then
+        if [ -e "$HOST_PATH" ]; then
             COPIED=$((COPIED + 1))
         else
             FAILED=$((FAILED + 1))
