@@ -192,11 +192,11 @@ log "Container done — activation path: $HM_ACTIVATION_PATH"
 ACTIVATE_EOF
 
     # ── Generate Dockerfile from vm-pilot template ──
-    # Source-of-truth: b_infra/home-manager/vm-pilot/src/Dockerfile.transport
+    # Source-of-truth: b_infra/_shared/vm-pilot/src/Dockerfile.transport
     # Substitutions are LITERAL (sed-no-regex via awk) for {{SERVICE_NAME}},
     # {{HM_ACTIVATION_PATH}}, {{HM_USER}}.
     # STEPS_DIR is /home/.../cloud/1_workflows/src/scripts (set in engine.sh)
-    HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-$STEPS_DIR/../../../b_infra/home-manager/vm-pilot/src/Dockerfile.transport}"
+    HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-$STEPS_DIR/../../../b_infra/_shared/vm-pilot/src/Dockerfile.transport}"
     if [ ! -f "$HM_DOCKERFILE_TPL" ]; then
         log "ERROR: vm-pilot transport Dockerfile template missing: $HM_DOCKERFILE_TPL"
         return 1

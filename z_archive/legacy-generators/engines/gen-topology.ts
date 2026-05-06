@@ -4,7 +4,7 @@
 //   ~/.ssh/config                            → VM aliases + WireGuard IPs
 //   a_solutions/{service}/build.json         → service metadata
 //   a_solutions/{service}/dist/compose.yml   → containers, ports, networks
-//   b_infra/home-manager/                    → WireGuard peers
+//   b_infra/                    → WireGuard peers
 //   ba-clo_hickory-dns/dist/zones/           → DNS records
 //
 // Outputs (written directly to cloud-data/ submodule, symlinked from repo root):

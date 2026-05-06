@@ -135,11 +135,17 @@ step_docker() {
                 USER_SWITCH="USER ${NATIVE_USER}
 ENV HOME=/home/${NATIVE_USER}"
             fi
+            # Also COPY build.json — services may read it at runtime for
+            # data-driven config (FIRE RULE 4). e.g. google-personal-mcp
+            # reads accounts[] from build.json. Without this, the COPY
+            # ${COPY_SRC} only copies app_dir contents and build.json is
+            # missing at /app/build.json.
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
 ${APT_LINE}
 WORKDIR ${WORKDIR_PATH}
 COPY ${COPY_SRC} ${WORKDIR_PATH}
+COPY build.json ${WORKDIR_PATH}/build.json
 RUN ${NATIVE_CMD}
 ${USER_LINE}
 ${USER_SWITCH}

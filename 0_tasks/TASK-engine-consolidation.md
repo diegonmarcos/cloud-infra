@@ -13,7 +13,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 - `cloud-data/` → `I_cloud-data/`, `tools/` → `II_tools/` (submodule renames)
 - `static/` → `cicd/` (GHA workflow YAMLs)
 - All scripts consolidated into `1_workflows/src/scripts/` with `cloud-ship-*`/`cloud-health-*` naming
-- Both engines moved as-is: `a_solutions/_engine.sh` → `cloud-ship-container-engine.sh`, `b_infra/home-manager/_engine.sh` → `cloud-ship-nix-homemanager-engine.sh`
+- Both engines moved as-is: `a_solutions/_engine.sh` → `cloud-ship-container-engine.sh`, `b_infra/_engine.sh` → `cloud-ship-nix-homemanager-engine.sh`
 - 58 service + 5 HM symlinks updated
 - Cross-references updated (script-to-script, cicd/*.yml, Dagu partial)
 - `build.sh workflow`: src→dist→deploy for ALL files, header injection, symlink always recreated

@@ -495,14 +495,14 @@ reverse_proxy 10.0.0.6:8081
 
 | File | Change |
 |------|--------|
-| `b_infra/home-manager/_shared/mesh-topology.nix` | NEW — WG mesh source of truth |
-| `b_infra/home-manager/_shared/modules/nftables-firewall.nix` | NEW — replaces iptables firewall.nix |
-| `b_infra/home-manager/_shared/modules/docker-network.nix` | NEW — fixed Docker networks |
-| `b_infra/home-manager/_shared/modules/dnsmasq.nix` | NEW — host DNS for containers |
-| `b_infra/home-manager/_shared/modules/web-server-busybox.nix` | NEW — WG-only httpd |
-| `b_infra/home-manager/_shared/modules/docker-service.nix` | EDIT — `iptables: false` in daemon.json |
-| `b_infra/home-manager/_shared/wireguard.nix` | EDIT — read from meshTopology |
-| `b_infra/home-manager/*/src/*.nix` (x6 VMs) | EDIT — import meshTopology, add containerNetwork, publicPorts |
+| `b_infra/_shared/mesh-topology.nix` | NEW — WG mesh source of truth |
+| `b_infra/_shared/modules/nftables-firewall.nix` | NEW — replaces iptables firewall.nix |
+| `b_infra/_shared/modules/docker-network.nix` | NEW — fixed Docker networks |
+| `b_infra/_shared/modules/dnsmasq.nix` | NEW — host DNS for containers |
+| `b_infra/_shared/modules/web-server-busybox.nix` | NEW — WG-only httpd |
+| `b_infra/_shared/modules/docker-service.nix` | EDIT — `iptables: false` in daemon.json |
+| `b_infra/_shared/wireguard.nix` | EDIT — read from meshTopology |
+| `b_infra/*/src/*.nix` (x6 VMs) | EDIT — import meshTopology, add containerNetwork, publicPorts |
 | Every service `build.json` | EDIT — add `auth` block |
 | Every service `flake.nix` | EDIT — bind ports to WG IP, fixed container IPs, dns gateway |
 | `bb-sec_caddy/src/flake.nix` | EDIT — auto-generate routes from build.json + meshTopology upstreams + L4 |

@@ -88,8 +88,8 @@ Covers all subsystems: build engine, service deployment pipeline, home-manager V
 | **Build Engine** | `a_solutions/_engine.sh` | Universal build/deploy pipeline for all 59 services |
 | **Service Flakes** | `a_solutions/*/src/flake.nix` | Per-service Nix derivation → docker-compose.yml + configs |
 | **Cloud-Data Engine** | `I_cloud-data/engines/` | Derives 26 JSON config files from build.json + config.json |
-| **Home Manager** | `b_infra/home-manager/` | VM-level provisioning: packages, cgroups, security, containers |
-| **HM Shared Modules** | `b_infra/home-manager/_shared/modules/` | 40+ reusable modules (system-protection, container-control, etc.) |
+| **Home Manager** | `b_infra/` | VM-level provisioning: packages, cgroups, security, containers |
+| **HM Shared Modules** | `b_infra/_shared/modules/` | 40+ reusable modules (system-protection, container-control, etc.) |
 | **CI/CD** | `.github/workflows/` | Auto-deploy on push, health checks, submodule sync |
 | **MCP Servers** | `bc-obs_c3-infra-mcp/`, `bc-obs_cloud-cgc-mcp/`, etc. | Machine-readable infrastructure API for Claude agents |
 | **DTK** | `II_tools/` | Operational shell scripts and dashboards |

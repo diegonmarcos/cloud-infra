@@ -15,7 +15,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 CLOUD_ROOT="$(cd ../ && pwd)"
-HM_DIR="${CLOUD_ROOT}/b_infra/home-manager"
+HM_DIR="${CLOUD_ROOT}/b_infra"
 SOL_DIR="${CLOUD_ROOT}/a_solutions"
 
 PASS=0
@@ -167,8 +167,8 @@ fi
 echo ""
 echo "==> Phase 3: vm-pilot/security/sshd-hardening.nix data-driven (no hardcoded port heredoc)"
 
-SSHD_NIX="${CLOUD_ROOT}/b_infra/home-manager/vm-pilot/src/modules/security/sshd-hardening.nix"
-VM_PILOT_DEFAULT="${CLOUD_ROOT}/b_infra/home-manager/vm-pilot/src/modules/default.nix"
+SSHD_NIX="${CLOUD_ROOT}/b_infra/_shared/vm-pilot/src/modules/security/sshd-hardening.nix"
+VM_PILOT_DEFAULT="${CLOUD_ROOT}/b_infra/_shared/vm-pilot/src/modules/default.nix"
 
 if [[ ! -f "$SSHD_NIX" ]]; then
   fail_with "phase3: $SSHD_NIX missing"

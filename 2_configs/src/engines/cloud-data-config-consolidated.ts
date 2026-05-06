@@ -104,7 +104,7 @@ function resolveVmId(host: string, aliasMap: Record<string, string>, vms: Record
   return host;
 }
 
-// public_ports source-of-truth = b_infra/home-manager/nixhm-sudo-<alias>/build.json.firewall.public_ports
+// public_ports source-of-truth = b_infra/nixhm-sudo-<alias>/build.json.firewall.public_ports
 // Per loyal-firewalling-marmot.md the home-manager sudo deploy that owns wg0+iptables also owns the port catalog.
 // Fallback signature kept for safety; in practice config.json no longer holds public_ports (deleted in Phase 2).
 function loadVmPublicPorts(alias: string | undefined, cloudRoot: string, fallback: any[]): any[] {
@@ -205,7 +205,7 @@ function main() {
       specs: mergedSpecs,
       description: vm.description ?? "",
       // Config.json owns: wg, ssh, user, home, method, rescue, gha
-      // public_ports MOVED to b_infra/home-manager/nixhm-sudo-<alias>/build.json.firewall.public_ports
+      // public_ports MOVED to b_infra/nixhm-sudo-<alias>/build.json.firewall.public_ports
       // (loyal-firewalling-marmot.md Phase 1 — the home-manager sudo deploy that owns wg0+iptables also owns the port catalog)
       wg_ip: vm.wg_ip,
       wg_public_key: vaultWgKeys[vm.ssh_alias] ?? null,  // vault is source of truth
@@ -624,7 +624,7 @@ function main() {
   // ═══════════════════════════════════════════════════════════════════════
 
   const consolidated = {
-    _warning: "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+    _warning: "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
     _meta: {
       version: 2,
       generated_at: new Date().toISOString(),
@@ -634,7 +634,7 @@ function main() {
         source_inputs: [
           "a_solutions/*/build.json (per-service declarations)",
           "config.json (global topology + vms + dns + wireguard)",
-          "b_infra/home-manager/*/build.json (per-VM HM config)",
+          "b_infra/*/build.json (per-VM HM config)",
           "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)",
         ],
         engines: {

@@ -261,7 +261,7 @@ Or read from `mesh-topology.nix` (after sec-03):
 
 ```nix
 lib.ghaWireguardConfig = let
-  mesh = import ../b_infra/home-manager/_shared/mesh-topology.nix;
+  mesh = import ../b_infra/_shared/mesh-topology.nix;
   hub = mesh.peers.gcp-proxy;
 in pkgs.writeText "wg-gha.conf" ''
   [Interface]
@@ -310,7 +310,7 @@ When WG tunnel is up, engine uses WG IPs instead of public IPs. Declared in SSH 
 
 **Dependency**: Cleaner after sec-03 (mesh-topology.nix as source of truth for WG IPs).
 
-**Files**: `.github/flake.nix`, `.github/actions/setup-deps/action.yml`, `b_infra/home-manager/_shared/wireguard.nix` or `mesh-topology.nix`
+**Files**: `.github/flake.nix`, `.github/actions/setup-deps/action.yml`, `b_infra/_shared/wireguard.nix` or `mesh-topology.nix`
 
 ---
 
@@ -364,4 +364,4 @@ When WG tunnel is up, engine uses WG IPs instead of public IPs. Declared in SSH 
 | `.github/flake.lock` | NEW — generated from flake.nix |
 | `.github/actions/setup-deps/action.yml` | Nix cache, `nix develop` instead of individual nix-shell, SSH ControlMaster, WG tunnel |
 | `a_solutions/_engine.sh` | rsync flags, hash-on-VM, deps flake support |
-| `b_infra/home-manager/_shared/wireguard.nix` | Add GHA peer (10.0.0.20) |
+| `b_infra/_shared/wireguard.nix` | Add GHA peer (10.0.0.20) |

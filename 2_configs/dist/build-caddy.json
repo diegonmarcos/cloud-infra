@@ -1,16 +1,16 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-06T11:05:11.236Z",
+    "generated_at": "2026-05-06T13:32:19.779Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
         "a_solutions/*/build.json (per-service declarations)",
         "config.json (global topology + vms + dns + wireguard)",
-        "b_infra/home-manager/*/build.json (per-VM HM config)",
+        "b_infra/*/build.json (per-VM HM config)",
         "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
       ],
       "engines": {
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-06T11:05:11.124Z",
+  "_generated": "2026-05-06T13:32:19.623Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -187,43 +187,7 @@
     "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
-  "l4_routes": [
-    {
-      "port": 993,
-      "upstream": "10.0.0.3:993",
-      "comment": "IMAPS -- TLS passthrough to maddy"
-    },
-    {
-      "port": 465,
-      "upstream": "10.0.0.3:465",
-      "comment": "SMTPS -- TLS passthrough to maddy"
-    },
-    {
-      "port": 587,
-      "upstream": "10.0.0.3:587",
-      "comment": "SMTP Submission -- TLS passthrough to maddy"
-    },
-    {
-      "port": 2443,
-      "upstream": "10.0.0.3:2443",
-      "comment": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
-    },
-    {
-      "port": 2465,
-      "upstream": "10.0.0.3:2465",
-      "comment": "SMTPS -- TLS passthrough to stalwart"
-    },
-    {
-      "port": 2587,
-      "upstream": "10.0.0.3:2587",
-      "comment": "SMTP Submission -- TLS passthrough to stalwart"
-    },
-    {
-      "port": 2993,
-      "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS -- TLS passthrough to stalwart"
-    }
-  ],
+  "l4_routes": [],
   "redirects": [
     {
       "domain": "mail.diegonmarcos.com",
@@ -640,26 +604,6 @@
     {
       "service": "redis.app",
       "upstream": "10.0.0.1:6379"
-    },
-    {
-      "service": "oci-mail.app",
-      "upstream": "10.0.0.3:7680"
-    },
-    {
-      "service": "oci-analytics.app",
-      "upstream": "10.0.0.4:7680"
-    },
-    {
-      "service": "oci-apps.app",
-      "upstream": "10.0.0.6:7680"
-    },
-    {
-      "service": "gcp-t4.app",
-      "upstream": "10.0.0.8:7680"
-    },
-    {
-      "service": "gcp-proxy.app",
-      "upstream": "10.0.0.1:7680"
     }
   ],
   "s3_routes": [
@@ -2534,56 +2478,6 @@
       "zone": "com",
       "service": null,
       "notes": null
-    },
-    {
-      "host": "oci-mail.app",
-      "path": null,
-      "upstream": "10.0.0.3:7680",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "oci-analytics.app",
-      "path": null,
-      "upstream": "10.0.0.4:7680",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "oci-apps.app",
-      "path": null,
-      "upstream": "10.0.0.6:7680",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "gcp-t4.app",
-      "path": null,
-      "upstream": "10.0.0.8:7680",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "gcp-proxy.app",
-      "path": null,
-      "upstream": "10.0.0.1:7680",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
     }
   ],
   "private_A1_app_canonical": [
@@ -3224,78 +3118,7 @@
       "notes": "OCI bucket: my-photos"
     }
   ],
-  "l4_listeners": [
-    {
-      "host": ":993",
-      "path": null,
-      "upstream": "10.0.0.3:993",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "IMAPS -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":465",
-      "path": null,
-      "upstream": "10.0.0.3:465",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTPS -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":587",
-      "path": null,
-      "upstream": "10.0.0.3:587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission -- TLS passthrough to maddy"
-    },
-    {
-      "host": ":2443",
-      "path": null,
-      "upstream": "10.0.0.3:2443",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)"
-    },
-    {
-      "host": ":2465",
-      "path": null,
-      "upstream": "10.0.0.3:2465",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTPS -- TLS passthrough to stalwart"
-    },
-    {
-      "host": ":2587",
-      "path": null,
-      "upstream": "10.0.0.3:2587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission -- TLS passthrough to stalwart"
-    },
-    {
-      "host": ":2993",
-      "path": null,
-      "upstream": "10.0.0.3:2993",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "IMAPS -- TLS passthrough to stalwart"
-    }
-  ],
+  "l4_listeners": [],
   "others": [
     {
       "host": "<global>",

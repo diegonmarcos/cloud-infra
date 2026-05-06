@@ -195,10 +195,54 @@ step_compose() {
         log "  free: ${FREE_GB}GB / threshold: ${MIN_FREE_GB}GB"
         if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
             log "  insufficient — running cleanup (docker prune + log truncate + journal vacuum)"
+            # Prune list, in order of safety (most-conservative → most-aggressive):
+            #   1. truncate runaway container json-log files (>50M)
+            #   2. /containers/prune          — stopped containers only
+            #   3. /images/prune dangling     — only <none> tagged images
+            #   4. /build/prune?all=true      — buildkit cache (rare on non-builder VMs)
+            #   5. /images/prune until=720h   — UNUSED tagged images older than 30d.
+            #      Surfaced 2026-05-05 (oci-mail incident): /var/lib/containerd
+            #      held 12 GB of old tagged-but-unreferenced images that the prior
+            #      4 steps couldn't touch. `until=720h` filter only removes images
+            #      with no running/stopped container referencing them AND last
+            #      used > 30 days ago — safe for steady-state VMs, cleans the
+            #      historical pulls that accumulate over months.
+            #   6. journalctl --vacuum-size=50M
+            #   7. rm /var/disk-reserve/ballast.bin (engineered safety net)
+            #
+            # REVERTED 2026-05-05: an "orphan /var/lib/containerd" cleanup step
+            # was added between (5) and (6) on the assumption that the absence
+            # of a `containerd.service` systemd unit meant the directory was
+            # leftover from a removed install. That assumption is FALSE on
+            # modern docker installs: dockerd ships an embedded containerd
+            # binary that does NOT register a separate systemd unit but still
+            # uses /var/lib/containerd as its content store. The cleanup
+            # destroyed docker's image cache and forced a re-pull on every
+            # ship — directly counterproductive on the disk-pressure VMs the
+            # cleanup was meant to help. Real fix for runaway containerd
+            # content store: docker's own /images/prune (steps 3+5 above) GCs
+            # via the containerd content reference graph; if that's not
+            # reclaiming, the issue is upstream (manifest staleness) and
+            # outside engine scope.
+            # Additional safe prunes (added 2026-05-05 from oci-mail incident
+            # post-mortem: 38 GB used, 4 GB free, blocked HM activation):
+            #   - vm-system.tar.gz from /var/backups/evidence/* — these are
+            #     legacy heavy snapshots from the pre-2026-04-20 evidence-
+            #     collector script. The .nix source has been refactored to
+            #     a lightweight version that doesn't write vm-system.tar.gz,
+            #     but VMs whose HM ship has been failing still run the OLD
+            #     deployed script (oci-mail had 4×793 MB = 3.2 GB of these
+            #     orphan files). Safe to remove: lightweight script never
+            #     regenerates them; heavy script's existing 7-day retention
+            #     handles the next cycle if ship continues to fail.
+            #   - apt cache (apt-get clean) — regenerable, cheap to clear.
             ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/build/prune?all=true' >/dev/null 2>&1 || true; \
+                    curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22until%22%3A%5B%22720h%22%5D%7D' >/dev/null 2>&1 || true; \
+                    sudo find /var/backups/evidence -name 'vm-system.tar.gz' -delete 2>/dev/null || true; \
+                    sudo apt-get clean -qq 2>/dev/null || true; \
                     sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
                     sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
@@ -212,6 +256,26 @@ step_compose() {
                 return 1
             fi
         fi
+
+        # ── Pre-flight: nuke broken docker wrappers ──
+        # The retired guardrails.nix used to install a `pkgs.writeShellScriptBin
+        # "docker"` overlay that exec'd `nice /usr/local/bin/docker-real "$@"`.
+        # `docker-real` was a system-side wrapper that has since been removed
+        # (commit a0774f4ce). On VMs whose nix-profile still points to that
+        # stale 2-line wrapper, the engine's `docker pull` step dies with
+        # `nice: '/usr/local/bin/docker-real': No such file or directory`
+        # BEFORE the activation container runs — so scheduler.nix's own
+        # cleanup hook is unreachable. Strip the bad wrapper here, every ship,
+        # idempotent on healthy VMs (head -2 grep returns nothing, rm skipped).
+        log "Pre-flight: removing any stale docker-real wrapper from nix-profile on $DEPLOY_HOST"
+        ssh_vm "for _p in /home/$HM_USER/.nix-profile/bin/docker /usr/local/bin/docker /usr/local/bin/docker-real /usr/local/bin/docker-capped /usr/local/bin/docker-compose-capped /usr/local/bin/docker-buildx-capped; do
+                  if [ -e \"\$_p\" ] && head -2 \"\$_p\" 2>/dev/null | grep -q 'docker-real'; then
+                    rm -f \"\$_p\" && echo \"[hm-preflight] removed broken wrapper: \$_p\"
+                  fi
+                done
+                # Also kill any /usr/local/bin/docker-real* leftovers (broken targets)
+                rm -f /usr/local/bin/docker-real* 2>/dev/null || sudo rm -f /usr/local/bin/docker-real* 2>/dev/null || true
+                exit 0" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
 
         # Deploy pre-decrypted secrets to VM via SSH
         if [ -f "$DIST_DIR/.secrets" ]; then

@@ -42,7 +42,7 @@ cmd_sync() {
   rm -f "$SRC_DIR/"*.yaml
 
   find "$CLOUD_SOURCE_DIR/a_solutions" \
-       "$CLOUD_SOURCE_DIR/b_infra/home-manager" \
+       "$CLOUD_SOURCE_DIR/b_infra" \
        "$CLOUD_SOURCE_DIR/b_infra" \
     -name "secrets*.yaml" \
     -not -path "*/z_archive/*" -not -path "*/node_modules/*" \

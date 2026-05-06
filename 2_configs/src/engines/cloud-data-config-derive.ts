@@ -2349,13 +2349,13 @@ function main() {
   //                    block emitted by cloud-data-config-consolidated.ts so any
   //                    consumer reading either the master or a derived file can
   //                    trace back to the source-of-truth in one read.
-  const DO_NOT_EDIT = "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.";
+  const DO_NOT_EDIT = "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.";
   const PIPELINE_META = {
     description: "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
     source_inputs: [
       "a_solutions/*/build.json (per-service declarations)",
       "config.json (global topology + vms + dns + wireguard)",
-      "b_infra/home-manager/*/build.json (per-VM HM config)",
+      "b_infra/*/build.json (per-VM HM config)",
       "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)",
     ],
     engines: {

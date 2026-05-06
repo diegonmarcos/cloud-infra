@@ -228,8 +228,8 @@ step_compose() {
         # vacuum before any pull/cp/activate runs. Data-driven threshold:
         #   build.json:.vm.disk.activation_min_free_gb (default 10).
         # Single source of truth: 1_workflows/src/data/hm-config.json
-        # ALSO read by b_infra/home-manager/vm-pilot/src/modules/protection/disk-ballast.nix
-        # via symlinked b_infra/home-manager/_shared/modules/hm-config.json.
+        # ALSO read by b_infra/_shared/vm-pilot/src/modules/protection/disk-ballast.nix
+        # via symlinked b_infra/_shared/modules/hm-config.json.
         HM_CONFIG_FILE="$STEPS_DIR/../data/hm-config.json"
         MIN_FREE_GB=$(jq -r '.min_size_ballast_file_gb' "$HM_CONFIG_FILE" 2>/dev/null)
         : "${MIN_FREE_GB:=10}"  # fallback if the JSON read fails for any reason
