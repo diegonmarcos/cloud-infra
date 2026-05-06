@@ -25,6 +25,7 @@ in {
     (import ./rescue-ssh.nix { inherit config pkgs lib rescuePort; })
     (import ./scheduler.nix { inherit config pkgs lib ramMB; })
     (import ./layer2-identity.nix { inherit config pkgs lib ramMB cpus userName userId; })
+    (import ./disk-ballast.nix { inherit config pkgs lib; })
     (import ../dashboard/dashboard.nix { inherit vmName; })
     (import ../agents/health-agent.nix { inherit config pkgs lib; })
     # guardrails.nix disabled (POSIX sh bug)
