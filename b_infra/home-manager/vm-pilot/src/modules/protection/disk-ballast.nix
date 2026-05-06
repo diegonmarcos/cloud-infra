@@ -25,19 +25,15 @@
 #
 # Imported by: system-protection.nix orchestrator
 #
-# Ballast size MUST match the engine's HM-activation reservation (10 GB).
-# Source-of-truth for that value is the engine itself (cloud-ship-nix-homemanager-step-deploy-activate.sh
-# constant `MIN_FREE_GB=10`). Cross-reference both sites if you change one.
-#
-# Why 10 (post 2026-05-06 optimization): the engine now `docker rmi`s the HM
-# image immediately after the activation container exits — BEFORE the native
-# nix-build step. That eliminates the 6 GB image-overlay parallel-with-nix-build
-# overlap. New peak math:
-#   pull  +6 → cp +2 (peak 8) → rmi -6 → nix-build +3 (peak 5) → done
-# Steady-state peak: 8 GB. With 20% safety margin: 8 × 1.2 = 9.6 → 10 GB.
-{ config, pkgs, lib, ballastGB ? 10, ... }:
+# Single source of truth for the ballast/activation-reservation size:
+#   1_workflows/src/data/hm-config.json :: .min_size_ballast_file_gb
+# Symlinked into vm-pilot via _shared/modules/hm-config.json.
+# Engine pre-flight reads the same JSON. ONE field, ONE place.
+{ config, pkgs, lib, ... }:
 
 let
+  hmConfig = builtins.fromJSON (builtins.readFile ../hm-config.json);
+  ballastGB = hmConfig.min_size_ballast_file_gb;
   ballastPath = "/var/disk-reserve/ballast.bin";
   recreateThreshold = 70;  # only allocate when /<70%
 in {
