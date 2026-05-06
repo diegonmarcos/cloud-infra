@@ -227,18 +227,12 @@ step_compose() {
         # Fix: pre-flight prune docker + truncate runaway logs + journal
         # vacuum before any pull/cp/activate runs. Data-driven threshold:
         #   build.json:.vm.disk.activation_min_free_gb (default 10).
-        # The engine OWNS the activation peak need — not per-VM build.json.
-        # Peak math (post 2026-05-06 optimization, image rmi'd before nix-build):
-        #   docker pull   +6 GB → peak 6  (image in overlay2)
-        #   cp -aR        +2 GB → peak 8  (closure delta written to host /nix/store)
-        #   docker rmi    -6 GB → drops to 2  (image gone, BEFORE nix-build)
-        #   nix-build     +3 GB → peak ~5 GB during native activate
-        # Steady-state peak: 8 GB. With 20% safety margin: 8 × 1.2 = 9.6 → 10 GB.
-        # Cross-reference: vm-pilot/src/modules/protection/disk-ballast.nix
-        # (ballastGB ? 10) MUST equal this number — the ballast releases
-        # exactly the activation reservation so engine pre-flight frees just
-        # enough headroom for cp + nix-build with safety margin.
-        MIN_FREE_GB=10
+        # Single source of truth: 1_workflows/src/data/hm-config.json
+        # ALSO read by b_infra/home-manager/vm-pilot/src/modules/protection/disk-ballast.nix
+        # via symlinked b_infra/home-manager/_shared/modules/hm-config.json.
+        HM_CONFIG_FILE="$STEPS_DIR/../data/hm-config.json"
+        MIN_FREE_GB=$(jq -r '.min_size_ballast_file_gb' "$HM_CONFIG_FILE" 2>/dev/null)
+        : "${MIN_FREE_GB:=10}"  # fallback if the JSON read fails for any reason
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
         # POSIX df: column 4 is Available KB. Convert to GB.
         FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
