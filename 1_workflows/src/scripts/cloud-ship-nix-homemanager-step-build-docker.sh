@@ -191,24 +191,30 @@ echo "$HM_ACTIVATION_PATH" > "$HOST/tmp/.hm-activation-path"
 log "Container done — activation path: $HM_ACTIVATION_PATH"
 ACTIVATE_EOF
 
-    # ── Generate Dockerfile ──
-    cat > "$DOCKER_CTX/Dockerfile" <<DOCKERFILE_EOF
-# nix-hm-runtime is the minimal HM-transport base: debian + nix multi-user
-# only, no Diego dev profile, no cloned repos, no fish/rust/go/etc.
-# (Source: unix/cb_containers-builders/src/Dockerfile.hm-runtime)
-# Saves ~2.3 GB per VM vs. the user-dev-x86-deb-nix-hm dev environment.
-FROM ghcr.io/diegonmarcos/nix-hm-runtime:latest
-USER root
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
-LABEL org.opencontainers.image.description="Home-Manager activation image for $SERVICE_NAME"
-COPY nix-store/ /nix/store/
-COPY activate.sh /hm/activate.sh
-COPY nix-db-dump.txt /hm/nix-db-dump.txt
-RUN chmod +x /hm/activate.sh
-ENV HM_ACTIVATION_PATH=/nix/store/$RESULT_BASENAME
-ENV HM_USER=$HM_USER
-ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]
-DOCKERFILE_EOF
+    # ── Generate Dockerfile from vm-pilot template ──
+    # Source-of-truth: b_infra/home-manager/vm-pilot/src/Dockerfile.transport
+    # Substitutions are LITERAL (sed-no-regex via awk) for {{SERVICE_NAME}},
+    # {{HM_ACTIVATION_PATH}}, {{HM_USER}}.
+    # STEPS_DIR is /home/.../cloud/1_workflows/src/scripts (set in engine.sh)
+    HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-$STEPS_DIR/../../../b_infra/home-manager/vm-pilot/src/Dockerfile.transport}"
+    if [ ! -f "$HM_DOCKERFILE_TPL" ]; then
+        log "ERROR: vm-pilot transport Dockerfile template missing: $HM_DOCKERFILE_TPL"
+        return 1
+    fi
+    awk -v svc="$SERVICE_NAME" \
+        -v ap="/nix/store/$RESULT_BASENAME" \
+        -v hu="$HM_USER" '
+      {
+        line = $0
+        while ((i = index(line, "{{SERVICE_NAME}}")) > 0)
+          line = substr(line,1,i-1) svc substr(line,i+length("{{SERVICE_NAME}}"))
+        while ((i = index(line, "{{HM_ACTIVATION_PATH}}")) > 0)
+          line = substr(line,1,i-1) ap substr(line,i+length("{{HM_ACTIVATION_PATH}}"))
+        while ((i = index(line, "{{HM_USER}}")) > 0)
+          line = substr(line,1,i-1) hu substr(line,i+length("{{HM_USER}}"))
+        print line
+      }
+    ' "$HM_DOCKERFILE_TPL" > "$DOCKER_CTX/Dockerfile"
 
     log "Docker context ready: $DOCKER_CTX ($(du -sh "$DOCKER_CTX" | cut -f1))"
     log "  Closure: ${CLOSURE_SIZE}MB, ${CLOSURE_COUNT} store paths"

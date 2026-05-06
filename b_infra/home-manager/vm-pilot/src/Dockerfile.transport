@@ -1,0 +1,40 @@
+# vm-pilot transport Dockerfile — shared across all nixhm-sudo-{vm} images
+#
+# Each per-VM HM image is built by the cloud engine from this template,
+# substituting:
+#   {{SERVICE_NAME}}        → e.g. "nixhm-sudo-oci-mail"
+#   {{HM_ACTIVATION_PATH}}  → /nix/store/<hash>-home-manager-generation
+#   {{HM_USER}}             → the per-VM user (ubuntu, diego, etc.)
+#
+# Architecture note (why so minimal):
+#   The VM ALREADY has nix-daemon installed natively. This container's only
+#   job is to deliver the closure bytes to host's /nix/store and run the
+#   activation script. NO nix runtime needed inside the container — bash is
+#   sufficient. Total layered cost: ~30 MB base + closure-on-top.
+#
+#   For first-pull VMs without nix yet, activate.sh installs the daemon via
+#   the official upstream installer (curl ... | sh) using `chroot /host`.
+#
+# Source-of-truth: b_infra/home-manager/vm-pilot/src/Dockerfile.transport
+# Consumed by:    1_workflows/src/scripts/cloud-ship-nix-homemanager-step-build-docker.sh
+FROM debian:bookworm-slim
+
+# Bootstrap deps for nix installer (only used on fresh VMs without nix yet)
+# + the few binaries activate.sh actually invokes.
+RUN apt-get update -qq \
+    && apt-get install -y -qq --no-install-recommends \
+        bash sudo curl xz-utils ca-certificates coreutils \
+    && rm -rf /var/lib/apt/lists/*
+
+USER root
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.description="Home-Manager activation image for {{SERVICE_NAME}}"
+
+COPY nix-store/ /nix/store/
+COPY activate.sh /hm/activate.sh
+COPY nix-db-dump.txt /hm/nix-db-dump.txt
+RUN chmod +x /hm/activate.sh
+
+ENV HM_ACTIVATION_PATH={{HM_ACTIVATION_PATH}}
+ENV HM_USER={{HM_USER}}
+ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]
