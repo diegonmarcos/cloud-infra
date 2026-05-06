@@ -144,6 +144,14 @@ check "post-hoc: apply-rules delegates to mail-sieve-subset-delivery-time" \
 check "post-hoc: apply-rules scan loop uses input redirection (not pipeline)" \
     grep -qE 'done < "\$SCAN"' "$SRC/mail-sieve-subset-post-hoc.sh"
 
+# 12e. apply-rules converts cachedHeader JSON → RFC822 before piping to
+# delivery-time. go-imap-sql stores headers as `{"From":["…"], …}`, but
+# delivery-time's awk get_header expects raw `Field: value\n`. Without
+# the conversion, get_header finds no fields and EVERY message falls
+# through to routing_default (observed: 2104/2104 → fallback folder).
+check "post-hoc: apply-rules converts cachedHeader JSON → RFC822 (jq to_entries)" \
+    grep -q 'to_entries\[\] | "\\(.key): \\(.value | join' "$SRC/mail-sieve-subset-post-hoc.sh"
+
 # 13. Embedded jq program compiles. `sh -n` only validates POSIX shell;
 # the jq script lives inside a single-quoted heredoc and was historically
 # broken (missing `;` between `def` definitions caused jq to error at EOF
