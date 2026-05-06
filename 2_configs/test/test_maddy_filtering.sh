@@ -130,6 +130,31 @@ check "delivery-time: pins schema_version=2" \
 check "delivery-time: single jq -n (combined ctx + eval — no two-jq chain)" \
     bash -c "[ \"\$(grep -c '^OUT=' '$SRC/mail-sieve-subset-delivery-time.sh')\" = '1' ]"
 
+# 13. Embedded jq program compiles. `sh -n` only validates POSIX shell;
+# the jq script lives inside a single-quoted heredoc and was historically
+# broken (missing `;` between `def` definitions caused jq to error at EOF
+# and Maddy to fall back to INBOX-only delivery for every message).
+# This check extracts the jq body between `--slurpfile rf "$RULES" '` and
+# the matching closing `')"`, then runs `jq -n -f` with the same --arg
+# bindings the script uses — fails fast on any compile error.
+JQ_BODY="$(mktemp)"
+python3 - "$SRC/mail-sieve-subset-delivery-time.sh" "$JQ_BODY" <<'PY' || true
+import re, sys
+src = open(sys.argv[1]).read()
+m = re.search(r"--slurpfile rf \"\$RULES\" '(.*?)'\)\"", src, re.DOTALL)
+open(sys.argv[2], 'w').write(m.group(1) if m else '')
+PY
+check "delivery-time: embedded jq program compiles (jq -n -f)" \
+    bash -c "[ -s '$JQ_BODY' ] && jq -n -r \
+        --arg acct '' --arg sender '' --arg rcpt '' \
+        --arg from_dom '' --arg from_addr '' \
+        --arg to '' --arg cc '' --arg bcc '' \
+        --arg reply_to '' --arg subject '' --arg list_id '' \
+        --arg headers '' \
+        --slurpfile rf '$MADDY/dist/assets/mail-rules.json' \
+        -f '$JQ_BODY' >/dev/null 2>&1"
+rm -f "$JQ_BODY"
+
 echo
 echo "Results: $PASS passed, $FAIL failed"
 exit $(( FAIL > 0 ? 1 : 0 ))
