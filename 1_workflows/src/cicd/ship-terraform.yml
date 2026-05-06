@@ -1,8 +1,19 @@
 name: "Ship → terraform"
 
-# Ordering: gen-configs MUST run first so c_vps/**/main.tf changes are
-# reflected in the regenerated 2_configs/dist/ before terraform applies.
+# Two triggers, by intent:
+#   push        → terraform-source change auto-applies immediately.
+#   workflow_run → declaration change made gen-configs regen dist/; this
+#                 workflow waits for new dist/ to commit, THEN applies.
 on:
+  push:
+    paths:
+      - "c_vps/ba-clo_cloudflare/src/**"
+      - "c_vps/vps_gcloud/src/**"
+      - "c_vps/vps_oci/src/**"
+      - "c_vps/vps_hetzner/src/**"
+      - "a_solutions/ba-clo_cloudflare-worker/src/**"
+      - "1_workflows/src/cicd/ship-terraform.yml"
+    branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
     types: [completed]

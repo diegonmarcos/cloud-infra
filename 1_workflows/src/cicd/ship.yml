@@ -9,10 +9,18 @@
 
 name: Ship
 
-# Ordering: gen-configs MUST run first so origin/main has the regenerated
-# 2_configs/dist/_cloud-data-consolidated.json + per-service build-*.json
-# committed before any service ships. workflow_run gates this.
+# Two triggers, by intent:
+#   push        → src/ change (code only) auto-ships immediately. gen-configs
+#                 doesn't need to regen dist/ because no declaration changed.
+#   workflow_run → declaration change (build.json, config.json, etc.) made
+#                 gen-configs run; ship.yml waits for the new dist/ to land
+#                 in origin/main, THEN ships from canonical truth.
+# Manual workflow_dispatch always available.
 on:
+  push:
+    paths:
+      - "a_solutions/*/src/**"
+    branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
     types: [completed]

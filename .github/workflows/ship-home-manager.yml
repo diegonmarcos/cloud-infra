@@ -19,12 +19,16 @@
 
 name: "Ship → home-manager"
 
-# Ordering: gen-configs MUST run first so origin/main has the regenerated
-# 2_configs/dist/_cloud-data-consolidated.json + per-VM build-vm-*.json
-# committed before any VM ships. workflow_run gates this:
-#   gen-configs SUCCESS → this workflow starts
-#   gen-configs FAILURE → this workflow does NOT start (the if: gate)
+# Two triggers, by intent:
+#   push        → b_infra/ change auto-ships immediately (code/module level).
+#   workflow_run → declaration change made gen-configs regen dist/; this
+#                 workflow waits for the new dist/ to commit, THEN ships.
+# Manual workflow_dispatch always available.
 on:
+  push:
+    paths:
+      - "b_infra/**"
+    branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
     types: [completed]

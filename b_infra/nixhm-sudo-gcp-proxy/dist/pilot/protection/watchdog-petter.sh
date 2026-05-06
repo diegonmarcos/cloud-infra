@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-proxy/src/pilot/protection/watchdog-petter.sh
+# ║   Source : b_infra/nixhm-sudo-gcp-proxy/src/pilot/protection/watchdog-petter.sh
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -16,7 +16,7 @@
 # Rich telemetry: mem, swap, PSI, top procs, disk, containers every 30s
 # POSIX sh — no bash required
 # Managed by home-manager — DO NOT EDIT on VM
-# Source: cloud/b_infra/home-manager/_shared/modules/watchdog-petter.sh
+# Source: cloud/b_infra/_shared/modules/watchdog-petter.sh
 
 # Hardware watchdog DISABLED — CPUQuota throttling causes missed pets → VM reset
 # TODO: re-enable once we confirm VMs are stable without it
