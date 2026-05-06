@@ -1,0 +1,3619 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_meta": {
+    "description": "Idempotent delta for the kg-graph SurrealDB instance. Re-applying the same delta is a no-op (deterministic keys + UPSERT MERGE on the consumer side).",
+    "format_version": 1,
+    "idempotency": {
+      "node_key": "<table>:<sanitized_id>",
+      "edge_key": "<from_key>-><table>-><to_key>",
+      "stale_strategy": "mark with last_seen_ts (never hard-delete)"
+    },
+    "generated_at": "2026-05-06T14:27:43.397Z",
+    "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+        "derive": "2_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 2_configs/build.sh all"
+    }
+  },
+  "_generated": "2026-05-06T14:27:43.256Z",
+  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
+  "counts": {
+    "nodes": 164,
+    "edges": 194,
+    "by_table": {
+      "vm": 5,
+      "service": 54,
+      "container": 75,
+      "domain": 30
+    }
+  },
+  "nodes": [
+    {
+      "table": "vm",
+      "id": "oci_mail",
+      "key": "vm:oci_mail",
+      "properties": {
+        "vm_id": "oci-E2-f_0",
+        "alias": "oci-mail",
+        "ip": "130.110.251.193",
+        "wg_ip": "10.0.0.3",
+        "user": "ubuntu",
+        "provider": "oci",
+        "arch": "x86_64",
+        "cpu_count": 1,
+        "ram_gb": 1,
+        "disk_gb": 0,
+        "description": "Oracle Free - E2 Micro 0 - Mail Server"
+      }
+    },
+    {
+      "table": "vm",
+      "id": "oci_analytics",
+      "key": "vm:oci_analytics",
+      "properties": {
+        "vm_id": "oci-E2-f_1",
+        "alias": "oci-analytics",
+        "ip": "129.151.228.66",
+        "wg_ip": "10.0.0.4",
+        "user": "ubuntu",
+        "provider": "oci",
+        "arch": "x86_64",
+        "cpu_count": 1,
+        "ram_gb": 1,
+        "disk_gb": 0,
+        "description": "Oracle Free - E2 Micro 1 - Analytics + Workflows"
+      }
+    },
+    {
+      "table": "vm",
+      "id": "oci_apps",
+      "key": "vm:oci_apps",
+      "properties": {
+        "vm_id": "oci-A1-f_0",
+        "alias": "oci-apps",
+        "ip": "82.70.229.129",
+        "wg_ip": "10.0.0.6",
+        "user": "ubuntu",
+        "provider": "oci",
+        "arch": "aarch64",
+        "cpu_count": 4,
+        "ram_gb": 24,
+        "disk_gb": 0,
+        "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated"
+      }
+    },
+    {
+      "table": "vm",
+      "id": "gcp_t4",
+      "key": "vm:gcp_t4",
+      "properties": {
+        "vm_id": "gcp-T4-p_0",
+        "alias": "gcp-t4",
+        "ip": "34.173.227.250",
+        "wg_ip": "10.0.0.8",
+        "user": "diego",
+        "provider": "gcp",
+        "arch": "x86_64",
+        "cpu_count": 4,
+        "ram_gb": 15,
+        "disk_gb": 50,
+        "description": "GCloud Paid - N1 Std 4 + T4 GPU (Spot) - Ollama LLM"
+      }
+    },
+    {
+      "table": "vm",
+      "id": "gcp_proxy",
+      "key": "vm:gcp_proxy",
+      "properties": {
+        "vm_id": "gcp-E2-f_0",
+        "alias": "gcp-proxy",
+        "ip": "35.226.147.64",
+        "wg_ip": "10.0.0.1",
+        "user": "diego",
+        "provider": "gcp",
+        "arch": "x86_64",
+        "cpu_count": 2,
+        "ram_gb": 2,
+        "disk_gb": 32,
+        "description": "GCloud Free - E2 Micro 0 - Central Proxy + Control"
+      }
+    },
+    {
+      "table": "service",
+      "id": "code_server",
+      "key": "service:code_server",
+      "properties": {
+        "name": "code-server",
+        "category": "app",
+        "description": "VS Code IDE (ide.diegonmarcos.com)",
+        "domain": "ide.diegonmarcos.com",
+        "port": 8443,
+        "vm": "oci-apps",
+        "folder": "aa-sui_code-server"
+      }
+    },
+    {
+      "table": "container",
+      "id": "code_server",
+      "key": "container:code_server",
+      "properties": {
+        "name": "code-server",
+        "image": "linuxserver/code-server:latest",
+        "role": "app",
+        "port": 8443,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cypht",
+      "key": "service:cypht",
+      "properties": {
+        "name": "cypht",
+        "category": "app",
+        "description": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
+        "domain": "webmail.diegonmarcos.com",
+        "port": 8889,
+        "vm": "oci-mail",
+        "folder": "aa-sui_cypht"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cypht",
+      "key": "container:cypht",
+      "properties": {
+        "name": "cypht",
+        "image": "cypht/cypht:latest",
+        "role": "app",
+        "port": 8889,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "cypht_postgres",
+      "key": "container:cypht_postgres",
+      "properties": {
+        "name": "cypht-postgres",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "etherpad",
+      "key": "service:etherpad",
+      "properties": {
+        "name": "etherpad",
+        "category": "app",
+        "description": "Etherpad collaborative editor",
+        "domain": "pad.diegonmarcos.com",
+        "port": 3012,
+        "vm": "oci-apps",
+        "folder": "aa-sui_etherpad"
+      }
+    },
+    {
+      "table": "container",
+      "id": "etherpad_app",
+      "key": "container:etherpad_app",
+      "properties": {
+        "name": "etherpad_app",
+        "image": "etherpad/etherpad:latest",
+        "role": "app",
+        "port": 3012,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "etherpad_postgres",
+      "key": "container:etherpad_postgres",
+      "properties": {
+        "name": "etherpad_postgres",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": 5436,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "filebrowser",
+      "key": "service:filebrowser",
+      "properties": {
+        "name": "filebrowser",
+        "category": "app",
+        "description": "FileBrowser web file manager (NEW - not deployed yet)",
+        "domain": "files.diegonmarcos.com",
+        "port": 3015,
+        "vm": "oci-apps",
+        "folder": "aa-sui_filebrowser"
+      }
+    },
+    {
+      "table": "container",
+      "id": "filebrowser_app",
+      "key": "container:filebrowser_app",
+      "properties": {
+        "name": "filebrowser_app",
+        "image": "filebrowser/filebrowser:latest",
+        "role": "app",
+        "port": 3015,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "google_personal_mcp",
+      "key": "service:google_personal_mcp",
+      "properties": {
+        "name": "google-personal-mcp",
+        "category": "app",
+        "description": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
+        "domain": "mcp.diegonmarcos.com",
+        "port": 3106,
+        "vm": "oci-apps",
+        "folder": "aa-sui_google-personal-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "google_personal_mcp",
+      "key": "container:google_personal_mcp",
+      "properties": {
+        "name": "google-personal-mcp",
+        "image": "ghcr.io/diegonmarcos/google-personal-mcp:latest",
+        "role": "app",
+        "port": 3106,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "google_workspace_mcp",
+      "key": "service:google_workspace_mcp",
+      "properties": {
+        "name": "google-workspace-mcp",
+        "category": "app",
+        "description": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
+        "domain": "mcp.diegonmarcos.com",
+        "port": 3104,
+        "vm": "oci-apps",
+        "folder": "aa-sui_google-workspace-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "google_workspace_mcp",
+      "key": "container:google_workspace_mcp",
+      "properties": {
+        "name": "google-workspace-mcp",
+        "image": "ghcr.io/diegonmarcos/google-workspace-mcp:latest",
+        "role": "app",
+        "port": 3104,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "grist",
+      "key": "service:grist",
+      "properties": {
+        "name": "grist",
+        "category": "app",
+        "description": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
+        "domain": "sheets.diegonmarcos.com",
+        "port": 3011,
+        "vm": "oci-apps",
+        "folder": "aa-sui_grist"
+      }
+    },
+    {
+      "table": "container",
+      "id": "grist_app",
+      "key": "container:grist_app",
+      "properties": {
+        "name": "grist_app",
+        "image": "gristlabs/grist:latest",
+        "role": "app",
+        "port": 3011,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "hedgedoc",
+      "key": "service:hedgedoc",
+      "properties": {
+        "name": "hedgedoc",
+        "category": "app",
+        "description": "Collaborative markdown editor",
+        "domain": "doc.diegonmarcos.com",
+        "port": 3018,
+        "vm": "oci-apps",
+        "folder": "aa-sui_hedgedoc"
+      }
+    },
+    {
+      "table": "container",
+      "id": "hedgedoc_app",
+      "key": "container:hedgedoc_app",
+      "properties": {
+        "name": "hedgedoc_app",
+        "image": "quay.io/hedgedoc/hedgedoc:latest",
+        "role": "app",
+        "port": 3018,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "hedgedoc_postgres",
+      "key": "container:hedgedoc_postgres",
+      "properties": {
+        "name": "hedgedoc_postgres",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": 5439,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "mail_mcp",
+      "key": "service:mail_mcp",
+      "properties": {
+        "name": "mail-mcp",
+        "category": "app",
+        "description": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+        "domain": "mcp.diegonmarcos.com",
+        "port": 3103,
+        "vm": "oci-apps",
+        "folder": "aa-sui_mail-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mail_mcp",
+      "key": "container:mail_mcp",
+      "properties": {
+        "name": "mail-mcp",
+        "image": "ghcr.io/diegonmarcos/mail-mcp:latest",
+        "role": "app",
+        "port": 3103,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "mail_puller",
+      "key": "service:mail_puller",
+      "properties": {
+        "name": "mail-puller",
+        "category": "app",
+        "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+        "domain": "mail-puller.diegonmarcos.com",
+        "port": null,
+        "vm": "oci-mail",
+        "folder": "aa-sui_mail-puller"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mail_puller",
+      "key": "container:mail_puller",
+      "properties": {
+        "name": "mail-puller",
+        "image": "ghcr.io/diegonmarcos/mail-puller-binaries:latest",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "mattermost_bots",
+      "key": "service:mattermost_bots",
+      "properties": {
+        "name": "mattermost-bots",
+        "category": "app",
+        "description": "Mattermost team chat with ntfy bridge and C3 command bot",
+        "domain": "chat.diegonmarcos.com",
+        "port": 8065,
+        "vm": "oci-apps",
+        "folder": "aa-sui_mattermost-bots"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mattermost",
+      "key": "container:mattermost",
+      "properties": {
+        "name": "mattermost",
+        "image": "mattermost/mattermost-team-edition:10.11",
+        "role": "app",
+        "port": 8065,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "mattermost_postgres",
+      "key": "container:mattermost_postgres",
+      "properties": {
+        "name": "mattermost-postgres",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": 5435,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "mattermost_bots",
+      "key": "container:mattermost_bots",
+      "properties": {
+        "name": "mattermost-bots",
+        "image": "python:3.12-slim",
+        "role": "bots",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "mattermost_mcp",
+      "key": "service:mattermost_mcp",
+      "properties": {
+        "name": "mattermost-mcp",
+        "category": "app",
+        "description": "Mattermost MCP server — chat tools via HTTP transport",
+        "domain": null,
+        "port": 3102,
+        "vm": "oci-apps",
+        "folder": "aa-sui_mattermost-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mattermost_mcp",
+      "key": "container:mattermost_mcp",
+      "properties": {
+        "name": "mattermost-mcp",
+        "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
+        "role": "app",
+        "port": 3102,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "photoprism",
+      "key": "service:photoprism",
+      "properties": {
+        "name": "photoprism",
+        "category": "app",
+        "description": "PhotoPrism AI-powered photo management (oci-flex-1)",
+        "domain": "photos.diegonmarcos.com",
+        "port": 3013,
+        "vm": "oci-apps",
+        "folder": "aa-sui_photoprism"
+      }
+    },
+    {
+      "table": "container",
+      "id": "photoprism_app",
+      "key": "container:photoprism_app",
+      "properties": {
+        "name": "photoprism_app",
+        "image": "photoprism/photoprism:latest",
+        "role": "app",
+        "port": 3013,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "photoprism_mariadb",
+      "key": "container:photoprism_mariadb",
+      "properties": {
+        "name": "photoprism_mariadb",
+        "image": "mariadb:11",
+        "role": "db",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "photoprism_rclone",
+      "key": "container:photoprism_rclone",
+      "properties": {
+        "name": "photoprism_rclone",
+        "image": "rclone/rclone:latest",
+        "role": "rclone",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "photos_webhook",
+      "key": "service:photos_webhook",
+      "properties": {
+        "name": "photos-webhook",
+        "category": "app",
+        "description": "PhotoPrism Webhook + S3 Processor",
+        "domain": null,
+        "port": 5002,
+        "vm": "oci-apps",
+        "folder": "aa-sui_photos-webhook"
+      }
+    },
+    {
+      "table": "container",
+      "id": "photos_webhook",
+      "key": "container:photos_webhook",
+      "properties": {
+        "name": "photos-webhook",
+        "image": "ghcr.io/diegonmarcos/photos-webhook:latest",
+        "role": "app",
+        "port": 5002,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "photos_db",
+      "key": "container:photos_db",
+      "properties": {
+        "name": "photos-db",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "radicale",
+      "key": "service:radicale",
+      "properties": {
+        "name": "radicale",
+        "category": "app",
+        "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
+        "domain": "cal.diegonmarcos.com",
+        "port": 5232,
+        "vm": "oci-apps",
+        "folder": "aa-sui_radicale"
+      }
+    },
+    {
+      "table": "container",
+      "id": "radicale",
+      "key": "container:radicale",
+      "properties": {
+        "name": "radicale",
+        "image": "tomsquest/docker-radicale:latest",
+        "role": "app",
+        "port": 5232,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "snappymail",
+      "key": "service:snappymail",
+      "properties": {
+        "name": "snappymail",
+        "category": "app",
+        "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
+        "domain": "webmail.diegonmarcos.com",
+        "port": 8888,
+        "vm": "oci-mail",
+        "folder": "aa-sui_snappymail"
+      }
+    },
+    {
+      "table": "container",
+      "id": "snappymail",
+      "key": "container:snappymail",
+      "properties": {
+        "name": "snappymail",
+        "image": "djmaze/snappymail:latest",
+        "role": "app",
+        "port": 8888,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "maddy",
+      "key": "service:maddy",
+      "properties": {
+        "name": "maddy",
+        "category": "app",
+        "description": "Maddy Mail Server (mail.diegonmarcos.com)",
+        "domain": "mail.diegonmarcos.com",
+        "port": null,
+        "vm": "oci-mail",
+        "folder": "aa-sui_tools-maddy"
+      }
+    },
+    {
+      "table": "container",
+      "id": "maddy",
+      "key": "container:maddy",
+      "properties": {
+        "name": "maddy",
+        "image": "ghcr.io/diegonmarcos/maddy:latest",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "smtp_proxy",
+      "key": "service:smtp_proxy",
+      "properties": {
+        "name": "smtp-proxy",
+        "category": "app",
+        "description": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)",
+        "domain": "smtp.diegonmarcos.com",
+        "port": 8080,
+        "vm": "oci-mail",
+        "folder": "aa-sui_tools-smtp-proxy"
+      }
+    },
+    {
+      "table": "container",
+      "id": "smtp_proxy",
+      "key": "container:smtp_proxy",
+      "properties": {
+        "name": "smtp-proxy",
+        "image": null,
+        "role": "app",
+        "port": 8080,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "stalwart",
+      "key": "service:stalwart",
+      "properties": {
+        "name": "stalwart",
+        "category": "app",
+        "description": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)",
+        "domain": "mail-stalwart.diegonmarcos.com",
+        "port": 2443,
+        "vm": "oci-mail",
+        "folder": "aa-sui_tools-stalwart"
+      }
+    },
+    {
+      "table": "container",
+      "id": "stalwart",
+      "key": "container:stalwart",
+      "properties": {
+        "name": "stalwart",
+        "image": "stalwartlabs/stalwart:v0.14.1",
+        "role": "app",
+        "port": 2443,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "stalwart_sorter",
+      "key": "container:stalwart_sorter",
+      "properties": {
+        "name": "stalwart-sorter",
+        "image": "python:3-alpine",
+        "role": "sorter",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "vaultwarden",
+      "key": "service:vaultwarden",
+      "properties": {
+        "name": "vaultwarden",
+        "category": "mic",
+        "description": "Bitwarden password manager",
+        "domain": "vault.diegonmarcos.com",
+        "port": 8880,
+        "vm": "oci-apps",
+        "folder": "ab-mic_vaultwarden"
+      }
+    },
+    {
+      "table": "container",
+      "id": "vaultwarden",
+      "key": "container:vaultwarden",
+      "properties": {
+        "name": "vaultwarden",
+        "image": "vaultwarden/server:latest",
+        "role": "app",
+        "port": 8880,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "crawlee_cloud",
+      "key": "service:crawlee_cloud",
+      "properties": {
+        "name": "crawlee-cloud",
+        "category": "fin",
+        "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
+        "domain": "api.diegonmarcos.com",
+        "port": 3000,
+        "vm": "oci-apps",
+        "folder": "ac-fin_crawlee-cloud"
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_api",
+      "key": "container:crawlee_api",
+      "properties": {
+        "name": "crawlee_api",
+        "image": "crawlee-cloud-api:local",
+        "role": "app",
+        "port": 3000,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_runner",
+      "key": "container:crawlee_runner",
+      "properties": {
+        "name": "crawlee_runner",
+        "image": "crawlee-cloud-runner:local",
+        "role": "runner",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_dashboard",
+      "key": "container:crawlee_dashboard",
+      "properties": {
+        "name": "crawlee_dashboard",
+        "image": "crawlee-cloud-dashboard:local",
+        "role": "dashboard",
+        "port": 3001,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_scheduler",
+      "key": "container:crawlee_scheduler",
+      "properties": {
+        "name": "crawlee_scheduler",
+        "image": "crawlee-cloud-api:local",
+        "role": "scheduler",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_db",
+      "key": "container:crawlee_db",
+      "properties": {
+        "name": "crawlee_db",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": 5433,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_redis",
+      "key": "container:crawlee_redis",
+      "properties": {
+        "name": "crawlee_redis",
+        "image": "redis:7-alpine",
+        "role": "redis",
+        "port": 6381,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "crawlee_minio",
+      "key": "container:crawlee_minio",
+      "properties": {
+        "name": "crawlee_minio",
+        "image": "minio/minio:latest",
+        "role": "minio",
+        "port": 9000,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "fin_api",
+      "key": "service:fin_api",
+      "properties": {
+        "name": "fin-api",
+        "category": "fin",
+        "description": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
+        "domain": "api.diegonmarcos.com/fin-api",
+        "port": 8340,
+        "vm": "oci-apps",
+        "folder": "ac-fin_fin-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "fin_api",
+      "key": "container:fin_api",
+      "properties": {
+        "name": "fin-api",
+        "image": "ghcr.io/diegonmarcos/fin-api:latest",
+        "role": "app",
+        "port": 8340,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "ollama",
+      "key": "service:ollama",
+      "properties": {
+        "name": "ollama",
+        "category": "agi",
+        "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
+        "domain": null,
+        "port": 11434,
+        "vm": "gcp-t4",
+        "folder": "ad-agi_ollama"
+      }
+    },
+    {
+      "table": "container",
+      "id": "ollama",
+      "key": "container:ollama",
+      "properties": {
+        "name": "ollama",
+        "image": "ollama/ollama:latest",
+        "role": "app",
+        "port": 11434,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "ollama_arm",
+      "key": "service:ollama_arm",
+      "properties": {
+        "name": "ollama-arm",
+        "category": "agi",
+        "description": "Ollama LLM server (ARM CPU, 7b models)",
+        "domain": null,
+        "port": 11434,
+        "vm": "oci-apps-2",
+        "folder": "ad-agi_ollama-arm"
+      }
+    },
+    {
+      "table": "container",
+      "id": "ollama_arm",
+      "key": "container:ollama_arm",
+      "properties": {
+        "name": "ollama-arm",
+        "image": null,
+        "role": "app",
+        "port": 11434,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "ollama_hai",
+      "key": "service:ollama_hai",
+      "properties": {
+        "name": "ollama-hai",
+        "category": "agi",
+        "description": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode",
+        "domain": null,
+        "port": 11435,
+        "vm": "oci-apps",
+        "folder": "ad-agi_ollama-hai"
+      }
+    },
+    {
+      "table": "container",
+      "id": "ollama_hai",
+      "key": "container:ollama_hai",
+      "properties": {
+        "name": "ollama-hai",
+        "image": "ollama/ollama:latest",
+        "role": "app",
+        "port": 11435,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "rig_agentic_sonn_14bq8",
+      "key": "service:rig_agentic_sonn_14bq8",
+      "properties": {
+        "name": "rig-agentic-sonn-14bq8",
+        "category": "agi",
+        "description": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP",
+        "domain": null,
+        "port": 8091,
+        "vm": "oci-apps",
+        "folder": "ad-agi_rig-agentic-sonn-14bq8"
+      }
+    },
+    {
+      "table": "container",
+      "id": "rig_agentic_sonn_14bq8",
+      "key": "container:rig_agentic_sonn_14bq8",
+      "properties": {
+        "name": "rig-agentic-sonn-14bq8",
+        "image": null,
+        "role": "app",
+        "port": 8091,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloudflare_worker",
+      "key": "service:cloudflare_worker",
+      "properties": {
+        "name": "cloudflare-worker",
+        "category": "cloud",
+        "description": "Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "ba-clo_cloudflare-worker"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloudflare_worker",
+      "key": "container:cloudflare_worker",
+      "properties": {
+        "name": "cloudflare-worker",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "gcloud",
+      "key": "service:gcloud",
+      "properties": {
+        "name": "gcloud",
+        "category": "cloud",
+        "description": "Google Cloud SDK and tools (local CLI only)",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "ba-clo_gcloud"
+      }
+    },
+    {
+      "table": "container",
+      "id": "gcloud",
+      "key": "container:gcloud",
+      "properties": {
+        "name": "gcloud",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "hickory_dns",
+      "key": "service:hickory_dns",
+      "properties": {
+        "name": "hickory-dns",
+        "category": "cloud",
+        "description": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+        "domain": "dns.internal",
+        "port": 53,
+        "vm": "gcp-proxy",
+        "folder": "ba-clo_hickory-dns"
+      }
+    },
+    {
+      "table": "container",
+      "id": "hickory_dns",
+      "key": "container:hickory_dns",
+      "properties": {
+        "name": "hickory-dns",
+        "image": "hickorydns/hickory-dns:latest",
+        "role": "app",
+        "port": 53,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "authelia",
+      "key": "service:authelia",
+      "properties": {
+        "name": "authelia",
+        "category": "sec",
+        "description": "SSO and 2FA authentication portal",
+        "domain": "auth.diegonmarcos.com",
+        "port": 9091,
+        "vm": "gcp-proxy",
+        "folder": "bb-sec_authelia"
+      }
+    },
+    {
+      "table": "container",
+      "id": "authelia",
+      "key": "container:authelia",
+      "properties": {
+        "name": "authelia",
+        "image": "authelia/authelia:4.39.15",
+        "role": "app",
+        "port": 9091,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "authelia_redis",
+      "key": "container:authelia_redis",
+      "properties": {
+        "name": "authelia-redis",
+        "image": "redis:7-bookworm",
+        "role": "redis",
+        "port": 6380,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "postlite_authelia",
+      "key": "container:postlite_authelia",
+      "properties": {
+        "name": "postlite-authelia",
+        "image": "ghcr.io/diegonmarcos/postlite:latest",
+        "role": "postlite",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "caddy",
+      "key": "service:caddy",
+      "properties": {
+        "name": "caddy",
+        "category": "sec",
+        "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+        "domain": "proxy.diegonmarcos.com",
+        "port": 443,
+        "vm": "gcp-proxy",
+        "folder": "bb-sec_caddy"
+      }
+    },
+    {
+      "table": "container",
+      "id": "caddy",
+      "key": "container:caddy",
+      "properties": {
+        "name": "caddy",
+        "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+        "role": "app",
+        "port": 443,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "caddy_l4_image",
+      "key": "service:caddy_l4_image",
+      "properties": {
+        "name": "caddy-l4-image",
+        "category": "sec",
+        "description": "Custom Caddy with L4 TCP proxy, ratelimit, Cloudflare DNS plugins",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "bb-sec_caddy-l4-image"
+      }
+    },
+    {
+      "table": "container",
+      "id": "caddy_l4_image",
+      "key": "container:caddy_l4_image",
+      "properties": {
+        "name": "caddy-l4-image",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "introspect_proxy",
+      "key": "service:introspect_proxy",
+      "properties": {
+        "name": "introspect-proxy",
+        "category": "sec",
+        "description": "OIDC token introspection sidecar for Caddy Bearer auth",
+        "domain": null,
+        "port": 4182,
+        "vm": "gcp-proxy",
+        "folder": "bb-sec_introspect-proxy"
+      }
+    },
+    {
+      "table": "container",
+      "id": "introspect_proxy",
+      "key": "container:introspect_proxy",
+      "properties": {
+        "name": "introspect-proxy",
+        "image": "ghcr.io/diegonmarcos/introspect-proxy:latest",
+        "role": "app",
+        "port": 4182,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_infra_api",
+      "key": "service:c3_infra_api",
+      "properties": {
+        "name": "c3-infra-api",
+        "category": "sec",
+        "description": "C3 REST API — Cloud Control Center Fastify API",
+        "domain": "api.diegonmarcos.com/c3-infra-api",
+        "port": 8081,
+        "vm": "oci-apps",
+        "folder": "bc-obs_c3-infra-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_infra_api",
+      "key": "container:c3_infra_api",
+      "properties": {
+        "name": "c3-infra-api",
+        "image": "ghcr.io/diegonmarcos/c3-infra-api:latest",
+        "role": "app",
+        "port": 8081,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_infra_mcp",
+      "key": "service:c3_infra_mcp",
+      "properties": {
+        "name": "c3-infra-mcp",
+        "category": "sec",
+        "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
+        "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+        "port": 3100,
+        "vm": "oci-apps",
+        "folder": "bc-obs_c3-infra-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_infra_mcp",
+      "key": "container:c3_infra_mcp",
+      "properties": {
+        "name": "c3-infra-mcp",
+        "image": "ghcr.io/diegonmarcos/c3-infra-mcp:latest",
+        "role": "app",
+        "port": 3100,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_services_api",
+      "key": "service:c3_services_api",
+      "properties": {
+        "name": "c3-services-api",
+        "category": "obs",
+        "description": "C3 Services REST API — service API gateway Fastify API",
+        "domain": "api.diegonmarcos.com/c3-services-api",
+        "port": 8082,
+        "vm": "oci-apps",
+        "folder": "bc-obs_c3-services-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_services_api",
+      "key": "container:c3_services_api",
+      "properties": {
+        "name": "c3-services-api",
+        "image": "ghcr.io/diegonmarcos/c3-services-api:latest",
+        "role": "app",
+        "port": 8082,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_services_mcp",
+      "key": "service:c3_services_mcp",
+      "properties": {
+        "name": "c3-services-mcp",
+        "category": "obs",
+        "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+        "domain": null,
+        "port": 3101,
+        "vm": "oci-apps",
+        "folder": "bc-obs_c3-services-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_services_mcp",
+      "key": "container:c3_services_mcp",
+      "properties": {
+        "name": "c3-services-mcp",
+        "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
+        "role": "app",
+        "port": 3101,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_cgc_mcp",
+      "key": "service:cloud_cgc_mcp",
+      "properties": {
+        "name": "cloud-cgc-mcp",
+        "category": "obs",
+        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+        "domain": null,
+        "port": 3105,
+        "vm": "oci-apps",
+        "folder": "bc-obs_cloud-cgc-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_cgc_mcp",
+      "key": "container:cloud_cgc_mcp",
+      "properties": {
+        "name": "cloud-cgc-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+        "role": "app",
+        "port": 3105,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_spec",
+      "key": "service:cloud_spec",
+      "properties": {
+        "name": "cloud-spec",
+        "category": "tools",
+        "description": "Unified Cloud Documentation Portal",
+        "domain": null,
+        "port": 3080,
+        "vm": "oci-apps",
+        "folder": "bc-obs_cloud-spec"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_spec",
+      "key": "container:cloud_spec",
+      "properties": {
+        "name": "cloud-spec",
+        "image": "busybox:latest",
+        "role": "app",
+        "port": 3080,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "dagu",
+      "key": "service:dagu",
+      "properties": {
+        "name": "dagu",
+        "category": "tools",
+        "description": "Dagu - Lightweight DAG-based workflow scheduler",
+        "domain": "workflows.diegonmarcos.com",
+        "port": 8070,
+        "vm": "oci-analytics",
+        "folder": "bc-obs_dagu"
+      }
+    },
+    {
+      "table": "container",
+      "id": "dagu",
+      "key": "container:dagu",
+      "properties": {
+        "name": "dagu",
+        "image": "ghcr.io/diegonmarcos/dagu:latest",
+        "role": "app",
+        "port": 8070,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "dbgate",
+      "key": "service:dbgate",
+      "properties": {
+        "name": "dbgate",
+        "category": "tools",
+        "description": "DBGate - Universal database manager for all cloud databases",
+        "domain": "db.diegonmarcos.com",
+        "port": 8086,
+        "vm": "oci-apps",
+        "folder": "bc-obs_dbgate"
+      }
+    },
+    {
+      "table": "container",
+      "id": "dbgate",
+      "key": "container:dbgate",
+      "properties": {
+        "name": "dbgate",
+        "image": "dbgate/dbgate:latest",
+        "role": "app",
+        "port": 8086,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "dozzle",
+      "key": "service:dozzle",
+      "properties": {
+        "name": "dozzle",
+        "category": "tools",
+        "description": "Dozzle - Real-time Docker log viewer",
+        "domain": "logs.diegonmarcos.com",
+        "port": 9999,
+        "vm": "oci-analytics",
+        "folder": "bc-obs_dozzle"
+      }
+    },
+    {
+      "table": "container",
+      "id": "dozzle",
+      "key": "container:dozzle",
+      "properties": {
+        "name": "dozzle",
+        "image": "amir20/dozzle:latest",
+        "role": "app",
+        "port": 9999,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "matomo",
+      "key": "service:matomo",
+      "properties": {
+        "name": "matomo",
+        "category": "tools",
+        "description": "Matomo hybrid analytics (oci-apps)",
+        "domain": "analytics.diegonmarcos.com",
+        "port": 8084,
+        "vm": "oci-apps",
+        "folder": "bc-obs_matomo"
+      }
+    },
+    {
+      "table": "container",
+      "id": "matomo_hybrid",
+      "key": "container:matomo_hybrid",
+      "properties": {
+        "name": "matomo-hybrid",
+        "image": null,
+        "role": "app",
+        "port": 8084,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "news_gdelt",
+      "key": "service:news_gdelt",
+      "properties": {
+        "name": "news-gdelt",
+        "category": "tools",
+        "description": "GDELT News Aggregator — Fastify API with SQLite cache",
+        "domain": null,
+        "port": 3019,
+        "vm": "oci-apps",
+        "folder": "bc-obs_news-gdelt"
+      }
+    },
+    {
+      "table": "container",
+      "id": "news_gdelt",
+      "key": "container:news_gdelt",
+      "properties": {
+        "name": "news-gdelt",
+        "image": "ghcr.io/diegonmarcos/news-gdelt:latest",
+        "role": "app",
+        "port": 3019,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "ntfy",
+      "key": "service:ntfy",
+      "properties": {
+        "name": "ntfy",
+        "category": "tools",
+        "description": "Push notification server",
+        "domain": "rss.diegonmarcos.com",
+        "port": 8090,
+        "vm": "oci-apps",
+        "folder": "bc-obs_ntfy"
+      }
+    },
+    {
+      "table": "container",
+      "id": "ntfy",
+      "key": "container:ntfy",
+      "properties": {
+        "name": "ntfy",
+        "image": "binwiederhier/ntfy",
+        "role": "app",
+        "port": 8090,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "syslog_bridge",
+      "key": "container:syslog_bridge",
+      "properties": {
+        "name": "syslog-bridge",
+        "image": "python:3.11-slim",
+        "role": "syslog-bridge",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "github_rss",
+      "key": "container:github_rss",
+      "properties": {
+        "name": "github-rss",
+        "image": "python:3.11-slim",
+        "role": "github-rss",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "openobserve",
+      "key": "service:openobserve",
+      "properties": {
+        "name": "openobserve",
+        "category": "tools",
+        "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+        "domain": "grafana.diegonmarcos.com",
+        "port": 5080,
+        "vm": "oci-apps",
+        "folder": "bc-obs_openobserve"
+      }
+    },
+    {
+      "table": "container",
+      "id": "openobserve",
+      "key": "container:openobserve",
+      "properties": {
+        "name": "openobserve",
+        "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+        "role": "app",
+        "port": 5080,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "sauron_forwarder",
+      "key": "service:sauron_forwarder",
+      "properties": {
+        "name": "sauron-forwarder",
+        "category": "tools",
+        "description": "Alert forwarding to central sauron",
+        "domain": null,
+        "port": null,
+        "vm": "oci-analytics",
+        "folder": "bc-obs_sauron-forwarder"
+      }
+    },
+    {
+      "table": "container",
+      "id": "sauron_forwarder",
+      "key": "container:sauron_forwarder",
+      "properties": {
+        "name": "sauron-forwarder",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "sauron_lite",
+      "key": "service:sauron_lite",
+      "properties": {
+        "name": "sauron-lite",
+        "category": "tools",
+        "description": "File Integrity Scanner (deployed on all VMs)",
+        "domain": null,
+        "port": null,
+        "vm": "all",
+        "folder": "bc-obs_sauron-lite"
+      }
+    },
+    {
+      "table": "container",
+      "id": "sauron",
+      "key": "container:sauron",
+      "properties": {
+        "name": "sauron",
+        "image": null,
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "umami",
+      "key": "service:umami",
+      "properties": {
+        "name": "umami",
+        "category": "tools",
+        "description": "Umami Analytics - lightweight privacy-focused web analytics",
+        "domain": "analytics.diegonmarcos.com",
+        "port": 3006,
+        "vm": "oci-apps",
+        "folder": "bc-obs_umami"
+      }
+    },
+    {
+      "table": "container",
+      "id": "umami",
+      "key": "container:umami",
+      "properties": {
+        "name": "umami",
+        "image": "ghcr.io/umami-software/umami:latest",
+        "role": "app",
+        "port": 3006,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "umami_db",
+      "key": "container:umami_db",
+      "properties": {
+        "name": "umami-db",
+        "image": "postgres:16-alpine",
+        "role": "db",
+        "port": 5442,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "umami_setup",
+      "key": "container:umami_setup",
+      "properties": {
+        "name": "umami-setup",
+        "image": "curlimages/curl:latest",
+        "role": "setup",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_builder_x",
+      "key": "service:cloud_builder_x",
+      "properties": {
+        "name": "cloud-builder-x",
+        "category": "tools",
+        "description": "CI/CD builder images — deployed to oci-apps, source in unix repo",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "bd-cloud-builder-x"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_builder_x",
+      "key": "container:cloud_builder_x",
+      "properties": {
+        "name": "cloud-builder-x",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_diego_personal_data_mcp",
+      "key": "service:c3_diego_personal_data_mcp",
+      "properties": {
+        "name": "c3-diego-personal-data-mcp",
+        "category": "data",
+        "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "ca-dat_c3-diego-personal-data-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_diego_personal_data_mcp",
+      "key": "container:c3_diego_personal_data_mcp",
+      "properties": {
+        "name": "c3-diego-personal-data-mcp",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "db_agent",
+      "key": "service:db_agent",
+      "properties": {
+        "name": "db-agent",
+        "category": "data",
+        "description": "Central DB Backup Agent (deployed on all VMs)",
+        "domain": null,
+        "port": null,
+        "vm": "all",
+        "folder": "ca-dat_db-agent"
+      }
+    },
+    {
+      "table": "container",
+      "id": "db_agent",
+      "key": "container:db_agent",
+      "properties": {
+        "name": "db-agent",
+        "image": null,
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "gitea",
+      "key": "service:gitea",
+      "properties": {
+        "name": "gitea",
+        "category": "data",
+        "description": "Self-hosted Git service",
+        "domain": "git.diegonmarcos.com",
+        "port": 3002,
+        "vm": "oci-apps",
+        "folder": "ca-dat_gitea"
+      }
+    },
+    {
+      "table": "container",
+      "id": "gitea",
+      "key": "container:gitea",
+      "properties": {
+        "name": "gitea",
+        "image": "gitea/gitea:latest",
+        "role": "app",
+        "port": 3002,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "redis",
+      "key": "service:redis",
+      "properties": {
+        "name": "redis",
+        "category": "data",
+        "description": "In-memory data store",
+        "domain": null,
+        "port": 6379,
+        "vm": "gcp-proxy",
+        "folder": "ca-dat_redis"
+      }
+    },
+    {
+      "table": "container",
+      "id": "redis",
+      "key": "container:redis",
+      "properties": {
+        "name": "redis",
+        "image": "redis:alpine",
+        "role": "app",
+        "port": 6379,
+        "public": false
+      }
+    },
+    {
+      "table": "domain",
+      "id": "ide_diegonmarcos_com",
+      "key": "domain:ide_diegonmarcos_com",
+      "properties": {
+        "fqdn": "ide.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "webmail_diegonmarcos_com",
+      "key": "domain:webmail_diegonmarcos_com",
+      "properties": {
+        "fqdn": "webmail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "pad_diegonmarcos_com",
+      "key": "domain:pad_diegonmarcos_com",
+      "properties": {
+        "fqdn": "pad.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "files_diegonmarcos_com",
+      "key": "domain:files_diegonmarcos_com",
+      "properties": {
+        "fqdn": "files.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mcp_diegonmarcos_com",
+      "key": "domain:mcp_diegonmarcos_com",
+      "properties": {
+        "fqdn": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "sheets_diegonmarcos_com",
+      "key": "domain:sheets_diegonmarcos_com",
+      "properties": {
+        "fqdn": "sheets.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "doc_diegonmarcos_com",
+      "key": "domain:doc_diegonmarcos_com",
+      "properties": {
+        "fqdn": "doc.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mail_puller_diegonmarcos_com",
+      "key": "domain:mail_puller_diegonmarcos_com",
+      "properties": {
+        "fqdn": "mail-puller.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "chat_diegonmarcos_com",
+      "key": "domain:chat_diegonmarcos_com",
+      "properties": {
+        "fqdn": "chat.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "photos_diegonmarcos_com",
+      "key": "domain:photos_diegonmarcos_com",
+      "properties": {
+        "fqdn": "photos.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "cal_diegonmarcos_com",
+      "key": "domain:cal_diegonmarcos_com",
+      "properties": {
+        "fqdn": "cal.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mail_diegonmarcos_com",
+      "key": "domain:mail_diegonmarcos_com",
+      "properties": {
+        "fqdn": "mail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "smtp_diegonmarcos_com",
+      "key": "domain:smtp_diegonmarcos_com",
+      "properties": {
+        "fqdn": "smtp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mail_stalwart_diegonmarcos_com",
+      "key": "domain:mail_stalwart_diegonmarcos_com",
+      "properties": {
+        "fqdn": "mail-stalwart.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "vault_diegonmarcos_com",
+      "key": "domain:vault_diegonmarcos_com",
+      "properties": {
+        "fqdn": "vault.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com",
+      "key": "domain:api_diegonmarcos_com",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com/fin_api",
+      "key": "domain:api_diegonmarcos_com/fin_api",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/fin-api"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "dns_internal",
+      "key": "domain:dns_internal",
+      "properties": {
+        "fqdn": "dns.internal"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "auth_diegonmarcos_com",
+      "key": "domain:auth_diegonmarcos_com",
+      "properties": {
+        "fqdn": "auth.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "proxy_diegonmarcos_com",
+      "key": "domain:proxy_diegonmarcos_com",
+      "properties": {
+        "fqdn": "proxy.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com/c3_infra_api",
+      "key": "domain:api_diegonmarcos_com/c3_infra_api",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/c3-infra-api"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mcp_diegonmarcos_com/c3_infra_mcp",
+      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
+      "properties": {
+        "fqdn": "mcp.diegonmarcos.com/c3-infra-mcp"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com/c3_services_api",
+      "key": "domain:api_diegonmarcos_com/c3_services_api",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/c3-services-api"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "workflows_diegonmarcos_com",
+      "key": "domain:workflows_diegonmarcos_com",
+      "properties": {
+        "fqdn": "workflows.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "db_diegonmarcos_com",
+      "key": "domain:db_diegonmarcos_com",
+      "properties": {
+        "fqdn": "db.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "logs_diegonmarcos_com",
+      "key": "domain:logs_diegonmarcos_com",
+      "properties": {
+        "fqdn": "logs.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "analytics_diegonmarcos_com",
+      "key": "domain:analytics_diegonmarcos_com",
+      "properties": {
+        "fqdn": "analytics.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "rss_diegonmarcos_com",
+      "key": "domain:rss_diegonmarcos_com",
+      "properties": {
+        "fqdn": "rss.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "grafana_diegonmarcos_com",
+      "key": "domain:grafana_diegonmarcos_com",
+      "properties": {
+        "fqdn": "grafana.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "git_diegonmarcos_com",
+      "key": "domain:git_diegonmarcos_com",
+      "properties": {
+        "fqdn": "git.diegonmarcos.com"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "table": "hosted_on",
+      "from": "service:code_server",
+      "to": "vm:oci_apps",
+      "key": "service:code_server->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:code_server",
+      "to": "container:code_server",
+      "key": "service:code_server->runs_container->container:code_server",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cypht",
+      "to": "vm:oci_mail",
+      "key": "service:cypht->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cypht",
+      "to": "container:cypht",
+      "key": "service:cypht->runs_container->container:cypht",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cypht",
+      "to": "container:cypht_postgres",
+      "key": "service:cypht->runs_container->container:cypht_postgres",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:etherpad",
+      "to": "vm:oci_apps",
+      "key": "service:etherpad->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:etherpad",
+      "to": "container:etherpad_app",
+      "key": "service:etherpad->runs_container->container:etherpad_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:etherpad",
+      "to": "container:etherpad_postgres",
+      "key": "service:etherpad->runs_container->container:etherpad_postgres",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:filebrowser",
+      "to": "vm:oci_apps",
+      "key": "service:filebrowser->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:filebrowser",
+      "to": "container:filebrowser_app",
+      "key": "service:filebrowser->runs_container->container:filebrowser_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:google_personal_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:google_personal_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:google_personal_mcp",
+      "to": "container:google_personal_mcp",
+      "key": "service:google_personal_mcp->runs_container->container:google_personal_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:google_workspace_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:google_workspace_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:google_workspace_mcp",
+      "to": "container:google_workspace_mcp",
+      "key": "service:google_workspace_mcp->runs_container->container:google_workspace_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:grist",
+      "to": "vm:oci_apps",
+      "key": "service:grist->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:grist",
+      "to": "container:grist_app",
+      "key": "service:grist->runs_container->container:grist_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:hedgedoc",
+      "to": "vm:oci_apps",
+      "key": "service:hedgedoc->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:hedgedoc",
+      "to": "container:hedgedoc_app",
+      "key": "service:hedgedoc->runs_container->container:hedgedoc_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:hedgedoc",
+      "to": "container:hedgedoc_postgres",
+      "key": "service:hedgedoc->runs_container->container:hedgedoc_postgres",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:mail_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:mail_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mail_mcp",
+      "to": "container:mail_mcp",
+      "key": "service:mail_mcp->runs_container->container:mail_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:mail_puller",
+      "to": "vm:oci_mail",
+      "key": "service:mail_puller->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mail_puller",
+      "to": "container:mail_puller",
+      "key": "service:mail_puller->runs_container->container:mail_puller",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:mattermost_bots",
+      "to": "vm:oci_apps",
+      "key": "service:mattermost_bots->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mattermost_bots",
+      "to": "container:mattermost",
+      "key": "service:mattermost_bots->runs_container->container:mattermost",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mattermost_bots",
+      "to": "container:mattermost_postgres",
+      "key": "service:mattermost_bots->runs_container->container:mattermost_postgres",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mattermost_bots",
+      "to": "container:mattermost_bots",
+      "key": "service:mattermost_bots->runs_container->container:mattermost_bots",
+      "properties": {
+        "role": "bots"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:mattermost_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:mattermost_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mattermost_mcp",
+      "to": "container:mattermost_mcp",
+      "key": "service:mattermost_mcp->runs_container->container:mattermost_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:photoprism",
+      "to": "vm:oci_apps",
+      "key": "service:photoprism->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:photoprism",
+      "to": "container:photoprism_app",
+      "key": "service:photoprism->runs_container->container:photoprism_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:photoprism",
+      "to": "container:photoprism_mariadb",
+      "key": "service:photoprism->runs_container->container:photoprism_mariadb",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:photoprism",
+      "to": "container:photoprism_rclone",
+      "key": "service:photoprism->runs_container->container:photoprism_rclone",
+      "properties": {
+        "role": "rclone"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:photos_webhook",
+      "to": "vm:oci_apps",
+      "key": "service:photos_webhook->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:photos_webhook",
+      "to": "container:photos_webhook",
+      "key": "service:photos_webhook->runs_container->container:photos_webhook",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:photos_webhook",
+      "to": "container:photos_db",
+      "key": "service:photos_webhook->runs_container->container:photos_db",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:radicale",
+      "to": "vm:oci_apps",
+      "key": "service:radicale->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:radicale",
+      "to": "container:radicale",
+      "key": "service:radicale->runs_container->container:radicale",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:snappymail",
+      "to": "vm:oci_mail",
+      "key": "service:snappymail->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:snappymail",
+      "to": "container:snappymail",
+      "key": "service:snappymail->runs_container->container:snappymail",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:maddy",
+      "to": "vm:oci_mail",
+      "key": "service:maddy->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:maddy",
+      "to": "container:maddy",
+      "key": "service:maddy->runs_container->container:maddy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:smtp_proxy",
+      "to": "vm:oci_mail",
+      "key": "service:smtp_proxy->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:smtp_proxy",
+      "to": "container:smtp_proxy",
+      "key": "service:smtp_proxy->runs_container->container:smtp_proxy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:stalwart",
+      "to": "vm:oci_mail",
+      "key": "service:stalwart->hosted_on->vm:oci_mail",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:stalwart",
+      "to": "container:stalwart",
+      "key": "service:stalwart->runs_container->container:stalwart",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:stalwart",
+      "to": "container:stalwart_sorter",
+      "key": "service:stalwart->runs_container->container:stalwart_sorter",
+      "properties": {
+        "role": "sorter"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:vaultwarden",
+      "to": "vm:oci_apps",
+      "key": "service:vaultwarden->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:vaultwarden",
+      "to": "container:vaultwarden",
+      "key": "service:vaultwarden->runs_container->container:vaultwarden",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:crawlee_cloud",
+      "to": "vm:oci_apps",
+      "key": "service:crawlee_cloud->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_api",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "depends_on",
+      "from": "service:crawlee_cloud",
+      "to": "service:redis",
+      "key": "service:crawlee_cloud->depends_on->service:redis",
+      "properties": {
+        "type": "runtime"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_runner",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_runner",
+      "properties": {
+        "role": "runner"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_dashboard",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_dashboard",
+      "properties": {
+        "role": "dashboard"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_scheduler",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_scheduler",
+      "properties": {
+        "role": "scheduler"
+      }
+    },
+    {
+      "table": "depends_on",
+      "from": "service:crawlee_cloud",
+      "to": "service:redis",
+      "key": "service:crawlee_cloud->depends_on->service:redis",
+      "properties": {
+        "type": "runtime"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_db",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_db",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_redis",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_redis",
+      "properties": {
+        "role": "redis"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crawlee_cloud",
+      "to": "container:crawlee_minio",
+      "key": "service:crawlee_cloud->runs_container->container:crawlee_minio",
+      "properties": {
+        "role": "minio"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:fin_api",
+      "to": "vm:oci_apps",
+      "key": "service:fin_api->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:fin_api",
+      "to": "container:fin_api",
+      "key": "service:fin_api->runs_container->container:fin_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:ollama",
+      "to": "vm:gcp_t4",
+      "key": "service:ollama->hosted_on->vm:gcp_t4",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ollama",
+      "to": "container:ollama",
+      "key": "service:ollama->runs_container->container:ollama",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ollama_arm",
+      "to": "container:ollama_arm",
+      "key": "service:ollama_arm->runs_container->container:ollama_arm",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:ollama_hai",
+      "to": "vm:oci_apps",
+      "key": "service:ollama_hai->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ollama_hai",
+      "to": "container:ollama_hai",
+      "key": "service:ollama_hai->runs_container->container:ollama_hai",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:rig_agentic_sonn_14bq8",
+      "to": "vm:oci_apps",
+      "key": "service:rig_agentic_sonn_14bq8->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:rig_agentic_sonn_14bq8",
+      "to": "container:rig_agentic_sonn_14bq8",
+      "key": "service:rig_agentic_sonn_14bq8->runs_container->container:rig_agentic_sonn_14bq8",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloudflare_worker",
+      "to": "container:cloudflare_worker",
+      "key": "service:cloudflare_worker->runs_container->container:cloudflare_worker",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:gcloud",
+      "to": "container:gcloud",
+      "key": "service:gcloud->runs_container->container:gcloud",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:hickory_dns",
+      "to": "vm:gcp_proxy",
+      "key": "service:hickory_dns->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:hickory_dns",
+      "to": "container:hickory_dns",
+      "key": "service:hickory_dns->runs_container->container:hickory_dns",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:authelia",
+      "to": "vm:gcp_proxy",
+      "key": "service:authelia->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:authelia",
+      "to": "container:authelia",
+      "key": "service:authelia->runs_container->container:authelia",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "depends_on",
+      "from": "service:authelia",
+      "to": "service:redis",
+      "key": "service:authelia->depends_on->service:redis",
+      "properties": {
+        "type": "runtime"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:authelia",
+      "to": "container:authelia_redis",
+      "key": "service:authelia->runs_container->container:authelia_redis",
+      "properties": {
+        "role": "redis"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:authelia",
+      "to": "container:postlite_authelia",
+      "key": "service:authelia->runs_container->container:postlite_authelia",
+      "properties": {
+        "role": "postlite"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:caddy",
+      "to": "vm:gcp_proxy",
+      "key": "service:caddy->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:caddy",
+      "to": "container:caddy",
+      "key": "service:caddy->runs_container->container:caddy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "depends_on",
+      "from": "service:caddy",
+      "to": "service:introspect_proxy",
+      "key": "service:caddy->depends_on->service:introspect_proxy",
+      "properties": {
+        "type": "runtime"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:caddy_l4_image",
+      "to": "container:caddy_l4_image",
+      "key": "service:caddy_l4_image->runs_container->container:caddy_l4_image",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:introspect_proxy",
+      "to": "vm:gcp_proxy",
+      "key": "service:introspect_proxy->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:introspect_proxy",
+      "to": "container:introspect_proxy",
+      "key": "service:introspect_proxy->runs_container->container:introspect_proxy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:c3_infra_api",
+      "to": "vm:oci_apps",
+      "key": "service:c3_infra_api->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_infra_api",
+      "to": "container:c3_infra_api",
+      "key": "service:c3_infra_api->runs_container->container:c3_infra_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:c3_infra_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:c3_infra_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_infra_mcp",
+      "to": "container:c3_infra_mcp",
+      "key": "service:c3_infra_mcp->runs_container->container:c3_infra_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:c3_services_api",
+      "to": "vm:oci_apps",
+      "key": "service:c3_services_api->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_services_api",
+      "to": "container:c3_services_api",
+      "key": "service:c3_services_api->runs_container->container:c3_services_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:c3_services_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:c3_services_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_services_mcp",
+      "to": "container:c3_services_mcp",
+      "key": "service:c3_services_mcp->runs_container->container:c3_services_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_cgc_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_cgc_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_cgc_mcp",
+      "to": "container:cloud_cgc_mcp",
+      "key": "service:cloud_cgc_mcp->runs_container->container:cloud_cgc_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_spec",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_spec->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_spec",
+      "to": "container:cloud_spec",
+      "key": "service:cloud_spec->runs_container->container:cloud_spec",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:dagu",
+      "to": "vm:oci_analytics",
+      "key": "service:dagu->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:dagu",
+      "to": "container:dagu",
+      "key": "service:dagu->runs_container->container:dagu",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:dbgate",
+      "to": "vm:oci_apps",
+      "key": "service:dbgate->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:dbgate",
+      "to": "container:dbgate",
+      "key": "service:dbgate->runs_container->container:dbgate",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:dozzle",
+      "to": "vm:oci_analytics",
+      "key": "service:dozzle->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:dozzle",
+      "to": "container:dozzle",
+      "key": "service:dozzle->runs_container->container:dozzle",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:matomo",
+      "to": "vm:oci_apps",
+      "key": "service:matomo->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matomo",
+      "to": "container:matomo_hybrid",
+      "key": "service:matomo->runs_container->container:matomo_hybrid",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:news_gdelt",
+      "to": "vm:oci_apps",
+      "key": "service:news_gdelt->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:news_gdelt",
+      "to": "container:news_gdelt",
+      "key": "service:news_gdelt->runs_container->container:news_gdelt",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:ntfy",
+      "to": "vm:oci_apps",
+      "key": "service:ntfy->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ntfy",
+      "to": "container:ntfy",
+      "key": "service:ntfy->runs_container->container:ntfy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ntfy",
+      "to": "container:syslog_bridge",
+      "key": "service:ntfy->runs_container->container:syslog_bridge",
+      "properties": {
+        "role": "syslog-bridge"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ntfy",
+      "to": "container:github_rss",
+      "key": "service:ntfy->runs_container->container:github_rss",
+      "properties": {
+        "role": "github-rss"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:openobserve",
+      "to": "vm:oci_apps",
+      "key": "service:openobserve->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:openobserve",
+      "to": "container:openobserve",
+      "key": "service:openobserve->runs_container->container:openobserve",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:sauron_forwarder",
+      "to": "vm:oci_analytics",
+      "key": "service:sauron_forwarder->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:sauron_forwarder",
+      "to": "container:sauron_forwarder",
+      "key": "service:sauron_forwarder->runs_container->container:sauron_forwarder",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:sauron_lite",
+      "to": "container:sauron",
+      "key": "service:sauron_lite->runs_container->container:sauron",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:sauron_lite",
+      "to": "container:sauron_forwarder",
+      "key": "service:sauron_lite->runs_container->container:sauron_forwarder",
+      "properties": {
+        "role": "forwarder"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:umami",
+      "to": "vm:oci_apps",
+      "key": "service:umami->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:umami",
+      "to": "container:umami",
+      "key": "service:umami->runs_container->container:umami",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:umami",
+      "to": "container:umami_db",
+      "key": "service:umami->runs_container->container:umami_db",
+      "properties": {
+        "role": "db"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:umami",
+      "to": "container:umami_setup",
+      "key": "service:umami->runs_container->container:umami_setup",
+      "properties": {
+        "role": "setup"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_builder_x",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_builder_x->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_builder_x",
+      "to": "container:cloud_builder_x",
+      "key": "service:cloud_builder_x->runs_container->container:cloud_builder_x",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_diego_personal_data_mcp",
+      "to": "container:c3_diego_personal_data_mcp",
+      "key": "service:c3_diego_personal_data_mcp->runs_container->container:c3_diego_personal_data_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:db_agent",
+      "to": "container:db_agent",
+      "key": "service:db_agent->runs_container->container:db_agent",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:gitea",
+      "to": "vm:oci_apps",
+      "key": "service:gitea->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:gitea",
+      "to": "container:gitea",
+      "key": "service:gitea->runs_container->container:gitea",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:redis",
+      "to": "vm:gcp_proxy",
+      "key": "service:redis->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:redis",
+      "to": "container:redis",
+      "key": "service:redis->runs_container->container:redis",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:code_server",
+      "to": "service:caddy",
+      "key": "service:code_server->proxied_by->service:caddy",
+      "properties": {
+        "domain": "ide.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:cypht",
+      "to": "service:caddy",
+      "key": "service:cypht->proxied_by->service:caddy",
+      "properties": {
+        "domain": "webmail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:etherpad",
+      "to": "service:caddy",
+      "key": "service:etherpad->proxied_by->service:caddy",
+      "properties": {
+        "domain": "pad.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:filebrowser",
+      "to": "service:caddy",
+      "key": "service:filebrowser->proxied_by->service:caddy",
+      "properties": {
+        "domain": "files.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:google_personal_mcp",
+      "to": "service:caddy",
+      "key": "service:google_personal_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:google_workspace_mcp",
+      "to": "service:caddy",
+      "key": "service:google_workspace_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:grist",
+      "to": "service:caddy",
+      "key": "service:grist->proxied_by->service:caddy",
+      "properties": {
+        "domain": "sheets.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:hedgedoc",
+      "to": "service:caddy",
+      "key": "service:hedgedoc->proxied_by->service:caddy",
+      "properties": {
+        "domain": "doc.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:mail_mcp",
+      "to": "service:caddy",
+      "key": "service:mail_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:mail_puller",
+      "to": "service:caddy",
+      "key": "service:mail_puller->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mail-puller.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:mattermost_bots",
+      "to": "service:caddy",
+      "key": "service:mattermost_bots->proxied_by->service:caddy",
+      "properties": {
+        "domain": "chat.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:photoprism",
+      "to": "service:caddy",
+      "key": "service:photoprism->proxied_by->service:caddy",
+      "properties": {
+        "domain": "photos.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:radicale",
+      "to": "service:caddy",
+      "key": "service:radicale->proxied_by->service:caddy",
+      "properties": {
+        "domain": "cal.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:snappymail",
+      "to": "service:caddy",
+      "key": "service:snappymail->proxied_by->service:caddy",
+      "properties": {
+        "domain": "webmail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:maddy",
+      "to": "service:caddy",
+      "key": "service:maddy->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:smtp_proxy",
+      "to": "service:caddy",
+      "key": "service:smtp_proxy->proxied_by->service:caddy",
+      "properties": {
+        "domain": "smtp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:stalwart",
+      "to": "service:caddy",
+      "key": "service:stalwart->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mail-stalwart.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:vaultwarden",
+      "to": "service:caddy",
+      "key": "service:vaultwarden->proxied_by->service:caddy",
+      "properties": {
+        "domain": "vault.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:crawlee_cloud",
+      "to": "service:caddy",
+      "key": "service:crawlee_cloud->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:fin_api",
+      "to": "service:caddy",
+      "key": "service:fin_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/fin-api"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:hickory_dns",
+      "to": "service:caddy",
+      "key": "service:hickory_dns->proxied_by->service:caddy",
+      "properties": {
+        "domain": "dns.internal"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:authelia",
+      "to": "service:caddy",
+      "key": "service:authelia->proxied_by->service:caddy",
+      "properties": {
+        "domain": "auth.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:c3_infra_api",
+      "to": "service:caddy",
+      "key": "service:c3_infra_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/c3-infra-api"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:c3_infra_mcp",
+      "to": "service:caddy",
+      "key": "service:c3_infra_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com/c3-infra-mcp"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:c3_services_api",
+      "to": "service:caddy",
+      "key": "service:c3_services_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/c3-services-api"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:dagu",
+      "to": "service:caddy",
+      "key": "service:dagu->proxied_by->service:caddy",
+      "properties": {
+        "domain": "workflows.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:dbgate",
+      "to": "service:caddy",
+      "key": "service:dbgate->proxied_by->service:caddy",
+      "properties": {
+        "domain": "db.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:dozzle",
+      "to": "service:caddy",
+      "key": "service:dozzle->proxied_by->service:caddy",
+      "properties": {
+        "domain": "logs.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:matomo",
+      "to": "service:caddy",
+      "key": "service:matomo->proxied_by->service:caddy",
+      "properties": {
+        "domain": "analytics.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:ntfy",
+      "to": "service:caddy",
+      "key": "service:ntfy->proxied_by->service:caddy",
+      "properties": {
+        "domain": "rss.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:openobserve",
+      "to": "service:caddy",
+      "key": "service:openobserve->proxied_by->service:caddy",
+      "properties": {
+        "domain": "grafana.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:umami",
+      "to": "service:caddy",
+      "key": "service:umami->proxied_by->service:caddy",
+      "properties": {
+        "domain": "analytics.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:gitea",
+      "to": "service:caddy",
+      "key": "service:gitea->proxied_by->service:caddy",
+      "properties": {
+        "domain": "git.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:ide_diegonmarcos_com",
+      "to": "service:code_server",
+      "key": "domain:ide_diegonmarcos_com->routes_to->service:code_server",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:webmail_diegonmarcos_com",
+      "to": "service:cypht",
+      "key": "domain:webmail_diegonmarcos_com->routes_to->service:cypht",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:pad_diegonmarcos_com",
+      "to": "service:etherpad",
+      "key": "domain:pad_diegonmarcos_com->routes_to->service:etherpad",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:files_diegonmarcos_com",
+      "to": "service:filebrowser",
+      "key": "domain:files_diegonmarcos_com->routes_to->service:filebrowser",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com",
+      "to": "service:google_personal_mcp",
+      "key": "domain:mcp_diegonmarcos_com->routes_to->service:google_personal_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com",
+      "to": "service:google_workspace_mcp",
+      "key": "domain:mcp_diegonmarcos_com->routes_to->service:google_workspace_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:sheets_diegonmarcos_com",
+      "to": "service:grist",
+      "key": "domain:sheets_diegonmarcos_com->routes_to->service:grist",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:doc_diegonmarcos_com",
+      "to": "service:hedgedoc",
+      "key": "domain:doc_diegonmarcos_com->routes_to->service:hedgedoc",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com",
+      "to": "service:mail_mcp",
+      "key": "domain:mcp_diegonmarcos_com->routes_to->service:mail_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mail_puller_diegonmarcos_com",
+      "to": "service:mail_puller",
+      "key": "domain:mail_puller_diegonmarcos_com->routes_to->service:mail_puller",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:chat_diegonmarcos_com",
+      "to": "service:mattermost_bots",
+      "key": "domain:chat_diegonmarcos_com->routes_to->service:mattermost_bots",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:photos_diegonmarcos_com",
+      "to": "service:photoprism",
+      "key": "domain:photos_diegonmarcos_com->routes_to->service:photoprism",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:cal_diegonmarcos_com",
+      "to": "service:radicale",
+      "key": "domain:cal_diegonmarcos_com->routes_to->service:radicale",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:webmail_diegonmarcos_com",
+      "to": "service:snappymail",
+      "key": "domain:webmail_diegonmarcos_com->routes_to->service:snappymail",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mail_diegonmarcos_com",
+      "to": "service:maddy",
+      "key": "domain:mail_diegonmarcos_com->routes_to->service:maddy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:smtp_diegonmarcos_com",
+      "to": "service:smtp_proxy",
+      "key": "domain:smtp_diegonmarcos_com->routes_to->service:smtp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mail_stalwart_diegonmarcos_com",
+      "to": "service:stalwart",
+      "key": "domain:mail_stalwart_diegonmarcos_com->routes_to->service:stalwart",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:vault_diegonmarcos_com",
+      "to": "service:vaultwarden",
+      "key": "domain:vault_diegonmarcos_com->routes_to->service:vaultwarden",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com",
+      "to": "service:crawlee_cloud",
+      "key": "domain:api_diegonmarcos_com->routes_to->service:crawlee_cloud",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/fin_api",
+      "to": "service:fin_api",
+      "key": "domain:api_diegonmarcos_com/fin_api->routes_to->service:fin_api",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:dns_internal",
+      "to": "service:hickory_dns",
+      "key": "domain:dns_internal->routes_to->service:hickory_dns",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:auth_diegonmarcos_com",
+      "to": "service:authelia",
+      "key": "domain:auth_diegonmarcos_com->routes_to->service:authelia",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:proxy_diegonmarcos_com",
+      "to": "service:caddy",
+      "key": "domain:proxy_diegonmarcos_com->routes_to->service:caddy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/c3_infra_api",
+      "to": "service:c3_infra_api",
+      "key": "domain:api_diegonmarcos_com/c3_infra_api->routes_to->service:c3_infra_api",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
+      "to": "service:c3_infra_mcp",
+      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp->routes_to->service:c3_infra_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/c3_services_api",
+      "to": "service:c3_services_api",
+      "key": "domain:api_diegonmarcos_com/c3_services_api->routes_to->service:c3_services_api",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:workflows_diegonmarcos_com",
+      "to": "service:dagu",
+      "key": "domain:workflows_diegonmarcos_com->routes_to->service:dagu",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:db_diegonmarcos_com",
+      "to": "service:dbgate",
+      "key": "domain:db_diegonmarcos_com->routes_to->service:dbgate",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:logs_diegonmarcos_com",
+      "to": "service:dozzle",
+      "key": "domain:logs_diegonmarcos_com->routes_to->service:dozzle",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:analytics_diegonmarcos_com",
+      "to": "service:matomo",
+      "key": "domain:analytics_diegonmarcos_com->routes_to->service:matomo",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:rss_diegonmarcos_com",
+      "to": "service:ntfy",
+      "key": "domain:rss_diegonmarcos_com->routes_to->service:ntfy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:grafana_diegonmarcos_com",
+      "to": "service:openobserve",
+      "key": "domain:grafana_diegonmarcos_com->routes_to->service:openobserve",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:analytics_diegonmarcos_com",
+      "to": "service:umami",
+      "key": "domain:analytics_diegonmarcos_com->routes_to->service:umami",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:git_diegonmarcos_com",
+      "to": "service:gitea",
+      "key": "domain:git_diegonmarcos_com->routes_to->service:gitea",
+      "properties": {}
+    }
+  ]
+}

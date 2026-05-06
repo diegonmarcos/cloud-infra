@@ -1,0 +1,117 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_meta": {
+    "description": "SurrealDB schema declaration for the kg-graph hybrid Knowledge Graph (node tables, edge relations, vector indexes). Consumed by ca-dat_kg-graph at schema-load time and by reports-logs/kg_ingest at validation time.",
+    "format_version": 1,
+    "generated_at": "2026-05-06T14:27:43.397Z",
+    "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+        "derive": "2_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 2_configs/build.sh all"
+    }
+  },
+  "_generated": "2026-05-06T14:27:43.250Z",
+  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-schema",
+  "namespace": "infra",
+  "database": "production",
+  "embedder": {
+    "enabled": false,
+    "model": "nomic-embed-text",
+    "dim": 768,
+    "index_type": "MTREE",
+    "vector_dtype": "F32"
+  },
+  "ingest": {
+    "endpoint": "/import",
+    "idempotent": true,
+    "stale_strategy": "mark"
+  },
+  "node_tables": [
+    {
+      "table": "vm",
+      "key_source": "ssh_alias"
+    },
+    {
+      "table": "service",
+      "key_source": "name"
+    },
+    {
+      "table": "container",
+      "key_source": "container_name"
+    },
+    {
+      "table": "domain",
+      "key_source": "fqdn"
+    },
+    {
+      "table": "log",
+      "key_source": "auto"
+    },
+    {
+      "table": "documentation",
+      "key_source": "path"
+    },
+    {
+      "table": "audit_log",
+      "key_source": "auto"
+    }
+  ],
+  "edge_tables": [
+    {
+      "table": "hosted_on",
+      "in": "service",
+      "out": "vm"
+    },
+    {
+      "table": "runs_container",
+      "in": "service",
+      "out": "container"
+    },
+    {
+      "table": "depends_on",
+      "in": "service",
+      "out": "service"
+    },
+    {
+      "table": "proxied_by",
+      "in": "service",
+      "out": "service"
+    },
+    {
+      "table": "authenticated_by",
+      "in": "service",
+      "out": "service"
+    },
+    {
+      "table": "connected_to",
+      "in": "vm",
+      "out": "vm"
+    },
+    {
+      "table": "routes_to",
+      "in": "domain",
+      "out": "service"
+    },
+    {
+      "table": "caused_by",
+      "in": "log",
+      "out": "any"
+    }
+  ],
+  "vector_indexes": []
+}
