@@ -25,7 +25,10 @@
 #
 # Imported by: system-protection.nix orchestrator
 #
-{ config, pkgs, lib, ballastPercent ? 5, ... }:
+# Ballast size MUST match the engine's HM-activation peak need (10 GB).
+# Source-of-truth for that value is the engine itself (cloud-ship-nix-homemanager-step-deploy-activate.sh
+# constant `MIN_FREE_GB=10`). Cross-reference both sites if you change one.
+{ config, pkgs, lib, ballastGB ? 10, ... }:
 
 let
   ballastPath = "/var/disk-reserve/ballast.bin";
@@ -35,7 +38,7 @@ in {
     executable = true;
     text = ''
       #!/bin/bash
-      # Allocate ${toString ballastPercent}% of / as a rescue ballast file.
+      # Allocate ${toString ballastGB} GB at / as the HM-activation reserve.
       # Idempotent: skips if file already exists at target size.
       # Safe: refuses to allocate if /<${toString recreateThreshold}% would be exceeded.
       set -euo pipefail
@@ -44,9 +47,7 @@ in {
       mkdir -p "$DIR"
       chmod 700 "$DIR"
 
-      # POSIX df -P: portable across GNU coreutils + BusyBox.
-      TOTAL_KB=$(df -P / | awk 'NR==2 { print $2 }')
-      WANT_MB=$(( TOTAL_KB * ${toString ballastPercent} / 100 / 1024 ))
+      WANT_MB=$(( ${toString ballastGB} * 1024 ))
 
       if [ -f "$BALLAST" ]; then
         HAVE_MB=$(($(stat -c%s "$BALLAST" 2>/dev/null || echo 0) / 1024 / 1024))
@@ -64,7 +65,7 @@ in {
         exit 0
       fi
 
-      echo "[disk-ballast] Allocating ''${WANT_MB}MB at $BALLAST (${toString ballastPercent}% of /)"
+      echo "[disk-ballast] Allocating ''${WANT_MB}MB at $BALLAST (${toString ballastGB} GB — HM activation reserve)"
       if command -v fallocate >/dev/null 2>&1; then
         fallocate -l "''${WANT_MB}M" "$BALLAST"
       else
@@ -77,7 +78,7 @@ in {
 
   home.file.".local/share/system-protection/disk-ballast-create.service".text = ''
     [Unit]
-    Description=Pre-allocate disk ballast (${toString ballastPercent}% rescue reserve)
+    Description=Pre-allocate disk ballast (${toString ballastGB} GB HM-activation reserve)
     After=local-fs.target
     [Service]
     Type=oneshot
@@ -129,7 +130,7 @@ in {
     $SUDO systemctl enable disk-ballast-create.timer 2>/dev/null || true
     $SUDO systemctl start disk-ballast-create.service 2>/dev/null || true
 
-    echo "[disk-ballast] deployed: ${toString ballastPercent}% reserve at ${ballastPath}"
+    echo "[disk-ballast] deployed: ${toString ballastGB} GB reserve at ${ballastPath}"
     ) || echo "[disk-ballast] FAILED — activation continues"
   '';
 }
