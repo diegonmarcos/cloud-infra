@@ -110,8 +110,6 @@
         "ollama-hai",
         "rig-agentic-hai",
         "rig-agentic-sonn-14bq8",
-        "syslog-central",
-        "siem-api",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -3355,33 +3353,6 @@
         "path": "/health"
       }
     },
-    "sauron-central": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "folder": "bb-sec_sauron-central",
-      "description": "Central Syslog Collector + SIEM API",
-      "containers": {
-        "syslog": {
-          "container_name": "syslog-central",
-          "upstream_image": "ghcr.io/axoflow/axosyslog:4.8.1"
-        },
-        "api": {
-          "container_name": "siem-api",
-          "upstream_image": "python:3.11-slim"
-        }
-      },
-      "container_names": [
-        "syslog-central",
-        "siem-api"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      }
-    },
     "c3-infra-api": {
       "category": "sec",
       "vm": "oci-A1-f_0",
@@ -4300,31 +4271,6 @@
         "endpoint_check": true
       }
     },
-    "sauron-lite": {
-      "category": "tools",
-      "vm": "all",
-      "folder": "bc-obs_sauron-lite",
-      "description": "File Integrity Scanner (deployed on all VMs)",
-      "containers": {
-        "app": {
-          "container_name": "sauron",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
-        }
-      },
-      "container_names": [
-        "sauron"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      }
-    },
     "umami": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5042,7 +4988,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-07T10:34:47.258Z",
+    "generated_at": "2026-05-07T11:19:47.233Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

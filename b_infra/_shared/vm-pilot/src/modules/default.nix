@@ -36,7 +36,7 @@ in {
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
 
     # ── Security
-    ./security/ssh-keys.nix
+    (import ./security/ssh-keys.nix { inherit vmName; })
     ./security/authorized-keys.nix
     (import ./security/sshd-hardening.nix { inherit vmName; })
     ./security/serial-console.nix

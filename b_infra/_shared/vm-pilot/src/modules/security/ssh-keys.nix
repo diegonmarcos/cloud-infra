@@ -3,17 +3,23 @@
 # Also writes SSH keys + config to /opt/ssh-keys/<container>/ on the host.
 # Docker compose bind-mounts these directories into containers (:ro).
 # Keys persist across container recreation (unlike the old docker cp approach).
-# Container targets are defined in ssh-containers.json (single source of truth).
+#
+# Container SSH targets are derived from each per-service a_solutions/*/build.json
+# top-level `ssh` field, aggregated by cloud-data-config-consolidated.ts into
+# _cloud-data-consolidated.json[._home_manager.vms.<alias>.ssh_containers].
+# Per-VM slice also lives in 2_configs/dist/build-vm-<alias>.json.ssh_containers.
+# This module reads from the consolidated JSON (no standalone duplicate file).
+{ vmName }:
 { lib, ... }:
 
 let
-  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.ssh_config]
+  # 2026-04-27 migrated: cloud-data-home-manager.json → _cloud-data-consolidated.json[._home_manager.{ssh_config,vms}]
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
   cloudData = {
     ssh_config = consolidated._home_manager.ssh_config or [];
   };
-  # Read container SSH targets from JSON — parseable by jq, MCP, CI, etc.
-  sshContainers = builtins.fromJSON (builtins.readFile ./ssh-containers.json);
+  vmHm = consolidated._home_manager.vms.${vmName} or {};
+  sshContainers = vmHm.ssh_containers or [];
   containerTargets = lib.concatStringsSep " " (map (c:
     "${c.name}:${toString c.uid}:${c.ssh_dir}:${lib.concatStringsSep "," c.keys}"
   ) sshContainers);
