@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-oci-analytics/src/pilot/container/tools.nix
+# ║   Source : b_infra/nixhm-sudo-oci-analytics/src/pilot/container/tools.nix
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -76,14 +76,19 @@
     # ── Container runtime ──
     docker
     docker-compose
-    docker-buildx
-    youki            # Rust OCI runtime — replaces runc (Go), lighter per-container overhead
-    podman
+    # REMOVED 2026-05-06: docker-buildx (~32 MB) — image builds run inside
+    # the cloud-builder-x container on oci-apps; host shell never invokes
+    # buildx directly.
+    # REMOVED 2026-05-06: youki (~30 MB) — alternate OCI runtime never
+    # configured to replace runc; dead weight on every VM.
+    # REMOVED 2026-05-06: podman (~50 MB) — we use docker daemon
+    # exclusively; podman never invoked from any module.
 
-    # ── Database clients (used by db-agent, photos-webhook) ──
-    sqlite
-    postgresql_16
-    mariadb
+    # ── Database clients ──
+    sqlite             # journal-ntfy + small agents
+    # REMOVED 2026-05-06: postgresql_16 (~28 MB) — clients ship inside
+    # services that need them (cypht-postgres, etc.).
+    # REMOVED 2026-05-06: mariadb (~247 MB) — services bundle their own.
 
     # ── Backup ──
     rustic-rs

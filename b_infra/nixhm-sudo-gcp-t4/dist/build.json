@@ -1,0 +1,53 @@
+{
+  "name": "nixhm-sudo-gcp-t4",
+  "description": "Home Manager system image for gcp-t4 (N1 Std 4 + T4 GPU, Spot, Ollama LLM)",
+  "vm": {
+    "id": "gcp-T4-p_0",
+    "alias": "gcp-t4",
+    "provider": "gcp",
+    "arch": "x86_64-linux",
+    "transient": true,
+    "transient_reason": "GCP Spot instance — preempted on demand; HM Ship failure is non-fatal (workflow honors vm.transient via continue-on-error)",
+    "resources": {
+      "cpus": 4,
+      "ram_mb": 15360,
+      "disk_gb": 100,
+      "gpu": "NVIDIA T4",
+      "vram_mb": 16384
+    },
+    "network": {
+      "public_ip": "34.173.227.250",
+      "wg_ip": "10.0.0.8",
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "rescue_port": 2200
+    }
+  },
+  "hm": {
+    "user": "diego",
+    "config": "diego@gcp-t4",
+    "delivery": "docker",
+    "image": "ghcr.io/diegonmarcos/nixhm-sudo-gcp-t4",
+    "platform": "linux/amd64",
+    "remote_build": false
+  },
+  "firewall": {
+    "public_ports": []
+  },
+  "dashboard": {
+    "dns": "gcp-t4.app",
+    "port": 7680
+  },
+  "idle_shutdown": {
+    "enabled": true,
+    "timeout_minutes": 60,
+    "cpu_threshold_percent": 5
+  },
+  "deploy": {
+    "host": "gcp-t4",
+    "remote_path": "~/.config/home-manager"
+  },
+  "build": {
+    "headers_enforced": true
+  }
+}

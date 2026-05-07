@@ -2,7 +2,7 @@
 // ║                                                                  ║
 // ║   GENERATED FILE — DO NOT EDIT                                   ║
 // ║                                                                  ║
-// ║   Source : b_infra/home-manager/nixhm-sudo-oci-apps/src/pilot/html/pilot.js
+// ║   Source : b_infra/nixhm-sudo-oci-apps/src/pilot/html/pilot.js
 // ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 // ║   Rebuild: ./1_workflows/build.sh
 // ║                                                                  ║

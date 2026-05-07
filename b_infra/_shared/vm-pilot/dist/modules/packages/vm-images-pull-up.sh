@@ -5,7 +5,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/packages/vm-images-pull-up.sh
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -24,7 +24,7 @@
 # Phase 2: Serial docker compose up for each service
 #
 # Managed by home-manager — DO NOT EDIT on VM
-# Source: cloud/b_infra/home-manager/_shared/modules/vm-images-pull-up.sh
+# Source: cloud/b_infra/_shared/modules/vm-images-pull-up.sh
 
 set -u
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")

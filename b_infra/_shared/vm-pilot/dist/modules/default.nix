@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/default.nix
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -56,6 +56,7 @@ in {
     # ── Infra
     ./infra/shell-path.nix
     ./infra/system-cleanup.nix
+    ./infra/prune-maintenance.nix
 
     # ── Packages
     ./packages/node-npm-deps.nix
