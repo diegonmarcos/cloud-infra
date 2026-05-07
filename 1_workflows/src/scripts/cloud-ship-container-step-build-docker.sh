@@ -420,11 +420,33 @@ NEOF
 
             # Readiness flag set by dispatch's multiplex warmup; fall back to a
             # live probe for out-of-CI invocations (CLI / Dagu). NO silent
-            # degradation — if the host is dead, we exit 1.
+            # degradation — if the host is dead after retries, we exit 1.
+            #
+            # Retry/backoff loaded from runners.json (.probe.retries +
+            # .probe.backoff_seconds + .probe.connect_timeout_seconds) — added
+            # because single-shot probes failed the entire ship on transient
+            # SSH timeouts (WG flap, sshd MaxStartups bursts under engine's
+            # parallel block). Defaults are conservative: 3 retries × 5s.
             _ready_var="CLOUD_BUILDER_$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')_READY"
             if [ "$(eval "echo \${$_ready_var:-}")" != "1" ]; then
-                if ! ssh $SSH_OPTS "$RUNNER_HOST" true 2>/dev/null; then
-                    log_error "cloud-builder for arch=$ARCH unreachable (host=$RUNNER_HOST). This is an illegal state — not falling back."
+                _probe_retries=$(jq -r '.probe.retries // 3' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_backoff=$(jq -r '.probe.backoff_seconds // 5' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_ctimeout=$(jq -r '.probe.connect_timeout_seconds // 10' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_ok=0
+                _probe_attempt=0
+                while [ "$_probe_attempt" -le "$_probe_retries" ]; do
+                    if ssh $SSH_OPTS -o ConnectTimeout="$_probe_ctimeout" "$RUNNER_HOST" true 2>/dev/null; then
+                        _probe_ok=1
+                        break
+                    fi
+                    _probe_attempt=$((_probe_attempt + 1))
+                    if [ "$_probe_attempt" -le "$_probe_retries" ]; then
+                        log_warn "cloud-builder probe ${_probe_attempt}/${_probe_retries} failed (host=$RUNNER_HOST) — retrying in ${_probe_backoff}s"
+                        sleep "$_probe_backoff"
+                    fi
+                done
+                if [ "$_probe_ok" -ne 1 ]; then
+                    log_error "cloud-builder for arch=$ARCH unreachable (host=$RUNNER_HOST) after ${_probe_retries} retries × ${_probe_backoff}s. This is an illegal state — not falling back."
                     return 1
                 fi
             fi
@@ -433,6 +455,9 @@ NEOF
             REMOTE_TOKEN_FILE="/tmp/${SERVICE_NAME}-ghcr-token"
             log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
             ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
+            # rsync uses the user's ~/.ssh/config (already declares its own
+            # ControlMaster mux). Forcing engine's SSH_OPTS via -e collided
+            # with the user's master path, causing rsync handshakes to drop.
             rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
 
             # GHCR token: read where vault IS available (this side — runner-side
