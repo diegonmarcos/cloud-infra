@@ -70,8 +70,11 @@ in {
       SWAPFILE="/swapfile"
       SWAP_MB=${toString diskSwapMB}
 
-      # Check disk has room to recreate (need SWAP_MB + 1GB headroom)
-      AVAIL_MB=$(df / --output=avail | tail -1 | tr -d ' ')
+      # Check disk has room to recreate (need SWAP_MB + 1GB headroom).
+      # df -P (POSIX format) is portable: works on GNU coreutils AND BusyBox
+      # (some VMs ship BusyBox df where --output=* is unsupported).
+      # POSIX columns: 1=fs 2=1K-blocks 3=Used 4=Available 5=Capacity 6=Mountpoint.
+      AVAIL_MB=$(df -P / | awk 'NR==2 {print $4}')
       AVAIL_MB=$((AVAIL_MB / 1024))
       NEED_MB=$((SWAP_MB + 1024))
       if [ "$AVAIL_MB" -lt "$NEED_MB" ]; then
@@ -129,7 +132,7 @@ in {
         DOCKER_SIZE=$(docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
       fi
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
       echo "[disk-watchdog] Root: ''${USAGE}% | swap=''${SWAP_SIZE_MB}MB | docker=$DOCKER_SIZE"
       [ "$USAGE" -lt "$WARN" ] && exit 0
 
@@ -145,7 +148,7 @@ in {
         docker system prune -f --filter "until=72h" 2>/dev/null || true
       fi
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
       [ "$USAGE" -lt "$CRIT" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
 
       # ── CRIT (90%) — aggressive prune (swap untouched) ──────────────
@@ -154,7 +157,7 @@ in {
       command -v docker >/dev/null 2>&1 && docker image prune -af 2>/dev/null && docker volume prune -f 2>/dev/null || true
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage --delete-older-than 3d 2>/dev/null || true
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
       [ "$USAGE" -lt "$EMERG" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
 
       # ── EMERG (95%) — remove swapfile entirely + last resort ─────────
@@ -173,7 +176,7 @@ in {
       find /var/log -name "*.gz" -delete 2>/dev/null || true
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage -d 2>/dev/null || true
 
-      USAGE=$(df / --output=pcent | tail -1 | tr -d ' %')
+      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
       echo "[disk-watchdog] Final: ''${USAGE}%"
     '';
   };
