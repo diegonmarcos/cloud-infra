@@ -680,7 +680,7 @@ function main() {
   };
 
   // ═══════════════════════════════════════════════════════════════════════
-  // Inject enabled flag from build.json (read directly to avoid tsx cache)
+  // Inject enabled + ssh fields from build.json (read directly to avoid tsx cache)
   // ═══════════════════════════════════════════════════════════════════════
   let disabledCount = 0;
   for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
@@ -689,12 +689,49 @@ function main() {
       const bj = JSON.parse(readFileSync(bjPath, "utf-8"));
       svc.enabled = bj.enabled ?? true;
       if (!svc.enabled) disabledCount++;
+      // ssh: per-service container SSH-key requirement
+      // Shape: { uid: int, ssh_dir: string, keys: string[] }
+      // Consumed by: vm-pilot/src/modules/security/ssh-keys.nix (via per-VM
+      // homeManagerVms[alias].ssh_containers, derived below).
+      if (bj.ssh) svc.ssh = bj.ssh;
     } else {
       svc.enabled = true;
     }
   }
   if (disabledCount > 0) {
     console.log(`  Disabled: ${disabledCount} services (enabled: false)`);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Derive per-VM ssh_containers from enriched services[*].ssh
+  // ═══════════════════════════════════════════════════════════════════════
+  // For each VM, look up its services that declared a top-level `ssh` field
+  // in their build.json, and emit them as a `ssh_containers` array on the
+  // VM's homeManagerVms entry. This is what ssh-keys.nix consumes.
+  for (const [alias, hmVm] of Object.entries(homeManagerVms) as [string, any][]) {
+    const containerSshTargets: any[] = [];
+    for (const svcName of (hmVm.containers ?? []) as string[]) {
+      const svc = (services as any)[svcName];
+      if (svc?.ssh) {
+        // Apply the SSH target to each container_name of the service
+        // (most services = 1 container with same name; multi-container
+        // services would need to opt in per container, not handled yet).
+        const cnames = svc.container_names && svc.container_names.length > 0
+          ? svc.container_names
+          : [svcName];
+        for (const cname of cnames as string[]) {
+          containerSshTargets.push({
+            name: cname,
+            uid: svc.ssh.uid ?? 0,
+            ssh_dir: svc.ssh.ssh_dir ?? "/root/.ssh",
+            keys: svc.ssh.keys ?? [],
+          });
+        }
+      }
+    }
+    if (containerSshTargets.length > 0) {
+      hmVm.ssh_containers = containerSshTargets;
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════

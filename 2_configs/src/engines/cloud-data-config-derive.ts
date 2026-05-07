@@ -2009,12 +2009,19 @@ function deriveBuildVm(c: any): DerivedFile[] {
 
     if (vmServices.length === 0) continue;
 
+    // ssh_containers: derived in consolidation from per-service build.json
+    // .ssh fields. Sliced here into per-VM build-vm-*.json so ssh-keys.nix
+    // (in vm-pilot) can read the per-VM SSH-key deployment list directly.
+    const hmVm = c._home_manager?.vms?.[alias] ?? {};
+    const sshContainers = hmVm.ssh_containers ?? [];
+
     files.push({
       name: `build-vm-${alias}.json`,
       data: {
         vm: alias,
         vm_id: vmId,
         services: vmServices,
+        ssh_containers: sshContainers,
       },
     });
   }
