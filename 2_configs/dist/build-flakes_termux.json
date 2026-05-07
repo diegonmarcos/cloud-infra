@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-06T19:18:53.559Z",
+    "generated_at": "2026-05-07T10:34:47.274Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-06T19:18:52.577Z",
+  "_generated": "2026-05-07T10:34:47.115Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -261,11 +261,9 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
-        "dagu",
-        "dozzle",
-        "sauron-forwarder"
+        "dagu"
       ],
-      "container_count": 3
+      "container_count": 1
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -4996,78 +4994,6 @@
         ]
       }
     },
-    "dozzle": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_dozzle",
-      "description": "Dozzle - Real-time Docker log viewer",
-      "enabled": true,
-      "domain": "logs.diegonmarcos.com",
-      "port": 9999,
-      "dns": "dozzle.app",
-      "upstream": "10.0.0.4:9999",
-      "containers": {
-        "app": {
-          "container_name": "dozzle",
-          "image": "amir20/dozzle:latest",
-          "port": 9999,
-          "port_env": "DOZZLE_ADDR",
-          "dns": "dozzle.app",
-          "public": true,
-          "proxy": {
-            "type": "path",
-            "parent_domain": "app.diegonmarcos.com",
-            "base_path": "/dozzle",
-            "auth": "two_factor"
-          },
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "/var/run/docker.sock:/var/run/docker.sock:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": {
-            "mem_limit": "64m"
-          },
-          "read_only": false,
-          "port_format": "colon",
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "dozzle"
-      ],
-      "all_ports": [
-        "9999"
-      ],
-      "all_dns": [
-        "dozzle.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "type": "path",
-          "parent_domain": "app.diegonmarcos.com",
-          "base_path": "/dozzle",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 9999
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": true,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "matomo": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5484,42 +5410,6 @@
         "ZO_INGEST_TOKEN"
       ]
     },
-    "sauron-forwarder": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_sauron-forwarder",
-      "description": "Alert forwarding to central sauron",
-      "enabled": true,
-      "dns": "sauron-forwarder.app",
-      "containers": {
-        "app": {
-          "container_name": "sauron-forwarder",
-          "image": "",
-          "public": false,
-          "dns": "sauron-forwarder.app"
-        }
-      },
-      "container_names": [
-        "sauron-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [
-        "sauron-forwarder.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "upstream_image": "debian:bookworm-slim",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "sauron-lite": {
       "category": "tools",
       "vm": "all",
@@ -5533,18 +5423,10 @@
           "env_file": false,
           "read_only": false,
           "protocol": "none"
-        },
-        "forwarder": {
-          "container_name": "sauron-forwarder",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
         }
       },
       "container_names": [
-        "sauron",
-        "sauron-forwarder"
+        "sauron"
       ],
       "all_ports": [],
       "all_dns": [],

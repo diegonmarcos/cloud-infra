@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-06T19:18:52.331Z",
+  "_generated": "2026-05-07T10:34:47.088Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-resources",
   "services": {
     "code-server": {
@@ -486,17 +486,6 @@
         }
       }
     },
-    "dozzle": {
-      "vm": "oci-analytics",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "dozzle"
-      ],
-      "resources": {
-        "mem_limit": "64m"
-      }
-    },
     "matomo": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
@@ -551,22 +540,12 @@
         "mem_limit": "512m"
       }
     },
-    "sauron-forwarder": {
-      "vm": "oci-analytics",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "sauron-forwarder"
-      ],
-      "resources": null
-    },
     "sauron-lite": {
       "vm": "all",
       "vm_ram_gb": null,
       "vm_cpu": null,
       "containers": [
-        "sauron",
-        "sauron-forwarder"
+        "sauron"
       ],
       "resources": null
     },
@@ -671,7 +650,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-06T19:18:53.470Z",
+    "generated_at": "2026-05-07T10:34:47.256Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

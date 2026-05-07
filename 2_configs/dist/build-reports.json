@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-06T19:18:52.318Z",
+  "_generated": "2026-05-07T10:34:47.086Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -851,17 +851,6 @@
         "path": "/"
       }
     },
-    "dozzle": {
-      "name": "dozzle",
-      "vm": "oci-E2-f_1",
-      "domain": "logs.diegonmarcos.com",
-      "enabled": true,
-      "category": "tools",
-      "ports": {
-        "app": 9999
-      },
-      "health": null
-    },
     "matomo": {
       "name": "matomo",
       "vm": "oci-A1-f_0",
@@ -911,15 +900,6 @@
       "health": {
         "path": "/healthz"
       }
-    },
-    "sauron-forwarder": {
-      "name": "sauron-forwarder",
-      "vm": "oci-E2-f_1",
-      "domain": null,
-      "enabled": true,
-      "category": "tools",
-      "ports": null,
-      "health": null
     },
     "sauron-lite": {
       "name": "sauron-lite",
@@ -1437,15 +1417,6 @@
       "dns": "dbgate.app"
     },
     {
-      "service": "dozzle",
-      "dns": "dozzle.app"
-    },
-    {
-      "service": "dozzle",
-      "container": "app",
-      "dns": "dozzle.app"
-    },
-    {
       "service": "matomo",
       "dns": "matomo.app"
     },
@@ -1475,15 +1446,6 @@
       "service": "openobserve",
       "container": "app",
       "dns": "openobserve.app"
-    },
-    {
-      "service": "sauron-forwarder",
-      "dns": "sauron-forwarder.app"
-    },
-    {
-      "service": "sauron-forwarder",
-      "container": "app",
-      "dns": "sauron-forwarder.app"
     },
     {
       "service": "umami",
@@ -1649,9 +1611,7 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
-          "dagu",
-          "dozzle",
-          "sauron-forwarder"
+          "dagu"
         ]
       },
       "oci-A1-f_0": {
@@ -2273,17 +2233,6 @@
           "path": "/"
         }
       },
-      "dozzle": {
-        "name": "dozzle",
-        "vm": "oci-E2-f_1",
-        "domain": "logs.diegonmarcos.com",
-        "enabled": true,
-        "category": "tools",
-        "ports": {
-          "app": 9999
-        },
-        "health": null
-      },
       "matomo": {
         "name": "matomo",
         "vm": "oci-A1-f_0",
@@ -2333,15 +2282,6 @@
         "health": {
           "path": "/healthz"
         }
-      },
-      "sauron-forwarder": {
-        "name": "sauron-forwarder",
-        "vm": "oci-E2-f_1",
-        "domain": null,
-        "enabled": true,
-        "category": "tools",
-        "ports": null,
-        "health": null
       },
       "sauron-lite": {
         "name": "sauron-lite",
@@ -3192,7 +3132,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-06T19:18:53.457Z",
+    "generated_at": "2026-05-07T10:34:47.254Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
