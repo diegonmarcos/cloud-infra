@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-07T11:19:47.236Z",
+    "generated_at": "2026-05-07T12:03:20.932Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T11:19:47.192Z",
+  "_generated": "2026-05-07T12:03:20.892Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 157,
@@ -1077,7 +1077,7 @@
         "description": "SSO and 2FA authentication portal",
         "domain": "auth.diegonmarcos.com",
         "port": 9091,
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "folder": "bb-sec_authelia"
       }
     },
@@ -1695,7 +1695,7 @@
         "description": "In-memory data store",
         "domain": null,
         "port": 6379,
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "folder": "ca-dat_redis"
       }
     },
@@ -2544,8 +2544,8 @@
     {
       "table": "hosted_on",
       "from": "service:authelia",
-      "to": "vm:gcp_proxy",
-      "key": "service:authelia->hosted_on->vm:gcp_proxy",
+      "to": "vm:oci_apps",
+      "key": "service:authelia->hosted_on->vm:oci_apps",
       "properties": {}
     },
     {
@@ -2931,8 +2931,8 @@
     {
       "table": "hosted_on",
       "from": "service:redis",
-      "to": "vm:gcp_proxy",
-      "key": "service:redis->hosted_on->vm:gcp_proxy",
+      "to": "vm:oci_apps",
+      "key": "service:redis->hosted_on->vm:oci_apps",
       "properties": {}
     },
     {

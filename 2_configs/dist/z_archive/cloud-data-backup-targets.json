@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T11:19:47.181Z",
+  "_generated": "2026-05-07T12:03:20.881Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/backup-targets",
   "targets": [
     {
@@ -205,8 +205,8 @@
     },
     {
       "service": "authelia",
-      "vm": "gcp-E2-f_0",
-      "vm_alias": "gcp-proxy",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
       "volumes": [],
       "databases": [
         {
@@ -315,8 +315,8 @@
     },
     {
       "service": "redis",
-      "vm": "gcp-E2-f_0",
-      "vm_alias": "gcp-proxy",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
       "volumes": [],
       "databases": [
         {
@@ -408,6 +408,19 @@
           "type": "minio"
         },
         {
+          "service": "authelia",
+          "container": "authelia",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/config/db.sqlite3"
+        },
+        {
+          "service": "authelia",
+          "container": "authelia-redis",
+          "container_key": "redis",
+          "type": "redis"
+        },
+        {
           "service": "matomo",
           "container": "matomo-hybrid",
           "container_key": "app",
@@ -442,6 +455,12 @@
           "container": "surrealdb",
           "container_key": "app",
           "type": "surrealdb"
+        },
+        {
+          "service": "redis",
+          "container": "redis",
+          "container_key": "app",
+          "type": "redis"
         }
       ],
       "volumes": [
@@ -488,36 +507,10 @@
         "maddy_data",
         "stalwart_data"
       ]
-    },
-    "gcp-proxy": {
-      "wg_ip": "10.0.0.1",
-      "user": "diego",
-      "databases": [
-        {
-          "service": "authelia",
-          "container": "authelia",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/config/db.sqlite3"
-        },
-        {
-          "service": "authelia",
-          "container": "authelia-redis",
-          "container_key": "redis",
-          "type": "redis"
-        },
-        {
-          "service": "redis",
-          "container": "redis",
-          "container_key": "app",
-          "type": "redis"
-        }
-      ],
-      "volumes": []
     }
   },
   "_meta": {
-    "generated_at": "2026-05-07T11:19:47.233Z",
+    "generated_at": "2026-05-07T12:03:20.929Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
