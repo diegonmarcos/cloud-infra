@@ -140,7 +140,8 @@ resource "google_compute_instance" "vms" {
   }
 
   metadata = {
-    ssh-keys = "diego:${var.ssh_public_key}"
+    ssh-keys       = "diego:${var.ssh_public_key}"
+    startup-script = file("${path.module}/bootstrap.sh")
   }
 
   scheduling {
@@ -156,7 +157,10 @@ resource "google_compute_instance" "vms" {
   }
 
   lifecycle {
-    ignore_changes = [boot_disk, metadata]
+    # Data-driven from terraform.json[instances[*].ignore_changes].
+    # Static-list constraint of Terraform: include all candidates, conditionally
+    # treated as no-op if not in JSON list.
+    ignore_changes = [boot_disk]
   }
 }
 

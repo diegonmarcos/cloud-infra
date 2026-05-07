@@ -260,6 +260,17 @@ NEOF
     # owns the image; this step is a no-op for them and the existing skip at
     # line ~205 handles it.
     UPSTREAM_DECL="$(get_config upstream_image)"
+    # Auto-detect Type B (upstream wrap) when build.json doesn't declare
+    # upstream_image but the flake produced a dist/code/<arch>/Dockerfile
+    # with a `FROM <upstream>` line. Avoids requiring every Type-B service
+    # (authelia, vaultwarden, …) to redundantly mirror the FROM line in
+    # build.json.
+    if [ -z "$UPSTREAM_DECL" ] \
+       && [ -f "$DIST_DIR/code/$ARCH/Dockerfile" ] \
+       && grep -q '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" 2>/dev/null; then
+        UPSTREAM_DECL="$(grep -m1 '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" | awk '{print $2}')"
+        log "Type B auto-detected: upstream=${UPSTREAM_DECL} (from dist/code/$ARCH/Dockerfile)"
+    fi
     if [ -z "${BUILD_CONTEXT:-}" ]; then
         BUILD_CONTEXT="$SRC_DIR"
         if [ -n "$UPSTREAM_DECL" ] \
@@ -454,13 +465,22 @@ NEOF
             # Surfaced 2026-05-07 (ship run 25490646324, oci-apps host).
             # Engine guard: if the path is a directory, nuke it. Idempotent
             # on healthy hosts (the test below is a no-op there).
-            ssh $SSH_OPTS "$RUNNER_HOST" '
-                if [ -d /root/.docker/config.json ]; then
-                    echo "[runner] /root/.docker/config.json is a DIRECTORY — repairing"
-                    rm -rf /root/.docker/config.json
+            # Run via `bash -c` because the runner host's login shell may be
+            # fish (set by home-manager on oci-apps), which can't parse this
+            # bash `if/then/fi` block. Target $HOME/.docker (the SSH user's
+            # home) — that is where the subsequent `docker login` (line 484)
+            # writes config.json, and what the user has permission to repair.
+            # The earlier hardcoded `/root/.docker` was wrong: the SSH user
+            # (ubuntu) has no write access to /root/.
+            ssh $SSH_OPTS "$RUNNER_HOST" "bash -s" <<'REMOTE_REPAIR'
+                set -e
+                DOCKER_CFG_DIR="$HOME/.docker"
+                if [ -d "$DOCKER_CFG_DIR/config.json" ]; then
+                    echo "[runner] $DOCKER_CFG_DIR/config.json is a DIRECTORY — repairing"
+                    rm -rf "$DOCKER_CFG_DIR/config.json"
                 fi
-                mkdir -p /root/.docker
-            '
+                mkdir -p "$DOCKER_CFG_DIR"
+REMOTE_REPAIR
 
             # Ensure HOST docker daemon (which executes the `docker run` for
             # the runner image below) has fresh ghcr.io auth — the inner

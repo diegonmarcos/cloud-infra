@@ -45,8 +45,21 @@ COPY . /configs/
 CMD ["sh", "-c", "cp -r /configs/. /out/ && echo '[configs] extracted to /out'"]
 DEOF
 
-    log "Building configs image: $CONFIGS_IMAGE"
-    docker build -q -t "$CONFIGS_IMAGE" -f "$DIST_DIR/Dockerfile.configs" "$DIST_DIR" || {
+    # Cross-arch: respect build.json:.docker.arch (DOCKER_ARCH set in orchestrator).
+    # Without --platform the configs image inherits the build host's arch, so
+    # an amd64 desktop pushes amd64 configs that fail with "exec format error"
+    # on arm64 VMs (oci-apps). The Dockerfile.configs only does FROM busybox +
+    # COPY + CMD — no arch-specific code — so cross-arch works without QEMU
+    # because busybox:latest is a multi-arch manifest. Pre-pull the matching
+    # variant first so docker build doesn't have to resolve cross-arch.
+    CONFIGS_PLATFORM_FLAG=""
+    if [ -n "${DOCKER_ARCH:-}" ]; then
+        CONFIGS_PLATFORM_FLAG="--platform linux/${DOCKER_ARCH}"
+        docker pull --platform "linux/${DOCKER_ARCH}" busybox:latest 2>/dev/null || true
+    fi
+
+    log "Building configs image: $CONFIGS_IMAGE${DOCKER_ARCH:+ (arch=$DOCKER_ARCH)}"
+    docker build $CONFIGS_PLATFORM_FLAG -q -t "$CONFIGS_IMAGE" -f "$DIST_DIR/Dockerfile.configs" "$DIST_DIR" || {
         log_warn "Configs image build failed (non-fatal)"
         return 0
     }

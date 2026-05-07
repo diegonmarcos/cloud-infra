@@ -346,43 +346,48 @@ function deriveCaddy(c: any): DerivedFile {
     return upstream;
   };
 
-  // ── L4 routes: derive from gcp-proxy public_ports for mail passthrough ──
+  // ── L4 routes: derive from each service's proxy.primary.l4_ports ──
+  // Source-of-truth = the service that owns the port (maddy, stalwart, …).
+  // Each service declares in its build.json:
+  //   proxy.primary.l4_ports: [
+  //     { port: 993, upstream: "<host>:993", protocol: "tls", comment: "..." }
+  //   ]
+  // The deploy.host of that service determines which VM is the upstream.
+  // Caddy on gcp-proxy binds the listed ports and TLS-passthroughs to upstream.
   const l4Routes: any[] = [];
-  const l4Map: Record<number, string> = {
-    993: "IMAPS -- TLS passthrough to maddy",
-    465: "SMTPS -- TLS passthrough to maddy",
-    587: "SMTP Submission -- TLS passthrough to maddy",
-    2993: "IMAPS -- TLS passthrough to stalwart",
-    2465: "SMTPS -- TLS passthrough to stalwart",
-    2587: "SMTP Submission -- TLS passthrough to stalwart",
-    2443: "HTTPS -- TLS passthrough to stalwart (JMAP/webadmin)",
-  };
-  // Find oci-mail's WG IP (L4 upstream) and gcp-proxy's WG IP (optional listen scope).
-  let ociMailIp = "";
   let gcpProxyWgIp = "";
   for (const vm of Object.values(vms) as any[]) {
-    if (vm.ssh_alias === "oci-mail") ociMailIp = vm.wg_ip ?? vm.ip;
     if (vm.ssh_alias === "gcp-proxy") gcpProxyWgIp = vm.wg_ip ?? "";
   }
+  // ssh_alias → wg_ip lookup so we can rewrite "<alias>:port" upstreams.
+  const aliasToWgIp: Record<string, string> = {};
   for (const vm of Object.values(vms) as any[]) {
-    if (vm.ssh_alias !== "gcp-proxy") continue;
-    for (const pp of vm.public_ports ?? []) {
-      if (!l4Map[pp.port]) continue;
-      const route: any = {
-        port: pp.port,
-        upstream: `${ociMailIp}:${pp.port}`,
-        comment: l4Map[pp.port],
-      };
-      // listen_scope = "wg" → Caddy binds only on gcp-proxy's WG IP, not all
-      // interfaces. This is the declarative knob for "mail reachable only from
-      // WG peers" without dropping the route (Caddy stays the router).
-      // Omitted / "public" (default) → route has no `listen` field → Caddy's
-      // default = all interfaces = current public behavior.
-      if (pp.listen_scope === "wg") {
+    if (vm.ssh_alias && vm.wg_ip) aliasToWgIp[vm.ssh_alias] = vm.wg_ip;
+  }
+  for (const [, svc] of Object.entries(services)) {
+    const l4Ports = (svc as any).proxy?.primary?.l4_ports ?? [];
+    if (!Array.isArray(l4Ports) || l4Ports.length === 0) continue;
+    const deployHost = (svc as any).deploy?.host ?? (svc as any).vm ?? "";
+    const fallbackIp = aliasToWgIp[deployHost] ?? "";
+    for (const lp of l4Ports) {
+      if (typeof lp.port !== "number") continue;
+      // Resolve upstream: explicit lp.upstream wins; otherwise <fallbackIp>:<port>.
+      // Rewrite "<alias>:port" → "<wg_ip>:port" if alias matches a known VM.
+      let upstream = (lp.upstream as string | undefined) ?? "";
+      if (upstream) {
+        const m = upstream.match(/^([^:]+):(\d+)$/);
+        if (m && aliasToWgIp[m[1]]) upstream = `${aliasToWgIp[m[1]]}:${m[2]}`;
+      } else if (fallbackIp) {
+        upstream = `${fallbackIp}:${lp.port}`;
+      }
+      if (!upstream) continue;
+      const route: any = { port: lp.port, upstream, comment: lp.comment ?? `L4 passthrough (${(svc as any).name ?? "?"})` };
+      // listen_scope = "wg" → bind to wg_ip only (not all interfaces).
+      if (lp.listen_scope === "wg") {
         if (!gcpProxyWgIp) {
-          throw new Error(`listen_scope=wg on port ${pp.port} but gcp-proxy has no wg_ip in config.json`);
+          throw new Error(`listen_scope=wg on port ${lp.port} but gcp-proxy has no wg_ip in config.json`);
         }
-        route.listen = `${gcpProxyWgIp}:${pp.port}`;
+        route.listen = `${gcpProxyWgIp}:${lp.port}`;
       }
       l4Routes.push(route);
     }
@@ -2300,6 +2305,219 @@ function deriveServiceConnections(c: any): DerivedFile {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// KG-Graph derivers
+//   - deriveKgSchema: emits SurrealDB schema spec (node/edge tables + vector
+//     index declarations) from `c.services["kg-graph"].kg`.
+//   - deriveKgDelta:  emits an idempotent {nodes, edges} delta from the rest
+//     of the consolidated file (vms, services, containers, dns, wireguard,
+//     authelia ACL). Deterministic keys → re-running ingest is a no-op.
+// Both files land at dist/build-kg-graph_*.json (NOT cloud-data-* — new
+// pattern, not archived).
+// ═══════════════════════════════════════════════════════════════════════════
+
+function deriveKgSchema(c: any): DerivedFile {
+  const kg = c.services?.["kg-graph"]?.kg ?? {};
+  const embedder = kg.embedder ?? { enabled: false, model: "nomic-embed-text", dim: 768, index_type: "MTREE", vector_dtype: "F32" };
+  const nodeTables = kg.node_tables ?? [];
+  const edgeTables = kg.edge_tables ?? [];
+
+  // Vector indexes are only emitted when an embedder is declared+enabled.
+  // This keeps MTREE creation declarative (Rule 3) and avoids wasting init
+  // time on empty fields (matches the schema.surql.tpl Phase-3 comment).
+  const vectorIndexes = embedder.enabled
+    ? nodeTables
+        .filter((n: any) => ["vm", "service", "container", "log", "documentation"].includes(n.table))
+        .map((n: any) => ({
+          name: `idx_${n.table}_embedding`,
+          table: n.table,
+          field: "embedding",
+          type: embedder.index_type ?? "MTREE",
+          dimension: embedder.dim ?? 768,
+          dtype: embedder.vector_dtype ?? "F32",
+        }))
+    : [];
+
+  return {
+    name: "build-kg-graph_schema.json",
+    data: {
+      _meta: {
+        description: "SurrealDB schema declaration for the kg-graph hybrid Knowledge Graph (node tables, edge relations, vector indexes). Consumed by ca-dat_kg-graph at schema-load time and by reports-logs/kg_ingest at validation time.",
+        format_version: 1,
+      },
+      _generated: now(),
+      _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-schema",
+      namespace: kg.namespace ?? "infra",
+      database: kg.database ?? "production",
+      embedder,
+      ingest: kg.ingest ?? { endpoint: "/import", idempotent: true },
+      node_tables: nodeTables,
+      edge_tables: edgeTables,
+      vector_indexes: vectorIndexes,
+    },
+  };
+}
+
+function deriveKgDelta(c: any): DerivedFile {
+  const services = (c.services ?? {}) as Record<string, any>;
+  const vms = (c.vms ?? {}) as Record<string, any>;
+  const dns = c.dns ?? {};
+  const wg = c.native?.wireguard ?? c.wireguard ?? {};
+
+  // Idempotent upsert keys: deterministic, never auto-generated.
+  // SurrealDB record-id-safe form (replace "-" / "." with "_"; caller layer
+  // is responsible for the surql ⟨…⟩ escape if it prefers raw).
+  const safe = (s: string): string => s.replace(/[-.]/g, "_");
+  const nodes: any[] = [];
+  const edges: any[] = [];
+  const seenNode = new Set<string>();
+  const pushNode = (table: string, id: string, props: Record<string, any>) => {
+    const key = `${table}:${id}`;
+    if (seenNode.has(key)) return;
+    seenNode.add(key);
+    nodes.push({ table, id, key, properties: props });
+  };
+  const pushEdge = (table: string, fromKey: string, toKey: string, props: Record<string, any> = {}) => {
+    edges.push({ table, from: fromKey, to: toKey, key: `${fromKey}->${table}->${toKey}`, properties: props });
+  };
+
+  // ── VM nodes ────────────────────────────────────────────────────────────
+  for (const [vmId, vm] of Object.entries(vms)) {
+    if (!vm.ssh_alias || !vm.wg_ip) continue;        // skip placeholders / TBD
+    pushNode("vm", safe(vm.ssh_alias), {
+      vm_id: vmId,
+      alias: vm.ssh_alias,
+      ip: vm.ip,
+      wg_ip: vm.wg_ip,
+      user: vm.user ?? null,
+      provider: vm.provider ?? (vmId.startsWith("gcp") ? "gcp" : vmId.startsWith("oci") ? "oci" : null),
+      arch: vm.specs?.arch ?? null,
+      cpu_count: vm.specs?.cpu ?? null,
+      ram_gb: vm.specs?.ram_gb ?? null,
+      disk_gb: vm.specs?.disk_gb ?? null,
+      description: vm.description ?? "",
+    });
+  }
+
+  // ── Service + Container nodes (and runs_container, hosted_on edges) ─────
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (svc.enabled === false) continue;             // honour build.json toggle
+    const vmEntry = vms[svc.vm];
+    const vmAlias = vmEntry?.ssh_alias;
+
+    pushNode("service", safe(svcName), {
+      name: svcName,
+      category: svc.category ?? null,
+      description: svc.description ?? "",
+      domain: svc.domain ?? null,
+      port: svc.port ?? null,
+      vm: vmAlias ?? svc.vm,
+      folder: svc.folder ?? null,
+    });
+
+    if (vmAlias) {
+      pushEdge("hosted_on", `service:${safe(svcName)}`, `vm:${safe(vmAlias)}`);
+    }
+
+    for (const [role, ct] of Object.entries(svc.containers ?? {}) as [string, any][]) {
+      const cname = ct.container_name || `${svcName}_${role}`;
+      pushNode("container", safe(cname), {
+        name: cname,
+        image: ct.image ?? null,
+        role,
+        port: ct.port ?? null,
+        public: ct.public ?? false,
+      });
+      pushEdge("runs_container", `service:${safe(svcName)}`, `container:${safe(cname)}`, { role });
+
+      // depends_on edges from compose-level declarations
+      for (const dep of (ct.depends_on ?? []) as string[]) {
+        if (services[dep]) {
+          pushEdge("depends_on", `service:${safe(svcName)}`, `service:${safe(dep)}`, { type: "runtime" });
+        }
+      }
+    }
+  }
+
+  // ── connected_to (WG mesh) — declarative from native.wireguard.peers ────
+  const peers: any[] = Array.isArray(wg.peers) ? wg.peers : Object.values(wg.peers ?? {});
+  const aliases = peers.map((p: any) => p.alias).filter(Boolean);
+  for (let i = 0; i < aliases.length; i++) {
+    for (let j = i + 1; j < aliases.length; j++) {
+      pushEdge("connected_to", `vm:${safe(aliases[i])}`, `vm:${safe(aliases[j])}`, { interface: "wg0" });
+    }
+  }
+
+  // ── proxied_by — derived from services[].proxy.parent_domain ────────────
+  const caddySvc = Object.entries(services).find(([, s]: [string, any]) =>
+    s.category === "sec" && (s.folder ?? "").includes("caddy"));
+  if (caddySvc) {
+    const caddyKey = `service:${safe(caddySvc[0])}`;
+    for (const [svcName, svc] of Object.entries(services)) {
+      if (svcName === caddySvc[0]) continue;
+      if (svc.proxy?.parent_domain || svc.domain) {
+        pushEdge("proxied_by", `service:${safe(svcName)}`, caddyKey, {
+          domain: svc.domain ?? svc.proxy?.parent_domain ?? null,
+        });
+      }
+    }
+  }
+
+  // ── authenticated_by — reuse the ACL deriver as source of truth ─────────
+  try {
+    const acl = (deriveAutheliaAcl(c).data as any) ?? {};
+    const aclRules = acl.rules ?? [];
+    const autheliaSvc = Object.entries(services).find(([n]) => n === "authelia");
+    if (autheliaSvc) {
+      const autheliaKey = `service:${safe(autheliaSvc[0])}`;
+      const seen = new Set<string>();
+      for (const rule of aclRules) {
+        const target = rule.service ?? rule.subject ?? null;
+        if (!target || !services[target] || seen.has(target)) continue;
+        seen.add(target);
+        pushEdge("authenticated_by", `service:${safe(target)}`, autheliaKey);
+      }
+    }
+  } catch { /* ACL deriver is best-effort here; missing → no auth edges. */ }
+
+  // ── routes_to (Domain → Service) — from services[].domain + dns records ─
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (!svc.domain) continue;
+    pushNode("domain", safe(svc.domain), { fqdn: svc.domain });
+    pushEdge("routes_to", `domain:${safe(svc.domain)}`, `service:${safe(svcName)}`);
+  }
+  for (const rec of (dns.records ?? [])) {
+    if (!rec?.name || rec.type !== "CNAME") continue;
+    pushNode("domain", safe(rec.name), { fqdn: rec.name, type: rec.type, value: rec.value ?? null });
+  }
+
+  return {
+    name: "build-kg-graph_delta.json",
+    data: {
+      _meta: {
+        description: "Idempotent delta for the kg-graph SurrealDB instance. Re-applying the same delta is a no-op (deterministic keys + UPSERT MERGE on the consumer side).",
+        format_version: 1,
+        idempotency: {
+          node_key: "<table>:<sanitized_id>",
+          edge_key: "<from_key>-><table>-><to_key>",
+          stale_strategy: "mark with last_seen_ts (never hard-delete)",
+        },
+      },
+      _generated: now(),
+      _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
+      counts: {
+        nodes: nodes.length,
+        edges: edges.length,
+        by_table: nodes.reduce((acc: Record<string, number>, n: any) => {
+          acc[n.table] = (acc[n.table] ?? 0) + 1; return acc;
+        }, {}),
+      },
+      nodes,
+      edges,
+    },
+  };
+}
+
 function main() {
   console.log("cloud-data-config-derive: reading consolidated file...\n");
 
@@ -2344,6 +2562,8 @@ function main() {
     deriveDeps(consolidated),
     deriveDatabases(consolidated),
     deriveSecretsEnvVarNames(consolidated),
+    deriveKgSchema(consolidated),
+    deriveKgDelta(consolidated),
     ...deriveExternalConsumers(consolidated),
   ];
 

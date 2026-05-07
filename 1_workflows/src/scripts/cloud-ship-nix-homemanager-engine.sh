@@ -218,6 +218,24 @@ ensure_ssh_host_alias
 
 # ── SSH multiplexing ────────────────────────────────────────────────
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"
+# Bootstrap-time overrides for new VMs not yet in trusted SSH topology
+# (e.g., freshly provisioned via Terraform with ephemeral IP, before WG
+# is up). Setting SSH_HOST_OVERRIDE/SSH_KEY_OVERRIDE lets the engine
+# target the new VM's raw IP using a bootstrap key, without requiring
+# edits to ~/.ssh/config (which is read-only when home-manager owns it).
+# Once the VM is in the trusted topology, unset these to resume normal
+# alias-based routing.
+if [ -n "${SSH_HOST_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o HostName=${SSH_HOST_OVERRIDE}"
+    log "[ssh] HostName override: ${SSH_HOST_OVERRIDE}"
+fi
+if [ -n "${SSH_KEY_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o IdentityFile=${SSH_KEY_OVERRIDE} -o IdentitiesOnly=yes"
+    log "[ssh] IdentityFile override: ${SSH_KEY_OVERRIDE}"
+fi
+if [ -n "${SSH_USER_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o User=${SSH_USER_OVERRIDE}"
+fi
 ssh_vm() {
     ssh $SSH_OPTS "$DEPLOY_HOST" "$@"
 }

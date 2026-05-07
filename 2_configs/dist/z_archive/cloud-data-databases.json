@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T12:03:20.890Z",
+  "_generated": "2026-05-07T16:11:36.343Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
   "total": 27,
   "summary": {
@@ -397,9 +397,9 @@
       "container_key": "app",
       "type": "sqlite",
       "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
+      "vm": "gcp-E2-f_0",
+      "vm_alias": "gcp-proxy",
+      "wg_ip": "10.0.0.1",
       "image": "authelia/authelia:4.39.15",
       "port": 9091,
       "dns": "authelia.app",
@@ -417,9 +417,9 @@
       "container_key": "redis",
       "type": "redis",
       "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
+      "vm": "gcp-E2-f_0",
+      "vm_alias": "gcp-proxy",
+      "wg_ip": "10.0.0.1",
       "image": "redis:7-bookworm",
       "port": 6380,
       "dns": "authelia-redis.app",
@@ -428,7 +428,7 @@
       ],
       "resources": null,
       "backup": true,
-      "connection": "redis://10.0.0.6:6380"
+      "connection": "redis://10.0.0.1:6380"
     },
     {
       "service": "dagu",
@@ -605,9 +605,9 @@
       "container_key": "app",
       "type": "redis",
       "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
+      "vm": "gcp-E2-f_0",
+      "vm_alias": "gcp-proxy",
+      "wg_ip": "10.0.0.1",
       "image": "redis:alpine",
       "port": 6379,
       "dns": "redis.app",
@@ -617,7 +617,7 @@
       ],
       "resources": null,
       "backup": true,
-      "connection": "redis://10.0.0.6:6379"
+      "connection": "redis://10.0.0.1:6379"
     }
   ],
   "by_type": {
@@ -880,9 +880,9 @@
         "container_key": "app",
         "type": "sqlite",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
+        "vm": "gcp-E2-f_0",
+        "vm_alias": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
         "image": "authelia/authelia:4.39.15",
         "port": 9091,
         "dns": "authelia.app",
@@ -1143,9 +1143,9 @@
         "container_key": "redis",
         "type": "redis",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
+        "vm": "gcp-E2-f_0",
+        "vm_alias": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
         "image": "redis:7-bookworm",
         "port": 6380,
         "dns": "authelia-redis.app",
@@ -1154,7 +1154,7 @@
         ],
         "resources": null,
         "backup": true,
-        "connection": "redis://10.0.0.6:6380"
+        "connection": "redis://10.0.0.1:6380"
       },
       {
         "service": "redis",
@@ -1162,9 +1162,9 @@
         "container_key": "app",
         "type": "redis",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
+        "vm": "gcp-E2-f_0",
+        "vm_alias": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
         "image": "redis:alpine",
         "port": 6379,
         "dns": "redis.app",
@@ -1174,7 +1174,7 @@
         ],
         "resources": null,
         "backup": true,
-        "connection": "redis://10.0.0.6:6379"
+        "connection": "redis://10.0.0.1:6379"
       }
     ],
     "minio": [
@@ -1620,45 +1620,6 @@
           "backup": true
         },
         {
-          "service": "authelia",
-          "container": "authelia",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "authelia/authelia:4.39.15",
-          "port": 9091,
-          "dns": "authelia.app",
-          "path": "/config/db.sqlite3",
-          "healthcheck": "/api/health",
-          "volumes": [
-            "./config:/config"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "authelia",
-          "container": "authelia-redis",
-          "container_key": "redis",
-          "type": "redis",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "redis:7-bookworm",
-          "port": 6380,
-          "dns": "authelia-redis.app",
-          "volumes": [
-            "authelia_redis_data:/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "redis://10.0.0.6:6380"
-        },
-        {
           "service": "matomo",
           "container": "matomo-hybrid",
           "container_key": "app",
@@ -1801,6 +1762,51 @@
           "volumes": [],
           "resources": null,
           "backup": true
+        }
+      ]
+    },
+    "gcp-proxy": {
+      "wg_ip": "10.0.0.1",
+      "user": "diego",
+      "databases": [
+        {
+          "service": "authelia",
+          "container": "authelia",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
+          "image": "authelia/authelia:4.39.15",
+          "port": 9091,
+          "dns": "authelia.app",
+          "path": "/config/db.sqlite3",
+          "healthcheck": "/api/health",
+          "volumes": [
+            "./config:/config"
+          ],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "authelia",
+          "container": "authelia-redis",
+          "container_key": "redis",
+          "type": "redis",
+          "enabled": true,
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
+          "image": "redis:7-bookworm",
+          "port": 6380,
+          "dns": "authelia-redis.app",
+          "volumes": [
+            "authelia_redis_data:/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "redis://10.0.0.1:6380"
         },
         {
           "service": "redis",
@@ -1808,9 +1814,9 @@
           "container_key": "app",
           "type": "redis",
           "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
           "image": "redis:alpine",
           "port": 6379,
           "dns": "redis.app",
@@ -1820,7 +1826,7 @@
           ],
           "resources": null,
           "backup": true,
-          "connection": "redis://10.0.0.6:6379"
+          "connection": "redis://10.0.0.1:6379"
         }
       ]
     },
@@ -1985,7 +1991,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-07T12:03:20.931Z",
+    "generated_at": "2026-05-07T16:11:36.445Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

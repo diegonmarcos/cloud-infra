@@ -165,6 +165,18 @@ else
     echo "[hm-docker] WARN: no DB dump found — paths may not be registered"
 fi
 
+# ── Step 4.5: Re-own /nix to HM_USER (post-cp, pre-activate) ──
+# The activation container ran cp -aR /nix/store → /host/nix/store as root,
+# preserving image-internal ownership (root). When sudo -u $HM_USER runs
+# `activate` next, nix-env tries to create a lock file inside /nix/store
+# and fails with EACCES on the freshly-cp'd root-owned dir entries.
+# Determinate-Nix multi-user mode would normally route writes through the
+# nix-daemon as root, but on freshly-bootstrapped GCP VMs (and any VM where
+# nix-daemon is disabled) the user-side write path needs ownership.
+# Idempotent: chown -R is a no-op once converged.
+echo "[hm-docker] Reclaiming /nix ownership for $HM_USER"
+sudo chown -R "$HM_USER:$HM_USER" /nix 2>/dev/null || true
+
 # ── Step 5: Activate generation ──
 # HM's activate script does `nix-build --quiet --expr '{}'` as a sanity check
 # (line 170 of generation/activate). sudo -u strips PATH; nix-build is normally

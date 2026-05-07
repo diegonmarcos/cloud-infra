@@ -43,9 +43,18 @@ step_docker_push() {
         BUILDX_BUILDER="$( { docker buildx inspect --bootstrap 2>/dev/null || true; } | grep -E '^Name:' | head -1 | awk '{print $2}' )"
         BUILDKIT_CONTAINER="buildx_buildkit_${BUILDX_BUILDER:-default}0"
         export RETRY_RECOVERY_CMD="docker restart ${BUILDKIT_CONTAINER} 2>/dev/null && sleep 3 || true"
+        # --provenance=false + --sbom=false: omit attestation manifests so the
+        # pushed manifest list has ONLY the architecture manifests. Docker on
+        # the target VM (moby-engine 27.x with containerd-shim-runc-v2) reads
+        # the manifest list and fails with "unsupported shim version (3)" if
+        # buildx pushed an "unknown/unknown" attestation entry alongside the
+        # arch entries — the daemon can't pick a platform and falls back to
+        # the attestation manifest, which has no usable runtime config.
         run_with_retry "docker buildx build + push" \
             docker buildx build \
             --platform "$PLATFORM" \
+            --provenance=false \
+            --sbom=false \
             --push \
             -t "$HM_IMAGE:latest" \
             -t "$HM_IMAGE:$SHA_TAG" \

@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-07T10:23:16.563Z",
+    "generated_at": "2026-05-07T12:03:20.619Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -157,7 +157,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
-        "sauron-central",
+        "authelia",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -174,9 +174,10 @@
         "backup-borg",
         "backup-bup",
         "gitea",
-        "kg-graph"
+        "kg-graph",
+        "redis"
       ],
-      "container_count": 49
+      "container_count": 53
     },
     "gcp-T4-p_0": {
       "ip": "34.173.227.250",
@@ -255,13 +256,11 @@
       "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1",
       "services": [
         "hickory-dns",
-        "authelia",
         "caddy",
         "introspect-proxy",
-        "postlite",
-        "redis"
+        "postlite"
       ],
-      "container_count": 7
+      "container_count": 3
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -3770,14 +3769,14 @@
     },
     "authelia": {
       "category": "sec",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "folder": "bb-sec_authelia",
       "description": "SSO and 2FA authentication portal",
       "enabled": true,
       "domain": "auth.diegonmarcos.com",
       "port": 9091,
       "dns": "authelia.app",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "containers": {
         "app": {
           "container_name": "authelia",
@@ -4284,41 +4283,6 @@
         "auth": "bearer"
       }
     },
-    "sauron-central": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "folder": "bb-sec_sauron-central",
-      "description": "Central Syslog Collector + SIEM API",
-      "enabled": false,
-      "containers": {
-        "syslog": {
-          "container_name": "syslog-central",
-          "upstream_image": "ghcr.io/axoflow/axosyslog:4.8.1"
-        },
-        "api": {
-          "container_name": "siem-api",
-          "upstream_image": "python:3.11-slim"
-        }
-      },
-      "container_names": [
-        "syslog-central",
-        "siem-api"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "c3-infra-api": {
       "category": "sec",
       "vm": "oci-A1-f_0",
@@ -4396,6 +4360,16 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
       },
       "api": {
         "has_api": true,
@@ -4501,6 +4475,16 @@
         "pids_limit": 1024,
         "_why_init": "c3-infra-mcp spawns ssh/git/curl/dig children concurrently via execAsync. Without docker-init (tini) as PID 1, zombie reaping doesn't happen and pids_limit is exhausted within days -> 'sh: 0: Cannot fork' on healthcheck.",
         "_why_pids_limit": "ssh-exec + git-clone + curl all fan out concurrently across ~24 VM/service targets. Default 256 is too tight; 1024 leaves safe headroom with tini reaping orphans."
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
       },
       "api": {
         "has_api": false,
@@ -5011,6 +4995,16 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
       },
       "api": {
         "has_api": true,
@@ -5546,56 +5540,6 @@
         "ZO_ROOT_USER_PASSWORD",
         "ZO_INGEST_TOKEN"
       ]
-    },
-    "sauron-lite": {
-      "category": "tools",
-      "vm": "all",
-      "folder": "bc-obs_sauron-lite",
-      "description": "File Integrity Scanner (deployed on all VMs)",
-      "enabled": true,
-      "containers": {
-        "app": {
-          "container_name": "sauron",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
-        },
-        "forwarder": {
-          "container_name": "sauron-forwarder",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
-        }
-      },
-      "container_names": [
-        "sauron",
-        "sauron-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "timezone": "Europe/Madrid",
-      "resources": {
-        "mem_limit": "64m",
-        "mem_reservation": "16m"
-      },
-      "central": {
-        "host": "35.226.147.64",
-        "port": 5514
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
     },
     "umami": {
       "category": "tools",
@@ -6294,13 +6238,13 @@
     },
     "redis": {
       "category": "data",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "folder": "ca-dat_redis",
       "description": "In-memory data store",
       "enabled": true,
       "port": 6379,
       "dns": "redis.app",
-      "upstream": "10.0.0.1:6379",
+      "upstream": "10.0.0.6:6379",
       "containers": {
         "app": {
           "container_name": "redis",
@@ -6649,13 +6593,13 @@
       {
         "name": "authelia.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "authelia"
       },
       {
         "name": "authelia-redis.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "authelia"
       },
       {
@@ -6763,7 +6707,7 @@
       {
         "name": "redis.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "redis"
       }
     ],
@@ -6844,7 +6788,20 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        }
+        },
+        "ssh_containers": [
+          {
+            "name": "dagu",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          }
+        ]
       },
       "oci-apps": {
         "vm_id": "oci-A1-f_0",
@@ -6889,7 +6846,7 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
-          "sauron-central",
+          "authelia",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -6906,13 +6863,38 @@
           "backup-borg",
           "backup-bup",
           "gitea",
-          "kg-graph"
+          "kg-graph",
+          "redis"
         ],
         "method": "key",
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        }
+        },
+        "ssh_containers": [
+          {
+            "name": "c3-infra-api",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          },
+          {
+            "name": "c3-infra-mcp",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          }
+        ]
       },
       "gcp-t4": {
         "vm_id": "gcp-T4-p_0",
@@ -6976,11 +6958,9 @@
         "idle_shutdown": null,
         "containers": [
           "hickory-dns",
-          "authelia",
           "caddy",
           "introspect-proxy",
-          "postlite",
-          "redis"
+          "postlite"
         ],
         "method": "gcloud",
         "gha": {
@@ -7274,7 +7254,7 @@
       },
       "authelia": {
         "dir": "bb-sec_authelia",
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "has_docker": true
       },
       "caddy": {
@@ -7285,11 +7265,6 @@
       "introspect-proxy": {
         "dir": "bb-sec_introspect-proxy",
         "vm": "gcp-proxy",
-        "has_docker": true
-      },
-      "sauron-central": {
-        "dir": "bb-sec_sauron-central",
-        "vm": "oci-apps",
         "has_docker": true
       },
       "c3-infra-api": {
@@ -7389,7 +7364,7 @@
       },
       "redis": {
         "dir": "ca-dat_redis",
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "has_docker": true
       }
     }
