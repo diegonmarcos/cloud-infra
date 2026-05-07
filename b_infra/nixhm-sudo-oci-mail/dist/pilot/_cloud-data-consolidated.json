@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-06T19:18:49.146Z",
+    "generated_at": "2026-05-07T17:50:50.823Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -104,11 +104,9 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
-        "dagu",
-        "dozzle",
-        "sauron-forwarder"
+        "dagu"
       ],
-      "container_count": 3
+      "container_count": 1
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -159,7 +157,6 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
-        "sauron-central",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -1868,7 +1865,12 @@
       "proxy": {
         "primary": {
           "domain": "chat.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/api/v4/*": {
+              "auth": "bypass"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -2556,19 +2558,19 @@
           "l4_ports": [
             {
               "port": 993,
-              "upstream": "130.110.251.193:993",
+              "upstream": "oci-mail:993",
               "comment": "IMAPS",
               "protocol": "tls"
             },
             {
               "port": 465,
-              "upstream": "130.110.251.193:465",
+              "upstream": "oci-mail:465",
               "comment": "SMTPS",
               "protocol": "tls"
             },
             {
               "port": 587,
-              "upstream": "130.110.251.193:587",
+              "upstream": "oci-mail:587",
               "comment": "SMTP Submission",
               "protocol": "starttls"
             }
@@ -2821,7 +2823,27 @@
         "primary": {
           "domain": "mail-stalwart.diegonmarcos.com",
           "auth": "none",
-          "tls_skip_verify": true
+          "tls_skip_verify": true,
+          "l4_ports": [
+            {
+              "port": 2993,
+              "upstream": "oci-mail:2993",
+              "comment": "IMAPS (Stalwart)",
+              "protocol": "tls"
+            },
+            {
+              "port": 2465,
+              "upstream": "oci-mail:2465",
+              "comment": "SMTPS (Stalwart)",
+              "protocol": "tls"
+            },
+            {
+              "port": 2587,
+              "upstream": "oci-mail:2587",
+              "comment": "SMTP Submission (Stalwart)",
+              "protocol": "starttls"
+            }
+          ]
         }
       },
       "health": {
@@ -3157,9 +3179,16 @@
       },
       "proxy": {
         "primary": {
-          "domain": "api.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
           "base_path": "/crawlee",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/openapi.json": {
+              "auth": "public"
+            }
+          },
+          "domain": "api.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -3280,7 +3309,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/fin-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/health": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -3953,11 +3987,15 @@
           "extra_ports": [
             {
               "port": 80,
-              "protocol": "http"
+              "protocol": "http",
+              "monitor": false,
+              "_comment": "Caddy is TLS-only on :443 — no plain :80 listener. Suppress canonical URL probe."
             },
             {
               "port": 2019,
-              "protocol": "http"
+              "protocol": "http",
+              "monitor": false,
+              "_comment": "Admin API bound to localhost:2019 only — local-only by design."
             }
           ],
           "port_env": null,
@@ -4286,41 +4324,6 @@
         "auth": "bearer"
       }
     },
-    "sauron-central": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "folder": "bb-sec_sauron-central",
-      "description": "Central Syslog Collector + SIEM API",
-      "enabled": false,
-      "containers": {
-        "syslog": {
-          "container_name": "syslog-central",
-          "upstream_image": "ghcr.io/axoflow/axosyslog:4.8.1"
-        },
-        "api": {
-          "container_name": "siem-api",
-          "upstream_image": "python:3.11-slim"
-        }
-      },
-      "container_names": [
-        "syslog-central",
-        "siem-api"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "c3-infra-api": {
       "category": "sec",
       "vm": "oci-A1-f_0",
@@ -4382,10 +4385,15 @@
       },
       "proxy": {
         "primary": {
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-infra-api",
-          "auth": "two_factor"
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -4398,6 +4406,16 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
       },
       "api": {
         "has_api": true,
@@ -4484,6 +4502,7 @@
       "proxy": {
         "primary": {
           "streaming": true,
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
           "base_path": "/c3-infra-mcp"
@@ -4503,6 +4522,16 @@
         "pids_limit": 1024,
         "_why_init": "c3-infra-mcp spawns ssh/git/curl/dig children concurrently via execAsync. Without docker-init (tini) as PID 1, zombie reaping doesn't happen and pids_limit is exhausted within days -> 'sh: 0: Cannot fork' on healthcheck.",
         "_why_pids_limit": "ssh-exec + git-clone + curl all fan out concurrently across ~24 VM/service targets. Default 256 is too tight; 1024 leaves safe headroom with tini reaping orphans."
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
       },
       "api": {
         "has_api": false,
@@ -4604,7 +4633,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-services-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -5014,6 +5048,16 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub",
+          "google_compute_engine",
+          "google_compute_engine.pub"
+        ]
+      },
       "api": {
         "has_api": true,
         "has_web_ui": true,
@@ -5133,78 +5177,6 @@
         ]
       }
     },
-    "dozzle": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_dozzle",
-      "description": "Dozzle - Real-time Docker log viewer",
-      "enabled": true,
-      "domain": "logs.diegonmarcos.com",
-      "port": 9999,
-      "dns": "dozzle.app",
-      "upstream": "10.0.0.4:9999",
-      "containers": {
-        "app": {
-          "container_name": "dozzle",
-          "image": "amir20/dozzle:latest",
-          "port": 9999,
-          "port_env": "DOZZLE_ADDR",
-          "dns": "dozzle.app",
-          "public": true,
-          "proxy": {
-            "type": "path",
-            "parent_domain": "app.diegonmarcos.com",
-            "base_path": "/dozzle",
-            "auth": "two_factor"
-          },
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "/var/run/docker.sock:/var/run/docker.sock:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": {
-            "mem_limit": "64m"
-          },
-          "read_only": false,
-          "port_format": "colon",
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "dozzle"
-      ],
-      "all_ports": [
-        "9999"
-      ],
-      "all_dns": [
-        "dozzle.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "type": "path",
-          "parent_domain": "app.diegonmarcos.com",
-          "base_path": "/dozzle",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 9999
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": true,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "matomo": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5275,7 +5247,33 @@
       "proxy": {
         "primary": {
           "domain": "analytics.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/matomo.js": {
+              "auth": "public"
+            },
+            "/matomo.php": {
+              "auth": "public"
+            },
+            "/piwik.js": {
+              "auth": "public"
+            },
+            "/piwik.php": {
+              "auth": "public"
+            },
+            "/collect.php": {
+              "auth": "public"
+            },
+            "/api.php": {
+              "auth": "public"
+            },
+            "/track.php": {
+              "auth": "public"
+            },
+            "/js/*": {
+              "auth": "public"
+            }
+          }
         }
       },
       "health": {
@@ -5621,92 +5619,6 @@
         "ZO_INGEST_TOKEN"
       ]
     },
-    "sauron-forwarder": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_sauron-forwarder",
-      "description": "Alert forwarding to central sauron",
-      "enabled": true,
-      "dns": "sauron-forwarder.app",
-      "containers": {
-        "app": {
-          "container_name": "sauron-forwarder",
-          "image": "",
-          "public": false,
-          "dns": "sauron-forwarder.app"
-        }
-      },
-      "container_names": [
-        "sauron-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [
-        "sauron-forwarder.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "upstream_image": "debian:bookworm-slim",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
-    "sauron-lite": {
-      "category": "tools",
-      "vm": "all",
-      "folder": "bc-obs_sauron-lite",
-      "description": "File Integrity Scanner (deployed on all VMs)",
-      "enabled": true,
-      "containers": {
-        "app": {
-          "container_name": "sauron",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
-        },
-        "forwarder": {
-          "container_name": "sauron-forwarder",
-          "public": false,
-          "env_file": false,
-          "read_only": false,
-          "protocol": "none"
-        }
-      },
-      "container_names": [
-        "sauron",
-        "sauron-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "timezone": "Europe/Madrid",
-      "resources": {
-        "mem_limit": "64m",
-        "mem_reservation": "16m"
-      },
-      "central": {
-        "host": "35.226.147.64",
-        "port": 5514
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "umami": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5820,9 +5732,19 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
           "base_path": "/umami",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/script.js": {
+              "auth": "public"
+            },
+            "/api/send": {
+              "auth": "public"
+            }
+          },
+          "domain": "analytics.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -6145,8 +6067,11 @@
       },
       "proxy": {
         "primary": {
-          "domain": "git.diegonmarcos.com",
-          "auth": "two_factor"
+          "type": "path",
+          "parent_domain": "app.diegonmarcos.com",
+          "base_path": "/gitea",
+          "auth": "two_factor",
+          "domain": "git.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -6829,12 +6754,6 @@
         "service": "dbgate"
       },
       {
-        "name": "dozzle.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "dozzle"
-      },
-      {
         "name": "matomo.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -6851,12 +6770,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "openobserve"
-      },
-      {
-        "name": "sauron-forwarder.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "sauron-forwarder"
       },
       {
         "name": "umami.app",
@@ -6960,15 +6873,26 @@
         "public_ports": [],
         "idle_shutdown": null,
         "containers": [
-          "dagu",
-          "dozzle",
-          "sauron-forwarder"
+          "dagu"
         ],
         "method": "key",
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        }
+        },
+        "ssh_containers": [
+          {
+            "name": "dagu",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          }
+        ]
       },
       "oci-apps": {
         "vm_id": "oci-A1-f_0",
@@ -7013,7 +6937,6 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
-          "sauron-central",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -7036,7 +6959,31 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        }
+        },
+        "ssh_containers": [
+          {
+            "name": "c3-infra-api",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          },
+          {
+            "name": "c3-infra-mcp",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub",
+              "google_compute_engine",
+              "google_compute_engine.pub"
+            ]
+          }
+        ]
       },
       "gcp-t4": {
         "vm_id": "gcp-T4-p_0",
@@ -7411,11 +7358,6 @@
         "vm": "gcp-proxy",
         "has_docker": true
       },
-      "sauron-central": {
-        "dir": "bb-sec_sauron-central",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "c3-infra-api": {
         "dir": "bc-obs_c3-infra-api",
         "vm": "oci-apps",
@@ -7456,11 +7398,6 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "dozzle": {
-        "dir": "bc-obs_dozzle",
-        "vm": "oci-analytics",
-        "has_docker": true
-      },
       "matomo": {
         "dir": "bc-obs_matomo",
         "vm": "oci-apps",
@@ -7479,11 +7416,6 @@
       "openobserve": {
         "dir": "bc-obs_openobserve",
         "vm": "oci-apps",
-        "has_docker": true
-      },
-      "sauron-forwarder": {
-        "dir": "bc-obs_sauron-forwarder",
-        "vm": "oci-analytics",
         "has_docker": true
       },
       "umami": {

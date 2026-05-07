@@ -418,6 +418,14 @@ NEOF
             [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
             [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked III_unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
 
+            # ssh_with_retry / rsync_with_retry are defined in
+            # cloud-ship-container-engine.sh (sourced before this step).
+            # Override defaults from runners.json — same values used by the
+            # probe loop above for consistency across all SSH/rsync calls
+            # in the engine, not just this step.
+            export SSH_RETRY_N=$(jq -r '.probe.retries // 3' "$RUNNERS_JSON" 2>/dev/null)
+            export SSH_RETRY_BACKOFF=$(jq -r '.probe.backoff_seconds // 5' "$RUNNERS_JSON" 2>/dev/null)
+
             # Readiness flag set by dispatch's multiplex warmup; fall back to a
             # live probe for out-of-CI invocations (CLI / Dagu). NO silent
             # degradation — if the host is dead after retries, we exit 1.
@@ -454,11 +462,14 @@ NEOF
             REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
             REMOTE_TOKEN_FILE="/tmp/${SERVICE_NAME}-ghcr-token"
             log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
-            ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
+            log "  [1/7] mkdir $REMOTE_BUILD_DIR on $RUNNER_HOST"
+            ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
             # rsync uses the user's ~/.ssh/config (already declares its own
             # ControlMaster mux). Forcing engine's SSH_OPTS via -e collided
             # with the user's master path, causing rsync handshakes to drop.
-            rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            # Transport-blip retry via rsync_with_retry (exit 12/30/255).
+            log "  [2/7] rsync $BUILD_CONTEXT/ → $RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            rsync_with_retry -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
 
             # GHCR token: read where vault IS available (this side — runner-side
             # cloud-builder has ~/git/vault mounted by ship.yml), then ship to
@@ -480,7 +491,8 @@ NEOF
                 log_error "no GHCR token available (vault: $VAULT_GHCR_TOKEN_PATH missing AND GITHUB_TOKEN unset)"
                 return 1
             fi
-            ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
+            log "  [3/7] write GHCR token → $RUNNER_HOST:$REMOTE_TOKEN_FILE (vault path: $VAULT_GHCR_TOKEN_PATH)"
+            ssh_with_retry "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
 
             # Repair: docker login does atomic temp+rename over
             # /root/.docker/config.json. If a stale `docker run -v` ever
@@ -497,7 +509,8 @@ NEOF
             # writes config.json, and what the user has permission to repair.
             # The earlier hardcoded `/root/.docker` was wrong: the SSH user
             # (ubuntu) has no write access to /root/.
-            ssh $SSH_OPTS "$RUNNER_HOST" "bash -s" <<'REMOTE_REPAIR'
+            log "  [4/7] repair \$HOME/.docker/config.json on $RUNNER_HOST (if it's a stray directory)"
+            ssh_with_retry "$RUNNER_HOST" "bash -s" <<'REMOTE_REPAIR'
                 set -e
                 DOCKER_CFG_DIR="$HOME/.docker"
                 if [ -d "$DOCKER_CFG_DIR/config.json" ]; then
@@ -515,42 +528,104 @@ REMOTE_REPAIR
             # cloud-builder-x runner on a VM whose ~/.docker/config.json
             # holds a stale ghs_* token fails with "denied: denied" pulling
             # the runner image, before any inside-container step can run.
-            ssh $SSH_OPTS "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
+            log "  [5/7] docker login ghcr.io on $RUNNER_HOST (host daemon — for runner-image pull)"
+            ssh_with_retry "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
 
             # Build + login + push happen INSIDE the cloud-builder-x container.
             # Token is mounted from the SSH-staged file (no vault dep on VM).
-            # `set -o pipefail` so any failure in the | while-read pipe propagates
-            # — without it, SSH-side build/push failures returned exit 0 and the
-            # engine continued as if the push succeeded.
+            #
+            # ASYNC DISPATCH: write the build to a remote script, launch via
+            # nohup detached from the SSH session, poll a status file. This
+            # survives WG flaps / sshd restarts during long builds (10–15min
+            # for full Rust/Nix builds): the build keeps running on the runner
+            # even if the engine's SSH session dies; we just reconnect to
+            # read status. Tunables read from cloud-data-runners.json:
+            # .dispatch.{poll_interval_seconds,max_duration_seconds,tail_log_lines}.
             #
             # `cd /workspace &&` — REQUIRED because cloud-builder-x's entrypoint
             # (cb_containers-builders/src/docker/entrypoint.sh:248-249) does
             # `cd $GIT_ROOT/cloud` before exec'ing the user command, OVERRIDING
             # docker's -w flag. Without the explicit cd, docker build runs from
             # /root/git/cloud and can't find Dockerfile.native (rsync'd to
-            # /workspace). Surfaced 2026-04-27 (ship run 25000440517):
-            # "ERROR: failed to read dockerfile: open Dockerfile.native: no such file or directory".
-            set -o pipefail
-            ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
-                -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
-                $RUNNER_IMAGE \
-                sh -c 'set -e; \
-                    cd /workspace && \
-                    cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
-                    echo \"[ghcr] login ok (cwd=\$(pwd))\" && \
-                    (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
-                    (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-                    docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
-                    docker push $FULL_IMAGE:latest && \
-                    docker push $BINARIES_IMAGE:latest && \
-                    docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
-            set +o pipefail
-            # chmod -R u+w: rsync -L dereferences nix-store-rooted symlinks
-            # into read-only files (mode 444); without u+w, rm -rf fails and
-            # masks the build's success with a fatal cleanup error.
-            ssh $SSH_OPTS "$RUNNER_HOST" "rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR"
+            # /workspace). Surfaced 2026-04-27 (ship run 25000440517).
+            JOB_ID="${SERVICE_NAME}-build-$(date +%s)-$$"
+            REMOTE_JOB_DIR="/tmp/cloud-builder-jobs"
+            JOB_CMD="$REMOTE_JOB_DIR/$JOB_ID.cmd"
+            JOB_LOG="$REMOTE_JOB_DIR/$JOB_ID.log"
+            JOB_STATUS="$REMOTE_JOB_DIR/$JOB_ID.status"
+
+            # Write the build command to a remote script via heredoc — no
+            # quoting nightmare with the giant docker-run inline string.
+            log "  [6/7] write JOB_CMD ($JOB_ID) to $RUNNER_HOST:$JOB_CMD"
+            ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_JOB_DIR && cat > $JOB_CMD && chmod +x $JOB_CMD" <<EOF
+#!/bin/bash
+set -e -o pipefail
+docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
+    -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
+    $RUNNER_IMAGE \
+    sh -c 'set -e; \
+        cd /workspace && \
+        cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
+        echo "[ghcr] login ok (cwd=\$(pwd))" && \
+        (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
+        (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
+        docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
+        docker push $FULL_IMAGE:latest && \
+        docker push $BINARIES_IMAGE:latest && \
+        docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1
+EOF
+
+            # Launch detached. Subshell + nohup + redirected stdio + & lets
+            # the SSH connection close immediately while the build keeps
+            # running. Status file gets written when the script exits.
+            # Routed through `bash -s` because oci-apps' login shell is fish
+            # (HM-set), which can't parse the `(... &)` subshell syntax.
+            log "  [7/7] dispatch nohup bash -c '$JOB_CMD' on $RUNNER_HOST (logs: $JOB_LOG, status: $JOB_STATUS)"
+            ssh_with_retry "$RUNNER_HOST" "bash -s" <<DISPATCH_EOF
+                ( nohup bash -c "$JOB_CMD > $JOB_LOG 2>&1; echo \"exit=\\\$?\" > $JOB_STATUS" </dev/null >/dev/null 2>&1 & )
+                sleep 0.5
+DISPATCH_EOF
+            log "Dispatched build job $JOB_ID — polling status"
+
+            # Poll loop: data-driven from runners.json
+            _poll_int=$(jq -r '.dispatch.poll_interval_seconds // 15' "$RUNNERS_JSON" 2>/dev/null)
+            _poll_max=$(jq -r '.dispatch.max_duration_seconds // 1800' "$RUNNERS_JSON" 2>/dev/null)
+            _poll_tail=$(jq -r '.dispatch.tail_log_lines // 200' "$RUNNERS_JSON" 2>/dev/null)
+            _job_status=""
+            _elapsed=0
+            while [ "$_elapsed" -lt "$_poll_max" ]; do
+                sleep "$_poll_int"
+                _elapsed=$((_elapsed + _poll_int))
+                # Status read is itself a transient SSH — tolerate single failures
+                _job_status=$(ssh $SSH_OPTS "$RUNNER_HOST" "cat $JOB_STATUS 2>/dev/null" 2>/dev/null || true)
+                if [ -n "$_job_status" ]; then
+                    log "Build job $JOB_ID complete after ${_elapsed}s — $_job_status"
+                    break
+                fi
+                # Tail recent log so the operator sees progress, not silence
+                ssh $SSH_OPTS "$RUNNER_HOST" "tail -n 5 $JOB_LOG 2>/dev/null" 2>/dev/null \
+                    | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done || true
+                log "  ↳ build still running (${_elapsed}s/${_poll_max}s)"
+            done
+
+            # Retrieve full tail + parse exit code
+            ssh $SSH_OPTS "$RUNNER_HOST" "tail -n $_poll_tail $JOB_LOG 2>/dev/null" 2>/dev/null \
+                | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done || true
+
+            _job_exit=$(echo "$_job_status" | sed -n 's/^exit=//p')
+            # Cleanup remote artefacts before deciding pass/fail
+            ssh_with_retry "$RUNNER_HOST" "rm -f $JOB_CMD $JOB_LOG $JOB_STATUS; rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR" 2>/dev/null || true
+
+            if [ -z "$_job_exit" ]; then
+                log_error "Build job $JOB_ID did not complete within ${_poll_max}s"
+                return 1
+            fi
+            if [ "$_job_exit" -ne 0 ]; then
+                log_error "Build job $JOB_ID exited $_job_exit"
+                return 1
+            fi
             ;;
 
         *)
