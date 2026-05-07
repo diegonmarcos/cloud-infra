@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/shared/bash-config.nix
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -53,7 +53,7 @@ in {
       _nix_block() {
         echo -e "\033[1;31m[BLOCKED]\033[0m \"$1\" is disabled on this VM."
         echo '  This environment is managed declaratively with Nix Home Manager.'
-        echo '  Flake: git/cloud/b_infra/home-manager/'
+        echo '  Flake: git/cloud/b_infra/'
         echo '  To add packages: edit the .nix file, then deploy with:'
         echo '    ./build.sh switch'
         echo '  Do NOT install packages imperatively.'

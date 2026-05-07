@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/shared/git-config.nix
+# ║   Source : b_infra/nixhm-sudo-gcp-t4/src/pilot/shared/git-config.nix
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║

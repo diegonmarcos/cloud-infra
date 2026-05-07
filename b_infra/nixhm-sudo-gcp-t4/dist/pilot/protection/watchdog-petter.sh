@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/protection/watchdog-petter.sh
+# ║   Source : b_infra/nixhm-sudo-gcp-t4/src/pilot/protection/watchdog-petter.sh
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -16,7 +16,7 @@
 # Rich telemetry: mem, swap, PSI, top procs, disk, containers every 30s
 # POSIX sh — no bash required
 # Managed by home-manager — DO NOT EDIT on VM
-# Source: cloud/b_infra/home-manager/_shared/modules/watchdog-petter.sh
+# Source: cloud/b_infra/_shared/modules/watchdog-petter.sh
 
 # Hardware watchdog DISABLED — CPUQuota throttling causes missed pets → VM reset
 # TODO: re-enable once we confirm VMs are stable without it
@@ -30,8 +30,8 @@ DOCKER_FAIL=0
 DOCKER_SOCK="unix:///var/run/docker.sock"
 # Query docker API without spawning any docker CLI process
 dapi() { curl -sf --max-time 5 --unix-socket /var/run/docker.sock "http://localhost$1" 2>/dev/null; }
-# Only for actions (restart/prune) — deprioritized, with timeout
-dcli() { ionice -c3 nice -n 19 timeout 15 docker "$@" 2>/dev/null; }
+# Only for actions (restart/prune) — with timeout (no nice/ionice wrapping; docker-real wrapper retired)
+dcli() { timeout 15 docker "$@" 2>/dev/null; }
 DOCKER_FAIL_THRESHOLD=120
 CTR_RESTART_TRACK=""
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")

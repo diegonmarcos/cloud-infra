@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/protection/guardrails.nix
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,7 +25,7 @@
 { config, lib, ... }:
 
 let
-  managed = import ../infra/managed-header.nix { inherit lib; repo = "cloud/b_infra/home-manager"; };
+  managed = import ../infra/managed-header.nix { inherit lib; repo = "cloud/b_infra"; };
 
   # ── Tier 0: WHITELIST — read-only subcommands, pass immediately ────
   # These never modify the system. Needed for Claude Code internals
@@ -249,7 +249,7 @@ let
         printf "\033[1;37m  Proceed? [y/N] \033[0m"
         if ! read -t 5 -r REPLY < /dev/tty 2>/dev/null; then
           printf "\n\033[0;31m  [guardrail] BLOCKED (no TTY or timeout): ${cmd} %s\033[0m\n" "$ARGS" >&2
-          printf "\033[0;33m  Source: ~/git/cloud/b_infra/home-manager/_shared/modules/guardrails.nix\033[0m\n" >&2
+          printf "\033[0;33m  Source: ~/git/cloud/b_infra/_shared/modules/guardrails.nix\033[0m\n" >&2
           exit 1
         fi
         if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then

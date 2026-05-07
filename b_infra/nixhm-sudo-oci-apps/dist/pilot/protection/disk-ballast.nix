@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-oci-apps/src/pilot/protection/disk-ballast.nix
+# ║   Source : b_infra/nixhm-sudo-oci-apps/src/pilot/protection/disk-ballast.nix
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -12,9 +12,9 @@
 
 # System Protection — Disk Ballast (declarative reserve, replaces ext4 -m 5)
 #
-# Ports the orphan _shared/modules/system-protection-disk-ballast.nix into
-# vm-pilot. Pre-allocates ${ballastPercent}% of / as a userland file at
-# /var/disk-reserve/ballast.bin. Acts as the universal buffer area:
+# Pre-allocates a userland file at /var/disk-reserve/ballast.bin sized to the
+# HM-activation reservation declared in 1_workflows/src/data/hm-config.json
+# (single SoT, also read by the engine). Acts as the universal buffer area:
 #
 #   1. HM activation pre-flight (cloud-ship-nix-homemanager-step-deploy-activate.sh:264)
 #      `rm -f /var/disk-reserve/ballast.bin` releases N% instantly when the
@@ -37,12 +37,15 @@
 #
 # Imported by: system-protection.nix orchestrator
 #
-# Ballast size MUST match the engine's HM-activation peak need (10 GB).
-# Source-of-truth for that value is the engine itself (cloud-ship-nix-homemanager-step-deploy-activate.sh
-# constant `MIN_FREE_GB=10`). Cross-reference both sites if you change one.
-{ config, pkgs, lib, ballastGB ? 10, ... }:
+# Single source of truth for the ballast/activation-reservation size:
+#   1_workflows/src/data/hm-config.json :: .min_size_ballast_file_gb
+# Symlinked into vm-pilot via _shared/modules/hm-config.json.
+# Engine pre-flight reads the same JSON. ONE field, ONE place.
+{ config, pkgs, lib, ... }:
 
 let
+  hmConfig = builtins.fromJSON (builtins.readFile ../hm-config.json);
+  ballastGB = hmConfig.min_size_ballast_file_gb;
   ballastPath = "/var/disk-reserve/ballast.bin";
   recreateThreshold = 70;  # only allocate when /<70%
 in {

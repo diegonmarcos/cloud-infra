@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/default.nix
+# ║   Source : b_infra/nixhm-sudo-gcp-t4/src/pilot/default.nix
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -56,6 +56,7 @@ in {
     # ── Infra
     ./infra/shell-path.nix
     ./infra/system-cleanup.nix
+    ./infra/prune-maintenance.nix
 
     # ── Packages
     ./packages/node-npm-deps.nix

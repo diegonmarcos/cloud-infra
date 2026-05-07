@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/container/init.nix
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -38,7 +38,7 @@ let
   };
   vmData = cloudData.vms.${vmName} or {};
   # Read HM build.json for this VM (delivery method, image, etc.)
-  # HM configs live at b_infra/home-manager/nixhm-sudo-<vmName>/build.json
+  # HM configs live at b_infra/nixhm-sudo-<vmName>/build.json
   # From here (vm-pilot/src/modules/container/), that's ../../../../nixhm-sudo-<vmName>/
   hmBuildJsonPath = ../../../../. + "/nixhm-sudo-${vmName}/build.json";
   hmBuildJson = if builtins.pathExists hmBuildJsonPath

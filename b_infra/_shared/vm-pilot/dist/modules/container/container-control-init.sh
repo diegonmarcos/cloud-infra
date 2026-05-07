@@ -5,7 +5,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/container/container-control-init.sh
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Container Init — VM-side container lifecycle manager            ║
 # ║ Managed by home-manager — DO NOT EDIT on VM                    ║
-# ║ Source: cloud/b_infra/home-manager/vm-pilot/src/modules/       ║
+# ║ Source: cloud/b_infra/_shared/vm-pilot/src/modules/       ║
 # ║         container/container-control-init.sh                    ║
 # ╠══════════════════════════════════════════════════════════════════╣
 # ║ Usage:                                                         ║

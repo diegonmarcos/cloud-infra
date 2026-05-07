@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-oci-apps/src/pilot/packages/vm-images-pull-up.sh
+# ║   Source : b_infra/nixhm-sudo-oci-apps/src/pilot/packages/vm-images-pull-up.sh
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -24,7 +24,7 @@
 # Phase 2: Serial docker compose up for each service
 #
 # Managed by home-manager — DO NOT EDIT on VM
-# Source: cloud/b_infra/home-manager/_shared/modules/vm-images-pull-up.sh
+# Source: cloud/b_infra/_shared/modules/vm-images-pull-up.sh
 
 set -u
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")

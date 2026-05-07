@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : src/modules/protection/system-protection.nix
-# ║   Engine : b_infra/home-manager/vm-pilot/build.sh
+# ║   Engine : b_infra/_shared/vm-pilot/build.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -37,6 +37,7 @@ in {
     (import ./rescue-ssh.nix { inherit config pkgs lib rescuePort; })
     (import ./scheduler.nix { inherit config pkgs lib ramMB; })
     (import ./layer2-identity.nix { inherit config pkgs lib ramMB cpus userName userId; })
+    (import ./disk-ballast.nix { inherit config pkgs lib; })
     (import ../dashboard/dashboard.nix { inherit vmName; })
     (import ../agents/health-agent.nix { inherit config pkgs lib; })
     # guardrails.nix disabled (POSIX sh bug)

@@ -1,15 +1,15 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-05T15:03:44.698Z",
+    "generated_at": "2026-05-06T19:18:49.146Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
         "a_solutions/*/build.json (per-service declarations)",
         "config.json (global topology + vms + dns + wireguard)",
-        "b_infra/home-manager/*/build.json (per-VM HM config)",
+        "b_infra/*/build.json (per-VM HM config)",
         "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
       ],
       "engines": {
@@ -59,22 +59,7 @@
       "method": "key",
       "ssh_alias": "oci-mail",
       "rescue_port": 2200,
-      "public_ports": [
-        {
-          "port": 25,
-          "proto": "tcp",
-          "desc": "SMTP (Maddy MX — must be public, RFC)",
-          "source": "0.0.0.0/0",
-          "owned_by": "maddy"
-        },
-        {
-          "port": 8080,
-          "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
-          "source": "0.0.0.0/0",
-          "owned_by": "smtp-proxy"
-        }
-      ],
+      "public_ports": [],
       "gha": {
         "ssh_secret": "OCI_SSH_KEY",
         "host_literal": true
@@ -147,36 +132,7 @@
       "method": "key",
       "ssh_alias": "oci-apps",
       "rescue_port": 2200,
-      "public_ports": [
-        {
-          "port": 8081,
-          "proto": "tcp",
-          "desc": "C3 API",
-          "source": "0.0.0.0/0",
-          "owned_by": "c3-infra-api"
-        },
-        {
-          "port": 3000,
-          "proto": "tcp",
-          "desc": "Crawlee dashboard/API",
-          "source": "0.0.0.0/0",
-          "owned_by": "crawlee-cloud"
-        },
-        {
-          "port": 2222,
-          "proto": "tcp",
-          "desc": "Gitea SSH",
-          "source": "0.0.0.0/0",
-          "owned_by": "gitea"
-        },
-        {
-          "port": 8099,
-          "proto": "tcp",
-          "desc": "cloud-spec httpd",
-          "source": "0.0.0.0/0",
-          "owned_by": "cloud-spec"
-        }
-      ],
+      "public_ports": [],
       "gha": {
         "ssh_secret": "OCI_SSH_KEY",
         "host_literal": true
@@ -229,15 +185,11 @@
       "specs": {
         "cpu": 4,
         "ram_gb": 15,
-        "disk_gb": 50,
+        "disk_gb": 100,
         "arch": "x86_64",
         "shape": "n1-standard-4",
         "gpu": "NVIDIA T4",
-        "vram_gb": 16,
-        "machine_type": "n1-standard-4",
-        "cloud_name": "ollama-spot-gpu",
-        "cloud_zone": "us-central1-a",
-        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/ollama-spot-gpu"
+        "vram_gb": 16
       },
       "description": "GCloud Paid - N1 Std 4 + T4 GPU (Spot) - Ollama LLM",
       "wg_ip": "10.0.0.8",
@@ -266,7 +218,6 @@
         "network_threshold": 51200,
         "min_uptime_seconds": 600
       },
-      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/ollama-spot-gpu",
       "services": [
         "ollama"
       ],
@@ -295,85 +246,7 @@
       "method": "gcloud",
       "ssh_alias": "gcp-proxy",
       "rescue_port": 2200,
-      "public_ports": [
-        {
-          "port": 22,
-          "proto": "tcp",
-          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
-          "source": "0.0.0.0/0",
-          "owned_by": "system"
-        },
-        {
-          "port": 80,
-          "proto": "tcp",
-          "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 443,
-          "proto": "tcp",
-          "desc": "HTTPS (Caddy)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 443,
-          "proto": "udp",
-          "desc": "QUIC (Caddy)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        }
-      ],
+      "public_ports": [],
       "gha": {
         "ssh_secret": "GCP_PROXY_SSH_KEY",
         "host_secret": "GCP_PROXY_HOST",
@@ -2838,7 +2711,7 @@
       "containers": {
         "app": {
           "container_name": "stalwart",
-          "image": "stalwartlabs/stalwart:latest",
+          "image": "stalwartlabs/stalwart:v0.14.1",
           "port": 2443,
           "extra_ports": [
             {
@@ -2965,7 +2838,7 @@
           "stalwart_data"
         ]
       },
-      "upstream_image": "stalwartlabs/stalwart:latest",
+      "upstream_image": "stalwartlabs/stalwart:v0.14.1",
       "timezone": "Europe/Madrid",
       "users": {
         "admin": {
@@ -4662,7 +4535,15 @@
         "RESEND_API_KEY",
         "CF_API_KEY",
         "CF_API_EMAIL",
-        "NOREPLY_PASSWORD"
+        "NOREPLY_PASSWORD",
+        "OCI_USER",
+        "OCI_FINGERPRINT",
+        "OCI_TENANCY",
+        "OCI_REGION",
+        "OCI_API_KEY_PEM_B64",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_DEFAULT_REGION"
       ]
     },
     "c3-services-api": {
@@ -6372,6 +6253,94 @@
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb",
+      "kg": {
+        "namespace": "infra",
+        "database": "production",
+        "embedder": {
+          "enabled": false,
+          "model": "nomic-embed-text",
+          "dim": 768,
+          "index_type": "MTREE",
+          "vector_dtype": "F32"
+        },
+        "ingest": {
+          "endpoint": "/import",
+          "idempotent": true,
+          "stale_strategy": "mark"
+        },
+        "node_tables": [
+          {
+            "table": "vm",
+            "key_source": "ssh_alias"
+          },
+          {
+            "table": "service",
+            "key_source": "name"
+          },
+          {
+            "table": "container",
+            "key_source": "container_name"
+          },
+          {
+            "table": "domain",
+            "key_source": "fqdn"
+          },
+          {
+            "table": "log",
+            "key_source": "auto"
+          },
+          {
+            "table": "documentation",
+            "key_source": "path"
+          },
+          {
+            "table": "audit_log",
+            "key_source": "auto"
+          }
+        ],
+        "edge_tables": [
+          {
+            "table": "hosted_on",
+            "in": "service",
+            "out": "vm"
+          },
+          {
+            "table": "runs_container",
+            "in": "service",
+            "out": "container"
+          },
+          {
+            "table": "depends_on",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "proxied_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "authenticated_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "connected_to",
+            "in": "vm",
+            "out": "vm"
+          },
+          {
+            "table": "routes_to",
+            "in": "domain",
+            "out": "service"
+          },
+          {
+            "table": "caused_by",
+            "in": "log",
+            "out": "any"
+          }
+        ]
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -6523,133 +6492,7 @@
         }
       ]
     },
-    "os": {
-      "oci-mail": [
-        {
-          "port": 25,
-          "proto": "tcp",
-          "desc": "SMTP (Maddy MX — must be public, RFC)",
-          "source": "0.0.0.0/0",
-          "owned_by": "maddy"
-        },
-        {
-          "port": 8080,
-          "proto": "tcp",
-          "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
-          "source": "0.0.0.0/0",
-          "owned_by": "smtp-proxy"
-        }
-      ],
-      "oci-apps": [
-        {
-          "port": 8081,
-          "proto": "tcp",
-          "desc": "C3 API",
-          "source": "0.0.0.0/0",
-          "owned_by": "c3-infra-api"
-        },
-        {
-          "port": 3000,
-          "proto": "tcp",
-          "desc": "Crawlee dashboard/API",
-          "source": "0.0.0.0/0",
-          "owned_by": "crawlee-cloud"
-        },
-        {
-          "port": 2222,
-          "proto": "tcp",
-          "desc": "Gitea SSH",
-          "source": "0.0.0.0/0",
-          "owned_by": "gitea"
-        },
-        {
-          "port": 8099,
-          "proto": "tcp",
-          "desc": "cloud-spec httpd",
-          "source": "0.0.0.0/0",
-          "owned_by": "cloud-spec"
-        }
-      ],
-      "gcp-proxy": [
-        {
-          "port": 22,
-          "proto": "tcp",
-          "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
-          "source": "0.0.0.0/0",
-          "owned_by": "system"
-        },
-        {
-          "port": 80,
-          "proto": "tcp",
-          "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 443,
-          "proto": "tcp",
-          "desc": "HTTPS (Caddy)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 443,
-          "proto": "udp",
-          "desc": "QUIC (Caddy)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2443,
-          "proto": "tcp",
-          "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2465,
-          "proto": "tcp",
-          "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2587,
-          "proto": "tcp",
-          "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        },
-        {
-          "port": 2993,
-          "proto": "tcp",
-          "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
-          "source": "0.0.0.0/0",
-          "owned_by": "caddy"
-        }
-      ]
-    },
+    "os": {},
     "global": {
       "docker_iptables": true,
       "forward_policy": "DROP",
@@ -7078,22 +6921,7 @@
           "cloud_zone": "eu-marseille-1",
           "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
         },
-        "public_ports": [
-          {
-            "port": 25,
-            "proto": "tcp",
-            "desc": "SMTP (Maddy MX — must be public, RFC)",
-            "source": "0.0.0.0/0",
-            "owned_by": "maddy"
-          },
-          {
-            "port": 8080,
-            "proto": "tcp",
-            "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
-            "source": "0.0.0.0/0",
-            "owned_by": "smtp-proxy"
-          }
-        ],
+        "public_ports": [],
         "idle_shutdown": null,
         "containers": [
           "cypht",
@@ -7107,10 +6935,6 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        },
-        "dashboard": {
-          "dns": "oci-mail.app",
-          "port": 7680
         }
       },
       "oci-analytics": {
@@ -7144,10 +6968,6 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        },
-        "dashboard": {
-          "dns": "oci-analytics.app",
-          "port": 7680
         }
       },
       "oci-apps": {
@@ -7170,36 +6990,7 @@
           "cloud_zone": "eu-marseille-1",
           "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
         },
-        "public_ports": [
-          {
-            "port": 8081,
-            "proto": "tcp",
-            "desc": "C3 API",
-            "source": "0.0.0.0/0",
-            "owned_by": "c3-infra-api"
-          },
-          {
-            "port": 3000,
-            "proto": "tcp",
-            "desc": "Crawlee dashboard/API",
-            "source": "0.0.0.0/0",
-            "owned_by": "crawlee-cloud"
-          },
-          {
-            "port": 2222,
-            "proto": "tcp",
-            "desc": "Gitea SSH",
-            "source": "0.0.0.0/0",
-            "owned_by": "gitea"
-          },
-          {
-            "port": 8099,
-            "proto": "tcp",
-            "desc": "cloud-spec httpd",
-            "source": "0.0.0.0/0",
-            "owned_by": "cloud-spec"
-          }
-        ],
+        "public_ports": [],
         "idle_shutdown": null,
         "containers": [
           "code-server",
@@ -7245,10 +7036,6 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        },
-        "dashboard": {
-          "dns": "oci-apps.app",
-          "port": 7680
         }
       },
       "gcp-t4": {
@@ -7264,15 +7051,11 @@
         "specs": {
           "cpu": 4,
           "ram_gb": 15,
-          "disk_gb": 50,
+          "disk_gb": 100,
           "arch": "x86_64",
           "shape": "n1-standard-4",
           "gpu": "NVIDIA T4",
-          "vram_gb": 16,
-          "machine_type": "n1-standard-4",
-          "cloud_name": "ollama-spot-gpu",
-          "cloud_zone": "us-central1-a",
-          "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/ollama-spot-gpu"
+          "vram_gb": 16
         },
         "public_ports": [],
         "idle_shutdown": {
@@ -7290,10 +7073,6 @@
           "ssh_secret": "GCP_T4_SSH_KEY",
           "host_secret": "GCP_T4_HOST",
           "user_secret": "GCP_T4_USER"
-        },
-        "dashboard": {
-          "dns": "gcp-t4.app",
-          "port": 7680
         }
       },
       "gcp-proxy": {
@@ -7317,85 +7096,7 @@
           "cloud_zone": "us-central1-a",
           "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
         },
-        "public_ports": [
-          {
-            "port": 22,
-            "proto": "tcp",
-            "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
-            "source": "0.0.0.0/0",
-            "owned_by": "system"
-          },
-          {
-            "port": 80,
-            "proto": "tcp",
-            "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 443,
-            "proto": "tcp",
-            "desc": "HTTPS (Caddy)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 443,
-            "proto": "udp",
-            "desc": "QUIC (Caddy)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 993,
-            "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 465,
-            "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 2443,
-            "proto": "tcp",
-            "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 2465,
-            "proto": "tcp",
-            "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 2587,
-            "proto": "tcp",
-            "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          },
-          {
-            "port": 2993,
-            "proto": "tcp",
-            "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
-            "source": "0.0.0.0/0",
-            "owned_by": "caddy"
-          }
-        ],
+        "public_ports": [],
         "idle_shutdown": null,
         "containers": [
           "hickory-dns",
@@ -7410,10 +7111,6 @@
           "ssh_secret": "GCP_PROXY_SSH_KEY",
           "host_secret": "GCP_PROXY_HOST",
           "user_secret": "GCP_PROXY_USER"
-        },
-        "dashboard": {
-          "dns": "gcp-proxy.app",
-          "port": 7680
         }
       },
       "vast-ollama": {

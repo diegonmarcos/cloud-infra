@@ -1,5 +1,5 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/home-manager/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "vm": "oci-analytics",
   "vm_id": "oci-E2-f_1",
   "services": [
@@ -30,14 +30,14 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-06T11:05:11.227Z",
+    "generated_at": "2026-05-06T19:18:52.585Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
         "a_solutions/*/build.json (per-service declarations)",
         "config.json (global topology + vms + dns + wireguard)",
-        "b_infra/home-manager/*/build.json (per-VM HM config)",
+        "b_infra/*/build.json (per-VM HM config)",
         "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
       ],
       "engines": {

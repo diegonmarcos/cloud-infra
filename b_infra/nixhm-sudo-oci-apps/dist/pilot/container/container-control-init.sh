@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-oci-apps/src/pilot/container/container-control-init.sh
+# ║   Source : b_infra/nixhm-sudo-oci-apps/src/pilot/container/container-control-init.sh
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Container Init — VM-side container lifecycle manager            ║
 # ║ Managed by home-manager — DO NOT EDIT on VM                    ║
-# ║ Source: cloud/b_infra/home-manager/vm-pilot/src/modules/       ║
+# ║ Source: cloud/b_infra/_shared/vm-pilot/src/modules/       ║
 # ║         container/container-control-init.sh                    ║
 # ╠══════════════════════════════════════════════════════════════════╣
 # ║ Usage:                                                         ║

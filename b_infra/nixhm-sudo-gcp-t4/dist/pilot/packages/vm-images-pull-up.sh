@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/home-manager/nixhm-sudo-gcp-t4/src/pilot/packages/vm-images-pull-up.sh
+# ║   Source : b_infra/nixhm-sudo-gcp-t4/src/pilot/packages/vm-images-pull-up.sh
 # ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./1_workflows/build.sh
 # ║                                                                  ║
@@ -24,7 +24,7 @@
 # Phase 2: Serial docker compose up for each service
 #
 # Managed by home-manager — DO NOT EDIT on VM
-# Source: cloud/b_infra/home-manager/_shared/modules/vm-images-pull-up.sh
+# Source: cloud/b_infra/_shared/modules/vm-images-pull-up.sh
 
 set -u
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
@@ -106,7 +106,7 @@ if [ -n "$MANIFEST" ]; then
       ENV_FLAG=""
       [ -f "$COMPOSE_PATH/.secrets" ] && ENV_FLAG="--env-file $COMPOSE_PATH/.secrets"
       log "[$IDX] PULL IMAGES: $NAME"
-      if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do ionice -c3 nice -n19 docker pull "$img" 2>/dev/null || true; done); then
+      if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
         PULL_OK=$((PULL_OK + 1))
       else
         PULL_FAIL=$((PULL_FAIL + 1))
@@ -177,7 +177,7 @@ else
     ENV_FLAG=""
     [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file $dir/.secrets"
     log "[$IDX/$TOTAL] PULL: $name"
-    if (cd "$dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do ionice -c3 nice -n19 docker pull "$img" 2>/dev/null || true; done); then
+    if (cd "$dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
       PULL_OK=$((PULL_OK + 1))
     else
       PULL_FAIL=$((PULL_FAIL + 1))
