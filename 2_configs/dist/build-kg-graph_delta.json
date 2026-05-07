@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-07T10:34:47.266Z",
+    "generated_at": "2026-05-07T10:40:52.516Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,15 +30,15 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T10:34:47.114Z",
+  "_generated": "2026-05-07T10:40:52.474Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 159,
-    "edges": 187,
+    "nodes": 157,
+    "edges": 186,
     "by_table": {
       "vm": 5,
-      "service": 52,
-      "container": 73,
+      "service": 51,
+      "container": 72,
       "domain": 29
     }
   },
@@ -1533,32 +1533,6 @@
     },
     {
       "table": "service",
-      "id": "sauron_lite",
-      "key": "service:sauron_lite",
-      "properties": {
-        "name": "sauron-lite",
-        "category": "tools",
-        "description": "File Integrity Scanner (deployed on all VMs)",
-        "domain": null,
-        "port": null,
-        "vm": "all",
-        "folder": "bc-obs_sauron-lite"
-      }
-    },
-    {
-      "table": "container",
-      "id": "sauron",
-      "key": "container:sauron",
-      "properties": {
-        "name": "sauron",
-        "image": null,
-        "role": "app",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "umami",
       "key": "service:umami",
       "properties": {
@@ -2866,15 +2840,6 @@
       "from": "service:openobserve",
       "to": "container:openobserve",
       "key": "service:openobserve->runs_container->container:openobserve",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:sauron_lite",
-      "to": "container:sauron",
-      "key": "service:sauron_lite->runs_container->container:sauron",
       "properties": {
         "role": "app"
       }
