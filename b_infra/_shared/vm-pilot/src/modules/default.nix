@@ -21,6 +21,10 @@ in {
     #    watchdog, rescue-ssh, scheduler, layer2-identity, dashboard, health-agent)
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
+    # Cleanup stranded systemd units from migrations (data:
+    # nixhm-sudo-<vm>/build.json .obsolete_systemd_units[]). No-op when
+    # the array is empty or absent — safe on every VM.
+    (import ./protection/obsolete-cleanup.nix { inherit vmName; })
   ] ++ lib.optionals (vmName != "oci-apps") [
     ./protection/no-build-guard.nix        # WARNING: small VM — remind operators not to build
     ./container/no-build-guardrails.nix    # WARNING: docker wrapper — warns on build/--build

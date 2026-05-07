@@ -239,8 +239,12 @@ in {
     ESSENTIAL_COUNT=0
     WORKLOAD_COUNT=0
 
+    # awk MUST be an absolute store path: HM activation runs with a stripped PATH
+    # that excludes /usr/bin (gawk is not in HM's default activation PATH set,
+    # only coreutils/gnused/gnugrep are). Bare `awk` here would die with
+    # "awk: command not found" and abort the entire installLayer2Identity step.
     for svc in $($SUDO systemctl list-units --type=service --state=active,running \
-                  --no-legend --no-pager --plain 2>/dev/null | awk '{print $1}'); do
+                  --no-legend --no-pager --plain 2>/dev/null | ${pkgs.gawk}/bin/awk '{print $1}'); do
 
       svc_base="''${svc%.service}"
 
