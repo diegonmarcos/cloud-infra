@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T12:03:20.880Z",
+  "_generated": "2026-05-07T16:11:36.327Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -697,7 +697,7 @@
     },
     "authelia": {
       "name": "authelia",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "domain": "auth.diegonmarcos.com",
       "enabled": true,
       "category": "sec",
@@ -997,7 +997,7 @@
     },
     "redis": {
       "name": "redis",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "domain": null,
       "enabled": true,
       "category": "data",
@@ -1623,7 +1623,6 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
-          "authelia",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -1640,8 +1639,7 @@
           "backup-borg",
           "backup-bup",
           "gitea",
-          "kg-graph",
-          "redis"
+          "kg-graph"
         ]
       },
       "gcp-T4-p_0": {
@@ -1662,9 +1660,11 @@
         "provider": null,
         "services": [
           "hickory-dns",
+          "authelia",
           "caddy",
           "introspect-proxy",
-          "postlite"
+          "postlite",
+          "redis"
         ]
       },
       "vast-RTX-p_0": {
@@ -2060,7 +2060,7 @@
       },
       "authelia": {
         "name": "authelia",
-        "vm": "oci-A1-f_0",
+        "vm": "gcp-E2-f_0",
         "domain": "auth.diegonmarcos.com",
         "enabled": true,
         "category": "sec",
@@ -2360,7 +2360,7 @@
       },
       "redis": {
         "name": "redis",
-        "vm": "oci-A1-f_0",
+        "vm": "gcp-E2-f_0",
         "domain": null,
         "enabled": true,
         "category": "data",
@@ -3095,7 +3095,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-07T12:03:20.928Z",
+    "generated_at": "2026-05-07T16:11:36.435Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

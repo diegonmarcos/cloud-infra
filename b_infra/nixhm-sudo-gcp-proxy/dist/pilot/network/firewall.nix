@@ -84,6 +84,21 @@ let
       echo "[firewall] nft raw: flushed all rules"
     fi
 
+    # iptables-LEGACY — Fedora 42 ships both nft (default `iptables`) AND legacy
+    # tables. Docker (moby-engine) inserts FORWARD rules into LEGACY when its
+    # iptables-detector picks up legacy first. With FORWARD policy DROP in
+    # legacy, transit traffic (e.g. desktop → hub → spoke) is silently dropped.
+    # Mirror the same FORWARD-permits as the nft side so legacy doesn't block.
+    if command -v iptables-legacy >/dev/null 2>&1; then
+      iptables-legacy -F FORWARD 2>/dev/null || true
+      iptables-legacy -P FORWARD ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -i wg0 -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -o wg0 -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -s ${dockerSubnet} -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -d ${dockerSubnet} -j ACCEPT 2>/dev/null || true
+      echo "[firewall] iptables-legacy: FORWARD ACCEPT + wg0/docker rules"
+    fi
+
     # ══════════════════════════════════════════════════════════════
     # PHASE 1: FILTER TABLE — INPUT
     # ══════════════════════════════════════════════════════════════

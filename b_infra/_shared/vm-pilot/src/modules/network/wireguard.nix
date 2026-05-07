@@ -171,12 +171,9 @@ in {
     $SUDO mkdir -p /etc/wireguard
 
     # 2. Generate new config from template with injected key
-    TEMPLATE=$(cat <<'WGTEMPLATE'
-    ${wgTemplate}
-    WGTEMPLATE
-    )
-    # Strip leading whitespace from heredoc
-    TEMPLATE=$(echo "$TEMPLATE" | sed 's/^    //')
+    # NOTE: heredoc closer MUST be at column 0 (bash quirk). Use printf via
+    # a nix variable so we never depend on heredoc indentation behavior.
+    TEMPLATE=${lib.escapeShellArg wgTemplate}
     NEW_CONF=$(echo "$TEMPLATE" | sed "s|__PRIVKEY__|$PRIVKEY|")
 
     # 3. Compare with current live config (use sudo — /etc/wireguard is 700 root:root)
@@ -195,9 +192,46 @@ in {
       if $SUDO systemctl is-active wg-quick@wg0 >/dev/null 2>&1; then
         $SUDO systemctl restart wg-quick@wg0
         echo "$WG_LOG_PREFIX wg-quick@wg0 restarted"
-      else
-        echo "$WG_LOG_PREFIX wg-quick@wg0 not active — config written, start manually"
       fi
+    fi
+
+    # 4. Ensure systemd unit + start wg-quick@wg0 (Fedora/Debian don't ship
+    #    wg-quick@.service — install one pointing at HM's nix-profile binary).
+    WG_UNIT="/etc/systemd/system/wg-quick@.service"
+    WG_BIN="$HOME/.nix-profile/bin/wg-quick"
+    WG_BIN_DIR="$HOME/.nix-profile/bin"
+    if [ -x "$WG_BIN" ] && ! $SUDO test -f "$WG_UNIT"; then
+      echo "$WG_LOG_PREFIX installing $WG_UNIT"
+      printf '%s\n' \
+        "[Unit]" \
+        "Description=WireGuard via wg-quick(8) for %I" \
+        "After=network-online.target nss-lookup.target" \
+        "Wants=network-online.target nss-lookup.target" \
+        "PartOf=wg-quick.target" \
+        "Documentation=man:wg-quick(8)" \
+        "" \
+        "[Service]" \
+        "Type=oneshot" \
+        "RemainAfterExit=yes" \
+        "ExecStart=$WG_BIN up %i" \
+        "ExecStop=$WG_BIN down %i" \
+        "Environment=WG_ENDPOINT_RESOLUTION_RETRIES=infinity" \
+        "Environment=PATH=$WG_BIN_DIR:/usr/sbin:/usr/bin:/sbin:/bin" \
+        "" \
+        "[Install]" \
+        "WantedBy=multi-user.target" \
+        | $SUDO tee "$WG_UNIT" > /dev/null
+      $SUDO systemctl daemon-reload
+    fi
+
+    # 5. Enable + start wg-quick@wg0 if not already running
+    if ! $SUDO systemctl is-enabled wg-quick@wg0 >/dev/null 2>&1; then
+      $SUDO systemctl enable wg-quick@wg0 >/dev/null 2>&1 || true
+    fi
+    if ! $SUDO systemctl is-active wg-quick@wg0 >/dev/null 2>&1; then
+      echo "$WG_LOG_PREFIX starting wg-quick@wg0"
+      $SUDO systemctl start wg-quick@wg0 2>&1 \
+        || $SUDO "$WG_BIN" up wg0 2>&1 | sed "s/^/$WG_LOG_PREFIX wg-quick: /"
     fi
     ) || echo "[wireguard] FAILED — see errors above, activation continues"
   '';

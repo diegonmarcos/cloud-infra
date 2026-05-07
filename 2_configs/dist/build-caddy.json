@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-07T12:03:20.893Z",
+    "generated_at": "2026-05-07T16:11:36.349Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T12:03:20.876Z",
+  "_generated": "2026-05-07T16:11:36.316Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -187,7 +187,38 @@
     "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
-  "l4_routes": [],
+  "l4_routes": [
+    {
+      "port": 993,
+      "upstream": "10.0.0.3:993",
+      "comment": "IMAPS"
+    },
+    {
+      "port": 465,
+      "upstream": "10.0.0.3:465",
+      "comment": "SMTPS"
+    },
+    {
+      "port": 587,
+      "upstream": "10.0.0.3:587",
+      "comment": "SMTP Submission"
+    },
+    {
+      "port": 2993,
+      "upstream": "10.0.0.3:2993",
+      "comment": "IMAPS (Stalwart)"
+    },
+    {
+      "port": 2465,
+      "upstream": "10.0.0.3:2465",
+      "comment": "SMTPS (Stalwart)"
+    },
+    {
+      "port": 2587,
+      "upstream": "10.0.0.3:2587",
+      "comment": "SMTP Submission (Stalwart)"
+    }
+  ],
   "redirects": [
     {
       "domain": "mail.diegonmarcos.com",
@@ -248,7 +279,7 @@
     },
     {
       "domain": "auth.diegonmarcos.com",
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "comment": "SSO and 2FA authentication portal"
     },
     {
@@ -265,11 +296,6 @@
       "domain": "grafana.diegonmarcos.com",
       "upstream": "10.0.0.6:5080",
       "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
-    },
-    {
-      "domain": "git.diegonmarcos.com",
-      "upstream": "10.0.0.6:3002",
-      "comment": "Self-hosted Git service"
     }
   ],
   "path_routes": [
@@ -290,6 +316,11 @@
           "base_path": "/hedgedoc",
           "upstream": "10.0.0.6:3018",
           "comment": "Collaborative markdown editor"
+        },
+        {
+          "base_path": "/gitea",
+          "upstream": "10.0.0.6:3002",
+          "comment": "Self-hosted Git service"
         }
       ],
       "comment": "App hub -- path-based routing",
@@ -526,7 +557,7 @@
     },
     {
       "service": "authelia.app",
-      "upstream": "10.0.0.6:9091"
+      "upstream": "10.0.0.1:9091"
     },
     {
       "service": "caddy.app",
@@ -594,7 +625,7 @@
     },
     {
       "service": "redis.app",
-      "upstream": "10.0.0.6:6379"
+      "upstream": "10.0.0.1:6379"
     }
   ],
   "s3_routes": [
@@ -630,7 +661,7 @@
     }
   ],
   "auth_upstreams": {
-    "authelia": "10.0.0.6:9091",
+    "authelia": "10.0.0.1:9091",
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
@@ -1176,7 +1207,7 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "oci-A1-f_0"
+      "vm": "gcp-E2-f_0"
     },
     {
       "kind": "canonical",
@@ -1184,10 +1215,10 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "port": 9091,
       "protocol": "http",
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "source": "containers.app.port"
     },
     {
@@ -1588,7 +1619,7 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "engine": "sqlite",
       "port": null,
       "path": "/var/lib/authelia/db.sqlite3"
@@ -1794,6 +1825,16 @@
       "zone": "com",
       "service": null,
       "notes": "Collaborative markdown editor"
+    },
+    {
+      "host": "app.diegonmarcos.com",
+      "path": "/gitea",
+      "upstream": "10.0.0.6:3002",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Self-hosted Git service"
     }
   ],
   "public_D_others": [
@@ -1890,7 +1931,7 @@
     {
       "host": "auth.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -1926,16 +1967,6 @@
       "zone": "com",
       "service": null,
       "notes": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
-    },
-    {
-      "host": "git.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:3002",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Self-hosted Git service"
     },
     {
       "host": "cloud.diegonmarcos.com",
@@ -2252,7 +2283,7 @@
     {
       "host": "authelia.app",
       "path": null,
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2422,7 +2453,7 @@
     {
       "host": "redis.app",
       "path": null,
-      "upstream": "10.0.0.6:6379",
+      "upstream": "10.0.0.1:6379",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2694,7 +2725,7 @@
     {
       "host": "authelia-http-9091.app",
       "path": null,
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2953,7 +2984,7 @@
       "tls": "on_demand",
       "zone": "db",
       "service": "authelia",
-      "notes": "engine=sqlite vm=oci-A1-f_0"
+      "notes": "engine=sqlite vm=gcp-E2-f_0"
     },
     {
       "host": "dagu-sqlite-null.db",
@@ -3058,7 +3089,68 @@
       "notes": "OCI bucket: my-photos"
     }
   ],
-  "l4_listeners": [],
+  "l4_listeners": [
+    {
+      "host": ":993",
+      "path": null,
+      "upstream": "10.0.0.3:993",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "IMAPS"
+    },
+    {
+      "host": ":465",
+      "path": null,
+      "upstream": "10.0.0.3:465",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTPS"
+    },
+    {
+      "host": ":587",
+      "path": null,
+      "upstream": "10.0.0.3:587",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTP Submission"
+    },
+    {
+      "host": ":2993",
+      "path": null,
+      "upstream": "10.0.0.3:2993",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "IMAPS (Stalwart)"
+    },
+    {
+      "host": ":2465",
+      "path": null,
+      "upstream": "10.0.0.3:2465",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTPS (Stalwart)"
+    },
+    {
+      "host": ":2587",
+      "path": null,
+      "upstream": "10.0.0.3:2587",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTP Submission (Stalwart)"
+    }
+  ],
   "others": [
     {
       "host": "<global>",

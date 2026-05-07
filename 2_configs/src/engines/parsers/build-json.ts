@@ -246,7 +246,16 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
           port = primary.port ?? undefined;
           dns = primary.dns ?? undefined;
           if (primary.proxy?.domain) primaryDomain = primary.proxy.domain;
-          if (primary.proxy) primaryProxy = { primary: primary.proxy };
+          if (primary.proxy) {
+            // Merge: container.proxy is per-container HTTP routing (domain/auth);
+            // top-level bj.proxy.primary may carry service-wide fields like
+            // l4_ports (port-level passthrough at the perimeter, NOT tied to a
+            // single container). Container fields win for overlapping keys, but
+            // l4_ports from top-level must survive — otherwise services with
+            // both (stalwart, maddy*) lose their L4 declarations downstream.
+            const topPrimary = (bj.proxy?.primary ?? {}) as Record<string, any>;
+            primaryProxy = { primary: { ...topPrimary, ...primary.proxy } };
+          }
           // health.path is a URL path for HTTP probing.
           // primary.healthcheck is the docker HEALTHCHECK directive — usually
           // a shell command (`wget -qO …`, `curl -f …`, `redis-cli ping`).

@@ -96,7 +96,7 @@
     # ── WireGuard ──
     wireguard-tools
 
-    # ── Security scanning (used by sauron-lite) ──
+    # ── Security scanning (YARA rules engine) ──
     yara
   ];
 

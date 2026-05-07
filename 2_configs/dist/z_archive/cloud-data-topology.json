@@ -110,9 +110,6 @@
         "ollama-hai",
         "rig-agentic-hai",
         "rig-agentic-sonn-14bq8",
-        "authelia",
-        "authelia-redis",
-        "postlite-authelia",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -133,8 +130,7 @@
         "borg-server",
         "bup-server",
         "gitea",
-        "surrealdb",
-        "redis"
+        "surrealdb"
       ],
       "ports": [],
       "networks": [],
@@ -197,9 +193,13 @@
       },
       "containers": [
         "hickory-dns",
+        "authelia",
+        "authelia-redis",
+        "postlite-authelia",
         "caddy",
         "introspect-proxy",
-        "postlite"
+        "postlite",
+        "redis"
       ],
       "ports": [],
       "networks": [],
@@ -641,13 +641,13 @@
       {
         "name": "authelia.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.1",
         "service": "authelia"
       },
       {
         "name": "authelia-redis.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.1",
         "service": "authelia"
       },
       {
@@ -755,7 +755,7 @@
       {
         "name": "redis.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.1",
         "service": "redis"
       }
     ],
@@ -1655,7 +1655,12 @@
       "proxy": {
         "primary": {
           "domain": "chat.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/api/v4/*": {
+              "auth": "bypass"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -2185,19 +2190,19 @@
           "l4_ports": [
             {
               "port": 993,
-              "upstream": "130.110.251.193:993",
+              "upstream": "oci-mail:993",
               "comment": "IMAPS",
               "protocol": "tls"
             },
             {
               "port": 465,
-              "upstream": "130.110.251.193:465",
+              "upstream": "oci-mail:465",
               "comment": "SMTPS",
               "protocol": "tls"
             },
             {
               "port": 587,
-              "upstream": "130.110.251.193:587",
+              "upstream": "oci-mail:587",
               "comment": "SMTP Submission",
               "protocol": "starttls"
             }
@@ -2401,7 +2406,27 @@
         "primary": {
           "domain": "mail-stalwart.diegonmarcos.com",
           "auth": "none",
-          "tls_skip_verify": true
+          "tls_skip_verify": true,
+          "l4_ports": [
+            {
+              "port": 2993,
+              "upstream": "oci-mail:2993",
+              "comment": "IMAPS (Stalwart)",
+              "protocol": "tls"
+            },
+            {
+              "port": 2465,
+              "upstream": "oci-mail:2465",
+              "comment": "SMTPS (Stalwart)",
+              "protocol": "tls"
+            },
+            {
+              "port": 2587,
+              "upstream": "oci-mail:2587",
+              "comment": "SMTP Submission (Stalwart)",
+              "protocol": "starttls"
+            }
+          ]
         }
       },
       "health": {
@@ -2677,9 +2702,16 @@
       },
       "proxy": {
         "primary": {
-          "domain": "api.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
           "base_path": "/crawlee",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/openapi.json": {
+              "auth": "public"
+            }
+          },
+          "domain": "api.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -2763,7 +2795,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/fin-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/health": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -3084,13 +3121,13 @@
     },
     "authelia": {
       "category": "sec",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "folder": "bb-sec_authelia",
       "description": "SSO and 2FA authentication portal",
       "domain": "auth.diegonmarcos.com",
       "port": 9091,
       "dns": "authelia.app",
-      "upstream": "10.0.0.6:9091",
+      "upstream": "10.0.0.1:9091",
       "containers": {
         "app": {
           "container_name": "authelia",
@@ -3412,10 +3449,15 @@
       },
       "proxy": {
         "primary": {
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-infra-api",
-          "auth": "two_factor"
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -3487,6 +3529,7 @@
       "proxy": {
         "primary": {
           "streaming": true,
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
           "base_path": "/c3-infra-mcp"
@@ -3556,7 +3599,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-services-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -3994,7 +4042,33 @@
       "proxy": {
         "primary": {
           "domain": "analytics.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/matomo.js": {
+              "auth": "public"
+            },
+            "/matomo.php": {
+              "auth": "public"
+            },
+            "/piwik.js": {
+              "auth": "public"
+            },
+            "/piwik.php": {
+              "auth": "public"
+            },
+            "/collect.php": {
+              "auth": "public"
+            },
+            "/api.php": {
+              "auth": "public"
+            },
+            "/track.php": {
+              "auth": "public"
+            },
+            "/js/*": {
+              "auth": "public"
+            }
+          }
         }
       },
       "health": {
@@ -4383,9 +4457,19 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
           "base_path": "/umami",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/script.js": {
+              "auth": "public"
+            },
+            "/api/send": {
+              "auth": "public"
+            }
+          },
+          "domain": "analytics.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -4592,8 +4676,11 @@
       },
       "proxy": {
         "primary": {
-          "domain": "git.diegonmarcos.com",
-          "auth": "two_factor"
+          "type": "path",
+          "parent_domain": "app.diegonmarcos.com",
+          "base_path": "/gitea",
+          "auth": "two_factor",
+          "domain": "git.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -4694,12 +4781,12 @@
     },
     "redis": {
       "category": "data",
-      "vm": "oci-A1-f_0",
+      "vm": "gcp-E2-f_0",
       "folder": "ca-dat_redis",
       "description": "In-memory data store",
       "port": 6379,
       "dns": "redis.app",
-      "upstream": "10.0.0.6:6379",
+      "upstream": "10.0.0.1:6379",
       "containers": {
         "app": {
           "container_name": "redis",
@@ -4988,7 +5075,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-07T12:03:20.930Z",
+    "generated_at": "2026-05-07T16:11:36.439Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

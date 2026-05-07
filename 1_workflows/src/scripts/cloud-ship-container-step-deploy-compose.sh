@@ -17,6 +17,32 @@ step_compose() {
         fi
     fi
 
+    # Repair: /root/.docker/config.json may exist as a DIRECTORY due to a
+    # historical `docker run -v /root/.docker/config.json:...` bind-mount
+    # where the host path was missing — docker auto-creates such paths as
+    # directories. Subsequent `sudo docker compose pull` then fails with
+    # auth/manifest errors because /root/.docker/config.json can't be read
+    # as a JSON file. Idempotent: no-op when the path is a regular file or
+    # missing. Same fix applied to RUNNER_HOST in step_docker (line ~458).
+    # Re-login follows so private GHCR pulls work.
+    GHCR_TOKEN_FILE="${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token"
+    if [ -f "$GHCR_TOKEN_FILE" ]; then
+        GHCR_TOKEN_VAL="$(cat "$GHCR_TOKEN_FILE")"
+        # Use bash -c explicitly: target VMs may use fish/zsh as login shell
+        # (e.g. oci-apps's diego user runs fish), and fish does not support
+        # bash if/then/fi syntax; this wrapper guarantees POSIX semantics.
+        ssh $SSH_OPTS "$DEPLOY_HOST" 'bash -c '"'"'
+            if sudo test -d /root/.docker/config.json; then
+                echo "[deploy-compose] /root/.docker/config.json is a DIRECTORY — repairing"
+                sudo rm -rf /root/.docker/config.json
+            fi
+            sudo mkdir -p /root/.docker
+        '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
+        # Login as root so `sudo docker compose pull` can fetch private GHCR images
+        ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$GHCR_TOKEN_VAL' | sudo docker login ghcr.io -u diegonmarcos --password-stdin >/dev/null 2>&1" || \
+            log_warn "GHCR login on $DEPLOY_HOST failed (non-fatal — public images still work)"
+    fi
+
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then
         if ssh $SSH_OPTS "$DEPLOY_HOST" "grep -q 'entrypoint.*$COMPOSE_PRE_HOOK' $DEPLOY_PATH/$REMOTE_COMPOSE_REL 2>/dev/null"; then
@@ -34,7 +60,11 @@ step_compose() {
     #
     # `--build` in build.json's deploy.compose_flags is IGNORED at compose-up
     # time; the engine logs a warning so the legacy flag can be cleaned up.
-    COMPOSE_UP_FLAGS="--no-build --pull never --force-recreate"
+    # --pull missing: pull images that aren't present locally (e.g. redis:7-bookworm
+    # from Docker Hub on a fresh VM). Idempotent — only pulls when needed.
+    # Was --pull never which broke first-time deployments and any service whose
+    # compose references public images not pre-cached on the VM.
+    COMPOSE_UP_FLAGS="--no-build --pull missing --force-recreate"
     COMPOSE_PULL_FIRST="true"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
         log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
