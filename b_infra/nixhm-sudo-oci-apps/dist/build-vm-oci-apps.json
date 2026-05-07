@@ -189,13 +189,6 @@
       "has_docker_build": true
     },
     {
-      "name": "sauron-central",
-      "dir": "bb-sec_sauron-central",
-      "compose_path": "/opt/containers/sauron-central",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
       "name": "c3-infra-api",
       "dir": "bc-obs_c3-infra-api",
       "compose_path": "/opt/containers/c3-infra-api",
@@ -345,8 +338,32 @@
       "has_docker_build": true
     }
   ],
+  "ssh_containers": [
+    {
+      "name": "c3-infra-api",
+      "uid": 0,
+      "ssh_dir": "/root/.ssh",
+      "keys": [
+        "vault_id_rsa",
+        "vault_id_rsa.pub",
+        "google_compute_engine",
+        "google_compute_engine.pub"
+      ]
+    },
+    {
+      "name": "c3-infra-mcp",
+      "uid": 0,
+      "ssh_dir": "/root/.ssh",
+      "keys": [
+        "vault_id_rsa",
+        "vault_id_rsa.pub",
+        "google_compute_engine",
+        "google_compute_engine.pub"
+      ]
+    }
+  ],
   "_meta": {
-    "generated_at": "2026-05-07T10:09:06.281Z",
+    "generated_at": "2026-05-07T10:39:51.139Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
