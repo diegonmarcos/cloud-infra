@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-07T11:19:47.195Z",
+    "generated_at": "2026-05-07T12:03:20.893Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T11:19:47.172Z",
+  "_generated": "2026-05-07T12:03:20.876Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -248,7 +248,7 @@
     },
     {
       "domain": "auth.diegonmarcos.com",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "comment": "SSO and 2FA authentication portal"
     },
     {
@@ -526,7 +526,7 @@
     },
     {
       "service": "authelia.app",
-      "upstream": "10.0.0.1:9091"
+      "upstream": "10.0.0.6:9091"
     },
     {
       "service": "caddy.app",
@@ -594,7 +594,7 @@
     },
     {
       "service": "redis.app",
-      "upstream": "10.0.0.1:6379"
+      "upstream": "10.0.0.6:6379"
     }
   ],
   "s3_routes": [
@@ -630,7 +630,7 @@
     }
   ],
   "auth_upstreams": {
-    "authelia": "10.0.0.1:9091",
+    "authelia": "10.0.0.6:9091",
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
@@ -1176,7 +1176,7 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "gcp-E2-f_0"
+      "vm": "oci-A1-f_0"
     },
     {
       "kind": "canonical",
@@ -1184,10 +1184,10 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "port": 9091,
       "protocol": "http",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "source": "containers.app.port"
     },
     {
@@ -1588,7 +1588,7 @@
       "container": "authelia",
       "container_key": "app",
       "svc": "authelia",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "engine": "sqlite",
       "port": null,
       "path": "/var/lib/authelia/db.sqlite3"
@@ -1890,7 +1890,7 @@
     {
       "host": "auth.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2252,7 +2252,7 @@
     {
       "host": "authelia.app",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2422,7 +2422,7 @@
     {
       "host": "redis.app",
       "path": null,
-      "upstream": "10.0.0.1:6379",
+      "upstream": "10.0.0.6:6379",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2694,7 +2694,7 @@
     {
       "host": "authelia-http-9091.app",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2953,7 +2953,7 @@
       "tls": "on_demand",
       "zone": "db",
       "service": "authelia",
-      "notes": "engine=sqlite vm=gcp-E2-f_0"
+      "notes": "engine=sqlite vm=oci-A1-f_0"
     },
     {
       "host": "dagu-sqlite-null.db",

@@ -49,10 +49,20 @@ if ! command -v ensure_terraform >/dev/null 2>&1; then
   }
 fi
 if ! command -v ensure_wrangler >/dev/null 2>&1; then
+  # `wrangler` is baked into the cloud-builder image at image-build time,
+  # driven by cloud/config.json:.deps.docker_npm (FIRE rule 4: data-driven,
+  # rule 1: declarative). Runtime npm-install was retired 2026-05-07 — it
+  # silently swallowed npm errors, version was unpinned, and ran every CI
+  # invocation. If wrangler is missing here, the cloud-builder image is
+  # stale; rebuild + push via:
+  #   bash unix/cb_containers-builders/build.sh ship cloud-builder-x-deb-nixhm
   ensure_wrangler() {
-    command -v wrangler >/dev/null 2>&1 && return
-    echo "Installing wrangler..."
-    npm install -g wrangler
+    if ! command -v wrangler >/dev/null 2>&1; then
+      echo "FATAL: wrangler not on PATH inside cloud-builder image." >&2
+      echo "  Image is stale — rebuild via:" >&2
+      echo "  bash unix/cb_containers-builders/build.sh ship cloud-builder-x-deb-nixhm" >&2
+      exit 1
+    fi
   }
 fi
 

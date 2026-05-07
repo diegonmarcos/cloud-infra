@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-07T11:19:46.909Z",
+    "generated_at": "2026-05-07T12:03:20.619Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -157,6 +157,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
+        "authelia",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -173,9 +174,10 @@
         "backup-borg",
         "backup-bup",
         "gitea",
-        "kg-graph"
+        "kg-graph",
+        "redis"
       ],
-      "container_count": 49
+      "container_count": 53
     },
     "gcp-T4-p_0": {
       "ip": "34.173.227.250",
@@ -254,13 +256,11 @@
       "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1",
       "services": [
         "hickory-dns",
-        "authelia",
         "caddy",
         "introspect-proxy",
-        "postlite",
-        "redis"
+        "postlite"
       ],
-      "container_count": 7
+      "container_count": 3
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -3769,14 +3769,14 @@
     },
     "authelia": {
       "category": "sec",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "folder": "bb-sec_authelia",
       "description": "SSO and 2FA authentication portal",
       "enabled": true,
       "domain": "auth.diegonmarcos.com",
       "port": 9091,
       "dns": "authelia.app",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "10.0.0.6:9091",
       "containers": {
         "app": {
           "container_name": "authelia",
@@ -6238,13 +6238,13 @@
     },
     "redis": {
       "category": "data",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-A1-f_0",
       "folder": "ca-dat_redis",
       "description": "In-memory data store",
       "enabled": true,
       "port": 6379,
       "dns": "redis.app",
-      "upstream": "10.0.0.1:6379",
+      "upstream": "10.0.0.6:6379",
       "containers": {
         "app": {
           "container_name": "redis",
@@ -6593,13 +6593,13 @@
       {
         "name": "authelia.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "authelia"
       },
       {
         "name": "authelia-redis.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "authelia"
       },
       {
@@ -6707,7 +6707,7 @@
       {
         "name": "redis.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.6",
         "service": "redis"
       }
     ],
@@ -6846,6 +6846,7 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
+          "authelia",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -6862,7 +6863,8 @@
           "backup-borg",
           "backup-bup",
           "gitea",
-          "kg-graph"
+          "kg-graph",
+          "redis"
         ],
         "method": "key",
         "gha": {
@@ -6956,11 +6958,9 @@
         "idle_shutdown": null,
         "containers": [
           "hickory-dns",
-          "authelia",
           "caddy",
           "introspect-proxy",
-          "postlite",
-          "redis"
+          "postlite"
         ],
         "method": "gcloud",
         "gha": {
@@ -7254,7 +7254,7 @@
       },
       "authelia": {
         "dir": "bb-sec_authelia",
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "has_docker": true
       },
       "caddy": {
@@ -7364,7 +7364,7 @@
       },
       "redis": {
         "dir": "ca-dat_redis",
-        "vm": "gcp-proxy",
+        "vm": "oci-apps",
         "has_docker": true
       }
     }
