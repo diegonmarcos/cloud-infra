@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-06T19:18:52.610Z",
+    "generated_at": "2026-05-07T10:34:47.120Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-06T19:18:52.180Z",
+  "_generated": "2026-05-07T10:34:47.069Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -290,11 +290,6 @@
           "base_path": "/hedgedoc",
           "upstream": "10.0.0.6:3018",
           "comment": "Collaborative markdown editor"
-        },
-        {
-          "base_path": "/dozzle",
-          "upstream": "10.0.0.4:9999",
-          "comment": "Dozzle - Real-time Docker log viewer"
         }
       ],
       "comment": "App hub -- path-based routing",
@@ -572,10 +567,6 @@
     {
       "service": "dbgate.app",
       "upstream": "10.0.0.6:8086"
-    },
-    {
-      "service": "dozzle.app",
-      "upstream": "10.0.0.4:9999"
     },
     {
       "service": "matomo.app",
@@ -1414,27 +1405,6 @@
     },
     {
       "kind": "redirect",
-      "service": "dozzle.app",
-      "redirect_to": "https://dozzle-http-9999.app",
-      "container": "dozzle",
-      "container_key": "app",
-      "svc": "dozzle",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "canonical",
-      "service": "dozzle-http-9999.app",
-      "container": "dozzle",
-      "container_key": "app",
-      "svc": "dozzle",
-      "vm": "oci-E2-f_1",
-      "port": 9999,
-      "protocol": "http",
-      "upstream": "10.0.0.4:9999",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "matomo-hybrid.app",
       "redirect_to": "https://matomo-hybrid-http-8084.app",
       "container": "matomo-hybrid",
@@ -1824,16 +1794,6 @@
       "zone": "com",
       "service": null,
       "notes": "Collaborative markdown editor"
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/dozzle",
-      "upstream": "10.0.0.4:9999",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Dozzle - Real-time Docker log viewer"
     }
   ],
   "public_D_others": [
@@ -2400,16 +2360,6 @@
       "notes": null
     },
     {
-      "host": "dozzle.app",
-      "path": null,
-      "upstream": "10.0.0.4:9999",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "matomo.app",
       "path": null,
       "upstream": "10.0.0.6:8084",
@@ -2859,16 +2809,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "dbgate",
-      "notes": null
-    },
-    {
-      "host": "dozzle-http-9999.app",
-      "path": null,
-      "upstream": "10.0.0.4:9999",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "dozzle",
       "notes": null
     },
     {

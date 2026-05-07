@@ -46,8 +46,12 @@
           done
           ;;
       esac
-      # Strip .local/bin from PATH to find the real docker, then exec it
+      # Strip .local/bin from PATH (avoid wrapper recursion), then ensure
+      # canonical bin paths are present so non-interactive SSH shells
+      # (which get a stripped PATH) can still find docker on both NixOS
+      # (/run/current-system/sw/bin) and Debian/Ubuntu (/usr/bin).
       PATH="$(printf "%s" "$PATH" | tr ':' '\n' | grep -v '\.local/bin' | tr '\n' ':')"
+      PATH="/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
       exec docker "$@"
     '';
   };

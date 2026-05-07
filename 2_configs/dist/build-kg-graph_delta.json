@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-06T19:18:53.525Z",
+    "generated_at": "2026-05-07T10:34:47.266Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-06T19:18:52.570Z",
+  "_generated": "2026-05-07T10:34:47.114Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 164,
-    "edges": 194,
+    "nodes": 159,
+    "edges": 187,
     "by_table": {
       "vm": 5,
-      "service": 54,
-      "container": 75,
-      "domain": 30
+      "service": 52,
+      "container": 73,
+      "domain": 29
     }
   },
   "nodes": [
@@ -1405,32 +1405,6 @@
     },
     {
       "table": "service",
-      "id": "dozzle",
-      "key": "service:dozzle",
-      "properties": {
-        "name": "dozzle",
-        "category": "tools",
-        "description": "Dozzle - Real-time Docker log viewer",
-        "domain": "logs.diegonmarcos.com",
-        "port": 9999,
-        "vm": "oci-analytics",
-        "folder": "bc-obs_dozzle"
-      }
-    },
-    {
-      "table": "container",
-      "id": "dozzle",
-      "key": "container:dozzle",
-      "properties": {
-        "name": "dozzle",
-        "image": "amir20/dozzle:latest",
-        "role": "app",
-        "port": 9999,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
       "id": "matomo",
       "key": "service:matomo",
       "properties": {
@@ -1555,32 +1529,6 @@
         "role": "app",
         "port": 5080,
         "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "sauron_forwarder",
-      "key": "service:sauron_forwarder",
-      "properties": {
-        "name": "sauron-forwarder",
-        "category": "tools",
-        "description": "Alert forwarding to central sauron",
-        "domain": null,
-        "port": null,
-        "vm": "oci-analytics",
-        "folder": "bc-obs_sauron-forwarder"
-      }
-    },
-    {
-      "table": "container",
-      "id": "sauron_forwarder",
-      "key": "container:sauron_forwarder",
-      "properties": {
-        "name": "sauron-forwarder",
-        "image": "",
-        "role": "app",
-        "port": null,
-        "public": false
       }
     },
     {
@@ -1987,14 +1935,6 @@
       "key": "domain:db_diegonmarcos_com",
       "properties": {
         "fqdn": "db.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "logs_diegonmarcos_com",
-      "key": "domain:logs_diegonmarcos_com",
-      "properties": {
-        "fqdn": "logs.diegonmarcos.com"
       }
     },
     {
@@ -2850,22 +2790,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:dozzle",
-      "to": "vm:oci_analytics",
-      "key": "service:dozzle->hosted_on->vm:oci_analytics",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:dozzle",
-      "to": "container:dozzle",
-      "key": "service:dozzle->runs_container->container:dozzle",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:matomo",
       "to": "vm:oci_apps",
       "key": "service:matomo->hosted_on->vm:oci_apps",
@@ -2947,37 +2871,12 @@
       }
     },
     {
-      "table": "hosted_on",
-      "from": "service:sauron_forwarder",
-      "to": "vm:oci_analytics",
-      "key": "service:sauron_forwarder->hosted_on->vm:oci_analytics",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:sauron_forwarder",
-      "to": "container:sauron_forwarder",
-      "key": "service:sauron_forwarder->runs_container->container:sauron_forwarder",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
       "table": "runs_container",
       "from": "service:sauron_lite",
       "to": "container:sauron",
       "key": "service:sauron_lite->runs_container->container:sauron",
       "properties": {
         "role": "app"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:sauron_lite",
-      "to": "container:sauron_forwarder",
-      "key": "service:sauron_lite->runs_container->container:sauron_forwarder",
-      "properties": {
-        "role": "forwarder"
       }
     },
     {
@@ -3325,15 +3224,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:dozzle",
-      "to": "service:caddy",
-      "key": "service:dozzle->proxied_by->service:caddy",
-      "properties": {
-        "domain": "logs.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:matomo",
       "to": "service:caddy",
       "key": "service:matomo->proxied_by->service:caddy",
@@ -3571,13 +3461,6 @@
       "from": "domain:db_diegonmarcos_com",
       "to": "service:dbgate",
       "key": "domain:db_diegonmarcos_com->routes_to->service:dbgate",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:logs_diegonmarcos_com",
-      "to": "service:dozzle",
-      "key": "domain:logs_diegonmarcos_com->routes_to->service:dozzle",
       "properties": {}
     },
     {

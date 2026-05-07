@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-06T19:18:49.146Z",
+    "generated_at": "2026-05-07T10:09:05.840Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -104,11 +104,9 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
-        "dagu",
-        "dozzle",
-        "sauron-forwarder"
+        "dagu"
       ],
-      "container_count": 3
+      "container_count": 1
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -5133,78 +5131,6 @@
         ]
       }
     },
-    "dozzle": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_dozzle",
-      "description": "Dozzle - Real-time Docker log viewer",
-      "enabled": true,
-      "domain": "logs.diegonmarcos.com",
-      "port": 9999,
-      "dns": "dozzle.app",
-      "upstream": "10.0.0.4:9999",
-      "containers": {
-        "app": {
-          "container_name": "dozzle",
-          "image": "amir20/dozzle:latest",
-          "port": 9999,
-          "port_env": "DOZZLE_ADDR",
-          "dns": "dozzle.app",
-          "public": true,
-          "proxy": {
-            "type": "path",
-            "parent_domain": "app.diegonmarcos.com",
-            "base_path": "/dozzle",
-            "auth": "two_factor"
-          },
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "/var/run/docker.sock:/var/run/docker.sock:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": {
-            "mem_limit": "64m"
-          },
-          "read_only": false,
-          "port_format": "colon",
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "dozzle"
-      ],
-      "all_ports": [
-        "9999"
-      ],
-      "all_dns": [
-        "dozzle.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "type": "path",
-          "parent_domain": "app.diegonmarcos.com",
-          "base_path": "/dozzle",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 9999
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": true,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "matomo": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -5620,42 +5546,6 @@
         "ZO_ROOT_USER_PASSWORD",
         "ZO_INGEST_TOKEN"
       ]
-    },
-    "sauron-forwarder": {
-      "category": "tools",
-      "vm": "oci-E2-f_1",
-      "folder": "bc-obs_sauron-forwarder",
-      "description": "Alert forwarding to central sauron",
-      "enabled": true,
-      "dns": "sauron-forwarder.app",
-      "containers": {
-        "app": {
-          "container_name": "sauron-forwarder",
-          "image": "",
-          "public": false,
-          "dns": "sauron-forwarder.app"
-        }
-      },
-      "container_names": [
-        "sauron-forwarder"
-      ],
-      "all_ports": [],
-      "all_dns": [
-        "sauron-forwarder.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "upstream_image": "debian:bookworm-slim",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
     },
     "sauron-lite": {
       "category": "tools",
@@ -6829,12 +6719,6 @@
         "service": "dbgate"
       },
       {
-        "name": "dozzle.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "dozzle"
-      },
-      {
         "name": "matomo.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -6851,12 +6735,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "openobserve"
-      },
-      {
-        "name": "sauron-forwarder.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "sauron-forwarder"
       },
       {
         "name": "umami.app",
@@ -6960,9 +6838,7 @@
         "public_ports": [],
         "idle_shutdown": null,
         "containers": [
-          "dagu",
-          "dozzle",
-          "sauron-forwarder"
+          "dagu"
         ],
         "method": "key",
         "gha": {
@@ -7456,11 +7332,6 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "dozzle": {
-        "dir": "bc-obs_dozzle",
-        "vm": "oci-analytics",
-        "has_docker": true
-      },
       "matomo": {
         "dir": "bc-obs_matomo",
         "vm": "oci-apps",
@@ -7479,11 +7350,6 @@
       "openobserve": {
         "dir": "bc-obs_openobserve",
         "vm": "oci-apps",
-        "has_docker": true
-      },
-      "sauron-forwarder": {
-        "dir": "bc-obs_sauron-forwarder",
-        "vm": "oci-analytics",
         "has_docker": true
       },
       "umami": {
