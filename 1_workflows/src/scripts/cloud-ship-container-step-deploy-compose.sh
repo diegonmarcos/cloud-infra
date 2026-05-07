@@ -7,11 +7,11 @@ step_compose() {
     [ -z "$DEPLOY_PATH" ] && { log "ERROR: deploy.remote_path not set in build.json"; return 1; }
 
     # Ensure Docker daemon is running
-    if ! ssh $SSH_OPTS "$DEPLOY_HOST" "docker info >/dev/null 2>&1"; then
+    if ! ssh_with_retry "$DEPLOY_HOST" "docker info >/dev/null 2>&1"; then
         log_warn "Docker not running on $DEPLOY_HOST — starting"
-        ssh $SSH_OPTS "$DEPLOY_HOST" "sudo systemctl start docker" 2>/dev/null || true
+        ssh_with_retry "$DEPLOY_HOST" "sudo systemctl start docker" 2>/dev/null || true
         sleep 5
-        if ! ssh $SSH_OPTS "$DEPLOY_HOST" "docker info >/dev/null 2>&1"; then
+        if ! ssh_with_retry "$DEPLOY_HOST" "docker info >/dev/null 2>&1"; then
             log_error "Docker failed to start on $DEPLOY_HOST"
             return 1
         fi
@@ -31,7 +31,7 @@ step_compose() {
         # Use bash -c explicitly: target VMs may use fish/zsh as login shell
         # (e.g. oci-apps's diego user runs fish), and fish does not support
         # bash if/then/fi syntax; this wrapper guarantees POSIX semantics.
-        ssh $SSH_OPTS "$DEPLOY_HOST" 'bash -c '"'"'
+        ssh_with_retry "$DEPLOY_HOST" 'bash -c '"'"'
             if sudo test -d /root/.docker/config.json; then
                 echo "[deploy-compose] /root/.docker/config.json is a DIRECTORY — repairing"
                 sudo rm -rf /root/.docker/config.json
@@ -39,17 +39,17 @@ step_compose() {
             sudo mkdir -p /root/.docker
         '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
         # Login as root so `sudo docker compose pull` can fetch private GHCR images
-        ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$GHCR_TOKEN_VAL' | sudo docker login ghcr.io -u diegonmarcos --password-stdin >/dev/null 2>&1" || \
+        ssh_with_retry "$DEPLOY_HOST" "echo '$GHCR_TOKEN_VAL' | sudo docker login ghcr.io -u diegonmarcos --password-stdin >/dev/null 2>&1" || \
             log_warn "GHCR login on $DEPLOY_HOST failed (non-fatal — public images still work)"
     fi
 
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then
-        if ssh $SSH_OPTS "$DEPLOY_HOST" "grep -q 'entrypoint.*$COMPOSE_PRE_HOOK' $DEPLOY_PATH/$REMOTE_COMPOSE_REL 2>/dev/null"; then
+        if ssh_with_retry "$DEPLOY_HOST" "grep -q 'entrypoint.*$COMPOSE_PRE_HOOK' $DEPLOY_PATH/$REMOTE_COMPOSE_REL 2>/dev/null"; then
             log "Skipping pre_hook '$COMPOSE_PRE_HOOK' — container entrypoint"
         else
             log "Running pre-hook: $COMPOSE_PRE_HOOK"
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_PRE_HOOK && ./$COMPOSE_PRE_HOOK"
+            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_PRE_HOOK && ./$COMPOSE_PRE_HOOK"
         fi
     fi
 
@@ -109,7 +109,7 @@ COMPOSE_HEADER
 
         log "Deploying + running $SCRIPT_NAME on $DEPLOY_HOST"
         rsync -az "$TMP_SCRIPT" "$DEPLOY_HOST:$DEPLOY_PATH/$SCRIPT_NAME"
-        ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && sh $SCRIPT_NAME && rm -f $SCRIPT_NAME"
+        ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && sh $SCRIPT_NAME && rm -f $SCRIPT_NAME"
         rm -f "$TMP_SCRIPT"
         trap - EXIT
     else
@@ -121,21 +121,21 @@ COMPOSE_HEADER
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
             # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
             # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
-            ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
     fi
 
     # Post-hook
     if [ -n "$COMPOSE_POST_HOOK" ]; then
         log "Running post-hook: $COMPOSE_POST_HOOK"
-        ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_POST_HOOK && ./$COMPOSE_POST_HOOK"
+        ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_POST_HOOK && ./$COMPOSE_POST_HOOK"
     fi
 
     # Verify
     log "Verifying containers are running..."
     sleep 3
-    ssh $SSH_OPTS "$DEPLOY_HOST" "docker ps --filter 'name=$(basename $DEPLOY_PATH)' --format '{{.Names}} {{.Status}}'" 2>/dev/null | while read -r line; do log "  $line"; done
+    ssh_with_retry "$DEPLOY_HOST" "docker ps --filter 'name=$(basename $DEPLOY_PATH)' --format '{{.Names}} {{.Status}}'" 2>/dev/null | while read -r line; do log "  $line"; done
     log "Done."
 }

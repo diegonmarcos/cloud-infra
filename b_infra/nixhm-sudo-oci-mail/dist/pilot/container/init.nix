@@ -101,6 +101,12 @@ in {
 
     [Service]
     Type=notify
+    # PATH: nix profile FIRST so dockerd resolves containerd-shim-runc-v2
+    # from the same nix package as dockerd. Without this, dockerd (nix) calls
+    # /usr/bin/containerd-shim-runc-v2 (Fedora moby-engine) which speaks a
+    # different shim API — breaks all `docker run` with
+    # "unsupported shim version (3): not implemented".
+    Environment=PATH=${pkgs.docker}/libexec/docker:${pkgs.docker}/bin:${pkgs.containerd}/bin:${pkgs.runc}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     ExecStartPre=/bin/bash -c '[ -d /var/run/docker.sock ] && rm -rf /var/run/docker.sock || true'
     ExecStart=${dockerdBin}
     ExecReload=/bin/kill -s HUP $MAINPID
