@@ -2095,6 +2095,12 @@
           "tls_skip_verify": true,
           "l4_ports": [
             {
+              "port": 25,
+              "upstream": "oci-mail:25",
+              "comment": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge",
+              "protocol": "tcp"
+            },
+            {
               "port": 443,
               "sni": "imap.diegonmarcos.com",
               "upstream": "oci-mail:993",
@@ -5181,7 +5187,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-08T11:42:19.850Z",
+    "generated_at": "2026-05-08T11:46:54.861Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
