@@ -2,11 +2,16 @@
 
 **Status**: ALL phases (1, 2a, 2b, 3, 4, 5) done — source-only, undeployed · **Owner**: diego · **Created**: 2026-05-08
 
-Goal = **2 unique public port numbers** on gcp-proxy (`443` + `51820`),
-**1** on every other VM (`51820`). All inbound mail flows via Cloudflare
-Email Routing → Worker `email-forwarder` → Cloudflare Tunnel
-(`smtp-proxy.diegonmarcos.com` → localhost:8080 on gcp-proxy) →
-WG → smtp-proxy → maddy. Port 25 is NEVER publicly open.
+Goal = on gcp-proxy: **`443/tcp` + `443/udp` + `51820/udp`** (active) plus
+**`25/tcp` (design-complete listener, GCP cloud firewall currently blocks
+public ingress)**. On every other VM: `51820/udp` only.
+
+Inbound mail flows via Cloudflare Email Routing → Worker
+`email-forwarder` → Cloudflare Tunnel (`smtp-proxy.diegonmarcos.com` →
+localhost:8080 on gcp-proxy) → WG → smtp-proxy → maddy. Port 25 is
+defined end-to-end (host firewall + Caddy L4 plain-TCP forwarder to
+maddy:25 via WG) but blocked by GCP cloud firewall — flip one rule to
+re-enable direct MX delivery without code change.
 
 ## Goal
 
