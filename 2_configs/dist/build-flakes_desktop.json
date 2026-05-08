@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T17:59:05.838Z",
+    "generated_at": "2026-05-08T18:39:03.511Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T17:59:05.168Z",
+  "_generated": "2026-05-08T18:39:03.339Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -287,10 +287,9 @@
         "mail-puller",
         "snappymail",
         "maddy",
-        "smtp-proxy",
         "stalwart"
       ],
-      "container_count": 8
+      "container_count": 7
     },
     "oci-E2-f_1": {
       "ip": "129.151.228.66",
@@ -422,6 +421,7 @@
       "gcloud_instance": "arch-1",
       "gcloud_zone": "us-central1-a",
       "services": [
+        "http-to-smtp-proxy-api",
         "hickory-dns",
         "wireguard-mesh-ws-tunnel",
         "authelia",
@@ -431,7 +431,7 @@
         "postlite",
         "redis"
       ],
-      "container_count": 9
+      "container_count": 10
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -2282,6 +2282,78 @@
         "SNAPPYMAIL_ADMIN_PASSWORD"
       ]
     },
+    "http-to-smtp-proxy-api": {
+      "category": "app",
+      "vm": "gcp-E2-f_0",
+      "folder": "aa-sui_tools-http-to-smtp-proxy-api",
+      "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "enabled": true,
+      "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "flake": "tools-http-to-smtp-proxy-api",
+      "port": 8080,
+      "dns": "http-to-smtp-proxy-api.app",
+      "upstream": "10.0.0.1:8080",
+      "containers": {
+        "app": {
+          "container_name": "http-to-smtp-proxy-api",
+          "port": 8080,
+          "port_env": "LISTEN_PORT",
+          "dns": "http-to-smtp-proxy-api.app",
+          "public": true,
+          "proxy": {
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/http-to-smtp-proxy-api",
+            "auth": "bearer"
+          },
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "http-to-smtp-proxy-api"
+      ],
+      "all_ports": [
+        "8080"
+      ],
+      "all_dns": [
+        "http-to-smtp-proxy-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/http-to-smtp-proxy-api",
+          "auth": "bearer"
+        }
+      },
+      "declared_ports": {
+        "app": 8080
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/http-to-smtp-proxy-api",
+        "api_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api/http-to-smtp-proxy-api",
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/http-to-smtp-proxy-api",
+        "endpoint_count": 1,
+        "display_name": "HTTP-to-SMTP Proxy API",
+        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over WG. Used by CF email-forwarder Worker for inbound mail (because CF Workers cannot make outbound TCP/25 connections — port 25 is GCP-blocked end-to-end).",
+        "auth": "bearer"
+      },
+      "secret_env_vars": [
+        "SMTP_HOST",
+        "SMTP_PORT",
+        "API_KEY",
+        "LISTEN_PORT"
+      ]
+    },
     "maddy": {
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -2302,7 +2374,7 @@
               "protocol": "tcp",
               "bind": "10.0.0.3",
               "service": "smtp_mx",
-              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → CF Tunnel → smtp-proxy is the public bridge (Phase 5)"
+              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)"
             },
             {
               "port": 465,
@@ -2454,78 +2526,6 @@
         "DKIM_PRIVATE_KEY_B64"
       ]
     },
-    "smtp-proxy": {
-      "category": "app",
-      "vm": "oci-E2-f_0",
-      "folder": "aa-sui_tools-smtp-proxy",
-      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-      "enabled": true,
-      "domain": "api.diegonmarcos.com/smtp-proxy-api",
-      "flake": "tools-smtp-proxy",
-      "port": 8080,
-      "dns": "smtp-proxy.app",
-      "upstream": "10.0.0.3:8080",
-      "containers": {
-        "app": {
-          "container_name": "smtp-proxy",
-          "port": 8080,
-          "port_env": "LISTEN_PORT",
-          "dns": "smtp-proxy.app",
-          "public": true,
-          "proxy": {
-            "type": "path",
-            "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/smtp-proxy-api",
-            "auth": "bearer"
-          },
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "smtp-proxy"
-      ],
-      "all_ports": [
-        "8080"
-      ],
-      "all_dns": [
-        "smtp-proxy.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "type": "path",
-          "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/smtp-proxy-api",
-          "auth": "bearer"
-        }
-      },
-      "declared_ports": {
-        "app": 8080
-      },
-      "api": {
-        "has_api": true,
-        "has_web_ui": false,
-        "api_path": "/smtp-proxy-api",
-        "api_url": "https://api.diegonmarcos.com/smtp-proxy-api/smtp-proxy-api",
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/smtp-proxy-api",
-        "endpoint_count": 1,
-        "display_name": "SMTP-Proxy HTTP-to-SMTP Bridge API",
-        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over WG. Used by CF email-forwarder Worker for inbound mail (because CF Workers cannot make outbound TCP/25 connections — port 25 is GCP-blocked end-to-end).",
-        "auth": "bearer"
-      },
-      "secret_env_vars": [
-        "SMTP_HOST",
-        "SMTP_PORT",
-        "API_KEY",
-        "LISTEN_PORT"
-      ]
-    },
     "stalwart": {
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -2546,9 +2546,9 @@
             {
               "port": 2025,
               "protocol": "starttls",
-              "bind": "127.0.0.1",
+              "bind": "10.0.0.3",
               "service": "smtp_shadow",
-              "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)"
+              "desc": "SMTP shadow (http-to-smtp-proxy-api on gcp-proxy → WG → :2025)"
             },
             {
               "port": 2443,
@@ -4366,7 +4366,7 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3a",
-            "auth": "public"
+            "auth": "none"
           },
           "healthcheck": "/healthz",
           "monitoring": {
@@ -4401,7 +4401,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3a",
-          "auth": "public"
+          "auth": "none"
         }
       },
       "declared_ports": {
@@ -5239,7 +5239,7 @@
         "AUTHELIA_BEARER_TOKEN",
         "UMAMI_USERNAME",
         "UMAMI_PASSWORD",
-        "SMTP_PROXY_API_KEY"
+        "HTTP_TO_SMTP_PROXY_API_KEY"
       ]
     },
     "dbgate": {
@@ -5341,7 +5341,7 @@
       "folder": "bc-obs_matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "enabled": true,
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "port": 8084,
       "dns": "matomo.app",
       "upstream": "10.0.0.6:8084",
@@ -5355,7 +5355,9 @@
           "dns": "matomo.app",
           "public": true,
           "proxy": {
-            "domain": "analytics.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/matomo",
             "auth": "two_factor"
           },
           "healthcheck": "/",
@@ -5404,7 +5406,9 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/matomo",
           "auth": "two_factor",
           "paths": {
             "/matomo.js": {
@@ -5452,7 +5456,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/matomo/?module=API",
         "healthcheck_paths": [
           "/"
         ],
@@ -5685,7 +5689,7 @@
       "folder": "bc-obs_openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
       "enabled": true,
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "port": 5080,
       "dns": "openobserve.app",
       "upstream": "10.0.0.6:5080",
@@ -5698,8 +5702,9 @@
           "dns": "openobserve.app",
           "public": true,
           "proxy": {
-            "type": "domain",
-            "domain": "grafana.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/openobserve",
             "auth": "two_factor"
           },
           "healthcheck": null,
@@ -5741,8 +5746,9 @@
       },
       "proxy": {
         "primary": {
-          "type": "domain",
-          "domain": "grafana.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/openobserve",
           "auth": "two_factor"
         }
       },
@@ -5762,7 +5768,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/swagger/index.html",
-        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "api_url": "https://analytics.diegonmarcos.com/openobserve/swagger/index.html",
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/swagger/index.html",

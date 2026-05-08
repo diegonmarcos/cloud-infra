@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║ Asserts ship.yml warms a Rust cargo cache so subsequent ship     ║
 # ║ runs can skip `cargo download crates` + `cargo build` from-scratch║
-# ║ for fin-api, mail-puller, rig-agentic-*, smtp-proxy, etc.        ║
+# ║ for fin-api, mail-puller, rig-agentic-*, http-to-smtp-proxy-api, etc. ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   1. ship.yml has an actions/cache@v4 step keyed on Cargo.lock   ║

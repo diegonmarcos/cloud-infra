@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-08T17:59:05.087Z",
+  "_generated": "2026-05-08T18:39:03.296Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/matomo-sites",
   "sites": [
     {
@@ -74,14 +74,14 @@
       "service": "snappymail"
     },
     {
+      "name": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "service": "http-to-smtp-proxy-api"
+    },
+    {
       "name": "Maddy Mail Server (mail.diegonmarcos.com)",
       "url": "https://mail.diegonmarcos.com",
       "service": "maddy"
-    },
-    {
-      "name": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-      "url": "https://api.diegonmarcos.com/smtp-proxy-api",
-      "service": "smtp-proxy"
     },
     {
       "name": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)",
@@ -160,7 +160,7 @@
     },
     {
       "name": "Matomo hybrid analytics (oci-apps)",
-      "url": "https://analytics.diegonmarcos.com",
+      "url": "https://analytics.diegonmarcos.com/matomo",
       "service": "matomo"
     },
     {
@@ -170,7 +170,7 @@
     },
     {
       "name": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-      "url": "https://grafana.diegonmarcos.com",
+      "url": "https://analytics.diegonmarcos.com/openobserve",
       "service": "openobserve"
     },
     {
@@ -185,7 +185,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-08T17:59:05.781Z",
+    "generated_at": "2026-05-08T18:39:03.494Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

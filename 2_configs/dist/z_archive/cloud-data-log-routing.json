@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-08T17:59:05.086Z",
+  "_generated": "2026-05-08T18:39:03.295Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/log-routing",
   "vms": {
     "oci-apps": [
@@ -297,11 +297,6 @@
         "log_level": "info"
       },
       {
-        "container": "smtp-proxy",
-        "service": "smtp-proxy",
-        "log_level": "info"
-      },
-      {
         "container": "stalwart",
         "service": "stalwart",
         "log_level": "info"
@@ -312,43 +307,12 @@
         "log_level": "info"
       }
     ],
-    "gcp-t4": [
-      {
-        "container": "ollama",
-        "service": "ollama",
-        "log_level": "info"
-      }
-    ],
-    "oci-apps-2": [
-      {
-        "container": "ollama-arm",
-        "service": "ollama-arm",
-        "log_level": "info"
-      }
-    ],
-    "local": [
-      {
-        "container": "cloudflare-worker",
-        "service": "cloudflare-worker",
-        "log_level": "info"
-      },
-      {
-        "container": "gcloud",
-        "service": "gcloud",
-        "log_level": "info"
-      },
-      {
-        "container": "caddy-l4-image",
-        "service": "caddy-l4-image",
-        "log_level": "info"
-      },
-      {
-        "container": "c3-diego-personal-data-mcp",
-        "service": "c3-diego-personal-data-mcp",
-        "log_level": "info"
-      }
-    ],
     "gcp-proxy": [
+      {
+        "container": "http-to-smtp-proxy-api",
+        "service": "http-to-smtp-proxy-api",
+        "log_level": "info"
+      },
       {
         "container": "hickory-dns",
         "service": "hickory-dns",
@@ -400,6 +364,42 @@
         "log_level": "info"
       }
     ],
+    "gcp-t4": [
+      {
+        "container": "ollama",
+        "service": "ollama",
+        "log_level": "info"
+      }
+    ],
+    "oci-apps-2": [
+      {
+        "container": "ollama-arm",
+        "service": "ollama-arm",
+        "log_level": "info"
+      }
+    ],
+    "local": [
+      {
+        "container": "cloudflare-worker",
+        "service": "cloudflare-worker",
+        "log_level": "info"
+      },
+      {
+        "container": "gcloud",
+        "service": "gcloud",
+        "log_level": "info"
+      },
+      {
+        "container": "caddy-l4-image",
+        "service": "caddy-l4-image",
+        "log_level": "info"
+      },
+      {
+        "container": "c3-diego-personal-data-mcp",
+        "service": "c3-diego-personal-data-mcp",
+        "log_level": "info"
+      }
+    ],
     "oci-analytics": [
       {
         "container": "dagu",
@@ -416,7 +416,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-08T17:59:05.775Z",
+    "generated_at": "2026-05-08T18:39:03.493Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

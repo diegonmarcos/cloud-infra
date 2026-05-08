@@ -340,7 +340,7 @@ function main() {
 
     // Web UI = has a domain AND not an MCP-only service.
     // "MCP-only" is now derived from declarations, not name-regex.
-    const WEB_UI_EXCLUSIONS = new Set(["introspect-proxy", "smtp-proxy", "hickory-dns"]);
+    const WEB_UI_EXCLUSIONS = new Set(["introspect-proxy", "http-to-smtp-proxy-api", "hickory-dns"]);
     const isMcpOnly = !!mcpDecl && !apiDecl;
     const hasWebUi = !!(entry.domain && !isMcpOnly && !WEB_UI_EXCLUSIONS.has(entry.name));
 

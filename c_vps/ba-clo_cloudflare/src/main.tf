@@ -288,5 +288,5 @@ resource "cloudflare_zone_settings_override" "ssl_settings" {
 # =============================================================================
 
 output "email_architecture" {
-  value = "CF Email Routing (MX) → Worker email-forwarder → smtp-proxy (oci-mail:8080) → Stalwart :25"
+  value = "CF Email Routing (MX) → Worker email-forwarder → http-to-smtp-proxy-api (gcp-proxy:8080) → SMTP/WG → maddy :25 + stalwart :2025 (oci-mail)"
 }

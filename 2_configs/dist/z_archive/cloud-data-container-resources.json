@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-08T17:59:05.085Z",
+  "_generated": "2026-05-08T18:39:03.294Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-resources",
   "services": {
     "code-server": {
@@ -167,6 +167,15 @@
         "mem_reservation": "16M"
       }
     },
+    "http-to-smtp-proxy-api": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "http-to-smtp-proxy-api"
+      ],
+      "resources": null
+    },
     "maddy": {
       "vm": "oci-mail",
       "vm_ram_gb": 1,
@@ -182,15 +191,6 @@
           "memory": "32M"
         }
       }
-    },
-    "smtp-proxy": {
-      "vm": "oci-mail",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "smtp-proxy"
-      ],
-      "resources": null
     },
     "stalwart": {
       "vm": "oci-mail",
@@ -652,7 +652,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-08T17:59:05.772Z",
+    "generated_at": "2026-05-08T18:39:03.492Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

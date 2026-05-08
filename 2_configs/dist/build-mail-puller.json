@@ -3,7 +3,7 @@
   "_meta": {
     "description": "mail-puller container config (service=mail-puller, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-08T17:59:05.284Z",
+    "generated_at": "2026-05-08T18:39:03.381Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T17:59:05.058Z",
+  "_generated": "2026-05-08T18:39:03.283Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "mail-puller",
@@ -562,6 +562,28 @@
         ]
       }
     },
+    "http-to-smtp-proxy-api": {
+      "ip": "10.0.0.1",
+      "ports": {
+        "app": 8080
+      },
+      "vm": "gcp-proxy",
+      "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/http-to-smtp-proxy-api",
+        "api_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api/http-to-smtp-proxy-api",
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/http-to-smtp-proxy-api",
+        "endpoint_count": 1,
+        "display_name": "HTTP-to-SMTP Proxy API",
+        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over WG. Used by CF email-forwarder Worker for inbound mail (because CF Workers cannot make outbound TCP/25 connections — port 25 is GCP-blocked end-to-end).",
+        "auth": "bearer"
+      }
+    },
     "maddy": {
       "ip": "10.0.0.3",
       "ports": {
@@ -596,7 +618,7 @@
         "25": {
           "protocol": "tcp",
           "bind": "10.0.0.3",
-          "desc": "MX delivery endpoint — wg0-only bind; CF Worker → CF Tunnel → smtp-proxy is the public bridge (Phase 5)",
+          "desc": "MX delivery endpoint — wg0-only bind; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)",
           "service": "smtp_mx",
           "role": "app"
         },
@@ -621,28 +643,6 @@
           "service": "imap_ssl",
           "role": "app"
         }
-      }
-    },
-    "smtp-proxy": {
-      "ip": "10.0.0.3",
-      "ports": {
-        "app": 8080
-      },
-      "vm": "oci-mail",
-      "domain": "api.diegonmarcos.com/smtp-proxy-api",
-      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-      "api": {
-        "has_api": true,
-        "has_web_ui": false,
-        "api_path": "/smtp-proxy-api",
-        "api_url": "https://api.diegonmarcos.com/smtp-proxy-api/smtp-proxy-api",
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/smtp-proxy-api",
-        "endpoint_count": 1,
-        "display_name": "SMTP-Proxy HTTP-to-SMTP Bridge API",
-        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over WG. Used by CF email-forwarder Worker for inbound mail (because CF Workers cannot make outbound TCP/25 connections — port 25 is GCP-blocked end-to-end).",
-        "auth": "bearer"
       }
     },
     "stalwart": {
@@ -678,8 +678,8 @@
       "extra_ports": {
         "2025": {
           "protocol": "starttls",
-          "bind": "127.0.0.1",
-          "desc": "SMTP shadow (smtp-proxy → localhost, loopback-only)",
+          "bind": "10.0.0.3",
+          "desc": "SMTP shadow (http-to-smtp-proxy-api on gcp-proxy → WG → :2025)",
           "service": "smtp_shadow",
           "role": "app"
         },
@@ -1192,13 +1192,13 @@
         "app": 8084
       },
       "vm": "oci-apps",
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "api": {
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/matomo/?module=API",
         "healthcheck_paths": [
           "/"
         ],
@@ -1253,13 +1253,13 @@
         "app": 5080
       },
       "vm": "oci-apps",
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
       "api": {
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/swagger/index.html",
-        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "api_url": "https://analytics.diegonmarcos.com/openobserve/swagger/index.html",
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/swagger/index.html",
