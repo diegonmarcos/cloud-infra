@@ -17,14 +17,6 @@
 
     "cname_records": [
       {
-        "key": "smtp_proxy_tunnel",
-        "name": "smtp-proxy",
-        "content": "90b644ed-1339-4fbe-a467-687012aa84ae.cfargotunnel.com",
-        "proxied": true,
-        "ttl": 1,
-        "comment": "Cloudflare Tunnel → smtp-proxy on oci-mail"
-      },
-      {
         "key": "mta_sts",
         "name": "mta-sts",
         "content": "diegonmarcos.com",
@@ -118,14 +110,6 @@
         "comment": "CAA: restrict cert issuance to Let's Encrypt only"
       }
     ]
-  },
-
-  "tunnel": {
-    "id": "90b644ed-1339-4fbe-a467-687012aa84ae",
-    "ingress_rules": [
-      { "hostname": "smtp-proxy.diegonmarcos.com", "service": "http://localhost:8080" }
-    ],
-    "catchall_service": "http_status:404"
   },
 
   "email_routing": {
