@@ -127,7 +127,7 @@ in {
     ROOT_DEV=$(${pkgs.util-linux}/bin/findmnt -n -o SOURCE / 2>/dev/null || echo "")
     ROOT_FS=$(${pkgs.util-linux}/bin/findmnt -n -o FSTYPE / 2>/dev/null || echo "")
     if [ "$ROOT_FS" = "ext4" ] && [ -n "$ROOT_DEV" ]; then
-      CUR=$($SUDO ${pkgs.e2fsprogs}/bin/tune2fs -l "$ROOT_DEV" 2>/dev/null | awk -F: '/Reserved block count/ {gsub(/ /,"",$2); print $2}')
+      CUR=$($SUDO ${pkgs.e2fsprogs}/bin/tune2fs -l "$ROOT_DEV" 2>/dev/null | ${pkgs.gawk}/bin/awk -F: '/Reserved block count/ {gsub(/ /,"",$2); print $2}')
       if [ -n "$CUR" ] && [ "$CUR" -gt 0 ]; then
         echo "[disk-ballast] ext4 reserved blocks: $CUR → 0 (releasing cloud-default 5%)"
         $SUDO ${pkgs.e2fsprogs}/bin/tune2fs -m 0 "$ROOT_DEV" >/dev/null

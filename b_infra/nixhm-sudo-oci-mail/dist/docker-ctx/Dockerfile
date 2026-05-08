@@ -2,8 +2,8 @@
 #
 # Each per-VM HM image is built by the cloud engine from this template,
 # substituting:
-#   nixhm-sudo-oci-analytics        → e.g. "nixhm-sudo-oci-mail"
-#   /nix/store/0iwj6x3hrrkkg4j5c3xfxdpivwn3rk2j-home-manager-generation  → /nix/store/<hash>-home-manager-generation
+#   nixhm-sudo-oci-mail        → e.g. "nixhm-sudo-oci-mail"
+#   /nix/store/nhjib6lpl124hfqz3gm21r2hyy87ipfq-home-manager-generation  → /nix/store/<hash>-home-manager-generation
 #   ubuntu             → the per-VM user (ubuntu, diego, etc.)
 #
 # Architecture note (why so minimal):
@@ -26,13 +26,13 @@ FROM debian:bookworm-slim
 
 USER root
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
-LABEL org.opencontainers.image.description="Home-Manager activation image for nixhm-sudo-oci-analytics"
+LABEL org.opencontainers.image.description="Home-Manager activation image for nixhm-sudo-oci-mail"
 
 COPY nix-store/ /nix/store/
 COPY activate.sh /hm/activate.sh
 COPY nix-db-dump.txt /hm/nix-db-dump.txt
 RUN chmod +x /hm/activate.sh
 
-ENV HM_ACTIVATION_PATH=/nix/store/0iwj6x3hrrkkg4j5c3xfxdpivwn3rk2j-home-manager-generation
+ENV HM_ACTIVATION_PATH=/nix/store/nhjib6lpl124hfqz3gm21r2hyy87ipfq-home-manager-generation
 ENV HM_USER=ubuntu
 ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]

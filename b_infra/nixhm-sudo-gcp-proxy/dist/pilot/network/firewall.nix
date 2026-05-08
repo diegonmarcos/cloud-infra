@@ -44,6 +44,16 @@ let
   dockerSubnet = cloudData.docker.subnet;
   wgSubnet = cloudData.wireguard.subnet;
 
+  # Detect WG role for this VM from consolidated peers list. The hub gets
+  # a NAT redirect for the WG fallback port (443/udp → 51820/udp), so
+  # peers on networks that block 51820/udp (airports, hotels) can reach
+  # WG by switching their endpoint to gcp-proxy:443.
+  wgPeers = cloudData.wireguard.peers or [];
+  thisPeer = lib.findFirst (p: p.name == vmName) null wgPeers;
+  isWgHub = (thisPeer != null) && ((thisPeer.role or null) == "hub");
+  wgFallbackPort = "443";  # UDP
+  wgPort = toString (cloudData.wireguard.port or 51820);
+
   mkPortRule = r:
     let
       port = toString r.port;
@@ -170,6 +180,19 @@ let
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+${if isWgHub then ''
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 3b: WG FALLBACK — redirect UDP/${wgFallbackPort} → UDP/${wgPort}
+    # ══════════════════════════════════════════════════════════════
+    # Hub-only. Peers behind networks that block 51820/udp (airports,
+    # hotels, restrictive corp WiFi) can switch their wg-quick endpoint
+    # to gcp-proxy:${wgFallbackPort} and still reach the mesh. Caddy must
+    # NOT bind UDP/${wgFallbackPort} (drop QUIC/HTTP/3) for this to work.
+    iptables -t nat -A PREROUTING -p udp --dport ${wgFallbackPort} -j REDIRECT --to-port ${wgPort}
+    iptables -A INPUT -p udp --dport ${wgFallbackPort} -m comment --comment "WG fallback (REDIRECT → ${wgPort})" -j ACCEPT
+    echo "[firewall] WG fallback NAT: udp/${wgFallbackPort} → udp/${wgPort}"
+'' else ""}
 
     echo "[firewall] Applied: fully declarative iptables + nft for ${vmName} (${toString (builtins.length publicPorts)} static ports)"
   '';

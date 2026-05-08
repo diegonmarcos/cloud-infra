@@ -44,6 +44,16 @@ let
   dockerSubnet = cloudData.docker.subnet;
   wgSubnet = cloudData.wireguard.subnet;
 
+  # Detect WG role for this VM from consolidated peers list. The hub gets
+  # a NAT redirect for the WG fallback port (443/udp → 51820/udp), so
+  # peers on networks that block 51820/udp (airports, hotels) can reach
+  # WG by switching their endpoint to gcp-proxy:443.
+  wgPeers = cloudData.wireguard.peers or [];
+  thisPeer = lib.findFirst (p: p.name == vmName) null wgPeers;
+  isWgHub = (thisPeer != null) && ((thisPeer.role or null) == "hub");
+  wgFallbackPort = "443";  # UDP
+  wgPort = toString (cloudData.wireguard.port or 51820);
+
   mkPortRule = r:
     let
       port = toString r.port;
@@ -82,6 +92,21 @@ let
       nft flush chain ip raw PREROUTING 2>/dev/null || true
       nft flush chain ip raw OUTPUT 2>/dev/null || true
       echo "[firewall] nft raw: flushed all rules"
+    fi
+
+    # iptables-LEGACY — Fedora 42 ships both nft (default `iptables`) AND legacy
+    # tables. Docker (moby-engine) inserts FORWARD rules into LEGACY when its
+    # iptables-detector picks up legacy first. With FORWARD policy DROP in
+    # legacy, transit traffic (e.g. desktop → hub → spoke) is silently dropped.
+    # Mirror the same FORWARD-permits as the nft side so legacy doesn't block.
+    if command -v iptables-legacy >/dev/null 2>&1; then
+      iptables-legacy -F FORWARD 2>/dev/null || true
+      iptables-legacy -P FORWARD ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -i wg0 -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -o wg0 -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -s ${dockerSubnet} -j ACCEPT 2>/dev/null || true
+      iptables-legacy -A FORWARD -d ${dockerSubnet} -j ACCEPT 2>/dev/null || true
+      echo "[firewall] iptables-legacy: FORWARD ACCEPT + wg0/docker rules"
     fi
 
     # ══════════════════════════════════════════════════════════════
@@ -155,6 +180,19 @@ let
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+${if isWgHub then ''
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 3b: WG FALLBACK — redirect UDP/${wgFallbackPort} → UDP/${wgPort}
+    # ══════════════════════════════════════════════════════════════
+    # Hub-only. Peers behind networks that block 51820/udp (airports,
+    # hotels, restrictive corp WiFi) can switch their wg-quick endpoint
+    # to gcp-proxy:${wgFallbackPort} and still reach the mesh. Caddy must
+    # NOT bind UDP/${wgFallbackPort} (drop QUIC/HTTP/3) for this to work.
+    iptables -t nat -A PREROUTING -p udp --dport ${wgFallbackPort} -j REDIRECT --to-port ${wgPort}
+    iptables -A INPUT -p udp --dport ${wgFallbackPort} -m comment --comment "WG fallback (REDIRECT → ${wgPort})" -j ACCEPT
+    echo "[firewall] WG fallback NAT: udp/${wgFallbackPort} → udp/${wgPort}"
+'' else ""}
 
     echo "[firewall] Applied: fully declarative iptables + nft for ${vmName} (${toString (builtins.length publicPorts)} static ports)"
   '';
