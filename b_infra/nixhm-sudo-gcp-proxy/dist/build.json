@@ -30,13 +30,6 @@
   "firewall": {
     "public_ports": [
       {
-        "port": 22,
-        "proto": "tcp",
-        "desc": "SSH (admin) — Cloudflare GEO rule + fail2ban recommended",
-        "source": "0.0.0.0/0",
-        "owned_by": "system"
-      },
-      {
         "port": 80,
         "proto": "tcp",
         "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
@@ -53,9 +46,9 @@
       {
         "port": 443,
         "proto": "udp",
-        "desc": "QUIC (Caddy)",
+        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
         "source": "0.0.0.0/0",
-        "owned_by": "caddy"
+        "owned_by": "wireguard"
       },
       {
         "port": 993,
@@ -72,13 +65,6 @@
         "owned_by": "caddy"
       },
       {
-        "port": 587,
-        "proto": "tcp",
-        "desc": "SMTP Submission (Caddy L4 → oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
         "port": 2443,
         "proto": "tcp",
         "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
@@ -89,13 +75,6 @@
         "port": 2465,
         "proto": "tcp",
         "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
-        "port": 2587,
-        "proto": "tcp",
-        "desc": "SMTP Submission (Caddy L4 → stalwart on oci-mail)",
         "source": "0.0.0.0/0",
         "owned_by": "caddy"
       },

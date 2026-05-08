@@ -3,7 +3,7 @@
 # Each per-VM HM image is built by the cloud engine from this template,
 # substituting:
 #   nixhm-sudo-gcp-proxy        → e.g. "nixhm-sudo-oci-mail"
-#   /nix/store/4fmh2vkirajra0fjgkcimhj6lckfqsym-home-manager-generation  → /nix/store/<hash>-home-manager-generation
+#   /nix/store/kf28xzzbiq3xmh4sccpv5h6ifx77bwhz-home-manager-generation  → /nix/store/<hash>-home-manager-generation
 #   diego             → the per-VM user (ubuntu, diego, etc.)
 #
 # Architecture note (why so minimal):
@@ -33,6 +33,6 @@ COPY activate.sh /hm/activate.sh
 COPY nix-db-dump.txt /hm/nix-db-dump.txt
 RUN chmod +x /hm/activate.sh
 
-ENV HM_ACTIVATION_PATH=/nix/store/4fmh2vkirajra0fjgkcimhj6lckfqsym-home-manager-generation
+ENV HM_ACTIVATION_PATH=/nix/store/kf28xzzbiq3xmh4sccpv5h6ifx77bwhz-home-manager-generation
 ENV HM_USER=diego
 ENTRYPOINT ["/bin/bash", "/hm/activate.sh"]

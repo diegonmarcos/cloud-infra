@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-07T10:40:52.204Z",
+    "generated_at": "2026-05-08T11:09:56.710Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -148,7 +148,6 @@
         "mattermost-bots",
         "mattermost-mcp",
         "photoprism",
-        "photos-webhook",
         "radicale",
         "revealmd",
         "vaultwarden",
@@ -157,6 +156,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
+        "wireguard-mesh",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -175,63 +175,16 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 49
-    },
-    "gcp-T4-p_0": {
-      "ip": "34.173.227.250",
-      "specs": {
-        "cpu": 4,
-        "ram_gb": 15,
-        "disk_gb": 100,
-        "arch": "x86_64",
-        "shape": "n1-standard-4",
-        "gpu": "NVIDIA T4",
-        "vram_gb": 16
-      },
-      "description": "GCloud Paid - N1 Std 4 + T4 GPU (Spot) - Ollama LLM",
-      "wg_ip": "10.0.0.8",
-      "wg_public_key": null,
-      "wg_port": 51820,
-      "wg_role": "spoke",
-      "user": "diego",
-      "home": "/home/diego",
-      "method": "gcloud",
-      "ssh_alias": "gcp-t4",
-      "rescue_port": 2200,
-      "public_ports": [],
-      "gha": {
-        "ssh_secret": "GCP_T4_SSH_KEY",
-        "host_secret": "GCP_T4_HOST",
-        "user_secret": "GCP_T4_USER"
-      },
-      "provider": "gcp",
-      "provisioning": "spot",
-      "gcloud_instance": "ollama-spot-gpu",
-      "gcloud_zone": "us-central1-a",
-      "idle_shutdown": {
-        "timeout_hours": 1,
-        "cpu_threshold": 60,
-        "docker_cpu_threshold": 30,
-        "network_threshold": 51200,
-        "min_uptime_seconds": 600
-      },
-      "services": [
-        "ollama"
-      ],
-      "container_count": 1
+      "container_count": 47
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
       "specs": {
-        "cpu": 2,
-        "ram_gb": 2,
-        "disk_gb": 32,
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 30,
         "arch": "x86_64",
-        "shape": "e2-small",
-        "machine_type": "e2-small",
-        "cloud_name": "arch-1",
-        "cloud_zone": "us-central1-a",
-        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
+        "shape": "e2-micro"
       },
       "description": "GCloud Free - E2 Micro 0 - Central Proxy + Control",
       "wg_ip": "10.0.0.1",
@@ -251,16 +204,17 @@
       },
       "gcloud_instance": "arch-1",
       "gcloud_zone": "us-central1-a",
-      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1",
       "services": [
         "hickory-dns",
+        "wireguard-mesh-ws-tunnel",
         "authelia",
         "caddy",
         "introspect-proxy",
+        "c3-analytics-api",
         "postlite",
         "redis"
       ],
-      "container_count": 7
+      "container_count": 9
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -311,10 +265,9 @@
       "infrastructure_type": "Terraform",
       "folder": "c_vps/vps_gcloud",
       "instances": [
-        "gcp-E2-f_0",
-        "gcp-T4-p_0"
+        "gcp-E2-f_0"
       ],
-      "description": "GCP instances - free micro + spot T4 GPU for LLM workloads",
+      "description": "GCP instances - free micro central proxy",
       "has_terraform": true
     },
     "aws": {
@@ -375,13 +328,6 @@
           "wg_ip": "10.0.0.6",
           "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
           "endpoint": "82.70.229.129:51820",
-          "role": "spoke"
-        },
-        {
-          "name": "gcp-t4",
-          "wg_ip": "10.0.0.8",
-          "wg_public_key": null,
-          "endpoint": "34.173.227.250:51820",
           "role": "spoke"
         },
         {
@@ -1865,7 +1811,12 @@
       "proxy": {
         "primary": {
           "domain": "chat.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/api/v4/*": {
+              "auth": "bypass"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -2167,61 +2118,6 @@
         "OCI_S3_SECRET_KEY"
       ]
     },
-    "photos-webhook": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "aa-sui_photos-webhook",
-      "description": "PhotoPrism Webhook + S3 Processor",
-      "enabled": true,
-      "port": 5002,
-      "dns": "photos-webhook.app",
-      "upstream": "10.0.0.6:5002",
-      "containers": {
-        "app": {
-          "container_name": "photos-webhook",
-          "image": "ghcr.io/diegonmarcos/photos-webhook:latest",
-          "port": 5002,
-          "port_env": "WEBHOOK_PORT",
-          "protocol": "http"
-        },
-        "db": {
-          "container_name": "photos-db",
-          "image": "postgres:16-alpine",
-          "db_name": "photos",
-          "db_user": "photos_user"
-        }
-      },
-      "container_names": [
-        "photos-webhook",
-        "photos-db"
-      ],
-      "all_ports": [
-        "5002"
-      ],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "declared_ports": {
-        "app": 5002
-      },
-      "backup": {
-        "enabled": true
-      },
-      "s3": {
-        "region": "eu-marseille-1",
-        "bucket": "photos"
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "radicale": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -2485,13 +2381,6 @@
               "desc": "SMTPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
             },
             {
-              "port": 587,
-              "protocol": "starttls",
-              "bind": "10.0.0.3",
-              "service": "smtp_starttls",
-              "desc": "Submission — wg0 bind, reached via Caddy L4 from gcp-proxy"
-            },
-            {
               "port": 993,
               "protocol": "tls",
               "bind": "10.0.0.3",
@@ -2553,21 +2442,15 @@
           "l4_ports": [
             {
               "port": 993,
-              "upstream": "130.110.251.193:993",
+              "upstream": "oci-mail:993",
               "comment": "IMAPS",
               "protocol": "tls"
             },
             {
               "port": 465,
-              "upstream": "130.110.251.193:465",
+              "upstream": "oci-mail:465",
               "comment": "SMTPS",
               "protocol": "tls"
-            },
-            {
-              "port": 587,
-              "upstream": "130.110.251.193:587",
-              "comment": "SMTP Submission",
-              "protocol": "starttls"
             }
           ]
         },
@@ -2733,13 +2616,6 @@
               "desc": "SMTPS — wg0 bind, reached via Caddy L4"
             },
             {
-              "port": 2587,
-              "protocol": "starttls",
-              "bind": "10.0.0.3",
-              "service": "smtp_starttls",
-              "desc": "Submission — wg0 bind, reached via Caddy L4"
-            },
-            {
               "port": 2993,
               "protocol": "tls",
               "bind": "10.0.0.3",
@@ -2818,7 +2694,21 @@
         "primary": {
           "domain": "mail-stalwart.diegonmarcos.com",
           "auth": "none",
-          "tls_skip_verify": true
+          "tls_skip_verify": true,
+          "l4_ports": [
+            {
+              "port": 2993,
+              "upstream": "oci-mail:2993",
+              "comment": "IMAPS (Stalwart)",
+              "protocol": "tls"
+            },
+            {
+              "port": 2465,
+              "upstream": "oci-mail:2465",
+              "comment": "SMTPS (Stalwart)",
+              "protocol": "tls"
+            }
+          ]
         }
       },
       "health": {
@@ -3154,9 +3044,16 @@
       },
       "proxy": {
         "primary": {
-          "domain": "api.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
           "base_path": "/crawlee",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/openapi.json": {
+              "auth": "public"
+            }
+          },
+          "domain": "api.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -3187,7 +3084,8 @@
         "actor_default_memory_mb": 512,
         "actor_timeout_secs": 3600,
         "s3_bucket": "crawlee-cloud",
-        "s3_force_path_style": true
+        "s3_force_path_style": true,
+        "dashboard_hostname": "10.0.0.6"
       },
       "api": {
         "has_api": true,
@@ -3277,7 +3175,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/fin-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/health": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -3311,13 +3214,12 @@
     },
     "ollama": {
       "category": "agi",
-      "vm": "gcp-T4-p_0",
+      "vm": "gcp-t4",
       "folder": "ad-agi_ollama",
       "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
       "enabled": true,
       "port": 11434,
       "dns": "ollama.app",
-      "upstream": "10.0.0.8:11434",
       "containers": {
         "app": {
           "container_name": "ollama",
@@ -3436,7 +3338,7 @@
       "vm": "oci-A1-f_0",
       "folder": "ad-agi_ollama-hai",
       "description": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode",
-      "enabled": true,
+      "enabled": false,
       "port": 11435,
       "dns": "ollama-hai.app",
       "upstream": "10.0.0.6:11435",
@@ -3767,6 +3669,209 @@
         "healthcheck_paths": []
       }
     },
+    "wireguard-mesh": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "bb-net_wireguard-mesh",
+      "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "enabled": true,
+      "domain": "mesh.diegonmarcos.com",
+      "flake": "wireguard-mesh",
+      "port": 8080,
+      "dns": "wireguard-mesh.app",
+      "upstream": "10.0.0.6:8080",
+      "containers": {
+        "app": {
+          "container_name": "wireguard-mesh",
+          "port": 8080,
+          "port_format": "colon",
+          "protocol": "http",
+          "public": true,
+          "read_only": true,
+          "tmpfs": [
+            "/var/cache/nginx",
+            "/var/run"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "32m"
+          },
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "wget",
+              "-qO-",
+              "http://localhost:8080/"
+            ],
+            "interval": "30s",
+            "timeout": "5s",
+            "retries": 3
+          },
+          "monitoring": {
+            "tls_check": true
+          }
+        }
+      },
+      "container_names": [
+        "wireguard-mesh"
+      ],
+      "all_ports": [
+        "8080"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "domain",
+          "domain": "mesh.diegonmarcos.com",
+          "auth": "two_factor",
+          "comment": "Authelia 2FA — ops-only observability."
+        }
+      },
+      "declared_ports": {
+        "app": 8080
+      },
+      "health": {
+        "path": "/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "subcategory": "net",
+      "data_sources": {
+        "_doc": "Inputs the snapshot deriver reads — declarative cross-references, no hardcoded values in the panel. Single canonical SoT after the I_cloud-data restructure (post-2026-04): _cloud-data-consolidated.json carries every wg_ip / wg_public_key / public_port already merged.",
+        "consolidated": "2_configs/dist/_cloud-data-consolidated.json",
+        "ws_tunnel": "a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json"
+      },
+      "data_outputs": {
+        "snapshot": "2_configs/dist/mesh-snapshot.json",
+        "_consumer_hint": "Symlinked into src/data/mesh.json at build-prep time; PORTAL_DATA[\"mesh\"] hydration. Bare name (not cloud-data-*) so it stays at dist/ root per cloud-data-config-derive.ts L26 archival rule."
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "folder": "bb-net_wireguard-mesh-ws-tunnel",
+      "description": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "enabled": true,
+      "domain": "vpn.diegonmarcos.com",
+      "flake": "wireguard-mesh-ws-tunnel",
+      "port": 8080,
+      "dns": "wireguard-mesh-ws-tunnel.app",
+      "upstream": "10.0.0.1:8080",
+      "containers": {
+        "app": {
+          "container_name": "wireguard-mesh-ws-tunnel",
+          "image": "ghcr.io/erebe/wstunnel:latest",
+          "command": [
+            "server",
+            "ws://127.0.0.1:8080",
+            "--restrict-to",
+            "127.0.0.1:51820",
+            "--http-upgrade-path-prefix",
+            "${WSTUNNEL_PATH_PREFIX}"
+          ],
+          "port": 8080,
+          "port_format": "colon",
+          "protocol": "http",
+          "public": false,
+          "network_mode": "host",
+          "read_only": true,
+          "tmpfs": [
+            "/tmp"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "64m"
+          },
+          "healthcheck": null,
+          "monitoring": {
+            "tls_check": true
+          }
+        }
+      },
+      "container_names": [
+        "wireguard-mesh-ws-tunnel"
+      ],
+      "all_ports": [
+        "8080"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "domain",
+          "domain": "vpn.diegonmarcos.com",
+          "auth": "none",
+          "websocket": true,
+          "upstream": "127.0.0.1:8080",
+          "path_match": "${WSTUNNEL_PATH_PREFIX}/*",
+          "comment": "WS upgrade only on the secret prefix path. Caddy returns 404 for unknown paths to defend against scanners."
+        }
+      },
+      "declared_ports": {
+        "ws": 8080
+      },
+      "health": {
+        "path": "/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": false
+      },
+      "subcategory": "net",
+      "transports": {
+        "_doc": "Canonical declaration of all VPN transport paths. Read by bb-net_wireguard-mesh (the panel) + unix/.../wireguard-wstunnel.nix (the laptop client) + cloud Caddy deriver. Single source of truth — never duplicate these values anywhere.",
+        "wg0": {
+          "label": "WireGuard direct (UDP)",
+          "protocol": "udp",
+          "port": 51820,
+          "endpoint_template": "${gcp_proxy.public_ip}:51820",
+          "primary": true,
+          "fallback": false,
+          "use_case": "Default high-speed path. UDP-friendly networks (cloud-to-cloud, home, most cellular).",
+          "_consumer_hint": "Read by home-manager wireguard.nix on every VM and laptop."
+        },
+        "wg0-tcp": {
+          "label": "WireGuard via wstunnel (TCP/443)",
+          "protocol": "tcp",
+          "port": 443,
+          "endpoint_template": "wss://${domain}:443",
+          "wstunnel_path_prefix_secret": "WSTUNNEL_PATH_PREFIX",
+          "primary": false,
+          "fallback": true,
+          "use_case": "Hostile networks (airport / hotel / captive portal) where UDP/51820 is blocked. Looks identical to normal HTTPS to MITM/DPI.",
+          "_consumer_hint": "Read by home-manager wireguard-wstunnel.nix on laptop/phone only."
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "authelia": {
       "category": "sec",
       "vm": "gcp-E2-f_0",
@@ -3950,11 +4055,15 @@
           "extra_ports": [
             {
               "port": 80,
-              "protocol": "http"
+              "protocol": "http",
+              "monitor": false,
+              "_comment": "Caddy is TLS-only on :443 — no plain :80 listener. Suppress canonical URL probe."
             },
             {
               "port": 2019,
-              "protocol": "http"
+              "protocol": "http",
+              "monitor": false,
+              "_comment": "Admin API bound to localhost:2019 only — local-only by design."
             }
           ],
           "port_env": null,
@@ -4263,6 +4372,7 @@
       "health": {
         "path": "/health"
       },
+      "bind_host": "10.0.0.1",
       "resources": {
         "mem_limit": "64M",
         "mem_reservation": "16M"
@@ -4282,6 +4392,145 @@
         "description": "Validates bearer JWT tokens locally using Authelia JWKS public keys for Caddy forward_auth.",
         "auth": "bearer"
       }
+    },
+    "c3-analytics-api": {
+      "category": "obs",
+      "vm": "gcp-E2-f_0",
+      "folder": "bc-obs_c3-analytics-api",
+      "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
+      "enabled": true,
+      "domain": "api.diegonmarcos.com/c3a",
+      "flake": "c3-analytics-api",
+      "port": 8085,
+      "dns": "c3-analytics-api.app",
+      "upstream": "10.0.0.1:8085",
+      "containers": {
+        "app": {
+          "container_name": "c3-analytics-api",
+          "image": "ghcr.io/diegonmarcos/c3-analytics-api:latest",
+          "port": 8085,
+          "port_env": "PORT",
+          "dns": "c3-analytics-api.app",
+          "public": true,
+          "proxy": {
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/c3a",
+            "auth": "public"
+          },
+          "healthcheck": "/healthz",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "c3-analytics-api"
+      ],
+      "all_ports": [
+        "8085"
+      ],
+      "all_dns": [
+        "c3-analytics-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/c3a",
+          "auth": "public"
+        }
+      },
+      "declared_ports": {
+        "app": 8085
+      },
+      "health": {
+        "path": "/c3a/healthz"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backends": {
+        "e": {
+          "service": "matomo",
+          "rewrite_path": "/matomo.php",
+          "description": "Matomo Tracking API",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        },
+        "s": {
+          "service": "umami",
+          "rewrite_path": "/api/send",
+          "description": "Umami /api/send",
+          "methods": [
+            "POST"
+          ]
+        },
+        "l": {
+          "service": "openobserve",
+          "rewrite_path": "/api/default/default/_json",
+          "description": "OpenObserve _json bulk ingest",
+          "methods": [
+            "POST"
+          ],
+          "auth_header_env": "OPENOBSERVE_AUTHORIZATION"
+        }
+      },
+      "sites": [
+        {
+          "id": "diegonmarcos-com",
+          "origins": [
+            "https://diegonmarcos.com",
+            "https://www.diegonmarcos.com"
+          ],
+          "matomo_idsite": null,
+          "umami_website_id": null,
+          "openobserve_stream": "diegonmarcos-com"
+        }
+      ],
+      "limits": {
+        "max_body_bytes": 1048576,
+        "max_ingest_lines": 5000,
+        "rate_per_ip_per_min": 60,
+        "rate_per_sid_per_min": 1000,
+        "tracker_cache_seconds": 300,
+        "request_timeout_ms": 5000
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/c3a/docs/json",
+        "api_url": "https://api.diegonmarcos.com/c3a/c3a/docs/json",
+        "healthcheck_paths": [
+          "/healthz"
+        ],
+        "type": "openapi",
+        "spec_path": "/c3a/docs/json",
+        "base_path": "/c3a",
+        "display_name": "C3 Analytics Public Collector",
+        "description": "Public passthrough analytics collector. Browsers/sites POST to /c3a/{e|s|l}, file ingest /c3a/f, tracker /c3a/t.js.",
+        "auth": "none"
+      },
+      "secret_env_vars": [
+        "OPENOBSERVE_AUTHORIZATION"
+      ]
     },
     "c3-infra-api": {
       "category": "sec",
@@ -4344,10 +4593,15 @@
       },
       "proxy": {
         "primary": {
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-infra-api",
-          "auth": "two_factor"
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -4456,6 +4710,7 @@
       "proxy": {
         "primary": {
           "streaming": true,
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
           "base_path": "/c3-infra-mcp"
@@ -4586,7 +4841,12 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-services-api",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/docs/json": {
+              "auth": "public"
+            }
+          }
         }
       },
       "declared_ports": {
@@ -5195,7 +5455,33 @@
       "proxy": {
         "primary": {
           "domain": "analytics.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/matomo.js": {
+              "auth": "public"
+            },
+            "/matomo.php": {
+              "auth": "public"
+            },
+            "/piwik.js": {
+              "auth": "public"
+            },
+            "/piwik.php": {
+              "auth": "public"
+            },
+            "/collect.php": {
+              "auth": "public"
+            },
+            "/api.php": {
+              "auth": "public"
+            },
+            "/track.php": {
+              "auth": "public"
+            },
+            "/js/*": {
+              "auth": "public"
+            }
+          }
         }
       },
       "health": {
@@ -5654,9 +5940,19 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
           "base_path": "/umami",
-          "auth": "two_factor"
+          "auth": "two_factor",
+          "paths": {
+            "/script.js": {
+              "auth": "public"
+            },
+            "/api/send": {
+              "auth": "public"
+            }
+          },
+          "domain": "analytics.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -5979,8 +6275,11 @@
       },
       "proxy": {
         "primary": {
-          "domain": "git.diegonmarcos.com",
-          "auth": "two_factor"
+          "type": "path",
+          "parent_domain": "app.diegonmarcos.com",
+          "base_path": "/gitea",
+          "auth": "two_factor",
+          "domain": "git.diegonmarcos.com"
         }
       },
       "declared_ports": {
@@ -6001,6 +6300,7 @@
         ]
       },
       "ssh_port": 2222,
+      "ssh_listen_host": "10.0.0.6",
       "gitea": {
         "org": "diego",
         "mirrors": {
@@ -6573,12 +6873,6 @@
         "service": "fin-api"
       },
       {
-        "name": "ollama.app",
-        "type": "A",
-        "value": "10.0.0.8",
-        "service": "ollama"
-      },
-      {
         "name": "ollama-hai.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -6613,6 +6907,12 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "introspect-proxy"
+      },
+      {
+        "name": "c3-analytics-api.app",
+        "type": "A",
+        "value": "10.0.0.1",
+        "service": "c3-analytics-api"
       },
       {
         "name": "c3-infra-api.app",
@@ -6837,7 +7137,6 @@
           "mattermost-bots",
           "mattermost-mcp",
           "photoprism",
-          "photos-webhook",
           "radicale",
           "revealmd",
           "vaultwarden",
@@ -6846,6 +7145,7 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
+          "wireguard-mesh",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -6894,43 +7194,6 @@
           }
         ]
       },
-      "gcp-t4": {
-        "vm_id": "gcp-T4-p_0",
-        "ip": "34.173.227.250",
-        "wg_ip": "10.0.0.8",
-        "wg_public_key": null,
-        "wg_port": 51820,
-        "wg_role": "spoke",
-        "user": "diego",
-        "home": "/home/diego",
-        "rescue_port": 2200,
-        "specs": {
-          "cpu": 4,
-          "ram_gb": 15,
-          "disk_gb": 100,
-          "arch": "x86_64",
-          "shape": "n1-standard-4",
-          "gpu": "NVIDIA T4",
-          "vram_gb": 16
-        },
-        "public_ports": [],
-        "idle_shutdown": {
-          "timeout_hours": 1,
-          "cpu_threshold": 60,
-          "docker_cpu_threshold": 30,
-          "network_threshold": 51200,
-          "min_uptime_seconds": 600
-        },
-        "containers": [
-          "ollama"
-        ],
-        "method": "gcloud",
-        "gha": {
-          "ssh_secret": "GCP_T4_SSH_KEY",
-          "host_secret": "GCP_T4_HOST",
-          "user_secret": "GCP_T4_USER"
-        }
-      },
       "gcp-proxy": {
         "vm_id": "gcp-E2-f_0",
         "ip": "35.226.147.64",
@@ -6942,23 +7205,21 @@
         "home": "/home/diego",
         "rescue_port": 2200,
         "specs": {
-          "cpu": 2,
-          "ram_gb": 2,
-          "disk_gb": 32,
+          "cpu": 1,
+          "ram_gb": 1,
+          "disk_gb": 30,
           "arch": "x86_64",
-          "shape": "e2-small",
-          "machine_type": "e2-small",
-          "cloud_name": "arch-1",
-          "cloud_zone": "us-central1-a",
-          "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
+          "shape": "e2-micro"
         },
         "public_ports": [],
         "idle_shutdown": null,
         "containers": [
           "hickory-dns",
+          "wireguard-mesh-ws-tunnel",
           "authelia",
           "caddy",
           "introspect-proxy",
+          "c3-analytics-api",
           "postlite",
           "redis"
         ],
@@ -7038,20 +7299,6 @@
         "port": 2200
       },
       {
-        "host": "gcp-t4",
-        "hostname": "10.0.0.8",
-        "user": "diego",
-        "identity_file": "~/.ssh/google_compute_engine",
-        "port": 22
-      },
-      {
-        "host": "gcp-t4-dropbear",
-        "hostname": "10.0.0.8",
-        "user": "diego",
-        "identity_file": "~/.ssh/google_compute_engine",
-        "port": 2200
-      },
-      {
         "host": "gcp-proxy",
         "hostname": "10.0.0.1",
         "user": "diego",
@@ -7097,12 +7344,6 @@
         "ssh_secret": "OCI_SSH_KEY",
         "user": "ubuntu",
         "host": "82.70.229.129"
-      },
-      "gcp-t4": {
-        "ssh_secret": "GCP_T4_SSH_KEY",
-        "user": "diego",
-        "host_secret": "GCP_T4_HOST",
-        "user_secret": "GCP_T4_USER"
       },
       "gcp-proxy": {
         "ssh_secret": "GCP_PROXY_SSH_KEY",
@@ -7177,11 +7418,6 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "photos-webhook": {
-        "dir": "aa-sui_photos-webhook",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "radicale": {
         "dir": "aa-sui_radicale",
         "vm": "oci-apps",
@@ -7252,6 +7488,16 @@
         "vm": "gcp-proxy",
         "has_docker": true
       },
+      "wireguard-mesh": {
+        "dir": "bb-net_wireguard-mesh",
+        "vm": "oci-apps",
+        "has_docker": false
+      },
+      "wireguard-mesh-ws-tunnel": {
+        "dir": "bb-net_wireguard-mesh-ws-tunnel",
+        "vm": "gcp-proxy",
+        "has_docker": false
+      },
       "authelia": {
         "dir": "bb-sec_authelia",
         "vm": "gcp-proxy",
@@ -7264,6 +7510,11 @@
       },
       "introspect-proxy": {
         "dir": "bb-sec_introspect-proxy",
+        "vm": "gcp-proxy",
+        "has_docker": true
+      },
+      "c3-analytics-api": {
+        "dir": "bc-obs_c3-analytics-api",
         "vm": "gcp-proxy",
         "has_docker": true
       },
