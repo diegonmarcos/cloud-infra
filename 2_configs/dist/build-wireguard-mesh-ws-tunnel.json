@@ -3,7 +3,7 @@
   "_meta": {
     "description": "wireguard-mesh-ws-tunnel container config (service=wireguard-mesh-ws-tunnel, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-08T13:51:56.329Z",
+    "generated_at": "2026-05-08T14:27:28.113Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,17 +25,18 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T13:51:55.796Z",
+  "_generated": "2026-05-08T14:27:27.707Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "wireguard-mesh-ws-tunnel",
     "image": "ghcr.io/erebe/wstunnel:latest",
     "command": [
+      "/home/app/wstunnel",
       "server",
-      "ws://127.0.0.1:8080",
+      "ws://0.0.0.0:8080",
       "--restrict-to",
       "127.0.0.1:51820",
-      "--http-upgrade-path-prefix",
+      "--restrict-http-upgrade-path-prefix",
       "${WSTUNNEL_PATH_PREFIX}"
     ],
     "port": 8080,

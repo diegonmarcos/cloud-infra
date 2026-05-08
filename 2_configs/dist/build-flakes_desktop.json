@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T13:51:56.654Z",
+    "generated_at": "2026-05-08T14:27:28.387Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T13:51:55.983Z",
+  "_generated": "2026-05-08T14:27:27.864Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -3716,11 +3716,12 @@
           "container_name": "wireguard-mesh-ws-tunnel",
           "image": "ghcr.io/erebe/wstunnel:latest",
           "command": [
+            "/home/app/wstunnel",
             "server",
-            "ws://127.0.0.1:8080",
+            "ws://0.0.0.0:8080",
             "--restrict-to",
             "127.0.0.1:51820",
-            "--http-upgrade-path-prefix",
+            "--restrict-http-upgrade-path-prefix",
             "${WSTUNNEL_PATH_PREFIX}"
           ],
           "port": 8080,
@@ -3804,7 +3805,10 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
-      }
+      },
+      "secret_env_vars": [
+        "WSTUNNEL_PATH_PREFIX"
+      ]
     },
     "authelia": {
       "category": "sec",
