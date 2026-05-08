@@ -169,6 +169,23 @@ detect_layout
 # SSH multiplexing: one connection reused across all steps, kept alive 120s
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 
+# SSH override hooks (used during VM cutover before DNS/alias points to new IP)
+# SSH_HOST_OVERRIDE=<ip>          → -o HostName=<ip>
+# SSH_KEY_OVERRIDE=<keyfile>      → -o IdentityFile=<keyfile> + IdentitiesOnly=yes
+# SSH_USER_OVERRIDE=<user>        → -o User=<user>
+if [ -n "${SSH_HOST_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o HostName=${SSH_HOST_OVERRIDE}"
+fi
+if [ -n "${SSH_KEY_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o IdentityFile=${SSH_KEY_OVERRIDE} -o IdentitiesOnly=yes"
+fi
+if [ -n "${SSH_USER_OVERRIDE:-}" ]; then
+    SSH_OPTS="$SSH_OPTS -o User=${SSH_USER_OVERRIDE}"
+fi
+export SSH_OPTS
+# Make rsync (called bare in some steps) honor SSH_OPTS via standard env var
+export RSYNC_RSH="ssh $SSH_OPTS"
+
 # Binary name for deploy payload (default: SERVICE_NAME-binary)
 : "${DOCKER_BINARY_NAME:=${SERVICE_NAME}-binary}"
 
@@ -323,7 +340,7 @@ case "${1:-all}" in
             fi
             [ "$NEW_SECRETS_HASH" != "$OLD_SECRETS_HASH" ] && SECRETS_CHANGED=true
         fi
-        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "$FORCE_DEPLOY" ]; then
+        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "${FORCE_DEPLOY:-}" ]; then
             log "Config unchanged, no image rebuild — skipping deploy+compose"
         else
             step_deploy
