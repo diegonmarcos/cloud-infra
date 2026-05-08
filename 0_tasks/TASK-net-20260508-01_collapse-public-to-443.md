@@ -1,6 +1,6 @@
 # Collapse public surface to `443/tcp` + `443/udp` + `51820/udp`
 
-**Status**: Phase 1 in progress · **Owner**: diego · **Created**: 2026-05-08
+**Status**: Phases 1, 2a, 4 done (source-only, undeployed) · Phases 2b, 3, 5 deferred · **Owner**: diego · **Created**: 2026-05-08
 
 ## Goal
 
@@ -15,13 +15,48 @@ All other VMs (oci-*) stay at `51820/udp` only.
 
 | # | Title | Risk | Status |
 |---|---|---|---|
-| 1 | Drop 587 (mail submission) | low | in progress |
-| 2 | Caddy DNS-01 + drop 80 | medium | pending — needs `caddy-dns/cloudflare` plugin verified in `bb-sec_caddy-l4-image` |
-| 3 | caddy-l4 SNI multiplex mail-over-TLS onto 443 | medium | pending |
-| 4 | WG fallback on 443/udp + drop QUIC | medium | pending |
-| 5 | Drop port 25, delegate inbound mail to CF Worker | high | pending |
+| 1 | Drop 587 (mail submission) | low | **done** (`53b12b134`) |
+| 2a | Caddy global DNS-01 (port 80 still open) | medium | **done** (`5ad8b48b8`); needs deploy + renewal validation |
+| 2b | Drop port 80 | low (after 2a validated) | deferred |
+| 3 | caddy-l4 SNI multiplex mail-over-TLS onto 443 | medium-high | deferred — see rationale below |
+| 4 | WG fallback on 443/udp + drop QUIC | medium | **done** (this commit) |
+| 5 | Drop port 25 | high | deferred — needs CF Email Routing rule audit (see rationale) |
 
 Each phase = one commit, individually deployable & reversible.
+
+## Deferred phases — rationale
+
+### Phase 3 deferred — SNI architecture decision needed
+Multiplexing IMAPS (993) and SMTPS (465) onto a single port via SNI requires
+each protocol to have a distinct SNI hostname (or fragile ALPN matching).
+Real options:
+1. **Subprotocol subdomains** (cleanest): `imap.diegonmarcos.com:443`,
+   `smtps.diegonmarcos.com:443`, `imap-stalwart.diegonmarcos.com:443`,
+   `smtps-stalwart.diegonmarcos.com:443`. Requires new DNS CNAMEs +
+   updated mail-client docs.
+2. **ALPN matchers** (fragile): IMAPS/SMTPS clients rarely advertise ALPN;
+   matching on absence-of-ALPN is brittle.
+3. **Status quo** (no Phase 3): keep 465, 993, 2443, 2465, 2993 as
+   dedicated TCP ports. Public surface stays at 8 ports instead of 3.
+
+Decide #1 vs #3 and ship as a follow-up. Source-side cost is ~30 lines in
+`caddyfile.nix` + a few new entries in `cloud-data-cloudflare-dns.json`.
+
+### Phase 5 deferred — CF Email Routing rule coverage
+Verified via `c_vps/ba-clo_cloudflare/src/terraform.json`:
+- `email_routing.rules[]` has ONE rule covering only `me@diegonmarcos.com`
+- All other addresses (`no-reply@`, `postmaster@`, `contact@`, etc.) fall
+  through to either the `backup_email` (live.com) or — if MX still points
+  at oci-mail:25 — to Maddy directly.
+
+Dropping port 25 without first adding CF Email Routing rules for all
+inbound aliases would silently lose mail to non-`me@` addresses. Phase 5
+needs an operational pre-step:
+1. Inventory all inbound aliases used by the system (Authelia notifications,
+   service alerts, etc.)
+2. Add CF Email Routing rules for each (or a catch-all → worker)
+3. Validate one-week mail flow
+4. Then drop port 25
 
 ## Final state
 

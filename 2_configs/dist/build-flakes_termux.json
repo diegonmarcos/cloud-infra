@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T10:43:41.814Z",
+    "generated_at": "2026-05-08T11:09:58.200Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T10:43:41.483Z",
+  "_generated": "2026-05-08T11:09:57.983Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -3617,15 +3617,13 @@
       },
       "subcategory": "net",
       "data_sources": {
-        "_doc": "Inputs the snapshot deriver reads — declarative cross-references, no hardcoded values in the panel.",
-        "topology": "I_cloud-data/cloud-data-topology.json",
-        "ws_tunnel": "a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json",
-        "vms_gcp": "c_vps/vps_gcloud/src/terraform.json",
-        "vms_oci": "c_vps/vps_oci/src/terraform.json"
+        "_doc": "Inputs the snapshot deriver reads — declarative cross-references, no hardcoded values in the panel. Single canonical SoT after the I_cloud-data restructure (post-2026-04): _cloud-data-consolidated.json carries every wg_ip / wg_public_key / public_port already merged.",
+        "consolidated": "2_configs/dist/_cloud-data-consolidated.json",
+        "ws_tunnel": "a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json"
       },
       "data_outputs": {
-        "snapshot": "I_cloud-data/cloud-data-wg-mesh-snapshot.json",
-        "_consumer_hint": "Symlinked into src/data/mesh.json at build-prep time; PORTAL_DATA[\"mesh\"] hydration."
+        "snapshot": "2_configs/dist/mesh-snapshot.json",
+        "_consumer_hint": "Symlinked into src/data/mesh.json at build-prep time; PORTAL_DATA[\"mesh\"] hydration. Bare name (not cloud-data-*) so it stays at dist/ root per cloud-data-config-derive.ts L26 archival rule."
       },
       "api": {
         "has_api": false,
