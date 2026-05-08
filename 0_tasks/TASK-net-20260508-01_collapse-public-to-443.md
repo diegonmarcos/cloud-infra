@@ -1,6 +1,12 @@
 # Collapse public surface to `443/tcp` + `443/udp` + `51820/udp`
 
-**Status**: Phases 1, 2a, 4 done (source-only, undeployed) · Phases 2b, 3, 5 deferred · **Owner**: diego · **Created**: 2026-05-08
+**Status**: Phases 1, 2a, 4, 5 done (source-only, undeployed) · Phases 2b, 3 deferred · **Owner**: diego · **Created**: 2026-05-08
+
+Goal = **2 unique public port numbers** on gcp-proxy (`443` + `51820`),
+**1** on every other VM (`51820`). All inbound mail flows via Cloudflare
+Email Routing → Worker `email-forwarder` → Cloudflare Tunnel
+(`smtp-proxy.diegonmarcos.com` → localhost:8080 on gcp-proxy) →
+WG → smtp-proxy → maddy. Port 25 is NEVER publicly open.
 
 ## Goal
 
@@ -20,7 +26,7 @@ All other VMs (oci-*) stay at `51820/udp` only.
 | 2b | Drop port 80 | low (after 2a validated) | deferred |
 | 3 | caddy-l4 SNI multiplex mail-over-TLS onto 443 | medium-high | deferred — see rationale below |
 | 4 | WG fallback on 443/udp + drop QUIC | medium | **done** (this commit) |
-| 5 | Drop port 25 | high | deferred — needs CF Email Routing rule audit (see rationale) |
+| 5 | Drop port 25 | low (CF Worker bridges) | **done** (this commit) |
 
 Each phase = one commit, individually deployable & reversible.
 
@@ -42,21 +48,27 @@ Real options:
 Decide #1 vs #3 and ship as a follow-up. Source-side cost is ~30 lines in
 `caddyfile.nix` + a few new entries in `cloud-data-cloudflare-dns.json`.
 
-### Phase 5 deferred — CF Email Routing rule coverage
-Verified via `c_vps/ba-clo_cloudflare/src/terraform.json`:
-- `email_routing.rules[]` has ONE rule covering only `me@diegonmarcos.com`
-- All other addresses (`no-reply@`, `postmaster@`, `contact@`, etc.) fall
-  through to either the `backup_email` (live.com) or — if MX still points
-  at oci-mail:25 — to Maddy directly.
+### Phase 5 done — CF Worker is the bridge
 
-Dropping port 25 without first adding CF Email Routing rules for all
-inbound aliases would silently lose mail to non-`me@` addresses. Phase 5
-needs an operational pre-step:
-1. Inventory all inbound aliases used by the system (Authelia notifications,
-   service alerts, etc.)
-2. Add CF Email Routing rules for each (or a catch-all → worker)
-3. Validate one-week mail flow
-4. Then drop port 25
+GCP firewall blocks port 25 entirely. Inbound mail never touches a public
+port on our infra. Path:
+
+```
+External MTA → MX (CF) → CF Email Routing → Worker `email-forwarder`
+                            → Cloudflare Tunnel
+                                → localhost:8080 on gcp-proxy
+                                    → WG → oci-mail smtp-proxy
+                                        → maddy
+```
+
+Source: `allow-mail-smtp` (port 25) dropped from
+`c_vps/vps_gcloud/src/terraform.json`. Verified via
+`c_vps/ba-clo_cloudflare/src/terraform.json`:
+- `email_routing.rules[]` routes `me@` → worker
+- `tunnel.ingress_rules[]` routes `smtp-proxy.diegonmarcos.com` → localhost:8080
+
+If new aliases need delivery (e.g. `no-reply@`, `postmaster@`), add CF
+Email Routing rules for them — no firewall change needed.
 
 ## Final state
 
