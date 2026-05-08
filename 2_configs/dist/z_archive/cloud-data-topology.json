@@ -2150,8 +2150,8 @@
       "category": "app",
       "vm": "oci-E2-f_0",
       "folder": "aa-sui_tools-smtp-proxy",
-      "description": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)",
-      "domain": "smtp.diegonmarcos.com",
+      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
+      "domain": "api.diegonmarcos.com/smtp-proxy-api",
       "port": 8080,
       "dns": "smtp-proxy.app",
       "upstream": "10.0.0.3:8080",
@@ -2163,8 +2163,10 @@
           "dns": "smtp-proxy.app",
           "public": true,
           "proxy": {
-            "domain": "smtp.diegonmarcos.com",
-            "auth": "none"
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/smtp-proxy-api",
+            "auth": "bearer"
           },
           "protocol": "http"
         }
@@ -2185,8 +2187,10 @@
       },
       "proxy": {
         "primary": {
-          "domain": "smtp.diegonmarcos.com",
-          "auth": "none"
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/smtp-proxy-api",
+          "auth": "bearer"
         }
       },
       "declared_ports": {
@@ -3461,7 +3465,7 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3a",
-            "auth": "none"
+            "auth": "public"
           },
           "healthcheck": "/healthz",
           "monitoring": {
@@ -3496,7 +3500,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3a",
-          "auth": "none"
+          "auth": "public"
         }
       },
       "declared_ports": {
@@ -4100,7 +4104,7 @@
       "vm": "oci-A1-f_0",
       "folder": "bc-obs_matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
-      "domain": "analytics.diegonmarcos.com/matomo",
+      "domain": "analytics.diegonmarcos.com",
       "port": 8084,
       "dns": "matomo.app",
       "upstream": "10.0.0.6:8084",
@@ -4114,9 +4118,7 @@
           "dns": "matomo.app",
           "public": true,
           "proxy": {
-            "type": "path",
-            "parent_domain": "analytics.diegonmarcos.com",
-            "base_path": "/matomo",
+            "domain": "analytics.diegonmarcos.com",
             "auth": "two_factor"
           },
           "healthcheck": "/",
@@ -4165,9 +4167,7 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "analytics.diegonmarcos.com",
-          "base_path": "/matomo",
+          "domain": "analytics.diegonmarcos.com",
           "auth": "two_factor",
           "paths": {
             "/matomo.js": {
@@ -4398,7 +4398,7 @@
       "vm": "oci-A1-f_0",
       "folder": "bc-obs_openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-      "domain": "analytics.diegonmarcos.com/openobserve",
+      "domain": "grafana.diegonmarcos.com",
       "port": 5080,
       "dns": "openobserve.app",
       "upstream": "10.0.0.6:5080",
@@ -4411,9 +4411,8 @@
           "dns": "openobserve.app",
           "public": true,
           "proxy": {
-            "type": "path",
-            "parent_domain": "analytics.diegonmarcos.com",
-            "base_path": "/openobserve",
+            "type": "domain",
+            "domain": "grafana.diegonmarcos.com",
             "auth": "two_factor"
           },
           "healthcheck": null,
@@ -4455,9 +4454,8 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "analytics.diegonmarcos.com",
-          "base_path": "/openobserve",
+          "type": "domain",
+          "domain": "grafana.diegonmarcos.com",
           "auth": "two_factor"
         }
       },
@@ -5198,7 +5196,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-08T15:53:34.784Z",
+    "generated_at": "2026-05-08T17:59:05.789Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

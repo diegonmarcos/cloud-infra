@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-08T15:53:34.794Z",
+    "generated_at": "2026-05-08T17:59:05.826Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T15:53:34.628Z",
+  "_generated": "2026-05-08T17:59:05.165Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 161,
+    "nodes": 160,
     "edges": 192,
     "by_table": {
       "vm": 4,
       "service": 52,
       "container": 72,
-      "domain": 33
+      "domain": 32
     }
   },
   "nodes": [
@@ -622,8 +622,8 @@
       "properties": {
         "name": "smtp-proxy",
         "category": "app",
-        "description": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)",
-        "domain": "smtp.diegonmarcos.com",
+        "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
+        "domain": "api.diegonmarcos.com/smtp-proxy-api",
         "port": 8080,
         "vm": "oci-mail",
         "folder": "aa-sui_tools-smtp-proxy"
@@ -1407,7 +1407,7 @@
         "name": "matomo",
         "category": "tools",
         "description": "Matomo hybrid analytics (oci-apps)",
-        "domain": "analytics.diegonmarcos.com/matomo",
+        "domain": "analytics.diegonmarcos.com",
         "port": 8084,
         "vm": "oci-apps",
         "folder": "bc-obs_matomo"
@@ -1509,7 +1509,7 @@
         "name": "openobserve",
         "category": "tools",
         "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-        "domain": "analytics.diegonmarcos.com/openobserve",
+        "domain": "grafana.diegonmarcos.com",
         "port": 5080,
         "vm": "oci-apps",
         "folder": "bc-obs_openobserve"
@@ -1805,10 +1805,10 @@
     },
     {
       "table": "domain",
-      "id": "smtp_diegonmarcos_com",
-      "key": "domain:smtp_diegonmarcos_com",
+      "id": "api_diegonmarcos_com/smtp_proxy_api",
+      "key": "domain:api_diegonmarcos_com/smtp_proxy_api",
       "properties": {
-        "fqdn": "smtp.diegonmarcos.com"
+        "fqdn": "api.diegonmarcos.com/smtp-proxy-api"
       }
     },
     {
@@ -1933,10 +1933,10 @@
     },
     {
       "table": "domain",
-      "id": "analytics_diegonmarcos_com/matomo",
-      "key": "domain:analytics_diegonmarcos_com/matomo",
+      "id": "analytics_diegonmarcos_com",
+      "key": "domain:analytics_diegonmarcos_com",
       "properties": {
-        "fqdn": "analytics.diegonmarcos.com/matomo"
+        "fqdn": "analytics.diegonmarcos.com"
       }
     },
     {
@@ -1949,18 +1949,10 @@
     },
     {
       "table": "domain",
-      "id": "analytics_diegonmarcos_com/openobserve",
-      "key": "domain:analytics_diegonmarcos_com/openobserve",
+      "id": "grafana_diegonmarcos_com",
+      "key": "domain:grafana_diegonmarcos_com",
       "properties": {
-        "fqdn": "analytics.diegonmarcos.com/openobserve"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "analytics_diegonmarcos_com",
-      "key": "domain:analytics_diegonmarcos_com",
-      "properties": {
-        "fqdn": "analytics.diegonmarcos.com"
+        "fqdn": "grafana.diegonmarcos.com"
       }
     },
     {
@@ -3113,7 +3105,7 @@
       "to": "service:caddy",
       "key": "service:smtp_proxy->proxied_by->service:caddy",
       "properties": {
-        "domain": "smtp.diegonmarcos.com"
+        "domain": "api.diegonmarcos.com/smtp-proxy-api"
       }
     },
     {
@@ -3248,7 +3240,7 @@
       "to": "service:caddy",
       "key": "service:matomo->proxied_by->service:caddy",
       "properties": {
-        "domain": "analytics.diegonmarcos.com/matomo"
+        "domain": "analytics.diegonmarcos.com"
       }
     },
     {
@@ -3266,7 +3258,7 @@
       "to": "service:caddy",
       "key": "service:openobserve->proxied_by->service:caddy",
       "properties": {
-        "domain": "analytics.diegonmarcos.com/openobserve"
+        "domain": "grafana.diegonmarcos.com"
       }
     },
     {
@@ -3394,9 +3386,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:smtp_diegonmarcos_com",
+      "from": "domain:api_diegonmarcos_com/smtp_proxy_api",
       "to": "service:smtp_proxy",
-      "key": "domain:smtp_diegonmarcos_com->routes_to->service:smtp_proxy",
+      "key": "domain:api_diegonmarcos_com/smtp_proxy_api->routes_to->service:smtp_proxy",
       "properties": {}
     },
     {
@@ -3506,9 +3498,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:analytics_diegonmarcos_com/matomo",
+      "from": "domain:analytics_diegonmarcos_com",
       "to": "service:matomo",
-      "key": "domain:analytics_diegonmarcos_com/matomo->routes_to->service:matomo",
+      "key": "domain:analytics_diegonmarcos_com->routes_to->service:matomo",
       "properties": {}
     },
     {
@@ -3520,9 +3512,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:analytics_diegonmarcos_com/openobserve",
+      "from": "domain:grafana_diegonmarcos_com",
       "to": "service:openobserve",
-      "key": "domain:analytics_diegonmarcos_com/openobserve->routes_to->service:openobserve",
+      "key": "domain:grafana_diegonmarcos_com->routes_to->service:openobserve",
       "properties": {}
     },
     {
