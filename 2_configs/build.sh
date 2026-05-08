@@ -86,8 +86,27 @@ consolidate() {
 derive() {
     ensure_node_deps
     mkdir -p "$DIST"
-    log "Deriving per-concern + per-container JSONs → $DIST/"
-    tsx "$ENGINES/cloud-data-config-derive.ts"
+    DERIVERS_JSON="$SCRIPT_DIR/src/derivers.json"
+    if [ -f "$DERIVERS_JSON" ] && command -v jq >/dev/null 2>&1; then
+        count=$(jq '.derivers | length' "$DERIVERS_JSON")
+        log "Deriving via $count derivers from src/derivers.json → $DIST/"
+        i=0
+        while [ "$i" -lt "$count" ]; do
+            name=$(jq -r ".derivers[$i].name"   "$DERIVERS_JSON")
+            rel=$( jq -r ".derivers[$i].script" "$DERIVERS_JSON")
+            [ -f "$SCRIPT_DIR/$rel" ] || { log "ERROR: deriver '$name' script missing: $rel"; exit 1; }
+            log "  → $name ($rel)"
+            tsx "$SCRIPT_DIR/$rel" || { log "FAILED: deriver '$name'"; exit 1; }
+            i=$((i + 1))
+        done
+    else
+        # Fallback when jq is unavailable or the JSON hasn't been deployed yet —
+        # keep the canonical deriver running so the pipeline never silently
+        # produces an incomplete dist/. New derivers MUST be added to
+        # derivers.json, not here.
+        log "WARN: derivers.json or jq unavailable — running only the canonical cloud-data-config-derive.ts"
+        tsx "$ENGINES/cloud-data-config-derive.ts"
+    fi
     cache_download_generator
 }
 
