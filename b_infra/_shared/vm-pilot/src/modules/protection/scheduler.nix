@@ -125,9 +125,29 @@ in {
     done
 
     $SUDO systemctl daemon-reload
-    $SUDO systemctl restart sshd 2>/dev/null || $SUDO systemctl restart ssh 2>/dev/null || true
 
-    echo "[scheduler] deployed: connectivity.slice=${toString connectivityReserveMB}MB | docker.slice=${toString dockerMaxMB}MB | slices-only (no FIFO/RR)"
+    # Defer sshd restart until 20s AFTER activation finishes. A direct
+    # `systemctl restart sshd` here can race with — and tear down — the SSH
+    # session that is carrying this very activation (the HM-Docker delivery
+    # invokes the activation over SSH; if sshd's KillMode is not strictly
+    # `process`, the foreground `docker run` that wraps the activation is
+    # killed and the ship engine sees exit 255, aborting before later steps
+    # like installLayer2Identity / installObsoleteSystemdUnitsCleanup ever
+    # run. systemd-run --on-active queues the restart on the host's systemd
+    # so it fires once the activation is well past completion.
+    $SUDO ${pkgs.systemd}/bin/systemd-run \
+      --on-active=20 \
+      --unit=sshd-scheduler-restart.service \
+      --description="Deferred sshd restart to apply scheduler.conf drop-in" \
+      systemctl restart sshd 2>/dev/null \
+    || $SUDO ${pkgs.systemd}/bin/systemd-run \
+      --on-active=20 \
+      --unit=sshd-scheduler-restart.service \
+      --description="Deferred sshd restart to apply scheduler.conf drop-in" \
+      systemctl restart ssh 2>/dev/null \
+    || true
+
+    echo "[scheduler] deployed: connectivity.slice=${toString connectivityReserveMB}MB | docker.slice=${toString dockerMaxMB}MB | slices-only (no FIFO/RR) | sshd-restart deferred 20s"
     ) || echo "[scheduler] FAILED — activation continues"
   '';
 }

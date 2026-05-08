@@ -265,7 +265,6 @@ jobs:
           VM="${{ matrix.vm }}"
           case "$VM" in
             gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
-            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
             *)         KEY="$OCI_SSH_KEY"
                        HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
                        USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
