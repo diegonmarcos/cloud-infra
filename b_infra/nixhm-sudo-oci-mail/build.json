@@ -28,22 +28,7 @@
     "remote_build": false
   },
   "firewall": {
-    "public_ports": [
-      {
-        "port": 25,
-        "proto": "tcp",
-        "desc": "SMTP (Maddy MX — must be public, RFC)",
-        "source": "0.0.0.0/0",
-        "owned_by": "maddy"
-      },
-      {
-        "port": 8080,
-        "proto": "tcp",
-        "desc": "SMTP proxy (CF Worker ingress — Cloudflare has no WireGuard)",
-        "source": "0.0.0.0/0",
-        "owned_by": "smtp-proxy"
-      }
-    ]
+    "public_ports": []
   },
   "dashboard": {
     "dns": "oci-mail.app",
@@ -55,12 +40,5 @@
   },
   "build": {
     "headers_enforced": true
-  },
-  "_obsolete_systemd_units_note": "Stranded systemd units left over from migrations (e.g., a service that became a docker container). The protection/obsolete-cleanup.nix module reads this array and on every home-manager activation: stops, disables, masks, and removes /etc/systemd/system/<unit>. List is intentionally per-VM — the same unit name on a different VM may still be in use.",
-  "obsolete_systemd_units": [
-    {
-      "unit": "smtp-proxy.service",
-      "_why": "Replaced by docker container at /opt/containers/smtp-proxy (Rust). Old Python /opt/smtp-proxy/smtp_proxy.py was deleted during migration but the systemd unit at /etc/systemd/system/smtp-proxy.service was left behind, restarting every 5s (NRestarts=60636+ as of 2026-05-07). RestartSec=5 in the leftover unit means ~17280 fail-restart events per day."
-    }
-  ]
+  }
 }

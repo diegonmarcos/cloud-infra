@@ -65,9 +65,8 @@ Cloudflare (DNS + proxy + DDoS + Email Worker)
 | oci-E2-f_0 | oci-mail | 130.110.251.193 | 10.0.0.3 | x86_64 | 1 GB | 24/7 |
 | oci-E2-f_1 | oci-analytics | 129.151.228.66 | 10.0.0.4 | x86_64 | 1 GB | 24/7 |
 | oci-A1-f_0 | oci-apps | 82.70.229.129 | 10.0.0.6 | aarch64 | 16 GB | 24/7 |
-| gcp-T4-p_0 | gcp-t4 | — | 10.0.0.8 | x86_64 | 16 GB | on-demand |
 
-SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`, `ssh gcp-t4`
+SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`
 
 ### A.3 Active Services
 
@@ -140,12 +139,6 @@ SSH access: `ssh gcp-proxy`, `ssh oci-mail`, `ssh oci-analytics`, `ssh oci-apps`
 | Dozzle | logs.diegonmarcos.com | Real-time Docker log viewer |
 | Fluent Bit | — | Log processor and forwarder |
 | Sauron Forwarder | — | Alert forwarding to central sauron |
-
-#### gcp-t4 (GPU / On-Demand)
-
-| Service | Domain | Description |
-|---------|--------|-------------|
-| Ollama | — | DeepSeek/Qwen 14B on GCP Spot T4 |
 
 #### Multi-VM / Local
 
@@ -238,7 +231,6 @@ cloud/
 │   │   ├── _engine.sh            HM build engine
 │   │   ├── _shared/              40+ shared modules (system protection, containers, security)
 │   │   ├── nixhm-sudo-gcp-proxy/ Per-VM configs (build.json + src/)
-│   │   ├── nixhm-sudo-gcp-t4/
 │   │   ├── nixhm-sudo-oci-analytics/
 │   │   ├── nixhm-sudo-oci-apps/
 │   │   ├── nixhm-sudo-oci-mail/
@@ -452,7 +444,6 @@ b_infra/
 │   ├── httpd.nix           Web server config
 │   └── secrets.yaml        Shared secrets (sops-encrypted)
 ├── nixhm-sudo-gcp-proxy/  Per-VM (x86_64)
-├── nixhm-sudo-gcp-t4/     Per-VM (x86_64)
 ├── nixhm-sudo-oci-analytics/ Per-VM (x86_64)
 ├── nixhm-sudo-oci-apps/   Per-VM (aarch64)
 ├── nixhm-sudo-oci-mail/   Per-VM (x86_64)
