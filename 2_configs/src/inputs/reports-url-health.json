@@ -1,13 +1,15 @@
 {
   "_comment": "cloud-url-health-report runtime config. Passwords NEVER live here — NOREPLY_PASSWORD + ME_PASSWORD come from env (sops-decrypted upstream).",
   "concurrency": {
+    "_comment": "Private concurrency intentionally low: 16 simultaneous WG probes saturate idle handshakes and cause cascading timeouts on the spokes. 4 is high-enough for the 86 private targets to finish in <30s while staying under the WG renegotiation pressure point.",
     "public": 16,
-    "private": 16
+    "private": 4
   },
   "timeouts": {
-    "http_connect_secs": 3,
-    "http_total_secs": 5,
-    "tcp_secs": 3
+    "_comment": "Bumped 2026-05-07: WG re-handshake on idle peers can take ~3-5s before first packet, so a 3s TCP / 5s HTTP-total budget produced false negatives across the 10.0.0.6 spoke (oci-apps) when probing from desktop. New budget allows one full handshake + actual request.",
+    "http_connect_secs": 10,
+    "http_total_secs": 15,
+    "tcp_secs": 10
   },
   "targets": {
     "_comment": "Ports that are not HTTP servers — probe via TcpStream::connect only, skip HTTP GET.",
