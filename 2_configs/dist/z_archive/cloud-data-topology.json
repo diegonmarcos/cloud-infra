@@ -338,6 +338,8 @@
   "wireguard": {
     "subnet": "10.0.0.0/24",
     "port": 51820,
+    "port_fallback": 443,
+    "port_fallback_proto": "udp",
     "hub": "gcp-E2-f_0",
     "peers": [
       {
@@ -3459,7 +3461,7 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3a",
-            "auth": "public"
+            "auth": "none"
           },
           "healthcheck": "/healthz",
           "monitoring": {
@@ -3494,7 +3496,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3a",
-          "auth": "public"
+          "auth": "none"
         }
       },
       "declared_ports": {
@@ -4098,7 +4100,7 @@
       "vm": "oci-A1-f_0",
       "folder": "bc-obs_matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "port": 8084,
       "dns": "matomo.app",
       "upstream": "10.0.0.6:8084",
@@ -4112,7 +4114,9 @@
           "dns": "matomo.app",
           "public": true,
           "proxy": {
-            "domain": "analytics.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/matomo",
             "auth": "two_factor"
           },
           "healthcheck": "/",
@@ -4161,7 +4165,9 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/matomo",
           "auth": "two_factor",
           "paths": {
             "/matomo.js": {
@@ -4392,7 +4398,7 @@
       "vm": "oci-A1-f_0",
       "folder": "bc-obs_openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "port": 5080,
       "dns": "openobserve.app",
       "upstream": "10.0.0.6:5080",
@@ -4405,8 +4411,9 @@
           "dns": "openobserve.app",
           "public": true,
           "proxy": {
-            "type": "domain",
-            "domain": "grafana.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/openobserve",
             "auth": "two_factor"
           },
           "healthcheck": null,
@@ -4448,8 +4455,9 @@
       },
       "proxy": {
         "primary": {
-          "type": "domain",
-          "domain": "grafana.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/openobserve",
           "auth": "two_factor"
         }
       },
@@ -4962,6 +4970,8 @@
     "wireguard": {
       "subnet": "10.0.0.0/24",
       "port": 51820,
+      "port_fallback": 443,
+      "port_fallback_proto": "udp",
       "hub": "gcp-E2-f_0",
       "peers": [
         {
@@ -5188,7 +5198,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-08T14:27:28.354Z",
+    "generated_at": "2026-05-08T15:53:34.784Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

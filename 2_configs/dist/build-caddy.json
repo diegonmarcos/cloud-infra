@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-08T14:27:27.872Z",
+    "generated_at": "2026-05-08T15:53:34.638Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T14:27:27.674Z",
+  "_generated": "2026-05-08T15:53:34.557Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -301,11 +301,6 @@
       "domain": "db.diegonmarcos.com",
       "upstream": "10.0.0.6:8086",
       "comment": "DBGate - Universal database manager for all cloud databases"
-    },
-    {
-      "domain": "grafana.diegonmarcos.com",
-      "upstream": "10.0.0.6:5080",
-      "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     }
   ],
   "path_routes": [
@@ -379,6 +374,27 @@
       ],
       "comment": "Cloud dashboard + spec viewer",
       "landing_page": "cloud"
+    },
+    {
+      "parent_domain": "analytics.diegonmarcos.com",
+      "paths": [
+        {
+          "base_path": "/matomo",
+          "upstream": "10.0.0.6:8084",
+          "comment": "Matomo hybrid analytics (oci-apps)"
+        },
+        {
+          "base_path": "/openobserve",
+          "upstream": "10.0.0.6:5080",
+          "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
+        },
+        {
+          "base_path": "/umami",
+          "upstream": "10.0.0.6:3006",
+          "comment": "Umami Analytics - lightweight privacy-focused web analytics"
+        }
+      ],
+      "comment": ""
     }
   ],
   "github_pages_proxies": [
@@ -449,7 +465,7 @@
       "comment": "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie"
     },
     "analytics": {
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "comment": "Matomo (public tracking + protected admin) + Umami (path-based)",
       "matomo_upstream": "10.0.0.6:8084",
       "umami_upstream": "10.0.0.6:3006",
@@ -1960,16 +1976,6 @@
       "notes": "DBGate - Universal database manager for all cloud databases"
     },
     {
-      "host": "grafana.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:5080",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
-    },
-    {
       "host": "cloud.diegonmarcos.com",
       "path": "/spec",
       "upstream": "10.0.0.6:3080",
@@ -1978,6 +1984,36 @@
       "zone": "com",
       "service": null,
       "notes": "Unified Cloud Documentation Portal"
+    },
+    {
+      "host": "analytics.diegonmarcos.com",
+      "path": "/matomo",
+      "upstream": "10.0.0.6:8084",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Matomo hybrid analytics (oci-apps)"
+    },
+    {
+      "host": "analytics.diegonmarcos.com",
+      "path": "/openobserve",
+      "upstream": "10.0.0.6:5080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
+    },
+    {
+      "host": "analytics.diegonmarcos.com",
+      "path": "/umami",
+      "upstream": "10.0.0.6:3006",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Umami Analytics - lightweight privacy-focused web analytics"
     },
     {
       "host": "diegonmarcos.com, www.diegonmarcos.com",

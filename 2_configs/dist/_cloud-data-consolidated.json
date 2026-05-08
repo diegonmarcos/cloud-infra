@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-08T14:27:23.529Z",
+    "generated_at": "2026-05-08T15:53:33.589Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -307,6 +307,8 @@
     "wireguard": {
       "subnet": "10.0.0.0/24",
       "port": 51820,
+      "port_fallback": 443,
+      "port_fallback_proto": "udp",
       "hub": "gcp-E2-f_0",
       "peers": [
         {
@@ -4425,7 +4427,7 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3a",
-            "auth": "public"
+            "auth": "none"
           },
           "healthcheck": "/healthz",
           "monitoring": {
@@ -4460,7 +4462,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3a",
-          "auth": "public"
+          "auth": "none"
         }
       },
       "declared_ports": {
@@ -5400,7 +5402,7 @@
       "folder": "bc-obs_matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "enabled": true,
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "port": 8084,
       "dns": "matomo.app",
       "upstream": "10.0.0.6:8084",
@@ -5414,7 +5416,9 @@
           "dns": "matomo.app",
           "public": true,
           "proxy": {
-            "domain": "analytics.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/matomo",
             "auth": "two_factor"
           },
           "healthcheck": "/",
@@ -5463,7 +5467,9 @@
       },
       "proxy": {
         "primary": {
-          "domain": "analytics.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/matomo",
           "auth": "two_factor",
           "paths": {
             "/matomo.js": {
@@ -5511,7 +5517,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/matomo/?module=API",
         "healthcheck_paths": [
           "/"
         ],
@@ -5744,7 +5750,7 @@
       "folder": "bc-obs_openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
       "enabled": true,
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "port": 5080,
       "dns": "openobserve.app",
       "upstream": "10.0.0.6:5080",
@@ -5757,8 +5763,9 @@
           "dns": "openobserve.app",
           "public": true,
           "proxy": {
-            "type": "domain",
-            "domain": "grafana.diegonmarcos.com",
+            "type": "path",
+            "parent_domain": "analytics.diegonmarcos.com",
+            "base_path": "/openobserve",
             "auth": "two_factor"
           },
           "healthcheck": null,
@@ -5800,8 +5807,9 @@
       },
       "proxy": {
         "primary": {
-          "type": "domain",
-          "domain": "grafana.diegonmarcos.com",
+          "type": "path",
+          "parent_domain": "analytics.diegonmarcos.com",
+          "base_path": "/openobserve",
           "auth": "two_factor"
         }
       },
@@ -5821,7 +5829,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/swagger/index.html",
-        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "api_url": "https://analytics.diegonmarcos.com/openobserve/swagger/index.html",
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/swagger/index.html",

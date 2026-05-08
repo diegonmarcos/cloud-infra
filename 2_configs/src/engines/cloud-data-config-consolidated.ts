@@ -586,6 +586,10 @@ function main() {
   const wireguardSection = {
     subnet: native.wireguard?.subnet ?? "10.0.0.0/24",
     port: native.wireguard?.port ?? 51820,
+    // Fallback port: hub-side NAT redirect on gcp-proxy (Phase 4: udp/<port_fallback> -> udp/<port>)
+    // Clients on networks blocking udp/51820 (airport/hotel WiFi) switch to this port.
+    port_fallback: native.wireguard?.port_fallback ?? null,
+    port_fallback_proto: native.wireguard?.port_fallback_proto ?? "udp",
     hub: native.wireguard?.wg_hub ?? null,
     peers: wgPeers,
     clients: Object.fromEntries(
