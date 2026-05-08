@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-08T15:53:34.638Z",
+    "generated_at": "2026-05-08T17:59:05.200Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T15:53:34.557Z",
+  "_generated": "2026-05-08T17:59:05.035Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -258,12 +258,6 @@
       "comment": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
     },
     {
-      "domain": "smtp.diegonmarcos.com",
-      "upstream": "10.0.0.3:8080",
-      "auth": "none",
-      "comment": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)"
-    },
-    {
       "domain": "mail-stalwart.diegonmarcos.com",
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
@@ -301,6 +295,11 @@
       "domain": "db.diegonmarcos.com",
       "upstream": "10.0.0.6:8086",
       "comment": "DBGate - Universal database manager for all cloud databases"
+    },
+    {
+      "domain": "grafana.diegonmarcos.com",
+      "upstream": "10.0.0.6:5080",
+      "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     }
   ],
   "path_routes": [
@@ -334,6 +333,11 @@
     {
       "parent_domain": "api.diegonmarcos.com",
       "paths": [
+        {
+          "base_path": "/smtp-proxy-api",
+          "upstream": "10.0.0.3:8080",
+          "comment": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/"
+        },
         {
           "base_path": "/crawlee",
           "upstream": "10.0.0.6:3000",
@@ -374,27 +378,6 @@
       ],
       "comment": "Cloud dashboard + spec viewer",
       "landing_page": "cloud"
-    },
-    {
-      "parent_domain": "analytics.diegonmarcos.com",
-      "paths": [
-        {
-          "base_path": "/matomo",
-          "upstream": "10.0.0.6:8084",
-          "comment": "Matomo hybrid analytics (oci-apps)"
-        },
-        {
-          "base_path": "/openobserve",
-          "upstream": "10.0.0.6:5080",
-          "comment": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
-        },
-        {
-          "base_path": "/umami",
-          "upstream": "10.0.0.6:3006",
-          "comment": "Umami Analytics - lightweight privacy-focused web analytics"
-        }
-      ],
-      "comment": ""
     }
   ],
   "github_pages_proxies": [
@@ -465,7 +448,7 @@
       "comment": "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie"
     },
     "analytics": {
-      "domain": "analytics.diegonmarcos.com/matomo",
+      "domain": "analytics.diegonmarcos.com",
       "comment": "Matomo (public tracking + protected admin) + Umami (path-based)",
       "matomo_upstream": "10.0.0.6:8084",
       "umami_upstream": "10.0.0.6:3006",
@@ -1743,6 +1726,16 @@
   "public_B_apis": [
     {
       "host": "api.diegonmarcos.com",
+      "path": "/smtp-proxy-api",
+      "upstream": "10.0.0.3:8080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/"
+    },
+    {
+      "host": "api.diegonmarcos.com",
       "path": "/crawlee",
       "upstream": "10.0.0.6:3000",
       "kind": "reverse_proxy",
@@ -1896,16 +1889,6 @@
       "notes": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
     },
     {
-      "host": "smtp.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.3:8080",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)"
-    },
-    {
       "host": "mail-stalwart.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.3:2443",
@@ -1976,28 +1959,8 @@
       "notes": "DBGate - Universal database manager for all cloud databases"
     },
     {
-      "host": "cloud.diegonmarcos.com",
-      "path": "/spec",
-      "upstream": "10.0.0.6:3080",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Unified Cloud Documentation Portal"
-    },
-    {
-      "host": "analytics.diegonmarcos.com",
-      "path": "/matomo",
-      "upstream": "10.0.0.6:8084",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Matomo hybrid analytics (oci-apps)"
-    },
-    {
-      "host": "analytics.diegonmarcos.com",
-      "path": "/openobserve",
+      "host": "grafana.diegonmarcos.com",
+      "path": null,
       "upstream": "10.0.0.6:5080",
       "kind": "reverse_proxy",
       "tls": "public",
@@ -2006,14 +1969,14 @@
       "notes": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     },
     {
-      "host": "analytics.diegonmarcos.com",
-      "path": "/umami",
-      "upstream": "10.0.0.6:3006",
+      "host": "cloud.diegonmarcos.com",
+      "path": "/spec",
+      "upstream": "10.0.0.6:3080",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Umami Analytics - lightweight privacy-focused web analytics"
+      "notes": "Unified Cloud Documentation Portal"
     },
     {
       "host": "diegonmarcos.com, www.diegonmarcos.com",

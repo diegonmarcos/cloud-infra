@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-08T15:53:33.589Z",
+    "generated_at": "2026-05-08T17:59:03.106Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -2529,9 +2529,9 @@
       "category": "app",
       "vm": "oci-E2-f_0",
       "folder": "aa-sui_tools-smtp-proxy",
-      "description": "HTTP-to-SMTP bridge for CF Email Routing (smtp.diegonmarcos.com)",
+      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
       "enabled": true,
-      "domain": "smtp.diegonmarcos.com",
+      "domain": "api.diegonmarcos.com/smtp-proxy-api",
       "flake": "tools-smtp-proxy",
       "port": 8080,
       "dns": "smtp-proxy.app",
@@ -2544,8 +2544,10 @@
           "dns": "smtp-proxy.app",
           "public": true,
           "proxy": {
-            "domain": "smtp.diegonmarcos.com",
-            "auth": "none"
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/smtp-proxy-api",
+            "auth": "bearer"
           },
           "protocol": "http"
         }
@@ -2566,19 +2568,27 @@
       },
       "proxy": {
         "primary": {
-          "domain": "smtp.diegonmarcos.com",
-          "auth": "none"
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/smtp-proxy-api",
+          "auth": "bearer"
         }
       },
       "declared_ports": {
         "app": 8080
       },
       "api": {
-        "has_api": false,
+        "has_api": true,
         "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
+        "api_path": "/smtp-proxy-api",
+        "api_url": "https://api.diegonmarcos.com/smtp-proxy-api/smtp-proxy-api",
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/smtp-proxy-api",
+        "endpoint_count": 1,
+        "display_name": "SMTP-Proxy HTTP-to-SMTP Bridge API",
+        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over WG. Used by CF email-forwarder Worker for inbound mail (because CF Workers cannot make outbound TCP/25 connections — port 25 is GCP-blocked end-to-end).",
+        "auth": "bearer"
       },
       "secret_env_vars": [
         "SMTP_HOST",
@@ -4427,7 +4437,7 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3a",
-            "auth": "none"
+            "auth": "public"
           },
           "healthcheck": "/healthz",
           "monitoring": {
@@ -4462,7 +4472,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3a",
-          "auth": "none"
+          "auth": "public"
         }
       },
       "declared_ports": {
@@ -5402,7 +5412,7 @@
       "folder": "bc-obs_matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "enabled": true,
-      "domain": "analytics.diegonmarcos.com/matomo",
+      "domain": "analytics.diegonmarcos.com",
       "port": 8084,
       "dns": "matomo.app",
       "upstream": "10.0.0.6:8084",
@@ -5416,9 +5426,7 @@
           "dns": "matomo.app",
           "public": true,
           "proxy": {
-            "type": "path",
-            "parent_domain": "analytics.diegonmarcos.com",
-            "base_path": "/matomo",
+            "domain": "analytics.diegonmarcos.com",
             "auth": "two_factor"
           },
           "healthcheck": "/",
@@ -5467,9 +5475,7 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "analytics.diegonmarcos.com",
-          "base_path": "/matomo",
+          "domain": "analytics.diegonmarcos.com",
           "auth": "two_factor",
           "paths": {
             "/matomo.js": {
@@ -5517,7 +5523,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/matomo/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/?module=API",
         "healthcheck_paths": [
           "/"
         ],
@@ -5750,7 +5756,7 @@
       "folder": "bc-obs_openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
       "enabled": true,
-      "domain": "analytics.diegonmarcos.com/openobserve",
+      "domain": "grafana.diegonmarcos.com",
       "port": 5080,
       "dns": "openobserve.app",
       "upstream": "10.0.0.6:5080",
@@ -5763,9 +5769,8 @@
           "dns": "openobserve.app",
           "public": true,
           "proxy": {
-            "type": "path",
-            "parent_domain": "analytics.diegonmarcos.com",
-            "base_path": "/openobserve",
+            "type": "domain",
+            "domain": "grafana.diegonmarcos.com",
             "auth": "two_factor"
           },
           "healthcheck": null,
@@ -5807,9 +5812,8 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "analytics.diegonmarcos.com",
-          "base_path": "/openobserve",
+          "type": "domain",
+          "domain": "grafana.diegonmarcos.com",
           "auth": "two_factor"
         }
       },
@@ -5829,7 +5833,7 @@
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/swagger/index.html",
-        "api_url": "https://analytics.diegonmarcos.com/openobserve/swagger/index.html",
+        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/swagger/index.html",
