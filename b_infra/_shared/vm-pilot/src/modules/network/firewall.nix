@@ -58,6 +58,14 @@ let
     # VM: ${vmName} — fully declarative iptables + nftables
     # THIS SCRIPT OWNS ALL PACKET FILTERING. Docker creates nothing.
     set -euo pipefail
+    # Default $HOME for systemd-boot-path execution: this script runs both
+    # via home-manager activation (HOME=/home/diego, set) AND via systemd
+    # firewall.service at boot (root, HOME UNSET). Without this default,
+    # `set -u` aborts the script on first $HOME reference, leaving the VM
+    # with a stale 4-rule INPUT chain (lo, ESTABLISHED, 10.0.0.0/24,
+    # udp/51820) and no public-port ACCEPT rules. Fix: default to root's
+    # home so the FW_JSON path search keeps working even at boot.
+    : "''${HOME:=/root}"
     export PATH="${pkgs.iptables}/bin:$PATH"
 
     # ══════════════════════════════════════════════════════════════
