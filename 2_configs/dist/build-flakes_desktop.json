@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T18:39:03.511Z",
+    "generated_at": "2026-05-08T19:04:51.510Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T18:39:03.339Z",
+  "_generated": "2026-05-08T19:04:51.298Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -3503,7 +3503,7 @@
       "category": "cloud",
       "vm": "local",
       "folder": "ba-clo_cloudflare-worker",
-      "description": "Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy",
+      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
       "enabled": true,
       "containers": {
         "app": {
@@ -3528,7 +3528,10 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
-      }
+      },
+      "secret_env_vars": [
+        "HTTP_TO_SMTP_PROXY_API_KEY"
+      ]
     },
     "gcloud": {
       "category": "cloud",

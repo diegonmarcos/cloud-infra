@@ -87,6 +87,8 @@ if [ -f "$CONFIG" ]; then
     COMPOSE_POST_HOOK="$(get_config compose.post_hook)"
     COMPOSE_CUSTOM="$(get_config compose.custom)"
     WRANGLER_DEPLOY="$(get_config deploy.wrangler)"
+    WRANGLER_SECRETS_PUSH="$(get_config deploy.wrangler_secrets)"
+    WRANGLER_SECRET_DROP="$(get_config_array deploy.wrangler_secret_drop)"
     TERRAFORM_DEPLOY="$(get_config deploy.terraform)"
     TERRAFORM_TFVARS_TEMPLATE="$(get_config terraform.tfvars_template)"
     BUILD_COPY_ONLY="$(get_config build.copy_only)"
@@ -316,12 +318,15 @@ case "${1:-all}" in
         # Runner: where to build Docker images (auto, local, oci-apps, gha)
         RUNNER="${2:-auto}"
 
-        # Special cases: wrangler/terraform have their own flow
+        # Special cases: wrangler/terraform have their own flow.
+        # NOTE: must `exit 0` (not `break`) — `break` is a no-op outside
+        # a loop, so the case-arm continued into the standard pipeline,
+        # double-running step_build + step_secrets.
         if [ "$WRANGLER_DEPLOY" = "true" ]; then
-            step_build; step_secrets; step_wrangler; break
+            step_build; step_secrets; step_wrangler; exit 0
         fi
         if [ "$TERRAFORM_DEPLOY" = "true" ]; then
-            step_build; step_secrets; step_terraform; break
+            step_build; step_secrets; step_terraform; exit 0
         fi
 
         # ── Phase 1: BUILD (sequential — nix build produces dist/) ──

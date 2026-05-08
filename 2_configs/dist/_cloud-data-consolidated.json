@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-08T18:39:02.384Z",
+    "generated_at": "2026-05-08T19:04:49.974Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -3574,7 +3574,7 @@
       "category": "cloud",
       "vm": "local",
       "folder": "ba-clo_cloudflare-worker",
-      "description": "Cloudflare Email Worker - routes inbound email (me@diegonmarcos.com) to Mailu via SMTP proxy",
+      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
       "enabled": true,
       "containers": {
         "app": {
@@ -3599,7 +3599,10 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
-      }
+      },
+      "secret_env_vars": [
+        "HTTP_TO_SMTP_PROXY_API_KEY"
+      ]
     },
     "gcloud": {
       "category": "cloud",
