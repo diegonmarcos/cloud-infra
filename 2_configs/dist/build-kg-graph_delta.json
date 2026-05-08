@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-08T14:27:28.379Z",
+    "generated_at": "2026-05-08T15:53:34.794Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T14:27:27.860Z",
+  "_generated": "2026-05-08T15:53:34.628Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 160,
+    "nodes": 161,
     "edges": 192,
     "by_table": {
       "vm": 4,
       "service": 52,
       "container": 72,
-      "domain": 32
+      "domain": 33
     }
   },
   "nodes": [
@@ -1407,7 +1407,7 @@
         "name": "matomo",
         "category": "tools",
         "description": "Matomo hybrid analytics (oci-apps)",
-        "domain": "analytics.diegonmarcos.com",
+        "domain": "analytics.diegonmarcos.com/matomo",
         "port": 8084,
         "vm": "oci-apps",
         "folder": "bc-obs_matomo"
@@ -1509,7 +1509,7 @@
         "name": "openobserve",
         "category": "tools",
         "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-        "domain": "grafana.diegonmarcos.com",
+        "domain": "analytics.diegonmarcos.com/openobserve",
         "port": 5080,
         "vm": "oci-apps",
         "folder": "bc-obs_openobserve"
@@ -1933,10 +1933,10 @@
     },
     {
       "table": "domain",
-      "id": "analytics_diegonmarcos_com",
-      "key": "domain:analytics_diegonmarcos_com",
+      "id": "analytics_diegonmarcos_com/matomo",
+      "key": "domain:analytics_diegonmarcos_com/matomo",
       "properties": {
-        "fqdn": "analytics.diegonmarcos.com"
+        "fqdn": "analytics.diegonmarcos.com/matomo"
       }
     },
     {
@@ -1949,10 +1949,18 @@
     },
     {
       "table": "domain",
-      "id": "grafana_diegonmarcos_com",
-      "key": "domain:grafana_diegonmarcos_com",
+      "id": "analytics_diegonmarcos_com/openobserve",
+      "key": "domain:analytics_diegonmarcos_com/openobserve",
       "properties": {
-        "fqdn": "grafana.diegonmarcos.com"
+        "fqdn": "analytics.diegonmarcos.com/openobserve"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "analytics_diegonmarcos_com",
+      "key": "domain:analytics_diegonmarcos_com",
+      "properties": {
+        "fqdn": "analytics.diegonmarcos.com"
       }
     },
     {
@@ -3240,7 +3248,7 @@
       "to": "service:caddy",
       "key": "service:matomo->proxied_by->service:caddy",
       "properties": {
-        "domain": "analytics.diegonmarcos.com"
+        "domain": "analytics.diegonmarcos.com/matomo"
       }
     },
     {
@@ -3258,7 +3266,7 @@
       "to": "service:caddy",
       "key": "service:openobserve->proxied_by->service:caddy",
       "properties": {
-        "domain": "grafana.diegonmarcos.com"
+        "domain": "analytics.diegonmarcos.com/openobserve"
       }
     },
     {
@@ -3498,9 +3506,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:analytics_diegonmarcos_com",
+      "from": "domain:analytics_diegonmarcos_com/matomo",
       "to": "service:matomo",
-      "key": "domain:analytics_diegonmarcos_com->routes_to->service:matomo",
+      "key": "domain:analytics_diegonmarcos_com/matomo->routes_to->service:matomo",
       "properties": {}
     },
     {
@@ -3512,9 +3520,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:grafana_diegonmarcos_com",
+      "from": "domain:analytics_diegonmarcos_com/openobserve",
       "to": "service:openobserve",
-      "key": "domain:grafana_diegonmarcos_com->routes_to->service:openobserve",
+      "key": "domain:analytics_diegonmarcos_com/openobserve->routes_to->service:openobserve",
       "properties": {}
     },
     {

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "crawlee_scheduler container config (service=crawlee-cloud, role=scheduler)",
     "format_version": 1,
-    "generated_at": "2026-05-08T14:27:28.060Z",
+    "generated_at": "2026-05-08T15:53:34.711Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T14:27:27.707Z",
+  "_generated": "2026-05-08T15:53:34.569Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "crawlee_scheduler",
@@ -1175,13 +1175,13 @@
         "app": 8084
       },
       "vm": "oci-apps",
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "api": {
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/?module=API",
-        "api_url": "https://analytics.diegonmarcos.com/?module=API",
+        "api_url": "https://analytics.diegonmarcos.com/matomo/?module=API",
         "healthcheck_paths": [
           "/"
         ],
@@ -1236,13 +1236,13 @@
         "app": 5080
       },
       "vm": "oci-apps",
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
       "api": {
         "has_api": true,
         "has_web_ui": true,
         "api_path": "/swagger/index.html",
-        "api_url": "https://grafana.diegonmarcos.com/swagger/index.html",
+        "api_url": "https://analytics.diegonmarcos.com/openobserve/swagger/index.html",
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/swagger/index.html",

@@ -141,6 +141,9 @@
       "description": "WireGuard VPN mesh — managed via home-manager (not Docker)",
       "subnet": "10.0.0.0/24",
       "port": 51820,
+      "port_fallback": 443,
+      "port_fallback_proto": "udp",
+      "port_fallback_description": "Hub-side NAT redirect (deployed Phase 4 via firewall.nix): udp/443 → udp/51820 on gcp-proxy. Clients on networks blocking udp/51820 (airports, hotels) switch to this port.",
       "wg_hub": "gcp-E2-f_0",
       "peers": [
         "oci-E2-f_0",
