@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.328Z",
+  "_generated": "2026-05-08T10:43:41.430Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-resources",
   "services": {
     "code-server": {
@@ -137,16 +137,6 @@
       ],
       "resources": null
     },
-    "photos-webhook": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "photos-webhook",
-        "photos-db"
-      ],
-      "resources": null
-    },
     "radicale": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
@@ -262,8 +252,8 @@
     },
     "ollama": {
       "vm": "gcp-t4",
-      "vm_ram_gb": 15,
-      "vm_cpu": 4,
+      "vm_ram_gb": null,
+      "vm_cpu": null,
       "containers": [
         "ollama"
       ],
@@ -337,8 +327,8 @@
     },
     "hickory-dns": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "hickory-dns"
       ],
@@ -346,10 +336,32 @@
         "mem_limit": "64M"
       }
     },
+    "wireguard-mesh": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "wireguard-mesh"
+      ],
+      "resources": {
+        "mem_limit": "32m"
+      }
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "wireguard-mesh-ws-tunnel"
+      ],
+      "resources": {
+        "mem_limit": "64m"
+      }
+    },
     "authelia": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "authelia",
         "authelia-redis",
@@ -366,8 +378,8 @@
     },
     "caddy": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "caddy"
       ],
@@ -384,10 +396,19 @@
     },
     "introspect-proxy": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "introspect-proxy"
+      ],
+      "resources": null
+    },
+    "c3-analytics-api": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "c3-analytics-api"
       ],
       "resources": null
     },
@@ -613,8 +634,8 @@
     },
     "postlite": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "postlite"
       ],
@@ -622,8 +643,8 @@
     },
     "redis": {
       "vm": "gcp-proxy",
-      "vm_ram_gb": 2,
-      "vm_cpu": 2,
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
         "redis"
       ],
@@ -631,7 +652,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.438Z",
+    "generated_at": "2026-05-08T10:43:41.777Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

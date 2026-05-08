@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.322Z",
+  "_generated": "2026-05-08T10:43:41.414Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/home-manager",
   "owner": {
     "name": "Diego Marcos",
@@ -126,7 +126,6 @@
         "mattermost-bots",
         "mattermost-mcp",
         "photoprism",
-        "photos-webhook",
         "radicale",
         "revealmd",
         "vaultwarden",
@@ -135,6 +134,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
+        "wireguard-mesh",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -183,43 +183,6 @@
         }
       ]
     },
-    "gcp-t4": {
-      "vm_id": "gcp-T4-p_0",
-      "ip": "34.173.227.250",
-      "wg_ip": "10.0.0.8",
-      "wg_public_key": null,
-      "wg_port": 51820,
-      "wg_role": "spoke",
-      "user": "diego",
-      "home": "/home/diego",
-      "rescue_port": 2200,
-      "specs": {
-        "cpu": 4,
-        "ram_gb": 15,
-        "disk_gb": 100,
-        "arch": "x86_64",
-        "shape": "n1-standard-4",
-        "gpu": "NVIDIA T4",
-        "vram_gb": 16
-      },
-      "public_ports": [],
-      "idle_shutdown": {
-        "timeout_hours": 1,
-        "cpu_threshold": 60,
-        "docker_cpu_threshold": 30,
-        "network_threshold": 51200,
-        "min_uptime_seconds": 600
-      },
-      "containers": [
-        "ollama"
-      ],
-      "method": "gcloud",
-      "gha": {
-        "ssh_secret": "GCP_T4_SSH_KEY",
-        "host_secret": "GCP_T4_HOST",
-        "user_secret": "GCP_T4_USER"
-      }
-    },
     "gcp-proxy": {
       "vm_id": "gcp-E2-f_0",
       "ip": "35.226.147.64",
@@ -231,23 +194,21 @@
       "home": "/home/diego",
       "rescue_port": 2200,
       "specs": {
-        "cpu": 2,
-        "ram_gb": 2,
-        "disk_gb": 32,
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 30,
         "arch": "x86_64",
-        "shape": "e2-small",
-        "machine_type": "e2-small",
-        "cloud_name": "arch-1",
-        "cloud_zone": "us-central1-a",
-        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/arch-1"
+        "shape": "e2-micro"
       },
       "public_ports": [],
       "idle_shutdown": null,
       "containers": [
         "hickory-dns",
+        "wireguard-mesh-ws-tunnel",
         "authelia",
         "caddy",
         "introspect-proxy",
+        "c3-analytics-api",
         "postlite",
         "redis"
       ],
@@ -314,15 +275,6 @@
         "role": "spoke",
         "wg_port": 51820,
         "public_ip": "82.70.229.129"
-      },
-      {
-        "name": "gcp-t4",
-        "wg_ip": "10.0.0.8",
-        "wg_public_key": null,
-        "endpoint": "34.173.227.250:51820",
-        "role": "spoke",
-        "wg_port": 51820,
-        "public_ip": "34.173.227.250"
       },
       {
         "name": "gcp-proxy",
@@ -410,20 +362,6 @@
       "port": 2200
     },
     {
-      "host": "gcp-t4",
-      "hostname": "10.0.0.8",
-      "user": "diego",
-      "identity_file": "~/.ssh/google_compute_engine",
-      "port": 22
-    },
-    {
-      "host": "gcp-t4-dropbear",
-      "hostname": "10.0.0.8",
-      "user": "diego",
-      "identity_file": "~/.ssh/google_compute_engine",
-      "port": 2200
-    },
-    {
       "host": "gcp-proxy",
       "hostname": "10.0.0.1",
       "user": "diego",
@@ -453,7 +391,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.434Z",
+    "generated_at": "2026-05-08T10:43:41.768Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

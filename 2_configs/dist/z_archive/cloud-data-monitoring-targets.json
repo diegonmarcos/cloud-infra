@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.323Z",
+  "_generated": "2026-05-08T10:43:41.417Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/monitoring-targets",
   "endpoint_checks": [
     {
@@ -56,8 +56,16 @@
       "url": "https://api.diegonmarcos.com/fin-api/fin-api/health"
     },
     {
+      "service": "wireguard-mesh",
+      "url": "https://mesh.diegonmarcos.com/"
+    },
+    {
       "service": "authelia",
       "url": "https://auth.diegonmarcos.com/api/health"
+    },
+    {
+      "service": "c3-analytics-api",
+      "url": "https://api.diegonmarcos.com/c3a/c3a/healthz"
     },
     {
       "service": "c3-infra-api",
@@ -146,8 +154,20 @@
       "domain": "api.diegonmarcos.com/fin-api"
     },
     {
+      "service": "wireguard-mesh",
+      "domain": "mesh.diegonmarcos.com"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel",
+      "domain": "vpn.diegonmarcos.com"
+    },
+    {
       "service": "authelia",
       "domain": "auth.diegonmarcos.com"
+    },
+    {
+      "service": "c3-analytics-api",
+      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -236,8 +256,20 @@
       "domain": "api.diegonmarcos.com/fin-api"
     },
     {
+      "service": "wireguard-mesh",
+      "domain": "mesh.diegonmarcos.com"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel",
+      "domain": "vpn.diegonmarcos.com"
+    },
+    {
       "service": "authelia",
       "domain": "auth.diegonmarcos.com"
+    },
+    {
+      "service": "c3-analytics-api",
+      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -293,18 +325,13 @@
       "user": "ubuntu"
     },
     {
-      "ip": "10.0.0.8",
-      "name": "gcp-t4",
-      "user": "diego"
-    },
-    {
       "ip": "10.0.0.1",
       "name": "gcp-proxy",
       "user": "diego"
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.435Z",
+    "generated_at": "2026-05-08T10:43:41.771Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

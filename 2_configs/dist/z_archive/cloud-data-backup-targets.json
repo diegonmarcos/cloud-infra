@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.328Z",
+  "_generated": "2026-05-08T10:43:41.429Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/backup-targets",
   "targets": [
     {
@@ -104,22 +104,6 @@
           "type": "mariadb",
           "user": "root",
           "db": "photoprism"
-        }
-      ]
-    },
-    {
-      "service": "photos-webhook",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "photos-webhook",
-          "container": "photos-db",
-          "container_key": "db",
-          "type": "custom",
-          "user": "photos_user",
-          "db": "photos"
         }
       ]
     },
@@ -373,14 +357,6 @@
           "db": "photoprism"
         },
         {
-          "service": "photos-webhook",
-          "container": "photos-db",
-          "container_key": "db",
-          "type": "custom",
-          "user": "photos_user",
-          "db": "photos"
-        },
-        {
           "service": "vaultwarden",
           "container": "vaultwarden",
           "container_key": "app",
@@ -517,7 +493,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.437Z",
+    "generated_at": "2026-05-08T10:43:41.776Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

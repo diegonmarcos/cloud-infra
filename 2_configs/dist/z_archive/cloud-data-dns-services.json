@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.311Z",
+  "_generated": "2026-05-08T10:43:41.366Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/dns-services",
   "suffix": "app",
   "caddy_ip": "10.0.0.1",
@@ -73,10 +73,6 @@
       "ip": "10.0.0.1",
       "desc": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
-    "photos-webhook": {
-      "ip": "10.0.0.1",
-      "desc": "PhotoPrism Webhook + S3 Processor"
-    },
     "radicale": {
       "ip": "10.0.0.1",
       "desc": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
@@ -137,10 +133,6 @@
       "ip": "10.0.0.1",
       "desc": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     },
-    "ollama": {
-      "ip": "10.0.0.1",
-      "desc": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback"
-    },
     "ollama-hai": {
       "ip": "10.0.0.1",
       "desc": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode"
@@ -157,6 +149,14 @@
       "ip": "10.0.0.1",
       "desc": "Internal DNS server for WireGuard mesh (per-service .app zones)"
     },
+    "wireguard-mesh": {
+      "ip": "10.0.0.1",
+      "desc": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "ip": "10.0.0.1",
+      "desc": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+    },
     "authelia": {
       "ip": "10.0.0.1",
       "desc": "SSO and 2FA authentication portal"
@@ -172,6 +172,10 @@
     "introspect-proxy": {
       "ip": "10.0.0.1",
       "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
+    },
+    "c3-analytics-api": {
+      "ip": "10.0.0.1",
+      "desc": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
     },
     "c3-infra-api": {
       "ip": "10.0.0.1",
@@ -278,11 +282,10 @@
     "1": "gcp-proxy",
     "3": "oci-mail",
     "4": "oci-analytics",
-    "6": "oci-apps",
-    "8": "gcp-t4"
+    "6": "oci-apps"
   },
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.349Z",
+    "generated_at": "2026-05-08T10:43:41.489Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-07T16:11:36.349Z",
+    "generated_at": "2026-05-08T10:43:41.491Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T16:11:36.316Z",
+  "_generated": "2026-05-08T10:43:41.392Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -199,11 +199,6 @@
       "comment": "SMTPS"
     },
     {
-      "port": 587,
-      "upstream": "10.0.0.3:587",
-      "comment": "SMTP Submission"
-    },
-    {
       "port": 2993,
       "upstream": "10.0.0.3:2993",
       "comment": "IMAPS (Stalwart)"
@@ -212,11 +207,6 @@
       "port": 2465,
       "upstream": "10.0.0.3:2465",
       "comment": "SMTPS (Stalwart)"
-    },
-    {
-      "port": 2587,
-      "upstream": "10.0.0.3:2587",
-      "comment": "SMTP Submission (Stalwart)"
     }
   ],
   "redirects": [
@@ -276,6 +266,17 @@
       "upstream": "10.0.0.6:8880",
       "auth": "none",
       "comment": "Bitwarden password manager"
+    },
+    {
+      "domain": "mesh.diegonmarcos.com",
+      "upstream": "10.0.0.6:8080",
+      "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    {
+      "domain": "vpn.diegonmarcos.com",
+      "upstream": "10.0.0.1:8080",
+      "auth": "none",
+      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     {
       "domain": "auth.diegonmarcos.com",
@@ -338,6 +339,11 @@
           "base_path": "/fin-api",
           "upstream": "10.0.0.6:8340",
           "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+        },
+        {
+          "base_path": "/c3a",
+          "upstream": "10.0.0.1:8085",
+          "comment": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
         },
         {
           "base_path": "/c3-infra-api",
@@ -508,10 +514,6 @@
       "upstream": "10.0.0.6:3013"
     },
     {
-      "service": "photos-webhook.app",
-      "upstream": "10.0.0.6:5002"
-    },
-    {
       "service": "radicale.app",
       "upstream": "10.0.0.6:5232"
     },
@@ -540,20 +542,20 @@
       "upstream": "10.0.0.6:8340"
     },
     {
-      "service": "ollama.app",
-      "upstream": "10.0.0.8:11434"
-    },
-    {
-      "service": "ollama-hai.app",
-      "upstream": "10.0.0.6:11435"
-    },
-    {
       "service": "rig-agentic-sonn-14bq8.app",
       "upstream": "10.0.0.6:8091"
     },
     {
       "service": "hickory-dns.app",
       "upstream": "10.0.0.1:53"
+    },
+    {
+      "service": "wireguard-mesh.app",
+      "upstream": "10.0.0.6:8080"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel.app",
+      "upstream": "10.0.0.1:8080"
     },
     {
       "service": "authelia.app",
@@ -566,6 +568,10 @@
     {
       "service": "introspect-proxy.app",
       "upstream": "10.0.0.1:4182"
+    },
+    {
+      "service": "c3-analytics-api.app",
+      "upstream": "10.0.0.1:8085"
     },
     {
       "service": "c3-infra-api.app",
@@ -919,44 +925,6 @@
     },
     {
       "kind": "redirect",
-      "service": "photos-webhook.app",
-      "redirect_to": "https://photos-webhook-http-5002.app",
-      "container": "photos-webhook",
-      "container_key": "app",
-      "svc": "photos-webhook",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "photos-webhook-http-5002.app",
-      "container": "photos-webhook",
-      "container_key": "app",
-      "svc": "photos-webhook",
-      "vm": "oci-A1-f_0",
-      "port": 5002,
-      "protocol": "http",
-      "upstream": "10.0.0.6:5002",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "photos-db.app",
-      "redirect_to": "https://photos-db-null.app",
-      "container": "photos-db",
-      "container_key": "db",
-      "svc": "photos-webhook",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "photos-db-null.app",
-      "container": "photos-db",
-      "container_key": "db",
-      "svc": "photos-webhook",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
       "service": "radicale.app",
       "redirect_to": "https://radicale-http-5232.app",
       "container": "radicale",
@@ -1041,18 +1009,6 @@
     },
     {
       "kind": "canonical",
-      "service": "stalwart-starttls-2025.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2025,
-      "protocol": "starttls",
-      "upstream": "10.0.0.3:2025",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
       "service": "stalwart-tls-2465.app",
       "container": "stalwart",
       "container_key": "app",
@@ -1061,18 +1017,6 @@
       "port": 2465,
       "protocol": "tls",
       "upstream": "10.0.0.3:2465",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-starttls-2587.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2587,
-      "protocol": "starttls",
-      "upstream": "10.0.0.3:2587",
       "source": "containers.app.extra_ports"
     },
     {
@@ -1202,6 +1146,27 @@
     },
     {
       "kind": "redirect",
+      "service": "wireguard-mesh.app",
+      "redirect_to": "https://wireguard-mesh-http-8080.app",
+      "container": "wireguard-mesh",
+      "container_key": "app",
+      "svc": "wireguard-mesh",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "wireguard-mesh-http-8080.app",
+      "container": "wireguard-mesh",
+      "container_key": "app",
+      "svc": "wireguard-mesh",
+      "vm": "oci-A1-f_0",
+      "port": 8080,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8080",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "authelia.app",
       "redirect_to": "https://authelia-http-9091.app",
       "container": "authelia",
@@ -1243,28 +1208,25 @@
       "source": "containers.app.port"
     },
     {
-      "kind": "canonical",
-      "service": "caddy-http-80.app",
-      "container": "caddy",
+      "kind": "redirect",
+      "service": "c3-analytics-api.app",
+      "redirect_to": "https://c3-analytics-api-http-8085.app",
+      "container": "c3-analytics-api",
       "container_key": "app",
-      "svc": "caddy",
-      "vm": "gcp-E2-f_0",
-      "port": 80,
-      "protocol": "http",
-      "upstream": "10.0.0.1:80",
-      "source": "containers.app.extra_ports"
+      "svc": "c3-analytics-api",
+      "vm": "gcp-E2-f_0"
     },
     {
       "kind": "canonical",
-      "service": "caddy-http-2019.app",
-      "container": "caddy",
+      "service": "c3-analytics-api-http-8085.app",
+      "container": "c3-analytics-api",
       "container_key": "app",
-      "svc": "caddy",
+      "svc": "c3-analytics-api",
       "vm": "gcp-E2-f_0",
-      "port": 2019,
+      "port": 8085,
       "protocol": "http",
-      "upstream": "10.0.0.1:2019",
-      "source": "containers.app.extra_ports"
+      "upstream": "10.0.0.1:8085",
+      "source": "containers.app.port"
     },
     {
       "kind": "redirect",
@@ -1776,6 +1738,16 @@
     },
     {
       "host": "api.diegonmarcos.com",
+      "path": "/c3a",
+      "upstream": "10.0.0.1:8085",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
+    },
+    {
+      "host": "api.diegonmarcos.com",
       "path": "/c3-infra-api",
       "upstream": "10.0.0.6:8081",
       "kind": "reverse_proxy",
@@ -1927,6 +1899,26 @@
       "zone": "com",
       "service": null,
       "notes": "Bitwarden password manager"
+    },
+    {
+      "host": "mesh.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    {
+      "host": "vpn.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.1:8080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     {
       "host": "auth.diegonmarcos.com",
@@ -2161,16 +2153,6 @@
       "notes": null
     },
     {
-      "host": "photos-webhook.app",
-      "path": null,
-      "upstream": "10.0.0.6:5002",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "radicale.app",
       "path": null,
       "upstream": "10.0.0.6:5232",
@@ -2241,26 +2223,6 @@
       "notes": null
     },
     {
-      "host": "ollama.app",
-      "path": null,
-      "upstream": "10.0.0.8:11434",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "ollama-hai.app",
-      "path": null,
-      "upstream": "10.0.0.6:11435",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "rig-agentic-sonn-14bq8.app",
       "path": null,
       "upstream": "10.0.0.6:8091",
@@ -2274,6 +2236,26 @@
       "host": "hickory-dns.app",
       "path": null,
       "upstream": "10.0.0.1:53",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "wireguard-mesh.app",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "wireguard-mesh-ws-tunnel.app",
+      "path": null,
+      "upstream": "10.0.0.1:8080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2304,6 +2286,16 @@
       "host": "introspect-proxy.app",
       "path": null,
       "upstream": "10.0.0.1:4182",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "c3-analytics-api.app",
+      "path": null,
+      "upstream": "10.0.0.1:8085",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2583,16 +2575,6 @@
       "notes": "underscore → TLS broken"
     },
     {
-      "host": "photos-webhook-http-5002.app",
-      "path": null,
-      "upstream": "10.0.0.6:5002",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "photos-webhook",
-      "notes": null
-    },
-    {
       "host": "radicale-http-5232.app",
       "path": null,
       "upstream": "10.0.0.6:5232",
@@ -2633,29 +2615,9 @@
       "notes": null
     },
     {
-      "host": "stalwart-starttls-2025.app",
-      "path": null,
-      "upstream": "10.0.0.3:2025",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
       "host": "stalwart-tls-2465.app",
       "path": null,
       "upstream": "10.0.0.3:2465",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "stalwart-starttls-2587.app",
-      "path": null,
-      "upstream": "10.0.0.3:2587",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2723,6 +2685,16 @@
       "notes": null
     },
     {
+      "host": "wireguard-mesh-http-8080.app",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "wireguard-mesh",
+      "notes": null
+    },
+    {
       "host": "authelia-http-9091.app",
       "path": null,
       "upstream": "10.0.0.1:9091",
@@ -2743,23 +2715,13 @@
       "notes": null
     },
     {
-      "host": "caddy-http-80.app",
+      "host": "c3-analytics-api-http-8085.app",
       "path": null,
-      "upstream": "10.0.0.1:80",
+      "upstream": "10.0.0.1:8085",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
-      "service": "caddy",
-      "notes": null
-    },
-    {
-      "host": "caddy-http-2019.app",
-      "path": null,
-      "upstream": "10.0.0.1:2019",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "caddy",
+      "service": "c3-analytics-api",
       "notes": null
     },
     {
@@ -2894,16 +2856,6 @@
     }
   ],
   "private_A2_app_portless": [
-    {
-      "host": "photos-db-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "photos-webhook",
-      "notes": null
-    },
     {
       "host": "stalwart-sorter-null.app",
       "path": null,
@@ -3111,16 +3063,6 @@
       "notes": "SMTPS"
     },
     {
-      "host": ":587",
-      "path": null,
-      "upstream": "10.0.0.3:587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission"
-    },
-    {
       "host": ":2993",
       "path": null,
       "upstream": "10.0.0.3:2993",
@@ -3139,16 +3081,6 @@
       "zone": "l4",
       "service": null,
       "notes": "SMTPS (Stalwart)"
-    },
-    {
-      "host": ":2587",
-      "path": null,
-      "upstream": "10.0.0.3:2587",
-      "kind": "l4_forward",
-      "tls": "none",
-      "zone": "l4",
-      "service": null,
-      "notes": "SMTP Submission (Stalwart)"
     }
   ],
   "others": [

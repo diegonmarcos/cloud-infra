@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.329Z",
+  "_generated": "2026-05-08T10:43:41.431Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/matomo-sites",
   "sites": [
     {
@@ -109,6 +109,16 @@
       "service": "hickory-dns"
     },
     {
+      "name": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "url": "https://mesh.diegonmarcos.com",
+      "service": "wireguard-mesh"
+    },
+    {
+      "name": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "url": "https://vpn.diegonmarcos.com",
+      "service": "wireguard-mesh-ws-tunnel"
+    },
+    {
       "name": "SSO and 2FA authentication portal",
       "url": "https://auth.diegonmarcos.com",
       "service": "authelia"
@@ -117,6 +127,11 @@
       "name": "Caddy reverse proxy + security dashboard (gcp-proxy)",
       "url": "https://proxy.diegonmarcos.com",
       "service": "caddy"
+    },
+    {
+      "name": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
+      "url": "https://api.diegonmarcos.com/c3a",
+      "service": "c3-analytics-api"
     },
     {
       "name": "C3 REST API — Cloud Control Center Fastify API",
@@ -170,7 +185,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.439Z",
+    "generated_at": "2026-05-08T10:43:41.780Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

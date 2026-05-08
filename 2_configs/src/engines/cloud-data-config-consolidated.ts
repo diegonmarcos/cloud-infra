@@ -316,8 +316,12 @@ function main() {
     // schema in a_solutions/build.schema.json). Replaces the previous KNOWN_API_PATHS
     // hardcoded map, the name-based hasApi heuristic, and the healthcheck-regex
     // api-path extraction. Adding a new API now requires zero engine edits.
+    // healthcheck per build.schema can be a path string ("/health"), a
+    // shell-cmd string ("curl ..."), an object ({test, interval, ...}),
+    // or null. Only path strings are useful here — coerce non-strings to
+    // "" so the downstream `.startsWith("/")` filter is type-safe.
     const healthchecks: string[] = Object.values(containers)
-      .map((c: any) => c.healthcheck ?? "")
+      .map((c: any) => (typeof c.healthcheck === "string" ? c.healthcheck : ""))
       .filter(Boolean);
 
     const apiDecl = (entry.api ?? null) as Record<string, unknown> | null;

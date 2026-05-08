@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-07T16:11:36.342Z",
+    "generated_at": "2026-05-08T10:43:41.463Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -62,6 +62,18 @@
       "networks": [],
       "containers": [
         "bup-server"
+      ]
+    },
+    {
+      "name": "c3-analytics-api",
+      "category": "obs",
+      "vm": "gcp-E2-f_0",
+      "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
+      "domain": "api.diegonmarcos.com/c3a",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "c3-analytics-api"
       ]
     },
     {
@@ -524,7 +536,7 @@
     {
       "name": "ollama",
       "category": "agi",
-      "vm": "gcp-T4-p_0",
+      "vm": "gcp-t4",
       "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
       "domain": "—",
       "ports": [],
@@ -581,19 +593,6 @@
         "photoprism_app",
         "photoprism_mariadb",
         "photoprism_rclone"
-      ]
-    },
-    {
-      "name": "photos-webhook",
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "description": "PhotoPrism Webhook + S3 Processor",
-      "domain": "—",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "photos-webhook",
-        "photos-db"
       ]
     },
     {
@@ -729,6 +728,30 @@
       "networks": [],
       "containers": [
         "vaultwarden"
+      ]
+    },
+    {
+      "name": "wireguard-mesh",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "domain": "mesh.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "wireguard-mesh"
+      ]
+    },
+    {
+      "name": "wireguard-mesh-ws-tunnel",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "description": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "domain": "vpn.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "wireguard-mesh-ws-tunnel"
       ]
     }
   ],
@@ -1050,6 +1073,30 @@
         "umami-db",
         "umami-setup"
       ]
+    },
+    {
+      "name": "wireguard-mesh",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "domain": "mesh.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "wireguard-mesh"
+      ]
+    },
+    {
+      "name": "wireguard-mesh-ws-tunnel",
+      "category": "tools",
+      "vm": "gcp-E2-f_0",
+      "description": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "domain": "vpn.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "wireguard-mesh-ws-tunnel"
+      ]
     }
   ],
   "apps": [
@@ -1247,7 +1294,7 @@
     {
       "name": "ollama",
       "category": "agi",
-      "vm": "gcp-T4-p_0",
+      "vm": "gcp-t4",
       "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
       "domain": "—",
       "ports": [],
@@ -1292,19 +1339,6 @@
         "photoprism_app",
         "photoprism_mariadb",
         "photoprism_rclone"
-      ]
-    },
-    {
-      "name": "photos-webhook",
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "description": "PhotoPrism Webhook + S3 Processor",
-      "domain": "—",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "photos-webhook",
-        "photos-db"
       ]
     },
     {

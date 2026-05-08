@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "ollama-arm container config (service=ollama-arm, role=app)",
+    "description": "c3-analytics-api container config (service=c3-analytics-api, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-08T10:43:41.653Z",
+    "generated_at": "2026-05-08T10:43:41.693Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,15 +28,34 @@
   "_generated": "2026-05-08T10:43:41.412Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "ollama-arm",
-    "port": 11434,
-    "port_env": "OLLAMA_HOST",
-    "port_format": "host",
+    "container_name": "c3-analytics-api",
+    "image": "ghcr.io/diegonmarcos/c3-analytics-api:latest",
+    "port": 8085,
+    "port_env": "PORT",
+    "dns": "c3-analytics-api.app",
+    "public": true,
+    "proxy": {
+      "type": "path",
+      "parent_domain": "api.diegonmarcos.com",
+      "base_path": "/c3a",
+      "auth": "public"
+    },
+    "healthcheck": "/healthz",
+    "monitoring": {
+      "tls_check": true,
+      "dns_check": true,
+      "endpoint_check": true
+    },
+    "volumes": [],
+    "env_file": true,
+    "depends_on": [],
+    "resources": null,
+    "read_only": false,
     "protocol": "http"
   },
-  "service": "ollama-arm",
+  "service": "c3-analytics-api",
   "role": "app",
-  "vm": "oci-apps-2",
+  "vm": "gcp-proxy",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",

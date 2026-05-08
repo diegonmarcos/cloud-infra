@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "ollama-arm container config (service=ollama-arm, role=app)",
+    "description": "wireguard-mesh-ws-tunnel container config (service=wireguard-mesh-ws-tunnel, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-08T10:43:41.653Z",
+    "generated_at": "2026-05-08T10:43:41.680Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,15 +28,38 @@
   "_generated": "2026-05-08T10:43:41.412Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "ollama-arm",
-    "port": 11434,
-    "port_env": "OLLAMA_HOST",
-    "port_format": "host",
-    "protocol": "http"
+    "container_name": "wireguard-mesh-ws-tunnel",
+    "image": "ghcr.io/erebe/wstunnel:latest",
+    "command": [
+      "server",
+      "ws://127.0.0.1:8080",
+      "--restrict-to",
+      "127.0.0.1:51820",
+      "--http-upgrade-path-prefix",
+      "${WSTUNNEL_PATH_PREFIX}"
+    ],
+    "port": 8080,
+    "port_format": "colon",
+    "protocol": "http",
+    "public": false,
+    "network_mode": "host",
+    "read_only": true,
+    "tmpfs": [
+      "/tmp"
+    ],
+    "env_file": true,
+    "depends_on": [],
+    "resources": {
+      "mem_limit": "64m"
+    },
+    "healthcheck": null,
+    "monitoring": {
+      "tls_check": true
+    }
   },
-  "service": "ollama-arm",
+  "service": "wireguard-mesh-ws-tunnel",
   "role": "app",
-  "vm": "oci-apps-2",
+  "vm": "gcp-proxy",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",
