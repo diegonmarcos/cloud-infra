@@ -1,6 +1,6 @@
 # Collapse public surface to `443/tcp` + `443/udp` + `51820/udp`
 
-**Status**: Phases 1, 2a, 4, 5 done (source-only, undeployed) · Phases 2b, 3 deferred · **Owner**: diego · **Created**: 2026-05-08
+**Status**: Phases 1, 2a, 2b, 4, 5 done (source-only, undeployed) · Phase 3 deferred · **Owner**: diego · **Created**: 2026-05-08
 
 Goal = **2 unique public port numbers** on gcp-proxy (`443` + `51820`),
 **1** on every other VM (`51820`). All inbound mail flows via Cloudflare
@@ -23,7 +23,7 @@ All other VMs (oci-*) stay at `51820/udp` only.
 |---|---|---|---|
 | 1 | Drop 587 (mail submission) | low | **done** (`53b12b134`) |
 | 2a | Caddy global DNS-01 (port 80 still open) | medium | **done** (`5ad8b48b8`); needs deploy + renewal validation |
-| 2b | Drop port 80 | low (after 2a validated) | deferred |
+| 2b | Drop port 80 | low | **done** (this commit) — Caddy `auto_https disable_redirects` already set, port 80 was vestigial |
 | 3 | caddy-l4 SNI multiplex mail-over-TLS onto 443 | medium-high | deferred — see rationale below |
 | 4 | WG fallback on 443/udp + drop QUIC | medium | **done** (this commit) |
 | 5 | Drop port 25 | low (CF Worker bridges) | **done** (this commit) |
