@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-08T11:23:46.353Z",
+    "generated_at": "2026-05-08T11:34:14.644Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T11:23:46.250Z",
+  "_generated": "2026-05-08T11:34:14.523Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -189,24 +189,28 @@
   },
   "l4_routes": [
     {
-      "port": 993,
+      "port": 443,
       "upstream": "10.0.0.3:993",
-      "comment": "IMAPS"
+      "comment": "IMAPS via SNI on :443 (Maddy)",
+      "sni": "imap.diegonmarcos.com"
     },
     {
-      "port": 465,
+      "port": 443,
       "upstream": "10.0.0.3:465",
-      "comment": "SMTPS"
+      "comment": "SMTPS via SNI on :443 (Maddy)",
+      "sni": "smtps.diegonmarcos.com"
     },
     {
-      "port": 2993,
+      "port": 443,
       "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS (Stalwart)"
+      "comment": "IMAPS via SNI on :443 (Stalwart)",
+      "sni": "imap-stalwart.diegonmarcos.com"
     },
     {
-      "port": 2465,
+      "port": 443,
       "upstream": "10.0.0.3:2465",
-      "comment": "SMTPS (Stalwart)"
+      "comment": "SMTPS via SNI on :443 (Stalwart)",
+      "sni": "smtps-stalwart.diegonmarcos.com"
     }
   ],
   "redirects": [
@@ -3043,44 +3047,44 @@
   ],
   "l4_listeners": [
     {
-      "host": ":993",
+      "host": ":443",
       "path": null,
       "upstream": "10.0.0.3:993",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "IMAPS"
+      "notes": "IMAPS via SNI on :443 (Maddy)"
     },
     {
-      "host": ":465",
+      "host": ":443",
       "path": null,
       "upstream": "10.0.0.3:465",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "SMTPS"
+      "notes": "SMTPS via SNI on :443 (Maddy)"
     },
     {
-      "host": ":2993",
+      "host": ":443",
       "path": null,
       "upstream": "10.0.0.3:2993",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "IMAPS (Stalwart)"
+      "notes": "IMAPS via SNI on :443 (Stalwart)"
     },
     {
-      "host": ":2465",
+      "host": ":443",
       "path": null,
       "upstream": "10.0.0.3:2465",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "SMTPS (Stalwart)"
+      "notes": "SMTPS via SNI on :443 (Stalwart)"
     }
   ],
   "others": [

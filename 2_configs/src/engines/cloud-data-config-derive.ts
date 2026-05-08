@@ -389,6 +389,13 @@ function deriveCaddy(c: any): DerivedFile {
         }
         route.listen = `${gcpProxyWgIp}:${lp.port}`;
       }
+      // sni → caddy-l4 SNI matcher; multiple routes sharing the same listen
+      // spec collapse into one listener with per-SNI sub-routes (caddyfile.nix
+      // groups them). Phase 3 of public-surface collapse plan: lets IMAPS,
+      // SMTPS, JMAP all share :443 via SNI hostname routing.
+      if (typeof lp.sni === "string" && lp.sni.length > 0) {
+        route.sni = lp.sni;
+      }
       l4Routes.push(route);
     }
   }
@@ -632,9 +639,18 @@ function deriveCaddy(c: any): DerivedFile {
       };
       if (typeof c.port === "number" && c.protocol) add(c.port, c.protocol, `containers.${ck}.port`);
       for (const ep of (c.extra_ports ?? []) as any[]) {
-        if (typeof ep === "object" && typeof ep.port === "number" && ep.protocol) {
-          add(ep.port, ep.protocol, `containers.${ck}.extra_ports`);
-        }
+        // Skip ports that are loopback-only (`bind: "127.0.0.1"`) or
+        // explicitly flagged `monitor: false` (e.g. caddy admin :2019,
+        // caddy raw :80, stalwart :2025 shadow delivery). Listened-to by
+        // local processes but never reachable from the WG mesh, so a
+        // canonical .app URL probe would always fail.
+        // Data-driven via build.json — both signals already declared:
+        //   `"bind": "127.0.0.1"`  → service-defined binding scope
+        //   `"monitor": false`     → explicit opt-out for non-bind cases
+        if (typeof ep !== "object" || typeof ep.port !== "number" || !ep.protocol) continue;
+        if (ep.monitor === false) continue;
+        if (ep.bind === "127.0.0.1" || ep.bind === "::1") continue;
+        add(ep.port, ep.protocol, `containers.${ck}.extra_ports`);
       }
       if (isSingle) {
         for (const l4 of (svc.proxy?.primary?.l4_ports ?? []) as any[]) {
