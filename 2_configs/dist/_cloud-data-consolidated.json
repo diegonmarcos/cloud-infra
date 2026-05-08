@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-08T11:34:13.035Z",
+    "generated_at": "2026-05-08T11:42:17.869Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -2369,9 +2369,9 @@
             {
               "port": 25,
               "protocol": "tcp",
-              "bind": "0.0.0.0",
+              "bind": "10.0.0.3",
               "service": "smtp_mx",
-              "desc": "MX (inbound — must be public)"
+              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → CF Tunnel → smtp-proxy is the public bridge (Phase 5)"
             },
             {
               "port": 465,

@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T11:34:14.970Z",
+    "generated_at": "2026-05-08T11:42:19.891Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T11:34:14.634Z",
+  "_generated": "2026-05-08T11:42:19.546Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -2240,9 +2240,9 @@
             {
               "port": 25,
               "protocol": "tcp",
-              "bind": "0.0.0.0",
+              "bind": "10.0.0.3",
               "service": "smtp_mx",
-              "desc": "MX (inbound — must be public)"
+              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → CF Tunnel → smtp-proxy is the public bridge (Phase 5)"
             },
             {
               "port": 465,
