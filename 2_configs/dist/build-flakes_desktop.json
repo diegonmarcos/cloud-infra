@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-08T11:09:58.194Z",
+    "generated_at": "2026-05-08T11:23:46.635Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T11:09:57.983Z",
+  "_generated": "2026-05-08T11:23:46.343Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -3656,10 +3656,9 @@
       },
       "proxy": {
         "primary": {
-          "type": "domain",
           "domain": "mesh.diegonmarcos.com",
           "auth": "two_factor",
-          "comment": "Authelia 2FA — ops-only observability."
+          "_doc": "Authelia 2FA — ops-only observability panel."
         }
       },
       "declared_ports": {
@@ -3748,13 +3747,9 @@
       },
       "proxy": {
         "primary": {
-          "type": "domain",
           "domain": "vpn.diegonmarcos.com",
           "auth": "none",
-          "websocket": true,
-          "upstream": "127.0.0.1:8080",
-          "path_match": "${WSTUNNEL_PATH_PREFIX}/*",
-          "comment": "WS upgrade only on the secret prefix path. Caddy returns 404 for unknown paths to defend against scanners."
+          "_doc": "auth=none required: wstunnel client cannot do 2FA cookies. Scanner defence is enforced by the wstunnel server itself via --http-upgrade-path-prefix ${WSTUNNEL_PATH_PREFIX} — Caddy passes WebSocket upgrades through natively (Caddy v2 reverse_proxy handles WS by default)."
         }
       },
       "declared_ports": {
