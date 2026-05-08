@@ -3,7 +3,7 @@
   "_meta": {
     "description": "mattermost-mcp container config (service=mattermost-mcp, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-07T16:11:36.366Z",
+    "generated_at": "2026-05-08T10:43:41.572Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T16:11:36.321Z",
+  "_generated": "2026-05-08T10:43:41.411Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "mattermost-mcp",
@@ -500,21 +500,6 @@
         "auth": "bearer"
       }
     },
-    "photos-webhook": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 5002
-      },
-      "vm": "oci-apps",
-      "description": "PhotoPrism Webhook + S3 Processor",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "radicale": {
       "ip": "10.0.0.6",
       "ports": {
@@ -623,13 +608,6 @@
           "service": "smtp_ssl",
           "role": "app"
         },
-        "587": {
-          "protocol": "starttls",
-          "bind": "10.0.0.3",
-          "desc": "Submission — wg0 bind, reached via Caddy L4 from gcp-proxy",
-          "service": "smtp_starttls",
-          "role": "app"
-        },
         "993": {
           "protocol": "tls",
           "bind": "10.0.0.3",
@@ -705,13 +683,6 @@
           "bind": "10.0.0.3",
           "desc": "SMTPS — wg0 bind, reached via Caddy L4",
           "service": "smtp_ssl",
-          "role": "app"
-        },
-        "2587": {
-          "protocol": "starttls",
-          "bind": "10.0.0.3",
-          "desc": "Submission — wg0 bind, reached via Caddy L4",
-          "service": "smtp_starttls",
           "role": "app"
         },
         "2993": {
@@ -804,27 +775,6 @@
         "auth": "bearer"
       }
     },
-    "ollama": {
-      "ip": "10.0.0.8",
-      "ports": {
-        "app": 11434
-      },
-      "vm": "gcp-t4",
-      "description": "Ollama LLM Server — DeepSeek/Qwen 14B on GCP Spot T4 + Vast.ai fallback",
-      "api": {
-        "has_api": true,
-        "has_web_ui": false,
-        "api_path": "/api",
-        "api_url": null,
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/api",
-        "endpoint_count": 16,
-        "display_name": "Ollama LLM API (gcp-t4)",
-        "description": "REST API for LLM inference, embeddings, model management, and version information.",
-        "auth": "none"
-      }
-    },
     "ollama-hai": {
       "ip": "10.0.0.6",
       "ports": {
@@ -888,6 +838,39 @@
       "api": {
         "has_api": false,
         "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "wireguard-mesh": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8080
+      },
+      "vm": "oci-apps",
+      "domain": "mesh.diegonmarcos.com",
+      "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "ip": "10.0.0.1",
+      "ports": {
+        "ws": 8080,
+        "app": 8080
+      },
+      "vm": "gcp-proxy",
+      "domain": "vpn.diegonmarcos.com",
+      "description": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
@@ -968,6 +951,30 @@
         "display_name": "JWT Introspection Proxy",
         "description": "Validates bearer JWT tokens locally using Authelia JWKS public keys for Caddy forward_auth.",
         "auth": "bearer"
+      }
+    },
+    "c3-analytics-api": {
+      "ip": "10.0.0.1",
+      "ports": {
+        "app": 8085
+      },
+      "vm": "gcp-proxy",
+      "domain": "api.diegonmarcos.com/c3a",
+      "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/c3a/docs/json",
+        "api_url": "https://api.diegonmarcos.com/c3a/c3a/docs/json",
+        "healthcheck_paths": [
+          "/healthz"
+        ],
+        "type": "openapi",
+        "spec_path": "/c3a/docs/json",
+        "base_path": "/c3a",
+        "display_name": "C3 Analytics Public Collector",
+        "description": "Public passthrough analytics collector. Browsers/sites POST to /c3a/{e|s|l}, file ingest /c3a/f, tracker /c3a/t.js.",
+        "auth": "none"
       }
     },
     "c3-infra-api": {

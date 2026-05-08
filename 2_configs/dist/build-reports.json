@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-07T16:11:36.327Z",
+  "_generated": "2026-05-08T10:43:41.427Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -66,8 +66,16 @@
       "url": "https://api.diegonmarcos.com/fin-api/fin-api/health"
     },
     {
+      "service": "wireguard-mesh",
+      "url": "https://mesh.diegonmarcos.com/"
+    },
+    {
       "service": "authelia",
       "url": "https://auth.diegonmarcos.com/api/health"
+    },
+    {
+      "service": "c3-analytics-api",
+      "url": "https://api.diegonmarcos.com/c3a/c3a/healthz"
     },
     {
       "service": "c3-infra-api",
@@ -156,8 +164,20 @@
       "domain": "api.diegonmarcos.com/fin-api"
     },
     {
+      "service": "wireguard-mesh",
+      "domain": "mesh.diegonmarcos.com"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel",
+      "domain": "vpn.diegonmarcos.com"
+    },
+    {
       "service": "authelia",
       "domain": "auth.diegonmarcos.com"
+    },
+    {
+      "service": "c3-analytics-api",
+      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -246,8 +266,20 @@
       "domain": "api.diegonmarcos.com/fin-api"
     },
     {
+      "service": "wireguard-mesh",
+      "domain": "mesh.diegonmarcos.com"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel",
+      "domain": "vpn.diegonmarcos.com"
+    },
+    {
       "service": "authelia",
       "domain": "auth.diegonmarcos.com"
+    },
+    {
+      "service": "c3-analytics-api",
+      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -301,11 +333,6 @@
       "ip": "10.0.0.6",
       "name": "oci-apps",
       "user": "ubuntu"
-    },
-    {
-      "ip": "10.0.0.8",
-      "name": "gcp-t4",
-      "user": "diego"
     },
     {
       "ip": "10.0.0.1",
@@ -482,17 +509,6 @@
         "path": "/api/v1/status"
       }
     },
-    "photos-webhook": {
-      "name": "photos-webhook",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "app": 5002
-      },
-      "health": null
-    },
     "radicale": {
       "name": "radicale",
       "vm": "oci-A1-f_0",
@@ -613,7 +629,7 @@
     },
     "ollama": {
       "name": "ollama",
-      "vm": "gcp-T4-p_0",
+      "vm": "gcp-t4",
       "domain": null,
       "enabled": true,
       "category": "agi",
@@ -637,7 +653,7 @@
       "name": "ollama-hai",
       "vm": "oci-A1-f_0",
       "domain": null,
-      "enabled": true,
+      "enabled": false,
       "category": "agi",
       "ports": {
         "app": 11435
@@ -695,6 +711,32 @@
       },
       "health": null
     },
+    "wireguard-mesh": {
+      "name": "wireguard-mesh",
+      "vm": "oci-A1-f_0",
+      "domain": "mesh.diegonmarcos.com",
+      "enabled": true,
+      "category": "tools",
+      "ports": {
+        "app": 8080
+      },
+      "health": {
+        "path": "/"
+      }
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "name": "wireguard-mesh-ws-tunnel",
+      "vm": "gcp-E2-f_0",
+      "domain": "vpn.diegonmarcos.com",
+      "enabled": true,
+      "category": "tools",
+      "ports": {
+        "ws": 8080
+      },
+      "health": {
+        "path": "/"
+      }
+    },
     "authelia": {
       "name": "authelia",
       "vm": "gcp-E2-f_0",
@@ -738,6 +780,19 @@
       },
       "health": {
         "path": "/health"
+      }
+    },
+    "c3-analytics-api": {
+      "name": "c3-analytics-api",
+      "vm": "gcp-E2-f_0",
+      "domain": "api.diegonmarcos.com/c3a",
+      "enabled": true,
+      "category": "obs",
+      "ports": {
+        "app": 8085
+      },
+      "health": {
+        "path": "/c3a/healthz"
       }
     },
     "c3-infra-api": {
@@ -1141,10 +1196,6 @@
       "dns": "photoprism.app"
     },
     {
-      "service": "photos-webhook",
-      "dns": "photos-webhook.app"
-    },
-    {
       "service": "radicale",
       "dns": "radicale.app"
     },
@@ -1295,6 +1346,14 @@
       "dns": "hickory-dns.app"
     },
     {
+      "service": "wireguard-mesh",
+      "dns": "wireguard-mesh.app"
+    },
+    {
+      "service": "wireguard-mesh-ws-tunnel",
+      "dns": "wireguard-mesh-ws-tunnel.app"
+    },
+    {
       "service": "authelia",
       "dns": "authelia.app"
     },
@@ -1325,6 +1384,15 @@
       "service": "introspect-proxy",
       "container": "app",
       "dns": "introspect-proxy.app"
+    },
+    {
+      "service": "c3-analytics-api",
+      "dns": "c3-analytics-api.app"
+    },
+    {
+      "service": "c3-analytics-api",
+      "container": "app",
+      "dns": "c3-analytics-api.app"
     },
     {
       "service": "c3-infra-api",
@@ -1614,7 +1682,6 @@
           "mattermost-bots",
           "mattermost-mcp",
           "photoprism",
-          "photos-webhook",
           "radicale",
           "revealmd",
           "vaultwarden",
@@ -1623,6 +1690,7 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
+          "wireguard-mesh",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -1642,16 +1710,6 @@
           "kg-graph"
         ]
       },
-      "gcp-T4-p_0": {
-        "alias": "gcp-t4",
-        "wg_ip": "10.0.0.8",
-        "public_ip": null,
-        "user": "diego",
-        "provider": "gcp",
-        "services": [
-          "ollama"
-        ]
-      },
       "gcp-E2-f_0": {
         "alias": "gcp-proxy",
         "wg_ip": "10.0.0.1",
@@ -1660,9 +1718,11 @@
         "provider": null,
         "services": [
           "hickory-dns",
+          "wireguard-mesh-ws-tunnel",
           "authelia",
           "caddy",
           "introspect-proxy",
+          "c3-analytics-api",
           "postlite",
           "redis"
         ]
@@ -1845,17 +1905,6 @@
           "path": "/api/v1/status"
         }
       },
-      "photos-webhook": {
-        "name": "photos-webhook",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "app": 5002
-        },
-        "health": null
-      },
       "radicale": {
         "name": "radicale",
         "vm": "oci-A1-f_0",
@@ -1976,7 +2025,7 @@
       },
       "ollama": {
         "name": "ollama",
-        "vm": "gcp-T4-p_0",
+        "vm": "gcp-t4",
         "domain": null,
         "enabled": true,
         "category": "agi",
@@ -2000,7 +2049,7 @@
         "name": "ollama-hai",
         "vm": "oci-A1-f_0",
         "domain": null,
-        "enabled": true,
+        "enabled": false,
         "category": "agi",
         "ports": {
           "app": 11435
@@ -2058,6 +2107,32 @@
         },
         "health": null
       },
+      "wireguard-mesh": {
+        "name": "wireguard-mesh",
+        "vm": "oci-A1-f_0",
+        "domain": "mesh.diegonmarcos.com",
+        "enabled": true,
+        "category": "tools",
+        "ports": {
+          "app": 8080
+        },
+        "health": {
+          "path": "/"
+        }
+      },
+      "wireguard-mesh-ws-tunnel": {
+        "name": "wireguard-mesh-ws-tunnel",
+        "vm": "gcp-E2-f_0",
+        "domain": "vpn.diegonmarcos.com",
+        "enabled": true,
+        "category": "tools",
+        "ports": {
+          "ws": 8080
+        },
+        "health": {
+          "path": "/"
+        }
+      },
       "authelia": {
         "name": "authelia",
         "vm": "gcp-E2-f_0",
@@ -2101,6 +2176,19 @@
         },
         "health": {
           "path": "/health"
+        }
+      },
+      "c3-analytics-api": {
+        "name": "c3-analytics-api",
+        "vm": "gcp-E2-f_0",
+        "domain": "api.diegonmarcos.com/c3a",
+        "enabled": true,
+        "category": "obs",
+        "ports": {
+          "app": 8085
+        },
+        "health": {
+          "path": "/c3a/healthz"
         }
       },
       "c3-infra-api": {
@@ -2374,13 +2462,15 @@
   "url_health": {
     "_comment": "cloud-url-health-report runtime config. Passwords NEVER live here — NOREPLY_PASSWORD + ME_PASSWORD come from env (sops-decrypted upstream).",
     "concurrency": {
+      "_comment": "Private concurrency intentionally low: 16 simultaneous WG probes saturate idle handshakes and cause cascading timeouts on the spokes. 4 is high-enough for the 86 private targets to finish in <30s while staying under the WG renegotiation pressure point.",
       "public": 16,
-      "private": 16
+      "private": 4
     },
     "timeouts": {
-      "http_connect_secs": 3,
-      "http_total_secs": 5,
-      "tcp_secs": 3
+      "_comment": "Bumped 2026-05-07: WG re-handshake on idle peers can take ~3-5s before first packet, so a 3s TCP / 5s HTTP-total budget produced false negatives across the 10.0.0.6 spoke (oci-apps) when probing from desktop. New budget allows one full handshake + actual request.",
+      "http_connect_secs": 10,
+      "http_total_secs": 15,
+      "tcp_secs": 10
     },
     "targets": {
       "_comment": "Ports that are not HTTP servers — probe via TcpStream::connect only, skip HTTP GET.",
@@ -3095,7 +3185,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-07T16:11:36.435Z",
+    "generated_at": "2026-05-08T10:43:41.772Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

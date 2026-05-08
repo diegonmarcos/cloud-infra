@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "ollama-arm container config (service=ollama-arm, role=app)",
+    "description": "wireguard-mesh container config (service=wireguard-mesh, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-08T10:43:41.653Z",
+    "generated_at": "2026-05-08T10:43:41.677Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,15 +28,39 @@
   "_generated": "2026-05-08T10:43:41.412Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "ollama-arm",
-    "port": 11434,
-    "port_env": "OLLAMA_HOST",
-    "port_format": "host",
-    "protocol": "http"
+    "container_name": "wireguard-mesh",
+    "port": 8080,
+    "port_format": "colon",
+    "protocol": "http",
+    "public": true,
+    "read_only": true,
+    "tmpfs": [
+      "/var/cache/nginx",
+      "/var/run"
+    ],
+    "env_file": false,
+    "depends_on": [],
+    "resources": {
+      "mem_limit": "32m"
+    },
+    "healthcheck": {
+      "test": [
+        "CMD",
+        "wget",
+        "-qO-",
+        "http://localhost:8080/"
+      ],
+      "interval": "30s",
+      "timeout": "5s",
+      "retries": 3
+    },
+    "monitoring": {
+      "tls_check": true
+    }
   },
-  "service": "ollama-arm",
+  "service": "wireguard-mesh",
   "role": "app",
-  "vm": "oci-apps-2",
+  "vm": "oci-apps",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "GHA ship-system config (vms + services dispatch matrix)",
     "format_version": 1,
-    "generated_at": "2026-05-07T16:11:36.434Z",
+    "generated_at": "2026-05-08T10:43:41.769Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T16:11:36.322Z",
+  "_generated": "2026-05-08T10:43:41.415Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/gha-config",
   "vms": {
     "oci-mail": {
@@ -45,13 +45,6 @@
       "user": "ubuntu",
       "host": "82.70.229.129",
       "wg_ip": "10.0.0.6"
-    },
-    "gcp-t4": {
-      "ssh_secret": "GCP_T4_SSH_KEY",
-      "user": "diego",
-      "host_secret": "GCP_T4_HOST",
-      "user_secret": "GCP_T4_USER",
-      "wg_ip": "10.0.0.8"
     },
     "gcp-proxy": {
       "ssh_secret": "GCP_PROXY_SSH_KEY",
@@ -127,11 +120,6 @@
       "vm": "oci-apps",
       "has_docker": true
     },
-    "photos-webhook": {
-      "dir": "aa-sui_photos-webhook",
-      "vm": "oci-apps",
-      "has_docker": true
-    },
     "radicale": {
       "dir": "aa-sui_radicale",
       "vm": "oci-apps",
@@ -202,6 +190,16 @@
       "vm": "gcp-proxy",
       "has_docker": true
     },
+    "wireguard-mesh": {
+      "dir": "bb-net_wireguard-mesh",
+      "vm": "oci-apps",
+      "has_docker": false
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "dir": "bb-net_wireguard-mesh-ws-tunnel",
+      "vm": "gcp-proxy",
+      "has_docker": false
+    },
     "authelia": {
       "dir": "bb-sec_authelia",
       "vm": "gcp-proxy",
@@ -214,6 +212,11 @@
     },
     "introspect-proxy": {
       "dir": "bb-sec_introspect-proxy",
+      "vm": "gcp-proxy",
+      "has_docker": true
+    },
+    "c3-analytics-api": {
+      "dir": "bc-obs_c3-analytics-api",
       "vm": "gcp-proxy",
       "has_docker": true
     },

@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-07T16:11:36.448Z",
+    "generated_at": "2026-05-08T10:43:41.799Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-07T16:11:36.346Z",
+  "_generated": "2026-05-08T10:43:41.480Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 157,
-    "edges": 186,
+    "nodes": 160,
+    "edges": 192,
     "by_table": {
-      "vm": 5,
-      "service": 51,
+      "vm": 4,
+      "service": 52,
       "container": 72,
-      "domain": 29
+      "domain": 32
     }
   },
   "nodes": [
@@ -99,24 +99,6 @@
     },
     {
       "table": "vm",
-      "id": "gcp_t4",
-      "key": "vm:gcp_t4",
-      "properties": {
-        "vm_id": "gcp-T4-p_0",
-        "alias": "gcp-t4",
-        "ip": "34.173.227.250",
-        "wg_ip": "10.0.0.8",
-        "user": "diego",
-        "provider": "gcp",
-        "arch": "x86_64",
-        "cpu_count": 4,
-        "ram_gb": 15,
-        "disk_gb": 100,
-        "description": "GCloud Paid - N1 Std 4 + T4 GPU (Spot) - Ollama LLM"
-      }
-    },
-    {
-      "table": "vm",
       "id": "gcp_proxy",
       "key": "vm:gcp_proxy",
       "properties": {
@@ -127,9 +109,9 @@
         "user": "diego",
         "provider": "gcp",
         "arch": "x86_64",
-        "cpu_count": 2,
-        "ram_gb": 2,
-        "disk_gb": 32,
+        "cpu_count": 1,
+        "ram_gb": 1,
+        "disk_gb": 30,
         "description": "GCloud Free - E2 Micro 0 - Central Proxy + Control"
       }
     },
@@ -557,44 +539,6 @@
     },
     {
       "table": "service",
-      "id": "photos_webhook",
-      "key": "service:photos_webhook",
-      "properties": {
-        "name": "photos-webhook",
-        "category": "app",
-        "description": "PhotoPrism Webhook + S3 Processor",
-        "domain": null,
-        "port": 5002,
-        "vm": "oci-apps",
-        "folder": "aa-sui_photos-webhook"
-      }
-    },
-    {
-      "table": "container",
-      "id": "photos_webhook",
-      "key": "container:photos_webhook",
-      "properties": {
-        "name": "photos-webhook",
-        "image": "ghcr.io/diegonmarcos/photos-webhook:latest",
-        "role": "app",
-        "port": 5002,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "photos_db",
-      "key": "container:photos_db",
-      "properties": {
-        "name": "photos-db",
-        "image": "postgres:16-alpine",
-        "role": "db",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "radicale",
       "key": "service:radicale",
       "properties": {
@@ -939,32 +883,6 @@
     },
     {
       "table": "service",
-      "id": "ollama_hai",
-      "key": "service:ollama_hai",
-      "properties": {
-        "name": "ollama-hai",
-        "category": "agi",
-        "description": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode",
-        "domain": null,
-        "port": 11435,
-        "vm": "oci-apps",
-        "folder": "ad-agi_ollama-hai"
-      }
-    },
-    {
-      "table": "container",
-      "id": "ollama_hai",
-      "key": "container:ollama_hai",
-      "properties": {
-        "name": "ollama-hai",
-        "image": "ollama/ollama:latest",
-        "role": "app",
-        "port": 11435,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "rig_agentic_sonn_14bq8",
       "key": "service:rig_agentic_sonn_14bq8",
       "properties": {
@@ -1064,6 +982,58 @@
         "image": "hickorydns/hickory-dns:latest",
         "role": "app",
         "port": 53,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "wireguard_mesh",
+      "key": "service:wireguard_mesh",
+      "properties": {
+        "name": "wireguard-mesh",
+        "category": "tools",
+        "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+        "domain": "mesh.diegonmarcos.com",
+        "port": 8080,
+        "vm": "oci-apps",
+        "folder": "bb-net_wireguard-mesh"
+      }
+    },
+    {
+      "table": "container",
+      "id": "wireguard_mesh",
+      "key": "container:wireguard_mesh",
+      "properties": {
+        "name": "wireguard-mesh",
+        "image": null,
+        "role": "app",
+        "port": 8080,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "wireguard_mesh_ws_tunnel",
+      "key": "service:wireguard_mesh_ws_tunnel",
+      "properties": {
+        "name": "wireguard-mesh-ws-tunnel",
+        "category": "tools",
+        "description": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+        "domain": "vpn.diegonmarcos.com",
+        "port": 8080,
+        "vm": "gcp-proxy",
+        "folder": "bb-net_wireguard-mesh-ws-tunnel"
+      }
+    },
+    {
+      "table": "container",
+      "id": "wireguard_mesh_ws_tunnel",
+      "key": "container:wireguard_mesh_ws_tunnel",
+      "properties": {
+        "name": "wireguard-mesh-ws-tunnel",
+        "image": "ghcr.io/erebe/wstunnel:latest",
+        "role": "app",
+        "port": 8080,
         "public": false
       }
     },
@@ -1193,6 +1163,32 @@
         "role": "app",
         "port": 4182,
         "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "c3_analytics_api",
+      "key": "service:c3_analytics_api",
+      "properties": {
+        "name": "c3-analytics-api",
+        "category": "obs",
+        "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
+        "domain": "api.diegonmarcos.com/c3a",
+        "port": 8085,
+        "vm": "gcp-proxy",
+        "folder": "bc-obs_c3-analytics-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_analytics_api",
+      "key": "container:c3_analytics_api",
+      "properties": {
+        "name": "c3-analytics-api",
+        "image": "ghcr.io/diegonmarcos/c3-analytics-api:latest",
+        "role": "app",
+        "port": 8085,
+        "public": true
       }
     },
     {
@@ -1857,6 +1853,22 @@
     },
     {
       "table": "domain",
+      "id": "mesh_diegonmarcos_com",
+      "key": "domain:mesh_diegonmarcos_com",
+      "properties": {
+        "fqdn": "mesh.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "vpn_diegonmarcos_com",
+      "key": "domain:vpn_diegonmarcos_com",
+      "properties": {
+        "fqdn": "vpn.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "auth_diegonmarcos_com",
       "key": "domain:auth_diegonmarcos_com",
       "properties": {
@@ -1869,6 +1881,14 @@
       "key": "domain:proxy_diegonmarcos_com",
       "properties": {
         "fqdn": "proxy.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com/c3a",
+      "key": "domain:api_diegonmarcos_com/c3a",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/c3a"
       }
     },
     {
@@ -2218,31 +2238,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:photos_webhook",
-      "to": "vm:oci_apps",
-      "key": "service:photos_webhook->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:photos_webhook",
-      "to": "container:photos_webhook",
-      "key": "service:photos_webhook->runs_container->container:photos_webhook",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:photos_webhook",
-      "to": "container:photos_db",
-      "key": "service:photos_webhook->runs_container->container:photos_db",
-      "properties": {
-        "role": "db"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:radicale",
       "to": "vm:oci_apps",
       "key": "service:radicale->hosted_on->vm:oci_apps",
@@ -2451,13 +2446,6 @@
       }
     },
     {
-      "table": "hosted_on",
-      "from": "service:ollama",
-      "to": "vm:gcp_t4",
-      "key": "service:ollama->hosted_on->vm:gcp_t4",
-      "properties": {}
-    },
-    {
       "table": "runs_container",
       "from": "service:ollama",
       "to": "container:ollama",
@@ -2471,22 +2459,6 @@
       "from": "service:ollama_arm",
       "to": "container:ollama_arm",
       "key": "service:ollama_arm->runs_container->container:ollama_arm",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:ollama_hai",
-      "to": "vm:oci_apps",
-      "key": "service:ollama_hai->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:ollama_hai",
-      "to": "container:ollama_hai",
-      "key": "service:ollama_hai->runs_container->container:ollama_hai",
       "properties": {
         "role": "app"
       }
@@ -2537,6 +2509,38 @@
       "from": "service:hickory_dns",
       "to": "container:hickory_dns",
       "key": "service:hickory_dns->runs_container->container:hickory_dns",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:wireguard_mesh",
+      "to": "vm:oci_apps",
+      "key": "service:wireguard_mesh->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:wireguard_mesh",
+      "to": "container:wireguard_mesh",
+      "key": "service:wireguard_mesh->runs_container->container:wireguard_mesh",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:wireguard_mesh_ws_tunnel",
+      "to": "vm:gcp_proxy",
+      "key": "service:wireguard_mesh_ws_tunnel->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:wireguard_mesh_ws_tunnel",
+      "to": "container:wireguard_mesh_ws_tunnel",
+      "key": "service:wireguard_mesh_ws_tunnel->runs_container->container:wireguard_mesh_ws_tunnel",
       "properties": {
         "role": "app"
       }
@@ -2630,6 +2634,22 @@
       "from": "service:introspect_proxy",
       "to": "container:introspect_proxy",
       "key": "service:introspect_proxy->runs_container->container:introspect_proxy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:c3_analytics_api",
+      "to": "vm:gcp_proxy",
+      "key": "service:c3_analytics_api->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_analytics_api",
+      "to": "container:c3_analytics_api",
+      "key": "service:c3_analytics_api->runs_container->container:c3_analytics_api",
       "properties": {
         "role": "app"
       }
@@ -3135,11 +3155,38 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:wireguard_mesh",
+      "to": "service:caddy",
+      "key": "service:wireguard_mesh->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mesh.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:wireguard_mesh_ws_tunnel",
+      "to": "service:caddy",
+      "key": "service:wireguard_mesh_ws_tunnel->proxied_by->service:caddy",
+      "properties": {
+        "domain": "vpn.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:authelia",
       "to": "service:caddy",
       "key": "service:authelia->proxied_by->service:caddy",
       "properties": {
         "domain": "auth.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:c3_analytics_api",
+      "to": "service:caddy",
+      "key": "service:c3_analytics_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/c3a"
       }
     },
     {
@@ -3381,6 +3428,20 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:mesh_diegonmarcos_com",
+      "to": "service:wireguard_mesh",
+      "key": "domain:mesh_diegonmarcos_com->routes_to->service:wireguard_mesh",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:vpn_diegonmarcos_com",
+      "to": "service:wireguard_mesh_ws_tunnel",
+      "key": "domain:vpn_diegonmarcos_com->routes_to->service:wireguard_mesh_ws_tunnel",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:auth_diegonmarcos_com",
       "to": "service:authelia",
       "key": "domain:auth_diegonmarcos_com->routes_to->service:authelia",
@@ -3391,6 +3452,13 @@
       "from": "domain:proxy_diegonmarcos_com",
       "to": "service:caddy",
       "key": "domain:proxy_diegonmarcos_com->routes_to->service:caddy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/c3a",
+      "to": "service:c3_analytics_api",
+      "key": "domain:api_diegonmarcos_com/c3a->routes_to->service:c3_analytics_api",
       "properties": {}
     },
     {
