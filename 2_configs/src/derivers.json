@@ -1,0 +1,16 @@
+{
+  "_doc": "Ordered list of TS derivers executed by 2_configs/build.sh derive. Runs after consolidate; order matters when a later deriver consumes an earlier one's output. Adding a deriver = append a JSON entry; build.sh remains untouched (fire-rule 6: data-driven, never hardcoded).",
+  "_schema": "derivers/v1",
+  "derivers": [
+    {
+      "name": "config-derive",
+      "script": "src/engines/cloud-data-config-derive.ts",
+      "description": "Per-consumer JSON files (build-*.json + cloud-data-*.json archive) from _cloud-data-consolidated.json"
+    },
+    {
+      "name": "mesh-snapshot",
+      "script": "src/engines/derive-mesh-snapshot.ts",
+      "description": "WireGuard mesh + wstunnel TCP/443 fallback snapshot consumed by bb-net_wireguard-mesh panel as PORTAL_DATA[mesh]"
+    }
+  ]
+}
