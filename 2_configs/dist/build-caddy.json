@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-08T11:42:19.552Z",
+    "generated_at": "2026-05-08T11:46:54.565Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T11:42:19.440Z",
+  "_generated": "2026-05-08T11:46:54.438Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -188,6 +188,11 @@
     "app_hub_fallback": "Not Found"
   },
   "l4_routes": [
+    {
+      "port": 25,
+      "upstream": "10.0.0.3:25",
+      "comment": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
+    },
     {
       "port": 443,
       "upstream": "10.0.0.3:993",
@@ -3046,6 +3051,16 @@
     }
   ],
   "l4_listeners": [
+    {
+      "host": ":25",
+      "path": null,
+      "upstream": "10.0.0.3:25",
+      "kind": "l4_forward",
+      "tls": "none",
+      "zone": "l4",
+      "service": null,
+      "notes": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
+    },
     {
       "host": ":443",
       "path": null,

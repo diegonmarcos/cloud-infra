@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-08T11:42:17.869Z",
+    "generated_at": "2026-05-08T11:46:52.190Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -2440,6 +2440,12 @@
           "auth": "two_factor",
           "tls_skip_verify": true,
           "l4_ports": [
+            {
+              "port": 25,
+              "upstream": "oci-mail:25",
+              "comment": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge",
+              "protocol": "tcp"
+            },
             {
               "port": 443,
               "sni": "imap.diegonmarcos.com",
