@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-08T17:59:05.826Z",
+    "generated_at": "2026-05-08T18:39:03.507Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T17:59:05.165Z",
+  "_generated": "2026-05-08T18:39:03.338Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 160,
+    "nodes": 161,
     "edges": 192,
     "by_table": {
       "vm": 4,
       "service": 52,
       "container": 72,
-      "domain": 32
+      "domain": 33
     }
   },
   "nodes": [
@@ -591,6 +591,32 @@
     },
     {
       "table": "service",
+      "id": "http_to_smtp_proxy_api",
+      "key": "service:http_to_smtp_proxy_api",
+      "properties": {
+        "name": "http-to-smtp-proxy-api",
+        "category": "app",
+        "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+        "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+        "port": 8080,
+        "vm": "gcp-proxy",
+        "folder": "aa-sui_tools-http-to-smtp-proxy-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "http_to_smtp_proxy_api",
+      "key": "container:http_to_smtp_proxy_api",
+      "properties": {
+        "name": "http-to-smtp-proxy-api",
+        "image": null,
+        "role": "app",
+        "port": 8080,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "maddy",
       "key": "service:maddy",
       "properties": {
@@ -613,32 +639,6 @@
         "role": "app",
         "port": null,
         "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "smtp_proxy",
-      "key": "service:smtp_proxy",
-      "properties": {
-        "name": "smtp-proxy",
-        "category": "app",
-        "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-        "domain": "api.diegonmarcos.com/smtp-proxy-api",
-        "port": 8080,
-        "vm": "oci-mail",
-        "folder": "aa-sui_tools-smtp-proxy"
-      }
-    },
-    {
-      "table": "container",
-      "id": "smtp_proxy",
-      "key": "container:smtp_proxy",
-      "properties": {
-        "name": "smtp-proxy",
-        "image": null,
-        "role": "app",
-        "port": 8080,
-        "public": true
       }
     },
     {
@@ -1407,7 +1407,7 @@
         "name": "matomo",
         "category": "tools",
         "description": "Matomo hybrid analytics (oci-apps)",
-        "domain": "analytics.diegonmarcos.com",
+        "domain": "analytics.diegonmarcos.com/matomo",
         "port": 8084,
         "vm": "oci-apps",
         "folder": "bc-obs_matomo"
@@ -1509,7 +1509,7 @@
         "name": "openobserve",
         "category": "tools",
         "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-        "domain": "grafana.diegonmarcos.com",
+        "domain": "analytics.diegonmarcos.com/openobserve",
         "port": 5080,
         "vm": "oci-apps",
         "folder": "bc-obs_openobserve"
@@ -1797,18 +1797,18 @@
     },
     {
       "table": "domain",
-      "id": "mail_diegonmarcos_com",
-      "key": "domain:mail_diegonmarcos_com",
+      "id": "api_diegonmarcos_com/http_to_smtp_proxy_api",
+      "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
       "properties": {
-        "fqdn": "mail.diegonmarcos.com"
+        "fqdn": "api.diegonmarcos.com/http-to-smtp-proxy-api"
       }
     },
     {
       "table": "domain",
-      "id": "api_diegonmarcos_com/smtp_proxy_api",
-      "key": "domain:api_diegonmarcos_com/smtp_proxy_api",
+      "id": "mail_diegonmarcos_com",
+      "key": "domain:mail_diegonmarcos_com",
       "properties": {
-        "fqdn": "api.diegonmarcos.com/smtp-proxy-api"
+        "fqdn": "mail.diegonmarcos.com"
       }
     },
     {
@@ -1933,10 +1933,10 @@
     },
     {
       "table": "domain",
-      "id": "analytics_diegonmarcos_com",
-      "key": "domain:analytics_diegonmarcos_com",
+      "id": "analytics_diegonmarcos_com/matomo",
+      "key": "domain:analytics_diegonmarcos_com/matomo",
       "properties": {
-        "fqdn": "analytics.diegonmarcos.com"
+        "fqdn": "analytics.diegonmarcos.com/matomo"
       }
     },
     {
@@ -1949,10 +1949,18 @@
     },
     {
       "table": "domain",
-      "id": "grafana_diegonmarcos_com",
-      "key": "domain:grafana_diegonmarcos_com",
+      "id": "analytics_diegonmarcos_com/openobserve",
+      "key": "domain:analytics_diegonmarcos_com/openobserve",
       "properties": {
-        "fqdn": "grafana.diegonmarcos.com"
+        "fqdn": "analytics.diegonmarcos.com/openobserve"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "analytics_diegonmarcos_com",
+      "key": "domain:analytics_diegonmarcos_com",
+      "properties": {
+        "fqdn": "analytics.diegonmarcos.com"
       }
     },
     {
@@ -2270,6 +2278,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:http_to_smtp_proxy_api",
+      "to": "vm:gcp_proxy",
+      "key": "service:http_to_smtp_proxy_api->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:http_to_smtp_proxy_api",
+      "to": "container:http_to_smtp_proxy_api",
+      "key": "service:http_to_smtp_proxy_api->runs_container->container:http_to_smtp_proxy_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:maddy",
       "to": "vm:oci_mail",
       "key": "service:maddy->hosted_on->vm:oci_mail",
@@ -2280,22 +2304,6 @@
       "from": "service:maddy",
       "to": "container:maddy",
       "key": "service:maddy->runs_container->container:maddy",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:smtp_proxy",
-      "to": "vm:oci_mail",
-      "key": "service:smtp_proxy->hosted_on->vm:oci_mail",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:smtp_proxy",
-      "to": "container:smtp_proxy",
-      "key": "service:smtp_proxy->runs_container->container:smtp_proxy",
       "properties": {
         "role": "app"
       }
@@ -3092,20 +3100,20 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:http_to_smtp_proxy_api",
+      "to": "service:caddy",
+      "key": "service:http_to_smtp_proxy_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:maddy",
       "to": "service:caddy",
       "key": "service:maddy->proxied_by->service:caddy",
       "properties": {
         "domain": "mail.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
-      "from": "service:smtp_proxy",
-      "to": "service:caddy",
-      "key": "service:smtp_proxy->proxied_by->service:caddy",
-      "properties": {
-        "domain": "api.diegonmarcos.com/smtp-proxy-api"
       }
     },
     {
@@ -3240,7 +3248,7 @@
       "to": "service:caddy",
       "key": "service:matomo->proxied_by->service:caddy",
       "properties": {
-        "domain": "analytics.diegonmarcos.com"
+        "domain": "analytics.diegonmarcos.com/matomo"
       }
     },
     {
@@ -3258,7 +3266,7 @@
       "to": "service:caddy",
       "key": "service:openobserve->proxied_by->service:caddy",
       "properties": {
-        "domain": "grafana.diegonmarcos.com"
+        "domain": "analytics.diegonmarcos.com/openobserve"
       }
     },
     {
@@ -3379,16 +3387,16 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:mail_diegonmarcos_com",
-      "to": "service:maddy",
-      "key": "domain:mail_diegonmarcos_com->routes_to->service:maddy",
+      "from": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
+      "to": "service:http_to_smtp_proxy_api",
+      "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api->routes_to->service:http_to_smtp_proxy_api",
       "properties": {}
     },
     {
       "table": "routes_to",
-      "from": "domain:api_diegonmarcos_com/smtp_proxy_api",
-      "to": "service:smtp_proxy",
-      "key": "domain:api_diegonmarcos_com/smtp_proxy_api->routes_to->service:smtp_proxy",
+      "from": "domain:mail_diegonmarcos_com",
+      "to": "service:maddy",
+      "key": "domain:mail_diegonmarcos_com->routes_to->service:maddy",
       "properties": {}
     },
     {
@@ -3498,9 +3506,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:analytics_diegonmarcos_com",
+      "from": "domain:analytics_diegonmarcos_com/matomo",
       "to": "service:matomo",
-      "key": "domain:analytics_diegonmarcos_com->routes_to->service:matomo",
+      "key": "domain:analytics_diegonmarcos_com/matomo->routes_to->service:matomo",
       "properties": {}
     },
     {
@@ -3512,9 +3520,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:grafana_diegonmarcos_com",
+      "from": "domain:analytics_diegonmarcos_com/openobserve",
       "to": "service:openobserve",
-      "key": "domain:grafana_diegonmarcos_com->routes_to->service:openobserve",
+      "key": "domain:analytics_diegonmarcos_com/openobserve->routes_to->service:openobserve",
       "properties": {}
     },
     {

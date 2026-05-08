@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-08T17:59:05.141Z",
+    "generated_at": "2026-05-08T18:39:03.329Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -410,6 +410,18 @@
       ]
     },
     {
+      "name": "http-to-smtp-proxy-api",
+      "category": "app",
+      "vm": "gcp-E2-f_0",
+      "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "http-to-smtp-proxy-api"
+      ]
+    },
+    {
       "name": "introspect-proxy",
       "category": "sec",
       "vm": "gcp-E2-f_0",
@@ -474,7 +486,7 @@
       "category": "tools",
       "vm": "oci-A1-f_0",
       "description": "Matomo hybrid analytics (oci-apps)",
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "ports": [],
       "networks": [],
       "containers": [
@@ -574,7 +586,7 @@
       "category": "tools",
       "vm": "oci-A1-f_0",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "ports": [],
       "networks": [],
       "containers": [
@@ -665,18 +677,6 @@
       "networks": [],
       "containers": [
         "rig-agentic-sonn-14bq8"
-      ]
-    },
-    {
-      "name": "smtp-proxy",
-      "category": "app",
-      "vm": "oci-E2-f_0",
-      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-      "domain": "api.diegonmarcos.com/smtp-proxy-api",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "smtp-proxy"
       ]
     },
     {
@@ -991,7 +991,7 @@
       "category": "tools",
       "vm": "oci-A1-f_0",
       "description": "Matomo hybrid analytics (oci-apps)",
-      "domain": "analytics.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/matomo",
       "ports": [],
       "networks": [],
       "containers": [
@@ -1029,7 +1029,7 @@
       "category": "tools",
       "vm": "oci-A1-f_0",
       "description": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
-      "domain": "grafana.diegonmarcos.com",
+      "domain": "analytics.diegonmarcos.com/openobserve",
       "ports": [],
       "networks": [],
       "containers": [
@@ -1230,6 +1230,18 @@
       ]
     },
     {
+      "name": "http-to-smtp-proxy-api",
+      "category": "app",
+      "vm": "gcp-E2-f_0",
+      "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "http-to-smtp-proxy-api"
+      ]
+    },
+    {
       "name": "maddy",
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -1387,18 +1399,6 @@
       "networks": [],
       "containers": [
         "rig-agentic-sonn-14bq8"
-      ]
-    },
-    {
-      "name": "smtp-proxy",
-      "category": "app",
-      "vm": "oci-E2-f_0",
-      "description": "HTTP-to-SMTP bridge — receives JSON email payloads from CF Worker and translates to SMTP. Public path: api.diegonmarcos.com/smtp-proxy-api/",
-      "domain": "api.diegonmarcos.com/smtp-proxy-api",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "smtp-proxy"
       ]
     },
     {

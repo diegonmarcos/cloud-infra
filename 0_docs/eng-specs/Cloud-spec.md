@@ -435,8 +435,8 @@ Oracle Cloud blocks SMTP ports 25, 587, and 8080 at the infrastructure level (an
 **Cloudflare Worker Configuration (email-forwarder):**
 | Setting | Value | Status |
 |---------|-------|--------|
-| SMTP_PROXY_URL | http://smtp.diegonmarcos.com:8080/ | ❌ Port 8080 blocked by Oracle |
-| SMTP_PROXY_KEY | `wrangler secret put` | - |
+| HTTP_TO_SMTP_PROXY_API_URL | https://api.diegonmarcos.com/http-to-smtp-proxy-api/ | ✅ Caddy sidecar on gcp-proxy |
+| HTTP_TO_SMTP_PROXY_API_KEY | `wrangler secret put` | - |
 | BACKUP_EMAIL | diegonmarcos@live.com | ✅ Configured (2026-02-03) |
 | Fetch Timeout | 5 seconds | ✅ Fast failover to backup |
 
@@ -3026,7 +3026,7 @@ curl -H "Authorization: Bearer $TOKEN" https://db.diegonmarcos.com/api/v2/meta/b
 │   │   ├── mail-app/                       ← Mailu containers
 │   │   │   ├── docker-compose.yml
 │   │   │   ├── cloudflare-worker/          ← Email routing worker
-│   │   │   └── smtp-proxy/                 ← SMTP proxy config
+│   │   │   └── http-to-smtp-proxy-api/     ← HTTP-to-SMTP Proxy API config
 │   │   └── mail-db/
 │   │       └── docker-compose.yml
 │   │
