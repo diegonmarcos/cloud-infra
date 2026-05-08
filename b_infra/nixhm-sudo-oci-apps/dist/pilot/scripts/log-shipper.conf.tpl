@@ -71,6 +71,8 @@
     http_Passwd      {ZO_PASS}
     Retry_Limit      3
     net.keepalive    on
+    net.keepalive_idle_timeout 15
+    net.keepalive_max_recycle  100
 
 [OUTPUT]
     Name             http
@@ -85,6 +87,8 @@
     http_Passwd      {ZO_PASS}
     Retry_Limit      3
     net.keepalive    on
+    net.keepalive_idle_timeout 15
+    net.keepalive_max_recycle  100
 
 # Built-in parsers `docker` and `json` are loaded from Fluent Bit's
 # bundled parsers.conf — referenced via parsers_file in [SERVICE]
