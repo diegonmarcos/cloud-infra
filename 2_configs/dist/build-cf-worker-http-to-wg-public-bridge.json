@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "cloud-cgc-mcp container config (service=cloud-cgc-mcp, role=app)",
+    "description": "cf-worker-http-to-wg-public-bridge container config (service=cf-worker-http-to-wg-public-bridge, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-09T17:17:20.008Z",
+    "generated_at": "2026-05-09T17:17:19.993Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,32 +28,23 @@
   "_generated": "2026-05-09T17:17:19.961Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "cloud-cgc-mcp",
-    "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
-    "port": 3105,
-    "port_env": "MCP_HTTP_PORT",
-    "dns": "cloud-cgc-mcp.app",
+    "container_name": "cf-worker-http-to-wg-public-bridge",
+    "port": 8092,
+    "port_env": "LISTEN_PORT",
+    "dns": "cf-worker-http-to-wg-public-bridge.app",
     "public": true,
+    "bind_host": "10.1.0.1",
     "proxy": {
-      "streaming": true,
       "type": "path",
-      "parent_domain": "mcp.diegonmarcos.com",
-      "base_path": "/cloud-cgc-mcp"
+      "parent_domain": "api.diegonmarcos.com",
+      "base_path": "/cf-worker-bridge",
+      "auth": "bearer"
     },
-    "healthcheck": "/mcp",
-    "monitoring": null,
-    "volumes": [
-      "./data:/data:ro"
-    ],
-    "env_file": false,
-    "depends_on": [],
-    "resources": null,
-    "read_only": false,
     "protocol": "http"
   },
-  "service": "cloud-cgc-mcp",
+  "service": "cf-worker-http-to-wg-public-bridge",
   "role": "app",
-  "vm": "oci-apps",
+  "vm": "oci-analytics",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",

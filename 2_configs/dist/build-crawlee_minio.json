@@ -3,7 +3,7 @@
   "_meta": {
     "description": "crawlee_minio container config (service=crawlee-cloud, role=minio)",
     "format_version": 1,
-    "generated_at": "2026-05-09T17:07:17.008Z",
+    "generated_at": "2026-05-09T17:17:19.999Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:07:16.971Z",
+  "_generated": "2026-05-09T17:17:19.961Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "crawlee_minio",
@@ -551,6 +551,28 @@
         ]
       }
     },
+    "cf-worker-http-to-wg-public-bridge": {
+      "ip": "10.0.0.4",
+      "ports": {
+        "app": 8092
+      },
+      "vm": "oci-analytics",
+      "domain": "api.diegonmarcos.com/cf-worker-bridge",
+      "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/cf-worker-bridge",
+        "api_url": "https://api.diegonmarcos.com/cf-worker-bridge/cf-worker-bridge",
+        "healthcheck_paths": [],
+        "type": "custom-rest",
+        "base_path": "/cf-worker-bridge",
+        "endpoint_count": 1,
+        "display_name": "CF-Worker → wg-public Bridge",
+        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over wg-public mesh. Used by CF email-forwarder Worker for inbound mail when oci-analytics is the public ingress (instead of gcp-proxy).",
+        "auth": "bearer"
+      }
+    },
     "http-to-smtp-proxy-api": {
       "ip": "10.0.0.1",
       "ports": {
@@ -902,13 +924,13 @@
       }
     },
     "caddy": {
-      "ip": "10.0.0.1",
+      "ip": "10.0.0.4",
       "ports": {
         "app": 443
       },
-      "vm": "gcp-proxy",
+      "vm": "oci-analytics",
       "domain": "proxy.diegonmarcos.com",
-      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
       "api": {
         "has_api": false,
         "has_web_ui": true,

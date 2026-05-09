@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-09T17:07:16.972Z",
+  "_generated": "2026-05-09T17:17:19.962Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/home-manager",
   "owner": {
     "name": "Diego Marcos",
@@ -33,6 +33,7 @@
         "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
       },
       "public_ports": [],
+      "is_public_ingress": false,
       "idle_shutdown": null,
       "containers": [
         "cypht",
@@ -67,9 +68,27 @@
         "cloud_zone": "eu-marseille-1",
         "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
       },
-      "public_ports": [],
+      "public_ports": [
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (wg-public hub — public ingress for external clients via wg-public mesh)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX (wg-public hub — inbound mail relay)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        }
+      ],
+      "is_public_ingress": true,
       "idle_shutdown": null,
       "containers": [
+        "cf-worker-http-to-wg-public-bridge",
+        "caddy",
         "dagu"
       ],
       "method": "key",
@@ -112,6 +131,7 @@
         "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
       },
       "public_ports": [],
+      "is_public_ingress": false,
       "idle_shutdown": null,
       "containers": [
         "code-server",
@@ -199,14 +219,36 @@
         "arch": "x86_64",
         "shape": "e2-micro"
       },
-      "public_ports": [],
+      "public_ports": [
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+          "source": "0.0.0.0/0",
+          "owned_by": "wireguard"
+        }
+      ],
+      "is_public_ingress": true,
       "idle_shutdown": null,
       "containers": [
         "http-to-smtp-proxy-api",
         "hickory-dns",
         "wireguard-mesh-ws-tunnel",
         "authelia",
-        "caddy",
         "introspect-proxy",
         "c3-analytics-api",
         "postlite",
@@ -238,6 +280,7 @@
         "vram_gb": 16
       },
       "public_ports": [],
+      "is_public_ingress": false,
       "idle_shutdown": null,
       "containers": [],
       "method": "key",
@@ -393,7 +436,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-09T17:07:17.031Z",
+    "generated_at": "2026-05-09T17:17:20.020Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
