@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T17:24:14.661Z",
+    "generated_at": "2026-05-09T17:42:14.175Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:24:14.616Z",
+  "_generated": "2026-05-09T17:42:14.124Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -338,9 +338,10 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "cf-worker-http-to-wg-public-bridge",
+        "caddy",
         "dagu"
       ],
-      "container_count": 2
+      "container_count": 3
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -467,13 +468,12 @@
         "hickory-dns",
         "wireguard-mesh-ws-tunnel",
         "authelia",
-        "caddy",
         "introspect-proxy",
         "c3-analytics-api",
         "postlite",
         "redis"
       ],
-      "container_count": 10
+      "container_count": 9
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -2484,34 +2484,47 @@
           "container_name": "maddy",
           "image": "ghcr.io/diegonmarcos/maddy:latest",
           "port": null,
+          "_doc_dual_bind": "Phase 4 of public-surface collapse: each port dual-binds on wg0 (10.0.0.3) AND wg-public (10.1.0.3). Maddy is host-network so binds happen inside maddy.conf.tpl via `@LISTEN_<port>@`; flake.nix expands `bind` arrays into space-separated multi-listener prefixes (e.g. `tls://10.0.0.3:993 tls://10.1.0.3:993`). Caddy on oci-analytics reaches mail ports via wg-public; legacy clients on wg0 keep working unchanged.",
           "extra_ports": [
             {
               "port": 25,
               "protocol": "tcp",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_mx",
-              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)"
+              "desc": "MX delivery endpoint — dual-bind wg0+wg-public; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)"
             },
             {
               "port": 465,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_ssl",
-              "desc": "SMTPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
+              "desc": "SMTPS — dual-bind wg0+wg-public, reached via Caddy L4 from oci-analytics"
             },
             {
               "port": 993,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_ssl",
-              "desc": "IMAPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
+              "desc": "IMAPS — dual-bind wg0+wg-public, reached via Caddy L4 from oci-analytics"
             },
             {
               "port": 143,
               "protocol": "tcp",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_plain",
-              "desc": "IMAP plain — wg0 bind"
+              "desc": "IMAP plain — dual-bind wg0+wg-public"
             }
           ],
           "dns": "maddy.app",
@@ -2658,41 +2671,57 @@
           "container_name": "stalwart",
           "image": "stalwartlabs/stalwart:v0.14.1",
           "port": 2443,
+          "_doc_dual_bind": "Phase 4 of public-surface collapse: each port dual-binds on wg0 (10.0.0.3) AND wg-public (10.1.0.3). Caddy on oci-analytics reaches mail ports via wg-public mesh; legacy clients on wg0 keep working unchanged. compose.nix expands `bind` arrays into one host-port mapping per IP.",
           "extra_ports": [
             {
               "port": 2025,
               "protocol": "starttls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_shadow",
               "desc": "SMTP shadow (http-to-smtp-proxy-api on gcp-proxy → WG → :2025)"
             },
             {
               "port": 2443,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "jmap_tls",
-              "desc": "HTTPS admin/JMAP — wg0 bind, reached via Caddy L4"
+              "desc": "HTTPS admin/JMAP — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 2465,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_ssl",
-              "desc": "SMTPS — wg0 bind, reached via Caddy L4"
+              "desc": "SMTPS — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 2993,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_ssl",
-              "desc": "IMAPS — wg0 bind, reached via Caddy L4"
+              "desc": "IMAPS — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 6190,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "manage_sieve",
-              "desc": "ManageSieve — wg0 bind, reached via Caddy L4"
+              "desc": "ManageSieve — dual-bind wg0+wg-public, reached via Caddy L4"
             }
           ],
           "port_env": null,
@@ -4110,14 +4139,14 @@
     },
     "caddy": {
       "category": "sec",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-E2-f_1",
       "folder": "bb-sec_caddy",
-      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
       "enabled": true,
       "domain": "proxy.diegonmarcos.com",
       "port": 443,
       "dns": "caddy.app",
-      "upstream": "10.0.0.1:443",
+      "upstream": "10.0.0.4:443",
       "containers": {
         "app": {
           "container_name": "caddy",
@@ -4191,8 +4220,8 @@
           "admin_bind": "localhost:2019",
           "order": "respond before handle",
           "auto_https": "disable_redirects",
-          "_doc_wg_bind_ip": "Caddy's WG IP — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip) so Hickory's *.diegonmarcos.com → 10.0.0.1 fast-path lands on the same routing table the public listener uses. Without this, WG-internal traffic hits the *:443 listener that's shadowed by the more-specific 10.0.0.1:443 listener (created by *.app blocks), and unmatched hosts get an empty 200 response.",
-          "wg_bind_ip": "10.0.0.1"
+          "_doc_wg_bind_ip": "Caddy's wg-public hub IP (oci-analytics = 10.1.0.1) — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip). Phase 4 of the wg-public migration: Caddy lives on oci-analytics which is the hub of the public-trust WG mesh; reverse-proxy upstreams to wg-public peers (gcp-proxy/oci-mail/oci-apps) cross via 10.1.0.x rather than the internal wg0 (10.0.0.x). Source-of-truth: 2_configs/dist/_cloud-data-consolidated.json wireguard_public.peers[] (oci-analytics → 10.1.0.1).",
+          "wg_bind_ip": "10.1.0.1"
         },
         "on_demand_tls": {
           "ask_bind": "127.0.0.1:2020",
