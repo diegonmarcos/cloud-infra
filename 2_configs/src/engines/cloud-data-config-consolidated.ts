@@ -644,6 +644,15 @@ function main() {
         wg_public_key: vaultWgKeys[`${p.name}-public`] ?? null,
       };
     }),
+    // Mirrors wireguard.clients shape — non-VM client peers (Surface laptop,
+    // Termux phone). Vault key dir is `<name>-public` (parallel to the VM
+    // peer naming convention above).
+    clients: Object.fromEntries(
+      Object.entries(wgPublicCfg.clients ?? {}).map(([name, client]: [string, any]) => [
+        name,
+        { ...client, wg_public_key: vaultWgKeys[`${name}-public`] ?? client.wg_public_key ?? null },
+      ])
+    ),
   } : null;
 
   // ── 16. GHA config (previously gen-gha-config.ts) ──────────────────────

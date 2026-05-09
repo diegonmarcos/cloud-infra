@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T17:42:14.175Z",
+    "generated_at": "2026-05-09T18:05:42.114Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:42:14.124Z",
+  "_generated": "2026-05-09T18:05:42.066Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -245,6 +245,54 @@
         "wg_ip": "10.0.0.200",
         "role": "client",
         "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
+      }
+    }
+  },
+  "wireguard_public": {
+    "subnet": "10.1.0.0/24",
+    "port": 51821,
+    "hub": "oci-E2-f_1",
+    "_doc": "Public-trust WG mesh. Members: oci-analytics (hub, the only public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services.",
+    "peers": [
+      {
+        "name": "oci-analytics",
+        "wg_ip": "10.1.0.1",
+        "role": "hub",
+        "endpoint": "129.151.228.66:51821",
+        "wg_public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc="
+      },
+      {
+        "name": "gcp-proxy",
+        "wg_ip": "10.1.0.2",
+        "role": "spoke",
+        "endpoint": "35.226.147.64:51821",
+        "wg_public_key": "jkGSUNImyWXEx4PB9hfTvIsG8ui4PnvWakBhAB7WSj4="
+      },
+      {
+        "name": "oci-mail",
+        "wg_ip": "10.1.0.3",
+        "role": "spoke",
+        "endpoint": "130.110.251.193:51821",
+        "wg_public_key": "kt9Hy6EZtwiR3mx1GiQiARfHUjsszkAI75AYvjMQaiY="
+      },
+      {
+        "name": "oci-apps",
+        "wg_ip": "10.1.0.4",
+        "role": "spoke",
+        "endpoint": "82.70.229.129:51821",
+        "wg_public_key": "Z54BMXtL7Wb9HiSePnK8hFTecX2q3Sui1OpWmn+IxAY="
+      }
+    ],
+    "clients": {
+      "surface": {
+        "wg_ip": "10.1.0.5",
+        "role": "client",
+        "wg_public_key": "7BAojpGh3yZH9Fi2PDDL8wYHbIs7yQroFJoHmj0rlGQ="
+      },
+      "termux": {
+        "wg_ip": "10.1.0.9",
+        "role": "client",
+        "wg_public_key": "YSURIKsDv8BdvUEJOQlh9rWuertxi3JHLfOMLA2+ZD8="
       }
     }
   },
