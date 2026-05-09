@@ -39,14 +39,20 @@ else
     ok  "b_infra/home-manager/ has zero tracked files"
 fi
 
-# Test 3: every per-VM dir uses the new layout
-for vm in gcp-proxy gcp-t4 oci-mail oci-analytics oci-apps; do
-    if [ -d "$REPO_ROOT/b_infra/nixhm-sudo-$vm" ]; then
-        ok  "b_infra/nixhm-sudo-$vm/ exists"
-    else
-        fail "b_infra/nixhm-sudo-$vm/ missing"
-    fi
-done
+# Test 3: every per-VM dir uses the new nixhm-sudo-<vm> layout (≥1 must
+# exist; the set is discovered from disk so decommissioning a VM doesn't
+# require editing this test — the legacy-layout guard above is the actual
+# regression check).
+shopt -s nullglob
+NIXHM_DIRS=("$REPO_ROOT"/b_infra/nixhm-sudo-*)
+shopt -u nullglob
+if [ ${#NIXHM_DIRS[@]} -eq 0 ]; then
+    fail "no b_infra/nixhm-sudo-*/ dirs found — new layout missing"
+else
+    for d in "${NIXHM_DIRS[@]}"; do
+        ok  "b_infra/$(basename "$d")/ exists"
+    done
+fi
 
 # Test 4: cloud-side source files do not reference the legacy path.
 # Excludes: submodules, dist/, z_archive/, *.build-log, .claude/settings.local.
