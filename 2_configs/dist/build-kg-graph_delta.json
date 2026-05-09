@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-08T19:24:36.523Z",
+    "generated_at": "2026-05-09T09:12:56.628Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T19:24:36.216Z",
+  "_generated": "2026-05-09T09:12:56.568Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 161,
@@ -598,7 +598,7 @@
         "category": "app",
         "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
         "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
-        "port": 8080,
+        "port": 8090,
         "vm": "gcp-proxy",
         "folder": "aa-sui_tools-http-to-smtp-proxy-api"
       }
@@ -611,7 +611,7 @@
         "name": "http-to-smtp-proxy-api",
         "image": null,
         "role": "app",
-        "port": 8080,
+        "port": 8090,
         "public": true
       }
     },
