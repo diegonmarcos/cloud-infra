@@ -168,6 +168,18 @@
         }
       }
     },
+    "wireguard_public": {
+      "subnet": "10.1.0.0/24",
+      "port": 51821,
+      "hub": "oci-E2-f_1",
+      "_doc": "Public-trust WG mesh. Members: oci-analytics (hub, the only public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services.",
+      "peers": [
+        { "name": "oci-analytics", "wg_ip": "10.1.0.1", "role": "hub" },
+        { "name": "gcp-proxy",     "wg_ip": "10.1.0.2", "role": "spoke" },
+        { "name": "oci-mail",      "wg_ip": "10.1.0.3", "role": "spoke" },
+        { "name": "oci-apps",      "wg_ip": "10.1.0.4", "role": "spoke" }
+      ]
+    },
     "dns": {
       "primary": "10.0.0.1",
       "fallback": "1.1.1.1",
