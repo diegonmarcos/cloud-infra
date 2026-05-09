@@ -15,6 +15,12 @@ let
   vmData = cloudData.vms.${vmName};
   publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
     ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }];
+
+  # ── wg-public mesh membership (Phase 2 of zero-public-TCP plan) ─────
+  # Data-driven: a VM participates in wg-public iff it appears in
+  # consolidated.native.wireguard_public.peers[].name. No hardcoded VM lists.
+  wgPublicPeers = consolidated.native.wireguard_public.peers or [];
+  isWgPublicMember = lib.any (p: p.name == vmName) wgPublicPeers;
 in {
   imports = [
     # ── Protection (system-protection orchestrator imports: resource-bouncer,
@@ -34,7 +40,8 @@ in {
     ./container/container.nix
 
     # ── Network
-    (import ./network/wireguard.nix { inherit vmName; })
+    # wg0 — private internal mesh (always present on every VM)
+    (import ./network/wireguard.nix { inherit vmName; interfaceName = "wg0"; meshKey = "wireguard"; secretEnvName = "WG_PRIVATE_KEY"; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
     ./network/dns-hickory.nix
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
@@ -63,5 +70,16 @@ in {
     # ── Shared user config
     (import ./shared/bash-config.nix { inherit vmName; })
     ./shared/git-config.nix
+  ] ++ lib.optionals isWgPublicMember [
+    # ── wg-public — public-trust mesh (Phase 2 of zero-public-TCP plan)
+    # Conditionally imported for VMs listed in
+    # consolidated.native.wireguard_public.peers[].name. Currently:
+    # oci-analytics (hub), gcp-proxy, oci-mail, oci-apps (spokes).
+    (import ./network/wireguard.nix {
+      inherit vmName;
+      interfaceName = "wg-public";
+      meshKey       = "wireguard_public";
+      secretEnvName = "WG_PUBLIC_PRIVATE_KEY";
+    })
   ];
 }
