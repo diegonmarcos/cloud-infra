@@ -27,7 +27,7 @@ step_health() {
     while [ "$elapsed" -lt "$timeout" ]; do
         # Get all container statuses from compose project
         local statuses
-        statuses=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps --format '{{.Name}}|{{.State}}|{{.Health}}' 2>/dev/null" || true)
+        statuses=$(ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps --format '{{.Name}}|{{.State}}|{{.Health}}' 2>/dev/null" || true)
 
         if [ -z "$statuses" ]; then
             log "WARNING: No containers found"
@@ -43,7 +43,7 @@ step_health() {
             # Crash loop detection: "restarting" state
             if echo "$cstate" | grep -qi "restarting"; then
                 log "FAIL: $cname is crash-looping"
-                ssh $SSH_OPTS "$DEPLOY_HOST" "docker logs --tail 15 $cname 2>&1" | while read -r l; do log "  $l"; done
+                ssh_with_retry "$DEPLOY_HOST" "docker logs --tail 15 $cname 2>&1" | while read -r l; do log "  $l"; done
                 return 1
             fi
 
@@ -54,7 +54,7 @@ step_health() {
                     : # healthy, good
                 elif echo "$chealth" | grep -qi "unhealthy"; then
                     log "FAIL: $cname is unhealthy"
-                    ssh $SSH_OPTS "$DEPLOY_HOST" "docker logs --tail 15 $cname 2>&1" | while read -r l; do log "  $l"; done
+                    ssh_with_retry "$DEPLOY_HOST" "docker logs --tail 15 $cname 2>&1" | while read -r l; do log "  $l"; done
                     return 1
                 else
                     all_ok=false  # still starting
@@ -84,6 +84,6 @@ EOF
 
     # Timeout — show final state
     log "TIMEOUT: Not all containers healthy after ${timeout}s"
-    ssh $SSH_OPTS "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps" 2>/dev/null | while read -r l; do log "  $l"; done
+    ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps" 2>/dev/null | while read -r l; do log "  $l"; done
     return 1
 }

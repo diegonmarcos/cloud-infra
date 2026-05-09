@@ -211,7 +211,7 @@ jobs:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
       # ── Cache warming: cargo registry/git + target dir ─────────────────
-      # Rust services (fin-api, mail-puller, rig-agentic-*, smtp-proxy)
+      # Rust services (fin-api, mail-puller, rig-agentic-*, http-to-smtp-proxy-api)
       # run a host-side `cargo build` inside cloud-builder. Without cache,
       # every build re-downloads ~500MB of crates and recompiles from scratch
       # (5-10 min per service). We restore ~/.cargo/{registry,git} keyed on
@@ -277,7 +277,6 @@ jobs:
           VM="${{ matrix.vm }}"
           case "$VM" in
             gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
-            gcp-t4)    KEY="$GCP_T4_SSH_KEY";    HOST="$GCP_T4_HOST";    USER="$GCP_T4_USER" ;;
             *)         KEY="$OCI_SSH_KEY"
                        HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
                        USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;

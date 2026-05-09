@@ -70,4 +70,35 @@ step_wrangler() {
         return 1
     fi
     log "Worker deployed to Cloudflare"
+
+    # ── Declarative secret rotation (sops → wrangler) ─────────────────
+    # Pushes every KEY=VALUE in dist/.secrets via `wrangler secret put`
+    # (stdin is non-interactive). Drops legacy keys listed in
+    # build.json deploy.wrangler_secret_drop[].
+    if [ "${WRANGLER_SECRETS_PUSH:-}" = "true" ]; then
+        if [ -f "$DIST_DIR/.secrets" ]; then
+            log "Pushing secrets to Cloudflare Worker (from dist/.secrets)…"
+            while IFS='=' read -r _key _val; do
+                case "$_key" in ''|'#'*) continue ;; esac
+                # strip surrounding quotes if any
+                _val="${_val#\"}"; _val="${_val%\"}"
+                printf '%s' "$_val" | wrangler secret put "$_key" >/dev/null 2>&1 \
+                    && log "  ✓ secret put: $_key" \
+                    || log_error "  ✗ secret put failed: $_key"
+            done < "$DIST_DIR/.secrets"
+        else
+            log_warn "deploy.wrangler_secrets=true but dist/.secrets not present — skipping push"
+        fi
+    fi
+
+    if [ -n "${WRANGLER_SECRET_DROP:-}" ]; then
+        log "Dropping legacy Worker secrets…"
+        printf '%s\n' "$WRANGLER_SECRET_DROP" | while IFS= read -r _drop; do
+            [ -z "$_drop" ] && continue
+            # `wrangler secret delete` prompts for confirmation; pipe `y` non-interactively.
+            printf 'y\n' | wrangler secret delete "$_drop" >/dev/null 2>&1 \
+                && log "  ✓ secret delete: $_drop" \
+                || log "  – secret delete: $_drop (already absent)"
+        done
+    fi
 }
