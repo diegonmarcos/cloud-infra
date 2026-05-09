@@ -22,8 +22,22 @@ step_docker() {
         log_error "step_docker died at line $1 (exit $2): $3"
         return "$2"
     }
+    # RETURN trap also restores any pipefail state saved by the SSH-builder
+    # branch (see `_SSH_PREV_PIPEFAIL` below). Without this, an early `return 1`
+    # from anywhere inside the `ssh)` case branch (host/image probe failure,
+    # rsync abort, dispatch timeout, …) would leave `set -o pipefail` enabled
+    # in the parent shell and leak into subsequent steps. The textual
+    # `set +o pipefail` is also issued at every explicit branch exit point so
+    # the test contract can grep for it.
+    _docker_return_cleanup() {
+        if [ -n "${_SSH_PREV_PIPEFAIL:-}" ]; then
+            set +o pipefail
+            eval "$_SSH_PREV_PIPEFAIL"
+        fi
+        trap - ERR RETURN
+    }
     trap '_docker_err "$LINENO" "$?" "$BASH_COMMAND"' ERR
-    trap 'trap - ERR RETURN' RETURN
+    trap '_docker_return_cleanup' RETURN
 
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
@@ -418,6 +432,21 @@ NEOF
             [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
             [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked III_unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
 
+            # Save prior pipefail state and enable pipefail for the entire
+            # SSH-builder branch. The branch contains multiple
+            # `ssh ... | while IFS= read -r line` pipelines (tail-log streaming,
+            # status polling) plus the GHCR token | docker login | ssh stdin
+            # pipe. Without `set -o pipefail`, the pipeline's exit is the LAST
+            # command's exit (typically `while read` → 0 on EOF), masking
+            # genuine SSH/build/push failures upstream and silently returning 0
+            # to step_docker. The misleading "Pushed" log line then runs even
+            # when nothing was pushed. Surfaced 2026-04-27 (ship run
+            # 24998852451). Prior state restored before exiting the branch
+            # (search for `set +o pipefail` below) so options don't leak into
+            # subsequent steps in the same shell.
+            _SSH_PREV_PIPEFAIL=$(set +o | grep pipefail)
+            set -o pipefail
+
             # ssh_with_retry / rsync_with_retry are defined in
             # cloud-ship-container-engine.sh (sourced before this step).
             # Override defaults from runners.json — same values used by the
@@ -492,7 +521,14 @@ NEOF
                 return 1
             fi
             log "  [3/7] write GHCR token → $RUNNER_HOST:$REMOTE_TOKEN_FILE (vault path: $VAULT_GHCR_TOKEN_PATH)"
-            ssh_with_retry "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
+            # Stream the token to the remote temp file via SSH stdin in a single
+            # printf | ssh pipe (pipefail is set above — a failure in printf or
+            # ssh propagates and aborts the branch). The literal `ssh $SSH_OPTS`
+            # form (not `ssh_with_retry`) is required so the engine's
+            # SSH_OPTS-controlled mux is reused; the token never lands on disk
+            # on the controller and never lives on the runner FS outside the
+            # 0600 file we explicitly clean up at the end of the branch.
+            printf '%s' "$GHCR_TOKEN_VAL" | ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE"
 
             # Repair: docker login does atomic temp+rename over
             # /root/.docker/config.json. If a stale `docker run -v` ever
@@ -624,8 +660,19 @@ DISPATCH_EOF
             fi
             if [ "$_job_exit" -ne 0 ]; then
                 log_error "Build job $JOB_ID exited $_job_exit"
+                # Restore prior pipefail state before bailing — keeps shell
+                # options clean for any caller / subsequent step in the same
+                # process (set +o pipefail covers the explicit-disable form).
+                set +o pipefail
+                eval "$_SSH_PREV_PIPEFAIL"
                 return 1
             fi
+            # Restore prior pipefail state on the success path. The explicit
+            # `set +o pipefail` is the canonical clear (test asserts it textually);
+            # the eval re-applies the saved state in case pipefail was set
+            # before we entered the branch (no-op on a fresh shell).
+            set +o pipefail
+            eval "$_SSH_PREV_PIPEFAIL"
             ;;
 
         *)
