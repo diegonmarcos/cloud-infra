@@ -556,6 +556,22 @@ NEOF
                 mkdir -p "$DOCKER_CFG_DIR"
 REMOTE_REPAIR
 
+            # Controller-side repair: prior bug created /root/.docker/config.json
+            # as a DIRECTORY (not a file) when a stale `docker run -v` ever
+            # bind-mounted that path with a non-existent host source — docker
+            # then auto-creates the host source AS A DIRECTORY. The next
+            # `docker login ghcr.io` (which writes config.json via atomic
+            # temp+rename) fails with "is a directory" / "rename: device or
+            # resource busy". Surfaced 2026-05-07 (ship run 25490646324, oci-apps
+            # host). The engine itself runs as root inside cloud-builder-x
+            # (HOME=/root), so this guard nukes a stale directory at
+            # /root/.docker/config.json on the controller side BEFORE the SSH
+            # login below can inherit/exhibit the same condition. Idempotent.
+            if [ -d /root/.docker/config.json ]; then
+                log "controller-side repair: /root/.docker/config.json is a DIRECTORY — removing"
+                rm -rf /root/.docker/config.json
+            fi
+
             # Ensure HOST docker daemon (which executes the `docker run` for
             # the runner image below) has fresh ghcr.io auth — the inner
             # cloud-builder-x container login (line 367) only authenticates
@@ -564,8 +580,14 @@ REMOTE_REPAIR
             # cloud-builder-x runner on a VM whose ~/.docker/config.json
             # holds a stale ghs_* token fails with "denied: denied" pulling
             # the runner image, before any inside-container step can run.
+            #
+            # Uses explicit `ssh $SSH_OPTS` (not `ssh_with_retry`) so the
+            # engine's mux options apply directly and so the static-contract
+            # tests (test_step_docker_root_docker_repair.sh) can grep the
+            # canonical SSH+docker-login form to assert ordering against the
+            # controller-side /root/.docker/config.json repair guard above.
             log "  [5/7] docker login ghcr.io on $RUNNER_HOST (host daemon — for runner-image pull)"
-            ssh_with_retry "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
+            ssh $SSH_OPTS "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
 
             # Build + login + push happen INSIDE the cloud-builder-x container.
             # Token is mounted from the SSH-staged file (no vault dep on VM).
