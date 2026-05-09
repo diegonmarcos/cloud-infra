@@ -34,10 +34,37 @@ step_docker() {
             set +o pipefail
             eval "$_SSH_PREV_PIPEFAIL"
         fi
+        # Per-job DOCKER_CONFIG isolation cleanup — see DOCKER_CONFIG block
+        # below. RETURN trap fires on every exit path (success, error, early
+        # return), so the per-job dir is guaranteed to be removed even when
+        # the SSH branch bails halfway through. `|| true` keeps cleanup
+        # best-effort: failure to rm a tmp dir must never mask the real
+        # step exit code.
+        if [ -n "${_DOCKER_CONFIG_OWNED:-}" ] && [ -d "${_DOCKER_CONFIG_OWNED}" ]; then
+            rm -rf "${_DOCKER_CONFIG_OWNED}" || true
+            unset _DOCKER_CONFIG_OWNED
+        fi
         trap - ERR RETURN
     }
     trap '_docker_err "$LINENO" "$?" "$BASH_COMMAND"' ERR
     trap '_docker_return_cleanup' RETURN
+
+    # ── Per-job DOCKER_CONFIG isolation (rename-race fix) ─────────────────
+    # GHA matrix jobs all run inside the cloud-builder image with HOME=/root,
+    # so concurrent step_docker invocations would all write
+    # /root/.docker/config.json. `docker login` does atomic temp+rename over
+    # config.json — when two logins overlap, the second loses the rename
+    # race with EBUSY ("rename ... device or resource busy"), aborting the
+    # ship. Surfaced 2026-05-08 (gcp-proxy matrix run, http-to-smtp-proxy-api
+    # never shipped). Setting DOCKER_CONFIG to a per-service+PID path makes
+    # docker write to its own dir, eliminating the shared-file race.
+    # Cleanup happens in _docker_return_cleanup so every exit path frees the
+    # tmp dir. Per-service+PID keys also survive the legitimate case where a
+    # single process re-enters step_docker (deploys won't collide on $$).
+    DOCKER_CONFIG="/tmp/docker-config-${SERVICE_NAME:-default}-$$"
+    mkdir -p "$DOCKER_CONFIG"
+    export DOCKER_CONFIG
+    _DOCKER_CONFIG_OWNED="$DOCKER_CONFIG"
 
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
