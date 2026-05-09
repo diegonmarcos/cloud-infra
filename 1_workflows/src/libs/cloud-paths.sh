@@ -97,15 +97,18 @@ cloud_paths_gha_config() {
         "$_cpgc_root/cloud-data-gha-config.json"
 }
 
-# Public: cloud-data-runners.json — arch → runner mapping (amd64=local,
-# arm64=ssh oci-apps cloud-builder-x).
+# Public: build-workflows.json — arch → runner mapping (amd64=local,
+# arm64=ssh oci-apps cloud-builder-x). Migrated 2026-05-09 from the legacy
+# runners.json that lived under I_cloud-data/ (now z_archive). Source-of-truth
+# is now 1_workflows/build.json (.runners + .probe + .dispatch), aggregated
+# by 2_configs/build.sh into dist/build-workflows.json. Schema unchanged:
+# .runners[$arch].{type,host,builder_image}.
 cloud_paths_runners() {
     _cpr_root="$(_cloud_paths_root)" || return 1
-    _cloud_paths_first_existing "cloud-data-runners.json" \
-        "/app/cloud-data-runners.json" \
-        "$_cpr_root/2_configs/dist/cloud-data-runners.json" \
-        "$_cpr_root/cloud-data/cloud-data-runners.json" \
-        "$_cpr_root/cloud-data-runners.json"
+    _cloud_paths_first_existing "build-workflows.json" \
+        "/app/build-workflows.json" \
+        "$_cpr_root/2_configs/dist/build-workflows.json" \
+        "$_cpr_root/1_workflows/src/build-workflows.json"
 }
 
 # Public: $CLOUD_ROOT (resolved).

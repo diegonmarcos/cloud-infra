@@ -3,7 +3,7 @@
 # ║ Phase 1 tester — arch → runner routing                           ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
-# ║   1. cloud-data-runners.json has an entry for every docker.arch  ║
+# ║   1. build-workflows.json has an entry for every docker.arch  ║
 # ║      declared by any build.json                                  ║
 # ║   2. step_docker reads from the JSON (no hardcoded oci-apps)     ║
 # ║   3. The illegal QEMU fallback branch is gone                    ║
@@ -20,10 +20,9 @@ DISPATCH="$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"
 
 RUNNERS_JSON=""
 for p in \
-    "/app/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
+    "/app/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_workflows/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
 
@@ -34,7 +33,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 echo "── 1: runners.json exists and matches every declared docker.arch ──"
 
 if [ -z "$RUNNERS_JSON" ]; then
-    fail "cloud-data-runners.json not found under 2_configs/dist/ or repo root"
+    fail "build-workflows.json not found under 2_configs/dist/ or repo root"
 else
     pass "runners.json found at $RUNNERS_JSON"
     # Collect distinct docker.arch values from every service build.json
@@ -54,10 +53,10 @@ fi
 echo ""
 echo "── 2: step_docker reads from runners.json, no hardcoded hostnames ──"
 
-if grep -q 'cloud-data-runners.json' "$DOCKER_STEP"; then
-    pass "step_docker reads cloud-data-runners.json"
+if grep -q 'build-workflows.json' "$DOCKER_STEP"; then
+    pass "step_docker reads build-workflows.json"
 else
-    fail "step_docker does NOT reference cloud-data-runners.json"
+    fail "step_docker does NOT reference build-workflows.json"
 fi
 
 # Hardcoded hostnames must not appear outside the runners.json comment/context
@@ -115,7 +114,7 @@ if bash -c "
     DIST_DIR=$tmp
     CLOUD_ROOT=$tmp
     mkdir -p $tmp/2_configs/dist
-    cp $tmp/runners.json $tmp/2_configs/dist/cloud-data-runners.json
+    cp $tmp/runners.json $tmp/2_configs/dist/build-workflows.json
     DOCKER_IMAGE=ghcr.io/x/fake
     DOCKER_REGISTRY=
     DOCKER_ARCH=arm64

@@ -193,9 +193,9 @@ log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "
 # failures only — real remote-command exit codes propagate unchanged.
 #
 # Tunables: $SSH_RETRY_N (default 3), $SSH_RETRY_BACKOFF (default 5).
-# Set in callers from cloud-data-runners.json (.probe.retries +
+# Set in callers from build-workflows.json (.probe.retries +
 # .probe.backoff_seconds) for the full runners path; defaults work for
-# the deploy/health steps that don't read runners.json.
+# the deploy/health steps that don't read the workflows registry.
 ssh_with_retry() {
     _swr_n="${SSH_RETRY_N:-3}"
     _swr_bo="${SSH_RETRY_BACKOFF:-5}"
