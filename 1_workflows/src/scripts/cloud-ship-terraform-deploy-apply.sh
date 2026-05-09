@@ -74,7 +74,7 @@ should_run() {
   [ "${EVENT_NAME:-}" = "workflow_dispatch" ] && return 0
   # On push, check CHANGES_* env var (uppercase, hyphens to underscores)
   local var_name="CHANGES_$(echo "$name" | tr '[:lower:]-' '[:upper:]_')"
-  local val="${!var_name:-true}"
+  local val="${!var_name:-false}"
   [ "$val" = "true" ]
 }
 
