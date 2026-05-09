@@ -165,6 +165,15 @@ jobs:
         # dist/z_archive/. Every consumer's probe chain MUST include a
         # dist/z_archive/<file> candidate or it silently 404s.
         run: bash 1_workflows/src/test/test_cloud_data_zarchive_probe.sh
+      - name: Phase 41 — Tier-3 WG-only bind policy (rendered artefacts)
+        # Mirrors 2_configs/src/engines/test-bind-host-policy.sh but scans
+        # the rendered docker-compose.yml + dist/build-{name}.json — catches
+        # any escape via per-flake ports: stanzas. Allowlist is data-driven
+        # from 2_configs/build.json#policy.public_bindings_allowlist.
+        # Grandfathered slot-3 violators (gitea, tools-maddy, ollama-arm)
+        # warn but do NOT fail; flip after slot 3 lands by removing entries
+        # from policy.grandfathered_violations.
+        run: bash 1_workflows/src/test/test_bind_host_policy.sh
       - name: Phase 33 — dist/ + .github/workflows/ in sync with src/ (no agent drift)
         # report-only: false-positives in CI when local + origin match but
         # CI's freshly-built dist differs (likely env-dependent — node/npm
