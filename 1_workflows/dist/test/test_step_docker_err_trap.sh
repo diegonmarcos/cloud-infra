@@ -48,8 +48,18 @@ fi
 
 # 3) RETURN trap must clear ERR + RETURN on function exit (no leak into
 #    parallel siblings step_configs_push / step_compose_build / step_secrets).
+#
+# Two acceptable forms:
+#   (a) Inline:  trap 'trap - ERR RETURN' RETURN
+#   (b) Helper:  trap '_docker_return_cleanup' RETURN  +  helper that runs
+#               `trap - ERR RETURN` (used when extra cleanup, e.g. pipefail
+#               restore for the SSH-builder branch, has to ride along).
 if grep -qE "trap 'trap - ERR RETURN' RETURN" "$SCRIPT"; then
-    printf "  OK  RETURN trap clears ERR + RETURN on function exit\n"
+    printf "  OK  RETURN trap clears ERR + RETURN on function exit (inline)\n"
+elif grep -qE "trap '_docker_return_cleanup' RETURN" "$SCRIPT" \
+     && awk '/^[[:space:]]*_docker_return_cleanup\(\)/,/^[[:space:]]*\}/' "$SCRIPT" \
+        | grep -qE 'trap - ERR RETURN'; then
+    printf "  OK  RETURN trap clears ERR + RETURN on function exit (via _docker_return_cleanup helper)\n"
 else
     printf "  FAIL no RETURN trap to clear — ERR could leak into other parallel steps\n"
     FAIL=1

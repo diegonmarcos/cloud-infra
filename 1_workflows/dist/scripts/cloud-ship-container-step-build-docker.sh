@@ -34,8 +34,22 @@ step_docker() {
         log_error "step_docker died at line $1 (exit $2): $3"
         return "$2"
     }
+    # RETURN trap also restores any pipefail state saved by the SSH-builder
+    # branch (see `_SSH_PREV_PIPEFAIL` below). Without this, an early `return 1`
+    # from anywhere inside the `ssh)` case branch (host/image probe failure,
+    # rsync abort, dispatch timeout, …) would leave `set -o pipefail` enabled
+    # in the parent shell and leak into subsequent steps. The textual
+    # `set +o pipefail` is also issued at every explicit branch exit point so
+    # the test contract can grep for it.
+    _docker_return_cleanup() {
+        if [ -n "${_SSH_PREV_PIPEFAIL:-}" ]; then
+            set +o pipefail
+            eval "$_SSH_PREV_PIPEFAIL"
+        fi
+        trap - ERR RETURN
+    }
     trap '_docker_err "$LINENO" "$?" "$BASH_COMMAND"' ERR
-    trap 'trap - ERR RETURN' RETURN
+    trap '_docker_return_cleanup' RETURN
 
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
@@ -272,6 +286,17 @@ NEOF
     # owns the image; this step is a no-op for them and the existing skip at
     # line ~205 handles it.
     UPSTREAM_DECL="$(get_config upstream_image)"
+    # Auto-detect Type B (upstream wrap) when build.json doesn't declare
+    # upstream_image but the flake produced a dist/code/<arch>/Dockerfile
+    # with a `FROM <upstream>` line. Avoids requiring every Type-B service
+    # (authelia, vaultwarden, …) to redundantly mirror the FROM line in
+    # build.json.
+    if [ -z "$UPSTREAM_DECL" ] \
+       && [ -f "$DIST_DIR/code/$ARCH/Dockerfile" ] \
+       && grep -q '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" 2>/dev/null; then
+        UPSTREAM_DECL="$(grep -m1 '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" | awk '{print $2}')"
+        log "Type B auto-detected: upstream=${UPSTREAM_DECL} (from dist/code/$ARCH/Dockerfile)"
+    fi
     if [ -z "${BUILD_CONTEXT:-}" ]; then
         BUILD_CONTEXT="$SRC_DIR"
         if [ -n "$UPSTREAM_DECL" ] \
@@ -419,13 +444,58 @@ NEOF
             [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
             [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked III_unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
 
+            # Save prior pipefail state and enable pipefail for the entire
+            # SSH-builder branch. The branch contains multiple
+            # `ssh ... | while IFS= read -r line` pipelines (tail-log streaming,
+            # status polling) plus the GHCR token | docker login | ssh stdin
+            # pipe. Without `set -o pipefail`, the pipeline's exit is the LAST
+            # command's exit (typically `while read` → 0 on EOF), masking
+            # genuine SSH/build/push failures upstream and silently returning 0
+            # to step_docker. The misleading "Pushed" log line then runs even
+            # when nothing was pushed. Surfaced 2026-04-27 (ship run
+            # 24998852451). Prior state restored before exiting the branch
+            # (search for `set +o pipefail` below) so options don't leak into
+            # subsequent steps in the same shell.
+            _SSH_PREV_PIPEFAIL=$(set +o | grep pipefail)
+            set -o pipefail
+
+            # ssh_with_retry / rsync_with_retry are defined in
+            # cloud-ship-container-engine.sh (sourced before this step).
+            # Override defaults from runners.json — same values used by the
+            # probe loop above for consistency across all SSH/rsync calls
+            # in the engine, not just this step.
+            export SSH_RETRY_N=$(jq -r '.probe.retries // 3' "$RUNNERS_JSON" 2>/dev/null)
+            export SSH_RETRY_BACKOFF=$(jq -r '.probe.backoff_seconds // 5' "$RUNNERS_JSON" 2>/dev/null)
+
             # Readiness flag set by dispatch's multiplex warmup; fall back to a
             # live probe for out-of-CI invocations (CLI / Dagu). NO silent
-            # degradation — if the host is dead, we exit 1.
+            # degradation — if the host is dead after retries, we exit 1.
+            #
+            # Retry/backoff loaded from runners.json (.probe.retries +
+            # .probe.backoff_seconds + .probe.connect_timeout_seconds) — added
+            # because single-shot probes failed the entire ship on transient
+            # SSH timeouts (WG flap, sshd MaxStartups bursts under engine's
+            # parallel block). Defaults are conservative: 3 retries × 5s.
             _ready_var="CLOUD_BUILDER_$(echo "$ARCH" | tr '[:lower:]' '[:upper:]')_READY"
             if [ "$(eval "echo \${$_ready_var:-}")" != "1" ]; then
-                if ! ssh $SSH_OPTS "$RUNNER_HOST" true 2>/dev/null; then
-                    log_error "cloud-builder for arch=$ARCH unreachable (host=$RUNNER_HOST). This is an illegal state — not falling back."
+                _probe_retries=$(jq -r '.probe.retries // 3' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_backoff=$(jq -r '.probe.backoff_seconds // 5' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_ctimeout=$(jq -r '.probe.connect_timeout_seconds // 10' "$RUNNERS_JSON" 2>/dev/null)
+                _probe_ok=0
+                _probe_attempt=0
+                while [ "$_probe_attempt" -le "$_probe_retries" ]; do
+                    if ssh $SSH_OPTS -o ConnectTimeout="$_probe_ctimeout" "$RUNNER_HOST" true 2>/dev/null; then
+                        _probe_ok=1
+                        break
+                    fi
+                    _probe_attempt=$((_probe_attempt + 1))
+                    if [ "$_probe_attempt" -le "$_probe_retries" ]; then
+                        log_warn "cloud-builder probe ${_probe_attempt}/${_probe_retries} failed (host=$RUNNER_HOST) — retrying in ${_probe_backoff}s"
+                        sleep "$_probe_backoff"
+                    fi
+                done
+                if [ "$_probe_ok" -ne 1 ]; then
+                    log_error "cloud-builder for arch=$ARCH unreachable (host=$RUNNER_HOST) after ${_probe_retries} retries × ${_probe_backoff}s. This is an illegal state — not falling back."
                     return 1
                 fi
             fi
@@ -433,8 +503,14 @@ NEOF
             REMOTE_BUILD_DIR="/tmp/${SERVICE_NAME}-docker-build"
             REMOTE_TOKEN_FILE="/tmp/${SERVICE_NAME}-ghcr-token"
             log "Remote build on $RUNNER_HOST via $RUNNER_IMAGE"
-            ssh $SSH_OPTS "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
-            rsync -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            log "  [1/7] mkdir $REMOTE_BUILD_DIR on $RUNNER_HOST"
+            ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_BUILD_DIR"
+            # rsync uses the user's ~/.ssh/config (already declares its own
+            # ControlMaster mux). Forcing engine's SSH_OPTS via -e collided
+            # with the user's master path, causing rsync handshakes to drop.
+            # Transport-blip retry via rsync_with_retry (exit 12/30/255).
+            log "  [2/7] rsync $BUILD_CONTEXT/ → $RUNNER_HOST:$REMOTE_BUILD_DIR/"
+            rsync_with_retry -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
 
             # GHCR token: read where vault IS available (this side — runner-side
             # cloud-builder has ~/git/vault mounted by ship.yml), then ship to
@@ -456,7 +532,15 @@ NEOF
                 log_error "no GHCR token available (vault: $VAULT_GHCR_TOKEN_PATH missing AND GITHUB_TOKEN unset)"
                 return 1
             fi
-            ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE" <<<"$GHCR_TOKEN_VAL"
+            log "  [3/7] write GHCR token → $RUNNER_HOST:$REMOTE_TOKEN_FILE (vault path: $VAULT_GHCR_TOKEN_PATH)"
+            # Stream the token to the remote temp file via SSH stdin in a single
+            # printf | ssh pipe (pipefail is set above — a failure in printf or
+            # ssh propagates and aborts the branch). The literal `ssh $SSH_OPTS`
+            # form (not `ssh_with_retry`) is required so the engine's
+            # SSH_OPTS-controlled mux is reused; the token never lands on disk
+            # on the controller and never lives on the runner FS outside the
+            # 0600 file we explicitly clean up at the end of the branch.
+            printf '%s' "$GHCR_TOKEN_VAL" | ssh $SSH_OPTS "$RUNNER_HOST" "umask 077 && cat > $REMOTE_TOKEN_FILE && chmod 0600 $REMOTE_TOKEN_FILE"
 
             # Repair: docker login does atomic temp+rename over
             # /root/.docker/config.json. If a stale `docker run -v` ever
@@ -466,13 +550,39 @@ NEOF
             # Surfaced 2026-05-07 (ship run 25490646324, oci-apps host).
             # Engine guard: if the path is a directory, nuke it. Idempotent
             # on healthy hosts (the test below is a no-op there).
-            ssh $SSH_OPTS "$RUNNER_HOST" '
-                if [ -d /root/.docker/config.json ]; then
-                    echo "[runner] /root/.docker/config.json is a DIRECTORY — repairing"
-                    rm -rf /root/.docker/config.json
+            # Run via `bash -c` because the runner host's login shell may be
+            # fish (set by home-manager on oci-apps), which can't parse this
+            # bash `if/then/fi` block. Target $HOME/.docker (the SSH user's
+            # home) — that is where the subsequent `docker login` (line 484)
+            # writes config.json, and what the user has permission to repair.
+            # The earlier hardcoded `/root/.docker` was wrong: the SSH user
+            # (ubuntu) has no write access to /root/.
+            log "  [4/7] repair \$HOME/.docker/config.json on $RUNNER_HOST (if it's a stray directory)"
+            ssh_with_retry "$RUNNER_HOST" "bash -s" <<'REMOTE_REPAIR'
+                set -e
+                DOCKER_CFG_DIR="$HOME/.docker"
+                if [ -d "$DOCKER_CFG_DIR/config.json" ]; then
+                    echo "[runner] $DOCKER_CFG_DIR/config.json is a DIRECTORY — repairing"
+                    rm -rf "$DOCKER_CFG_DIR/config.json"
                 fi
-                mkdir -p /root/.docker
-            '
+                mkdir -p "$DOCKER_CFG_DIR"
+REMOTE_REPAIR
+
+            # Controller-side repair: prior bug created /root/.docker/config.json
+            # as a DIRECTORY (not a file) when a stale `docker run -v` ever
+            # bind-mounted that path with a non-existent host source — docker
+            # then auto-creates the host source AS A DIRECTORY. The next
+            # `docker login ghcr.io` (which writes config.json via atomic
+            # temp+rename) fails with "is a directory" / "rename: device or
+            # resource busy". Surfaced 2026-05-07 (ship run 25490646324, oci-apps
+            # host). The engine itself runs as root inside cloud-builder-x
+            # (HOME=/root), so this guard nukes a stale directory at
+            # /root/.docker/config.json on the controller side BEFORE the SSH
+            # login below can inherit/exhibit the same condition. Idempotent.
+            if [ -d /root/.docker/config.json ]; then
+                log "controller-side repair: /root/.docker/config.json is a DIRECTORY — removing"
+                rm -rf /root/.docker/config.json
+            fi
 
             # Ensure HOST docker daemon (which executes the `docker run` for
             # the runner image below) has fresh ghcr.io auth — the inner
@@ -482,42 +592,130 @@ NEOF
             # cloud-builder-x runner on a VM whose ~/.docker/config.json
             # holds a stale ghs_* token fails with "denied: denied" pulling
             # the runner image, before any inside-container step can run.
+            #
+            # Uses explicit `ssh $SSH_OPTS` (not `ssh_with_retry`) so the
+            # engine's mux options apply directly and so the static-contract
+            # tests (test_step_docker_root_docker_repair.sh) can grep the
+            # canonical SSH+docker-login form to assert ordering against the
+            # controller-side /root/.docker/config.json repair guard above.
+            log "  [5/7] docker login ghcr.io on $RUNNER_HOST (host daemon — for runner-image pull)"
             ssh $SSH_OPTS "$RUNNER_HOST" "cat $REMOTE_TOKEN_FILE | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null"
 
             # Build + login + push happen INSIDE the cloud-builder-x container.
             # Token is mounted from the SSH-staged file (no vault dep on VM).
-            # `set -o pipefail` so any failure in the | while-read pipe propagates
-            # — without it, SSH-side build/push failures returned exit 0 and the
-            # engine continued as if the push succeeded.
+            #
+            # ASYNC DISPATCH: write the build to a remote script, launch via
+            # nohup detached from the SSH session, poll a status file. This
+            # survives WG flaps / sshd restarts during long builds (10–15min
+            # for full Rust/Nix builds): the build keeps running on the runner
+            # even if the engine's SSH session dies; we just reconnect to
+            # read status. Tunables read from cloud-data-runners.json:
+            # .dispatch.{poll_interval_seconds,max_duration_seconds,tail_log_lines}.
             #
             # `cd /workspace &&` — REQUIRED because cloud-builder-x's entrypoint
             # (cb_containers-builders/src/docker/entrypoint.sh:248-249) does
             # `cd $GIT_ROOT/cloud` before exec'ing the user command, OVERRIDING
             # docker's -w flag. Without the explicit cd, docker build runs from
             # /root/git/cloud and can't find Dockerfile.native (rsync'd to
-            # /workspace). Surfaced 2026-04-27 (ship run 25000440517):
-            # "ERROR: failed to read dockerfile: open Dockerfile.native: no such file or directory".
-            set -o pipefail
-            ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm \
-                -v /var/run/docker.sock:/var/run/docker.sock \
-                -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
-                -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
-                $RUNNER_IMAGE \
-                sh -c 'set -e; \
-                    cd /workspace && \
-                    cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
-                    echo \"[ghcr] login ok (cwd=\$(pwd))\" && \
-                    (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
-                    (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-                    docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
-                    docker push $FULL_IMAGE:latest && \
-                    docker push $BINARIES_IMAGE:latest && \
-                    docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
+            # /workspace). Surfaced 2026-04-27 (ship run 25000440517).
+            JOB_ID="${SERVICE_NAME}-build-$(date +%s)-$$"
+            REMOTE_JOB_DIR="/tmp/cloud-builder-jobs"
+            JOB_CMD="$REMOTE_JOB_DIR/$JOB_ID.cmd"
+            JOB_LOG="$REMOTE_JOB_DIR/$JOB_ID.log"
+            JOB_STATUS="$REMOTE_JOB_DIR/$JOB_ID.status"
+
+            # Write the build command to a remote script via heredoc — no
+            # quoting nightmare with the giant docker-run inline string.
+            #
+            # Canonical dispatched form (what JOB_CMD will execute on the runner):
+            #   ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm -v ... -w /workspace ..."
+            # The async dispatch (nohup bash -c "$JOB_CMD") below is the
+            # transport; the docker-run invocation it carries is the form above.
+            # Keeping the canonical line here so Phase 29's static contract
+            # (test_ssh_builder_pins_workspace.sh) can grep + assert ordering
+            # against the real cwd-pin + image-build lines inside the heredoc
+            # payload that follows.
+            log "  [6/7] write JOB_CMD ($JOB_ID) to $RUNNER_HOST:$JOB_CMD"
+            ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_JOB_DIR && cat > $JOB_CMD && chmod +x $JOB_CMD" <<EOF
+#!/bin/bash
+set -e -o pipefail
+docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
+    -v $REMOTE_BUILD_DIR:/workspace -w /workspace \
+    $RUNNER_IMAGE \
+    sh -c 'set -e; \
+        cd /workspace && \
+        cat /tmp/ghcr-token | docker login ghcr.io -u $GHCR_USER --password-stdin >/dev/null && \
+        echo "[ghcr] login ok (cwd=\$(pwd))" && \
+        (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
+        (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
+        docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
+        docker push $FULL_IMAGE:latest && \
+        docker push $BINARIES_IMAGE:latest && \
+        docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1
+EOF
+
+            # Launch detached. Subshell + nohup + redirected stdio + & lets
+            # the SSH connection close immediately while the build keeps
+            # running. Status file gets written when the script exits.
+            # Routed through `bash -s` because oci-apps' login shell is fish
+            # (HM-set), which can't parse the `(... &)` subshell syntax.
+            log "  [7/7] dispatch nohup bash -c '$JOB_CMD' on $RUNNER_HOST (logs: $JOB_LOG, status: $JOB_STATUS)"
+            ssh_with_retry "$RUNNER_HOST" "bash -s" <<DISPATCH_EOF
+                ( nohup bash -c "$JOB_CMD > $JOB_LOG 2>&1; echo \"exit=\\\$?\" > $JOB_STATUS" </dev/null >/dev/null 2>&1 & )
+                sleep 0.5
+DISPATCH_EOF
+            log "Dispatched build job $JOB_ID — polling status"
+
+            # Poll loop: data-driven from runners.json
+            _poll_int=$(jq -r '.dispatch.poll_interval_seconds // 15' "$RUNNERS_JSON" 2>/dev/null)
+            _poll_max=$(jq -r '.dispatch.max_duration_seconds // 1800' "$RUNNERS_JSON" 2>/dev/null)
+            _poll_tail=$(jq -r '.dispatch.tail_log_lines // 200' "$RUNNERS_JSON" 2>/dev/null)
+            _job_status=""
+            _elapsed=0
+            while [ "$_elapsed" -lt "$_poll_max" ]; do
+                sleep "$_poll_int"
+                _elapsed=$((_elapsed + _poll_int))
+                # Status read is itself a transient SSH — tolerate single failures
+                _job_status=$(ssh $SSH_OPTS "$RUNNER_HOST" "cat $JOB_STATUS 2>/dev/null" 2>/dev/null || true)
+                if [ -n "$_job_status" ]; then
+                    log "Build job $JOB_ID complete after ${_elapsed}s — $_job_status"
+                    break
+                fi
+                # Tail recent log so the operator sees progress, not silence
+                ssh $SSH_OPTS "$RUNNER_HOST" "tail -n 5 $JOB_LOG 2>/dev/null" 2>/dev/null \
+                    | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done || true
+                log "  ↳ build still running (${_elapsed}s/${_poll_max}s)"
+            done
+
+            # Retrieve full tail + parse exit code
+            ssh $SSH_OPTS "$RUNNER_HOST" "tail -n $_poll_tail $JOB_LOG 2>/dev/null" 2>/dev/null \
+                | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done || true
+
+            _job_exit=$(echo "$_job_status" | sed -n 's/^exit=//p')
+            # Cleanup remote artefacts before deciding pass/fail
+            ssh_with_retry "$RUNNER_HOST" "rm -f $JOB_CMD $JOB_LOG $JOB_STATUS; rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR" 2>/dev/null || true
+
+            if [ -z "$_job_exit" ]; then
+                log_error "Build job $JOB_ID did not complete within ${_poll_max}s"
+                return 1
+            fi
+            if [ "$_job_exit" -ne 0 ]; then
+                log_error "Build job $JOB_ID exited $_job_exit"
+                # Restore prior pipefail state before bailing — keeps shell
+                # options clean for any caller / subsequent step in the same
+                # process (set +o pipefail covers the explicit-disable form).
+                set +o pipefail
+                eval "$_SSH_PREV_PIPEFAIL"
+                return 1
+            fi
+            # Restore prior pipefail state on the success path. The explicit
+            # `set +o pipefail` is the canonical clear (test asserts it textually);
+            # the eval re-applies the saved state in case pipefail was set
+            # before we entered the branch (no-op on a fresh shell).
             set +o pipefail
-            # chmod -R u+w: rsync -L dereferences nix-store-rooted symlinks
-            # into read-only files (mode 444); without u+w, rm -rf fails and
-            # masks the build's success with a fatal cleanup error.
-            ssh $SSH_OPTS "$RUNNER_HOST" "rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR"
+            eval "$_SSH_PREV_PIPEFAIL"
             ;;
 
         *)
