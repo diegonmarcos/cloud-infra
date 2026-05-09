@@ -84,9 +84,9 @@ variable "ses_dkim_token_3" {
 # Map variable names to values for dynamic DKIM lookup
 locals {
   dkim_vars = {
-    dkim_maddy_public_key = var.dkim_maddy_public_key
-    dkim_cf_public_key       = var.dkim_cf_public_key
-    dkim_google_public_key   = var.dkim_google_public_key
+    dkim_maddy_public_key  = var.dkim_maddy_public_key
+    dkim_cf_public_key     = var.dkim_cf_public_key
+    dkim_google_public_key = var.dkim_google_public_key
   }
 
   ses_dkim_tokens = {
