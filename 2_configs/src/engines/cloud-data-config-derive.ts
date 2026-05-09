@@ -1165,6 +1165,95 @@ function resolveMailAccounts(svcName: string, services: Record<string, any>): an
   };
 }
 
+// ── Tier-3 WG-only bind policy ────────────────────────────────────────
+// Loads policy.public_bindings_allowlist + policy.grandfathered_violations from
+// 2_configs/build.json (single source of truth) and exposes a resolver that
+// (a) substitutes the literal "vm.wg_ip" → actual VM wg_ip and (b) enforces
+// the 0.0.0.0 allowlist. Failure throws — the deriver pipeline aborts so the
+// violation is never silently shipped.
+//
+// Mirrored at runtime by 1_workflows/src/test/test_bind_host_policy.sh which
+// scans rendered docker-compose.yml output (catches future ports: usage that
+// bypasses bind_host wholesale).
+interface BindHostPolicy {
+  allowlist: Map<string, Set<string>>;          // "service::container" → "*" | "port,port,..."
+  grandfathered: Map<string, Set<string>>;      // "service::container" → ports
+}
+
+let _bindHostPolicy: BindHostPolicy | null = null;
+
+function loadBindHostPolicy(): BindHostPolicy {
+  if (_bindHostPolicy) return _bindHostPolicy;
+  const POLICY_FILE = join(CONFIGS_DIR, "build.json");
+  const allowlist = new Map<string, Set<string>>();
+  const grandfathered = new Map<string, Set<string>>();
+  if (!existsSync(POLICY_FILE)) {
+    console.warn(`[bind-host-policy] ${POLICY_FILE} missing — strict mode disabled`);
+    _bindHostPolicy = { allowlist, grandfathered };
+    return _bindHostPolicy;
+  }
+  try {
+    const cfg = JSON.parse(readFileSync(POLICY_FILE, "utf-8"));
+    const policy = cfg.policy ?? {};
+    for (const e of (policy.public_bindings_allowlist ?? []) as any[]) {
+      if (!e?.service || !e?.container) continue;
+      const key = `${e.service}::${e.container}`;
+      const ports = Array.isArray(e.ports) && e.ports.length > 0
+        ? new Set<string>(e.ports.map((p: any) => String(p)))
+        : new Set<string>(["*"]);
+      allowlist.set(key, ports);
+    }
+    for (const e of (policy.grandfathered_violations ?? []) as any[]) {
+      if (!e?.service || !e?.container) continue;
+      const key = `${e.service}::${e.container}`;
+      const ports = Array.isArray(e.ports) && e.ports.length > 0
+        ? new Set<string>(e.ports.map((p: any) => String(p)))
+        : new Set<string>(["*"]);
+      grandfathered.set(key, ports);
+    }
+  } catch (err) {
+    console.warn(`[bind-host-policy] failed to parse ${POLICY_FILE}: ${err}`);
+  }
+  _bindHostPolicy = { allowlist, grandfathered };
+  return _bindHostPolicy;
+}
+
+function resolveBindHost(opts: {
+  declared: string | null | undefined;
+  vmWgIp: string | null | undefined;
+  serviceName: string;
+  containerName: string;
+  port: number | null | undefined;
+}): string {
+  const policy = loadBindHostPolicy();
+  // Default — when no bind_host declared, use the VM's wg_ip (the whole point
+  // of the policy: WG-only bind by default).
+  let host = opts.declared ?? "vm.wg_ip";
+  // Magic literal substitution.
+  if (host === "vm.wg_ip") {
+    host = opts.vmWgIp ?? "vm.wg_ip";
+  }
+  // Enforcement — only 0.0.0.0 needs allowlist clearance. Other literals
+  // (127.0.0.1, 10.0.0.1 explicitly named, etc.) pass through unchecked.
+  if (host === "0.0.0.0") {
+    const key = `${opts.serviceName}::${opts.containerName}`;
+    const portStr = opts.port != null ? String(opts.port) : "*";
+    const allow = policy.allowlist.get(key);
+    const grandfather = policy.grandfathered.get(key);
+    const portMatchesAllow = !!allow && (allow.has("*") || allow.has(portStr));
+    const portMatchesGrandfather = !!grandfather && (grandfather.has("*") || grandfather.has(portStr));
+    if (portMatchesAllow) return host;
+    if (portMatchesGrandfather) {
+      console.warn(`[bind-host-policy] WARN grandfathered: ${key} port=${portStr} binds 0.0.0.0 (clear via 2_configs/build.json#policy.grandfathered_violations once migrated)`);
+      return host;
+    }
+    throw new Error(
+      `[bind-host-policy] FAIL ${key} declares bind_host=0.0.0.0 (port=${portStr}) — not in 2_configs/build.json#policy.public_bindings_allowlist. Either bind to vm.wg_ip OR add an allowlist entry with explicit audit-trail comment.`
+    );
+  }
+  return host;
+}
+
 function deriveContainerConfigs(c: any): DerivedFile[] {
   const serviceConnections = deriveServiceConnections(c).data as any;
   const services = c.services as Record<string, any>;
@@ -1209,6 +1298,19 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
     for (const [role, ct] of containerEntries) {
       const containerName = ct.container_name || svcName;
       if (SPECIAL_CASES.has(containerName)) continue;
+      // Resolve Tier-3 bind_host: container-level overrides service-level;
+      // unset → "vm.wg_ip" magic which substitutes to vmEntry.wg_ip.
+      // Throws (aborts derive) if the resolved host is 0.0.0.0 and not in
+      // 2_configs/build.json#policy.public_bindings_allowlist.
+      const declaredBind = (ct.bind_host !== undefined ? ct.bind_host : (svc as any).bind_host) ?? null;
+      const resolvedBind = resolveBindHost({
+        declared: declaredBind,
+        vmWgIp: vmEntry?.wg_ip,
+        serviceName: svcName,
+        containerName,
+        port: ct.port,
+      });
+      const containerWithBind = { ...ct, bind_host: resolvedBind };
       files.push({
         name: `build-${containerName}.json`,
         data: {
@@ -1218,10 +1320,11 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
           },
           _generated: now(),
           _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
-          container: ct,
+          container: containerWithBind,
           service: svcName,
           role,
           vm: vmAlias,
+          bind_host: resolvedBind,
           services: serviceConnections.services ?? {},
           ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
         },

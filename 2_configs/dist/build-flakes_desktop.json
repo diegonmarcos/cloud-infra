@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T13:41:42.518Z",
+    "generated_at": "2026-05-09T14:02:43.242Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T13:41:42.472Z",
+  "_generated": "2026-05-09T14:02:43.195Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -4332,6 +4332,7 @@
       "all_ports": [
         "4182"
       ],
+      "bind_host": "10.0.0.1",
       "all_dns": [
         "introspect-proxy.app"
       ],
@@ -4349,7 +4350,6 @@
       "health": {
         "path": "/health"
       },
-      "bind_host": "10.0.0.1",
       "resources": {
         "mem_limit": "64M",
         "mem_reservation": "16M"
@@ -6473,7 +6473,7 @@
       "category": "data",
       "vm": "gcp-E2-f_0",
       "folder": "ca-dat_postlite",
-      "description": "SQLite REST API (WireGuard only)",
+      "description": "SQLite PostgreSQL wire-protocol proxies (WireGuard only)",
       "enabled": false,
       "containers": {
         "postlite-npm": {
@@ -6512,18 +6512,10 @@
         "sqlite-authelia"
       ],
       "all_ports": [],
+      "bind_host": "10.0.0.1",
       "all_dns": [],
       "compose": {
-        "containers": [
-          "postlite-authelia",
-          "postlite-npm",
-          "postlite-ntfy",
-          "postlite-vaultwarden",
-          "sqlite-authelia",
-          "sqlite-npm",
-          "sqlite-ntfy",
-          "sqlite-vaultwarden"
-        ],
+        "containers": [],
         "ports": [],
         "networks": []
       },

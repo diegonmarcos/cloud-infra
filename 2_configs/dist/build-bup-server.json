@@ -3,7 +3,7 @@
   "_meta": {
     "description": "bup-server container config (service=backup-bup, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-09T13:41:42.507Z",
+    "generated_at": "2026-05-09T14:02:43.230Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,16 +25,18 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T13:41:42.457Z",
+  "_generated": "2026-05-09T14:02:43.180Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "bup-server",
     "port": 2223,
-    "protocol": "http"
+    "protocol": "http",
+    "bind_host": "10.0.0.6"
   },
   "service": "backup-bup",
   "role": "app",
   "vm": "oci-apps",
+  "bind_host": "10.0.0.6",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",
@@ -1361,7 +1363,7 @@
         "authelia_pg": 5436
       },
       "vm": "gcp-proxy",
-      "description": "SQLite REST API (WireGuard only)",
+      "description": "SQLite PostgreSQL wire-protocol proxies (WireGuard only)",
       "api": {
         "has_api": false,
         "has_web_ui": false,

@@ -109,7 +109,8 @@ function resolveVmId(host: string, aliasMap: Record<string, string>, vms: Record
 // Fallback signature kept for safety; in practice config.json no longer holds public_ports (deleted in Phase 2).
 function loadVmPublicPorts(alias: string | undefined, cloudRoot: string, fallback: any[]): any[] {
   if (!alias) return fallback;
-  const hmBuildPath = join(cloudRoot, "b_infra", "home-manager", `nixhm-sudo-${alias}`, "build.json");
+  // Path migrated 2026-04-26: b_infra/home-manager/ collapsed; nixhm-sudo-<alias>/ now lives at b_infra/<alias>/
+  const hmBuildPath = join(cloudRoot, "b_infra", `nixhm-sudo-${alias}`, "build.json");
   if (!existsSync(hmBuildPath)) return fallback;
   try {
     const bj = JSON.parse(readFileSync(hmBuildPath, "utf-8"));
@@ -286,6 +287,9 @@ function main() {
       containers,
       container_names: containerNames.length > 0 ? containerNames : compose.containers,
       all_ports: allPorts,
+      // Tier-3 WG-only bind policy (top-level default; per-container override
+      // lives at containers.<name>.bind_host).
+      ...(entry.bind_host !== undefined ? { bind_host: entry.bind_host } : {}),
       all_dns: allDns,
       // Compose reconciliation
       compose: {

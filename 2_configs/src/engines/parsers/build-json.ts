@@ -116,6 +116,13 @@ export interface ContainerSpec {
   db_engine?: EmbeddedDbEngine;     // declared when the container IS a DB (used by .db zone)
   dns?: string | null;
   public: boolean;
+  // ── Tier-3 WG-only bind policy ────────────────────────────────────────
+  // Default (unset) = "vm.wg_ip" — engine substitutes the deploy VM's wg_ip
+  // at derive time. Explicit "0.0.0.0" requires an entry in
+  // 2_configs/build.json#policy.public_bindings_allowlist or the deriver
+  // FAILS (test-bind-host-policy.sh + test_bind_host_policy.sh).
+  // Other literal IPs (e.g. "127.0.0.1", "10.0.0.1") are accepted as-is.
+  bind_host?: string | null;
   proxy?: ProxyPrimaryConfig | null;
   healthcheck?: string | null;
   monitoring?: MonitoringConfig | null;
@@ -158,6 +165,9 @@ export interface BuildJsonEntry {
   notifications?: NotificationsConfig;
   // Multi-container declarations (new schema)
   containers?: Record<string, ContainerSpec>;
+  // Service-wide bind_host default (overridden by containers.<name>.bind_host).
+  // See ContainerSpec.bind_host for full semantics.
+  bind_host?: string | null;
   // Declarative API / MCP surfaces — flow into services.<name>.{api,mcp} of every
   // per-container build-{name}.json via deriveServiceConnections.
   api?: Record<string, unknown>;
@@ -290,7 +300,7 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
         "ports", "proxy", "health", "monitoring", "backup", "notifications",
         "docker", "secrets", "build", "compose", "lifecycle", "terraform",
         "multi_vm", "frozen", "version", "containers", "enabled",
-        "api", "mcp",
+        "api", "mcp", "bind_host",
       ]);
       const extra: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(bj)) {
@@ -318,6 +328,8 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
         ...(bj.notifications ? { notifications: bj.notifications } : {}),
         // Multi-container declarations (new schema)
         ...(containers ? { containers } : {}),
+        // Tier-3 WG-only bind policy (top-level service-wide default)
+        ...(bj.bind_host !== undefined ? { bind_host: bj.bind_host } : {}),
         // Declarative API / MCP surfaces
         ...(bj.api ? { api: bj.api } : {}),
         ...(bj.mcp ? { mcp: bj.mcp } : {}),

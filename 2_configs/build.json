@@ -8,5 +8,20 @@
   "deploy": {
     "host": "local",
     "note": "Outputs stay in dist/; consumers read via symlinks from a_solutions/*/src/build-{container}.json."
+  },
+  "policy": {
+    "_doc": "Tier-3 bind allowlist enforced by 2_configs/src/engines/test-bind-host-policy.sh and 1_workflows/src/test/test_bind_host_policy.sh. Service+container pairs that may legitimately bind 0.0.0.0 (or any non-WG interface). Everything else MUST bind the VM wg0 IP (default = vm.wg_ip resolved from cloud-data). Adding a new public binding requires a paired audit-trail comment in this allowlist; never silence the test.",
+    "public_bindings_allowlist": [
+      { "service": "caddy",                  "container": "caddy",                  "ports": [80, 443, 8443], "proto": "tcp", "comment": "Reverse proxy — public HTTPS+HTTP edge" },
+      { "service": "caddy",                  "container": "caddy-l4",               "ports": [25, 443],       "proto": "tcp", "comment": "L4 SNI mux + SMTP" },
+      { "service": "wireguard-mesh",         "container": "wireguard",              "ports": [51820],         "proto": "udp", "comment": "WG mesh hub — public UDP listener" },
+      { "service": "wireguard-mesh-ws-tunnel", "container": "wireguard-mesh-ws-tunnel", "ports": [8080],      "proto": "tcp", "comment": "WG-over-WebSocket tunnel — restricted to localhost upstream" }
+    ],
+    "_grandfathered_doc": "Pre-existing services that bind 0.0.0.0 today and will be migrated by parallel slot 3 work (SSH listen → wg_ip, IMAPS → wg_ip + caddy-l4, etc.). Each entry MUST include a tracking ref + planned-removal note. The deriver only WARNS for grandfathered entries; the strict mode (FAIL) activates once slot 3 lands.",
+    "grandfathered_violations": [
+      { "service": "gitea",                  "container": "gitea",                  "ports": [2222], "comment": "SSH listen 0.0.0.0 — slot 3 plans wg_ip restriction" },
+      { "service": "tools-maddy",            "container": "maddy",                  "ports": [],    "comment": "flake.nix exposes 0.0.0.0 for IMAPS/SMTPS — slot 3 plans caddy-l4 SNI mux migration" },
+      { "service": "ollama-arm",             "container": "ollama-arm",             "ports": [],    "comment": "OLLAMA_HOST=0.0.0.0:port — slot 3 plans wg_ip bind" }
+    ]
   }
 }
