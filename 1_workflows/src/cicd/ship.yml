@@ -263,8 +263,11 @@ jobs:
           fi
           [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 2_configs/build.sh" >&2; exit 1; }
           VM="${{ matrix.vm }}"
+          # All VMs (including gcp-proxy) reach the runner via WG IP. Public
+          # :22 on gcp-proxy is closed by host iptables since the public-surface
+          # collapse (2026-05-08) — only :443/:51820/:25 are exposed. Falling
+          # through to the cloud-data lookup gives wg_ip=10.0.0.1.
           case "$VM" in
-            gcp-proxy) KEY="$GCP_PROXY_SSH_KEY"; HOST="$GCP_PROXY_HOST"; USER="$GCP_PROXY_USER" ;;
             *)         KEY="$OCI_SSH_KEY"
                        HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
                        USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
