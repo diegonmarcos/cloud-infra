@@ -4,15 +4,15 @@
   },
 
   "domain": "diegonmarcos.com",
-  "_proxy_ip_doc": "Phase 6 (wg-public): public-bridge VM is now oci-analytics (129.151.228.66). All A records resolve to it; gcp-proxy lost public TCP. Caddy + caddy-l4 + CF-Worker bridge live on oci-analytics. Source of truth: _cloud-data-consolidated.json[.vms.\"oci-E2-f_1\".ip].",
-  "proxy_ip": "129.151.228.66",
+  "_proxy_ip_doc": "Public-bridge VM is gcp-proxy (35.226.147.64). All A records resolve to it; Caddy on gcp-proxy fronts the WireGuard hub. Source of truth: _cloud-data-consolidated.json[.vms.\"gcp-E2-f_0\".ip]. Phase 6 cutover to oci-analytics deferred until Caddy lives there.",
+  "proxy_ip": "35.226.147.64",
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
   "dns_records": {
     "a_records": [
       { "name": "diegonmarcos.com", "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",              "proxied": false, "ttl": 300, "comment": null },
-      { "name": "*",                "proxied": false, "ttl": 1,   "comment": "Wildcard catch-all → oci-analytics Caddy (Phase 6)" },
+      { "name": "*",                "proxied": false, "ttl": 1,   "comment": "Wildcard catch-all → gcp-proxy Caddy" },
       { "name": "mail",             "proxied": false, "ttl": 300, "comment": "Caddy L4: webmail+IMAP+SMTP (needs A, wildcard skips)" }
     ],
 
