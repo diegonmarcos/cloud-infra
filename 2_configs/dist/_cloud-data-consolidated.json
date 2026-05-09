@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-09T10:09:08.455Z",
+    "generated_at": "2026-05-09T10:16:22.295Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -6525,14 +6525,40 @@
       "description": "SQLite REST API (WireGuard only)",
       "enabled": false,
       "containers": {
-        "app": {
-          "container_name": "postlite",
-          "image": "",
-          "public": false
+        "postlite-npm": {
+          "container_name": "postlite-npm"
+        },
+        "postlite-vaultwarden": {
+          "container_name": "postlite-vaultwarden"
+        },
+        "postlite-ntfy": {
+          "container_name": "postlite-ntfy"
+        },
+        "postlite-authelia": {
+          "container_name": "postlite-authelia"
+        },
+        "sqlite-npm": {
+          "container_name": "sqlite-npm"
+        },
+        "sqlite-vaultwarden": {
+          "container_name": "sqlite-vaultwarden"
+        },
+        "sqlite-ntfy": {
+          "container_name": "sqlite-ntfy"
+        },
+        "sqlite-authelia": {
+          "container_name": "sqlite-authelia"
         }
       },
       "container_names": [
-        "postlite"
+        "postlite-npm",
+        "postlite-vaultwarden",
+        "postlite-ntfy",
+        "postlite-authelia",
+        "sqlite-npm",
+        "sqlite-vaultwarden",
+        "sqlite-ntfy",
+        "sqlite-authelia"
       ],
       "all_ports": [],
       "all_dns": [],

@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "crawlee_dashboard container config (service=crawlee-cloud, role=dashboard)",
+    "description": "postlite-vaultwarden container config (service=postlite, role=postlite-vaultwarden)",
     "format_version": 1,
-    "generated_at": "2026-05-09T10:16:22.588Z",
+    "generated_at": "2026-05-09T10:16:22.607Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,25 +28,11 @@
   "_generated": "2026-05-09T10:16:22.556Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "crawlee_dashboard",
-    "image": "crawlee-cloud-dashboard:local",
-    "port": 3001,
-    "port_env": "PORT",
-    "dns": "crawlee-dashboard.app",
-    "public": false,
-    "healthcheck": null,
-    "volumes": [],
-    "env_file": false,
-    "depends_on": [
-      "app"
-    ],
-    "resources": null,
-    "read_only": false,
-    "protocol": "http"
+    "container_name": "postlite-vaultwarden"
   },
-  "service": "crawlee-cloud",
-  "role": "dashboard",
-  "vm": "oci-apps",
+  "service": "postlite",
+  "role": "postlite-vaultwarden",
+  "vm": "gcp-proxy",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",

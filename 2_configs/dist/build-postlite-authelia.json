@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "postlite-authelia container config (service=authelia, role=postlite)",
+    "description": "postlite-authelia container config (service=postlite, role=postlite-authelia)",
     "format_version": 1,
-    "generated_at": "2026-05-09T10:09:08.766Z",
+    "generated_at": "2026-05-09T10:16:22.607Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,33 +25,13 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T10:09:08.725Z",
+  "_generated": "2026-05-09T10:16:22.556Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "postlite-authelia",
-    "image": "ghcr.io/diegonmarcos/postlite:latest",
-    "port": null,
-    "port_env": null,
-    "public": false,
-    "healthcheck": null,
-    "volumes": [],
-    "env_file": false,
-    "depends_on": [
-      "app"
-    ],
-    "resources": {
-      "limits": {
-        "memory": "64M"
-      },
-      "reservations": {
-        "memory": "16M"
-      }
-    },
-    "read_only": false,
-    "protocol": "tcp"
+    "container_name": "postlite-authelia"
   },
-  "service": "authelia",
-  "role": "postlite",
+  "service": "postlite",
+  "role": "postlite-authelia",
   "vm": "gcp-proxy",
   "services": {
     "code-server": {
