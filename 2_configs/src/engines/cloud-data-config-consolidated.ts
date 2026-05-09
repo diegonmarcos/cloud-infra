@@ -600,6 +600,30 @@ function main() {
     ),
   };
 
+  // ── 13b. WireGuard PUBLIC mesh (zany-popping plan Phase 1) ─────────────
+  // Second WG interface ("wg-public") between the public-facing VM (oci-analytics hub)
+  // and the 3 service VMs (gcp-proxy, oci-mail, oci-apps). Distinct subnet (10.1.0.0/24)
+  // and port (51821) from wg0. Public keys live at vault/A0_keys/providers/wireguard/<vm>-public/publickey.
+  const wgPublicCfg = native.wireguard_public ?? null;
+  const wireguardPublicSection = wgPublicCfg ? {
+    subnet: wgPublicCfg.subnet ?? "10.1.0.0/24",
+    port: wgPublicCfg.port ?? 51821,
+    hub: wgPublicCfg.hub ?? null,
+    _doc: wgPublicCfg._doc ?? null,
+    peers: (wgPublicCfg.peers ?? []).map((p: any) => {
+      // Resolve endpoint from VM IP (hub peer needs publicly reachable endpoint)
+      const vmEntry = Object.values(vms).find((v: any) => v.ssh_alias === p.name) as any;
+      const endpoint = vmEntry?.ip ? `${vmEntry.ip}:${wgPublicCfg.port ?? 51821}` : "dynamic";
+      return {
+        name: p.name,
+        wg_ip: p.wg_ip,
+        role: p.role ?? "spoke",
+        endpoint,
+        wg_public_key: vaultWgKeys[`${p.name}-public`] ?? null,
+      };
+    }),
+  } : null;
+
   // ── 16. GHA config (previously gen-gha-config.ts) ──────────────────────
   const ghaVms: Record<string, any> = {};
   for (const [vmId, vm] of Object.entries(vms) as [string, any][]) {
@@ -666,10 +690,14 @@ function main() {
     vpss,
     native: {
       wireguard: wireguardSection,
+      ...(wireguardPublicSection ? { wireguard_public: wireguardPublicSection } : {}),
       dns: native.dns ?? { primary: "10.0.0.1", fallback: "1.1.1.1" },
       docker: native.docker ?? { subnet: "172.16.0.0/12", iptables: false },
       monitoring: native.monitoring ?? { ntfy_base: "https://rss.diegonmarcos.com" },
     },
+    // Top-level convenience alias (also lives under native.wireguard_public).
+    // Phase 1 of the wg-public mesh plan — consumers can read either path.
+    ...(wireguardPublicSection ? { wireguard_public: wireguardPublicSection } : {}),
     deps,
     services,
     firewalls,
