@@ -16,6 +16,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'  # every 30 min — catches upstream submodule pushes
 
 jobs:
   sync:
