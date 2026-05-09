@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-09T17:07:17.036Z",
+    "generated_at": "2026-05-09T17:17:20.026Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:07:16.986Z",
+  "_generated": "2026-05-09T17:17:19.976Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 161,
-    "edges": 192,
+    "nodes": 164,
+    "edges": 196,
     "by_table": {
       "vm": 4,
-      "service": 52,
-      "container": 72,
-      "domain": 33
+      "service": 53,
+      "container": 73,
+      "domain": 34
     }
   },
   "nodes": [
@@ -591,6 +591,32 @@
     },
     {
       "table": "service",
+      "id": "cf_worker_http_to_wg_public_bridge",
+      "key": "service:cf_worker_http_to_wg_public_bridge",
+      "properties": {
+        "name": "cf-worker-http-to-wg-public-bridge",
+        "category": "app",
+        "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
+        "domain": "api.diegonmarcos.com/cf-worker-bridge",
+        "port": 8092,
+        "vm": "oci-analytics",
+        "folder": "aa-sui_tools-cf-worker-http-to-wg-public-bridge"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cf_worker_http_to_wg_public_bridge",
+      "key": "container:cf_worker_http_to_wg_public_bridge",
+      "properties": {
+        "name": "cf-worker-http-to-wg-public-bridge",
+        "image": null,
+        "role": "app",
+        "port": 8092,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "http_to_smtp_proxy_api",
       "key": "service:http_to_smtp_proxy_api",
       "properties": {
@@ -1094,10 +1120,10 @@
       "properties": {
         "name": "caddy",
         "category": "sec",
-        "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+        "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
         "domain": "proxy.diegonmarcos.com",
         "port": 443,
-        "vm": "gcp-proxy",
+        "vm": "oci-analytics",
         "folder": "bb-sec_caddy"
       }
     },
@@ -1797,6 +1823,14 @@
     },
     {
       "table": "domain",
+      "id": "api_diegonmarcos_com/cf_worker_bridge",
+      "key": "domain:api_diegonmarcos_com/cf_worker_bridge",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/cf-worker-bridge"
+      }
+    },
+    {
+      "table": "domain",
       "id": "api_diegonmarcos_com/http_to_smtp_proxy_api",
       "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
       "properties": {
@@ -2278,6 +2312,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:cf_worker_http_to_wg_public_bridge",
+      "to": "vm:oci_analytics",
+      "key": "service:cf_worker_http_to_wg_public_bridge->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cf_worker_http_to_wg_public_bridge",
+      "to": "container:cf_worker_http_to_wg_public_bridge",
+      "key": "service:cf_worker_http_to_wg_public_bridge->runs_container->container:cf_worker_http_to_wg_public_bridge",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:http_to_smtp_proxy_api",
       "to": "vm:gcp_proxy",
       "key": "service:http_to_smtp_proxy_api->hosted_on->vm:gcp_proxy",
@@ -2599,8 +2649,8 @@
     {
       "table": "hosted_on",
       "from": "service:caddy",
-      "to": "vm:gcp_proxy",
-      "key": "service:caddy->hosted_on->vm:gcp_proxy",
+      "to": "vm:oci_analytics",
+      "key": "service:caddy->hosted_on->vm:oci_analytics",
       "properties": {}
     },
     {
@@ -3100,6 +3150,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:cf_worker_http_to_wg_public_bridge",
+      "to": "service:caddy",
+      "key": "service:cf_worker_http_to_wg_public_bridge->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/cf-worker-bridge"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:http_to_smtp_proxy_api",
       "to": "service:caddy",
       "key": "service:http_to_smtp_proxy_api->proxied_by->service:caddy",
@@ -3383,6 +3442,13 @@
       "from": "domain:webmail_diegonmarcos_com",
       "to": "service:snappymail",
       "key": "domain:webmail_diegonmarcos_com->routes_to->service:snappymail",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/cf_worker_bridge",
+      "to": "service:cf_worker_http_to_wg_public_bridge",
+      "key": "domain:api_diegonmarcos_com/cf_worker_bridge->routes_to->service:cf_worker_http_to_wg_public_bridge",
       "properties": {}
     },
     {

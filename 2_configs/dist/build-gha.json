@@ -3,7 +3,7 @@
   "_meta": {
     "description": "GHA ship-system config (vms + services dispatch matrix)",
     "format_version": 1,
-    "generated_at": "2026-05-09T17:07:17.031Z",
+    "generated_at": "2026-05-09T17:17:20.021Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:07:16.972Z",
+  "_generated": "2026-05-09T17:17:19.962Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/gha-config",
   "vms": {
     "oci-mail": {
@@ -135,6 +135,11 @@
       "vm": "oci-mail",
       "has_docker": true
     },
+    "cf-worker-http-to-wg-public-bridge": {
+      "dir": "aa-sui_tools-cf-worker-http-to-wg-public-bridge",
+      "vm": "oci-analytics",
+      "has_docker": true
+    },
     "http-to-smtp-proxy-api": {
       "dir": "aa-sui_tools-http-to-smtp-proxy-api",
       "vm": "gcp-proxy",
@@ -207,7 +212,7 @@
     },
     "caddy": {
       "dir": "bb-sec_caddy",
-      "vm": "gcp-proxy",
+      "vm": "oci-analytics",
       "has_docker": true
     },
     "introspect-proxy": {

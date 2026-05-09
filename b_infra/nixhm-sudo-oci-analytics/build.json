@@ -28,7 +28,22 @@
     "remote_build": false
   },
   "firewall": {
-    "public_ports": []
+    "public_ports": [
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS (wg-public hub — public ingress for external clients via wg-public mesh)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 25,
+        "proto": "tcp",
+        "desc": "SMTP MX (wg-public hub — inbound mail relay)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      }
+    ]
   },
   "dashboard": {
     "dns": "oci-analytics.app",

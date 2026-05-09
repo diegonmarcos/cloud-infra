@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-09T17:07:16.974Z",
+  "_generated": "2026-05-09T17:17:19.965Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -546,6 +546,17 @@
         "path": "/"
       }
     },
+    "cf-worker-http-to-wg-public-bridge": {
+      "name": "cf-worker-http-to-wg-public-bridge",
+      "vm": "oci-E2-f_1",
+      "domain": "api.diegonmarcos.com/cf-worker-bridge",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8092
+      },
+      "health": null
+    },
     "http-to-smtp-proxy-api": {
       "name": "http-to-smtp-proxy-api",
       "vm": "gcp-E2-f_0",
@@ -753,7 +764,7 @@
     },
     "caddy": {
       "name": "caddy",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-E2-f_1",
       "domain": "proxy.diegonmarcos.com",
       "enabled": true,
       "category": "sec",
@@ -1223,6 +1234,15 @@
       "dns": "snappymail.app"
     },
     {
+      "service": "cf-worker-http-to-wg-public-bridge",
+      "dns": "cf-worker-http-to-wg-public-bridge.app"
+    },
+    {
+      "service": "cf-worker-http-to-wg-public-bridge",
+      "container": "app",
+      "dns": "cf-worker-http-to-wg-public-bridge.app"
+    },
+    {
       "service": "http-to-smtp-proxy-api",
       "dns": "http-to-smtp-proxy-api.app"
     },
@@ -1660,6 +1680,8 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
+          "cf-worker-http-to-wg-public-bridge",
+          "caddy",
           "dagu"
         ]
       },
@@ -1720,7 +1742,6 @@
           "hickory-dns",
           "wireguard-mesh-ws-tunnel",
           "authelia",
-          "caddy",
           "introspect-proxy",
           "c3-analytics-api",
           "postlite",
@@ -1942,6 +1963,17 @@
           "path": "/"
         }
       },
+      "cf-worker-http-to-wg-public-bridge": {
+        "name": "cf-worker-http-to-wg-public-bridge",
+        "vm": "oci-E2-f_1",
+        "domain": "api.diegonmarcos.com/cf-worker-bridge",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8092
+        },
+        "health": null
+      },
       "http-to-smtp-proxy-api": {
         "name": "http-to-smtp-proxy-api",
         "vm": "gcp-E2-f_0",
@@ -2149,7 +2181,7 @@
       },
       "caddy": {
         "name": "caddy",
-        "vm": "gcp-E2-f_0",
+        "vm": "oci-E2-f_1",
         "domain": "proxy.diegonmarcos.com",
         "enabled": true,
         "category": "sec",
@@ -3185,7 +3217,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-09T17:07:17.032Z",
+    "generated_at": "2026-05-09T17:17:20.021Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
