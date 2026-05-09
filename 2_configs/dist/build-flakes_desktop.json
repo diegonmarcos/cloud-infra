@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T17:17:20.027Z",
+    "generated_at": "2026-05-09T17:24:14.661Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:17:19.977Z",
+  "_generated": "2026-05-09T17:24:14.616Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -338,10 +338,9 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "cf-worker-http-to-wg-public-bridge",
-        "caddy",
         "dagu"
       ],
-      "container_count": 3
+      "container_count": 2
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -468,12 +467,13 @@
         "hickory-dns",
         "wireguard-mesh-ws-tunnel",
         "authelia",
+        "caddy",
         "introspect-proxy",
         "c3-analytics-api",
         "postlite",
         "redis"
       ],
-      "container_count": 9
+      "container_count": 10
     },
     "vast-RTX-p_0": {
       "ip": "TBD",
@@ -4110,14 +4110,14 @@
     },
     "caddy": {
       "category": "sec",
-      "vm": "oci-E2-f_1",
+      "vm": "gcp-E2-f_0",
       "folder": "bb-sec_caddy",
-      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
+      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
       "enabled": true,
       "domain": "proxy.diegonmarcos.com",
       "port": 443,
       "dns": "caddy.app",
-      "upstream": "10.0.0.4:443",
+      "upstream": "10.0.0.1:443",
       "containers": {
         "app": {
           "container_name": "caddy",
@@ -4191,8 +4191,8 @@
           "admin_bind": "localhost:2019",
           "order": "respond before handle",
           "auto_https": "disable_redirects",
-          "_doc_wg_bind_ip": "Caddy's wg-public hub IP (oci-analytics = 10.1.0.1) — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip). Phase 4 of the wg-public migration: Caddy lives on oci-analytics which is the hub of the public-trust WG mesh; reverse-proxy upstreams to wg-public peers (gcp-proxy/oci-mail/oci-apps) cross via 10.1.0.x rather than the internal wg0 (10.0.0.x). Source-of-truth: 2_configs/dist/_cloud-data-consolidated.json wireguard_public.peers[] (oci-analytics → 10.1.0.1).",
-          "wg_bind_ip": "10.1.0.1"
+          "_doc_wg_bind_ip": "Caddy's WG IP — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip) so Hickory's *.diegonmarcos.com → 10.0.0.1 fast-path lands on the same routing table the public listener uses. Without this, WG-internal traffic hits the *:443 listener that's shadowed by the more-specific 10.0.0.1:443 listener (created by *.app blocks), and unmatched hosts get an empty 200 response.",
+          "wg_bind_ip": "10.0.0.1"
         },
         "on_demand_tls": {
           "ask_bind": "127.0.0.1:2020",

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-09T17:17:19.978Z",
+    "generated_at": "2026-05-09T17:24:14.617Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,15 +25,15 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:17:19.959Z",
+  "_generated": "2026-05-09T17:24:14.600Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
     "admin_bind": "localhost:2019",
     "order": "respond before handle",
     "auto_https": "disable_redirects",
-    "_doc_wg_bind_ip": "Caddy's wg-public hub IP (oci-analytics = 10.1.0.1) — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip). Phase 4 of the wg-public migration: Caddy lives on oci-analytics which is the hub of the public-trust WG mesh; reverse-proxy upstreams to wg-public peers (gcp-proxy/oci-mail/oci-apps) cross via 10.1.0.x rather than the internal wg0 (10.0.0.x). Source-of-truth: 2_configs/dist/_cloud-data-consolidated.json wireguard_public.peers[] (oci-analytics → 10.1.0.1).",
-    "wg_bind_ip": "10.1.0.1"
+    "_doc_wg_bind_ip": "Caddy's WG IP — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip) so Hickory's *.diegonmarcos.com → 10.0.0.1 fast-path lands on the same routing table the public listener uses. Without this, WG-internal traffic hits the *:443 listener that's shadowed by the more-specific 10.0.0.1:443 listener (created by *.app blocks), and unmatched hosts get an empty 200 response.",
+    "wg_bind_ip": "10.0.0.1"
   },
   "on_demand_tls": {
     "ask_bind": "127.0.0.1:2020",
@@ -190,30 +190,30 @@
   "l4_routes": [
     {
       "port": 25,
-      "upstream": "10.1.0.3:25",
+      "upstream": "10.0.0.3:25",
       "comment": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
     },
     {
       "port": 443,
-      "upstream": "10.1.0.3:993",
+      "upstream": "10.0.0.3:993",
       "comment": "IMAPS via SNI on :443 (Maddy)",
       "sni": "imap.diegonmarcos.com"
     },
     {
       "port": 443,
-      "upstream": "10.1.0.3:465",
+      "upstream": "10.0.0.3:465",
       "comment": "SMTPS via SNI on :443 (Maddy)",
       "sni": "smtps.diegonmarcos.com"
     },
     {
       "port": 443,
-      "upstream": "10.1.0.3:2993",
+      "upstream": "10.0.0.3:2993",
       "comment": "IMAPS via SNI on :443 (Stalwart)",
       "sni": "imap-stalwart.diegonmarcos.com"
     },
     {
       "port": 443,
-      "upstream": "10.1.0.3:2465",
+      "upstream": "10.0.0.3:2465",
       "comment": "SMTPS via SNI on :443 (Stalwart)",
       "sni": "smtps-stalwart.diegonmarcos.com"
     }
@@ -496,175 +496,175 @@
   "internal_routes": [
     {
       "service": "code-server.app",
-      "upstream": "10.1.0.4:8443"
+      "upstream": "10.0.0.6:8443"
     },
     {
       "service": "cypht.app",
-      "upstream": "10.1.0.3:8889"
+      "upstream": "10.0.0.3:8889"
     },
     {
       "service": "etherpad.app",
-      "upstream": "10.1.0.4:3012"
+      "upstream": "10.0.0.6:3012"
     },
     {
       "service": "filebrowser.app",
-      "upstream": "10.1.0.4:3015"
+      "upstream": "10.0.0.6:3015"
     },
     {
       "service": "g-personal-mcp.app",
-      "upstream": "10.1.0.4:3106"
+      "upstream": "10.0.0.6:3106"
     },
     {
       "service": "g-workspace-mcp.app",
-      "upstream": "10.1.0.4:3104"
+      "upstream": "10.0.0.6:3104"
     },
     {
       "service": "grist.app",
-      "upstream": "10.1.0.4:3011"
+      "upstream": "10.0.0.6:3011"
     },
     {
       "service": "hedgedoc.app",
-      "upstream": "10.1.0.4:3018"
+      "upstream": "10.0.0.6:3018"
     },
     {
       "service": "mail-mcp.app",
-      "upstream": "10.1.0.4:3103"
+      "upstream": "10.0.0.6:3103"
     },
     {
       "service": "mattermost.app",
-      "upstream": "10.1.0.4:8065"
+      "upstream": "10.0.0.6:8065"
     },
     {
       "service": "mattermost-mcp.app",
-      "upstream": "10.1.0.4:3102"
+      "upstream": "10.0.0.6:3102"
     },
     {
       "service": "photoprism.app",
-      "upstream": "10.1.0.4:3013"
+      "upstream": "10.0.0.6:3013"
     },
     {
       "service": "radicale.app",
-      "upstream": "10.1.0.4:5232"
+      "upstream": "10.0.0.6:5232"
     },
     {
       "service": "snappymail.app",
-      "upstream": "10.1.0.3:8888"
+      "upstream": "10.0.0.3:8888"
     },
     {
       "service": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.1.0.1:8092"
+      "upstream": "10.0.0.4:8092"
     },
     {
       "service": "http-to-smtp-proxy-api.app",
-      "upstream": "10.1.0.2:8090"
+      "upstream": "10.0.0.1:8090"
     },
     {
       "service": "stalwart.app",
-      "upstream": "10.1.0.3:2443"
+      "upstream": "10.0.0.3:2443"
     },
     {
       "service": "vaultwarden.app",
-      "upstream": "10.1.0.4:8880"
+      "upstream": "10.0.0.6:8880"
     },
     {
       "service": "crawlee.app",
-      "upstream": "10.1.0.4:3000"
+      "upstream": "10.0.0.6:3000"
     },
     {
       "service": "fin-api.app",
-      "upstream": "10.1.0.4:8340"
+      "upstream": "10.0.0.6:8340"
     },
     {
       "service": "rig-agentic-sonn-14bq8.app",
-      "upstream": "10.1.0.4:8091"
+      "upstream": "10.0.0.6:8091"
     },
     {
       "service": "hickory-dns.app",
-      "upstream": "10.1.0.2:53"
+      "upstream": "10.0.0.1:53"
     },
     {
       "service": "wireguard-mesh.app",
-      "upstream": "10.1.0.4:8080"
+      "upstream": "10.0.0.6:8080"
     },
     {
       "service": "wireguard-mesh-ws-tunnel.app",
-      "upstream": "10.1.0.2:8080"
+      "upstream": "10.0.0.1:8080"
     },
     {
       "service": "authelia.app",
-      "upstream": "10.1.0.2:9091"
+      "upstream": "10.0.0.1:9091"
     },
     {
       "service": "caddy.app",
-      "upstream": "10.1.0.1:443"
+      "upstream": "10.0.0.1:443"
     },
     {
       "service": "introspect-proxy.app",
-      "upstream": "10.1.0.2:4182"
+      "upstream": "10.0.0.1:4182"
     },
     {
       "service": "c3-analytics-api.app",
-      "upstream": "10.1.0.2:8085"
+      "upstream": "10.0.0.1:8085"
     },
     {
       "service": "c3-infra-api.app",
-      "upstream": "10.1.0.4:8081"
+      "upstream": "10.0.0.6:8081"
     },
     {
       "service": "c3-infra-mcp.app",
-      "upstream": "10.1.0.4:3100"
+      "upstream": "10.0.0.6:3100"
     },
     {
       "service": "c3-services-api.app",
-      "upstream": "10.1.0.4:8082"
+      "upstream": "10.0.0.6:8082"
     },
     {
       "service": "c3-services-mcp.app",
-      "upstream": "10.1.0.4:3101"
+      "upstream": "10.0.0.6:3101"
     },
     {
       "service": "cloud-cgc-mcp.app",
-      "upstream": "10.1.0.4:3105"
+      "upstream": "10.0.0.6:3105"
     },
     {
       "service": "c3-spec.app",
-      "upstream": "10.1.0.4:3080"
+      "upstream": "10.0.0.6:3080"
     },
     {
       "service": "dagu.app",
-      "upstream": "10.1.0.1:8070"
+      "upstream": "10.0.0.4:8070"
     },
     {
       "service": "dbgate.app",
-      "upstream": "10.1.0.4:8086"
+      "upstream": "10.0.0.6:8086"
     },
     {
       "service": "matomo.app",
-      "upstream": "10.1.0.4:8084"
+      "upstream": "10.0.0.6:8084"
     },
     {
       "service": "news-gdelt.app",
-      "upstream": "10.1.0.4:3019"
+      "upstream": "10.0.0.6:3019"
     },
     {
       "service": "ntfy.app",
-      "upstream": "10.1.0.4:8090"
+      "upstream": "10.0.0.6:8090"
     },
     {
       "service": "openobserve.app",
-      "upstream": "10.1.0.4:5080"
+      "upstream": "10.0.0.6:5080"
     },
     {
       "service": "umami.app",
-      "upstream": "10.1.0.4:3006"
+      "upstream": "10.0.0.6:3006"
     },
     {
       "service": "gitea.app",
-      "upstream": "10.1.0.4:3002"
+      "upstream": "10.0.0.6:3002"
     },
     {
       "service": "redis.app",
-      "upstream": "10.1.0.2:6379"
+      "upstream": "10.0.0.1:6379"
     }
   ],
   "s3_routes": [
@@ -722,7 +722,7 @@
       "vm": "oci-A1-f_0",
       "port": 8443,
       "protocol": "https",
-      "upstream": "10.1.0.4:8443",
+      "upstream": "10.0.0.6:8443",
       "source": "containers.app.port"
     },
     {
@@ -743,7 +743,7 @@
       "vm": "oci-E2-f_0",
       "port": 8889,
       "protocol": "http",
-      "upstream": "10.1.0.3:8889",
+      "upstream": "10.0.0.3:8889",
       "source": "containers.app.port"
     },
     {
@@ -764,7 +764,7 @@
       "vm": "oci-A1-f_0",
       "port": 3012,
       "protocol": "http",
-      "upstream": "10.1.0.4:3012",
+      "upstream": "10.0.0.6:3012",
       "source": "containers.app.port"
     },
     {
@@ -785,7 +785,7 @@
       "vm": "oci-A1-f_0",
       "port": 3015,
       "protocol": "http",
-      "upstream": "10.1.0.4:3015",
+      "upstream": "10.0.0.6:3015",
       "source": "containers.app.port"
     },
     {
@@ -806,7 +806,7 @@
       "vm": "oci-A1-f_0",
       "port": 3106,
       "protocol": "http",
-      "upstream": "10.1.0.4:3106",
+      "upstream": "10.0.0.6:3106",
       "source": "containers.app.port"
     },
     {
@@ -827,7 +827,7 @@
       "vm": "oci-A1-f_0",
       "port": 3104,
       "protocol": "http",
-      "upstream": "10.1.0.4:3104",
+      "upstream": "10.0.0.6:3104",
       "source": "containers.app.port"
     },
     {
@@ -848,7 +848,7 @@
       "vm": "oci-A1-f_0",
       "port": 3011,
       "protocol": "http",
-      "upstream": "10.1.0.4:3011",
+      "upstream": "10.0.0.6:3011",
       "source": "containers.app.port"
     },
     {
@@ -869,7 +869,7 @@
       "vm": "oci-A1-f_0",
       "port": 3018,
       "protocol": "http",
-      "upstream": "10.1.0.4:3018",
+      "upstream": "10.0.0.6:3018",
       "source": "containers.app.port"
     },
     {
@@ -890,7 +890,7 @@
       "vm": "oci-A1-f_0",
       "port": 3103,
       "protocol": "http",
-      "upstream": "10.1.0.4:3103",
+      "upstream": "10.0.0.6:3103",
       "source": "containers.app.port"
     },
     {
@@ -911,7 +911,7 @@
       "vm": "oci-A1-f_0",
       "port": 8065,
       "protocol": "http",
-      "upstream": "10.1.0.4:8065",
+      "upstream": "10.0.0.6:8065",
       "source": "containers.app.port"
     },
     {
@@ -932,7 +932,7 @@
       "vm": "oci-A1-f_0",
       "port": 3102,
       "protocol": "http",
-      "upstream": "10.1.0.4:3102",
+      "upstream": "10.0.0.6:3102",
       "source": "containers.app.port"
     },
     {
@@ -953,7 +953,7 @@
       "vm": "oci-A1-f_0",
       "port": 3013,
       "protocol": "http",
-      "upstream": "10.1.0.4:3013",
+      "upstream": "10.0.0.6:3013",
       "source": "containers.app.port"
     },
     {
@@ -974,7 +974,7 @@
       "vm": "oci-A1-f_0",
       "port": 5232,
       "protocol": "http",
-      "upstream": "10.1.0.4:5232",
+      "upstream": "10.0.0.6:5232",
       "source": "containers.app.port"
     },
     {
@@ -995,7 +995,7 @@
       "vm": "oci-E2-f_0",
       "port": 8888,
       "protocol": "http",
-      "upstream": "10.1.0.3:8888",
+      "upstream": "10.0.0.3:8888",
       "source": "containers.app.port"
     },
     {
@@ -1016,7 +1016,7 @@
       "vm": "oci-E2-f_1",
       "port": 8092,
       "protocol": "http",
-      "upstream": "10.1.0.1:8092",
+      "upstream": "10.0.0.4:8092",
       "source": "containers.app.port"
     },
     {
@@ -1037,7 +1037,7 @@
       "vm": "gcp-E2-f_0",
       "port": 8090,
       "protocol": "http",
-      "upstream": "10.1.0.2:8090",
+      "upstream": "10.0.0.1:8090",
       "source": "containers.app.port"
     },
     {
@@ -1058,7 +1058,7 @@
       "vm": "oci-E2-f_0",
       "port": 2443,
       "protocol": "https",
-      "upstream": "10.1.0.3:2443",
+      "upstream": "10.0.0.3:2443",
       "source": "containers.app.port"
     },
     {
@@ -1070,7 +1070,7 @@
       "vm": "oci-E2-f_0",
       "port": 2025,
       "protocol": "starttls",
-      "upstream": "10.1.0.3:2025",
+      "upstream": "10.0.0.3:2025",
       "source": "containers.app.extra_ports"
     },
     {
@@ -1082,7 +1082,7 @@
       "vm": "oci-E2-f_0",
       "port": 2465,
       "protocol": "tls",
-      "upstream": "10.1.0.3:2465",
+      "upstream": "10.0.0.3:2465",
       "source": "containers.app.extra_ports"
     },
     {
@@ -1094,7 +1094,7 @@
       "vm": "oci-E2-f_0",
       "port": 2993,
       "protocol": "tls",
-      "upstream": "10.1.0.3:2993",
+      "upstream": "10.0.0.3:2993",
       "source": "containers.app.extra_ports"
     },
     {
@@ -1106,7 +1106,7 @@
       "vm": "oci-E2-f_0",
       "port": 6190,
       "protocol": "tls",
-      "upstream": "10.1.0.3:6190",
+      "upstream": "10.0.0.3:6190",
       "source": "containers.app.extra_ports"
     },
     {
@@ -1144,7 +1144,7 @@
       "vm": "oci-A1-f_0",
       "port": 8880,
       "protocol": "http",
-      "upstream": "10.1.0.4:8880",
+      "upstream": "10.0.0.6:8880",
       "source": "containers.app.port"
     },
     {
@@ -1165,7 +1165,7 @@
       "vm": "oci-A1-f_0",
       "port": 3000,
       "protocol": "http",
-      "upstream": "10.1.0.4:3000",
+      "upstream": "10.0.0.6:3000",
       "source": "containers.app.port"
     },
     {
@@ -1186,7 +1186,7 @@
       "vm": "oci-A1-f_0",
       "port": 8340,
       "protocol": "http",
-      "upstream": "10.1.0.4:8340",
+      "upstream": "10.0.0.6:8340",
       "source": "containers.app.port"
     },
     {
@@ -1207,7 +1207,7 @@
       "vm": "oci-A1-f_0",
       "port": 8091,
       "protocol": "http",
-      "upstream": "10.1.0.4:8091",
+      "upstream": "10.0.0.6:8091",
       "source": "containers.app.port"
     },
     {
@@ -1228,7 +1228,7 @@
       "vm": "oci-A1-f_0",
       "port": 8080,
       "protocol": "http",
-      "upstream": "10.1.0.4:8080",
+      "upstream": "10.0.0.6:8080",
       "source": "containers.app.port"
     },
     {
@@ -1249,7 +1249,7 @@
       "vm": "gcp-E2-f_0",
       "port": 9091,
       "protocol": "http",
-      "upstream": "10.1.0.2:9091",
+      "upstream": "10.0.0.1:9091",
       "source": "containers.app.port"
     },
     {
@@ -1259,7 +1259,7 @@
       "container": "caddy",
       "container_key": "app",
       "svc": "caddy",
-      "vm": "oci-E2-f_1"
+      "vm": "gcp-E2-f_0"
     },
     {
       "kind": "canonical",
@@ -1267,10 +1267,10 @@
       "container": "caddy",
       "container_key": "app",
       "svc": "caddy",
-      "vm": "oci-E2-f_1",
+      "vm": "gcp-E2-f_0",
       "port": 443,
       "protocol": "https",
-      "upstream": "10.1.0.1:443",
+      "upstream": "10.0.0.1:443",
       "source": "containers.app.port"
     },
     {
@@ -1291,7 +1291,7 @@
       "vm": "gcp-E2-f_0",
       "port": 8085,
       "protocol": "http",
-      "upstream": "10.1.0.2:8085",
+      "upstream": "10.0.0.1:8085",
       "source": "containers.app.port"
     },
     {
@@ -1312,7 +1312,7 @@
       "vm": "oci-A1-f_0",
       "port": 8081,
       "protocol": "http",
-      "upstream": "10.1.0.4:8081",
+      "upstream": "10.0.0.6:8081",
       "source": "containers.app.port"
     },
     {
@@ -1333,7 +1333,7 @@
       "vm": "oci-A1-f_0",
       "port": 3100,
       "protocol": "http",
-      "upstream": "10.1.0.4:3100",
+      "upstream": "10.0.0.6:3100",
       "source": "containers.app.port"
     },
     {
@@ -1354,7 +1354,7 @@
       "vm": "oci-A1-f_0",
       "port": 8082,
       "protocol": "http",
-      "upstream": "10.1.0.4:8082",
+      "upstream": "10.0.0.6:8082",
       "source": "containers.app.port"
     },
     {
@@ -1375,7 +1375,7 @@
       "vm": "oci-A1-f_0",
       "port": 3101,
       "protocol": "http",
-      "upstream": "10.1.0.4:3101",
+      "upstream": "10.0.0.6:3101",
       "source": "containers.app.port"
     },
     {
@@ -1396,7 +1396,7 @@
       "vm": "oci-A1-f_0",
       "port": 3105,
       "protocol": "http",
-      "upstream": "10.1.0.4:3105",
+      "upstream": "10.0.0.6:3105",
       "source": "containers.app.port"
     },
     {
@@ -1417,7 +1417,7 @@
       "vm": "oci-A1-f_0",
       "port": 3080,
       "protocol": "http",
-      "upstream": "10.1.0.4:3080",
+      "upstream": "10.0.0.6:3080",
       "source": "containers.app.port"
     },
     {
@@ -1438,7 +1438,7 @@
       "vm": "oci-E2-f_1",
       "port": 8070,
       "protocol": "http",
-      "upstream": "10.1.0.1:8070",
+      "upstream": "10.0.0.4:8070",
       "source": "containers.app.port"
     },
     {
@@ -1459,7 +1459,7 @@
       "vm": "oci-A1-f_0",
       "port": 8086,
       "protocol": "http",
-      "upstream": "10.1.0.4:8086",
+      "upstream": "10.0.0.6:8086",
       "source": "containers.app.port"
     },
     {
@@ -1480,7 +1480,7 @@
       "vm": "oci-A1-f_0",
       "port": 8084,
       "protocol": "http",
-      "upstream": "10.1.0.4:8084",
+      "upstream": "10.0.0.6:8084",
       "source": "containers.app.port"
     },
     {
@@ -1518,7 +1518,7 @@
       "vm": "oci-A1-f_0",
       "port": 8090,
       "protocol": "http",
-      "upstream": "10.1.0.4:8090",
+      "upstream": "10.0.0.6:8090",
       "source": "containers.app.port"
     },
     {
@@ -1539,7 +1539,7 @@
       "vm": "oci-A1-f_0",
       "port": 5080,
       "protocol": "http",
-      "upstream": "10.1.0.4:5080",
+      "upstream": "10.0.0.6:5080",
       "source": "containers.app.port"
     },
     {
@@ -1560,7 +1560,7 @@
       "vm": "oci-A1-f_0",
       "port": 3006,
       "protocol": "http",
-      "upstream": "10.1.0.4:3006",
+      "upstream": "10.0.0.6:3006",
       "source": "containers.app.port"
     },
     {
@@ -1581,7 +1581,7 @@
       "vm": "oci-A1-f_0",
       "port": 3002,
       "protocol": "http",
-      "upstream": "10.1.0.4:3002",
+      "upstream": "10.0.0.6:3002",
       "source": "containers.app.port"
     }
   ],
@@ -1672,7 +1672,7 @@
       "vm": "oci-A1-f_0",
       "engine": "mariadb",
       "port": 3306,
-      "upstream": "10.1.0.4:3306",
+      "upstream": "10.0.0.6:3306",
       "path": "/var/lib/mysql"
     },
     {
@@ -2131,7 +2131,7 @@
     {
       "host": "code-server.app",
       "path": null,
-      "upstream": "10.1.0.4:8443",
+      "upstream": "10.0.0.6:8443",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2141,7 +2141,7 @@
     {
       "host": "cypht.app",
       "path": null,
-      "upstream": "10.1.0.3:8889",
+      "upstream": "10.0.0.3:8889",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2151,7 +2151,7 @@
     {
       "host": "etherpad.app",
       "path": null,
-      "upstream": "10.1.0.4:3012",
+      "upstream": "10.0.0.6:3012",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2161,7 +2161,7 @@
     {
       "host": "filebrowser.app",
       "path": null,
-      "upstream": "10.1.0.4:3015",
+      "upstream": "10.0.0.6:3015",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2171,7 +2171,7 @@
     {
       "host": "g-personal-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3106",
+      "upstream": "10.0.0.6:3106",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2181,7 +2181,7 @@
     {
       "host": "g-workspace-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3104",
+      "upstream": "10.0.0.6:3104",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2191,7 +2191,7 @@
     {
       "host": "grist.app",
       "path": null,
-      "upstream": "10.1.0.4:3011",
+      "upstream": "10.0.0.6:3011",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2201,7 +2201,7 @@
     {
       "host": "hedgedoc.app",
       "path": null,
-      "upstream": "10.1.0.4:3018",
+      "upstream": "10.0.0.6:3018",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2211,7 +2211,7 @@
     {
       "host": "mail-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3103",
+      "upstream": "10.0.0.6:3103",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2221,7 +2221,7 @@
     {
       "host": "mattermost.app",
       "path": null,
-      "upstream": "10.1.0.4:8065",
+      "upstream": "10.0.0.6:8065",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2231,7 +2231,7 @@
     {
       "host": "mattermost-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3102",
+      "upstream": "10.0.0.6:3102",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2241,7 +2241,7 @@
     {
       "host": "photoprism.app",
       "path": null,
-      "upstream": "10.1.0.4:3013",
+      "upstream": "10.0.0.6:3013",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2251,7 +2251,7 @@
     {
       "host": "radicale.app",
       "path": null,
-      "upstream": "10.1.0.4:5232",
+      "upstream": "10.0.0.6:5232",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2261,7 +2261,7 @@
     {
       "host": "snappymail.app",
       "path": null,
-      "upstream": "10.1.0.3:8888",
+      "upstream": "10.0.0.3:8888",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2271,7 +2271,7 @@
     {
       "host": "cf-worker-http-to-wg-public-bridge.app",
       "path": null,
-      "upstream": "10.1.0.1:8092",
+      "upstream": "10.0.0.4:8092",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2281,7 +2281,7 @@
     {
       "host": "http-to-smtp-proxy-api.app",
       "path": null,
-      "upstream": "10.1.0.2:8090",
+      "upstream": "10.0.0.1:8090",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2291,7 +2291,7 @@
     {
       "host": "stalwart.app",
       "path": null,
-      "upstream": "10.1.0.3:2443",
+      "upstream": "10.0.0.3:2443",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2301,7 +2301,7 @@
     {
       "host": "vaultwarden.app",
       "path": null,
-      "upstream": "10.1.0.4:8880",
+      "upstream": "10.0.0.6:8880",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2311,7 +2311,7 @@
     {
       "host": "crawlee.app",
       "path": null,
-      "upstream": "10.1.0.4:3000",
+      "upstream": "10.0.0.6:3000",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2321,7 +2321,7 @@
     {
       "host": "fin-api.app",
       "path": null,
-      "upstream": "10.1.0.4:8340",
+      "upstream": "10.0.0.6:8340",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2331,7 +2331,7 @@
     {
       "host": "rig-agentic-sonn-14bq8.app",
       "path": null,
-      "upstream": "10.1.0.4:8091",
+      "upstream": "10.0.0.6:8091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2341,7 +2341,7 @@
     {
       "host": "hickory-dns.app",
       "path": null,
-      "upstream": "10.1.0.2:53",
+      "upstream": "10.0.0.1:53",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2351,7 +2351,7 @@
     {
       "host": "wireguard-mesh.app",
       "path": null,
-      "upstream": "10.1.0.4:8080",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2361,7 +2361,7 @@
     {
       "host": "wireguard-mesh-ws-tunnel.app",
       "path": null,
-      "upstream": "10.1.0.2:8080",
+      "upstream": "10.0.0.1:8080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2371,7 +2371,7 @@
     {
       "host": "authelia.app",
       "path": null,
-      "upstream": "10.1.0.2:9091",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2381,7 +2381,7 @@
     {
       "host": "caddy.app",
       "path": null,
-      "upstream": "10.1.0.1:443",
+      "upstream": "10.0.0.1:443",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2391,7 +2391,7 @@
     {
       "host": "introspect-proxy.app",
       "path": null,
-      "upstream": "10.1.0.2:4182",
+      "upstream": "10.0.0.1:4182",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2401,7 +2401,7 @@
     {
       "host": "c3-analytics-api.app",
       "path": null,
-      "upstream": "10.1.0.2:8085",
+      "upstream": "10.0.0.1:8085",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2411,7 +2411,7 @@
     {
       "host": "c3-infra-api.app",
       "path": null,
-      "upstream": "10.1.0.4:8081",
+      "upstream": "10.0.0.6:8081",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2421,7 +2421,7 @@
     {
       "host": "c3-infra-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3100",
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2431,7 +2431,7 @@
     {
       "host": "c3-services-api.app",
       "path": null,
-      "upstream": "10.1.0.4:8082",
+      "upstream": "10.0.0.6:8082",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2441,7 +2441,7 @@
     {
       "host": "c3-services-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3101",
+      "upstream": "10.0.0.6:3101",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2451,7 +2451,7 @@
     {
       "host": "cloud-cgc-mcp.app",
       "path": null,
-      "upstream": "10.1.0.4:3105",
+      "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2461,7 +2461,7 @@
     {
       "host": "c3-spec.app",
       "path": null,
-      "upstream": "10.1.0.4:3080",
+      "upstream": "10.0.0.6:3080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2471,7 +2471,7 @@
     {
       "host": "dagu.app",
       "path": null,
-      "upstream": "10.1.0.1:8070",
+      "upstream": "10.0.0.4:8070",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2481,7 +2481,7 @@
     {
       "host": "dbgate.app",
       "path": null,
-      "upstream": "10.1.0.4:8086",
+      "upstream": "10.0.0.6:8086",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2491,7 +2491,7 @@
     {
       "host": "matomo.app",
       "path": null,
-      "upstream": "10.1.0.4:8084",
+      "upstream": "10.0.0.6:8084",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2501,7 +2501,7 @@
     {
       "host": "news-gdelt.app",
       "path": null,
-      "upstream": "10.1.0.4:3019",
+      "upstream": "10.0.0.6:3019",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2511,7 +2511,7 @@
     {
       "host": "ntfy.app",
       "path": null,
-      "upstream": "10.1.0.4:8090",
+      "upstream": "10.0.0.6:8090",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2521,7 +2521,7 @@
     {
       "host": "openobserve.app",
       "path": null,
-      "upstream": "10.1.0.4:5080",
+      "upstream": "10.0.0.6:5080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2531,7 +2531,7 @@
     {
       "host": "umami.app",
       "path": null,
-      "upstream": "10.1.0.4:3006",
+      "upstream": "10.0.0.6:3006",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2541,7 +2541,7 @@
     {
       "host": "gitea.app",
       "path": null,
-      "upstream": "10.1.0.4:3002",
+      "upstream": "10.0.0.6:3002",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2551,7 +2551,7 @@
     {
       "host": "redis.app",
       "path": null,
-      "upstream": "10.1.0.2:6379",
+      "upstream": "10.0.0.1:6379",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2563,7 +2563,7 @@
     {
       "host": "code-server-https-8443.app",
       "path": null,
-      "upstream": "10.1.0.4:8443",
+      "upstream": "10.0.0.6:8443",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2573,7 +2573,7 @@
     {
       "host": "cypht-http-8889.app",
       "path": null,
-      "upstream": "10.1.0.3:8889",
+      "upstream": "10.0.0.3:8889",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2583,7 +2583,7 @@
     {
       "host": "etherpad_app-http-3012.app",
       "path": null,
-      "upstream": "10.1.0.4:3012",
+      "upstream": "10.0.0.6:3012",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2593,7 +2593,7 @@
     {
       "host": "filebrowser_app-http-3015.app",
       "path": null,
-      "upstream": "10.1.0.4:3015",
+      "upstream": "10.0.0.6:3015",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2603,7 +2603,7 @@
     {
       "host": "google-personal-mcp-http-3106.app",
       "path": null,
-      "upstream": "10.1.0.4:3106",
+      "upstream": "10.0.0.6:3106",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2613,7 +2613,7 @@
     {
       "host": "google-workspace-mcp-http-3104.app",
       "path": null,
-      "upstream": "10.1.0.4:3104",
+      "upstream": "10.0.0.6:3104",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2623,7 +2623,7 @@
     {
       "host": "grist_app-http-3011.app",
       "path": null,
-      "upstream": "10.1.0.4:3011",
+      "upstream": "10.0.0.6:3011",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2633,7 +2633,7 @@
     {
       "host": "hedgedoc_app-http-3018.app",
       "path": null,
-      "upstream": "10.1.0.4:3018",
+      "upstream": "10.0.0.6:3018",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2643,7 +2643,7 @@
     {
       "host": "mail-mcp-http-3103.app",
       "path": null,
-      "upstream": "10.1.0.4:3103",
+      "upstream": "10.0.0.6:3103",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2653,7 +2653,7 @@
     {
       "host": "mattermost-http-8065.app",
       "path": null,
-      "upstream": "10.1.0.4:8065",
+      "upstream": "10.0.0.6:8065",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2663,7 +2663,7 @@
     {
       "host": "mattermost-mcp-http-3102.app",
       "path": null,
-      "upstream": "10.1.0.4:3102",
+      "upstream": "10.0.0.6:3102",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2673,7 +2673,7 @@
     {
       "host": "photoprism_app-http-3013.app",
       "path": null,
-      "upstream": "10.1.0.4:3013",
+      "upstream": "10.0.0.6:3013",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2683,7 +2683,7 @@
     {
       "host": "radicale-http-5232.app",
       "path": null,
-      "upstream": "10.1.0.4:5232",
+      "upstream": "10.0.0.6:5232",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2693,7 +2693,7 @@
     {
       "host": "snappymail-http-8888.app",
       "path": null,
-      "upstream": "10.1.0.3:8888",
+      "upstream": "10.0.0.3:8888",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2703,7 +2703,7 @@
     {
       "host": "cf-worker-http-to-wg-public-bridge-http-8092.app",
       "path": null,
-      "upstream": "10.1.0.1:8092",
+      "upstream": "10.0.0.4:8092",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2713,7 +2713,7 @@
     {
       "host": "http-to-smtp-proxy-api-http-8090.app",
       "path": null,
-      "upstream": "10.1.0.2:8090",
+      "upstream": "10.0.0.1:8090",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2723,7 +2723,7 @@
     {
       "host": "stalwart-https-2443.app",
       "path": null,
-      "upstream": "10.1.0.3:2443",
+      "upstream": "10.0.0.3:2443",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2733,7 +2733,7 @@
     {
       "host": "stalwart-starttls-2025.app",
       "path": null,
-      "upstream": "10.1.0.3:2025",
+      "upstream": "10.0.0.3:2025",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2743,7 +2743,7 @@
     {
       "host": "stalwart-tls-2465.app",
       "path": null,
-      "upstream": "10.1.0.3:2465",
+      "upstream": "10.0.0.3:2465",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2753,7 +2753,7 @@
     {
       "host": "stalwart-tls-2993.app",
       "path": null,
-      "upstream": "10.1.0.3:2993",
+      "upstream": "10.0.0.3:2993",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2763,7 +2763,7 @@
     {
       "host": "stalwart-tls-6190.app",
       "path": null,
-      "upstream": "10.1.0.3:6190",
+      "upstream": "10.0.0.3:6190",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2773,7 +2773,7 @@
     {
       "host": "vaultwarden-http-8880.app",
       "path": null,
-      "upstream": "10.1.0.4:8880",
+      "upstream": "10.0.0.6:8880",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2783,7 +2783,7 @@
     {
       "host": "crawlee_api-http-3000.app",
       "path": null,
-      "upstream": "10.1.0.4:3000",
+      "upstream": "10.0.0.6:3000",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2793,7 +2793,7 @@
     {
       "host": "fin-api-http-8340.app",
       "path": null,
-      "upstream": "10.1.0.4:8340",
+      "upstream": "10.0.0.6:8340",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2803,7 +2803,7 @@
     {
       "host": "rig-agentic-sonn-14bq8-http-8091.app",
       "path": null,
-      "upstream": "10.1.0.4:8091",
+      "upstream": "10.0.0.6:8091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2813,7 +2813,7 @@
     {
       "host": "wireguard-mesh-http-8080.app",
       "path": null,
-      "upstream": "10.1.0.4:8080",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2823,7 +2823,7 @@
     {
       "host": "authelia-http-9091.app",
       "path": null,
-      "upstream": "10.1.0.2:9091",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2833,7 +2833,7 @@
     {
       "host": "caddy-https-443.app",
       "path": null,
-      "upstream": "10.1.0.1:443",
+      "upstream": "10.0.0.1:443",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2843,7 +2843,7 @@
     {
       "host": "c3-analytics-api-http-8085.app",
       "path": null,
-      "upstream": "10.1.0.2:8085",
+      "upstream": "10.0.0.1:8085",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2853,7 +2853,7 @@
     {
       "host": "c3-infra-api-http-8081.app",
       "path": null,
-      "upstream": "10.1.0.4:8081",
+      "upstream": "10.0.0.6:8081",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2863,7 +2863,7 @@
     {
       "host": "c3-infra-mcp-http-3100.app",
       "path": null,
-      "upstream": "10.1.0.4:3100",
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2873,7 +2873,7 @@
     {
       "host": "c3-services-api-http-8082.app",
       "path": null,
-      "upstream": "10.1.0.4:8082",
+      "upstream": "10.0.0.6:8082",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2883,7 +2883,7 @@
     {
       "host": "c3-services-mcp-http-3101.app",
       "path": null,
-      "upstream": "10.1.0.4:3101",
+      "upstream": "10.0.0.6:3101",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2893,7 +2893,7 @@
     {
       "host": "cloud-cgc-mcp-http-3105.app",
       "path": null,
-      "upstream": "10.1.0.4:3105",
+      "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2903,7 +2903,7 @@
     {
       "host": "cloud-spec-http-3080.app",
       "path": null,
-      "upstream": "10.1.0.4:3080",
+      "upstream": "10.0.0.6:3080",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2913,7 +2913,7 @@
     {
       "host": "dagu-http-8070.app",
       "path": null,
-      "upstream": "10.1.0.1:8070",
+      "upstream": "10.0.0.4:8070",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2923,7 +2923,7 @@
     {
       "host": "dbgate-http-8086.app",
       "path": null,
-      "upstream": "10.1.0.4:8086",
+      "upstream": "10.0.0.6:8086",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2933,7 +2933,7 @@
     {
       "host": "matomo-hybrid-http-8084.app",
       "path": null,
-      "upstream": "10.1.0.4:8084",
+      "upstream": "10.0.0.6:8084",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2943,7 +2943,7 @@
     {
       "host": "ntfy-http-8090.app",
       "path": null,
-      "upstream": "10.1.0.4:8090",
+      "upstream": "10.0.0.6:8090",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2953,7 +2953,7 @@
     {
       "host": "openobserve-http-5080.app",
       "path": null,
-      "upstream": "10.1.0.4:5080",
+      "upstream": "10.0.0.6:5080",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2963,7 +2963,7 @@
     {
       "host": "umami-http-3006.app",
       "path": null,
-      "upstream": "10.1.0.4:3006",
+      "upstream": "10.0.0.6:3006",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -2973,7 +2973,7 @@
     {
       "host": "gitea-http-3002.app",
       "path": null,
-      "upstream": "10.1.0.4:3002",
+      "upstream": "10.0.0.6:3002",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -3077,7 +3077,7 @@
     {
       "host": "matomo-hybrid-mariadb-3306.db",
       "path": "/var/lib/mysql",
-      "upstream": "10.1.0.4:3306",
+      "upstream": "10.0.0.6:3306",
       "kind": "catalog",
       "tls": "on_demand",
       "zone": "db",
@@ -3171,7 +3171,7 @@
     {
       "host": ":25",
       "path": null,
-      "upstream": "10.1.0.3:25",
+      "upstream": "10.0.0.3:25",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
@@ -3181,7 +3181,7 @@
     {
       "host": ":443",
       "path": null,
-      "upstream": "10.1.0.3:993",
+      "upstream": "10.0.0.3:993",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
@@ -3191,7 +3191,7 @@
     {
       "host": ":443",
       "path": null,
-      "upstream": "10.1.0.3:465",
+      "upstream": "10.0.0.3:465",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
@@ -3201,7 +3201,7 @@
     {
       "host": ":443",
       "path": null,
-      "upstream": "10.1.0.3:2993",
+      "upstream": "10.0.0.3:2993",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
@@ -3211,7 +3211,7 @@
     {
       "host": ":443",
       "path": null,
-      "upstream": "10.1.0.3:2465",
+      "upstream": "10.0.0.3:2465",
       "kind": "l4_forward",
       "tls": "none",
       "zone": "l4",
