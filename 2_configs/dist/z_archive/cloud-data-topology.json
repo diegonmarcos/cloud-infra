@@ -163,7 +163,14 @@
         "caddy",
         "introspect-proxy",
         "c3-analytics-api",
-        "postlite",
+        "postlite-npm",
+        "postlite-vaultwarden",
+        "postlite-ntfy",
+        "postlite-authelia",
+        "sqlite-npm",
+        "sqlite-vaultwarden",
+        "sqlite-ntfy",
+        "sqlite-authelia",
         "redis"
       ],
       "ports": [],
@@ -4875,14 +4882,40 @@
       "folder": "ca-dat_postlite",
       "description": "SQLite REST API (WireGuard only)",
       "containers": {
-        "app": {
-          "container_name": "postlite",
-          "image": "",
-          "public": false
+        "postlite-npm": {
+          "container_name": "postlite-npm"
+        },
+        "postlite-vaultwarden": {
+          "container_name": "postlite-vaultwarden"
+        },
+        "postlite-ntfy": {
+          "container_name": "postlite-ntfy"
+        },
+        "postlite-authelia": {
+          "container_name": "postlite-authelia"
+        },
+        "sqlite-npm": {
+          "container_name": "sqlite-npm"
+        },
+        "sqlite-vaultwarden": {
+          "container_name": "sqlite-vaultwarden"
+        },
+        "sqlite-ntfy": {
+          "container_name": "sqlite-ntfy"
+        },
+        "sqlite-authelia": {
+          "container_name": "sqlite-authelia"
         }
       },
       "container_names": [
-        "postlite"
+        "postlite-npm",
+        "postlite-vaultwarden",
+        "postlite-ntfy",
+        "postlite-authelia",
+        "sqlite-npm",
+        "sqlite-vaultwarden",
+        "sqlite-ntfy",
+        "sqlite-authelia"
       ],
       "all_ports": [],
       "all_dns": [],
@@ -5202,7 +5235,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-09T10:09:08.779Z",
+    "generated_at": "2026-05-09T10:16:22.611Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
