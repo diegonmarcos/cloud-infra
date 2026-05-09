@@ -53,7 +53,6 @@
       },
       "containers": [
         "cf-worker-http-to-wg-public-bridge",
-        "caddy",
         "dagu"
       ],
       "ports": [],
@@ -162,6 +161,7 @@
         "authelia",
         "authelia-redis",
         "postlite-authelia",
+        "caddy",
         "introspect-proxy",
         "c3-analytics-api",
         "postlite-npm",
@@ -699,7 +699,7 @@
       {
         "name": "caddy.app",
         "type": "A",
-        "value": "10.0.0.4",
+        "value": "10.0.0.1",
         "service": "caddy"
       },
       {
@@ -3442,13 +3442,13 @@
     },
     "caddy": {
       "category": "sec",
-      "vm": "oci-E2-f_1",
+      "vm": "gcp-E2-f_0",
       "folder": "bb-sec_caddy",
-      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
+      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
       "domain": "proxy.diegonmarcos.com",
       "port": 443,
       "dns": "caddy.app",
-      "upstream": "10.0.0.4:443",
+      "upstream": "10.0.0.1:443",
       "containers": {
         "app": {
           "container_name": "caddy",
@@ -5375,7 +5375,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-09T17:17:20.023Z",
+    "generated_at": "2026-05-09T17:24:14.657Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
