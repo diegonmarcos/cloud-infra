@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-09T17:24:14.660Z",
+    "generated_at": "2026-05-09T17:42:14.174Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T17:24:14.615Z",
+  "_generated": "2026-05-09T17:42:14.124Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 164,
@@ -1120,10 +1120,10 @@
       "properties": {
         "name": "caddy",
         "category": "sec",
-        "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+        "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
         "domain": "proxy.diegonmarcos.com",
         "port": 443,
-        "vm": "gcp-proxy",
+        "vm": "oci-analytics",
         "folder": "bb-sec_caddy"
       }
     },
@@ -2649,8 +2649,8 @@
     {
       "table": "hosted_on",
       "from": "service:caddy",
-      "to": "vm:gcp_proxy",
-      "key": "service:caddy->hosted_on->vm:gcp_proxy",
+      "to": "vm:oci_analytics",
+      "key": "service:caddy->hosted_on->vm:oci_analytics",
       "properties": {}
     },
     {
