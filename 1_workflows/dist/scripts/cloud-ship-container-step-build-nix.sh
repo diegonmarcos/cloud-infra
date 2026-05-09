@@ -72,9 +72,25 @@ step_build() {
         log "cloud-data submodule already updated by CI dispatch — skipping"
     elif [ -f "$SERVICE_DIR/../../.gitmodules" ] && { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
         log "Updating cloud-data submodule to latest (--remote --force)"
-        if ! git -C "$SERVICE_DIR/../.." -c submodule."2_configs/dist".update=checkout \
-             submodule update --remote --init --force 2_configs/dist 2>&1 | while IFS= read -r line; do log "  $line"; done; then
-            log "WARN: 2_configs/dist update failed — ship will use the pinned commit (may be stale)"
+        # flock: parallel ships of different services on this host fight over
+        # git submodule's per-config lock and corrupt each other. Serialize the
+        # actual git invocation; once one runs --remote, the rest see the
+        # already-current submodule and exit instantly. Lock-fd 9 + 60s timeout
+        # guards CI runners with stuck previous flock holders.
+        FLOCK_BIN="$(command -v flock || true)"
+        if [ -n "$FLOCK_BIN" ]; then
+            (
+                "$FLOCK_BIN" -w 60 9 || { log "WARN: flock timed out — running unlocked"; }
+                git -C "$SERVICE_DIR/../.." -c submodule."2_configs/dist".update=checkout \
+                    submodule update --remote --init --force 2_configs/dist 2>&1 \
+                    | while IFS= read -r line; do log "  $line"; done
+            ) 9>/tmp/cloud-submodule-update.lock || \
+                log "WARN: 2_configs/dist update failed — ship will use the pinned commit (may be stale)"
+        else
+            git -C "$SERVICE_DIR/../.." -c submodule."2_configs/dist".update=checkout \
+                submodule update --remote --init --force 2_configs/dist 2>&1 \
+                | while IFS= read -r line; do log "  $line"; done || \
+                log "WARN: 2_configs/dist update failed — ship will use the pinned commit (may be stale)"
         fi
     fi
 

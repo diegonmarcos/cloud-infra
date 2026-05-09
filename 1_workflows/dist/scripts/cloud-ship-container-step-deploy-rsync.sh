@@ -23,7 +23,7 @@ step_deploy() {
     CONFIGS_IMAGE="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}/${SERVICE_NAME}-configs:latest"
 
     log "Deploying via configs image: $CONFIGS_IMAGE"
-    ssh $SSH_OPTS "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH && \
+    ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH && \
         docker pull $CONFIGS_IMAGE && \
         docker run --rm -v $DEPLOY_PATH:/out $CONFIGS_IMAGE && \
         sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH" && {
@@ -32,8 +32,8 @@ step_deploy() {
         log_warn "Configs image deploy failed — falling back to rsync"
         # Rsync fallback (only if configs image unavailable, e.g. first-ever ship)
         log "Deploying dist/ -> $DEPLOY_HOST:$DEPLOY_PATH (rsync fallback)"
-        ssh $SSH_OPTS "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH"
-        rsync -az --compress-level=9 --checksum "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/" 2>/dev/null || true
+        ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH"
+        rsync_with_retry -az --compress-level=9 --checksum "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/" 2>/dev/null || true
     }
 
     # Secrets: ALWAYS via scp (never in GHCR image)
@@ -60,7 +60,7 @@ step_deploy() {
     log "Deploying dist/ -> $DEPLOY_HOST:$DEPLOY_PATH"
 
     # Ensure remote dir exists
-    ssh $SSH_OPTS "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH"
+    ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH"
 
     MANIFEST_FILE=".deploy-manifest"
 
@@ -68,7 +68,7 @@ step_deploy() {
     NEW_MANIFEST=$(cd "$DIST_DIR" && find . -type f | sort)
 
     # 2. Read old manifest from remote (may be empty on first deploy)
-    OLD_MANIFEST=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat '$DEPLOY_PATH/$MANIFEST_FILE' 2>/dev/null" || true)
+    OLD_MANIFEST=$(ssh_with_retry "$DEPLOY_HOST" "cat '$DEPLOY_PATH/$MANIFEST_FILE' 2>/dev/null" || true)
 
     # 3. Build rsync exclude flags from build.json array
     RSYNC_EXCLUDES=""
@@ -85,13 +85,13 @@ step_deploy() {
         echo "$CLEAN_DIRS" | while IFS= read -r d; do
             [ -z "$d" ] && continue
             log "  clean: $DEPLOY_PATH/$d/"
-            ssh $SSH_OPTS "$DEPLOY_HOST" "rm -rf '$DEPLOY_PATH/$d/'"
+            ssh_with_retry "$DEPLOY_HOST" "rm -rf '$DEPLOY_PATH/$d/'"
         done
     fi
 
     # 4. Additive rsync (NO --delete) — adds/updates files, never removes
     if command -v rsync >/dev/null 2>&1; then
-        eval rsync -az --compress-level=9 --checksum --partial --inplace --exclude='docs/' $RSYNC_EXCLUDES '"$DIST_DIR/"' '"$DEPLOY_HOST:$DEPLOY_PATH/"'
+        eval rsync_with_retry -az --compress-level=9 --checksum --partial --inplace --exclude='docs/' $RSYNC_EXCLUDES '"$DIST_DIR/"' '"$DEPLOY_HOST:$DEPLOY_PATH/"'
     elif command -v rclone >/dev/null 2>&1; then
         rclone copy "$DIST_DIR/" ":sftp:$DEPLOY_PATH/" \
             --sftp-host="$(ssh -G "$DEPLOY_HOST" | grep '^hostname ' | awk '{print $2}')" \
@@ -118,7 +118,7 @@ step_deploy() {
             echo "$STALE_FILES" | while IFS= read -r f; do
                 [ -z "$f" ] && continue
                 log "  rm stale: $f"
-                ssh $SSH_OPTS "$DEPLOY_HOST" "rm -f '$DEPLOY_PATH/$f'"
+                ssh_with_retry "$DEPLOY_HOST" "rm -f '$DEPLOY_PATH/$f'"
                 STALE_COUNT=$((STALE_COUNT + 1))
             done
             log "Cleaned stale files from previous deploy"
@@ -126,7 +126,7 @@ step_deploy() {
     fi
 
     # 6. Save new manifest to remote
-    echo "$NEW_MANIFEST" | ssh $SSH_OPTS "$DEPLOY_HOST" "cat > '$DEPLOY_PATH/$MANIFEST_FILE'"
+    echo "$NEW_MANIFEST" | ssh_with_retry "$DEPLOY_HOST" "cat > '$DEPLOY_PATH/$MANIFEST_FILE'"
 
     log "Deployed to $DEPLOY_HOST:$DEPLOY_PATH"
 }

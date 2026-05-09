@@ -100,6 +100,8 @@ if [ -f "$CONFIG" ]; then
     COMPOSE_POST_HOOK="$(get_config compose.post_hook)"
     COMPOSE_CUSTOM="$(get_config compose.custom)"
     WRANGLER_DEPLOY="$(get_config deploy.wrangler)"
+    WRANGLER_SECRETS_PUSH="$(get_config deploy.wrangler_secrets)"
+    WRANGLER_SECRET_DROP="$(get_config_array deploy.wrangler_secret_drop)"
     TERRAFORM_DEPLOY="$(get_config deploy.terraform)"
     TERRAFORM_TFVARS_TEMPLATE="$(get_config terraform.tfvars_template)"
     BUILD_COPY_ONLY="$(get_config build.copy_only)"
@@ -197,6 +199,62 @@ log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 log_warn() { printf "\033[0;33m[%s] WARNING: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 
+# ── SSH/rsync transport-blip retry helpers ────────────────────────────
+# Single-shot SSH/rsync calls fail the entire ship pipeline when the
+# runner host has transient SSH unreachability (WG flap, sshd MaxStartups
+# bursts, brief sshd restarts). These helpers retry on transport-level
+# failures only — real remote-command exit codes propagate unchanged.
+#
+# Tunables: $SSH_RETRY_N (default 3), $SSH_RETRY_BACKOFF (default 5).
+# Set in callers from cloud-data-runners.json (.probe.retries +
+# .probe.backoff_seconds) for the full runners path; defaults work for
+# the deploy/health steps that don't read runners.json.
+ssh_with_retry() {
+    _swr_n="${SSH_RETRY_N:-3}"
+    _swr_bo="${SSH_RETRY_BACKOFF:-5}"
+    _swr_attempt=0
+    _swr_ec=0
+    while [ "$_swr_attempt" -le "$_swr_n" ]; do
+        ssh $SSH_OPTS "$@"
+        _swr_ec=$?
+        [ "$_swr_ec" -eq 0 ] && return 0
+        # Exit 255 = SSH-level error (timeout / reset). Retry.
+        # Other exit codes = remote command failed; do NOT retry.
+        if [ "$_swr_ec" -ne 255 ]; then
+            return "$_swr_ec"
+        fi
+        _swr_attempt=$((_swr_attempt + 1))
+        if [ "$_swr_attempt" -le "$_swr_n" ]; then
+            log_warn "ssh exit 255 attempt ${_swr_attempt}/${_swr_n} — retry in ${_swr_bo}s"
+            sleep "$_swr_bo"
+        fi
+    done
+    return "$_swr_ec"
+}
+rsync_with_retry() {
+    _rwr_n="${SSH_RETRY_N:-3}"
+    _rwr_bo="${SSH_RETRY_BACKOFF:-5}"
+    _rwr_attempt=0
+    _rwr_ec=0
+    while [ "$_rwr_attempt" -le "$_rwr_n" ]; do
+        rsync "$@"
+        _rwr_ec=$?
+        [ "$_rwr_ec" -eq 0 ] && return 0
+        # rsync exit 12/30/255 = transport error (broken pipe, conn-reset,
+        # ssh error). Retry. Other codes (perm, disk, partial) = real.
+        case "$_rwr_ec" in
+            12|30|255) ;;
+            *) return "$_rwr_ec" ;;
+        esac
+        _rwr_attempt=$((_rwr_attempt + 1))
+        if [ "$_rwr_attempt" -le "$_rwr_n" ]; then
+            log_warn "rsync exit ${_rwr_ec} attempt ${_rwr_attempt}/${_rwr_n} — retry in ${_rwr_bo}s"
+            sleep "$_rwr_bo"
+        fi
+    done
+    return "$_rwr_ec"
+}
+
 # Global error handler: print step name on failure ONLY.
 # Captures $? FIRST (any subsequent command resets it), then fires the
 # error log only when actually exiting non-zero. Without the exit-status
@@ -273,12 +331,15 @@ case "${1:-all}" in
         # Runner: where to build Docker images (auto, local, oci-apps, gha)
         RUNNER="${2:-auto}"
 
-        # Special cases: wrangler/terraform have their own flow
+        # Special cases: wrangler/terraform have their own flow.
+        # NOTE: must `exit 0` (not `break`) — `break` is a no-op outside
+        # a loop, so the case-arm continued into the standard pipeline,
+        # double-running step_build + step_secrets.
         if [ "$WRANGLER_DEPLOY" = "true" ]; then
-            step_build; step_secrets; step_wrangler; break
+            step_build; step_secrets; step_wrangler; exit 0
         fi
         if [ "$TERRAFORM_DEPLOY" = "true" ]; then
-            step_build; step_secrets; step_terraform; break
+            step_build; step_secrets; step_terraform; exit 0
         fi
 
         # ── Phase 1: BUILD (sequential — nix build produces dist/) ──
