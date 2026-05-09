@@ -15,9 +15,9 @@
 # ║ This test asserts: every script that mentions a deprecated       ║
 # ║ cloud-data-{topology|gha-config|dns-services|...}.json filename  ║
 # ║ MUST include a dist/z_archive/<file> candidate in its probe      ║
-# ║ chain. The single exception is cloud-data-runners.json, which    ║
-# ║ remains git-tracked at top-level dist/ (hand-edited transitional ║
-# ║ file).                                                           ║
+# ║ chain. The legacy runners.json was migrated to                   ║
+# ║ 1_workflows/build.json + dist/build-workflows.json (2026-05-09)  ║
+# ║ and is no longer relevant to this fallback probe.                ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_cloud_data_zarchive_probe.sh
 # ╚══════════════════════════════════════════════════════════════════╝
@@ -30,8 +30,9 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-# Files that derive emits to dist/z_archive/. runners is the exception
-# (top-level dist/, hand-edited, git-tracked).
+# Files that derive emits to dist/z_archive/. The legacy runners.json
+# was migrated to 1_workflows/build.json + dist/build-workflows.json on
+# 2026-05-09 and is no longer scanned here.
 DEPRECATED_FILES="cloud-data-topology cloud-data-gha-config cloud-data-dns-services cloud-data-configs cloud-data-deps cloud-data-cloudflare-dns cloud-data-monitoring-targets cloud-data-backup-targets cloud-data-container-resources cloud-data-matomo-sites cloud-data-ntfy-acl cloud-data-firewall-rules cloud-data-log-routing cloud-data-databases cloud-data-secrets-env-var-names cloud-data-disk-protection cloud-data-authelia-acl cloud-data-caddy-routes cloud-data-kg-schema cloud-data-repo-scan cloud-data-reports-logs cloud-data-sec-scan cloud-data-url-health"
 
 echo "── Every consumer of a deprecated cloud-data-*.json must probe dist/z_archive/ ──"

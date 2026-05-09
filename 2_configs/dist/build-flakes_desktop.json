@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T10:16:22.615Z",
+    "generated_at": "2026-05-09T13:41:42.518Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T10:16:22.570Z",
+  "_generated": "2026-05-09T13:41:42.472Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -412,7 +412,29 @@
       "method": "gcloud",
       "ssh_alias": "gcp-proxy",
       "rescue_port": 2200,
-      "public_ports": [],
+      "public_ports": [
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+          "source": "0.0.0.0/0",
+          "owned_by": "wireguard"
+        }
+      ],
       "gha": {
         "ssh_secret": "GCP_PROXY_SSH_KEY",
         "host_secret": "GCP_PROXY_HOST",
