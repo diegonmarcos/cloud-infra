@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-08T19:24:36.228Z",
+    "generated_at": "2026-05-09T09:12:56.571Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-08T19:24:36.134Z",
+  "_generated": "2026-05-09T09:12:56.540Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -330,7 +330,7 @@
       "paths": [
         {
           "base_path": "/http-to-smtp-proxy-api",
-          "upstream": "10.0.0.1:8080",
+          "upstream": "10.0.0.1:8090",
           "comment": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/"
         },
         {
@@ -547,7 +547,7 @@
     },
     {
       "service": "http-to-smtp-proxy-api.app",
-      "upstream": "10.0.0.1:8080"
+      "upstream": "10.0.0.1:8090"
     },
     {
       "service": "stalwart.app",
@@ -992,7 +992,7 @@
     {
       "kind": "redirect",
       "service": "http-to-smtp-proxy-api.app",
-      "redirect_to": "https://http-to-smtp-proxy-api-http-8080.app",
+      "redirect_to": "https://http-to-smtp-proxy-api-http-8090.app",
       "container": "http-to-smtp-proxy-api",
       "container_key": "app",
       "svc": "http-to-smtp-proxy-api",
@@ -1000,14 +1000,14 @@
     },
     {
       "kind": "canonical",
-      "service": "http-to-smtp-proxy-api-http-8080.app",
+      "service": "http-to-smtp-proxy-api-http-8090.app",
       "container": "http-to-smtp-proxy-api",
       "container_key": "app",
       "svc": "http-to-smtp-proxy-api",
       "vm": "gcp-E2-f_0",
-      "port": 8080,
+      "port": 8090,
       "protocol": "http",
-      "upstream": "10.0.0.1:8080",
+      "upstream": "10.0.0.1:8090",
       "source": "containers.app.port"
     },
     {
@@ -1755,7 +1755,7 @@
     {
       "host": "api.diegonmarcos.com",
       "path": "/http-to-smtp-proxy-api",
-      "upstream": "10.0.0.1:8080",
+      "upstream": "10.0.0.1:8090",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2231,7 +2231,7 @@
     {
       "host": "http-to-smtp-proxy-api.app",
       "path": null,
-      "upstream": "10.0.0.1:8080",
+      "upstream": "10.0.0.1:8090",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2651,9 +2651,9 @@
       "notes": null
     },
     {
-      "host": "http-to-smtp-proxy-api-http-8080.app",
+      "host": "http-to-smtp-proxy-api-http-8090.app",
       "path": null,
-      "upstream": "10.0.0.1:8080",
+      "upstream": "10.0.0.1:8090",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",

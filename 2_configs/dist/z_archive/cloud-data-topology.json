@@ -2015,13 +2015,13 @@
       "folder": "aa-sui_tools-http-to-smtp-proxy-api",
       "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
       "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
-      "port": 8080,
+      "port": 8090,
       "dns": "http-to-smtp-proxy-api.app",
-      "upstream": "10.0.0.1:8080",
+      "upstream": "10.0.0.1:8090",
       "containers": {
         "app": {
           "container_name": "http-to-smtp-proxy-api",
-          "port": 8080,
+          "port": 8090,
           "port_env": "LISTEN_PORT",
           "dns": "http-to-smtp-proxy-api.app",
           "public": true,
@@ -2038,7 +2038,7 @@
         "http-to-smtp-proxy-api"
       ],
       "all_ports": [
-        "8080"
+        "8090"
       ],
       "all_dns": [
         "http-to-smtp-proxy-api.app"
@@ -2057,7 +2057,7 @@
         }
       },
       "declared_ports": {
-        "app": 8080
+        "app": 8090
       },
       "flake": "tools-http-to-smtp-proxy-api"
     },
@@ -5202,7 +5202,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-08T19:24:36.510Z",
+    "generated_at": "2026-05-09T09:12:56.625Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
