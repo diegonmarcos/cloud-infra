@@ -19,6 +19,7 @@ run_lifecycle() {
         CONTAINER="$(echo "$action_json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).container||'')" 2>/dev/null || echo "$action_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('container',''),end='')")"
         COMPOSE_PATH="$(echo "$action_json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).path||'')" 2>/dev/null || echo "$action_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('path',''),end='')")"
         SCRIPT="$(echo "$action_json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).script||'')" 2>/dev/null || echo "$action_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('script',''),end='')")"
+        LOCAL_SCRIPT="$(echo "$action_json" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).local_script||'')" 2>/dev/null || echo "$action_json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('local_script',''),end='')")"
 
         : "${VM:=$DEPLOY_HOST}"
 
@@ -72,10 +73,30 @@ run_lifecycle() {
                 ssh -n $SSH_OPTS "$VM" "free -h && echo '---' && docker stats --no-stream --format 'table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}'"
                 ;;
             ssh_run)
-                # Run a script on the VM host (outside any container)
-                # $SCRIPT is an absolute path on the VM (must be deployed there first)
-                log "  ssh_run on $VM: $SCRIPT"
-                ssh -n $SSH_OPTS "$VM" "sh $SCRIPT"
+                # Run a script on the VM host (outside any container).
+                #
+                # Two modes:
+                #   1. `script`        — absolute path on the VM (already deployed there)
+                #   2. `local_script`  — path relative to the service dir (e.g.
+                #                        "dist/assets/purge-orphan.sh"); engine
+                #                        pipes its content via ssh stdin so the
+                #                        target VM does NOT need the file
+                #                        pre-deployed. Useful for cross-VM
+                #                        lifecycle actions (service deploys to
+                #                        VM-A, lifecycle runs on VM-B).
+                if [ -n "$LOCAL_SCRIPT" ]; then
+                    LOCAL_PATH="$LOCAL_SCRIPT"
+                    [ ! -f "$LOCAL_PATH" ] && LOCAL_PATH="$SERVICE_DIR/$LOCAL_SCRIPT"
+                    if [ ! -f "$LOCAL_PATH" ]; then
+                        log "  ssh_run: local_script not found: $LOCAL_SCRIPT"
+                        continue
+                    fi
+                    log "  ssh_run on $VM: piping local_script $LOCAL_SCRIPT"
+                    ssh $SSH_OPTS "$VM" 'sudo bash -s' < "$LOCAL_PATH"
+                else
+                    log "  ssh_run on $VM: $SCRIPT"
+                    ssh -n $SSH_OPTS "$VM" "sudo sh $SCRIPT"
+                fi
                 ;;
         esac
     done
