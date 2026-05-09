@@ -209,6 +209,71 @@ inject_header() {
     if [ -x "$src" ]; then chmod +x "$dest"; fi
 }
 
+# Public: stamp an already-existing file in place.
+#
+# Use case: engine steps that emit artifacts via `cat > $DIST_DIR/foo <<EOF`
+# (e.g. cloud-ship-container-step-build-docker.sh emits Dockerfile.native).
+# There is no src/ counterpart to inject from — the file is generated content.
+# This helper rewrites the file with the GENERATED-FILE banner prepended,
+# using the same prefix/shebang/skip rules as inject_header().
+#
+# Args:
+#   $1 = path to the file to stamp (will be rewritten in place)
+#   $2 = optional virtual source label for the {{SOURCE}} placeholder
+#        (defaults to the file path, relative to repo root)
+stamp_header_inplace() {
+    local target="$1"
+    local virtual_src="${2:-$target}"
+    local repo_root engine rel_src prefix first_line tmp header
+    [ -f "$target" ] || return 0
+    repo_root="$(_ih_repo_root)"
+    engine="$(_ih_engine)"
+    rel_src="${virtual_src#$repo_root/}"
+
+    # Skip rules apply to in-place stamping too.
+    if _ih_should_skip "$target"; then
+        return 0
+    fi
+
+    # JSON: only stamp when explicitly opted in (matches inject_header).
+    if _ih_is_json "$target"; then
+        if [ "${INJECT_JSON:-0}" = "1" ]; then
+            tmp="$(mktemp)"
+            _ih_inject_json "$target" "$tmp" "$rel_src" "$engine" || { rm -f "$tmp"; return 1; }
+            mv "$tmp" "$target"
+        fi
+        return 0
+    fi
+
+    prefix="$(_ih_prefix_for "$target")"
+    [ -z "$prefix" ] && return 0   # unknown type — leave untouched
+
+    # Idempotent: skip if already stamped.
+    local marker
+    marker=$(jq -r '.marker' "$(_ih_tpl_file)")
+    if head -n 20 "$target" | grep -qF "$marker"; then
+        return 0
+    fi
+
+    first_line="$(head -n1 "$target" 2>/dev/null || true)"
+    header="$(_ih_build_header "$prefix" "$rel_src" "$engine")"
+    tmp="$(mktemp)"
+    if [ "${first_line:0:2}" = "#!" ]; then
+        {
+            printf '%s\n\n' "$first_line"
+            printf '%s\n\n' "$header"
+            tail -n +2 "$target"
+        } > "$tmp"
+    else
+        {
+            printf '%s\n\n' "$header"
+            cat "$target"
+        } > "$tmp"
+    fi
+    if [ -x "$target" ]; then chmod +x "$tmp"; fi
+    mv "$tmp" "$target"
+}
+
 # Public: recursively walk src_dir and inject header into every file,
 # mirroring the tree under dest_dir.
 inject_header_tree() {
@@ -240,8 +305,14 @@ if [ "${BASH_SOURCE[0]:-$0}" = "${0}" ]; then
             [ $# -eq 3 ] || { echo "usage: $0 tree <src_dir> <dest_dir>" >&2; exit 2; }
             inject_header_tree "$2" "$3"
             ;;
+        stamp)
+            # In-place stamp for engine-generated artifacts (heredoc/cat>file
+            # output that has no src/ counterpart, e.g. Dockerfile.native).
+            [ $# -ge 2 ] && [ $# -le 3 ] || { echo "usage: $0 stamp <file> [virtual_src]" >&2; exit 2; }
+            stamp_header_inplace "$2" "${3:-}"
+            ;;
         *)
-            echo "usage: $0 {file|tree} <src> <dest>" >&2
+            echo "usage: $0 {file|tree|stamp} ..." >&2
             exit 2
             ;;
     esac
