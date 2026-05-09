@@ -56,12 +56,36 @@ step_docker() {
     if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
         REMOTE_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.docker-src-hash 2>/dev/null" 2>/dev/null || true)
         if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
-            # Trust the hash ONLY if the binaries image actually exists on GHCR.
+            # Trust the hash ONLY if the binaries package actually exists on GHCR.
             # A prior failed-push deploy still rsyncs .docker-src-hash to the VM,
             # so without this check we'd short-circuit forever and step_compose
             # would fail on the VM with "denied: denied" pulling a missing image.
+            #
+            # Existence check via `gh api` (preferred over `docker manifest
+            # inspect`):
+            #   - gh API returns deterministic 404 vs 200, no auth-vs-missing
+            #     ambiguity. `docker manifest inspect` could return failure on
+            #     transient auth glitches even when the image existed (and
+            #     vice versa) — caused 6 services (google-workspace-mcp,
+            #     rig-agentic-{sonn,hai}, cloud-cgc-mcp, news-gdelt, postlite)
+            #     to remain stale after the binaries-tag fix landed
+            #     (8ec41cb5, 2026-04-25): src/ unchanged → skip path →
+            #     never rebuilt → never pushed -binaries (Phase 16 contract).
+            #   - gh API is also exactly what test_binaries_image_published.sh
+            #     queries, so engine + test stay in lockstep.
+            #   - Falls back to `docker manifest inspect` when gh is
+            #     unavailable / unauthenticated (e.g. CI runners without gh).
             BINARIES_IMG="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}${DOCKER_IMAGE}-binaries:latest"
-            if docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
+            BINARIES_PKG="${DOCKER_IMAGE}-binaries"
+            _binaries_exists=0
+            if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+                if gh api "/user/packages/container/${BINARIES_PKG}" >/dev/null 2>&1; then
+                    _binaries_exists=1
+                fi
+            elif docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
+                _binaries_exists=1
+            fi
+            if [ "$_binaries_exists" = 1 ]; then
                 log "Docker src unchanged ($LOCAL_HASH) — skipping"
                 return 0
             else
