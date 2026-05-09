@@ -20,7 +20,7 @@
 # ║      is absent (authelia / hickory-dns / umami use inline only)  ║
 # ║   A) the guard accepts BOTH ""  and "null" (jq literal)          ║
 # ║   G) for type=binary, the engine runs NATIVE_CMD before checking ║
-# ║      that the binary exists (fixes smtp-proxy)                   ║
+# ║      that the binary exists (fixes http-to-smtp-proxy-api)       ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_step_docker_guards.sh      ║
 # ╚══════════════════════════════════════════════════════════════════╝
