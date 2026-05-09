@@ -53,6 +53,7 @@
       },
       "containers": [
         "cf-worker-http-to-wg-public-bridge",
+        "caddy",
         "dagu"
       ],
       "ports": [],
@@ -161,7 +162,6 @@
         "authelia",
         "authelia-redis",
         "postlite-authelia",
-        "caddy",
         "introspect-proxy",
         "c3-analytics-api",
         "postlite-npm",
@@ -699,7 +699,7 @@
       {
         "name": "caddy.app",
         "type": "A",
-        "value": "10.0.0.1",
+        "value": "10.0.0.4",
         "service": "caddy"
       },
       {
@@ -2220,34 +2220,47 @@
           "container_name": "maddy",
           "image": "ghcr.io/diegonmarcos/maddy:latest",
           "port": null,
+          "_doc_dual_bind": "Phase 4 of public-surface collapse: each port dual-binds on wg0 (10.0.0.3) AND wg-public (10.1.0.3). Maddy is host-network so binds happen inside maddy.conf.tpl via `@LISTEN_<port>@`; flake.nix expands `bind` arrays into space-separated multi-listener prefixes (e.g. `tls://10.0.0.3:993 tls://10.1.0.3:993`). Caddy on oci-analytics reaches mail ports via wg-public; legacy clients on wg0 keep working unchanged.",
           "extra_ports": [
             {
               "port": 25,
               "protocol": "tcp",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_mx",
-              "desc": "MX delivery endpoint — wg0-only bind; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)"
+              "desc": "MX delivery endpoint — dual-bind wg0+wg-public; CF Worker → Caddy → http-to-smtp-proxy-api → SMTP over WG is the public bridge (Phase 5)"
             },
             {
               "port": 465,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_ssl",
-              "desc": "SMTPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
+              "desc": "SMTPS — dual-bind wg0+wg-public, reached via Caddy L4 from oci-analytics"
             },
             {
               "port": 993,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_ssl",
-              "desc": "IMAPS — wg0 bind, reached via Caddy L4 from gcp-proxy"
+              "desc": "IMAPS — dual-bind wg0+wg-public, reached via Caddy L4 from oci-analytics"
             },
             {
               "port": 143,
               "protocol": "tcp",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_plain",
-              "desc": "IMAP plain — wg0 bind"
+              "desc": "IMAP plain — dual-bind wg0+wg-public"
             }
           ],
           "dns": "maddy.app",
@@ -2359,41 +2372,57 @@
           "container_name": "stalwart",
           "image": "stalwartlabs/stalwart:v0.14.1",
           "port": 2443,
+          "_doc_dual_bind": "Phase 4 of public-surface collapse: each port dual-binds on wg0 (10.0.0.3) AND wg-public (10.1.0.3). Caddy on oci-analytics reaches mail ports via wg-public mesh; legacy clients on wg0 keep working unchanged. compose.nix expands `bind` arrays into one host-port mapping per IP.",
           "extra_ports": [
             {
               "port": 2025,
               "protocol": "starttls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_shadow",
               "desc": "SMTP shadow (http-to-smtp-proxy-api on gcp-proxy → WG → :2025)"
             },
             {
               "port": 2443,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "jmap_tls",
-              "desc": "HTTPS admin/JMAP — wg0 bind, reached via Caddy L4"
+              "desc": "HTTPS admin/JMAP — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 2465,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "smtp_ssl",
-              "desc": "SMTPS — wg0 bind, reached via Caddy L4"
+              "desc": "SMTPS — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 2993,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "imap_ssl",
-              "desc": "IMAPS — wg0 bind, reached via Caddy L4"
+              "desc": "IMAPS — dual-bind wg0+wg-public, reached via Caddy L4"
             },
             {
               "port": 6190,
               "protocol": "tls",
-              "bind": "10.0.0.3",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
               "service": "manage_sieve",
-              "desc": "ManageSieve — wg0 bind, reached via Caddy L4"
+              "desc": "ManageSieve — dual-bind wg0+wg-public, reached via Caddy L4"
             }
           ],
           "port_env": null,
@@ -3442,13 +3471,13 @@
     },
     "caddy": {
       "category": "sec",
-      "vm": "gcp-E2-f_0",
+      "vm": "oci-E2-f_1",
       "folder": "bb-sec_caddy",
-      "description": "Caddy reverse proxy + security dashboard (gcp-proxy)",
+      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
       "domain": "proxy.diegonmarcos.com",
       "port": 443,
       "dns": "caddy.app",
-      "upstream": "10.0.0.1:443",
+      "upstream": "10.0.0.4:443",
       "containers": {
         "app": {
           "container_name": "caddy",
@@ -5375,7 +5404,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-09T17:24:14.657Z",
+    "generated_at": "2026-05-09T17:42:14.171Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

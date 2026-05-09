@@ -328,15 +328,63 @@ function deriveCaddy(c: any): DerivedFile {
   const vms = c.vms as Record<string, any>;
   const flatRoutes: any[] = c.configs?.caddy?.routes ?? [];
 
-  // Build dns→wg_ip map to resolve any lingering name.app:port → WG_IP:port
+  // ── wg-public peer lookup (Phase 4 of public-surface collapse plan) ──────
+  // Source: c.wireguard_public.peers[] (declared in cloud-data). When Caddy's
+  // deploy host is itself a wg-public peer, reverse-proxy upstreams to OTHER
+  // wg-public peers travel via the public-trust mesh (10.1.0.x) instead of
+  // the internal wg0 (10.0.0.x) — keeps blast-radius bounded if the public
+  // edge is compromised. VMs not in wg-public (e.g. gcp-t4) silently fall
+  // back to wg0. Zero hardcoded IPs — everything reads cloud-data peers list.
+  const wgPublicPeers: Array<{ name: string; wg_ip: string }> = c.wireguard_public?.peers ?? [];
+  const aliasToWgPublicIp: Record<string, string> = {};
+  for (const peer of wgPublicPeers) {
+    if (peer.name && peer.wg_ip) aliasToWgPublicIp[peer.name] = peer.wg_ip;
+  }
+  const caddySvcForVm = services["caddy"];
+  const caddyVmObj = caddySvcForVm ? vms[caddySvcForVm.vm] : null;
+  const caddyHostAlias: string = caddyVmObj?.ssh_alias ?? "";
+  const caddyOnWgPublic = caddyHostAlias !== "" && Boolean(aliasToWgPublicIp[caddyHostAlias]);
+
+  /**
+   * Resolve a VM's upstream IP for Caddy. If both Caddy host AND target VM
+   * are wg-public peers, prefer the wg-public IP; otherwise fall back to
+   * wg0 (or whatever wg_ip was passed in). Pure function of cloud-data —
+   * no hardcoded IPs anywhere.
+   */
+  const resolveVmIpForCaddy = (vm: any): string => {
+    const wg0 = vm?.wg_ip ?? "";
+    if (!caddyOnWgPublic) return wg0;
+    const alias = vm?.ssh_alias ?? "";
+    return aliasToWgPublicIp[alias] ?? wg0;
+  };
+
+  /**
+   * Rewrite a service's `<wg0_ip>:<port>` upstream string to the
+   * caddy-reachable IP (wg-public preferred when applicable). Pass-through
+   * if the upstream doesn't start with the VM's wg0 IP (e.g. a static
+   * hostname-based upstream).
+   */
+  const rewriteUpstreamForCaddy = (vmId: string | undefined, upstream: string | undefined): string | undefined => {
+    if (!upstream || !vmId) return upstream;
+    const vm = vms[vmId];
+    if (!vm?.wg_ip) return upstream;
+    if (!upstream.startsWith(`${vm.wg_ip}:`)) return upstream;
+    const newIp = resolveVmIpForCaddy(vm);
+    if (!newIp || newIp === vm.wg_ip) return upstream;
+    return upstream.replace(`${vm.wg_ip}:`, `${newIp}:`);
+  };
+
+  // Build dns→<caddy-reachable>ip map (resolves any lingering name.app:port → IP:port).
+  // Uses the wg-public preference when applicable.
   const dnsToIp: Record<string, string> = {};
   for (const [, svc] of Object.entries(services)) {
     const vm = vms[svc.vm];
     if (!vm?.wg_ip || !svc.dns) continue;
-    dnsToIp[svc.dns] = vm.wg_ip;
+    const ip = resolveVmIpForCaddy(vm);
+    dnsToIp[svc.dns] = ip;
     for (const ct of Object.values(svc.containers ?? {})) {
       const c = ct as any;
-      if (c.dns) dnsToIp[c.dns] = vm.wg_ip;
+      if (c.dns) dnsToIp[c.dns] = ip;
     }
   }
   const resolveUpstream = (upstream: string | undefined): string | undefined => {
@@ -353,16 +401,24 @@ function deriveCaddy(c: any): DerivedFile {
   //     { port: 993, upstream: "<host>:993", protocol: "tls", comment: "..." }
   //   ]
   // The deploy.host of that service determines which VM is the upstream.
-  // Caddy on gcp-proxy binds the listed ports and TLS-passthroughs to upstream.
+  // Caddy on its host binds the listed ports and TLS-passthroughs to upstream.
+  // Phase 4: aliasToWgIp routes via wg-public when caddy host is a member.
   const l4Routes: any[] = [];
-  let gcpProxyWgIp = "";
-  for (const vm of Object.values(vms) as any[]) {
-    if (vm.ssh_alias === "gcp-proxy") gcpProxyWgIp = vm.wg_ip ?? "";
+  // Caddy's own listen-scope=wg target IP — used when a route declares
+  // listen_scope: "wg" so Caddy binds to its own WG interface only (not 0.0.0.0).
+  // Phase 4: when Caddy lives on a wg-public host (oci-analytics) we bind to
+  // its wg-public IP (10.1.0.1); otherwise to its wg0 IP. Pure data lookup.
+  let caddyListenScopeWgIp = "";
+  if (caddyVmObj) {
+    caddyListenScopeWgIp = caddyOnWgPublic
+      ? aliasToWgPublicIp[caddyHostAlias]
+      : (caddyVmObj.wg_ip ?? "");
   }
-  // ssh_alias → wg_ip lookup so we can rewrite "<alias>:port" upstreams.
+  // ssh_alias → caddy-reachable IP (wg-public preferred when caddy is on it,
+  // wg0 otherwise). Used to rewrite "<alias>:port" upstreams.
   const aliasToWgIp: Record<string, string> = {};
   for (const vm of Object.values(vms) as any[]) {
-    if (vm.ssh_alias && vm.wg_ip) aliasToWgIp[vm.ssh_alias] = vm.wg_ip;
+    if (vm.ssh_alias && vm.wg_ip) aliasToWgIp[vm.ssh_alias] = resolveVmIpForCaddy(vm);
   }
   for (const [, svc] of Object.entries(services)) {
     const l4Ports = (svc as any).proxy?.primary?.l4_ports ?? [];
@@ -372,7 +428,7 @@ function deriveCaddy(c: any): DerivedFile {
     for (const lp of l4Ports) {
       if (typeof lp.port !== "number") continue;
       // Resolve upstream: explicit lp.upstream wins; otherwise <fallbackIp>:<port>.
-      // Rewrite "<alias>:port" → "<wg_ip>:port" if alias matches a known VM.
+      // Rewrite "<alias>:port" → "<caddy-reachable wg ip>:port" if alias matches a known VM.
       let upstream = (lp.upstream as string | undefined) ?? "";
       if (upstream) {
         const m = upstream.match(/^([^:]+):(\d+)$/);
@@ -382,12 +438,12 @@ function deriveCaddy(c: any): DerivedFile {
       }
       if (!upstream) continue;
       const route: any = { port: lp.port, upstream, comment: lp.comment ?? `L4 passthrough (${(svc as any).name ?? "?"})` };
-      // listen_scope = "wg" → bind to wg_ip only (not all interfaces).
+      // listen_scope = "wg" → bind Caddy's listener to its own WG IP only.
       if (lp.listen_scope === "wg") {
-        if (!gcpProxyWgIp) {
-          throw new Error(`listen_scope=wg on port ${lp.port} but gcp-proxy has no wg_ip in config.json`);
+        if (!caddyListenScopeWgIp) {
+          throw new Error(`listen_scope=wg on port ${lp.port} but caddy host has no resolvable WG IP`);
         }
-        route.listen = `${gcpProxyWgIp}:${lp.port}`;
+        route.listen = `${caddyListenScopeWgIp}:${lp.port}`;
       }
       // sni → caddy-l4 SNI matcher; multiple routes sharing the same listen
       // spec collapse into one listener with per-SNI sub-routes (caddyfile.nix
@@ -406,9 +462,10 @@ function deriveCaddy(c: any): DerivedFile {
     const proxy = svc.proxy?.primary;
     if (!proxy?.domain || proxy.type === "path" || proxy.type === "special" || proxy.streaming || proxy.base_path) continue;
     if (!svc.upstream) continue; // Skip services with no HTTP upstream (e.g. Maddy — SMTP/IMAP only, no web UI)
+    const upstreamForCaddy = rewriteUpstreamForCaddy(svc.vm, svc.upstream);
     const route: any = {
       domain: proxy.domain,
-      ...(svc.upstream ? { upstream: svc.upstream } : {}),
+      ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
       ...(proxy.landing_page ? { landing_page: proxy.landing_page } : {}),
       ...(proxy.tls_skip_verify ? { tls_skip_verify: true } : {}),
       ...(proxy.auth === "none" ? { auth: "none" } : {}),
@@ -430,9 +487,10 @@ function deriveCaddy(c: any): DerivedFile {
     const pd = proxy.parent_domain ?? proxy.domain;
     if (!pd) continue;
     if (!pathGroups[pd]) pathGroups[pd] = { paths: [], comment: "" };
+    const upstreamForCaddy = rewriteUpstreamForCaddy(svc.vm, svc.upstream);
     pathGroups[pd].paths.push({
       base_path: proxy.base_path,
-      ...(svc.upstream ? { upstream: svc.upstream } : {}),
+      ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
       ...(proxy.public_paths ? { public_paths: proxy.public_paths } : {}),
       comment: svc.description,
     });
@@ -501,9 +559,10 @@ function deriveCaddy(c: any): DerivedFile {
   for (const [, svc] of Object.entries(services)) {
     const proxy = svc.proxy?.primary;
     if (!proxy?.streaming || !proxy.parent_domain) continue;
+    const upstreamForCaddy = rewriteUpstreamForCaddy(svc.vm, svc.upstream);
     mcpEndpoints.push({
       base_path: proxy.base_path,
-      ...(svc.upstream ? { upstream: svc.upstream } : {}),
+      ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
     });
   }
   const mcpRoutes = mcpEndpoints.length > 0 ? [{
@@ -521,7 +580,7 @@ function deriveCaddy(c: any): DerivedFile {
   if (ntfySvc) {
     special.ntfy = {
       domain: ntfySvc.domain ?? ntfySvc.proxy?.primary?.domain,
-      upstream: ntfySvc.upstream,
+      upstream: rewriteUpstreamForCaddy(ntfySvc.vm, ntfySvc.upstream),
       comment: "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie",
     };
   }
@@ -530,11 +589,13 @@ function deriveCaddy(c: any): DerivedFile {
   const matomoSvc = services["matomo"];
   const umamiSvc = services["umami"];
   if (matomoSvc) {
+    const matomoUp = rewriteUpstreamForCaddy(matomoSvc.vm, matomoSvc.upstream);
+    const umamiUp = umamiSvc ? rewriteUpstreamForCaddy(umamiSvc.vm, umamiSvc.upstream) : undefined;
     special.analytics = {
       domain: matomoSvc.domain ?? matomoSvc.proxy?.primary?.domain,
       comment: "Matomo (public tracking + protected admin) + Umami (path-based)",
-      matomo_upstream: matomoSvc.upstream,
-      ...(umamiSvc?.upstream ? { umami_upstream: umamiSvc.upstream } : {}),
+      matomo_upstream: matomoUp,
+      ...(umamiUp ? { umami_upstream: umamiUp } : {}),
       public_tracking_paths: ["/matomo.js", "/matomo.php", "/piwik.js", "/piwik.php", "/collect.php", "/api.php", "/track.php", "/js/*"],
       ...(umamiSvc ? { umami_public_paths: ["/umami/script.js", "/umami/api/send"] } : {}),
     };
@@ -563,13 +624,22 @@ function deriveCaddy(c: any): DerivedFile {
   });
 
   // ── Internal routes: all services with upstream + dns → Caddy HTTP:80 listener ──
+  // Each upstream is rewritten through resolveVmIpForCaddy so that Caddy on
+  // a wg-public host (Phase 4: oci-analytics) prefers wg-public IPs for peer
+  // VMs; non-peer VMs (e.g. gcp-t4) keep their wg0 IPs unchanged.
   const internalRoutes: any[] = [];
   for (const [, svc] of Object.entries(services)) {
     if (svc.enabled === false) continue;
     if (!svc.upstream || !svc.dns) continue;
+    const vm = vms[svc.vm];
+    let upstream: string = svc.upstream;
+    if (vm?.wg_ip && upstream.startsWith(`${vm.wg_ip}:`)) {
+      const newIp = resolveVmIpForCaddy(vm);
+      upstream = upstream.replace(`${vm.wg_ip}:`, `${newIp}:`);
+    }
     internalRoutes.push({
       service: svc.dns,
-      upstream: svc.upstream,
+      upstream,
     });
   }
   // VM dashboards: read directly from per-VM build.json (source of truth)
@@ -582,7 +652,7 @@ function deriveCaddy(c: any): DerivedFile {
       if (bj.dashboard?.dns) {
         internalRoutes.push({
           service: bj.dashboard.dns,
-          upstream: `${vm.wg_ip}:${bj.dashboard.port ?? 7680}`,
+          upstream: `${resolveVmIpForCaddy(vm)}:${bj.dashboard.port ?? 7680}`,
         });
       }
     } catch { /* skip VMs without HM build.json */ }
@@ -607,11 +677,15 @@ function deriveCaddy(c: any): DerivedFile {
   ];
 
   // ── Auth upstreams: Caddy forward_auth targets (from cloud-data, not hardcoded) ──
+  // Rewrite via resolveVmIpForCaddy so wg-public peers cross the public-trust
+  // mesh when caddy is on a wg-public host (Phase 4).
   const authUpstreams: Record<string, string> = {};
   const authSvc = services["authelia"];
-  if (authSvc?.upstream) authUpstreams.authelia = authSvc.upstream;
+  const authUp = authSvc ? rewriteUpstreamForCaddy(authSvc.vm, authSvc.upstream) : undefined;
+  if (authUp) authUpstreams.authelia = authUp;
   const introspectSvc = services["introspect-proxy"];
-  if (introspectSvc?.upstream) authUpstreams.introspect_proxy = introspectSvc.upstream;
+  const introspectUp = introspectSvc ? rewriteUpstreamForCaddy(introspectSvc.vm, introspectSvc.upstream) : undefined;
+  if (introspectUp) authUpstreams.introspect_proxy = introspectUp;
 
   // ── all_app_urls: canonical per-container, per-port .app URL synthesis ──
   // Naming rules (zero heuristics — all declared):
@@ -649,7 +723,10 @@ function deriveCaddy(c: any): DerivedFile {
         //   `"monitor": false`     → explicit opt-out for non-bind cases
         if (typeof ep !== "object" || typeof ep.port !== "number" || !ep.protocol) continue;
         if (ep.monitor === false) continue;
-        if (ep.bind === "127.0.0.1" || ep.bind === "::1") continue;
+        // bind may be a string ("10.0.0.3") or an array (["10.0.0.3", "10.1.0.3"]).
+        // A port is loopback-only iff EVERY bind is loopback. Skip in that case.
+        const binds: string[] = Array.isArray(ep.bind) ? ep.bind : (ep.bind ? [ep.bind] : []);
+        if (binds.length > 0 && binds.every(b => b === "127.0.0.1" || b === "::1")) continue;
         add(ep.port, ep.protocol, `containers.${ck}.extra_ports`);
       }
       if (isSingle) {
@@ -681,6 +758,9 @@ function deriveCaddy(c: any): DerivedFile {
           vm: svc.vm,
         });
       } else {
+        // Use caddy-reachable IP (wg-public preferred when caddy is on a
+        // wg-public host, wg0 otherwise). Pure data lookup via resolveVmIpForCaddy.
+        const vmIpForCaddy = resolveVmIpForCaddy(vm);
         for (const { port, protocol, source } of ports) {
           allAppUrls.push({
             kind: "canonical",
@@ -691,7 +771,7 @@ function deriveCaddy(c: any): DerivedFile {
             vm: svc.vm,
             port,
             protocol,
-            upstream: `${vm.wg_ip}:${port}`,
+            upstream: `${vmIpForCaddy}:${port}`,
             source,
           });
         }
@@ -724,7 +804,7 @@ function deriveCaddy(c: any): DerivedFile {
             kind: "container",
             service: `${c.container_name}-${engine}-${c.port}.db`,
             ...common, engine, port: c.port,
-            upstream: `${vm.wg_ip}:${c.port}`,
+            upstream: `${resolveVmIpForCaddy(vm)}:${c.port}`,
           });
         } else {
           allDbUrls.push({
@@ -744,7 +824,7 @@ function deriveCaddy(c: any): DerivedFile {
             kind: "bundled",
             service: `${c.container_name}-${edb.engine}-${edb.port}.db`,
             ...common, engine: edb.engine, port: edb.port,
-            upstream: `${vm.wg_ip}:${edb.port}`,
+            upstream: `${resolveVmIpForCaddy(vm)}:${edb.port}`,
             ...(edb.path ? { path: edb.path } : {}),
           });
         } else {
