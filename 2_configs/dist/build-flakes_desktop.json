@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-09T10:09:08.783Z",
+    "generated_at": "2026-05-09T10:16:22.615Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-09T10:09:08.738Z",
+  "_generated": "2026-05-09T10:16:22.570Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -6454,14 +6454,40 @@
       "description": "SQLite REST API (WireGuard only)",
       "enabled": false,
       "containers": {
-        "app": {
-          "container_name": "postlite",
-          "image": "",
-          "public": false
+        "postlite-npm": {
+          "container_name": "postlite-npm"
+        },
+        "postlite-vaultwarden": {
+          "container_name": "postlite-vaultwarden"
+        },
+        "postlite-ntfy": {
+          "container_name": "postlite-ntfy"
+        },
+        "postlite-authelia": {
+          "container_name": "postlite-authelia"
+        },
+        "sqlite-npm": {
+          "container_name": "sqlite-npm"
+        },
+        "sqlite-vaultwarden": {
+          "container_name": "sqlite-vaultwarden"
+        },
+        "sqlite-ntfy": {
+          "container_name": "sqlite-ntfy"
+        },
+        "sqlite-authelia": {
+          "container_name": "sqlite-authelia"
         }
       },
       "container_names": [
-        "postlite"
+        "postlite-npm",
+        "postlite-vaultwarden",
+        "postlite-ntfy",
+        "postlite-authelia",
+        "sqlite-npm",
+        "sqlite-vaultwarden",
+        "sqlite-ntfy",
+        "sqlite-authelia"
       ],
       "all_ports": [],
       "all_dns": [],
