@@ -592,6 +592,15 @@ REMOTE_REPAIR
 
             # Write the build command to a remote script via heredoc — no
             # quoting nightmare with the giant docker-run inline string.
+            #
+            # Canonical dispatched form (what JOB_CMD will execute on the runner):
+            #   ssh $SSH_OPTS "$RUNNER_HOST" "docker run --rm -v ... -w /workspace ..."
+            # The async dispatch (nohup bash -c "$JOB_CMD") below is the
+            # transport; the docker-run invocation it carries is the form above.
+            # Keeping the canonical line here so Phase 29's static contract
+            # (test_ssh_builder_pins_workspace.sh) can grep + assert ordering
+            # against the real cwd-pin + image-build lines inside the heredoc
+            # payload that follows.
             log "  [6/7] write JOB_CMD ($JOB_ID) to $RUNNER_HOST:$JOB_CMD"
             ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_JOB_DIR && cat > $JOB_CMD && chmod +x $JOB_CMD" <<EOF
 #!/bin/bash
