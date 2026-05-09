@@ -388,22 +388,24 @@ NEOF
             | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     fi
 
-    # ── Resolve runner from cloud-data-runners.json (data-driven) ─────────
+    # ── Resolve runner from build-workflows.json (data-driven) ────────────
     # Declared architecture matrix: amd64 → local GHA, arm64 → oci-apps cloud-builder-x.
     # No QEMU. No cross-arch fallback. If the declared runner is unreachable
     # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
     # of exec-format-error builds.
+    # Source-of-truth: 1_workflows/build.json (.runners + .probe + .dispatch),
+    # aggregated by 2_configs/build.sh into dist/build-workflows.json.
+    # Migrated 2026-05-09 from the legacy runners.json under I_cloud-data/ (archived).
     RUNNERS_JSON=""
     for _p in \
-        "/app/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
-        "$SRC_DIR/cloud-data-runners.json"; do
+        "/app/build-workflows.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/build-workflows.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/1_workflows/src/build-workflows.json" \
+        "$SRC_DIR/build-workflows.json"; do
         [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
     done
     if [ -z "$RUNNERS_JSON" ]; then
-        log_error "cloud-data-runners.json not found — cannot resolve runner for arch=$ARCH"
+        log_error "build-workflows.json not found — cannot resolve runner for arch=$ARCH"
         return 1
     fi
 
@@ -411,7 +413,7 @@ NEOF
     RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
     # Image identity: prefer III_unix/cb_containers-builders/build.json (the
     # producer's master). Back-compat: fall back to legacy
-    # .runners[$a].builder_image in cloud-data-runners.json if master not
+    # .runners[$a].builder_image in build-workflows.json if master not
     # checked out. The legacy field may be removed once all consumers are
     # migrated; this fallback then becomes the only path that matters.
     RUNNER_IMAGE=""
@@ -426,7 +428,7 @@ NEOF
         [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] && RUNNER_IMAGE="${_ghcr}:latest"
     fi
     if [ -z "$RUNNER_IMAGE" ]; then
-        # Legacy fallback — runners.json mirror, kept for back-compat
+        # Legacy fallback — build-workflows.json mirror, kept for back-compat
         RUNNER_IMAGE="$(jq -r --arg a "$ARCH" '.runners[$a].builder_image // empty' "$RUNNERS_JSON")"
     fi
 
@@ -658,7 +660,7 @@ REMOTE_REPAIR
             # survives WG flaps / sshd restarts during long builds (10–15min
             # for full Rust/Nix builds): the build keeps running on the runner
             # even if the engine's SSH session dies; we just reconnect to
-            # read status. Tunables read from cloud-data-runners.json:
+            # read status. Tunables read from build-workflows.json:
             # .dispatch.{poll_interval_seconds,max_duration_seconds,tail_log_lines}.
             #
             # `cd /workspace &&` — REQUIRED because cloud-builder-x's entrypoint

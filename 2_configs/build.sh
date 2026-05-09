@@ -122,17 +122,14 @@ derive() {
 #
 # Source preference: sibling clone (live edits) → in-repo submodule
 # (committed). Each entry can declare its own source if needed.
+#
+# 2026-05-09: cloud-data-runners.json migrated out — runner-image registry
+# now lives in 1_workflows/build.json and is materialised by the
+# build-workflows deriver (registered in src/derivers.json). This loop
+# stays as a no-op stub so future cached fixtures can be re-added without
+# touching the pipeline shape.
 cache_download_generator() {
-    for f in cloud-data-runners.json; do
-        for _srcdir in "$CLOUD_ROOT/../cloud-data" "$CLOUD_ROOT/I_cloud-data"; do
-            _src="$_srcdir/$f"
-            if [ -f "$_src" ]; then
-                cp -f "$_src" "$DIST/$f"
-                log "cache_download_generator: $f ← $_srcdir"
-                break
-            fi
-        done
-    done
+    : # currently no cached fixtures — kept as extension point
 }
 
 run_tests() {
