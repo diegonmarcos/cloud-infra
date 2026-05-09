@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-09T17:07:16.975Z",
+  "_generated": "2026-05-09T17:17:19.966Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/log-routing",
   "vms": {
     "oci-apps": [
@@ -307,6 +307,23 @@
         "log_level": "info"
       }
     ],
+    "oci-analytics": [
+      {
+        "container": "cf-worker-http-to-wg-public-bridge",
+        "service": "cf-worker-http-to-wg-public-bridge",
+        "log_level": "info"
+      },
+      {
+        "container": "caddy",
+        "service": "caddy",
+        "log_level": "info"
+      },
+      {
+        "container": "dagu",
+        "service": "dagu",
+        "log_level": "info"
+      }
+    ],
     "gcp-proxy": [
       {
         "container": "http-to-smtp-proxy-api",
@@ -336,11 +353,6 @@
       {
         "container": "postlite-authelia",
         "service": "authelia",
-        "log_level": "info"
-      },
-      {
-        "container": "caddy",
-        "service": "caddy",
         "log_level": "info"
       },
       {
@@ -435,13 +447,6 @@
         "log_level": "info"
       }
     ],
-    "oci-analytics": [
-      {
-        "container": "dagu",
-        "service": "dagu",
-        "log_level": "info"
-      }
-    ],
     "all": [
       {
         "container": "db-agent",
@@ -451,7 +456,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-09T17:07:17.033Z",
+    "generated_at": "2026-05-09T17:17:20.022Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

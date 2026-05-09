@@ -28,6 +28,8 @@ let
   cloudData = {
     docker = consolidated.native.docker or {};
     wireguard = consolidated.native.wireguard or {};
+    wireguardPublic = consolidated.native.wireguard_public or {};
+    hmVm = consolidated._home_manager.vms.${vmName} or {};
   };
   dockerSubnet = cloudData.docker.subnet;
   wgSubnet = cloudData.wireguard.subnet;
@@ -41,6 +43,27 @@ let
   isWgHub = (thisPeer != null) && ((thisPeer.role or null) == "hub");
   wgFallbackPort = "443";  # UDP
   wgPort = toString (cloudData.wireguard.port or 51820);
+
+  # ── Phase 6/7: wg-public mesh membership + DOCKER-USER chain ───────────
+  # Data-driven from consolidated.native.wireguard_public.{subnet,port,hub,peers}.
+  # If this VM peers in wg-public, the wg-public interface is trusted (wg-public
+  # INPUT ACCEPT + wg-public subnet ACCEPT) and the hub additionally opens
+  # the wg-public listen port. Members run wg-quick@wg-public alongside wg0.
+  wgPublicSubnet = cloudData.wireguardPublic.subnet or null;
+  wgPublicPort   = cloudData.wireguardPublic.port or null;
+  wgPublicHub    = cloudData.wireguardPublic.hub or null;
+  wgPublicPeers  = cloudData.wireguardPublic.peers or [];
+  isWgPublicPeer = lib.any (p: p.name == vmName) wgPublicPeers;
+  # Hub is named by wg-public peer name (e.g. "oci-analytics"); map to the
+  # vmName form (some VMs use "oci-analytics" as their vmName). The hub field
+  # holds the cloud-name (e.g. "oci-E2-f_1") on some snapshots — accept either.
+  thisWgPublicPeer = lib.findFirst (p: p.name == vmName) null wgPublicPeers;
+  isWgPublicHub    = (thisWgPublicPeer != null) && ((thisWgPublicPeer.role or null) == "hub");
+  # Phase 7: explicit ingress flag drives DOCKER-USER drop. Public ingress VMs
+  # need the drop (Docker port-mapping bypass of INPUT chain). Internal-only
+  # VMs (wg0-only spokes) still get the drop for defence-in-depth — wg0 + lo
+  # + ESTABLISHED are always whitelisted, so legitimate flows never break.
+  isPublicIngress = cloudData.hmVm.is_public_ingress or false;
 
   mkPortRule = r:
     let
@@ -123,6 +146,16 @@ let
     iptables -A INPUT -p tcp --dport 22 -m comment --comment "SSH" -j ACCEPT
     # WireGuard port
     iptables -A INPUT -p udp --dport ${toString cloudData.wireguard.port} -m comment --comment "WireGuard" -j ACCEPT
+${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
+    # ── wg-public mesh (Phase 6) ──────────────────────────────────────
+    # Trust the wg-public interface AND its subnet (defence-in-depth: if
+    # the iface is renamed by wg-quick, the source-address rule still wins).
+    iptables -A INPUT -i wg-public -j ACCEPT
+    iptables -A INPUT -s ${wgPublicSubnet} -j ACCEPT
+''}${lib.optionalString (isWgPublicHub && wgPublicPort != null) ''
+    # wg-public hub: open the wg-public listen port to the world
+    iptables -A INPUT -p udp --dport ${toString wgPublicPort} -m comment --comment "wg-public hub" -j ACCEPT
+''}
     # VM-specific public ports (static from nix)
     ${portRules}
 
@@ -164,6 +197,12 @@ let
     # WireGuard forwarding
     iptables -A FORWARD -i wg0 -j ACCEPT
     iptables -A FORWARD -o wg0 -j ACCEPT
+${lib.optionalString isWgPublicPeer ''
+    # wg-public mesh forwarding (Phase 6) — required for hub to relay between
+    # spokes and for any wg-public participant to forward returning packets.
+    iptables -A FORWARD -i wg-public -j ACCEPT
+    iptables -A FORWARD -o wg-public -j ACCEPT
+''}
 
     # ══════════════════════════════════════════════════════════════
     # PHASE 3: NAT TABLE — MASQUERADE only, zero DNAT
@@ -176,6 +215,36 @@ let
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
+    # wg-public subnet MASQUERADE (Phase 6) — outbound from wg-public peers
+    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
+    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} ! -d ${wgPublicSubnet} -j MASQUERADE
+''}
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 3c: DOCKER-USER CHAIN — Tier-2 fleet-wide drop (Phase 7)
+    # ══════════════════════════════════════════════════════════════
+    # Closes the Docker-port-mapping bypass of the INPUT chain. Any container
+    # with a published port (-p host:cont, or moby's iptables=true side) bolts
+    # rules into DOCKER-USER ahead of FORWARD. Without an explicit drop here
+    # the public-facing iface can reach those containers even though INPUT is
+    # locked down. We:
+    #   1) Ensure DOCKER-USER exists (Docker creates it lazily; pre-create so
+    #      flush is safe even when no Docker container has run yet).
+    #   2) Flush any prior rules — own this chain entirely, declarative.
+    #   3) Whitelist trusted ifaces (lo, wg0, optionally wg-public) +
+    #      RELATED,ESTABLISHED + the docker subnet itself.
+    #   4) Final DROP: untrusted public iface → docker = denied.
+    iptables -N DOCKER-USER 2>/dev/null || true
+    iptables -F DOCKER-USER 2>/dev/null || true
+    iptables -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    iptables -A DOCKER-USER -i lo  -j ACCEPT
+    iptables -A DOCKER-USER -i wg0 -j ACCEPT
+    ${lib.optionalString isWgPublicPeer ''iptables -A DOCKER-USER -i wg-public -j ACCEPT''}
+    iptables -A DOCKER-USER -s ${dockerSubnet} -j ACCEPT
+    iptables -A DOCKER-USER -j DROP
+    echo "[firewall] DOCKER-USER: declarative drop installed (wg-public peer=${if isWgPublicPeer then "yes" else "no"}, public-ingress=${if isPublicIngress then "yes" else "no"})"
 ${if isWgHub then ''
 
     # ══════════════════════════════════════════════════════════════

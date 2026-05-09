@@ -107,17 +107,37 @@ function resolveVmId(host: string, aliasMap: Record<string, string>, vms: Record
 // public_ports source-of-truth = b_infra/nixhm-sudo-<alias>/build.json.firewall.public_ports
 // Per loyal-firewalling-marmot.md the home-manager sudo deploy that owns wg0+iptables also owns the port catalog.
 // Fallback signature kept for safety; in practice config.json no longer holds public_ports (deleted in Phase 2).
-function loadVmPublicPorts(alias: string | undefined, cloudRoot: string, fallback: any[]): any[] {
-  if (!alias) return fallback;
-  const hmBuildPath = join(cloudRoot, "b_infra", "home-manager", `nixhm-sudo-${alias}`, "build.json");
-  if (!existsSync(hmBuildPath)) return fallback;
+//
+// 2026-05-09 (Phase 7) bugfix: previously read from b_infra/home-manager/nixhm-sudo-<alias>/
+// which doesn't exist — the actual layout is b_infra/nixhm-sudo-<alias>/. Without the fix every
+// VM's public_ports silently fell back to []. Now declared ports actually reach the firewall.
+function loadVmHmBuild(alias: string | undefined, cloudRoot: string): any | null {
+  if (!alias) return null;
+  const hmBuildPath = join(cloudRoot, "b_infra", `nixhm-sudo-${alias}`, "build.json");
+  if (!existsSync(hmBuildPath)) return null;
   try {
-    const bj = JSON.parse(readFileSync(hmBuildPath, "utf-8"));
-    const ports = bj.firewall?.public_ports;
-    return Array.isArray(ports) ? ports : fallback;
+    return JSON.parse(readFileSync(hmBuildPath, "utf-8"));
   } catch {
-    return fallback;
+    return null;
   }
+}
+
+function loadVmPublicPorts(alias: string | undefined, cloudRoot: string, fallback: any[]): any[] {
+  const bj = loadVmHmBuild(alias, cloudRoot);
+  if (!bj) return fallback;
+  const ports = bj.firewall?.public_ports;
+  return Array.isArray(ports) ? ports : fallback;
+}
+
+// Phase 7: VM is a public ingress IF it declares any public_ports. Implicit/derived
+// from the same source of truth — operators add a port to firewall.public_ports and
+// the VM automatically becomes "public ingress" (drives DOCKER-USER drop / accept logic).
+function loadVmIsPublicIngress(alias: string | undefined, cloudRoot: string): boolean {
+  const bj = loadVmHmBuild(alias, cloudRoot);
+  if (!bj) return false;
+  // Explicit override wins (lets operators force `false` to lock down).
+  if (typeof bj.firewall?.is_public_ingress === "boolean") return bj.firewall.is_public_ingress;
+  return Array.isArray(bj.firewall?.public_ports) && bj.firewall.public_ports.length > 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -217,6 +237,7 @@ function main() {
       ssh_alias: vm.ssh_alias,
       rescue_port: vm.rescue_port ?? 2200,
       public_ports: loadVmPublicPorts(vm.ssh_alias, CLOUD_ROOT, vm.public_ports ?? []),
+      is_public_ingress: loadVmIsPublicIngress(vm.ssh_alias, CLOUD_ROOT),
       gha: vm.gha ?? null,
       // Optional provider/provisioning fields
       ...(vm.provider ? { provider: vm.provider } : {}),
@@ -539,6 +560,7 @@ function main() {
       rescue_port: vm.rescue_port,
       specs: vm.specs,
       public_ports: vm.public_ports,
+      is_public_ingress: vm.is_public_ingress ?? false,
       idle_shutdown: vm.idle_shutdown ?? null,
       containers: vm.services,
       method: vm.method,
