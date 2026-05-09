@@ -65,9 +65,14 @@ for svc in $retired; do
         # Filter chain — each step works on the prior's output. Note grep's
         # `-n` output prefix is `LINE:` so comment-line filters must account
         # for that prefix.
+        # `"_doc..."` JSON keys are a repo-wide documentation convention
+        # (free-form prose; never live config). Anything on a `_doc`-keyed
+        # line is descriptive text, not a service reference, so strip those
+        # lines before scanning. Honoured generically — no name allowlist.
         if grep -nwE -- "$svc" "$f" 2>/dev/null \
             | grep -vE "ghcr\.io/[^ /]+/$svc" \
             | grep -vE "^[0-9]+:\s*#|^[0-9]+:\s*//" \
+            | grep -vE '^[0-9]+:\s*"_doc[a-zA-Z0-9_]*"\s*:' \
             | grep -vE "[a-zA-Z0-9_/-]$svc|$svc[a-zA-Z0-9_/-]" \
             | grep -vE '"(cmd|entrypoint|command|args|binary|apt|app_dir)"\s*:' \
             | grep -vE 'sed -i.*'"$svc"'|"\\bsed\\b.*'"$svc" \
