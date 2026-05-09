@@ -4,6 +4,22 @@
   "vm_id": "oci-E2-f_1",
   "services": [
     {
+      "name": "cf-worker-http-to-wg-public-bridge",
+      "dir": "aa-sui_tools-cf-worker-http-to-wg-public-bridge",
+      "compose_path": "/opt/containers/cf-worker-http-to-wg-public-bridge",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "caddy",
+      "dir": "bb-sec_caddy",
+      "compose_path": "/opt/containers/caddy",
+      "images": [
+        "ghcr.io/diegonmarcos/caddy-l4:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
       "name": "dagu",
       "dir": "bc-obs_dagu",
       "compose_path": "/opt/containers/dagu",
@@ -27,7 +43,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-09T17:07:16.987Z",
+    "generated_at": "2026-05-09T17:17:19.977Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
