@@ -323,7 +323,31 @@
         }
       ]
     },
-    "os": {},
+    "os": {
+      "gcp-proxy": [
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+          "source": "0.0.0.0/0",
+          "owned_by": "wireguard"
+        }
+      ]
+    },
     "global": {
       "docker_iptables": true,
       "forward_policy": "DROP",
@@ -333,7 +357,31 @@
       "nat_rules": []
     }
   },
-  "os_firewalls": {},
+  "os_firewalls": {
+    "gcp-proxy": [
+      {
+        "port": 25,
+        "proto": "tcp",
+        "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
+        "source": "0.0.0.0/0",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "udp",
+        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+        "source": "0.0.0.0/0",
+        "owned_by": "wireguard"
+      }
+    ]
+  },
   "os_firewall_global": {
     "docker_iptables": true,
     "forward_policy": "DROP",
@@ -5235,7 +5283,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-09T10:16:22.611Z",
+    "generated_at": "2026-05-09T13:41:42.515Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

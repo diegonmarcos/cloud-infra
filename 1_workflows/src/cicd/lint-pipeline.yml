@@ -136,9 +136,10 @@ jobs:
         # cloud-ship-*.sh must use ${WORKSPACE:-/root/git}/... not bare
         # /root/git/... — paths that break in non-default mount setups.
         run: bash 1_workflows/src/test/test_engine_workspace_paths_derived.sh
-      - name: Phase 37 — cloud-data-runners.json schema invariants
+      - name: Phase 37 — build-workflows.json schema invariants
         # Top-level _comment + _source + runners; per-runner type/host contract.
         # Image identity NOT in this file — lives in unix master.
+        # Migrated 2026-05-09: source is 1_workflows/build.json; dist file is build-workflows.json.
         run: bash 1_workflows/src/test/test_runners_json_schema.sh
       - name: Phase 38 — no dead `nix profile install` branch in engine
         # Host-state mutation forbidden in engine scripts. nix_install must use
