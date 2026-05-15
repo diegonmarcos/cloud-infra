@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-09T18:05:42.065Z",
+  "_generated": "2026-05-15T14:18:55.853Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
   "total": 26,
   "summary": {
@@ -385,10 +385,11 @@
       "image": "authelia/authelia:4.39.15",
       "port": 9091,
       "dns": "authelia.app",
-      "path": "/config/db.sqlite3",
+      "path": "/data/db.sqlite3",
       "healthcheck": "/api/health",
       "volumes": [
-        "./config:/config"
+        "authelia_data:/data",
+        "./configs:/config:ro"
       ],
       "resources": null,
       "backup": true
@@ -868,10 +869,11 @@
         "image": "authelia/authelia:4.39.15",
         "port": 9091,
         "dns": "authelia.app",
-        "path": "/config/db.sqlite3",
+        "path": "/data/db.sqlite3",
         "healthcheck": "/api/health",
         "volumes": [
-          "./config:/config"
+          "authelia_data:/data",
+          "./configs:/config:ro"
         ],
         "resources": null,
         "backup": true
@@ -1725,10 +1727,11 @@
           "image": "authelia/authelia:4.39.15",
           "port": 9091,
           "dns": "authelia.app",
-          "path": "/config/db.sqlite3",
+          "path": "/data/db.sqlite3",
           "healthcheck": "/api/health",
           "volumes": [
-            "./config:/config"
+            "authelia_data:/data",
+            "./configs:/config:ro"
           ],
           "resources": null,
           "backup": true
@@ -1914,7 +1917,7 @@
     }
   },
   "_meta": {
-    "generated_at": "2026-05-09T18:05:42.112Z",
+    "generated_at": "2026-05-15T14:18:56.040Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

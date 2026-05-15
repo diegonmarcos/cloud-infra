@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-09T18:05:41.816Z",
+    "generated_at": "2026-05-15T14:18:53.842Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -412,40 +412,40 @@
           "wg_ip": "10.1.0.1",
           "role": "hub",
           "endpoint": "129.151.228.66:51821",
-          "wg_public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc="
+          "wg_public_key": null
         },
         {
           "name": "gcp-proxy",
           "wg_ip": "10.1.0.2",
           "role": "spoke",
           "endpoint": "35.226.147.64:51821",
-          "wg_public_key": "jkGSUNImyWXEx4PB9hfTvIsG8ui4PnvWakBhAB7WSj4="
+          "wg_public_key": null
         },
         {
           "name": "oci-mail",
           "wg_ip": "10.1.0.3",
           "role": "spoke",
           "endpoint": "130.110.251.193:51821",
-          "wg_public_key": "kt9Hy6EZtwiR3mx1GiQiARfHUjsszkAI75AYvjMQaiY="
+          "wg_public_key": null
         },
         {
           "name": "oci-apps",
           "wg_ip": "10.1.0.4",
           "role": "spoke",
           "endpoint": "82.70.229.129:51821",
-          "wg_public_key": "Z54BMXtL7Wb9HiSePnK8hFTecX2q3Sui1OpWmn+IxAY="
+          "wg_public_key": null
         }
       ],
       "clients": {
         "surface": {
           "wg_ip": "10.1.0.5",
           "role": "client",
-          "wg_public_key": "7BAojpGh3yZH9Fi2PDDL8wYHbIs7yQroFJoHmj0rlGQ="
+          "wg_public_key": null
         },
         "termux": {
           "wg_ip": "10.1.0.9",
           "role": "client",
-          "wg_public_key": "YSURIKsDv8BdvUEJOQlh9rWuertxi3JHLfOMLA2+ZD8="
+          "wg_public_key": null
         }
       }
     },
@@ -475,40 +475,40 @@
         "wg_ip": "10.1.0.1",
         "role": "hub",
         "endpoint": "129.151.228.66:51821",
-        "wg_public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc="
+        "wg_public_key": null
       },
       {
         "name": "gcp-proxy",
         "wg_ip": "10.1.0.2",
         "role": "spoke",
         "endpoint": "35.226.147.64:51821",
-        "wg_public_key": "jkGSUNImyWXEx4PB9hfTvIsG8ui4PnvWakBhAB7WSj4="
+        "wg_public_key": null
       },
       {
         "name": "oci-mail",
         "wg_ip": "10.1.0.3",
         "role": "spoke",
         "endpoint": "130.110.251.193:51821",
-        "wg_public_key": "kt9Hy6EZtwiR3mx1GiQiARfHUjsszkAI75AYvjMQaiY="
+        "wg_public_key": null
       },
       {
         "name": "oci-apps",
         "wg_ip": "10.1.0.4",
         "role": "spoke",
         "endpoint": "82.70.229.129:51821",
-        "wg_public_key": "Z54BMXtL7Wb9HiSePnK8hFTecX2q3Sui1OpWmn+IxAY="
+        "wg_public_key": null
       }
     ],
     "clients": {
       "surface": {
         "wg_ip": "10.1.0.5",
         "role": "client",
-        "wg_public_key": "7BAojpGh3yZH9Fi2PDDL8wYHbIs7yQroFJoHmj0rlGQ="
+        "wg_public_key": null
       },
       "termux": {
         "wg_ip": "10.1.0.9",
         "role": "client",
-        "wg_public_key": "YSURIKsDv8BdvUEJOQlh9rWuertxi3JHLfOMLA2+ZD8="
+        "wg_public_key": null
       }
     }
   },
@@ -870,24 +870,12 @@
         "_doc": "Cypht-only declarations. Cross-service data (mail server hosts/ports, mailbox identities) is JOINED at engine derive time from peers' build.json (services.<peer>.users + .domain + .ports/extra_ports). Output lands in build-cypht.json#mail_accounts (resolved). The cypht flake reads build-cypht.json and emits dist/assets/seed-accounts.json + dist/assets/cypht-api/configs.json — no hand-written duplicates.",
         "primary_user": {
           "_doc": "Cypht UI master login (Hm_Auth_DB). INDEPENDENT from the mailbox passwords (those come from peers' users{}.pass_env). Cypht-only data — owned by cypht.",
-          "user_ref": "maddy.users.admin",
+          "user_ref": "stalwart.users.admin",
           "pass_env": "CYPHT_LOGIN_PASSWORD"
         },
         "via_internal": [
           {
-            "_doc": "Each entry references a peer service's users{} entry + service labels for receive/send channels. Engine resolves user_ref → {address, pass_env}, receive_via → {host, port, secure}, send_via → {host, port, secure} by looking up the matching extra_ports[].service on the peer.",
-            "label_template": "{addr_short} | IMAP-Maddy",
-            "user_ref": "maddy.users.admin",
-            "receive_via": {
-              "service": "maddy",
-              "via": "imap_ssl"
-            },
-            "send_via": {
-              "service": "maddy",
-              "via": "smtp_ssl"
-            }
-          },
-          {
+            "_doc": "JMAP via Stalwart. Cypht runs network_mode=host on oci-mail (same VM as Stalwart). Engine resolves service=stalwart, via=jmap_tls → host=mail-stalwart.diegonmarcos.com:2443 — reachable inside-VM (Stalwart listens on 10.0.0.3:2443). External clients should NOT use this entry; for those, use the imap-stalwart/smtps-stalwart Caddy-routed via_external entries below.",
             "label_template": "{addr_short} | JMAP-Stalwart",
             "user_ref": "stalwart.users.admin",
             "receive_via": {
@@ -899,31 +887,41 @@
               "via": "smtp_ssl"
             },
             "alias_email": "me-jmap@stalwart"
-          },
-          {
-            "label_template": "{addr_short} | SMTP-Stalwart-STARTTLS",
-            "user_ref": "stalwart.users.admin",
-            "receive_via": null,
-            "send_via": {
-              "service": "stalwart",
-              "via": "smtp_starttls"
-            },
-            "alias_email": "me-starttls@stalwart"
-          },
-          {
-            "label_template": "{addr_short} | IMAP-Maddy",
-            "user_ref": "maddy.users.noreply",
-            "receive_via": {
-              "service": "maddy",
-              "via": "imap_ssl"
-            },
-            "send_via": {
-              "service": "maddy",
-              "via": "smtp_ssl"
-            }
           }
         ],
         "via_external": [
+          {
+            "_doc": "Stalwart IMAPS for me@ via Caddy public route (imap-stalwart.diegonmarcos.com:443 SNI → 10.1.0.3:2993). Replaces former IMAP-Maddy entry (Maddy decommissioned 2026-05).",
+            "label": "me@dnm.com | IMAPS-Stalwart",
+            "email": "me@diegonmarcos.com",
+            "pass_env": "ME_PASSWORD",
+            "imap": {
+              "host": "imap-stalwart.diegonmarcos.com",
+              "port": 443,
+              "secure": "SSL"
+            },
+            "smtp": {
+              "host": "smtps-stalwart.diegonmarcos.com",
+              "port": 443,
+              "secure": "SSL"
+            }
+          },
+          {
+            "_doc": "Stalwart IMAPS for no-reply@ via the same Caddy public route. Replaces former IMAP-Maddy entry.",
+            "label": "no-reply@dnm.com | IMAPS-Stalwart",
+            "email": "no-reply@diegonmarcos.com",
+            "pass_env": "NOREPLY_PASSWORD",
+            "imap": {
+              "host": "imap-stalwart.diegonmarcos.com",
+              "port": 443,
+              "secure": "SSL"
+            },
+            "smtp": {
+              "host": "smtps-stalwart.diegonmarcos.com",
+              "port": 443,
+              "secure": "SSL"
+            }
+          },
           {
             "_doc": "External providers (no internal SoT exists). Hosts/ports declared inline because no peer service owns them.",
             "label": "diegonmarcos@livecom | IMAP-outlook",
@@ -961,7 +959,7 @@
           "radicale": {
             "service_ref": "radicale",
             "path_template": "/{user_url_encoded}/",
-            "user_ref": "maddy.users.admin",
+            "user_ref": "stalwart.users.admin",
             "pass_env": "ME_PASSWORD"
           }
         },
@@ -975,8 +973,8 @@
           "_doc": "Cypht send-as profiles (Hm_Profiles, modules/profiles). Profile is a CYPHT-ONLY concept — owned by cypht. match_template is rendered after via_internal labels are resolved; engine wires smtp_id/imap_id by name lookup at apply-time.",
           "diego": {
             "name": "Diego",
-            "user_ref": "maddy.users.admin",
-            "match_template": "{addr_short} | IMAP-Maddy",
+            "user_ref": "stalwart.users.admin",
+            "match_template": "{addr_short} | IMAPS-Stalwart",
             "default": true,
             "sig": "",
             "rmk": ""
@@ -4166,7 +4164,8 @@
             "tls_check": true
           },
           "volumes": [
-            "./config:/config"
+            "authelia_data:/data",
+            "./configs:/config:ro"
           ],
           "env_file": true,
           "depends_on": [
@@ -4174,12 +4173,12 @@
           ],
           "resources": null,
           "read_only": false,
-          "db_path": "/config/db.sqlite3",
+          "db_path": "/data/db.sqlite3",
           "protocol": "http",
           "embedded_dbs": [
             {
               "engine": "sqlite",
-              "path": "/var/lib/authelia/db.sqlite3"
+              "path": "/data/db.sqlite3"
             }
           ]
         },
@@ -4301,7 +4300,8 @@
         "AUTHELIA_OIDC_CLIENT_CLOUD_ADMIN_SECRET",
         "AUTHELIA_OIDC_CLIENT_CLAUDE_OPUS_SECRET",
         "AUTHELIA_OIDC_CLIENT_CLAUDE_SONNET_SECRET",
-        "AUTHELIA_OIDC_CLIENT_CLAUDE_HAIKU_SECRET"
+        "AUTHELIA_OIDC_CLIENT_CLAUDE_HAIKU_SECRET",
+        "AUTHELIA_USER_ME_TOTP_SECRET"
       ]
     },
     "caddy": {
