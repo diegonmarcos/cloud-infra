@@ -283,6 +283,7 @@ for _step in \
     cloud-ship-container-step-deploy-health.sh \
     cloud-ship-container-step-lifecycle.sh \
     cloud-ship-container-step-wrangler.sh \
+    cloud-ship-container-step-wrangler-logs.sh \
     cloud-ship-container-step-terraform-apply.sh \
     cloud-ship-container-step-terraform-plan.sh \
     cloud-ship-container-step-terraform-import.sh \
@@ -408,6 +409,7 @@ case "${1:-all}" in
         fi
         ;;
     wrangler) step_wrangler ;;
+    logs)     shift; step_wrangler_logs "$@" ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;
@@ -428,6 +430,7 @@ case "${1:-all}" in
             echo "  compose      Docker compose up on VM"
             echo "  health       Verify containers are healthy (post-deploy)"
             echo "  wrangler     Deploy Cloudflare Worker via wrangler"
+            echo "  logs [since] [limit] [fmt]  Tail Cloudflare Worker observability logs (default: 15m, 100, pretty)"
             echo "  terraform    Terraform init + apply in dist/"
             echo "  tf-plan      build + secrets + terraform plan"
             echo "  tf-import    build + secrets + terraform import (from src/import.sh)"

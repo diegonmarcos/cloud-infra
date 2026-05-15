@@ -572,7 +572,7 @@ NEOF
             # failed → docker login failed → build/push failed → engine
             # logged misleading "Pushed" because the SSH | while-read pipe
             # swallowed the non-zero exit (no pipefail).
-            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-/home/diego/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
             GHCR_TOKEN_VAL=""
             if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then

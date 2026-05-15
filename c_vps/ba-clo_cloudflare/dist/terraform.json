@@ -4,6 +4,7 @@
   },
 
   "domain": "diegonmarcos.com",
+  "_proxy_ip_doc": "Public-bridge VM is gcp-proxy (35.226.147.64). All A records resolve to it; Caddy on gcp-proxy fronts the WireGuard hub. Source of truth: _cloud-data-consolidated.json[.vms.\"gcp-E2-f_0\".ip]. Phase 6 cutover to oci-analytics deferred until Caddy lives there.",
   "proxy_ip": "35.226.147.64",
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
@@ -11,19 +12,11 @@
     "a_records": [
       { "name": "diegonmarcos.com", "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",              "proxied": false, "ttl": 300, "comment": null },
-      { "name": "*",                "proxied": false, "ttl": 1,   "comment": "Wildcard catch-all → GCP Caddy" },
+      { "name": "*",                "proxied": false, "ttl": 1,   "comment": "Wildcard catch-all → gcp-proxy Caddy" },
       { "name": "mail",             "proxied": false, "ttl": 300, "comment": "Caddy L4: webmail+IMAP+SMTP (needs A, wildcard skips)" }
     ],
 
     "cname_records": [
-      {
-        "key": "smtp_proxy_tunnel",
-        "name": "smtp-proxy",
-        "content": "90b644ed-1339-4fbe-a467-687012aa84ae.cfargotunnel.com",
-        "proxied": true,
-        "ttl": 1,
-        "comment": "Cloudflare Tunnel → smtp-proxy on oci-mail"
-      },
       {
         "key": "mta_sts",
         "name": "mta-sts",
@@ -46,9 +39,9 @@
       {
         "key": "spf",
         "name": "diegonmarcos.com",
-        "content": "v=spf1 ip4:130.110.251.193 include:_spf.mx.cloudflare.net include:amazonses.com include:eu.rp.oracleemaildelivery.com -all",
+        "content": "v=spf1 ip4:130.110.251.193 include:_spf.mx.cloudflare.net include:_spf.google.com include:amazonses.com include:eu.rp.oracleemaildelivery.com -all",
         "ttl": 300,
-        "comment": "SPF: Stalwart VM IP + CF Email Routing + AWS SES + OCI relay — hardfail"
+        "comment": "SPF: Stalwart VM IP + CF Email Routing + Google Workspace + AWS SES + OCI relay — hardfail"
       },
       {
         "key": "dmarc",
