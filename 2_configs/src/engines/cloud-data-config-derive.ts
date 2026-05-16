@@ -343,17 +343,22 @@ function deriveCaddy(c: any): DerivedFile {
   const caddySvcForVm = services["caddy"];
   const caddyVmObj = caddySvcForVm ? vms[caddySvcForVm.vm] : null;
   const caddyHostAlias: string = caddyVmObj?.ssh_alias ?? "";
-  const caddyOnWgPublic = caddyHostAlias !== "" && Boolean(aliasToWgPublicIp[caddyHostAlias]);
+  // wg-public is hub-and-spoke (only hub has all peers in allowed_ips). Spoke
+  // → spoke routing through the hub is not enabled, so Caddy can only use
+  // wg-public IPs when Caddy itself runs on the hub. On a spoke host (e.g.
+  // gcp-proxy), fall back to wg0 for all upstreams.
+  const caddyWgPublicPeer = wgPublicPeers.find((p: any) => p.name === caddyHostAlias);
+  const caddyOnWgPublicHub = caddyWgPublicPeer?.role === "hub";
 
   /**
-   * Resolve a VM's upstream IP for Caddy. If both Caddy host AND target VM
-   * are wg-public peers, prefer the wg-public IP; otherwise fall back to
-   * wg0 (or whatever wg_ip was passed in). Pure function of cloud-data —
-   * no hardcoded IPs anywhere.
+   * Resolve a VM's upstream IP for Caddy. Only when Caddy runs on the
+   * wg-public hub AND the target VM is also a wg-public peer is the
+   * wg-public IP used; otherwise fall back to wg0. Pure function of
+   * cloud-data — no hardcoded IPs anywhere.
    */
   const resolveVmIpForCaddy = (vm: any): string => {
     const wg0 = vm?.wg_ip ?? "";
-    if (!caddyOnWgPublic) return wg0;
+    if (!caddyOnWgPublicHub) return wg0;
     const alias = vm?.ssh_alias ?? "";
     return aliasToWgPublicIp[alias] ?? wg0;
   };
@@ -406,11 +411,11 @@ function deriveCaddy(c: any): DerivedFile {
   const l4Routes: any[] = [];
   // Caddy's own listen-scope=wg target IP — used when a route declares
   // listen_scope: "wg" so Caddy binds to its own WG interface only (not 0.0.0.0).
-  // Phase 4: when Caddy lives on a wg-public host (oci-analytics) we bind to
-  // its wg-public IP (10.1.0.1); otherwise to its wg0 IP. Pure data lookup.
+  // When Caddy lives on the wg-public hub (oci-analytics) we bind to its
+  // wg-public IP (10.1.0.1); otherwise to its wg0 IP. Pure data lookup.
   let caddyListenScopeWgIp = "";
   if (caddyVmObj) {
-    caddyListenScopeWgIp = caddyOnWgPublic
+    caddyListenScopeWgIp = caddyOnWgPublicHub
       ? aliasToWgPublicIp[caddyHostAlias]
       : (caddyVmObj.wg_ip ?? "");
   }
@@ -898,6 +903,36 @@ function deriveCaddy(c: any): DerivedFile {
   const l4Listeners = l4Routes.map((r: any) =>
     ({ host: `:${r.port}`, path: null, upstream: r.upstream, kind: "l4_forward", tls: "none", zone: "l4", service: null, notes: r.comment ?? null }));
 
+  // ── well_known routes: aggregated from per-service proxy.well_known[] ──
+  // Used by caddyfile.nix mkGithubPagesRoute to attach .well-known handlers
+  // to a target_domain's GitHub Pages block (e.g. /.well-known/jmap on the
+  // apex diegonmarcos.com → reverse-proxies to Stalwart's JMAP listener).
+  // Each entry: { path, target_domain, upstream, tls_skip_verify, comment }.
+  // upstream is auto-resolved from the service's caddy-reachable IP + the
+  // declared port (default: the service's web/JMAP port; fallback :443).
+  const wellKnownRoutes: any[] = [];
+  for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
+    const wkEntries: any[] = svc.proxy?.well_known ?? [];
+    if (!wkEntries.length) continue;
+    const vm = vms[svc.vm];
+    const ip = vm ? resolveVmIpForCaddy(vm) : null;
+    for (const wk of wkEntries) {
+      if (!wk.path || !wk.target_domain) continue;
+      // Resolve upstream: explicit wk.upstream wins, else service IP+port
+      const port = wk.upstream_port ?? svc.upstream?.split(":")[1] ?? "443";
+      const upstream = wk.upstream
+        ?? (ip ? `${ip}:${port}` : null);
+      if (!upstream) continue;
+      wellKnownRoutes.push({
+        path: wk.path,
+        target_domain: wk.target_domain,
+        upstream,
+        ...(wk.tls_skip_verify ? { tls_skip_verify: true } : {}),
+        comment: wk.comment ?? `${wk.path} → ${svcName}`,
+      });
+    }
+  }
+
   const others: any[] = [
     { host: "<global>",       path: null, upstream: caddyCfg.global?.admin_bind ?? "?", kind: "directive",    tls: "none",   zone: "global", service: "caddy", notes: "admin bind" },
     { host: "<global>",       path: null, upstream: caddyCfg.global?.auto_https ?? "?", kind: "directive",    tls: "none",   zone: "global", service: "caddy", notes: "auto_https" },
@@ -935,6 +970,7 @@ function deriveCaddy(c: any): DerivedFile {
       redirects,
       routes:           dedupedRoutes,
       path_routes:      filteredPathRoutes,
+      well_known_routes: wellKnownRoutes,
       github_pages_proxies: githubPagesProxies,
       mcp_routes:       mcpRoutes,
       special,

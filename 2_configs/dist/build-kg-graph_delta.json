@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-15T14:18:56.043Z",
+    "generated_at": "2026-05-16T20:07:09.341Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-15T14:18:55.856Z",
+  "_generated": "2026-05-16T20:07:08.647Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 164,
@@ -674,8 +674,8 @@
       "properties": {
         "name": "stalwart",
         "category": "app",
-        "description": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)",
-        "domain": "mail-stalwart.diegonmarcos.com",
+        "description": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
+        "domain": "jmap.diegonmarcos.com",
         "port": 2443,
         "vm": "oci-mail",
         "folder": "aa-sui_tools-stalwart"
@@ -1120,10 +1120,10 @@
       "properties": {
         "name": "caddy",
         "category": "sec",
-        "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
+        "description": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)",
         "domain": "proxy.diegonmarcos.com",
         "port": 443,
-        "vm": "oci-analytics",
+        "vm": "gcp-proxy",
         "folder": "bb-sec_caddy"
       }
     },
@@ -1847,10 +1847,10 @@
     },
     {
       "table": "domain",
-      "id": "mail_stalwart_diegonmarcos_com",
-      "key": "domain:mail_stalwart_diegonmarcos_com",
+      "id": "jmap_diegonmarcos_com",
+      "key": "domain:jmap_diegonmarcos_com",
       "properties": {
-        "fqdn": "mail-stalwart.diegonmarcos.com"
+        "fqdn": "jmap.diegonmarcos.com"
       }
     },
     {
@@ -2649,8 +2649,8 @@
     {
       "table": "hosted_on",
       "from": "service:caddy",
-      "to": "vm:oci_analytics",
-      "key": "service:caddy->hosted_on->vm:oci_analytics",
+      "to": "vm:gcp_proxy",
+      "key": "service:caddy->hosted_on->vm:gcp_proxy",
       "properties": {}
     },
     {
@@ -3181,7 +3181,7 @@
       "to": "service:caddy",
       "key": "service:stalwart->proxied_by->service:caddy",
       "properties": {
-        "domain": "mail-stalwart.diegonmarcos.com"
+        "domain": "jmap.diegonmarcos.com"
       }
     },
     {
@@ -3467,9 +3467,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:mail_stalwart_diegonmarcos_com",
+      "from": "domain:jmap_diegonmarcos_com",
       "to": "service:stalwart",
-      "key": "domain:mail_stalwart_diegonmarcos_com->routes_to->service:stalwart",
+      "key": "domain:jmap_diegonmarcos_com->routes_to->service:stalwart",
       "properties": {}
     },
     {

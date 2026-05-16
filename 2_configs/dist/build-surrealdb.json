@@ -3,7 +3,7 @@
   "_meta": {
     "description": "surrealdb container config (service=kg-graph, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-15T14:18:56.002Z",
+    "generated_at": "2026-05-16T20:07:09.233Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-15T14:18:55.820Z",
+  "_generated": "2026-05-16T20:07:08.554Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "surrealdb",
@@ -82,7 +82,7 @@
         },
         "via_internal": [
           {
-            "_doc": "JMAP via Stalwart. Cypht runs network_mode=host on oci-mail (same VM as Stalwart). Engine resolves service=stalwart, via=jmap_tls → host=mail-stalwart.diegonmarcos.com:2443 — reachable inside-VM (Stalwart listens on 10.0.0.3:2443). External clients should NOT use this entry; for those, use the imap-stalwart/smtps-stalwart Caddy-routed via_external entries below.",
+            "_doc": "JMAP via Stalwart. Cypht runs network_mode=host on oci-mail (same VM as Stalwart). Engine resolves service=stalwart, via=jmap_tls → host=jmap.diegonmarcos.com:2443 — reachable inside-VM (Stalwart listens on 10.0.0.3:2443) and externally via Caddy L4 reverse_proxy on jmap.diegonmarcos.com:443.",
             "label_template": "{addr_short} | JMAP-Stalwart",
             "user_ref": "stalwart.users.admin",
             "receive_via": {
@@ -97,38 +97,6 @@
           }
         ],
         "via_external": [
-          {
-            "_doc": "Stalwart IMAPS for me@ via Caddy public route (imap-stalwart.diegonmarcos.com:443 SNI → 10.1.0.3:2993). Replaces former IMAP-Maddy entry (Maddy decommissioned 2026-05).",
-            "label": "me@dnm.com | IMAPS-Stalwart",
-            "email": "me@diegonmarcos.com",
-            "pass_env": "ME_PASSWORD",
-            "imap": {
-              "host": "imap-stalwart.diegonmarcos.com",
-              "port": 443,
-              "secure": "SSL"
-            },
-            "smtp": {
-              "host": "smtps-stalwart.diegonmarcos.com",
-              "port": 443,
-              "secure": "SSL"
-            }
-          },
-          {
-            "_doc": "Stalwart IMAPS for no-reply@ via the same Caddy public route. Replaces former IMAP-Maddy entry.",
-            "label": "no-reply@dnm.com | IMAPS-Stalwart",
-            "email": "no-reply@diegonmarcos.com",
-            "pass_env": "NOREPLY_PASSWORD",
-            "imap": {
-              "host": "imap-stalwart.diegonmarcos.com",
-              "port": 443,
-              "secure": "SSL"
-            },
-            "smtp": {
-              "host": "smtps-stalwart.diegonmarcos.com",
-              "port": 443,
-              "secure": "SSL"
-            }
-          },
           {
             "_doc": "External providers (no internal SoT exists). Hosts/ports declared inline because no peer service owns them.",
             "label": "diegonmarcos@livecom | IMAP-outlook",
@@ -662,8 +630,8 @@
         "app": 2443
       },
       "vm": "oci-mail",
-      "domain": "mail-stalwart.diegonmarcos.com",
-      "description": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)",
+      "domain": "jmap.diegonmarcos.com",
+      "description": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
       "api": {
         "has_api": false,
         "has_web_ui": true,
@@ -939,13 +907,13 @@
       }
     },
     "caddy": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "ports": {
         "app": 443
       },
-      "vm": "oci-analytics",
+      "vm": "gcp-proxy",
       "domain": "proxy.diegonmarcos.com",
-      "description": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)",
+      "description": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)",
       "api": {
         "has_api": false,
         "has_web_ui": true,
