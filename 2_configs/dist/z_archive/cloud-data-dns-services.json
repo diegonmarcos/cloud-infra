@@ -1,284 +1,284 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-15T14:18:55.800Z",
+  "_generated": "2026-05-16T20:07:08.514Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/dns-services",
   "suffix": "app",
-  "caddy_ip": "10.0.0.4",
+  "caddy_ip": "10.0.0.1",
   "services": {
     "code-server": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "VS Code IDE (ide.diegonmarcos.com)"
     },
     "cypht": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
     },
     "etherpad": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Etherpad collaborative editor"
     },
     "etherpad-db": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Etherpad collaborative editor"
     },
     "filebrowser": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "FileBrowser web file manager (NEW - not deployed yet)"
     },
     "g-personal-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account"
     },
     "g-workspace-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport"
     },
     "grist": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     "hedgedoc": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Collaborative markdown editor"
     },
     "hedgedoc-db": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Collaborative markdown editor"
     },
     "mail-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API"
     },
     "mail-puller": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops."
     },
     "mattermost": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     "mattermost-postgres": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     "mattermost-bots": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     "mattermost-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Mattermost MCP server — chat tools via HTTP transport"
     },
     "photoprism": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     "radicale": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
     },
     "revealmd": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Reveal.js markdown presentations (not deployed)"
     },
     "snappymail": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
     },
     "cf-worker-http-to-wg-public-bridge": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
     },
     "http-to-smtp-proxy-api": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/"
     },
     "maddy": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Maddy Mail Server (mail.diegonmarcos.com)"
     },
     "stalwart": {
-      "ip": "10.0.0.4",
-      "desc": "Stalwart Mail Server — shadow mode (mail-stalwart.diegonmarcos.com)"
+      "ip": "10.0.0.1",
+      "desc": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     "vaultwarden": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Bitwarden password manager"
     },
     "crawlee": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-runner": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-dashboard": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-scheduler": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-db": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-redis": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "crawlee-minio": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     "fin-api": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     },
     "ollama-hai": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode"
     },
     "rig-agentic-hai-1.5bq4": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Rig Agentic AI (HAI) — Lightweight Qwen 1.5B Q4 agent with strict allowlist guardrails"
     },
     "rig-agentic-sonn-14bq8": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP"
     },
     "hickory-dns": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Internal DNS server for WireGuard mesh (per-service .app zones)"
     },
     "wireguard-mesh": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
     "wireguard-mesh-ws-tunnel": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     "authelia": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "SSO and 2FA authentication portal"
     },
     "authelia-redis": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "SSO and 2FA authentication portal"
     },
     "caddy": {
-      "ip": "10.0.0.4",
-      "desc": "Caddy reverse proxy + security dashboard (oci-analytics, wg-public hub)"
+      "ip": "10.0.0.1",
+      "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
     },
     "introspect-proxy": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
     },
     "c3-analytics-api": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
     },
     "c3-infra-api": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "C3 REST API — Cloud Control Center Fastify API"
     },
     "c3-infra-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)"
     },
     "c3-services-api": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "C3 Services REST API — service API gateway Fastify API"
     },
     "c3-services-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)"
     },
     "cloud-cgc-mcp": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search"
     },
     "c3-spec": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Unified Cloud Documentation Portal"
     },
     "dagu": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Dagu - Lightweight DAG-based workflow scheduler"
     },
     "dbgate": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "DBGate - Universal database manager for all cloud databases"
     },
     "matomo": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Matomo hybrid analytics (oci-apps)"
     },
     "news-gdelt": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "GDELT News Aggregator — Fastify API with SQLite cache"
     },
     "ntfy": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Push notification server"
     },
     "openobserve": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
     },
     "umami": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Umami Analytics - lightweight privacy-focused web analytics"
     },
     "umami-db": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Umami Analytics - lightweight privacy-focused web analytics"
     },
     "umami-setup": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Umami Analytics - lightweight privacy-focused web analytics"
     },
     "backup-borg": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Media Backups SSH Server (Borg deduplication)"
     },
     "backup-bup": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Database Backups SSH Server (bup)"
     },
     "gitea": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "Self-hosted Git service"
     },
     "kg-graph": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search"
     },
     "redis": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "In-memory data store"
     },
     "s3-backups-binaries": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "S3 bucket: cloud-backups-binaries-medias"
     },
     "s3-backups-db": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "S3 bucket: cloud-backups-db"
     },
     "s3-backups-media": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "S3 bucket: cloud-backups-media"
     },
     "s3-backups-nonbin": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "S3 bucket: cloud-backups-non-binaries"
     },
     "s3-photos": {
-      "ip": "10.0.0.4",
+      "ip": "10.0.0.1",
       "desc": "S3 bucket: my-photos"
     }
   },
@@ -289,7 +289,7 @@
     "6": "oci-apps"
   },
   "_meta": {
-    "generated_at": "2026-05-15T14:18:55.867Z",
+    "generated_at": "2026-05-16T20:07:08.683Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

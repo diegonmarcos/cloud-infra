@@ -253,8 +253,15 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
             // single container). Container fields win for overlapping keys, but
             // l4_ports from top-level must survive — otherwise services with
             // both (stalwart, maddy*) lose their L4 declarations downstream.
-            const topPrimary = (bj.proxy?.primary ?? {}) as Record<string, any>;
-            primaryProxy = { primary: { ...topPrimary, ...primary.proxy } };
+            // Sibling keys of bj.proxy (well_known, mail_hub, app_hub, etc.)
+            // are also service-wide and must be preserved.
+            const topProxyAll = (bj.proxy ?? {}) as Record<string, any>;
+            const topPrimary = (topProxyAll.primary ?? {}) as Record<string, any>;
+            const { primary: _drop, ...siblingProxyKeys } = topProxyAll;
+            primaryProxy = {
+              ...siblingProxyKeys,
+              primary: { ...topPrimary, ...primary.proxy },
+            };
           }
           // health.path is a URL path for HTTP probing.
           // primary.healthcheck is the docker HEALTHCHECK directive — usually
