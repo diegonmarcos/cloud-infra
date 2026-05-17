@@ -3,7 +3,7 @@
   "_meta": {
     "description": "c3-infra-mcp container config (service=c3-infra-mcp, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-17T09:56:02.667Z",
+    "generated_at": "2026-05-17T13:39:47.374Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-17T09:56:02.556Z",
+  "_generated": "2026-05-17T13:39:47.092Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "c3-infra-mcp",
@@ -682,7 +682,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "SMTP shadow (http-to-smtp-proxy-api on gcp-proxy → WG → :2025)",
+          "desc": "SMTP shadow (host:2025 → stalwart:25)",
           "service": "smtp_shadow",
           "role": "app"
         },
@@ -692,7 +692,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "HTTPS admin/JMAP — dual-bind wg0+wg-public, reached via Caddy L4",
+          "desc": "HTTPS admin/JMAP (host:2443 → stalwart:443)",
           "service": "jmap_tls",
           "role": "app"
         },
@@ -702,7 +702,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "SMTPS — dual-bind wg0+wg-public, reached via Caddy L4",
+          "desc": "SMTPS (host:2465 → stalwart:465)",
           "service": "smtp_ssl",
           "role": "app"
         },
@@ -712,7 +712,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "IMAPS — dual-bind wg0+wg-public, reached via Caddy L4",
+          "desc": "IMAPS (host:2993 → stalwart:993)",
           "service": "imap_ssl",
           "role": "app"
         },
@@ -722,7 +722,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "ManageSieve — dual-bind wg0+wg-public, reached via Caddy L4",
+          "desc": "ManageSieve (host:6190 → stalwart:4190)",
           "service": "manage_sieve",
           "role": "app"
         }
