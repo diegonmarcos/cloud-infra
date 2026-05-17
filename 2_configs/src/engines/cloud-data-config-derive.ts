@@ -474,6 +474,12 @@ function deriveCaddy(c: any): DerivedFile {
       ...(proxy.landing_page ? { landing_page: proxy.landing_page } : {}),
       ...(proxy.tls_skip_verify ? { tls_skip_verify: true } : {}),
       ...(proxy.auth === "none" ? { auth: "none" } : {}),
+      // root_response_json: static JSON served at GET /. Used to override
+      // upstreams that bake their internal listener port into responses
+      // (e.g. Stalwart JMAP Session leaks :2443). Caddy emits `handle /`
+      // with `respond <json> 200` + Content-Type: application/json. Other
+      // paths still flow to the reverse_proxy upstream.
+      ...(proxy.root_response_json ? { root_response_json: proxy.root_response_json } : {}),
       comment: svc.description,
     };
     routes.push(route);
@@ -918,6 +924,19 @@ function deriveCaddy(c: any): DerivedFile {
     const ip = vm ? resolveVmIpForCaddy(vm) : null;
     for (const wk of wkEntries) {
       if (!wk.path || !wk.target_domain) continue;
+      // Two modes: (a) reverse_proxy to an upstream, or (b) redirect to a URL.
+      // redirect_to wins if both are declared. Used by JMAP autoconfig to
+      // bounce the apex /.well-known/jmap to our static Session JSON on the
+      // service's primary domain (avoiding upstream-baked URL leaks).
+      if (wk.redirect_to) {
+        wellKnownRoutes.push({
+          path: wk.path,
+          target_domain: wk.target_domain,
+          redirect_to: wk.redirect_to,
+          comment: wk.comment ?? `${wk.path} → redirect ${svcName}`,
+        });
+        continue;
+      }
       // Resolve upstream: explicit wk.upstream wins, else service IP+port
       const port = wk.upstream_port ?? svc.upstream?.split(":")[1] ?? "443";
       const upstream = wk.upstream
