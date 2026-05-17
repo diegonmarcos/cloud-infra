@@ -316,8 +316,14 @@ jobs:
             User $SSH_USER
             IdentityFile ~/.ssh/id_deploy
             StrictHostKeyChecking no
-            ServerAliveInterval 30
+            # Tighter keepalive (was 30s) — GHA cloud-builder → VM SSH was
+            # dropping during long-running compose+post_hook steps (~40s),
+            # presumably from intermediate WG/NAT idle timeouts. 10s ping
+            # x 10 max-missed = 100s grace; well within typical NAT TCP
+            # idle window (60-180s) and keeps the path "warm".
+            ServerAliveInterval 10
             ServerAliveCountMax 10
+            TCPKeepAlive yes
           SSHEOF
           chmod 600 ~/.ssh/config
           mkdir -p ~/.config/sops/age
