@@ -64,13 +64,14 @@ in {
   # Source-of-truth migration: replaces the legacy cloud-data-containers-{vm}.json
   # that vm-pilot used to pull at runtime from the cloud-data git clone.
   # The canonical file lives at 2_configs/dist/build-vm-{vmName}.json (emitted
-  # by the 2_configs derive pipeline; cloud-data emits NOTHING). At nix build
-  # time we read its content and bake it into the home-manager activation so
-  # the VM has it without needing to clone cloud-data on every boot.
-  # Falls back to {} if missing — vm-pilot scripts then keep using the legacy
-  # path until the file appears for that VM.
+  # by the 2_configs derive pipeline; cloud-data emits NOTHING). The
+  # nixhm-sudo-{vm}/src/build-vm-{vm}.json symlink resolves to that file, and
+  # the home-manager staging engine copies it into the dist flake root —
+  # i.e. dist/build-vm-{vm}.json, parallel to dist/pilot/. From this file
+  # (dist/pilot/container/init.nix), that's two `../` away. Falls back to {}
+  # if the file isn't staged (e.g. VM not yet wired into the new pattern).
   home.file.".local/share/container-init/build-vm.json".text = let
-    p = ../../../../../../2_configs/dist + "/build-vm-${vmName}.json";
+    p = ../.. + "/build-vm-${vmName}.json";
   in if builtins.pathExists p
      then builtins.readFile p
      else "{}";
