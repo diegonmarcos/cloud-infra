@@ -38,6 +38,35 @@ sm_git() {
 STAGED=$(git diff --cached --name-only)
 [ -z "$STAGED" ] && exit 0
 
+# ── BLOCK STAGED PATHS INSIDE SUBMODULES ──────────────────────────────
+# Submodules are READ-ONLY from this repo's perspective. Anything staged
+# under a submodule mount is a leak that would silently change the SHA
+# pointer (or not work at all) — caught proactively here.
+# Files inside submodules belong to a different repo; edits there must
+# happen in that repo (e.g. ~/git/cloud-data for cloud/I_cloud-data).
+SUBMODULE_PATHS=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}')
+if [ -n "$SUBMODULE_PATHS" ]; then
+  SM_LEAK=""
+  while IFS= read -r _sm; do
+    [ -n "$_sm" ] || continue
+    _hits=$(echo "$STAGED" | grep -E "^${_sm}/" || true)
+    [ -n "$_hits" ] && SM_LEAK="${SM_LEAK}${_hits}"$'\n'
+  done <<< "$SUBMODULE_PATHS"
+  if [ -n "$SM_LEAK" ]; then
+    echo "══════════════════════════════════════════════════" >&2
+    echo "BLOCKED: staged files inside a SUBMODULE mount" >&2
+    echo "══════════════════════════════════════════════════" >&2
+    echo "$SM_LEAK" | sort -u | sed '/^$/d' | sed 's/^/  - /' >&2
+    echo >&2
+    echo "Submodules are read-only here. Edit the source repo instead:" >&2
+    echo "  cloud/I_cloud-data → ~/git/cloud-data" >&2
+    echo "  cloud/III_unix     → ~/git/unix" >&2
+    echo "  cloud/II_tools     → ~/git/tools" >&2
+    echo "Commit + push there, then 'git submodule update --remote' here." >&2
+    exit 1
+  fi
+fi
+
 BLOCKED=""
 
 # ── UNIVERSAL GITIGNORE-BYPASS DETECTOR ──────────────────
