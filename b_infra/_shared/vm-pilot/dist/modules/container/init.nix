@@ -72,9 +72,26 @@ in {
   # ── Config JSON: VM identity + settings (auto-generated from cloud-data) ──
   home.file.".local/share/container-init/container-init.json".text = containerInitJson;
 
+  # ── build-vm.json (NEW canonical per-VM manifest) ────────────────────
+  # Source-of-truth migration: replaces the legacy cloud-data-containers-{vm}.json
+  # that vm-pilot used to pull at runtime from the cloud-data git clone.
+  # The canonical file lives at 2_configs/dist/build-vm-{vmName}.json (emitted
+  # by the 2_configs derive pipeline; cloud-data emits NOTHING). The
+  # nixhm-sudo-{vm}/src/build-vm-{vm}.json symlink resolves to that file, and
+  # the home-manager staging engine copies it into the dist flake root —
+  # i.e. dist/build-vm-{vm}.json, parallel to dist/pilot/. From this file
+  # (dist/pilot/container/init.nix), that's two `../` away. Falls back to {}
+  # if the file isn't staged (e.g. VM not yet wired into the new pattern).
+  home.file.".local/share/container-init/build-vm.json".text = let
+    p = ../.. + "/build-vm-${vmName}.json";
+  in if builtins.pathExists p
+     then builtins.readFile p
+     else "{}";
+
   # ── Symlinks in ~/ for easy access ───────────────────────────────────
   home.file."container-init.sh".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
   home.file."container-init.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.json";
+  home.file."build-vm.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/build-vm.json";
   home.file."container-init-drift.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-drift.json";
   home.file."container-init-boot.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-boot.json";
   home.file."containers".source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
@@ -101,6 +118,12 @@ in {
 
     [Service]
     Type=notify
+    # PATH: nix profile FIRST so dockerd resolves containerd-shim-runc-v2
+    # from the same nix package as dockerd. Without this, dockerd (nix) calls
+    # /usr/bin/containerd-shim-runc-v2 (Fedora moby-engine) which speaks a
+    # different shim API — breaks all `docker run` with
+    # "unsupported shim version (3): not implemented".
+    Environment=PATH=${pkgs.docker}/libexec/docker:${pkgs.docker}/bin:${pkgs.containerd}/bin:${pkgs.runc}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     ExecStartPre=/bin/bash -c '[ -d /var/run/docker.sock ] && rm -rf /var/run/docker.sock || true'
     ExecStart=${dockerdBin}
     ExecReload=/bin/kill -s HUP $MAINPID
@@ -136,6 +159,8 @@ in {
     $SUDO mkdir -p /opt/scripts
     $SUDO cp -f "$SRC/container-init.sh" /opt/scripts/container-init.sh
     $SUDO cp -f "$SRC/container-init.json" /opt/scripts/container-init.json
+    # NEW canonical per-VM manifest (replaces legacy cloud-data-containers-{vm}.json)
+    [ -f "$SRC/build-vm.json" ] && $SUDO cp -f "$SRC/build-vm.json" /opt/scripts/build-vm.json
     $SUDO chmod +x /opt/scripts/container-init.sh
 
     # Deploy daemon.json (youki runtime + log config)
