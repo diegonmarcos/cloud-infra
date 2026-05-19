@@ -46,4 +46,16 @@ if [ -x "$NUKE" ] || [ -f "$NUKE" ]; then
         fi
       done
 fi
+
+# ── Mark submodule files read-only at the OS level ──────────────────
+# See post-checkout for full rationale. Files RO, dirs writable.
+git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null \
+  | awk '{print $2}' \
+  | while IFS= read -r _sm; do
+      [ -n "$_sm" ] || continue
+      [ -d "$_sm" ] || continue
+      find "$_sm" -type f -not -path "$_sm/.git/*" -not -name '.git' \
+        -exec chmod a-w {} + 2>/dev/null || true
+    done
+
 exit 0

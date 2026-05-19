@@ -128,14 +128,24 @@ cmd_cloud_data_sync() {
   fi
 }
 
-# Resolve declared services from cloud-data manifest
+# Resolve declared services from per-VM manifest.
+# Probe order:
+#   1. /opt/scripts/build-vm.json — NEW canonical, deployed by home-manager
+#      from 2_configs/dist/build-vm-{vm}.json. cloud-data emits NOTHING; this
+#      is the only declarative source going forward.
+#   2. $CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json — LEGACY fallback
+#      for VMs not yet re-shipped under the new pattern. Remove once all VMs
+#      have been redeployed and verified.
+# Both files have the same `.services[].compose_path` shape (verified against
+# 2_configs/dist/build-vm-oci-mail.json).
 _get_services() {
   _json=""
-  for _p in "cloud-data-containers-${VM_ALIAS}.json"; do
-    _m=$(find "$CLOUD_DATA_DIR" -maxdepth 1 -name "$_p" 2>/dev/null | head -1)
-    [ -n "$_m" ] && _json="$_m" && break
+  for _p in "/opt/scripts/build-vm.json" "$CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json"; do
+    if [ -f "$_p" ] && [ -s "$_p" ] && jq -e '.services | length > 0' "$_p" >/dev/null 2>&1; then
+      _json="$_p" && break
+    fi
   done
-  [ -z "$_json" ] && { log_err "No manifest for vm=$VM_ALIAS"; return 1; }
+  [ -z "$_json" ] && { log_err "No manifest for vm=$VM_ALIAS (probed /opt/scripts/build-vm.json + $CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json)"; return 1; }
   jq -r '.services[].compose_path' "$_json"
 }
 

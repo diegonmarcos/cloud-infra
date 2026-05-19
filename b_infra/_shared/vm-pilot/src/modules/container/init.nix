@@ -60,9 +60,25 @@ in {
   # ── Config JSON: VM identity + settings (auto-generated from cloud-data) ──
   home.file.".local/share/container-init/container-init.json".text = containerInitJson;
 
+  # ── build-vm.json (NEW canonical per-VM manifest) ────────────────────
+  # Source-of-truth migration: replaces the legacy cloud-data-containers-{vm}.json
+  # that vm-pilot used to pull at runtime from the cloud-data git clone.
+  # The canonical file lives at 2_configs/dist/build-vm-{vmName}.json (emitted
+  # by the 2_configs derive pipeline; cloud-data emits NOTHING). At nix build
+  # time we read its content and bake it into the home-manager activation so
+  # the VM has it without needing to clone cloud-data on every boot.
+  # Falls back to {} if missing — vm-pilot scripts then keep using the legacy
+  # path until the file appears for that VM.
+  home.file.".local/share/container-init/build-vm.json".text = let
+    p = ../../../../../../2_configs/dist + "/build-vm-${vmName}.json";
+  in if builtins.pathExists p
+     then builtins.readFile p
+     else "{}";
+
   # ── Symlinks in ~/ for easy access ───────────────────────────────────
   home.file."container-init.sh".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.sh";
   home.file."container-init.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/container-init.json";
+  home.file."build-vm.json".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts/build-vm.json";
   home.file."container-init-drift.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-drift.json";
   home.file."container-init-boot.json".source = config.lib.file.mkOutOfStoreSymlink "/var/log/container-init-boot.json";
   home.file."containers".source = config.lib.file.mkOutOfStoreSymlink "/opt/containers";
@@ -130,6 +146,8 @@ in {
     $SUDO mkdir -p /opt/scripts
     $SUDO cp -f "$SRC/container-init.sh" /opt/scripts/container-init.sh
     $SUDO cp -f "$SRC/container-init.json" /opt/scripts/container-init.json
+    # NEW canonical per-VM manifest (replaces legacy cloud-data-containers-{vm}.json)
+    [ -f "$SRC/build-vm.json" ] && $SUDO cp -f "$SRC/build-vm.json" /opt/scripts/build-vm.json
     $SUDO chmod +x /opt/scripts/container-init.sh
 
     # Deploy daemon.json (youki runtime + log config)
