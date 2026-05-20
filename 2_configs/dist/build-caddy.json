@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-20T10:11:57.290Z",
+    "generated_at": "2026-05-20T12:22:27.787Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-20T10:11:57.238Z",
+  "_generated": "2026-05-20T12:22:27.651Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -349,6 +349,11 @@
         {
           "base_path": "/c3-public-api",
           "upstream": "10.0.0.4:8087",
+          "public_paths": [
+            "/c3-public-api/health",
+            "/c3-public-api/ready",
+            "/c3-public-api/analytics/*"
+          ],
           "comment": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
         },
         {
