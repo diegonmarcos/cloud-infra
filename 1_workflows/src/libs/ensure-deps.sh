@@ -112,13 +112,14 @@ ensure_terraform() {
     command -v terraform >/dev/null 2>&1
 }
 
-# ── wrangler (Cloudflare Workers deploy) ──
-ensure_wrangler() {
-    command -v wrangler >/dev/null 2>&1 && return 0
-    log "ensure_wrangler: installing wrangler (npm)"
-    if command -v npm >/dev/null 2>&1; then
-        # wrangler is a CLI-with-binary, so global install works (unlike yaml/nunjucks).
-        npm install -g --silent wrangler >/dev/null 2>&1
-    fi
-    command -v wrangler >/dev/null 2>&1
-}
+# ── wrangler removed 2026-05-20 ──
+# Was runtime-installable via `npm install -g --silent wrangler` here, but
+# stdout+stderr were both >/dev/null'd — npm registry / EACCES / missing-npm
+# failures were swallowed, then `set -e` aborted the engine 1 line later with
+# no diagnostic. Replaced by `cloud-ship-terraform-deploy-apply.sh`'s inline
+# fail-fast `ensure_wrangler` that prints a clear "image is stale, rebuild
+# via cb_containers-builders" message. Wrangler is baked into the
+# cloud-builder image at image-build time from `config.json:.deps.docker_npm`
+# (see `unix/cb_containers-builders/dist/docker-deps.sh:18`) — DO NOT add a
+# silent-install fallback back here, the test in
+# `test/test_docker_npm_baked_into_image.sh` will fail.
