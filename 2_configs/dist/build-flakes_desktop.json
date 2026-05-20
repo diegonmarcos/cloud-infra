@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-20T10:11:57.411Z",
+    "generated_at": "2026-05-20T12:22:28.086Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-20T10:11:57.283Z",
+  "_generated": "2026-05-20T12:22:27.775Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -5035,17 +5035,11 @@
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
             "base_path": "/c3-public-api",
-            "paths": {
-              "/health": {
-                "auth": "public"
-              },
-              "/ready": {
-                "auth": "public"
-              },
-              "/analytics/": {
-                "auth": "public"
-              }
-            }
+            "public_paths": [
+              "/c3-public-api/health",
+              "/c3-public-api/ready",
+              "/c3-public-api/analytics/*"
+            ]
           },
           "healthcheck": "/health",
           "monitoring": {
@@ -5076,23 +5070,17 @@
         "networks": []
       },
       "proxy": {
-        "_doc": "Mixed-auth service. Default = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /analytics/* and /health, /ready sub-paths are public — declared via paths.{} carve-outs so Caddy's forward_auth skips them. Mirrors the c3-infra-api primary.paths pattern (which carves out /docs/json as auth=public).",
+        "_doc": "Mixed-auth service. Default for base_path = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /health, /ready, /analytics/* sub-paths are public — declared via the engine-supported public_paths[] array (2_configs/src/engines/cloud-data-config-derive.ts:507 → caddyfile.nix:432 emits a pre-auth `handle <pp>` block per entry that strip_prefix base_path then reverse_proxy upstream).",
         "primary": {
           "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/c3-public-api",
-          "paths": {
-            "/health": {
-              "auth": "public"
-            },
-            "/ready": {
-              "auth": "public"
-            },
-            "/analytics/": {
-              "auth": "public"
-            }
-          }
+          "public_paths": [
+            "/c3-public-api/health",
+            "/c3-public-api/ready",
+            "/c3-public-api/analytics/*"
+          ]
         }
       },
       "declared_ports": {
