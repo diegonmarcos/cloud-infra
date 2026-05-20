@@ -267,7 +267,15 @@ in {
 
   home.file.".local/share/firewall/firewall.sh" = {
     executable = true;
-    text = fwScript;
+    # fwScript's '' indented-string common-indent strip fails because the
+    # ${lib.optionalString ...} conditional blocks sit at column 0 in the
+    # nix source — that pulls the common-indent down to 0 and nix strips
+    # nothing, so every body line retains its 4-space prefix (including
+    # #!/bin/bash). bash invocation tolerates it, but systemd exec(2) does
+    # not — status=203/EXEC at boot, firewall.service stays failed, rules
+    # are never re-applied across reboots. Post-process: drop a uniform
+    # 4-space prefix from every line so the shebang lands at column 0.
+    text = lib.replaceStrings [ "\n    " ] [ "\n" ] (lib.removePrefix "    " fwScript);
   };
 
   home.file.".local/share/firewall/firewall.service".text = ''
