@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-19T11:21:10.128Z",
+    "generated_at": "2026-05-20T10:11:56.388Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -121,9 +121,10 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "cf-worker-http-to-wg-public-bridge",
+        "c3-public-api",
         "dagu"
       ],
-      "container_count": 2
+      "container_count": 3
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -5129,6 +5130,168 @@
         "AWS_DEFAULT_REGION"
       ]
     },
+    "c3-public-api": {
+      "category": "obs",
+      "vm": "oci-E2-f_1",
+      "folder": "bc-obs_c3-public-api",
+      "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+      "enabled": true,
+      "domain": "api.diegonmarcos.com/c3-public-api",
+      "flake": "c3-public-api",
+      "port": 8087,
+      "dns": "c3-public-api.app",
+      "upstream": "10.0.0.4:8087",
+      "containers": {
+        "app": {
+          "container_name": "c3-public-api",
+          "image": "ghcr.io/diegonmarcos/c3-public-api:latest",
+          "port": 8087,
+          "port_env": "PORT",
+          "dns": "c3-public-api.app",
+          "public": true,
+          "proxy": {
+            "auth": "two_factor",
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/c3-public-api",
+            "paths": {
+              "/health": {
+                "auth": "public"
+              },
+              "/ready": {
+                "auth": "public"
+              },
+              "/analytics/": {
+                "auth": "public"
+              }
+            }
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "c3-public-api"
+      ],
+      "all_ports": [
+        "8087"
+      ],
+      "all_dns": [
+        "c3-public-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "_doc": "Mixed-auth service. Default = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /analytics/* and /health, /ready sub-paths are public — declared via paths.{} carve-outs so Caddy's forward_auth skips them. Mirrors the c3-infra-api primary.paths pattern (which carves out /docs/json as auth=public).",
+        "primary": {
+          "auth": "two_factor",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/c3-public-api",
+          "paths": {
+            "/health": {
+              "auth": "public"
+            },
+            "/ready": {
+              "auth": "public"
+            },
+            "/analytics/": {
+              "auth": "public"
+            }
+          }
+        }
+      },
+      "declared_ports": {
+        "app": 8087
+      },
+      "health": {
+        "path": "/c3-public-api/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "mail": {
+        "_doc": "JSON-in -> SMTP-out: replicates the aa-sui_tools-http-to-smtp-proxy-api Rust binary contract so the CF Worker does not need any change. Primary delivery to Maddy:25 (MX-style, plain SMTP over WG); shadow delivery to Stalwart:2025 (STARTTLS-capable, fire-and-forget so JMAP clients see the same mail).",
+        "primary": {
+          "service": "maddy",
+          "via": "smtp_mx"
+        },
+        "shadow": {
+          "service": "stalwart",
+          "via": "smtp_shadow"
+        },
+        "helo_domain": "c3-public-api.diegonmarcos.com",
+        "default_user_env": "SMTP_USER"
+      },
+      "backends": {
+        "matomo": {
+          "service": "matomo",
+          "rewrite_path": "/matomo.php",
+          "description": "Matomo Tracking API",
+          "methods": [
+            "GET",
+            "POST"
+          ]
+        },
+        "umami": {
+          "service": "umami",
+          "rewrite_path": "/api/send",
+          "description": "Umami /api/send",
+          "methods": [
+            "POST"
+          ]
+        },
+        "openobserve": {
+          "service": "openobserve",
+          "rewrite_path": "/api/default/default/_json",
+          "description": "OpenObserve _json bulk ingest",
+          "methods": [
+            "POST"
+          ],
+          "auth_header_env": "OPENOBSERVE_AUTHORIZATION"
+        }
+      },
+      "limits": {
+        "max_body_bytes": 1048576,
+        "max_ingest_lines": 5000,
+        "rate_per_ip_per_min": 60,
+        "rate_per_sid_per_min": 1000,
+        "request_timeout_ms": 5000
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/c3-public-api",
+        "api_url": "https://api.diegonmarcos.com/c3-public-api/c3-public-api",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/c3-public-api",
+        "endpoint_count": 5,
+        "display_name": "C3 Public API",
+        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
+        "auth": "mixed"
+      },
+      "secret_env_vars": [
+        "OPENOBSERVE_AUTHORIZATION"
+      ]
+    },
     "c3-services-api": {
       "category": "obs",
       "vm": "oci-A1-f_0",
@@ -7355,6 +7518,12 @@
         "service": "c3-infra-mcp"
       },
       {
+        "name": "c3-public-api.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "c3-public-api"
+      },
+      {
         "name": "c3-services-api.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -7527,6 +7696,7 @@
         "idle_shutdown": null,
         "containers": [
           "cf-worker-http-to-wg-public-bridge",
+          "c3-public-api",
           "dagu"
         ],
         "method": "key",
@@ -8002,6 +8172,11 @@
       "c3-infra-mcp": {
         "dir": "bc-obs_c3-infra-mcp",
         "vm": "oci-apps",
+        "has_docker": true
+      },
+      "c3-public-api": {
+        "dir": "bc-obs_c3-public-api",
+        "vm": "oci-analytics",
         "has_docker": true
       },
       "c3-services-api": {
