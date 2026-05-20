@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-19T08:09:44.534Z",
+    "generated_at": "2026-05-20T10:11:57.290Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-19T08:09:44.497Z",
+  "_generated": "2026-05-20T10:11:57.238Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -347,6 +347,11 @@
           "comment": "C3 REST API — Cloud Control Center Fastify API"
         },
         {
+          "base_path": "/c3-public-api",
+          "upstream": "10.0.0.4:8087",
+          "comment": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
+        },
+        {
           "base_path": "/c3-services-api",
           "upstream": "10.0.0.6:8082",
           "comment": "C3 Services REST API — service API gateway Fastify API"
@@ -617,6 +622,10 @@
     {
       "service": "c3-infra-mcp.app",
       "upstream": "10.0.0.6:3100"
+    },
+    {
+      "service": "c3-public-api.app",
+      "upstream": "10.0.0.4:8087"
     },
     {
       "service": "c3-services-api.app",
@@ -1342,6 +1351,27 @@
     },
     {
       "kind": "redirect",
+      "service": "c3-public-api.app",
+      "redirect_to": "https://c3-public-api-http-8087.app",
+      "container": "c3-public-api",
+      "container_key": "app",
+      "svc": "c3-public-api",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "c3-public-api-http-8087.app",
+      "container": "c3-public-api",
+      "container_key": "app",
+      "svc": "c3-public-api",
+      "vm": "oci-E2-f_1",
+      "port": 8087,
+      "protocol": "http",
+      "upstream": "10.0.0.4:8087",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "c3-services-api.app",
       "redirect_to": "https://c3-services-api-http-8082.app",
       "container": "c3-services-api",
@@ -1845,6 +1875,16 @@
       "zone": "com",
       "service": null,
       "notes": "C3 REST API — Cloud Control Center Fastify API"
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/c3-public-api",
+      "upstream": "10.0.0.4:8087",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2433,6 +2473,16 @@
       "notes": null
     },
     {
+      "host": "c3-public-api.app",
+      "path": null,
+      "upstream": "10.0.0.4:8087",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "c3-services-api.app",
       "path": null,
       "upstream": "10.0.0.6:8082",
@@ -2872,6 +2922,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "c3-infra-mcp",
+      "notes": null
+    },
+    {
+      "host": "c3-public-api-http-8087.app",
+      "path": null,
+      "upstream": "10.0.0.4:8087",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "c3-public-api",
       "notes": null
     },
     {

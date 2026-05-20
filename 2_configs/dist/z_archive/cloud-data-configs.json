@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-19T08:09:44.525Z",
+    "generated_at": "2026-05-20T10:11:57.275Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -110,6 +110,18 @@
       "networks": [],
       "containers": [
         "c3-infra-mcp"
+      ]
+    },
+    {
+      "name": "c3-public-api",
+      "category": "obs",
+      "vm": "oci-E2-f_1",
+      "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+      "domain": "api.diegonmarcos.com/c3-public-api",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "c3-public-api"
       ]
     },
     {

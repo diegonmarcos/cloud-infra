@@ -53,6 +53,7 @@
       },
       "containers": [
         "cf-worker-http-to-wg-public-bridge",
+        "c3-public-api",
         "dagu"
       ],
       "ports": [],
@@ -725,6 +726,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "c3-infra-mcp"
+      },
+      {
+        "name": "c3-public-api.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "c3-public-api"
       },
       {
         "name": "c3-services-api.app",
@@ -3938,6 +3945,101 @@
       },
       "flake": "c3-infra-mcp"
     },
+    "c3-public-api": {
+      "category": "obs",
+      "vm": "oci-E2-f_1",
+      "folder": "bc-obs_c3-public-api",
+      "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+      "domain": "api.diegonmarcos.com/c3-public-api",
+      "port": 8087,
+      "dns": "c3-public-api.app",
+      "upstream": "10.0.0.4:8087",
+      "containers": {
+        "app": {
+          "container_name": "c3-public-api",
+          "image": "ghcr.io/diegonmarcos/c3-public-api:latest",
+          "port": 8087,
+          "port_env": "PORT",
+          "dns": "c3-public-api.app",
+          "public": true,
+          "proxy": {
+            "auth": "two_factor",
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/c3-public-api",
+            "paths": {
+              "/health": {
+                "auth": "public"
+              },
+              "/ready": {
+                "auth": "public"
+              },
+              "/analytics/": {
+                "auth": "public"
+              }
+            }
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "c3-public-api"
+      ],
+      "all_ports": [
+        "8087"
+      ],
+      "all_dns": [
+        "c3-public-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "_doc": "Mixed-auth service. Default = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /analytics/* and /health, /ready sub-paths are public — declared via paths.{} carve-outs so Caddy's forward_auth skips them. Mirrors the c3-infra-api primary.paths pattern (which carves out /docs/json as auth=public).",
+        "primary": {
+          "auth": "two_factor",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/c3-public-api",
+          "paths": {
+            "/health": {
+              "auth": "public"
+            },
+            "/ready": {
+              "auth": "public"
+            },
+            "/analytics/": {
+              "auth": "public"
+            }
+          }
+        }
+      },
+      "declared_ports": {
+        "app": 8087
+      },
+      "health": {
+        "path": "/c3-public-api/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "flake": "c3-public-api"
+    },
     "c3-services-api": {
       "category": "obs",
       "vm": "oci-A1-f_0",
@@ -5501,7 +5603,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-19T08:09:44.584Z",
+    "generated_at": "2026-05-20T10:11:57.402Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

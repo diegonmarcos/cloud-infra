@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-19T08:09:44.506Z",
+  "_generated": "2026-05-20T10:11:57.254Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -80,6 +80,10 @@
     {
       "service": "c3-infra-api",
       "url": "https://api.diegonmarcos.com/c3-infra-api/c3-infra-api/health"
+    },
+    {
+      "service": "c3-public-api",
+      "url": "https://api.diegonmarcos.com/c3-public-api/c3-public-api/health"
     },
     {
       "service": "c3-services-api",
@@ -184,6 +188,10 @@
       "domain": "api.diegonmarcos.com/c3-infra-api"
     },
     {
+      "service": "c3-public-api",
+      "domain": "api.diegonmarcos.com/c3-public-api"
+    },
+    {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
     },
@@ -284,6 +292,10 @@
     {
       "service": "c3-infra-api",
       "domain": "api.diegonmarcos.com/c3-infra-api"
+    },
+    {
+      "service": "c3-public-api",
+      "domain": "api.diegonmarcos.com/c3-public-api"
     },
     {
       "service": "c3-services-api",
@@ -830,6 +842,19 @@
       },
       "health": {
         "path": "/mcp"
+      }
+    },
+    "c3-public-api": {
+      "name": "c3-public-api",
+      "vm": "oci-E2-f_1",
+      "domain": "api.diegonmarcos.com/c3-public-api",
+      "enabled": true,
+      "category": "obs",
+      "ports": {
+        "app": 8087
+      },
+      "health": {
+        "path": "/c3-public-api/health"
       }
     },
     "c3-services-api": {
@@ -1433,6 +1458,15 @@
       "dns": "c3-infra-mcp.app"
     },
     {
+      "service": "c3-public-api",
+      "dns": "c3-public-api.app"
+    },
+    {
+      "service": "c3-public-api",
+      "container": "app",
+      "dns": "c3-public-api.app"
+    },
+    {
       "service": "c3-services-api",
       "dns": "c3-services-api.app"
     },
@@ -1681,6 +1715,7 @@
         "provider": null,
         "services": [
           "cf-worker-http-to-wg-public-bridge",
+          "c3-public-api",
           "dagu"
         ]
       },
@@ -2247,6 +2282,19 @@
         },
         "health": {
           "path": "/mcp"
+        }
+      },
+      "c3-public-api": {
+        "name": "c3-public-api",
+        "vm": "oci-E2-f_1",
+        "domain": "api.diegonmarcos.com/c3-public-api",
+        "enabled": true,
+        "category": "obs",
+        "ports": {
+          "app": 8087
+        },
+        "health": {
+          "path": "/c3-public-api/health"
         }
       },
       "c3-services-api": {
@@ -3217,7 +3265,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-19T08:09:44.582Z",
+    "generated_at": "2026-05-20T10:11:57.397Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

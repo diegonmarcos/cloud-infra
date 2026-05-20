@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-19T08:09:44.588Z",
+    "generated_at": "2026-05-20T10:11:57.410Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,16 +30,16 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-19T08:09:44.529Z",
+  "_generated": "2026-05-20T10:11:57.279Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 164,
-    "edges": 196,
+    "nodes": 167,
+    "edges": 200,
     "by_table": {
       "vm": 4,
-      "service": 53,
-      "container": 73,
-      "domain": 34
+      "service": 54,
+      "container": 74,
+      "domain": 35
     }
   },
   "nodes": [
@@ -1271,6 +1271,32 @@
     },
     {
       "table": "service",
+      "id": "c3_public_api",
+      "key": "service:c3_public_api",
+      "properties": {
+        "name": "c3-public-api",
+        "category": "obs",
+        "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+        "domain": "api.diegonmarcos.com/c3-public-api",
+        "port": 8087,
+        "vm": "oci-analytics",
+        "folder": "bc-obs_c3-public-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "c3_public_api",
+      "key": "container:c3_public_api",
+      "properties": {
+        "name": "c3-public-api",
+        "image": "ghcr.io/diegonmarcos/c3-public-api:latest",
+        "role": "app",
+        "port": 8087,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "c3_services_api",
       "key": "service:c3_services_api",
       "properties": {
@@ -1939,6 +1965,14 @@
       "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
       "properties": {
         "fqdn": "mcp.diegonmarcos.com/c3-infra-mcp"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "api_diegonmarcos_com/c3_public_api",
+      "key": "domain:api_diegonmarcos_com/c3_public_api",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/c3-public-api"
       }
     },
     {
@@ -2746,6 +2780,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:c3_public_api",
+      "to": "vm:oci_analytics",
+      "key": "service:c3_public_api->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:c3_public_api",
+      "to": "container:c3_public_api",
+      "key": "service:c3_public_api->runs_container->container:c3_public_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:c3_services_api",
       "to": "vm:oci_apps",
       "key": "service:c3_services_api->hosted_on->vm:oci_apps",
@@ -3276,6 +3326,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:c3_public_api",
+      "to": "service:caddy",
+      "key": "service:c3_public_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/c3-public-api"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:c3_services_api",
       "to": "service:caddy",
       "key": "service:c3_services_api->proxied_by->service:caddy",
@@ -3547,6 +3606,13 @@
       "from": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
       "to": "service:c3_infra_mcp",
       "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp->routes_to->service:c3_infra_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/c3_public_api",
+      "to": "service:c3_public_api",
+      "key": "domain:api_diegonmarcos_com/c3_public_api->routes_to->service:c3_public_api",
       "properties": {}
     },
     {

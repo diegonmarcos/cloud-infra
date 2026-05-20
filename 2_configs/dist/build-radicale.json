@@ -3,7 +3,7 @@
   "_meta": {
     "description": "radicale container config (service=radicale, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-19T08:09:44.549Z",
+    "generated_at": "2026-05-20T10:11:57.321Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-19T08:09:44.500Z",
+  "_generated": "2026-05-20T10:11:57.242Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "radicale",
@@ -1063,6 +1063,30 @@
         "description": "Cloud health, DevOps operations, workflows, cost tracking, security scanning, observability, front-end deployment.",
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
+    "c3-public-api": {
+      "ip": "10.0.0.4",
+      "ports": {
+        "app": 8087
+      },
+      "vm": "oci-analytics",
+      "domain": "api.diegonmarcos.com/c3-public-api",
+      "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/c3-public-api",
+        "api_url": "https://api.diegonmarcos.com/c3-public-api/c3-public-api",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/c3-public-api",
+        "endpoint_count": 5,
+        "display_name": "C3 Public API",
+        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
+        "auth": "mixed"
       }
     },
     "c3-services-api": {
