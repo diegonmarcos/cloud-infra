@@ -325,8 +325,15 @@ in {
     if [ "$NEW" = "$CURRENT" ]; then
       echo "[firewall] rules unchanged — skipping"
     else
+      # Run the script directly (works even when systemd unit is in a stale
+      # failed state) AND `reset-failed` + `try-restart` the unit so its
+      # systemd state reflects current reality. Without try-restart the
+      # unit can sit `failed` from a prior bad script across reboots even
+      # though the on-disk script is now correct.
       $SUDO /opt/scripts/firewall.sh
       echo "$NEW" | $SUDO tee /opt/scripts/.firewall.sh.prev > /dev/null
+      $SUDO systemctl reset-failed firewall.service 2>/dev/null || true
+      $SUDO systemctl try-restart firewall.service 2>/dev/null || true
       echo "[firewall] rules applied for ${vmName}"
     fi
     ) || echo "[firewall] FAILED — see errors above, activation continues"
