@@ -283,11 +283,22 @@ in {
     Description=OS-level firewall (${vmName})
     After=network-pre.target
     Before=network.target docker.service wg-quick@wg0.service
+    # Cap retries so a permanent breakage doesn't loop forever — after 5
+    # consecutive failures within 5 min, the unit goes to failed and stays
+    # failed (no further auto-restart until manually reset).
+    StartLimitBurst=5
+    StartLimitIntervalSec=300
 
     [Service]
     Type=oneshot
     RemainAfterExit=yes
     ExecStart=/opt/scripts/firewall.sh
+    # If the script fails mid-boot (transient nix-store path glitch,
+    # missing /var/log dir, anything), systemd retries instead of leaving
+    # the unit in failed state for hours. RestartSec gives the dependent
+    # network services a chance to settle before retry.
+    Restart=on-failure
+    RestartSec=10s
 
     [Install]
     WantedBy=multi-user.target
@@ -312,30 +323,35 @@ in {
     $SUDO chmod +x /opt/scripts/firewall.sh
     $SUDO cp -f "$SRC/firewall.service" /etc/systemd/system/firewall.service
 
-    # Diff check — only restart if changed
-    CURRENT=""
-    if $SUDO test -f /opt/scripts/.firewall.sh.prev; then
-      CURRENT=$($SUDO cat /opt/scripts/.firewall.sh.prev 2>/dev/null || true)
-    fi
-    NEW=$($SUDO cat /opt/scripts/firewall.sh)
-
+    # Drop the content-diff gate. Apply + ensure-running on EVERY activation.
+    #
+    # Why no gate: the gate compared the new script content to the previously
+    # applied one and skipped if equal. But iptables STATE can diverge from
+    # script content for reasons unrelated to script changes:
+    #   - VM reboot where firewall.service is enabled-but-inactive (an old
+    #     systemd unit failure leaves it sitting inactive after boot — exactly
+    #     the gcp-proxy state observed 2026-05-21 where SSH:22 ACCEPT was
+    #     missing for hours after a reboot, blocking every ship-* workflow
+    #     until manual recovery).
+    #   - Docker / nftables / external scripts flushing the INPUT chain.
+    #   - Out-of-band manual iptables -F.
+    # Any of those produce drift the diff gate cannot see. Re-running
+    # firewall.sh is idempotent (it -F's INPUT/FORWARD first then re-adds
+    # the full rule set) — and ESTABLISHED state survives the flush via
+    # conntrack, so in-flight SSH sessions are not disrupted.
     $SUDO systemctl daemon-reload
+    $SUDO systemctl reset-failed firewall.service 2>/dev/null || true
     $SUDO systemctl enable firewall.service 2>/dev/null || true
-
-    if [ "$NEW" = "$CURRENT" ]; then
-      echo "[firewall] rules unchanged — skipping"
-    else
-      # Run the script directly (works even when systemd unit is in a stale
-      # failed state) AND `reset-failed` + `try-restart` the unit so its
-      # systemd state reflects current reality. Without try-restart the
-      # unit can sit `failed` from a prior bad script across reboots even
-      # though the on-disk script is now correct.
-      $SUDO /opt/scripts/firewall.sh
-      echo "$NEW" | $SUDO tee /opt/scripts/.firewall.sh.prev > /dev/null
-      $SUDO systemctl reset-failed firewall.service 2>/dev/null || true
-      $SUDO systemctl try-restart firewall.service 2>/dev/null || true
-      echo "[firewall] rules applied for ${vmName}"
-    fi
+    # Run the script directly (works even if the systemd unit is in any
+    # transient state) then start the unit so its is-active state reflects
+    # reality. systemctl start on an active (exited) Type=oneshot unit is
+    # a no-op — safe to call unconditionally.
+    $SUDO /opt/scripts/firewall.sh
+    $SUDO systemctl start firewall.service 2>/dev/null || true
+    # Keep .prev for observability (drift detection in monitoring) but no
+    # longer gate on it.
+    $SUDO cat /opt/scripts/firewall.sh | $SUDO tee /opt/scripts/.firewall.sh.prev > /dev/null
+    echo "[firewall] rules applied + service started for ${vmName}"
     ) || echo "[firewall] FAILED — see errors above, activation continues"
   '';
 }
