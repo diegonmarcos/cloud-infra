@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-20T19:26:45.310Z",
+    "generated_at": "2026-05-21T09:09:51.385Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,15 +30,15 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-20T19:26:45.251Z",
+  "_generated": "2026-05-21T09:09:50.794Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 167,
-    "edges": 200,
+    "nodes": 165,
+    "edges": 198,
     "by_table": {
       "vm": 4,
-      "service": 54,
-      "container": 74,
+      "service": 53,
+      "container": 73,
       "domain": 35
     }
   },
@@ -612,32 +612,6 @@
         "image": null,
         "role": "app",
         "port": 8092,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "http_to_smtp_proxy_api",
-      "key": "service:http_to_smtp_proxy_api",
-      "properties": {
-        "name": "http-to-smtp-proxy-api",
-        "category": "app",
-        "description": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/",
-        "domain": "api.diegonmarcos.com/http-to-smtp-proxy-api",
-        "port": 8090,
-        "vm": "gcp-proxy",
-        "folder": "aa-sui_tools-http-to-smtp-proxy-api"
-      }
-    },
-    {
-      "table": "container",
-      "id": "http_to_smtp_proxy_api",
-      "key": "container:http_to_smtp_proxy_api",
-      "properties": {
-        "name": "http-to-smtp-proxy-api",
-        "image": null,
-        "role": "app",
-        "port": 8090,
         "public": true
       }
     },
@@ -2356,22 +2330,6 @@
       "from": "service:cf_worker_http_to_wg_public_bridge",
       "to": "container:cf_worker_http_to_wg_public_bridge",
       "key": "service:cf_worker_http_to_wg_public_bridge->runs_container->container:cf_worker_http_to_wg_public_bridge",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:http_to_smtp_proxy_api",
-      "to": "vm:gcp_proxy",
-      "key": "service:http_to_smtp_proxy_api->hosted_on->vm:gcp_proxy",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:http_to_smtp_proxy_api",
-      "to": "container:http_to_smtp_proxy_api",
-      "key": "service:http_to_smtp_proxy_api->runs_container->container:http_to_smtp_proxy_api",
       "properties": {
         "role": "app"
       }
