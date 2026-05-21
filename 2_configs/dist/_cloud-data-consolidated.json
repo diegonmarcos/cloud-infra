@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-21T09:49:49.377Z",
+    "generated_at": "2026-05-21T16:59:56.634Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -5255,11 +5255,12 @@
         }
       },
       "limits": {
+        "_doc_request_timeout_ms": "Caps nodemailer connectionTimeout + greetingTimeout + socketTimeout for BOTH primary (Maddy:25) and shadow (Stalwart:2025). Measured baseline 2026-05-21: full SMTP transaction (HELO→DATA→QUIT) to Stalwart warm = 2.3s. Cold-start + STARTTLS-aware Stalwart can spike — first CF Worker probe after deploy had shadow.delivery_failed err=Timeout at 5000ms. 15000ms gives 6× warm-baseline headroom; primary still completes <3s so user-visible latency unchanged. Fire-and-forget shadow detached promise — does not impact response time.",
         "max_body_bytes": 1048576,
         "max_ingest_lines": 5000,
         "rate_per_ip_per_min": 60,
         "rate_per_sid_per_min": 1000,
-        "request_timeout_ms": 5000
+        "request_timeout_ms": 15000
       },
       "api": {
         "has_api": true,

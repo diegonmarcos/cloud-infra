@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-21T09:49:54.253Z",
+    "generated_at": "2026-05-21T16:59:58.436Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-21T09:49:53.441Z",
+  "_generated": "2026-05-21T16:59:57.825Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -5130,11 +5130,12 @@
         }
       },
       "limits": {
+        "_doc_request_timeout_ms": "Caps nodemailer connectionTimeout + greetingTimeout + socketTimeout for BOTH primary (Maddy:25) and shadow (Stalwart:2025). Measured baseline 2026-05-21: full SMTP transaction (HELO→DATA→QUIT) to Stalwart warm = 2.3s. Cold-start + STARTTLS-aware Stalwart can spike — first CF Worker probe after deploy had shadow.delivery_failed err=Timeout at 5000ms. 15000ms gives 6× warm-baseline headroom; primary still completes <3s so user-visible latency unchanged. Fire-and-forget shadow detached promise — does not impact response time.",
         "max_body_bytes": 1048576,
         "max_ingest_lines": 5000,
         "rate_per_ip_per_min": 60,
         "rate_per_sid_per_min": 1000,
-        "request_timeout_ms": 5000
+        "request_timeout_ms": 15000
       },
       "api": {
         "has_api": true,
