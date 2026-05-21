@@ -490,6 +490,7 @@ function deriveCaddy(c: any): DerivedFile {
   const pathGroups: Record<string, { paths: any[]; comment: string; fallback?: string; landing_page?: string }> = {};
 
   for (const [, svc] of Object.entries(services)) {
+    if (svc.enabled === false) continue;  // honour build.json toggle (parity with the 4 other loops in this file)
     const proxy = svc.proxy?.primary;
     if (!proxy || proxy.streaming) continue;
     // Include explicit path type OR services with base_path (implicit path route)
