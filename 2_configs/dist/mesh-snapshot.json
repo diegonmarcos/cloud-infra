@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "generated_at": "2026-05-22T09:11:46.367Z",
+    "generated_at": "2026-05-22T09:26:02.245Z",
     "generated_by": "2_configs/src/engines/derive-mesh-snapshot.ts",
     "schema": "wg-mesh/v1",
     "sources": {
@@ -80,21 +80,35 @@
         {
           "port": 25,
           "proto": "tcp",
-          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
-          "source": "0.0.0.0/0",
+          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — wg0 mesh source",
+          "source": "10.0.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+          "source": "10.1.0.0/24",
           "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "tcp",
-          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
-          "source": "0.0.0.0/0",
+          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS) — wg0 mesh source",
+          "source": "10.0.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+          "source": "10.1.0.0/24",
           "owned_by": "caddy"
         },
         {
           "port": 443,
           "proto": "udp",
-          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — MUST stay public; the whole point is reaching WG when other ports are blocked",
           "source": "0.0.0.0/0",
           "owned_by": "wireguard"
         }
@@ -230,7 +244,7 @@
   ],
   "health": {
     "tls_expiries": [],
-    "last_snapshot_at": "2026-05-22T09:11:46.367Z",
+    "last_snapshot_at": "2026-05-22T09:26:02.245Z",
     "status": "healthy"
   }
 }
