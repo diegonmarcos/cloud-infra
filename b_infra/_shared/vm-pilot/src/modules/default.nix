@@ -23,7 +23,11 @@ let
     desc = p.desc;
     source = p.source or "0.0.0.0/0";
   }) vmData.public_ports
-    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; source = "0.0.0.0/0"; }];
+    # Rescue SSH (Dropbear) — WG-only. Only WG handshake (51820/udp) and WG
+    # fallback (443/udp) are reachable from public; everything else, including
+    # rescue SSH, must be inside the mesh. Break-glass: WG-tunneled access from
+    # admin termux+WG.
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; source = "10.0.0.0/24"; }];
 
   # ── wg-public mesh membership (Phase 2 of zero-public-TCP plan) ─────
   # Data-driven: a VM participates in wg-public iff it appears in

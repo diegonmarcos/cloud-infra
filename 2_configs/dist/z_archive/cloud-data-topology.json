@@ -374,8 +374,15 @@
         {
           "port": 443,
           "proto": "udp",
-          "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — MUST stay public; the whole point is reaching WG when other ports are blocked",
-          "source": "0.0.0.0/0",
+          "desc": "WG fallback (NAT redirect → 51820/udp on hub) — wg0 mesh source. Operator decision 2026-05-22: WG handshake (51820/udp) is the ONLY public port; 443/udp fallback is no longer needed since the only external entry points are oci-analytics. Peers behind networks blocking 51820/udp lose the fallback path — accepted tradeoff.",
+          "source": "10.0.0.0/24",
+          "owned_by": "wireguard"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WG fallback — wg-public mesh source",
+          "source": "10.1.0.0/24",
           "owned_by": "wireguard"
         }
       ]
@@ -438,8 +445,15 @@
       {
         "port": 443,
         "proto": "udp",
-        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — MUST stay public; the whole point is reaching WG when other ports are blocked",
-        "source": "0.0.0.0/0",
+        "desc": "WG fallback (NAT redirect → 51820/udp on hub) — wg0 mesh source. Operator decision 2026-05-22: WG handshake (51820/udp) is the ONLY public port; 443/udp fallback is no longer needed since the only external entry points are oci-analytics. Peers behind networks blocking 51820/udp lose the fallback path — accepted tradeoff.",
+        "source": "10.0.0.0/24",
+        "owned_by": "wireguard"
+      },
+      {
+        "port": 443,
+        "proto": "udp",
+        "desc": "WG fallback — wg-public mesh source",
+        "source": "10.1.0.0/24",
         "owned_by": "wireguard"
       }
     ]
@@ -5617,7 +5631,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-22T09:26:01.579Z",
+    "generated_at": "2026-05-22T11:00:14.455Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
