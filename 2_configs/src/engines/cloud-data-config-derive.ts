@@ -1537,13 +1537,20 @@ function deriveGhaConfig(c: any): DerivedFile {
   const vms: Record<string, any> = {};
   for (const [vmAlias, ghaVm] of Object.entries(ghaData.vms ?? {}) as [string, any][]) {
     const mainVm = Object.values(c.vms ?? {}).find((v: any) => v.ssh_alias === vmAlias) as any;
-    // Hub (gcp-proxy) uses public IP for GHA SSH (Docker can't route to WG hub IP)
-    const isHub = mainVm?.wg_role === "hub";
+    // Every VM gets its wg_ip — INCLUDING the WG hub (gcp-proxy). The cloud-
+    // builder image runs `wg-quick up wg0` before any ship step and is
+    // assigned a 10.0.0.200/24 address (gha-runner peer in
+    // _cloud-data-consolidated.json). From there 10.0.0.1 (hub) is reachable
+    // exactly like any other peer.
+    //
+    // The previous `isHub → delete wg_ip + override host = public_ip` branch
+    // was a 2026-05-08-era workaround for an older cloud-builder layout that
+    // didn't carry WG-tools — it forced GHA to SSH the hub at its public IP.
+    // That conflicts with the session-goal hardening (gcp-proxy fully private:
+    // no public :22, ssh-firewall.service drops anything not from
+    // 10.0.0.0/24). ship.yml already does `.wg_ip // .host` fallback, so
+    // including wg_ip universally lets GHA reach gcp-proxy via 10.0.0.1.
     const enriched = { ...ghaVm, wg_ip: mainVm?.wg_ip ?? null, user: ghaVm.user ?? mainVm?.user ?? null };
-    if (isHub && mainVm?.ip) {
-      enriched.host = mainVm.ip;
-      delete enriched.wg_ip;
-    }
     vms[vmAlias] = enriched;
   }
 
