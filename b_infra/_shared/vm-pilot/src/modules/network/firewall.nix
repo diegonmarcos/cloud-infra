@@ -263,8 +263,14 @@ ${if isWgHub then ''
     # hotels, restrictive corp WiFi) can switch their wg-quick endpoint
     # to gcp-proxy:${wgFallbackPort} and still reach the mesh. Caddy must
     # NOT bind UDP/${wgFallbackPort} (drop QUIC/HTTP/3) for this to work.
+    #
+    # No explicit INPUT ACCEPT for udp/${wgFallbackPort}: PREROUTING REDIRECT
+    # rewrites dport ${wgFallbackPort} → ${wgPort} BEFORE the INPUT chain
+    # evaluates. INPUT then sees dport=${wgPort} and matches the
+    # `iptables -A INPUT -p udp --dport ${wgPort} ... ACCEPT` rule (the only
+    # public-source ACCEPT — operator policy 2026-05-22: WG handshake on
+    # ${wgPort}/udp is THE ONLY port reachable from 0.0.0.0/0).
     iptables -t nat -A PREROUTING -p udp --dport ${wgFallbackPort} -j REDIRECT --to-port ${wgPort}
-    iptables -A INPUT -p udp --dport ${wgFallbackPort} -m comment --comment "WG fallback (REDIRECT → ${wgPort})" -j ACCEPT
     echo "[firewall] WG fallback NAT: udp/${wgFallbackPort} → udp/${wgPort}"
 '' else ""}
 
