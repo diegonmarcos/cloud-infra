@@ -70,8 +70,17 @@ let
       port = toString r.port;
       proto = r.proto or "tcp";
       comment = r.desc or "port-${port}";
+      # Source CIDR is data-driven from b_infra/nixhm-sudo-<vm>/build.json
+      # firewall.public_ports[].source. Default to 0.0.0.0/0 only when
+      # the data omits source (back-compat). Setting source to a WG mesh
+      # (10.0.0.0/24 wg0 or 10.1.0.0/24 wg-public) is how operators close
+      # a listener to public reach while keeping it open to the meshes —
+      # the listener itself stays bound on the same socket; only the
+      # firewall scope changes.
+      source = r.source or "0.0.0.0/0";
+      srcFlag = if source == "0.0.0.0/0" then "" else "-s ${source} ";
     in
-      "iptables -A INPUT -p ${proto} --dport ${port} -m comment --comment \"${comment}\" -j ACCEPT";
+      "iptables -A INPUT ${srcFlag}-p ${proto} --dport ${port} -m comment --comment \"${comment}\" -j ACCEPT";
 
   portRules = builtins.concatStringsSep "\n    " (map mkPortRule publicPorts);
 

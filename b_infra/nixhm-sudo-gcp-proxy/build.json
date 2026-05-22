@@ -28,25 +28,40 @@
     "remote_build": false
   },
   "firewall": {
+    "_doc": "gcp-proxy is FULLY PRIVATE: listeners stay (Caddy :443 + :25 + caddy-l4 SNI mux), but firewall sources restrict reach to WG meshes only (10.0.0.0/24 wg0 + 10.1.0.0/24 wg-public). Public-internet traffic terminates at oci-analytics (the public-edge VM) and forwards over wg-public. 443/udp (WG fallback) MUST stay 0.0.0.0/0 — its purpose is to provide WG handshake on a port that hostile networks don't block; restricting it defeats the fallback. Engine: firewall.nix mkPortRule emits `-s ${source}` per entry; source = '0.0.0.0/0' means no -s flag (back-compat).",
     "public_ports": [
       {
         "port": 25,
         "proto": "tcp",
-        "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — design-complete listener; GCP cloud firewall currently blocks; CF Worker is the active inbound bridge",
-        "source": "0.0.0.0/0",
+        "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — wg0 mesh source",
+        "source": "10.0.0.0/24",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 25,
+        "proto": "tcp",
+        "desc": "SMTP MX — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+        "source": "10.1.0.0/24",
         "owned_by": "caddy"
       },
       {
         "port": 443,
         "proto": "tcp",
-        "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)",
-        "source": "0.0.0.0/0",
+        "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS) — wg0 mesh source",
+        "source": "10.0.0.0/24",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+        "source": "10.1.0.0/24",
         "owned_by": "caddy"
       },
       {
         "port": 443,
         "proto": "udp",
-        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
+        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — MUST stay public; the whole point is reaching WG when other ports are blocked",
         "source": "0.0.0.0/0",
         "owned_by": "wireguard"
       }
