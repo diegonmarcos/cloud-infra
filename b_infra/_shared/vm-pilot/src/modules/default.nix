@@ -13,8 +13,17 @@ let
     vms = consolidated._home_manager.vms or {};
   };
   vmData = cloudData.vms.${vmName};
-  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
-    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }];
+  # Pass through `source` (and other optional fields) so firewall.nix mkPortRule
+  # can emit per-port -s CIDR. Previously this map only kept port/proto/desc —
+  # stripping `source` silently — so the WG-only restriction on gcp-proxy's
+  # 25/443 listeners didn't actually fire (deployed firewall.sh had no -s flag).
+  publicPorts = map (p: {
+    port = p.port;
+    proto = p.proto;
+    desc = p.desc;
+    source = p.source or "0.0.0.0/0";
+  }) vmData.public_ports
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; source = "0.0.0.0/0"; }];
 
   # ── wg-public mesh membership (Phase 2 of zero-public-TCP plan) ─────
   # Data-driven: a VM participates in wg-public iff it appears in
