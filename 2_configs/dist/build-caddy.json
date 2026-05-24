@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-22T11:00:14.295Z",
+    "generated_at": "2026-05-24T12:52:47.090Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-22T11:00:14.213Z",
+  "_generated": "2026-05-24T12:52:47.026Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -605,6 +605,10 @@
     {
       "service": "caddy.app",
       "upstream": "10.0.0.1:443"
+    },
+    {
+      "service": "caddy-l4-public.app",
+      "upstream": "10.0.0.4:443"
     },
     {
       "service": "introspect-proxy.app",
@@ -1262,6 +1266,27 @@
       "port": 443,
       "protocol": "https",
       "upstream": "10.0.0.1:443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "caddy-l4-public.app",
+      "redirect_to": "https://caddy-l4-public-tcp-443.app",
+      "container": "caddy-l4-public",
+      "container_key": "app",
+      "svc": "caddy-l4-public",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-l4-public-tcp-443.app",
+      "container": "caddy-l4-public",
+      "container_key": "app",
+      "svc": "caddy-l4-public",
+      "vm": "oci-E2-f_1",
+      "port": 443,
+      "protocol": "tcp",
+      "upstream": "10.0.0.4:443",
       "source": "containers.app.port"
     },
     {
@@ -2391,6 +2416,16 @@
       "notes": null
     },
     {
+      "host": "caddy-l4-public.app",
+      "path": null,
+      "upstream": "10.0.0.4:443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "introspect-proxy.app",
       "path": null,
       "upstream": "10.0.0.1:4182",
@@ -2840,6 +2875,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "caddy",
+      "notes": null
+    },
+    {
+      "host": "caddy-l4-public-tcp-443.app",
+      "path": null,
+      "upstream": "10.0.0.4:443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy-l4-public",
       "notes": null
     },
     {

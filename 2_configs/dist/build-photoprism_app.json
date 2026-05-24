@@ -3,7 +3,7 @@
   "_meta": {
     "description": "photoprism_app container config (service=photoprism, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-22T11:00:14.345Z",
+    "generated_at": "2026-05-24T12:52:47.114Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-22T11:00:14.221Z",
+  "_generated": "2026-05-24T12:52:47.031Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "photoprism_app",
@@ -958,6 +958,21 @@
           "desc": null,
           "role": "app"
         }
+      }
+    },
+    "caddy-l4-public": {
+      "ip": "10.0.0.4",
+      "ports": {
+        "app": 443
+      },
+      "vm": "oci-analytics",
+      "description": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
       }
     },
     "introspect-proxy": {

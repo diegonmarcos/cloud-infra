@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-22T11:00:14.467Z",
+    "generated_at": "2026-05-24T12:52:47.176Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-22T11:00:14.290Z",
+  "_generated": "2026-05-24T12:52:47.086Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -386,10 +386,11 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "cf-worker-http-to-wg-public-bridge",
+        "caddy-l4-public",
         "c3-public-api",
         "dagu"
       ],
-      "container_count": 3
+      "container_count": 4
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -4563,6 +4564,67 @@
         "networks": []
       },
       "upstream_image": "caddy:2",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "caddy-l4-public": {
+      "category": "sec",
+      "vm": "oci-E2-f_1",
+      "folder": "bb-sec_caddy-l4-public",
+      "description": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly.",
+      "enabled": true,
+      "port": 443,
+      "dns": "caddy-l4-public.app",
+      "upstream": "10.0.0.4:443",
+      "containers": {
+        "app": {
+          "container_name": "caddy-l4-public",
+          "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+          "port": 443,
+          "dns": "caddy-l4-public.app",
+          "public": true,
+          "healthcheck": null,
+          "monitoring": {
+            "tls_check": false,
+            "dns_check": false,
+            "endpoint_check": false
+          },
+          "volumes": [],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "tcp"
+        }
+      },
+      "container_names": [
+        "caddy-l4-public"
+      ],
+      "all_ports": [
+        "443"
+      ],
+      "all_dns": [
+        "caddy-l4-public.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 443
+      },
+      "monitoring": {
+        "tls_check": false,
+        "dns_check": false,
+        "endpoint_check": false
+      },
+      "_doc_relay_target": "10.1.0.2:443 = gcp-proxy wg-public IP (spoke). 10.1.0.1 is oci-analytics itself (hub). Source: cloud-data.native.wg_public.peers[name=gcp-proxy].wg_ip. Hardcoded in Caddyfile because caddy-l4's tls sni matcher with wildcard *.diegonmarcos.com and the gcp-proxy wg-public IP are architectural constants — if they move, update the Caddyfile explicitly; not worth a templating layer for a 2-liner config.",
       "api": {
         "has_api": false,
         "has_web_ui": false,
