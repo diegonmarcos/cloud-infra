@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-22T11:00:14.253Z",
+  "_generated": "2026-05-24T12:52:47.048Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -792,6 +792,17 @@
       "ports": null,
       "health": null
     },
+    "caddy-l4-public": {
+      "name": "caddy-l4-public",
+      "vm": "oci-E2-f_1",
+      "domain": null,
+      "enabled": true,
+      "category": "sec",
+      "ports": {
+        "app": 443
+      },
+      "health": null
+    },
     "introspect-proxy": {
       "name": "introspect-proxy",
       "vm": "gcp-E2-f_0",
@@ -1422,6 +1433,15 @@
       "dns": "caddy.app"
     },
     {
+      "service": "caddy-l4-public",
+      "dns": "caddy-l4-public.app"
+    },
+    {
+      "service": "caddy-l4-public",
+      "container": "app",
+      "dns": "caddy-l4-public.app"
+    },
+    {
       "service": "introspect-proxy",
       "dns": "introspect-proxy.app"
     },
@@ -1715,6 +1735,7 @@
         "provider": null,
         "services": [
           "cf-worker-http-to-wg-public-bridge",
+          "caddy-l4-public",
           "c3-public-api",
           "dagu"
         ]
@@ -2230,6 +2251,17 @@
         "enabled": true,
         "category": "sec",
         "ports": null,
+        "health": null
+      },
+      "caddy-l4-public": {
+        "name": "caddy-l4-public",
+        "vm": "oci-E2-f_1",
+        "domain": null,
+        "enabled": true,
+        "category": "sec",
+        "ports": {
+          "app": 443
+        },
         "health": null
       },
       "introspect-proxy": {
@@ -3265,7 +3297,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-22T11:00:14.450Z",
+    "generated_at": "2026-05-24T12:52:47.166Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

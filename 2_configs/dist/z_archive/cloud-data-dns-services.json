@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-22T11:00:14.198Z",
+  "_generated": "2026-05-24T12:52:47.008Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/dns-services",
   "suffix": "app",
   "caddy_ip": "10.0.0.1",
@@ -173,6 +173,10 @@
       "ip": "10.0.0.1",
       "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
     },
+    "caddy-l4-public": {
+      "ip": "10.0.0.1",
+      "desc": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly."
+    },
     "introspect-proxy": {
       "ip": "10.0.0.1",
       "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
@@ -293,7 +297,7 @@
     "6": "oci-apps"
   },
   "_meta": {
-    "generated_at": "2026-05-22T11:00:14.294Z",
+    "generated_at": "2026-05-24T12:52:47.090Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

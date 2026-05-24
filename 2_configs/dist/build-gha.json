@@ -3,7 +3,7 @@
   "_meta": {
     "description": "GHA ship-system config (vms + services dispatch matrix)",
     "format_version": 1,
-    "generated_at": "2026-05-22T11:00:14.446Z",
+    "generated_at": "2026-05-24T12:52:47.165Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-22T11:00:14.233Z",
+  "_generated": "2026-05-24T12:52:47.035Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/gha-config",
   "vms": {
     "oci-mail": {
@@ -213,6 +213,11 @@
     "caddy": {
       "dir": "bb-sec_caddy",
       "vm": "gcp-proxy",
+      "has_docker": true
+    },
+    "caddy-l4-public": {
+      "dir": "bb-sec_caddy-l4-public",
+      "vm": "oci-analytics",
       "has_docker": true
     },
     "introspect-proxy": {
