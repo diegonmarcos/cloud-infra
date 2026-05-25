@@ -28,6 +28,7 @@
     openssl
     bind           # dig, nslookup
     socat
+    tcpdump        # packet capture — operator network debugging
 
     # ── System ──
     htop
