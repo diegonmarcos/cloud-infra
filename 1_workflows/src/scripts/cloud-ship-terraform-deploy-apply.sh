@@ -151,13 +151,21 @@ for name in cloudflare gcloud oci hetzner; do
 done
 
 # Commit updated tfstate.enc files back to repo
+#
+# Identity passed via `git -c` per-command, NOT `git config` (persistent).
+# Persistent `git config user.{name,email}` writes to .git/config and
+# pollutes the operator's local repo identity if this script is ever run
+# outside a fresh CI clone — every subsequent operator commit on that
+# repo would then be authored as github-actions, masking the real author
+# and potentially confusing webhook delivery / branch-protection rules.
 if [ "$STATE_CHANGED" = true ]; then
   echo "── Committing updated tfstate.enc files ──"
   git add c_vps/*/src/terraform.tfstate.enc
   if ! git diff --cached --quiet; then
-    git config user.name "github-actions"
-    git config user.email "actions@github.com"
-    git commit -m "terraform: update encrypted tfstate"
+    git \
+      -c user.name="github-actions" \
+      -c user.email="actions@github.com" \
+      commit -m "terraform: update encrypted tfstate"
     git pull --rebase
     git push
   fi
