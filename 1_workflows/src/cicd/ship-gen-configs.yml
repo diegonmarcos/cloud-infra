@@ -75,3 +75,49 @@ jobs:
             -v "$HOME/git/vault:/root/git/vault:ro" \
             -e CLOUD_DATA_DEPLOY_KEY \
             cloud-builder gen-configs
+
+      # Commit + push the regenerated dist/ back to main.
+      #
+      # The orchestrator script (1_workflows/src/scripts/cloud-ship-orchestrate-gen-configs.sh)
+      # explicitly says "The regenerated files are committed by the standard
+      # ci flow (the workflow caller commits + pushes)" — but until this step
+      # was added, no such commit happened. dist/ on origin diverged from what
+      # the engine actually produces, and downstream ship-home-manager (which
+      # checks out workflow_run.head_sha and reads committed dist/ as-is) saw
+      # stale data. Newly declared peers — e.g. wg-public clients added via
+      # config.json or new vault keys — never propagated to the running VMs.
+      #
+      # Why this won't infinite-loop:
+      #   • commits made with GITHUB_TOKEN do not re-trigger workflows
+      #     (documented GitHub Actions anti-loop)
+      #   • the commit message carries [skip ci] as belt-and-braces
+      #   • a downstream workflow_run consumer (ship-home-manager) still fires
+      #     once per parent ship-gen-configs completion, but by that point
+      #     origin/main has the fresh dist for its checkout to pull
+      - name: Commit regenerated dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eu
+          # Stage every path the engine writes to. Globs that match no files
+          # are silently ignored (|| true on the whole add invocation).
+          git add 2_configs/dist/ \
+                  b_infra/_shared/vm-pilot/dist/ \
+                  b_infra/nixhm-sudo-*/dist/ \
+                  a_solutions/*/src/_cloud-data-consolidated.json \
+                  a_solutions/*/src/build-*.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "::notice::dist/ unchanged — nothing to commit"
+            exit 0
+          fi
+          # Per-command identity (does NOT pollute .git/config — same pattern
+          # adopted in cloud-ship-terraform-deploy-apply.sh after b7ec24e6).
+          git \
+            -c user.name="github-actions" \
+            -c user.email="actions@github.com" \
+            commit -m "ci(gen-configs): refresh dist/ from latest sources [skip ci]
+
+Auto-committed by ship-gen-configs.yml after running
+cloud-builder gen-configs against trigger commit ${GITHUB_SHA::8}.
+Source workflow run: ${GITHUB_RUN_ID}."
+          git push origin HEAD:main
