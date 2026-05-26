@@ -97,16 +97,62 @@ locals {
 }
 
 # =============================================================================
-# DNS Records — A records (all point to proxy_ip)
+# DNS Records — A records
+#
+# Each entry in `a_records` produces:
+#   1. One A record at `name` → `proxy_ip` (always — public IP, gcp-proxy edge)
+#   2. Optionally one additional A record per IP in `extra_ips` (multi-value
+#      DNS — for split-tunnel WG clients that should reach the same service
+#      via an internal IP without round-tripping to the public edge).
+#
+# Multi-value DNS rationale: when a name is configured with extra_ips, a
+# client that can reach the internal IP (e.g. phone on wg0) tries it first
+# and saves a hairpin through the public edge. Public-only clients drop the
+# unreachable internal IP after one connect-failure timeout (~5s) and fall
+# back to the proxy_ip — slight one-time lag, no breakage.
+#
+# Per-record extra_ips are NEVER proxied (Cloudflare proxy can't terminate
+# arbitrary protocols against an RFC1918 origin). proxied flag is always
+# false for the extras regardless of the primary record's `proxied` setting.
 # =============================================================================
 
+locals {
+  # Flatten a_records into one entry per (name, ip) pair. The primary entry
+  # keeps key=name for state stability with the pre-multi-value schema;
+  # extras get key="${name}-${ip}" so they don't collide.
+  a_record_expansions = flatten([
+    for r in local.dns.a_records : concat(
+      [
+        {
+          key     = r.name
+          name    = r.name
+          ip      = local.config.proxy_ip
+          proxied = r.proxied
+          ttl     = r.ttl
+          comment = r.comment
+        }
+      ],
+      [
+        for ip in lookup(r, "extra_ips", []) : {
+          key     = "${r.name}-${ip}"
+          name    = r.name
+          ip      = ip
+          proxied = false
+          ttl     = r.ttl
+          comment = "${r.comment != null ? "${r.comment} " : ""}[multi-value:${ip}]"
+        }
+      ]
+    )
+  ])
+}
+
 resource "cloudflare_record" "a_records" {
-  for_each = { for idx, r in local.dns.a_records : r.name => r }
+  for_each = { for r in local.a_record_expansions : r.key => r }
 
   zone_id = var.cloudflare_zone_id
   name    = each.value.name
   type    = "A"
-  content = local.config.proxy_ip
+  content = each.value.ip
   proxied = each.value.proxied
   ttl     = each.value.ttl
   comment = each.value.comment
