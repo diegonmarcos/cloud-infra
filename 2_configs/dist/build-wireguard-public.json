@@ -3,7 +3,7 @@
   "_meta": {
     "description": "wireguard-public container config (service=wireguard-public, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T14:21:07.914Z",
+    "generated_at": "2026-05-27T15:23:38.392Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T14:21:07.576Z",
+  "_generated": "2026-05-27T15:23:38.272Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "wireguard-public",
@@ -1444,6 +1444,9 @@
     "_doc": "Public-trust WG mesh. VM members: oci-analytics (hub — the only fully-public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services. Operator policy (2026-05-23): wg0 is the private admin mesh; wg-public is open-enrollment.",
     "subnet": "10.1.0.0/24",
     "port": 51821,
+    "port_fallback": 443,
+    "port_fallback_proto": "udp",
+    "_port_fallback_doc": "Hotel-WiFi/airport-network resistance: hub also accepts handshake on udp/443 (PREROUTING REDIRECT → udp/51821). Same mechanism wg0 uses. The two meshes' fallbacks coexist because their hubs are on different VMs (wg0 hub gcp-proxy 35.226.147.64 / wg-public hub oci-analytics 129.151.228.66) — each REDIRECT is local to its own host.",
     "hub": "oci-E2-f_1",
     "peers": [
       {

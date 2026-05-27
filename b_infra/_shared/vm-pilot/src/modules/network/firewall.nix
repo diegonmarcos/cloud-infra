@@ -257,21 +257,34 @@ ${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
 ${if isWgHub then ''
 
     # ══════════════════════════════════════════════════════════════
-    # PHASE 3b: WG FALLBACK — redirect UDP/${wgFallbackPort} → UDP/${wgPort}
+    # WG0 FALLBACK — redirect UDP/${wgFallbackPort} → UDP/${wgPort}
     # ══════════════════════════════════════════════════════════════
-    # Hub-only. Peers behind networks that block 51820/udp (airports,
+    # Hub-only. Peers behind networks that block ${wgPort}/udp (airports,
     # hotels, restrictive corp WiFi) can switch their wg-quick endpoint
     # to gcp-proxy:${wgFallbackPort} and still reach the mesh. Caddy must
     # NOT bind UDP/${wgFallbackPort} (drop QUIC/HTTP/3) for this to work.
-    #
-    # No explicit INPUT ACCEPT for udp/${wgFallbackPort}: PREROUTING REDIRECT
-    # rewrites dport ${wgFallbackPort} → ${wgPort} BEFORE the INPUT chain
-    # evaluates. INPUT then sees dport=${wgPort} and matches the
-    # `iptables -A INPUT -p udp --dport ${wgPort} ... ACCEPT` rule (the only
-    # public-source ACCEPT — operator policy 2026-05-22: WG handshake on
-    # ${wgPort}/udp is THE ONLY port reachable from 0.0.0.0/0).
     iptables -t nat -A PREROUTING -p udp --dport ${wgFallbackPort} -j REDIRECT --to-port ${wgPort}
-    echo "[firewall] WG fallback NAT: udp/${wgFallbackPort} → udp/${wgPort}"
+    echo "[firewall] wg0 fallback NAT: udp/${wgFallbackPort} → udp/${wgPort}"
+'' else ""}
+${let
+  # wg-public's own UDP-fallback REDIRECT on its hub (oci-analytics).
+  # Coexists with wg0's UDP/443 redirect because the hubs live on
+  # different public IPs — each REDIRECT is local to its own host.
+  # Data: wireguard_public.{port_fallback, port_fallback_proto, port}.
+  wgpPortFallback  = cloudData.wireguardPublic.port_fallback or null;
+  wgpFallbackProto = cloudData.wireguardPublic.port_fallback_proto or "udp";
+  wgpPort          = toString (cloudData.wireguardPublic.port or 51821);
+in if isWgPublicHub && wgpPortFallback != null then ''
+
+    # ══════════════════════════════════════════════════════════════
+    # WG-PUBLIC FALLBACK — redirect ${wgpFallbackProto}/${toString wgpPortFallback} → ${wgpFallbackProto}/${wgpPort}
+    # ══════════════════════════════════════════════════════════════
+    # Same mechanism as wg0's fallback above, but for the wg-public hub.
+    # The two coexist because each runs on a different VM (different
+    # public IP). Caddy on this VM is TCP-only on :443, so UDP/443 is
+    # available for the redirect.
+    iptables -t nat -A PREROUTING -p ${wgpFallbackProto} --dport ${toString wgpPortFallback} -j REDIRECT --to-port ${wgpPort}
+    echo "[firewall] wg-public fallback NAT: ${wgpFallbackProto}/${toString wgpPortFallback} → ${wgpFallbackProto}/${wgpPort}"
 '' else ""}
 
     echo "[firewall] Applied: fully declarative iptables + nft for ${vmName} (${toString (builtins.length publicPorts)} static ports)"
