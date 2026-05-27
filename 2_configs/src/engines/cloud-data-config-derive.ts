@@ -1308,16 +1308,45 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
   const SPECIAL_CASES = new Set(["caddy", "authelia", "redis"]);
   const files: DerivedFile[] = [];
 
+  // Standard svc fields known by the engine — anything else on a service
+  // object came via `entry.extra` from the source build.json and must be
+  // forwarded into the per-service derived file so consumers can read
+  // their slice from there (same pattern as deriveServiceConnections does
+  // for `services{}`). Without this, services that own non-container
+  // declarative data (e.g. bb-net_wireguard-public owning the wg-public
+  // mesh topology) couldn't be consumed via their own build-{name}.json
+  // and downstream would have to read the full consolidated.
+  const STANDARD_SVC_KEYS = new Set([
+    "category", "subcategory", "vm", "folder", "description", "enabled",
+    "domain", "flake", "port", "dns", "upstream",
+    "containers", "container_names", "all_ports", "all_dns",
+    "compose", "proxy", "declared_ports", "health", "monitoring",
+    "backup", "notifications", "users", "mail_clients", "fallback_vm",
+    "api", "mcp",
+  ]);
+
+  function svcExtras(svc: any): Record<string, unknown> {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(svc ?? {})) {
+      if (!STANDARD_SVC_KEYS.has(k) && !k.startsWith("_")) out[k] = v;
+    }
+    return out;
+  }
+
   for (const [svcName, svc] of Object.entries(services)) {
     const containers = (svc as any).containers ?? {};
     const containerEntries = Object.entries(containers) as [string, any][];
     const vmEntry = vms[(svc as any).vm];
     const vmAlias = vmEntry?.ssh_alias ?? (svc as any).vm;
+    const extras = svcExtras(svc);
 
     if (containerEntries.length === 0) {
       // Service without containers (terraform-managed, cloudflare-worker,
-      // image-only artefacts). Emit a single build-{svcName}.json so the
-      // service is still discoverable by peers / introspection tooling.
+      // image-only artefacts, or pure data-declaration entries like
+      // bb-net_wireguard-public). Emit a single build-{svcName}.json so
+      // the service is still discoverable by peers / introspection tooling.
+      // Forward any extras (e.g. wireguard_public) so consumers read the
+      // slice from their own derived file, not the global consolidated.
       files.push({
         name: `build-${svcName}.json`,
         data: {
@@ -1332,6 +1361,7 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
           role: null,
           vm: vmAlias,
           services: serviceConnections.services ?? {},
+          ...extras,
         },
       });
       continue;
@@ -1360,6 +1390,11 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
           vm: vmAlias,
           services: serviceConnections.services ?? {},
           ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
+          // Forward any non-standard svc fields (came via entry.extra in the
+          // source build.json) so per-service consumers can read their slice
+          // from build-{containerName}.json instead of the global consolidated.
+          // E.g. bb-net_wireguard-public's wireguard_public block lands here.
+          ...extras,
         },
       });
     }

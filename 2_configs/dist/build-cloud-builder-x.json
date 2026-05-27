@@ -3,7 +3,7 @@
   "_meta": {
     "description": "cloud-builder-x container config (service=cloud-builder-x, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.772Z",
+    "generated_at": "2026-05-27T12:58:44.913Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "cloud-builder-x",
@@ -1438,6 +1438,22 @@
         "api_url": null,
         "healthcheck_paths": []
       }
+    }
+  },
+  "on_demand": true,
+  "registry": "ghcr.io/diegonmarcos",
+  "images": {
+    "cloud-builder-x-deb-nixhm": {
+      "ghcr": "ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm",
+      "dockerfile": "src/Dockerfile.x-deb-nixhm",
+      "platform": "linux/amd64,linux/arm64",
+      "description": "GHA CI/CD builder — Debian flat + nix + home-manager (multi-arch)"
+    },
+    "cloud-builder-x-deb-apt": {
+      "ghcr": "ghcr.io/diegonmarcos/cloud-builder-x-deb-apt",
+      "dockerfile": "src/Dockerfile.apt",
+      "platform": "linux/amd64,linux/arm64",
+      "description": "Multi-arch builder Debian apt (no Nix, lighter)"
     }
   }
 }

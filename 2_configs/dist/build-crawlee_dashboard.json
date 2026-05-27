@@ -3,7 +3,7 @@
   "_meta": {
     "description": "crawlee_dashboard container config (service=crawlee-cloud, role=dashboard)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.711Z",
+    "generated_at": "2026-05-27T12:58:44.878Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "crawlee_dashboard",
@@ -1451,5 +1451,28 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "runtime": {
+    "node_env": "production",
+    "log_level": "info",
+    "rate_limit_max": 1000,
+    "max_concurrent_runs": 5,
+    "actor_max_memory_mb": 2048,
+    "actor_default_memory_mb": 512,
+    "actor_timeout_secs": 3600,
+    "s3_bucket": "crawlee-cloud",
+    "s3_force_path_style": true,
+    "dashboard_hostname": "10.0.0.6"
+  },
+  "secret_env_vars": [
+    "POSTGRES_USER",
+    "POSTGRES_PASSWORD",
+    "POSTGRES_DB",
+    "MINIO_USER",
+    "MINIO_PASSWORD",
+    "JWT_SECRET",
+    "ADMIN_EMAIL",
+    "ADMIN_PASSWORD",
+    "RUNNER_TOKEN"
+  ]
 }

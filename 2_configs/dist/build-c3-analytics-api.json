@@ -3,7 +3,7 @@
   "_meta": {
     "description": "c3-analytics-api container config (service=c3-analytics-api, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.751Z",
+    "generated_at": "2026-05-27T12:58:44.897Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "c3-analytics-api",
@@ -1460,5 +1460,56 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "backends": {
+    "e": {
+      "service": "matomo",
+      "rewrite_path": "/matomo.php",
+      "description": "Matomo Tracking API",
+      "methods": [
+        "GET",
+        "POST"
+      ]
+    },
+    "s": {
+      "service": "umami",
+      "rewrite_path": "/api/send",
+      "description": "Umami /api/send",
+      "methods": [
+        "POST"
+      ]
+    },
+    "l": {
+      "service": "openobserve",
+      "rewrite_path": "/api/default/default/_json",
+      "description": "OpenObserve _json bulk ingest",
+      "methods": [
+        "POST"
+      ],
+      "auth_header_env": "OPENOBSERVE_AUTHORIZATION"
+    }
+  },
+  "sites": [
+    {
+      "id": "diegonmarcos-com",
+      "origins": [
+        "https://diegonmarcos.com",
+        "https://www.diegonmarcos.com"
+      ],
+      "matomo_idsite": null,
+      "umami_website_id": null,
+      "openobserve_stream": "diegonmarcos-com"
+    }
+  ],
+  "limits": {
+    "max_body_bytes": 1048576,
+    "max_ingest_lines": 5000,
+    "rate_per_ip_per_min": 60,
+    "rate_per_sid_per_min": 1000,
+    "tracker_cache_seconds": 300,
+    "request_timeout_ms": 5000
+  },
+  "secret_env_vars": [
+    "OPENOBSERVE_AUTHORIZATION"
+  ]
 }

@@ -631,30 +631,41 @@ function main() {
   // SINGLE source of truth — no fallback:
   //   a_solutions/bb-net_wireguard-public/build.json::wireguard_public
   //
+  // Read via the SAME pipeline as every other service: scanBuildJsons()
+  // picks the field up into entry.extra.wireguard_public (the generic
+  // catch-all for non-typed top-level keys), then this engine finds the
+  // single entry that owns it. No special-case file read here.
+  //
   // Public keys live at vault/A0_keys/providers/wireguard/<name>-public/publickey.
   //
-  // If the build.json is missing or malformed this engine FAILS LOUDLY
-  // rather than silently degrading — `wg-public` is critical infra and
-  // a stale/missing topology would silently lock peers out. Recovery is
-  // to restore the file from git, never to add a fallback here.
-  const wgPublicBuildJsonPath = join(SOLUTIONS_DIR, "bb-net_wireguard-public", "build.json");
-  if (!existsSync(wgPublicBuildJsonPath)) {
+  // If no scanned entry carries the field this engine FAILS LOUDLY rather
+  // than silently degrading — wg-public is critical infra; a stale or
+  // missing topology would lock peers out. Recovery is to restore the
+  // owning build.json from git, never to add a fallback here.
+  const wgPublicEntries = buildEntries.filter(
+    (e: any) => e.extra && e.extra.wireguard_public
+  );
+  if (wgPublicEntries.length === 0) {
     throw new Error(
-      `wg-public SoT missing: ${wgPublicBuildJsonPath}\n` +
-      `This file is the ONLY source of truth for the wg-public mesh ` +
-      `(topology + clients). No fallback is supported — restore it from git ` +
-      `(git checkout HEAD -- a_solutions/bb-net_wireguard-public/build.json) ` +
+      `wg-public SoT not found: no a_solutions/*/build.json carries a ` +
+      `top-level 'wireguard_public' field. Expected owner: ` +
+      `a_solutions/bb-net_wireguard-public/build.json. Restore from git ` +
       `and retry.`
     );
   }
-  const wgPublicBuildJson = readJson(wgPublicBuildJsonPath) as any;
-  const wgPublicCfg = wgPublicBuildJson?.wireguard_public;
+  if (wgPublicEntries.length > 1) {
+    throw new Error(
+      `wg-public SoT collision: ${wgPublicEntries.length} build.json files ` +
+      `declare 'wireguard_public': ${wgPublicEntries.map((e: any) => e.folder).join(", ")}. ` +
+      `Exactly one entry must own this field.`
+    );
+  }
+  const wgPublicOwner = wgPublicEntries[0] as any;
+  const wgPublicCfg = wgPublicOwner.extra.wireguard_public;
   if (!wgPublicCfg || typeof wgPublicCfg !== "object") {
     throw new Error(
-      `wg-public SoT malformed: ${wgPublicBuildJsonPath} has no top-level ` +
-      `'wireguard_public' object. This file must declare { subnet, port, ` +
-      `hub, peers[], clients{} } — see a_solutions/bb-net_wireguard-public/build.json ` +
-      `git history for the schema.`
+      `wg-public SoT malformed: ${wgPublicOwner.folder}/build.json has 'wireguard_public' ` +
+      `but it is not an object. Expected { subnet, port, hub, peers[], clients{} }.`
     );
   }
   const wireguardPublicSection = wgPublicCfg ? {
