@@ -46,10 +46,37 @@ step_docker() {
             set +o pipefail
             eval "$_SSH_PREV_PIPEFAIL"
         fi
+        # Per-job DOCKER_CONFIG isolation cleanup — see DOCKER_CONFIG block
+        # below. RETURN trap fires on every exit path (success, error, early
+        # return), so the per-job dir is guaranteed to be removed even when
+        # the SSH branch bails halfway through. `|| true` keeps cleanup
+        # best-effort: failure to rm a tmp dir must never mask the real
+        # step exit code.
+        if [ -n "${_DOCKER_CONFIG_OWNED:-}" ] && [ -d "${_DOCKER_CONFIG_OWNED}" ]; then
+            rm -rf "${_DOCKER_CONFIG_OWNED}" || true
+            unset _DOCKER_CONFIG_OWNED
+        fi
         trap - ERR RETURN
     }
     trap '_docker_err "$LINENO" "$?" "$BASH_COMMAND"' ERR
     trap '_docker_return_cleanup' RETURN
+
+    # ── Per-job DOCKER_CONFIG isolation (rename-race fix) ─────────────────
+    # GHA matrix jobs all run inside the cloud-builder image with HOME=/root,
+    # so concurrent step_docker invocations would all write
+    # /root/.docker/config.json. `docker login` does atomic temp+rename over
+    # config.json — when two logins overlap, the second loses the rename
+    # race with EBUSY ("rename ... device or resource busy"), aborting the
+    # ship. Surfaced 2026-05-08 (gcp-proxy matrix run, http-to-smtp-proxy-api
+    # never shipped). Setting DOCKER_CONFIG to a per-service+PID path makes
+    # docker write to its own dir, eliminating the shared-file race.
+    # Cleanup happens in _docker_return_cleanup so every exit path frees the
+    # tmp dir. Per-service+PID keys also survive the legitimate case where a
+    # single process re-enters step_docker (deploys won't collide on $$).
+    DOCKER_CONFIG="/tmp/docker-config-${SERVICE_NAME:-default}-$$"
+    mkdir -p "$DOCKER_CONFIG"
+    export DOCKER_CONFIG
+    _DOCKER_CONFIG_OWNED="$DOCKER_CONFIG"
 
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
@@ -68,12 +95,36 @@ step_docker() {
     if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
         REMOTE_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.docker-src-hash 2>/dev/null" 2>/dev/null || true)
         if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
-            # Trust the hash ONLY if the binaries image actually exists on GHCR.
+            # Trust the hash ONLY if the binaries package actually exists on GHCR.
             # A prior failed-push deploy still rsyncs .docker-src-hash to the VM,
             # so without this check we'd short-circuit forever and step_compose
             # would fail on the VM with "denied: denied" pulling a missing image.
+            #
+            # Existence check via `gh api` (preferred over `docker manifest
+            # inspect`):
+            #   - gh API returns deterministic 404 vs 200, no auth-vs-missing
+            #     ambiguity. `docker manifest inspect` could return failure on
+            #     transient auth glitches even when the image existed (and
+            #     vice versa) — caused 6 services (google-workspace-mcp,
+            #     rig-agentic-{sonn,hai}, cloud-cgc-mcp, news-gdelt, postlite)
+            #     to remain stale after the binaries-tag fix landed
+            #     (8ec41cb5, 2026-04-25): src/ unchanged → skip path →
+            #     never rebuilt → never pushed -binaries (Phase 16 contract).
+            #   - gh API is also exactly what test_binaries_image_published.sh
+            #     queries, so engine + test stay in lockstep.
+            #   - Falls back to `docker manifest inspect` when gh is
+            #     unavailable / unauthenticated (e.g. CI runners without gh).
             BINARIES_IMG="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}${DOCKER_IMAGE}-binaries:latest"
-            if docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
+            BINARIES_PKG="${DOCKER_IMAGE}-binaries"
+            _binaries_exists=0
+            if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+                if gh api "/user/packages/container/${BINARIES_PKG}" >/dev/null 2>&1; then
+                    _binaries_exists=1
+                fi
+            elif docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
+                _binaries_exists=1
+            fi
+            if [ "$_binaries_exists" = 1 ]; then
                 log "Docker src unchanged ($LOCAL_HASH) — skipping"
                 return 0
             else
@@ -167,6 +218,10 @@ ${ENV_LINE}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 ${CMD_LINE}
 NEOF
+            # Stamp the engine-generated Dockerfile.native with the canonical
+            # GENERATED-FILE banner so test_service_header_present.sh passes.
+            # Done BEFORE the cp into src/ so both copies carry the header.
+            [ -x "$INJECT_HEADER" ] && "$INJECT_HEADER" stamp "$DIST_DIR/Dockerfile.native" "$DIST_DIR/Dockerfile.native" || true
             # Place Dockerfile in src/ so build context has access to app_dir
             cp "$DIST_DIR/Dockerfile.native" "$SRC_DIR/Dockerfile.native"
             DOCKERFILE="Dockerfile.native"
@@ -202,6 +257,9 @@ ENTRYPOINT []
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 ${CMD_LINE}
 NEOF
+            # Stamp the engine-generated Dockerfile.native with the canonical
+            # GENERATED-FILE banner. See test_service_header_present.sh.
+            [ -x "$INJECT_HEADER" ] && "$INJECT_HEADER" stamp "$DIST_DIR/Dockerfile.native" "$DIST_DIR/Dockerfile.native" || true
             # Place Dockerfile in src/ so build context has access to app files
             cp "$DIST_DIR/Dockerfile.native" "$SRC_DIR/Dockerfile.native"
             DOCKERFILE="Dockerfile.native"
@@ -262,6 +320,9 @@ COPY ${BINARY_NAME} /usr/local/bin/${BINARY_NAME}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 CMD ["${BINARY_NAME}"]
 NEOF
+            # Stamp the engine-generated Dockerfile.native with the canonical
+            # GENERATED-FILE banner. See test_service_header_present.sh.
+            [ -x "$INJECT_HEADER" ] && "$INJECT_HEADER" stamp "$DIST_DIR/Dockerfile.native" "$DIST_DIR/Dockerfile.native" || true
             DOCKERFILE="Dockerfile.native"
             # Pin context to DIST_DIR — the binary AND the Dockerfile.native
             # both live there. Without this, the default-context block below
@@ -339,22 +400,24 @@ NEOF
             | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     fi
 
-    # ── Resolve runner from cloud-data-runners.json (data-driven) ─────────
+    # ── Resolve runner from build-workflows.json (data-driven) ────────────
     # Declared architecture matrix: amd64 → local GHA, arm64 → oci-apps cloud-builder-x.
     # No QEMU. No cross-arch fallback. If the declared runner is unreachable
     # we FAIL LOUDLY — silent degradation was the bug that masked hundreds
     # of exec-format-error builds.
+    # Source-of-truth: 1_workflows/build.json (.runners + .probe + .dispatch),
+    # aggregated by 2_configs/build.sh into dist/build-workflows.json.
+    # Migrated 2026-05-09 from the legacy runners.json under I_cloud-data/ (archived).
     RUNNERS_JSON=""
     for _p in \
-        "/app/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data/cloud-data-runners.json" \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/cloud-data-runners.json" \
-        "$SRC_DIR/cloud-data-runners.json"; do
+        "/app/build-workflows.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/build-workflows.json" \
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/1_workflows/src/build-workflows.json" \
+        "$SRC_DIR/build-workflows.json"; do
         [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
     done
     if [ -z "$RUNNERS_JSON" ]; then
-        log_error "cloud-data-runners.json not found — cannot resolve runner for arch=$ARCH"
+        log_error "build-workflows.json not found — cannot resolve runner for arch=$ARCH"
         return 1
     fi
 
@@ -362,7 +425,7 @@ NEOF
     RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
     # Image identity: prefer III_unix/cb_containers-builders/build.json (the
     # producer's master). Back-compat: fall back to legacy
-    # .runners[$a].builder_image in cloud-data-runners.json if master not
+    # .runners[$a].builder_image in build-workflows.json if master not
     # checked out. The legacy field may be removed once all consumers are
     # migrated; this fallback then becomes the only path that matters.
     RUNNER_IMAGE=""
@@ -377,7 +440,7 @@ NEOF
         [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] && RUNNER_IMAGE="${_ghcr}:latest"
     fi
     if [ -z "$RUNNER_IMAGE" ]; then
-        # Legacy fallback — runners.json mirror, kept for back-compat
+        # Legacy fallback — build-workflows.json mirror, kept for back-compat
         RUNNER_IMAGE="$(jq -r --arg a "$ARCH" '.runners[$a].builder_image // empty' "$RUNNERS_JSON")"
     fi
 
@@ -521,7 +584,7 @@ NEOF
             # failed → docker login failed → build/push failed → engine
             # logged misleading "Pushed" because the SSH | while-read pipe
             # swallowed the non-zero exit (no pipefail).
-            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-/home/diego/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
             GHCR_TOKEN_VAL=""
             if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
@@ -609,7 +672,7 @@ REMOTE_REPAIR
             # survives WG flaps / sshd restarts during long builds (10–15min
             # for full Rust/Nix builds): the build keeps running on the runner
             # even if the engine's SSH session dies; we just reconnect to
-            # read status. Tunables read from cloud-data-runners.json:
+            # read status. Tunables read from build-workflows.json:
             # .dispatch.{poll_interval_seconds,max_duration_seconds,tail_log_lines}.
             #
             # `cd /workspace &&` — REQUIRED because cloud-builder-x's entrypoint

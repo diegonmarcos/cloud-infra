@@ -71,13 +71,20 @@ else
     echo "✓ Clone step uses inputs.vault_deploy_key (declarative)"
 fi
 
-# 4. fetch-vault is wired into the 4 cicd templates that run cloud-builder
-EXPECTED_USAGES=(ship.yml ship-home-manager.yml ship-ci-image.yml ship-gen-configs.yml)
-for tpl in "${EXPECTED_USAGES[@]}"; do
-    f="$CICD_DIR/$tpl"
-    [ -f "$f" ] || { echo "✗ cicd template missing: $tpl"; FAILS=$((FAILS + 1)); continue; }
+# 4. fetch-vault is wired into every cicd ship-*.yml template that runs
+#    cloud-builder. Discovered from disk (no hardcoded allowlist) so retiring
+#    or adding a ship template doesn't require editing this test.
+shopt -s nullglob
+SHIP_TPLS=("$CICD_DIR"/ship*.yml)
+shopt -u nullglob
+[ ${#SHIP_TPLS[@]} -gt 0 ] || { echo "✗ no ship-*.yml templates found in $CICD_DIR"; FAILS=$((FAILS + 1)); }
+for f in "${SHIP_TPLS[@]}"; do
+    tpl=$(basename "$f")
+    # Only assert templates that actually invoke cloud-builder; non-builder
+    # ship templates don't need vault.
+    grep -q 'cloud-builder' "$f" || { echo "· $tpl does not invoke cloud-builder — skipped"; continue; }
     if ! grep -q 'uses:.*fetch-vault' "$f"; then
-        echo "✗ $tpl does not call ./.github/actions/fetch-vault — vault won't be cloned, cloud-builder will fail"
+        echo "✗ $tpl invokes cloud-builder but does not call ./.github/actions/fetch-vault — cloud-builder will fail"
         FAILS=$((FAILS + 1))
     else
         echo "✓ $tpl wires fetch-vault"

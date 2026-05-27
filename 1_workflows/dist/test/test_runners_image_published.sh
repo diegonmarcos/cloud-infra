@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Phase 17 tester — every runners[].builder_image is published     ║
 # ║                                                                  ║
-# ║ Regression guard for cloud-data-runners.json drifting away from  ║
+# ║ Regression guard for build-workflows.json drifting away from  ║
 # ║ the actually-published cloud-builder-x* image. If they diverge,  ║
 # ║ ssh-runner builds fail on oci-apps with "denied: denied" trying  ║
 # ║ to pull the non-existent runner image — and the engine's docker  ║
@@ -23,7 +23,7 @@
 # ║ being built, masking the real cause.                             ║
 # ║                                                                  ║
 # ║ Data-driven (FIRE RULE 3): walks every runner declared in        ║
-# ║ cloud-data-runners.json with type=ssh + builder_image set.       ║
+# ║ build-workflows.json with type=ssh + builder_image set.       ║
 # ║                                                                  ║
 # ║ Skipped when gh is unauthenticated (local dev without token).    ║
 # ║                                                                  ║
@@ -49,18 +49,16 @@ if ! gh auth status >/dev/null 2>&1; then
     exit 0
 fi
 
-# Resolve runners.json — prefer in-image bundled, then derived dist/, fall back to cloud-data submodule
+# Resolve build-workflows.json — prefer in-image bundled, then derived dist/, fall back to source-side symlink.
 RUNNERS_JSON=""
 for p in \
-    "/app/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/I_cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
+    "/app/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_workflows/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
 if [ -z "$RUNNERS_JSON" ]; then
-    fail "cloud-data-runners.json not found"
+    fail "build-workflows.json not found"
     exit 1
 fi
 echo "  source: $RUNNERS_JSON"
@@ -74,7 +72,7 @@ while IFS=$'\t' read -r arch image; do
     body=$(gh api "/user/packages/container/$pkg" 2>/dev/null) || {
         http=$(gh api -i "/user/packages/container/$pkg" 2>/dev/null | head -1 || echo "")
         case "$http" in
-            *404*) fail "arch=$arch builder_image references $image — package '$pkg' does not exist on GHCR. Either republish it or fix cloud-data-runners.json"; continue ;;
+            *404*) fail "arch=$arch builder_image references $image — package '$pkg' does not exist on GHCR. Either republish it or fix build-workflows.json"; continue ;;
         esac
         fail "arch=$arch: gh API error for $pkg"
         continue
