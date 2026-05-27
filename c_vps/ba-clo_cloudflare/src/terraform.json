@@ -9,19 +9,13 @@
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
   "dns_records": {
-    "_a_records_doc": "extra_ips: optional list of additional A-record IPs for the same name (multi-value DNS). Engine emits one cloudflare_record per (name, ip). Use for mail-server hostnames so split-tunnel WG clients hit the wg0 IP directly (10.0.0.1 = gcp-proxy wg0 / Caddy L4 SNI mux) and skip the hairpin through the public edge. Public-only clients drop the unreachable RFC1918 IP after a single connect timeout and fall back to proxy_ip. RFC1918 leak is acceptable per operator policy (topology is already public). 10.0.0.1 is gcp-proxy wg0 IP — Caddy SNI mux on :443 routes IMAPS/SMTPS to Maddy at 10.0.0.3:993/465.",
+    "_a_records_doc": "DEFAULT: wildcard '*' is multi-value [proxy_ip + 10.0.0.1] so every *.diegonmarcos.com is reachable from both public and wg0 clients with NO per-subdomain bookkeeping. EXPLICIT entries are needed only when overriding this default — e.g. 'api' (CF-Worker-consumed, must stay public-only because CF edge has no wg0 route) or 'mail' (wildcard doesn't catch the bare 'mail' name in CF when an MX record exists at the same label). extra_ips field on any record adds more IPs to the multi-value set; the engine emits one cloudflare_record per (name, ip). All RFC1918 leaking acceptable per operator policy.",
     "a_records": [
       { "name": "diegonmarcos.com",  "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",               "proxied": false, "ttl": 300, "comment": null },
       { "name": "*",                 "proxied": false, "ttl": 1,   "extra_ips": ["10.0.0.1"], "comment": "Wildcard → gcp-proxy Caddy (multi-value: wg0 + public)" },
-      { "name": "api",               "proxied": false, "ttl": 300, "comment": "Public-only — Cloudflare Workers (email-forwarder) call api.diegonmarcos.com from CF edge with no wg0 route; multi-value would 50%-drop deliveries to RFC1918. Explicit single-value overrides the wildcard." },
-      { "name": "mail",              "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "Caddy L4: webmail+IMAP+SMTP (needs A, wildcard skips)" },
-      { "name": "imap",              "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "IMAPS via Caddy L4 SNI mux → Maddy 993" },
-      { "name": "smtps",             "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "SMTPS via Caddy L4 SNI mux → Maddy 465" },
-      { "name": "jmap",              "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "JMAP via Caddy reverse_proxy → Stalwart 2443" },
-      { "name": "imap-stalwart",     "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "IMAPS via Caddy L4 SNI mux → Stalwart 2993" },
-      { "name": "smtps-stalwart",    "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "SMTPS via Caddy L4 SNI mux → Stalwart 2465" },
-      { "name": "mail-stalwart",     "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "JMAP HTTPS via Caddy reverse_proxy → Stalwart 2443" }
+      { "name": "api",               "proxied": false, "ttl": 300, "comment": "Public-only — CF Workers call api.* from CF edge with no wg0 route; multi-value would 50%-drop. Overrides the wildcard." },
+      { "name": "mail",              "proxied": false, "ttl": 300, "comment": "Explicit A — CF wildcard doesn't catch bare 'mail' label when MX exists at same name; wildcard already provides multi-value at all other subdomains" }
     ],
 
     "cname_records": [
