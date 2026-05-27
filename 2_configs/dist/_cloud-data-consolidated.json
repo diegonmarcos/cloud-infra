@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-05-27T14:21:05.783Z",
+    "generated_at": "2026-05-27T15:23:36.984Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -4226,6 +4226,9 @@
         "_doc": "Public-trust WG mesh. VM members: oci-analytics (hub — the only fully-public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services. Operator policy (2026-05-23): wg0 is the private admin mesh; wg-public is open-enrollment.",
         "subnet": "10.1.0.0/24",
         "port": 51821,
+        "port_fallback": 443,
+        "port_fallback_proto": "udp",
+        "_port_fallback_doc": "Hotel-WiFi/airport-network resistance: hub also accepts handshake on udp/443 (PREROUTING REDIRECT → udp/51821). Same mechanism wg0 uses. The two meshes' fallbacks coexist because their hubs are on different VMs (wg0 hub gcp-proxy 35.226.147.64 / wg-public hub oci-analytics 129.151.228.66) — each REDIRECT is local to its own host.",
         "hub": "oci-E2-f_1",
         "peers": [
           {
