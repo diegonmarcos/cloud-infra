@@ -132,6 +132,15 @@ for name in cloudflare gcloud oci hetzner; do
 
   tf_cleanup() { rm -f terraform.tfstate terraform.tfstate.backup terraform.tfvars tfplan; rm -rf .terraform; }
   terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
+  # Adopt pre-existing infra resources into state (idempotent — `terraform import`
+  # errors out cleanly when an address is already in state; import.sh swallows it).
+  # Each provider may ship a src/import.sh listing OCIDs/IDs of resources that
+  # were created out-of-band (OCI console, CF dashboard) BEFORE terraform took
+  # over. Without this hook, `apply` hits 409-Conflict on those resources.
+  if [ -x import.sh ]; then
+    echo "  Running import.sh (idempotent state adoption)"
+    ./import.sh || echo "  import.sh exited non-zero (expected if resources already adopted)"
+  fi
   terraform plan -input=false -out=tfplan || { echo "FAIL $name (plan)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
   terraform apply -input=false -auto-approve tfplan || { echo "FAIL $name (apply)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
 
