@@ -166,8 +166,10 @@ resource "cloudflare_record" "a_records" {
   proxied = each.value.proxied
   ttl     = each.value.ttl
   # Truncate at 100 chars — Cloudflare API rejects longer comments (9313).
-  # coalesce shields against null comments (a_records[].comment is nullable).
-  comment = substr(coalesce(each.value.comment, ""), 0, 100)
+  # Null-safe conditional: this TF version's coalesce() still evaluates its
+  # first arg even when shielded, so substr() sees null and errors. Explicit
+  # branch passes null through directly.
+  comment = each.value.comment == null ? null : substr(each.value.comment, 0, 100)
 
   # Import-on-create: if a record with same name+type already exists in
   # Cloudflare (e.g. from a previous partial-apply that died mid-way), treat
