@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-27T11:53:34.202Z",
+    "generated_at": "2026-05-27T12:40:42.561Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -795,6 +795,18 @@
       "networks": [],
       "containers": [
         "wireguard-mesh-ws-tunnel"
+      ]
+    },
+    {
+      "name": "wireguard-public",
+      "category": "net",
+      "vm": "local",
+      "description": "Owner of the wg-public mesh topology + client list. Data-only entry (enabled=false → no container/compose). Replaces the previous wireguard_public block that lived in config.json (root global), so adding/rotating/sharing a wg-public client is a one-file edit here instead of touching the global config.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "wireguard-public"
       ]
     }
   ],

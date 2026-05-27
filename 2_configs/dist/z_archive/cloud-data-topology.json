@@ -3424,6 +3424,30 @@
       },
       "flake": "wireguard-mesh-ws-tunnel"
     },
+    "wireguard-public": {
+      "category": "net",
+      "vm": "local",
+      "folder": "bb-net_wireguard-public",
+      "description": "Owner of the wg-public mesh topology + client list. Data-only entry (enabled=false → no container/compose). Replaces the previous wireguard_public block that lived in config.json (root global), so adding/rotating/sharing a wg-public client is a one-file edit here instead of touching the global config.",
+      "containers": {
+        "app": {
+          "container_name": "wireguard-public",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "wireguard-public"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "wireguard-public"
+    },
     "authelia": {
       "category": "sec",
       "vm": "gcp-E2-f_0",
@@ -5690,7 +5714,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-27T11:53:34.304Z",
+    "generated_at": "2026-05-27T12:40:42.807Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
