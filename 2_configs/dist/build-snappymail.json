@@ -3,7 +3,7 @@
   "_meta": {
     "description": "snappymail container config (service=snappymail, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.700Z",
+    "generated_at": "2026-05-27T12:58:44.867Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.761Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "snappymail",
@@ -1462,5 +1462,13 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "upstream_image": "djmaze/snappymail:latest",
+  "resources": {
+    "mem_limit": "64M",
+    "mem_reservation": "16M"
+  },
+  "secret_env_vars": [
+    "SNAPPYMAIL_ADMIN_PASSWORD"
+  ]
 }

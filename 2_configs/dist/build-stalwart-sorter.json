@@ -3,7 +3,7 @@
   "_meta": {
     "description": "stalwart-sorter container config (service=stalwart, role=sorter)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.706Z",
+    "generated_at": "2026-05-27T12:58:44.873Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.761Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "stalwart-sorter",
@@ -1442,5 +1442,30 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "recovery_mode": false,
+  "upstream_image": "stalwartlabs/stalwart:v0.14.1",
+  "timezone": "Europe/Madrid",
+  "mta_routes": [
+    {
+      "name": "oci-relay",
+      "description": "OCI Email Delivery (eu-marseille-1) — primary outbound relay; SMTP creds shared with maddy (same vault user/pass, region-bound)",
+      "address": "smtp.email.eu-marseille-1.oci.oraclecloud.com",
+      "port": 587,
+      "protocol": "smtp",
+      "implicit_tls": false,
+      "allow_invalid_certs": false,
+      "auth_username_env": "OCI_RELAYUSER",
+      "auth_secret_env": "OCI_RELAYPASSWORD",
+      "default_outbound": true
+    }
+  ],
+  "secret_env_vars": [
+    "ADMIN_PASSWORD",
+    "ME_PASSWORD",
+    "NOREPLY_PASSWORD",
+    "OCI_RELAYUSER",
+    "OCI_RELAYPASSWORD",
+    "DKIM_PRIVATE_KEY_B64"
+  ]
 }

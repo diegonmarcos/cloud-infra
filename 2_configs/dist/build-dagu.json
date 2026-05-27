@@ -3,7 +3,7 @@
   "_meta": {
     "description": "dagu container config (service=dagu, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.761Z",
+    "generated_at": "2026-05-27T12:58:44.904Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "dagu",
@@ -1472,5 +1472,26 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "ssh": {
+    "uid": 0,
+    "ssh_dir": "/root/.ssh",
+    "keys": [
+      "vault_id_rsa",
+      "vault_id_rsa.pub",
+      "google_compute_engine",
+      "google_compute_engine.pub"
+    ]
+  },
+  "secret_env_vars": [
+    "DAGU_ADMIN_USERNAME",
+    "DAGU_ADMIN_PASSWORD",
+    "AUTHELIA_OIDC_DAGU_SECRET",
+    "NOREPLY_PASSWORD",
+    "GITHUB_TOKEN",
+    "AUTHELIA_BEARER_TOKEN",
+    "UMAMI_USERNAME",
+    "UMAMI_PASSWORD",
+    "HTTP_TO_SMTP_PROXY_API_KEY"
+  ]
 }

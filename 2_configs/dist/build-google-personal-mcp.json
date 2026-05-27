@@ -3,7 +3,7 @@
   "_meta": {
     "description": "google-personal-mcp container config (service=google-personal-mcp, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.643Z",
+    "generated_at": "2026-05-27T12:58:44.847Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.760Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "google-personal-mcp",
@@ -1456,5 +1456,24 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "auth": {
+    "mode": "app_password",
+    "imap_host": "imap.gmail.com",
+    "imap_port": 993,
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": 465,
+    "tls": true
+  },
+  "accounts": [
+    {
+      "alias": "diego1",
+      "email": "diegonmarcos1@gmail.com",
+      "secret_env": "DIEGO1_APP_PASSWORD",
+      "default": true
+    }
+  ],
+  "secret_env_vars": [
+    "DIEGO1_APP_PASSWORD"
+  ]
 }

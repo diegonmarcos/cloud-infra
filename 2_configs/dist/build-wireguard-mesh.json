@@ -3,7 +3,7 @@
   "_meta": {
     "description": "wireguard-mesh container config (service=wireguard-mesh, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.735Z",
+    "generated_at": "2026-05-27T12:58:44.889Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "wireguard-mesh",
@@ -1465,5 +1465,14 @@
         "healthcheck_paths": []
       }
     }
+  },
+  "data_sources": {
+    "_doc": "Inputs the snapshot deriver reads — declarative cross-references, no hardcoded values in the panel. Single canonical SoT after the I_cloud-data restructure (post-2026-04): _cloud-data-consolidated.json carries every wg_ip / wg_public_key / public_port already merged.",
+    "consolidated": "2_configs/dist/_cloud-data-consolidated.json",
+    "ws_tunnel": "a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json"
+  },
+  "data_outputs": {
+    "snapshot": "2_configs/dist/mesh-snapshot.json",
+    "_consumer_hint": "Symlinked into src/data/mesh.json at build-prep time; PORTAL_DATA[\"mesh\"] hydration. Bare name (not cloud-data-*) so it stays at dist/ root per cloud-data-config-derive.ts L26 archival rule."
   }
 }

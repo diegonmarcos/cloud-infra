@@ -3,7 +3,7 @@
   "_meta": {
     "description": "gitea container config (service=gitea, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.785Z",
+    "generated_at": "2026-05-27T12:58:44.918Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.450Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "gitea",
@@ -1466,5 +1466,41 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "ssh_port": 2222,
+  "ssh_listen_host": "10.0.0.6",
+  "gitea": {
+    "org": "diego",
+    "mirrors": {
+      "unix": {
+        "upstream": "https://github.com/diegonmarcos/unix.git"
+      },
+      "cloud": {
+        "upstream": "https://github.com/diegonmarcos/cloud.git"
+      },
+      "cloud-data": {
+        "upstream": "https://github.com/diegonmarcos/cloud-data.git"
+      },
+      "front": {
+        "upstream": "https://github.com/diegonmarcos/front.git"
+      },
+      "front-data": {
+        "upstream": "https://github.com/diegonmarcos/front-data.git"
+      },
+      "tools": {
+        "upstream": "https://github.com/diegonmarcos/tools.git"
+      },
+      "vault": {
+        "upstream": "https://github.com/diegonmarcos/vault.git",
+        "private": true
+      }
+    },
+    "mirror_interval": "1h"
+  },
+  "upstream_image": "gitea/gitea:latest",
+  "secret_env_vars": [
+    "GITEA_ADMIN_USER",
+    "GITEA_ADMIN_PASSWORD",
+    "GITEA_ADMIN_EMAIL"
+  ]
 }

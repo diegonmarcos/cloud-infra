@@ -3,7 +3,7 @@
   "_meta": {
     "description": "photoprism_mariadb container config (service=photoprism, role=db)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.695Z",
+    "generated_at": "2026-05-27T12:58:44.864Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.761Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "photoprism_mariadb",
@@ -1455,5 +1455,27 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "timezone": "Europe/Madrid",
+  "s3": {
+    "bucket": "my-photos",
+    "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com",
+    "region": "eu-marseille-1"
+  },
+  "db": {
+    "name": "photoprism",
+    "user": "photoprism"
+  },
+  "secret_env_vars": [
+    "PHOTOPRISM_ADMIN_PASSWORD",
+    "MARIADB_DATABASE",
+    "MARIADB_USER",
+    "MARIADB_PASSWORD",
+    "MARIADB_ROOT_PASSWORD",
+    "PHOTOPRISM_DATABASE_NAME",
+    "PHOTOPRISM_DATABASE_USER",
+    "PHOTOPRISM_DATABASE_PASSWORD",
+    "OCI_S3_ACCESS_KEY",
+    "OCI_S3_SECRET_KEY"
+  ]
 }

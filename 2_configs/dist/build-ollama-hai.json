@@ -3,7 +3,7 @@
   "_meta": {
     "description": "ollama-hai container config (service=ollama-hai, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.722Z",
+    "generated_at": "2026-05-27T12:58:44.885Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "ollama-hai",
@@ -1457,5 +1457,20 @@
         "healthcheck_paths": []
       }
     }
+  },
+  "timezone": "America/Chicago",
+  "upstream_image": "ollama/ollama:latest",
+  "ollama": {
+    "keep_alive": "-1",
+    "num_parallel": 2,
+    "max_loaded_models": 2,
+    "num_ctx": 4096,
+    "models": [
+      "qwen2.5:1.5b",
+      "nomic-embed-text"
+    ]
+  },
+  "resources": {
+    "mem_limit": "6G"
   }
 }

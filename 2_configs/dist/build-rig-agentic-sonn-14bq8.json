@@ -3,7 +3,7 @@
   "_meta": {
     "description": "rig-agentic-sonn-14bq8 container config (service=rig-agentic-sonn-14bq8, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.724Z",
+    "generated_at": "2026-05-27T12:58:44.886Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "rig-agentic-sonn-14bq8",
@@ -1440,5 +1440,21 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "rig": {
+    "ollama_service": "ollama",
+    "ollama_model": "MFDoom/deepseek-r1-tool-calling:14b-qwen-distill-q8_0",
+    "c3_api_url": "http://c3-api.app",
+    "c3_mcp_url": "http://c3-mcp.app",
+    "mattermost_service": "mattermost-bots",
+    "mm_bot_mention": "@ollama-14bq8-ai",
+    "guardrail_max_turns": 20,
+    "self_healing_enabled": true,
+    "rust_log": "rig_agentic=info"
+  },
+  "secret_env_vars": [
+    "SURREAL_ROOT_PASSWORD",
+    "SURREAL_URL",
+    "MM_BOT_TOKEN"
+  ]
 }

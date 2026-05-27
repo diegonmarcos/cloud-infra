@@ -3,7 +3,7 @@
   "_meta": {
     "description": "mail-mcp container config (service=mail-mcp, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.673Z",
+    "generated_at": "2026-05-27T12:58:44.853Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.761Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "mail-mcp",
@@ -1456,5 +1456,45 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "proxied_mcps": {
+    "_note": "URLs resolved at flake build time from cloud-data services{}. Bridge mode → WG IPs only. Same retry/LRU pattern as c3-services-mcp.",
+    "children": [
+      {
+        "name": "google-personal-mcp",
+        "service": "google-personal-mcp",
+        "path": "/mcp"
+      }
+    ],
+    "retry": {
+      "initial_ms": 10000,
+      "max_ms": 120000,
+      "max_retry_state_entries": 16
+    }
+  },
+  "mail_hosts": {
+    "maddy": "mail.diegonmarcos.com",
+    "stalwart": "jmap.diegonmarcos.com"
+  },
+  "mail_ports": {
+    "maddy_imap": 993,
+    "maddy_smtp": 465,
+    "stalwart_imap": 2993,
+    "stalwart_smtp": 2465,
+    "stalwart_jmap_https": 2443
+  },
+  "secret_env_vars": [
+    "MAIL_USER",
+    "MAIL_PASSWORD",
+    "STALWART_ADMIN_URL",
+    "STALWART_ADMIN_USER",
+    "STALWART_ADMIN_PASSWORD",
+    "RESEND_API_KEY",
+    "MADDY_ME_USER",
+    "MADDY_ME_PASSWORD",
+    "STALWART_ME_USER",
+    "STALWART_ME_PASSWORD",
+    "MADDY_NOREPLY_USER",
+    "MADDY_NOREPLY_PASSWORD"
+  ]
 }

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "c3-infra-api container config (service=c3-infra-api, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.752Z",
+    "generated_at": "2026-05-27T12:58:44.897Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "c3-infra-api",
@@ -1466,5 +1466,25 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "ssh": {
+    "uid": 0,
+    "ssh_dir": "/root/.ssh",
+    "keys": [
+      "vault_id_rsa",
+      "vault_id_rsa.pub",
+      "google_compute_engine",
+      "google_compute_engine.pub"
+    ]
+  },
+  "secret_env_vars": [
+    "AUTHELIA_OIDC_C3_MCP_SECRET",
+    "MM_BOT_TOKEN",
+    "C3_API_KEY",
+    "DAGU_USERNAME",
+    "DAGU_PASSWORD",
+    "RESEND_API_KEY",
+    "CF_API_KEY",
+    "CF_API_EMAIL"
+  ]
 }

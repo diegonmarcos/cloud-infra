@@ -3,7 +3,7 @@
   "_meta": {
     "description": "wireguard-mesh-ws-tunnel container config (service=wireguard-mesh-ws-tunnel, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T12:40:42.736Z",
+    "generated_at": "2026-05-27T12:58:44.891Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T12:40:42.449Z",
+  "_generated": "2026-05-27T12:58:44.762Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "wireguard-mesh-ws-tunnel",
@@ -1465,5 +1465,32 @@
         "healthcheck_paths": []
       }
     }
-  }
+  },
+  "transports": {
+    "_doc": "Canonical declaration of all VPN transport paths. Read by bb-net_wireguard-mesh (the panel) + unix/.../wireguard-wstunnel.nix (the laptop client) + cloud Caddy deriver. Single source of truth — never duplicate these values anywhere.",
+    "wg0": {
+      "label": "WireGuard direct (UDP)",
+      "protocol": "udp",
+      "port": 51820,
+      "endpoint_template": "${gcp_proxy.public_ip}:51820",
+      "primary": true,
+      "fallback": false,
+      "use_case": "Default high-speed path. UDP-friendly networks (cloud-to-cloud, home, most cellular).",
+      "_consumer_hint": "Read by home-manager wireguard.nix on every VM and laptop."
+    },
+    "wg0-tcp": {
+      "label": "WireGuard via wstunnel (TCP/443)",
+      "protocol": "tcp",
+      "port": 443,
+      "endpoint_template": "wss://${domain}:443",
+      "wstunnel_path_prefix_secret": "WSTUNNEL_PATH_PREFIX",
+      "primary": false,
+      "fallback": true,
+      "use_case": "Hostile networks (airport / hotel / captive portal) where UDP/51820 is blocked. Looks identical to normal HTTPS to MITM/DPI.",
+      "_consumer_hint": "Read by home-manager wireguard-wstunnel.nix on laptop/phone only."
+    }
+  },
+  "secret_env_vars": [
+    "WSTUNNEL_PATH_PREFIX"
+  ]
 }
