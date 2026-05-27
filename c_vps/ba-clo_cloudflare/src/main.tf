@@ -146,7 +146,12 @@ locals {
         {
           key     = r.name
           name    = r.name
-          ip      = local.config.proxy_ip
+          # Per-record `ip` override → default global `proxy_ip`. Lets a
+          # single record point somewhere other than the canonical public
+          # edge (e.g. `api` → oci-analytics 129.151.228.66 while the
+          # wildcard stays on gcp-proxy). Engine remains data-driven —
+          # override lives in the data file, not in HCL.
+          ip      = lookup(r, "ip", local.config.proxy_ip)
           proxied = r.proxied
           ttl     = r.ttl
           comment = r.comment

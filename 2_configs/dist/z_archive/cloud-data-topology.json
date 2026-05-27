@@ -4089,7 +4089,7 @@
       "vm": "oci-E2-f_1",
       "folder": "bc-obs_c3-public-api",
       "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
-      "domain": "api.diegonmarcos.com/c3-public-api",
+      "domain": "api.diegonmarcos.com/pub",
       "port": 8087,
       "dns": "c3-public-api.app",
       "upstream": "10.0.0.4:8087",
@@ -4105,11 +4105,11 @@
             "auth": "two_factor",
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/c3-public-api",
+            "base_path": "/pub",
             "public_paths": [
-              "/c3-public-api/health",
-              "/c3-public-api/ready",
-              "/c3-public-api/analytics/*"
+              "/pub/health",
+              "/pub/ready",
+              "/pub/analytics/*"
             ]
           },
           "healthcheck": "/health",
@@ -4146,11 +4146,11 @@
           "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/c3-public-api",
+          "base_path": "/pub",
           "public_paths": [
-            "/c3-public-api/health",
-            "/c3-public-api/ready",
-            "/c3-public-api/analytics/*"
+            "/pub/health",
+            "/pub/ready",
+            "/pub/analytics/*"
           ]
         }
       },
@@ -4158,7 +4158,7 @@
         "app": 8087
       },
       "health": {
-        "path": "/c3-public-api/health"
+        "path": "/pub/health"
       },
       "monitoring": {
         "tls_check": true,
@@ -5730,7 +5730,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-27T15:23:38.454Z",
+    "generated_at": "2026-05-27T16:17:17.614Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
