@@ -13,7 +13,7 @@
     "a_records": [
       { "name": "diegonmarcos.com",  "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",               "proxied": false, "ttl": 300, "comment": null },
-      { "name": "*",                 "proxied": false, "ttl": 1,   "extra_ips": ["10.0.0.1"], "comment": "Wildcard catch-all → gcp-proxy Caddy. Multi-value 35.226.147.64 + 10.0.0.1 so wg0 clients (phone, laptop, VMs) reach EVERY *.diegonmarcos.com directly via the WG mesh — no per-service multi-value needed. Public clients lose at most one connect-timeout to the unreachable RFC1918 before falling back to proxy_ip." },
+      { "name": "*",                 "proxied": false, "ttl": 1,   "extra_ips": ["10.0.0.1"], "comment": "Wildcard → gcp-proxy Caddy (multi-value: wg0 + public)" },
       { "name": "mail",              "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "Caddy L4: webmail+IMAP+SMTP (needs A, wildcard skips)" },
       { "name": "imap",              "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "IMAPS via Caddy L4 SNI mux → Maddy 993" },
       { "name": "smtps",             "proxied": false, "ttl": 300, "extra_ips": ["10.0.0.1"], "comment": "SMTPS via Caddy L4 SNI mux → Maddy 465" },
