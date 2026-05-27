@@ -13,7 +13,7 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ Phase 37 tester — cloud-data-runners.json schema invariants      ║
+# ║ Phase 37 tester — build-workflows.json schema invariants      ║
 # ║                                                                  ║
 # ║ Audit P2 #7 (2026-05-05): runners.json had no formal schema, so  ║
 # ║ silent breakage was possible if a key got renamed/dropped. This  ║
@@ -43,19 +43,17 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-# Locate runners.json (same probe order as engine scripts).
+# Locate build-workflows.json (same probe order as engine scripts).
 RUNNERS_JSON=""
 for p in \
-    "/app/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/I_cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
+    "/app/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_workflows/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
 
 if [ -z "$RUNNERS_JSON" ]; then
-    fail "cloud-data-runners.json not found in any expected location"
+    fail "build-workflows.json not found in any expected location"
     echo "Phase 37 runners-schema: FAIL"
     exit 1
 fi

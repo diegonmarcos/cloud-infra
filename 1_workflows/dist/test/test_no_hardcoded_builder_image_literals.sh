@@ -20,7 +20,7 @@
 # ║ Wrappers (GHA YAMLs, composite actions, orchestrate scripts)     ║
 # ║ MUST resolve from the same source — never re-paste the literal.  ║
 # ║                                                                  ║
-# ║ Root cause this prevents (2026-05-05): cloud-data-runners.json   ║
+# ║ Root cause this prevents (2026-05-05): build-workflows.json   ║
 # ║ shipped `cloud-builder-x:latest` (missing -deb-nixhm suffix);    ║
 # ║ engine read it correctly and broke. ~10 hardcoded copies in GHA  ║
 # ║ workflows would have continued working — silently masking the    ║

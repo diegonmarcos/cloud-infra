@@ -130,14 +130,14 @@ SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPer
 
 # ── Warm declared arch runners (for cross-arch docker builds) ────
 # Services with docker.arch != HOST_ARCH need a remote builder (e.g. arm64
-# → oci-apps cloud-builder-x). Source of truth: cloud-data-runners.json.
+# → oci-apps cloud-builder-x). Source of truth: 1_workflows/build.json
+# (.runners), materialised by 2_configs/build.sh into dist/build-workflows.json.
 # Export CLOUD_BUILDER_<ARCH>_READY=1 so step_docker skips its live probe.
 RUNNERS_JSON=""
 for _p in \
-    "/app/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/cloud-data-runners.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data-runners.json"; do
+    "/app/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/2_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_workflows/src/build-workflows.json"; do
     [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
 done
 if [ -n "$RUNNERS_JSON" ]; then

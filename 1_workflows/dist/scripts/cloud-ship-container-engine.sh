@@ -206,9 +206,9 @@ log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "
 # failures only — real remote-command exit codes propagate unchanged.
 #
 # Tunables: $SSH_RETRY_N (default 3), $SSH_RETRY_BACKOFF (default 5).
-# Set in callers from cloud-data-runners.json (.probe.retries +
+# Set in callers from build-workflows.json (.probe.retries +
 # .probe.backoff_seconds) for the full runners path; defaults work for
-# the deploy/health steps that don't read runners.json.
+# the deploy/health steps that don't read the workflows registry.
 ssh_with_retry() {
     _swr_n="${SSH_RETRY_N:-3}"
     _swr_bo="${SSH_RETRY_BACKOFF:-5}"
@@ -296,6 +296,7 @@ for _step in \
     cloud-ship-container-step-deploy-health.sh \
     cloud-ship-container-step-lifecycle.sh \
     cloud-ship-container-step-wrangler.sh \
+    cloud-ship-container-step-wrangler-logs.sh \
     cloud-ship-container-step-terraform-apply.sh \
     cloud-ship-container-step-terraform-plan.sh \
     cloud-ship-container-step-terraform-import.sh \
@@ -421,6 +422,7 @@ case "${1:-all}" in
         fi
         ;;
     wrangler) step_wrangler ;;
+    logs)     shift; step_wrangler_logs "$@" ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;
@@ -441,6 +443,7 @@ case "${1:-all}" in
             echo "  compose      Docker compose up on VM"
             echo "  health       Verify containers are healthy (post-deploy)"
             echo "  wrangler     Deploy Cloudflare Worker via wrangler"
+            echo "  logs [since] [limit] [fmt]  Tail Cloudflare Worker observability logs (default: 15m, 100, pretty)"
             echo "  terraform    Terraform init + apply in dist/"
             echo "  tf-plan      build + secrets + terraform plan"
             echo "  tf-import    build + secrets + terraform import (from src/import.sh)"
