@@ -341,6 +341,14 @@
           "desc": "SMTP MX (wg-public hub — inbound mail relay)",
           "source": "0.0.0.0/0",
           "owned_by": "caddy"
+        },
+        {
+          "port": 51821,
+          "proto": "udp",
+          "desc": "WireGuard wg-public hub — handshake ingress (open enrollment mesh)",
+          "source": "0.0.0.0/0",
+          "owned_by": "wireguard-public",
+          "_doc": "Should be auto-derived by engine from wireguard_public.hub == this VM's alias AND wireguard_public.port. Until that engine refactor, declared explicitly here so the hub actually receives WG handshakes."
         }
       ],
       "gcp-proxy": [
@@ -412,6 +420,14 @@
         "desc": "SMTP MX (wg-public hub — inbound mail relay)",
         "source": "0.0.0.0/0",
         "owned_by": "caddy"
+      },
+      {
+        "port": 51821,
+        "proto": "udp",
+        "desc": "WireGuard wg-public hub — handshake ingress (open enrollment mesh)",
+        "source": "0.0.0.0/0",
+        "owned_by": "wireguard-public",
+        "_doc": "Should be auto-derived by engine from wireguard_public.hub == this VM's alias AND wireguard_public.port. Until that engine refactor, declared explicitly here so the hub actually receives WG handshakes."
       }
     ],
     "gcp-proxy": [
@@ -5714,7 +5730,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-27T12:58:44.932Z",
+    "generated_at": "2026-05-27T14:21:08.151Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
