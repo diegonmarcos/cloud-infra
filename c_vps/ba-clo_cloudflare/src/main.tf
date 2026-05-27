@@ -117,21 +117,21 @@ locals {
 # =============================================================================
 
 locals {
-  # Flatten a_records into one entry per (name, ip) pair. The primary entry
-  # keeps key=name for state stability with the pre-multi-value schema;
-  # extras get key="${name}-${ip}" so they don't collide.
+  # Flatten a_records into one entry per (name, ip) pair.
+  #
+  # Ordering intent: extra_ips first (intended to be wg-mesh internal
+  # addresses like 10.0.0.1), proxy_ip last (the public fallback). This
+  # is an INTENT marker — Cloudflare's authoritative DNS randomizes the
+  # multi-value response order on each query (round-robin), so clients
+  # don't see this declaration order verbatim. For deterministic wg-first
+  # resolution, point the client at hickory (10.0.0.1:53) which returns
+  # the wg IP only.
+  #
+  # Resource keys: the entry whose ip == proxy_ip keeps key=r.name (state
+  # stable with the pre-multi-value schema, regardless of where in the
+  # concat it lands); extras get key="${name}-${ip}" so they don't collide.
   a_record_expansions = flatten([
     for r in local.dns.a_records : concat(
-      [
-        {
-          key     = r.name
-          name    = r.name
-          ip      = local.config.proxy_ip
-          proxied = r.proxied
-          ttl     = r.ttl
-          comment = r.comment
-        }
-      ],
       [
         for ip in lookup(r, "extra_ips", []) : {
           key     = "${r.name}-${ip}"
@@ -140,6 +140,16 @@ locals {
           proxied = false
           ttl     = r.ttl
           comment = "${r.comment != null ? "${r.comment} " : ""}[multi-value:${ip}]"
+        }
+      ],
+      [
+        {
+          key     = r.name
+          name    = r.name
+          ip      = local.config.proxy_ip
+          proxied = r.proxied
+          ttl     = r.ttl
+          comment = r.comment
         }
       ]
     )
