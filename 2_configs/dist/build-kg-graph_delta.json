@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-27T15:23:38.462Z",
+    "generated_at": "2026-05-27T16:17:17.622Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T15:23:38.322Z",
+  "_generated": "2026-05-27T16:17:17.489Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 167,
@@ -1277,7 +1277,7 @@
         "name": "c3-public-api",
         "category": "obs",
         "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
-        "domain": "api.diegonmarcos.com/c3-public-api",
+        "domain": "api.diegonmarcos.com/pub",
         "port": 8087,
         "vm": "oci-analytics",
         "folder": "bc-obs_c3-public-api"
@@ -1969,10 +1969,10 @@
     },
     {
       "table": "domain",
-      "id": "api_diegonmarcos_com/c3_public_api",
-      "key": "domain:api_diegonmarcos_com/c3_public_api",
+      "id": "api_diegonmarcos_com/pub",
+      "key": "domain:api_diegonmarcos_com/pub",
       "properties": {
-        "fqdn": "api.diegonmarcos.com/c3-public-api"
+        "fqdn": "api.diegonmarcos.com/pub"
       }
     },
     {
@@ -3330,7 +3330,7 @@
       "to": "service:caddy",
       "key": "service:c3_public_api->proxied_by->service:caddy",
       "properties": {
-        "domain": "api.diegonmarcos.com/c3-public-api"
+        "domain": "api.diegonmarcos.com/pub"
       }
     },
     {
@@ -3610,9 +3610,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:api_diegonmarcos_com/c3_public_api",
+      "from": "domain:api_diegonmarcos_com/pub",
       "to": "service:c3_public_api",
-      "key": "domain:api_diegonmarcos_com/c3_public_api->routes_to->service:c3_public_api",
+      "key": "domain:api_diegonmarcos_com/pub->routes_to->service:c3_public_api",
       "properties": {}
     },
     {

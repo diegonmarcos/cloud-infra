@@ -3,7 +3,7 @@
   "_meta": {
     "description": "caddy-l4-image container config (service=caddy-l4-image, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-27T15:23:38.402Z",
+    "generated_at": "2026-05-27T16:17:17.571Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T15:23:38.273Z",
+  "_generated": "2026-05-27T16:17:17.434Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "caddy-l4-image",
@@ -1058,18 +1058,18 @@
         "app": 8087
       },
       "vm": "oci-analytics",
-      "domain": "api.diegonmarcos.com/c3-public-api",
+      "domain": "api.diegonmarcos.com/pub",
       "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
       "api": {
         "has_api": true,
         "has_web_ui": true,
-        "api_path": "/c3-public-api",
-        "api_url": "https://api.diegonmarcos.com/c3-public-api/c3-public-api",
+        "api_path": "/pub",
+        "api_url": "https://api.diegonmarcos.com/pub/pub",
         "healthcheck_paths": [
           "/health"
         ],
         "type": "custom-rest",
-        "base_path": "/c3-public-api",
+        "base_path": "/pub",
         "endpoint_count": 5,
         "display_name": "C3 Public API",
         "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",

@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-27T15:23:38.464Z",
+    "generated_at": "2026-05-27T16:17:17.624Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T15:23:38.327Z",
+  "_generated": "2026-05-27T16:17:17.494Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -5198,7 +5198,7 @@
       "folder": "bc-obs_c3-public-api",
       "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
       "enabled": true,
-      "domain": "api.diegonmarcos.com/c3-public-api",
+      "domain": "api.diegonmarcos.com/pub",
       "flake": "c3-public-api",
       "port": 8087,
       "dns": "c3-public-api.app",
@@ -5215,11 +5215,11 @@
             "auth": "two_factor",
             "type": "path",
             "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/c3-public-api",
+            "base_path": "/pub",
             "public_paths": [
-              "/c3-public-api/health",
-              "/c3-public-api/ready",
-              "/c3-public-api/analytics/*"
+              "/pub/health",
+              "/pub/ready",
+              "/pub/analytics/*"
             ]
           },
           "healthcheck": "/health",
@@ -5256,11 +5256,11 @@
           "auth": "two_factor",
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/c3-public-api",
+          "base_path": "/pub",
           "public_paths": [
-            "/c3-public-api/health",
-            "/c3-public-api/ready",
-            "/c3-public-api/analytics/*"
+            "/pub/health",
+            "/pub/ready",
+            "/pub/analytics/*"
           ]
         }
       },
@@ -5268,13 +5268,14 @@
         "app": 8087
       },
       "health": {
-        "path": "/c3-public-api/health"
+        "path": "/pub/health"
       },
       "monitoring": {
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
       },
+      "_domain_doc": "PUB ROUTING (operator decision 2026-05-27): public-facing routes live under api.diegonmarcos.com/pub/* (high precedence, public ingress via oci-analytics). All other api.* paths remain wg-cloud-only (gcp-proxy edge over wg0). Renamed from /c3-public-api → /pub for clean separation of concerns.",
       "mail": {
         "_doc": "JSON-in -> SMTP-out: replicates the aa-sui_tools-http-to-smtp-proxy-api Rust binary contract so the CF Worker does not need any change. Primary delivery to Maddy:25 (MX-style, plain SMTP over WG); shadow delivery to Stalwart:2025 (STARTTLS-capable, fire-and-forget so JMAP clients see the same mail).",
         "primary": {
@@ -5327,13 +5328,13 @@
       "api": {
         "has_api": true,
         "has_web_ui": true,
-        "api_path": "/c3-public-api",
-        "api_url": "https://api.diegonmarcos.com/c3-public-api/c3-public-api",
+        "api_path": "/pub",
+        "api_url": "https://api.diegonmarcos.com/pub/pub",
         "healthcheck_paths": [
           "/health"
         ],
         "type": "custom-rest",
-        "base_path": "/c3-public-api",
+        "base_path": "/pub",
         "endpoint_count": 5,
         "display_name": "C3 Public API",
         "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
