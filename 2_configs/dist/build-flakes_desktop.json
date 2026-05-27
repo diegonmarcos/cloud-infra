@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-27T11:53:34.313Z",
+    "generated_at": "2026-05-27T12:40:42.816Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T11:53:34.212Z",
+  "_generated": "2026-05-27T12:40:42.585Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -252,7 +252,7 @@
     "subnet": "10.1.0.0/24",
     "port": 51821,
     "hub": "oci-E2-f_1",
-    "_doc": "Public-trust WG mesh. Members: oci-analytics (hub, the only public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services.",
+    "_doc": "Public-trust WG mesh. VM members: oci-analytics (hub — the only fully-public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services. Operator policy (2026-05-23): wg0 is the private admin mesh; wg-public is open-enrollment.",
     "peers": [
       {
         "name": "oci-analytics",
@@ -287,17 +287,19 @@
       "surface": {
         "wg_ip": "10.1.0.5",
         "role": "client",
+        "_doc": "Diego's laptop. wg-public access only.",
         "wg_public_key": null
       },
       "termux": {
         "wg_ip": "10.1.0.9",
         "role": "client",
+        "_doc": "Diego's phone — same X25519 identity as wg0 termux (the operator's unified personal credential). The vault dir termux-public/ mirrors the pubkey from termux/.",
         "wg_public_key": "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA="
       },
       "termux-share": {
         "wg_ip": "10.1.0.10",
         "role": "client",
-        "_doc": "Shareable wg-public credential held on Diego's phone. Separate keypair from 'termux' (which is the operator's merged wg0+wg-public identity), so revoking/rotating this one doesn't affect personal admin access.",
+        "_doc": "Shareable wg-public credential held on Diego's phone. Separate keypair from 'termux' (vault dir termux-share-public/) so rotating/revoking this one doesn't affect personal admin access. Designed for handout: someone gets ONLY wg-public access (10.1.0.0/24), never wg0.",
         "wg_public_key": "nNpzC6gB2vm0jV+i3o+WC2jHIafII6ek202naOEhZX8="
       }
     }
@@ -4058,6 +4060,85 @@
       "secret_env_vars": [
         "WSTUNNEL_PATH_PREFIX"
       ]
+    },
+    "wireguard-public": {
+      "category": "net",
+      "vm": "local",
+      "folder": "bb-net_wireguard-public",
+      "description": "Owner of the wg-public mesh topology + client list. Data-only entry (enabled=false → no container/compose). Replaces the previous wireguard_public block that lived in config.json (root global), so adding/rotating/sharing a wg-public client is a one-file edit here instead of touching the global config.",
+      "enabled": false,
+      "flake": "wireguard-public",
+      "containers": {
+        "app": {
+          "container_name": "wireguard-public",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "wireguard-public"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "subcategory": "network",
+      "_doc": "Engine contract: cloud-data-config-consolidated.ts reads .wireguard_public from THIS build.json (preferred) before falling back to config.json::native.wireguard_public during the migration window. Final state after migration is to remove the config.json copy entirely.",
+      "wireguard_public": {
+        "_doc": "Public-trust WG mesh. VM members: oci-analytics (hub — the only fully-public VM), gcp-proxy, oci-mail, oci-apps. Compromise blast radius bounded — wg-public peers reach only public-facing services, not internal wg0 services. Operator policy (2026-05-23): wg0 is the private admin mesh; wg-public is open-enrollment.",
+        "subnet": "10.1.0.0/24",
+        "port": 51821,
+        "hub": "oci-E2-f_1",
+        "peers": [
+          {
+            "name": "oci-analytics",
+            "wg_ip": "10.1.0.1",
+            "role": "hub"
+          },
+          {
+            "name": "gcp-proxy",
+            "wg_ip": "10.1.0.2",
+            "role": "spoke"
+          },
+          {
+            "name": "oci-mail",
+            "wg_ip": "10.1.0.3",
+            "role": "spoke"
+          },
+          {
+            "name": "oci-apps",
+            "wg_ip": "10.1.0.4",
+            "role": "spoke"
+          }
+        ],
+        "clients": {
+          "surface": {
+            "wg_ip": "10.1.0.5",
+            "role": "client",
+            "_doc": "Diego's laptop. wg-public access only."
+          },
+          "termux": {
+            "wg_ip": "10.1.0.9",
+            "role": "client",
+            "_doc": "Diego's phone — same X25519 identity as wg0 termux (the operator's unified personal credential). The vault dir termux-public/ mirrors the pubkey from termux/."
+          },
+          "termux-share": {
+            "wg_ip": "10.1.0.10",
+            "role": "client",
+            "_doc": "Shareable wg-public credential held on Diego's phone. Separate keypair from 'termux' (vault dir termux-share-public/) so rotating/revoking this one doesn't affect personal admin access. Designed for handout: someone gets ONLY wg-public access (10.1.0.0/24), never wg0."
+          }
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
     },
     "authelia": {
       "category": "sec",

@@ -622,11 +622,41 @@ function main() {
     ),
   };
 
-  // ── 13b. WireGuard PUBLIC mesh (zany-popping plan Phase 1) ─────────────
-  // Second WG interface ("wg-public") between the public-facing VM (oci-analytics hub)
-  // and the 3 service VMs (gcp-proxy, oci-mail, oci-apps). Distinct subnet (10.1.0.0/24)
-  // and port (51821) from wg0. Public keys live at vault/A0_keys/providers/wireguard/<vm>-public/publickey.
-  const wgPublicCfg = native.wireguard_public ?? null;
+  // ── 13b. WireGuard PUBLIC mesh ────────────────────────────────────────
+  // Second WG interface ("wg-public") between the public-facing VM
+  // (oci-analytics hub) and the 3 service VMs (gcp-proxy, oci-mail,
+  // oci-apps), plus client peers (operator devices). Distinct subnet
+  // (10.1.0.0/24) and port (51821) from wg0.
+  //
+  // SINGLE source of truth — no fallback:
+  //   a_solutions/bb-net_wireguard-public/build.json::wireguard_public
+  //
+  // Public keys live at vault/A0_keys/providers/wireguard/<name>-public/publickey.
+  //
+  // If the build.json is missing or malformed this engine FAILS LOUDLY
+  // rather than silently degrading — `wg-public` is critical infra and
+  // a stale/missing topology would silently lock peers out. Recovery is
+  // to restore the file from git, never to add a fallback here.
+  const wgPublicBuildJsonPath = join(SOLUTIONS_DIR, "bb-net_wireguard-public", "build.json");
+  if (!existsSync(wgPublicBuildJsonPath)) {
+    throw new Error(
+      `wg-public SoT missing: ${wgPublicBuildJsonPath}\n` +
+      `This file is the ONLY source of truth for the wg-public mesh ` +
+      `(topology + clients). No fallback is supported — restore it from git ` +
+      `(git checkout HEAD -- a_solutions/bb-net_wireguard-public/build.json) ` +
+      `and retry.`
+    );
+  }
+  const wgPublicBuildJson = readJson(wgPublicBuildJsonPath) as any;
+  const wgPublicCfg = wgPublicBuildJson?.wireguard_public;
+  if (!wgPublicCfg || typeof wgPublicCfg !== "object") {
+    throw new Error(
+      `wg-public SoT malformed: ${wgPublicBuildJsonPath} has no top-level ` +
+      `'wireguard_public' object. This file must declare { subnet, port, ` +
+      `hub, peers[], clients{} } — see a_solutions/bb-net_wireguard-public/build.json ` +
+      `git history for the schema.`
+    );
+  }
   const wireguardPublicSection = wgPublicCfg ? {
     subnet: wgPublicCfg.subnet ?? "10.1.0.0/24",
     port: wgPublicCfg.port ?? 51821,
