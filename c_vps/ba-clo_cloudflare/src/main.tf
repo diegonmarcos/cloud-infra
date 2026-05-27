@@ -165,7 +165,17 @@ resource "cloudflare_record" "a_records" {
   content = each.value.ip
   proxied = each.value.proxied
   ttl     = each.value.ttl
-  comment = each.value.comment
+  # Truncate at 100 chars — Cloudflare API rejects longer comments (9313).
+  # The engine appends ' [multi-value:<ip>]' (~23 chars) to extras' comments,
+  # so the source comment must stay under ~75 chars to be safe.
+  comment = substr(each.value.comment, 0, 100)
+
+  # Import-on-create: if a record with same name+type already exists in
+  # Cloudflare (e.g. from a previous partial-apply that died mid-way), treat
+  # it as an update target instead of erroring with 'expected DNS record to
+  # not already be present'. The repo is declarative — anything in CF that
+  # terraform doesn't track is, by definition, drift to be reconciled.
+  allow_overwrite = true
 }
 
 # =============================================================================
