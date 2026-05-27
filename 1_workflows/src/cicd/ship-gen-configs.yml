@@ -112,12 +112,12 @@ jobs:
           fi
           # Per-command identity (does NOT pollute .git/config — same pattern
           # adopted in cloud-ship-terraform-deploy-apply.sh after b7ec24e6).
+          # Subject-only commit message — keep it on ONE line. A multi-line
+          # message inside a YAML run-block scalar requires every line to be
+          # indented at the block's base indent; lines at column 1 silently
+          # break the YAML and the whole workflow fails to validate.
           git \
             -c user.name="github-actions" \
             -c user.email="actions@github.com" \
-            commit -m "ci(gen-configs): refresh dist/ from latest sources [skip ci]
-
-Auto-committed by ship-gen-configs.yml after running
-cloud-builder gen-configs against trigger commit ${GITHUB_SHA::8}.
-Source workflow run: ${GITHUB_RUN_ID}."
+            commit -m "ci(gen-configs): refresh dist/ from trigger ${GITHUB_SHA::8} via run ${GITHUB_RUN_ID} [skip ci]"
           git push origin HEAD:main
