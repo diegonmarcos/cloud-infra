@@ -8,7 +8,7 @@
       "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-05-27T16:17:17.627Z",
+    "generated_at": "2026-05-28T21:40:24.139Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,7 +30,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T16:17:17.494Z",
+  "_generated": "2026-05-28T21:40:24.070Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_termux",
   "deps": {
@@ -1111,6 +1111,64 @@
         "display_name": "FileBrowser",
         "description": "Web-based file manager with REST API.",
         "auth": "bearer"
+      }
+    },
+    "front-end": {
+      "category": "app",
+      "vm": "local",
+      "folder": "aa-sui_front-end",
+      "description": "Front-end project — GitHub Pages route declarations (apex + subdomains). Data-only service: no flake, no deploy. Owns the declarative source for every public host that reverse-proxies to diegonmarcos.github.io, replacing the previous hack of co-locating these inside bb-sec_caddy/build.json.",
+      "enabled": true,
+      "containers": {
+        "app": {
+          "container_name": "front-end",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "front-end"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "type": "special",
+        "github_pages_proxies": [
+          {
+            "domain": "diegonmarcos.com, www.diegonmarcos.com",
+            "github_path": "landpage",
+            "wkd": true,
+            "comment": "Landing page + WKD (Web Key Directory for PGP)"
+          },
+          {
+            "domain": "linktree.diegonmarcos.com",
+            "github_path": "linktree"
+          },
+          {
+            "domain": "nexus.diegonmarcos.com",
+            "github_path": "nexus"
+          },
+          {
+            "domain": "suite.diegonmarcos.com",
+            "github_path": "suite"
+          },
+          {
+            "domain": "maps.diegonmarcos.com",
+            "github_path": "mymaps"
+          }
+        ]
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
       }
     },
     "google-personal-mcp": {
@@ -2868,6 +2926,13 @@
             "target_domain": "diegonmarcos.com",
             "tls_skip_verify": true,
             "comment": "JMAP API follow-through (matches relative redirect from /.well-known/jmap)"
+          },
+          {
+            "_doc": "Bare-host shortcut: clients that hit https://jmap.diegonmarcos.com/ (no path) get a 308 to /.well-known/jmap so the JMAP session JSON is reachable at any of three equivalent URLs — bare host, /.well-known/jmap, apex /.well-known/jmap. Relies on the proxy-route well_known graft (caddyfile.nix mkProxyRoute filtering wellKnownRoutes by target_domain). Mailtemi and similar clients that probe the bare subdomain hostname work without manual URL entry.",
+            "path": "/",
+            "target_domain": "jmap.diegonmarcos.com",
+            "redirect_to": "/.well-known/jmap",
+            "comment": "Bare host → JMAP discovery URL (308 redirect)"
           }
         ],
         "primary": {
@@ -4390,30 +4455,6 @@
           "domain": "proxy.diegonmarcos.com",
           "comment": "Infrastructure dashboard (static HTML)"
         },
-        "github_pages_proxies": [
-          {
-            "domain": "diegonmarcos.com, www.diegonmarcos.com",
-            "github_path": "landpage",
-            "wkd": true,
-            "comment": "Landing page + WKD (Web Key Directory for PGP)"
-          },
-          {
-            "domain": "linktree.diegonmarcos.com",
-            "github_path": "linktree"
-          },
-          {
-            "domain": "nexus.diegonmarcos.com",
-            "github_path": "nexus"
-          },
-          {
-            "domain": "suite.diegonmarcos.com",
-            "github_path": "suite"
-          },
-          {
-            "domain": "maps.diegonmarcos.com",
-            "github_path": "mymaps"
-          }
-        ],
         "parent_domain_meta": {
           "api.diegonmarcos.com": {
             "landing_page": "api",

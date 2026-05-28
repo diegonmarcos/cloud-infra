@@ -1,9 +1,9 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "cypht container config (service=cypht, role=app)",
+    "description": "front-end container config (service=front-end, role=app)",
     "format_version": 1,
-    "generated_at": "2026-05-28T21:40:24.076Z",
+    "generated_at": "2026-05-28T21:40:24.079Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -28,36 +28,13 @@
   "_generated": "2026-05-28T21:40:24.026Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "cypht",
-    "image": "cypht/cypht:latest",
-    "port": 8889,
-    "port_env": null,
-    "dns": "cypht.app",
-    "public": true,
-    "proxy": {
-      "domain": "webmail.diegonmarcos.com",
-      "auth": "two_factor"
-    },
-    "healthcheck": "/",
-    "monitoring": null,
-    "volumes": [
-      "cypht_data:/var/lib/hm3"
-    ],
-    "env_file": true,
-    "depends_on": [
-      "cypht-postgres"
-    ],
-    "resources": {
-      "mem_limit": "256M",
-      "mem_reservation": "64M"
-    },
-    "read_only": false,
-    "protocol": "http",
-    "embedded_dbs": []
+    "container_name": "front-end",
+    "image": "",
+    "public": false
   },
-  "service": "cypht",
+  "service": "front-end",
   "role": "app",
-  "vm": "oci-mail",
+  "vm": "local",
   "services": {
     "code-server": {
       "ip": "10.0.0.6",
@@ -1462,118 +1439,5 @@
         "healthcheck_paths": []
       }
     }
-  },
-  "mail_accounts": {
-    "primary_user": {
-      "email": "me@diegonmarcos.com",
-      "pass_env": "CYPHT_LOGIN_PASSWORD"
-    },
-    "extras": [
-      {
-        "name": "me@dnm.com | JMAP-Stalwart",
-        "email": "me-jmap@stalwart",
-        "login": "me@diegonmarcos.com",
-        "pass_env": "ME_PASSWORD",
-        "jmap": {
-          "host": "jmap.diegonmarcos.com",
-          "port": 2443,
-          "secure": "SSL"
-        },
-        "smtp": {
-          "host": "jmap.diegonmarcos.com",
-          "port": 2465,
-          "secure": "SSL"
-        }
-      },
-      {
-        "name": "diegonmarcos@livecom | IMAP-outlook",
-        "email": "diegonmarcos@live.com",
-        "login": "diegonmarcos@live.com",
-        "pass_env": "LIVE_APP_PASSWORD",
-        "imap": {
-          "host": "outlook.office365.com",
-          "port": 993,
-          "secure": "SSL"
-        },
-        "smtp": {
-          "host": "smtp-mail.outlook.com",
-          "port": 587,
-          "secure": "TLS"
-        }
-      },
-      {
-        "name": "diegonmarcos1@gmail.com | IMAP-gaccount",
-        "email": "diegonmarcos1@gmail.com",
-        "login": "diegonmarcos1@gmail.com",
-        "pass_env": "GMAIL_APP_PASSWORD",
-        "imap": {
-          "host": "imap.gmail.com",
-          "port": 993,
-          "secure": "SSL"
-        },
-        "smtp": {
-          "host": "smtp.gmail.com",
-          "port": 587,
-          "secure": "TLS"
-        }
-      }
-    ],
-    "carddav": {
-      "radicale": {
-        "server_template": "https://cal.diegonmarcos.com/{user_url_encoded}/",
-        "user_env": "PRIMARY_EMAIL",
-        "pass_env": "ME_PASSWORD"
-      }
-    },
-    "feeds": {
-      "url_template": "https://rss.diegonmarcos.com/{topic}/json?poll=1",
-      "topics_source": "../ntfy-topics.json"
-    },
-    "profiles": {
-      "diego": {
-        "name": "Diego",
-        "address": "me@diegonmarcos.com",
-        "replyto": "me@diegonmarcos.com",
-        "sig": "",
-        "rmk": "",
-        "type": "imap",
-        "default": true,
-        "match": "me@dnm.com | IMAPS-Stalwart"
-      }
-    },
-    "settings": {
-      "theme_setting": "darkly",
-      "start_page_setting": "unread",
-      "enable_sieve_filter_setting": true,
-      "enable_snooze_setting": true,
-      "smtp_compose_type_setting": 1,
-      "enable_attachment_reminder_setting": true,
-      "enable_compose_delivery_receipt_setting": true,
-      "mailto_handler_setting": true,
-      "enable_collect_address_on_send_setting": true
-    },
-    "_generated_from": {
-      "via_internal_count": 1,
-      "via_external_count": 1,
-      "peers_referenced": [
-        "stalwart"
-      ]
-    }
-  },
-  "upstream_image": "cypht/cypht:latest",
-  "resources": {
-    "mem_limit": "256M",
-    "mem_reservation": "64M"
-  },
-  "secret_env_vars": [
-    "CYPHT_DB_PASSWORD",
-    "POSTGRES_PASSWORD",
-    "CYPHT_2FA_SECRET",
-    "CYPHT_ADMIN_PASSWORD",
-    "ME_PASSWORD",
-    "NOREPLY_PASSWORD",
-    "LIVE_APP_PASSWORD",
-    "GMAIL_APP_PASSWORD",
-    "CYPHT_LOGIN_PASSWORD"
-  ]
+  }
 }

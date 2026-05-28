@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-27T16:17:17.480Z",
+    "generated_at": "2026-05-28T21:40:24.057Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -358,6 +358,18 @@
       "networks": [],
       "containers": [
         "fin-api"
+      ]
+    },
+    {
+      "name": "front-end",
+      "category": "app",
+      "vm": "local",
+      "description": "Front-end project — GitHub Pages route declarations (apex + subdomains). Data-only service: no flake, no deploy. Owns the declarative source for every public host that reverse-proxies to diegonmarcos.github.io, replacing the previous hack of co-locating these inside bb-sec_caddy/build.json.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "front-end"
       ]
     },
     {
@@ -1264,6 +1276,18 @@
       "networks": [],
       "containers": [
         "fin-api"
+      ]
+    },
+    {
+      "name": "front-end",
+      "category": "app",
+      "vm": "local",
+      "description": "Front-end project — GitHub Pages route declarations (apex + subdomains). Data-only service: no flake, no deploy. Owns the declarative source for every public host that reverse-proxies to diegonmarcos.github.io, replacing the previous hack of co-locating these inside bb-sec_caddy/build.json.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "front-end"
       ]
     },
     {
