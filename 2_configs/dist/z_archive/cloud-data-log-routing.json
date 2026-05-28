@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-27T16:17:17.453Z",
+  "_generated": "2026-05-28T21:40:24.040Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/log-routing",
   "vms": {
     "oci-apps": [
@@ -307,6 +307,38 @@
         "log_level": "info"
       }
     ],
+    "local": [
+      {
+        "container": "front-end",
+        "service": "front-end",
+        "log_level": "info"
+      },
+      {
+        "container": "cloudflare-worker",
+        "service": "cloudflare-worker",
+        "log_level": "info"
+      },
+      {
+        "container": "gcloud",
+        "service": "gcloud",
+        "log_level": "info"
+      },
+      {
+        "container": "wireguard-public",
+        "service": "wireguard-public",
+        "log_level": "info"
+      },
+      {
+        "container": "caddy-l4-image",
+        "service": "caddy-l4-image",
+        "log_level": "info"
+      },
+      {
+        "container": "c3-diego-personal-data-mcp",
+        "service": "c3-diego-personal-data-mcp",
+        "log_level": "info"
+      }
+    ],
     "oci-analytics": [
       {
         "container": "cf-worker-http-to-wg-public-bridge",
@@ -435,33 +467,6 @@
         "log_level": "info"
       }
     ],
-    "local": [
-      {
-        "container": "cloudflare-worker",
-        "service": "cloudflare-worker",
-        "log_level": "info"
-      },
-      {
-        "container": "gcloud",
-        "service": "gcloud",
-        "log_level": "info"
-      },
-      {
-        "container": "wireguard-public",
-        "service": "wireguard-public",
-        "log_level": "info"
-      },
-      {
-        "container": "caddy-l4-image",
-        "service": "caddy-l4-image",
-        "log_level": "info"
-      },
-      {
-        "container": "c3-diego-personal-data-mcp",
-        "service": "c3-diego-personal-data-mcp",
-        "log_level": "info"
-      }
-    ],
     "all": [
       {
         "container": "db-agent",
@@ -471,7 +476,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-27T16:17:17.612Z",
+    "generated_at": "2026-05-28T21:40:24.130Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

@@ -552,19 +552,24 @@ function deriveCaddy(c: any): DerivedFile {
     ...(group.landing_page ? { landing_page: group.landing_page } : {}),
   }));
 
-  // ── GitHub Pages proxies: from caddy build.json proxy.github_pages_proxies ──
-  const caddyBuildJsonPath = join(CLOUD_ROOT, "a_solutions/bb-sec_caddy/src/build.json");
-  const caddyBuildJson = existsSync(caddyBuildJsonPath)
-    ? JSON.parse(readFileSync(caddyBuildJsonPath, "utf-8"))
-    : {};
-  const githubPagesProxies: any[] = (caddyBuildJson.proxy?.github_pages_proxies ?? []).map(
-    (entry: any) => ({
-      domain: entry.domain,
-      github_path: entry.github_path,
-      ...(entry.wkd ? { wkd: true } : {}),
-      ...(entry.comment ? { comment: entry.comment } : {}),
-    }),
-  );
+  // ── GitHub Pages proxies: aggregated from any service's proxy.github_pages_proxies[] ──
+  // Each service declares its own routes in its build.json — there is no
+  // privileged service that owns this list. The canonical declarer today is
+  // a_solutions/aa-sui_front-end/build.json (a data-only "service" that bundles
+  // every diegonmarcos.github.io reverse-proxy host). Any future service may
+  // also contribute entries by adding a `proxy.github_pages_proxies[]` array.
+  const githubPagesProxies: any[] = [];
+  for (const svc of Object.values(services) as any[]) {
+    const proxies = (svc.proxy?.github_pages_proxies ?? []) as any[];
+    for (const entry of proxies) {
+      githubPagesProxies.push({
+        domain: entry.domain,
+        github_path: entry.github_path,
+        ...(entry.wkd ? { wkd: true } : {}),
+        ...(entry.comment ? { comment: entry.comment } : {}),
+      });
+    }
+  }
 
   // ── MCP routes: streaming services ──
   const mcpEndpoints: any[] = [];

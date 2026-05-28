@@ -8,7 +8,7 @@
       "edge_key": "<from_key>-><table>-><to_key>",
       "stale_strategy": "mark with last_seen_ts (never hard-delete)"
     },
-    "generated_at": "2026-05-27T16:17:17.622Z",
+    "generated_at": "2026-05-28T21:40:24.135Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -30,15 +30,15 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-27T16:17:17.489Z",
+  "_generated": "2026-05-28T21:40:24.066Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 167,
-    "edges": 200,
+    "nodes": 169,
+    "edges": 201,
     "by_table": {
       "vm": 4,
-      "service": 54,
-      "container": 74,
+      "service": 55,
+      "container": 75,
       "domain": 35
     }
   },
@@ -241,6 +241,32 @@
         "role": "app",
         "port": 3015,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "front_end",
+      "key": "service:front_end",
+      "properties": {
+        "name": "front-end",
+        "category": "app",
+        "description": "Front-end project — GitHub Pages route declarations (apex + subdomains). Data-only service: no flake, no deploy. Owns the declarative source for every public host that reverse-proxies to diegonmarcos.github.io, replacing the previous hack of co-locating these inside bb-sec_caddy/build.json.",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "aa-sui_front-end"
+      }
+    },
+    {
+      "table": "container",
+      "id": "front_end",
+      "key": "container:front_end",
+      "properties": {
+        "name": "front-end",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
       }
     },
     {
@@ -2119,6 +2145,15 @@
       "from": "service:filebrowser",
       "to": "container:filebrowser_app",
       "key": "service:filebrowser->runs_container->container:filebrowser_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:front_end",
+      "to": "container:front_end",
+      "key": "service:front_end->runs_container->container:front_end",
       "properties": {
         "role": "app"
       }
