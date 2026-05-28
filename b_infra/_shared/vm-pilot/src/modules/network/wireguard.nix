@@ -116,7 +116,20 @@ let
     "AllowedIPs = ${cloudData.mesh.subnet}\n"
   else
     "AllowedIPs = ${peer.address}/32\n"
-  ) + "PersistentKeepalive = 25\n";
+  ) + (if peer.endpoint != null
+       then "PersistentKeepalive = 25\n"
+       else "");
+  # ^^ Emit PersistentKeepalive ONLY when an Endpoint is also set.
+  # WireGuard's keepalive timer requires an endpoint to send to; setting
+  # the keepalive without an endpoint puts the peer into a permanent
+  # `(einval)` retry loop (every 5s the kernel tries to send and fails),
+  # which silently blocks inbound handshakes from that peer's pubkey
+  # from being credited. Symptom: phone WG client tx>0 / rx=0,
+  # `wg show <iface> latest-handshakes` stays at 0, and dyndbg shows
+  # "Sending handshake initiation to peer N ((einval))" looping
+  # without any "Receiving handshake initiation from peer N".
+  # Roaming clients (termux, surface) have no endpoint in the SoT —
+  # the hub must NOT push keepalives at them; they push at the hub.
 
   # Derive hub name from topology (the peer with role == "hub")
   hubName = (lib.findFirst (p: p.role == "hub") { name = "gcp-proxy"; } (cloudData.mesh.peers or [])).name;
