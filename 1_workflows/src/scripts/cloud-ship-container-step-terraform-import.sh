@@ -73,7 +73,10 @@ _tf_state_encrypt() {
         log "Encrypting terraform.tfstate → terraform.tfstate.enc"
         # sops needs the file to have the .enc name for creation_rules matching
         cp "$plain_state" "$enc_state"
-        sops -e -i --input-type json "$enc_state"
+        # sops walks up from CWD to find .sops.yaml — run from SRC_DIR (inside
+        # the cloud repo) so .sops.yaml at the repo root is discoverable
+        # regardless of where build.sh was invoked from.
+        ( cd "$SRC_DIR" && sops -e -i --input-type json "$(basename "$enc_state")" )
         log "State encrypted ($(wc -c < "$enc_state") bytes)"
     fi
 }
