@@ -188,7 +188,14 @@ if [ "$STATE_CHANGED" = true ]; then
       -c user.name="github-actions" \
       -c user.email="actions@github.com" \
       commit -m "terraform: update encrypted tfstate"
-    git pull --rebase
+    # --autostash: terraform leaves regenerated dist/ artifacts
+    # (.terraform.lock.hcl, terraform.tfstate.backup, dist copies) in the
+    # working tree; they're intentionally NOT in the auto-commit (only
+    # src/terraform.tfstate.enc is). Without --autostash, `git pull --rebase`
+    # refuses with "cannot pull with rebase: You have unstaged changes."
+    # autostash stashes them, rebases, then restores — correct for CI where
+    # the dist drift is never pushed.
+    git pull --rebase --autostash
     git push
   fi
 fi
