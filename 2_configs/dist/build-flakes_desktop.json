@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-06-05T18:20:56.113Z",
+    "generated_at": "2026-06-05T20:49:47.490Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-06-05T18:20:55.985Z",
+  "_generated": "2026-06-05T20:49:47.275Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -622,9 +622,7 @@
           "volumes": [
             "./data/mattermost/config:/mattermost/config",
             "./data/mattermost/data:/mattermost/data",
-            "./data/mattermost/logs:/mattermost/logs",
-            "./data/mattermost/plugins:/mattermost/plugins",
-            "./data/mattermost/client-plugins:/mattermost/client/plugins"
+            "./data/mattermost/logs:/mattermost/logs"
           ],
           "env_file": true,
           "depends_on": [
