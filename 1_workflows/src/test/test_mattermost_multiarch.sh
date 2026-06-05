@@ -86,6 +86,19 @@ else
     pass "MM_PACKAGE → $MM_PACKAGE"
 fi
 
+# (5) Agents plugin pinned to an arm64 tarball — TE ships zero plugins so
+# this URL is the only way the Agents plugin actually lands in the image.
+MM_PLUGIN_AGENTS_URL=$(jq -r '.docker.build_args.MM_PLUGIN_AGENTS_URL // empty' "$BUILD_JSON" 2>/dev/null)
+if [ -z "$MM_PLUGIN_AGENTS_URL" ]; then
+    fail "build.json#docker.build_args.MM_PLUGIN_AGENTS_URL not set — Agents plugin won't be baked into the image and /api/v4/plugins will return empty"
+elif [[ "$MM_PLUGIN_AGENTS_URL" != *"mattermost-plugin-agents"* ]]; then
+    fail "MM_PLUGIN_AGENTS_URL doesn't look like a mattermost-plugin-agents release: $MM_PLUGIN_AGENTS_URL"
+elif [[ "$MM_PLUGIN_AGENTS_URL" != *"-linux-arm64.tar.gz" ]]; then
+    fail "MM_PLUGIN_AGENTS_URL is not an arm64 build: $MM_PLUGIN_AGENTS_URL"
+else
+    pass "MM_PLUGIN_AGENTS_URL → $MM_PLUGIN_AGENTS_URL"
+fi
+
 echo ""
 if [ "$FAIL" -eq 0 ]; then
     echo "══════════════════════════════════════════════"
