@@ -480,6 +480,14 @@ function deriveCaddy(c: any): DerivedFile {
       // with `respond <json> 200` + Content-Type: application/json. Other
       // paths still flow to the reverse_proxy upstream.
       ...(proxy.root_response_json ? { root_response_json: proxy.root_response_json } : {}),
+      // Per-path Authelia bypass for primary-domain routes. The caddyfile.nix
+      // template already renders `route.bypass_paths` as `handle <pp> {
+      // reverse_proxy <upstream> }` BEFORE the @bearer/authed handle blocks
+      // (caddyfile.nix:323+323). Caddy's first-match-wins puts the bypass
+      // path on the no-auth path; everything else still hits Authelia. Used
+      // for mobile-app login endpoints (e.g. Mattermost's /api/v4/*) where
+      // the app posts JSON credentials and can't follow a 302 redirect.
+      ...(proxy.bypass_paths ? { bypass_paths: proxy.bypass_paths } : {}),
       comment: svc.description,
     };
     routes.push(route);
