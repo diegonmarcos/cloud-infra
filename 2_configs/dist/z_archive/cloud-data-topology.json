@@ -79,6 +79,9 @@
         "host_literal": true
       },
       "containers": [
+        "mattermost",
+        "mattermost-postgres",
+        "mattermost-bots",
         "code-server",
         "etherpad_app",
         "etherpad_postgres",
@@ -89,9 +92,6 @@
         "hedgedoc_app",
         "hedgedoc_postgres",
         "mail-mcp",
-        "mattermost",
-        "mattermost-postgres",
-        "mattermost-bots",
         "mattermost-mcp",
         "photoprism_app",
         "photoprism_mariadb",
@@ -541,6 +541,24 @@
     "internal_zones": [],
     "derived_entries": [
       {
+        "name": "mattermost.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "chat-mattermost"
+      },
+      {
+        "name": "mattermost-postgres.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "chat-mattermost"
+      },
+      {
+        "name": "mattermost-bots.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "chat-mattermost"
+      },
+      {
         "name": "code-server.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -605,24 +623,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "mail-mcp"
-      },
-      {
-        "name": "mattermost.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "mattermost-bots"
-      },
-      {
-        "name": "mattermost-postgres.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "mattermost-bots"
-      },
-      {
-        "name": "mattermost-bots.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "mattermost-bots"
       },
       {
         "name": "mattermost-mcp.app",
@@ -886,6 +886,136 @@
     "cloudflare": []
   },
   "services": {
+    "chat-mattermost": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_chat-mattermost",
+      "description": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
+      "domain": "chat.diegonmarcos.com",
+      "port": 8065,
+      "dns": "mattermost.app",
+      "upstream": "10.0.0.6:8065",
+      "containers": {
+        "app": {
+          "container_name": "mattermost",
+          "image": "mattermost/mattermost-team-edition:10.11",
+          "port": 8065,
+          "port_env": "MM_SERVICESETTINGS_LISTENADDRESS",
+          "dns": "mattermost.app",
+          "public": true,
+          "proxy": {
+            "domain": "chat.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/api/v4/system/ping",
+          "monitoring": {
+            "tls_check": true
+          },
+          "volumes": [
+            "./data/mattermost/config:/mattermost/config",
+            "./data/mattermost/data:/mattermost/data",
+            "./data/mattermost/logs:/mattermost/logs",
+            "./data/mattermost/plugins:/mattermost/plugins",
+            "./data/mattermost/client-plugins:/mattermost/client/plugins"
+          ],
+          "env_file": true,
+          "depends_on": [
+            "db"
+          ],
+          "resources": null,
+          "read_only": false,
+          "port_format": "colon",
+          "protocol": "http"
+        },
+        "db": {
+          "container_name": "mattermost-postgres",
+          "image": "postgres:16-alpine",
+          "port": 5435,
+          "port_env": "PGPORT",
+          "dns": "mattermost-postgres.app",
+          "public": false,
+          "healthcheck": "pg_isready -U mattermost -d mattermost",
+          "volumes": [
+            "./data/postgres:/var/lib/postgresql/data"
+          ],
+          "env_file": true,
+          "resources": null,
+          "read_only": false,
+          "db_user": "mattermost",
+          "db_name": "mattermost",
+          "protocol": "tcp",
+          "db_engine": "postgres"
+        },
+        "bots": {
+          "container_name": "mattermost-bots",
+          "image": "python:3.12-slim",
+          "port": null,
+          "port_env": null,
+          "dns": "mattermost-bots.app",
+          "public": false,
+          "healthcheck": null,
+          "volumes": [
+            "./ntfy-bridge.py:/app/ntfy-bridge.py:ro",
+            "./requirements-bridge.txt:/app/requirements.txt:ro"
+          ],
+          "env_file": true,
+          "depends_on": [
+            "app"
+          ],
+          "resources": null,
+          "read_only": false
+        }
+      },
+      "container_names": [
+        "mattermost",
+        "mattermost-postgres",
+        "mattermost-bots"
+      ],
+      "all_ports": [
+        "8065",
+        "5435"
+      ],
+      "all_dns": [
+        "mattermost.app",
+        "mattermost-postgres.app",
+        "mattermost-bots.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "chat.diegonmarcos.com",
+          "auth": "two_factor",
+          "paths": {
+            "/api/v4/*": {
+              "auth": "bypass"
+            }
+          }
+        }
+      },
+      "declared_ports": {
+        "app": 8065,
+        "db": 5435
+      },
+      "health": {
+        "path": "/api/v4/system/ping"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mattermost_data",
+          "mattermost_postgres"
+        ]
+      }
+    },
     "code-server": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1727,136 +1857,6 @@
         "enabled": true,
         "volumes": [
           "mail_puller_state"
-        ]
-      }
-    },
-    "mattermost-bots": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "aa-sui_mattermost-bots",
-      "description": "Mattermost team chat with ntfy bridge and C3 command bot",
-      "domain": "chat.diegonmarcos.com",
-      "port": 8065,
-      "dns": "mattermost.app",
-      "upstream": "10.0.0.6:8065",
-      "containers": {
-        "app": {
-          "container_name": "mattermost",
-          "image": "mattermost/mattermost-team-edition:10.11",
-          "port": 8065,
-          "port_env": "MM_SERVICESETTINGS_LISTENADDRESS",
-          "dns": "mattermost.app",
-          "public": true,
-          "proxy": {
-            "domain": "chat.diegonmarcos.com",
-            "auth": "two_factor"
-          },
-          "healthcheck": "/api/v4/system/ping",
-          "monitoring": {
-            "tls_check": true
-          },
-          "volumes": [
-            "./data/mattermost/config:/mattermost/config",
-            "./data/mattermost/data:/mattermost/data",
-            "./data/mattermost/logs:/mattermost/logs",
-            "./data/mattermost/plugins:/mattermost/plugins",
-            "./data/mattermost/client-plugins:/mattermost/client/plugins"
-          ],
-          "env_file": true,
-          "depends_on": [
-            "db"
-          ],
-          "resources": null,
-          "read_only": false,
-          "port_format": "colon",
-          "protocol": "http"
-        },
-        "db": {
-          "container_name": "mattermost-postgres",
-          "image": "postgres:16-alpine",
-          "port": 5435,
-          "port_env": "PGPORT",
-          "dns": "mattermost-postgres.app",
-          "public": false,
-          "healthcheck": "pg_isready -U mattermost -d mattermost",
-          "volumes": [
-            "./data/postgres:/var/lib/postgresql/data"
-          ],
-          "env_file": true,
-          "resources": null,
-          "read_only": false,
-          "db_user": "mattermost",
-          "db_name": "mattermost",
-          "protocol": "tcp",
-          "db_engine": "postgres"
-        },
-        "bots": {
-          "container_name": "mattermost-bots",
-          "image": "python:3.12-slim",
-          "port": null,
-          "port_env": null,
-          "dns": "mattermost-bots.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [
-            "./ntfy-bridge.py:/app/ntfy-bridge.py:ro",
-            "./requirements-bridge.txt:/app/requirements.txt:ro"
-          ],
-          "env_file": true,
-          "depends_on": [
-            "app"
-          ],
-          "resources": null,
-          "read_only": false
-        }
-      },
-      "container_names": [
-        "mattermost",
-        "mattermost-postgres",
-        "mattermost-bots"
-      ],
-      "all_ports": [
-        "8065",
-        "5435"
-      ],
-      "all_dns": [
-        "mattermost.app",
-        "mattermost-postgres.app",
-        "mattermost-bots.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "domain": "chat.diegonmarcos.com",
-          "auth": "two_factor",
-          "paths": {
-            "/api/v4/*": {
-              "auth": "bypass"
-            }
-          }
-        }
-      },
-      "declared_ports": {
-        "app": 8065,
-        "db": 5435
-      },
-      "health": {
-        "path": "/api/v4/system/ping"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "mattermost_data",
-          "mattermost_postgres"
         ]
       }
     },
@@ -5763,7 +5763,7 @@
   },
   "engine_folder": "bc-obs_c3-infra-api",
   "_meta": {
-    "generated_at": "2026-05-31T12:26:39.199Z",
+    "generated_at": "2026-06-05T12:00:35.853Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

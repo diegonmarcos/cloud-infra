@@ -1,8 +1,12 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-31T12:26:38.747Z",
+  "_generated": "2026-06-05T12:00:35.626Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/monitoring-targets",
   "endpoint_checks": [
+    {
+      "service": "chat-mattermost",
+      "url": "https://chat.diegonmarcos.com/api/v4/system/ping"
+    },
     {
       "service": "code-server",
       "url": "https://ide.diegonmarcos.com/"
@@ -22,10 +26,6 @@
     {
       "service": "hedgedoc",
       "url": "https://doc.diegonmarcos.com/"
-    },
-    {
-      "service": "mattermost-bots",
-      "url": "https://chat.diegonmarcos.com/api/v4/system/ping"
     },
     {
       "service": "photoprism",
@@ -106,6 +106,10 @@
   ],
   "dns_checks": [
     {
+      "service": "chat-mattermost",
+      "domain": "chat.diegonmarcos.com"
+    },
+    {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
     },
@@ -124,10 +128,6 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
-    },
-    {
-      "service": "mattermost-bots",
-      "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -212,6 +212,10 @@
   ],
   "tls_checks": [
     {
+      "service": "chat-mattermost",
+      "domain": "chat.diegonmarcos.com"
+    },
+    {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
     },
@@ -230,10 +234,6 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
-    },
-    {
-      "service": "mattermost-bots",
-      "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -343,7 +343,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-31T12:26:39.186Z",
+    "generated_at": "2026-06-05T12:00:35.844Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

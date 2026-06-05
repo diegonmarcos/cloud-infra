@@ -7,7 +7,7 @@
     "replaces": [
       "cloud-data-gha-config.json (vm wg_ip/host/user lookup + service matrix for ship-services.sh)"
     ],
-    "generated_at": "2026-05-31T12:26:39.225Z",
+    "generated_at": "2026-06-05T12:00:35.872Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -29,7 +29,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-31T12:26:38.834Z",
+  "_generated": "2026-06-05T12:00:35.710Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "builders",
   "gha": {
@@ -57,6 +57,11 @@
       }
     },
     "services": {
+      "chat-mattermost": {
+        "dir": "aa-sui_chat-mattermost",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
       "code-server": {
         "dir": "aa-sui_code-server",
         "vm": "oci-apps",
@@ -105,11 +110,6 @@
       "mail-puller": {
         "dir": "aa-sui_mail-puller",
         "vm": "oci-mail",
-        "has_docker": true
-      },
-      "mattermost-bots": {
-        "dir": "aa-sui_mattermost-bots",
-        "vm": "oci-apps",
         "has_docker": true
       },
       "mattermost-mcp": {

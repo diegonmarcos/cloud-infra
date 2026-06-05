@@ -4,7 +4,7 @@
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "api_route": "GET /c3-api/cloud-data/configs",
     "source": "_cloud-data-consolidated.json",
-    "generated_at": "2026-05-31T12:26:38.806Z",
+    "generated_at": "2026-06-05T12:00:35.697Z",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -194,6 +194,20 @@
       "networks": [],
       "containers": [
         "cf-worker-http-to-wg-public-bridge"
+      ]
+    },
+    {
+      "name": "chat-mattermost",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "description": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
+      "domain": "chat.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "mattermost",
+        "mattermost-postgres",
+        "mattermost-bots"
       ]
     },
     {
@@ -539,20 +553,6 @@
       "networks": [],
       "containers": [
         "matomo-hybrid"
-      ]
-    },
-    {
-      "name": "mattermost-bots",
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "description": "Mattermost team chat with ntfy bridge and C3 command bot",
-      "domain": "chat.diegonmarcos.com",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "mattermost",
-        "mattermost-postgres",
-        "mattermost-bots"
       ]
     },
     {
@@ -1199,6 +1199,20 @@
       ]
     },
     {
+      "name": "chat-mattermost",
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "description": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
+      "domain": "chat.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "mattermost",
+        "mattermost-postgres",
+        "mattermost-bots"
+      ]
+    },
+    {
       "name": "code-server",
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1385,20 +1399,6 @@
       "networks": [],
       "containers": [
         "mail-puller"
-      ]
-    },
-    {
-      "name": "mattermost-bots",
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "description": "Mattermost team chat with ntfy bridge and C3 command bot",
-      "domain": "chat.diegonmarcos.com",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "mattermost",
-        "mattermost-postgres",
-        "mattermost-bots"
       ]
     },
     {

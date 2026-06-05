@@ -1,10 +1,22 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-31T12:26:38.676Z",
+  "_generated": "2026-06-05T12:00:35.591Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/dns-services",
   "suffix": "app",
   "caddy_ip": "10.0.0.1",
   "services": {
+    "mattermost": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    "mattermost-postgres": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    "mattermost-bots": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
     "code-server": {
       "ip": "10.0.0.1",
       "desc": "VS Code IDE (ide.diegonmarcos.com)"
@@ -52,18 +64,6 @@
     "mail-puller": {
       "ip": "10.0.0.1",
       "desc": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops."
-    },
-    "mattermost": {
-      "ip": "10.0.0.1",
-      "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
-    },
-    "mattermost-postgres": {
-      "ip": "10.0.0.1",
-      "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
-    },
-    "mattermost-bots": {
-      "ip": "10.0.0.1",
-      "desc": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     "mattermost-mcp": {
       "ip": "10.0.0.1",
@@ -297,7 +297,7 @@
     "6": "oci-apps"
   },
   "_meta": {
-    "generated_at": "2026-05-31T12:26:38.860Z",
+    "generated_at": "2026-06-05T12:00:35.714Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

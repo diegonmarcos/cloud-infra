@@ -3,7 +3,7 @@
   "_meta": {
     "description": "GHA ship-system config (vms + services dispatch matrix)",
     "format_version": 1,
-    "generated_at": "2026-05-31T12:26:39.170Z",
+    "generated_at": "2026-06-05T12:00:35.841Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-31T12:26:38.744Z",
+  "_generated": "2026-06-05T12:00:35.621Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/gha-config",
   "vms": {
     "oci-mail": {
@@ -55,6 +55,11 @@
     }
   },
   "services": {
+    "chat-mattermost": {
+      "dir": "aa-sui_chat-mattermost",
+      "vm": "oci-apps",
+      "has_docker": true
+    },
     "code-server": {
       "dir": "aa-sui_code-server",
       "vm": "oci-apps",
@@ -103,11 +108,6 @@
     "mail-puller": {
       "dir": "aa-sui_mail-puller",
       "vm": "oci-mail",
-      "has_docker": true
-    },
-    "mattermost-bots": {
-      "dir": "aa-sui_mattermost-bots",
-      "vm": "oci-apps",
       "has_docker": true
     },
     "mattermost-mcp": {
