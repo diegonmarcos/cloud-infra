@@ -49,7 +49,26 @@ interface DerivedFile {
 // Helpers
 // ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * Reproducible timestamp source.
+ *
+ * Honors SOURCE_DATE_EPOCH (reproducible-builds.org standard). When set, every
+ * emitter call produces the same ISO string — so byte-identical inputs yield
+ * byte-identical outputs (FIRE RULE 3). 2_configs/build.sh sets this to the
+ * commit timestamp of git HEAD before invoking the engine, so the same commit
+ * regenerates identical dist/ files on any machine. Without this gate every
+ * `_generated`/`generated_at` field carried wall-clock noise, marking ALL ~100
+ * dist files "changed" on every commit and exploding the Ship matrix fanout.
+ *
+ * Falls back to wall-clock only when SOURCE_DATE_EPOCH is unset (CLI runs
+ * outside the build harness). Anything that relies on the field being a fresh
+ * timestamp is broken-by-design.
+ */
 function now(): string {
+  const sde = process.env.SOURCE_DATE_EPOCH;
+  if (sde && /^\d+$/.test(sde)) {
+    return new Date(Number(sde) * 1000).toISOString();
+  }
   return new Date().toISOString();
 }
 

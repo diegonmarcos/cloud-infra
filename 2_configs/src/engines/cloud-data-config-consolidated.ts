@@ -76,6 +76,21 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
+/**
+ * Reproducible timestamp source (reproducible-builds.org SOURCE_DATE_EPOCH).
+ * See cloud-data-config-derive.ts:`now` for the long-form rationale — short
+ * version: wall-clock timestamps in dist/ make every regen-on-commit look like
+ * "100 files changed", exploding the Ship-matrix detect fanout. 2_configs/
+ * build.sh sets SOURCE_DATE_EPOCH=git HEAD commit time before running.
+ */
+function reproducibleNow(): string {
+  const sde = process.env.SOURCE_DATE_EPOCH;
+  if (sde && /^\d+$/.test(sde)) {
+    return new Date(Number(sde) * 1000).toISOString();
+  }
+  return new Date().toISOString();
+}
+
 function takeHigher(existing: string | undefined, candidate: string): string {
   if (!existing) return candidate;
   return candidate > existing ? candidate : existing;
@@ -731,7 +746,7 @@ function main() {
     _warning: "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
     _meta: {
       version: 2,
-      generated_at: new Date().toISOString(),
+      generated_at: reproducibleNow(),
       generated_by: "2_configs/src/engines/cloud-data-config-consolidated.ts",
       pipeline: {
         description: "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
