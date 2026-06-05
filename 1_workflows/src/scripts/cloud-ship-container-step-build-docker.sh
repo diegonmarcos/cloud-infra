@@ -445,7 +445,16 @@ NEOF
     done
     if [ -n "$UNIX_MASTER" ]; then
         _ghcr=$(jq -r '.images["cloud-builder-x-deb-nixhm"].ghcr // empty' "$UNIX_MASTER" 2>/dev/null)
-        [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] && RUNNER_IMAGE="${_ghcr}:latest"
+        # Pull the per-arch tag (:amd64 / :arm64) instead of :latest. The
+        # unix-repo build.sh publishes both per-arch tags AND a multi-arch
+        # :latest manifest list — but :latest got clobbered to amd64-only
+        # at some point on the GHCR push rotation (manifest combine step
+        # didn't survive a subsequent single-arch push). Using :$ARCH is
+        # what `docker manifest create` itself reads from — same source of
+        # truth, arch-correct, immune to :latest regressions.
+        # See log of ship run 27015547857 (2026-06-05) — exec format error
+        # because :latest was amd64 on an arm64 host.
+        [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] && RUNNER_IMAGE="${_ghcr}:${ARCH}"
     fi
     if [ -z "$RUNNER_IMAGE" ]; then
         # Legacy fallback — build-workflows.json mirror, kept for back-compat
