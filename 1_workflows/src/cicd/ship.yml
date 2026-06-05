@@ -196,6 +196,17 @@ jobs:
     needs: detect
     if: needs.detect.outputs.has_vms == 'true'
     runs-on: ubuntu-latest
+    # Ceiling on a per-VM ship pass. Without this, an SSH session that
+    # stalls (NAT timeout, WG tunnel hiccup, oci-builder hang) holds the
+    # `ship-<vm>` concurrency group open until GHA's default 6h timeout,
+    # blocking every subsequent push for hours. Surfaced 2026-06-05 on
+    # run 27027587805 — Ship → oci-analytics hung from 16:41 and was
+    # still in_progress 1h+ later, queueing every follow-up ship.
+    # 45 min covers cold image builds (~10 min each) + 3-retry SSH
+    # deploys + compose recreate with a healthy buffer. If a real build
+    # takes longer than 45 min, that's its own bug to surface, not
+    # something to silently absorb at the workflow level.
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
