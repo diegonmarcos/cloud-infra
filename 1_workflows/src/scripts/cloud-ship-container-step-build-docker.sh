@@ -136,6 +136,26 @@ step_docker() {
     [ -z "$NATIVE_TYPE" ] && NATIVE_TYPE="binary"
     [ -z "$NATIVE_USER" ] && NATIVE_USER="appuser"
 
+    # ── Type-A vendored-Dockerfile build_args ──
+    # Services that ship their own Dockerfile (via nativeBuild.dockerfile in
+    # the flake) can declare upstream-style --build-arg KEY=VALUE pairs
+    # under docker.build_args in build.json (e.g. MM_PACKAGE pointing at the
+    # arm64 tarball for Mattermost). Parsed into an array so values with
+    # spaces / special chars survive both `local` and `ssh` build paths.
+    declare -a BUILD_ARGS_ARR=()
+    BUILD_ARGS_STR=""
+    BUILD_ARGS_JSON="$(jq -c '.docker.build_args // empty' "$CONFIG" 2>/dev/null)"
+    if [ -n "$BUILD_ARGS_JSON" ] && [ "$BUILD_ARGS_JSON" != "null" ] && [ "$BUILD_ARGS_JSON" != "{}" ]; then
+        while IFS= read -r _kv; do
+            [ -n "$_kv" ] || continue
+            BUILD_ARGS_ARR+=(--build-arg "$_kv")
+            # String form for the ssh heredoc branch (values are URLs / scalars
+            # with no shell-sensitive chars; if that assumption ever changes,
+            # we'd need a printf %q per-value pass before inlining).
+            BUILD_ARGS_STR="$BUILD_ARGS_STR --build-arg $_kv"
+        done < <(echo "$BUILD_ARGS_JSON" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+    fi
+
     if [ -n "$NATIVE_CMD" ]; then
         # Convert entrypoint string to JSON array: "npx tsx index.ts" → ["npx","tsx","index.ts"]
         _entrypoint_json() {
@@ -485,6 +505,7 @@ NEOF
                 --tag "$FULL_IMAGE:$SHA_TAG" \
                 --tag "$BINARIES_IMAGE:latest" \
                 --file "$DOCKERFILE_PATH" \
+                "${BUILD_ARGS_ARR[@]}" \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
@@ -701,7 +722,7 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE . && \
+        docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE $BUILD_ARGS_STR . && \
         docker push $FULL_IMAGE:latest && \
         docker push $BINARIES_IMAGE:latest && \
         docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1
