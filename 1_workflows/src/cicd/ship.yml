@@ -20,6 +20,16 @@ on:
   push:
     paths:
       - "a_solutions/*/src/**"
+      # 2_configs/dist/build-*.json are the regenerated config files that
+      # services in a_solutions/*/src/ symlink to (e.g.
+      # bb-sec_caddy/src/build-caddy.json → ../../../2_configs/dist/build-caddy.json).
+      # When the dist file regenerates (because someone edited
+      # 2_configs/src/), git records the content change on the dist file
+      # path — the symlink itself is unchanged so `a_solutions/*/src/**`
+      # would miss it. Adding the dist path here closes the gap; the detect
+      # step (below) reverse-walks the symlinks to map changed dist files
+      # back to their consuming services.
+      - "2_configs/dist/build-*.json"
     branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
@@ -54,14 +64,17 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       # Path-relevance: skip if upstream commit didn't touch a_solutions/
+      # OR 2_configs/dist/build-*.json (whose changes propagate to symlinked
+      # consumers in a_solutions/*/src/).
       - name: Path relevance gate
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
-          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^a_solutions/' | head -1 || true)
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
+              | grep -E '^(a_solutions/|2_configs/dist/build-)' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::skip — no a_solutions/ changes in upstream commit"
+            echo "::notice::skip — no a_solutions/ or 2_configs/dist/build-* changes in upstream commit"
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -121,8 +134,35 @@ jobs:
               CHANGED_DIRS=""; VM_FILTER="$INPUT_VM"
             fi
           else
-            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- a_solutions/*/src/ \
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' \
               | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+
+            # Also pick up consumers of regenerated 2_configs/dist/build-*.json
+            # files. Reverse-walk each service's src/ for symlinks resolving to
+            # any changed dist file, and append the owning service dir to
+            # CHANGED_DIRS. Without this, edits to 2_configs/src/ regenerate
+            # the dist but no Ship runs for the symlinked consumers.
+            DIST_CHANGED=$(git diff --name-only HEAD~1 HEAD -- '2_configs/dist/build-*.json' 2>/dev/null)
+            if [ -n "$DIST_CHANGED" ]; then
+              DIST_CONSUMERS=""
+              for _df in $DIST_CHANGED; do
+                _df_abs="$PWD/$_df"
+                for _svc_dir in a_solutions/*/src; do
+                  for _link in "$_svc_dir"/*.json; do
+                    [ -L "$_link" ] || continue
+                    _target=$(readlink -f "$_link" 2>/dev/null || true)
+                    if [ "$_target" = "$_df_abs" ]; then
+                      _svc=$(echo "$_svc_dir" | awk -F/ '{print $2}')
+                      DIST_CONSUMERS="$DIST_CONSUMERS $_svc"
+                    fi
+                  done
+                done
+              done
+              CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$DIST_CONSUMERS" \
+                | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+              echo "::notice::dist-consumer ship: $DIST_CONSUMERS"
+            fi
+
             VM_FILTER=""
             if [ -z "$CHANGED_DIRS" ]; then
               echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
