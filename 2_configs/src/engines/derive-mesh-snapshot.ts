@@ -191,7 +191,12 @@ function build(): Snapshot {
     }
   }
 
-  const now = new Date().toISOString();
+  // Reproducible timestamp source — see cloud-data-config-derive.ts:`now`.
+  // Honors SOURCE_DATE_EPOCH; falls back to wall-clock outside the harness.
+  const _sde = process.env.SOURCE_DATE_EPOCH;
+  const now = (_sde && /^\d+$/.test(_sde))
+    ? new Date(Number(_sde) * 1000).toISOString()
+    : new Date().toISOString();
   return {
     _meta: {
       generated_at: now,
