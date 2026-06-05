@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ Phase 3D tester — mattermost base image is multi-arch            ║
+# ║ Phase 3D tester — chat-mattermost arm64 build invariants         ║
 # ║                                                                  ║
-# ║ Proves:                                                          ║
-# ║   chat-mattermost/flake.nix uses an upstream image that          ║
-# ║   publishes both linux/amd64 and linux/arm64 manifests.          ║
-# ║   The old ngrie/mattermost-team-edition-arm fork only publishes  ║
-# ║   amd64, breaking oci-apps (aarch64).                            ║
+# ║ Proves the service uses our in-house arm64 build path:           ║
+# ║   1. No reference to ngrie/mattermost-team-edition-arm           ║
+# ║      (community fork; only publishes amd64; broke oci-apps).     ║
+# ║   2. No reference to upstream mattermost/mattermost-team-edition ║
+# ║      Docker image (still amd64-only on Docker Hub for 11.x).     ║
+# ║   3. A vendored Dockerfile exists at src/code/arm64/Dockerfile   ║
+# ║      with the UPSTREAM.txt pin metadata next to it.              ║
+# ║   4. build.json#docker.build_args.MM_PACKAGE points at the       ║
+# ║      official releases.mattermost.com URL with a -linux-arm64    ║
+# ║      .tar.gz suffix (so cloud-builder builds with the right      ║
+# ║      binary tarball).                                            ║
 # ║                                                                  ║
-# ║ Strategy: static check of flake source (no network). The full    ║
-# ║ manifest check is run in the weekly sweep preflight via          ║
-# ║ `docker manifest inspect`.                                        ║
+# ║ Strategy: static check (no network). The actual build happens    ║
+# ║ on oci-apps cloud-builder via the ship pipeline; this test       ║
+# ║ catches accidental regressions in the source declarations.       ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_mattermost_multiarch.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
@@ -19,9 +25,10 @@ set -eo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 SVC_DIR="$REPO_ROOT/a_solutions/aa-sui_chat-mattermost"
 FLAKE="$SVC_DIR/src/flake.nix"
-# Image declaration now lives in auto-generated build-mattermost.json (derived
-# from cloud-data-consolidated); flake.nix just readFile's it. Assert on the
-# full set of source files that could carry the image reference.
+DOCKERFILE="$SVC_DIR/src/code/arm64/Dockerfile"
+UPSTREAM_PIN="$SVC_DIR/src/code/arm64/UPSTREAM.txt"
+BUILD_JSON="$SVC_DIR/build.json"
+
 # -L follows symlinks (build-*.json files are symlinks to ../../../2_configs/dist/)
 SEARCH_FILES=$(find -L "$SVC_DIR/src" -maxdepth 2 -type f \
     \( -name 'flake.nix' -o -name 'build-*.json' -o -name 'build.json' -o -name 'compose.nix' \) 2>/dev/null)
@@ -30,40 +37,64 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-echo "── chat-mattermost base image ──"
+echo "── chat-mattermost arm64 build invariants ──"
 
-if [ -z "$SEARCH_FILES" ]; then
-    fail "no flake.nix / build-*.json found under $SVC_DIR/src"
+# (1) No ngrie fork
+if grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES 2>/dev/null \
+    | grep -vE ':\s*(#|//)' \
+    | grep -q .; then
+    fail "source still references ngrie/mattermost-team-edition-arm (amd64-only, breaks oci-apps):"
+    grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES \
+        | grep -vE ':\s*(#|//)' >&2 || true
 else
-    # The forbidden fork tag — ngrie/mattermost-team-edition-arm only publishes
-    # amd64. Match executable code only (skip '#'- and '//'-comment lines so the
-    # swap note explaining WHY we switched doesn't trip the test).
-    if grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES 2>/dev/null \
-        | grep -vE ':\s*(#|//)' \
-        | grep -q .; then
-        fail "source still references ngrie/mattermost-team-edition-arm (amd64-only, breaks oci-apps):"
-        grep -nE 'ngrie/mattermost-team-edition-arm' $SEARCH_FILES \
-            | grep -vE ':\s*(#|//)' >&2 || true
-    else
-        pass "no reference to ngrie fork in code"
-    fi
+    pass "no reference to ngrie fork in code"
+fi
 
-    if grep -qE 'mattermost/mattermost-team-edition:[0-9]' $SEARCH_FILES; then
-        pass "source declares upstream multi-arch mattermost/mattermost-team-edition"
-    else
-        fail "source does not reference upstream mattermost/mattermost-team-edition — cannot guarantee multi-arch"
-    fi
+# (2) No upstream mattermost/mattermost-team-edition image (we vendor the
+# Dockerfile and build our own arm64 image from the binary tarball)
+if grep -nE 'mattermost/mattermost-team-edition' $SEARCH_FILES 2>/dev/null \
+    | grep -vE ':\s*(#|//)' \
+    | grep -q .; then
+    fail "source still references upstream mattermost/mattermost-team-edition Docker image (amd64-only on Docker Hub):"
+    grep -nE 'mattermost/mattermost-team-edition' $SEARCH_FILES \
+        | grep -vE ':\s*(#|//)' >&2 || true
+else
+    pass "no reference to upstream amd64-only Docker image"
+fi
+
+# (3) Vendored upstream Dockerfile + pin metadata exist
+if [ -f "$DOCKERFILE" ]; then
+    pass "vendored Dockerfile exists ($DOCKERFILE)"
+else
+    fail "vendored Dockerfile missing at $DOCKERFILE"
+fi
+if [ -f "$UPSTREAM_PIN" ] && grep -q '^commit_sha:' "$UPSTREAM_PIN" 2>/dev/null; then
+    pass "UPSTREAM.txt pin records commit_sha"
+else
+    fail "UPSTREAM.txt missing or lacks commit_sha at $UPSTREAM_PIN"
+fi
+
+# (4) build.json declares MM_PACKAGE → arm64 tarball
+MM_PACKAGE=$(jq -r '.docker.build_args.MM_PACKAGE // empty' "$BUILD_JSON" 2>/dev/null)
+if [ -z "$MM_PACKAGE" ]; then
+    fail "build.json#docker.build_args.MM_PACKAGE not set — build will pull amd64 default"
+elif [[ "$MM_PACKAGE" != *"releases.mattermost.com"* ]]; then
+    fail "MM_PACKAGE is not a releases.mattermost.com URL: $MM_PACKAGE"
+elif [[ "$MM_PACKAGE" != *"-linux-arm64.tar.gz" ]]; then
+    fail "MM_PACKAGE does not end with -linux-arm64.tar.gz: $MM_PACKAGE"
+else
+    pass "MM_PACKAGE → $MM_PACKAGE"
 fi
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then
     echo "══════════════════════════════════════════════"
-    echo "Phase 3D mattermost multi-arch: PASS"
+    echo "Phase 3D chat-mattermost arm64 invariants: PASS"
     echo "══════════════════════════════════════════════"
     exit 0
 else
     echo "══════════════════════════════════════════════"
-    echo "Phase 3D mattermost multi-arch: FAIL"
+    echo "Phase 3D chat-mattermost arm64 invariants: FAIL"
     echo "══════════════════════════════════════════════"
     exit 1
 fi
