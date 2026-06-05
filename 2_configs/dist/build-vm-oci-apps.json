@@ -4,6 +4,17 @@
   "vm_id": "oci-A1-f_0",
   "services": [
     {
+      "name": "chat-mattermost",
+      "dir": "aa-sui_chat-mattermost",
+      "compose_path": "/opt/containers/chat-mattermost",
+      "images": [
+        "mattermost/mattermost-team-edition:10.11",
+        "postgres:16-alpine",
+        "python:3.12-slim"
+      ],
+      "has_docker_build": true
+    },
+    {
       "name": "code-server",
       "dir": "aa-sui_code-server",
       "compose_path": "/opt/containers/code-server",
@@ -74,17 +85,6 @@
       "compose_path": "/opt/containers/mail-mcp",
       "images": [
         "ghcr.io/diegonmarcos/mail-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "mattermost-bots",
-      "dir": "aa-sui_mattermost-bots",
-      "compose_path": "/opt/containers/mattermost-bots",
-      "images": [
-        "mattermost/mattermost-team-edition:10.11",
-        "postgres:16-alpine",
-        "python:3.12-slim"
       ],
       "has_docker_build": true
     },
@@ -360,7 +360,7 @@
     }
   ],
   "_meta": {
-    "generated_at": "2026-05-31T12:26:38.839Z",
+    "generated_at": "2026-06-05T12:00:35.712Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

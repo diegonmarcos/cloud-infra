@@ -3,7 +3,7 @@
 # ║ Phase 3D tester — mattermost base image is multi-arch            ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
-# ║   mattermost-bots/flake.nix uses an upstream image that          ║
+# ║   chat-mattermost/flake.nix uses an upstream image that          ║
 # ║   publishes both linux/amd64 and linux/arm64 manifests.          ║
 # ║   The old ngrie/mattermost-team-edition-arm fork only publishes  ║
 # ║   amd64, breaking oci-apps (aarch64).                            ║
@@ -17,7 +17,7 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SVC_DIR="$REPO_ROOT/a_solutions/aa-sui_mattermost-bots"
+SVC_DIR="$REPO_ROOT/a_solutions/aa-sui_chat-mattermost"
 FLAKE="$SVC_DIR/src/flake.nix"
 # Image declaration now lives in auto-generated build-mattermost.json (derived
 # from cloud-data-consolidated); flake.nix just readFile's it. Assert on the
@@ -30,7 +30,7 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-echo "── mattermost-bots base image ──"
+echo "── chat-mattermost base image ──"
 
 if [ -z "$SEARCH_FILES" ]; then
     fail "no flake.nix / build-*.json found under $SVC_DIR/src"

@@ -3,7 +3,7 @@
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
-    "generated_at": "2026-05-31T12:26:38.862Z",
+    "generated_at": "2026-06-05T12:00:35.716Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -25,7 +25,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-05-31T12:26:38.728Z",
+  "_generated": "2026-06-05T12:00:35.610Z",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -215,6 +215,11 @@
   ],
   "routes": [
     {
+      "domain": "chat.diegonmarcos.com",
+      "upstream": "10.0.0.6:8065",
+      "comment": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    {
       "domain": "ide.diegonmarcos.com",
       "upstream": "10.0.0.6:8443",
       "comment": "VS Code IDE (ide.diegonmarcos.com)"
@@ -228,11 +233,6 @@
       "domain": "sheets.diegonmarcos.com",
       "upstream": "10.0.0.6:3011",
       "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
-    },
-    {
-      "domain": "chat.diegonmarcos.com",
-      "upstream": "10.0.0.6:8065",
-      "comment": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     {
       "domain": "photos.diegonmarcos.com",
@@ -513,6 +513,10 @@
   },
   "internal_routes": [
     {
+      "service": "mattermost.app",
+      "upstream": "10.0.0.6:8065"
+    },
+    {
       "service": "code-server.app",
       "upstream": "10.0.0.6:8443"
     },
@@ -547,10 +551,6 @@
     {
       "service": "mail-mcp.app",
       "upstream": "10.0.0.6:3103"
-    },
-    {
-      "service": "mattermost.app",
-      "upstream": "10.0.0.6:8065"
     },
     {
       "service": "mattermost-mcp.app",
@@ -726,6 +726,27 @@
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
+    {
+      "kind": "redirect",
+      "service": "mattermost.app",
+      "redirect_to": "https://mattermost-http-8065.app",
+      "container": "mattermost",
+      "container_key": "app",
+      "svc": "chat-mattermost",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "mattermost-http-8065.app",
+      "container": "mattermost",
+      "container_key": "app",
+      "svc": "chat-mattermost",
+      "vm": "oci-A1-f_0",
+      "port": 8065,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8065",
+      "source": "containers.app.port"
+    },
     {
       "kind": "redirect",
       "service": "code-server.app",
@@ -913,27 +934,6 @@
       "port": 3103,
       "protocol": "http",
       "upstream": "10.0.0.6:3103",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost.app",
-      "redirect_to": "https://mattermost-http-8065.app",
-      "container": "mattermost",
-      "container_key": "app",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mattermost-http-8065.app",
-      "container": "mattermost",
-      "container_key": "app",
-      "svc": "mattermost-bots",
-      "vm": "oci-A1-f_0",
-      "port": 8065,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8065",
       "source": "containers.app.port"
     },
     {
@@ -1940,6 +1940,16 @@
   ],
   "public_D_others": [
     {
+      "host": "chat.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    {
       "host": "ide.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8443",
@@ -1968,16 +1978,6 @@
       "zone": "com",
       "service": null,
       "notes": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
-    },
-    {
-      "host": "chat.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8065",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Mattermost team chat with ntfy bridge and C3 command bot"
     },
     {
       "host": "photos.diegonmarcos.com",
@@ -2172,6 +2172,16 @@
   ],
   "private_A0_app_short": [
     {
+      "host": "mattermost.app",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "code-server.app",
       "path": null,
       "upstream": "10.0.0.6:8443",
@@ -2255,16 +2265,6 @@
       "host": "mail-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3103",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mattermost.app",
-      "path": null,
-      "upstream": "10.0.0.6:8065",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2614,6 +2614,16 @@
   ],
   "private_A1_app_canonical": [
     {
+      "host": "mattermost-http-8065.app",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "chat-mattermost",
+      "notes": null
+    },
+    {
       "host": "code-server-https-8443.app",
       "path": null,
       "upstream": "10.0.0.6:8443",
@@ -2701,16 +2711,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "mail-mcp",
-      "notes": null
-    },
-    {
-      "host": "mattermost-http-8065.app",
-      "path": null,
-      "upstream": "10.0.0.6:8065",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mattermost-bots",
       "notes": null
     },
     {

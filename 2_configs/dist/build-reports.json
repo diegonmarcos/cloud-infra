@@ -1,6 +1,6 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
-  "_generated": "2026-05-31T12:26:38.775Z",
+  "_generated": "2026-06-05T12:00:35.662Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/inputs/reports-*.json via cloud-data-config-derive.ts/build-reports",
   "_replaces": [
     "cloud-data-monitoring-targets.json",
@@ -13,6 +13,10 @@
     "cloud-data-sec-scan.json"
   ],
   "endpoint_checks": [
+    {
+      "service": "chat-mattermost",
+      "url": "https://chat.diegonmarcos.com/api/v4/system/ping"
+    },
     {
       "service": "code-server",
       "url": "https://ide.diegonmarcos.com/"
@@ -32,10 +36,6 @@
     {
       "service": "hedgedoc",
       "url": "https://doc.diegonmarcos.com/"
-    },
-    {
-      "service": "mattermost-bots",
-      "url": "https://chat.diegonmarcos.com/api/v4/system/ping"
     },
     {
       "service": "photoprism",
@@ -116,6 +116,10 @@
   ],
   "dns_checks": [
     {
+      "service": "chat-mattermost",
+      "domain": "chat.diegonmarcos.com"
+    },
+    {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
     },
@@ -134,10 +138,6 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
-    },
-    {
-      "service": "mattermost-bots",
-      "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -222,6 +222,10 @@
   ],
   "tls_checks": [
     {
+      "service": "chat-mattermost",
+      "domain": "chat.diegonmarcos.com"
+    },
+    {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
     },
@@ -240,10 +244,6 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
-    },
-    {
-      "service": "mattermost-bots",
-      "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -353,6 +353,20 @@
     }
   ],
   "services": {
+    "chat-mattermost": {
+      "name": "chat-mattermost",
+      "vm": "oci-A1-f_0",
+      "domain": "chat.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8065,
+        "db": 5435
+      },
+      "health": {
+        "path": "/api/v4/system/ping"
+      }
+    },
     "code-server": {
       "name": "code-server",
       "vm": "oci-A1-f_0",
@@ -490,20 +504,6 @@
       },
       "health": {
         "path": null
-      }
-    },
-    "mattermost-bots": {
-      "name": "mattermost-bots",
-      "vm": "oci-A1-f_0",
-      "domain": "chat.diegonmarcos.com",
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "app": 8065,
-        "db": 5435
-      },
-      "health": {
-        "path": "/api/v4/system/ping"
       }
     },
     "mattermost-mcp": {
@@ -1129,6 +1129,25 @@
   },
   "dns_services": [
     {
+      "service": "chat-mattermost",
+      "dns": "mattermost.app"
+    },
+    {
+      "service": "chat-mattermost",
+      "container": "app",
+      "dns": "mattermost.app"
+    },
+    {
+      "service": "chat-mattermost",
+      "container": "db",
+      "dns": "mattermost-postgres.app"
+    },
+    {
+      "service": "chat-mattermost",
+      "container": "bots",
+      "dns": "mattermost-bots.app"
+    },
+    {
       "service": "code-server",
       "dns": "code-server.app"
     },
@@ -1222,25 +1241,6 @@
     {
       "service": "mail-puller",
       "dns": "mail-puller.app"
-    },
-    {
-      "service": "mattermost-bots",
-      "dns": "mattermost.app"
-    },
-    {
-      "service": "mattermost-bots",
-      "container": "app",
-      "dns": "mattermost.app"
-    },
-    {
-      "service": "mattermost-bots",
-      "container": "db",
-      "dns": "mattermost-postgres.app"
-    },
-    {
-      "service": "mattermost-bots",
-      "container": "bots",
-      "dns": "mattermost-bots.app"
     },
     {
       "service": "mattermost-mcp",
@@ -1641,6 +1641,14 @@
   ],
   "databases": [
     {
+      "service": "chat-mattermost",
+      "container": "db",
+      "engine": "postgres",
+      "port": 5435,
+      "db_name": "mattermost",
+      "db_user": "mattermost"
+    },
+    {
       "service": "etherpad",
       "container": "db",
       "engine": "postgres",
@@ -1655,14 +1663,6 @@
       "port": 5439,
       "db_name": "hedgedoc",
       "db_user": "hedgedoc"
-    },
-    {
-      "service": "mattermost-bots",
-      "container": "db",
-      "engine": "postgres",
-      "port": 5435,
-      "db_name": "mattermost",
-      "db_user": "mattermost"
     },
     {
       "service": "photoprism",
@@ -1765,6 +1765,7 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
+          "chat-mattermost",
           "code-server",
           "etherpad",
           "filebrowser",
@@ -1773,7 +1774,6 @@
           "grist",
           "hedgedoc",
           "mail-mcp",
-          "mattermost-bots",
           "mattermost-mcp",
           "photoprism",
           "radicale",
@@ -1832,6 +1832,20 @@
       }
     },
     "services": {
+      "chat-mattermost": {
+        "name": "chat-mattermost",
+        "vm": "oci-A1-f_0",
+        "domain": "chat.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8065,
+          "db": 5435
+        },
+        "health": {
+          "path": "/api/v4/system/ping"
+        }
+      },
       "code-server": {
         "name": "code-server",
         "vm": "oci-A1-f_0",
@@ -1969,20 +1983,6 @@
         },
         "health": {
           "path": null
-        }
-      },
-      "mattermost-bots": {
-        "name": "mattermost-bots",
-        "vm": "oci-A1-f_0",
-        "domain": "chat.diegonmarcos.com",
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "app": 8065,
-          "db": 5435
-        },
-        "health": {
-          "path": "/api/v4/system/ping"
         }
       },
       "mattermost-mcp": {
@@ -3333,7 +3333,7 @@
     ]
   },
   "_meta": {
-    "generated_at": "2026-05-31T12:26:39.188Z",
+    "generated_at": "2026-06-05T12:00:35.845Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
