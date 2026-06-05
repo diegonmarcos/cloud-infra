@@ -134,7 +134,14 @@ jobs:
               CHANGED_DIRS=""; VM_FILTER="$INPUT_VM"
             fi
           else
-            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' \
+            # Pathspec NOTE: `a_solutions/*/src/` (with trailing slash) is
+            # interpreted by git as a directory pathspec that DOES NOT recurse
+            # into nested files like src/code/arm64/Dockerfile (verified 2026-06-05
+            # commit dbaf52371 — Dockerfile change missed by detect, matrix
+            # emitted empty, Ship → ${{ matrix.vm }} reported "skipped" even
+            # though the source changed and warranted a rebuild). The fix is to
+            # use a recursive glob: `**` matches at any depth under src/.
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' \
               | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 
             # Also pick up consumers of regenerated 2_configs/dist/build-*.json
