@@ -9,7 +9,7 @@
       "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
       "cloud-data-topology.json (CLAUDE.md generation)"
     ],
-    "generated_at": "2026-06-05T14:16:24.209Z",
+    "generated_at": "2026-06-05T16:21:00.708Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -31,7 +31,7 @@
       "rebuild_command": "bash 2_configs/build.sh all"
     }
   },
-  "_generated": "2026-06-05T14:16:24.071Z",
+  "_generated": "2026-06-05T16:21:00.349Z",
   "_source": "_cloud-data-consolidated.json + 2_configs/src/external-consumers.json via cloud-data-config-derive.ts/external-consumers",
   "consumer": "flakes_desktop",
   "deps": {
@@ -697,11 +697,9 @@
         "primary": {
           "domain": "chat.diegonmarcos.com",
           "auth": "two_factor",
-          "paths": {
-            "/api/v4/*": {
-              "auth": "bypass"
-            }
-          }
+          "bypass_paths": [
+            "/api/v4/*"
+          ]
         }
       },
       "declared_ports": {
@@ -753,7 +751,8 @@
         "MM_ADMIN_PASSWORD",
         "BEARER_TOKEN",
         "MM_CLAUDE_PASSWORD",
-        "AUTHELIA_OIDC_MATTERMOST_SECRET"
+        "AUTHELIA_OIDC_MATTERMOST_SECRET",
+        "MM_EMAILSETTINGS_SMTPPASSWORD"
       ]
     },
     "code-server": {

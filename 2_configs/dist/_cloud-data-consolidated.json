@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "version": 2,
-    "generated_at": "2026-06-05T14:16:22.656Z",
+    "generated_at": "2026-06-05T16:20:58.482Z",
     "generated_by": "2_configs/src/engines/cloud-data-config-consolidated.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
@@ -824,11 +824,9 @@
         "primary": {
           "domain": "chat.diegonmarcos.com",
           "auth": "two_factor",
-          "paths": {
-            "/api/v4/*": {
-              "auth": "bypass"
-            }
-          }
+          "bypass_paths": [
+            "/api/v4/*"
+          ]
         }
       },
       "declared_ports": {
@@ -880,7 +878,8 @@
         "MM_ADMIN_PASSWORD",
         "BEARER_TOKEN",
         "MM_CLAUDE_PASSWORD",
-        "AUTHELIA_OIDC_MATTERMOST_SECRET"
+        "AUTHELIA_OIDC_MATTERMOST_SECRET",
+        "MM_EMAILSETTINGS_SMTPPASSWORD"
       ]
     },
     "code-server": {
