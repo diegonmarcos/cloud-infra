@@ -99,17 +99,32 @@ else
     pass "MM_PACKAGE → $MM_PACKAGE"
 fi
 
-# (5) Agents plugin pinned to an arm64 tarball — TE ships zero plugins so
-# this URL is the only way the Agents plugin actually lands in the image.
-MM_PLUGIN_AGENTS_URL=$(jq -r '.docker.build_args.MM_PLUGIN_AGENTS_URL // empty' "$BUILD_JSON" 2>/dev/null)
-if [ -z "$MM_PLUGIN_AGENTS_URL" ]; then
-    fail "build.json#docker.build_args.MM_PLUGIN_AGENTS_URL not set — Agents plugin won't be baked into the image and /api/v4/plugins will return empty"
-elif [[ "$MM_PLUGIN_AGENTS_URL" != *"mattermost-plugin-agents"* ]]; then
-    fail "MM_PLUGIN_AGENTS_URL doesn't look like a mattermost-plugin-agents release: $MM_PLUGIN_AGENTS_URL"
-elif [[ "$MM_PLUGIN_AGENTS_URL" != *"-linux-arm64.tar.gz" ]]; then
-    fail "MM_PLUGIN_AGENTS_URL is not an arm64 build: $MM_PLUGIN_AGENTS_URL"
+# (5) Plugin manifest (src/code/arm64/plugins.json) — must exist, be valid
+# JSON, and contain at least the Agents entry with url + sig pointing at
+# arm64 release assets. TE ships zero plugins, so this manifest is the
+# only way Agents lands in the image. plugins.json replaced the old per-
+# plugin build_args entries in build.json on 2026-06-06 (FIRE RULE 4 —
+# data-driven schema; adding a plugin is a JSON edit, no Dockerfile change).
+PLUGINS_JSON="$REPO_ROOT/a_solutions/aa-sui_chat-mattermost/src/code/arm64/plugins.json"
+if [ ! -f "$PLUGINS_JSON" ]; then
+    fail "plugins.json missing at $PLUGINS_JSON — Agents plugin won't be baked, /api/v4/plugins will be empty"
+elif ! jq -e . "$PLUGINS_JSON" >/dev/null 2>&1; then
+    fail "plugins.json is not valid JSON"
 else
-    pass "MM_PLUGIN_AGENTS_URL → $MM_PLUGIN_AGENTS_URL"
+    AGENTS_URL=$(jq -r '.plugins[] | select(.name=="agents") | .url' "$PLUGINS_JSON" 2>/dev/null)
+    AGENTS_SIG=$(jq -r '.plugins[] | select(.name=="agents") | .sig' "$PLUGINS_JSON" 2>/dev/null)
+    if [ -z "$AGENTS_URL" ] || [ "$AGENTS_URL" = "null" ]; then
+        fail "plugins.json has no 'agents' entry"
+    elif [[ "$AGENTS_URL" != *"mattermost-plugin-agents"* ]]; then
+        fail "agents.url doesn't look like a mattermost-plugin-agents release: $AGENTS_URL"
+    elif [[ "$AGENTS_URL" != *"-linux-arm64.tar.gz" ]]; then
+        fail "agents.url is not an arm64 build: $AGENTS_URL"
+    elif [ -z "$AGENTS_SIG" ] || [ "$AGENTS_SIG" = "null" ]; then
+        fail "agents.sig missing — prepackaged loader requires .tar.gz.sig sibling"
+    else
+        pass "plugins.json/agents → $AGENTS_URL"
+        pass "plugins.json/agents.sig present"
+    fi
 fi
 
 echo ""
