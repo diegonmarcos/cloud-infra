@@ -1399,6 +1399,18 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
     // container of that service for consistency.
     const mailAccounts = resolveMailAccounts(svcName, serviceConnections.services ?? {});
 
+    // ntfy_topics propagation: chat-mattermost's ntfy-bridge subscribes to a
+    // declared list of ntfy topics. Source of truth lives in
+    // bc-obs_ntfy/build.json#.topics, flows through parseNtfy →
+    // configs.ntfy.topics in _cloud-data-consolidated.json. The mattermost
+    // container (and its mattermost-bots sidecar) reads this list via its
+    // src/build-mattermost.json symlink — no separate ntfy-topics.nix file
+    // and no sync script. FIRE RULE 4.
+    const ntfyTopicsForMattermost: string[] | undefined =
+      (svcName === "chat-mattermost"
+        ? (c.configs?.ntfy?.topics ?? []).map((t: any) => t.name)
+        : undefined);
+
     for (const [role, ct] of containerEntries) {
       const containerName = ct.container_name || svcName;
       if (SPECIAL_CASES.has(containerName)) continue;
@@ -1417,6 +1429,7 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
           vm: vmAlias,
           services: serviceConnections.services ?? {},
           ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
+          ...(ntfyTopicsForMattermost ? { ntfy_topics: ntfyTopicsForMattermost } : {}),
           // Forward any non-standard svc fields (came via entry.extra in the
           // source build.json) so per-service consumers can read their slice
           // from build-{containerName}.json instead of the global consolidated.
