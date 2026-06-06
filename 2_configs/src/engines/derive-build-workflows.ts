@@ -55,13 +55,8 @@ function main(): void {
     _comment:
       "Derived by 2_configs/src/engines/derive-build-workflows.ts from 1_workflows/build.json. Do not edit — edit the source.",
     _source: "1_workflows/build.json",
-    _generated_at: (() => {
-      // Reproducible timestamp — see cloud-data-config-derive.ts:`now`.
-      const _sde = process.env.SOURCE_DATE_EPOCH;
-      return (_sde && /^\d+$/.test(_sde))
-        ? new Date(Number(_sde) * 1000).toISOString()
-        : new Date().toISOString();
-    })(),
+    // Stable empty string — see cloud-data-config-derive.ts:`now`.
+    _generated_at: "",
     name: src.name,
     runners_doc: src.runners_doc,
     runners: src.runners,

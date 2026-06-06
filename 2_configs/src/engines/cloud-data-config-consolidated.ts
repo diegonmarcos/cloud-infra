@@ -76,19 +76,9 @@ function readJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
-/**
- * Reproducible timestamp source (reproducible-builds.org SOURCE_DATE_EPOCH).
- * See cloud-data-config-derive.ts:`now` for the long-form rationale — short
- * version: wall-clock timestamps in dist/ make every regen-on-commit look like
- * "100 files changed", exploding the Ship-matrix detect fanout. 2_configs/
- * build.sh sets SOURCE_DATE_EPOCH=git HEAD commit time before running.
- */
+/** Stable empty string for `_generated` / `generated_at` — see derive's `now()`. */
 function reproducibleNow(): string {
-  const sde = process.env.SOURCE_DATE_EPOCH;
-  if (sde && /^\d+$/.test(sde)) {
-    return new Date(Number(sde) * 1000).toISOString();
-  }
-  return new Date().toISOString();
+  return "";
 }
 
 function takeHigher(existing: string | undefined, candidate: string): string {

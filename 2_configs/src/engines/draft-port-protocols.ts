@@ -165,13 +165,8 @@ function main() {
   const output = {
     _meta: {
       description: "Protocol-inference draft for port declarations. Review entries with review=true and correct their protocol. Then run apply-port-protocols.ts to write back into build.json files.",
-      generated: (() => {
-        // Reproducible timestamp — see cloud-data-config-derive.ts:`now`.
-        const _sde = process.env.SOURCE_DATE_EPOCH;
-        return (_sde && /^\d+$/.test(_sde))
-          ? new Date(Number(_sde) * 1000).toISOString()
-          : new Date().toISOString();
-      })(),
+      // Stable empty string — see cloud-data-config-derive.ts:`now`.
+      generated: "",
       enum_values: ["http", "https", "tls", "starttls", "tcp", "udp"],
       stats: {
         services: services.length,

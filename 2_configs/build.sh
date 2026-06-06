@@ -18,27 +18,11 @@ CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
 export CLOUD_ROOT  # cloud-paths.sh / ensure-deps.sh read this
 
-# ─────────────────────────────────────────────────────────────────────────
-# Deterministic emitter timestamp (reproducible-builds.org SOURCE_DATE_EPOCH)
-# ─────────────────────────────────────────────────────────────────────────
-# Every engine in 2_configs/src/engines/ that writes a `_generated` /
-# `generated_at` field reads SOURCE_DATE_EPOCH. When set, the timestamp is
-# derived from it deterministically → same git HEAD ⇒ same dist/ bytes.
-# Without this, every regen embedded the wall-clock time, so on commit the
-# pre-commit hook regenerated ~100 dist files and `git add 2_configs/dist/`
-# staged ALL of them, exploding ship.yml's detect-step fanout (the
-# dist-consumer reverse-walk fired for every "changed" build-*.json).
-#
-# Strategy: pick git HEAD's commit time. Identical commit → identical dist.
-# Only the commit that ACTUALLY changes content propagates a content delta
-# to consumers, which makes the Ship matrix match the real change set.
-# Falls back to wall-clock when not in a git repo (CLI builds outside CI).
-if [ -z "${SOURCE_DATE_EPOCH:-}" ]; then
-  if SDE=$(git -C "$CLOUD_ROOT" log -1 --format=%ct HEAD 2>/dev/null); then
-    SOURCE_DATE_EPOCH="$SDE"
-    export SOURCE_DATE_EPOCH
-  fi
-fi
+# Emitters now write empty strings for `_generated` / `generated_at` (see
+# 2_configs/src/engines/cloud-data-config-derive.ts:`now`). No timestamp env
+# var needed — the SOURCE_DATE_EPOCH approach broke because pre-commit hooks
+# run BEFORE the commit object exists, so HEAD's timestamp belongs to the
+# PARENT commit, changing every push.
 
 # Source shared engine libs (idempotent, guard against double-source).
 LIB_DIR="$CLOUD_ROOT/1_workflows/src/libs"
