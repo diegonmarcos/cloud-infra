@@ -17,18 +17,28 @@ export interface NtfyConfig {
 }
 
 export function parseNtfy(solutionsDir: string): NtfyConfig | null {
-  // Parse server.yml from dist/
-  const configPath = join(solutionsDir, "bc-obs_ntfy", "dist", "etc", "server.yml");
-  if (!existsSync(configPath)) return null;
+  // Topics now live in bc-obs_ntfy/build.json (SoT) — independent of any
+  // built artefacts. Previously gated extraction behind the existence of
+  // dist/etc/server.yml, but that file is gitignored and absent on clean
+  // checkouts, so the entire `configs.ntfy` block dropped out of the
+  // consolidated config (and the downstream build-mattermost.json
+  // ntfy_topics field came out empty). server.yml is now only used for
+  // its scalar fields; absence means fall-back to documented defaults.
+  const topics = extractTopicsFromScanner(solutionsDir);
 
-  let doc: any;
-  try {
-    doc = parseYaml(readFileSync(configPath, "utf-8"));
-  } catch {
-    return null;
+  let doc: any = null;
+  const configPath = join(solutionsDir, "bc-obs_ntfy", "dist", "etc", "server.yml");
+  if (existsSync(configPath)) {
+    try {
+      doc = parseYaml(readFileSync(configPath, "utf-8"));
+    } catch {
+      doc = null;
+    }
   }
 
-  const topics = extractTopicsFromScanner(solutionsDir);
+  // If neither topics nor a server.yml are available, the ntfy block carries
+  // no information — leave it out of the consolidated to keep the schema clean.
+  if (topics.length === 0 && doc == null) return null;
 
   return {
     topics,
@@ -39,7 +49,34 @@ export function parseNtfy(solutionsDir: string): NtfyConfig | null {
 }
 
 function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
-  const scannerPath = join(solutionsDir, "bc-obs_ntfy", "src", "topic-scanner.py");
+  // PRIMARY (FIRE RULE 4 — data-driven): topics live in bc-obs_ntfy/build.json
+  // under .topics as an array of { name, category, desc, publishers? }. This is
+  // the single source of truth — topic-scanner.py, parsers/ntfy.ts, derive's
+  // build-mattermost.json emitter, and chat-mattermost's compose.nix all
+  // consume from here. Adding a topic = edit build.json + rebuild.
+  const buildJsonPath = join(solutionsDir, "bc-obs_ntfy", "build.json");
+  if (existsSync(buildJsonPath)) {
+    try {
+      const buildJson = JSON.parse(readFileSync(buildJsonPath, "utf-8"));
+      if (Array.isArray(buildJson?.topics) && buildJson.topics.length > 0) {
+        const publishers = extractPublisherMap(solutionsDir);
+        return buildJson.topics.map((t: any): NtfyTopic => ({
+          name: String(t.name),
+          category: String(t.category ?? String(t.name).split("_")[0]),
+          desc: String(t.desc ?? t.name),
+          publishers: Array.isArray(t.publishers) && t.publishers.length > 0
+            ? t.publishers.map(String)
+            : publishers.get(String(t.name)) ?? ["system"],
+        }));
+      }
+    } catch {
+      // Fall through to legacy extraction if build.json is malformed.
+    }
+  }
+
+  // LEGACY fallback (kept until topic-scanner.py is migrated to read from
+  // build.json itself; remove this branch after that migration).
+  const scannerPath = join(solutionsDir, "bc-obs_ntfy", "src", "code", "topic-scanner.py");
   if (!existsSync(scannerPath)) return [];
 
   const content = readFileSync(scannerPath, "utf-8");
