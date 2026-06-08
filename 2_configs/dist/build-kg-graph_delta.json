@@ -33,13 +33,13 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 169,
-    "edges": 201,
+    "nodes": 172,
+    "edges": 205,
     "by_table": {
       "vm": 4,
-      "service": 55,
-      "container": 75,
-      "domain": 35
+      "service": 56,
+      "container": 76,
+      "domain": 36
     }
   },
   "nodes": [
@@ -117,6 +117,32 @@
     },
     {
       "table": "service",
+      "id": "calendar_radicale",
+      "key": "service:calendar_radicale",
+      "properties": {
+        "name": "calendar-radicale",
+        "category": "app",
+        "description": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+        "domain": "cal.diegonmarcos.com",
+        "port": 5232,
+        "vm": "oci-apps",
+        "folder": "aa-sui_calendar-radicale"
+      }
+    },
+    {
+      "table": "container",
+      "id": "calendar_radicale",
+      "key": "container:calendar_radicale",
+      "properties": {
+        "name": "calendar-radicale",
+        "image": "tomsquest/docker-radicale:latest",
+        "role": "app",
+        "port": 5232,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "chat_mattermost",
       "key": "service:chat_mattermost",
       "properties": {
@@ -188,6 +214,32 @@
         "image": "linuxserver/code-server:latest",
         "role": "app",
         "port": 8443,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "contacts_radicale",
+      "key": "service:contacts_radicale",
+      "properties": {
+        "name": "contacts-radicale",
+        "category": "app",
+        "description": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+        "domain": "contacts.diegonmarcos.com",
+        "port": 5233,
+        "vm": "oci-apps",
+        "folder": "aa-sui_contacts-radicale"
+      }
+    },
+    {
+      "table": "container",
+      "id": "contacts_radicale",
+      "key": "container:contacts_radicale",
+      "properties": {
+        "name": "contacts-radicale",
+        "image": "tomsquest/docker-radicale:latest",
+        "role": "app",
+        "port": 5233,
         "public": true
       }
     },
@@ -561,32 +613,6 @@
         "role": "rclone",
         "port": null,
         "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "radicale",
-      "key": "service:radicale",
-      "properties": {
-        "name": "radicale",
-        "category": "app",
-        "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
-        "domain": "cal.diegonmarcos.com",
-        "port": 5232,
-        "vm": "oci-apps",
-        "folder": "aa-sui_radicale"
-      }
-    },
-    {
-      "table": "container",
-      "id": "radicale",
-      "key": "container:radicale",
-      "properties": {
-        "name": "radicale",
-        "image": "tomsquest/docker-radicale:latest",
-        "role": "app",
-        "port": 5232,
-        "public": true
       }
     },
     {
@@ -1787,6 +1813,14 @@
     },
     {
       "table": "domain",
+      "id": "cal_diegonmarcos_com",
+      "key": "domain:cal_diegonmarcos_com",
+      "properties": {
+        "fqdn": "cal.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "chat_diegonmarcos_com",
       "key": "domain:chat_diegonmarcos_com",
       "properties": {
@@ -1799,6 +1833,14 @@
       "key": "domain:ide_diegonmarcos_com",
       "properties": {
         "fqdn": "ide.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "contacts_diegonmarcos_com",
+      "key": "domain:contacts_diegonmarcos_com",
+      "properties": {
+        "fqdn": "contacts.diegonmarcos.com"
       }
     },
     {
@@ -1863,14 +1905,6 @@
       "key": "domain:photos_diegonmarcos_com",
       "properties": {
         "fqdn": "photos.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "cal_diegonmarcos_com",
-      "key": "domain:cal_diegonmarcos_com",
-      "properties": {
-        "fqdn": "cal.diegonmarcos.com"
       }
     },
     {
@@ -2069,6 +2103,22 @@
   "edges": [
     {
       "table": "hosted_on",
+      "from": "service:calendar_radicale",
+      "to": "vm:oci_apps",
+      "key": "service:calendar_radicale->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:calendar_radicale",
+      "to": "container:calendar_radicale",
+      "key": "service:calendar_radicale->runs_container->container:calendar_radicale",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:chat_mattermost",
       "to": "vm:oci_apps",
       "key": "service:chat_mattermost->hosted_on->vm:oci_apps",
@@ -2113,6 +2163,22 @@
       "from": "service:code_server",
       "to": "container:code_server",
       "key": "service:code_server->runs_container->container:code_server",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:contacts_radicale",
+      "to": "vm:oci_apps",
+      "key": "service:contacts_radicale->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:contacts_radicale",
+      "to": "container:contacts_radicale",
+      "key": "service:contacts_radicale->runs_container->container:contacts_radicale",
       "properties": {
         "role": "app"
       }
@@ -2345,22 +2411,6 @@
       "key": "service:photoprism->runs_container->container:photoprism_rclone",
       "properties": {
         "role": "rclone"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:radicale",
-      "to": "vm:oci_apps",
-      "key": "service:radicale->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:radicale",
-      "to": "container:radicale",
-      "key": "service:radicale->runs_container->container:radicale",
-      "properties": {
-        "role": "app"
       }
     },
     {
@@ -3109,6 +3159,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:calendar_radicale",
+      "to": "service:caddy",
+      "key": "service:calendar_radicale->proxied_by->service:caddy",
+      "properties": {
+        "domain": "cal.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:chat_mattermost",
       "to": "service:caddy",
       "key": "service:chat_mattermost->proxied_by->service:caddy",
@@ -3123,6 +3182,15 @@
       "key": "service:code_server->proxied_by->service:caddy",
       "properties": {
         "domain": "ide.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:contacts_radicale",
+      "to": "service:caddy",
+      "key": "service:contacts_radicale->proxied_by->service:caddy",
+      "properties": {
+        "domain": "contacts.diegonmarcos.com"
       }
     },
     {
@@ -3213,15 +3281,6 @@
       "key": "service:photoprism->proxied_by->service:caddy",
       "properties": {
         "domain": "photos.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
-      "from": "service:radicale",
-      "to": "service:caddy",
-      "key": "service:radicale->proxied_by->service:caddy",
-      "properties": {
-        "domain": "cal.diegonmarcos.com"
       }
     },
     {
@@ -3442,6 +3501,13 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:cal_diegonmarcos_com",
+      "to": "service:calendar_radicale",
+      "key": "domain:cal_diegonmarcos_com->routes_to->service:calendar_radicale",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:chat_diegonmarcos_com",
       "to": "service:chat_mattermost",
       "key": "domain:chat_diegonmarcos_com->routes_to->service:chat_mattermost",
@@ -3452,6 +3518,13 @@
       "from": "domain:ide_diegonmarcos_com",
       "to": "service:code_server",
       "key": "domain:ide_diegonmarcos_com->routes_to->service:code_server",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:contacts_diegonmarcos_com",
+      "to": "service:contacts_radicale",
+      "key": "domain:contacts_diegonmarcos_com->routes_to->service:contacts_radicale",
       "properties": {}
     },
     {
@@ -3522,13 +3595,6 @@
       "from": "domain:photos_diegonmarcos_com",
       "to": "service:photoprism",
       "key": "domain:photos_diegonmarcos_com->routes_to->service:photoprism",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:cal_diegonmarcos_com",
-      "to": "service:radicale",
-      "key": "domain:cal_diegonmarcos_com->routes_to->service:radicale",
       "properties": {}
     },
     {

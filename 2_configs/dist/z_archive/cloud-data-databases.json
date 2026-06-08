@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 26,
+  "total": 27,
   "summary": {
     "postgres": 6,
     "mariadb": 2,
@@ -16,12 +16,32 @@
     "mimir": 0,
     "tempo": 0,
     "grafana": 0,
-    "files": 2,
+    "files": 3,
     "rocksdb": 1,
     "minio": 1,
     "parquet": 1
   },
   "databases": [
+    {
+      "service": "calendar-radicale",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "type": "files",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "tomsquest/docker-radicale:latest",
+      "port": 5232,
+      "dns": "calendar.app",
+      "healthcheck": "/.web/",
+      "volumes": [
+        "./data:/data",
+        "./configs/config:/config/config:ro"
+      ],
+      "resources": null,
+      "backup": false
+    },
     {
       "service": "chat-mattermost",
       "container": "mattermost-postgres",
@@ -43,6 +63,26 @@
       "resources": null,
       "backup": true,
       "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
+    },
+    {
+      "service": "contacts-radicale",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "type": "files",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "tomsquest/docker-radicale:latest",
+      "port": 5233,
+      "dns": "contacts.app",
+      "healthcheck": "/.web/",
+      "volumes": [
+        "./data:/data",
+        "./configs/config:/config/config:ro"
+      ],
+      "resources": null,
+      "backup": false
     },
     {
       "service": "cypht",
@@ -195,26 +235,6 @@
       ],
       "resources": null,
       "backup": true
-    },
-    {
-      "service": "radicale",
-      "container": "radicale",
-      "container_key": "app",
-      "type": "files",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "tomsquest/docker-radicale:latest",
-      "port": 5232,
-      "dns": "radicale.app",
-      "healthcheck": "/.web/",
-      "volumes": [
-        "./data:/data",
-        "./config:/config:ro"
-      ],
-      "resources": null,
-      "backup": false
     },
     {
       "service": "snappymail",
@@ -604,6 +624,70 @@
     }
   ],
   "by_type": {
+    "files": [
+      {
+        "service": "calendar-radicale",
+        "container": "calendar-radicale",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "tomsquest/docker-radicale:latest",
+        "port": 5232,
+        "dns": "calendar.app",
+        "healthcheck": "/.web/",
+        "volumes": [
+          "./data:/data",
+          "./configs/config:/config/config:ro"
+        ],
+        "resources": null,
+        "backup": false
+      },
+      {
+        "service": "contacts-radicale",
+        "container": "contacts-radicale",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "tomsquest/docker-radicale:latest",
+        "port": 5233,
+        "dns": "contacts.app",
+        "healthcheck": "/.web/",
+        "volumes": [
+          "./data:/data",
+          "./configs/config:/config/config:ro"
+        ],
+        "resources": null,
+        "backup": false
+      },
+      {
+        "service": "snappymail",
+        "container": "snappymail",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-E2-f_0",
+        "vm_alias": "oci-mail",
+        "wg_ip": "10.0.0.3",
+        "image": "djmaze/snappymail:latest",
+        "port": 8888,
+        "dns": "snappymail.app",
+        "healthcheck": "/",
+        "volumes": [
+          "./data:/var/lib/snappymail"
+        ],
+        "resources": {
+          "mem_limit": "64M",
+          "mem_reservation": "16M"
+        },
+        "backup": false
+      }
+    ],
     "postgres": [
       {
         "service": "chat-mattermost",
@@ -1006,50 +1090,6 @@
         "backup": true
       }
     ],
-    "files": [
-      {
-        "service": "radicale",
-        "container": "radicale",
-        "container_key": "app",
-        "type": "files",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "tomsquest/docker-radicale:latest",
-        "port": 5232,
-        "dns": "radicale.app",
-        "healthcheck": "/.web/",
-        "volumes": [
-          "./data:/data",
-          "./config:/config:ro"
-        ],
-        "resources": null,
-        "backup": false
-      },
-      {
-        "service": "snappymail",
-        "container": "snappymail",
-        "container_key": "app",
-        "type": "files",
-        "enabled": true,
-        "vm": "oci-E2-f_0",
-        "vm_alias": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "image": "djmaze/snappymail:latest",
-        "port": 8888,
-        "dns": "snappymail.app",
-        "healthcheck": "/",
-        "volumes": [
-          "./data:/var/lib/snappymail"
-        ],
-        "resources": {
-          "mem_limit": "64M",
-          "mem_reservation": "16M"
-        },
-        "backup": false
-      }
-    ],
     "rocksdb": [
       {
         "service": "stalwart",
@@ -1209,6 +1249,26 @@
       "user": "ubuntu",
       "databases": [
         {
+          "service": "calendar-radicale",
+          "container": "calendar-radicale",
+          "container_key": "app",
+          "type": "files",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5232,
+          "dns": "calendar.app",
+          "healthcheck": "/.web/",
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "resources": null,
+          "backup": false
+        },
+        {
           "service": "chat-mattermost",
           "container": "mattermost-postgres",
           "container_key": "db",
@@ -1229,6 +1289,26 @@
           "resources": null,
           "backup": true,
           "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
+        },
+        {
+          "service": "contacts-radicale",
+          "container": "contacts-radicale",
+          "container_key": "app",
+          "type": "files",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5233,
+          "dns": "contacts.app",
+          "healthcheck": "/.web/",
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "resources": null,
+          "backup": false
         },
         {
           "service": "etherpad",
@@ -1335,26 +1415,6 @@
           ],
           "resources": null,
           "backup": true
-        },
-        {
-          "service": "radicale",
-          "container": "radicale",
-          "container_key": "app",
-          "type": "files",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "tomsquest/docker-radicale:latest",
-          "port": 5232,
-          "dns": "radicale.app",
-          "healthcheck": "/.web/",
-          "volumes": [
-            "./data:/data",
-            "./config:/config:ro"
-          ],
-          "resources": null,
-          "backup": false
         },
         {
           "service": "vaultwarden",

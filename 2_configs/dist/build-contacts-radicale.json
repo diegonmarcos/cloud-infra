@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "radicale container config (service=radicale, role=app)",
+    "description": "contacts-radicale container config (service=contacts-radicale, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,14 +28,14 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "radicale",
+    "container_name": "contacts-radicale",
     "image": "tomsquest/docker-radicale:latest",
-    "port": 5232,
+    "port": 5233,
     "port_env": null,
-    "dns": "radicale.app",
+    "dns": "contacts.app",
     "public": true,
     "proxy": {
-      "domain": "cal.diegonmarcos.com",
+      "domain": "contacts.diegonmarcos.com",
       "auth": "two_factor"
     },
     "healthcheck": "/.web/",
@@ -46,7 +46,7 @@
     },
     "volumes": [
       "./data:/data",
-      "./config:/config:ro"
+      "./configs/config:/config/config:ro"
     ],
     "env_file": false,
     "depends_on": [],
@@ -60,10 +60,33 @@
       }
     ]
   },
-  "service": "radicale",
+  "service": "contacts-radicale",
   "role": "app",
   "vm": "oci-apps",
   "services": {
+    "calendar-radicale": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 5232
+      },
+      "vm": "oci-apps",
+      "domain": "cal.diegonmarcos.com",
+      "description": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/.well-known/caldav",
+        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
+        "healthcheck_paths": [
+          "/.web/"
+        ],
+        "type": "custom-protocol",
+        "base_path": "/.well-known/caldav",
+        "display_name": "Radicale CalDAV Server (Calendars)",
+        "description": "WebDAV-based CalDAV server for calendar synchronization.",
+        "auth": "basic"
+      }
+    },
     "chat-mattermost": {
       "ip": "10.0.0.6",
       "ports": {
@@ -104,6 +127,29 @@
         "healthcheck_paths": [
           "/"
         ]
+      }
+    },
+    "contacts-radicale": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 5233
+      },
+      "vm": "oci-apps",
+      "domain": "contacts.diegonmarcos.com",
+      "description": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/.well-known/carddav",
+        "api_url": "https://contacts.diegonmarcos.com/.well-known/carddav",
+        "healthcheck_paths": [
+          "/.web/"
+        ],
+        "type": "custom-protocol",
+        "base_path": "/.well-known/carddav",
+        "display_name": "Radicale CardDAV Server (Contacts)",
+        "description": "WebDAV-based CardDAV server for contact / address-book synchronization.",
+        "auth": "basic"
       }
     },
     "cypht": {
@@ -180,9 +226,9 @@
           }
         ],
         "carddav": {
-          "_doc": "CardDAV providers. Engine resolves service_ref → services.radicale.domain at derive time.",
-          "radicale": {
-            "service_ref": "radicale",
+          "_doc": "CardDAV providers. Engine resolves service_ref → services.{name}.domain at derive time.",
+          "contacts-radicale": {
+            "service_ref": "contacts-radicale",
             "path_template": "/{user_url_encoded}/",
             "user_ref": "stalwart.users.admin",
             "pass_env": "ME_PASSWORD"
@@ -475,29 +521,6 @@
         "display_name": "PhotoPrism",
         "description": "AI-powered photo management system with REST API.",
         "auth": "bearer"
-      }
-    },
-    "radicale": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 5232
-      },
-      "vm": "oci-apps",
-      "domain": "cal.diegonmarcos.com",
-      "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/.well-known/caldav",
-        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
-        "healthcheck_paths": [
-          "/.web/"
-        ],
-        "type": "custom-protocol",
-        "base_path": "/.well-known/caldav",
-        "display_name": "Radicale CalDAV/CardDAV Server",
-        "description": "WebDAV-based CalDAV/CardDAV server for calendar and contact synchronization.",
-        "auth": "basic"
       }
     },
     "revealmd": {

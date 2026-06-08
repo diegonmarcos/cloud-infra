@@ -215,6 +215,11 @@
   ],
   "routes": [
     {
+      "domain": "cal.diegonmarcos.com",
+      "upstream": "10.0.0.6:5232",
+      "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+    },
+    {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
       "bypass_paths": [
@@ -226,6 +231,11 @@
       "domain": "ide.diegonmarcos.com",
       "upstream": "10.0.0.6:8443",
       "comment": "VS Code IDE (ide.diegonmarcos.com)"
+    },
+    {
+      "domain": "contacts.diegonmarcos.com",
+      "upstream": "10.0.0.6:5233",
+      "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
     {
       "domain": "webmail.diegonmarcos.com",
@@ -242,11 +252,6 @@
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
       "comment": "PhotoPrism AI-powered photo management (oci-flex-1)"
-    },
-    {
-      "domain": "cal.diegonmarcos.com",
-      "upstream": "10.0.0.6:5232",
-      "comment": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
     },
     {
       "domain": "jmap.diegonmarcos.com",
@@ -516,12 +521,20 @@
   },
   "internal_routes": [
     {
+      "service": "calendar.app",
+      "upstream": "10.0.0.6:5232"
+    },
+    {
       "service": "mattermost.app",
       "upstream": "10.0.0.6:8065"
     },
     {
       "service": "code-server.app",
       "upstream": "10.0.0.6:8443"
+    },
+    {
+      "service": "contacts.app",
+      "upstream": "10.0.0.6:5233"
     },
     {
       "service": "cypht.app",
@@ -562,10 +575,6 @@
     {
       "service": "photoprism.app",
       "upstream": "10.0.0.6:3013"
-    },
-    {
-      "service": "radicale.app",
-      "upstream": "10.0.0.6:5232"
     },
     {
       "service": "snappymail.app",
@@ -731,6 +740,27 @@
   "all_app_urls": [
     {
       "kind": "redirect",
+      "service": "calendar-radicale.app",
+      "redirect_to": "https://calendar-radicale-http-5232.app",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "calendar-radicale-http-5232.app",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0",
+      "port": 5232,
+      "protocol": "http",
+      "upstream": "10.0.0.6:5232",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "mattermost.app",
       "redirect_to": "https://mattermost-http-8065.app",
       "container": "mattermost",
@@ -769,6 +799,27 @@
       "port": 8443,
       "protocol": "https",
       "upstream": "10.0.0.6:8443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "contacts-radicale.app",
+      "redirect_to": "https://contacts-radicale-http-5233.app",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "contacts-radicale-http-5233.app",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0",
+      "port": 5233,
+      "protocol": "http",
+      "upstream": "10.0.0.6:5233",
       "source": "containers.app.port"
     },
     {
@@ -979,27 +1030,6 @@
       "port": 3013,
       "protocol": "http",
       "upstream": "10.0.0.6:3013",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "radicale.app",
-      "redirect_to": "https://radicale-http-5232.app",
-      "container": "radicale",
-      "container_key": "app",
-      "svc": "radicale",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "radicale-http-5232.app",
-      "container": "radicale",
-      "container_key": "app",
-      "svc": "radicale",
-      "vm": "oci-A1-f_0",
-      "port": 5232,
-      "protocol": "http",
-      "upstream": "10.0.0.6:5232",
       "source": "containers.app.port"
     },
     {
@@ -1634,6 +1664,28 @@
   "all_db_urls": [
     {
       "kind": "embedded",
+      "service": "calendar-radicale-files-null.db",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0",
+      "engine": "files",
+      "port": null,
+      "path": "/data/collections"
+    },
+    {
+      "kind": "embedded",
+      "service": "contacts-radicale-files-null.db",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0",
+      "engine": "files",
+      "port": null,
+      "path": "/data/collections"
+    },
+    {
+      "kind": "embedded",
       "service": "filebrowser_app-sqlite-null.db",
       "container": "filebrowser_app",
       "container_key": "app",
@@ -1642,17 +1694,6 @@
       "engine": "sqlite",
       "port": null,
       "path": "/data/filebrowser.db"
-    },
-    {
-      "kind": "embedded",
-      "service": "radicale-files-null.db",
-      "container": "radicale",
-      "container_key": "app",
-      "svc": "radicale",
-      "vm": "oci-A1-f_0",
-      "engine": "files",
-      "port": null,
-      "path": "/data/collections"
     },
     {
       "kind": "embedded",
@@ -1943,6 +1984,16 @@
   ],
   "public_D_others": [
     {
+      "host": "cal.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+    },
+    {
       "host": "chat.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -1961,6 +2012,16 @@
       "zone": "com",
       "service": null,
       "notes": "VS Code IDE (ide.diegonmarcos.com)"
+    },
+    {
+      "host": "contacts.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
     {
       "host": "webmail.diegonmarcos.com",
@@ -1991,16 +2052,6 @@
       "zone": "com",
       "service": null,
       "notes": "PhotoPrism AI-powered photo management (oci-flex-1)"
-    },
-    {
-      "host": "cal.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:5232",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)"
     },
     {
       "host": "jmap.diegonmarcos.com",
@@ -2175,6 +2226,16 @@
   ],
   "private_A0_app_short": [
     {
+      "host": "calendar.app",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "mattermost.app",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -2188,6 +2249,16 @@
       "host": "code-server.app",
       "path": null,
       "upstream": "10.0.0.6:8443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "contacts.app",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2288,16 +2359,6 @@
       "host": "photoprism.app",
       "path": null,
       "upstream": "10.0.0.6:3013",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "radicale.app",
-      "path": null,
-      "upstream": "10.0.0.6:5232",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2617,6 +2678,16 @@
   ],
   "private_A1_app_canonical": [
     {
+      "host": "calendar-radicale-http-5232.app",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "calendar-radicale",
+      "notes": null
+    },
+    {
       "host": "mattermost-http-8065.app",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -2634,6 +2705,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "code-server",
+      "notes": null
+    },
+    {
+      "host": "contacts-radicale-http-5233.app",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "contacts-radicale",
       "notes": null
     },
     {
@@ -2735,16 +2816,6 @@
       "zone": "com",
       "service": "photoprism",
       "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "radicale-http-5232.app",
-      "path": null,
-      "upstream": "10.0.0.6:5232",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "radicale",
-      "notes": null
     },
     {
       "host": "snappymail-http-8888.app",
@@ -3071,6 +3142,26 @@
   ],
   "private_B0_db": [
     {
+      "host": "calendar-radicale-files-null.db",
+      "path": "/data/collections",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "calendar-radicale",
+      "notes": "engine=files vm=oci-A1-f_0"
+    },
+    {
+      "host": "contacts-radicale-files-null.db",
+      "path": "/data/collections",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "contacts-radicale",
+      "notes": "engine=files vm=oci-A1-f_0"
+    },
+    {
       "host": "filebrowser_app-sqlite-null.db",
       "path": "/data/filebrowser.db",
       "upstream": "embedded",
@@ -3079,16 +3170,6 @@
       "zone": "db",
       "service": "filebrowser",
       "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "radicale-files-null.db",
-      "path": "/data/collections",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "radicale",
-      "notes": "engine=files vm=oci-A1-f_0"
     },
     {
       "host": "snappymail-files-null.db",

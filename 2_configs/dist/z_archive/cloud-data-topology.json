@@ -79,10 +79,12 @@
         "host_literal": true
       },
       "containers": [
+        "calendar-radicale",
         "mattermost",
         "mattermost-postgres",
         "mattermost-bots",
         "code-server",
+        "contacts-radicale",
         "etherpad_app",
         "etherpad_postgres",
         "filebrowser_app",
@@ -96,7 +98,6 @@
         "photoprism_app",
         "photoprism_mariadb",
         "photoprism_rclone",
-        "radicale",
         "revealmd_app",
         "vaultwarden",
         "crawlee_api",
@@ -541,6 +542,12 @@
     "internal_zones": [],
     "derived_entries": [
       {
+        "name": "calendar.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "calendar-radicale"
+      },
+      {
         "name": "mattermost.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -563,6 +570,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "code-server"
+      },
+      {
+        "name": "contacts.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "contacts-radicale"
       },
       {
         "name": "cypht.app",
@@ -635,12 +648,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "photoprism"
-      },
-      {
-        "name": "radicale.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "radicale"
       },
       {
         "name": "revealmd.app",
@@ -886,6 +893,82 @@
     "cloudflare": []
   },
   "services": {
+    "calendar-radicale": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_calendar-radicale",
+      "description": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+      "domain": "cal.diegonmarcos.com",
+      "port": 5232,
+      "dns": "calendar.app",
+      "upstream": "10.0.0.6:5232",
+      "containers": {
+        "app": {
+          "container_name": "calendar-radicale",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5232,
+          "port_env": null,
+          "dns": "calendar.app",
+          "public": true,
+          "proxy": {
+            "domain": "cal.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/.web/",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": [
+            {
+              "engine": "files",
+              "path": "/data/collections"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "calendar-radicale"
+      ],
+      "all_ports": [
+        "5232"
+      ],
+      "all_dns": [
+        "calendar.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "cal.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 5232
+      },
+      "health": {
+        "path": "/.web/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      }
+    },
     "chat-mattermost": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1075,6 +1158,82 @@
       },
       "health": {
         "path": "/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      }
+    },
+    "contacts-radicale": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_contacts-radicale",
+      "description": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+      "domain": "contacts.diegonmarcos.com",
+      "port": 5233,
+      "dns": "contacts.app",
+      "upstream": "10.0.0.6:5233",
+      "containers": {
+        "app": {
+          "container_name": "contacts-radicale",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5233,
+          "port_env": null,
+          "dns": "contacts.app",
+          "public": true,
+          "proxy": {
+            "domain": "contacts.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/.web/",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": [
+            {
+              "engine": "files",
+              "path": "/data/collections"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "contacts-radicale"
+      ],
+      "all_ports": [
+        "5233"
+      ],
+      "all_dns": [
+        "contacts.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "contacts.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 5233
+      },
+      "health": {
+        "path": "/.web/"
       },
       "monitoring": {
         "tls_check": true,
@@ -2036,82 +2195,6 @@
           "photoprism_originals",
           "photoprism_storage"
         ]
-      }
-    },
-    "radicale": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "aa-sui_radicale",
-      "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
-      "domain": "cal.diegonmarcos.com",
-      "port": 5232,
-      "dns": "radicale.app",
-      "upstream": "10.0.0.6:5232",
-      "containers": {
-        "app": {
-          "container_name": "radicale",
-          "image": "tomsquest/docker-radicale:latest",
-          "port": 5232,
-          "port_env": null,
-          "dns": "radicale.app",
-          "public": true,
-          "proxy": {
-            "domain": "cal.diegonmarcos.com",
-            "auth": "two_factor"
-          },
-          "healthcheck": "/.web/",
-          "monitoring": {
-            "tls_check": true,
-            "dns_check": true,
-            "endpoint_check": true
-          },
-          "volumes": [
-            "./data:/data",
-            "./config:/config:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "files",
-              "path": "/data/collections"
-            }
-          ]
-        }
-      },
-      "container_names": [
-        "radicale"
-      ],
-      "all_ports": [
-        "5232"
-      ],
-      "all_dns": [
-        "radicale.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "domain": "cal.diegonmarcos.com",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 5232
-      },
-      "health": {
-        "path": "/.web/"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
       }
     },
     "revealmd": {
