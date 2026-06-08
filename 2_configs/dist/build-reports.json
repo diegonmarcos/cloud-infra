@@ -14,12 +14,20 @@
   ],
   "endpoint_checks": [
     {
+      "service": "calendar-radicale",
+      "url": "https://cal.diegonmarcos.com/.web/"
+    },
+    {
       "service": "chat-mattermost",
       "url": "https://chat.diegonmarcos.com/api/v4/system/ping"
     },
     {
       "service": "code-server",
       "url": "https://ide.diegonmarcos.com/"
+    },
+    {
+      "service": "contacts-radicale",
+      "url": "https://contacts.diegonmarcos.com/.web/"
     },
     {
       "service": "etherpad",
@@ -40,10 +48,6 @@
     {
       "service": "photoprism",
       "url": "https://photos.diegonmarcos.com/api/v1/status"
-    },
-    {
-      "service": "radicale",
-      "url": "https://cal.diegonmarcos.com/.web/"
     },
     {
       "service": "maddy",
@@ -116,12 +120,20 @@
   ],
   "dns_checks": [
     {
+      "service": "calendar-radicale",
+      "domain": "cal.diegonmarcos.com"
+    },
+    {
       "service": "chat-mattermost",
       "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
+    },
+    {
+      "service": "contacts-radicale",
+      "domain": "contacts.diegonmarcos.com"
     },
     {
       "service": "etherpad",
@@ -142,10 +154,6 @@
     {
       "service": "photoprism",
       "domain": "photos.diegonmarcos.com"
-    },
-    {
-      "service": "radicale",
-      "domain": "cal.diegonmarcos.com"
     },
     {
       "service": "maddy",
@@ -222,12 +230,20 @@
   ],
   "tls_checks": [
     {
+      "service": "calendar-radicale",
+      "domain": "cal.diegonmarcos.com"
+    },
+    {
       "service": "chat-mattermost",
       "domain": "chat.diegonmarcos.com"
     },
     {
       "service": "code-server",
       "domain": "ide.diegonmarcos.com"
+    },
+    {
+      "service": "contacts-radicale",
+      "domain": "contacts.diegonmarcos.com"
     },
     {
       "service": "etherpad",
@@ -248,10 +264,6 @@
     {
       "service": "photoprism",
       "domain": "photos.diegonmarcos.com"
-    },
-    {
-      "service": "radicale",
-      "domain": "cal.diegonmarcos.com"
     },
     {
       "service": "maddy",
@@ -353,6 +365,19 @@
     }
   ],
   "services": {
+    "calendar-radicale": {
+      "name": "calendar-radicale",
+      "vm": "oci-A1-f_0",
+      "domain": "cal.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 5232
+      },
+      "health": {
+        "path": "/.web/"
+      }
+    },
     "chat-mattermost": {
       "name": "chat-mattermost",
       "vm": "oci-A1-f_0",
@@ -378,6 +403,19 @@
       },
       "health": {
         "path": "/"
+      }
+    },
+    "contacts-radicale": {
+      "name": "contacts-radicale",
+      "vm": "oci-A1-f_0",
+      "domain": "contacts.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 5233
+      },
+      "health": {
+        "path": "/.web/"
       }
     },
     "cypht": {
@@ -528,19 +566,6 @@
       },
       "health": {
         "path": "/api/v1/status"
-      }
-    },
-    "radicale": {
-      "name": "radicale",
-      "vm": "oci-A1-f_0",
-      "domain": "cal.diegonmarcos.com",
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "app": 5232
-      },
-      "health": {
-        "path": "/.web/"
       }
     },
     "revealmd": {
@@ -1129,6 +1154,15 @@
   },
   "dns_services": [
     {
+      "service": "calendar-radicale",
+      "dns": "calendar.app"
+    },
+    {
+      "service": "calendar-radicale",
+      "container": "app",
+      "dns": "calendar.app"
+    },
+    {
       "service": "chat-mattermost",
       "dns": "mattermost.app"
     },
@@ -1155,6 +1189,15 @@
       "service": "code-server",
       "container": "app",
       "dns": "code-server.app"
+    },
+    {
+      "service": "contacts-radicale",
+      "dns": "contacts.app"
+    },
+    {
+      "service": "contacts-radicale",
+      "container": "app",
+      "dns": "contacts.app"
     },
     {
       "service": "cypht",
@@ -1259,15 +1302,6 @@
       "service": "photoprism",
       "container": "app",
       "dns": "photoprism.app"
-    },
-    {
-      "service": "radicale",
-      "dns": "radicale.app"
-    },
-    {
-      "service": "radicale",
-      "container": "app",
-      "dns": "radicale.app"
     },
     {
       "service": "revealmd",
@@ -1765,8 +1799,10 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
+          "calendar-radicale",
           "chat-mattermost",
           "code-server",
+          "contacts-radicale",
           "etherpad",
           "filebrowser",
           "google-personal-mcp",
@@ -1776,7 +1812,6 @@
           "mail-mcp",
           "mattermost-mcp",
           "photoprism",
-          "radicale",
           "revealmd",
           "vaultwarden",
           "crawlee-cloud",
@@ -1832,6 +1867,19 @@
       }
     },
     "services": {
+      "calendar-radicale": {
+        "name": "calendar-radicale",
+        "vm": "oci-A1-f_0",
+        "domain": "cal.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 5232
+        },
+        "health": {
+          "path": "/.web/"
+        }
+      },
       "chat-mattermost": {
         "name": "chat-mattermost",
         "vm": "oci-A1-f_0",
@@ -1857,6 +1905,19 @@
         },
         "health": {
           "path": "/"
+        }
+      },
+      "contacts-radicale": {
+        "name": "contacts-radicale",
+        "vm": "oci-A1-f_0",
+        "domain": "contacts.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 5233
+        },
+        "health": {
+          "path": "/.web/"
         }
       },
       "cypht": {
@@ -2007,19 +2068,6 @@
         },
         "health": {
           "path": "/api/v1/status"
-        }
-      },
-      "radicale": {
-        "name": "radicale",
-        "vm": "oci-A1-f_0",
-        "domain": "cal.diegonmarcos.com",
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "app": 5232
-        },
-        "health": {
-          "path": "/.web/"
         }
       },
       "revealmd": {

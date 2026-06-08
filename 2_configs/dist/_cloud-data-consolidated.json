@@ -165,8 +165,10 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
+        "calendar-radicale",
         "chat-mattermost",
         "code-server",
+        "contacts-radicale",
         "etherpad",
         "filebrowser",
         "google-personal-mcp",
@@ -176,7 +178,6 @@
         "mail-mcp",
         "mattermost-mcp",
         "photoprism",
-        "radicale",
         "revealmd",
         "vaultwarden",
         "crawlee-cloud",
@@ -203,7 +204,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 47
+      "container_count": 48
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -720,6 +721,101 @@
     }
   },
   "services": {
+    "calendar-radicale": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_calendar-radicale",
+      "description": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+      "enabled": true,
+      "domain": "cal.diegonmarcos.com",
+      "port": 5232,
+      "dns": "calendar.app",
+      "upstream": "10.0.0.6:5232",
+      "containers": {
+        "app": {
+          "container_name": "calendar-radicale",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5232,
+          "port_env": null,
+          "dns": "calendar.app",
+          "public": true,
+          "proxy": {
+            "domain": "cal.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/.web/",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": [
+            {
+              "engine": "files",
+              "path": "/data/collections"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "calendar-radicale"
+      ],
+      "all_ports": [
+        "5232"
+      ],
+      "all_dns": [
+        "calendar.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "cal.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 5232
+      },
+      "health": {
+        "path": "/.web/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "upstream_image": "tomsquest/docker-radicale:latest",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/.well-known/caldav",
+        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
+        "healthcheck_paths": [
+          "/.web/"
+        ],
+        "type": "custom-protocol",
+        "base_path": "/.well-known/caldav",
+        "display_name": "Radicale CalDAV Server (Calendars)",
+        "description": "WebDAV-based CalDAV server for calendar synchronization.",
+        "auth": "basic"
+      },
+      "secret_env_vars": [
+        "RADICALE_USERS"
+      ]
+    },
     "chat-mattermost": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -965,6 +1061,101 @@
         "CODE_SERVER_PASSWORD"
       ]
     },
+    "contacts-radicale": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_contacts-radicale",
+      "description": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+      "enabled": true,
+      "domain": "contacts.diegonmarcos.com",
+      "port": 5233,
+      "dns": "contacts.app",
+      "upstream": "10.0.0.6:5233",
+      "containers": {
+        "app": {
+          "container_name": "contacts-radicale",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5233,
+          "port_env": null,
+          "dns": "contacts.app",
+          "public": true,
+          "proxy": {
+            "domain": "contacts.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/.web/",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": [
+            {
+              "engine": "files",
+              "path": "/data/collections"
+            }
+          ]
+        }
+      },
+      "container_names": [
+        "contacts-radicale"
+      ],
+      "all_ports": [
+        "5233"
+      ],
+      "all_dns": [
+        "contacts.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "contacts.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 5233
+      },
+      "health": {
+        "path": "/.web/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "upstream_image": "tomsquest/docker-radicale:latest",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/.well-known/carddav",
+        "api_url": "https://contacts.diegonmarcos.com/.well-known/carddav",
+        "healthcheck_paths": [
+          "/.web/"
+        ],
+        "type": "custom-protocol",
+        "base_path": "/.well-known/carddav",
+        "display_name": "Radicale CardDAV Server (Contacts)",
+        "description": "WebDAV-based CardDAV server for contact / address-book synchronization.",
+        "auth": "basic"
+      },
+      "secret_env_vars": [
+        "RADICALE_USERS"
+      ]
+    },
     "cypht": {
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -1130,9 +1321,9 @@
           }
         ],
         "carddav": {
-          "_doc": "CardDAV providers. Engine resolves service_ref → services.radicale.domain at derive time.",
-          "radicale": {
-            "service_ref": "radicale",
+          "_doc": "CardDAV providers. Engine resolves service_ref → services.{name}.domain at derive time.",
+          "contacts-radicale": {
+            "service_ref": "contacts-radicale",
             "path_template": "/{user_url_encoded}/",
             "user_ref": "stalwart.users.admin",
             "pass_env": "ME_PASSWORD"
@@ -2329,101 +2520,6 @@
         "PHOTOPRISM_DATABASE_PASSWORD",
         "OCI_S3_ACCESS_KEY",
         "OCI_S3_SECRET_KEY"
-      ]
-    },
-    "radicale": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "aa-sui_radicale",
-      "description": "Radicale CalDAV/CardDAV server (cal.diegonmarcos.com)",
-      "enabled": true,
-      "domain": "cal.diegonmarcos.com",
-      "port": 5232,
-      "dns": "radicale.app",
-      "upstream": "10.0.0.6:5232",
-      "containers": {
-        "app": {
-          "container_name": "radicale",
-          "image": "tomsquest/docker-radicale:latest",
-          "port": 5232,
-          "port_env": null,
-          "dns": "radicale.app",
-          "public": true,
-          "proxy": {
-            "domain": "cal.diegonmarcos.com",
-            "auth": "two_factor"
-          },
-          "healthcheck": "/.web/",
-          "monitoring": {
-            "tls_check": true,
-            "dns_check": true,
-            "endpoint_check": true
-          },
-          "volumes": [
-            "./data:/data",
-            "./config:/config:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "files",
-              "path": "/data/collections"
-            }
-          ]
-        }
-      },
-      "container_names": [
-        "radicale"
-      ],
-      "all_ports": [
-        "5232"
-      ],
-      "all_dns": [
-        "radicale.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "domain": "cal.diegonmarcos.com",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 5232
-      },
-      "health": {
-        "path": "/.web/"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "upstream_image": "tomsquest/docker-radicale:latest",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/.well-known/caldav",
-        "api_url": "https://cal.diegonmarcos.com/.well-known/caldav",
-        "healthcheck_paths": [
-          "/.web/"
-        ],
-        "type": "custom-protocol",
-        "base_path": "/.well-known/caldav",
-        "display_name": "Radicale CalDAV/CardDAV Server",
-        "description": "WebDAV-based CalDAV/CardDAV server for calendar and contact synchronization.",
-        "auth": "basic"
-      },
-      "secret_env_vars": [
-        "RADICALE_USERS"
       ]
     },
     "revealmd": {
@@ -7606,6 +7702,12 @@
     "internal_zones": [],
     "derived_entries": [
       {
+        "name": "calendar.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "calendar-radicale"
+      },
+      {
         "name": "mattermost.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -7628,6 +7730,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "code-server"
+      },
+      {
+        "name": "contacts.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "contacts-radicale"
       },
       {
         "name": "cypht.app",
@@ -7700,12 +7808,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "photoprism"
-      },
-      {
-        "name": "radicale.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "radicale"
       },
       {
         "name": "revealmd.app",
@@ -8234,8 +8336,10 @@
         "is_public_ingress": false,
         "idle_shutdown": null,
         "containers": [
+          "calendar-radicale",
           "chat-mattermost",
           "code-server",
+          "contacts-radicale",
           "etherpad",
           "filebrowser",
           "google-personal-mcp",
@@ -8245,7 +8349,6 @@
           "mail-mcp",
           "mattermost-mcp",
           "photoprism",
-          "radicale",
           "revealmd",
           "vaultwarden",
           "crawlee-cloud",
@@ -8507,6 +8610,11 @@
       }
     },
     "services": {
+      "calendar-radicale": {
+        "dir": "aa-sui_calendar-radicale",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
       "chat-mattermost": {
         "dir": "aa-sui_chat-mattermost",
         "vm": "oci-apps",
@@ -8514,6 +8622,11 @@
       },
       "code-server": {
         "dir": "aa-sui_code-server",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "contacts-radicale": {
+        "dir": "aa-sui_contacts-radicale",
         "vm": "oci-apps",
         "has_docker": true
       },
@@ -8569,11 +8682,6 @@
       },
       "photoprism": {
         "dir": "aa-sui_photoprism",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
-      "radicale": {
-        "dir": "aa-sui_radicale",
         "vm": "oci-apps",
         "has_docker": true
       },
