@@ -104,19 +104,29 @@ step_docker() {
             #     unavailable / unauthenticated (e.g. CI runners without gh).
             BINARIES_IMG="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}${DOCKER_IMAGE}-binaries:latest"
             BINARIES_PKG="${DOCKER_IMAGE}-binaries"
-            _binaries_exists=0
-            if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-                if gh api "/user/packages/container/${BINARIES_PKG}" >/dev/null 2>&1; then
-                    _binaries_exists=1
-                fi
-            elif docker manifest inspect "$BINARIES_IMG" >/dev/null 2>&1; then
-                _binaries_exists=1
+            # Existence is not enough — must also verify the manifest covers
+            # the target $ARCH. Without the arch check, a service that's been
+            # built only amd64 in the past skips rebuild forever, and the
+            # arm64 VM hits "exec format error" on compose. `docker manifest
+            # inspect` is the authoritative cross-arch query (.manifests[].
+            # platform.architecture for multi-arch manifests, .architecture
+            # for single-arch).
+            _binaries_arch_match=0
+            _remote_archs=$(docker manifest inspect "$BINARIES_IMG" 2>/dev/null | \
+                jq -r '
+                    if .manifests then
+                        [.manifests[].platform.architecture] | join(",")
+                    elif .architecture then
+                        .architecture
+                    else empty end' 2>/dev/null)
+            if [ -n "$_remote_archs" ] && echo ",$_remote_archs," | grep -q ",$ARCH,"; then
+                _binaries_arch_match=1
             fi
-            if [ "$_binaries_exists" = 1 ]; then
-                log "Docker src unchanged ($LOCAL_HASH) — skipping"
+            if [ "$_binaries_arch_match" = 1 ]; then
+                log "Docker src unchanged ($LOCAL_HASH), $BINARIES_IMG covers arch=$ARCH — skipping"
                 return 0
             else
-                log "Docker src unchanged ($LOCAL_HASH) but $BINARIES_IMG missing on GHCR — forcing rebuild"
+                log "Docker src unchanged ($LOCAL_HASH) but $BINARIES_IMG missing or no arch=$ARCH variant (remote_archs=${_remote_archs:-none}) — forcing rebuild"
             fi
         else
             [ -n "$REMOTE_HASH" ] && log "Docker src changed ($REMOTE_HASH -> $LOCAL_HASH)"
