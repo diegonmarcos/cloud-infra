@@ -389,8 +389,23 @@ case "${1:-all}" in
             fi
             [ "$NEW_SECRETS_HASH" != "$OLD_SECRETS_HASH" ] && SECRETS_CHANGED=true
         fi
-        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "${FORCE_DEPLOY:-}" ]; then
-            log "Config unchanged, no image rebuild — skipping deploy+compose"
+        # Check container-presence on VM. Smart-skip is wrong if the desired
+        # state (compose services running) doesn't match observed state — a
+        # service whose source hash hasn't changed but whose container has
+        # been stopped/removed otherwise silently stays down forever.
+        CONTAINERS_MISSING=""
+        if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
+            EXPECTED=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
+                "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' config --services 2>/dev/null | sort -u" 2>/dev/null)
+            RUNNING=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
+                "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' ps --services --status=running 2>/dev/null | sort -u" 2>/dev/null)
+            if [ -n "$EXPECTED" ] && [ "$EXPECTED" != "$RUNNING" ]; then
+                CONTAINERS_MISSING=true
+                log_warn "Expected services not all running on $DEPLOY_HOST — forcing redeploy"
+            fi
+        fi
+        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "$CONTAINERS_MISSING" ] && [ -z "${FORCE_DEPLOY:-}" ]; then
+            log "Config unchanged, no image rebuild, all containers running — skipping deploy+compose"
         else
             step_deploy
             step_compose
