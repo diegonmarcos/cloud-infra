@@ -220,7 +220,18 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
       fail-fast: false
-      max-parallel: 5
+      # Serialized: all parallel ship jobs use the same gha-runner WG key
+      # (vault/A0_keys/providers/wireguard/gha-runner/, pubkey
+      # QEPkGSsJXX...). Parallel jobs race for the single registered peer
+      # slot on the gcp-proxy hub — whichever wg-quick handshake lands
+      # last "wins" the endpoint, the others silently lose reply packets
+      # and every subsequent SSH to a wg_ip target fails with exit 255.
+      # max-parallel:1 serializes matrix jobs so only one job at a time
+      # holds the wg slot. Trade-off: total ship time scales linearly with
+      # VM count instead of in parallel. Proper fix (per-job WG identity
+      # pool) tracked separately — needs new keys + hub peer entries +
+      # entrypoint refactor + image rebuild.
+      max-parallel: 1
     concurrency:
       group: ship-${{ matrix.vm }}
       cancel-in-progress: false
