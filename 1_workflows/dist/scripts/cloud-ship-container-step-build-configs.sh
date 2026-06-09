@@ -15,24 +15,38 @@
 
 step_configs_push() {
     CURRENT_STEP="configs-push"
+    # Disable set -e within this function — a non-zero from any single
+    # command was bailing out the whole backgrounded subshell silently
+    # under `set -e` from the engine, leaving the dispatch with the
+    # bare "WARNING: configs-push failed" and zero diagnostic info.
+    # Per-step error handling below logs the exact failure point.
+    set +e
     [ ! -d "$DIST_DIR" ] && { log "No dist/ — skipping configs push"; return 0; }
     [ ! -f "$COMPOSE_FILE" ] && { log "No compose file ($COMPOSE_FILE) — skipping configs push"; return 0; }
 
     CONFIGS_IMAGE="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}/${SERVICE_NAME}-configs:latest"
 
-    # Skip if dist/ unchanged since last configs push
+    # Skip if dist/ unchanged AND arch unchanged. Without DOCKER_ARCH in
+    # the hash, a service whose docker.arch was added later (e.g. arm64
+    # for oci-apps services) sees an unchanged hash and skips pushing —
+    # the GHCR image stays amd64-only and the arm64 VM hits "exec format
+    # error" on deploy.
     CONFIGS_HASH=$(find "$DIST_DIR" -type f ! -name 'Dockerfile.configs' ! -name '.configs-hash' -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
+    CONFIGS_HASH="${CONFIGS_HASH}-${DOCKER_ARCH:-amd64}"
     OLD_CONFIGS_HASH=$(cat "$SERVICE_DIR/.configs-hash" 2>/dev/null || echo "")
     if [ "$CONFIGS_HASH" = "$OLD_CONFIGS_HASH" ] && [ -n "$CONFIGS_HASH" ]; then
         log "Configs unchanged — skipping push ($CONFIGS_HASH)"
         return 0
     fi
+    log "configs-push start (hash=$CONFIGS_HASH, arch=${DOCKER_ARCH:-amd64})"
 
     # GHCR login (CI provides GITHUB_TOKEN+GITHUB_ACTOR; locally fall back to `gh` CLI)
     if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
-        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>/dev/null
+        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
+        [ $? -eq 0 ] && log "GHCR login OK (env)" || log_warn "GHCR login failed (env)"
     elif command -v gh >/dev/null 2>&1; then
-        gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>/dev/null
+        gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin >/dev/null 2>&1
+        [ $? -eq 0 ] && log "GHCR login OK (gh)" || log_warn "GHCR login failed (gh)"
     else
         log_warn "No GHCR credentials — skipping configs push"
         return 0
