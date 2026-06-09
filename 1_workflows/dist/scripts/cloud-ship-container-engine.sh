@@ -89,6 +89,12 @@ if [ -f "$CONFIG" ]; then
     DOCKER_BINARY_NAME="$(get_config docker.binary_name)"
     DOCKER_PLATFORM="$(get_config docker.platform)"
     DOCKER_ARCH="$(get_config docker.arch)"
+    # Backgrounded sub-shells (step_configs_push &, step_docker &) need these
+    # in their environment. Without export, ${DOCKER_ARCH:-} in the subshell
+    # evaluates to empty → configs image gets built for the GHA runner's
+    # arch (amd64) instead of the target VM's arch (arm64 for oci-apps)
+    # → "exec format error" when the VM pulls + runs it on deploy.
+    export DOCKER_ARCH DOCKER_REGISTRY DOCKER_IMAGE DOCKER_PLATFORM SERVICE_NAME DIST_DIR COMPOSE_FILE SERVICE_DIR DEPLOY_HOST DEPLOY_PATH
     SEQUENTIAL_RESTART="$(get_config deploy.sequential_restart)"
     COMPOSE_FLAGS="$(get_config deploy.compose_flags)"
     ESCAPE_DOLLARS="$(get_config secrets.escape_dollars)"
