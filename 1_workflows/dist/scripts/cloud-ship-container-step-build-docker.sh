@@ -124,13 +124,18 @@ step_docker() {
             # platform.architecture for multi-arch manifests, .architecture
             # for single-arch).
             _binaries_arch_match=0
-            _remote_archs=$(docker manifest inspect "$BINARIES_IMG" 2>/dev/null | \
+            # `|| true` is required because the pipe's first command exits
+            # non-zero when the manifest is missing (404). Engine has
+            # `set -e -o pipefail` at the top, so without the tolerant
+            # outer, the script aborts at the assignment instead of just
+            # leaving _remote_archs empty for the rebuild path.
+            _remote_archs=$( (docker manifest inspect "$BINARIES_IMG" 2>/dev/null | \
                 jq -r '
                     if .manifests then
                         [.manifests[].platform.architecture] | join(",")
                     elif .architecture then
                         .architecture
-                    else empty end' 2>/dev/null)
+                    else empty end' 2>/dev/null) || true )
             if [ -n "$_remote_archs" ] && echo ",$_remote_archs," | grep -q ",$ARCH,"; then
                 _binaries_arch_match=1
             fi
