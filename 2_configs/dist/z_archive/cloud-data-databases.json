@@ -2,12 +2,12 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 27,
+  "total": 28,
   "summary": {
     "postgres": 6,
     "mariadb": 2,
     "redis": 3,
-    "sqlite": 9,
+    "sqlite": 10,
     "surrealdb": 1,
     "custom": 0,
     "mongo": 0,
@@ -213,6 +213,25 @@
           "memory": "16M"
         }
       },
+      "backup": true
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "container": "mautrix-whatsapp",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+      "port": 29318,
+      "dns": "matrix-mautrix-whatsapp.app",
+      "path": "/data/mautrix-whatsapp.db",
+      "volumes": [
+        "./data:/data"
+      ],
+      "resources": null,
       "backup": true
     },
     {
@@ -896,6 +915,25 @@
         "backup": true
       },
       {
+        "service": "matrix-mautrix-whatsapp",
+        "container": "mautrix-whatsapp",
+        "container_key": "app",
+        "type": "sqlite",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+        "port": 29318,
+        "dns": "matrix-mautrix-whatsapp.app",
+        "path": "/data/mautrix-whatsapp.db",
+        "volumes": [
+          "./data:/data"
+        ],
+        "resources": null,
+        "backup": true
+      },
+      {
         "service": "maddy",
         "container": "maddy",
         "container_key": "app",
@@ -1394,6 +1432,25 @@
           "resources": null,
           "backup": true,
           "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
+        },
+        {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+          "port": 29318,
+          "dns": "matrix-mautrix-whatsapp.app",
+          "path": "/data/mautrix-whatsapp.db",
+          "volumes": [
+            "./data:/data"
+          ],
+          "resources": null,
+          "backup": true
         },
         {
           "service": "photoprism",

@@ -33,13 +33,13 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 175,
-    "edges": 209,
+    "nodes": 180,
+    "edges": 215,
     "by_table": {
       "vm": 4,
-      "service": 57,
-      "container": 77,
-      "domain": 37
+      "service": 59,
+      "container": 79,
+      "domain": 38
     }
   },
   "nodes": [
@@ -563,6 +563,58 @@
         "role": "app",
         "port": 8008,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "matrix_element",
+      "key": "service:matrix_element",
+      "properties": {
+        "name": "matrix-element",
+        "category": "app",
+        "description": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
+        "domain": "messenger.diegonmarcos.com",
+        "port": 8082,
+        "vm": "oci-apps",
+        "folder": "aa-sui_matrix-element"
+      }
+    },
+    {
+      "table": "container",
+      "id": "matrix_element",
+      "key": "container:matrix_element",
+      "properties": {
+        "name": "matrix-element",
+        "image": "ghcr.io/diegonmarcos/matrix-element-binaries:latest",
+        "role": "app",
+        "port": 8082,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "matrix_mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp",
+      "properties": {
+        "name": "matrix-mautrix-whatsapp",
+        "category": "app",
+        "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+        "domain": null,
+        "port": 29318,
+        "vm": "oci-apps",
+        "folder": "aa-sui_matrix-mautrix-whatsapp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mautrix_whatsapp",
+      "key": "container:mautrix_whatsapp",
+      "properties": {
+        "name": "mautrix-whatsapp",
+        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+        "role": "app",
+        "port": 29318,
+        "public": false
       }
     },
     {
@@ -1935,6 +1987,14 @@
     },
     {
       "table": "domain",
+      "id": "messenger_diegonmarcos_com",
+      "key": "domain:messenger_diegonmarcos_com",
+      "properties": {
+        "fqdn": "messenger.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "photos_diegonmarcos_com",
       "key": "domain:photos_diegonmarcos_com",
       "properties": {
@@ -2409,6 +2469,38 @@
       "from": "service:matrix_continuwuity",
       "to": "container:continuwuity",
       "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:matrix_element",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_element->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_element",
+      "to": "container:matrix_element",
+      "key": "service:matrix_element->runs_container->container:matrix_element",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_mautrix_whatsapp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "container:mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
       "properties": {
         "role": "app"
       }
@@ -3335,6 +3427,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:matrix_element",
+      "to": "service:caddy",
+      "key": "service:matrix_element->proxied_by->service:caddy",
+      "properties": {
+        "domain": "messenger.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:photoprism",
       "to": "service:caddy",
       "key": "service:photoprism->proxied_by->service:caddy",
@@ -3654,6 +3755,13 @@
       "from": "domain:matrix_diegonmarcos_com",
       "to": "service:matrix_continuwuity",
       "key": "domain:matrix_diegonmarcos_com->routes_to->service:matrix_continuwuity",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:messenger_diegonmarcos_com",
+      "to": "service:matrix_element",
+      "key": "domain:messenger_diegonmarcos_com->routes_to->service:matrix_element",
       "properties": {}
     },
     {
