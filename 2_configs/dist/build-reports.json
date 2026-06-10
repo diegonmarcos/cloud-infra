@@ -50,6 +50,10 @@
       "url": "https://matrix.diegonmarcos.com/_matrix/client/versions"
     },
     {
+      "service": "matrix-element",
+      "url": "https://messenger.diegonmarcos.com/"
+    },
+    {
       "service": "photoprism",
       "url": "https://photos.diegonmarcos.com/api/v1/status"
     },
@@ -158,6 +162,10 @@
     {
       "service": "matrix-continuwuity",
       "domain": "matrix.diegonmarcos.com"
+    },
+    {
+      "service": "matrix-element",
+      "domain": "messenger.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -272,6 +280,10 @@
     {
       "service": "matrix-continuwuity",
       "domain": "matrix.diegonmarcos.com"
+    },
+    {
+      "service": "matrix-element",
+      "domain": "messenger.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -568,6 +580,30 @@
       "health": {
         "path": "/_matrix/client/versions"
       }
+    },
+    "matrix-element": {
+      "name": "matrix-element",
+      "vm": "oci-A1-f_0",
+      "domain": "messenger.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8082
+      },
+      "health": {
+        "path": "/"
+      }
+    },
+    "matrix-mautrix-whatsapp": {
+      "name": "matrix-mautrix-whatsapp",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 29318
+      },
+      "health": null
     },
     "mattermost-mcp": {
       "name": "mattermost-mcp",
@@ -1320,6 +1356,24 @@
       "dns": "matrix-continuwuity.app"
     },
     {
+      "service": "matrix-element",
+      "dns": "matrix-element.app"
+    },
+    {
+      "service": "matrix-element",
+      "container": "app",
+      "dns": "matrix-element.app"
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "dns": "matrix-mautrix-whatsapp.app"
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "container": "app",
+      "dns": "matrix-mautrix-whatsapp.app"
+    },
+    {
       "service": "mattermost-mcp",
       "dns": "mattermost-mcp.app"
     },
@@ -1845,6 +1899,8 @@
           "hedgedoc",
           "mail-mcp",
           "matrix-continuwuity",
+          "matrix-element",
+          "matrix-mautrix-whatsapp",
           "mattermost-mcp",
           "photoprism",
           "revealmd",
@@ -2093,6 +2149,30 @@
         "health": {
           "path": "/_matrix/client/versions"
         }
+      },
+      "matrix-element": {
+        "name": "matrix-element",
+        "vm": "oci-A1-f_0",
+        "domain": "messenger.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8082
+        },
+        "health": {
+          "path": "/"
+        }
+      },
+      "matrix-mautrix-whatsapp": {
+        "name": "matrix-mautrix-whatsapp",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 29318
+        },
+        "health": null
       },
       "mattermost-mcp": {
         "name": "mattermost-mcp",
