@@ -488,6 +488,10 @@ function deriveCaddy(c: any): DerivedFile {
       ...(proxy.landing_page ? { landing_page: proxy.landing_page } : {}),
       ...(proxy.tls_skip_verify ? { tls_skip_verify: true } : {}),
       ...(proxy.auth === "none" ? { auth: "none" } : {}),
+      // wg_only: when set, caddyfile.nix gates the whole route behind a
+      // `remote_ip 10.0.0.0/24` matcher (403 for anything off the WG mesh).
+      // Source of truth: service build.json proxy.primary.wg_only.
+      ...(proxy.wg_only ? { wg_only: true } : {}),
       // root_response_json: static JSON served at GET /. Used to override
       // upstreams that bake their internal listener port into responses
       // (e.g. Stalwart JMAP Session leaks :2443). Caddy emits `handle /`
@@ -602,6 +606,10 @@ function deriveCaddy(c: any): DerivedFile {
     mcpEndpoints.push({
       base_path: proxy.base_path,
       ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
+      // wg_only: caddyfile.nix mkMcpRouteGroup gates this endpoint behind a
+      // `remote_ip 10.0.0.0/24` matcher. Needed because the MCP hub emits no
+      // Authelia/bearer — without this the endpoint is fully public.
+      ...(proxy.wg_only ? { wg_only: true } : {}),
     });
   }
   const mcpRoutes = mcpEndpoints.length > 0 ? [{
