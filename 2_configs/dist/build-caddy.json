@@ -248,6 +248,12 @@
       "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     {
+      "domain": "matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8008",
+      "auth": "none",
+      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    {
       "domain": "photos.diegonmarcos.com",
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
@@ -575,6 +581,10 @@
     {
       "service": "mail-mcp.app",
       "upstream": "10.0.0.6:3103"
+    },
+    {
+      "service": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008"
     },
     {
       "service": "mattermost-mcp.app",
@@ -996,6 +1006,27 @@
       "port": 3103,
       "protocol": "http",
       "upstream": "10.0.0.6:3103",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "continuwuity.app",
+      "redirect_to": "https://continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "port": 8008,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8008",
       "source": "containers.app.port"
     },
     {
@@ -2052,6 +2083,16 @@
       "notes": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     {
+      "host": "matrix.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    {
       "host": "photos.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3013",
@@ -2347,6 +2388,16 @@
       "host": "mail-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-continuwuity.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2803,6 +2854,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "mail-mcp",
+      "notes": null
+    },
+    {
+      "host": "continuwuity-http-8008.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-continuwuity",
       "notes": null
     },
     {

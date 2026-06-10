@@ -46,6 +46,10 @@
       "url": "https://doc.diegonmarcos.com/"
     },
     {
+      "service": "matrix-continuwuity",
+      "url": "https://matrix.diegonmarcos.com/_matrix/client/versions"
+    },
+    {
       "service": "photoprism",
       "url": "https://photos.diegonmarcos.com/api/v1/status"
     },
@@ -150,6 +154,10 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
+    },
+    {
+      "service": "matrix-continuwuity",
+      "domain": "matrix.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -260,6 +268,10 @@
     {
       "service": "hedgedoc",
       "domain": "doc.diegonmarcos.com"
+    },
+    {
+      "service": "matrix-continuwuity",
+      "domain": "matrix.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -542,6 +554,19 @@
       },
       "health": {
         "path": null
+      }
+    },
+    "matrix-continuwuity": {
+      "name": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "domain": "matrix.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
       }
     },
     "mattermost-mcp": {
@@ -1286,6 +1311,15 @@
       "dns": "mail-puller.app"
     },
     {
+      "service": "matrix-continuwuity",
+      "dns": "matrix-continuwuity.app"
+    },
+    {
+      "service": "matrix-continuwuity",
+      "container": "app",
+      "dns": "matrix-continuwuity.app"
+    },
+    {
       "service": "mattermost-mcp",
       "dns": "mattermost-mcp.app"
     },
@@ -1810,6 +1844,7 @@
           "grist",
           "hedgedoc",
           "mail-mcp",
+          "matrix-continuwuity",
           "mattermost-mcp",
           "photoprism",
           "revealmd",
@@ -2044,6 +2079,19 @@
         },
         "health": {
           "path": null
+        }
+      },
+      "matrix-continuwuity": {
+        "name": "matrix-continuwuity",
+        "vm": "oci-A1-f_0",
+        "domain": "matrix.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8008
+        },
+        "health": {
+          "path": "/_matrix/client/versions"
         }
       },
       "mattermost-mcp": {
