@@ -98,6 +98,23 @@
       "databases": []
     },
     {
+      "service": "matrix-mautrix-whatsapp",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "mautrix_whatsapp_data"
+      ],
+      "databases": [
+        {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/mautrix-whatsapp.db"
+        }
+      ]
+    },
+    {
       "service": "photoprism",
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
@@ -358,6 +375,13 @@
           "db": "hedgedoc"
         },
         {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/mautrix-whatsapp.db"
+        },
+        {
           "service": "photoprism",
           "container": "photoprism_mariadb",
           "container_key": "db",
@@ -434,6 +458,7 @@
         "mattermost_postgres",
         "grist_data",
         "continuwuity_data",
+        "mautrix_whatsapp_data",
         "photoprism_originals",
         "photoprism_storage",
         "vaultwarden_data",

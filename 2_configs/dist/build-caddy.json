@@ -254,6 +254,11 @@
       "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
+      "domain": "messenger.diegonmarcos.com",
+      "upstream": "10.0.0.6:8082",
+      "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
+    },
+    {
       "domain": "photos.diegonmarcos.com",
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
@@ -464,19 +469,23 @@
       "endpoints": [
         {
           "base_path": "/g-personal",
-          "upstream": "10.0.0.6:3106"
+          "upstream": "10.0.0.6:3106",
+          "wg_only": true
         },
         {
           "base_path": "/g-workspace",
-          "upstream": "10.0.0.6:3104"
+          "upstream": "10.0.0.6:3104",
+          "wg_only": true
         },
         {
           "base_path": "/mail-mcp",
-          "upstream": "10.0.0.6:3103"
+          "upstream": "10.0.0.6:3103",
+          "wg_only": true
         },
         {
           "base_path": "/mattermost-mcp",
-          "upstream": "10.0.0.6:3102"
+          "upstream": "10.0.0.6:3102",
+          "wg_only": true
         },
         {
           "base_path": "/c3-infra-mcp",
@@ -485,7 +494,8 @@
         },
         {
           "base_path": "/c3-services-mcp",
-          "upstream": "10.0.0.6:3101"
+          "upstream": "10.0.0.6:3101",
+          "wg_only": true
         },
         {
           "base_path": "/cloud-cgc-mcp",
@@ -580,6 +590,14 @@
     {
       "service": "matrix-continuwuity.app",
       "upstream": "10.0.0.6:8008"
+    },
+    {
+      "service": "matrix-element.app",
+      "upstream": "10.0.0.6:8082"
+    },
+    {
+      "service": "matrix-mautrix-whatsapp.app",
+      "upstream": "10.0.0.6:29318"
     },
     {
       "service": "mattermost-mcp.app",
@@ -1022,6 +1040,27 @@
       "port": 8008,
       "protocol": "http",
       "upstream": "10.0.0.6:8008",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "matrix-element.app",
+      "redirect_to": "https://matrix-element-http-8082.app",
+      "container": "matrix-element",
+      "container_key": "app",
+      "svc": "matrix-element",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "matrix-element-http-8082.app",
+      "container": "matrix-element",
+      "container_key": "app",
+      "svc": "matrix-element",
+      "vm": "oci-A1-f_0",
+      "port": 8082,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8082",
       "source": "containers.app.port"
     },
     {
@@ -2088,6 +2127,16 @@
       "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
+      "host": "messenger.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8082",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
+    },
+    {
       "host": "photos.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3013",
@@ -2393,6 +2442,26 @@
       "host": "matrix-continuwuity.app",
       "path": null,
       "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-element.app",
+      "path": null,
+      "upstream": "10.0.0.6:8082",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-mautrix-whatsapp.app",
+      "path": null,
+      "upstream": "10.0.0.6:29318",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2859,6 +2928,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "matrix-continuwuity",
+      "notes": null
+    },
+    {
+      "host": "matrix-element-http-8082.app",
+      "path": null,
+      "upstream": "10.0.0.6:8082",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-element",
       "notes": null
     },
     {

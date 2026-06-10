@@ -444,6 +444,8 @@
         "hedgedoc",
         "mail-mcp",
         "matrix-continuwuity",
+        "matrix-element",
+        "matrix-mautrix-whatsapp",
         "mattermost-mcp",
         "photoprism",
         "revealmd",
@@ -472,7 +474,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 49
+      "container_count": 51
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -1577,7 +1579,8 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/g-personal"
+          "base_path": "/g-personal",
+          "wg_only": true
         }
       },
       "declared_ports": {
@@ -1684,7 +1687,8 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/g-workspace"
+          "base_path": "/g-workspace",
+          "wg_only": true
         }
       },
       "declared_ports": {
@@ -1987,7 +1991,8 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/mail-mcp"
+          "base_path": "/mail-mcp",
+          "wg_only": true
         }
       },
       "declared_ports": {
@@ -2241,6 +2246,169 @@
         "CONTINUWUITY_REGISTRATION_TOKEN"
       ]
     },
+    "matrix-element": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_matrix-element",
+      "description": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
+      "enabled": true,
+      "domain": "messenger.diegonmarcos.com",
+      "port": 8082,
+      "dns": "matrix-element.app",
+      "upstream": "10.0.0.6:8082",
+      "containers": {
+        "app": {
+          "container_name": "matrix-element",
+          "image": "ghcr.io/diegonmarcos/matrix-element-binaries:latest",
+          "port": 8082,
+          "port_env": null,
+          "dns": "matrix-element.app",
+          "public": true,
+          "proxy": {
+            "domain": "messenger.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "./configs/config.json:/app/config.json:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "matrix-element"
+      ],
+      "all_ports": [
+        "8082"
+      ],
+      "all_dns": [
+        "matrix-element.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "messenger.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 8082
+      },
+      "health": {
+        "path": "/"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "vectorim/element-web:latest",
+      "resources": {
+        "mem_limit": "128M",
+        "mem_reservation": "16M"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/"
+        ],
+        "type": "no-api"
+      }
+    },
+    "matrix-mautrix-whatsapp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_matrix-mautrix-whatsapp",
+      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+      "enabled": true,
+      "port": 29318,
+      "dns": "matrix-mautrix-whatsapp.app",
+      "upstream": "10.0.0.6:29318",
+      "containers": {
+        "app": {
+          "container_name": "mautrix-whatsapp",
+          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+          "port": 29318,
+          "port_env": null,
+          "dns": "matrix-mautrix-whatsapp.app",
+          "public": false,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "db_path": "/data/mautrix-whatsapp.db",
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "mautrix-whatsapp"
+      ],
+      "all_ports": [
+        "29318"
+      ],
+      "all_dns": [
+        "matrix-mautrix-whatsapp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 29318
+      },
+      "monitoring": {
+        "tls_check": false,
+        "dns_check": false,
+        "endpoint_check": false
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mautrix_whatsapp_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
+      "resources": {
+        "mem_limit": "512M",
+        "mem_reservation": "64M"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "no-api"
+      },
+      "secret_env_vars": [
+        "AS_TOKEN",
+        "HS_TOKEN"
+      ]
+    },
     "mattermost-mcp": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -2294,7 +2462,8 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/mattermost-mcp"
+          "base_path": "/mattermost-mcp",
+          "wg_only": true
         }
       },
       "declared_ports": {
@@ -5727,7 +5896,8 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/c3-services-mcp"
+          "base_path": "/c3-services-mcp",
+          "wg_only": true
         }
       },
       "declared_ports": {
