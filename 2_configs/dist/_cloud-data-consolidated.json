@@ -176,6 +176,7 @@
         "grist",
         "hedgedoc",
         "mail-mcp",
+        "matrix-continuwuity",
         "mattermost-mcp",
         "photoprism",
         "revealmd",
@@ -204,7 +205,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 48
+      "container_count": 49
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -2272,6 +2273,105 @@
         "LOCAL_DELIVERY_USER",
         "LOCAL_DELIVERY_PASSWORD",
         "GMAIL_APP_PASSWORD"
+      ]
+    },
+    "matrix-continuwuity": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_matrix-continuwuity",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "enabled": true,
+      "domain": "matrix.diegonmarcos.com",
+      "port": 8008,
+      "dns": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "containers": {
+        "app": {
+          "container_name": "continuwuity",
+          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+          "port": 8008,
+          "port_env": "CONTINUWUITY_PORT",
+          "dns": "matrix-continuwuity.app",
+          "public": true,
+          "proxy": {
+            "domain": "matrix.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/_matrix/client/versions",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "continuwuity_data:/var/lib/continuwuity"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "continuwuity"
+      ],
+      "all_ports": [
+        "8008"
+      ],
+      "all_dns": [
+        "matrix-continuwuity.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "matrix.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "continuwuity_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "forgejo.ellis.link/continuwuation/continuwuity:latest",
+      "resources": {
+        "mem_limit": "768M",
+        "mem_reservation": "128M"
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/_matrix",
+        "api_url": "https://matrix.diegonmarcos.com/_matrix",
+        "healthcheck_paths": [
+          "/_matrix/client/versions"
+        ],
+        "type": "custom-rest",
+        "base_path": "/_matrix",
+        "display_name": "Matrix (Continuwuity)",
+        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
+        "auth": "bearer"
+      },
+      "secret_env_vars": [
+        "CONTINUWUITY_REGISTRATION_TOKEN"
       ]
     },
     "mattermost-mcp": {
@@ -7801,6 +7901,12 @@
         "service": "mail-mcp"
       },
       {
+        "name": "matrix-continuwuity.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "matrix-continuwuity"
+      },
+      {
         "name": "mattermost-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -8350,6 +8456,7 @@
           "grist",
           "hedgedoc",
           "mail-mcp",
+          "matrix-continuwuity",
           "mattermost-mcp",
           "photoprism",
           "revealmd",
@@ -8676,6 +8783,11 @@
       "mail-puller": {
         "dir": "aa-sui_mail-puller",
         "vm": "oci-mail",
+        "has_docker": true
+      },
+      "matrix-continuwuity": {
+        "dir": "aa-sui_matrix-continuwuity",
+        "vm": "oci-apps",
         "has_docker": true
       },
       "mattermost-mcp": {

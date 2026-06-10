@@ -94,6 +94,7 @@
         "hedgedoc_app",
         "hedgedoc_postgres",
         "mail-mcp",
+        "continuwuity",
         "mattermost-mcp",
         "photoprism_app",
         "photoprism_mariadb",
@@ -636,6 +637,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "mail-mcp"
+      },
+      {
+        "name": "matrix-continuwuity.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "matrix-continuwuity"
       },
       {
         "name": "mattermost-mcp.app",
@@ -2012,6 +2019,81 @@
         "enabled": true,
         "volumes": [
           "mail_puller_state"
+        ]
+      }
+    },
+    "matrix-continuwuity": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "aa-sui_matrix-continuwuity",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "domain": "matrix.diegonmarcos.com",
+      "port": 8008,
+      "dns": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "containers": {
+        "app": {
+          "container_name": "continuwuity",
+          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+          "port": 8008,
+          "port_env": "CONTINUWUITY_PORT",
+          "dns": "matrix-continuwuity.app",
+          "public": true,
+          "proxy": {
+            "domain": "matrix.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/_matrix/client/versions",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "continuwuity_data:/var/lib/continuwuity"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "continuwuity"
+      ],
+      "all_ports": [
+        "8008"
+      ],
+      "all_dns": [
+        "matrix-continuwuity.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "matrix.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "continuwuity_data"
         ]
       }
     },
