@@ -405,17 +405,32 @@ NEOF
         return 0
     fi
 
-    # GHCR login — best-effort.
-    # The login is REDUNDANT inside cloud-builder: the GHA runner already
-    # logged in before `docker compose run`, and ${HOME}/.docker/config.json
-    # is bind-mounted RO into cloud-builder per cb_containers-builders compose.yaml.
-    # The re-login fails with "permission denied" trying to write the RO
-    # mount → previously aborted step_docker silently because of `2>/dev/null`
-    # combined with set -e. Now: stderr is preserved (for debuggability) and
-    # `|| true` keeps the pipeline going since downstream `docker push` will
-    # surface its own error if auth is genuinely broken.
+    # GHCR login — best-effort, three-tier fallback (mirrors the remote-runner
+    # branch at the bottom of this file for uniform auth across local + remote):
+    #
+    #   1. Vault PAT (~/git/vault/...) — owner-scoped PAT with write:packages.
+    #      ALWAYS works when vault is present. Tried FIRST because the GHA
+    #      ephemeral $GITHUB_TOKEN has failed before with `denied:
+    #      permission_denied: write_package` (forked PR context, package-level
+    #      access lists, etc.); the vault PAT bypasses all of that.
+    #   2. $GITHUB_TOKEN — GHA workflow ephemeral, when running inside GHA.
+    #   3. `gh auth token` — interactive `gh` login (devs running locally).
+    #
+    # The login itself is REDUNDANT inside cloud-builder when the GHA runner
+    # already logged in before `docker compose run` (${HOME}/.docker/config.json
+    # is bind-mounted RO into cloud-builder per cb_containers-builders
+    # compose.yaml). The re-login fails with "permission denied" trying to
+    # write the RO mount → previously aborted step_docker silently because of
+    # `2>/dev/null` combined with set -e. Now: stderr is preserved (for
+    # debuggability) and `|| true` keeps the pipeline going since downstream
+    # `docker push` will surface its own error if auth is genuinely broken.
     # Surfaced 2026-04-27 (ship run 24998359368) by step_docker ERR trap.
-    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    GHCR_USER="${GHCR_USER:-diegonmarcos}"
+    if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
+    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
             | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     elif command -v gh >/dev/null 2>&1; then
