@@ -678,6 +678,12 @@ function deriveCaddy(c: any): DerivedFile {
   for (const [, svc] of Object.entries(services)) {
     if (svc.enabled === false) continue;
     if (!svc.upstream || !svc.dns) continue;
+    // Skip services whose containers are all marked public: false (e.g. redis,
+    // postgres sidecars). They're docker-internal only — not reachable via the
+    // WG mesh, so emitting a Caddy/Hickory catalog row creates a phantom probe
+    // target. Matches the same guard used in allAppUrls (line 753).
+    const ctsArr = Object.values(svc.containers ?? {}) as any[];
+    if (ctsArr.length > 0 && ctsArr.every(c => c.public === false)) continue;
     const vm = vms[svc.vm];
     let upstream: string = svc.upstream;
     if (vm?.wg_ip && upstream.startsWith(`${vm.wg_ip}:`)) {

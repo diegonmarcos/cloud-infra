@@ -273,9 +273,14 @@ function main() {
     // Normalize to containers (new schema or synthesized from flat)
     const containers = normalizeToContainers(entry);
 
-    // Compute upstream from WG_IP:port (raw IP, not DNS — Caddy proxies all *.app)
+    // Compute upstream IP — prefer the primary container's bind_host (e.g. wg-public
+    // hub IP 10.1.0.1) over the VM's wg0 IP. This is how services like cf-worker-bridge
+    // declare "I bind on the wg-public mesh, not wg0" — without it, the catalog points
+    // probes/Caddy at the wrong interface.
     const vmWgIp = vmId ? vms[vmId]?.wg_ip : undefined;
-    const computedUpstream = vmWgIp && entry.port ? `${vmWgIp}:${entry.port}` : undefined;
+    const primaryContainer = Object.values(containers).find(c => c.port === entry.port) ?? Object.values(containers)[0];
+    const upstreamIp = primaryContainer?.bind_host ?? vmWgIp;
+    const computedUpstream = upstreamIp && entry.port ? `${upstreamIp}:${entry.port}` : undefined;
 
     // Derive container names from containers spec
     const containerNames = Object.values(containers).map(c => c.container_name);
