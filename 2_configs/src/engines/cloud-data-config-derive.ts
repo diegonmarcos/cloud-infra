@@ -811,9 +811,16 @@ function deriveCaddy(c: any): DerivedFile {
           vm: svc.vm,
         });
       } else {
-        // Use caddy-reachable IP (wg-public preferred when caddy is on a
-        // wg-public host, wg0 otherwise). Pure data lookup via resolveVmIpForCaddy.
+        // Upstream IP precedence (pure data lookups, no hardcoded IPs):
+        //   1. containers.<x>.bind_host — the container DECLARES the exact
+        //      interface it listens on (e.g. cf-worker-bridge binds the
+        //      wg-public hub IP 10.1.0.1, not the VM's wg0 IP). Probing or
+        //      proxying any other IP is guaranteed connection-refused.
+        //   2. resolveVmIpForCaddy(vm) — caddy-reachable VM IP (wg-public
+        //      preferred when caddy is on a wg-public host, wg0 otherwise).
+        // Mirrors the same precedence in cloud-data-config-consolidated.ts.
         const vmIpForCaddy = resolveVmIpForCaddy(vm);
+        const upstreamIp = (typeof c.bind_host === "string" && c.bind_host) ? c.bind_host : vmIpForCaddy;
         for (const { port, protocol, source } of ports) {
           allAppUrls.push({
             kind: "canonical",
@@ -824,7 +831,7 @@ function deriveCaddy(c: any): DerivedFile {
             vm: svc.vm,
             port,
             protocol,
-            upstream: `${vmIpForCaddy}:${port}`,
+            upstream: `${upstreamIp}:${port}`,
             source,
           });
         }
