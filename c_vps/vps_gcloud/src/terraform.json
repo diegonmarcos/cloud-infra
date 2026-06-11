@@ -17,7 +17,8 @@
   "_firewall_rules_doc": "REVERT of Phase 6 (PR #26) — production outage: PR #26 destroyed allow-https while DNS still pointed at gcp-proxy (Phase 4 Caddy migration to oci-analytics had not landed). Restoring allow-https + https-server tag to keep public 443 ingress on gcp-proxy until Phases 4+5 deploy.",
   "firewall_rules": [
     { "name": "allow-https",           "protocol": "tcp", "ports": ["443"],   "source": "0.0.0.0/0", "tags": ["https-server"],                           "description": "Allow HTTPS traffic (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS)" },
-    { "name": "allow-wireguard",       "protocol": "udp", "ports": ["51820"], "source": "0.0.0.0/0", "tags": [],                                        "description": "WireGuard wg0 mesh primary (gcp-proxy = hub)" }
+    { "name": "allow-wireguard",       "protocol": "udp", "ports": ["51820"], "source": "0.0.0.0/0", "tags": [],                                        "description": "WireGuard wg0 mesh primary (gcp-proxy = hub)" },
+    { "name": "allow-wireguard-fallback", "protocol": "udp", "ports": ["443"], "source": "0.0.0.0/0", "tags": [],                                        "description": "WireGuard wg0 fallback — host firewall.nix REDIRECTs udp/443 → udp/51820 for networks blocking 51820" }
   ],
 
   "static_ips": [
