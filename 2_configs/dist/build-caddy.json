@@ -338,7 +338,7 @@
       "paths": [
         {
           "base_path": "/cf-worker-bridge",
-          "upstream": "10.0.0.4:8092",
+          "upstream": "10.1.0.1:8092",
           "comment": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
         },
         {
@@ -596,10 +596,6 @@
       "upstream": "10.0.0.6:8083"
     },
     {
-      "service": "matrix-mautrix-whatsapp.app",
-      "upstream": "10.0.0.6:29318"
-    },
-    {
       "service": "mattermost-mcp.app",
       "upstream": "10.0.0.6:3102"
     },
@@ -613,7 +609,7 @@
     },
     {
       "service": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.0.0.4:8092"
+      "upstream": "10.1.0.1:8092"
     },
     {
       "service": "stalwart.app",
@@ -636,16 +632,8 @@
       "upstream": "10.0.0.6:8091"
     },
     {
-      "service": "hickory-dns.app",
-      "upstream": "10.0.0.1:53"
-    },
-    {
       "service": "wireguard-mesh.app",
       "upstream": "10.0.0.6:8080"
-    },
-    {
-      "service": "wireguard-mesh-ws-tunnel.app",
-      "upstream": "10.0.0.1:8080"
     },
     {
       "service": "authelia.app",
@@ -658,10 +646,6 @@
     {
       "service": "caddy-l4-public.app",
       "upstream": "10.0.0.4:443"
-    },
-    {
-      "service": "introspect-proxy.app",
-      "upstream": "10.0.0.1:4182"
     },
     {
       "service": "c3-analytics-api.app",
@@ -726,10 +710,6 @@
     {
       "service": "gitea.app",
       "upstream": "10.0.0.6:3002"
-    },
-    {
-      "service": "redis.app",
-      "upstream": "10.0.0.1:6379"
     }
   ],
   "s3_routes": [
@@ -1945,7 +1925,7 @@
     {
       "host": "api.diegonmarcos.com",
       "path": "/cf-worker-bridge",
-      "upstream": "10.0.0.4:8092",
+      "upstream": "10.1.0.1:8092",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2459,16 +2439,6 @@
       "notes": null
     },
     {
-      "host": "matrix-mautrix-whatsapp.app",
-      "path": null,
-      "upstream": "10.0.0.6:29318",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "mattermost-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3102",
@@ -2501,7 +2471,7 @@
     {
       "host": "cf-worker-http-to-wg-public-bridge.app",
       "path": null,
-      "upstream": "10.0.0.4:8092",
+      "upstream": "10.1.0.1:8092",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2559,29 +2529,9 @@
       "notes": null
     },
     {
-      "host": "hickory-dns.app",
-      "path": null,
-      "upstream": "10.0.0.1:53",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "wireguard-mesh.app",
       "path": null,
       "upstream": "10.0.0.6:8080",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "wireguard-mesh-ws-tunnel.app",
-      "path": null,
-      "upstream": "10.0.0.1:8080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2612,16 +2562,6 @@
       "host": "caddy-l4-public.app",
       "path": null,
       "upstream": "10.0.0.4:443",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "introspect-proxy.app",
-      "path": null,
-      "upstream": "10.0.0.1:4182",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2782,16 +2722,6 @@
       "host": "gitea.app",
       "path": null,
       "upstream": "10.0.0.6:3002",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "redis.app",
-      "path": null,
-      "upstream": "10.0.0.1:6379",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
