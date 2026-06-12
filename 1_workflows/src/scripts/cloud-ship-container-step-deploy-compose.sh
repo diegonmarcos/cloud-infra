@@ -60,11 +60,14 @@ step_compose() {
     #
     # `--build` in build.json's deploy.compose_flags is IGNORED at compose-up
     # time; the engine logs a warning so the legacy flag can be cleaned up.
-    # --pull missing: pull images that aren't present locally (e.g. redis:7-bookworm
-    # from Docker Hub on a fresh VM). Idempotent — only pulls when needed.
-    # Was --pull never which broke first-time deployments and any service whose
-    # compose references public images not pre-cached on the VM.
-    COMPOSE_UP_FLAGS="--no-build --pull missing --force-recreate"
+    # --pull always (history: never → missing → always). The fleet pins
+    # :latest tags, so "missing" let a stale locally-cached image shadow a
+    # freshly-pushed GHCR image forever — crawlee's amd64 mispush (run
+    # 27409752538) kept winning over the corrected arm64 build on every
+    # redeploy because the tag already existed locally. "always" re-pulls at
+    # each deploy; on registry/auth failure compose errors instead of
+    # silently running stale bits (FAIL LOUDLY doctrine).
+    COMPOSE_UP_FLAGS="--no-build --pull always --force-recreate"
     COMPOSE_PULL_FIRST="true"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
         log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
