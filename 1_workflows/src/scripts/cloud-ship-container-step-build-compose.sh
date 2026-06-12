@@ -51,6 +51,22 @@ step_compose_build() {
     ARCH="${DOCKER_ARCH:-amd64}"
     PLATFORM="linux/$ARCH"
     log "compose-build platform: $PLATFORM (from docker.arch)"
+    # ── Arch guard (no QEMU, no cross-arch fallback — same doctrine as the
+    # runner matrix). `docker compose build` compiles on the HOST arch no
+    # matter what platform we log; when the workflow's builder-image
+    # resolution fails (e.g. stale III_unix submodule pointer, run
+    # 27409752538) the engine silently ran on the amd64 GHA runner, pushed
+    # amd64 images for an arm64 target, and the VM died with exec-format-
+    # error. FAIL LOUDLY instead.
+    _HOST_ARCH=$(uname -m)
+    case "$_HOST_ARCH" in
+        x86_64)        _HOST_ARCH="amd64" ;;
+        aarch64|arm64) _HOST_ARCH="arm64" ;;
+    esac
+    if [ "$_HOST_ARCH" != "$ARCH" ]; then
+        log_error "compose-build arch mismatch: host=$_HOST_ARCH target=$ARCH — this step must run on the arch-matching builder (check builder-image resolution / III_unix submodule pointer)."
+        return 1
+    fi
     # Build + push all services with build: sections (verbose output)
     log "── dockerfile_inline content ──"
     grep -A20 'dockerfile_inline:' "$COMPOSE_FILE" || true
