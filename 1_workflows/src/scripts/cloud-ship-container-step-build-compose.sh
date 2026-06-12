@@ -66,7 +66,42 @@ step_compose_build() {
         aarch64|arm64) _HOST_ARCH="arm64" ;;
     esac
     if [ "$_HOST_ARCH" != "$ARCH" ]; then
-        log_error "compose-build arch mismatch: host=$_HOST_ARCH target=$ARCH — this step must run on the arch-matching builder (check builder-image resolution / III_unix submodule pointer)."
+        # Dispatch to the arch-matching runner (same registry step_docker
+        # uses: build-workflows.json .runners[arch].host). rsync the dist/
+        # tree (compose file + build contexts like assets/repo) and run
+        # docker compose build --push natively there.
+        RUNNERS_JSON=""
+        for _p in \
+            "/app/build-workflows.json" \
+            "${CLOUD_ROOT:-$SERVICE_DIR/../..}/2_configs/dist/build-workflows.json" \
+            "$SRC_DIR/build-workflows.json"; do
+            [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
+        done
+        RUNNER_HOST=""
+        [ -n "$RUNNERS_JSON" ] && RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
+        if [ -z "$RUNNER_HOST" ]; then
+            log_error "compose-build arch mismatch (host=$_HOST_ARCH target=$ARCH) and no .runners[$ARCH].host in build-workflows.json — cannot build."
+            return 1
+        fi
+        log "compose-build: arch mismatch (host=$_HOST_ARCH target=$ARCH) — dispatching to $RUNNER_HOST"
+        REMOTE_CB_DIR="/tmp/compose-build-${SERVICE_NAME}"
+        rsync -azL --delete "$DIST_DIR/" "$RUNNER_HOST:$REMOTE_CB_DIR/" || {
+            log_error "compose-build: rsync to $RUNNER_HOST failed"
+            return 1
+        }
+        # GHCR login on the runner — vault PAT via stdin (never on disk there).
+        _CB_TOK=""
+        [ -f "$VAULT_GHCR_TOKEN_PATH" ] && _CB_TOK="$(cat "$VAULT_GHCR_TOKEN_PATH")"
+        [ -z "$_CB_TOK" ] && _CB_TOK="${GITHUB_TOKEN:-}"
+        if [ -n "$_CB_TOK" ]; then
+            printf '%s' "$_CB_TOK" | ssh "$RUNNER_HOST" "docker login ghcr.io -u $GHCR_USER --password-stdin" >/dev/null 2>&1 || true
+        fi
+        if ssh "$RUNNER_HOST" "cd $REMOTE_CB_DIR && DOCKER_BUILDKIT=1 docker compose -f compose/docker-compose.yml --project-directory . build --no-cache --push" 2>&1 \
+            | while IFS= read -r line; do printf "[compose-build@remote] %s\n" "$line"; done; then
+            log "compose-build (remote on $RUNNER_HOST) OK"
+            return 0
+        fi
+        log_error "compose-build (remote on $RUNNER_HOST) FAILED"
         return 1
     fi
     # Build + push all services with build: sections (verbose output)
