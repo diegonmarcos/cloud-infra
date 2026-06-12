@@ -37,12 +37,21 @@ step_compose_build() {
     # context); then GHA env; then `gh` CLI (interactive devs).
     VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
     GHCR_USER="${GHCR_USER:-diegonmarcos}"
+    # Logins are guarded with `|| true` (mirrors step_docker): inside the
+    # cloud-builder ~/.docker/config.json is a RO bind mount, so docker login
+    # fails with 'Error saving credentials: rename ...: device or resource
+    # busy' even though the runner is ALREADY logged in. Unguarded, set -e +
+    # pipefail killed the whole step before the build ran (run 27416130512).
+    # A genuinely broken auth still surfaces at `docker compose build --push`.
     if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
-        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored|Error saving credentials)' || true
     elif [ -n "${GITHUB_TOKEN:-}" ]; then
-        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+        echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored|Error saving credentials)' || true
     elif command -v gh >/dev/null 2>&1; then
-        gh auth token | docker login ghcr.io -u "$(gh api user --jq .login)" --password-stdin
+        gh auth token | docker login ghcr.io -u "$(gh api user --jq .login)" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored|Error saving credentials)' || true
     else
         log_warn "No GHCR credentials — skipping push (build-only)"
         docker compose build
