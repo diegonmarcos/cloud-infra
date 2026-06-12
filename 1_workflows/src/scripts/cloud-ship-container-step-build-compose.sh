@@ -22,7 +22,9 @@ step_compose_build() {
     # the old inline-only grep silently skipped file-based builds, so their
     # GHCR images were never built/pushed and compose-up on the VM (which
     # is forced --no-build by doctrine) died with 'pull access denied'.
-    if ! grep -qE 'dockerfile_inline:|dockerfile:' "$COMPOSE_FILE" 2>/dev/null; then
+    # NOTE: engine.nix serialises compose as JSON-style YAML — keys are
+    # QUOTED ("dockerfile":), so the pattern must tolerate quotes.
+    if ! grep -qE '"?dockerfile(_inline)?"?[[:space:]]*:' "$COMPOSE_FILE" 2>/dev/null; then
         log "No build sections (dockerfile/dockerfile_inline) in docker-compose.yml -- skipping compose-build"
         return 0
     fi
