@@ -14,9 +14,16 @@ step_compose_build() {
         return 0
     fi
 
-    # Check if docker-compose.yml has any build: sections
-    if ! grep -q 'dockerfile_inline:' "$COMPOSE_FILE" 2>/dev/null; then
-        log "No dockerfile_inline in docker-compose.yml -- skipping compose-build"
+    # Check if docker-compose.yml has any build: sections. Two forms:
+    #   dockerfile_inline:  (mkGhcrBuild pattern — authelia, caddy, umami…)
+    #   dockerfile:         (file-based build context — crawlee-cloud's
+    #                        vendored assets/repo with docker/Dockerfile.*)
+    # The step's contract (header) is "all services with a build: section";
+    # the old inline-only grep silently skipped file-based builds, so their
+    # GHCR images were never built/pushed and compose-up on the VM (which
+    # is forced --no-build by doctrine) died with 'pull access denied'.
+    if ! grep -qE 'dockerfile_inline:|dockerfile:' "$COMPOSE_FILE" 2>/dev/null; then
+        log "No build sections (dockerfile/dockerfile_inline) in docker-compose.yml -- skipping compose-build"
         return 0
     fi
 
@@ -49,7 +56,12 @@ step_compose_build() {
     grep -A20 'dockerfile_inline:' "$COMPOSE_FILE" || true
     log "── docker compose build --push ──"
     COMPOSE_BUILD_OK=""
-    if DOCKER_BUILDKIT=1 docker compose -f "$COMPOSE_FILE" build --no-cache --push 2>&1 | while IFS= read -r line; do
+    # --project-directory "$DIST_DIR": relative build contexts in compose.nix
+    # (e.g. crawlee's "./assets/repo") are written for the deploy step's
+    # `--project-directory .` run from dist/. Without the same flag here,
+    # compose resolves them against the compose FILE's dir (dist/compose/)
+    # and the context is missing.
+    if DOCKER_BUILDKIT=1 docker compose -f "$COMPOSE_FILE" --project-directory "$DIST_DIR" build --no-cache --push 2>&1 | while IFS= read -r line; do
         printf "[compose-build] %s\n" "$line"
     done; then
         COMPOSE_BUILD_OK=true
