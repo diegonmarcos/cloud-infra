@@ -475,6 +475,19 @@ function deriveCaddy(c: any): DerivedFile {
     }
   }
 
+  // ── Fleet posture: WG-only by default (fail-closed) ──
+  // A public-edge route is gated to the WG mesh (10.0.0.0/24) by caddyfile.nix
+  // UNLESS its build.json explicitly declares `proxy.primary.wg_only: false`.
+  // i.e. omitted → WG-only; new/unclassified services are private by default.
+  // Setting `wg_only: false` is the deliberate, self-documenting opt-out for
+  // the handful of routes that MUST stay public (mesh bootstrap, inbound-mail
+  // ingress, public-site analytics beacons, Matrix federation, c3-public-api).
+  // Source of truth: service build.json proxy.primary.wg_only.
+  // Applies to every public-edge emitter below (subdomain, path, mcp, ntfy,
+  // proxy_dashboard). NOT applied to special.analytics (matomo/umami public
+  // tracking beacons) or to internal :80 catalog / .app synthesis routes.
+  const wgOnly = (proxy: any): boolean => (proxy?.wg_only ?? true);
+
   // ── Domain routes: services with domain-level proxy ──
   const routes: any[] = [];
   for (const [, svc] of Object.entries(services)) {
@@ -490,8 +503,8 @@ function deriveCaddy(c: any): DerivedFile {
       ...(proxy.auth === "none" ? { auth: "none" } : {}),
       // wg_only: when set, caddyfile.nix gates the whole route behind a
       // `remote_ip 10.0.0.0/24` matcher (403 for anything off the WG mesh).
-      // Source of truth: service build.json proxy.primary.wg_only.
-      ...(proxy.wg_only ? { wg_only: true } : {}),
+      // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
+      ...(wgOnly(proxy) ? { wg_only: true } : {}),
       // root_response_json: static JSON served at GET /. Used to override
       // upstreams that bake their internal listener port into responses
       // (e.g. Stalwart JMAP Session leaks :2443). Caddy emits `handle /`
@@ -530,6 +543,10 @@ function deriveCaddy(c: any): DerivedFile {
       base_path: proxy.base_path,
       ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
       ...(proxy.public_paths ? { public_paths: proxy.public_paths } : {}),
+      // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
+      // caddyfile.nix mkPathEntry wraps the per-path handle (incl. public_paths)
+      // in a `remote_ip 10.0.0.0/24` gate → 403 off-mesh.
+      ...(wgOnly(proxy) ? { wg_only: true } : {}),
       comment: svc.description,
     });
   }
@@ -609,7 +626,8 @@ function deriveCaddy(c: any): DerivedFile {
       // wg_only: caddyfile.nix mkMcpRouteGroup gates this endpoint behind a
       // `remote_ip 10.0.0.0/24` matcher. Needed because the MCP hub emits no
       // Authelia/bearer — without this the endpoint is fully public.
-      ...(proxy.wg_only ? { wg_only: true } : {}),
+      // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
+      ...(wgOnly(proxy) ? { wg_only: true } : {}),
     });
   }
   const mcpRoutes = mcpEndpoints.length > 0 ? [{
@@ -629,6 +647,8 @@ function deriveCaddy(c: any): DerivedFile {
       domain: ntfySvc.domain ?? ntfySvc.proxy?.primary?.domain,
       upstream: rewriteUpstreamForCaddy(ntfySvc.vm, ntfySvc.upstream),
       comment: "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie",
+      // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
+      ...(wgOnly(ntfySvc.proxy?.primary) ? { wg_only: true } : {}),
     };
   }
 
@@ -654,6 +674,8 @@ function deriveCaddy(c: any): DerivedFile {
     special.proxy_dashboard = {
       domain: caddySvc.domain ?? "proxy.diegonmarcos.com",
       comment: "Infrastructure dashboard (static HTML)",
+      // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
+      ...(wgOnly(caddySvc.proxy?.primary) ? { wg_only: true } : {}),
     };
   }
 

@@ -217,11 +217,13 @@
     {
       "domain": "cal.diegonmarcos.com",
       "upstream": "10.0.0.6:5232",
+      "wg_only": true,
       "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
     },
     {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
+      "wg_only": true,
       "bypass_paths": [
         "/api/v4/*"
       ],
@@ -230,21 +232,25 @@
     {
       "domain": "ide.diegonmarcos.com",
       "upstream": "10.0.0.6:8443",
+      "wg_only": true,
       "comment": "VS Code IDE (ide.diegonmarcos.com)"
     },
     {
       "domain": "contacts.diegonmarcos.com",
       "upstream": "10.0.0.6:5233",
+      "wg_only": true,
       "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
     {
       "domain": "webmail.diegonmarcos.com",
       "upstream": "10.0.0.3:8889",
+      "wg_only": true,
       "comment": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
     },
     {
       "domain": "sheets.diegonmarcos.com",
       "upstream": "10.0.0.6:3011",
+      "wg_only": true,
       "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     {
@@ -256,12 +262,14 @@
     {
       "domain": "messenger.diegonmarcos.com",
       "upstream": "10.0.0.6:8083",
+      "wg_only": true,
       "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
       "domain": "photos.diegonmarcos.com",
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
+      "wg_only": true,
       "comment": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
@@ -269,6 +277,7 @@
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
       "auth": "none",
+      "wg_only": true,
       "comment": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     {
@@ -281,6 +290,7 @@
     {
       "domain": "mesh.diegonmarcos.com",
       "upstream": "10.0.0.6:8080",
+      "wg_only": true,
       "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
     {
@@ -292,16 +302,19 @@
     {
       "domain": "auth.diegonmarcos.com",
       "upstream": "10.0.0.1:9091",
+      "wg_only": true,
       "comment": "SSO and 2FA authentication portal"
     },
     {
       "domain": "workflows.diegonmarcos.com",
       "upstream": "10.0.0.4:8070",
+      "wg_only": true,
       "comment": "Dagu - Lightweight DAG-based workflow scheduler"
     },
     {
       "domain": "db.diegonmarcos.com",
       "upstream": "10.0.0.6:8086",
+      "wg_only": true,
       "comment": "DBGate - Universal database manager for all cloud databases"
     }
   ],
@@ -312,21 +325,25 @@
         {
           "base_path": "/etherpad",
           "upstream": "10.0.0.6:3012",
+          "wg_only": true,
           "comment": "Etherpad collaborative editor"
         },
         {
           "base_path": "/filebrowser",
           "upstream": "10.0.0.6:3015",
+          "wg_only": true,
           "comment": "FileBrowser web file manager (NEW - not deployed yet)"
         },
         {
           "base_path": "/hedgedoc",
           "upstream": "10.0.0.6:3018",
+          "wg_only": true,
           "comment": "Collaborative markdown editor"
         },
         {
           "base_path": "/gitea",
           "upstream": "10.0.0.6:3002",
+          "wg_only": true,
           "comment": "Self-hosted Git service"
         }
       ],
@@ -344,16 +361,19 @@
         {
           "base_path": "/crawlee",
           "upstream": "10.0.0.6:3000",
+          "wg_only": true,
           "comment": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
         },
         {
           "base_path": "/fin-api",
           "upstream": "10.0.0.6:8340",
+          "wg_only": true,
           "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
         },
         {
           "base_path": "/c3a",
           "upstream": "10.0.0.1:8085",
+          "wg_only": true,
           "comment": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
         },
         {
@@ -362,6 +382,7 @@
           "public_paths": [
             "/c3-infra-api/docs/json"
           ],
+          "wg_only": true,
           "comment": "C3 REST API — Cloud Control Center Fastify API"
         },
         {
@@ -377,6 +398,7 @@
         {
           "base_path": "/c3-services-api",
           "upstream": "10.0.0.6:8082",
+          "wg_only": true,
           "comment": "C3 Services REST API — service API gateway Fastify API"
         }
       ],
@@ -389,6 +411,7 @@
         {
           "base_path": "/spec",
           "upstream": "10.0.0.6:3080",
+          "wg_only": true,
           "comment": "Unified Cloud Documentation Portal"
         }
       ],
@@ -511,7 +534,8 @@
     "ntfy": {
       "domain": "rss.diegonmarcos.com",
       "upstream": "10.0.0.6:8090",
-      "comment": "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie"
+      "comment": "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie",
+      "wg_only": true
     },
     "analytics": {
       "domain": "analytics.diegonmarcos.com/matomo",
@@ -535,7 +559,8 @@
     },
     "proxy_dashboard": {
       "domain": "proxy.diegonmarcos.com",
-      "comment": "Infrastructure dashboard (static HTML)"
+      "comment": "Infrastructure dashboard (static HTML)",
+      "wg_only": true
     }
   },
   "internal_routes": [
