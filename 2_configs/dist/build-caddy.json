@@ -266,6 +266,12 @@
       "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
+      "domain": "paca.diegonmarcos.com",
+      "upstream": "10.0.0.6:8095",
+      "wg_only": true,
+      "comment": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    {
       "domain": "photos.diegonmarcos.com",
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
@@ -623,6 +629,10 @@
     {
       "service": "mattermost-mcp.app",
       "upstream": "10.0.0.6:3102"
+    },
+    {
+      "service": "paca.app",
+      "upstream": "10.0.0.6:8095"
     },
     {
       "service": "photoprism.app",
@@ -1088,6 +1098,27 @@
       "protocol": "http",
       "upstream": "10.0.0.6:3102",
       "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "paca-gateway.app",
+      "redirect_to": "https://paca-gateway-http-8095.app",
+      "container": "paca-gateway",
+      "container_key": "gateway",
+      "svc": "paca",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "paca-gateway-http-8095.app",
+      "container": "paca-gateway",
+      "container_key": "gateway",
+      "svc": "paca",
+      "vm": "oci-A1-f_0",
+      "port": 8095,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8095",
+      "source": "containers.gateway.port"
     },
     {
       "kind": "redirect",
@@ -2142,6 +2173,16 @@
       "notes": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
+      "host": "paca.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    {
       "host": "photos.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3013",
@@ -2467,6 +2508,16 @@
       "host": "mattermost-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "paca.app",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2903,6 +2954,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "mattermost-mcp",
+      "notes": null
+    },
+    {
+      "host": "paca-gateway-http-8095.app",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "paca",
       "notes": null
     },
     {

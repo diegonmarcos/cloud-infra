@@ -115,6 +115,28 @@
       ]
     },
     {
+      "service": "paca",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "paca_postgres",
+        "paca_valkey",
+        "paca_backend_plugins",
+        "paca_frontend_plugins",
+        "paca_mcp_plugins"
+      ],
+      "databases": [
+        {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "paca",
+          "db": "paca"
+        }
+      ]
+    },
+    {
       "service": "photoprism",
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
@@ -382,6 +404,14 @@
           "path": "/data/mautrix-whatsapp.db"
         },
         {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "paca",
+          "db": "paca"
+        },
+        {
           "service": "photoprism",
           "container": "photoprism_mariadb",
           "container_key": "db",
@@ -459,6 +489,11 @@
         "grist_data",
         "continuwuity_data",
         "mautrix_whatsapp_data",
+        "paca_postgres",
+        "paca_valkey",
+        "paca_backend_plugins",
+        "paca_frontend_plugins",
+        "paca_mcp_plugins",
         "photoprism_originals",
         "photoprism_storage",
         "vaultwarden_data",
