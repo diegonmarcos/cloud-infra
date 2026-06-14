@@ -2,9 +2,9 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 28,
+  "total": 29,
   "summary": {
-    "postgres": 6,
+    "postgres": 7,
     "mariadb": 2,
     "redis": 3,
     "sqlite": 10,
@@ -233,6 +233,28 @@
       ],
       "resources": null,
       "backup": true
+    },
+    {
+      "service": "paca",
+      "container": "paca-postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5432,
+      "dns": "paca-postgres.app",
+      "user": "paca",
+      "db": "paca",
+      "healthcheck": "pg_isready -U paca -d paca",
+      "volumes": [
+        "paca_postgres:/var/lib/postgresql/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "postgresql://paca@10.0.0.6:5432/paca"
     },
     {
       "service": "photoprism",
@@ -794,6 +816,28 @@
         "resources": null,
         "backup": true,
         "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
+      },
+      {
+        "service": "paca",
+        "container": "paca-postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5432,
+        "dns": "paca-postgres.app",
+        "user": "paca",
+        "db": "paca",
+        "healthcheck": "pg_isready -U paca -d paca",
+        "volumes": [
+          "paca_postgres:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://paca@10.0.0.6:5432/paca"
       },
       {
         "service": "crawlee-cloud",
@@ -1451,6 +1495,28 @@
           ],
           "resources": null,
           "backup": true
+        },
+        {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5432,
+          "dns": "paca-postgres.app",
+          "user": "paca",
+          "db": "paca",
+          "healthcheck": "pg_isready -U paca -d paca",
+          "volumes": [
+            "paca_postgres:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://paca@10.0.0.6:5432/paca"
         },
         {
           "service": "photoprism",

@@ -54,6 +54,10 @@
       "url": "https://messenger.diegonmarcos.com/"
     },
     {
+      "service": "paca",
+      "url": "https://paca.diegonmarcos.com/api/healthz"
+    },
+    {
       "service": "photoprism",
       "url": "https://photos.diegonmarcos.com/api/v1/status"
     },
@@ -166,6 +170,10 @@
     {
       "service": "matrix-element",
       "domain": "messenger.diegonmarcos.com"
+    },
+    {
+      "service": "paca",
+      "domain": "paca.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -284,6 +292,10 @@
     {
       "service": "matrix-element",
       "domain": "messenger.diegonmarcos.com"
+    },
+    {
+      "service": "paca",
+      "domain": "paca.diegonmarcos.com"
     },
     {
       "service": "photoprism",
@@ -615,6 +627,22 @@
         "app": 3102
       },
       "health": null
+    },
+    "paca": {
+      "name": "paca",
+      "vm": "oci-A1-f_0",
+      "domain": "paca.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "gateway": 8095,
+        "api": 8080,
+        "realtime": 3001,
+        "db": 5432
+      },
+      "health": {
+        "path": "/api/healthz"
+      }
     },
     "photoprism": {
       "name": "photoprism",
@@ -1383,6 +1411,40 @@
       "dns": "mattermost-mcp.app"
     },
     {
+      "service": "paca",
+      "dns": "paca.app"
+    },
+    {
+      "service": "paca",
+      "container": "gateway",
+      "dns": "paca.app"
+    },
+    {
+      "service": "paca",
+      "container": "api",
+      "dns": "paca-api.app"
+    },
+    {
+      "service": "paca",
+      "container": "web",
+      "dns": "paca-web.app"
+    },
+    {
+      "service": "paca",
+      "container": "realtime",
+      "dns": "paca-realtime.app"
+    },
+    {
+      "service": "paca",
+      "container": "valkey",
+      "dns": "paca-valkey.app"
+    },
+    {
+      "service": "paca",
+      "container": "db",
+      "dns": "paca-postgres.app"
+    },
+    {
       "service": "photoprism",
       "dns": "photoprism.app"
     },
@@ -1787,6 +1849,14 @@
       "db_user": "hedgedoc"
     },
     {
+      "service": "paca",
+      "container": "db",
+      "engine": "postgres",
+      "port": 5432,
+      "db_name": "paca",
+      "db_user": "paca"
+    },
+    {
       "service": "photoprism",
       "container": "db",
       "engine": "mariadb",
@@ -1902,6 +1972,7 @@
           "matrix-element",
           "matrix-mautrix-whatsapp",
           "mattermost-mcp",
+          "paca",
           "photoprism",
           "revealmd",
           "vaultwarden",
@@ -2184,6 +2255,22 @@
           "app": 3102
         },
         "health": null
+      },
+      "paca": {
+        "name": "paca",
+        "vm": "oci-A1-f_0",
+        "domain": "paca.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "gateway": 8095,
+          "api": 8080,
+          "realtime": 3001,
+          "db": 5432
+        },
+        "health": {
+          "path": "/api/healthz"
+        }
       },
       "photoprism": {
         "name": "photoprism",
