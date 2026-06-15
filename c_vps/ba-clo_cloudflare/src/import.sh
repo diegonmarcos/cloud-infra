@@ -24,10 +24,12 @@ set -u
 
 cd "$(dirname "$0")"
 
-# Zone ID from terraform.json (single source of truth).
-ZONE_ID="$(jq -r '.account_id // empty' terraform.json 2>/dev/null)"
-# Override: zone id is NOT account_id; it's a separate field. Pull from
-# either dist/.secrets or env (TF_VAR_cloudflare_zone_id from GHA secrets).
+# Zone ID from terraform.json (single source of truth). NOTE: this MUST be
+# `.zone_id`, not `.account_id` — a CF zone import wants the zone identifier
+# (ff4335…), and `account_id` (e5cb0a…) makes terraform import fail with
+# "Invalid zone identifier (9109)", silently skipping every adoption.
+ZONE_ID="$(jq -r '.zone_id // empty' terraform.json 2>/dev/null)"
+# Override: pull from env if provided (TF_VAR_cloudflare_zone_id from GHA).
 [ -n "${TF_VAR_cloudflare_zone_id:-}" ] && ZONE_ID="$TF_VAR_cloudflare_zone_id"
 [ -n "${CLOUDFLARE_ZONE_ID:-}" ]        && ZONE_ID="$CLOUDFLARE_ZONE_ID"
 # Sentinel: fall back to the known zone id (data-driven would be ideal, but

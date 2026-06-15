@@ -7,6 +7,7 @@
   "_proxy_ip_doc": "Public edge = oci-analytics (129.151.228.66). gcp-proxy:443 is closed publicly (session goal: gcp-proxy is wg-only). Public clients hit oci-analytics:443 which runs caddy-l4-public — pure L4 SNI relay to gcp-proxy 10.1.0.2:443 over wg-public. TLS terminates + path-routes on gcp-proxy. WG0 clients (with hickory at 10.0.0.1:53) resolve via the multi-value extra_ip directly to gcp-proxy 10.0.0.1.",
   "proxy_ip": "129.151.228.66",
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
+  "zone_id": "ff4335cc9c7de42e580d0dff9a0d70eb",
 
   "dns_records": {
     "_a_records_doc": "DEFAULT: wildcard '*' is multi-value [proxy_ip + 10.0.0.1] so every *.diegonmarcos.com is reachable from both public and wg0 clients with NO per-subdomain bookkeeping. PER-RECORD OVERRIDES: 'ip' field on any record overrides the global proxy_ip for that single name (used by 'api' to point at oci-analytics while everything else stays on gcp-proxy). 'extra_ips' adds more IPs to the multi-value set; the engine emits one cloudflare_record per (name, ip). All RFC1918 leaking acceptable per operator policy.",
