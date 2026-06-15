@@ -480,9 +480,9 @@
       "container_key": "app",
       "type": "sqlite",
       "enabled": true,
-      "vm": "oci-E2-f_1",
-      "vm_alias": "oci-analytics",
-      "wg_ip": "10.0.0.4",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
       "image": "ghcr.io/diegonmarcos/dagu:latest",
       "port": 8070,
       "dns": "dagu.app",
@@ -1050,9 +1050,9 @@
         "container_key": "app",
         "type": "sqlite",
         "enabled": true,
-        "vm": "oci-E2-f_1",
-        "vm_alias": "oci-analytics",
-        "wg_ip": "10.0.0.4",
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
         "image": "ghcr.io/diegonmarcos/dagu:latest",
         "port": 8070,
         "dns": "dagu.app",
@@ -1621,6 +1621,31 @@
           "backup": true
         },
         {
+          "service": "dagu",
+          "container": "dagu",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "ghcr.io/diegonmarcos/dagu:latest",
+          "port": 8070,
+          "dns": "dagu.app",
+          "healthcheck": "/",
+          "volumes": [
+            "./data:/var/lib/dagu/data",
+            "./dags:/var/lib/dagu/dags",
+            "./base.yaml:/var/lib/dagu/base.yaml:ro",
+            "./fetch-token.sh:/var/lib/dagu/fetch-token.sh:ro",
+            "/opt/ssh-keys/dagu:/home/dagu/.ssh:ro"
+          ],
+          "resources": {
+            "mem_limit": "256m"
+          },
+          "backup": false
+        },
+        {
           "service": "matomo",
           "container": "matomo-hybrid",
           "container_key": "app",
@@ -1957,37 +1982,6 @@
           "resources": null,
           "backup": true,
           "connection": "redis://10.0.0.1:6379"
-        }
-      ]
-    },
-    "oci-analytics": {
-      "wg_ip": "10.0.0.4",
-      "user": "ubuntu",
-      "databases": [
-        {
-          "service": "dagu",
-          "container": "dagu",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-E2-f_1",
-          "vm_alias": "oci-analytics",
-          "wg_ip": "10.0.0.4",
-          "image": "ghcr.io/diegonmarcos/dagu:latest",
-          "port": 8070,
-          "dns": "dagu.app",
-          "healthcheck": "/",
-          "volumes": [
-            "./data:/var/lib/dagu/data",
-            "./dags:/var/lib/dagu/dags",
-            "./base.yaml:/var/lib/dagu/base.yaml:ro",
-            "./fetch-token.sh:/var/lib/dagu/fetch-token.sh:ro",
-            "/opt/ssh-keys/dagu:/home/dagu/.ssh:ro"
-          ],
-          "resources": {
-            "mem_limit": "256m"
-          },
-          "backup": false
         }
       ]
     }
