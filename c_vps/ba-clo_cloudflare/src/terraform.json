@@ -15,6 +15,7 @@
       { "name": "www",               "proxied": false, "ttl": 300, "comment": null },
       { "name": "*",                 "proxied": false, "ttl": 1,   "extra_ips": ["10.0.0.1"], "comment": "Wildcard → oci-analytics (public edge) + 10.0.0.1 (gcp-proxy over wg0 for internal callers)" },
       { "name": "api",               "proxied": false, "ttl": 300, "comment": "api.* hosts BOTH /pub/* (public — via oci-analytics) and wg-cloud routes (internal — via 10.0.0.1). Inherits wildcard pattern (multi-value)." },
+      { "name": "mcp",               "ip": "10.0.0.1", "proxied": false, "ttl": 300, "comment": "MCP = wg0-ONLY infra control surface. Explicit record shadows the wildcard → single A at gcp-proxy over wg0 (HTTP auth Caddy + introspect). NO public edge IP (oci-analytics is L4-only and 403s these HTTP routes)." },
       { "name": "mail",              "proxied": false, "ttl": 300, "comment": "Explicit A — CF wildcard doesn't catch bare 'mail' label when MX exists at same name" }
     ],
 
