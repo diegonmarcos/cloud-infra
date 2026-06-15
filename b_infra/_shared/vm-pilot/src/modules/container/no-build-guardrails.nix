@@ -1,34 +1,50 @@
-# container-control-no-build-guardrails.nix — WARNING wrapper for docker
+# container-control-no-build-guardrails.nix — HARD BLOCKER wrapper for docker
 #
-# Prints loud warnings when docker build/--build is used on small VMs.
-# Does NOT block execution — just warns so operators notice.
-# All images should be pre-built via GHCR or on oci-apps (ARM).
+# BLOCKS docker build / buildx / compose --build on small VMs (<2GB RAM).
+# A build on a 1GB E2 Micro saturates CPU/IO + OOMs → the box freezes and
+# its WireGuard mesh goes dark (SSH/dagu unreachable). Builds MUST run on a
+# runner — oci-apps (ARM, 24GB) or GHA — and small VMs only ever PULL the
+# prebuilt GHCR image and `compose up --no-build`.
+#
+# RAM-conditional so the SAME module is safe everywhere: on the oci-apps
+# runner (>=2GB) it warns-and-allows; on any <2GB VM it refuses (exit 1).
 { config, pkgs, lib, ... }:
 
 {
-  # Docker wrapper: warns on build commands, passes everything through
+  # Docker wrapper: hard-blocks build commands on small VMs, passes through otherwise.
   home.file.".local/bin/docker" = {
     executable = true;
     text = ''
       #!/bin/sh
+      # Total RAM (MB). Unknown → treat as large (fail-open for the wrapper,
+      # never block a host we cannot size).
+      _mem_kb=$(awk '/^MemTotal:/ { print $2 }' /proc/meminfo 2>/dev/null || echo 99999999)
+      _mem_mb=$(( _mem_kb / 1024 ))
+      _SMALL=0
+      [ "$_mem_mb" -lt 2048 ] && _SMALL=1
+
+      _refuse() {
+        echo "" >&2
+        echo "╔══════════════════════════════════════════════════════════════╗" >&2
+        echo "║  ⛔ BLOCKED: docker $1 on a small VM (''${_mem_mb}MB < 2GB)" >&2
+        echo "║  A build here saturates the box and drops the WireGuard mesh.  ║" >&2
+        echo "║  Build on a RUNNER (oci-apps ARM / GHA) → push to GHCR →       ║" >&2
+        echo "║  pull the prebuilt image here with: compose up -d --no-build.  ║" >&2
+        echo "╚══════════════════════════════════════════════════════════════╝" >&2
+        exit 1
+      }
+
       case "$1" in
         build|buildx)
-          echo "" >&2
-          echo "╔══════════════════════════════════════════════════════════════╗" >&2
-          echo "║  ⚠  WARNING: docker $1 on a small VM (<2GB RAM)           ║" >&2
-          echo "║  This WILL likely OOM and freeze the VM.                   ║" >&2
-          echo "║  Use GHCR pre-built images or build on oci-apps (24GB).   ║" >&2
-          echo "╚══════════════════════════════════════════════════════════════╝" >&2
+          [ "$_SMALL" = 1 ] && _refuse "$1"
+          echo "⚠  docker $1 on a ''${_mem_mb}MB host — prefer a runner (oci-apps/GHA)." >&2
           ;;
         compose)
           for arg in "$@"; do
             case "$arg" in
               --build)
-                echo "" >&2
-                echo "╔══════════════════════════════════════════════════════════════╗" >&2
-                echo "║  ⚠  WARNING: --build on a small VM — may OOM!             ║" >&2
-                echo "║  Use: docker compose up -d --no-build                      ║" >&2
-                echo "╚══════════════════════════════════════════════════════════════╝" >&2
+                [ "$_SMALL" = 1 ] && _refuse "compose --build"
+                echo "⚠  docker compose --build on a ''${_mem_mb}MB host — prefer --no-build + prebuilt image." >&2
                 ;;
             esac
           done
