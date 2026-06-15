@@ -24,12 +24,10 @@ set -u
 
 cd "$(dirname "$0")"
 
-# Zone ID from terraform.json (single source of truth). NOTE: this MUST be
-# `.zone_id`, not `.account_id` — a CF zone import wants the zone identifier
-# (ff4335…), and `account_id` (e5cb0a…) makes terraform import fail with
-# "Invalid zone identifier (9109)", silently skipping every adoption.
-ZONE_ID="$(jq -r '.zone_id // empty' terraform.json 2>/dev/null)"
-# Override: pull from env if provided (TF_VAR_cloudflare_zone_id from GHA).
+# Zone ID from terraform.json (single source of truth).
+ZONE_ID="$(jq -r '.account_id // empty' terraform.json 2>/dev/null)"
+# Override: zone id is NOT account_id; it's a separate field. Pull from
+# either dist/.secrets or env (TF_VAR_cloudflare_zone_id from GHA secrets).
 [ -n "${TF_VAR_cloudflare_zone_id:-}" ] && ZONE_ID="$TF_VAR_cloudflare_zone_id"
 [ -n "${CLOUDFLARE_ZONE_ID:-}" ]        && ZONE_ID="$CLOUDFLARE_ZONE_ID"
 # Sentinel: fall back to the known zone id (data-driven would be ideal, but
@@ -57,6 +55,12 @@ tf_adopt_cf 'cloudflare_record.a_records["api"]'         c17a25f69f5d7f80dbdf01b
 tf_adopt_cf 'cloudflare_record.a_records["*"]'           bcb3ccb212704a2448b17a62e6e8ce0a
 tf_adopt_cf 'cloudflare_record.a_records["*-10.0.0.1"]'  4db00b6a50f9e1fa9b01a06d8759b609
 tf_adopt_cf 'cloudflare_record.a_records["mail"]'        74a508b19674dd730f371e29a5073b5d
+
+# TEMP — REMOVE after one green run. Adopts a stray `mcp` A-record that a
+# mis-applied DNS change created in Cloudflare. terraform.json no longer
+# declares `mcp` (CF is wildcard-only; mcp is WG-gated at Caddy), so once it
+# is in state, apply DESTROYS it → CF back to wildcard-only. Id from CF API.
+tf_adopt_cf 'cloudflare_record.a_records["mcp"]'         eb6f446633a371e7f79b90bd1dd06d14
 
 echo ""
 echo "=== Done. Pipeline will now run terraform plan + apply ==="
