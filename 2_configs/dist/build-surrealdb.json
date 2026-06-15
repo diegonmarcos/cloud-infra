@@ -1593,6 +1593,18 @@
       {
         "table": "audit_log",
         "key_source": "auto"
+      },
+      {
+        "table": "repo",
+        "key_source": "name"
+      },
+      {
+        "table": "module",
+        "key_source": "name"
+      },
+      {
+        "table": "package",
+        "key_source": "name"
       }
     ],
     "edge_tables": [
@@ -1635,6 +1647,26 @@
         "table": "caused_by",
         "in": "log",
         "out": "any"
+      },
+      {
+        "table": "belongs_to_repo",
+        "in": "module",
+        "out": "repo"
+      },
+      {
+        "table": "implements",
+        "in": "module",
+        "out": "service"
+      },
+      {
+        "table": "declares_tool",
+        "in": "repo",
+        "out": "package"
+      },
+      {
+        "table": "consumes",
+        "in": "repo",
+        "out": "repo"
       }
     ]
   },

@@ -2768,6 +2768,66 @@ function deriveKgDelta(c: any): DerivedFile {
     pushNode("domain", safe(rec.name), { fqdn: rec.name, type: rec.type, value: rec.value ?? null });
   }
 
+  // ── CODE GRAPH — repo / module / package nodes + code-relationship edges ──
+  // Bridges the running-infra graph (service/vm/container) to the source-code
+  // structure that produces it. 100% derived from declared data — never typed
+  // by hand (Rule 6). Front/unix/tools *internal* module graphs land here once
+  // those repos feed their own structure into the pipeline (front-deps.json,
+  // flake parsers); today the cloud repo is fully covered + cross-repo edges.
+  pushNode("repo", "cloud", { name: "cloud", role: "service-infra" });
+
+  // module nodes — one per enabled service's a_solutions folder; bridge edges
+  // implements (module→service) + belongs_to_repo (module→repo:cloud).
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (svc.enabled === false || !svc.folder) continue;
+    const modId = safe(svc.folder);
+    pushNode("module", modId, {
+      name: svc.folder,
+      repo: "cloud",
+      category: svc.category ?? null,
+      service: svcName,
+    });
+    pushEdge("belongs_to_repo", `module:${modId}`, "repo:cloud");
+    pushEdge("implements", `module:${modId}`, `service:${safe(svcName)}`);
+  }
+
+  // package nodes + declares_tool — from the consolidated tooling registry
+  // (c.deps groups: system/build/optional/node/install/gha).
+  for (const [group, entries] of Object.entries((c.deps ?? {}) as Record<string, any>)) {
+    if (!entries || typeof entries !== "object") continue;
+    for (const [pkgName, pkg] of Object.entries(entries as Record<string, any>)) {
+      const pkgId = safe(pkgName);
+      pushNode("package", pkgId, {
+        name: pkgName,
+        group,
+        nix: pkg?.nix ?? null,
+        apt: pkg?.apt ?? null,
+        description: pkg?.desc ?? null,
+      });
+      pushEdge("declares_tool", "repo:cloud", `package:${pkgId}`, { group });
+    }
+  }
+
+  // consumes edges — cross-repo, from the external-consumers registry. A
+  // consumer in unix/ or cloud-data/ that reads a slice of the consolidated
+  // file is a downstream repo that `consumes` the cloud repo.
+  try {
+    const REGISTRY = join(CONFIGS_DIR, "src", "external-consumers.json");
+    if (existsSync(REGISTRY)) {
+      const reg = JSON.parse(readFileSync(REGISTRY, "utf-8"));
+      const repoOf = (p: string): string => (/(?:^|\/)git\/([^/]+)/.exec(p ?? "")?.[1]) ?? "";
+      for (const consumer of (reg.consumers ?? []) as any[]) {
+        const repo = repoOf(consumer.consumer_path ?? "");
+        if (!repo || repo === "cloud") continue;
+        pushNode("repo", safe(repo), { name: repo });
+        pushEdge("consumes", `repo:${safe(repo)}`, "repo:cloud", {
+          consumer: consumer.name ?? null,
+          via: "cloud-data slice",
+        });
+      }
+    }
+  } catch { /* registry best-effort; missing → no cross-repo edges. */ }
+
   return {
     name: "build-kg-graph_delta.json",
     data: {
