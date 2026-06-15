@@ -143,6 +143,23 @@ for name in cloudflare gcloud oci hetzner; do
     echo "  Copied terraform.tfvars.template → terraform.tfvars (placeholders stripped)"
   fi
 
+  # Export non-secret tfvars as TF_VAR_* so helper scripts that build resource
+  # IDs by hand (import.sh) see the same values terraform auto-loads for
+  # plan/apply. Without this, import.sh has no zone_id and every `terraform
+  # import` fails with "Invalid zone identifier", silently skipping adoption →
+  # apply then 409/allow_overwrite-conflicts on the un-adopted resources.
+  # Data-driven: values come from terraform.tfvars (the SoT), never hardcoded.
+  if [ -f terraform.tfvars ]; then
+    eval "$(awk -F= '
+      /^[[:space:]]*#/ { next }
+      /=/ {
+        k=$1; gsub(/[[:space:]]/, "", k)
+        v=substr($0, index($0, "=") + 1)
+        sub(/^[[:space:]]*/, "", v); sub(/[[:space:]]*$/, "", v); gsub(/"/, "", v)
+        if (k != "") printf "export TF_VAR_%s='"'"'%s'"'"'\n", k, v
+      }' terraform.tfvars)"
+  fi
+
   tf_cleanup() { rm -f terraform.tfstate terraform.tfstate.backup terraform.tfvars tfplan; rm -rf .terraform; }
   terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
   # Adopt pre-existing infra resources into state (idempotent — `terraform import`
@@ -184,10 +201,14 @@ if [ "$STATE_CHANGED" = true ]; then
   echo "── Committing updated tfstate.enc files ──"
   git add c_vps/*/src/terraform.tfstate.enc
   if ! git diff --cached --quiet; then
+    # [skip ci]: the state-commit touches c_vps/*/src/terraform.tfstate.enc,
+    # which matches this very workflow's push-path trigger. sops re-encryption
+    # is non-deterministic, so without the marker every apply would re-trigger
+    # ship-terraform → infinite loop. [skip ci] makes the state push inert.
     git \
       -c user.name="github-actions" \
       -c user.email="actions@github.com" \
-      commit -m "terraform: update encrypted tfstate"
+      commit -m "terraform: update encrypted tfstate [skip ci]"
     # --autostash: terraform leaves regenerated dist/ artifacts
     # (.terraform.lock.hcl, terraform.tfstate.backup, dist copies) in the
     # working tree; they're intentionally NOT in the auto-commit (only
@@ -195,8 +216,12 @@ if [ "$STATE_CHANGED" = true ]; then
     # refuses with "cannot pull with rebase: You have unstaged changes."
     # autostash stashes them, rebases, then restores — correct for CI where
     # the dist drift is never pushed.
-    git pull --rebase --autostash
-    git push
+    #
+    # Explicit `origin main` / `HEAD:main` refspecs: GHA actions/checkout
+    # leaves a DETACHED HEAD at the commit SHA, so bare `git pull --rebase` /
+    # `git push` abort with "You are not currently on a branch."
+    git pull --rebase --autostash origin main
+    git push origin HEAD:main
   fi
 fi
 

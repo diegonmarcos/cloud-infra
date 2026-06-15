@@ -188,10 +188,14 @@ if [ "$STATE_CHANGED" = true ]; then
   echo "── Committing updated tfstate.enc files ──"
   git add c_vps/*/src/terraform.tfstate.enc
   if ! git diff --cached --quiet; then
+    # [skip ci]: the state-commit touches c_vps/*/src/terraform.tfstate.enc,
+    # which matches this very workflow's push-path trigger. sops re-encryption
+    # is non-deterministic, so without the marker every apply would re-trigger
+    # ship-terraform → infinite loop. [skip ci] makes the state push inert.
     git \
       -c user.name="github-actions" \
       -c user.email="actions@github.com" \
-      commit -m "terraform: update encrypted tfstate"
+      commit -m "terraform: update encrypted tfstate [skip ci]"
     # --autostash: terraform leaves regenerated dist/ artifacts
     # (.terraform.lock.hcl, terraform.tfstate.backup, dist copies) in the
     # working tree; they're intentionally NOT in the auto-commit (only
@@ -199,8 +203,12 @@ if [ "$STATE_CHANGED" = true ]; then
     # refuses with "cannot pull with rebase: You have unstaged changes."
     # autostash stashes them, rebases, then restores — correct for CI where
     # the dist drift is never pushed.
-    git pull --rebase --autostash
-    git push
+    #
+    # Explicit `origin main` / `HEAD:main` refspecs: GHA actions/checkout
+    # leaves a DETACHED HEAD at the commit SHA, so bare `git pull --rebase` /
+    # `git push` abort with "You are not currently on a branch."
+    git pull --rebase --autostash origin main
+    git push origin HEAD:main
   fi
 fi
 
