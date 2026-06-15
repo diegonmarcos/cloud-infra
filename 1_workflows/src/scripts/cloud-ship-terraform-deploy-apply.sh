@@ -130,6 +130,23 @@ for name in cloudflare gcloud oci hetzner; do
     echo "  Copied terraform.tfvars.template → terraform.tfvars (placeholders stripped)"
   fi
 
+  # Export non-secret tfvars as TF_VAR_* so helper scripts that build resource
+  # IDs by hand (import.sh) see the same values terraform auto-loads for
+  # plan/apply. Without this, import.sh has no zone_id and every `terraform
+  # import` fails with "Invalid zone identifier", silently skipping adoption →
+  # apply then 409/allow_overwrite-conflicts on the un-adopted resources.
+  # Data-driven: values come from terraform.tfvars (the SoT), never hardcoded.
+  if [ -f terraform.tfvars ]; then
+    eval "$(awk -F= '
+      /^[[:space:]]*#/ { next }
+      /=/ {
+        k=$1; gsub(/[[:space:]]/, "", k)
+        v=substr($0, index($0, "=") + 1)
+        sub(/^[[:space:]]*/, "", v); sub(/[[:space:]]*$/, "", v); gsub(/"/, "", v)
+        if (k != "") printf "export TF_VAR_%s='"'"'%s'"'"'\n", k, v
+      }' terraform.tfvars)"
+  fi
+
   tf_cleanup() { rm -f terraform.tfstate terraform.tfstate.backup terraform.tfvars tfplan; rm -rf .terraform; }
   terraform init -input=false || { echo "FAIL $name (init)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
   # Adopt pre-existing infra resources into state (idempotent — `terraform import`
