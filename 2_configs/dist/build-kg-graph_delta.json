@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 279,
-    "edges": 376,
+    "nodes": 282,
+    "edges": 380,
     "by_table": {
       "vm": 4,
-      "service": 60,
-      "container": 85,
+      "service": 61,
+      "container": 86,
       "domain": 39,
       "repo": 3,
-      "module": 60,
+      "module": 61,
       "package": 28
     }
   },
@@ -1201,6 +1201,32 @@
         "image": "hickorydns/hickory-dns:latest",
         "role": "app",
         "port": 53,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "claude_openai_bridge",
+      "key": "service:claude_openai_bridge",
+      "properties": {
+        "name": "claude-openai-bridge",
+        "category": "net",
+        "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+        "domain": null,
+        "port": 3107,
+        "vm": "oci-apps",
+        "folder": "bb-net_claude-openai-bridge"
+      }
+    },
+    {
+      "table": "container",
+      "id": "claude_openai_bridge",
+      "key": "container:claude_openai_bridge",
+      "properties": {
+        "name": "claude-openai-bridge",
+        "image": "ghcr.io/diegonmarcos/claude-openai-bridge:latest",
+        "role": "app",
+        "port": 3107,
         "public": false
       }
     },
@@ -2664,6 +2690,17 @@
     },
     {
       "table": "module",
+      "id": "bb_net_claude_openai_bridge",
+      "key": "module:bb_net_claude_openai_bridge",
+      "properties": {
+        "name": "bb-net_claude-openai-bridge",
+        "repo": "cloud",
+        "category": "net",
+        "service": "claude-openai-bridge"
+      }
+    },
+    {
+      "table": "module",
       "id": "bb_net_wireguard_mesh",
       "key": "module:bb_net_wireguard_mesh",
       "properties": {
@@ -3991,6 +4028,22 @@
       "from": "service:hickory_dns",
       "to": "container:hickory_dns",
       "key": "service:hickory_dns->runs_container->container:hickory_dns",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:claude_openai_bridge",
+      "to": "vm:oci_apps",
+      "key": "service:claude_openai_bridge->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:claude_openai_bridge",
+      "to": "container:claude_openai_bridge",
+      "key": "service:claude_openai_bridge->runs_container->container:claude_openai_bridge",
       "properties": {
         "role": "app"
       }
@@ -5601,6 +5654,20 @@
       "from": "module:ba_clo_hickory_dns",
       "to": "service:hickory_dns",
       "key": "module:ba_clo_hickory_dns->implements->service:hickory_dns",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:bb_net_claude_openai_bridge",
+      "to": "repo:cloud",
+      "key": "module:bb_net_claude_openai_bridge->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:bb_net_claude_openai_bridge",
+      "to": "service:claude_openai_bridge",
+      "key": "module:bb_net_claude_openai_bridge->implements->service:claude_openai_bridge",
       "properties": {}
     },
     {

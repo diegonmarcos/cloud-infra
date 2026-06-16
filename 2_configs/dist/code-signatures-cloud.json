@@ -6,29 +6,29 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1435,
+    "files": 1439,
     "by_lang": {
-      "nix": 415,
-      "sh": 340,
+      "nix": 417,
+      "sh": 341,
       "rust": 272,
       "ts": 314,
       "py": 83,
-      "js": 11
+      "js": 12
     },
     "by_role": {
-      "flake": 70,
+      "flake": 71,
       "script": 99,
-      "shell": 227,
+      "shell": 228,
       "rust-module": 266,
       "engine": 36,
       "nix-module": 282,
-      "compose": 63,
+      "compose": 64,
       "python": 81,
       "module": 187,
       "entrypoint": 22,
       "mcp-tool": 100,
-      "workflow-dag": 1,
-      "file": 1
+      "file": 2,
+      "workflow-dag": 1
     }
   },
   "files": [
@@ -17513,6 +17513,113 @@
       ]
     },
     {
+      "path": "a_solutions/bb-net_claude-openai-bridge/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/bb-net_claude-openai-bridge/src/code/server.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:child_process"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/bb-net_claude-openai-bridge/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "binariesImage",
+        "services",
+        "claude-openai-bridge",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "environment",
+        "BRIDGE_PORT",
+        "BRIDGE_BIND",
+        "BRIDGE_DEFAULT_MODEL",
+        "BRIDGE_MAX_CONCURRENCY",
+        "BRIDGE_CALL_TIMEOUT_MS",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "a_solutions/bb-net_claude-openai-bridge/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
       "path": "a_solutions/bb-net_wireguard-mesh-ws-tunnel/0.spec/test-live.sh",
       "lang": "sh",
       "role": "shell",
@@ -23997,12 +24104,19 @@
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod"
+        "zod",
+        "node:fs",
+        "node:path"
       ],
       "symbols": [
-        "registerCodegraphTools(server: McpServer)",
-        "name (e.g. 'handleLogin')",
-        "name (e.g. 'queryDatabase')"
+        "listJson(dir: string, prefix: string)",
+        "addNode(g: Graph, n: Omit<GNode, \"layer\">, layer: string)",
+        "addEdge(g: Graph, e: Omit<GEdge, \"layer\">, layer: string)",
+        "loadExplicit(g: Graph, path: string, layer: string)",
+        "loadSignatures(g: Graph, path: string)",
+        "loadGraph()",
+        "resolveTarget(g: Graph, t: string)",
+        "registerCodegraphTools(server: McpServer)"
       ]
     },
     {
