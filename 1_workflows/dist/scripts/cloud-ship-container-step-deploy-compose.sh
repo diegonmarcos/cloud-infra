@@ -72,15 +72,33 @@ step_compose() {
     #
     # `--build` in build.json's deploy.compose_flags is IGNORED at compose-up
     # time; the engine logs a warning so the legacy flag can be cleaned up.
-    # --pull missing: pull images that aren't present locally (e.g. redis:7-bookworm
-    # from Docker Hub on a fresh VM). Idempotent — only pulls when needed.
-    # Was --pull never which broke first-time deployments and any service whose
-    # compose references public images not pre-cached on the VM.
-    COMPOSE_UP_FLAGS="--no-build --pull missing --force-recreate"
+    # --pull always (history: never → missing → always). The fleet pins
+    # :latest tags, so "missing" let a stale locally-cached image shadow a
+    # freshly-pushed GHCR image forever — crawlee's amd64 mispush (run
+    # 27409752538) kept winning over the corrected arm64 build on every
+    # redeploy because the tag already existed locally. "always" re-pulls at
+    # each deploy; on registry/auth failure compose errors instead of
+    # silently running stale bits (FAIL LOUDLY doctrine).
+    COMPOSE_UP_FLAGS="--no-build --pull always --force-recreate"
     COMPOSE_PULL_FIRST="true"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
         log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
     fi
+
+    # v1→v2 layout migration cleanup. Older deploys placed docker-compose.yml at
+    # the project ROOT; v2 canonical is a subdir (compose/docker-compose.yml). A
+    # lingering root file lets `docker compose` (or any `cd $dir && docker
+    # compose up`, e.g. the cloud-infra-local MCP tool) start a SECOND compose
+    # project that grabs the same explicit `container_name`. The canonical
+    # `down --remove-orphans` only evicts its own project, so that foreign
+    # container then blocks `up` with "container name already in use" (mail-mcp,
+    # 2026-06-16). When canonical compose lives in a subdir, tear down + delete
+    # any stale root file first so deploys stay idempotent. Runs on the VM; no
+    # single quotes (embedded into a single-quote-wrapped bash -c PAYLOAD).
+    LEGACY_COMPOSE_CLEANUP=""
+    case "$REMOTE_COMPOSE_REL" in
+        */*) LEGACY_COMPOSE_CLEANUP='if [ -f docker-compose.yml ]; then docker compose -f docker-compose.yml --project-directory . down --remove-orphans 2>/dev/null || true; rm -f docker-compose.yml; fi' ;;
+    esac
 
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
@@ -113,6 +131,7 @@ fi
 COMPOSE_HEADER
             # v2: compose at compose/ subdir; force project-dir=CWD for env_file/volumes resolution
             echo "COMPOSE_FILE_FLAG='-f $REMOTE_COMPOSE_REL --project-directory .'"
+            [ -n "$LEGACY_COMPOSE_CLEANUP" ] && echo "$LEGACY_COMPOSE_CLEANUP"
             [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
@@ -126,17 +145,30 @@ COMPOSE_HEADER
         trap - EXIT
     else
         # ── Standard: direct docker compose up ──
-        # v2 layout: prefer compose/.secrets; fall back to ./.secrets.
-        ENV_FILE_FLAG="\$([ -f compose/.secrets ] && echo '--env-file compose/.secrets' || ([ -f .secrets ] && echo '--env-file .secrets'))"
+        # v2 layout: prefer compose/.secrets; fall back to ./.secrets. The flag
+        # is resolved by the REMOTE shell, so the whole command MUST run under
+        # bash — target VMs use fish as the login shell (e.g. oci-apps), and
+        # fish rejects POSIX `$(...)` command substitution ("command
+        # substitutions not allowed here"), silently dropping --env-file.
+        # Without --env-file docker compose has NO interpolation source, so any
+        # `${SECRET}` referenced inside an `environment:` value (e.g. a
+        # DATABASE_URL embedding ${POSTGRES_PASSWORD}) renders EMPTY while
+        # `env_file:` values still resolve via --project-directory — a silent,
+        # asymmetric secret corruption (paca-api SASL auth failure, 2026-06-14).
+        # Wrap in `bash -c` for guaranteed POSIX semantics — same pattern as the
+        # GHCR-repair block above. PAYLOAD is built with double quotes only (no
+        # single quotes) so it can be single-quote-wrapped for fish→bash verbatim.
         CF="-f $REMOTE_COMPOSE_REL --project-directory ."
+        ENV_FILE_PROBE='ENV_FILE_FLAG="$([ -f compose/.secrets ] && echo --env-file compose/.secrets || { [ -f .secrets ] && echo --env-file .secrets; })"'
         log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH (compose=$REMOTE_COMPOSE_REL)"
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
             # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
             # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
-            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
-            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
+        ssh_with_retry "$DEPLOY_HOST" "bash -c '$PAYLOAD'"
     fi
 
     # Post-hook

@@ -4,156 +4,6 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/matomo-sites",
   "sites": [
     {
-      "name": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
-      "url": "https://cal.diegonmarcos.com",
-      "service": "calendar-radicale"
-    },
-    {
-      "name": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
-      "url": "https://chat.diegonmarcos.com",
-      "service": "chat-mattermost"
-    },
-    {
-      "name": "VS Code IDE (ide.diegonmarcos.com)",
-      "url": "https://ide.diegonmarcos.com",
-      "service": "code-server"
-    },
-    {
-      "name": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
-      "url": "https://contacts.diegonmarcos.com",
-      "service": "contacts-radicale"
-    },
-    {
-      "name": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
-      "url": "https://webmail.diegonmarcos.com",
-      "service": "cypht"
-    },
-    {
-      "name": "Etherpad collaborative editor",
-      "url": "https://pad.diegonmarcos.com",
-      "service": "etherpad"
-    },
-    {
-      "name": "FileBrowser web file manager (NEW - not deployed yet)",
-      "url": "https://files.diegonmarcos.com",
-      "service": "filebrowser"
-    },
-    {
-      "name": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
-      "url": "https://mcp.diegonmarcos.com",
-      "service": "google-personal-mcp"
-    },
-    {
-      "name": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
-      "url": "https://mcp.diegonmarcos.com",
-      "service": "google-workspace-mcp"
-    },
-    {
-      "name": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
-      "url": "https://sheets.diegonmarcos.com",
-      "service": "grist"
-    },
-    {
-      "name": "Collaborative markdown editor",
-      "url": "https://doc.diegonmarcos.com",
-      "service": "hedgedoc"
-    },
-    {
-      "name": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
-      "url": "https://mcp.diegonmarcos.com",
-      "service": "mail-mcp"
-    },
-    {
-      "name": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
-      "url": "https://mail-puller.diegonmarcos.com",
-      "service": "mail-puller"
-    },
-    {
-      "name": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-      "url": "https://matrix.diegonmarcos.com",
-      "service": "matrix-continuwuity"
-    },
-    {
-      "name": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
-      "url": "https://messenger.diegonmarcos.com",
-      "service": "matrix-element"
-    },
-    {
-      "name": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
-      "url": "https://paca.diegonmarcos.com",
-      "service": "paca"
-    },
-    {
-      "name": "PhotoPrism AI-powered photo management (oci-flex-1)",
-      "url": "https://photos.diegonmarcos.com",
-      "service": "photoprism"
-    },
-    {
-      "name": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-      "url": "https://webmail.diegonmarcos.com",
-      "service": "snappymail"
-    },
-    {
-      "name": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-      "url": "https://api.diegonmarcos.com/cf-worker-bridge",
-      "service": "cf-worker-http-to-wg-public-bridge"
-    },
-    {
-      "name": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]",
-      "url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api",
-      "service": "http-to-smtp-proxy-api"
-    },
-    {
-      "name": "Maddy Mail Server (mail.diegonmarcos.com)",
-      "url": "https://mail.diegonmarcos.com",
-      "service": "maddy"
-    },
-    {
-      "name": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
-      "url": "https://jmap.diegonmarcos.com",
-      "service": "stalwart"
-    },
-    {
-      "name": "Bitwarden password manager",
-      "url": "https://vault.diegonmarcos.com",
-      "service": "vaultwarden"
-    },
-    {
-      "name": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
-      "url": "https://api.diegonmarcos.com",
-      "service": "crawlee-cloud"
-    },
-    {
-      "name": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
-      "url": "https://api.diegonmarcos.com/fin-api",
-      "service": "fin-api"
-    },
-    {
-      "name": "Internal DNS server for WireGuard mesh (per-service .app zones)",
-      "url": "https://dns.internal",
-      "service": "hickory-dns"
-    },
-    {
-      "name": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
-      "url": "https://mesh.diegonmarcos.com",
-      "service": "wireguard-mesh"
-    },
-    {
-      "name": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
-      "url": "https://vpn.diegonmarcos.com",
-      "service": "wireguard-mesh-ws-tunnel"
-    },
-    {
-      "name": "SSO and 2FA authentication portal",
-      "url": "https://auth.diegonmarcos.com",
-      "service": "authelia"
-    },
-    {
-      "name": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)",
-      "url": "https://proxy.diegonmarcos.com",
-      "service": "caddy"
-    },
-    {
       "name": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
       "url": "https://api.diegonmarcos.com/c3a",
       "service": "c3-analytics-api"
@@ -177,6 +27,51 @@
       "name": "C3 Services REST API — service API gateway Fastify API",
       "url": "https://api.diegonmarcos.com/c3-services-api",
       "service": "c3-services-api"
+    },
+    {
+      "name": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "google-personal-mcp"
+    },
+    {
+      "name": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "google-workspace-mcp"
+    },
+    {
+      "name": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "mail-mcp"
+    },
+    {
+      "name": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
+      "url": "https://api.diegonmarcos.com/cf-worker-bridge",
+      "service": "cf-worker-http-to-wg-public-bridge"
+    },
+    {
+      "name": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]",
+      "url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "service": "http-to-smtp-proxy-api"
+    },
+    {
+      "name": "Self-hosted Git service",
+      "url": "https://git.diegonmarcos.com",
+      "service": "gitea"
+    },
+    {
+      "name": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "url": "https://dns.internal",
+      "service": "hickory-dns"
+    },
+    {
+      "name": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "url": "https://mesh.diegonmarcos.com",
+      "service": "wireguard-mesh"
+    },
+    {
+      "name": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "url": "https://vpn.diegonmarcos.com",
+      "service": "wireguard-mesh-ws-tunnel"
     },
     {
       "name": "Dagu - Lightweight DAG-based workflow scheduler",
@@ -209,9 +104,114 @@
       "service": "umami"
     },
     {
-      "name": "Self-hosted Git service",
-      "url": "https://git.diegonmarcos.com",
-      "service": "gitea"
+      "name": "SSO and 2FA authentication portal",
+      "url": "https://auth.diegonmarcos.com",
+      "service": "authelia"
+    },
+    {
+      "name": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)",
+      "url": "https://proxy.diegonmarcos.com",
+      "service": "caddy"
+    },
+    {
+      "name": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
+      "url": "https://chat.diegonmarcos.com",
+      "service": "chat-mattermost"
+    },
+    {
+      "name": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
+      "url": "https://webmail.diegonmarcos.com",
+      "service": "cypht"
+    },
+    {
+      "name": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "url": "https://mail-puller.diegonmarcos.com",
+      "service": "mail-puller"
+    },
+    {
+      "name": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "url": "https://matrix.diegonmarcos.com",
+      "service": "matrix-continuwuity"
+    },
+    {
+      "name": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
+      "url": "https://messenger.diegonmarcos.com",
+      "service": "matrix-element"
+    },
+    {
+      "name": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
+      "url": "https://webmail.diegonmarcos.com",
+      "service": "snappymail"
+    },
+    {
+      "name": "Maddy Mail Server (mail.diegonmarcos.com)",
+      "url": "https://mail.diegonmarcos.com",
+      "service": "maddy"
+    },
+    {
+      "name": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
+      "url": "https://jmap.diegonmarcos.com",
+      "service": "stalwart"
+    },
+    {
+      "name": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
+      "url": "https://api.diegonmarcos.com",
+      "service": "crawlee-cloud"
+    },
+    {
+      "name": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
+      "url": "https://api.diegonmarcos.com/fin-api",
+      "service": "fin-api"
+    },
+    {
+      "name": "PhotoPrism AI-powered photo management (oci-flex-1)",
+      "url": "https://photos.diegonmarcos.com",
+      "service": "photoprism"
+    },
+    {
+      "name": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+      "url": "https://cal.diegonmarcos.com",
+      "service": "calendar-radicale"
+    },
+    {
+      "name": "VS Code IDE (ide.diegonmarcos.com)",
+      "url": "https://ide.diegonmarcos.com",
+      "service": "code-server"
+    },
+    {
+      "name": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+      "url": "https://contacts.diegonmarcos.com",
+      "service": "contacts-radicale"
+    },
+    {
+      "name": "Etherpad collaborative editor",
+      "url": "https://pad.diegonmarcos.com",
+      "service": "etherpad"
+    },
+    {
+      "name": "FileBrowser web file manager (NEW - not deployed yet)",
+      "url": "https://files.diegonmarcos.com",
+      "service": "filebrowser"
+    },
+    {
+      "name": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
+      "url": "https://sheets.diegonmarcos.com",
+      "service": "grist"
+    },
+    {
+      "name": "Collaborative markdown editor",
+      "url": "https://doc.diegonmarcos.com",
+      "service": "hedgedoc"
+    },
+    {
+      "name": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
+      "url": "https://paca.diegonmarcos.com",
+      "service": "paca"
+    },
+    {
+      "name": "Bitwarden password manager",
+      "url": "https://vault.diegonmarcos.com",
+      "service": "vaultwarden"
     }
   ],
   "_meta": {

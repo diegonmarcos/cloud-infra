@@ -84,7 +84,7 @@ echo "── cloud-builder entrypoint brings WG up when the key is set ──"
 ENTRYPOINT=""
 for base in \
     "$REPO_ROOT/III_unix/cb_containers-builders/src/docker" \
-    "$REPO_ROOT/a_solutions/bd-cloud-builder-x/src/docker"; do
+    "$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/src/docker"; do
     if [ -f "$base/entrypoint.sh" ]; then
         ENTRYPOINT="$base/entrypoint.sh"
         break

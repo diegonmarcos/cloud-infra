@@ -7,7 +7,7 @@
 //   - 2_configs/dist/_cloud-data-consolidated.json  ← VMs (ip, wg_ip, wg_role,
 //                                                     wg_public_key, wg_port,
 //                                                     ssh_alias, public_ports)
-//   - a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json  ← transport
+//   - a_solutions/infra-net_wireguard-mesh-ws-tunnel/build.json  ← transport
 //                                                     declarations (UDP + TCP/443)
 //
 // Output:
@@ -75,7 +75,7 @@ function providerOf(vmId: string): string {
 // ── Build the snapshot ────────────────────────────────────────────────────
 function build(): Snapshot {
   const consolidatedRel = '2_configs/dist/_cloud-data-consolidated.json';
-  const wsTunnelRel     = 'a_solutions/bb-net_wireguard-mesh-ws-tunnel/build.json';
+  const wsTunnelRel     = 'a_solutions/infra-net_wireguard-mesh-ws-tunnel/build.json';
 
   const consolidated = READ(consolidatedRel) as any;
   const wsTunnel     = (() => {

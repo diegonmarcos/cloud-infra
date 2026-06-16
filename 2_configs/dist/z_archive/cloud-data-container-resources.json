@@ -3,84 +3,90 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-resources",
   "services": {
-    "calendar-radicale": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "calendar-radicale"
-      ],
-      "resources": null
-    },
-    "chat-mattermost": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "mattermost",
-        "mattermost-postgres",
-        "mattermost-bots"
-      ],
-      "resources": null
-    },
-    "code-server": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "code-server"
-      ],
-      "resources": null
-    },
-    "contacts-radicale": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "contacts-radicale"
-      ],
-      "resources": null
-    },
-    "cypht": {
-      "vm": "oci-mail",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "cypht",
-        "cypht-postgres"
-      ],
-      "resources": {
-        "mem_limit": "256M",
-        "mem_reservation": "64M"
-      }
-    },
-    "etherpad": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "etherpad_app",
-        "etherpad_postgres"
-      ],
-      "resources": null
-    },
-    "filebrowser": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "filebrowser_app"
-      ],
-      "resources": null
-    },
-    "front-end": {
+    "cloudflare-worker": {
       "vm": "local",
       "vm_ram_gb": null,
       "vm_cpu": null,
       "containers": [
-        "front-end"
+        "cloudflare-worker"
       ],
       "resources": null
+    },
+    "gcloud": {
+      "vm": "local",
+      "vm_ram_gb": null,
+      "vm_cpu": null,
+      "containers": [
+        "gcloud"
+      ],
+      "resources": null
+    },
+    "c3-analytics-api": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "c3-analytics-api"
+      ],
+      "resources": null
+    },
+    "c3-diego-personal-data-mcp": {
+      "vm": "local",
+      "vm_ram_gb": null,
+      "vm_cpu": null,
+      "containers": [
+        "c3-diego-personal-data-mcp"
+      ],
+      "resources": null
+    },
+    "c3-infra-api": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "c3-infra-api"
+      ],
+      "resources": null
+    },
+    "c3-infra-mcp": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "c3-infra-mcp"
+      ],
+      "resources": null
+    },
+    "c3-public-api": {
+      "vm": "oci-analytics",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "c3-public-api"
+      ],
+      "resources": null
+    },
+    "c3-services-api": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "c3-services-api"
+      ],
+      "resources": null
+    },
+    "c3-services-mcp": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "c3-services-mcp"
+      ],
+      "resources": {
+        "mem_limit": "2G",
+        "mem_reservation": "256M",
+        "pids_limit": 256
+      }
     },
     "google-personal-mcp": {
       "vm": "oci-apps",
@@ -100,74 +106,12 @@
       ],
       "resources": null
     },
-    "grist": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "grist_app"
-      ],
-      "resources": null
-    },
-    "hedgedoc": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "hedgedoc_app",
-        "hedgedoc_postgres"
-      ],
-      "resources": null
-    },
     "mail-mcp": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
         "mail-mcp"
-      ],
-      "resources": null
-    },
-    "mail-puller": {
-      "vm": "oci-mail",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "mail-puller"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "128M"
-        },
-        "reservations": {
-          "memory": "16M"
-        }
-      }
-    },
-    "matrix-continuwuity": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "continuwuity"
-      ],
-      "resources": null
-    },
-    "matrix-element": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "matrix-element"
-      ],
-      "resources": null
-    },
-    "matrix-mautrix-whatsapp": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "mautrix-whatsapp"
       ],
       "resources": null
     },
@@ -179,52 +123,6 @@
         "mattermost-mcp"
       ],
       "resources": null
-    },
-    "paca": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "paca-gateway",
-        "paca-api",
-        "paca-web",
-        "paca-realtime",
-        "paca-valkey",
-        "paca-postgres"
-      ],
-      "resources": null
-    },
-    "photoprism": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "photoprism_app",
-        "photoprism_mariadb",
-        "photoprism_rclone"
-      ],
-      "resources": null
-    },
-    "revealmd": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "revealmd_app"
-      ],
-      "resources": null
-    },
-    "snappymail": {
-      "vm": "oci-mail",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "snappymail"
-      ],
-      "resources": {
-        "mem_limit": "64M",
-        "mem_reservation": "16M"
-      }
     },
     "cf-worker-http-to-wg-public-bridge": {
       "vm": "oci-analytics",
@@ -244,79 +142,270 @@
       ],
       "resources": null
     },
-    "maddy": {
-      "vm": "oci-mail",
+    "cloud-builder-x": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "cloud-builder-x"
+      ],
+      "resources": null
+    },
+    "backup-borg": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "borg-server"
+      ],
+      "resources": null
+    },
+    "backup-bup": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "bup-server"
+      ],
+      "resources": null
+    },
+    "gitea": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "gitea"
+      ],
+      "resources": null
+    },
+    "postlite": {
+      "vm": "gcp-proxy",
       "vm_ram_gb": 1,
       "vm_cpu": 1,
       "containers": [
-        "maddy"
+        "postlite-npm",
+        "postlite-vaultwarden",
+        "postlite-ntfy",
+        "postlite-authelia",
+        "sqlite-npm",
+        "sqlite-vaultwarden",
+        "sqlite-ntfy",
+        "sqlite-authelia"
+      ],
+      "resources": null
+    },
+    "redis": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "redis"
+      ],
+      "resources": null
+    },
+    "hickory-dns": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "hickory-dns"
+      ],
+      "resources": {
+        "mem_limit": "64M"
+      }
+    },
+    "wireguard-mesh": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "wireguard-mesh"
+      ],
+      "resources": {
+        "mem_limit": "32m"
+      }
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "wireguard-mesh-ws-tunnel"
+      ],
+      "resources": {
+        "mem_limit": "64m"
+      }
+    },
+    "wireguard-public": {
+      "vm": "local",
+      "vm_ram_gb": null,
+      "vm_cpu": null,
+      "containers": [
+        "wireguard-public"
+      ],
+      "resources": null
+    },
+    "cloud-spec": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "cloud-spec"
+      ],
+      "resources": null
+    },
+    "dagu": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "dagu"
+      ],
+      "resources": {
+        "mem_limit": "256m"
+      }
+    },
+    "dbgate": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "dbgate"
       ],
       "resources": {
         "limits": {
           "memory": "256M"
         },
         "reservations": {
-          "memory": "32M"
+          "memory": "64M"
         }
       }
     },
-    "stalwart": {
-      "vm": "oci-mail",
+    "matomo": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "matomo-hybrid"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1024M"
+        },
+        "reservations": {
+          "memory": "64M"
+        }
+      }
+    },
+    "ntfy": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "ntfy",
+        "syslog-bridge",
+        "github-rss"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "64M"
+        },
+        "reservations": {
+          "memory": "16M"
+        }
+      }
+    },
+    "openobserve": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "openobserve"
+      ],
+      "resources": {
+        "mem_limit": "512m"
+      }
+    },
+    "umami": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "umami",
+        "umami-db",
+        "umami-setup"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "1G"
+        },
+        "reservations": {
+          "memory": "256M"
+        }
+      }
+    },
+    "authelia": {
+      "vm": "gcp-proxy",
       "vm_ram_gb": 1,
       "vm_cpu": 1,
       "containers": [
-        "stalwart",
-        "stalwart-sorter"
+        "authelia",
+        "authelia-redis",
+        "postlite-authelia"
       ],
       "resources": {
         "limits": {
-          "memory": "256M"
+          "memory": "64M"
         },
         "reservations": {
-          "memory": "32M"
+          "memory": "16M"
         }
       }
     },
-    "vaultwarden": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
+    "caddy": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
-        "vaultwarden"
+        "caddy"
       ],
       "resources": null
     },
-    "crawlee-cloud": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
+    "caddy-l4-image": {
+      "vm": "local",
+      "vm_ram_gb": null,
+      "vm_cpu": null,
       "containers": [
-        "crawlee_api",
-        "crawlee_runner",
-        "crawlee_dashboard",
-        "crawlee_scheduler",
-        "crawlee_db",
-        "crawlee_redis",
-        "crawlee_minio"
+        "caddy-l4-image"
       ],
       "resources": null
     },
-    "fin-api": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
+    "caddy-l4-public": {
+      "vm": "oci-analytics",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
-        "fin-api"
+        "caddy-l4-public"
       ],
-      "resources": {
-        "limits": {
-          "memory": "512M",
-          "cpus": "1"
-        },
-        "reservations": {
-          "memory": "128M"
-        }
-      }
+      "resources": null
+    },
+    "introspect-proxy": {
+      "vm": "gcp-proxy",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "introspect-proxy"
+      ],
+      "resources": null
+    },
+    "db-agent": {
+      "vm": "all",
+      "vm_ram_gb": null,
+      "vm_cpu": null,
+      "containers": [
+        "db-agent"
+      ],
+      "resources": null
     },
     "kg-bridge": {
       "vm": "oci-apps",
@@ -402,229 +491,160 @@
       ],
       "resources": null
     },
-    "cloudflare-worker": {
-      "vm": "local",
-      "vm_ram_gb": null,
-      "vm_cpu": null,
-      "containers": [
-        "cloudflare-worker"
-      ],
-      "resources": null
-    },
-    "gcloud": {
-      "vm": "local",
-      "vm_ram_gb": null,
-      "vm_cpu": null,
-      "containers": [
-        "gcloud"
-      ],
-      "resources": null
-    },
-    "hickory-dns": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "hickory-dns"
-      ],
-      "resources": {
-        "mem_limit": "64M"
-      }
-    },
-    "wireguard-mesh": {
+    "chat-mattermost": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "wireguard-mesh"
-      ],
-      "resources": {
-        "mem_limit": "32m"
-      }
-    },
-    "wireguard-mesh-ws-tunnel": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "wireguard-mesh-ws-tunnel"
-      ],
-      "resources": {
-        "mem_limit": "64m"
-      }
-    },
-    "wireguard-public": {
-      "vm": "local",
-      "vm_ram_gb": null,
-      "vm_cpu": null,
-      "containers": [
-        "wireguard-public"
+        "mattermost",
+        "mattermost-postgres",
+        "mattermost-bots"
       ],
       "resources": null
     },
-    "authelia": {
-      "vm": "gcp-proxy",
+    "cypht": {
+      "vm": "oci-mail",
       "vm_ram_gb": 1,
       "vm_cpu": 1,
       "containers": [
-        "authelia",
-        "authelia-redis",
-        "postlite-authelia"
+        "cypht",
+        "cypht-postgres"
+      ],
+      "resources": {
+        "mem_limit": "256M",
+        "mem_reservation": "64M"
+      }
+    },
+    "mail-puller": {
+      "vm": "oci-mail",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "mail-puller"
       ],
       "resources": {
         "limits": {
-          "memory": "64M"
+          "memory": "128M"
         },
         "reservations": {
           "memory": "16M"
         }
       }
     },
-    "caddy": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "caddy"
-      ],
-      "resources": null
-    },
-    "caddy-l4-image": {
-      "vm": "local",
-      "vm_ram_gb": null,
-      "vm_cpu": null,
-      "containers": [
-        "caddy-l4-image"
-      ],
-      "resources": null
-    },
-    "caddy-l4-public": {
-      "vm": "oci-analytics",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "caddy-l4-public"
-      ],
-      "resources": null
-    },
-    "introspect-proxy": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "introspect-proxy"
-      ],
-      "resources": null
-    },
-    "c3-analytics-api": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "c3-analytics-api"
-      ],
-      "resources": null
-    },
-    "c3-infra-api": {
+    "matrix-continuwuity": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "c3-infra-api"
+        "continuwuity"
       ],
       "resources": null
     },
-    "c3-infra-mcp": {
+    "matrix-element": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "c3-infra-mcp"
+        "matrix-element"
       ],
       "resources": null
     },
-    "c3-public-api": {
-      "vm": "oci-analytics",
+    "matrix-mautrix-whatsapp": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "mautrix-whatsapp"
+      ],
+      "resources": null
+    },
+    "snappymail": {
+      "vm": "oci-mail",
       "vm_ram_gb": 1,
       "vm_cpu": 1,
       "containers": [
-        "c3-public-api"
-      ],
-      "resources": null
-    },
-    "c3-services-api": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "c3-services-api"
-      ],
-      "resources": null
-    },
-    "c3-services-mcp": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "c3-services-mcp"
+        "snappymail"
       ],
       "resources": {
-        "mem_limit": "2G",
-        "mem_reservation": "256M",
-        "pids_limit": 256
+        "mem_limit": "64M",
+        "mem_reservation": "16M"
       }
     },
-    "cloud-spec": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
+    "maddy": {
+      "vm": "oci-mail",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
       "containers": [
-        "cloud-spec"
-      ],
-      "resources": null
-    },
-    "dagu": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "dagu"
-      ],
-      "resources": {
-        "mem_limit": "256m"
-      }
-    },
-    "dbgate": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "dbgate"
+        "maddy"
       ],
       "resources": {
         "limits": {
           "memory": "256M"
         },
         "reservations": {
-          "memory": "64M"
+          "memory": "32M"
         }
       }
     },
-    "matomo": {
+    "stalwart": {
+      "vm": "oci-mail",
+      "vm_ram_gb": 1,
+      "vm_cpu": 1,
+      "containers": [
+        "stalwart",
+        "stalwart-sorter"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "256M"
+        },
+        "reservations": {
+          "memory": "32M"
+        }
+      }
+    },
+    "crawlee-cloud": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "matomo-hybrid"
+        "crawlee_api",
+        "crawlee_runner",
+        "crawlee_dashboard",
+        "crawlee_scheduler",
+        "crawlee_db",
+        "crawlee_redis",
+        "crawlee_minio"
+      ],
+      "resources": null
+    },
+    "fin-api": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "fin-api"
       ],
       "resources": {
         "limits": {
-          "memory": "1024M"
+          "memory": "512M",
+          "cpus": "1"
         },
         "reservations": {
-          "memory": "64M"
+          "memory": "128M"
         }
       }
+    },
+    "photoprism": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "photoprism_app",
+        "photoprism_mariadb",
+        "photoprism_rclone"
+      ],
+      "resources": null
     },
     "news-gdelt": {
       "vm": "oci-apps",
@@ -635,129 +655,109 @@
       ],
       "resources": null
     },
-    "ntfy": {
+    "calendar-radicale": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "ntfy",
-        "syslog-bridge",
-        "github-rss"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "64M"
-        },
-        "reservations": {
-          "memory": "16M"
-        }
-      }
-    },
-    "openobserve": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "openobserve"
-      ],
-      "resources": {
-        "mem_limit": "512m"
-      }
-    },
-    "umami": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "umami",
-        "umami-db",
-        "umami-setup"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "1G"
-        },
-        "reservations": {
-          "memory": "256M"
-        }
-      }
-    },
-    "cloud-builder-x": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "cloud-builder-x"
+        "calendar-radicale"
       ],
       "resources": null
     },
-    "backup-borg": {
+    "code-server": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "borg-server"
+        "code-server"
       ],
       "resources": null
     },
-    "backup-bup": {
+    "contacts-radicale": {
       "vm": "oci-apps",
       "vm_ram_gb": 24,
       "vm_cpu": 4,
       "containers": [
-        "bup-server"
+        "contacts-radicale"
       ],
       "resources": null
     },
-    "c3-diego-personal-data-mcp": {
+    "etherpad": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "etherpad_app",
+        "etherpad_postgres"
+      ],
+      "resources": null
+    },
+    "filebrowser": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "filebrowser_app"
+      ],
+      "resources": null
+    },
+    "grist": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "grist_app"
+      ],
+      "resources": null
+    },
+    "hedgedoc": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "hedgedoc_app",
+        "hedgedoc_postgres"
+      ],
+      "resources": null
+    },
+    "paca": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "paca-gateway",
+        "paca-api",
+        "paca-web",
+        "paca-realtime",
+        "paca-valkey",
+        "paca-postgres"
+      ],
+      "resources": null
+    },
+    "revealmd": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "revealmd_app"
+      ],
+      "resources": null
+    },
+    "vaultwarden": {
+      "vm": "oci-apps",
+      "vm_ram_gb": 24,
+      "vm_cpu": 4,
+      "containers": [
+        "vaultwarden"
+      ],
+      "resources": null
+    },
+    "front-end": {
       "vm": "local",
       "vm_ram_gb": null,
       "vm_cpu": null,
       "containers": [
-        "c3-diego-personal-data-mcp"
-      ],
-      "resources": null
-    },
-    "db-agent": {
-      "vm": "all",
-      "vm_ram_gb": null,
-      "vm_cpu": null,
-      "containers": [
-        "db-agent"
-      ],
-      "resources": null
-    },
-    "gitea": {
-      "vm": "oci-apps",
-      "vm_ram_gb": 24,
-      "vm_cpu": 4,
-      "containers": [
-        "gitea"
-      ],
-      "resources": null
-    },
-    "postlite": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "postlite-npm",
-        "postlite-vaultwarden",
-        "postlite-ntfy",
-        "postlite-authelia",
-        "sqlite-npm",
-        "sqlite-vaultwarden",
-        "sqlite-ntfy",
-        "sqlite-authelia"
-      ],
-      "resources": null
-    },
-    "redis": {
-      "vm": "gcp-proxy",
-      "vm_ram_gb": 1,
-      "vm_cpu": 1,
-      "containers": [
-        "redis"
+        "front-end"
       ],
       "resources": null
     }

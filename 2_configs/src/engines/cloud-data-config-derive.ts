@@ -598,7 +598,7 @@ function deriveCaddy(c: any): DerivedFile {
   // ── GitHub Pages proxies: aggregated from any service's proxy.github_pages_proxies[] ──
   // Each service declares its own routes in its build.json — there is no
   // privileged service that owns this list. The canonical declarer today is
-  // a_solutions/aa-sui_front-end/build.json (a data-only "service" that bundles
+  // a_solutions/user-web_front-end/build.json (a data-only "service" that bundles
   // every diegonmarcos.github.io reverse-proxy host). Any future service may
   // also contribute entries by adding a `proxy.github_pages_proxies[]` array.
   const githubPagesProxies: any[] = [];

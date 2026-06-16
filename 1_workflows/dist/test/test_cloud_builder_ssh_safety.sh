@@ -37,7 +37,7 @@ COMPOSE=""
 ENTRYPOINT=""
 for base in \
     "$REPO_ROOT/III_unix/cb_containers-builders/src/docker" \
-    "$REPO_ROOT/a_solutions/bd-cloud-builder-x/src/docker"; do
+    "$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/src/docker"; do
     if [ -f "$base/compose.yaml" ]; then
         COMPOSE="$base/compose.yaml"
         ENTRYPOINT="$base/entrypoint.sh"

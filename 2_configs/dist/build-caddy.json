@@ -215,10 +215,34 @@
   ],
   "routes": [
     {
-      "domain": "cal.diegonmarcos.com",
-      "upstream": "10.0.0.6:5232",
+      "domain": "mesh.diegonmarcos.com",
+      "upstream": "10.0.0.6:8080",
       "wg_only": true,
-      "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+      "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    {
+      "domain": "vpn.diegonmarcos.com",
+      "upstream": "10.0.0.1:8080",
+      "auth": "none",
+      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+    },
+    {
+      "domain": "workflows.diegonmarcos.com",
+      "upstream": "10.0.0.6:8070",
+      "wg_only": true,
+      "comment": "Dagu - Lightweight DAG-based workflow scheduler"
+    },
+    {
+      "domain": "db.diegonmarcos.com",
+      "upstream": "10.0.0.6:8086",
+      "wg_only": true,
+      "comment": "DBGate - Universal database manager for all cloud databases"
+    },
+    {
+      "domain": "auth.diegonmarcos.com",
+      "upstream": "10.0.0.1:9091",
+      "wg_only": true,
+      "comment": "SSO and 2FA authentication portal"
     },
     {
       "domain": "chat.diegonmarcos.com",
@@ -230,28 +254,10 @@
       "comment": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
     },
     {
-      "domain": "ide.diegonmarcos.com",
-      "upstream": "10.0.0.6:8443",
-      "wg_only": true,
-      "comment": "VS Code IDE (ide.diegonmarcos.com)"
-    },
-    {
-      "domain": "contacts.diegonmarcos.com",
-      "upstream": "10.0.0.6:5233",
-      "wg_only": true,
-      "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
-    },
-    {
       "domain": "webmail.diegonmarcos.com",
       "upstream": "10.0.0.3:8889",
       "wg_only": true,
       "comment": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
-    },
-    {
-      "domain": "sheets.diegonmarcos.com",
-      "upstream": "10.0.0.6:3011",
-      "wg_only": true,
-      "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     {
       "domain": "matrix.diegonmarcos.com",
@@ -266,10 +272,12 @@
       "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
-      "domain": "paca.diegonmarcos.com",
-      "upstream": "10.0.0.6:8095",
+      "domain": "jmap.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "auth": "none",
       "wg_only": true,
-      "comment": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+      "comment": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     {
       "domain": "photos.diegonmarcos.com",
@@ -279,12 +287,34 @@
       "comment": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
-      "domain": "jmap.diegonmarcos.com",
-      "upstream": "10.0.0.3:2443",
-      "tls_skip_verify": true,
-      "auth": "none",
+      "domain": "cal.diegonmarcos.com",
+      "upstream": "10.0.0.6:5232",
       "wg_only": true,
-      "comment": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
+      "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+    },
+    {
+      "domain": "ide.diegonmarcos.com",
+      "upstream": "10.0.0.6:8443",
+      "wg_only": true,
+      "comment": "VS Code IDE (ide.diegonmarcos.com)"
+    },
+    {
+      "domain": "contacts.diegonmarcos.com",
+      "upstream": "10.0.0.6:5233",
+      "wg_only": true,
+      "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
+    },
+    {
+      "domain": "sheets.diegonmarcos.com",
+      "upstream": "10.0.0.6:3011",
+      "wg_only": true,
+      "comment": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
+    },
+    {
+      "domain": "paca.diegonmarcos.com",
+      "upstream": "10.0.0.6:8095",
+      "wg_only": true,
+      "comment": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
     },
     {
       "domain": "vault.diegonmarcos.com",
@@ -292,90 +322,12 @@
       "auth": "none",
       "wg_only": true,
       "comment": "Bitwarden password manager"
-    },
-    {
-      "domain": "mesh.diegonmarcos.com",
-      "upstream": "10.0.0.6:8080",
-      "wg_only": true,
-      "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
-    },
-    {
-      "domain": "vpn.diegonmarcos.com",
-      "upstream": "10.0.0.1:8080",
-      "auth": "none",
-      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
-    },
-    {
-      "domain": "auth.diegonmarcos.com",
-      "upstream": "10.0.0.1:9091",
-      "wg_only": true,
-      "comment": "SSO and 2FA authentication portal"
-    },
-    {
-      "domain": "workflows.diegonmarcos.com",
-      "upstream": "10.0.0.6:8070",
-      "wg_only": true,
-      "comment": "Dagu - Lightweight DAG-based workflow scheduler"
-    },
-    {
-      "domain": "db.diegonmarcos.com",
-      "upstream": "10.0.0.6:8086",
-      "wg_only": true,
-      "comment": "DBGate - Universal database manager for all cloud databases"
     }
   ],
   "path_routes": [
     {
-      "parent_domain": "app.diegonmarcos.com",
-      "paths": [
-        {
-          "base_path": "/etherpad",
-          "upstream": "10.0.0.6:3012",
-          "wg_only": true,
-          "comment": "Etherpad collaborative editor"
-        },
-        {
-          "base_path": "/filebrowser",
-          "upstream": "10.0.0.6:3015",
-          "wg_only": true,
-          "comment": "FileBrowser web file manager (NEW - not deployed yet)"
-        },
-        {
-          "base_path": "/hedgedoc",
-          "upstream": "10.0.0.6:3018",
-          "wg_only": true,
-          "comment": "Collaborative markdown editor"
-        },
-        {
-          "base_path": "/gitea",
-          "upstream": "10.0.0.6:3002",
-          "wg_only": true,
-          "comment": "Self-hosted Git service"
-        }
-      ],
-      "comment": "App hub -- path-based routing",
-      "fallback": "respond \"Not Found\" 404"
-    },
-    {
       "parent_domain": "api.diegonmarcos.com",
       "paths": [
-        {
-          "base_path": "/cf-worker-bridge",
-          "upstream": "10.1.0.1:8092",
-          "comment": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
-        },
-        {
-          "base_path": "/crawlee",
-          "upstream": "10.0.0.6:3000",
-          "wg_only": true,
-          "comment": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
-        },
-        {
-          "base_path": "/fin-api",
-          "upstream": "10.0.0.6:8340",
-          "wg_only": true,
-          "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
-        },
         {
           "base_path": "/c3a",
           "upstream": "10.0.0.1:8085",
@@ -406,10 +358,58 @@
           "upstream": "10.0.0.6:8082",
           "wg_only": true,
           "comment": "C3 Services REST API — service API gateway Fastify API"
+        },
+        {
+          "base_path": "/cf-worker-bridge",
+          "upstream": "10.1.0.1:8092",
+          "comment": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
+        },
+        {
+          "base_path": "/crawlee",
+          "upstream": "10.0.0.6:3000",
+          "wg_only": true,
+          "comment": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
+        },
+        {
+          "base_path": "/fin-api",
+          "upstream": "10.0.0.6:8340",
+          "wg_only": true,
+          "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
         }
       ],
       "comment": "API hub -- path-based routing to backend APIs",
       "landing_page": "api"
+    },
+    {
+      "parent_domain": "app.diegonmarcos.com",
+      "paths": [
+        {
+          "base_path": "/gitea",
+          "upstream": "10.0.0.6:3002",
+          "wg_only": true,
+          "comment": "Self-hosted Git service"
+        },
+        {
+          "base_path": "/etherpad",
+          "upstream": "10.0.0.6:3012",
+          "wg_only": true,
+          "comment": "Etherpad collaborative editor"
+        },
+        {
+          "base_path": "/filebrowser",
+          "upstream": "10.0.0.6:3015",
+          "wg_only": true,
+          "comment": "FileBrowser web file manager (NEW - not deployed yet)"
+        },
+        {
+          "base_path": "/hedgedoc",
+          "upstream": "10.0.0.6:3018",
+          "wg_only": true,
+          "comment": "Collaborative markdown editor"
+        }
+      ],
+      "comment": "App hub -- path-based routing",
+      "fallback": "respond \"Not Found\" 404"
     },
     {
       "parent_domain": "cloud.diegonmarcos.com",
@@ -497,6 +497,16 @@
       "parent_domain": "mcp.diegonmarcos.com",
       "endpoints": [
         {
+          "base_path": "/c3-infra-mcp",
+          "upstream": "10.0.0.6:3100",
+          "wg_only": true
+        },
+        {
+          "base_path": "/c3-services-mcp",
+          "upstream": "10.0.0.6:3101",
+          "wg_only": true
+        },
+        {
           "base_path": "/g-personal",
           "upstream": "10.0.0.6:3106",
           "wg_only": true
@@ -520,20 +530,10 @@
           "base_path": "/kg-mcp",
           "upstream": "10.0.0.6:3105",
           "wg_only": true
-        },
-        {
-          "base_path": "/c3-infra-mcp",
-          "upstream": "10.0.0.6:3100",
-          "wg_only": true
-        },
-        {
-          "base_path": "/c3-services-mcp",
-          "upstream": "10.0.0.6:3101",
-          "wg_only": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /kg-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /kg-mcp/mcp"
     }
   ],
   "special": {
@@ -571,122 +571,6 @@
   },
   "internal_routes": [
     {
-      "service": "calendar.app",
-      "upstream": "10.0.0.6:5232"
-    },
-    {
-      "service": "mattermost.app",
-      "upstream": "10.0.0.6:8065"
-    },
-    {
-      "service": "code-server.app",
-      "upstream": "10.0.0.6:8443"
-    },
-    {
-      "service": "contacts.app",
-      "upstream": "10.0.0.6:5233"
-    },
-    {
-      "service": "cypht.app",
-      "upstream": "10.0.0.3:8889"
-    },
-    {
-      "service": "etherpad.app",
-      "upstream": "10.0.0.6:3012"
-    },
-    {
-      "service": "filebrowser.app",
-      "upstream": "10.0.0.6:3015"
-    },
-    {
-      "service": "g-personal-mcp.app",
-      "upstream": "10.0.0.6:3106"
-    },
-    {
-      "service": "g-workspace-mcp.app",
-      "upstream": "10.0.0.6:3104"
-    },
-    {
-      "service": "grist.app",
-      "upstream": "10.0.0.6:3011"
-    },
-    {
-      "service": "hedgedoc.app",
-      "upstream": "10.0.0.6:3018"
-    },
-    {
-      "service": "mail-mcp.app",
-      "upstream": "10.0.0.6:3103"
-    },
-    {
-      "service": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008"
-    },
-    {
-      "service": "matrix-element.app",
-      "upstream": "10.0.0.6:8083"
-    },
-    {
-      "service": "mattermost-mcp.app",
-      "upstream": "10.0.0.6:3102"
-    },
-    {
-      "service": "paca.app",
-      "upstream": "10.0.0.6:8095"
-    },
-    {
-      "service": "photoprism.app",
-      "upstream": "10.0.0.6:3013"
-    },
-    {
-      "service": "snappymail.app",
-      "upstream": "10.0.0.3:8888"
-    },
-    {
-      "service": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.1.0.1:8092"
-    },
-    {
-      "service": "stalwart.app",
-      "upstream": "10.0.0.3:2443"
-    },
-    {
-      "service": "vaultwarden.app",
-      "upstream": "10.0.0.6:8880"
-    },
-    {
-      "service": "crawlee.app",
-      "upstream": "10.0.0.6:3000"
-    },
-    {
-      "service": "fin-api.app",
-      "upstream": "10.0.0.6:8340"
-    },
-    {
-      "service": "kg-mcp.app",
-      "upstream": "10.0.0.6:3105"
-    },
-    {
-      "service": "rig-agentic-sonn-14bq8.app",
-      "upstream": "10.0.0.6:8091"
-    },
-    {
-      "service": "wireguard-mesh.app",
-      "upstream": "10.0.0.6:8080"
-    },
-    {
-      "service": "authelia.app",
-      "upstream": "10.0.0.1:9091"
-    },
-    {
-      "service": "caddy.app",
-      "upstream": "10.0.0.1:443"
-    },
-    {
-      "service": "caddy-l4-public.app",
-      "upstream": "10.0.0.4:443"
-    },
-    {
       "service": "c3-analytics-api.app",
       "upstream": "10.0.0.1:8085"
     },
@@ -711,6 +595,34 @@
       "upstream": "10.0.0.6:3101"
     },
     {
+      "service": "g-personal-mcp.app",
+      "upstream": "10.0.0.6:3106"
+    },
+    {
+      "service": "g-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104"
+    },
+    {
+      "service": "mail-mcp.app",
+      "upstream": "10.0.0.6:3103"
+    },
+    {
+      "service": "mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102"
+    },
+    {
+      "service": "cf-worker-http-to-wg-public-bridge.app",
+      "upstream": "10.1.0.1:8092"
+    },
+    {
+      "service": "gitea.app",
+      "upstream": "10.0.0.6:3002"
+    },
+    {
+      "service": "wireguard-mesh.app",
+      "upstream": "10.0.0.6:8080"
+    },
+    {
       "service": "c3-spec.app",
       "upstream": "10.0.0.6:3080"
     },
@@ -727,10 +639,6 @@
       "upstream": "10.0.0.6:8084"
     },
     {
-      "service": "news-gdelt.app",
-      "upstream": "10.0.0.6:3019"
-    },
-    {
       "service": "ntfy.app",
       "upstream": "10.0.0.6:8090"
     },
@@ -743,8 +651,100 @@
       "upstream": "10.0.0.6:3006"
     },
     {
-      "service": "gitea.app",
-      "upstream": "10.0.0.6:3002"
+      "service": "authelia.app",
+      "upstream": "10.0.0.1:9091"
+    },
+    {
+      "service": "caddy.app",
+      "upstream": "10.0.0.1:443"
+    },
+    {
+      "service": "caddy-l4-public.app",
+      "upstream": "10.0.0.4:443"
+    },
+    {
+      "service": "kg-mcp.app",
+      "upstream": "10.0.0.6:3105"
+    },
+    {
+      "service": "rig-agentic-sonn-14bq8.app",
+      "upstream": "10.0.0.6:8091"
+    },
+    {
+      "service": "mattermost.app",
+      "upstream": "10.0.0.6:8065"
+    },
+    {
+      "service": "cypht.app",
+      "upstream": "10.0.0.3:8889"
+    },
+    {
+      "service": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008"
+    },
+    {
+      "service": "matrix-element.app",
+      "upstream": "10.0.0.6:8083"
+    },
+    {
+      "service": "snappymail.app",
+      "upstream": "10.0.0.3:8888"
+    },
+    {
+      "service": "stalwart.app",
+      "upstream": "10.0.0.3:2443"
+    },
+    {
+      "service": "crawlee.app",
+      "upstream": "10.0.0.6:3000"
+    },
+    {
+      "service": "fin-api.app",
+      "upstream": "10.0.0.6:8340"
+    },
+    {
+      "service": "photoprism.app",
+      "upstream": "10.0.0.6:3013"
+    },
+    {
+      "service": "news-gdelt.app",
+      "upstream": "10.0.0.6:3019"
+    },
+    {
+      "service": "calendar.app",
+      "upstream": "10.0.0.6:5232"
+    },
+    {
+      "service": "code-server.app",
+      "upstream": "10.0.0.6:8443"
+    },
+    {
+      "service": "contacts.app",
+      "upstream": "10.0.0.6:5233"
+    },
+    {
+      "service": "etherpad.app",
+      "upstream": "10.0.0.6:3012"
+    },
+    {
+      "service": "filebrowser.app",
+      "upstream": "10.0.0.6:3015"
+    },
+    {
+      "service": "grist.app",
+      "upstream": "10.0.0.6:3011"
+    },
+    {
+      "service": "hedgedoc.app",
+      "upstream": "10.0.0.6:3018"
+    },
+    {
+      "service": "paca.app",
+      "upstream": "10.0.0.6:8095"
+    },
+    {
+      "service": "vaultwarden.app",
+      "upstream": "10.0.0.6:8880"
     }
   ],
   "s3_routes": [
@@ -784,680 +784,6 @@
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
-    {
-      "kind": "redirect",
-      "service": "calendar-radicale.app",
-      "redirect_to": "https://calendar-radicale-http-5232.app",
-      "container": "calendar-radicale",
-      "container_key": "app",
-      "svc": "calendar-radicale",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "calendar-radicale-http-5232.app",
-      "container": "calendar-radicale",
-      "container_key": "app",
-      "svc": "calendar-radicale",
-      "vm": "oci-A1-f_0",
-      "port": 5232,
-      "protocol": "http",
-      "upstream": "10.0.0.6:5232",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost.app",
-      "redirect_to": "https://mattermost-http-8065.app",
-      "container": "mattermost",
-      "container_key": "app",
-      "svc": "chat-mattermost",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mattermost-http-8065.app",
-      "container": "mattermost",
-      "container_key": "app",
-      "svc": "chat-mattermost",
-      "vm": "oci-A1-f_0",
-      "port": 8065,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8065",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "code-server.app",
-      "redirect_to": "https://code-server-https-8443.app",
-      "container": "code-server",
-      "container_key": "app",
-      "svc": "code-server",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "code-server-https-8443.app",
-      "container": "code-server",
-      "container_key": "app",
-      "svc": "code-server",
-      "vm": "oci-A1-f_0",
-      "port": 8443,
-      "protocol": "https",
-      "upstream": "10.0.0.6:8443",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "contacts-radicale.app",
-      "redirect_to": "https://contacts-radicale-http-5233.app",
-      "container": "contacts-radicale",
-      "container_key": "app",
-      "svc": "contacts-radicale",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "contacts-radicale-http-5233.app",
-      "container": "contacts-radicale",
-      "container_key": "app",
-      "svc": "contacts-radicale",
-      "vm": "oci-A1-f_0",
-      "port": 5233,
-      "protocol": "http",
-      "upstream": "10.0.0.6:5233",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "cypht.app",
-      "redirect_to": "https://cypht-http-8889.app",
-      "container": "cypht",
-      "container_key": "app",
-      "svc": "cypht",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "cypht-http-8889.app",
-      "container": "cypht",
-      "container_key": "app",
-      "svc": "cypht",
-      "vm": "oci-E2-f_0",
-      "port": 8889,
-      "protocol": "http",
-      "upstream": "10.0.0.3:8889",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "etherpad_app.app",
-      "redirect_to": "https://etherpad_app-http-3012.app",
-      "container": "etherpad_app",
-      "container_key": "app",
-      "svc": "etherpad",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "etherpad_app-http-3012.app",
-      "container": "etherpad_app",
-      "container_key": "app",
-      "svc": "etherpad",
-      "vm": "oci-A1-f_0",
-      "port": 3012,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3012",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "filebrowser_app.app",
-      "redirect_to": "https://filebrowser_app-http-3015.app",
-      "container": "filebrowser_app",
-      "container_key": "app",
-      "svc": "filebrowser",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "filebrowser_app-http-3015.app",
-      "container": "filebrowser_app",
-      "container_key": "app",
-      "svc": "filebrowser",
-      "vm": "oci-A1-f_0",
-      "port": 3015,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3015",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "google-personal-mcp.app",
-      "redirect_to": "https://google-personal-mcp-http-3106.app",
-      "container": "google-personal-mcp",
-      "container_key": "app",
-      "svc": "google-personal-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "google-personal-mcp-http-3106.app",
-      "container": "google-personal-mcp",
-      "container_key": "app",
-      "svc": "google-personal-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3106,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3106",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "google-workspace-mcp.app",
-      "redirect_to": "https://google-workspace-mcp-http-3104.app",
-      "container": "google-workspace-mcp",
-      "container_key": "app",
-      "svc": "google-workspace-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "google-workspace-mcp-http-3104.app",
-      "container": "google-workspace-mcp",
-      "container_key": "app",
-      "svc": "google-workspace-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3104,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3104",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "grist_app.app",
-      "redirect_to": "https://grist_app-http-3011.app",
-      "container": "grist_app",
-      "container_key": "app",
-      "svc": "grist",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "grist_app-http-3011.app",
-      "container": "grist_app",
-      "container_key": "app",
-      "svc": "grist",
-      "vm": "oci-A1-f_0",
-      "port": 3011,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3011",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "hedgedoc_app.app",
-      "redirect_to": "https://hedgedoc_app-http-3018.app",
-      "container": "hedgedoc_app",
-      "container_key": "app",
-      "svc": "hedgedoc",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "hedgedoc_app-http-3018.app",
-      "container": "hedgedoc_app",
-      "container_key": "app",
-      "svc": "hedgedoc",
-      "vm": "oci-A1-f_0",
-      "port": 3018,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3018",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mail-mcp.app",
-      "redirect_to": "https://mail-mcp-http-3103.app",
-      "container": "mail-mcp",
-      "container_key": "app",
-      "svc": "mail-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mail-mcp-http-3103.app",
-      "container": "mail-mcp",
-      "container_key": "app",
-      "svc": "mail-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3103,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3103",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "continuwuity.app",
-      "redirect_to": "https://continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "port": 8008,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8008",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "matrix-element.app",
-      "redirect_to": "https://matrix-element-http-8083.app",
-      "container": "matrix-element",
-      "container_key": "app",
-      "svc": "matrix-element",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "matrix-element-http-8083.app",
-      "container": "matrix-element",
-      "container_key": "app",
-      "svc": "matrix-element",
-      "vm": "oci-A1-f_0",
-      "port": 8083,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8083",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost-mcp.app",
-      "redirect_to": "https://mattermost-mcp-http-3102.app",
-      "container": "mattermost-mcp",
-      "container_key": "app",
-      "svc": "mattermost-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mattermost-mcp-http-3102.app",
-      "container": "mattermost-mcp",
-      "container_key": "app",
-      "svc": "mattermost-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3102,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3102",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "paca-gateway.app",
-      "redirect_to": "https://paca-gateway-http-8095.app",
-      "container": "paca-gateway",
-      "container_key": "gateway",
-      "svc": "paca",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "paca-gateway-http-8095.app",
-      "container": "paca-gateway",
-      "container_key": "gateway",
-      "svc": "paca",
-      "vm": "oci-A1-f_0",
-      "port": 8095,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8095",
-      "source": "containers.gateway.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "photoprism_app.app",
-      "redirect_to": "https://photoprism_app-http-3013.app",
-      "container": "photoprism_app",
-      "container_key": "app",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "photoprism_app-http-3013.app",
-      "container": "photoprism_app",
-      "container_key": "app",
-      "svc": "photoprism",
-      "vm": "oci-A1-f_0",
-      "port": 3013,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3013",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "snappymail.app",
-      "redirect_to": "https://snappymail-http-8888.app",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "snappymail-http-8888.app",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0",
-      "port": 8888,
-      "protocol": "http",
-      "upstream": "10.0.0.3:8888",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "cf-worker-http-to-wg-public-bridge.app",
-      "redirect_to": "https://cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "container": "cf-worker-http-to-wg-public-bridge",
-      "container_key": "app",
-      "svc": "cf-worker-http-to-wg-public-bridge",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "canonical",
-      "service": "cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "container": "cf-worker-http-to-wg-public-bridge",
-      "container_key": "app",
-      "svc": "cf-worker-http-to-wg-public-bridge",
-      "vm": "oci-E2-f_1",
-      "port": 8092,
-      "protocol": "http",
-      "upstream": "10.1.0.1:8092",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "stalwart.app",
-      "redirect_to": "https://stalwart-https-2443.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-https-2443.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2443,
-      "protocol": "https",
-      "upstream": "10.0.0.3:2443",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-starttls-2025.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2025,
-      "protocol": "starttls",
-      "upstream": "10.0.0.3:2025",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-tls-2465.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2465,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:2465",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-tls-2993.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 2993,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:2993",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "canonical",
-      "service": "stalwart-tls-6190.app",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "port": 6190,
-      "protocol": "tls",
-      "upstream": "10.0.0.3:6190",
-      "source": "containers.app.extra_ports"
-    },
-    {
-      "kind": "redirect",
-      "service": "stalwart-sorter.app",
-      "redirect_to": "https://stalwart-sorter-null.app",
-      "container": "stalwart-sorter",
-      "container_key": "sorter",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "stalwart-sorter-null.app",
-      "container": "stalwart-sorter",
-      "container_key": "sorter",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "redirect",
-      "service": "vaultwarden.app",
-      "redirect_to": "https://vaultwarden-http-8880.app",
-      "container": "vaultwarden",
-      "container_key": "app",
-      "svc": "vaultwarden",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "vaultwarden-http-8880.app",
-      "container": "vaultwarden",
-      "container_key": "app",
-      "svc": "vaultwarden",
-      "vm": "oci-A1-f_0",
-      "port": 8880,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8880",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "crawlee_api.app",
-      "redirect_to": "https://crawlee_api-http-3000.app",
-      "container": "crawlee_api",
-      "container_key": "app",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_api-http-3000.app",
-      "container": "crawlee_api",
-      "container_key": "app",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 3000,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3000",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "fin-api.app",
-      "redirect_to": "https://fin-api-http-8340.app",
-      "container": "fin-api",
-      "container_key": "app",
-      "svc": "fin-api",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "fin-api-http-8340.app",
-      "container": "fin-api",
-      "container_key": "app",
-      "svc": "fin-api",
-      "vm": "oci-A1-f_0",
-      "port": 8340,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8340",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "kg-mcp.app",
-      "redirect_to": "https://kg-mcp-http-3105.app",
-      "container": "kg-mcp",
-      "container_key": "app",
-      "svc": "kg-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "kg-mcp-http-3105.app",
-      "container": "kg-mcp",
-      "container_key": "app",
-      "svc": "kg-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3105,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3105",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "rig-agentic-sonn-14bq8.app",
-      "redirect_to": "https://rig-agentic-sonn-14bq8-http-8091.app",
-      "container": "rig-agentic-sonn-14bq8",
-      "container_key": "app",
-      "svc": "rig-agentic-sonn-14bq8",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "rig-agentic-sonn-14bq8-http-8091.app",
-      "container": "rig-agentic-sonn-14bq8",
-      "container_key": "app",
-      "svc": "rig-agentic-sonn-14bq8",
-      "vm": "oci-A1-f_0",
-      "port": 8091,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8091",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "wireguard-mesh.app",
-      "redirect_to": "https://wireguard-mesh-http-8080.app",
-      "container": "wireguard-mesh",
-      "container_key": "app",
-      "svc": "wireguard-mesh",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "wireguard-mesh-http-8080.app",
-      "container": "wireguard-mesh",
-      "container_key": "app",
-      "svc": "wireguard-mesh",
-      "vm": "oci-A1-f_0",
-      "port": 8080,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8080",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "authelia.app",
-      "redirect_to": "https://authelia-http-9091.app",
-      "container": "authelia",
-      "container_key": "app",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "authelia-http-9091.app",
-      "container": "authelia",
-      "container_key": "app",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0",
-      "port": 9091,
-      "protocol": "http",
-      "upstream": "10.0.0.1:9091",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "caddy.app",
-      "redirect_to": "https://caddy-https-443.app",
-      "container": "caddy",
-      "container_key": "app",
-      "svc": "caddy",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "caddy-https-443.app",
-      "container": "caddy",
-      "container_key": "app",
-      "svc": "caddy",
-      "vm": "gcp-E2-f_0",
-      "port": 443,
-      "protocol": "https",
-      "upstream": "10.0.0.1:443",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "caddy-l4-public.app",
-      "redirect_to": "https://caddy-l4-public-tcp-443.app",
-      "container": "caddy-l4-public",
-      "container_key": "app",
-      "svc": "caddy-l4-public",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "canonical",
-      "service": "caddy-l4-public-tcp-443.app",
-      "container": "caddy-l4-public",
-      "container_key": "app",
-      "svc": "caddy-l4-public",
-      "vm": "oci-E2-f_1",
-      "port": 443,
-      "protocol": "tcp",
-      "upstream": "10.0.0.4:443",
-      "source": "containers.app.port"
-    },
     {
       "kind": "redirect",
       "service": "c3-analytics-api.app",
@@ -1586,6 +912,153 @@
     },
     {
       "kind": "redirect",
+      "service": "google-personal-mcp.app",
+      "redirect_to": "https://google-personal-mcp-http-3106.app",
+      "container": "google-personal-mcp",
+      "container_key": "app",
+      "svc": "google-personal-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "google-personal-mcp-http-3106.app",
+      "container": "google-personal-mcp",
+      "container_key": "app",
+      "svc": "google-personal-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3106,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3106",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "google-workspace-mcp.app",
+      "redirect_to": "https://google-workspace-mcp-http-3104.app",
+      "container": "google-workspace-mcp",
+      "container_key": "app",
+      "svc": "google-workspace-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "google-workspace-mcp-http-3104.app",
+      "container": "google-workspace-mcp",
+      "container_key": "app",
+      "svc": "google-workspace-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3104,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3104",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "mail-mcp.app",
+      "redirect_to": "https://mail-mcp-http-3103.app",
+      "container": "mail-mcp",
+      "container_key": "app",
+      "svc": "mail-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "mail-mcp-http-3103.app",
+      "container": "mail-mcp",
+      "container_key": "app",
+      "svc": "mail-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3103,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3103",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "mattermost-mcp.app",
+      "redirect_to": "https://mattermost-mcp-http-3102.app",
+      "container": "mattermost-mcp",
+      "container_key": "app",
+      "svc": "mattermost-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "mattermost-mcp-http-3102.app",
+      "container": "mattermost-mcp",
+      "container_key": "app",
+      "svc": "mattermost-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3102,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3102",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cf-worker-http-to-wg-public-bridge.app",
+      "redirect_to": "https://cf-worker-http-to-wg-public-bridge-http-8092.app",
+      "container": "cf-worker-http-to-wg-public-bridge",
+      "container_key": "app",
+      "svc": "cf-worker-http-to-wg-public-bridge",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "cf-worker-http-to-wg-public-bridge-http-8092.app",
+      "container": "cf-worker-http-to-wg-public-bridge",
+      "container_key": "app",
+      "svc": "cf-worker-http-to-wg-public-bridge",
+      "vm": "oci-E2-f_1",
+      "port": 8092,
+      "protocol": "http",
+      "upstream": "10.1.0.1:8092",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "gitea.app",
+      "redirect_to": "https://gitea-http-3002.app",
+      "container": "gitea",
+      "container_key": "app",
+      "svc": "gitea",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "gitea-http-3002.app",
+      "container": "gitea",
+      "container_key": "app",
+      "svc": "gitea",
+      "vm": "oci-A1-f_0",
+      "port": 3002,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3002",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "wireguard-mesh.app",
+      "redirect_to": "https://wireguard-mesh-http-8080.app",
+      "container": "wireguard-mesh",
+      "container_key": "app",
+      "svc": "wireguard-mesh",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "wireguard-mesh-http-8080.app",
+      "container": "wireguard-mesh",
+      "container_key": "app",
+      "svc": "wireguard-mesh",
+      "vm": "oci-A1-f_0",
+      "port": 8080,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8080",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "cloud-spec.app",
       "redirect_to": "https://cloud-spec-http-3080.app",
       "container": "cloud-spec",
@@ -1670,23 +1143,6 @@
     },
     {
       "kind": "redirect",
-      "service": "news-gdelt.app",
-      "redirect_to": "https://news-gdelt-null.app",
-      "container": "news-gdelt",
-      "container_key": "app",
-      "svc": "news-gdelt",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "portless",
-      "service": "news-gdelt-null.app",
-      "container": "news-gdelt",
-      "container_key": "app",
-      "svc": "news-gdelt",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "redirect",
       "service": "ntfy.app",
       "redirect_to": "https://ntfy-http-8090.app",
       "container": "ntfy",
@@ -1750,103 +1206,581 @@
     },
     {
       "kind": "redirect",
-      "service": "gitea.app",
-      "redirect_to": "https://gitea-http-3002.app",
-      "container": "gitea",
+      "service": "authelia.app",
+      "redirect_to": "https://authelia-http-9091.app",
+      "container": "authelia",
       "container_key": "app",
-      "svc": "gitea",
+      "svc": "authelia",
+      "vm": "gcp-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "authelia-http-9091.app",
+      "container": "authelia",
+      "container_key": "app",
+      "svc": "authelia",
+      "vm": "gcp-E2-f_0",
+      "port": 9091,
+      "protocol": "http",
+      "upstream": "10.0.0.1:9091",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "caddy.app",
+      "redirect_to": "https://caddy-https-443.app",
+      "container": "caddy",
+      "container_key": "app",
+      "svc": "caddy",
+      "vm": "gcp-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-https-443.app",
+      "container": "caddy",
+      "container_key": "app",
+      "svc": "caddy",
+      "vm": "gcp-E2-f_0",
+      "port": 443,
+      "protocol": "https",
+      "upstream": "10.0.0.1:443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "caddy-l4-public.app",
+      "redirect_to": "https://caddy-l4-public-tcp-443.app",
+      "container": "caddy-l4-public",
+      "container_key": "app",
+      "svc": "caddy-l4-public",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-l4-public-tcp-443.app",
+      "container": "caddy-l4-public",
+      "container_key": "app",
+      "svc": "caddy-l4-public",
+      "vm": "oci-E2-f_1",
+      "port": 443,
+      "protocol": "tcp",
+      "upstream": "10.0.0.4:443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "kg-mcp.app",
+      "redirect_to": "https://kg-mcp-http-3105.app",
+      "container": "kg-mcp",
+      "container_key": "app",
+      "svc": "kg-mcp",
       "vm": "oci-A1-f_0"
     },
     {
       "kind": "canonical",
-      "service": "gitea-http-3002.app",
-      "container": "gitea",
+      "service": "kg-mcp-http-3105.app",
+      "container": "kg-mcp",
       "container_key": "app",
-      "svc": "gitea",
+      "svc": "kg-mcp",
       "vm": "oci-A1-f_0",
-      "port": 3002,
+      "port": 3105,
       "protocol": "http",
-      "upstream": "10.0.0.6:3002",
+      "upstream": "10.0.0.6:3105",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "rig-agentic-sonn-14bq8.app",
+      "redirect_to": "https://rig-agentic-sonn-14bq8-http-8091.app",
+      "container": "rig-agentic-sonn-14bq8",
+      "container_key": "app",
+      "svc": "rig-agentic-sonn-14bq8",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "rig-agentic-sonn-14bq8-http-8091.app",
+      "container": "rig-agentic-sonn-14bq8",
+      "container_key": "app",
+      "svc": "rig-agentic-sonn-14bq8",
+      "vm": "oci-A1-f_0",
+      "port": 8091,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8091",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "mattermost.app",
+      "redirect_to": "https://mattermost-http-8065.app",
+      "container": "mattermost",
+      "container_key": "app",
+      "svc": "chat-mattermost",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "mattermost-http-8065.app",
+      "container": "mattermost",
+      "container_key": "app",
+      "svc": "chat-mattermost",
+      "vm": "oci-A1-f_0",
+      "port": 8065,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8065",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cypht.app",
+      "redirect_to": "https://cypht-http-8889.app",
+      "container": "cypht",
+      "container_key": "app",
+      "svc": "cypht",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cypht-http-8889.app",
+      "container": "cypht",
+      "container_key": "app",
+      "svc": "cypht",
+      "vm": "oci-E2-f_0",
+      "port": 8889,
+      "protocol": "http",
+      "upstream": "10.0.0.3:8889",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "continuwuity.app",
+      "redirect_to": "https://continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "port": 8008,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8008",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "matrix-element.app",
+      "redirect_to": "https://matrix-element-http-8083.app",
+      "container": "matrix-element",
+      "container_key": "app",
+      "svc": "matrix-element",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "matrix-element-http-8083.app",
+      "container": "matrix-element",
+      "container_key": "app",
+      "svc": "matrix-element",
+      "vm": "oci-A1-f_0",
+      "port": 8083,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8083",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "snappymail.app",
+      "redirect_to": "https://snappymail-http-8888.app",
+      "container": "snappymail",
+      "container_key": "app",
+      "svc": "snappymail",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "snappymail-http-8888.app",
+      "container": "snappymail",
+      "container_key": "app",
+      "svc": "snappymail",
+      "vm": "oci-E2-f_0",
+      "port": 8888,
+      "protocol": "http",
+      "upstream": "10.0.0.3:8888",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "stalwart.app",
+      "redirect_to": "https://stalwart-https-2443.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-https-2443.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 2443,
+      "protocol": "https",
+      "upstream": "10.0.0.3:2443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-starttls-2025.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 2025,
+      "protocol": "starttls",
+      "upstream": "10.0.0.3:2025",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-tls-2465.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 2465,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:2465",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-tls-2993.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 2993,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:2993",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-tls-6190.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 6190,
+      "protocol": "tls",
+      "upstream": "10.0.0.3:6190",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "redirect",
+      "service": "stalwart-sorter.app",
+      "redirect_to": "https://stalwart-sorter-null.app",
+      "container": "stalwart-sorter",
+      "container_key": "sorter",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "portless",
+      "service": "stalwart-sorter-null.app",
+      "container": "stalwart-sorter",
+      "container_key": "sorter",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "redirect",
+      "service": "crawlee_api.app",
+      "redirect_to": "https://crawlee_api-http-3000.app",
+      "container": "crawlee_api",
+      "container_key": "app",
+      "svc": "crawlee-cloud",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "crawlee_api-http-3000.app",
+      "container": "crawlee_api",
+      "container_key": "app",
+      "svc": "crawlee-cloud",
+      "vm": "oci-A1-f_0",
+      "port": 3000,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3000",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "fin-api.app",
+      "redirect_to": "https://fin-api-http-8340.app",
+      "container": "fin-api",
+      "container_key": "app",
+      "svc": "fin-api",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "fin-api-http-8340.app",
+      "container": "fin-api",
+      "container_key": "app",
+      "svc": "fin-api",
+      "vm": "oci-A1-f_0",
+      "port": 8340,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8340",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "photoprism_app.app",
+      "redirect_to": "https://photoprism_app-http-3013.app",
+      "container": "photoprism_app",
+      "container_key": "app",
+      "svc": "photoprism",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "photoprism_app-http-3013.app",
+      "container": "photoprism_app",
+      "container_key": "app",
+      "svc": "photoprism",
+      "vm": "oci-A1-f_0",
+      "port": 3013,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3013",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "news-gdelt.app",
+      "redirect_to": "https://news-gdelt-null.app",
+      "container": "news-gdelt",
+      "container_key": "app",
+      "svc": "news-gdelt",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "portless",
+      "service": "news-gdelt-null.app",
+      "container": "news-gdelt",
+      "container_key": "app",
+      "svc": "news-gdelt",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "redirect",
+      "service": "calendar-radicale.app",
+      "redirect_to": "https://calendar-radicale-http-5232.app",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "calendar-radicale-http-5232.app",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0",
+      "port": 5232,
+      "protocol": "http",
+      "upstream": "10.0.0.6:5232",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "code-server.app",
+      "redirect_to": "https://code-server-https-8443.app",
+      "container": "code-server",
+      "container_key": "app",
+      "svc": "code-server",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "code-server-https-8443.app",
+      "container": "code-server",
+      "container_key": "app",
+      "svc": "code-server",
+      "vm": "oci-A1-f_0",
+      "port": 8443,
+      "protocol": "https",
+      "upstream": "10.0.0.6:8443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "contacts-radicale.app",
+      "redirect_to": "https://contacts-radicale-http-5233.app",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "contacts-radicale-http-5233.app",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0",
+      "port": 5233,
+      "protocol": "http",
+      "upstream": "10.0.0.6:5233",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "etherpad_app.app",
+      "redirect_to": "https://etherpad_app-http-3012.app",
+      "container": "etherpad_app",
+      "container_key": "app",
+      "svc": "etherpad",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "etherpad_app-http-3012.app",
+      "container": "etherpad_app",
+      "container_key": "app",
+      "svc": "etherpad",
+      "vm": "oci-A1-f_0",
+      "port": 3012,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3012",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "filebrowser_app.app",
+      "redirect_to": "https://filebrowser_app-http-3015.app",
+      "container": "filebrowser_app",
+      "container_key": "app",
+      "svc": "filebrowser",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "filebrowser_app-http-3015.app",
+      "container": "filebrowser_app",
+      "container_key": "app",
+      "svc": "filebrowser",
+      "vm": "oci-A1-f_0",
+      "port": 3015,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3015",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "grist_app.app",
+      "redirect_to": "https://grist_app-http-3011.app",
+      "container": "grist_app",
+      "container_key": "app",
+      "svc": "grist",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "grist_app-http-3011.app",
+      "container": "grist_app",
+      "container_key": "app",
+      "svc": "grist",
+      "vm": "oci-A1-f_0",
+      "port": 3011,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3011",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "hedgedoc_app.app",
+      "redirect_to": "https://hedgedoc_app-http-3018.app",
+      "container": "hedgedoc_app",
+      "container_key": "app",
+      "svc": "hedgedoc",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "hedgedoc_app-http-3018.app",
+      "container": "hedgedoc_app",
+      "container_key": "app",
+      "svc": "hedgedoc",
+      "vm": "oci-A1-f_0",
+      "port": 3018,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3018",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "paca-gateway.app",
+      "redirect_to": "https://paca-gateway-http-8095.app",
+      "container": "paca-gateway",
+      "container_key": "gateway",
+      "svc": "paca",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "paca-gateway-http-8095.app",
+      "container": "paca-gateway",
+      "container_key": "gateway",
+      "svc": "paca",
+      "vm": "oci-A1-f_0",
+      "port": 8095,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8095",
+      "source": "containers.gateway.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "vaultwarden.app",
+      "redirect_to": "https://vaultwarden-http-8880.app",
+      "container": "vaultwarden",
+      "container_key": "app",
+      "svc": "vaultwarden",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "vaultwarden-http-8880.app",
+      "container": "vaultwarden",
+      "container_key": "app",
+      "svc": "vaultwarden",
+      "vm": "oci-A1-f_0",
+      "port": 8880,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8880",
       "source": "containers.app.port"
     }
   ],
   "all_db_urls": [
     {
       "kind": "embedded",
-      "service": "calendar-radicale-files-null.db",
-      "container": "calendar-radicale",
+      "service": "gitea-sqlite-null.db",
+      "container": "gitea",
       "container_key": "app",
-      "svc": "calendar-radicale",
-      "vm": "oci-A1-f_0",
-      "engine": "files",
-      "port": null,
-      "path": "/data/collections"
-    },
-    {
-      "kind": "embedded",
-      "service": "contacts-radicale-files-null.db",
-      "container": "contacts-radicale",
-      "container_key": "app",
-      "svc": "contacts-radicale",
-      "vm": "oci-A1-f_0",
-      "engine": "files",
-      "port": null,
-      "path": "/data/collections"
-    },
-    {
-      "kind": "embedded",
-      "service": "filebrowser_app-sqlite-null.db",
-      "container": "filebrowser_app",
-      "container_key": "app",
-      "svc": "filebrowser",
+      "svc": "gitea",
       "vm": "oci-A1-f_0",
       "engine": "sqlite",
       "port": null,
-      "path": "/data/filebrowser.db"
-    },
-    {
-      "kind": "embedded",
-      "service": "snappymail-files-null.db",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0",
-      "engine": "files",
-      "port": null,
-      "path": "/var/lib/snappymail"
-    },
-    {
-      "kind": "embedded",
-      "service": "stalwart-rocksdb-null.db",
-      "container": "stalwart",
-      "container_key": "app",
-      "svc": "stalwart",
-      "vm": "oci-E2-f_0",
-      "engine": "rocksdb",
-      "port": null,
-      "path": "/opt/stalwart-mail/data"
-    },
-    {
-      "kind": "embedded",
-      "service": "vaultwarden-sqlite-null.db",
-      "container": "vaultwarden",
-      "container_key": "app",
-      "svc": "vaultwarden",
-      "vm": "oci-A1-f_0",
-      "engine": "sqlite",
-      "port": null,
-      "path": "/data/db.sqlite3"
-    },
-    {
-      "kind": "embedded",
-      "service": "authelia-sqlite-null.db",
-      "container": "authelia",
-      "container_key": "app",
-      "svc": "authelia",
-      "vm": "gcp-E2-f_0",
-      "engine": "sqlite",
-      "port": null,
-      "path": "/data/db.sqlite3"
+      "path": "/data/gitea/gitea.db"
     },
     {
       "kind": "embedded",
@@ -1895,17 +1829,103 @@
     },
     {
       "kind": "embedded",
-      "service": "gitea-sqlite-null.db",
-      "container": "gitea",
+      "service": "authelia-sqlite-null.db",
+      "container": "authelia",
       "container_key": "app",
-      "svc": "gitea",
+      "svc": "authelia",
+      "vm": "gcp-E2-f_0",
+      "engine": "sqlite",
+      "port": null,
+      "path": "/data/db.sqlite3"
+    },
+    {
+      "kind": "embedded",
+      "service": "snappymail-files-null.db",
+      "container": "snappymail",
+      "container_key": "app",
+      "svc": "snappymail",
+      "vm": "oci-E2-f_0",
+      "engine": "files",
+      "port": null,
+      "path": "/var/lib/snappymail"
+    },
+    {
+      "kind": "embedded",
+      "service": "stalwart-rocksdb-null.db",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "engine": "rocksdb",
+      "port": null,
+      "path": "/opt/stalwart-mail/data"
+    },
+    {
+      "kind": "embedded",
+      "service": "calendar-radicale-files-null.db",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "svc": "calendar-radicale",
+      "vm": "oci-A1-f_0",
+      "engine": "files",
+      "port": null,
+      "path": "/data/collections"
+    },
+    {
+      "kind": "embedded",
+      "service": "contacts-radicale-files-null.db",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "svc": "contacts-radicale",
+      "vm": "oci-A1-f_0",
+      "engine": "files",
+      "port": null,
+      "path": "/data/collections"
+    },
+    {
+      "kind": "embedded",
+      "service": "filebrowser_app-sqlite-null.db",
+      "container": "filebrowser_app",
+      "container_key": "app",
+      "svc": "filebrowser",
       "vm": "oci-A1-f_0",
       "engine": "sqlite",
       "port": null,
-      "path": "/data/gitea/gitea.db"
+      "path": "/data/filebrowser.db"
+    },
+    {
+      "kind": "embedded",
+      "service": "vaultwarden-sqlite-null.db",
+      "container": "vaultwarden",
+      "container_key": "app",
+      "svc": "vaultwarden",
+      "vm": "oci-A1-f_0",
+      "engine": "sqlite",
+      "port": null,
+      "path": "/data/db.sqlite3"
     }
   ],
   "public_A_mcp": [
+    {
+      "host": "mcp.diegonmarcos.com",
+      "path": "/c3-infra-mcp",
+      "upstream": "10.0.0.6:3100",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
+      "path": "/c3-services-mcp",
+      "upstream": "10.0.0.6:3101",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
     {
       "host": "mcp.diegonmarcos.com",
       "path": "/g-personal",
@@ -1955,59 +1975,9 @@
       "zone": "com",
       "service": null,
       "notes": null
-    },
-    {
-      "host": "mcp.diegonmarcos.com",
-      "path": "/c3-infra-mcp",
-      "upstream": "10.0.0.6:3100",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mcp.diegonmarcos.com",
-      "path": "/c3-services-mcp",
-      "upstream": "10.0.0.6:3101",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": null
     }
   ],
   "public_B_apis": [
-    {
-      "host": "api.diegonmarcos.com",
-      "path": "/cf-worker-bridge",
-      "upstream": "10.1.0.1:8092",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
-    },
-    {
-      "host": "api.diegonmarcos.com",
-      "path": "/crawlee",
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
-    },
-    {
-      "host": "api.diegonmarcos.com",
-      "path": "/fin-api",
-      "upstream": "10.0.0.6:8340",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
-    },
     {
       "host": "api.diegonmarcos.com",
       "path": "/c3a",
@@ -2047,9 +2017,49 @@
       "zone": "com",
       "service": null,
       "notes": "C3 Services REST API — service API gateway Fastify API"
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/cf-worker-bridge",
+      "upstream": "10.1.0.1:8092",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/crawlee",
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/fin-api",
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     }
   ],
   "public_C_app_paths": [
+    {
+      "host": "app.diegonmarcos.com",
+      "path": "/gitea",
+      "upstream": "10.0.0.6:3002",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Self-hosted Git service"
+    },
     {
       "host": "app.diegonmarcos.com",
       "path": "/etherpad",
@@ -2079,28 +2089,58 @@
       "zone": "com",
       "service": null,
       "notes": "Collaborative markdown editor"
-    },
-    {
-      "host": "app.diegonmarcos.com",
-      "path": "/gitea",
-      "upstream": "10.0.0.6:3002",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Self-hosted Git service"
     }
   ],
   "public_D_others": [
     {
-      "host": "cal.diegonmarcos.com",
+      "host": "mesh.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.6:5232",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+      "notes": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    {
+      "host": "vpn.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.1:8080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+    },
+    {
+      "host": "workflows.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8070",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Dagu - Lightweight DAG-based workflow scheduler"
+    },
+    {
+      "host": "db.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8086",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "DBGate - Universal database manager for all cloud databases"
+    },
+    {
+      "host": "auth.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.1:9091",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "SSO and 2FA authentication portal"
     },
     {
       "host": "chat.diegonmarcos.com",
@@ -2113,26 +2153,6 @@
       "notes": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
     },
     {
-      "host": "ide.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8443",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "VS Code IDE (ide.diegonmarcos.com)"
-    },
-    {
-      "host": "contacts.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:5233",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
-    },
-    {
       "host": "webmail.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.3:8889",
@@ -2141,16 +2161,6 @@
       "zone": "com",
       "service": null,
       "notes": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
-    },
-    {
-      "host": "sheets.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:3011",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
     {
       "host": "matrix.diegonmarcos.com",
@@ -2173,14 +2183,14 @@
       "notes": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
-      "host": "paca.diegonmarcos.com",
+      "host": "jmap.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.6:8095",
+      "upstream": "10.0.0.3:2443",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+      "notes": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     {
       "host": "photos.diegonmarcos.com",
@@ -2193,14 +2203,54 @@
       "notes": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
-      "host": "jmap.diegonmarcos.com",
+      "host": "cal.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.3:2443",
+      "upstream": "10.0.0.6:5232",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
+      "notes": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+    },
+    {
+      "host": "ide.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8443",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "VS Code IDE (ide.diegonmarcos.com)"
+    },
+    {
+      "host": "contacts.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
+    },
+    {
+      "host": "sheets.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3011",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
+    },
+    {
+      "host": "paca.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
     },
     {
       "host": "vault.diegonmarcos.com",
@@ -2211,56 +2261,6 @@
       "zone": "com",
       "service": null,
       "notes": "Bitwarden password manager"
-    },
-    {
-      "host": "mesh.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8080",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
-    },
-    {
-      "host": "vpn.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.1:8080",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
-    },
-    {
-      "host": "auth.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.1:9091",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "SSO and 2FA authentication portal"
-    },
-    {
-      "host": "workflows.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8070",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Dagu - Lightweight DAG-based workflow scheduler"
-    },
-    {
-      "host": "db.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8086",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "DBGate - Universal database manager for all cloud databases"
     },
     {
       "host": "cloud.diegonmarcos.com",
@@ -2365,296 +2365,6 @@
   ],
   "private_A0_app_short": [
     {
-      "host": "calendar.app",
-      "path": null,
-      "upstream": "10.0.0.6:5232",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mattermost.app",
-      "path": null,
-      "upstream": "10.0.0.6:8065",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "code-server.app",
-      "path": null,
-      "upstream": "10.0.0.6:8443",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "contacts.app",
-      "path": null,
-      "upstream": "10.0.0.6:5233",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "cypht.app",
-      "path": null,
-      "upstream": "10.0.0.3:8889",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "etherpad.app",
-      "path": null,
-      "upstream": "10.0.0.6:3012",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "filebrowser.app",
-      "path": null,
-      "upstream": "10.0.0.6:3015",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "g-personal-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3106",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "g-workspace-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "grist.app",
-      "path": null,
-      "upstream": "10.0.0.6:3011",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "hedgedoc.app",
-      "path": null,
-      "upstream": "10.0.0.6:3018",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mail-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3103",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "matrix-continuwuity.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "matrix-element.app",
-      "path": null,
-      "upstream": "10.0.0.6:8083",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mattermost-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3102",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "paca.app",
-      "path": null,
-      "upstream": "10.0.0.6:8095",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "photoprism.app",
-      "path": null,
-      "upstream": "10.0.0.6:3013",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "snappymail.app",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "cf-worker-http-to-wg-public-bridge.app",
-      "path": null,
-      "upstream": "10.1.0.1:8092",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "stalwart.app",
-      "path": null,
-      "upstream": "10.0.0.3:2443",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "vaultwarden.app",
-      "path": null,
-      "upstream": "10.0.0.6:8880",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "crawlee.app",
-      "path": null,
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "fin-api.app",
-      "path": null,
-      "upstream": "10.0.0.6:8340",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "kg-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3105",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "rig-agentic-sonn-14bq8.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "wireguard-mesh.app",
-      "path": null,
-      "upstream": "10.0.0.6:8080",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "authelia.app",
-      "path": null,
-      "upstream": "10.0.0.1:9091",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "caddy.app",
-      "path": null,
-      "upstream": "10.0.0.1:443",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "caddy-l4-public.app",
-      "path": null,
-      "upstream": "10.0.0.4:443",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "c3-analytics-api.app",
       "path": null,
       "upstream": "10.0.0.1:8085",
@@ -2715,6 +2425,76 @@
       "notes": null
     },
     {
+      "host": "g-personal-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3106",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "g-workspace-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3104",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mail-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mattermost-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cf-worker-http-to-wg-public-bridge.app",
+      "path": null,
+      "upstream": "10.1.0.1:8092",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "gitea.app",
+      "path": null,
+      "upstream": "10.0.0.6:3002",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "wireguard-mesh.app",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "c3-spec.app",
       "path": null,
       "upstream": "10.0.0.6:3080",
@@ -2755,16 +2535,6 @@
       "notes": null
     },
     {
-      "host": "news-gdelt.app",
-      "path": null,
-      "upstream": "10.0.0.6:3019",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "ntfy.app",
       "path": null,
       "upstream": "10.0.0.6:8090",
@@ -2795,9 +2565,239 @@
       "notes": null
     },
     {
-      "host": "gitea.app",
+      "host": "authelia.app",
       "path": null,
-      "upstream": "10.0.0.6:3002",
+      "upstream": "10.0.0.1:9091",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "caddy.app",
+      "path": null,
+      "upstream": "10.0.0.1:443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "caddy-l4-public.app",
+      "path": null,
+      "upstream": "10.0.0.4:443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "kg-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "rig-agentic-sonn-14bq8.app",
+      "path": null,
+      "upstream": "10.0.0.6:8091",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mattermost.app",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cypht.app",
+      "path": null,
+      "upstream": "10.0.0.3:8889",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-continuwuity.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-element.app",
+      "path": null,
+      "upstream": "10.0.0.6:8083",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "snappymail.app",
+      "path": null,
+      "upstream": "10.0.0.3:8888",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "stalwart.app",
+      "path": null,
+      "upstream": "10.0.0.3:2443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "crawlee.app",
+      "path": null,
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "fin-api.app",
+      "path": null,
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "photoprism.app",
+      "path": null,
+      "upstream": "10.0.0.6:3013",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "news-gdelt.app",
+      "path": null,
+      "upstream": "10.0.0.6:3019",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "calendar.app",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "code-server.app",
+      "path": null,
+      "upstream": "10.0.0.6:8443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "contacts.app",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "etherpad.app",
+      "path": null,
+      "upstream": "10.0.0.6:3012",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "filebrowser.app",
+      "path": null,
+      "upstream": "10.0.0.6:3015",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "grist.app",
+      "path": null,
+      "upstream": "10.0.0.6:3011",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "hedgedoc.app",
+      "path": null,
+      "upstream": "10.0.0.6:3018",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "paca.app",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "vaultwarden.app",
+      "path": null,
+      "upstream": "10.0.0.6:8880",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2806,336 +2806,6 @@
     }
   ],
   "private_A1_app_canonical": [
-    {
-      "host": "calendar-radicale-http-5232.app",
-      "path": null,
-      "upstream": "10.0.0.6:5232",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "calendar-radicale",
-      "notes": null
-    },
-    {
-      "host": "mattermost-http-8065.app",
-      "path": null,
-      "upstream": "10.0.0.6:8065",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "chat-mattermost",
-      "notes": null
-    },
-    {
-      "host": "code-server-https-8443.app",
-      "path": null,
-      "upstream": "10.0.0.6:8443",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "code-server",
-      "notes": null
-    },
-    {
-      "host": "contacts-radicale-http-5233.app",
-      "path": null,
-      "upstream": "10.0.0.6:5233",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "contacts-radicale",
-      "notes": null
-    },
-    {
-      "host": "cypht-http-8889.app",
-      "path": null,
-      "upstream": "10.0.0.3:8889",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "cypht",
-      "notes": null
-    },
-    {
-      "host": "etherpad_app-http-3012.app",
-      "path": null,
-      "upstream": "10.0.0.6:3012",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "etherpad",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "filebrowser_app-http-3015.app",
-      "path": null,
-      "upstream": "10.0.0.6:3015",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "filebrowser",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "google-personal-mcp-http-3106.app",
-      "path": null,
-      "upstream": "10.0.0.6:3106",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "google-personal-mcp",
-      "notes": null
-    },
-    {
-      "host": "google-workspace-mcp-http-3104.app",
-      "path": null,
-      "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "google-workspace-mcp",
-      "notes": null
-    },
-    {
-      "host": "grist_app-http-3011.app",
-      "path": null,
-      "upstream": "10.0.0.6:3011",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "grist",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "hedgedoc_app-http-3018.app",
-      "path": null,
-      "upstream": "10.0.0.6:3018",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "hedgedoc",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "mail-mcp-http-3103.app",
-      "path": null,
-      "upstream": "10.0.0.6:3103",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mail-mcp",
-      "notes": null
-    },
-    {
-      "host": "continuwuity-http-8008.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "matrix-continuwuity",
-      "notes": null
-    },
-    {
-      "host": "matrix-element-http-8083.app",
-      "path": null,
-      "upstream": "10.0.0.6:8083",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "matrix-element",
-      "notes": null
-    },
-    {
-      "host": "mattermost-mcp-http-3102.app",
-      "path": null,
-      "upstream": "10.0.0.6:3102",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mattermost-mcp",
-      "notes": null
-    },
-    {
-      "host": "paca-gateway-http-8095.app",
-      "path": null,
-      "upstream": "10.0.0.6:8095",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "paca",
-      "notes": null
-    },
-    {
-      "host": "photoprism_app-http-3013.app",
-      "path": null,
-      "upstream": "10.0.0.6:3013",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "photoprism",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "snappymail-http-8888.app",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "snappymail",
-      "notes": null
-    },
-    {
-      "host": "cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "path": null,
-      "upstream": "10.1.0.1:8092",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "cf-worker-http-to-wg-public-bridge",
-      "notes": null
-    },
-    {
-      "host": "stalwart-https-2443.app",
-      "path": null,
-      "upstream": "10.0.0.3:2443",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "stalwart-starttls-2025.app",
-      "path": null,
-      "upstream": "10.0.0.3:2025",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "stalwart-tls-2465.app",
-      "path": null,
-      "upstream": "10.0.0.3:2465",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "stalwart-tls-2993.app",
-      "path": null,
-      "upstream": "10.0.0.3:2993",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "stalwart-tls-6190.app",
-      "path": null,
-      "upstream": "10.0.0.3:6190",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "vaultwarden-http-8880.app",
-      "path": null,
-      "upstream": "10.0.0.6:8880",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "vaultwarden",
-      "notes": null
-    },
-    {
-      "host": "crawlee_api-http-3000.app",
-      "path": null,
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
-    },
-    {
-      "host": "fin-api-http-8340.app",
-      "path": null,
-      "upstream": "10.0.0.6:8340",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "fin-api",
-      "notes": null
-    },
-    {
-      "host": "kg-mcp-http-3105.app",
-      "path": null,
-      "upstream": "10.0.0.6:3105",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "kg-mcp",
-      "notes": null
-    },
-    {
-      "host": "rig-agentic-sonn-14bq8-http-8091.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "rig-agentic-sonn-14bq8",
-      "notes": null
-    },
-    {
-      "host": "wireguard-mesh-http-8080.app",
-      "path": null,
-      "upstream": "10.0.0.6:8080",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "wireguard-mesh",
-      "notes": null
-    },
-    {
-      "host": "authelia-http-9091.app",
-      "path": null,
-      "upstream": "10.0.0.1:9091",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "authelia",
-      "notes": null
-    },
-    {
-      "host": "caddy-https-443.app",
-      "path": null,
-      "upstream": "10.0.0.1:443",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "caddy",
-      "notes": null
-    },
-    {
-      "host": "caddy-l4-public-tcp-443.app",
-      "path": null,
-      "upstream": "10.0.0.4:443",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "caddy-l4-public",
-      "notes": null
-    },
     {
       "host": "c3-analytics-api-http-8085.app",
       "path": null,
@@ -3194,6 +2864,76 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "c3-services-mcp",
+      "notes": null
+    },
+    {
+      "host": "google-personal-mcp-http-3106.app",
+      "path": null,
+      "upstream": "10.0.0.6:3106",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "google-personal-mcp",
+      "notes": null
+    },
+    {
+      "host": "google-workspace-mcp-http-3104.app",
+      "path": null,
+      "upstream": "10.0.0.6:3104",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "google-workspace-mcp",
+      "notes": null
+    },
+    {
+      "host": "mail-mcp-http-3103.app",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "mail-mcp",
+      "notes": null
+    },
+    {
+      "host": "mattermost-mcp-http-3102.app",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "mattermost-mcp",
+      "notes": null
+    },
+    {
+      "host": "cf-worker-http-to-wg-public-bridge-http-8092.app",
+      "path": null,
+      "upstream": "10.1.0.1:8092",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cf-worker-http-to-wg-public-bridge",
+      "notes": null
+    },
+    {
+      "host": "gitea-http-3002.app",
+      "path": null,
+      "upstream": "10.0.0.6:3002",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "gitea",
+      "notes": null
+    },
+    {
+      "host": "wireguard-mesh-http-8080.app",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "wireguard-mesh",
       "notes": null
     },
     {
@@ -3267,13 +3007,273 @@
       "notes": null
     },
     {
-      "host": "gitea-http-3002.app",
+      "host": "authelia-http-9091.app",
       "path": null,
-      "upstream": "10.0.0.6:3002",
+      "upstream": "10.0.0.1:9091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
-      "service": "gitea",
+      "service": "authelia",
+      "notes": null
+    },
+    {
+      "host": "caddy-https-443.app",
+      "path": null,
+      "upstream": "10.0.0.1:443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy",
+      "notes": null
+    },
+    {
+      "host": "caddy-l4-public-tcp-443.app",
+      "path": null,
+      "upstream": "10.0.0.4:443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy-l4-public",
+      "notes": null
+    },
+    {
+      "host": "kg-mcp-http-3105.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "kg-mcp",
+      "notes": null
+    },
+    {
+      "host": "rig-agentic-sonn-14bq8-http-8091.app",
+      "path": null,
+      "upstream": "10.0.0.6:8091",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "rig-agentic-sonn-14bq8",
+      "notes": null
+    },
+    {
+      "host": "mattermost-http-8065.app",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "chat-mattermost",
+      "notes": null
+    },
+    {
+      "host": "cypht-http-8889.app",
+      "path": null,
+      "upstream": "10.0.0.3:8889",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cypht",
+      "notes": null
+    },
+    {
+      "host": "continuwuity-http-8008.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-continuwuity",
+      "notes": null
+    },
+    {
+      "host": "matrix-element-http-8083.app",
+      "path": null,
+      "upstream": "10.0.0.6:8083",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-element",
+      "notes": null
+    },
+    {
+      "host": "snappymail-http-8888.app",
+      "path": null,
+      "upstream": "10.0.0.3:8888",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "snappymail",
+      "notes": null
+    },
+    {
+      "host": "stalwart-https-2443.app",
+      "path": null,
+      "upstream": "10.0.0.3:2443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "stalwart-starttls-2025.app",
+      "path": null,
+      "upstream": "10.0.0.3:2025",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "stalwart-tls-2465.app",
+      "path": null,
+      "upstream": "10.0.0.3:2465",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "stalwart-tls-2993.app",
+      "path": null,
+      "upstream": "10.0.0.3:2993",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "stalwart-tls-6190.app",
+      "path": null,
+      "upstream": "10.0.0.3:6190",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "crawlee_api-http-3000.app",
+      "path": null,
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "crawlee-cloud",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "fin-api-http-8340.app",
+      "path": null,
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "fin-api",
+      "notes": null
+    },
+    {
+      "host": "photoprism_app-http-3013.app",
+      "path": null,
+      "upstream": "10.0.0.6:3013",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "photoprism",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "calendar-radicale-http-5232.app",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "calendar-radicale",
+      "notes": null
+    },
+    {
+      "host": "code-server-https-8443.app",
+      "path": null,
+      "upstream": "10.0.0.6:8443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "code-server",
+      "notes": null
+    },
+    {
+      "host": "contacts-radicale-http-5233.app",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "contacts-radicale",
+      "notes": null
+    },
+    {
+      "host": "etherpad_app-http-3012.app",
+      "path": null,
+      "upstream": "10.0.0.6:3012",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "etherpad",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "filebrowser_app-http-3015.app",
+      "path": null,
+      "upstream": "10.0.0.6:3015",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "filebrowser",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "grist_app-http-3011.app",
+      "path": null,
+      "upstream": "10.0.0.6:3011",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "grist",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "hedgedoc_app-http-3018.app",
+      "path": null,
+      "upstream": "10.0.0.6:3018",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "hedgedoc",
+      "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "paca-gateway-http-8095.app",
+      "path": null,
+      "upstream": "10.0.0.6:8095",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "paca",
+      "notes": null
+    },
+    {
+      "host": "vaultwarden-http-8880.app",
+      "path": null,
+      "upstream": "10.0.0.6:8880",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "vaultwarden",
       "notes": null
     }
   ],
@@ -3301,74 +3301,14 @@
   ],
   "private_B0_db": [
     {
-      "host": "calendar-radicale-files-null.db",
-      "path": "/data/collections",
+      "host": "gitea-sqlite-null.db",
+      "path": "/data/gitea/gitea.db",
       "upstream": "embedded",
       "kind": "catalog",
       "tls": "on_demand",
       "zone": "db",
-      "service": "calendar-radicale",
-      "notes": "engine=files vm=oci-A1-f_0"
-    },
-    {
-      "host": "contacts-radicale-files-null.db",
-      "path": "/data/collections",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "contacts-radicale",
-      "notes": "engine=files vm=oci-A1-f_0"
-    },
-    {
-      "host": "filebrowser_app-sqlite-null.db",
-      "path": "/data/filebrowser.db",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "filebrowser",
-      "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
-    },
-    {
-      "host": "snappymail-files-null.db",
-      "path": "/var/lib/snappymail",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "snappymail",
-      "notes": "engine=files vm=oci-E2-f_0"
-    },
-    {
-      "host": "stalwart-rocksdb-null.db",
-      "path": "/opt/stalwart-mail/data",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "stalwart",
-      "notes": "engine=rocksdb vm=oci-E2-f_0"
-    },
-    {
-      "host": "vaultwarden-sqlite-null.db",
-      "path": "/data/db.sqlite3",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "vaultwarden",
+      "service": "gitea",
       "notes": "engine=sqlite vm=oci-A1-f_0"
-    },
-    {
-      "host": "authelia-sqlite-null.db",
-      "path": "/data/db.sqlite3",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "authelia",
-      "notes": "engine=sqlite vm=gcp-E2-f_0"
     },
     {
       "host": "dagu-sqlite-null.db",
@@ -3411,13 +3351,73 @@
       "notes": "engine=parquet vm=oci-A1-f_0"
     },
     {
-      "host": "gitea-sqlite-null.db",
-      "path": "/data/gitea/gitea.db",
+      "host": "authelia-sqlite-null.db",
+      "path": "/data/db.sqlite3",
       "upstream": "embedded",
       "kind": "catalog",
       "tls": "on_demand",
       "zone": "db",
-      "service": "gitea",
+      "service": "authelia",
+      "notes": "engine=sqlite vm=gcp-E2-f_0"
+    },
+    {
+      "host": "snappymail-files-null.db",
+      "path": "/var/lib/snappymail",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "snappymail",
+      "notes": "engine=files vm=oci-E2-f_0"
+    },
+    {
+      "host": "stalwart-rocksdb-null.db",
+      "path": "/opt/stalwart-mail/data",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "stalwart",
+      "notes": "engine=rocksdb vm=oci-E2-f_0"
+    },
+    {
+      "host": "calendar-radicale-files-null.db",
+      "path": "/data/collections",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "calendar-radicale",
+      "notes": "engine=files vm=oci-A1-f_0"
+    },
+    {
+      "host": "contacts-radicale-files-null.db",
+      "path": "/data/collections",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "contacts-radicale",
+      "notes": "engine=files vm=oci-A1-f_0"
+    },
+    {
+      "host": "filebrowser_app-sqlite-null.db",
+      "path": "/data/filebrowser.db",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "filebrowser",
+      "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
+    },
+    {
+      "host": "vaultwarden-sqlite-null.db",
+      "path": "/data/db.sqlite3",
+      "upstream": "embedded",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "vaultwarden",
       "notes": "engine=sqlite vm=oci-A1-f_0"
     }
   ],

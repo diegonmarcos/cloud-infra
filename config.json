@@ -161,7 +161,7 @@
         }
       }
     },
-    "_wireguard_public_moved_doc": "wg-public mesh topology + client list MOVED OUT of config.json. New source of truth: a_solutions/bb-net_wireguard-public/build.json (top-level wireguard_public block). Adding/rotating/sharing a wg-public client is a single-file edit there — keeps the global root config focused on cross-cutting topology (vms, wg0, dns, docker, monitoring) and not on individual access-control rows. Consolidator engine: 2_configs/src/engines/cloud-data-config-consolidated.ts reads from the new build.json first, falls back to config.json::wireguard_public only if the build.json is missing (transitional). Once tested + verified, the fallback can be removed. Server-side peer pubkeys still come from vault/A0_keys/providers/wireguard/<name>-public/publickey.",
+    "_wireguard_public_moved_doc": "wg-public mesh topology + client list MOVED OUT of config.json. New source of truth: a_solutions/infra-net_wireguard-public/build.json (top-level wireguard_public block). Adding/rotating/sharing a wg-public client is a single-file edit there — keeps the global root config focused on cross-cutting topology (vms, wg0, dns, docker, monitoring) and not on individual access-control rows. Consolidator engine: 2_configs/src/engines/cloud-data-config-consolidated.ts reads from the new build.json first, falls back to config.json::wireguard_public only if the build.json is missing (transitional). Once tested + verified, the fallback can be removed. Server-side peer pubkeys still come from vault/A0_keys/providers/wireguard/<name>-public/publickey.",
     "dns": {
       "primary": "10.0.0.1",
       "fallback": "1.1.1.1",

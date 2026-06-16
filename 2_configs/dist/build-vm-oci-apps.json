@@ -4,17 +4,232 @@
   "vm_id": "oci-A1-f_0",
   "services": [
     {
-      "name": "calendar-radicale",
-      "dir": "aa-sui_calendar-radicale",
-      "compose_path": "/opt/containers/calendar-radicale",
+      "name": "c3-infra-api",
+      "dir": "infra-api_c3-infra-api",
+      "compose_path": "/opt/containers/c3-infra-api",
       "images": [
-        "tomsquest/docker-radicale:latest"
+        "ghcr.io/diegonmarcos/c3-infra-api:latest"
       ],
       "has_docker_build": true
     },
     {
+      "name": "c3-infra-mcp",
+      "dir": "infra-api_c3-infra-mcp",
+      "compose_path": "/opt/containers/c3-infra-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/c3-infra-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "c3-services-api",
+      "dir": "infra-api_c3-services-api",
+      "compose_path": "/opt/containers/c3-services-api",
+      "images": [
+        "ghcr.io/diegonmarcos/c3-services-api:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "c3-services-mcp",
+      "dir": "infra-api_c3-services-mcp",
+      "compose_path": "/opt/containers/c3-services-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/c3-services-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "google-personal-mcp",
+      "dir": "infra-api_google-personal-mcp",
+      "compose_path": "/opt/containers/google-personal-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/google-personal-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "google-workspace-mcp",
+      "dir": "infra-api_google-workspace-mcp",
+      "compose_path": "/opt/containers/google-workspace-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/google-workspace-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "mail-mcp",
+      "dir": "infra-api_mail-mcp",
+      "compose_path": "/opt/containers/mail-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/mail-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "mattermost-mcp",
+      "dir": "infra-api_mattermost-mcp",
+      "compose_path": "/opt/containers/mattermost-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/mattermost-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-builder-x",
+      "dir": "infra-bld_cloud-builder-x",
+      "compose_path": "/opt/containers/cloud-builder-x",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "backup-borg",
+      "dir": "infra-dat_backup-borg",
+      "compose_path": "/opt/containers/backup-borg",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "backup-bup",
+      "dir": "infra-dat_backup-bup",
+      "compose_path": "/opt/containers/backup-bup",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "gitea",
+      "dir": "infra-dat_gitea",
+      "compose_path": "/opt/containers/gitea",
+      "images": [
+        "gitea/gitea:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "wireguard-mesh",
+      "dir": "infra-net_wireguard-mesh",
+      "compose_path": "/opt/containers/wireguard-mesh",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-spec",
+      "dir": "infra-obs_cloud-spec",
+      "compose_path": "/opt/containers/cloud-spec",
+      "images": [
+        "busybox:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "dagu",
+      "dir": "infra-obs_dagu",
+      "compose_path": "/opt/containers/dagu",
+      "images": [
+        "ghcr.io/diegonmarcos/dagu:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "dbgate",
+      "dir": "infra-obs_dbgate",
+      "compose_path": "/opt/containers/dbgate",
+      "images": [
+        "dbgate/dbgate:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "matomo",
+      "dir": "infra-obs_matomo",
+      "compose_path": "/opt/containers/matomo",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "ntfy",
+      "dir": "infra-obs_ntfy",
+      "compose_path": "/opt/containers/ntfy",
+      "images": [
+        "binwiederhier/ntfy",
+        "python:3.11-slim",
+        "python:3.11-slim"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "openobserve",
+      "dir": "infra-obs_openobserve",
+      "compose_path": "/opt/containers/openobserve",
+      "images": [
+        "public.ecr.aws/zinclabs/openobserve:v0.14.7"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "umami",
+      "dir": "infra-obs_umami",
+      "compose_path": "/opt/containers/umami",
+      "images": [
+        "ghcr.io/umami-software/umami:latest",
+        "postgres:16-alpine",
+        "curlimages/curl:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "kg-bridge",
+      "dir": "user-ai_kg-bridge",
+      "compose_path": "/opt/containers/kg-bridge",
+      "images": [
+        "ghcr.io/diegonmarcos/kg-bridge:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "kg-mcp",
+      "dir": "user-ai_kg-mcp",
+      "compose_path": "/opt/containers/kg-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/kg-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "kg-store",
+      "dir": "user-ai_kg-store",
+      "compose_path": "/opt/containers/kg-store",
+      "images": [
+        "ghcr.io/diegonmarcos/kg-store:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "ollama-hai",
+      "dir": "user-ai_ollama-hai",
+      "compose_path": "/opt/containers/ollama-hai",
+      "images": [
+        "ollama/ollama:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "rig-agentic-hai-1.5bq4",
+      "dir": "user-ai_rig-agentic-hai-1.5bq4",
+      "compose_path": "/opt/containers/rig-agentic-hai-1.5bq4",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "rig-agentic-sonn-14bq8",
+      "dir": "user-ai_rig-agentic-sonn-14bq8",
+      "compose_path": "/opt/containers/rig-agentic-sonn-14bq8",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
       "name": "chat-mattermost",
-      "dir": "aa-sui_chat-mattermost",
+      "dir": "user-comm_chat-mattermost",
       "compose_path": "/opt/containers/chat-mattermost",
       "images": [
         "ghcr.io/diegonmarcos/chat-mattermost-binaries:latest",
@@ -24,91 +239,8 @@
       "has_docker_build": true
     },
     {
-      "name": "code-server",
-      "dir": "aa-sui_code-server",
-      "compose_path": "/opt/containers/code-server",
-      "images": [
-        "linuxserver/code-server:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "contacts-radicale",
-      "dir": "aa-sui_contacts-radicale",
-      "compose_path": "/opt/containers/contacts-radicale",
-      "images": [
-        "tomsquest/docker-radicale:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "etherpad",
-      "dir": "aa-sui_etherpad",
-      "compose_path": "/opt/containers/etherpad",
-      "images": [
-        "etherpad/etherpad:latest",
-        "postgres:16-alpine"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "filebrowser",
-      "dir": "aa-sui_filebrowser",
-      "compose_path": "/opt/containers/filebrowser",
-      "images": [
-        "filebrowser/filebrowser:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "google-personal-mcp",
-      "dir": "aa-sui_google-personal-mcp",
-      "compose_path": "/opt/containers/google-personal-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/google-personal-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "google-workspace-mcp",
-      "dir": "aa-sui_google-workspace-mcp",
-      "compose_path": "/opt/containers/google-workspace-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/google-workspace-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "grist",
-      "dir": "aa-sui_grist",
-      "compose_path": "/opt/containers/grist",
-      "images": [
-        "gristlabs/grist:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "hedgedoc",
-      "dir": "aa-sui_hedgedoc",
-      "compose_path": "/opt/containers/hedgedoc",
-      "images": [
-        "quay.io/hedgedoc/hedgedoc:latest",
-        "postgres:16-alpine"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "mail-mcp",
-      "dir": "aa-sui_mail-mcp",
-      "compose_path": "/opt/containers/mail-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/mail-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "matrix-continuwuity",
-      "dir": "aa-sui_matrix-continuwuity",
+      "dir": "user-comm_matrix-continuwuity",
       "compose_path": "/opt/containers/matrix-continuwuity",
       "images": [
         "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest"
@@ -117,7 +249,7 @@
     },
     {
       "name": "matrix-element",
-      "dir": "aa-sui_matrix-element",
+      "dir": "user-comm_matrix-element",
       "compose_path": "/opt/containers/matrix-element",
       "images": [
         "ghcr.io/diegonmarcos/matrix-element-binaries:latest"
@@ -126,7 +258,7 @@
     },
     {
       "name": "matrix-mautrix-whatsapp",
-      "dir": "aa-sui_matrix-mautrix-whatsapp",
+      "dir": "user-comm_matrix-mautrix-whatsapp",
       "compose_path": "/opt/containers/matrix-mautrix-whatsapp",
       "images": [
         "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest"
@@ -134,60 +266,8 @@
       "has_docker_build": true
     },
     {
-      "name": "mattermost-mcp",
-      "dir": "aa-sui_mattermost-mcp",
-      "compose_path": "/opt/containers/mattermost-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/mattermost-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "paca",
-      "dir": "aa-sui_paca",
-      "compose_path": "/opt/containers/paca",
-      "images": [
-        "nginx:1.27-alpine",
-        "pacaai/paca-api:latest",
-        "pacaai/paca-web:latest",
-        "pacaai/paca-realtime:latest",
-        "valkey/valkey:8-alpine",
-        "postgres:16-alpine"
-      ],
-      "has_docker_build": false
-    },
-    {
-      "name": "photoprism",
-      "dir": "aa-sui_photoprism",
-      "compose_path": "/opt/containers/photoprism",
-      "images": [
-        "photoprism/photoprism:latest",
-        "mariadb:11",
-        "rclone/rclone:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "revealmd",
-      "dir": "aa-sui_revealmd",
-      "compose_path": "/opt/containers/revealmd",
-      "images": [
-        "webpronl/reveal-md:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "vaultwarden",
-      "dir": "ab-mic_vaultwarden",
-      "compose_path": "/opt/containers/vaultwarden",
-      "images": [
-        "vaultwarden/server:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "crawlee-cloud",
-      "dir": "ac-fin_crawlee-cloud",
+      "dir": "user-fin_crawlee-cloud",
       "compose_path": "/opt/containers/crawlee-cloud",
       "images": [
         "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
@@ -202,7 +282,7 @@
     },
     {
       "name": "fin-api",
-      "dir": "ac-fin_fin-api",
+      "dir": "user-fin_fin-api",
       "compose_path": "/opt/containers/fin-api",
       "images": [
         "ghcr.io/diegonmarcos/fin-api:latest"
@@ -210,135 +290,19 @@
       "has_docker_build": true
     },
     {
-      "name": "kg-bridge",
-      "dir": "ad-agi_kg-bridge",
-      "compose_path": "/opt/containers/kg-bridge",
+      "name": "photoprism",
+      "dir": "user-media_photoprism",
+      "compose_path": "/opt/containers/photoprism",
       "images": [
-        "ghcr.io/diegonmarcos/kg-bridge:latest"
+        "photoprism/photoprism:latest",
+        "mariadb:11",
+        "rclone/rclone:latest"
       ],
-      "has_docker_build": true
-    },
-    {
-      "name": "kg-mcp",
-      "dir": "ad-agi_kg-mcp",
-      "compose_path": "/opt/containers/kg-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/kg-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "kg-store",
-      "dir": "ad-agi_kg-store",
-      "compose_path": "/opt/containers/kg-store",
-      "images": [
-        "ghcr.io/diegonmarcos/kg-store:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "ollama-hai",
-      "dir": "ad-agi_ollama-hai",
-      "compose_path": "/opt/containers/ollama-hai",
-      "images": [
-        "ollama/ollama:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "rig-agentic-hai-1.5bq4",
-      "dir": "ad-agi_rig-agentic-hai-1.5bq4",
-      "compose_path": "/opt/containers/rig-agentic-hai-1.5bq4",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "rig-agentic-sonn-14bq8",
-      "dir": "ad-agi_rig-agentic-sonn-14bq8",
-      "compose_path": "/opt/containers/rig-agentic-sonn-14bq8",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "wireguard-mesh",
-      "dir": "bb-net_wireguard-mesh",
-      "compose_path": "/opt/containers/wireguard-mesh",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "c3-infra-api",
-      "dir": "bc-obs_c3-infra-api",
-      "compose_path": "/opt/containers/c3-infra-api",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-infra-api:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "c3-infra-mcp",
-      "dir": "bc-obs_c3-infra-mcp",
-      "compose_path": "/opt/containers/c3-infra-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-infra-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "c3-services-api",
-      "dir": "bc-obs_c3-services-api",
-      "compose_path": "/opt/containers/c3-services-api",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-services-api:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "c3-services-mcp",
-      "dir": "bc-obs_c3-services-mcp",
-      "compose_path": "/opt/containers/c3-services-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-services-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "cloud-spec",
-      "dir": "bc-obs_cloud-spec",
-      "compose_path": "/opt/containers/cloud-spec",
-      "images": [
-        "busybox:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "dagu",
-      "dir": "bc-obs_dagu",
-      "compose_path": "/opt/containers/dagu",
-      "images": [
-        "ghcr.io/diegonmarcos/dagu:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "dbgate",
-      "dir": "bc-obs_dbgate",
-      "compose_path": "/opt/containers/dbgate",
-      "images": [
-        "dbgate/dbgate:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "matomo",
-      "dir": "bc-obs_matomo",
-      "compose_path": "/opt/containers/matomo",
-      "images": [],
       "has_docker_build": true
     },
     {
       "name": "news-gdelt",
-      "dir": "bc-obs_news-gdelt",
+      "dir": "user-news_news-gdelt",
       "compose_path": "/opt/containers/news-gdelt",
       "images": [
         "ghcr.io/diegonmarcos/news-gdelt:latest"
@@ -346,63 +310,99 @@
       "has_docker_build": true
     },
     {
-      "name": "ntfy",
-      "dir": "bc-obs_ntfy",
-      "compose_path": "/opt/containers/ntfy",
+      "name": "calendar-radicale",
+      "dir": "user-prod_calendar-radicale",
+      "compose_path": "/opt/containers/calendar-radicale",
       "images": [
-        "binwiederhier/ntfy",
-        "python:3.11-slim",
-        "python:3.11-slim"
+        "tomsquest/docker-radicale:latest"
       ],
       "has_docker_build": true
     },
     {
-      "name": "openobserve",
-      "dir": "bc-obs_openobserve",
-      "compose_path": "/opt/containers/openobserve",
+      "name": "code-server",
+      "dir": "user-prod_code-server",
+      "compose_path": "/opt/containers/code-server",
       "images": [
-        "public.ecr.aws/zinclabs/openobserve:v0.14.7"
+        "linuxserver/code-server:latest"
       ],
       "has_docker_build": true
     },
     {
-      "name": "umami",
-      "dir": "bc-obs_umami",
-      "compose_path": "/opt/containers/umami",
+      "name": "contacts-radicale",
+      "dir": "user-prod_contacts-radicale",
+      "compose_path": "/opt/containers/contacts-radicale",
       "images": [
-        "ghcr.io/umami-software/umami:latest",
-        "postgres:16-alpine",
-        "curlimages/curl:latest"
+        "tomsquest/docker-radicale:latest"
       ],
       "has_docker_build": true
     },
     {
-      "name": "cloud-builder-x",
-      "dir": "bd-cloud-builder-x",
-      "compose_path": "/opt/containers/cloud-builder-x",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "backup-borg",
-      "dir": "ca-dat_backup-borg",
-      "compose_path": "/opt/containers/backup-borg",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "backup-bup",
-      "dir": "ca-dat_backup-bup",
-      "compose_path": "/opt/containers/backup-bup",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "gitea",
-      "dir": "ca-dat_gitea",
-      "compose_path": "/opt/containers/gitea",
+      "name": "etherpad",
+      "dir": "user-prod_etherpad",
+      "compose_path": "/opt/containers/etherpad",
       "images": [
-        "gitea/gitea:latest"
+        "etherpad/etherpad:latest",
+        "postgres:16-alpine"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "filebrowser",
+      "dir": "user-prod_filebrowser",
+      "compose_path": "/opt/containers/filebrowser",
+      "images": [
+        "filebrowser/filebrowser:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "grist",
+      "dir": "user-prod_grist",
+      "compose_path": "/opt/containers/grist",
+      "images": [
+        "gristlabs/grist:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "hedgedoc",
+      "dir": "user-prod_hedgedoc",
+      "compose_path": "/opt/containers/hedgedoc",
+      "images": [
+        "quay.io/hedgedoc/hedgedoc:latest",
+        "postgres:16-alpine"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "paca",
+      "dir": "user-prod_paca",
+      "compose_path": "/opt/containers/paca",
+      "images": [
+        "nginx:1.27-alpine",
+        "pacaai/paca-api:latest",
+        "pacaai/paca-web:latest",
+        "pacaai/paca-realtime:latest",
+        "valkey/valkey:8-alpine",
+        "postgres:16-alpine"
+      ],
+      "has_docker_build": false
+    },
+    {
+      "name": "revealmd",
+      "dir": "user-prod_revealmd",
+      "compose_path": "/opt/containers/revealmd",
+      "images": [
+        "webpronl/reveal-md:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "vaultwarden",
+      "dir": "user-vault_vaultwarden",
+      "compose_path": "/opt/containers/vaultwarden",
+      "images": [
+        "vaultwarden/server:latest"
       ],
       "has_docker_build": true
     }

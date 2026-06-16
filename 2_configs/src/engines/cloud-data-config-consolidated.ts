@@ -639,7 +639,7 @@ function main() {
   // (10.1.0.0/24) and port (51821) from wg0.
   //
   // SINGLE source of truth — no fallback:
-  //   a_solutions/bb-net_wireguard-public/build.json::wireguard_public
+  //   a_solutions/infra-net_wireguard-public/build.json::wireguard_public
   //
   // Read via the SAME pipeline as every other service: scanBuildJsons()
   // picks the field up into entry.extra.wireguard_public (the generic
@@ -659,7 +659,7 @@ function main() {
     throw new Error(
       `wg-public SoT not found: no a_solutions/*/build.json carries a ` +
       `top-level 'wireguard_public' field. Expected owner: ` +
-      `a_solutions/bb-net_wireguard-public/build.json. Restore from git ` +
+      `a_solutions/infra-net_wireguard-public/build.json. Restore from git ` +
       `and retry.`
     );
   }
