@@ -236,6 +236,20 @@
       ]
     },
     {
+      "service": "kg-store",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [],
+      "databases": [
+        {
+          "service": "kg-store",
+          "container": "kg-store",
+          "container_key": "app",
+          "type": "surrealdb"
+        }
+      ]
+    },
+    {
       "service": "authelia",
       "vm": "gcp-E2-f_0",
       "vm_alias": "gcp-proxy",
@@ -328,20 +342,6 @@
           "container_key": "app",
           "type": "sqlite",
           "path": "/data/gitea/gitea.db"
-        }
-      ]
-    },
-    {
-      "service": "kg-graph",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "kg-graph",
-          "container": "surrealdb",
-          "container_key": "app",
-          "type": "surrealdb"
         }
       ]
     },
@@ -447,6 +447,12 @@
           "type": "minio"
         },
         {
+          "service": "kg-store",
+          "container": "kg-store",
+          "container_key": "app",
+          "type": "surrealdb"
+        },
+        {
           "service": "matomo",
           "container": "matomo-hybrid",
           "container_key": "app",
@@ -475,12 +481,6 @@
           "container_key": "app",
           "type": "sqlite",
           "path": "/data/gitea/gitea.db"
-        },
-        {
-          "service": "kg-graph",
-          "container": "surrealdb",
-          "container_key": "app",
-          "type": "surrealdb"
         }
       ],
       "volumes": [

@@ -918,6 +918,68 @@
         "auth": "bearer"
       }
     },
+    "kg-bridge": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3107
+      },
+      "vm": "oci-apps",
+      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      }
+    },
+    "kg-mcp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3105
+      },
+      "vm": "oci-apps",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 48,
+        "resources_count": 2,
+        "prompts_count": 0,
+        "display_name": "Cloud CGC MCP",
+        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
+    "kg-store": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8001
+      },
+      "vm": "oci-apps",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "ollama-hai": {
       "ip": "10.0.0.6",
       "ports": {
@@ -984,23 +1046,6 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
-      }
-    },
-    "claude-openai-bridge": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 3107
-      },
-      "vm": "oci-apps",
-      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/health"
-        ]
       }
     },
     "wireguard-mesh": {
@@ -1287,36 +1332,6 @@
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
     },
-    "cloud-cgc-mcp": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 3105
-      },
-      "vm": "oci-apps",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/mcp"
-        ]
-      },
-      "mcp": {
-        "has_mcp": true,
-        "mcp_url": null,
-        "transport": "streamable-http",
-        "endpoint_path": "/mcp",
-        "tools_count": 48,
-        "resources_count": 2,
-        "prompts_count": 0,
-        "display_name": "Cloud CGC MCP",
-        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
-        "auth": "none",
-        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
-      }
-    },
     "cloud-spec": {
       "ip": "10.0.0.6",
       "ports": {
@@ -1541,21 +1556,6 @@
         "display_name": "Gitea",
         "description": "Self-hosted Git service with REST API and repository management.",
         "auth": "bearer"
-      }
-    },
-    "kg-graph": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 8001
-      },
-      "vm": "oci-apps",
-      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
       }
     },
     "postlite": {

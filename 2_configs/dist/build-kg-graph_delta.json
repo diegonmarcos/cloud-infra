@@ -1050,6 +1050,58 @@
     },
     {
       "table": "service",
+      "id": "kg_bridge",
+      "key": "service:kg_bridge",
+      "properties": {
+        "name": "kg-bridge",
+        "category": "net",
+        "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+        "domain": null,
+        "port": 3107,
+        "vm": "oci-apps",
+        "folder": "ad-agi_kg-bridge"
+      }
+    },
+    {
+      "table": "container",
+      "id": "kg_bridge",
+      "key": "container:kg_bridge",
+      "properties": {
+        "name": "kg-bridge",
+        "image": "ghcr.io/diegonmarcos/kg-bridge:latest",
+        "role": "app",
+        "port": 3107,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "kg_mcp",
+      "key": "service:kg_mcp",
+      "properties": {
+        "name": "kg-mcp",
+        "category": "obs",
+        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+        "domain": null,
+        "port": 3105,
+        "vm": "oci-apps",
+        "folder": "ad-agi_kg-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "kg_mcp",
+      "key": "container:kg_mcp",
+      "properties": {
+        "name": "kg-mcp",
+        "image": "ghcr.io/diegonmarcos/kg-mcp:latest",
+        "role": "app",
+        "port": 3105,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "ollama",
       "key": "service:ollama",
       "properties": {
@@ -1201,32 +1253,6 @@
         "image": "hickorydns/hickory-dns:latest",
         "role": "app",
         "port": 53,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "claude_openai_bridge",
-      "key": "service:claude_openai_bridge",
-      "properties": {
-        "name": "claude-openai-bridge",
-        "category": "net",
-        "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
-        "domain": null,
-        "port": 3107,
-        "vm": "oci-apps",
-        "folder": "bb-net_claude-openai-bridge"
-      }
-    },
-    {
-      "table": "container",
-      "id": "claude_openai_bridge",
-      "key": "container:claude_openai_bridge",
-      "properties": {
-        "name": "claude-openai-bridge",
-        "image": "ghcr.io/diegonmarcos/claude-openai-bridge:latest",
-        "role": "app",
-        "port": 3107,
         "public": false
       }
     },
@@ -1589,32 +1615,6 @@
         "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
         "role": "app",
         "port": 3101,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "cloud_cgc_mcp",
-      "key": "service:cloud_cgc_mcp",
-      "properties": {
-        "name": "cloud-cgc-mcp",
-        "category": "obs",
-        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-        "domain": null,
-        "port": 3105,
-        "vm": "oci-apps",
-        "folder": "bc-obs_cloud-cgc-mcp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "cloud_cgc_mcp",
-      "key": "container:cloud_cgc_mcp",
-      "properties": {
-        "name": "cloud-cgc-mcp",
-        "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
-        "role": "app",
-        "port": 3105,
         "public": true
       }
     },
@@ -2624,6 +2624,28 @@
     },
     {
       "table": "module",
+      "id": "ad_agi_kg_bridge",
+      "key": "module:ad_agi_kg_bridge",
+      "properties": {
+        "name": "ad-agi_kg-bridge",
+        "repo": "cloud",
+        "category": "net",
+        "service": "kg-bridge"
+      }
+    },
+    {
+      "table": "module",
+      "id": "ad_agi_kg_mcp",
+      "key": "module:ad_agi_kg_mcp",
+      "properties": {
+        "name": "ad-agi_kg-mcp",
+        "repo": "cloud",
+        "category": "obs",
+        "service": "kg-mcp"
+      }
+    },
+    {
+      "table": "module",
       "id": "ad_agi_ollama",
       "key": "module:ad_agi_ollama",
       "properties": {
@@ -2686,17 +2708,6 @@
         "repo": "cloud",
         "category": "cloud",
         "service": "hickory-dns"
-      }
-    },
-    {
-      "table": "module",
-      "id": "bb_net_claude_openai_bridge",
-      "key": "module:bb_net_claude_openai_bridge",
-      "properties": {
-        "name": "bb-net_claude-openai-bridge",
-        "repo": "cloud",
-        "category": "net",
-        "service": "claude-openai-bridge"
       }
     },
     {
@@ -2840,17 +2851,6 @@
         "repo": "cloud",
         "category": "obs",
         "service": "c3-services-mcp"
-      }
-    },
-    {
-      "table": "module",
-      "id": "bc_obs_cloud_cgc_mcp",
-      "key": "module:bc_obs_cloud_cgc_mcp",
-      "properties": {
-        "name": "bc-obs_cloud-cgc-mcp",
-        "repo": "cloud",
-        "category": "obs",
-        "service": "cloud-cgc-mcp"
       }
     },
     {
@@ -3965,6 +3965,38 @@
       }
     },
     {
+      "table": "hosted_on",
+      "from": "service:kg_bridge",
+      "to": "vm:oci_apps",
+      "key": "service:kg_bridge->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:kg_bridge",
+      "to": "container:kg_bridge",
+      "key": "service:kg_bridge->runs_container->container:kg_bridge",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:kg_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:kg_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:kg_mcp",
+      "to": "container:kg_mcp",
+      "key": "service:kg_mcp->runs_container->container:kg_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
       "table": "runs_container",
       "from": "service:ollama",
       "to": "container:ollama",
@@ -4028,22 +4060,6 @@
       "from": "service:hickory_dns",
       "to": "container:hickory_dns",
       "key": "service:hickory_dns->runs_container->container:hickory_dns",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:claude_openai_bridge",
-      "to": "vm:oci_apps",
-      "key": "service:claude_openai_bridge->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:claude_openai_bridge",
-      "to": "container:claude_openai_bridge",
-      "key": "service:claude_openai_bridge->runs_container->container:claude_openai_bridge",
       "properties": {
         "role": "app"
       }
@@ -4281,22 +4297,6 @@
       "from": "service:c3_services_mcp",
       "to": "container:c3_services_mcp",
       "key": "service:c3_services_mcp->runs_container->container:c3_services_mcp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:cloud_cgc_mcp",
-      "to": "vm:oci_apps",
-      "key": "service:cloud_cgc_mcp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:cloud_cgc_mcp",
-      "to": "container:cloud_cgc_mcp",
-      "key": "service:cloud_cgc_mcp->runs_container->container:cloud_cgc_mcp",
       "properties": {
         "role": "app"
       }
@@ -5574,6 +5574,34 @@
     },
     {
       "table": "belongs_to_repo",
+      "from": "module:ad_agi_kg_bridge",
+      "to": "repo:cloud",
+      "key": "module:ad_agi_kg_bridge->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:ad_agi_kg_bridge",
+      "to": "service:kg_bridge",
+      "key": "module:ad_agi_kg_bridge->implements->service:kg_bridge",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:ad_agi_kg_mcp",
+      "to": "repo:cloud",
+      "key": "module:ad_agi_kg_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:ad_agi_kg_mcp",
+      "to": "service:kg_mcp",
+      "key": "module:ad_agi_kg_mcp->implements->service:kg_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
       "from": "module:ad_agi_ollama",
       "to": "repo:cloud",
       "key": "module:ad_agi_ollama->belongs_to_repo->repo:cloud",
@@ -5654,20 +5682,6 @@
       "from": "module:ba_clo_hickory_dns",
       "to": "service:hickory_dns",
       "key": "module:ba_clo_hickory_dns->implements->service:hickory_dns",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:bb_net_claude_openai_bridge",
-      "to": "repo:cloud",
-      "key": "module:bb_net_claude_openai_bridge->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:bb_net_claude_openai_bridge",
-      "to": "service:claude_openai_bridge",
-      "key": "module:bb_net_claude_openai_bridge->implements->service:claude_openai_bridge",
       "properties": {}
     },
     {
@@ -5850,20 +5864,6 @@
       "from": "module:bc_obs_c3_services_mcp",
       "to": "service:c3_services_mcp",
       "key": "module:bc_obs_c3_services_mcp->implements->service:c3_services_mcp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:bc_obs_cloud_cgc_mcp",
-      "to": "repo:cloud",
-      "key": "module:bc_obs_cloud_cgc_mcp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:bc_obs_cloud_cgc_mcp",
-      "to": "service:cloud_cgc_mcp",
-      "key": "module:bc_obs_cloud_cgc_mcp->implements->service:cloud_cgc_mcp",
       "properties": {}
     },
     {

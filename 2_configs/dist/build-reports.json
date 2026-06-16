@@ -773,6 +773,43 @@
         "path": "/fin-api/health"
       }
     },
+    "kg-bridge": {
+      "name": "kg-bridge",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "net",
+      "ports": {
+        "app": 3107
+      },
+      "health": {
+        "path": "/health"
+      }
+    },
+    "kg-mcp": {
+      "name": "kg-mcp",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "obs",
+      "ports": {
+        "app": 3105
+      },
+      "health": {
+        "path": "/mcp"
+      }
+    },
+    "kg-store": {
+      "name": "kg-store",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": false,
+      "category": "data",
+      "ports": {
+        "app": 8001
+      },
+      "health": null
+    },
     "ollama": {
       "name": "ollama",
       "vm": "gcp-t4",
@@ -856,19 +893,6 @@
         "dns": 53
       },
       "health": null
-    },
-    "claude-openai-bridge": {
-      "name": "claude-openai-bridge",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "net",
-      "ports": {
-        "app": 3107
-      },
-      "health": {
-        "path": "/health"
-      }
     },
     "wireguard-mesh": {
       "name": "wireguard-mesh",
@@ -1039,19 +1063,6 @@
         "path": "/mcp"
       }
     },
-    "cloud-cgc-mcp": {
-      "name": "cloud-cgc-mcp",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "obs",
-      "ports": {
-        "app": 3105
-      },
-      "health": {
-        "path": "/mcp"
-      }
-    },
     "cloud-spec": {
       "name": "cloud-spec",
       "vm": "oci-A1-f_0",
@@ -1212,17 +1223,6 @@
       "health": {
         "path": "/"
       }
-    },
-    "kg-graph": {
-      "name": "kg-graph",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": false,
-      "category": "data",
-      "ports": {
-        "app": 8001
-      },
-      "health": null
     },
     "postlite": {
       "name": "postlite",
@@ -1578,6 +1578,28 @@
       "dns": "fin-api.app"
     },
     {
+      "service": "kg-bridge",
+      "dns": "kg-bridge.app"
+    },
+    {
+      "service": "kg-bridge",
+      "container": "app",
+      "dns": "kg-bridge.app"
+    },
+    {
+      "service": "kg-mcp",
+      "dns": "kg-mcp.app"
+    },
+    {
+      "service": "kg-mcp",
+      "container": "app",
+      "dns": "kg-mcp.app"
+    },
+    {
+      "service": "kg-store",
+      "dns": "kg-store.app"
+    },
+    {
       "service": "ollama",
       "dns": "ollama.app"
     },
@@ -1615,15 +1637,6 @@
       "service": "hickory-dns",
       "container": "app",
       "dns": "hickory-dns.app"
-    },
-    {
-      "service": "claude-openai-bridge",
-      "dns": "claude-openai-bridge.app"
-    },
-    {
-      "service": "claude-openai-bridge",
-      "container": "app",
-      "dns": "claude-openai-bridge.app"
     },
     {
       "service": "wireguard-mesh",
@@ -1729,15 +1742,6 @@
       "dns": "c3-services-mcp.app"
     },
     {
-      "service": "cloud-cgc-mcp",
-      "dns": "cloud-cgc-mcp.app"
-    },
-    {
-      "service": "cloud-cgc-mcp",
-      "container": "app",
-      "dns": "cloud-cgc-mcp.app"
-    },
-    {
       "service": "cloud-spec",
       "dns": "c3-spec.app"
     },
@@ -1832,10 +1836,6 @@
       "dns": "gitea.app"
     },
     {
-      "service": "kg-graph",
-      "dns": "kg-graph.app"
-    },
-    {
       "service": "redis",
       "dns": "redis.app"
     },
@@ -1911,6 +1911,14 @@
       "db_user": null
     },
     {
+      "service": "kg-store",
+      "container": "app",
+      "engine": "surrealdb",
+      "port": 8001,
+      "db_name": null,
+      "db_user": null
+    },
+    {
       "service": "authelia",
       "container": "redis",
       "engine": "redis",
@@ -1925,14 +1933,6 @@
       "port": 5442,
       "db_name": "umami",
       "db_user": "umami"
-    },
-    {
-      "service": "kg-graph",
-      "container": "app",
-      "engine": "surrealdb",
-      "port": 8001,
-      "db_name": null,
-      "db_user": null
     },
     {
       "service": "redis",
@@ -1999,16 +1999,17 @@
           "vaultwarden",
           "crawlee-cloud",
           "fin-api",
+          "kg-bridge",
+          "kg-mcp",
+          "kg-store",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
-          "claude-openai-bridge",
           "wireguard-mesh",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
           "c3-services-mcp",
-          "cloud-cgc-mcp",
           "cloud-spec",
           "dagu",
           "dbgate",
@@ -2020,8 +2021,7 @@
           "cloud-builder-x",
           "backup-borg",
           "backup-bup",
-          "gitea",
-          "kg-graph"
+          "gitea"
         ]
       },
       "gcp-E2-f_0": {
@@ -2424,6 +2424,43 @@
           "path": "/fin-api/health"
         }
       },
+      "kg-bridge": {
+        "name": "kg-bridge",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "net",
+        "ports": {
+          "app": 3107
+        },
+        "health": {
+          "path": "/health"
+        }
+      },
+      "kg-mcp": {
+        "name": "kg-mcp",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "obs",
+        "ports": {
+          "app": 3105
+        },
+        "health": {
+          "path": "/mcp"
+        }
+      },
+      "kg-store": {
+        "name": "kg-store",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": false,
+        "category": "data",
+        "ports": {
+          "app": 8001
+        },
+        "health": null
+      },
       "ollama": {
         "name": "ollama",
         "vm": "gcp-t4",
@@ -2507,19 +2544,6 @@
           "dns": 53
         },
         "health": null
-      },
-      "claude-openai-bridge": {
-        "name": "claude-openai-bridge",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "net",
-        "ports": {
-          "app": 3107
-        },
-        "health": {
-          "path": "/health"
-        }
       },
       "wireguard-mesh": {
         "name": "wireguard-mesh",
@@ -2690,19 +2714,6 @@
           "path": "/mcp"
         }
       },
-      "cloud-cgc-mcp": {
-        "name": "cloud-cgc-mcp",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "obs",
-        "ports": {
-          "app": 3105
-        },
-        "health": {
-          "path": "/mcp"
-        }
-      },
       "cloud-spec": {
         "name": "cloud-spec",
         "vm": "oci-A1-f_0",
@@ -2863,17 +2874,6 @@
         "health": {
           "path": "/"
         }
-      },
-      "kg-graph": {
-        "name": "kg-graph",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": false,
-        "category": "data",
-        "ports": {
-          "app": 8001
-        },
-        "health": null
       },
       "postlite": {
         "name": "postlite",

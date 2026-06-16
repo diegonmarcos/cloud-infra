@@ -6,12 +6,12 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1440,
+    "files": 1441,
     "by_lang": {
       "nix": 417,
       "sh": 342,
       "rust": 272,
-      "ts": 314,
+      "ts": 315,
       "py": 83,
       "js": 12
     },
@@ -24,7 +24,7 @@
       "nix-module": 282,
       "compose": 64,
       "python": 81,
-      "module": 187,
+      "module": 188,
       "entrypoint": 22,
       "mcp-tool": 100,
       "file": 2,
@@ -11970,6 +11970,24 @@
       "symbols": []
     },
     {
+      "path": "a_solutions/aa-sui_mail-mcp/src/code/mcp/shared/jmap.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sendViaJmap",
+        "JmapSendMsg"
+      ],
+      "imports": [
+        "./config.js"
+      ],
+      "symbols": [
+        "authHeader(user: string, pass: string)",
+        "addrList(s?: string)",
+        "jmapPost(apiUrl: string, auth: string, methodCalls: unknown[])",
+        "sendViaJmap(account: string, msg: JmapSendMsg)"
+      ]
+    },
+    {
       "path": "a_solutions/aa-sui_mail-mcp/src/code/mcp/shared/proxy-mcp.ts",
       "lang": "ts",
       "role": "module",
@@ -12035,6 +12053,7 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "../shared/smtp.js",
+        "../shared/jmap.js",
         "../shared/imap.js",
         "../shared/config.js",
         "mailparser"
@@ -12162,6 +12181,8 @@
         "PORT",
         "MAIL_HOST",
         "MADDY_HOST",
+        "MADDY_SMTP_IP",
+        "STALWART_SMTP_IP",
         "MADDY_IMAP_PORT",
         "MADDY_SMTP_PORT",
         "STALWART_HOST",
@@ -16477,6 +16498,2405 @@
       ]
     },
     {
+      "path": "a_solutions/ad-agi_kg-bridge/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-bridge/src/code/server.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:child_process"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-bridge/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "wgIp",
+        "home",
+        "binariesImage",
+        "services",
+        "kg-bridge",
+        "image",
+        "container_name",
+        "network_mode",
+        "environment",
+        "HOME",
+        "BRIDGE_PORT",
+        "BRIDGE_BIND",
+        "BRIDGE_DEFAULT_MODEL",
+        "BRIDGE_MAX_CONCURRENCY",
+        "BRIDGE_CALL_TIMEOUT_MS",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "claude_home"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-bridge/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/config.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getRepoRoot",
+        "getCloudDataPath",
+        "getConfig",
+        "getVmSshAlias",
+        "VmConfig",
+        "ServiceConfig",
+        "InfraConfig"
+      ],
+      "imports": [
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "getConfigPath()",
+        "getRepoRoot()",
+        "getCloudDataPath(filename: string)",
+        "getConfig()",
+        "getVmSshAlias(vmId: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/context.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "buildContextSummary"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./config.js"
+      ],
+      "symbols": [
+        "estimateTokens(text: string)",
+        "buildVmTable()",
+        "buildServiceTable()",
+        "buildArchitectureSummary()",
+        "buildToolIndex()",
+        "readFileSafe(path: string)",
+        "buildContextSummary(size: \"compact\" | \"full\")"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/stdio.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "./tools/a-knowledge/specs.js",
+        "./tools/a-knowledge/configs.js",
+        "./tools/a-knowledge/docs.js",
+        "./tools/a-knowledge/inventory.js",
+        "./tools/a-knowledge/skills.js",
+        "./tools/b-code-graph-context/octocode.js",
+        "./tools/b-code-graph-context/codegraph.js",
+        "./context.js",
+        "./shared/libs/binds.js"
+      ],
+      "symbols": [
+        "createMcpServer()",
+        "startStdio()",
+        "startHttp()",
+        "main()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/reindex.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "bridge_calls()",
+        "set_provider()"
+      ],
+      "imports": [],
+      "symbols": [
+        "bridge_calls()",
+        "set_provider()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/async-exec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "execAsync",
+        "shellAsync",
+        "ExecResult"
+      ],
+      "imports": [
+        "child_process",
+        "./paths.js"
+      ],
+      "symbols": [
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
+        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/async-ssh.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshExecAsync",
+        "tcpProbeAsync",
+        "pingAsync",
+        "curlStatusAsync",
+        "curlAsync"
+      ],
+      "imports": [
+        "./async-exec.js",
+        "./config.js"
+      ],
+      "symbols": [
+        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
+        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
+        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
+        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
+        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/audit.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "audit"
+      ],
+      "imports": [
+        "./db.js"
+      ],
+      "symbols": [
+        "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/binds.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "bindHost"
+      ],
+      "imports": [
+        "../shared/libs/binds.js"
+      ],
+      "symbols": [
+        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/cache.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "cacheWrite",
+        "cacheRead",
+        "cacheList",
+        "cachePrune",
+        "startCacheCleanup"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
+        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
+        "cacheList()",
+        "cachePrune()",
+        "pruneDir(dir: string)",
+        "sanitize(s: string)",
+        "startCacheCleanup()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/cloud/aws.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "listResources",
+        "getCosts"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "awsCli(args: string[], timeout = 30_000)",
+        "getRegion()",
+        "listInstances()",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/cloud/gcp.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory",
+        "getCostsByVm"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "gcloudCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceName: string, zone: string)",
+        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()",
+        "bqQuery(sql: string, timeout = 60_000)",
+        "getCostsHistory(months: number = 6)",
+        "getCostsByVm(months: number = 6)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/cloud/oci.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "getCompartmentId()",
+        "ociCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceId: string)",
+        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
+        "getCosts()",
+        "getCostsHistory(months: number = 3)",
+        "getInstanceBasedCosts(compartmentId: string, period: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/config.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getConfig",
+        "reloadConfig",
+        "getDriftReport",
+        "getServiceFolder",
+        "getServiceDir",
+        "getVmSshAlias",
+        "resolveVmId",
+        "getServicesForVm"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./types.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "getConfig()",
+        "reloadConfig()",
+        "getDriftReport()",
+        "discoverServicesFromDisk(fileConfig: InfraConfig)",
+        "getServiceFolder(name: string)",
+        "getServiceDir(name: string)",
+        "buildAliasMap()",
+        "getVmSshAlias(vmId: string)",
+        "resolveVmId(nameOrAlias: string)",
+        "getServicesForVm(vmId: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/control.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "vmStart",
+        "vmStop",
+        "vmReset",
+        "containerStart",
+        "containerStop",
+        "containerRestart",
+        "serviceStart",
+        "serviceStop",
+        "serviceRestart",
+        "vmDrain",
+        "ControlResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./audit.js",
+        "./docker.js",
+        "./validators.js"
+      ],
+      "symbols": [
+        "ensureVmReachable(vmId: string)",
+        "vmStart(vmNameOrAlias: string)",
+        "vmStop(vmNameOrAlias: string)",
+        "vmReset(vmNameOrAlias: string)",
+        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "vmDrain(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/db.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getDb",
+        "recordHealthCheck",
+        "getHealthHistory",
+        "getUptimeReport",
+        "recordAudit",
+        "getAuditLog",
+        "recordDeploy",
+        "getDeployHistory",
+        "getAlertState",
+        "updateAlertState",
+        "pruneOldRecords",
+        "HealthRecord",
+        "HealthHistoryQuery",
+        "HealthHistoryRow",
+        "AuditQuery",
+        "AuditRow",
+        "DeployQuery",
+        "DeployRow"
+      ],
+      "imports": [
+        "better-sqlite3",
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "ensureDir(dir: string)",
+        "getDb()",
+        "initSchema(db: Database.Database)",
+        "recordHealthCheck(record: HealthRecord)",
+        "getHealthHistory(query: HealthHistoryQuery = {})",
+        "getUptimeReport(vm?: string, hours = 24)",
+        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
+        "getAuditLog(query: AuditQuery = {})",
+        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
+        "getDeployHistory(query: DeployQuery = {})",
+        "getAlertState(vm: string)",
+        "updateAlertState(vm: string, status: string, notified: boolean)",
+        "pruneOldRecords(daysToKeep = 30)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/diagnostics.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "profileContainer",
+        "profileVm",
+        "profileService",
+        "vmNetwork",
+        "vmTop",
+        "vmDiskUsage",
+        "vmJournal"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "timedCheck(name: string, fn: ()",
+        "findContainerVm(containerName: string)",
+        "profileContainer(containerName: string)",
+        "profileVm(vmNameOrAlias: string)",
+        "profileService(serviceName: string)",
+        "vmNetwork(vmNameOrAlias: string)",
+        "vmTop(vmNameOrAlias: string)",
+        "vmDiskUsage(vmNameOrAlias: string)",
+        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/discovery.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listServices",
+        "getService",
+        "probeSpec",
+        "getAllSpecs",
+        "serviceVersion",
+        "allServiceVersions",
+        "ServiceVersion",
+        "getServiceDomains",
+        "SERVICE_BASE_PATHS"
+      ],
+      "imports": [
+        "./config.js",
+        "./http.js"
+      ],
+      "symbols": [
+        "getServiceDomains()",
+        "listServices()",
+        "getService(serviceName: string)",
+        "probeSpec(serviceName: string)",
+        "getAllSpecs()",
+        "serviceVersion(serviceName: string)",
+        "allServiceVersions()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/docker.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listContainers",
+        "controlContainer",
+        "getContainerLogs",
+        "composeUp",
+        "batchContainerStatuses",
+        "computeServiceStatus",
+        "containerTop",
+        "containerDiff",
+        "containerInspectFull",
+        "containerEvents",
+        "containerPause",
+        "containerUnpause",
+        "containerExecCmd",
+        "logsSearch",
+        "logsMulti",
+        "composeUpAll",
+        "dockerSystemDf"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./audit.js",
+        "./validators.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
+        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
+        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "composeUp(\n  service: string,\n)",
+        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
+        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
+        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
+        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
+        "composeUpAll(\n  vmNameOrAlias: string,\n)",
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/exec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "exec",
+        "execAsync",
+        "ExecResult"
+      ],
+      "imports": [
+        "child_process",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveExecEnv(command: string)",
+        "exec(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)",
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/files.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getConfigFile",
+        "getContainerLog",
+        "getVmStatus",
+        "getReport",
+        "getSecretsStatus"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./config.js",
+        "./paths.js",
+        "./ssh.js",
+        "./health.js",
+        "./discovery.js",
+        "./security.js"
+      ],
+      "symbols": [
+        "redactSensitiveLines(content: string)",
+        "redactWireGuardKeys(content: string)",
+        "getConfigFile(service: string, filename = \"build.json\")",
+        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "getVmStatus(vmId: string)",
+        "getReport(reportType: string)",
+        "getSecretsStatus(service?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/health.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "healthAlive",
+        "healthDeclared",
+        "healthDeployed",
+        "healthDrift",
+        "healthStatus",
+        "checkTier1All",
+        "checkTier2All",
+        "checkTier3All",
+        "gatherVmResources",
+        "probeVm",
+        "healthEndpoints",
+        "checkUp",
+        "checkHealth",
+        "checkReach",
+        "metricsSnapshot",
+        "Tier1Result",
+        "Tier2Result",
+        "VmResources",
+        "ContainerInfo",
+        "Tier3Result",
+        "DeployedVm",
+        "DriftEntry",
+        "HealthDeclaredResult",
+        "HealthStatusResult",
+        "EndpointHealthResult",
+        "UpResult",
+        "HealthResult",
+        "ReachResult",
+        "ContainerMetrics",
+        "VmMetricsSnapshot"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "./paths.js",
+        "./types.js"
+      ],
+      "symbols": [
+        "getVmIds(vmId?: string)",
+        "parseResources(output: string)",
+        "healthAlive()",
+        "healthDeclared()",
+        "healthDeployed(vmId?: string)",
+        "healthDrift()",
+        "healthStatus(vmId?: string)",
+        "checkTier1All(vmId?: string)",
+        "checkTier2All(vmId?: string)",
+        "checkTier3All(vmId?: string)",
+        "gatherVmResources(vmId: string)",
+        "probeVm(vmId: string)",
+        "getHealthDomains()",
+        "healthEndpoints()",
+        "resolveTarget(target: string)",
+        "buildAliasMapPublic()",
+        "findContainerVm(containerName: string)",
+        "checkUp(target: string)",
+        "findContainerOnVm(vmId: string, containerName: string)",
+        "checkHealth(target: string)",
+        "resolveServiceDomain(target: string)",
+        "checkReach(target: string)",
+        "metricsSnapshot(vmFilter?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getBearerToken",
+        "c3ApiGet",
+        "c3ApiPost",
+        "httpGet",
+        "rawHttpRequest",
+        "HttpResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./paths.js",
+        "fs"
+      ],
+      "symbols": [
+        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
+        "fetchOidcToken()",
+        "getBearerToken()",
+        "c3ApiGet(endpoint: string, timeout?: number)",
+        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
+        "httpGet(url: string, timeout?: number)",
+        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/notify.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sendNotification",
+        "alertHealthDown",
+        "alertHealthRecovered",
+        "alertCertExpiring",
+        "alertDiskFull",
+        "Priority",
+        "NotifyOptions",
+        "NotifyResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js"
+      ],
+      "symbols": [
+        "resolveNtfyUrl()",
+        "sendNotification(opts: NotifyOptions)",
+        "alertHealthDown(vm: string, details: string)",
+        "alertHealthRecovered(vm: string)",
+        "alertCertExpiring(domain: string, daysLeft: number)",
+        "alertDiskFull(vm: string, percent: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/obs.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "resolve",
+        "up",
+        "upAll",
+        "upAllContainers",
+        "health",
+        "healthAll",
+        "profile",
+        "profileAllServices",
+        "profileAllContainers",
+        "Resolved",
+        "UpProbe",
+        "PerfTiming",
+        "UpResult",
+        "UpAllResult",
+        "HealthCheck",
+        "HealthResult",
+        "ProfilingStep",
+        "ProfilingEngine",
+        "ProfilingResult"
+      ],
+      "imports": [
+        "./config.js",
+        "./pool.js",
+        "./async-ssh.js",
+        "./cache.js",
+        "./async-exec.js"
+      ],
+      "symbols": [
+        "resolve(target: string)",
+        "up(target: string)",
+        "upAll()",
+        "upAllContainers()",
+        "probeUrl(resolved: Resolved)",
+        "probeVm(resolved: Resolved)",
+        "probeContainer(resolved: Resolved)",
+        "health(target: string)",
+        "healthAll()",
+        "healthCheckUrl(resolved: Resolved)",
+        "healthCheckVm(resolved: Resolved)",
+        "healthCheckContainer(\n  resolved: Resolved,\n)",
+        "profile(target: string)",
+        "profileAllServices()",
+        "profileAllContainers()",
+        "engineUrl(resolved: Resolved)",
+        "engineContainer(\n  resolved: Resolved,\n)",
+        "engineNetwork(\n  resolved: Resolved,\n)",
+        "engineVmContext(\n  resolved: Resolved,\n)",
+        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
+        "extractAssetUrls(html: string, baseUrl: string)",
+        "resolveUrl(href: string, base: string)",
+        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/ops.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "handlePushEvent",
+        "daguHeaders",
+        "PushEvent",
+        "PushEventResult",
+        "DAGU_API",
+        "DAGU_API_PATH"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./audit.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveDaguApi()",
+        "resolveDaguApiPath()",
+        "handlePushEvent(event: PushEvent)",
+        "extractModifiedFiles(event: PushEvent)",
+        "daguHeaders()",
+        "triggerDag(name: string)",
+        "triggerDagViaSsh(name: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/paths.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "syncRepos",
+        "HOME",
+        "GIT_BASE",
+        "IS_ANDROID",
+        "IS_SERVER",
+        "IS_CLIENT",
+        "SSH_IDENTITY",
+        "SOLUTIONS_DIR",
+        "CLOUD_DATA_DIR",
+        "CLOUD_DATA_REPO",
+        "getConsolidatedPath",
+        "getConfigsPath",
+        "getDepsPath",
+        "getOwnBuildPath",
+        "CONFIGS_PATH",
+        "DEPS_PATH",
+        "getTopologySlice",
+        "getConfigsSlice",
+        "getDepsSlice",
+        "FRONT_DEPS_PATH",
+        "BUILD_SCRIPT",
+        "SSH_CONFIG_PATH",
+        "SOPS_AGE_KEY_FILE",
+        "AUTHELIA_TOKEN_PATH",
+        "C3_API_MESH",
+        "C3_API_PUBLIC",
+        "FRONT_DIR",
+        "FRONT_BUILD_SCRIPT",
+        "REPOS",
+        "resolveConfigPath"
+      ],
+      "imports": [
+        "fs",
+        "child_process",
+        "os",
+        "path"
+      ],
+      "symbols": [
+        "resolveCloudDataPath(filename: string)",
+        "resolveConfigPath()",
+        "readConsolidated()",
+        "resolveC3Api()",
+        "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/pool.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "Pool",
+        "sshPool",
+        "httpPool"
+      ],
+      "imports": [],
+      "symbols": [
+        "class Pool"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/schemas.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "VmConfigSchema",
+        "ServiceCategorySchema",
+        "ServiceConfigSchema",
+        "InfraConfigSchema",
+        "Tier1ResultSchema",
+        "Tier2ResultSchema",
+        "VmResourcesSchema",
+        "ContainerStatusSchema",
+        "Tier3ResultSchema",
+        "HealthDeclaredSchema",
+        "DeployedContainerSchema",
+        "DriftEntrySchema",
+        "DiagnosticCheckSchema",
+        "ProfilingResponseSchema",
+        "CloudInstanceSchema",
+        "CloudResourceSchema",
+        "CloudCostSchema",
+        "TopologyVmSchema",
+        "TopologyNetworkSchema",
+        "TopologySchema",
+        "TestResultSchema",
+        "TestSuiteResultSchema",
+        "TestSuiteNameSchema",
+        "FileRetrievalSchema",
+        "ReportTypeSchema",
+        "ServiceInfoSchema",
+        "SecurityFindingSchema",
+        "SecurityScanResultSchema",
+        "NotifyOptionsSchema",
+        "NotifyResultSchema"
+      ],
+      "imports": [
+        "zod"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/security.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "securityScan",
+        "securityDocker",
+        "securitySshKeys",
+        "securityTokens",
+        "SecurityFinding",
+        "SecurityScanResult",
+        "DockerSecurityInfo",
+        "SshKeysAudit",
+        "TokenStatus"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "fs",
+        "./paths.js"
+      ],
+      "symbols": [
+        "summarize(findings: SecurityFinding[])",
+        "securityScan(vmFilter?: string)",
+        "securityDocker(vmNameOrAlias: string)",
+        "securitySshKeys(vmNameOrAlias: string)",
+        "securityTokens()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/ssh.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshExec",
+        "sshExecAsync",
+        "checkVmReachable"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js",
+        "./audit.js"
+      ],
+      "symbols": [
+        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "checkVmReachable(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/tests.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "testWgPing",
+        "testSshSession",
+        "testDnsResolve",
+        "testTlsCert",
+        "testHttpRoute",
+        "testContainerHealth",
+        "testPortOpen",
+        "runTestSuite",
+        "TestResult",
+        "TestSuiteResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./docker.js",
+        "./discovery.js",
+        "./paths.js",
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
+        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
+        "getVmIds(target?: string)",
+        "getServicesWithDomains()",
+        "testWgPing(vmId: string)",
+        "testSshSession(vmId: string)",
+        "testDnsResolve(domain: string)",
+        "testTlsCert(domain: string)",
+        "testHttpRoute(domain: string)",
+        "testContainerHealth(vmId: string, containerName: string)",
+        "testPortOpen(ip: string, port: number)",
+        "runConnectivitySuite(target?: string)",
+        "runDnsSuite()",
+        "runTlsSuite()",
+        "runRoutesSuite()",
+        "runContainersSuite(target?: string)",
+        "runWireguardSuite()",
+        "runAuthSuite()",
+        "runSecretsSuite()",
+        "runComposeSuite()",
+        "runVolumesSuite(target?: string)",
+        "runResourcesSuite(target?: string)",
+        "runLatencySuite()",
+        "runImagesSuite(target?: string)",
+        "runCrossVmSuite()",
+        "runTestSuite(suite: SuiteName, target?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/types.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "VmConfig",
+        "ServiceConfig",
+        "InfraConfig"
+      ],
+      "imports": [],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/shared/libs/validators.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validateContainerName",
+        "validateSince",
+        "validatePathComponent"
+      ],
+      "imports": [],
+      "symbols": [
+        "validateContainerName(name: string)",
+        "validateSince(since: string)",
+        "validatePathComponent(path: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/a-knowledge/configs.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerConfigTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "fs",
+        "path",
+        "../../config.js"
+      ],
+      "symbols": [
+        "readJsonSafe(path: string)",
+        "readConsolidated()",
+        "registerConfigTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/a-knowledge/docs.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerDocsTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "fs",
+        "path",
+        "../../config.js",
+        "../../context.js"
+      ],
+      "symbols": [
+        "getCloudSpecDir()",
+        "registerDocsTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/a-knowledge/inventory.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerInventoryTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "fs",
+        "path",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "../../shared/libs/exec.js",
+        "../../shared/libs/discovery.js",
+        "../../shared/libs/http.js",
+        "../../shared/libs/files.js"
+      ],
+      "symbols": [
+        "jsonText(label: string, data: unknown)",
+        "plainText(text: string)",
+        "validateRepoPath(repo: string, path: string)",
+        "findProjects()",
+        "registerInventoryTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/a-knowledge/skills.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerSkillTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../config.js"
+      ],
+      "symbols": [
+        "registerSkillTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/a-knowledge/specs.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerSpecTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "fs",
+        "path",
+        "../../config.js"
+      ],
+      "symbols": [
+        "getSolutionsDir()",
+        "registerSpecTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/b-code-graph-context/codegraph.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerCodegraphTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "listJson(dir: string, prefix: string)",
+        "addNode(g: Graph, n: Omit<GNode, \"layer\">, layer: string)",
+        "addEdge(g: Graph, e: Omit<GEdge, \"layer\">, layer: string)",
+        "loadExplicit(g: Graph, path: string, layer: string)",
+        "loadSignatures(g: Graph, path: string)",
+        "loadGraph()",
+        "resolveTarget(g: Graph, t: string)",
+        "registerCodegraphTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/b-code-graph-context/octocode.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerOctocodeTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "node:child_process",
+        "node:util"
+      ],
+      "symbols": [
+        "runOctocode(args: string[], cwd?: string)",
+        "registerOctocodeTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/async-exec.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "execAsync",
+        "shellAsync",
+        "ExecResult"
+      ],
+      "imports": [
+        "child_process",
+        "./paths.js"
+      ],
+      "symbols": [
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
+        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/async-ssh.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "sshExecAsync",
+        "tcpProbeAsync",
+        "pingAsync",
+        "curlStatusAsync",
+        "curlAsync"
+      ],
+      "imports": [
+        "./async-exec.js",
+        "./config.js"
+      ],
+      "symbols": [
+        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
+        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
+        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
+        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
+        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/audit.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "audit"
+      ],
+      "imports": [
+        "./db.js"
+      ],
+      "symbols": [
+        "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/binds.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "bindHost"
+      ],
+      "imports": [
+        "../shared/libs/binds.js"
+      ],
+      "symbols": [
+        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/cache.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "cacheWrite",
+        "cacheRead",
+        "cacheList",
+        "cachePrune",
+        "startCacheCleanup"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
+        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
+        "cacheList()",
+        "cachePrune()",
+        "pruneDir(dir: string)",
+        "sanitize(s: string)",
+        "startCacheCleanup()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/cloud/aws.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "listInstances",
+        "listResources",
+        "getCosts"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "awsCli(args: string[], timeout = 30_000)",
+        "getRegion()",
+        "listInstances()",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/cloud/gcp.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory",
+        "getCostsByVm"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "gcloudCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceName: string, zone: string)",
+        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()",
+        "bqQuery(sql: string, timeout = 60_000)",
+        "getCostsHistory(months: number = 6)",
+        "getCostsByVm(months: number = 6)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/cloud/oci.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "getCompartmentId()",
+        "ociCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceId: string)",
+        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
+        "getCosts()",
+        "getCostsHistory(months: number = 3)",
+        "getInstanceBasedCosts(compartmentId: string, period: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/config.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "getConfig",
+        "reloadConfig",
+        "getDriftReport",
+        "getServiceFolder",
+        "getServiceDir",
+        "getVmSshAlias",
+        "resolveVmId",
+        "getServicesForVm"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./types.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "getConfig()",
+        "reloadConfig()",
+        "getDriftReport()",
+        "discoverServicesFromDisk(fileConfig: InfraConfig)",
+        "getServiceFolder(name: string)",
+        "getServiceDir(name: string)",
+        "buildAliasMap()",
+        "getVmSshAlias(vmId: string)",
+        "resolveVmId(nameOrAlias: string)",
+        "getServicesForVm(vmId: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/control.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "vmStart",
+        "vmStop",
+        "vmReset",
+        "containerStart",
+        "containerStop",
+        "containerRestart",
+        "serviceStart",
+        "serviceStop",
+        "serviceRestart",
+        "vmDrain",
+        "ControlResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./audit.js",
+        "./docker.js",
+        "./validators.js"
+      ],
+      "symbols": [
+        "ensureVmReachable(vmId: string)",
+        "vmStart(vmNameOrAlias: string)",
+        "vmStop(vmNameOrAlias: string)",
+        "vmReset(vmNameOrAlias: string)",
+        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "vmDrain(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/db.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "getDb",
+        "recordHealthCheck",
+        "getHealthHistory",
+        "getUptimeReport",
+        "recordAudit",
+        "getAuditLog",
+        "recordDeploy",
+        "getDeployHistory",
+        "getAlertState",
+        "updateAlertState",
+        "pruneOldRecords",
+        "HealthRecord",
+        "HealthHistoryQuery",
+        "HealthHistoryRow",
+        "AuditQuery",
+        "AuditRow",
+        "DeployQuery",
+        "DeployRow"
+      ],
+      "imports": [
+        "better-sqlite3",
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "ensureDir(dir: string)",
+        "getDb()",
+        "initSchema(db: Database.Database)",
+        "recordHealthCheck(record: HealthRecord)",
+        "getHealthHistory(query: HealthHistoryQuery = {})",
+        "getUptimeReport(vm?: string, hours = 24)",
+        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
+        "getAuditLog(query: AuditQuery = {})",
+        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
+        "getDeployHistory(query: DeployQuery = {})",
+        "getAlertState(vm: string)",
+        "updateAlertState(vm: string, status: string, notified: boolean)",
+        "pruneOldRecords(daysToKeep = 30)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/diagnostics.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "profileContainer",
+        "profileVm",
+        "profileService",
+        "vmNetwork",
+        "vmTop",
+        "vmDiskUsage",
+        "vmJournal"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "timedCheck(name: string, fn: ()",
+        "findContainerVm(containerName: string)",
+        "profileContainer(containerName: string)",
+        "profileVm(vmNameOrAlias: string)",
+        "profileService(serviceName: string)",
+        "vmNetwork(vmNameOrAlias: string)",
+        "vmTop(vmNameOrAlias: string)",
+        "vmDiskUsage(vmNameOrAlias: string)",
+        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/discovery.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "listServices",
+        "getService",
+        "probeSpec",
+        "getAllSpecs",
+        "serviceVersion",
+        "allServiceVersions",
+        "ServiceVersion",
+        "getServiceDomains",
+        "SERVICE_BASE_PATHS"
+      ],
+      "imports": [
+        "./config.js",
+        "./http.js"
+      ],
+      "symbols": [
+        "getServiceDomains()",
+        "listServices()",
+        "getService(serviceName: string)",
+        "probeSpec(serviceName: string)",
+        "getAllSpecs()",
+        "serviceVersion(serviceName: string)",
+        "allServiceVersions()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/docker.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "listContainers",
+        "controlContainer",
+        "getContainerLogs",
+        "composeUp",
+        "batchContainerStatuses",
+        "computeServiceStatus",
+        "containerTop",
+        "containerDiff",
+        "containerInspectFull",
+        "containerEvents",
+        "containerPause",
+        "containerUnpause",
+        "containerExecCmd",
+        "logsSearch",
+        "logsMulti",
+        "composeUpAll",
+        "dockerSystemDf"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./audit.js",
+        "./validators.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
+        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
+        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "composeUp(\n  service: string,\n)",
+        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
+        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
+        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
+        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
+        "composeUpAll(\n  vmNameOrAlias: string,\n)",
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/exec.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "exec",
+        "execAsync",
+        "ExecResult"
+      ],
+      "imports": [
+        "child_process",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveExecEnv(command: string)",
+        "exec(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)",
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/files.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "getConfigFile",
+        "getContainerLog",
+        "getVmStatus",
+        "getReport",
+        "getSecretsStatus"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./config.js",
+        "./paths.js",
+        "./ssh.js",
+        "./health.js",
+        "./discovery.js",
+        "./security.js"
+      ],
+      "symbols": [
+        "redactSensitiveLines(content: string)",
+        "redactWireGuardKeys(content: string)",
+        "getConfigFile(service: string, filename = \"build.json\")",
+        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "getVmStatus(vmId: string)",
+        "getReport(reportType: string)",
+        "getSecretsStatus(service?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/health.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "healthAlive",
+        "healthDeclared",
+        "healthDeployed",
+        "healthDrift",
+        "healthStatus",
+        "checkTier1All",
+        "checkTier2All",
+        "checkTier3All",
+        "gatherVmResources",
+        "probeVm",
+        "healthEndpoints",
+        "checkUp",
+        "checkHealth",
+        "checkReach",
+        "metricsSnapshot",
+        "Tier1Result",
+        "Tier2Result",
+        "VmResources",
+        "ContainerInfo",
+        "Tier3Result",
+        "DeployedVm",
+        "DriftEntry",
+        "HealthDeclaredResult",
+        "HealthStatusResult",
+        "EndpointHealthResult",
+        "UpResult",
+        "HealthResult",
+        "ReachResult",
+        "ContainerMetrics",
+        "VmMetricsSnapshot"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "./paths.js",
+        "./types.js"
+      ],
+      "symbols": [
+        "getVmIds(vmId?: string)",
+        "parseResources(output: string)",
+        "healthAlive()",
+        "healthDeclared()",
+        "healthDeployed(vmId?: string)",
+        "healthDrift()",
+        "healthStatus(vmId?: string)",
+        "checkTier1All(vmId?: string)",
+        "checkTier2All(vmId?: string)",
+        "checkTier3All(vmId?: string)",
+        "gatherVmResources(vmId: string)",
+        "probeVm(vmId: string)",
+        "getHealthDomains()",
+        "healthEndpoints()",
+        "resolveTarget(target: string)",
+        "buildAliasMapPublic()",
+        "findContainerVm(containerName: string)",
+        "checkUp(target: string)",
+        "findContainerOnVm(vmId: string, containerName: string)",
+        "checkHealth(target: string)",
+        "resolveServiceDomain(target: string)",
+        "checkReach(target: string)",
+        "metricsSnapshot(vmFilter?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/http.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "getBearerToken",
+        "c3ApiGet",
+        "c3ApiPost",
+        "httpGet",
+        "rawHttpRequest",
+        "HttpResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./paths.js",
+        "fs"
+      ],
+      "symbols": [
+        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
+        "fetchOidcToken()",
+        "getBearerToken()",
+        "c3ApiGet(endpoint: string, timeout?: number)",
+        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
+        "httpGet(url: string, timeout?: number)",
+        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/notify.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "sendNotification",
+        "alertHealthDown",
+        "alertHealthRecovered",
+        "alertCertExpiring",
+        "alertDiskFull",
+        "Priority",
+        "NotifyOptions",
+        "NotifyResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js"
+      ],
+      "symbols": [
+        "resolveNtfyUrl()",
+        "sendNotification(opts: NotifyOptions)",
+        "alertHealthDown(vm: string, details: string)",
+        "alertHealthRecovered(vm: string)",
+        "alertCertExpiring(domain: string, daysLeft: number)",
+        "alertDiskFull(vm: string, percent: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/obs.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "resolve",
+        "up",
+        "upAll",
+        "upAllContainers",
+        "health",
+        "healthAll",
+        "profile",
+        "profileAllServices",
+        "profileAllContainers",
+        "Resolved",
+        "UpProbe",
+        "PerfTiming",
+        "UpResult",
+        "UpAllResult",
+        "HealthCheck",
+        "HealthResult",
+        "ProfilingStep",
+        "ProfilingEngine",
+        "ProfilingResult"
+      ],
+      "imports": [
+        "./config.js",
+        "./pool.js",
+        "./async-ssh.js",
+        "./cache.js",
+        "./async-exec.js"
+      ],
+      "symbols": [
+        "resolve(target: string)",
+        "up(target: string)",
+        "upAll()",
+        "upAllContainers()",
+        "probeUrl(resolved: Resolved)",
+        "probeVm(resolved: Resolved)",
+        "probeContainer(resolved: Resolved)",
+        "health(target: string)",
+        "healthAll()",
+        "healthCheckUrl(resolved: Resolved)",
+        "healthCheckVm(resolved: Resolved)",
+        "healthCheckContainer(\n  resolved: Resolved,\n)",
+        "profile(target: string)",
+        "profileAllServices()",
+        "profileAllContainers()",
+        "engineUrl(resolved: Resolved)",
+        "engineContainer(\n  resolved: Resolved,\n)",
+        "engineNetwork(\n  resolved: Resolved,\n)",
+        "engineVmContext(\n  resolved: Resolved,\n)",
+        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
+        "extractAssetUrls(html: string, baseUrl: string)",
+        "resolveUrl(href: string, base: string)",
+        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/ops.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "handlePushEvent",
+        "daguHeaders",
+        "PushEvent",
+        "PushEventResult",
+        "DAGU_API",
+        "DAGU_API_PATH"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./audit.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveDaguApi()",
+        "resolveDaguApiPath()",
+        "handlePushEvent(event: PushEvent)",
+        "extractModifiedFiles(event: PushEvent)",
+        "daguHeaders()",
+        "triggerDag(name: string)",
+        "triggerDagViaSsh(name: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/paths.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "syncRepos",
+        "HOME",
+        "GIT_BASE",
+        "IS_ANDROID",
+        "IS_SERVER",
+        "IS_CLIENT",
+        "SSH_IDENTITY",
+        "SOLUTIONS_DIR",
+        "CLOUD_DATA_DIR",
+        "CLOUD_DATA_REPO",
+        "getConsolidatedPath",
+        "getConfigsPath",
+        "getDepsPath",
+        "getOwnBuildPath",
+        "CONFIGS_PATH",
+        "DEPS_PATH",
+        "getTopologySlice",
+        "getConfigsSlice",
+        "getDepsSlice",
+        "FRONT_DEPS_PATH",
+        "BUILD_SCRIPT",
+        "SSH_CONFIG_PATH",
+        "SOPS_AGE_KEY_FILE",
+        "AUTHELIA_TOKEN_PATH",
+        "C3_API_MESH",
+        "C3_API_PUBLIC",
+        "FRONT_DIR",
+        "FRONT_BUILD_SCRIPT",
+        "REPOS",
+        "resolveConfigPath"
+      ],
+      "imports": [
+        "fs",
+        "child_process",
+        "os",
+        "path"
+      ],
+      "symbols": [
+        "resolveCloudDataPath(filename: string)",
+        "resolveConfigPath()",
+        "readConsolidated()",
+        "resolveC3Api()",
+        "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/pool.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "Pool",
+        "sshPool",
+        "httpPool"
+      ],
+      "imports": [],
+      "symbols": [
+        "class Pool"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/schemas.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "VmConfigSchema",
+        "ServiceCategorySchema",
+        "ServiceConfigSchema",
+        "InfraConfigSchema",
+        "Tier1ResultSchema",
+        "Tier2ResultSchema",
+        "VmResourcesSchema",
+        "ContainerStatusSchema",
+        "Tier3ResultSchema",
+        "HealthDeclaredSchema",
+        "DeployedContainerSchema",
+        "DriftEntrySchema",
+        "DiagnosticCheckSchema",
+        "ProfilingResponseSchema",
+        "CloudInstanceSchema",
+        "CloudResourceSchema",
+        "CloudCostSchema",
+        "TopologyVmSchema",
+        "TopologyNetworkSchema",
+        "TopologySchema",
+        "TestResultSchema",
+        "TestSuiteResultSchema",
+        "TestSuiteNameSchema",
+        "FileRetrievalSchema",
+        "ReportTypeSchema",
+        "ServiceInfoSchema",
+        "SecurityFindingSchema",
+        "SecurityScanResultSchema",
+        "NotifyOptionsSchema",
+        "NotifyResultSchema"
+      ],
+      "imports": [
+        "zod"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/security.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "securityScan",
+        "securityDocker",
+        "securitySshKeys",
+        "securityTokens",
+        "SecurityFinding",
+        "SecurityScanResult",
+        "DockerSecurityInfo",
+        "SshKeysAudit",
+        "TokenStatus"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "fs",
+        "./paths.js"
+      ],
+      "symbols": [
+        "summarize(findings: SecurityFinding[])",
+        "securityScan(vmFilter?: string)",
+        "securityDocker(vmNameOrAlias: string)",
+        "securitySshKeys(vmNameOrAlias: string)",
+        "securityTokens()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/ssh.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "sshExec",
+        "sshExecAsync",
+        "checkVmReachable"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js",
+        "./audit.js"
+      ],
+      "symbols": [
+        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "checkVmReachable(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/tests.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "testWgPing",
+        "testSshSession",
+        "testDnsResolve",
+        "testTlsCert",
+        "testHttpRoute",
+        "testContainerHealth",
+        "testPortOpen",
+        "runTestSuite",
+        "TestResult",
+        "TestSuiteResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./docker.js",
+        "./discovery.js",
+        "./paths.js",
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
+        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
+        "getVmIds(target?: string)",
+        "getServicesWithDomains()",
+        "testWgPing(vmId: string)",
+        "testSshSession(vmId: string)",
+        "testDnsResolve(domain: string)",
+        "testTlsCert(domain: string)",
+        "testHttpRoute(domain: string)",
+        "testContainerHealth(vmId: string, containerName: string)",
+        "testPortOpen(ip: string, port: number)",
+        "runConnectivitySuite(target?: string)",
+        "runDnsSuite()",
+        "runTlsSuite()",
+        "runRoutesSuite()",
+        "runContainersSuite(target?: string)",
+        "runWireguardSuite()",
+        "runAuthSuite()",
+        "runSecretsSuite()",
+        "runComposeSuite()",
+        "runVolumesSuite(target?: string)",
+        "runResourcesSuite(target?: string)",
+        "runLatencySuite()",
+        "runImagesSuite(target?: string)",
+        "runCrossVmSuite()",
+        "runTestSuite(suite: SuiteName, target?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/types.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "VmConfig",
+        "ServiceConfig",
+        "InfraConfig"
+      ],
+      "imports": [],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/code/tools/shared/libs/validators.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "validateContainerName",
+        "validateSince",
+        "validatePathComponent"
+      ],
+      "imports": [],
+      "symbols": [
+        "validateContainerName(name: string)",
+        "validateSince(since: string)",
+        "validatePathComponent(path: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "app",
+        "vmIp",
+        "binariesImage",
+        "oct",
+        "octocodeJob",
+        "image",
+        "network_mode",
+        "user",
+        "command",
+        "restart",
+        "environment",
+        "HOME",
+        "OCTOCODE_HOME",
+        "OPENAI_API_URL",
+        "OPENAI_API_KEY",
+        "OLLAMA_API_URL",
+        "OLLAMA_API_KEY",
+        "OCTOCODE_LLM_MODELS",
+        "BRIDGE_HEALTH_URL",
+        "OCTOCODE_REPOS",
+        "OCTOCODE_REPOS_ROOT",
+        "OCTOCODE_PULL",
+        "volumes",
+        "services",
+        "kg-mcp",
+        "container_name",
+        "MCP_TRANSPORT",
+        "MCP_HTTP_PORT",
+        "MCP_HTTP_HOST",
+        "CONFIG_PATH",
+        "GIT_ROOT",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "kg-mcp-reindex",
+        "profiles"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "octocode",
+        "codegraph)",
+        "own",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-store/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-store/scripts/seed_from_config.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "_resolve_topology()",
+        "log()",
+        "surreal_query()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_resolve_topology()",
+        "log()",
+        "surreal_query()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-store/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "port",
+        "binariesImage",
+        "services",
+        "surrealdb",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "command",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_kg-store/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "wrap",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "kgSchema",
+        "embedder",
+        "vectorIndexesDdl",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "name",
+        "vars",
+        "EMBEDDER_MODEL",
+        "EMBEDDER_DIM",
+        "EMBEDDER_ENABLED",
+        "VECTOR_INDEXES_DDL",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
       "path": "a_solutions/ad-agi_ollama-arm/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -17509,118 +19929,6 @@
         "default",
         "srcDir",
         "composeSpec",
-        "title"
-      ]
-    },
-    {
-      "path": "a_solutions/bb-net_claude-openai-bridge/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/bb-net_claude-openai-bridge/src/code/server.mjs",
-      "lang": "js",
-      "role": "file",
-      "exports": [],
-      "imports": [
-        "node:http",
-        "node:child_process"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/bb-net_claude-openai-bridge/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container"
-      ],
-      "imports": [],
-      "symbols": [
-        "app",
-        "svc",
-        "wgIp",
-        "home",
-        "binariesImage",
-        "services",
-        "claude-openai-bridge",
-        "image",
-        "container_name",
-        "network_mode",
-        "environment",
-        "HOME",
-        "BRIDGE_PORT",
-        "BRIDGE_BIND",
-        "BRIDGE_DEFAULT_MODEL",
-        "BRIDGE_MAX_CONCURRENCY",
-        "BRIDGE_CALL_TIMEOUT_MS",
-        "volumes",
-        "healthcheck",
-        "test",
-        "interval",
-        "timeout",
-        "retries",
-        "start_period",
-        "claude_home"
-      ]
-    },
-    {
-      "path": "a_solutions/bb-net_claude-openai-bridge/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "nb",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "nativeBuild",
-        "cmd",
-        "binary",
-        "baseImage",
-        "apt",
         "title"
       ]
     },
@@ -22986,2180 +25294,6 @@
       ]
     },
     {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/config.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getRepoRoot",
-        "getCloudDataPath",
-        "getConfig",
-        "getVmSshAlias",
-        "VmConfig",
-        "ServiceConfig",
-        "InfraConfig"
-      ],
-      "imports": [
-        "fs",
-        "path"
-      ],
-      "symbols": [
-        "getConfigPath()",
-        "getRepoRoot()",
-        "getCloudDataPath(filename: string)",
-        "getConfig()",
-        "getVmSshAlias(vmId: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/context.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "buildContextSummary"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./config.js"
-      ],
-      "symbols": [
-        "estimateTokens(text: string)",
-        "buildVmTable()",
-        "buildServiceTable()",
-        "buildArchitectureSummary()",
-        "buildToolIndex()",
-        "readFileSafe(path: string)",
-        "buildContextSummary(size: \"compact\" | \"full\")"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/index.ts",
-      "lang": "ts",
-      "role": "entrypoint",
-      "exports": [],
-      "imports": [
-        "node:http",
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/stdio.js",
-        "@modelcontextprotocol/sdk/server/streamableHttp.js",
-        "./tools/a-knowledge/specs.js",
-        "./tools/a-knowledge/configs.js",
-        "./tools/a-knowledge/docs.js",
-        "./tools/a-knowledge/inventory.js",
-        "./tools/a-knowledge/skills.js",
-        "./tools/b-code-graph-context/octocode.js",
-        "./tools/b-code-graph-context/codegraph.js",
-        "./context.js",
-        "./shared/libs/binds.js"
-      ],
-      "symbols": [
-        "createMcpServer()",
-        "startStdio()",
-        "startHttp()",
-        "main()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/reindex.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "bridge_calls()",
-        "set_provider()"
-      ],
-      "imports": [],
-      "symbols": [
-        "bridge_calls()",
-        "set_provider()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/async-exec.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "execAsync",
-        "shellAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
-        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/async-ssh.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sshExecAsync",
-        "tcpProbeAsync",
-        "pingAsync",
-        "curlStatusAsync",
-        "curlAsync"
-      ],
-      "imports": [
-        "./async-exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
-        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
-        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
-        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
-        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/audit.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "audit"
-      ],
-      "imports": [
-        "./db.js"
-      ],
-      "symbols": [
-        "audit(tool: string, target: string, result: string, source = \"mcp\")"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/binds.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "bindHost"
-      ],
-      "imports": [
-        "../shared/libs/binds.js"
-      ],
-      "symbols": [
-        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/cache.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "cacheWrite",
-        "cacheRead",
-        "cacheList",
-        "cachePrune",
-        "startCacheCleanup"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
-        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
-        "cacheList()",
-        "cachePrune()",
-        "pruneDir(dir: string)",
-        "sanitize(s: string)",
-        "startCacheCleanup()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/cloud/aws.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "listResources",
-        "getCosts"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "awsCli(args: string[], timeout = 30_000)",
-        "getRegion()",
-        "listInstances()",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/cloud/gcp.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory",
-        "getCostsByVm"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "gcloudCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceName: string, zone: string)",
-        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()",
-        "bqQuery(sql: string, timeout = 60_000)",
-        "getCostsHistory(months: number = 6)",
-        "getCostsByVm(months: number = 6)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/cloud/oci.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory"
-      ],
-      "imports": [
-        "node:fs",
-        "node:path",
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "getCompartmentId()",
-        "ociCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceId: string)",
-        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
-        "getCosts()",
-        "getCostsHistory(months: number = 3)",
-        "getInstanceBasedCosts(compartmentId: string, period: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/config.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getConfig",
-        "reloadConfig",
-        "getDriftReport",
-        "getServiceFolder",
-        "getServiceDir",
-        "getVmSshAlias",
-        "resolveVmId",
-        "getServicesForVm"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./types.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "getConfig()",
-        "reloadConfig()",
-        "getDriftReport()",
-        "discoverServicesFromDisk(fileConfig: InfraConfig)",
-        "getServiceFolder(name: string)",
-        "getServiceDir(name: string)",
-        "buildAliasMap()",
-        "getVmSshAlias(vmId: string)",
-        "resolveVmId(nameOrAlias: string)",
-        "getServicesForVm(vmId: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/control.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "vmStart",
-        "vmStop",
-        "vmReset",
-        "containerStart",
-        "containerStop",
-        "containerRestart",
-        "serviceStart",
-        "serviceStop",
-        "serviceRestart",
-        "vmDrain",
-        "ControlResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./audit.js",
-        "./docker.js",
-        "./validators.js"
-      ],
-      "symbols": [
-        "ensureVmReachable(vmId: string)",
-        "vmStart(vmNameOrAlias: string)",
-        "vmStop(vmNameOrAlias: string)",
-        "vmReset(vmNameOrAlias: string)",
-        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "vmDrain(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/db.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getDb",
-        "recordHealthCheck",
-        "getHealthHistory",
-        "getUptimeReport",
-        "recordAudit",
-        "getAuditLog",
-        "recordDeploy",
-        "getDeployHistory",
-        "getAlertState",
-        "updateAlertState",
-        "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
-      ],
-      "imports": [
-        "better-sqlite3",
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "ensureDir(dir: string)",
-        "getDb()",
-        "initSchema(db: Database.Database)",
-        "recordHealthCheck(record: HealthRecord)",
-        "getHealthHistory(query: HealthHistoryQuery = {})",
-        "getUptimeReport(vm?: string, hours = 24)",
-        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
-        "getAuditLog(query: AuditQuery = {})",
-        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
-        "getDeployHistory(query: DeployQuery = {})",
-        "getAlertState(vm: string)",
-        "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/diagnostics.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "profileContainer",
-        "profileVm",
-        "profileService",
-        "vmNetwork",
-        "vmTop",
-        "vmDiskUsage",
-        "vmJournal"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "timedCheck(name: string, fn: ()",
-        "findContainerVm(containerName: string)",
-        "profileContainer(containerName: string)",
-        "profileVm(vmNameOrAlias: string)",
-        "profileService(serviceName: string)",
-        "vmNetwork(vmNameOrAlias: string)",
-        "vmTop(vmNameOrAlias: string)",
-        "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/discovery.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listServices",
-        "getService",
-        "probeSpec",
-        "getAllSpecs",
-        "serviceVersion",
-        "allServiceVersions",
-        "ServiceVersion",
-        "getServiceDomains",
-        "SERVICE_BASE_PATHS"
-      ],
-      "imports": [
-        "./config.js",
-        "./http.js"
-      ],
-      "symbols": [
-        "getServiceDomains()",
-        "listServices()",
-        "getService(serviceName: string)",
-        "probeSpec(serviceName: string)",
-        "getAllSpecs()",
-        "serviceVersion(serviceName: string)",
-        "allServiceVersions()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/docker.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listContainers",
-        "controlContainer",
-        "getContainerLogs",
-        "composeUp",
-        "batchContainerStatuses",
-        "computeServiceStatus",
-        "containerTop",
-        "containerDiff",
-        "containerInspectFull",
-        "containerEvents",
-        "containerPause",
-        "containerUnpause",
-        "containerExecCmd",
-        "logsSearch",
-        "logsMulti",
-        "composeUpAll",
-        "dockerSystemDf"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./audit.js",
-        "./validators.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
-        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
-        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "composeUp(\n  service: string,\n)",
-        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
-        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
-        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
-        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
-        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
-        "composeUpAll(\n  vmNameOrAlias: string,\n)",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/exec.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "exec",
-        "execAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveExecEnv(command: string)",
-        "exec(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)",
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/files.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getConfigFile",
-        "getContainerLog",
-        "getVmStatus",
-        "getReport",
-        "getSecretsStatus"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./config.js",
-        "./paths.js",
-        "./ssh.js",
-        "./health.js",
-        "./discovery.js",
-        "./security.js"
-      ],
-      "symbols": [
-        "redactSensitiveLines(content: string)",
-        "redactWireGuardKeys(content: string)",
-        "getConfigFile(service: string, filename = \"build.json\")",
-        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "getVmStatus(vmId: string)",
-        "getReport(reportType: string)",
-        "getSecretsStatus(service?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/health.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "healthAlive",
-        "healthDeclared",
-        "healthDeployed",
-        "healthDrift",
-        "healthStatus",
-        "checkTier1All",
-        "checkTier2All",
-        "checkTier3All",
-        "gatherVmResources",
-        "probeVm",
-        "healthEndpoints",
-        "checkUp",
-        "checkHealth",
-        "checkReach",
-        "metricsSnapshot",
-        "Tier1Result",
-        "Tier2Result",
-        "VmResources",
-        "ContainerInfo",
-        "Tier3Result",
-        "DeployedVm",
-        "DriftEntry",
-        "HealthDeclaredResult",
-        "HealthStatusResult",
-        "EndpointHealthResult",
-        "UpResult",
-        "HealthResult",
-        "ReachResult",
-        "ContainerMetrics",
-        "VmMetricsSnapshot"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "./paths.js",
-        "./types.js"
-      ],
-      "symbols": [
-        "getVmIds(vmId?: string)",
-        "parseResources(output: string)",
-        "healthAlive()",
-        "healthDeclared()",
-        "healthDeployed(vmId?: string)",
-        "healthDrift()",
-        "healthStatus(vmId?: string)",
-        "checkTier1All(vmId?: string)",
-        "checkTier2All(vmId?: string)",
-        "checkTier3All(vmId?: string)",
-        "gatherVmResources(vmId: string)",
-        "probeVm(vmId: string)",
-        "getHealthDomains()",
-        "healthEndpoints()",
-        "resolveTarget(target: string)",
-        "buildAliasMapPublic()",
-        "findContainerVm(containerName: string)",
-        "checkUp(target: string)",
-        "findContainerOnVm(vmId: string, containerName: string)",
-        "checkHealth(target: string)",
-        "resolveServiceDomain(target: string)",
-        "checkReach(target: string)",
-        "metricsSnapshot(vmFilter?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/http.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getBearerToken",
-        "c3ApiGet",
-        "c3ApiPost",
-        "httpGet",
-        "rawHttpRequest",
-        "HttpResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./paths.js",
-        "fs"
-      ],
-      "symbols": [
-        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
-        "fetchOidcToken()",
-        "getBearerToken()",
-        "c3ApiGet(endpoint: string, timeout?: number)",
-        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
-        "httpGet(url: string, timeout?: number)",
-        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/notify.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sendNotification",
-        "alertHealthDown",
-        "alertHealthRecovered",
-        "alertCertExpiring",
-        "alertDiskFull",
-        "Priority",
-        "NotifyOptions",
-        "NotifyResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "resolveNtfyUrl()",
-        "sendNotification(opts: NotifyOptions)",
-        "alertHealthDown(vm: string, details: string)",
-        "alertHealthRecovered(vm: string)",
-        "alertCertExpiring(domain: string, daysLeft: number)",
-        "alertDiskFull(vm: string, percent: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/obs.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "resolve",
-        "up",
-        "upAll",
-        "upAllContainers",
-        "health",
-        "healthAll",
-        "profile",
-        "profileAllServices",
-        "profileAllContainers",
-        "Resolved",
-        "UpProbe",
-        "PerfTiming",
-        "UpResult",
-        "UpAllResult",
-        "HealthCheck",
-        "HealthResult",
-        "ProfilingStep",
-        "ProfilingEngine",
-        "ProfilingResult"
-      ],
-      "imports": [
-        "./config.js",
-        "./pool.js",
-        "./async-ssh.js",
-        "./cache.js",
-        "./async-exec.js"
-      ],
-      "symbols": [
-        "resolve(target: string)",
-        "up(target: string)",
-        "upAll()",
-        "upAllContainers()",
-        "probeUrl(resolved: Resolved)",
-        "probeVm(resolved: Resolved)",
-        "probeContainer(resolved: Resolved)",
-        "health(target: string)",
-        "healthAll()",
-        "healthCheckUrl(resolved: Resolved)",
-        "healthCheckVm(resolved: Resolved)",
-        "healthCheckContainer(\n  resolved: Resolved,\n)",
-        "profile(target: string)",
-        "profileAllServices()",
-        "profileAllContainers()",
-        "engineUrl(resolved: Resolved)",
-        "engineContainer(\n  resolved: Resolved,\n)",
-        "engineNetwork(\n  resolved: Resolved,\n)",
-        "engineVmContext(\n  resolved: Resolved,\n)",
-        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
-        "extractAssetUrls(html: string, baseUrl: string)",
-        "resolveUrl(href: string, base: string)",
-        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/ops.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "handlePushEvent",
-        "daguHeaders",
-        "PushEvent",
-        "PushEventResult",
-        "DAGU_API",
-        "DAGU_API_PATH"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./audit.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveDaguApi()",
-        "resolveDaguApiPath()",
-        "handlePushEvent(event: PushEvent)",
-        "extractModifiedFiles(event: PushEvent)",
-        "daguHeaders()",
-        "triggerDag(name: string)",
-        "triggerDagViaSsh(name: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/paths.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "syncRepos",
-        "HOME",
-        "GIT_BASE",
-        "IS_ANDROID",
-        "IS_SERVER",
-        "IS_CLIENT",
-        "SSH_IDENTITY",
-        "SOLUTIONS_DIR",
-        "CLOUD_DATA_DIR",
-        "CLOUD_DATA_REPO",
-        "getConsolidatedPath",
-        "getConfigsPath",
-        "getDepsPath",
-        "getOwnBuildPath",
-        "CONFIGS_PATH",
-        "DEPS_PATH",
-        "getTopologySlice",
-        "getConfigsSlice",
-        "getDepsSlice",
-        "FRONT_DEPS_PATH",
-        "BUILD_SCRIPT",
-        "SSH_CONFIG_PATH",
-        "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR",
-        "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
-      ],
-      "imports": [
-        "fs",
-        "child_process",
-        "os",
-        "path"
-      ],
-      "symbols": [
-        "resolveCloudDataPath(filename: string)",
-        "resolveConfigPath()",
-        "readConsolidated()",
-        "resolveC3Api()",
-        "syncRepos(force = false)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/pool.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "Pool",
-        "sshPool",
-        "httpPool"
-      ],
-      "imports": [],
-      "symbols": [
-        "class Pool"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/schemas.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "VmConfigSchema",
-        "ServiceCategorySchema",
-        "ServiceConfigSchema",
-        "InfraConfigSchema",
-        "Tier1ResultSchema",
-        "Tier2ResultSchema",
-        "VmResourcesSchema",
-        "ContainerStatusSchema",
-        "Tier3ResultSchema",
-        "HealthDeclaredSchema",
-        "DeployedContainerSchema",
-        "DriftEntrySchema",
-        "DiagnosticCheckSchema",
-        "ProfilingResponseSchema",
-        "CloudInstanceSchema",
-        "CloudResourceSchema",
-        "CloudCostSchema",
-        "TopologyVmSchema",
-        "TopologyNetworkSchema",
-        "TopologySchema",
-        "TestResultSchema",
-        "TestSuiteResultSchema",
-        "TestSuiteNameSchema",
-        "FileRetrievalSchema",
-        "ReportTypeSchema",
-        "ServiceInfoSchema",
-        "SecurityFindingSchema",
-        "SecurityScanResultSchema",
-        "NotifyOptionsSchema",
-        "NotifyResultSchema"
-      ],
-      "imports": [
-        "zod"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/security.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "securityScan",
-        "securityDocker",
-        "securitySshKeys",
-        "securityTokens",
-        "SecurityFinding",
-        "SecurityScanResult",
-        "DockerSecurityInfo",
-        "SshKeysAudit",
-        "TokenStatus"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "fs",
-        "./paths.js"
-      ],
-      "symbols": [
-        "summarize(findings: SecurityFinding[])",
-        "securityScan(vmFilter?: string)",
-        "securityDocker(vmNameOrAlias: string)",
-        "securitySshKeys(vmNameOrAlias: string)",
-        "securityTokens()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/ssh.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sshExec",
-        "sshExecAsync",
-        "checkVmReachable"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js",
-        "./audit.js"
-      ],
-      "symbols": [
-        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "checkVmReachable(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/tests.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "testWgPing",
-        "testSshSession",
-        "testDnsResolve",
-        "testTlsCert",
-        "testHttpRoute",
-        "testContainerHealth",
-        "testPortOpen",
-        "runTestSuite",
-        "TestResult",
-        "TestSuiteResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./docker.js",
-        "./discovery.js",
-        "./paths.js",
-        "fs",
-        "path"
-      ],
-      "symbols": [
-        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
-        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
-        "getVmIds(target?: string)",
-        "getServicesWithDomains()",
-        "testWgPing(vmId: string)",
-        "testSshSession(vmId: string)",
-        "testDnsResolve(domain: string)",
-        "testTlsCert(domain: string)",
-        "testHttpRoute(domain: string)",
-        "testContainerHealth(vmId: string, containerName: string)",
-        "testPortOpen(ip: string, port: number)",
-        "runConnectivitySuite(target?: string)",
-        "runDnsSuite()",
-        "runTlsSuite()",
-        "runRoutesSuite()",
-        "runContainersSuite(target?: string)",
-        "runWireguardSuite()",
-        "runAuthSuite()",
-        "runSecretsSuite()",
-        "runComposeSuite()",
-        "runVolumesSuite(target?: string)",
-        "runResourcesSuite(target?: string)",
-        "runLatencySuite()",
-        "runImagesSuite(target?: string)",
-        "runCrossVmSuite()",
-        "runTestSuite(suite: SuiteName, target?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/types.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "VmConfig",
-        "ServiceConfig",
-        "InfraConfig"
-      ],
-      "imports": [],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/shared/libs/validators.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "validateContainerName",
-        "validateSince",
-        "validatePathComponent"
-      ],
-      "imports": [],
-      "symbols": [
-        "validateContainerName(name: string)",
-        "validateSince(since: string)",
-        "validatePathComponent(path: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/a-knowledge/configs.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerConfigTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "fs",
-        "path",
-        "../../config.js"
-      ],
-      "symbols": [
-        "readJsonSafe(path: string)",
-        "readConsolidated()",
-        "registerConfigTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/a-knowledge/docs.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerDocsTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../config.js",
-        "../../context.js"
-      ],
-      "symbols": [
-        "getCloudSpecDir()",
-        "registerDocsTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/a-knowledge/inventory.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerInventoryTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/discovery.js",
-        "../../shared/libs/http.js",
-        "../../shared/libs/files.js"
-      ],
-      "symbols": [
-        "jsonText(label: string, data: unknown)",
-        "plainText(text: string)",
-        "validateRepoPath(repo: string, path: string)",
-        "findProjects()",
-        "registerInventoryTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/a-knowledge/skills.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerSkillTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../config.js"
-      ],
-      "symbols": [
-        "registerSkillTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/a-knowledge/specs.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerSpecTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../config.js"
-      ],
-      "symbols": [
-        "getSolutionsDir()",
-        "registerSpecTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/b-code-graph-context/codegraph.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerCodegraphTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "node:fs",
-        "node:path"
-      ],
-      "symbols": [
-        "listJson(dir: string, prefix: string)",
-        "addNode(g: Graph, n: Omit<GNode, \"layer\">, layer: string)",
-        "addEdge(g: Graph, e: Omit<GEdge, \"layer\">, layer: string)",
-        "loadExplicit(g: Graph, path: string, layer: string)",
-        "loadSignatures(g: Graph, path: string)",
-        "loadGraph()",
-        "resolveTarget(g: Graph, t: string)",
-        "registerCodegraphTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/b-code-graph-context/octocode.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerOctocodeTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "node:child_process",
-        "node:util"
-      ],
-      "symbols": [
-        "runOctocode(args: string[], cwd?: string)",
-        "registerOctocodeTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/async-exec.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "execAsync",
-        "shellAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
-        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/async-ssh.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "sshExecAsync",
-        "tcpProbeAsync",
-        "pingAsync",
-        "curlStatusAsync",
-        "curlAsync"
-      ],
-      "imports": [
-        "./async-exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
-        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
-        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
-        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
-        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/audit.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "audit"
-      ],
-      "imports": [
-        "./db.js"
-      ],
-      "symbols": [
-        "audit(tool: string, target: string, result: string, source = \"mcp\")"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/binds.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "bindHost"
-      ],
-      "imports": [
-        "../shared/libs/binds.js"
-      ],
-      "symbols": [
-        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/cache.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "cacheWrite",
-        "cacheRead",
-        "cacheList",
-        "cachePrune",
-        "startCacheCleanup"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
-        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
-        "cacheList()",
-        "cachePrune()",
-        "pruneDir(dir: string)",
-        "sanitize(s: string)",
-        "startCacheCleanup()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/cloud/aws.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "listInstances",
-        "listResources",
-        "getCosts"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "awsCli(args: string[], timeout = 30_000)",
-        "getRegion()",
-        "listInstances()",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/cloud/gcp.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory",
-        "getCostsByVm"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "gcloudCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceName: string, zone: string)",
-        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()",
-        "bqQuery(sql: string, timeout = 60_000)",
-        "getCostsHistory(months: number = 6)",
-        "getCostsByVm(months: number = 6)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/cloud/oci.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory"
-      ],
-      "imports": [
-        "node:fs",
-        "node:path",
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "getCompartmentId()",
-        "ociCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceId: string)",
-        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
-        "getCosts()",
-        "getCostsHistory(months: number = 3)",
-        "getInstanceBasedCosts(compartmentId: string, period: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/config.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "getConfig",
-        "reloadConfig",
-        "getDriftReport",
-        "getServiceFolder",
-        "getServiceDir",
-        "getVmSshAlias",
-        "resolveVmId",
-        "getServicesForVm"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./types.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "getConfig()",
-        "reloadConfig()",
-        "getDriftReport()",
-        "discoverServicesFromDisk(fileConfig: InfraConfig)",
-        "getServiceFolder(name: string)",
-        "getServiceDir(name: string)",
-        "buildAliasMap()",
-        "getVmSshAlias(vmId: string)",
-        "resolveVmId(nameOrAlias: string)",
-        "getServicesForVm(vmId: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/control.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "vmStart",
-        "vmStop",
-        "vmReset",
-        "containerStart",
-        "containerStop",
-        "containerRestart",
-        "serviceStart",
-        "serviceStop",
-        "serviceRestart",
-        "vmDrain",
-        "ControlResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./audit.js",
-        "./docker.js",
-        "./validators.js"
-      ],
-      "symbols": [
-        "ensureVmReachable(vmId: string)",
-        "vmStart(vmNameOrAlias: string)",
-        "vmStop(vmNameOrAlias: string)",
-        "vmReset(vmNameOrAlias: string)",
-        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "vmDrain(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/db.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "getDb",
-        "recordHealthCheck",
-        "getHealthHistory",
-        "getUptimeReport",
-        "recordAudit",
-        "getAuditLog",
-        "recordDeploy",
-        "getDeployHistory",
-        "getAlertState",
-        "updateAlertState",
-        "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
-      ],
-      "imports": [
-        "better-sqlite3",
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "ensureDir(dir: string)",
-        "getDb()",
-        "initSchema(db: Database.Database)",
-        "recordHealthCheck(record: HealthRecord)",
-        "getHealthHistory(query: HealthHistoryQuery = {})",
-        "getUptimeReport(vm?: string, hours = 24)",
-        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
-        "getAuditLog(query: AuditQuery = {})",
-        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
-        "getDeployHistory(query: DeployQuery = {})",
-        "getAlertState(vm: string)",
-        "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/diagnostics.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "profileContainer",
-        "profileVm",
-        "profileService",
-        "vmNetwork",
-        "vmTop",
-        "vmDiskUsage",
-        "vmJournal"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "timedCheck(name: string, fn: ()",
-        "findContainerVm(containerName: string)",
-        "profileContainer(containerName: string)",
-        "profileVm(vmNameOrAlias: string)",
-        "profileService(serviceName: string)",
-        "vmNetwork(vmNameOrAlias: string)",
-        "vmTop(vmNameOrAlias: string)",
-        "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/discovery.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "listServices",
-        "getService",
-        "probeSpec",
-        "getAllSpecs",
-        "serviceVersion",
-        "allServiceVersions",
-        "ServiceVersion",
-        "getServiceDomains",
-        "SERVICE_BASE_PATHS"
-      ],
-      "imports": [
-        "./config.js",
-        "./http.js"
-      ],
-      "symbols": [
-        "getServiceDomains()",
-        "listServices()",
-        "getService(serviceName: string)",
-        "probeSpec(serviceName: string)",
-        "getAllSpecs()",
-        "serviceVersion(serviceName: string)",
-        "allServiceVersions()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/docker.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "listContainers",
-        "controlContainer",
-        "getContainerLogs",
-        "composeUp",
-        "batchContainerStatuses",
-        "computeServiceStatus",
-        "containerTop",
-        "containerDiff",
-        "containerInspectFull",
-        "containerEvents",
-        "containerPause",
-        "containerUnpause",
-        "containerExecCmd",
-        "logsSearch",
-        "logsMulti",
-        "composeUpAll",
-        "dockerSystemDf"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./audit.js",
-        "./validators.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
-        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
-        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "composeUp(\n  service: string,\n)",
-        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
-        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
-        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
-        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
-        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
-        "composeUpAll(\n  vmNameOrAlias: string,\n)",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/exec.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "exec",
-        "execAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveExecEnv(command: string)",
-        "exec(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)",
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/files.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "getConfigFile",
-        "getContainerLog",
-        "getVmStatus",
-        "getReport",
-        "getSecretsStatus"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./config.js",
-        "./paths.js",
-        "./ssh.js",
-        "./health.js",
-        "./discovery.js",
-        "./security.js"
-      ],
-      "symbols": [
-        "redactSensitiveLines(content: string)",
-        "redactWireGuardKeys(content: string)",
-        "getConfigFile(service: string, filename = \"build.json\")",
-        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "getVmStatus(vmId: string)",
-        "getReport(reportType: string)",
-        "getSecretsStatus(service?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/health.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "healthAlive",
-        "healthDeclared",
-        "healthDeployed",
-        "healthDrift",
-        "healthStatus",
-        "checkTier1All",
-        "checkTier2All",
-        "checkTier3All",
-        "gatherVmResources",
-        "probeVm",
-        "healthEndpoints",
-        "checkUp",
-        "checkHealth",
-        "checkReach",
-        "metricsSnapshot",
-        "Tier1Result",
-        "Tier2Result",
-        "VmResources",
-        "ContainerInfo",
-        "Tier3Result",
-        "DeployedVm",
-        "DriftEntry",
-        "HealthDeclaredResult",
-        "HealthStatusResult",
-        "EndpointHealthResult",
-        "UpResult",
-        "HealthResult",
-        "ReachResult",
-        "ContainerMetrics",
-        "VmMetricsSnapshot"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "./paths.js",
-        "./types.js"
-      ],
-      "symbols": [
-        "getVmIds(vmId?: string)",
-        "parseResources(output: string)",
-        "healthAlive()",
-        "healthDeclared()",
-        "healthDeployed(vmId?: string)",
-        "healthDrift()",
-        "healthStatus(vmId?: string)",
-        "checkTier1All(vmId?: string)",
-        "checkTier2All(vmId?: string)",
-        "checkTier3All(vmId?: string)",
-        "gatherVmResources(vmId: string)",
-        "probeVm(vmId: string)",
-        "getHealthDomains()",
-        "healthEndpoints()",
-        "resolveTarget(target: string)",
-        "buildAliasMapPublic()",
-        "findContainerVm(containerName: string)",
-        "checkUp(target: string)",
-        "findContainerOnVm(vmId: string, containerName: string)",
-        "checkHealth(target: string)",
-        "resolveServiceDomain(target: string)",
-        "checkReach(target: string)",
-        "metricsSnapshot(vmFilter?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/http.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "getBearerToken",
-        "c3ApiGet",
-        "c3ApiPost",
-        "httpGet",
-        "rawHttpRequest",
-        "HttpResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./paths.js",
-        "fs"
-      ],
-      "symbols": [
-        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
-        "fetchOidcToken()",
-        "getBearerToken()",
-        "c3ApiGet(endpoint: string, timeout?: number)",
-        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
-        "httpGet(url: string, timeout?: number)",
-        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/notify.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "sendNotification",
-        "alertHealthDown",
-        "alertHealthRecovered",
-        "alertCertExpiring",
-        "alertDiskFull",
-        "Priority",
-        "NotifyOptions",
-        "NotifyResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "resolveNtfyUrl()",
-        "sendNotification(opts: NotifyOptions)",
-        "alertHealthDown(vm: string, details: string)",
-        "alertHealthRecovered(vm: string)",
-        "alertCertExpiring(domain: string, daysLeft: number)",
-        "alertDiskFull(vm: string, percent: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/obs.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "resolve",
-        "up",
-        "upAll",
-        "upAllContainers",
-        "health",
-        "healthAll",
-        "profile",
-        "profileAllServices",
-        "profileAllContainers",
-        "Resolved",
-        "UpProbe",
-        "PerfTiming",
-        "UpResult",
-        "UpAllResult",
-        "HealthCheck",
-        "HealthResult",
-        "ProfilingStep",
-        "ProfilingEngine",
-        "ProfilingResult"
-      ],
-      "imports": [
-        "./config.js",
-        "./pool.js",
-        "./async-ssh.js",
-        "./cache.js",
-        "./async-exec.js"
-      ],
-      "symbols": [
-        "resolve(target: string)",
-        "up(target: string)",
-        "upAll()",
-        "upAllContainers()",
-        "probeUrl(resolved: Resolved)",
-        "probeVm(resolved: Resolved)",
-        "probeContainer(resolved: Resolved)",
-        "health(target: string)",
-        "healthAll()",
-        "healthCheckUrl(resolved: Resolved)",
-        "healthCheckVm(resolved: Resolved)",
-        "healthCheckContainer(\n  resolved: Resolved,\n)",
-        "profile(target: string)",
-        "profileAllServices()",
-        "profileAllContainers()",
-        "engineUrl(resolved: Resolved)",
-        "engineContainer(\n  resolved: Resolved,\n)",
-        "engineNetwork(\n  resolved: Resolved,\n)",
-        "engineVmContext(\n  resolved: Resolved,\n)",
-        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
-        "extractAssetUrls(html: string, baseUrl: string)",
-        "resolveUrl(href: string, base: string)",
-        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/ops.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "handlePushEvent",
-        "daguHeaders",
-        "PushEvent",
-        "PushEventResult",
-        "DAGU_API",
-        "DAGU_API_PATH"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./audit.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveDaguApi()",
-        "resolveDaguApiPath()",
-        "handlePushEvent(event: PushEvent)",
-        "extractModifiedFiles(event: PushEvent)",
-        "daguHeaders()",
-        "triggerDag(name: string)",
-        "triggerDagViaSsh(name: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/paths.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "syncRepos",
-        "HOME",
-        "GIT_BASE",
-        "IS_ANDROID",
-        "IS_SERVER",
-        "IS_CLIENT",
-        "SSH_IDENTITY",
-        "SOLUTIONS_DIR",
-        "CLOUD_DATA_DIR",
-        "CLOUD_DATA_REPO",
-        "getConsolidatedPath",
-        "getConfigsPath",
-        "getDepsPath",
-        "getOwnBuildPath",
-        "CONFIGS_PATH",
-        "DEPS_PATH",
-        "getTopologySlice",
-        "getConfigsSlice",
-        "getDepsSlice",
-        "FRONT_DEPS_PATH",
-        "BUILD_SCRIPT",
-        "SSH_CONFIG_PATH",
-        "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR",
-        "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
-      ],
-      "imports": [
-        "fs",
-        "child_process",
-        "os",
-        "path"
-      ],
-      "symbols": [
-        "resolveCloudDataPath(filename: string)",
-        "resolveConfigPath()",
-        "readConsolidated()",
-        "resolveC3Api()",
-        "syncRepos(force = false)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/pool.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "Pool",
-        "sshPool",
-        "httpPool"
-      ],
-      "imports": [],
-      "symbols": [
-        "class Pool"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/schemas.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "VmConfigSchema",
-        "ServiceCategorySchema",
-        "ServiceConfigSchema",
-        "InfraConfigSchema",
-        "Tier1ResultSchema",
-        "Tier2ResultSchema",
-        "VmResourcesSchema",
-        "ContainerStatusSchema",
-        "Tier3ResultSchema",
-        "HealthDeclaredSchema",
-        "DeployedContainerSchema",
-        "DriftEntrySchema",
-        "DiagnosticCheckSchema",
-        "ProfilingResponseSchema",
-        "CloudInstanceSchema",
-        "CloudResourceSchema",
-        "CloudCostSchema",
-        "TopologyVmSchema",
-        "TopologyNetworkSchema",
-        "TopologySchema",
-        "TestResultSchema",
-        "TestSuiteResultSchema",
-        "TestSuiteNameSchema",
-        "FileRetrievalSchema",
-        "ReportTypeSchema",
-        "ServiceInfoSchema",
-        "SecurityFindingSchema",
-        "SecurityScanResultSchema",
-        "NotifyOptionsSchema",
-        "NotifyResultSchema"
-      ],
-      "imports": [
-        "zod"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/security.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "securityScan",
-        "securityDocker",
-        "securitySshKeys",
-        "securityTokens",
-        "SecurityFinding",
-        "SecurityScanResult",
-        "DockerSecurityInfo",
-        "SshKeysAudit",
-        "TokenStatus"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "fs",
-        "./paths.js"
-      ],
-      "symbols": [
-        "summarize(findings: SecurityFinding[])",
-        "securityScan(vmFilter?: string)",
-        "securityDocker(vmNameOrAlias: string)",
-        "securitySshKeys(vmNameOrAlias: string)",
-        "securityTokens()"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/ssh.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "sshExec",
-        "sshExecAsync",
-        "checkVmReachable"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js",
-        "./audit.js"
-      ],
-      "symbols": [
-        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "checkVmReachable(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/tests.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "testWgPing",
-        "testSshSession",
-        "testDnsResolve",
-        "testTlsCert",
-        "testHttpRoute",
-        "testContainerHealth",
-        "testPortOpen",
-        "runTestSuite",
-        "TestResult",
-        "TestSuiteResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./docker.js",
-        "./discovery.js",
-        "./paths.js",
-        "fs",
-        "path"
-      ],
-      "symbols": [
-        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
-        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
-        "getVmIds(target?: string)",
-        "getServicesWithDomains()",
-        "testWgPing(vmId: string)",
-        "testSshSession(vmId: string)",
-        "testDnsResolve(domain: string)",
-        "testTlsCert(domain: string)",
-        "testHttpRoute(domain: string)",
-        "testContainerHealth(vmId: string, containerName: string)",
-        "testPortOpen(ip: string, port: number)",
-        "runConnectivitySuite(target?: string)",
-        "runDnsSuite()",
-        "runTlsSuite()",
-        "runRoutesSuite()",
-        "runContainersSuite(target?: string)",
-        "runWireguardSuite()",
-        "runAuthSuite()",
-        "runSecretsSuite()",
-        "runComposeSuite()",
-        "runVolumesSuite(target?: string)",
-        "runResourcesSuite(target?: string)",
-        "runLatencySuite()",
-        "runImagesSuite(target?: string)",
-        "runCrossVmSuite()",
-        "runTestSuite(suite: SuiteName, target?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/types.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "VmConfig",
-        "ServiceConfig",
-        "InfraConfig"
-      ],
-      "imports": [],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/code/tools/shared/libs/validators.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "validateContainerName",
-        "validateSince",
-        "validatePathComponent"
-      ],
-      "imports": [],
-      "symbols": [
-        "validateContainerName(name: string)",
-        "validateSince(since: string)",
-        "validatePathComponent(path: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container"
-      ],
-      "imports": [],
-      "symbols": [
-        "svc",
-        "app",
-        "vmIp",
-        "binariesImage",
-        "oct",
-        "octocodeJob",
-        "image",
-        "network_mode",
-        "user",
-        "command",
-        "restart",
-        "environment",
-        "HOME",
-        "OCTOCODE_HOME",
-        "OPENAI_API_URL",
-        "OPENAI_API_KEY",
-        "OLLAMA_API_URL",
-        "OLLAMA_API_KEY",
-        "OCTOCODE_LLM_MODELS",
-        "BRIDGE_HEALTH_URL",
-        "OCTOCODE_REPOS",
-        "OCTOCODE_REPOS_ROOT",
-        "OCTOCODE_PULL",
-        "volumes",
-        "services",
-        "cloud-cgc-mcp",
-        "container_name",
-        "MCP_TRANSPORT",
-        "MCP_HTTP_PORT",
-        "MCP_HTTP_HOST",
-        "CONFIG_PATH",
-        "GIT_ROOT",
-        "healthcheck",
-        "test",
-        "interval",
-        "timeout",
-        "retries",
-        "start_period",
-        "cloud-cgc-mcp-reindex",
-        "profiles"
-      ]
-    },
-    {
-      "path": "a_solutions/bc-obs_cloud-cgc-mcp/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
-        "octocode",
-        "codegraph)",
-        "own",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "nb",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "nativeBuild",
-        "cmd",
-        "binary",
-        "baseImage",
-        "apt",
-        "title"
-      ]
-    },
-    {
       "path": "a_solutions/bc-obs_cloud-spec/.result/assets/site/book.js",
       "lang": "js",
       "role": "module",
@@ -27224,119 +27358,6 @@
         "default",
         "srcDir",
         "templates",
-        "composeSpec",
-        "title"
-      ]
-    },
-    {
-      "path": "a_solutions/ca-dat_kg-graph/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/ca-dat_kg-graph/scripts/seed_from_config.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "_resolve_topology()",
-        "log()",
-        "surreal_query()"
-      ],
-      "imports": [],
-      "symbols": [
-        "_resolve_topology()",
-        "log()",
-        "surreal_query()"
-      ]
-    },
-    {
-      "path": "a_solutions/ca-dat_kg-graph/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container"
-      ],
-      "imports": [],
-      "symbols": [
-        "app",
-        "port",
-        "binariesImage",
-        "services",
-        "surrealdb",
-        "image",
-        "container_name",
-        "network_mode",
-        "env_file",
-        "command",
-        "volumes",
-        "healthcheck",
-        "test",
-        "interval",
-        "timeout",
-        "retries",
-        "start_period"
-      ]
-    },
-    {
-      "path": "a_solutions/ca-dat_kg-graph/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
-        "wrap",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "kgSchema",
-        "embedder",
-        "vectorIndexesDdl",
-        "engine",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "name",
-        "vars",
-        "EMBEDDER_MODEL",
-        "EMBEDDER_DIM",
-        "EMBEDDER_ENABLED",
-        "VECTOR_INDEXES_DDL",
         "composeSpec",
         "title"
       ]
