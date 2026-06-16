@@ -120,58 +120,6 @@
     },
     {
       "table": "service",
-      "id": "cloudflare_worker",
-      "key": "service:cloudflare_worker",
-      "properties": {
-        "name": "cloudflare-worker",
-        "category": "cloud",
-        "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
-        "domain": null,
-        "port": null,
-        "vm": "local",
-        "folder": "ba-clo_cloudflare-worker"
-      }
-    },
-    {
-      "table": "container",
-      "id": "cloudflare_worker",
-      "key": "container:cloudflare_worker",
-      "properties": {
-        "name": "cloudflare-worker",
-        "image": "",
-        "role": "app",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "gcloud",
-      "key": "service:gcloud",
-      "properties": {
-        "name": "gcloud",
-        "category": "cloud",
-        "description": "Google Cloud SDK and tools (local CLI only)",
-        "domain": null,
-        "port": null,
-        "vm": "local",
-        "folder": "ba-clo_gcloud"
-      }
-    },
-    {
-      "table": "container",
-      "id": "gcloud",
-      "key": "container:gcloud",
-      "properties": {
-        "name": "gcloud",
-        "image": "",
-        "role": "app",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "c3_analytics_api",
       "key": "service:c3_analytics_api",
       "properties": {
@@ -502,6 +450,58 @@
       "key": "container:cloud_builder_x",
       "properties": {
         "name": "cloud-builder-x",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloudflare_worker",
+      "key": "service:cloudflare_worker",
+      "properties": {
+        "name": "cloudflare-worker",
+        "category": "cloud",
+        "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "infra-cloud_cloudflare-worker"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloudflare_worker",
+      "key": "container:cloudflare_worker",
+      "properties": {
+        "name": "cloudflare-worker",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "gcloud",
+      "key": "service:gcloud",
+      "properties": {
+        "name": "gcloud",
+        "category": "cloud",
+        "description": "Google Cloud SDK and tools (local CLI only)",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "infra-cloud_gcloud"
+      }
+    },
+    {
+      "table": "container",
+      "id": "gcloud",
+      "key": "container:gcloud",
+      "properties": {
+        "name": "gcloud",
         "image": "",
         "role": "app",
         "port": null,
@@ -2327,28 +2327,6 @@
     },
     {
       "table": "module",
-      "id": "ba_clo_cloudflare_worker",
-      "key": "module:ba_clo_cloudflare_worker",
-      "properties": {
-        "name": "ba-clo_cloudflare-worker",
-        "repo": "cloud",
-        "category": "cloud",
-        "service": "cloudflare-worker"
-      }
-    },
-    {
-      "table": "module",
-      "id": "ba_clo_gcloud",
-      "key": "module:ba_clo_gcloud",
-      "properties": {
-        "name": "ba-clo_gcloud",
-        "repo": "cloud",
-        "category": "cloud",
-        "service": "gcloud"
-      }
-    },
-    {
-      "table": "module",
       "id": "infra_api_c3_analytics_api",
       "key": "module:infra_api_c3_analytics_api",
       "properties": {
@@ -2488,6 +2466,28 @@
         "repo": "cloud",
         "category": "tools",
         "service": "cloud-builder-x"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_cloud_cloudflare_worker",
+      "key": "module:infra_cloud_cloudflare_worker",
+      "properties": {
+        "name": "infra-cloud_cloudflare-worker",
+        "repo": "cloud",
+        "category": "cloud",
+        "service": "cloudflare-worker"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_cloud_gcloud",
+      "key": "module:infra_cloud_gcloud",
+      "properties": {
+        "name": "infra-cloud_gcloud",
+        "repo": "cloud",
+        "category": "cloud",
+        "service": "gcloud"
       }
     },
     {
@@ -3351,24 +3351,6 @@
   ],
   "edges": [
     {
-      "table": "runs_container",
-      "from": "service:cloudflare_worker",
-      "to": "container:cloudflare_worker",
-      "key": "service:cloudflare_worker->runs_container->container:cloudflare_worker",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:gcloud",
-      "to": "container:gcloud",
-      "key": "service:gcloud->runs_container->container:gcloud",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
       "table": "hosted_on",
       "from": "service:c3_analytics_api",
       "to": "vm:gcp_proxy",
@@ -3565,6 +3547,24 @@
       "from": "service:cloud_builder_x",
       "to": "container:cloud_builder_x",
       "key": "service:cloud_builder_x->runs_container->container:cloud_builder_x",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloudflare_worker",
+      "to": "container:cloudflare_worker",
+      "key": "service:cloudflare_worker->runs_container->container:cloudflare_worker",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:gcloud",
+      "to": "container:gcloud",
+      "key": "service:gcloud->runs_container->container:gcloud",
       "properties": {
         "role": "app"
       }
@@ -5196,34 +5196,6 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:ba_clo_cloudflare_worker",
-      "to": "repo:cloud",
-      "key": "module:ba_clo_cloudflare_worker->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:ba_clo_cloudflare_worker",
-      "to": "service:cloudflare_worker",
-      "key": "module:ba_clo_cloudflare_worker->implements->service:cloudflare_worker",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:ba_clo_gcloud",
-      "to": "repo:cloud",
-      "key": "module:ba_clo_gcloud->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:ba_clo_gcloud",
-      "to": "service:gcloud",
-      "key": "module:ba_clo_gcloud->implements->service:gcloud",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
       "from": "module:infra_api_c3_analytics_api",
       "to": "repo:cloud",
       "key": "module:infra_api_c3_analytics_api->belongs_to_repo->repo:cloud",
@@ -5402,6 +5374,34 @@
       "from": "module:infra_bld_cloud_builder_x",
       "to": "service:cloud_builder_x",
       "key": "module:infra_bld_cloud_builder_x->implements->service:cloud_builder_x",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_cloud_cloudflare_worker",
+      "to": "repo:cloud",
+      "key": "module:infra_cloud_cloudflare_worker->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_cloud_cloudflare_worker",
+      "to": "service:cloudflare_worker",
+      "key": "module:infra_cloud_cloudflare_worker->implements->service:cloudflare_worker",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_cloud_gcloud",
+      "to": "repo:cloud",
+      "key": "module:infra_cloud_gcloud->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_cloud_gcloud",
+      "to": "service:gcloud",
+      "key": "module:infra_cloud_gcloud->implements->service:gcloud",
       "properties": {}
     },
     {
