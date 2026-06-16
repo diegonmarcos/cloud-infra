@@ -949,52 +949,6 @@
     "cloudflare": []
   },
   "services": {
-    "cloudflare-worker": {
-      "category": "cloud",
-      "vm": "local",
-      "folder": "ba-clo_cloudflare-worker",
-      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
-      "containers": {
-        "app": {
-          "container_name": "cloudflare-worker",
-          "image": "",
-          "public": false
-        }
-      },
-      "container_names": [
-        "cloudflare-worker"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      }
-    },
-    "gcloud": {
-      "category": "cloud",
-      "vm": "local",
-      "folder": "ba-clo_gcloud",
-      "description": "Google Cloud SDK and tools (local CLI only)",
-      "containers": {
-        "app": {
-          "container_name": "gcloud",
-          "image": "",
-          "public": false
-        }
-      },
-      "container_names": [
-        "gcloud"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      }
-    },
     "c3-analytics-api": {
       "category": "obs",
       "vm": "gcp-E2-f_0",
@@ -1860,6 +1814,54 @@
         "networks": []
       },
       "flake": "infra-bld_cloud-builder-x"
+    },
+    "cloudflare-worker": {
+      "category": "cloud",
+      "vm": "local",
+      "folder": "infra-cloud_cloudflare-worker",
+      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
+      "containers": {
+        "app": {
+          "container_name": "cloudflare-worker",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "cloudflare-worker"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-cloud_cloudflare-worker"
+    },
+    "gcloud": {
+      "category": "cloud",
+      "vm": "local",
+      "folder": "infra-cloud_gcloud",
+      "description": "Google Cloud SDK and tools (local CLI only)",
+      "containers": {
+        "app": {
+          "container_name": "gcloud",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "gcloud"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-cloud_gcloud"
     },
     "backup-borg": {
       "category": "data",

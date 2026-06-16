@@ -598,73 +598,6 @@
     }
   },
   "services": {
-    "cloudflare-worker": {
-      "category": "cloud",
-      "vm": "local",
-      "folder": "ba-clo_cloudflare-worker",
-      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
-      "enabled": true,
-      "containers": {
-        "app": {
-          "container_name": "cloudflare-worker",
-          "image": "",
-          "public": false
-        }
-      },
-      "container_names": [
-        "cloudflare-worker"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      },
-      "secret_env_vars": [
-        "HTTP_TO_SMTP_PROXY_API_KEY",
-        "C3_BEARER_TOKEN",
-        "GOOGLE_SA_KEY"
-      ]
-    },
-    "gcloud": {
-      "category": "cloud",
-      "vm": "local",
-      "folder": "ba-clo_gcloud",
-      "description": "Google Cloud SDK and tools (local CLI only)",
-      "enabled": true,
-      "containers": {
-        "app": {
-          "container_name": "gcloud",
-          "image": "",
-          "public": false
-        }
-      },
-      "container_names": [
-        "gcloud"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "c3-analytics-api": {
       "category": "obs",
       "vm": "gcp-E2-f_0",
@@ -2088,6 +2021,75 @@
           "platform": "linux/amd64,linux/arm64",
           "description": "Multi-arch builder Debian apt (no Nix, lighter)"
         }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "cloudflare-worker": {
+      "category": "cloud",
+      "vm": "local",
+      "folder": "infra-cloud_cloudflare-worker",
+      "description": "Cloudflare Email Worker — inbound mail forwarder. Triple-delivers to Maddy (via http-to-smtp-proxy-api), Google Workspace (Gmail API), and live.com (disaster backup).",
+      "enabled": true,
+      "flake": "infra-cloud_cloudflare-worker",
+      "containers": {
+        "app": {
+          "container_name": "cloudflare-worker",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "cloudflare-worker"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "secret_env_vars": [
+        "HTTP_TO_SMTP_PROXY_API_KEY",
+        "C3_BEARER_TOKEN",
+        "GOOGLE_SA_KEY"
+      ]
+    },
+    "gcloud": {
+      "category": "cloud",
+      "vm": "local",
+      "folder": "infra-cloud_gcloud",
+      "description": "Google Cloud SDK and tools (local CLI only)",
+      "enabled": true,
+      "flake": "infra-cloud_gcloud",
+      "containers": {
+        "app": {
+          "container_name": "gcloud",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "gcloud"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
       },
       "api": {
         "has_api": false,
