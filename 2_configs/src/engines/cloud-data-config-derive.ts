@@ -2585,7 +2585,7 @@ function deriveServiceConnections(c: any): DerivedFile {
 // ═══════════════════════════════════════════════════════════════════════════
 // KG-Graph derivers
 //   - deriveKgSchema: emits SurrealDB schema spec (node/edge tables + vector
-//     index declarations) from `c.services["kg-graph"].kg`.
+//     index declarations) from `c.services["kg-store"].kg`.
 //   - deriveKgDelta:  emits an idempotent {nodes, edges} delta from the rest
 //     of the consolidated file (vms, services, containers, dns, wireguard,
 //     authelia ACL). Deterministic keys → re-running ingest is a no-op.
@@ -2594,7 +2594,7 @@ function deriveServiceConnections(c: any): DerivedFile {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function deriveKgSchema(c: any): DerivedFile {
-  const kg = c.services?.["kg-graph"]?.kg ?? {};
+  const kg = c.services?.["kg-store"]?.kg ?? {};
   const embedder = kg.embedder ?? { enabled: false, model: "nomic-embed-text", dim: 768, index_type: "MTREE", vector_dtype: "F32" };
   const nodeTables = kg.node_tables ?? [];
   const edgeTables = kg.edge_tables ?? [];
@@ -2619,7 +2619,7 @@ function deriveKgSchema(c: any): DerivedFile {
     name: "build-kg-graph_schema.json",
     data: {
       _meta: {
-        description: "SurrealDB schema declaration for the kg-graph hybrid Knowledge Graph (node tables, edge relations, vector indexes). Consumed by ca-dat_kg-graph at schema-load time and by reports-logs/kg_ingest at validation time.",
+        description: "SurrealDB schema declaration for the kg-graph hybrid Knowledge Graph (node tables, edge relations, vector indexes). Consumed by ad-agi_kg-store at schema-load time and by reports-logs/kg_ingest at validation time.",
         format_version: 1,
       },
       _generated: now(),

@@ -517,6 +517,11 @@
           "wg_only": true
         },
         {
+          "base_path": "/kg-mcp",
+          "upstream": "10.0.0.6:3105",
+          "wg_only": true
+        },
+        {
           "base_path": "/c3-infra-mcp",
           "upstream": "10.0.0.6:3100",
           "wg_only": true
@@ -525,15 +530,10 @@
           "base_path": "/c3-services-mcp",
           "upstream": "10.0.0.6:3101",
           "wg_only": true
-        },
-        {
-          "base_path": "/cloud-cgc-mcp",
-          "upstream": "10.0.0.6:3105",
-          "wg_only": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /kg-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp"
     }
   ],
   "special": {
@@ -663,6 +663,10 @@
       "upstream": "10.0.0.6:8340"
     },
     {
+      "service": "kg-mcp.app",
+      "upstream": "10.0.0.6:3105"
+    },
+    {
       "service": "rig-agentic-sonn-14bq8.app",
       "upstream": "10.0.0.6:8091"
     },
@@ -705,10 +709,6 @@
     {
       "service": "c3-services-mcp.app",
       "upstream": "10.0.0.6:3101"
-    },
-    {
-      "service": "cloud-cgc-mcp.app",
-      "upstream": "10.0.0.6:3105"
     },
     {
       "service": "c3-spec.app",
@@ -1334,6 +1334,27 @@
     },
     {
       "kind": "redirect",
+      "service": "kg-mcp.app",
+      "redirect_to": "https://kg-mcp-http-3105.app",
+      "container": "kg-mcp",
+      "container_key": "app",
+      "svc": "kg-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "kg-mcp-http-3105.app",
+      "container": "kg-mcp",
+      "container_key": "app",
+      "svc": "kg-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3105,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3105",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "rig-agentic-sonn-14bq8.app",
       "redirect_to": "https://rig-agentic-sonn-14bq8-http-8091.app",
       "container": "rig-agentic-sonn-14bq8",
@@ -1561,27 +1582,6 @@
       "port": 3101,
       "protocol": "http",
       "upstream": "10.0.0.6:3101",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "cloud-cgc-mcp.app",
-      "redirect_to": "https://cloud-cgc-mcp-http-3105.app",
-      "container": "cloud-cgc-mcp",
-      "container_key": "app",
-      "svc": "cloud-cgc-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "cloud-cgc-mcp-http-3105.app",
-      "container": "cloud-cgc-mcp",
-      "container_key": "app",
-      "svc": "cloud-cgc-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3105,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3105",
       "source": "containers.app.port"
     },
     {
@@ -1948,6 +1948,16 @@
     },
     {
       "host": "mcp.diegonmarcos.com",
+      "path": "/kg-mcp",
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
       "path": "/c3-infra-mcp",
       "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
@@ -1960,16 +1970,6 @@
       "host": "mcp.diegonmarcos.com",
       "path": "/c3-services-mcp",
       "upstream": "10.0.0.6:3101",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mcp.diegonmarcos.com",
-      "path": "/cloud-cgc-mcp",
-      "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2595,6 +2595,16 @@
       "notes": null
     },
     {
+      "host": "kg-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "rig-agentic-sonn-14bq8.app",
       "path": null,
       "upstream": "10.0.0.6:8091",
@@ -2698,16 +2708,6 @@
       "host": "c3-services-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3101",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "cloud-cgc-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3077,6 +3077,16 @@
       "notes": null
     },
     {
+      "host": "kg-mcp-http-3105.app",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "kg-mcp",
+      "notes": null
+    },
+    {
       "host": "rig-agentic-sonn-14bq8-http-8091.app",
       "path": null,
       "upstream": "10.0.0.6:8091",
@@ -3184,16 +3194,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "c3-services-mcp",
-      "notes": null
-    },
-    {
-      "host": "cloud-cgc-mcp-http-3105.app",
-      "path": null,
-      "upstream": "10.0.0.6:3105",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "cloud-cgc-mcp",
       "notes": null
     },
     {

@@ -223,18 +223,6 @@
       ]
     },
     {
-      "name": "claude-openai-bridge",
-      "category": "net",
-      "vm": "oci-A1-f_0",
-      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
-      "domain": "—",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "claude-openai-bridge"
-      ]
-    },
-    {
       "name": "cloud-builder-x",
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -244,18 +232,6 @@
       "networks": [],
       "containers": [
         "cloud-builder-x"
-      ]
-    },
-    {
-      "name": "cloud-cgc-mcp",
-      "category": "obs",
-      "vm": "oci-A1-f_0",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "domain": "—",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "cloud-cgc-mcp"
       ]
     },
     {
@@ -532,7 +508,31 @@
       ]
     },
     {
-      "name": "kg-graph",
+      "name": "kg-bridge",
+      "category": "net",
+      "vm": "oci-A1-f_0",
+      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "kg-bridge"
+      ]
+    },
+    {
+      "name": "kg-mcp",
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "kg-mcp"
+      ]
+    },
+    {
+      "name": "kg-store",
       "category": "data",
       "vm": "oci-A1-f_0",
       "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
@@ -540,7 +540,7 @@
       "ports": [],
       "networks": [],
       "containers": [
-        "surrealdb"
+        "kg-store"
       ]
     },
     {
@@ -1131,7 +1131,7 @@
       ]
     },
     {
-      "name": "kg-graph",
+      "name": "kg-store",
       "category": "data",
       "vm": "oci-A1-f_0",
       "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
@@ -1139,7 +1139,7 @@
       "ports": [],
       "networks": [],
       "containers": [
-        "surrealdb"
+        "kg-store"
       ]
     },
     {

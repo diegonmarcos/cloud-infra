@@ -178,16 +178,17 @@
         "vaultwarden",
         "crawlee-cloud",
         "fin-api",
+        "kg-bridge",
+        "kg-mcp",
+        "kg-store",
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
-        "claude-openai-bridge",
         "wireguard-mesh",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
         "c3-services-mcp",
-        "cloud-cgc-mcp",
         "cloud-spec",
         "dagu",
         "dbgate",
@@ -199,8 +200,7 @@
         "cloud-builder-x",
         "backup-borg",
         "backup-bup",
-        "gitea",
-        "kg-graph"
+        "gitea"
       ],
       "container_count": 59
     },
@@ -4181,6 +4181,352 @@
         "auth": "bearer"
       }
     },
+    "kg-bridge": {
+      "category": "net",
+      "vm": "oci-A1-f_0",
+      "folder": "ad-agi_kg-bridge",
+      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+      "enabled": true,
+      "flake": "kg-bridge",
+      "port": 3107,
+      "dns": "kg-bridge.app",
+      "upstream": "10.0.0.6:3107",
+      "containers": {
+        "app": {
+          "container_name": "kg-bridge",
+          "image": "ghcr.io/diegonmarcos/kg-bridge:latest",
+          "port": 3107,
+          "port_env": "BRIDGE_PORT",
+          "dns": "kg-bridge.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "kg-bridge"
+      ],
+      "all_ports": [
+        "3107"
+      ],
+      "all_dns": [
+        "kg-bridge.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3107
+      },
+      "health": {
+        "path": "/health"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      }
+    },
+    "kg-mcp": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "ad-agi_kg-mcp",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "enabled": true,
+      "flake": "kg-mcp",
+      "port": 3105,
+      "dns": "kg-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "containers": {
+        "app": {
+          "container_name": "kg-mcp",
+          "image": "ghcr.io/diegonmarcos/kg-mcp:latest",
+          "port": 3105,
+          "port_env": "MCP_HTTP_PORT",
+          "dns": "kg-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/kg-mcp"
+          },
+          "healthcheck": "/mcp",
+          "monitoring": null,
+          "volumes": [
+            "./data:/data:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "kg-mcp"
+      ],
+      "all_ports": [
+        "3105"
+      ],
+      "all_dns": [
+        "kg-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/kg-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3105
+      },
+      "health": {
+        "path": "/mcp"
+      },
+      "runtime": {
+        "git_root": "/repos",
+        "data_path": "/data",
+        "octocode": {
+          "repos_volume": "octocode_repos",
+          "repos_path": "/repos",
+          "db_volume": "octocode_db",
+          "db_path": "/home/appuser/.local/share/octocode",
+          "llm": {
+            "_comment": "octocode GraphRAG LLM → kg-bridge, TWO providers with fallback. openai:* reads OPENAI_API_URL → bridge /v1; ollama:* reads OLLAMA_API_URL (localhost:11434) → bridge Ollama mimic. reindex.sh forces use_llm=true (the flag that was off → 0 LLM calls) and tries `models` in order, falling back if a provider makes 0 bridge calls. api_key is a throwaway.",
+            "openai_api_url": "http://10.0.0.6:3107/v1/chat/completions",
+            "ollama_api_url": "http://localhost:11434",
+            "api_key": "sk-dummy",
+            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
+            "health_url": "http://10.0.0.6:3107/health"
+          },
+          "index_repos": [
+            "cloud",
+            "unix",
+            "front",
+            "tools",
+            "cloud-data",
+            "front-data"
+          ],
+          "home": "/home/appuser"
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 48,
+        "resources_count": 2,
+        "prompts_count": 0,
+        "display_name": "Cloud CGC MCP",
+        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
+    "kg-store": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "folder": "ad-agi_kg-store",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "enabled": false,
+      "flake": "kg-store",
+      "port": 8001,
+      "dns": "kg-store.app",
+      "upstream": "10.0.0.6:8001",
+      "containers": {
+        "app": {
+          "container_name": "kg-store",
+          "port": 8001,
+          "protocol": "http",
+          "db_engine": "surrealdb",
+          "image": "ghcr.io/diegonmarcos/kg-store:latest"
+        }
+      },
+      "container_names": [
+        "kg-store"
+      ],
+      "all_ports": [
+        "8001"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 8001
+      },
+      "backup": {
+        "enabled": true
+      },
+      "upstream_image": "surrealdb/surrealdb:v2",
+      "data_path": "/opt/data/surrealdb",
+      "kg": {
+        "namespace": "infra",
+        "database": "production",
+        "embedder": {
+          "enabled": false,
+          "model": "nomic-embed-text",
+          "dim": 768,
+          "index_type": "MTREE",
+          "vector_dtype": "F32"
+        },
+        "ingest": {
+          "endpoint": "/import",
+          "idempotent": true,
+          "stale_strategy": "mark"
+        },
+        "node_tables": [
+          {
+            "table": "vm",
+            "key_source": "ssh_alias"
+          },
+          {
+            "table": "service",
+            "key_source": "name"
+          },
+          {
+            "table": "container",
+            "key_source": "container_name"
+          },
+          {
+            "table": "domain",
+            "key_source": "fqdn"
+          },
+          {
+            "table": "log",
+            "key_source": "auto"
+          },
+          {
+            "table": "documentation",
+            "key_source": "path"
+          },
+          {
+            "table": "audit_log",
+            "key_source": "auto"
+          },
+          {
+            "table": "repo",
+            "key_source": "name"
+          },
+          {
+            "table": "module",
+            "key_source": "name"
+          },
+          {
+            "table": "package",
+            "key_source": "name"
+          }
+        ],
+        "edge_tables": [
+          {
+            "table": "hosted_on",
+            "in": "service",
+            "out": "vm"
+          },
+          {
+            "table": "runs_container",
+            "in": "service",
+            "out": "container"
+          },
+          {
+            "table": "depends_on",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "proxied_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "authenticated_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "connected_to",
+            "in": "vm",
+            "out": "vm"
+          },
+          {
+            "table": "routes_to",
+            "in": "domain",
+            "out": "service"
+          },
+          {
+            "table": "caused_by",
+            "in": "log",
+            "out": "any"
+          },
+          {
+            "table": "belongs_to_repo",
+            "in": "module",
+            "out": "repo"
+          },
+          {
+            "table": "implements",
+            "in": "module",
+            "out": "service"
+          },
+          {
+            "table": "declares_tool",
+            "in": "repo",
+            "out": "package"
+          },
+          {
+            "table": "consumes",
+            "in": "repo",
+            "out": "repo"
+          }
+        ]
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "secret_env_vars": [
+        "SURREAL_ROOT_PASSWORD"
+      ]
+    },
     "ollama": {
       "category": "agi",
       "vm": "gcp-t4",
@@ -4641,66 +4987,6 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
-      }
-    },
-    "claude-openai-bridge": {
-      "category": "net",
-      "vm": "oci-A1-f_0",
-      "folder": "bb-net_claude-openai-bridge",
-      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
-      "enabled": true,
-      "flake": "claude-openai-bridge",
-      "port": 3107,
-      "dns": "claude-openai-bridge.app",
-      "upstream": "10.0.0.6:3107",
-      "containers": {
-        "app": {
-          "container_name": "claude-openai-bridge",
-          "image": "ghcr.io/diegonmarcos/claude-openai-bridge:latest",
-          "port": 3107,
-          "port_env": "BRIDGE_PORT",
-          "dns": "claude-openai-bridge.app",
-          "public": false,
-          "healthcheck": "/health",
-          "monitoring": null,
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "claude-openai-bridge"
-      ],
-      "all_ports": [
-        "3107"
-      ],
-      "all_dns": [
-        "claude-openai-bridge.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false
-      },
-      "declared_ports": {
-        "app": 3107
-      },
-      "health": {
-        "path": "/health"
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/health"
-        ]
       }
     },
     "wireguard-mesh": {
@@ -6397,122 +6683,6 @@
         "DAGU_BASIC_AUTH"
       ]
     },
-    "cloud-cgc-mcp": {
-      "category": "obs",
-      "vm": "oci-A1-f_0",
-      "folder": "bc-obs_cloud-cgc-mcp",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "enabled": true,
-      "flake": "cloud-cgc-mcp",
-      "port": 3105,
-      "dns": "cloud-cgc-mcp.app",
-      "upstream": "10.0.0.6:3105",
-      "containers": {
-        "app": {
-          "container_name": "cloud-cgc-mcp",
-          "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
-          "port": 3105,
-          "port_env": "MCP_HTTP_PORT",
-          "dns": "cloud-cgc-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/cloud-cgc-mcp"
-          },
-          "healthcheck": "/mcp",
-          "monitoring": null,
-          "volumes": [
-            "./data:/data:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "cloud-cgc-mcp"
-      ],
-      "all_ports": [
-        "3105"
-      ],
-      "all_dns": [
-        "cloud-cgc-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/cloud-cgc-mcp",
-          "wg_only": true
-        }
-      },
-      "declared_ports": {
-        "app": 3105
-      },
-      "health": {
-        "path": "/mcp"
-      },
-      "runtime": {
-        "git_root": "/repos",
-        "data_path": "/data",
-        "octocode": {
-          "repos_volume": "octocode_repos",
-          "repos_path": "/repos",
-          "db_volume": "octocode_db",
-          "db_path": "/home/appuser/.local/share/octocode",
-          "llm": {
-            "_comment": "octocode GraphRAG LLM → claude-openai-bridge, TWO providers with fallback. openai:* reads OPENAI_API_URL → bridge /v1; ollama:* reads OLLAMA_API_URL (localhost:11434) → bridge Ollama mimic. reindex.sh forces use_llm=true (the flag that was off → 0 LLM calls) and tries `models` in order, falling back if a provider makes 0 bridge calls. api_key is a throwaway.",
-            "openai_api_url": "http://10.0.0.6:3107/v1/chat/completions",
-            "ollama_api_url": "http://localhost:11434",
-            "api_key": "sk-dummy",
-            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
-            "health_url": "http://10.0.0.6:3107/health"
-          },
-          "index_repos": [
-            "cloud",
-            "unix",
-            "front",
-            "tools",
-            "cloud-data",
-            "front-data"
-          ],
-          "home": "/home/appuser"
-        }
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/mcp"
-        ]
-      },
-      "mcp": {
-        "has_mcp": true,
-        "mcp_url": null,
-        "transport": "streamable-http",
-        "endpoint_path": "/mcp",
-        "tools_count": 48,
-        "resources_count": 2,
-        "prompts_count": 0,
-        "display_name": "Cloud CGC MCP",
-        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
-        "auth": "none",
-        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
-      }
-    },
     "cloud-spec": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -7856,175 +8026,6 @@
         "GITEA_ADMIN_EMAIL"
       ]
     },
-    "kg-graph": {
-      "category": "data",
-      "vm": "oci-A1-f_0",
-      "folder": "ca-dat_kg-graph",
-      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
-      "enabled": false,
-      "port": 8001,
-      "dns": "kg-graph.app",
-      "upstream": "10.0.0.6:8001",
-      "containers": {
-        "app": {
-          "container_name": "surrealdb",
-          "port": 8001,
-          "protocol": "http",
-          "db_engine": "surrealdb",
-          "image": "ghcr.io/diegonmarcos/kg-graph:latest"
-        }
-      },
-      "container_names": [
-        "surrealdb"
-      ],
-      "all_ports": [
-        "8001"
-      ],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "declared_ports": {
-        "app": 8001
-      },
-      "backup": {
-        "enabled": true
-      },
-      "upstream_image": "surrealdb/surrealdb:v2",
-      "data_path": "/opt/data/surrealdb",
-      "kg": {
-        "namespace": "infra",
-        "database": "production",
-        "embedder": {
-          "enabled": false,
-          "model": "nomic-embed-text",
-          "dim": 768,
-          "index_type": "MTREE",
-          "vector_dtype": "F32"
-        },
-        "ingest": {
-          "endpoint": "/import",
-          "idempotent": true,
-          "stale_strategy": "mark"
-        },
-        "node_tables": [
-          {
-            "table": "vm",
-            "key_source": "ssh_alias"
-          },
-          {
-            "table": "service",
-            "key_source": "name"
-          },
-          {
-            "table": "container",
-            "key_source": "container_name"
-          },
-          {
-            "table": "domain",
-            "key_source": "fqdn"
-          },
-          {
-            "table": "log",
-            "key_source": "auto"
-          },
-          {
-            "table": "documentation",
-            "key_source": "path"
-          },
-          {
-            "table": "audit_log",
-            "key_source": "auto"
-          },
-          {
-            "table": "repo",
-            "key_source": "name"
-          },
-          {
-            "table": "module",
-            "key_source": "name"
-          },
-          {
-            "table": "package",
-            "key_source": "name"
-          }
-        ],
-        "edge_tables": [
-          {
-            "table": "hosted_on",
-            "in": "service",
-            "out": "vm"
-          },
-          {
-            "table": "runs_container",
-            "in": "service",
-            "out": "container"
-          },
-          {
-            "table": "depends_on",
-            "in": "service",
-            "out": "service"
-          },
-          {
-            "table": "proxied_by",
-            "in": "service",
-            "out": "service"
-          },
-          {
-            "table": "authenticated_by",
-            "in": "service",
-            "out": "service"
-          },
-          {
-            "table": "connected_to",
-            "in": "vm",
-            "out": "vm"
-          },
-          {
-            "table": "routes_to",
-            "in": "domain",
-            "out": "service"
-          },
-          {
-            "table": "caused_by",
-            "in": "log",
-            "out": "any"
-          },
-          {
-            "table": "belongs_to_repo",
-            "in": "module",
-            "out": "repo"
-          },
-          {
-            "table": "implements",
-            "in": "module",
-            "out": "service"
-          },
-          {
-            "table": "declares_tool",
-            "in": "repo",
-            "out": "package"
-          },
-          {
-            "table": "consumes",
-            "in": "repo",
-            "out": "repo"
-          }
-        ]
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      },
-      "secret_env_vars": [
-        "SURREAL_ROOT_PASSWORD"
-      ]
-    },
     "postlite": {
       "category": "data",
       "vm": "gcp-E2-f_0",
@@ -8566,6 +8567,18 @@
         "service": "fin-api"
       },
       {
+        "name": "kg-bridge.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "kg-bridge"
+      },
+      {
+        "name": "kg-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "kg-mcp"
+      },
+      {
         "name": "ollama-hai.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -8576,12 +8589,6 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "hickory-dns"
-      },
-      {
-        "name": "claude-openai-bridge.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "claude-openai-bridge"
       },
       {
         "name": "authelia.app",
@@ -8648,12 +8655,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "c3-services-mcp"
-      },
-      {
-        "name": "cloud-cgc-mcp.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "cloud-cgc-mcp"
       },
       {
         "name": "c3-spec.app",
@@ -9008,16 +9009,17 @@
           "vaultwarden",
           "crawlee-cloud",
           "fin-api",
+          "kg-bridge",
+          "kg-mcp",
+          "kg-store",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
-          "claude-openai-bridge",
           "wireguard-mesh",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
           "c3-services-mcp",
-          "cloud-cgc-mcp",
           "cloud-spec",
           "dagu",
           "dbgate",
@@ -9029,8 +9031,7 @@
           "cloud-builder-x",
           "backup-borg",
           "backup-bup",
-          "gitea",
-          "kg-graph"
+          "gitea"
         ],
         "method": "key",
         "gha": {
@@ -9418,6 +9419,21 @@
         "vm": "oci-apps",
         "has_docker": true
       },
+      "kg-bridge": {
+        "dir": "ad-agi_kg-bridge",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "kg-mcp": {
+        "dir": "ad-agi_kg-mcp",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "kg-store": {
+        "dir": "ad-agi_kg-store",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
       "ollama": {
         "dir": "ad-agi_ollama",
         "vm": "gcp-t4",
@@ -9441,11 +9457,6 @@
       "hickory-dns": {
         "dir": "ba-clo_hickory-dns",
         "vm": "gcp-proxy",
-        "has_docker": true
-      },
-      "claude-openai-bridge": {
-        "dir": "bb-net_claude-openai-bridge",
-        "vm": "oci-apps",
         "has_docker": true
       },
       "wireguard-mesh": {
@@ -9508,11 +9519,6 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "cloud-cgc-mcp": {
-        "dir": "bc-obs_cloud-cgc-mcp",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "cloud-spec": {
         "dir": "bc-obs_cloud-spec",
         "vm": "oci-apps",
@@ -9570,11 +9576,6 @@
       },
       "gitea": {
         "dir": "ca-dat_gitea",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
-      "kg-graph": {
-        "dir": "ca-dat_kg-graph",
         "vm": "oci-apps",
         "has_docker": true
       },
