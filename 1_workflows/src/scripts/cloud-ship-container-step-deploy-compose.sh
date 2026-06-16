@@ -73,6 +73,21 @@ step_compose() {
         log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
     fi
 
+    # v1→v2 layout migration cleanup. Older deploys placed docker-compose.yml at
+    # the project ROOT; v2 canonical is a subdir (compose/docker-compose.yml). A
+    # lingering root file lets `docker compose` (or any `cd $dir && docker
+    # compose up`, e.g. the cloud-infra-local MCP tool) start a SECOND compose
+    # project that grabs the same explicit `container_name`. The canonical
+    # `down --remove-orphans` only evicts its own project, so that foreign
+    # container then blocks `up` with "container name already in use" (mail-mcp,
+    # 2026-06-16). When canonical compose lives in a subdir, tear down + delete
+    # any stale root file first so deploys stay idempotent. Runs on the VM; no
+    # single quotes (embedded into a single-quote-wrapped bash -c PAYLOAD).
+    LEGACY_COMPOSE_CLEANUP=""
+    case "$REMOTE_COMPOSE_REL" in
+        */*) LEGACY_COMPOSE_CLEANUP='if [ -f docker-compose.yml ]; then docker compose -f docker-compose.yml --project-directory . down --remove-orphans 2>/dev/null || true; rm -f docker-compose.yml; fi' ;;
+    esac
+
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
         # Generated in a tmpdir (ship transient — never pollutes dist/ or git working tree).
@@ -104,6 +119,7 @@ fi
 COMPOSE_HEADER
             # v2: compose at compose/ subdir; force project-dir=CWD for env_file/volumes resolution
             echo "COMPOSE_FILE_FLAG='-f $REMOTE_COMPOSE_REL --project-directory .'"
+            [ -n "$LEGACY_COMPOSE_CLEANUP" ] && echo "$LEGACY_COMPOSE_CLEANUP"
             [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
@@ -136,9 +152,9 @@ COMPOSE_HEADER
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
             # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
             # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
         ssh_with_retry "$DEPLOY_HOST" "bash -c '$PAYLOAD'"
     fi
