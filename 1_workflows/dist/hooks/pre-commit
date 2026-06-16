@@ -244,11 +244,12 @@ while IFS= read -r f; do
         # Git metadata files are never secret containers, even when their
         # path includes a "secret*" segment (e.g. 3_secrets/.gitignore).
         */.gitignore|.gitignore|*/.gitkeep|.gitkeep|*/.gitattributes|.gitattributes|*/.gitmodules|.gitmodules) continue ;;
-        # Dagu DAG yamls under */assets/dags/ are workflow definitions
-        # (schedule + steps), even when the DAG name involves "secrets"
-        # (e.g. sync_secrets.yaml). They reference env vars by name
-        # (${VAR}), never inline secret values.
-        */assets/dags/*.yaml|*/assets/dags/*.yml)
+        # Dagu DAG yamls under any */dags/ dir (src/dags/, assets/dags/, …)
+        # are workflow definitions (schedule + steps), even when the DAG name
+        # involves "secrets" (e.g. sync_secrets.yaml). They reference env vars
+        # by name (${VAR}), never inline secret values. Gated on DAG structure
+        # markers so a real secret file dropped in a dags/ dir still blocks.
+        */dags/*.yaml|*/dags/*.yml)
             if grep -qE '^(schedule|steps|type|env):' "$f" 2>/dev/null; then
                 continue
             fi
