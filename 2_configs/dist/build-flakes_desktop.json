@@ -460,6 +460,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
+        "claude-openai-bridge",
         "wireguard-mesh",
         "c3-infra-api",
         "c3-infra-mcp",
@@ -480,7 +481,7 @@
         "gitea",
         "kg-graph"
       ],
-      "container_count": 58
+      "container_count": 59
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -4507,6 +4508,66 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
+      }
+    },
+    "claude-openai-bridge": {
+      "category": "net",
+      "vm": "oci-A1-f_0",
+      "folder": "bb-net_claude-openai-bridge",
+      "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
+      "enabled": true,
+      "flake": "claude-openai-bridge",
+      "port": 3107,
+      "dns": "claude-openai-bridge.app",
+      "upstream": "10.0.0.6:3107",
+      "containers": {
+        "app": {
+          "container_name": "claude-openai-bridge",
+          "image": "ghcr.io/diegonmarcos/claude-openai-bridge:latest",
+          "port": 3107,
+          "port_env": "BRIDGE_PORT",
+          "dns": "claude-openai-bridge.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "claude-openai-bridge"
+      ],
+      "all_ports": [
+        "3107"
+      ],
+      "all_dns": [
+        "claude-openai-bridge.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3107
+      },
+      "health": {
+        "path": "/health"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
       }
     },
     "wireguard-mesh": {
