@@ -80,7 +80,7 @@ should_run() {
 
 # ── Cloudflare Worker (wrangler) ──
 if should_run "cf-worker"; then
-  WORKER_DIR="a_solutions/ba-clo_cloudflare-worker/src"
+  WORKER_DIR="a_solutions/infra-cloud_cloudflare-worker/src"
   if [ -d "$WORKER_DIR" ]; then
     echo "── Wrangler: cf-worker ($WORKER_DIR) ──"
     ensure_wrangler
