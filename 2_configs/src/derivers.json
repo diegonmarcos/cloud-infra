@@ -16,6 +16,11 @@
       "name": "build-workflows",
       "script": "src/engines/derive-build-workflows.ts",
       "description": "Runner-image registry (runners + probe + dispatch) extracted from 1_workflows/build.json. Replaces legacy cloud-data-runners.json. Consumed by 1_workflows/src/scripts/cloud-ship-* and tests via symlink 1_workflows/src/build-workflows.json -> ../../2_configs/dist/build-workflows.json"
+    },
+    {
+      "name": "code-signatures",
+      "script": "src/engines/derive-code-signatures.ts",
+      "description": "Per-file code signatures (exports/imports/symbols, no bodies) for the cloud repo → dist/code-signatures-cloud.json. Deterministic structure layer feeding the kg-graph code nodes/edges AND the Opus semantic GraphRAG pass (~244k tokens vs 5.6M full source)."
     }
   ]
 }
