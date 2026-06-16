@@ -25,7 +25,7 @@ check() {
   if "$@" &>/dev/null; then echo "[PASS] $label"; PASS=$((PASS+1))
   else echo "[FAIL] $label"; FAIL=$((FAIL+1)); fi
 }
-MADDY="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy"
+MADDY="$CLOUD_ROOT/a_solutions/user-comm_tools-maddy"
 SRC="$MADDY/src"
 
 # 1. Two active scripts present + executable + correctly named

@@ -251,6 +251,7 @@ ${USER_LINE}
 ${USER_SWITCH}
 ${ENV_LINE}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+ENTRYPOINT []
 ${CMD_LINE}
 NEOF
             # Stamp the engine-generated Dockerfile.native with the canonical
@@ -315,6 +316,60 @@ NEOF
                 log_error "native_build.app_dir='$APP_DIR_REL' not found at $BUILD_CWD"
                 return 1
             fi
+            BINARY_NAME=$(basename "$NATIVE_BINARY")
+            NATIVE_BUILDER="$(get_config docker.native_build.builder_image)"
+            if [ -n "$NATIVE_BUILDER" ]; then
+                # ── In-container multi-stage compile (arch-correct by design) ──
+                # The compile happens INSIDE docker, so it runs on whichever
+                # runner the arch matrix dispatches the build to (arm64 →
+                # oci-apps cloud-builder). This is the ONLY arch-safe path:
+                # the legacy host-compile below produces a binary of the CI
+                # host's arch — fin-api shipped an x86_64 ELF inside an
+                # "arm64" image (e_machine=0x3E), kernel ENOEXEC → dash
+                # fallback → 'Syntax error: "(" unexpected' (2026-06-11).
+                # builder_image is declared per-service in build.json
+                # (docker.native_build.builder_image) — data-driven, no
+                # toolchain guessing here.
+                log "Native build (binary, in-container): builder=$NATIVE_BUILDER cmd=$NATIVE_CMD"
+                cat > "$DIST_DIR/Dockerfile.native" <<NEOF
+FROM ${NATIVE_BUILDER} AS native-build
+WORKDIR /build
+COPY . /build
+RUN ${NATIVE_CMD}
+FROM ${NATIVE_BASE:-debian:bookworm-slim}
+${APT_LINE}
+COPY --from=native-build /build/${NATIVE_BINARY} /usr/local/bin/${BINARY_NAME}
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+CMD ["${BINARY_NAME}"]
+NEOF
+                [ -x "$INJECT_HEADER" ] && "$INJECT_HEADER" stamp "$DIST_DIR/Dockerfile.native" "$DIST_DIR/Dockerfile.native" || true
+                # Dockerfile must live inside the context so the remote-runner
+                # rsync ($BUILD_CONTEXT/ → runner) carries it along.
+                cp "$DIST_DIR/Dockerfile.native" "$BUILD_CWD/Dockerfile.native"
+                DOCKERFILE="Dockerfile.native"
+                BUILD_CONTEXT="$BUILD_CWD"
+                log "Native binary packaged (in-container, context=$BUILD_CWD)"
+                # Skip the host-compile path entirely.
+                NATIVE_HOST_COMPILE=false
+            else
+                NATIVE_HOST_COMPILE=true
+            fi
+            if [ "$NATIVE_HOST_COMPILE" = "true" ]; then
+            # ── Legacy host-compile path — host arch MUST match target ──
+            # uname -m → docker arch nomenclature. A host-compiled binary is
+            # the HOST's architecture no matter what --platform the later
+            # docker build claims; shipping it cross-arch is a guaranteed
+            # ENOEXEC on the VM. FAIL LOUDLY (same doctrine as the runner
+            # matrix: no QEMU, no cross-arch fallback).
+            _HOST_ARCH=$(uname -m)
+            case "$_HOST_ARCH" in
+                x86_64)         _HOST_ARCH="amd64" ;;
+                aarch64|arm64)  _HOST_ARCH="arm64" ;;
+            esac
+            if [ -n "$ARCH" ] && [ "$_HOST_ARCH" != "$ARCH" ]; then
+                log_error "native_build host-compile arch mismatch: host=$_HOST_ARCH target=$ARCH. Declare docker.native_build.builder_image (e.g. rust:1-bookworm) for an in-container multi-stage build on the arch-matching runner."
+                return 1
+            fi
             export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$BUILD_CWD/target}"
             log "Native build (binary): $NATIVE_CMD (cwd=$BUILD_CWD, CARGO_TARGET_DIR=$CARGO_TARGET_DIR)"
             (cd "$BUILD_CWD" && eval "$NATIVE_CMD") 2>&1 \
@@ -367,6 +422,7 @@ NEOF
             # directory" (mail-puller regression, fixed 2026-05-05).
             BUILD_CONTEXT="$DIST_DIR"
             log "Native binary packaged: $BINARY_NAME ($(du -sh "$DIST_DIR/$BINARY_NAME" | cut -f1))"
+            fi # NATIVE_HOST_COMPILE
         fi
     fi
 
@@ -417,17 +473,32 @@ NEOF
         return 0
     fi
 
-    # GHCR login — best-effort.
-    # The login is REDUNDANT inside cloud-builder: the GHA runner already
-    # logged in before `docker compose run`, and ${HOME}/.docker/config.json
-    # is bind-mounted RO into cloud-builder per cb_containers-builders compose.yaml.
-    # The re-login fails with "permission denied" trying to write the RO
-    # mount → previously aborted step_docker silently because of `2>/dev/null`
-    # combined with set -e. Now: stderr is preserved (for debuggability) and
-    # `|| true` keeps the pipeline going since downstream `docker push` will
-    # surface its own error if auth is genuinely broken.
+    # GHCR login — best-effort, three-tier fallback (mirrors the remote-runner
+    # branch at the bottom of this file for uniform auth across local + remote):
+    #
+    #   1. Vault PAT (~/git/vault/...) — owner-scoped PAT with write:packages.
+    #      ALWAYS works when vault is present. Tried FIRST because the GHA
+    #      ephemeral $GITHUB_TOKEN has failed before with `denied:
+    #      permission_denied: write_package` (forked PR context, package-level
+    #      access lists, etc.); the vault PAT bypasses all of that.
+    #   2. $GITHUB_TOKEN — GHA workflow ephemeral, when running inside GHA.
+    #   3. `gh auth token` — interactive `gh` login (devs running locally).
+    #
+    # The login itself is REDUNDANT inside cloud-builder when the GHA runner
+    # already logged in before `docker compose run` (${HOME}/.docker/config.json
+    # is bind-mounted RO into cloud-builder per cb_containers-builders
+    # compose.yaml). The re-login fails with "permission denied" trying to
+    # write the RO mount → previously aborted step_docker silently because of
+    # `2>/dev/null` combined with set -e. Now: stderr is preserved (for
+    # debuggability) and `|| true` keeps the pipeline going since downstream
+    # `docker push` will surface its own error if auth is genuinely broken.
     # Surfaced 2026-04-27 (ship run 24998359368) by step_docker ERR trap.
-    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    GHCR_USER="${GHCR_USER:-diegonmarcos}"
+    if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
+    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
             | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     elif command -v gh >/dev/null 2>&1; then

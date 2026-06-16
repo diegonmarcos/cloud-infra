@@ -51,7 +51,7 @@ fi
 echo ""
 echo "── 2: cloud-builder-x uses explicit container_name + on_demand ──"
 
-cb_build="$REPO_ROOT/a_solutions/bd-cloud-builder-x/build.json"
+cb_build="$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/build.json"
 if jq -e '.on_demand == true' "$cb_build" >/dev/null 2>&1; then
     pass "bd-cloud-builder-x has on_demand: true"
 else
@@ -59,7 +59,7 @@ else
 fi
 
 # Follow the src symlink into unix submodule for the compose source
-cb_compose="$REPO_ROOT/a_solutions/bd-cloud-builder-x/src/docker/compose.yaml"
+cb_compose="$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/src/docker/compose.yaml"
 if [ -f "$cb_compose" ]; then
     if grep -qE '^\s+container_name:\s*cloud-builder-x\s*$' "$cb_compose"; then
         pass "cloud-builder compose declares container_name: cloud-builder-x"

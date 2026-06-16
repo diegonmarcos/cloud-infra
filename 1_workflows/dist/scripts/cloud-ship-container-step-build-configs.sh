@@ -40,8 +40,15 @@ step_configs_push() {
     fi
     log "configs-push start (hash=$CONFIGS_HASH, arch=${DOCKER_ARCH:-amd64})"
 
-    # GHCR login (CI provides GITHUB_TOKEN+GITHUB_ACTOR; locally fall back to `gh` CLI)
-    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    # GHCR login — vault PAT first (owner-scoped, has write:packages and works
+    # even when GHA $GITHUB_TOKEN is denied by package access lists / fork
+    # context); then GHA env; then `gh` CLI (interactive devs).
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    GHCR_USER="${GHCR_USER:-diegonmarcos}"
+    if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null 2>&1
+        [ $? -eq 0 ] && log "GHCR login OK (vault)" || log_warn "GHCR login failed (vault)"
+    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1
         [ $? -eq 0 ] && log "GHCR login OK (env)" || log_warn "GHCR login failed (env)"
     elif command -v gh >/dev/null 2>&1; then

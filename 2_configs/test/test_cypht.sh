@@ -16,8 +16,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 CLOUD_ROOT="$(cd ../ && pwd)"
-CYPHT_DIR="${CLOUD_ROOT}/a_solutions/aa-sui_cypht"
-SNAP_DIR="${CLOUD_ROOT}/a_solutions/aa-sui_snappymail"
+CYPHT_DIR="${CLOUD_ROOT}/a_solutions/user-comm_cypht"
+SNAP_DIR="${CLOUD_ROOT}/a_solutions/user-comm_snappymail"
 
 PASS=0
 FAIL=0
@@ -392,10 +392,10 @@ check "flake.nix: NO Nix-path ref './seed-accounts.json' (Phase-6 deleted; only 
 echo ""
 echo "==> 7h. Cross-service SoT singularity — no duplicate mailbox declarations"
 
-MADDY_BJ="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/build.json"
-STAL_BJ="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/build.json"
-MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/src/templates/init.sh.tpl"
-STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/src/templates/activate.sh.tpl"
+MADDY_BJ="$CLOUD_ROOT/a_solutions/user-comm_tools-maddy/build.json"
+STAL_BJ="$CLOUD_ROOT/a_solutions/user-comm_tools-stalwart/build.json"
+MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/user-comm_tools-maddy/src/templates/init.sh.tpl"
+STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/user-comm_tools-stalwart/src/templates/activate.sh.tpl"
 BC_JSON="$CLOUD_ROOT/2_configs/dist/build-cypht.json"
 
 check "maddy/build.json: declares users{admin,noreply} with name+pass_env" \
@@ -408,8 +408,8 @@ check "stalwart/build.json: extra_ports[].service labels (jmap_tls, smtp_ssl, sm
     bash -c "jq -e '.containers.app.extra_ports | map(.service) | (index(\"jmap_tls\") != null and index(\"smtp_ssl\") != null and index(\"smtp_starttls\") != null and index(\"imap_ssl\") != null)' '$STAL_BJ' >/dev/null"
 
 # Templates must NOT hardcode mailbox addresses anymore — rely on userBlock substitution
-MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-maddy/src/templates/init.sh.tpl"
-STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/aa-sui_tools-stalwart/src/templates/activate.sh.tpl"
+MADDY_INIT_TPL="$CLOUD_ROOT/a_solutions/user-comm_tools-maddy/src/templates/init.sh.tpl"
+STAL_ACT_TPL="$CLOUD_ROOT/a_solutions/user-comm_tools-stalwart/src/templates/activate.sh.tpl"
 
 check "maddy/init.sh.tpl: contains @USER_CREATION_BLOCK@ placeholder (no hardcoded me@/no-reply@)" \
     bash -c "grep -q '@USER_CREATION_BLOCK@' '$MADDY_INIT_TPL' && ! grep -qE 'creds (create|password)\\s+(me|no-reply)@' '$MADDY_INIT_TPL'"

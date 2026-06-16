@@ -12,7 +12,7 @@
 set -euo pipefail
 
 REPO="${GIT_BASE:-$HOME/git}"
-CADDY_SRC="$REPO/cloud/a_solutions/bb-sec_caddy/src"
+CADDY_SRC="$REPO/cloud/a_solutions/infra-sec_caddy/src"
 CLOUD_JSON="$REPO/cloud/2_configs/dist/build-caddy.json"
 CADDY_JSON="$CADDY_SRC/build-caddy.json"
 LIVE_SNAPSHOT="${LIVE_SNAPSHOT:-/tmp/caddyfile-live-pre.txt}"

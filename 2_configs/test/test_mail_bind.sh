@@ -25,9 +25,9 @@ check() {
 echo "==> Regenerating dist/ ..."
 ./build.sh >/dev/null
 
-MADDY_CONF="../a_solutions/aa-sui_tools-maddy/dist/configs/maddy.conf.tpl"
-STALWART_CONF="../a_solutions/aa-sui_tools-stalwart/dist/configs/config.toml"
-STALWART_COMPOSE="../a_solutions/aa-sui_tools-stalwart/dist/compose/docker-compose.yml"
+MADDY_CONF="../a_solutions/user-comm_tools-maddy/dist/configs/maddy.conf.tpl"
+STALWART_CONF="../a_solutions/user-comm_tools-stalwart/dist/configs/config.toml"
+STALWART_COMPOSE="../a_solutions/user-comm_tools-stalwart/dist/compose/docker-compose.yml"
 CADDY_JSON="dist/build-caddy.json"
 DERIVE_SRC="src/engines/cloud-data-config-derive.ts"
 
@@ -57,7 +57,7 @@ check "maddy: SMTPS 465 dual-binds loopback (transitional)" \
 
 # ── SnappyMail: domain.ini uses mail.diegonmarcos.com (cert-matching public name)
 # Resolves via Hickory → Caddy L4 → Maddy's WG bind. No loopback shortcut.
-SNAPPY_DOMAIN="../a_solutions/aa-sui_snappymail/dist/configs/domain.ini"
+SNAPPY_DOMAIN="../a_solutions/user-comm_snappymail/dist/configs/domain.ini"
 check "snappymail: imap_host = mail.diegonmarcos.com (cert-matching public name)" \
   grep -qE '^imap_host = "mail\.diegonmarcos\.com"' "$SNAPPY_DOMAIN"
 
@@ -101,7 +101,7 @@ check "derive: listen_scope branch present in source" \
   grep -q 'listen_scope === "wg"' "$DERIVE_SRC"
 
 check "caddy template: mkL4Block honors route.listen" \
-  grep -q 'route.listen or' "../a_solutions/bb-sec_caddy/src/caddyfile.nix"
+  grep -q 'route.listen or' "../a_solutions/infra-sec_caddy/src/caddyfile.nix"
 
 # ── Derive engine: l4Map code still present (reversibility contract) ──────────
 check "derive: l4Map block preserved" \

@@ -5,9 +5,161 @@
   "suffix": "app",
   "caddy_ip": "10.0.0.1",
   "services": {
-    "calendar": {
+    "c3-analytics-api": {
       "ip": "10.0.0.1",
-      "desc": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+      "desc": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
+    },
+    "c3-infra-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 REST API — Cloud Control Center Fastify API"
+    },
+    "c3-infra-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)"
+    },
+    "c3-public-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
+    },
+    "c3-services-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Services REST API — service API gateway Fastify API"
+    },
+    "c3-services-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)"
+    },
+    "g-personal-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account"
+    },
+    "g-workspace-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport"
+    },
+    "mail-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API"
+    },
+    "mattermost-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost MCP server — chat tools via HTTP transport"
+    },
+    "cf-worker-http-to-wg-public-bridge": {
+      "ip": "10.0.0.1",
+      "desc": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
+    },
+    "http-to-smtp-proxy-api": {
+      "ip": "10.0.0.1",
+      "desc": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]"
+    },
+    "backup-borg": {
+      "ip": "10.0.0.1",
+      "desc": "Media Backups SSH Server (Borg deduplication)"
+    },
+    "backup-bup": {
+      "ip": "10.0.0.1",
+      "desc": "Database Backups SSH Server (bup)"
+    },
+    "gitea": {
+      "ip": "10.0.0.1",
+      "desc": "Self-hosted Git service"
+    },
+    "redis": {
+      "ip": "10.0.0.1",
+      "desc": "In-memory data store"
+    },
+    "hickory-dns": {
+      "ip": "10.0.0.1",
+      "desc": "Internal DNS server for WireGuard mesh (per-service .app zones)"
+    },
+    "wireguard-mesh": {
+      "ip": "10.0.0.1",
+      "desc": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "ip": "10.0.0.1",
+      "desc": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+    },
+    "c3-spec": {
+      "ip": "10.0.0.1",
+      "desc": "Unified Cloud Documentation Portal"
+    },
+    "dagu": {
+      "ip": "10.0.0.1",
+      "desc": "Dagu - Lightweight DAG-based workflow scheduler"
+    },
+    "dbgate": {
+      "ip": "10.0.0.1",
+      "desc": "DBGate - Universal database manager for all cloud databases"
+    },
+    "matomo": {
+      "ip": "10.0.0.1",
+      "desc": "Matomo hybrid analytics (oci-apps)"
+    },
+    "ntfy": {
+      "ip": "10.0.0.1",
+      "desc": "Push notification server"
+    },
+    "openobserve": {
+      "ip": "10.0.0.1",
+      "desc": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
+    },
+    "umami": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "umami-db": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "umami-setup": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "authelia": {
+      "ip": "10.0.0.1",
+      "desc": "SSO and 2FA authentication portal"
+    },
+    "authelia-redis": {
+      "ip": "10.0.0.1",
+      "desc": "SSO and 2FA authentication portal"
+    },
+    "caddy": {
+      "ip": "10.0.0.1",
+      "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
+    },
+    "caddy-l4-public": {
+      "ip": "10.0.0.1",
+      "desc": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly."
+    },
+    "introspect-proxy": {
+      "ip": "10.0.0.1",
+      "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
+    },
+    "kg-bridge": {
+      "ip": "10.0.0.1",
+      "desc": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public."
+    },
+    "kg-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search"
+    },
+    "kg-store": {
+      "ip": "10.0.0.1",
+      "desc": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search"
+    },
+    "ollama-hai": {
+      "ip": "10.0.0.1",
+      "desc": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode"
+    },
+    "rig-agentic-hai-1.5bq4": {
+      "ip": "10.0.0.1",
+      "desc": "Rig Agentic AI (HAI) — Lightweight Qwen 1.5B Q4 agent with strict allowlist guardrails"
+    },
+    "rig-agentic-sonn-14bq8": {
+      "ip": "10.0.0.1",
+      "desc": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP"
     },
     "mattermost": {
       "ip": "10.0.0.1",
@@ -21,53 +173,9 @@
       "ip": "10.0.0.1",
       "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
     },
-    "code-server": {
-      "ip": "10.0.0.1",
-      "desc": "VS Code IDE (ide.diegonmarcos.com)"
-    },
-    "contacts": {
-      "ip": "10.0.0.1",
-      "desc": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
-    },
     "cypht": {
       "ip": "10.0.0.1",
       "desc": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com"
-    },
-    "etherpad": {
-      "ip": "10.0.0.1",
-      "desc": "Etherpad collaborative editor"
-    },
-    "etherpad-db": {
-      "ip": "10.0.0.1",
-      "desc": "Etherpad collaborative editor"
-    },
-    "filebrowser": {
-      "ip": "10.0.0.1",
-      "desc": "FileBrowser web file manager (NEW - not deployed yet)"
-    },
-    "g-personal-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account"
-    },
-    "g-workspace-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport"
-    },
-    "grist": {
-      "ip": "10.0.0.1",
-      "desc": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
-    },
-    "hedgedoc": {
-      "ip": "10.0.0.1",
-      "desc": "Collaborative markdown editor"
-    },
-    "hedgedoc-db": {
-      "ip": "10.0.0.1",
-      "desc": "Collaborative markdown editor"
-    },
-    "mail-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API"
     },
     "mail-puller": {
       "ip": "10.0.0.1",
@@ -85,53 +193,9 @@
       "ip": "10.0.0.1",
       "desc": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix."
     },
-    "mattermost-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "Mattermost MCP server — chat tools via HTTP transport"
-    },
-    "paca": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "paca-api": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "paca-web": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "paca-realtime": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "paca-valkey": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "paca-postgres": {
-      "ip": "10.0.0.1",
-      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
-    },
-    "photoprism": {
-      "ip": "10.0.0.1",
-      "desc": "PhotoPrism AI-powered photo management (oci-flex-1)"
-    },
-    "revealmd": {
-      "ip": "10.0.0.1",
-      "desc": "Reveal.js markdown presentations (not deployed)"
-    },
     "snappymail": {
       "ip": "10.0.0.1",
       "desc": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
-    },
-    "cf-worker-http-to-wg-public-bridge": {
-      "ip": "10.0.0.1",
-      "desc": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
-    },
-    "http-to-smtp-proxy-api": {
-      "ip": "10.0.0.1",
-      "desc": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]"
     },
     "maddy": {
       "ip": "10.0.0.1",
@@ -140,10 +204,6 @@
     "stalwart": {
       "ip": "10.0.0.1",
       "desc": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
-    },
-    "vaultwarden": {
-      "ip": "10.0.0.1",
-      "desc": "Bitwarden password manager"
     },
     "crawlee": {
       "ip": "10.0.0.1",
@@ -177,141 +237,81 @@
       "ip": "10.0.0.1",
       "desc": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     },
-    "kg-bridge": {
+    "photoprism": {
       "ip": "10.0.0.1",
-      "desc": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public."
-    },
-    "kg-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search"
-    },
-    "kg-store": {
-      "ip": "10.0.0.1",
-      "desc": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search"
-    },
-    "ollama-hai": {
-      "ip": "10.0.0.1",
-      "desc": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode"
-    },
-    "rig-agentic-hai-1.5bq4": {
-      "ip": "10.0.0.1",
-      "desc": "Rig Agentic AI (HAI) — Lightweight Qwen 1.5B Q4 agent with strict allowlist guardrails"
-    },
-    "rig-agentic-sonn-14bq8": {
-      "ip": "10.0.0.1",
-      "desc": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP"
-    },
-    "hickory-dns": {
-      "ip": "10.0.0.1",
-      "desc": "Internal DNS server for WireGuard mesh (per-service .app zones)"
-    },
-    "wireguard-mesh": {
-      "ip": "10.0.0.1",
-      "desc": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
-    },
-    "wireguard-mesh-ws-tunnel": {
-      "ip": "10.0.0.1",
-      "desc": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
-    },
-    "authelia": {
-      "ip": "10.0.0.1",
-      "desc": "SSO and 2FA authentication portal"
-    },
-    "authelia-redis": {
-      "ip": "10.0.0.1",
-      "desc": "SSO and 2FA authentication portal"
-    },
-    "caddy": {
-      "ip": "10.0.0.1",
-      "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
-    },
-    "caddy-l4-public": {
-      "ip": "10.0.0.1",
-      "desc": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly."
-    },
-    "introspect-proxy": {
-      "ip": "10.0.0.1",
-      "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
-    },
-    "c3-analytics-api": {
-      "ip": "10.0.0.1",
-      "desc": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
-    },
-    "c3-infra-api": {
-      "ip": "10.0.0.1",
-      "desc": "C3 REST API — Cloud Control Center Fastify API"
-    },
-    "c3-infra-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)"
-    },
-    "c3-public-api": {
-      "ip": "10.0.0.1",
-      "desc": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
-    },
-    "c3-services-api": {
-      "ip": "10.0.0.1",
-      "desc": "C3 Services REST API — service API gateway Fastify API"
-    },
-    "c3-services-mcp": {
-      "ip": "10.0.0.1",
-      "desc": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)"
-    },
-    "c3-spec": {
-      "ip": "10.0.0.1",
-      "desc": "Unified Cloud Documentation Portal"
-    },
-    "dagu": {
-      "ip": "10.0.0.1",
-      "desc": "Dagu - Lightweight DAG-based workflow scheduler"
-    },
-    "dbgate": {
-      "ip": "10.0.0.1",
-      "desc": "DBGate - Universal database manager for all cloud databases"
-    },
-    "matomo": {
-      "ip": "10.0.0.1",
-      "desc": "Matomo hybrid analytics (oci-apps)"
+      "desc": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     "news-gdelt": {
       "ip": "10.0.0.1",
       "desc": "GDELT News Aggregator — Fastify API with SQLite cache"
     },
-    "ntfy": {
+    "calendar": {
       "ip": "10.0.0.1",
-      "desc": "Push notification server"
+      "desc": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
     },
-    "openobserve": {
+    "code-server": {
       "ip": "10.0.0.1",
-      "desc": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
+      "desc": "VS Code IDE (ide.diegonmarcos.com)"
     },
-    "umami": {
+    "contacts": {
       "ip": "10.0.0.1",
-      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+      "desc": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
-    "umami-db": {
+    "etherpad": {
       "ip": "10.0.0.1",
-      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+      "desc": "Etherpad collaborative editor"
     },
-    "umami-setup": {
+    "etherpad-db": {
       "ip": "10.0.0.1",
-      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+      "desc": "Etherpad collaborative editor"
     },
-    "backup-borg": {
+    "filebrowser": {
       "ip": "10.0.0.1",
-      "desc": "Media Backups SSH Server (Borg deduplication)"
+      "desc": "FileBrowser web file manager (NEW - not deployed yet)"
     },
-    "backup-bup": {
+    "grist": {
       "ip": "10.0.0.1",
-      "desc": "Database Backups SSH Server (bup)"
+      "desc": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
     },
-    "gitea": {
+    "hedgedoc": {
       "ip": "10.0.0.1",
-      "desc": "Self-hosted Git service"
+      "desc": "Collaborative markdown editor"
     },
-    "redis": {
+    "hedgedoc-db": {
       "ip": "10.0.0.1",
-      "desc": "In-memory data store"
+      "desc": "Collaborative markdown editor"
+    },
+    "paca": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-api": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-web": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-realtime": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-valkey": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-postgres": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "revealmd": {
+      "ip": "10.0.0.1",
+      "desc": "Reveal.js markdown presentations (not deployed)"
+    },
+    "vaultwarden": {
+      "ip": "10.0.0.1",
+      "desc": "Bitwarden password manager"
     },
     "s3-backups-binaries": {
       "ip": "10.0.0.1",

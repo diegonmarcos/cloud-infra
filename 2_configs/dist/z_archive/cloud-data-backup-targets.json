@@ -4,268 +4,32 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/backup-targets",
   "targets": [
     {
-      "service": "chat-mattermost",
+      "service": "gitea",
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
       "volumes": [
-        "mattermost_data",
-        "mattermost_postgres"
+        "gitea_data"
       ],
       "databases": [
         {
-          "service": "chat-mattermost",
-          "container": "mattermost-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "mattermost",
-          "db": "mattermost"
-        }
-      ]
-    },
-    {
-      "service": "etherpad",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "etherpad",
-          "container": "etherpad_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "etherpad",
-          "db": "etherpad"
-        }
-      ]
-    },
-    {
-      "service": "grist",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "grist_data"
-      ],
-      "databases": [
-        {
-          "service": "grist",
-          "container": "grist_app",
+          "service": "gitea",
+          "container": "gitea",
           "container_key": "app",
           "type": "sqlite",
-          "path": "/persist/grist-sessions.db"
+          "path": "/data/gitea/gitea.db"
         }
       ]
     },
     {
-      "service": "hedgedoc",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "hedgedoc",
-          "container": "hedgedoc_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "hedgedoc",
-          "db": "hedgedoc"
-        }
-      ]
-    },
-    {
-      "service": "mail-puller",
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "volumes": [
-        "mail_puller_state"
-      ],
-      "databases": [
-        {
-          "service": "mail-puller",
-          "container": "mail-puller",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/var/lib/mail-puller/state.db"
-        }
-      ]
-    },
-    {
-      "service": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "continuwuity_data"
-      ],
-      "databases": []
-    },
-    {
-      "service": "matrix-mautrix-whatsapp",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "mautrix_whatsapp_data"
-      ],
-      "databases": [
-        {
-          "service": "matrix-mautrix-whatsapp",
-          "container": "mautrix-whatsapp",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/mautrix-whatsapp.db"
-        }
-      ]
-    },
-    {
-      "service": "paca",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "paca_postgres",
-        "paca_valkey",
-        "paca_backend_plugins",
-        "paca_frontend_plugins",
-        "paca_mcp_plugins"
-      ],
-      "databases": [
-        {
-          "service": "paca",
-          "container": "paca-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "paca",
-          "db": "paca"
-        }
-      ]
-    },
-    {
-      "service": "photoprism",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "photoprism_originals",
-        "photoprism_storage"
-      ],
-      "databases": [
-        {
-          "service": "photoprism",
-          "container": "photoprism_mariadb",
-          "container_key": "db",
-          "type": "mariadb",
-          "user": "root",
-          "db": "photoprism"
-        }
-      ]
-    },
-    {
-      "service": "maddy",
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "volumes": [
-        "maddy_data"
-      ],
-      "databases": [
-        {
-          "service": "maddy",
-          "container": "maddy",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/imapsql.db"
-        }
-      ]
-    },
-    {
-      "service": "stalwart",
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "volumes": [
-        "stalwart_data"
-      ],
-      "databases": [
-        {
-          "service": "stalwart",
-          "container": "stalwart",
-          "container_key": "app",
-          "type": "rocksdb",
-          "path": "/opt/stalwart-mail/data",
-          "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'"
-        }
-      ]
-    },
-    {
-      "service": "vaultwarden",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "vaultwarden_data"
-      ],
-      "databases": [
-        {
-          "service": "vaultwarden",
-          "container": "vaultwarden",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/db.sqlite3"
-        }
-      ]
-    },
-    {
-      "service": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_db",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "crawlee",
-          "db": "crawlee"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_redis",
-          "container_key": "redis",
-          "type": "redis"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_minio",
-          "container_key": "minio",
-          "type": "minio"
-        }
-      ]
-    },
-    {
-      "service": "kg-store",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [],
-      "databases": [
-        {
-          "service": "kg-store",
-          "container": "kg-store",
-          "container_key": "app",
-          "type": "surrealdb"
-        }
-      ]
-    },
-    {
-      "service": "authelia",
+      "service": "redis",
       "vm": "gcp-E2-f_0",
       "vm_alias": "gcp-proxy",
       "volumes": [],
       "databases": [
         {
-          "service": "authelia",
-          "container": "authelia",
+          "service": "redis",
+          "container": "redis",
           "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/db.sqlite3"
-        },
-        {
-          "service": "authelia",
-          "container": "authelia-redis",
-          "container_key": "redis",
           "type": "redis"
         }
       ]
@@ -329,41 +93,48 @@
       ]
     },
     {
-      "service": "gitea",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "gitea_data"
-      ],
-      "databases": [
-        {
-          "service": "gitea",
-          "container": "gitea",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/gitea/gitea.db"
-        }
-      ]
-    },
-    {
-      "service": "redis",
+      "service": "authelia",
       "vm": "gcp-E2-f_0",
       "vm_alias": "gcp-proxy",
       "volumes": [],
       "databases": [
         {
-          "service": "redis",
-          "container": "redis",
+          "service": "authelia",
+          "container": "authelia",
           "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/db.sqlite3"
+        },
+        {
+          "service": "authelia",
+          "container": "authelia-redis",
+          "container_key": "redis",
           "type": "redis"
         }
       ]
-    }
-  ],
-  "by_vm": {
-    "oci-apps": {
-      "wg_ip": "10.0.0.6",
-      "user": "ubuntu",
+    },
+    {
+      "service": "kg-store",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [],
+      "databases": [
+        {
+          "service": "kg-store",
+          "container": "kg-store",
+          "container_key": "app",
+          "type": "surrealdb"
+        }
+      ]
+    },
+    {
+      "service": "chat-mattermost",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "mattermost_data",
+        "mattermost_postgres"
+      ],
       "databases": [
         {
           "service": "chat-mattermost",
@@ -372,60 +143,93 @@
           "type": "postgres",
           "user": "mattermost",
           "db": "mattermost"
-        },
+        }
+      ]
+    },
+    {
+      "service": "mail-puller",
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "volumes": [
+        "mail_puller_state"
+      ],
+      "databases": [
         {
-          "service": "etherpad",
-          "container": "etherpad_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "etherpad",
-          "db": "etherpad"
-        },
-        {
-          "service": "grist",
-          "container": "grist_app",
+          "service": "mail-puller",
+          "container": "mail-puller",
           "container_key": "app",
           "type": "sqlite",
-          "path": "/persist/grist-sessions.db"
-        },
-        {
-          "service": "hedgedoc",
-          "container": "hedgedoc_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "hedgedoc",
-          "db": "hedgedoc"
-        },
+          "path": "/var/lib/mail-puller/state.db"
+        }
+      ]
+    },
+    {
+      "service": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "continuwuity_data"
+      ],
+      "databases": []
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "mautrix_whatsapp_data"
+      ],
+      "databases": [
         {
           "service": "matrix-mautrix-whatsapp",
           "container": "mautrix-whatsapp",
           "container_key": "app",
           "type": "sqlite",
           "path": "/data/mautrix-whatsapp.db"
-        },
+        }
+      ]
+    },
+    {
+      "service": "maddy",
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "volumes": [
+        "maddy_data"
+      ],
+      "databases": [
         {
-          "service": "paca",
-          "container": "paca-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "user": "paca",
-          "db": "paca"
-        },
-        {
-          "service": "photoprism",
-          "container": "photoprism_mariadb",
-          "container_key": "db",
-          "type": "mariadb",
-          "user": "root",
-          "db": "photoprism"
-        },
-        {
-          "service": "vaultwarden",
-          "container": "vaultwarden",
+          "service": "maddy",
+          "container": "maddy",
           "container_key": "app",
           "type": "sqlite",
-          "path": "/data/db.sqlite3"
-        },
+          "path": "/data/imapsql.db"
+        }
+      ]
+    },
+    {
+      "service": "stalwart",
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "volumes": [
+        "stalwart_data"
+      ],
+      "databases": [
+        {
+          "service": "stalwart",
+          "container": "stalwart",
+          "container_key": "app",
+          "type": "rocksdb",
+          "path": "/opt/stalwart-mail/data",
+          "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'"
+        }
+      ]
+    },
+    {
+      "service": "crawlee-cloud",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [],
+      "databases": [
         {
           "service": "crawlee-cloud",
           "container": "crawlee_db",
@@ -445,12 +249,128 @@
           "container": "crawlee_minio",
           "container_key": "minio",
           "type": "minio"
-        },
+        }
+      ]
+    },
+    {
+      "service": "photoprism",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "photoprism_originals",
+        "photoprism_storage"
+      ],
+      "databases": [
         {
-          "service": "kg-store",
-          "container": "kg-store",
+          "service": "photoprism",
+          "container": "photoprism_mariadb",
+          "container_key": "db",
+          "type": "mariadb",
+          "user": "root",
+          "db": "photoprism"
+        }
+      ]
+    },
+    {
+      "service": "etherpad",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [],
+      "databases": [
+        {
+          "service": "etherpad",
+          "container": "etherpad_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "etherpad",
+          "db": "etherpad"
+        }
+      ]
+    },
+    {
+      "service": "grist",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "grist_data"
+      ],
+      "databases": [
+        {
+          "service": "grist",
+          "container": "grist_app",
           "container_key": "app",
-          "type": "surrealdb"
+          "type": "sqlite",
+          "path": "/persist/grist-sessions.db"
+        }
+      ]
+    },
+    {
+      "service": "hedgedoc",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [],
+      "databases": [
+        {
+          "service": "hedgedoc",
+          "container": "hedgedoc_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "hedgedoc",
+          "db": "hedgedoc"
+        }
+      ]
+    },
+    {
+      "service": "paca",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "paca_postgres",
+        "paca_valkey",
+        "paca_backend_plugins",
+        "paca_frontend_plugins",
+        "paca_mcp_plugins"
+      ],
+      "databases": [
+        {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "paca",
+          "db": "paca"
+        }
+      ]
+    },
+    {
+      "service": "vaultwarden",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "vaultwarden_data"
+      ],
+      "databases": [
+        {
+          "service": "vaultwarden",
+          "container": "vaultwarden",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/db.sqlite3"
+        }
+      ]
+    }
+  ],
+  "by_vm": {
+    "oci-apps": {
+      "wg_ip": "10.0.0.6",
+      "user": "ubuntu",
+      "databases": [
+        {
+          "service": "gitea",
+          "container": "gitea",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/gitea/gitea.db"
         },
         {
           "service": "matomo",
@@ -476,31 +396,137 @@
           "db": "umami"
         },
         {
-          "service": "gitea",
-          "container": "gitea",
+          "service": "kg-store",
+          "container": "kg-store",
+          "container_key": "app",
+          "type": "surrealdb"
+        },
+        {
+          "service": "chat-mattermost",
+          "container": "mattermost-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "mattermost",
+          "db": "mattermost"
+        },
+        {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
           "container_key": "app",
           "type": "sqlite",
-          "path": "/data/gitea/gitea.db"
+          "path": "/data/mautrix-whatsapp.db"
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_db",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "crawlee",
+          "db": "crawlee"
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_redis",
+          "container_key": "redis",
+          "type": "redis"
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_minio",
+          "container_key": "minio",
+          "type": "minio"
+        },
+        {
+          "service": "photoprism",
+          "container": "photoprism_mariadb",
+          "container_key": "db",
+          "type": "mariadb",
+          "user": "root",
+          "db": "photoprism"
+        },
+        {
+          "service": "etherpad",
+          "container": "etherpad_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "etherpad",
+          "db": "etherpad"
+        },
+        {
+          "service": "grist",
+          "container": "grist_app",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/persist/grist-sessions.db"
+        },
+        {
+          "service": "hedgedoc",
+          "container": "hedgedoc_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "hedgedoc",
+          "db": "hedgedoc"
+        },
+        {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "user": "paca",
+          "db": "paca"
+        },
+        {
+          "service": "vaultwarden",
+          "container": "vaultwarden",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/db.sqlite3"
         }
       ],
       "volumes": [
+        "gitea_data",
+        "dbgate_data",
+        "matomo_data",
         "mattermost_data",
         "mattermost_postgres",
-        "grist_data",
         "continuwuity_data",
         "mautrix_whatsapp_data",
+        "photoprism_originals",
+        "photoprism_storage",
+        "grist_data",
         "paca_postgres",
         "paca_valkey",
         "paca_backend_plugins",
         "paca_frontend_plugins",
         "paca_mcp_plugins",
-        "photoprism_originals",
-        "photoprism_storage",
-        "vaultwarden_data",
-        "dbgate_data",
-        "matomo_data",
-        "gitea_data"
+        "vaultwarden_data"
       ]
+    },
+    "gcp-proxy": {
+      "wg_ip": "10.0.0.1",
+      "user": "diego",
+      "databases": [
+        {
+          "service": "redis",
+          "container": "redis",
+          "container_key": "app",
+          "type": "redis"
+        },
+        {
+          "service": "authelia",
+          "container": "authelia",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/db.sqlite3"
+        },
+        {
+          "service": "authelia",
+          "container": "authelia-redis",
+          "container_key": "redis",
+          "type": "redis"
+        }
+      ],
+      "volumes": []
     },
     "oci-mail": {
       "wg_ip": "10.0.0.3",
@@ -534,32 +560,6 @@
         "maddy_data",
         "stalwart_data"
       ]
-    },
-    "gcp-proxy": {
-      "wg_ip": "10.0.0.1",
-      "user": "diego",
-      "databases": [
-        {
-          "service": "authelia",
-          "container": "authelia",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/db.sqlite3"
-        },
-        {
-          "service": "authelia",
-          "container": "authelia-redis",
-          "container_key": "redis",
-          "type": "redis"
-        },
-        {
-          "service": "redis",
-          "container": "redis",
-          "container_key": "app",
-          "type": "redis"
-        }
-      ],
-      "volumes": []
     }
   },
   "_meta": {

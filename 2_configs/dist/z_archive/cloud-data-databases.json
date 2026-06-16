@@ -16,479 +16,53 @@
     "mimir": 0,
     "tempo": 0,
     "grafana": 0,
+    "parquet": 1,
     "files": 3,
     "rocksdb": 1,
-    "minio": 1,
-    "parquet": 1
+    "minio": 1
   },
   "databases": [
     {
-      "service": "calendar-radicale",
-      "container": "calendar-radicale",
-      "container_key": "app",
-      "type": "files",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "tomsquest/docker-radicale:latest",
-      "port": 5232,
-      "dns": "calendar.app",
-      "healthcheck": "/.web/",
-      "volumes": [
-        "./data:/data",
-        "./configs/config:/config/config:ro"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
-      "service": "chat-mattermost",
-      "container": "mattermost-postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5435,
-      "dns": "mattermost-postgres.app",
-      "user": "mattermost",
-      "db": "mattermost",
-      "healthcheck": "pg_isready -U mattermost -d mattermost",
-      "volumes": [
-        "./data/postgres:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
-    },
-    {
-      "service": "contacts-radicale",
-      "container": "contacts-radicale",
-      "container_key": "app",
-      "type": "files",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "tomsquest/docker-radicale:latest",
-      "port": 5233,
-      "dns": "contacts.app",
-      "healthcheck": "/.web/",
-      "volumes": [
-        "./data:/data",
-        "./configs/config:/config/config:ro"
-      ],
-      "resources": null,
-      "backup": false
-    },
-    {
-      "service": "cypht",
-      "container": "cypht-postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "postgres:16-alpine",
-      "port": null,
-      "dns": null,
-      "volumes": [
-        "cypht_pgdata:/var/lib/postgresql/data"
-      ],
-      "resources": {
-        "mem_limit": "128M",
-        "mem_reservation": "32M"
-      },
-      "backup": false
-    },
-    {
-      "service": "etherpad",
-      "container": "etherpad_postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5436,
-      "dns": "etherpad-db.app",
-      "user": "etherpad",
-      "db": "etherpad",
-      "healthcheck": "cmd",
-      "volumes": [
-        "postgres_data:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
-    },
-    {
-      "service": "filebrowser",
-      "container": "filebrowser_app",
+      "service": "gitea",
+      "container": "gitea",
       "container_key": "app",
       "type": "sqlite",
       "enabled": true,
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
       "wg_ip": "10.0.0.6",
-      "image": "filebrowser/filebrowser:latest",
-      "port": 3015,
-      "dns": "filebrowser.app",
-      "healthcheck": "/health",
+      "image": "gitea/gitea:latest",
+      "port": 3002,
+      "dns": "gitea.app",
+      "path": "/data/gitea/gitea.db",
+      "healthcheck": "curl -f http://localhost:3002/",
       "volumes": [
-        "filebrowser_data:/srv",
-        "filebrowser_db:/database",
-        "filebrowser_config:/config"
+        "gitea_data:/data",
+        "/etc/timezone:/etc/timezone:ro",
+        "/etc/localtime:/etc/localtime:ro"
       ],
       "resources": null,
-      "backup": false
+      "backup": true
     },
     {
-      "service": "grist",
-      "container": "grist_app",
+      "service": "redis",
+      "container": "redis",
       "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "gristlabs/grist:latest",
-      "port": 3011,
-      "dns": "grist.app",
-      "path": "/persist/grist-sessions.db",
-      "healthcheck": "/",
-      "volumes": [
-        "grist_data:/persist"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "hedgedoc",
-      "container": "hedgedoc_postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5439,
-      "dns": "hedgedoc-db.app",
-      "user": "hedgedoc",
-      "db": "hedgedoc",
-      "healthcheck": "cmd",
-      "volumes": [
-        "postgres_data:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
-    },
-    {
-      "service": "mail-puller",
-      "container": "mail-puller",
-      "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "ghcr.io/diegonmarcos/mail-puller-binaries:latest",
-      "port": null,
-      "dns": null,
-      "volumes": [
-        "mail_puller_state:/var/lib/mail-puller"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "128M"
-        },
-        "reservations": {
-          "memory": "16M"
-        }
-      },
-      "backup": true
-    },
-    {
-      "service": "matrix-mautrix-whatsapp",
-      "container": "mautrix-whatsapp",
-      "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-      "port": 29318,
-      "dns": "matrix-mautrix-whatsapp.app",
-      "path": "/data/mautrix-whatsapp.db",
-      "volumes": [
-        "./data:/data"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "paca",
-      "container": "paca-postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5432,
-      "dns": "paca-postgres.app",
-      "user": "paca",
-      "db": "paca",
-      "healthcheck": "pg_isready -U paca -d paca",
-      "volumes": [
-        "paca_postgres:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://paca@10.0.0.6:5432/paca"
-    },
-    {
-      "service": "photoprism",
-      "container": "photoprism_mariadb",
-      "container_key": "db",
-      "type": "mariadb",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "mariadb:11",
-      "port": null,
-      "dns": null,
-      "user": "root",
-      "db": "photoprism",
-      "healthcheck": "cmd",
-      "volumes": [
-        "mariadb_data:/var/lib/mysql"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "snappymail",
-      "container": "snappymail",
-      "container_key": "app",
-      "type": "files",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "djmaze/snappymail:latest",
-      "port": 8888,
-      "dns": "snappymail.app",
-      "healthcheck": "/",
-      "volumes": [
-        "./data:/var/lib/snappymail"
-      ],
-      "resources": {
-        "mem_limit": "64M",
-        "mem_reservation": "16M"
-      },
-      "backup": false
-    },
-    {
-      "service": "maddy",
-      "container": "maddy",
-      "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "ghcr.io/diegonmarcos/maddy:latest",
-      "port": 993,
-      "dns": "maddy.app",
-      "volumes": [
-        "maddy_data:/data",
-        "./dkim:/data/dkim:ro"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "256M"
-        },
-        "reservations": {
-          "memory": "32M"
-        }
-      },
-      "backup": true
-    },
-    {
-      "service": "stalwart",
-      "container": "stalwart",
-      "container_key": "app",
-      "type": "rocksdb",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "stalwartlabs/stalwart:v0.14.1",
-      "port": 2443,
-      "dns": "stalwart.app",
-      "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'",
-      "healthcheck": "/",
-      "volumes": [
-        "stalwart_data:/opt/stalwart-mail/data",
-        "./tls:/opt/stalwart-mail/tls:ro"
-      ],
-      "resources": {
-        "limits": {
-          "memory": "256M"
-        },
-        "reservations": {
-          "memory": "32M"
-        }
-      },
-      "backup": true
-    },
-    {
-      "service": "vaultwarden",
-      "container": "vaultwarden",
-      "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "vaultwarden/server:latest",
-      "port": 8880,
-      "dns": "vaultwarden.app",
-      "path": "/data/db.sqlite3",
-      "healthcheck": "/alive",
-      "volumes": [
-        "./data:/data"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_db",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5433,
-      "dns": "crawlee-db.app",
-      "user": "crawlee",
-      "db": "crawlee",
-      "healthcheck": "pg_isready -U $POSTGRES_USER",
-      "volumes": [
-        "crawlee_postgres:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_redis",
-      "container_key": "redis",
-      "type": "redis",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "redis:7-alpine",
-      "port": 6381,
-      "dns": "crawlee-redis.app",
-      "healthcheck": "redis-cli -p 6381 ping",
-      "volumes": [
-        "crawlee_redis:/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "redis://10.0.0.6:6381"
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_minio",
-      "container_key": "minio",
-      "type": "minio",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "minio/minio:latest",
-      "port": 9000,
-      "dns": "crawlee-minio.app",
-      "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-      "volumes": [
-        "crawlee_minio:/data"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "kg-store",
-      "container": "kg-store",
-      "container_key": "app",
-      "type": "surrealdb",
-      "enabled": false,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "ghcr.io/diegonmarcos/kg-store:latest",
-      "port": 8001,
-      "dns": null,
-      "volumes": [],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "authelia",
-      "container": "authelia",
-      "container_key": "app",
-      "type": "sqlite",
-      "enabled": true,
-      "vm": "gcp-E2-f_0",
-      "vm_alias": "gcp-proxy",
-      "wg_ip": "10.0.0.1",
-      "image": "authelia/authelia:4.39.15",
-      "port": 9091,
-      "dns": "authelia.app",
-      "path": "/data/db.sqlite3",
-      "healthcheck": "/api/health",
-      "volumes": [
-        "authelia_data:/data",
-        "./configs:/config:ro"
-      ],
-      "resources": null,
-      "backup": true
-    },
-    {
-      "service": "authelia",
-      "container": "authelia-redis",
-      "container_key": "redis",
       "type": "redis",
       "enabled": true,
       "vm": "gcp-E2-f_0",
       "vm_alias": "gcp-proxy",
       "wg_ip": "10.0.0.1",
-      "image": "redis:7-bookworm",
-      "port": 6380,
-      "dns": "authelia-redis.app",
+      "image": "redis:alpine",
+      "port": 6379,
+      "dns": "redis.app",
+      "healthcheck": "redis-cli ping",
       "volumes": [
-        "authelia_redis_data:/data"
+        "/data/redis:/data"
       ],
       "resources": null,
       "backup": true,
-      "connection": "redis://10.0.0.1:6380"
+      "connection": "redis://10.0.0.1:6379"
     },
     {
       "service": "dagu",
@@ -622,313 +196,568 @@
       "connection": "postgresql://umami@10.0.0.6:5442/umami"
     },
     {
-      "service": "gitea",
-      "container": "gitea",
+      "service": "authelia",
+      "container": "authelia",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "gcp-E2-f_0",
+      "vm_alias": "gcp-proxy",
+      "wg_ip": "10.0.0.1",
+      "image": "authelia/authelia:4.39.15",
+      "port": 9091,
+      "dns": "authelia.app",
+      "path": "/data/db.sqlite3",
+      "healthcheck": "/api/health",
+      "volumes": [
+        "authelia_data:/data",
+        "./configs:/config:ro"
+      ],
+      "resources": null,
+      "backup": true
+    },
+    {
+      "service": "authelia",
+      "container": "authelia-redis",
+      "container_key": "redis",
+      "type": "redis",
+      "enabled": true,
+      "vm": "gcp-E2-f_0",
+      "vm_alias": "gcp-proxy",
+      "wg_ip": "10.0.0.1",
+      "image": "redis:7-bookworm",
+      "port": 6380,
+      "dns": "authelia-redis.app",
+      "volumes": [
+        "authelia_redis_data:/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "redis://10.0.0.1:6380"
+    },
+    {
+      "service": "kg-store",
+      "container": "kg-store",
+      "container_key": "app",
+      "type": "surrealdb",
+      "enabled": false,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "ghcr.io/diegonmarcos/kg-store:latest",
+      "port": 8001,
+      "dns": null,
+      "volumes": [],
+      "resources": null,
+      "backup": true
+    },
+    {
+      "service": "chat-mattermost",
+      "container": "mattermost-postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5435,
+      "dns": "mattermost-postgres.app",
+      "user": "mattermost",
+      "db": "mattermost",
+      "healthcheck": "pg_isready -U mattermost -d mattermost",
+      "volumes": [
+        "./data/postgres:/var/lib/postgresql/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
+    },
+    {
+      "service": "cypht",
+      "container": "cypht-postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "wg_ip": "10.0.0.3",
+      "image": "postgres:16-alpine",
+      "port": null,
+      "dns": null,
+      "volumes": [
+        "cypht_pgdata:/var/lib/postgresql/data"
+      ],
+      "resources": {
+        "mem_limit": "128M",
+        "mem_reservation": "32M"
+      },
+      "backup": false
+    },
+    {
+      "service": "mail-puller",
+      "container": "mail-puller",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "wg_ip": "10.0.0.3",
+      "image": "ghcr.io/diegonmarcos/mail-puller-binaries:latest",
+      "port": null,
+      "dns": null,
+      "volumes": [
+        "mail_puller_state:/var/lib/mail-puller"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "128M"
+        },
+        "reservations": {
+          "memory": "16M"
+        }
+      },
+      "backup": true
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "container": "mautrix-whatsapp",
       "container_key": "app",
       "type": "sqlite",
       "enabled": true,
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
       "wg_ip": "10.0.0.6",
-      "image": "gitea/gitea:latest",
-      "port": 3002,
-      "dns": "gitea.app",
-      "path": "/data/gitea/gitea.db",
-      "healthcheck": "curl -f http://localhost:3002/",
+      "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+      "port": 29318,
+      "dns": "matrix-mautrix-whatsapp.app",
+      "path": "/data/mautrix-whatsapp.db",
       "volumes": [
-        "gitea_data:/data",
-        "/etc/timezone:/etc/timezone:ro",
-        "/etc/localtime:/etc/localtime:ro"
+        "./data:/data"
       ],
       "resources": null,
       "backup": true
     },
     {
-      "service": "redis",
-      "container": "redis",
+      "service": "snappymail",
+      "container": "snappymail",
       "container_key": "app",
-      "type": "redis",
+      "type": "files",
       "enabled": true,
-      "vm": "gcp-E2-f_0",
-      "vm_alias": "gcp-proxy",
-      "wg_ip": "10.0.0.1",
-      "image": "redis:alpine",
-      "port": 6379,
-      "dns": "redis.app",
-      "healthcheck": "redis-cli ping",
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "wg_ip": "10.0.0.3",
+      "image": "djmaze/snappymail:latest",
+      "port": 8888,
+      "dns": "snappymail.app",
+      "healthcheck": "/",
       "volumes": [
-        "/data/redis:/data"
+        "./data:/var/lib/snappymail"
+      ],
+      "resources": {
+        "mem_limit": "64M",
+        "mem_reservation": "16M"
+      },
+      "backup": false
+    },
+    {
+      "service": "maddy",
+      "container": "maddy",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "wg_ip": "10.0.0.3",
+      "image": "ghcr.io/diegonmarcos/maddy:latest",
+      "port": 993,
+      "dns": "maddy.app",
+      "volumes": [
+        "maddy_data:/data",
+        "./dkim:/data/dkim:ro"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "256M"
+        },
+        "reservations": {
+          "memory": "32M"
+        }
+      },
+      "backup": true
+    },
+    {
+      "service": "stalwart",
+      "container": "stalwart",
+      "container_key": "app",
+      "type": "rocksdb",
+      "enabled": true,
+      "vm": "oci-E2-f_0",
+      "vm_alias": "oci-mail",
+      "wg_ip": "10.0.0.3",
+      "image": "stalwartlabs/stalwart:v0.14.1",
+      "port": 2443,
+      "dns": "stalwart.app",
+      "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'",
+      "healthcheck": "/",
+      "volumes": [
+        "stalwart_data:/opt/stalwart-mail/data",
+        "./tls:/opt/stalwart-mail/tls:ro"
+      ],
+      "resources": {
+        "limits": {
+          "memory": "256M"
+        },
+        "reservations": {
+          "memory": "32M"
+        }
+      },
+      "backup": true
+    },
+    {
+      "service": "crawlee-cloud",
+      "container": "crawlee_db",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5433,
+      "dns": "crawlee-db.app",
+      "user": "crawlee",
+      "db": "crawlee",
+      "healthcheck": "pg_isready -U $POSTGRES_USER",
+      "volumes": [
+        "crawlee_postgres:/var/lib/postgresql/data"
       ],
       "resources": null,
       "backup": true,
-      "connection": "redis://10.0.0.1:6379"
+      "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
+    },
+    {
+      "service": "crawlee-cloud",
+      "container": "crawlee_redis",
+      "container_key": "redis",
+      "type": "redis",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "redis:7-alpine",
+      "port": 6381,
+      "dns": "crawlee-redis.app",
+      "healthcheck": "redis-cli -p 6381 ping",
+      "volumes": [
+        "crawlee_redis:/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "redis://10.0.0.6:6381"
+    },
+    {
+      "service": "crawlee-cloud",
+      "container": "crawlee_minio",
+      "container_key": "minio",
+      "type": "minio",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "minio/minio:latest",
+      "port": 9000,
+      "dns": "crawlee-minio.app",
+      "healthcheck": "curl -f http://localhost:9000/minio/health/live",
+      "volumes": [
+        "crawlee_minio:/data"
+      ],
+      "resources": null,
+      "backup": true
+    },
+    {
+      "service": "photoprism",
+      "container": "photoprism_mariadb",
+      "container_key": "db",
+      "type": "mariadb",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "mariadb:11",
+      "port": null,
+      "dns": null,
+      "user": "root",
+      "db": "photoprism",
+      "healthcheck": "cmd",
+      "volumes": [
+        "mariadb_data:/var/lib/mysql"
+      ],
+      "resources": null,
+      "backup": true
+    },
+    {
+      "service": "calendar-radicale",
+      "container": "calendar-radicale",
+      "container_key": "app",
+      "type": "files",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "tomsquest/docker-radicale:latest",
+      "port": 5232,
+      "dns": "calendar.app",
+      "healthcheck": "/.web/",
+      "volumes": [
+        "./data:/data",
+        "./configs/config:/config/config:ro"
+      ],
+      "resources": null,
+      "backup": false
+    },
+    {
+      "service": "contacts-radicale",
+      "container": "contacts-radicale",
+      "container_key": "app",
+      "type": "files",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "tomsquest/docker-radicale:latest",
+      "port": 5233,
+      "dns": "contacts.app",
+      "healthcheck": "/.web/",
+      "volumes": [
+        "./data:/data",
+        "./configs/config:/config/config:ro"
+      ],
+      "resources": null,
+      "backup": false
+    },
+    {
+      "service": "etherpad",
+      "container": "etherpad_postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5436,
+      "dns": "etherpad-db.app",
+      "user": "etherpad",
+      "db": "etherpad",
+      "healthcheck": "cmd",
+      "volumes": [
+        "postgres_data:/var/lib/postgresql/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
+    },
+    {
+      "service": "filebrowser",
+      "container": "filebrowser_app",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "filebrowser/filebrowser:latest",
+      "port": 3015,
+      "dns": "filebrowser.app",
+      "healthcheck": "/health",
+      "volumes": [
+        "filebrowser_data:/srv",
+        "filebrowser_db:/database",
+        "filebrowser_config:/config"
+      ],
+      "resources": null,
+      "backup": false
+    },
+    {
+      "service": "grist",
+      "container": "grist_app",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "gristlabs/grist:latest",
+      "port": 3011,
+      "dns": "grist.app",
+      "path": "/persist/grist-sessions.db",
+      "healthcheck": "/",
+      "volumes": [
+        "grist_data:/persist"
+      ],
+      "resources": null,
+      "backup": true
+    },
+    {
+      "service": "hedgedoc",
+      "container": "hedgedoc_postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5439,
+      "dns": "hedgedoc-db.app",
+      "user": "hedgedoc",
+      "db": "hedgedoc",
+      "healthcheck": "cmd",
+      "volumes": [
+        "postgres_data:/var/lib/postgresql/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
+    },
+    {
+      "service": "paca",
+      "container": "paca-postgres",
+      "container_key": "db",
+      "type": "postgres",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "postgres:16-alpine",
+      "port": 5432,
+      "dns": "paca-postgres.app",
+      "user": "paca",
+      "db": "paca",
+      "healthcheck": "pg_isready -U paca -d paca",
+      "volumes": [
+        "paca_postgres:/var/lib/postgresql/data"
+      ],
+      "resources": null,
+      "backup": true,
+      "connection": "postgresql://paca@10.0.0.6:5432/paca"
+    },
+    {
+      "service": "vaultwarden",
+      "container": "vaultwarden",
+      "container_key": "app",
+      "type": "sqlite",
+      "enabled": true,
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "wg_ip": "10.0.0.6",
+      "image": "vaultwarden/server:latest",
+      "port": 8880,
+      "dns": "vaultwarden.app",
+      "path": "/data/db.sqlite3",
+      "healthcheck": "/alive",
+      "volumes": [
+        "./data:/data"
+      ],
+      "resources": null,
+      "backup": true
     }
   ],
   "by_type": {
-    "files": [
+    "sqlite": [
       {
-        "service": "calendar-radicale",
-        "container": "calendar-radicale",
+        "service": "gitea",
+        "container": "gitea",
         "container_key": "app",
-        "type": "files",
+        "type": "sqlite",
         "enabled": true,
         "vm": "oci-A1-f_0",
         "vm_alias": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "image": "tomsquest/docker-radicale:latest",
-        "port": 5232,
-        "dns": "calendar.app",
-        "healthcheck": "/.web/",
+        "image": "gitea/gitea:latest",
+        "port": 3002,
+        "dns": "gitea.app",
+        "path": "/data/gitea/gitea.db",
+        "healthcheck": "curl -f http://localhost:3002/",
         "volumes": [
-          "./data:/data",
-          "./configs/config:/config/config:ro"
+          "gitea_data:/data",
+          "/etc/timezone:/etc/timezone:ro",
+          "/etc/localtime:/etc/localtime:ro"
         ],
         "resources": null,
-        "backup": false
+        "backup": true
       },
       {
-        "service": "contacts-radicale",
-        "container": "contacts-radicale",
+        "service": "dagu",
+        "container": "dagu",
         "container_key": "app",
-        "type": "files",
+        "type": "sqlite",
         "enabled": true,
         "vm": "oci-A1-f_0",
         "vm_alias": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "image": "tomsquest/docker-radicale:latest",
-        "port": 5233,
-        "dns": "contacts.app",
-        "healthcheck": "/.web/",
-        "volumes": [
-          "./data:/data",
-          "./configs/config:/config/config:ro"
-        ],
-        "resources": null,
-        "backup": false
-      },
-      {
-        "service": "snappymail",
-        "container": "snappymail",
-        "container_key": "app",
-        "type": "files",
-        "enabled": true,
-        "vm": "oci-E2-f_0",
-        "vm_alias": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "image": "djmaze/snappymail:latest",
-        "port": 8888,
-        "dns": "snappymail.app",
+        "image": "ghcr.io/diegonmarcos/dagu:latest",
+        "port": 8070,
+        "dns": "dagu.app",
         "healthcheck": "/",
         "volumes": [
-          "./data:/var/lib/snappymail"
+          "./data:/var/lib/dagu/data",
+          "./dags:/var/lib/dagu/dags",
+          "./base.yaml:/var/lib/dagu/base.yaml:ro",
+          "./fetch-token.sh:/var/lib/dagu/fetch-token.sh:ro",
+          "/opt/ssh-keys/dagu:/home/dagu/.ssh:ro"
         ],
         "resources": {
-          "mem_limit": "64M",
-          "mem_reservation": "16M"
-        },
-        "backup": false
-      }
-    ],
-    "postgres": [
-      {
-        "service": "chat-mattermost",
-        "container": "mattermost-postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5435,
-        "dns": "mattermost-postgres.app",
-        "user": "mattermost",
-        "db": "mattermost",
-        "healthcheck": "pg_isready -U mattermost -d mattermost",
-        "volumes": [
-          "./data/postgres:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
-      },
-      {
-        "service": "cypht",
-        "container": "cypht-postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-E2-f_0",
-        "vm_alias": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "image": "postgres:16-alpine",
-        "port": null,
-        "dns": null,
-        "volumes": [
-          "cypht_pgdata:/var/lib/postgresql/data"
-        ],
-        "resources": {
-          "mem_limit": "128M",
-          "mem_reservation": "32M"
+          "mem_limit": "256m"
         },
         "backup": false
       },
       {
-        "service": "etherpad",
-        "container": "etherpad_postgres",
-        "container_key": "db",
-        "type": "postgres",
+        "service": "ntfy",
+        "container": "ntfy",
+        "container_key": "app",
+        "type": "sqlite",
         "enabled": true,
         "vm": "oci-A1-f_0",
         "vm_alias": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5436,
-        "dns": "etherpad-db.app",
-        "user": "etherpad",
-        "db": "etherpad",
-        "healthcheck": "cmd",
+        "image": "binwiederhier/ntfy",
+        "port": 8090,
+        "dns": "ntfy.app",
+        "path": "/var/cache/ntfy/cache.db",
+        "healthcheck": "/",
         "volumes": [
-          "postgres_data:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
-      },
-      {
-        "service": "hedgedoc",
-        "container": "hedgedoc_postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5439,
-        "dns": "hedgedoc-db.app",
-        "user": "hedgedoc",
-        "db": "hedgedoc",
-        "healthcheck": "cmd",
-        "volumes": [
-          "postgres_data:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
-      },
-      {
-        "service": "paca",
-        "container": "paca-postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5432,
-        "dns": "paca-postgres.app",
-        "user": "paca",
-        "db": "paca",
-        "healthcheck": "pg_isready -U paca -d paca",
-        "volumes": [
-          "paca_postgres:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://paca@10.0.0.6:5432/paca"
-      },
-      {
-        "service": "crawlee-cloud",
-        "container": "crawlee_db",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5433,
-        "dns": "crawlee-db.app",
-        "user": "crawlee",
-        "db": "crawlee",
-        "healthcheck": "pg_isready -U $POSTGRES_USER",
-        "volumes": [
-          "crawlee_postgres:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
-      },
-      {
-        "service": "umami",
-        "container": "umami-db",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5442,
-        "dns": "umami-db.app",
-        "user": "umami",
-        "db": "umami",
-        "healthcheck": "pg_isready -U umami",
-        "volumes": [
-          "umami_db_data:/var/lib/postgresql/data"
+          "./cache:/var/cache/ntfy",
+          "./etc:/etc/ntfy"
         ],
         "resources": {
           "limits": {
-            "memory": "512M"
+            "memory": "64M"
           },
           "reservations": {
-            "memory": "128M"
+            "memory": "16M"
           }
         },
-        "backup": true,
-        "connection": "postgresql://umami@10.0.0.6:5442/umami"
-      }
-    ],
-    "sqlite": [
-      {
-        "service": "filebrowser",
-        "container": "filebrowser_app",
-        "container_key": "app",
-        "type": "sqlite",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "filebrowser/filebrowser:latest",
-        "port": 3015,
-        "dns": "filebrowser.app",
-        "healthcheck": "/health",
-        "volumes": [
-          "filebrowser_data:/srv",
-          "filebrowser_db:/database",
-          "filebrowser_config:/config"
-        ],
-        "resources": null,
-        "backup": false
+        "backup": true
       },
       {
-        "service": "grist",
-        "container": "grist_app",
+        "service": "authelia",
+        "container": "authelia",
         "container_key": "app",
         "type": "sqlite",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "gristlabs/grist:latest",
-        "port": 3011,
-        "dns": "grist.app",
-        "path": "/persist/grist-sessions.db",
-        "healthcheck": "/",
+        "vm": "gcp-E2-f_0",
+        "vm_alias": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
+        "image": "authelia/authelia:4.39.15",
+        "port": 9091,
+        "dns": "authelia.app",
+        "path": "/data/db.sqlite3",
+        "healthcheck": "/api/health",
         "volumes": [
-          "grist_data:/persist"
+          "authelia_data:/data",
+          "./configs:/config:ro"
         ],
         "resources": null,
         "backup": true
@@ -1004,6 +833,47 @@
         "backup": true
       },
       {
+        "service": "filebrowser",
+        "container": "filebrowser_app",
+        "container_key": "app",
+        "type": "sqlite",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "filebrowser/filebrowser:latest",
+        "port": 3015,
+        "dns": "filebrowser.app",
+        "healthcheck": "/health",
+        "volumes": [
+          "filebrowser_data:/srv",
+          "filebrowser_db:/database",
+          "filebrowser_config:/config"
+        ],
+        "resources": null,
+        "backup": false
+      },
+      {
+        "service": "grist",
+        "container": "grist_app",
+        "container_key": "app",
+        "type": "sqlite",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "gristlabs/grist:latest",
+        "port": 3011,
+        "dns": "grist.app",
+        "path": "/persist/grist-sessions.db",
+        "healthcheck": "/",
+        "volumes": [
+          "grist_data:/persist"
+        ],
+        "resources": null,
+        "backup": true
+      },
+      {
         "service": "vaultwarden",
         "container": "vaultwarden",
         "container_key": "app",
@@ -1022,126 +892,70 @@
         ],
         "resources": null,
         "backup": true
-      },
+      }
+    ],
+    "redis": [
       {
-        "service": "authelia",
-        "container": "authelia",
+        "service": "redis",
+        "container": "redis",
         "container_key": "app",
-        "type": "sqlite",
+        "type": "redis",
         "enabled": true,
         "vm": "gcp-E2-f_0",
         "vm_alias": "gcp-proxy",
         "wg_ip": "10.0.0.1",
-        "image": "authelia/authelia:4.39.15",
-        "port": 9091,
-        "dns": "authelia.app",
-        "path": "/data/db.sqlite3",
-        "healthcheck": "/api/health",
+        "image": "redis:alpine",
+        "port": 6379,
+        "dns": "redis.app",
+        "healthcheck": "redis-cli ping",
         "volumes": [
-          "authelia_data:/data",
-          "./configs:/config:ro"
+          "/data/redis:/data"
         ],
         "resources": null,
-        "backup": true
+        "backup": true,
+        "connection": "redis://10.0.0.1:6379"
       },
       {
-        "service": "dagu",
-        "container": "dagu",
-        "container_key": "app",
-        "type": "sqlite",
+        "service": "authelia",
+        "container": "authelia-redis",
+        "container_key": "redis",
+        "type": "redis",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "ghcr.io/diegonmarcos/dagu:latest",
-        "port": 8070,
-        "dns": "dagu.app",
-        "healthcheck": "/",
+        "vm": "gcp-E2-f_0",
+        "vm_alias": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
+        "image": "redis:7-bookworm",
+        "port": 6380,
+        "dns": "authelia-redis.app",
         "volumes": [
-          "./data:/var/lib/dagu/data",
-          "./dags:/var/lib/dagu/dags",
-          "./base.yaml:/var/lib/dagu/base.yaml:ro",
-          "./fetch-token.sh:/var/lib/dagu/fetch-token.sh:ro",
-          "/opt/ssh-keys/dagu:/home/dagu/.ssh:ro"
-        ],
-        "resources": {
-          "mem_limit": "256m"
-        },
-        "backup": false
-      },
-      {
-        "service": "ntfy",
-        "container": "ntfy",
-        "container_key": "app",
-        "type": "sqlite",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "binwiederhier/ntfy",
-        "port": 8090,
-        "dns": "ntfy.app",
-        "path": "/var/cache/ntfy/cache.db",
-        "healthcheck": "/",
-        "volumes": [
-          "./cache:/var/cache/ntfy",
-          "./etc:/etc/ntfy"
-        ],
-        "resources": {
-          "limits": {
-            "memory": "64M"
-          },
-          "reservations": {
-            "memory": "16M"
-          }
-        },
-        "backup": true
-      },
-      {
-        "service": "gitea",
-        "container": "gitea",
-        "container_key": "app",
-        "type": "sqlite",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "gitea/gitea:latest",
-        "port": 3002,
-        "dns": "gitea.app",
-        "path": "/data/gitea/gitea.db",
-        "healthcheck": "curl -f http://localhost:3002/",
-        "volumes": [
-          "gitea_data:/data",
-          "/etc/timezone:/etc/timezone:ro",
-          "/etc/localtime:/etc/localtime:ro"
+          "authelia_redis_data:/data"
         ],
         "resources": null,
-        "backup": true
+        "backup": true,
+        "connection": "redis://10.0.0.1:6380"
+      },
+      {
+        "service": "crawlee-cloud",
+        "container": "crawlee_redis",
+        "container_key": "redis",
+        "type": "redis",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "redis:7-alpine",
+        "port": 6381,
+        "dns": "crawlee-redis.app",
+        "healthcheck": "redis-cli -p 6381 ping",
+        "volumes": [
+          "crawlee_redis:/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "redis://10.0.0.6:6381"
       }
     ],
     "mariadb": [
-      {
-        "service": "photoprism",
-        "container": "photoprism_mariadb",
-        "container_key": "db",
-        "type": "mariadb",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "mariadb:11",
-        "port": null,
-        "dns": null,
-        "user": "root",
-        "db": "photoprism",
-        "healthcheck": "cmd",
-        "volumes": [
-          "mariadb_data:/var/lib/mysql"
-        ],
-        "resources": null,
-        "backup": true
-      },
       {
         "service": "matomo",
         "container": "matomo-hybrid",
@@ -1170,6 +984,293 @@
           }
         },
         "backup": true
+      },
+      {
+        "service": "photoprism",
+        "container": "photoprism_mariadb",
+        "container_key": "db",
+        "type": "mariadb",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "mariadb:11",
+        "port": null,
+        "dns": null,
+        "user": "root",
+        "db": "photoprism",
+        "healthcheck": "cmd",
+        "volumes": [
+          "mariadb_data:/var/lib/mysql"
+        ],
+        "resources": null,
+        "backup": true
+      }
+    ],
+    "parquet": [
+      {
+        "service": "openobserve",
+        "container": "openobserve",
+        "container_key": "app",
+        "type": "parquet",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
+        "port": 5080,
+        "dns": "openobserve.app",
+        "volumes": [
+          "openobserve_data:/data"
+        ],
+        "resources": {
+          "mem_limit": "512m"
+        },
+        "backup": false
+      }
+    ],
+    "postgres": [
+      {
+        "service": "umami",
+        "container": "umami-db",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5442,
+        "dns": "umami-db.app",
+        "user": "umami",
+        "db": "umami",
+        "healthcheck": "pg_isready -U umami",
+        "volumes": [
+          "umami_db_data:/var/lib/postgresql/data"
+        ],
+        "resources": {
+          "limits": {
+            "memory": "512M"
+          },
+          "reservations": {
+            "memory": "128M"
+          }
+        },
+        "backup": true,
+        "connection": "postgresql://umami@10.0.0.6:5442/umami"
+      },
+      {
+        "service": "chat-mattermost",
+        "container": "mattermost-postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5435,
+        "dns": "mattermost-postgres.app",
+        "user": "mattermost",
+        "db": "mattermost",
+        "healthcheck": "pg_isready -U mattermost -d mattermost",
+        "volumes": [
+          "./data/postgres:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
+      },
+      {
+        "service": "cypht",
+        "container": "cypht-postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-E2-f_0",
+        "vm_alias": "oci-mail",
+        "wg_ip": "10.0.0.3",
+        "image": "postgres:16-alpine",
+        "port": null,
+        "dns": null,
+        "volumes": [
+          "cypht_pgdata:/var/lib/postgresql/data"
+        ],
+        "resources": {
+          "mem_limit": "128M",
+          "mem_reservation": "32M"
+        },
+        "backup": false
+      },
+      {
+        "service": "crawlee-cloud",
+        "container": "crawlee_db",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5433,
+        "dns": "crawlee-db.app",
+        "user": "crawlee",
+        "db": "crawlee",
+        "healthcheck": "pg_isready -U $POSTGRES_USER",
+        "volumes": [
+          "crawlee_postgres:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
+      },
+      {
+        "service": "etherpad",
+        "container": "etherpad_postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5436,
+        "dns": "etherpad-db.app",
+        "user": "etherpad",
+        "db": "etherpad",
+        "healthcheck": "cmd",
+        "volumes": [
+          "postgres_data:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
+      },
+      {
+        "service": "hedgedoc",
+        "container": "hedgedoc_postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5439,
+        "dns": "hedgedoc-db.app",
+        "user": "hedgedoc",
+        "db": "hedgedoc",
+        "healthcheck": "cmd",
+        "volumes": [
+          "postgres_data:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
+      },
+      {
+        "service": "paca",
+        "container": "paca-postgres",
+        "container_key": "db",
+        "type": "postgres",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "postgres:16-alpine",
+        "port": 5432,
+        "dns": "paca-postgres.app",
+        "user": "paca",
+        "db": "paca",
+        "healthcheck": "pg_isready -U paca -d paca",
+        "volumes": [
+          "paca_postgres:/var/lib/postgresql/data"
+        ],
+        "resources": null,
+        "backup": true,
+        "connection": "postgresql://paca@10.0.0.6:5432/paca"
+      }
+    ],
+    "surrealdb": [
+      {
+        "service": "kg-store",
+        "container": "kg-store",
+        "container_key": "app",
+        "type": "surrealdb",
+        "enabled": false,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "ghcr.io/diegonmarcos/kg-store:latest",
+        "port": 8001,
+        "dns": null,
+        "volumes": [],
+        "resources": null,
+        "backup": true
+      }
+    ],
+    "files": [
+      {
+        "service": "snappymail",
+        "container": "snappymail",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-E2-f_0",
+        "vm_alias": "oci-mail",
+        "wg_ip": "10.0.0.3",
+        "image": "djmaze/snappymail:latest",
+        "port": 8888,
+        "dns": "snappymail.app",
+        "healthcheck": "/",
+        "volumes": [
+          "./data:/var/lib/snappymail"
+        ],
+        "resources": {
+          "mem_limit": "64M",
+          "mem_reservation": "16M"
+        },
+        "backup": false
+      },
+      {
+        "service": "calendar-radicale",
+        "container": "calendar-radicale",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "tomsquest/docker-radicale:latest",
+        "port": 5232,
+        "dns": "calendar.app",
+        "healthcheck": "/.web/",
+        "volumes": [
+          "./data:/data",
+          "./configs/config:/config/config:ro"
+        ],
+        "resources": null,
+        "backup": false
+      },
+      {
+        "service": "contacts-radicale",
+        "container": "contacts-radicale",
+        "container_key": "app",
+        "type": "files",
+        "enabled": true,
+        "vm": "oci-A1-f_0",
+        "vm_alias": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "image": "tomsquest/docker-radicale:latest",
+        "port": 5233,
+        "dns": "contacts.app",
+        "healthcheck": "/.web/",
+        "volumes": [
+          "./data:/data",
+          "./configs/config:/config/config:ro"
+        ],
+        "resources": null,
+        "backup": false
       }
     ],
     "rocksdb": [
@@ -1202,67 +1303,6 @@
         "backup": true
       }
     ],
-    "redis": [
-      {
-        "service": "crawlee-cloud",
-        "container": "crawlee_redis",
-        "container_key": "redis",
-        "type": "redis",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "redis:7-alpine",
-        "port": 6381,
-        "dns": "crawlee-redis.app",
-        "healthcheck": "redis-cli -p 6381 ping",
-        "volumes": [
-          "crawlee_redis:/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "redis://10.0.0.6:6381"
-      },
-      {
-        "service": "authelia",
-        "container": "authelia-redis",
-        "container_key": "redis",
-        "type": "redis",
-        "enabled": true,
-        "vm": "gcp-E2-f_0",
-        "vm_alias": "gcp-proxy",
-        "wg_ip": "10.0.0.1",
-        "image": "redis:7-bookworm",
-        "port": 6380,
-        "dns": "authelia-redis.app",
-        "volumes": [
-          "authelia_redis_data:/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "redis://10.0.0.1:6380"
-      },
-      {
-        "service": "redis",
-        "container": "redis",
-        "container_key": "app",
-        "type": "redis",
-        "enabled": true,
-        "vm": "gcp-E2-f_0",
-        "vm_alias": "gcp-proxy",
-        "wg_ip": "10.0.0.1",
-        "image": "redis:alpine",
-        "port": 6379,
-        "dns": "redis.app",
-        "healthcheck": "redis-cli ping",
-        "volumes": [
-          "/data/redis:/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "redis://10.0.0.1:6379"
-      }
-    ],
     "minio": [
       {
         "service": "crawlee-cloud",
@@ -1283,46 +1323,6 @@
         "resources": null,
         "backup": true
       }
-    ],
-    "surrealdb": [
-      {
-        "service": "kg-store",
-        "container": "kg-store",
-        "container_key": "app",
-        "type": "surrealdb",
-        "enabled": false,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "ghcr.io/diegonmarcos/kg-store:latest",
-        "port": 8001,
-        "dns": null,
-        "volumes": [],
-        "resources": null,
-        "backup": true
-      }
-    ],
-    "parquet": [
-      {
-        "service": "openobserve",
-        "container": "openobserve",
-        "container_key": "app",
-        "type": "parquet",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
-        "port": 5080,
-        "dns": "openobserve.app",
-        "volumes": [
-          "openobserve_data:/data"
-        ],
-        "resources": {
-          "mem_limit": "512m"
-        },
-        "backup": false
-      }
     ]
   },
   "by_vm": {
@@ -1331,308 +1331,24 @@
       "user": "ubuntu",
       "databases": [
         {
-          "service": "calendar-radicale",
-          "container": "calendar-radicale",
-          "container_key": "app",
-          "type": "files",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "tomsquest/docker-radicale:latest",
-          "port": 5232,
-          "dns": "calendar.app",
-          "healthcheck": "/.web/",
-          "volumes": [
-            "./data:/data",
-            "./configs/config:/config/config:ro"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "chat-mattermost",
-          "container": "mattermost-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5435,
-          "dns": "mattermost-postgres.app",
-          "user": "mattermost",
-          "db": "mattermost",
-          "healthcheck": "pg_isready -U mattermost -d mattermost",
-          "volumes": [
-            "./data/postgres:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
-        },
-        {
-          "service": "contacts-radicale",
-          "container": "contacts-radicale",
-          "container_key": "app",
-          "type": "files",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "tomsquest/docker-radicale:latest",
-          "port": 5233,
-          "dns": "contacts.app",
-          "healthcheck": "/.web/",
-          "volumes": [
-            "./data:/data",
-            "./configs/config:/config/config:ro"
-          ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "etherpad",
-          "container": "etherpad_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5436,
-          "dns": "etherpad-db.app",
-          "user": "etherpad",
-          "db": "etherpad",
-          "healthcheck": "cmd",
-          "volumes": [
-            "postgres_data:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
-        },
-        {
-          "service": "filebrowser",
-          "container": "filebrowser_app",
+          "service": "gitea",
+          "container": "gitea",
           "container_key": "app",
           "type": "sqlite",
           "enabled": true,
           "vm": "oci-A1-f_0",
           "vm_alias": "oci-apps",
           "wg_ip": "10.0.0.6",
-          "image": "filebrowser/filebrowser:latest",
-          "port": 3015,
-          "dns": "filebrowser.app",
-          "healthcheck": "/health",
+          "image": "gitea/gitea:latest",
+          "port": 3002,
+          "dns": "gitea.app",
+          "path": "/data/gitea/gitea.db",
+          "healthcheck": "curl -f http://localhost:3002/",
           "volumes": [
-            "filebrowser_data:/srv",
-            "filebrowser_db:/database",
-            "filebrowser_config:/config"
+            "gitea_data:/data",
+            "/etc/timezone:/etc/timezone:ro",
+            "/etc/localtime:/etc/localtime:ro"
           ],
-          "resources": null,
-          "backup": false
-        },
-        {
-          "service": "grist",
-          "container": "grist_app",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "gristlabs/grist:latest",
-          "port": 3011,
-          "dns": "grist.app",
-          "path": "/persist/grist-sessions.db",
-          "healthcheck": "/",
-          "volumes": [
-            "grist_data:/persist"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "hedgedoc",
-          "container": "hedgedoc_postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5439,
-          "dns": "hedgedoc-db.app",
-          "user": "hedgedoc",
-          "db": "hedgedoc",
-          "healthcheck": "cmd",
-          "volumes": [
-            "postgres_data:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
-        },
-        {
-          "service": "matrix-mautrix-whatsapp",
-          "container": "mautrix-whatsapp",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-          "port": 29318,
-          "dns": "matrix-mautrix-whatsapp.app",
-          "path": "/data/mautrix-whatsapp.db",
-          "volumes": [
-            "./data:/data"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "paca",
-          "container": "paca-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5432,
-          "dns": "paca-postgres.app",
-          "user": "paca",
-          "db": "paca",
-          "healthcheck": "pg_isready -U paca -d paca",
-          "volumes": [
-            "paca_postgres:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://paca@10.0.0.6:5432/paca"
-        },
-        {
-          "service": "photoprism",
-          "container": "photoprism_mariadb",
-          "container_key": "db",
-          "type": "mariadb",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "mariadb:11",
-          "port": null,
-          "dns": null,
-          "user": "root",
-          "db": "photoprism",
-          "healthcheck": "cmd",
-          "volumes": [
-            "mariadb_data:/var/lib/mysql"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "vaultwarden",
-          "container": "vaultwarden",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "vaultwarden/server:latest",
-          "port": 8880,
-          "dns": "vaultwarden.app",
-          "path": "/data/db.sqlite3",
-          "healthcheck": "/alive",
-          "volumes": [
-            "./data:/data"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_db",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5433,
-          "dns": "crawlee-db.app",
-          "user": "crawlee",
-          "db": "crawlee",
-          "healthcheck": "pg_isready -U $POSTGRES_USER",
-          "volumes": [
-            "crawlee_postgres:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_redis",
-          "container_key": "redis",
-          "type": "redis",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "redis:7-alpine",
-          "port": 6381,
-          "dns": "crawlee-redis.app",
-          "healthcheck": "redis-cli -p 6381 ping",
-          "volumes": [
-            "crawlee_redis:/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "redis://10.0.0.6:6381"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_minio",
-          "container_key": "minio",
-          "type": "minio",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "minio/minio:latest",
-          "port": 9000,
-          "dns": "crawlee-minio.app",
-          "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-          "volumes": [
-            "crawlee_minio:/data"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "kg-store",
-          "container": "kg-store",
-          "container_key": "app",
-          "type": "surrealdb",
-          "enabled": false,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "ghcr.io/diegonmarcos/kg-store:latest",
-          "port": 8001,
-          "dns": null,
-          "volumes": [],
           "resources": null,
           "backup": true
         },
@@ -1768,26 +1484,376 @@
           "connection": "postgresql://umami@10.0.0.6:5442/umami"
         },
         {
-          "service": "gitea",
-          "container": "gitea",
+          "service": "kg-store",
+          "container": "kg-store",
+          "container_key": "app",
+          "type": "surrealdb",
+          "enabled": false,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "ghcr.io/diegonmarcos/kg-store:latest",
+          "port": 8001,
+          "dns": null,
+          "volumes": [],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "chat-mattermost",
+          "container": "mattermost-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5435,
+          "dns": "mattermost-postgres.app",
+          "user": "mattermost",
+          "db": "mattermost",
+          "healthcheck": "pg_isready -U mattermost -d mattermost",
+          "volumes": [
+            "./data/postgres:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
+        },
+        {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
           "container_key": "app",
           "type": "sqlite",
           "enabled": true,
           "vm": "oci-A1-f_0",
           "vm_alias": "oci-apps",
           "wg_ip": "10.0.0.6",
-          "image": "gitea/gitea:latest",
-          "port": 3002,
-          "dns": "gitea.app",
-          "path": "/data/gitea/gitea.db",
-          "healthcheck": "curl -f http://localhost:3002/",
+          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+          "port": 29318,
+          "dns": "matrix-mautrix-whatsapp.app",
+          "path": "/data/mautrix-whatsapp.db",
           "volumes": [
-            "gitea_data:/data",
-            "/etc/timezone:/etc/timezone:ro",
-            "/etc/localtime:/etc/localtime:ro"
+            "./data:/data"
           ],
           "resources": null,
           "backup": true
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_db",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5433,
+          "dns": "crawlee-db.app",
+          "user": "crawlee",
+          "db": "crawlee",
+          "healthcheck": "pg_isready -U $POSTGRES_USER",
+          "volumes": [
+            "crawlee_postgres:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://crawlee@10.0.0.6:5433/crawlee"
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_redis",
+          "container_key": "redis",
+          "type": "redis",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "redis:7-alpine",
+          "port": 6381,
+          "dns": "crawlee-redis.app",
+          "healthcheck": "redis-cli -p 6381 ping",
+          "volumes": [
+            "crawlee_redis:/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "redis://10.0.0.6:6381"
+        },
+        {
+          "service": "crawlee-cloud",
+          "container": "crawlee_minio",
+          "container_key": "minio",
+          "type": "minio",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "minio/minio:latest",
+          "port": 9000,
+          "dns": "crawlee-minio.app",
+          "healthcheck": "curl -f http://localhost:9000/minio/health/live",
+          "volumes": [
+            "crawlee_minio:/data"
+          ],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "photoprism",
+          "container": "photoprism_mariadb",
+          "container_key": "db",
+          "type": "mariadb",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "mariadb:11",
+          "port": null,
+          "dns": null,
+          "user": "root",
+          "db": "photoprism",
+          "healthcheck": "cmd",
+          "volumes": [
+            "mariadb_data:/var/lib/mysql"
+          ],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "calendar-radicale",
+          "container": "calendar-radicale",
+          "container_key": "app",
+          "type": "files",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5232,
+          "dns": "calendar.app",
+          "healthcheck": "/.web/",
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "resources": null,
+          "backup": false
+        },
+        {
+          "service": "contacts-radicale",
+          "container": "contacts-radicale",
+          "container_key": "app",
+          "type": "files",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "tomsquest/docker-radicale:latest",
+          "port": 5233,
+          "dns": "contacts.app",
+          "healthcheck": "/.web/",
+          "volumes": [
+            "./data:/data",
+            "./configs/config:/config/config:ro"
+          ],
+          "resources": null,
+          "backup": false
+        },
+        {
+          "service": "etherpad",
+          "container": "etherpad_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5436,
+          "dns": "etherpad-db.app",
+          "user": "etherpad",
+          "db": "etherpad",
+          "healthcheck": "cmd",
+          "volumes": [
+            "postgres_data:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://etherpad@10.0.0.6:5436/etherpad"
+        },
+        {
+          "service": "filebrowser",
+          "container": "filebrowser_app",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "filebrowser/filebrowser:latest",
+          "port": 3015,
+          "dns": "filebrowser.app",
+          "healthcheck": "/health",
+          "volumes": [
+            "filebrowser_data:/srv",
+            "filebrowser_db:/database",
+            "filebrowser_config:/config"
+          ],
+          "resources": null,
+          "backup": false
+        },
+        {
+          "service": "grist",
+          "container": "grist_app",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "gristlabs/grist:latest",
+          "port": 3011,
+          "dns": "grist.app",
+          "path": "/persist/grist-sessions.db",
+          "healthcheck": "/",
+          "volumes": [
+            "grist_data:/persist"
+          ],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "hedgedoc",
+          "container": "hedgedoc_postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5439,
+          "dns": "hedgedoc-db.app",
+          "user": "hedgedoc",
+          "db": "hedgedoc",
+          "healthcheck": "cmd",
+          "volumes": [
+            "postgres_data:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
+        },
+        {
+          "service": "paca",
+          "container": "paca-postgres",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "postgres:16-alpine",
+          "port": 5432,
+          "dns": "paca-postgres.app",
+          "user": "paca",
+          "db": "paca",
+          "healthcheck": "pg_isready -U paca -d paca",
+          "volumes": [
+            "paca_postgres:/var/lib/postgresql/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "postgresql://paca@10.0.0.6:5432/paca"
+        },
+        {
+          "service": "vaultwarden",
+          "container": "vaultwarden",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "oci-A1-f_0",
+          "vm_alias": "oci-apps",
+          "wg_ip": "10.0.0.6",
+          "image": "vaultwarden/server:latest",
+          "port": 8880,
+          "dns": "vaultwarden.app",
+          "path": "/data/db.sqlite3",
+          "healthcheck": "/alive",
+          "volumes": [
+            "./data:/data"
+          ],
+          "resources": null,
+          "backup": true
+        }
+      ]
+    },
+    "gcp-proxy": {
+      "wg_ip": "10.0.0.1",
+      "user": "diego",
+      "databases": [
+        {
+          "service": "redis",
+          "container": "redis",
+          "container_key": "app",
+          "type": "redis",
+          "enabled": true,
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
+          "image": "redis:alpine",
+          "port": 6379,
+          "dns": "redis.app",
+          "healthcheck": "redis-cli ping",
+          "volumes": [
+            "/data/redis:/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "redis://10.0.0.1:6379"
+        },
+        {
+          "service": "authelia",
+          "container": "authelia",
+          "container_key": "app",
+          "type": "sqlite",
+          "enabled": true,
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
+          "image": "authelia/authelia:4.39.15",
+          "port": 9091,
+          "dns": "authelia.app",
+          "path": "/data/db.sqlite3",
+          "healthcheck": "/api/health",
+          "volumes": [
+            "authelia_data:/data",
+            "./configs:/config:ro"
+          ],
+          "resources": null,
+          "backup": true
+        },
+        {
+          "service": "authelia",
+          "container": "authelia-redis",
+          "container_key": "redis",
+          "type": "redis",
+          "enabled": true,
+          "vm": "gcp-E2-f_0",
+          "vm_alias": "gcp-proxy",
+          "wg_ip": "10.0.0.1",
+          "image": "redis:7-bookworm",
+          "port": 6380,
+          "dns": "authelia-redis.app",
+          "volumes": [
+            "authelia_redis_data:/data"
+          ],
+          "resources": null,
+          "backup": true,
+          "connection": "redis://10.0.0.1:6380"
         }
       ]
     },
@@ -1916,72 +1982,6 @@
             }
           },
           "backup": true
-        }
-      ]
-    },
-    "gcp-proxy": {
-      "wg_ip": "10.0.0.1",
-      "user": "diego",
-      "databases": [
-        {
-          "service": "authelia",
-          "container": "authelia",
-          "container_key": "app",
-          "type": "sqlite",
-          "enabled": true,
-          "vm": "gcp-E2-f_0",
-          "vm_alias": "gcp-proxy",
-          "wg_ip": "10.0.0.1",
-          "image": "authelia/authelia:4.39.15",
-          "port": 9091,
-          "dns": "authelia.app",
-          "path": "/data/db.sqlite3",
-          "healthcheck": "/api/health",
-          "volumes": [
-            "authelia_data:/data",
-            "./configs:/config:ro"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "authelia",
-          "container": "authelia-redis",
-          "container_key": "redis",
-          "type": "redis",
-          "enabled": true,
-          "vm": "gcp-E2-f_0",
-          "vm_alias": "gcp-proxy",
-          "wg_ip": "10.0.0.1",
-          "image": "redis:7-bookworm",
-          "port": 6380,
-          "dns": "authelia-redis.app",
-          "volumes": [
-            "authelia_redis_data:/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "redis://10.0.0.1:6380"
-        },
-        {
-          "service": "redis",
-          "container": "redis",
-          "container_key": "app",
-          "type": "redis",
-          "enabled": true,
-          "vm": "gcp-E2-f_0",
-          "vm_alias": "gcp-proxy",
-          "wg_ip": "10.0.0.1",
-          "image": "redis:alpine",
-          "port": 6379,
-          "dns": "redis.app",
-          "healthcheck": "redis-cli ping",
-          "volumes": [
-            "/data/redis:/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "redis://10.0.0.1:6379"
         }
       ]
     }

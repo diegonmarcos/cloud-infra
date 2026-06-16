@@ -30,7 +30,7 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SVC_DIR="$REPO_ROOT/a_solutions/bc-obs_c3-services-mcp"
+SVC_DIR="$REPO_ROOT/a_solutions/infra-api_c3-services-mcp"
 # v2 engine cutover (2026-04-22) moved code under src/code/. Keep backward-
 # compatible resolution so the tester still works if either layout is used.
 PROXY_TS=""

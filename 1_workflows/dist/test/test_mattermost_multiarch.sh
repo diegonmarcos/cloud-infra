@@ -36,7 +36,7 @@
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SVC_DIR="$REPO_ROOT/a_solutions/aa-sui_chat-mattermost"
+SVC_DIR="$REPO_ROOT/a_solutions/user-comm_chat-mattermost"
 FLAKE="$SVC_DIR/src/flake.nix"
 DOCKERFILE="$SVC_DIR/src/code/arm64/Dockerfile"
 UPSTREAM_PIN="$SVC_DIR/src/code/arm64/UPSTREAM.txt"
@@ -105,7 +105,7 @@ fi
 # only way Agents lands in the image. plugins.json replaced the old per-
 # plugin build_args entries in build.json on 2026-06-06 (FIRE RULE 4 —
 # data-driven schema; adding a plugin is a JSON edit, no Dockerfile change).
-PLUGINS_JSON="$REPO_ROOT/a_solutions/aa-sui_chat-mattermost/src/code/arm64/plugins.json"
+PLUGINS_JSON="$REPO_ROOT/a_solutions/user-comm_chat-mattermost/src/code/arm64/plugins.json"
 if [ ! -f "$PLUGINS_JSON" ]; then
     fail "plugins.json missing at $PLUGINS_JSON — Agents plugin won't be baked, /api/v4/plugins will be empty"
 elif ! jq -e . "$PLUGINS_JSON" >/dev/null 2>&1; then
