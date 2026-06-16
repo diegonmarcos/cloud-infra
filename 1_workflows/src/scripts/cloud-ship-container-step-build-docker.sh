@@ -239,6 +239,7 @@ ${USER_LINE}
 ${USER_SWITCH}
 ${ENV_LINE}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+ENTRYPOINT []
 ${CMD_LINE}
 NEOF
             # Stamp the engine-generated Dockerfile.native with the canonical
