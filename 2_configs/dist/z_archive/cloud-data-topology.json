@@ -108,6 +108,7 @@
         "ollama-hai",
         "rig-agentic-hai",
         "rig-agentic-sonn-14bq8",
+        "session-memory",
         "mattermost",
         "mattermost-postgres",
         "mattermost-bots",
@@ -728,6 +729,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "ollama-hai"
+      },
+      {
+        "name": "session-memory.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "session-memory"
       },
       {
         "name": "mattermost.app",
@@ -3843,6 +3850,56 @@
         "app": 8091
       },
       "flake": "user-ai_rig-agentic-sonn-14bq8"
+    },
+    "session-memory": {
+      "category": "agi",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_session-memory",
+      "description": "Central SQLite store of all Claude Code session transcripts — push/list/fetch so a session started on one device can be resumed from any other. WG-only sidecar on oci-apps; Node 22 built-in node:sqlite (phone-portable, no native deps).",
+      "port": 3108,
+      "dns": "session-memory.app",
+      "upstream": "10.0.0.6:3108",
+      "containers": {
+        "app": {
+          "container_name": "session-memory",
+          "image": "ghcr.io/diegonmarcos/session-memory:latest",
+          "port": 3108,
+          "port_env": "MEM_PORT",
+          "dns": "session-memory.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "session-memory"
+      ],
+      "all_ports": [
+        "3108"
+      ],
+      "all_dns": [
+        "session-memory.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3108
+      },
+      "health": {
+        "path": "/health"
+      },
+      "flake": "user-ai_session-memory"
     },
     "chat-mattermost": {
       "category": "app",

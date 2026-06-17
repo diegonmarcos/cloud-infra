@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 282,
-    "edges": 380,
+    "nodes": 285,
+    "edges": 384,
     "by_table": {
       "vm": 4,
-      "service": 61,
-      "container": 86,
+      "service": 62,
+      "container": 87,
       "domain": 39,
       "repo": 3,
-      "module": 61,
+      "module": 62,
       "package": 28
     }
   },
@@ -1175,6 +1175,32 @@
         "image": null,
         "role": "app",
         "port": 8091,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "session_memory",
+      "key": "service:session_memory",
+      "properties": {
+        "name": "session-memory",
+        "category": "agi",
+        "description": "Central SQLite store of all Claude Code session transcripts — push/list/fetch so a session started on one device can be resumed from any other. WG-only sidecar on oci-apps; Node 22 built-in node:sqlite (phone-portable, no native deps).",
+        "domain": null,
+        "port": 3108,
+        "vm": "oci-apps",
+        "folder": "user-ai_session-memory"
+      }
+    },
+    {
+      "table": "container",
+      "id": "session_memory",
+      "key": "container:session_memory",
+      "properties": {
+        "name": "session-memory",
+        "image": "ghcr.io/diegonmarcos/session-memory:latest",
+        "role": "app",
+        "port": 3108,
         "public": false
       }
     },
@@ -2745,6 +2771,17 @@
     },
     {
       "table": "module",
+      "id": "user_ai_session_memory",
+      "key": "module:user_ai_session_memory",
+      "properties": {
+        "name": "user-ai_session-memory",
+        "repo": "cloud",
+        "category": "agi",
+        "service": "session-memory"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_comm_chat_mattermost",
       "key": "module:user_comm_chat_mattermost",
       "properties": {
@@ -3977,6 +4014,22 @@
       "from": "service:rig_agentic_sonn_14bq8",
       "to": "container:rig_agentic_sonn_14bq8",
       "key": "service:rig_agentic_sonn_14bq8->runs_container->container:rig_agentic_sonn_14bq8",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:session_memory",
+      "to": "vm:oci_apps",
+      "key": "service:session_memory->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:session_memory",
+      "to": "container:session_memory",
+      "key": "service:session_memory->runs_container->container:session_memory",
       "properties": {
         "role": "app"
       }
@@ -5724,6 +5777,20 @@
       "from": "module:user_ai_rig_agentic_sonn_14bq8",
       "to": "service:rig_agentic_sonn_14bq8",
       "key": "module:user_ai_rig_agentic_sonn_14bq8->implements->service:rig_agentic_sonn_14bq8",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_ai_session_memory",
+      "to": "repo:cloud",
+      "key": "module:user_ai_session_memory->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_session_memory",
+      "to": "service:session_memory",
+      "key": "module:user_ai_session_memory->implements->service:session_memory",
       "properties": {}
     },
     {

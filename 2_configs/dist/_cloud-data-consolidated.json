@@ -183,6 +183,7 @@
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
+        "session-memory",
         "chat-mattermost",
         "matrix-continuwuity",
         "matrix-element",
@@ -202,7 +203,7 @@
         "revealmd",
         "vaultwarden"
       ],
-      "container_count": 59
+      "container_count": 60
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -905,7 +906,7 @@
         "has_mcp": false,
         "mcp_url": null,
         "transport": "stdio",
-        "tools_count": 16,
+        "tools_count": 17,
         "resources_count": 0,
         "prompts_count": 0,
         "display_name": "Diego Personal Data MCP",
@@ -5280,6 +5281,66 @@
         "MM_BOT_TOKEN"
       ]
     },
+    "session-memory": {
+      "category": "agi",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_session-memory",
+      "description": "Central SQLite store of all Claude Code session transcripts — push/list/fetch so a session started on one device can be resumed from any other. WG-only sidecar on oci-apps; Node 22 built-in node:sqlite (phone-portable, no native deps).",
+      "enabled": true,
+      "flake": "user-ai_session-memory",
+      "port": 3108,
+      "dns": "session-memory.app",
+      "upstream": "10.0.0.6:3108",
+      "containers": {
+        "app": {
+          "container_name": "session-memory",
+          "image": "ghcr.io/diegonmarcos/session-memory:latest",
+          "port": 3108,
+          "port_env": "MEM_PORT",
+          "dns": "session-memory.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "session-memory"
+      ],
+      "all_ports": [
+        "3108"
+      ],
+      "all_dns": [
+        "session-memory.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3108
+      },
+      "health": {
+        "path": "/health"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      }
+    },
     "chat-mattermost": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -8150,8 +8211,8 @@
       "upstream_image": "vaultwarden/server:latest",
       "timezone": "Europe/Madrid",
       "resources": {
-        "mem_limit": "128M",
-        "mem_reservation": "32M"
+        "mem_limit": "512M",
+        "mem_reservation": "64M"
       },
       "api": {
         "has_api": true,
@@ -8568,6 +8629,12 @@
         "service": "ollama-hai"
       },
       {
+        "name": "session-memory.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "session-memory"
+      },
+      {
         "name": "mattermost.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -8932,6 +8999,7 @@
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
+          "session-memory",
           "chat-mattermost",
           "matrix-continuwuity",
           "matrix-element",
@@ -9389,6 +9457,11 @@
       },
       "rig-agentic-sonn-14bq8": {
         "dir": "user-ai_rig-agentic-sonn-14bq8",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "session-memory": {
+        "dir": "user-ai_session-memory",
         "vm": "oci-apps",
         "has_docker": true
       },

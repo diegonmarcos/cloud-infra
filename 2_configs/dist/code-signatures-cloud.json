@@ -6,29 +6,29 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1444,
+    "files": 1449,
     "by_lang": {
-      "nix": 417,
-      "sh": 344,
+      "nix": 419,
+      "sh": 345,
       "rust": 272,
-      "ts": 315,
-      "js": 13,
+      "ts": 316,
+      "js": 14,
       "py": 83
     },
     "by_role": {
-      "flake": 71,
+      "flake": 72,
       "script": 99,
-      "shell": 231,
+      "shell": 232,
       "rust-module": 266,
       "engine": 36,
       "nix-module": 282,
-      "module": 188,
+      "module": 189,
       "entrypoint": 22,
-      "compose": 64,
+      "compose": 65,
       "mcp-tool": 100,
       "python": 81,
       "workflow-dag": 1,
-      "file": 3
+      "file": 4
     }
   },
   "files": [
@@ -8974,11 +8974,55 @@
         "zod",
         "fs",
         "path",
-        "../config.js"
+        "../config.js",
+        "../vaultwarden.js"
       ],
       "symbols": [
         "listDirSafe(path: string)",
-        "registerVaultTools(server: McpServer)"
+        "registerVaultTools(server: McpServer)",
+        "vaultwardenError(e: unknown)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-diego-personal-data-mcp/src/vaultwarden.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getCredentialsPath",
+        "itemTypeLabel",
+        "getVaultItems",
+        "getTotpCode",
+        "VaultwardenCredentials",
+        "VaultwardenNotConfiguredError",
+        "VaultItem",
+        "TotpResult"
+      ],
+      "imports": [
+        "node:crypto",
+        "fs",
+        "path",
+        "./config.js"
+      ],
+      "symbols": [
+        "getCredentialsPath()",
+        "loadCredentials()",
+        "makeMasterKey(password: string, email: string, iterations: number)",
+        "makeMasterPasswordHash(masterKey: Buffer, password: string)",
+        "hkdfExpand(prk: Buffer, info: string, length: number)",
+        "stretchKey(key: Buffer)",
+        "decryptBuf(cipherString: string, encKey: Buffer, macKey: Buffer)",
+        "decryptStr(cipherString: string | null | undefined, encKey: Buffer, macKey: Buffer)",
+        "api(\n  server: string,\n  endpoint: string,\n  opts: { method?: string; token?: string; form?: Record<string, string> } = {}\n)",
+        "login(creds: VaultwardenCredentials)",
+        "itemTypeLabel(type: number)",
+        "loadVault(force = false)",
+        "cipherKeys(c: RawCipher, v: RawVault)",
+        "getVaultItems(force = false)",
+        "base32Decode(input: string)",
+        "parseTotp(field: string)",
+        "computeTotp(p: TotpParams, epochSeconds: number)",
+        "getTotpCode(service: string)",
+        "class VaultwardenNotConfiguredError"
       ]
     },
     {
@@ -22409,6 +22453,116 @@
         "description",
         "sonn-14bq8)",
         "own",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_session-memory/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_session-memory/src/code/server.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:sqlite",
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/user-ai_session-memory/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "wgIp",
+        "binariesImage",
+        "services",
+        "session-memory",
+        "image",
+        "container_name",
+        "network_mode",
+        "environment",
+        "MEM_PORT",
+        "MEM_BIND",
+        "MEM_DB",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "session_memory_data"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_session-memory/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
         "nixpkgs"
       ],
       "imports": [
