@@ -4529,7 +4529,7 @@
             "streaming": true,
             "type": "path",
             "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/kg-mcp"
+            "base_path": "/cloud-cgc-mcp"
           },
           "healthcheck": "/mcp",
           "monitoring": null,
@@ -4563,7 +4563,7 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/kg-mcp",
+          "base_path": "/cloud-cgc-mcp",
           "wg_only": true
         }
       },
@@ -4572,6 +4572,13 @@
       },
       "health": {
         "path": "/mcp"
+      },
+      "db_publish": {
+        "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 1_workflows/src/scripts/cloud-kg-db-snapshot.sh.",
+        "image": "ghcr.io/diegonmarcos/kg-mcp-octocode-db",
+        "tag": "latest",
+        "volume": "octocode_db",
+        "host": "oci-apps"
       },
       "runtime": {
         "git_root": "/repos",
@@ -4629,7 +4636,10 @@
         "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
-      }
+      },
+      "secret_env_vars": [
+        "KG_STORE_PASS"
+      ]
     },
     "kg-store": {
       "category": "data",
@@ -4725,6 +4735,11 @@
           {
             "table": "package",
             "key_source": "name"
+          },
+          {
+            "_comment": "octocode code-graph file nodes (full file-level mirror). One table; node_type property = file|source_file|test_file|config_file. Populated by a_solutions/user-ai_kg-mcp/src/code/octocode-export.py reading octocode's Lance graphrag_nodes per repo. key = <repo>:<path>.",
+            "table": "file",
+            "key_source": "path"
           }
         ],
         "edge_tables": [
@@ -4787,6 +4802,12 @@
             "table": "consumes",
             "in": "repo",
             "out": "repo"
+          },
+          {
+            "_comment": "octocode code-graph relationships (file→file), e.g. sibling_module. The exporter emits whatever relationship types octocode produced; SurrealDB RELATE auto-creates any not pre-defined here.",
+            "table": "sibling_module",
+            "in": "file",
+            "out": "file"
           }
         ]
       },

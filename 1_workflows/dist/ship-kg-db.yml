@@ -1,0 +1,113 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/ship-kg-db.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Publish kg-mcp octocode GraphRAG DB → GHCR (public)         │
+# │                                                              │
+# │  GHA = WG + SSH + GHCR auth; ALL logic in the POSIX script   │
+# │  1_workflows/src/scripts/cloud-kg-db-snapshot.sh.            │
+# │                                                              │
+# │  The GraphRAG index (FastEmbed vectors + LLM relationship    │
+# │  graph) lives only in the octocode_db volume on oci-apps —   │
+# │  this snapshots it to a GHCR image so a volume wipe is       │
+# │  restorable by `docker pull`. GHA (not the local ship) so    │
+# │  the package can be flipped PUBLIC (token scope).            │
+# │                                                              │
+# │  Manual only: the snapshot is large + expensive. Run it      │
+# │  after a reindex completes.                                  │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "Ship → kg-db (octocode GraphRAG snapshot)"
+
+on:
+  workflow_dispatch: {}
+
+# Shares the single gha-runner WireGuard peer slot on the gcp-proxy hub with the
+# other ship workflows — serialise so a concurrent Ship can't kick our tunnel.
+concurrency:
+  group: ship-wg-runner
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Snapshot octocode_db → GHCR
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+      WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # build-gha.json (vms[].wg_ip) is derived from build.json sources — used
+      # below to resolve the target VM's WireGuard IP for the SSH alias.
+      - name: Regenerate dist/ from build.json sources
+        run: bash 2_configs/build.sh all
+
+      - name: Install WireGuard
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools
+
+      # WireGuard up — gha-runner → gcp-proxy hub. Peer (pubkey/endpoint) is the
+      # stable hub identity, identical to the cloud-builder entrypoint. Runner
+      # uses .201 to avoid colliding with cloud-builder's .200 address.
+      - name: WireGuard up
+        run: |
+          sudo install -d -m 700 /etc/wireguard
+          umask 077
+          cat > /tmp/wg0.conf <<WGEOF
+          [Interface]
+          PrivateKey = ${WG_PRIVATE_KEY}
+          Address = 10.0.0.201/24
+
+          [Peer]
+          PublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=
+          Endpoint = 35.226.147.64:51820
+          AllowedIPs = 10.0.0.0/24
+          PersistentKeepalive = 25
+          WGEOF
+          sudo cp /tmp/wg0.conf /etc/wireguard/wg0.conf && rm -f /tmp/wg0.conf
+          sudo wg-quick up wg0
+          sudo wg show
+
+      # SSH alias `oci-apps` → its WireGuard IP (data-driven from build-gha.json,
+      # the same source ship.yml resolves from). Alias matches db_publish.host.
+      - name: Configure SSH to oci-apps
+        run: |
+          GHA_CONFIG="2_configs/dist/build-gha.json"
+          WGIP=$(jq -r '.vms["oci-apps"].wg_ip // "10.0.0.6"' "$GHA_CONFIG")
+          USER=$(jq -r '.vms["oci-apps"].user // "ubuntu"' "$GHA_CONFIG")
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<SSHEOF
+          Host oci-apps
+            HostName $WGIP
+            User $USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 15
+            ServerAliveCountMax 8
+          SSHEOF
+          chmod 600 ~/.ssh/config
+
+      - name: GHCR login
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      # All logic lives here — snapshot octocode_db → GHCR image + flip public.
+      - name: Snapshot octocode_db → GHCR
+        run: sh 1_workflows/src/scripts/cloud-kg-db-snapshot.sh
