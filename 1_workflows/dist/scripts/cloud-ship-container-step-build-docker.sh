@@ -231,7 +231,14 @@ step_docker() {
                 # "EACCES /home/appuser/.npm/_logs"). HOME env var is set
                 # explicitly so it works even when the user-switch path
                 # doesn't initialize HOME.
-                USER_LINE="RUN id -u ${NATIVE_USER} >/dev/null 2>&1 || useradd -r -m -u 10001 ${NATIVE_USER}"
+                # chown -R ${WORKDIR_PATH}: COPY preserves source file perms.
+                # On a host with a restrictive umask (077) the COPYed app files
+                # are mode 600 root-only, so after the USER switch appuser gets
+                # EACCES reading its own /app/package.json and the container
+                # crash-loops. chown the app tree to the runtime user (as root,
+                # before the USER switch) so it's readable regardless of the
+                # host umask — fully reproducible across build machines.
+                USER_LINE="RUN id -u ${NATIVE_USER} >/dev/null 2>&1 || useradd -r -m -u 10001 ${NATIVE_USER}; chown -R ${NATIVE_USER} ${WORKDIR_PATH}"
                 USER_SWITCH="USER ${NATIVE_USER}
 ENV HOME=/home/${NATIVE_USER}"
             fi
