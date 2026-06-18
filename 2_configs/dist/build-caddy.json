@@ -663,6 +663,10 @@
       "upstream": "10.0.0.4:443"
     },
     {
+      "service": "caddy-public.app",
+      "upstream": "10.0.0.4:8443"
+    },
+    {
       "service": "kg-mcp.app",
       "upstream": "10.0.0.6:3105"
     },
@@ -1265,6 +1269,27 @@
       "port": 443,
       "protocol": "tcp",
       "upstream": "10.0.0.4:443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "caddy-public.app",
+      "redirect_to": "https://caddy-public-https-8443.app",
+      "container": "caddy-public",
+      "container_key": "app",
+      "svc": "caddy-public",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "caddy-public-https-8443.app",
+      "container": "caddy-public",
+      "container_key": "app",
+      "svc": "caddy-public",
+      "vm": "oci-E2-f_1",
+      "port": 8443,
+      "protocol": "https",
+      "upstream": "10.0.0.4:8443",
       "source": "containers.app.port"
     },
     {
@@ -2595,6 +2620,16 @@
       "notes": null
     },
     {
+      "host": "caddy-public.app",
+      "path": null,
+      "upstream": "10.0.0.4:8443",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "kg-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -3034,6 +3069,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "caddy-l4-public",
+      "notes": null
+    },
+    {
+      "host": "caddy-public-https-8443.app",
+      "path": null,
+      "upstream": "10.0.0.4:8443",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "caddy-public",
       "notes": null
     },
     {

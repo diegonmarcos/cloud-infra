@@ -185,6 +185,18 @@
       ]
     },
     {
+      "name": "caddy-public",
+      "category": "sec",
+      "vm": "oci-E2-f_1",
+      "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "caddy-public"
+      ]
+    },
+    {
       "name": "calendar-radicale",
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1020,6 +1032,18 @@
       "networks": [],
       "containers": [
         "caddy-l4-public"
+      ]
+    },
+    {
+      "name": "caddy-public",
+      "category": "sec",
+      "vm": "oci-E2-f_1",
+      "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "caddy-public"
       ]
     },
     {

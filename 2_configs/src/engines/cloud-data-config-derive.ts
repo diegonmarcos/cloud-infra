@@ -337,7 +337,7 @@ function deriveDnsServices(c: any): DerivedFile {
   };
 }
 
-function deriveCaddy(c: any): DerivedFile {
+function deriveCaddy(c: any): DerivedFile[] {
   const services = c.services as Record<string, any>;
   const vms = c.vms as Record<string, any>;
   const flatRoutes: any[] = c.configs?.caddy?.routes ?? [];
@@ -1035,7 +1035,7 @@ function deriveCaddy(c: any): DerivedFile {
     others.push({ host: wkdDomain, path: caddyCfg.wkd.path, upstream: `/srv/wkd/hu/${caddyCfg.wkd.hash}`, kind: "file_server", tls: "public", zone: "com", service: "caddy", notes: "PGP WKD" });
   }
 
-  return {
+  const mainFile: DerivedFile = {
     name: "build-caddy.json",
     data: {
       _meta: {
@@ -1084,6 +1084,53 @@ function deriveCaddy(c: any): DerivedFile {
       others,
     },
   };
+
+  // ── build-caddy-public.json — DECLARED-PUBLIC allowlist for caddy-public (oci-analytics edge) ──
+  // Source of truth: wg_only !== true (private = wg_only:true; public = field omitted). This is the
+  // SAME flag the gcp-proxy @wg gate keys on, so the edge allowlist and the hub gate can NEVER
+  // diverge. NOT the public_* taxonomy — that is a ZONE label that includes wg_only:true MCP/API
+  // services (e.g. mcp.../cloud-cgc-mcp), so using it would expose ~32 private services.
+  const isPublic = (e: any) => e?.wg_only !== true;
+  const publicSubdomainRoutes = dedupedRoutes.filter(isPublic);
+  const publicPathRoutes = filteredPathRoutes
+    .map((g: any) => ({
+      ...g,
+      paths: (g.paths ?? []).filter((p: any) => isPublic(p) || ((p.public_paths ?? []).length > 0)),
+    }))
+    .filter((g: any) => (g.paths ?? []).length > 0);
+  const publicMcpRoutes = mcpRoutes
+    .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isPublic) }))
+    .filter((g: any) => (g.endpoints ?? []).length > 0);
+
+  const publicFile: DerivedFile = {
+    name: "build-caddy-public.json",
+    data: {
+      _meta: {
+        description: "Declared-public allowlist for caddy-public edge (oci-analytics). Source: wg_only!==true. NOT the public_* zone taxonomy.",
+        format_version: 1,
+      },
+      _generated: now(),
+      _source: "deriveCaddy → routes/path_routes/mcp_routes filtered to wg_only!==true + gh-pages + well-known",
+      global:            caddyCfg.global            ?? {},
+      on_demand_tls:     caddyCfg.on_demand_tls     ?? {},
+      security_snippets: caddyCfg.security_snippets ?? {},
+      auth:              caddyCfg.auth              ?? {},
+      auth_upstreams:    authUpstreams,
+      error_handler:     caddyCfg.error_handler     ?? {},
+      catch_all:         caddyCfg.catch_all         ?? {},
+      messages:          caddyCfg.messages          ?? {},
+      // Non-public requests fall through to the private hub over wg-PUBLIC (10.1.0.2), where the
+      // @wg remote_ip 10.0.0.0/24 gate 403s them. NEVER wg0 — that would pass the gate (a leak).
+      private_forward_upstream: "10.1.0.2:443",
+      public_routes:        publicSubdomainRoutes,
+      public_path_routes:   publicPathRoutes,
+      public_mcp_routes:    publicMcpRoutes,
+      github_pages_proxies: githubPagesProxies,
+      well_known_routes:    wellKnownRoutes,
+    },
+  };
+
+  return [mainFile, publicFile];
 }
 
 function deriveAutheliaAcl(c: any): DerivedFile {
@@ -2877,7 +2924,7 @@ function main() {
     ...deriveBuildVm(consolidated),                  // dist/build-vm-{vm}.json — per-VM service manifest
     deriveServiceConnections(consolidated),
     deriveDnsServices(consolidated),
-    deriveCaddy(consolidated),
+    ...deriveCaddy(consolidated),
     deriveAutheliaAcl(consolidated),
     deriveAuthelia(consolidated),
     deriveRedis(consolidated),

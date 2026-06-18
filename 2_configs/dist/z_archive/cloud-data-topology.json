@@ -54,7 +54,8 @@
       "containers": [
         "c3-public-api",
         "cf-worker-http-to-wg-public-bridge",
-        "caddy-l4-public"
+        "caddy-l4-public",
+        "caddy-public"
       ],
       "ports": [],
       "networks": [],
@@ -705,6 +706,12 @@
         "type": "A",
         "value": "10.0.0.4",
         "service": "caddy-l4-public"
+      },
+      {
+        "name": "caddy-public.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "caddy-public"
       },
       {
         "name": "introspect-proxy.app",
@@ -3411,6 +3418,71 @@
         "endpoint_check": false
       },
       "flake": "infra-sec_caddy-l4-public"
+    },
+    "caddy-public": {
+      "category": "sec",
+      "vm": "oci-E2-f_1",
+      "folder": "infra-sec_caddy-public",
+      "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
+      "port": 8443,
+      "dns": "caddy-public.app",
+      "upstream": "10.0.0.4:8443",
+      "containers": {
+        "app": {
+          "container_name": "caddy-public",
+          "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+          "port": 8443,
+          "extra_ports": [
+            {
+              "port": 2019,
+              "protocol": "http",
+              "monitor": false,
+              "_comment": "Admin API bound to localhost:2019 only — local-only by design."
+            }
+          ],
+          "port_env": null,
+          "dns": "caddy-public.app",
+          "public": true,
+          "proxy": {
+            "type": "special",
+            "comment": "Caddy-public IS the public-edge reverse proxy — allowlist + forward-to-gcp-proxy"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./Caddyfile:/etc/caddy/Caddyfile:ro",
+            "caddy_public_data:/data",
+            "caddy_public_config:/config",
+            "./logs:/var/log/caddy"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "https"
+        }
+      },
+      "container_names": [
+        "caddy-public"
+      ],
+      "all_ports": [
+        "8443"
+      ],
+      "all_dns": [
+        "caddy-public.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "special",
+          "comment": "Caddy-public IS the public-edge reverse proxy — allowlist + forward-to-gcp-proxy"
+        }
+      },
+      "flake": "infra-sec_caddy-public"
     },
     "introspect-proxy": {
       "category": "sec",
