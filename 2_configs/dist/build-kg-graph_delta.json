@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 285,
-    "edges": 384,
+    "nodes": 288,
+    "edges": 388,
     "by_table": {
       "vm": 4,
-      "service": 62,
-      "container": 87,
+      "service": 63,
+      "container": 88,
       "domain": 39,
       "repo": 3,
-      "module": 62,
+      "module": 63,
       "package": 28
     }
   },
@@ -993,6 +993,32 @@
         "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
         "role": "app",
         "port": 443,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "caddy_public",
+      "key": "service:caddy_public",
+      "properties": {
+        "name": "caddy-public",
+        "category": "sec",
+        "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
+        "domain": null,
+        "port": 8443,
+        "vm": "oci-analytics",
+        "folder": "infra-sec_caddy-public"
+      }
+    },
+    {
+      "table": "container",
+      "id": "caddy_public",
+      "key": "container:caddy_public",
+      "properties": {
+        "name": "caddy-public",
+        "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+        "role": "app",
+        "port": 8443,
         "public": true
       }
     },
@@ -2694,6 +2720,17 @@
     },
     {
       "table": "module",
+      "id": "infra_sec_caddy_public",
+      "key": "module:infra_sec_caddy_public",
+      "properties": {
+        "name": "infra-sec_caddy-public",
+        "repo": "cloud",
+        "category": "sec",
+        "service": "caddy-public"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_sec_introspect_proxy",
       "key": "module:infra_sec_introspect_proxy",
       "properties": {
@@ -3923,6 +3960,22 @@
       "from": "service:caddy_l4_public",
       "to": "container:caddy_l4_public",
       "key": "service:caddy_l4_public->runs_container->container:caddy_l4_public",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:caddy_public",
+      "to": "vm:oci_analytics",
+      "key": "service:caddy_public->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:caddy_public",
+      "to": "container:caddy_public",
+      "key": "service:caddy_public->runs_container->container:caddy_public",
       "properties": {
         "role": "app"
       }
@@ -5679,6 +5732,20 @@
       "from": "module:infra_sec_caddy_l4_public",
       "to": "service:caddy_l4_public",
       "key": "module:infra_sec_caddy_l4_public->implements->service:caddy_l4_public",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_sec_caddy_public",
+      "to": "repo:cloud",
+      "key": "module:infra_sec_caddy_public->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_sec_caddy_public",
+      "to": "service:caddy_public",
+      "key": "module:infra_sec_caddy_public->implements->service:caddy_public",
       "properties": {}
     },
     {

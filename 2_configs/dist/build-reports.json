@@ -824,6 +824,15 @@
       },
       "health": null
     },
+    "caddy-public": {
+      "name": "caddy-public",
+      "vm": "oci-E2-f_1",
+      "domain": null,
+      "enabled": true,
+      "category": "sec",
+      "ports": null,
+      "health": null
+    },
     "introspect-proxy": {
       "name": "introspect-proxy",
       "vm": "gcp-E2-f_0",
@@ -1525,6 +1534,15 @@
       "dns": "caddy-l4-public.app"
     },
     {
+      "service": "caddy-public",
+      "dns": "caddy-public.app"
+    },
+    {
+      "service": "caddy-public",
+      "container": "app",
+      "dns": "caddy-public.app"
+    },
+    {
       "service": "introspect-proxy",
       "dns": "introspect-proxy.app"
     },
@@ -1990,7 +2008,8 @@
         "services": [
           "c3-public-api",
           "cf-worker-http-to-wg-public-bridge",
-          "caddy-l4-public"
+          "caddy-l4-public",
+          "caddy-public"
         ]
       },
       "oci-A1-f_0": {
@@ -2496,6 +2515,15 @@
         "ports": {
           "app": 443
         },
+        "health": null
+      },
+      "caddy-public": {
+        "name": "caddy-public",
+        "vm": "oci-E2-f_1",
+        "domain": null,
+        "enabled": true,
+        "category": "sec",
+        "ports": null,
         "health": null
       },
       "introspect-proxy": {

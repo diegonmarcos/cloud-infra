@@ -6,26 +6,26 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1450,
+    "files": 1455,
     "by_lang": {
-      "nix": 419,
-      "sh": 345,
+      "nix": 422,
+      "sh": 346,
       "rust": 272,
-      "ts": 316,
+      "ts": 317,
       "js": 14,
       "py": 84
     },
     "by_role": {
-      "flake": 72,
+      "flake": 73,
       "script": 99,
-      "shell": 232,
+      "shell": 233,
       "rust-module": 266,
       "engine": 36,
-      "nix-module": 282,
+      "nix-module": 283,
       "module": 189,
       "entrypoint": 22,
-      "compose": 65,
-      "mcp-tool": 100,
+      "compose": 66,
+      "mcp-tool": 101,
       "python": 82,
       "workflow-dag": 1,
       "file": 4
@@ -18787,6 +18787,154 @@
       ]
     },
     {
+      "path": "a_solutions/infra-sec_caddy-public/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-sec_caddy-public/src/caddyfile-public.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "lib",
+        "caddyPublic"
+      ],
+      "imports": [],
+      "symbols": [
+        "readTpl",
+        "subst",
+        "stripTrail",
+        "privateUpstream",
+        "fwd",
+        "xreal",
+        "ss",
+        "securityHeaders",
+        "rateLimiting",
+        "blockBots",
+        "blockScanners",
+        "requestLimits",
+        "ipBlock",
+        "cidrs",
+        "body",
+        "accessLog",
+        "securitySnippet",
+        "sec",
+        "eh",
+        "codesExpr",
+        "handleErrors",
+        "global",
+        "odt",
+        "globalsBlock",
+        "ghPages",
+        "ghPagesDomainLists",
+        "ghPagesDomains",
+        "wellKnownRoutes",
+        "mkGithubProxy",
+        "mkWellKnownBlock",
+        "hasRedirect",
+        "hasTlsSkipVerify",
+        "mkGithubPagesRoute",
+        "groupDomains",
+        "matchingWellKnown",
+        "wellKnownBlocks",
+        "wkdBlock",
+        "mkSubdomainRoute",
+        "mkPublicPathHandle",
+        "mkPathRouteGroup"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-sec_caddy-public/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "services",
+        "caddy-public",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "cap_add",
+        "read_only",
+        "volumes",
+        "restart",
+        "limits",
+        "reservations",
+        "caddy_public_data",
+        "caddy_public_config",
+        "caddy_public_logs"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-sec_caddy-public/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./caddyfile-public.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "caddyfile-public.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "caddyPublic",
+        "engine",
+        "lib",
+        "caddyfileText",
+        "templates",
+        "packages",
+        "pkgs",
+        "engineOut",
+        "container",
+        "srcDir",
+        "composeSpec",
+        "title",
+        "svcPath",
+        "htmlBanner",
+        "htmlBannerFile",
+        "withBanner",
+        "default",
+        "passthru"
+      ]
+    },
+    {
       "path": "a_solutions/infra-sec_caddy/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -19391,6 +19539,7 @@
         "./tools/a-knowledge/skills.js",
         "./tools/b-code-graph-context/octocode.js",
         "./tools/b-code-graph-context/codegraph.js",
+        "./tools/b-code-graph-context/kgstore.js",
         "./context.js",
         "./shared/libs/binds.js"
       ],
@@ -19418,7 +19567,7 @@
       "exports": [
         "jarr(v)",
         "ident(s)",
-        "find_project_dir(commit)",
+        "find_project_dir(repo, commit)",
         "export(repo)"
       ],
       "imports": [
@@ -19428,7 +19577,7 @@
       "symbols": [
         "jarr(v)",
         "ident(s)",
-        "find_project_dir(commit)",
+        "find_project_dir(repo, commit)",
         "export(repo)"
       ]
     },
@@ -20483,6 +20632,22 @@
         "loadGraph()",
         "resolveTarget(g: Graph, t: string)",
         "registerCodegraphTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_kg-mcp/src/code/tools/b-code-graph-context/kgstore.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerKgStoreTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod"
+      ],
+      "symbols": [
+        "surql(q: string)",
+        "registerKgStoreTools(server: McpServer)"
       ]
     },
     {
