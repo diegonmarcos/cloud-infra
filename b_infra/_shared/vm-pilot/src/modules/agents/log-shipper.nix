@@ -31,6 +31,16 @@
     RestartSec=15
     MemoryMax=64M
     CPUQuota=10%
+    # ── fd / task self-limit (2026-06-19 fd-leak incident) ───────────────
+    # The `tail` input opens one fd + inotify watch per matched container log
+    # and leaks them on container churn / log rotation (known upstream tail
+    # behaviour). Hard-cap fluent-bit's own fds so a leak can NEVER drain the
+    # system fd table — if it ever climbs past this it hits EMFILE itself,
+    # crashes, and Restart=always (RestartSec=15) brings it back with fresh
+    # fds. A self-contained, self-healing blip instead of a host-wide freeze.
+    # ~30 containers need <500 fds; 8192 is generous-but-bounded headroom.
+    LimitNOFILE=8192
+    TasksMax=64
     User=root
     # Fluent Bit needs read access to /var/log/journal + /var/lib/docker
     ProtectSystem=strict
