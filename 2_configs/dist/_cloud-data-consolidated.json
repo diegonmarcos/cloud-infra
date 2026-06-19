@@ -4167,7 +4167,8 @@
       "containers": {
         "app": {
           "container_name": "caddy",
-          "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
+          "_image_doc": "PINNED to the last-known-good digest. caddy-l4:latest was rebuilt broken on 2026-06-19 (no caddy binary, CMD=/bin/sh) → gcp-proxy pulled it → :443 outage. Repin to :latest once infra-sec_caddy-l4-image is rebuilt + verified to contain caddy.",
+          "image": "ghcr.io/diegonmarcos/caddy-l4@sha256:d8309fad8a32c393ddf7a258b8dbfc990ea928372284804a08bd071a13df6b7c",
           "port": 443,
           "extra_ports": [
             {
@@ -5032,12 +5033,12 @@
           "db_volume": "octocode_db",
           "db_path": "/home/appuser/.local/share/octocode",
           "llm": {
-            "_comment": "octocode GraphRAG LLM → kg-bridge, TWO providers with fallback. openai:* reads OPENAI_API_URL → bridge /v1; ollama:* reads OLLAMA_API_URL (localhost:11434) → bridge Ollama mimic. reindex.sh forces use_llm=true (the flag that was off → 0 LLM calls) and tries `models` in order, falling back if a provider makes 0 bridge calls. api_key is a throwaway.",
-            "openai_api_url": "http://10.0.0.6:3107/v1/chat/completions",
-            "ollama_api_url": "http://localhost:11434",
+            "_comment": "octocode GraphRAG LLM -> claude-api-superset (kg-bridge successor), TWO providers with fallback. openai:* reads OPENAI_API_URL -> superset /v1 (3117); ollama:* reads OLLAMA_API_URL -> superset Ollama mimic (10.0.0.6:11436 — the superset binds the WG IP, not localhost). reindex.sh forces use_llm=true and tries `models` in order, falling back if a provider makes 0 superset /health calls. api_key is a throwaway.",
+            "openai_api_url": "http://10.0.0.6:3117/v1/chat/completions",
+            "ollama_api_url": "http://10.0.0.6:11436",
             "api_key": "sk-dummy",
             "models": "ollama:claude-sonnet openai:gpt-4o-mini",
-            "health_url": "http://10.0.0.6:3107/health"
+            "health_url": "http://10.0.0.6:3117/health"
           },
           "index_repos": [
             "cloud",
