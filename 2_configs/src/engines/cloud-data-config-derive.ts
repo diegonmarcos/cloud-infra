@@ -1102,8 +1102,10 @@ function deriveCaddy(c: any): DerivedFile[] {
     .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isPublic) }))
     .filter((g: any) => (g.endpoints ?? []).length > 0);
 
+  // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
+  // per-container manifest deriveContainerConfigs emits for the `caddy-public` service.
   const publicFile: DerivedFile = {
-    name: "build-caddy-public.json",
+    name: "build-caddy-edge.json",
     data: {
       _meta: {
         description: "Declared-public allowlist for caddy-public edge (oci-analytics). Source: wg_only!==true. NOT the public_* zone taxonomy.",
