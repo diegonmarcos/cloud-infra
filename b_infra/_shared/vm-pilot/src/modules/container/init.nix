@@ -117,7 +117,13 @@ in {
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
-    LimitNOFILE=infinity
+    # Bounded (was infinity) — 2026-06-19 fd-leak incident hardening. infinity
+    # lets dockerd + every container consume up to fs.nr_open, i.e. the whole
+    # system fd table; a single container fd leak could then freeze the host the
+    # same way fluent-bit did. 1048576 = half of fs.nr_open (2097152, set in
+    # resource-bouncer.nix) → docker is still astronomically generous yet can
+    # never starve sshd / wg-quick / dropbear of file descriptors.
+    LimitNOFILE=1048576
     LimitNPROC=infinity
     LimitCORE=infinity
     CPUQuota=80%

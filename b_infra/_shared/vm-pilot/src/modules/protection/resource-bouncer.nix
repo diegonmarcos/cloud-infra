@@ -41,6 +41,22 @@ in {
     vm.dirty_background_ratio = 5
     vm.watermark_scale_factor = 500
     net.ipv4.ip_forward = 1
+    # ── File-descriptor / inotify / PID exhaustion headroom ──────────────
+    # 2026-06-19 incident: a fluent-bit fd leak drained the SYSTEM fd table on
+    # gcp-proxy → every daemon (incl. FIFO-priority sshd / wg-quick / dropbear)
+    # got EMFILE (errno 24) on accept()/open() → the whole WG hub went
+    # unreachable while CPU+memory protection still looked healthy. cgroup
+    # CPU/mem slices CANNOT cap file descriptors, inotify watches, or PIDs —
+    # those live in global kernel tables. Give those tables massive headroom so
+    # a single leaking process can never exhaust them (defence-in-depth with the
+    # per-service LimitNOFILE caps on fluent-bit + docker). 8 GB RAM ceiling is
+    # irrelevant: each struct file is ~1 KB, 2M fds ≈ worst case the offender
+    # never reaches because it is LimitNOFILE-capped first.
+    fs.file-max = 2097152
+    fs.nr_open = 2097152
+    fs.inotify.max_user_watches = 524288
+    fs.inotify.max_user_instances = 1024
+    kernel.pid_max = 262144
   '';
 
   # ── Zram ──────────────────────────────────────────────────────────────
