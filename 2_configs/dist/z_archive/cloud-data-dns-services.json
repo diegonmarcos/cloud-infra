@@ -133,10 +133,6 @@
       "ip": "10.0.0.1",
       "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
     },
-    "caddy-l4-public": {
-      "ip": "10.0.0.1",
-      "desc": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly."
-    },
     "caddy-public": {
       "ip": "10.0.0.1",
       "desc": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients."
