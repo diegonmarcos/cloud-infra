@@ -4,7 +4,7 @@
   },
 
   "domain": "diegonmarcos.com",
-  "_proxy_ip_doc": "Public edge = oci-analytics (129.151.228.66). gcp-proxy:443 is closed publicly (session goal: gcp-proxy is wg-only). Public clients hit oci-analytics:443 which runs caddy-l4-public — pure L4 SNI relay to gcp-proxy 10.1.0.2:443 over wg-public. TLS terminates + path-routes on gcp-proxy. WG0 clients (with hickory at 10.0.0.1:53) resolve via the multi-value extra_ip directly to gcp-proxy 10.0.0.1.",
+  "_proxy_ip_doc": "Public edge = oci-analytics (129.151.228.66). gcp-proxy:443 is closed publicly (session goal: gcp-proxy is wg-only). Public clients hit oci-analytics:443 which runs caddy-public — a layer4 SNI mux: mail (imap./smtps.) → maddy L4; pure-public SNIs (gh-pages + auth=none) → local :8443 L7 serve; everything else → raw-TLS passthrough to gcp-proxy 10.1.0.2:443 over wg-public, where TLS terminates + path-routes + the @wg gate runs. WG0 clients (hickory at 10.0.0.1:53) resolve via the multi-value extra_ip directly to gcp-proxy 10.0.0.1.",
   "proxy_ip": "129.151.228.66",
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
