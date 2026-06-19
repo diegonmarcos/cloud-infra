@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 292,
-    "edges": 394,
+    "nodes": 289,
+    "edges": 390,
     "by_table": {
       "vm": 4,
-      "service": 64,
-      "container": 89,
+      "service": 63,
+      "container": 88,
       "domain": 40,
       "repo": 3,
-      "module": 64,
+      "module": 63,
       "package": 28
     }
   },
@@ -1097,32 +1097,6 @@
         "image": null,
         "role": "app",
         "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "kg_bridge",
-      "key": "service:kg_bridge",
-      "properties": {
-        "name": "kg-bridge",
-        "category": "net",
-        "description": "OpenAI-compatible shim over the Claude Code CLI (subscription OAuth) — serves octocode's GraphRAG LLM-extraction pass without a metered API key. Internal sidecar on oci-apps; never public.",
-        "domain": null,
-        "port": 3107,
-        "vm": "oci-apps",
-        "folder": "user-ai_kg-bridge"
-      }
-    },
-    {
-      "table": "container",
-      "id": "kg_bridge",
-      "key": "container:kg_bridge",
-      "properties": {
-        "name": "kg-bridge",
-        "image": "ghcr.io/diegonmarcos/kg-bridge:latest",
-        "role": "app",
-        "port": 3107,
         "public": false
       }
     },
@@ -2798,17 +2772,6 @@
     },
     {
       "table": "module",
-      "id": "user_ai_kg_bridge",
-      "key": "module:user_ai_kg_bridge",
-      "properties": {
-        "name": "user-ai_kg-bridge",
-        "repo": "cloud",
-        "category": "net",
-        "service": "kg-bridge"
-      }
-    },
-    {
-      "table": "module",
       "id": "user_ai_kg_mcp",
       "key": "module:user_ai_kg_mcp",
       "properties": {
@@ -4062,22 +4025,6 @@
       "from": "service:db_agent",
       "to": "container:db_agent",
       "key": "service:db_agent->runs_container->container:db_agent",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:kg_bridge",
-      "to": "vm:oci_apps",
-      "key": "service:kg_bridge->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:kg_bridge",
-      "to": "container:kg_bridge",
-      "key": "service:kg_bridge->runs_container->container:kg_bridge",
       "properties": {
         "role": "app"
       }
@@ -5865,20 +5812,6 @@
       "from": "module:user_ai_db_agent",
       "to": "service:db_agent",
       "key": "module:user_ai_db_agent->implements->service:db_agent",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_ai_kg_bridge",
-      "to": "repo:cloud",
-      "key": "module:user_ai_kg_bridge->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_ai_kg_bridge",
-      "to": "service:kg_bridge",
-      "key": "module:user_ai_kg_bridge->implements->service:kg_bridge",
       "properties": {}
     },
     {
