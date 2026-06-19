@@ -103,6 +103,7 @@
         "umami",
         "umami-db",
         "umami-setup",
+        "crowdsec",
         "kg-bridge",
         "kg-mcp",
         "kg-store",
@@ -712,6 +713,12 @@
         "type": "A",
         "value": "10.0.0.4",
         "service": "caddy-public"
+      },
+      {
+        "name": "crowdsec.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "crowdsec"
       },
       {
         "name": "introspect-proxy.app",
@@ -3483,6 +3490,88 @@
         }
       },
       "flake": "infra-sec_caddy-public"
+    },
+    "crowdsec": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-sec_crowdsec",
+      "description": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired.",
+      "domain": "crowdsec.diegonmarcos.com",
+      "port": 8088,
+      "dns": "crowdsec.app",
+      "upstream": "10.0.0.6:8088",
+      "containers": {
+        "app": {
+          "container_name": "crowdsec",
+          "image": "crowdsecurity/crowdsec:v1.7.8",
+          "port": 8088,
+          "port_env": null,
+          "dns": "crowdsec.app",
+          "public": true,
+          "proxy": {
+            "domain": "crowdsec.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "cmd",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": false
+          },
+          "volumes": [
+            "crowdsec_config:/etc/crowdsec",
+            "crowdsec_data:/var/lib/crowdsec/data"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "256M"
+            },
+            "reservations": {
+              "memory": "64M"
+            }
+          },
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "crowdsec"
+      ],
+      "all_ports": [
+        "8088"
+      ],
+      "all_dns": [
+        "crowdsec.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "crowdsec.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "lapi": 8088,
+        "metrics": 6062
+      },
+      "health": {
+        "path": "/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": false
+      },
+      "backup": {
+        "enabled": false
+      },
+      "flake": "infra-sec_crowdsec"
     },
     "introspect-proxy": {
       "category": "sec",

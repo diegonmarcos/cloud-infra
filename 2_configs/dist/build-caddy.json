@@ -245,6 +245,12 @@
       "comment": "SSO and 2FA authentication portal"
     },
     {
+      "domain": "crowdsec.diegonmarcos.com",
+      "upstream": "10.0.0.6:8088",
+      "wg_only": true,
+      "comment": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
+    },
+    {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
       "wg_only": true,
@@ -665,6 +671,10 @@
     {
       "service": "caddy-public.app",
       "upstream": "10.0.0.4:8443"
+    },
+    {
+      "service": "crowdsec.app",
+      "upstream": "10.0.0.6:8088"
     },
     {
       "service": "kg-mcp.app",
@@ -1290,6 +1300,27 @@
       "port": 8443,
       "protocol": "https",
       "upstream": "10.0.0.4:8443",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "crowdsec.app",
+      "redirect_to": "https://crowdsec-http-8088.app",
+      "container": "crowdsec",
+      "container_key": "app",
+      "svc": "crowdsec",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "crowdsec-http-8088.app",
+      "container": "crowdsec",
+      "container_key": "app",
+      "svc": "crowdsec",
+      "vm": "oci-A1-f_0",
+      "port": 8088,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8088",
       "source": "containers.app.port"
     },
     {
@@ -2168,6 +2199,16 @@
       "notes": "SSO and 2FA authentication portal"
     },
     {
+      "host": "crowdsec.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8088",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
+    },
+    {
       "host": "chat.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -2630,6 +2671,16 @@
       "notes": null
     },
     {
+      "host": "crowdsec.app",
+      "path": null,
+      "upstream": "10.0.0.6:8088",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "kg-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -3079,6 +3130,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "caddy-public",
+      "notes": null
+    },
+    {
+      "host": "crowdsec-http-8088.app",
+      "path": null,
+      "upstream": "10.0.0.6:8088",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "crowdsec",
       "notes": null
     },
     {
