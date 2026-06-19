@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 288,
-    "edges": 388,
+    "nodes": 292,
+    "edges": 394,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 88,
-      "domain": 39,
+      "service": 64,
+      "container": 89,
+      "domain": 40,
       "repo": 3,
-      "module": 63,
+      "module": 64,
       "package": 28
     }
   },
@@ -1019,6 +1019,32 @@
         "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
         "role": "app",
         "port": 8443,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "crowdsec",
+      "key": "service:crowdsec",
+      "properties": {
+        "name": "crowdsec",
+        "category": "sec",
+        "description": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired.",
+        "domain": "crowdsec.diegonmarcos.com",
+        "port": 8088,
+        "vm": "oci-apps",
+        "folder": "infra-sec_crowdsec"
+      }
+    },
+    {
+      "table": "container",
+      "id": "crowdsec",
+      "key": "container:crowdsec",
+      "properties": {
+        "name": "crowdsec",
+        "image": "crowdsecurity/crowdsec:v1.7.8",
+        "role": "app",
+        "port": 8088,
         "public": true
       }
     },
@@ -2218,6 +2244,14 @@
     },
     {
       "table": "domain",
+      "id": "crowdsec_diegonmarcos_com",
+      "key": "domain:crowdsec_diegonmarcos_com",
+      "properties": {
+        "fqdn": "crowdsec.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "chat_diegonmarcos_com",
       "key": "domain:chat_diegonmarcos_com",
       "properties": {
@@ -2727,6 +2761,17 @@
         "repo": "cloud",
         "category": "sec",
         "service": "caddy-public"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_sec_crowdsec",
+      "key": "module:infra_sec_crowdsec",
+      "properties": {
+        "name": "infra-sec_crowdsec",
+        "repo": "cloud",
+        "category": "sec",
+        "service": "crowdsec"
       }
     },
     {
@@ -3982,6 +4027,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:crowdsec",
+      "to": "vm:oci_apps",
+      "key": "service:crowdsec->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:crowdsec",
+      "to": "container:crowdsec",
+      "key": "service:crowdsec->runs_container->container:crowdsec",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:introspect_proxy",
       "to": "vm:gcp_proxy",
       "key": "service:introspect_proxy->hosted_on->vm:gcp_proxy",
@@ -4828,6 +4889,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:crowdsec",
+      "to": "service:caddy",
+      "key": "service:crowdsec->proxied_by->service:caddy",
+      "properties": {
+        "domain": "crowdsec.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:chat_mattermost",
       "to": "service:caddy",
       "key": "service:chat_mattermost->proxied_by->service:caddy",
@@ -5158,6 +5228,13 @@
       "from": "domain:proxy_diegonmarcos_com",
       "to": "service:caddy",
       "key": "domain:proxy_diegonmarcos_com->routes_to->service:caddy",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:crowdsec_diegonmarcos_com",
+      "to": "service:crowdsec",
+      "key": "domain:crowdsec_diegonmarcos_com->routes_to->service:crowdsec",
       "properties": {}
     },
     {
@@ -5746,6 +5823,20 @@
       "from": "module:infra_sec_caddy_public",
       "to": "service:caddy_public",
       "key": "module:infra_sec_caddy_public->implements->service:caddy_public",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_sec_crowdsec",
+      "to": "repo:cloud",
+      "key": "module:infra_sec_crowdsec->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_sec_crowdsec",
+      "to": "service:crowdsec",
+      "key": "module:infra_sec_crowdsec->implements->service:crowdsec",
       "properties": {}
     },
     {

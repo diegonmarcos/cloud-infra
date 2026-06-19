@@ -184,6 +184,10 @@
       "domain": "auth.diegonmarcos.com"
     },
     {
+      "service": "crowdsec",
+      "domain": "crowdsec.diegonmarcos.com"
+    },
+    {
       "service": "chat-mattermost",
       "domain": "chat.diegonmarcos.com"
     },
@@ -308,6 +312,10 @@
     {
       "service": "authelia",
       "domain": "auth.diegonmarcos.com"
+    },
+    {
+      "service": "crowdsec",
+      "domain": "crowdsec.diegonmarcos.com"
     },
     {
       "service": "chat-mattermost",
@@ -832,6 +840,20 @@
       "category": "sec",
       "ports": null,
       "health": null
+    },
+    "crowdsec": {
+      "name": "crowdsec",
+      "vm": "oci-A1-f_0",
+      "domain": "crowdsec.diegonmarcos.com",
+      "enabled": true,
+      "category": "sec",
+      "ports": {
+        "lapi": 8088,
+        "metrics": 6062
+      },
+      "health": {
+        "path": "/health"
+      }
     },
     "introspect-proxy": {
       "name": "introspect-proxy",
@@ -1543,6 +1565,15 @@
       "dns": "caddy-public.app"
     },
     {
+      "service": "crowdsec",
+      "dns": "crowdsec.app"
+    },
+    {
+      "service": "crowdsec",
+      "container": "app",
+      "dns": "crowdsec.app"
+    },
+    {
       "service": "introspect-proxy",
       "dns": "introspect-proxy.app"
     },
@@ -2039,6 +2070,7 @@
           "ntfy",
           "openobserve",
           "umami",
+          "crowdsec",
           "kg-bridge",
           "kg-mcp",
           "kg-store",
@@ -2525,6 +2557,20 @@
         "category": "sec",
         "ports": null,
         "health": null
+      },
+      "crowdsec": {
+        "name": "crowdsec",
+        "vm": "oci-A1-f_0",
+        "domain": "crowdsec.diegonmarcos.com",
+        "enabled": true,
+        "category": "sec",
+        "ports": {
+          "lapi": 8088,
+          "metrics": 6062
+        },
+        "health": {
+          "path": "/health"
+        }
       },
       "introspect-proxy": {
         "name": "introspect-proxy",
