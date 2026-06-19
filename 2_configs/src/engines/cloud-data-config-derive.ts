@@ -1121,9 +1121,22 @@ function deriveCaddy(c: any): DerivedFile[] {
       error_handler:     caddyCfg.error_handler     ?? {},
       catch_all:         caddyCfg.catch_all         ?? {},
       messages:          caddyCfg.messages          ?? {},
-      // Non-public requests fall through to the private hub over wg-PUBLIC (10.1.0.2), where the
-      // @wg remote_ip 10.0.0.0/24 gate 403s them. NEVER wg0 — that would pass the gate (a leak).
+      // caddy-public is the smart L4+L7 edge (caddy-l4 image). Its layer4 SNI-muxes:
+      //   · mail_l4_routes (imap./smtps.) → L4-forward to maddy (raw IMAPS/SMTPS — never L7);
+      //   · public_sni_hosts (pure-public: gh-pages + auth=none subdomains) → local :8443 L7 serve;
+      //   · everything else → L4 raw-TLS passthrough to private_forward_upstream (gcp-proxy), where
+      //     the @wg gate decides. Passthrough (not termination) avoids any TLS re-encryption AND
+      //     keeps mixed hosts (api./analytics.) served by gcp-proxy's existing routing.
+      // Non-served requests reach gcp-proxy over wg-PUBLIC (10.1.0.2) → @wg 403 for private. NEVER wg0.
       private_forward_upstream: "10.1.0.2:443",
+      mail_l4_routes:       (l4Routes ?? []).filter((r: any) => r && r.sni),
+      // Only hosts caddy-public SERVES at L7 (gh-pages + auth=none subdomains).
+      // Authed-public subdomains are NOT here — they passthrough to gcp-proxy where
+      // their auth lives. Anything not in this list is L4-passthrough'd to the hub.
+      public_sni_hosts: [
+        ...githubPagesProxies.flatMap((g: any) => String(g.domain).split(",").map((s: string) => s.trim())),
+        ...publicSubdomainRoutes.filter((r: any) => (r.auth ?? null) === "none").map((r: any) => r.domain),
+      ],
       public_routes:        publicSubdomainRoutes,
       public_path_routes:   publicPathRoutes,
       public_mcp_routes:    publicMcpRoutes,

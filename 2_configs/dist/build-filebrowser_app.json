@@ -778,7 +778,7 @@
     "caddy-public": {
       "ip": "10.0.0.4",
       "ports": {
-        "app": 8443
+        "app": 443
       },
       "vm": "oci-analytics",
       "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
@@ -792,6 +792,12 @@
       "extra_ports": {
         "2019": {
           "protocol": "http",
+          "bind": null,
+          "desc": null,
+          "role": "app"
+        },
+        "8443": {
+          "protocol": "https",
           "bind": null,
           "desc": null,
           "role": "app"
