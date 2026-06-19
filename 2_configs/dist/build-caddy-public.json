@@ -73,9 +73,9 @@
     "claude-api-superset": {
       "ip": "10.0.0.6",
       "ports": {
-        "app": 3107,
-        "ollama": 11434,
-        "headroom": 8787
+        "app": 3117,
+        "ollama": 11436,
+        "headroom": 8788
       },
       "vm": "oci-apps",
       "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
@@ -761,21 +761,6 @@
           "desc": null,
           "role": "app"
         }
-      }
-    },
-    "caddy-l4-public": {
-      "ip": "10.0.0.4",
-      "ports": {
-        "app": 443
-      },
-      "vm": "oci-analytics",
-      "description": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly.",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
       }
     },
     "caddy-public": {
@@ -1687,7 +1672,7 @@
       "order": "respond before handle",
       "auto_https": "disable_redirects",
       "https_port": 8443,
-      "_doc_wg_bind_ip": "oci-analytics wg0 IP (10.0.0.4). The public edge listens on :8443 (TLS-terminated, fronted by caddy-l4-public on 0.0.0.0:443) and forwards non-allowlisted traffic to gcp-proxy over wg-public (private_forward_upstream = 10.1.0.2:443).",
+      "_doc_wg_bind_ip": "oci-analytics wg0 IP (10.0.0.4). caddy-public OWNS 0.0.0.0:443 via its layer4 SNI mux (mail→maddy L4, pure-public→local :8443 L7, rest→gcp-proxy passthrough) and an internal :8443 L7 server. Non-allowlisted traffic reaches gcp-proxy over wg-public (private_forward_upstream = 10.1.0.2:443).",
       "wg_bind_ip": "10.0.0.4"
     },
     "on_demand_tls": {

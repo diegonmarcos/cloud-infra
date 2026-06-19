@@ -101,9 +101,9 @@
         {
           "port": 443,
           "proto": "tcp",
-          "desc": "HTTPS (wg-public hub — public ingress for external clients via wg-public mesh)",
+          "desc": "HTTPS (public ingress — caddy-public layer4 SNI mux: mail→maddy, public→L7, rest→gcp-proxy)",
           "source": "0.0.0.0/0",
-          "owned_by": "caddy"
+          "owned_by": "caddy-public"
         },
         {
           "port": 51821,
@@ -123,10 +123,9 @@
       "services": [
         "c3-public-api",
         "cf-worker-http-to-wg-public-bridge",
-        "caddy-l4-public",
         "caddy-public"
       ],
-      "container_count": 4
+      "container_count": 3
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -741,14 +740,14 @@
       "folder": "ad-agi_claude-api-superset",
       "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "enabled": true,
-      "port": 3107,
+      "port": 3117,
       "dns": "claude-api-superset.app",
-      "upstream": "10.0.0.6:3107",
+      "upstream": "10.0.0.6:3117",
       "containers": {
         "app": {
           "container_name": "claude-api-superset",
           "image": "ghcr.io/diegonmarcos/claude-api-superset:latest",
-          "port": 3107,
+          "port": 3117,
           "port_env": "BRIDGE_PORT",
           "dns": "claude-api-superset.app",
           "public": false,
@@ -765,7 +764,7 @@
         "claude-api-superset"
       ],
       "all_ports": [
-        "3107"
+        "3117"
       ],
       "all_dns": [
         "claude-api-superset.app"
@@ -779,9 +778,9 @@
         "app_hub": false
       },
       "declared_ports": {
-        "app": 3107,
-        "ollama": 11434,
-        "headroom": 8787
+        "app": 3117,
+        "ollama": 11436,
+        "headroom": 8788
       },
       "health": {
         "path": "/health"
@@ -4480,68 +4479,6 @@
         "healthcheck_paths": []
       }
     },
-    "caddy-l4-public": {
-      "category": "sec",
-      "vm": "oci-E2-f_1",
-      "folder": "infra-sec_caddy-l4-public",
-      "description": "Public-edge Caddy-L4 SNI mux on oci-analytics. Owns the public 0.0.0.0:443. SNI allowlist *.diegonmarcos.com → TCP-relay to gcp-proxy via wg-public (10.1.0.2:443; oci-analytics is the hub at 10.1.0.1, gcp-proxy is the spoke at 10.1.0.2). Unmatched SNI gets TCP RST. Pure layer-4 — does NOT terminate TLS; the gcp-proxy Caddy edge still handles all cert + routing logic. This makes oci-analytics THE single public-edge VM per the wg-public hardening design (operator policy 2026-05-23): gcp-proxy stays fully private, c3-public-api remains the only application surface directly served from oci-analytics; everything else either flows through this L4 relay to gcp-proxy or peers join wg-public to reach 10.1.0.2:443 directly.",
-      "enabled": true,
-      "flake": "infra-sec_caddy-l4-public",
-      "port": 443,
-      "dns": "caddy-l4-public.app",
-      "upstream": "10.0.0.4:443",
-      "containers": {
-        "app": {
-          "container_name": "caddy-l4-public",
-          "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
-          "port": 443,
-          "dns": "caddy-l4-public.app",
-          "public": true,
-          "healthcheck": null,
-          "monitoring": {
-            "tls_check": false,
-            "dns_check": false,
-            "endpoint_check": false
-          },
-          "volumes": [],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "tcp"
-        }
-      },
-      "container_names": [
-        "caddy-l4-public"
-      ],
-      "all_ports": [
-        "443"
-      ],
-      "all_dns": [
-        "caddy-l4-public.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "declared_ports": {
-        "app": 443
-      },
-      "monitoring": {
-        "tls_check": false,
-        "dns_check": false,
-        "endpoint_check": false
-      },
-      "_doc_relay_target": "10.1.0.2:443 = gcp-proxy wg-public IP (spoke). 10.1.0.1 is oci-analytics itself (hub). Source: cloud-data.native.wg_public.peers[name=gcp-proxy].wg_ip. Hardcoded in Caddyfile because caddy-l4's tls sni matcher with wildcard *.diegonmarcos.com and the gcp-proxy wg-public IP are architectural constants — if they move, update the Caddyfile explicitly; not worth a templating layer for a 2-liner config.",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
     "caddy-public": {
       "category": "sec",
       "vm": "oci-E2-f_1",
@@ -4620,7 +4557,7 @@
           "order": "respond before handle",
           "auto_https": "disable_redirects",
           "https_port": 8443,
-          "_doc_wg_bind_ip": "oci-analytics wg0 IP (10.0.0.4). The public edge listens on :8443 (TLS-terminated, fronted by caddy-l4-public on 0.0.0.0:443) and forwards non-allowlisted traffic to gcp-proxy over wg-public (private_forward_upstream = 10.1.0.2:443).",
+          "_doc_wg_bind_ip": "oci-analytics wg0 IP (10.0.0.4). caddy-public OWNS 0.0.0.0:443 via its layer4 SNI mux (mail→maddy L4, pure-public→local :8443 L7, rest→gcp-proxy passthrough) and an internal :8443 L7 server. Non-allowlisted traffic reaches gcp-proxy over wg-public (private_forward_upstream = 10.1.0.2:443).",
           "wg_bind_ip": "10.0.0.4"
         },
         "on_demand_tls": {
@@ -8704,9 +8641,9 @@
         {
           "port": 443,
           "proto": "tcp",
-          "desc": "HTTPS (wg-public hub — public ingress for external clients via wg-public mesh)",
+          "desc": "HTTPS (public ingress — caddy-public layer4 SNI mux: mail→maddy, public→L7, rest→gcp-proxy)",
           "source": "0.0.0.0/0",
-          "owned_by": "caddy"
+          "owned_by": "caddy-public"
         },
         {
           "port": 51821,
@@ -8988,12 +8925,6 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "caddy"
-      },
-      {
-        "name": "caddy-l4-public.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "caddy-l4-public"
       },
       {
         "name": "caddy-public.app",
@@ -9326,9 +9257,9 @@
           {
             "port": 443,
             "proto": "tcp",
-            "desc": "HTTPS (wg-public hub — public ingress for external clients via wg-public mesh)",
+            "desc": "HTTPS (public ingress — caddy-public layer4 SNI mux: mail→maddy, public→L7, rest→gcp-proxy)",
             "source": "0.0.0.0/0",
-            "owned_by": "caddy"
+            "owned_by": "caddy-public"
           },
           {
             "port": 51821,
@@ -9344,7 +9275,6 @@
         "containers": [
           "c3-public-api",
           "cf-worker-http-to-wg-public-bridge",
-          "caddy-l4-public",
           "caddy-public"
         ],
         "method": "key",
@@ -9824,11 +9754,6 @@
       "caddy": {
         "dir": "infra-sec_caddy",
         "vm": "gcp-proxy",
-        "has_docker": true
-      },
-      "caddy-l4-public": {
-        "dir": "infra-sec_caddy-l4-public",
-        "vm": "oci-analytics",
         "has_docker": true
       },
       "caddy-public": {
