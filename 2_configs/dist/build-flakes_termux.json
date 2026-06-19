@@ -4410,15 +4410,21 @@
       "description": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients.",
       "enabled": true,
       "flake": "infra-sec_caddy-public",
-      "port": 8443,
+      "port": 443,
       "dns": "caddy-public.app",
-      "upstream": "10.0.0.4:8443",
+      "upstream": "10.0.0.4:443",
       "containers": {
         "app": {
           "container_name": "caddy-public",
           "image": "ghcr.io/diegonmarcos/caddy-l4:latest",
-          "port": 8443,
+          "port": 443,
           "extra_ports": [
+            {
+              "port": 8443,
+              "protocol": "https",
+              "monitor": false,
+              "_comment": "Internal L7 server — the layer4 :443 mux PROXY-protocols pure-public SNIs here."
+            },
             {
               "port": 2019,
               "protocol": "http",
@@ -4452,7 +4458,7 @@
         "caddy-public"
       ],
       "all_ports": [
-        "8443"
+        "443"
       ],
       "all_dns": [
         "caddy-public.app"

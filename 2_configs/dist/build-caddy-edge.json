@@ -144,6 +144,30 @@
     "app_hub_fallback": "Not Found"
   },
   "private_forward_upstream": "10.1.0.2:443",
+  "mail_l4_routes": [
+    {
+      "port": 443,
+      "upstream": "10.0.0.3:2993",
+      "comment": "IMAPS via SNI on :443 — upstream flipped from Maddy:993 to Stalwart:2993 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
+      "sni": "imap.diegonmarcos.com"
+    },
+    {
+      "port": 443,
+      "upstream": "10.0.0.3:2465",
+      "comment": "SMTPS via SNI on :443 — upstream flipped from Maddy:465 to Stalwart:2465 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
+      "sni": "smtps.diegonmarcos.com"
+    }
+  ],
+  "public_sni_hosts": [
+    "diegonmarcos.com",
+    "www.diegonmarcos.com",
+    "linktree.diegonmarcos.com",
+    "nexus.diegonmarcos.com",
+    "suite.diegonmarcos.com",
+    "maps.diegonmarcos.com",
+    "vpn.diegonmarcos.com",
+    "matrix.diegonmarcos.com"
+  ],
   "public_routes": [
     {
       "domain": "vpn.diegonmarcos.com",
