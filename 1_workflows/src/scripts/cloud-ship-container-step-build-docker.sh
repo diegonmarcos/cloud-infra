@@ -570,6 +570,21 @@ NEOF
     # on the VM at `docker compose pull` time.
     BINARIES_IMAGE="${FULL_IMAGE}-binaries"
 
+    # ══════════════════════════════════════════════════════════════════════
+    # RUNNER DESIGN (data-driven from build-workflows.json .runners[$ARCH])
+    # ══════════════════════════════════════════════════════════════════════
+    #   docker.arch=amd64  → RUNNER_TYPE=local → build on THIS x86 GHA runner.
+    #   docker.arch=arm64  → RUNNER_TYPE=ssh   → build is DISPATCHED over SSH
+    #                        into the cloud-builder-x-deb-nixhm:arm64 container
+    #                        ON oci-apps (the ONLY ARM builder). GHA is x86-ONLY.
+    #   No QEMU. No cross-arch fallback. Unreachable runner ⇒ FAIL LOUD.
+    #
+    #   BOTH paths MUST `docker build --platform "$PLATFORM"` (linux/$ARCH).
+    #   The ssh path also passes `--cache-from <amd64 prior image>`; WITHOUT an
+    #   explicit --platform the classic builder reuses those amd64 layers and
+    #   silently emits an amd64 image on the arm64 host → every container then
+    #   dies with "exec format error". --platform is load-bearing, not cosmetic.
+    # ══════════════════════════════════════════════════════════════════════
     case "$RUNNER_TYPE" in
         local)
             log "Local build: $FULL_IMAGE"
@@ -824,7 +839,7 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        docker build --platform $PLATFORM --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE $BUILD_ARGS_STR . && \
         docker push $FULL_IMAGE:latest && \
         docker push $BINARIES_IMAGE:latest && \
         docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1
