@@ -88,6 +88,21 @@ step_compose() {
         */*) LEGACY_COMPOSE_CLEANUP='if [ -f docker-compose.yml ]; then docker compose -f docker-compose.yml --project-directory . down --remove-orphans 2>/dev/null || true; rm -f docker-compose.yml; fi' ;;
     esac
 
+    # Foreign-project container eviction. Our `down --remove-orphans` runs with
+    # project = basename($DEPLOY_PATH) (via --project-directory .), so it ONLY
+    # removes containers compose recorded under THAT project. A container created
+    # under a DIFFERENT project with the same explicit container_name — e.g. a
+    # manual `cd compose && docker compose up` (project="compose") or the
+    # cloud-infra MCP devops_docker_compose_up — survives the `down`, then blocks
+    # `up` with "container name already in use" (wireguard-mesh + etherpad_postgres,
+    # 2026-06-22). Force-remove the declared container_names by hand first:
+    # idempotent (no-op when `down` already removed them), data-driven from
+    # build.json, and lossless — `docker rm -f` drops only the container, named
+    # volumes persist.
+    EVICT_NAMED=""
+    _cnames="$(jq -r '.containers[]?.container_name // empty' "$SERVICE_DIR/build.json" 2>/dev/null | tr '\n' ' ')"
+    [ -n "$_cnames" ] && EVICT_NAMED="for c in $_cnames; do docker rm -f \"\$c\" 2>/dev/null || true; done"
+
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
         # Generated in a tmpdir (ship transient — never pollutes dist/ or git working tree).
@@ -122,6 +137,7 @@ COMPOSE_HEADER
             [ -n "$LEGACY_COMPOSE_CLEANUP" ] && echo "$LEGACY_COMPOSE_CLEANUP"
             [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
+            [ -n "$EVICT_NAMED" ] && echo "$EVICT_NAMED"
             echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         } > "$TMP_SCRIPT"
         chmod +x "$TMP_SCRIPT"
@@ -152,9 +168,9 @@ COMPOSE_HEADER
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
             # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
             # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         else
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
         ssh_with_retry "$DEPLOY_HOST" "bash -c '$PAYLOAD'"
     fi
