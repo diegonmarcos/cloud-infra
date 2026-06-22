@@ -141,6 +141,30 @@ log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 log_error() { printf "[%s] ERROR: %s\n" "$(date '+%H:%M:%S')" "$1" >&2; }
 cmd_exists() { command -v "$1" >/dev/null 2>&1; }
 
+# GHCR login — tries vault PAT → GHA $GITHUB_TOKEN → gh CLI, falling through on
+# FAILURE (not merely on a missing file). The prior inline blocks did
+# `if [ -f vault ]; then login || warn; elif [ TOKEN ]; then ...`, so a vault PAT
+# that EXISTS but FAILS (expired) never fell back to GITHUB_TOKEN — docker stayed
+# unauthenticated and the push died "denied: write_package" (ship.yml, 2026-06-22).
+# Returns 0 on the first method that succeeds, 1 if all fail.
+ghcr_login() {
+    _gl_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    _gl_user="${GHCR_USER:-diegonmarcos}"
+    if [ -f "$_gl_vault" ] && docker login ghcr.io -u "$_gl_user" --password-stdin < "$_gl_vault" >/dev/null 2>&1; then
+        log "GHCR login OK (vault)"; return 0
+    fi
+    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ] && \
+       printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1; then
+        log "GHCR login OK (env GITHUB_TOKEN)"; return 0
+    fi
+    if cmd_exists gh && gh auth token 2>/dev/null | \
+       docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null || echo "$_gl_user")" --password-stdin >/dev/null 2>&1; then
+        log "GHCR login OK (gh)"; return 0
+    fi
+    log "WARN: GHCR login failed (vault + GITHUB_TOKEN + gh all unavailable/denied)"
+    return 1
+}
+
 get_vm_prop() { jq -r ".vms[\"$1\"].$2 // empty" "$CONFIG_FILE"; }
 get_svc_prop() { jq -r ".services[\"$1\"].$2 // empty" "$CONFIG_FILE"; }
 get_all_vms() { jq -r '.vms | keys[]' "$CONFIG_FILE"; }
