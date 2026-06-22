@@ -1465,6 +1465,35 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
     return out;
   }
 
+  // ── db_engine aliases ────────────────────────────────────────────
+  // A container may declare `db_engine` (e.g. "surrealdb"); a flake that
+  // wraps the upstream DB image consumes the container slice by engine
+  // name (kg-store/src/build-surrealdb.json symlink). We mirror that
+  // container's build-{container_name}.json to build-{db_engine}.json.
+  //
+  // db_engine is NOT globally unique (postgres/redis appear on many
+  // containers) and may equal a real container_name. Only alias engine
+  // names that are unambiguous — declared by exactly one container, not
+  // colliding with any container_name, and not a SPECIAL_CASE — so the
+  // alias can never clobber another container's primary file or be
+  // order-dependent. Pre-compute the safe set in a first pass.
+  const containerNames = new Set<string>();
+  const engineCounts = new Map<string, number>();
+  for (const svc of Object.values(services)) {
+    for (const [, ct] of Object.entries((svc as any).containers ?? {})) {
+      const cn = (ct as any).container_name || (svc as any).name;
+      if (cn) containerNames.add(cn);
+      const eng = (ct as any).db_engine;
+      if (eng) engineCounts.set(eng, (engineCounts.get(eng) ?? 0) + 1);
+    }
+  }
+  const safeEngineAliases = new Set<string>();
+  for (const [eng, n] of engineCounts) {
+    if (n === 1 && !containerNames.has(eng) && !SPECIAL_CASES.has(eng)) {
+      safeEngineAliases.add(eng);
+    }
+  }
+
   for (const [svcName, svc] of Object.entries(services)) {
     const containers = (svc as any).containers ?? {};
     const containerEntries = Object.entries(containers) as [string, any][];
@@ -1519,29 +1548,34 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
     for (const [role, ct] of containerEntries) {
       const containerName = ct.container_name || svcName;
       if (SPECIAL_CASES.has(containerName)) continue;
-      files.push({
-        name: `build-${containerName}.json`,
-        data: {
-          _meta: {
-            description: `${containerName} container config (service=${svcName}, role=${role})`,
-            format_version: 1,
-          },
-          _generated: now(),
-          _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
-          container: ct,
-          service: svcName,
-          role,
-          vm: vmAlias,
-          services: serviceConnections.services ?? {},
-          ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
-          ...(ntfyTopicsForMattermost ? { ntfy_topics: ntfyTopicsForMattermost } : {}),
-          // Forward any non-standard svc fields (came via entry.extra in the
-          // source build.json) so per-service consumers can read their slice
-          // from build-{containerName}.json instead of the global consolidated.
-          // E.g. bb-net_wireguard-public's wireguard_public block lands here.
-          ...extras,
+      const containerData = {
+        _meta: {
+          description: `${containerName} container config (service=${svcName}, role=${role})`,
+          format_version: 1,
         },
-      });
+        _generated: now(),
+        _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
+        container: ct,
+        service: svcName,
+        role,
+        vm: vmAlias,
+        services: serviceConnections.services ?? {},
+        ...(mailAccounts ? { mail_accounts: mailAccounts } : {}),
+        ...(ntfyTopicsForMattermost ? { ntfy_topics: ntfyTopicsForMattermost } : {}),
+        // Forward any non-standard svc fields (came via entry.extra in the
+        // source build.json) so per-service consumers can read their slice
+        // from build-{containerName}.json instead of the global consolidated.
+        // E.g. bb-net_wireguard-public's wireguard_public block lands here.
+        ...extras,
+      };
+      files.push({ name: `build-${containerName}.json`, data: containerData });
+      // db_engine alias (only for unambiguous engine names — see
+      // safeEngineAliases above). Identical spec, named by engine, so a
+      // wrapper flake can consume the slice by engine name
+      // (kg-store/src/build-surrealdb.json symlink).
+      if (ct.db_engine && safeEngineAliases.has(ct.db_engine)) {
+        files.push({ name: `build-${ct.db_engine}.json`, data: containerData });
+      }
     }
   }
   return files;
