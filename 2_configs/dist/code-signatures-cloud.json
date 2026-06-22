@@ -6,27 +6,28 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2557,
+    "files": 2558,
     "by_lang": {
       "nix": 422,
-      "sh": 349,
+      "sh": 350,
       "rust": 620,
       "ts": 317,
-      "py": 834,
-      "js": 15
+      "py": 831,
+      "js": 18
     },
     "by_role": {
       "flake": 73,
-      "script": 99,
-      "shell": 235,
+      "script": 100,
+      "shell": 233,
       "rust-module": 612,
       "engine": 36,
       "nix-module": 283,
-      "python": 830,
-      "file": 5,
+      "python": 827,
+      "file": 6,
       "entrypoint": 26,
+      "hook": 7,
       "compose": 66,
-      "module": 189,
+      "module": 186,
       "mcp-tool": 101,
       "workflow-dag": 2
     }
@@ -1916,6 +1917,18 @@
       ],
       "symbols": [
         "run()"
+      ]
+    },
+    {
+      "path": "1_reports/src/cloud-health-full-daily/src/send.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "submit()"
+      ],
+      "imports": [],
+      "symbols": [
+        "submit()"
       ]
     },
     {
@@ -4358,6 +4371,18 @@
       ]
     },
     {
+      "path": "1_reports/z/src/cloud-health-full-daily/src/send.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "submit()"
+      ],
+      "imports": [],
+      "symbols": [
+        "submit()"
+      ]
+    },
+    {
       "path": "1_reports/z/src/cloud-health-full-daily/src/ssh.rs",
       "lang": "rust",
       "role": "rust-module",
@@ -6121,6 +6146,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ],
       "imports": [],
@@ -6129,6 +6155,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ]
     },
@@ -6742,6 +6769,26 @@
         "get_config()",
         "step_build()",
         "step_secrets()"
+      ]
+    },
+    {
+      "path": "1_workflows/src/scripts/test_step_docker_multiarch_tags.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
+      ],
+      "imports": [],
+      "symbols": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
       ]
     },
     {
@@ -24552,6 +24599,121 @@
       ]
     },
     {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/hooks/c-pretool-guard-blockers.sh",
+      "lang": "sh",
+      "role": "hook",
+      "exports": [
+        "deny()"
+      ],
+      "imports": [],
+      "symbols": [
+        "deny()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/hooks/c-pretool-guard-warning.sh",
+      "lang": "sh",
+      "role": "hook",
+      "exports": [
+        "warn()"
+      ],
+      "imports": [],
+      "symbols": [
+        "warn()"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/ponytail/hooks/ponytail-activate.js",
+      "lang": "js",
+      "role": "hook",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path",
+        "./ponytail-config",
+        "./ponytail-instructions",
+        "./ponytail-runtime"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/ponytail/hooks/ponytail-config.js",
+      "lang": "js",
+      "role": "hook",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "normalizeMode(mode)",
+        "normalizeConfigMode(mode)",
+        "normalizePersistedMode(mode)",
+        "isDeactivationCommand(text)",
+        "isShellSafe(p)",
+        "getConfigDir()",
+        "getConfigPath()",
+        "getClaudeDir()",
+        "getDefaultMode()",
+        "writeDefaultMode(mode)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/ponytail/hooks/ponytail-instructions.js",
+      "lang": "js",
+      "role": "hook",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path",
+        "./ponytail-config"
+      ],
+      "symbols": [
+        "filterSkillBodyForMode(body, mode)",
+        "getFallbackInstructions(mode)",
+        "getPonytailInstructions(mode)"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/ponytail/hooks/ponytail-mode-tracker.js",
+      "lang": "js",
+      "role": "hook",
+      "exports": [],
+      "imports": [
+        "./ponytail-config",
+        "./ponytail-runtime"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/ponytail/hooks/ponytail-runtime.js",
+      "lang": "js",
+      "role": "hook",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path",
+        "./ponytail-config"
+      ],
+      "symbols": [
+        "setMode(mode)",
+        "clearMode()",
+        "writeHookOutput(event, mode, context = '')"
+      ]
+    },
+    {
+      "path": "a_solutions/ad-agi_claude-api-superset/src/code/claude-config/render-mcp.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": []
+    },
+    {
       "path": "a_solutions/ad-agi_claude-api-superset/src/code/py/compress_service.py",
       "lang": "py",
       "role": "python",
@@ -40641,14 +40803,14 @@
         "HEADROOM_PROXY_BIND",
         "HEADROOM_PROXY_BACKEND",
         "HEADROOM_WORKSPACE_DIR",
+        "env_file",
         "volumes",
         "healthcheck",
         "test",
         "interval",
         "timeout",
         "retries",
-        "start_period",
-        "claude_home"
+        "start_period"
       ]
     },
     {
@@ -48640,18 +48802,6 @@
       ]
     },
     {
-      "path": "a_solutions/infra-dat_gitea/.result/configs/init-mirrors.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "api()"
-      ],
-      "imports": [],
-      "symbols": [
-        "api()"
-      ]
-    },
-    {
       "path": "a_solutions/infra-dat_gitea/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -49504,126 +49654,6 @@
       ]
     },
     {
-      "path": "a_solutions/infra-obs_cloud-spec/.result/assets/site/book.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "playground_text(playground, hidden = true)",
-        "codeSnippets()",
-        "fetch_with_timeout(url, options, timeout = 6000)",
-        "handle_crate_list_update(playground_block, playground_crates)",
-        "update_play_button(pre_block, playground_crates)",
-        "run_rust_code(code_block)",
-        "themes()",
-        "showThemes()",
-        "updateThemeSelected()",
-        "hideThemes()",
-        "get_theme()",
-        "set_theme(theme, store = true)",
-        "sidebar()",
-        "showSidebar()",
-        "toggleSection(ev)",
-        "hideSidebar()",
-        "sidebarToggle()",
-        "initResize(e)",
-        "resize(e)",
-        "stopResize(e)",
-        "chapterNavigation()",
-        "next()",
-        "prev()",
-        "clipboard()",
-        "hideTooltip(elem)",
-        "showTooltip(elem, msg)",
-        "scrollToTop ()",
-        "controllMenu()",
-        "controllPosition()",
-        "controllBorder()",
-        "updateBorder()",
-        "class and",
-        "class needs",
-        "class gives"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_cloud-spec/.result/assets/site/highlight.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "e(n)",
-        "t(e)",
-        "r(e,...n)",
-        "a(e)",
-        "e(t,r)",
-        "l()",
-        "c(e)",
-        "u(e)",
-        "d(e)",
-        "w(e,n)",
-        "p(e)",
-        "b(e,n,t,r)",
-        "m(e,t,a,s)",
-        "c(e,n)",
-        "u()",
-        "h(e)",
-        "x(t,r)",
-        "e(t,r,a)",
-        "n(n,t)",
-        "i(e,n)",
-        "t(s,o)",
-        "r(e,r)",
-        "v(e,n)",
-        "x(e)",
-        "E(e)",
-        "T(e)",
-        "A(e,{languageName:n})",
-        "I(e)",
-        "S(e,n)",
-        "e(e)",
-        "n(...n)",
-        "n(e)",
-        "a(...n)",
-        "s(...n)",
-        "s(e)",
-        "r(...e)",
-        "e(...e)",
-        "class n",
-        "class l",
-        "class c"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_cloud-spec/.result/assets/site/searcher.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "search(search)",
-        "hasFocus()",
-        "removeChildren(elem)",
-        "parseURL(url)",
-        "renderURL(urlobject)",
-        "formatSearchMetric(count, searchterm)",
-        "formatSearchResult(result, searchterms)",
-        "makeTeaser(body, searchterms)",
-        "init(config)",
-        "unfocusSearchbar()",
-        "doSearchOrMarkFromUrl()",
-        "hide()",
-        "globalKeyHandler(e)",
-        "showSearch(yes)",
-        "showResults(yes)",
-        "searchIconClickHandler()",
-        "searchbarKeyUpHandler()",
-        "setSearchUrlParameters(searchterm, action)",
-        "doSearch(searchterm)"
-      ]
-    },
-    {
       "path": "a_solutions/infra-obs_cloud-spec/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -50142,94 +50172,6 @@
       ]
     },
     {
-      "path": "a_solutions/infra-obs_ntfy/.result/assets/github-rss-to-ntfy.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "classify_event(title)",
-        "load_seen()",
-        "save_seen(seen)",
-        "send_ntfy(topic, title, message, priority='default', tags=None, click=None)",
-        "fetch_feed(url)",
-        "strip_html(text)",
-        "parse_atom_feed(xml_content)",
-        "main()"
-      ],
-      "imports": [
-        "pathlib",
-        "datetime",
-        "sys",
-        "json",
-        "time",
-        "hashlib",
-        "re",
-        "urllib.request",
-        "urllib.error",
-        "xml.etree.ElementTree"
-      ],
-      "symbols": [
-        "classify_event(title)",
-        "load_seen()",
-        "save_seen(seen)",
-        "send_ntfy(topic, title, message, priority='default', tags=None, click=None)",
-        "fetch_feed(url)",
-        "strip_html(text)",
-        "parse_atom_feed(xml_content)",
-        "main()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_ntfy/.result/assets/syslog-to-ntfy.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "get_last_offset()",
-        "save_offset(offset)",
-        "send_ntfy(title, message, priority='default', tags=None)",
-        "parse_sauron_alert(line)",
-        "main()"
-      ],
-      "imports": [
-        "pathlib",
-        "json",
-        "time",
-        "re",
-        "subprocess",
-        "urllib.request",
-        "urllib.error"
-      ],
-      "symbols": [
-        "get_last_offset()",
-        "save_offset(offset)",
-        "send_ntfy(title, message, priority='default', tags=None)",
-        "parse_sauron_alert(line)",
-        "main()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_ntfy/.result/assets/topic-scanner.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "scan_topics()",
-        "refresh_loop()",
-        "class Handler"
-      ],
-      "imports": [
-        "datetime",
-        "http.server",
-        "json",
-        "sqlite3",
-        "threading",
-        "time"
-      ],
-      "symbols": [
-        "scan_topics()",
-        "refresh_loop()",
-        "class Handler"
-      ]
-    },
-    {
       "path": "a_solutions/infra-obs_ntfy/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -50538,44 +50480,6 @@
         "templates",
         "composeSpec",
         "title"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_umami/.result/assets/migrate-from-matomo/migrate.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "log()"
-      ],
-      "imports": [
-        "$SELF_DIR/test.sh"
-      ],
-      "symbols": [
-        "log()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_umami/.result/assets/migrate-from-matomo/test.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "log()"
-      ],
-      "imports": [],
-      "symbols": [
-        "log()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_umami/.result/configs/setup.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "json_val()"
-      ],
-      "imports": [],
-      "symbols": [
-        "json_val()"
       ]
     },
     {
