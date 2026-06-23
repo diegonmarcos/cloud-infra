@@ -6,10 +6,10 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2558,
+    "files": 2560,
     "by_lang": {
       "nix": 422,
-      "sh": 350,
+      "sh": 352,
       "rust": 620,
       "ts": 317,
       "py": 831,
@@ -17,8 +17,8 @@
     },
     "by_role": {
       "flake": 73,
-      "script": 100,
-      "shell": 233,
+      "script": 101,
+      "shell": 234,
       "rust-module": 612,
       "engine": 36,
       "nix-module": 283,
@@ -233,6 +233,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ],
       "imports": [],
@@ -241,6 +242,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ]
     },
@@ -443,6 +445,7 @@
         "log()",
         "log_error()",
         "cmd_exists()",
+        "ghcr_login()",
         "get_vm_prop()",
         "get_svc_prop()",
         "get_all_vms()",
@@ -463,6 +466,7 @@
         "log()",
         "log_error()",
         "cmd_exists()",
+        "ghcr_login()",
         "get_vm_prop()",
         "get_svc_prop()",
         "get_all_vms()",
@@ -854,6 +858,26 @@
         "get_config()",
         "step_build()",
         "step_secrets()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/test_step_docker_multiarch_tags.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
+      ],
+      "imports": [],
+      "symbols": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
       ]
     },
     {
@@ -3289,6 +3313,22 @@
       "symbols": [
         "fmt(&self, f: &mut std::fmt::Formatter<'_>)",
         "from_checks(checks: &[&Check])"
+      ]
+    },
+    {
+      "path": "1_reports/z/recon/recon.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "have()",
+        "log()"
+      ],
+      "imports": [
+        "testssl.sh"
+      ],
+      "symbols": [
+        "have()",
+        "log()"
       ]
     },
     {
@@ -6358,6 +6398,7 @@
         "log()",
         "log_error()",
         "cmd_exists()",
+        "ghcr_login()",
         "get_vm_prop()",
         "get_svc_prop()",
         "get_all_vms()",
@@ -6378,6 +6419,7 @@
         "log()",
         "log_error()",
         "cmd_exists()",
+        "ghcr_login()",
         "get_vm_prop()",
         "get_svc_prop()",
         "get_all_vms()",
@@ -58859,8 +58901,8 @@
       "exports": [],
       "imports": [
         "fastify",
-        "./gdelt.js",
-        "./binds.js"
+        "./gdelt.ts",
+        "./binds.ts"
       ],
       "symbols": [
         "main()"
@@ -59291,6 +59333,7 @@
         "interval",
         "timeout",
         "retries",
+        "start_period",
         "limits",
         "reservations",
         "postgres",
@@ -59298,8 +59341,7 @@
         "POSTGRES_USER",
         "POSTGRES_PASSWORD",
         "POSTGRES_DB",
-        "PGDATA",
-        "PGPORT"
+        "PGDATA"
       ]
     },
     {

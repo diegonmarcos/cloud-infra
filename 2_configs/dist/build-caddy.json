@@ -366,11 +366,6 @@
           "comment": "C3 Services REST API — service API gateway Fastify API"
         },
         {
-          "base_path": "/cf-worker-bridge",
-          "upstream": "10.1.0.1:8092",
-          "comment": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
-        },
-        {
           "base_path": "/crawlee",
           "upstream": "10.0.0.6:3000",
           "wg_only": true,
@@ -615,10 +610,6 @@
     {
       "service": "mattermost-mcp.app",
       "upstream": "10.0.0.6:3102"
-    },
-    {
-      "service": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.1.0.1:8092"
     },
     {
       "service": "gitea.app",
@@ -1002,27 +993,6 @@
       "port": 3102,
       "protocol": "http",
       "upstream": "10.0.0.6:3102",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "cf-worker-http-to-wg-public-bridge.app",
-      "redirect_to": "https://cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "container": "cf-worker-http-to-wg-public-bridge",
-      "container_key": "app",
-      "svc": "cf-worker-http-to-wg-public-bridge",
-      "vm": "oci-E2-f_1"
-    },
-    {
-      "kind": "canonical",
-      "service": "cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "container": "cf-worker-http-to-wg-public-bridge",
-      "container_key": "app",
-      "svc": "cf-worker-http-to-wg-public-bridge",
-      "vm": "oci-E2-f_1",
-      "port": 8092,
-      "protocol": "http",
-      "upstream": "10.1.0.1:8092",
       "source": "containers.app.port"
     },
     {
@@ -2051,16 +2021,6 @@
     },
     {
       "host": "api.diegonmarcos.com",
-      "path": "/cf-worker-bridge",
-      "upstream": "10.1.0.1:8092",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public."
-    },
-    {
-      "host": "api.diegonmarcos.com",
       "path": "/crawlee",
       "upstream": "10.0.0.6:3000",
       "kind": "reverse_proxy",
@@ -2499,16 +2459,6 @@
       "host": "mattermost-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3102",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "cf-worker-http-to-wg-public-bridge.app",
-      "path": null,
-      "upstream": "10.1.0.1:8092",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2955,16 +2905,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "mattermost-mcp",
-      "notes": null
-    },
-    {
-      "host": "cf-worker-http-to-wg-public-bridge-http-8092.app",
-      "path": null,
-      "upstream": "10.1.0.1:8092",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "cf-worker-http-to-wg-public-bridge",
       "notes": null
     },
     {
