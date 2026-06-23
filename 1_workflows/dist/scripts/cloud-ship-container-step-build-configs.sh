@@ -40,10 +40,24 @@ step_configs_push() {
     fi
     log "configs-push start (hash=$CONFIGS_HASH, arch=${DOCKER_ARCH:-amd64})"
 
-    # GHCR login — shared fall-through helper (vault PAT → GITHUB_TOKEN → gh).
-    # If every method fails, skip the push rather than run it unauthenticated
-    # (which would die "denied: write_package").
-    ghcr_login || { log "No usable GHCR credentials — skipping configs push"; return 0; }
+    # GHCR login — INLINE fall-through (vault PAT → GITHUB_TOKEN → gh). Inlined,
+    # not a shared helper: the lib's ghcr_login was not in scope here at runtime
+    # ("ghcr_login: command not found" broke configs-push, 2026-06-23). Falls
+    # through on FAILURE (not just a missing file) so an expired vault PAT still
+    # reaches GITHUB_TOKEN; skip the push if every method fails.
+    _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    _ghcr_user="${GHCR_USER:-diegonmarcos}"
+    if [ -f "$_vault_tok" ] && docker login ghcr.io -u "$_ghcr_user" --password-stdin < "$_vault_tok" >/dev/null 2>&1; then
+        log "GHCR login OK (vault)"
+    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ] && \
+         printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1; then
+        log "GHCR login OK (env GITHUB_TOKEN)"
+    elif command -v gh >/dev/null 2>&1 && \
+         gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null || echo "$_ghcr_user")" --password-stdin >/dev/null 2>&1; then
+        log "GHCR login OK (gh)"
+    else
+        log "No usable GHCR credentials — skipping configs push"; return 0
+    fi
 
     # Generate Dockerfile: busybox + all dist/ files EXCEPT secrets → /configs/
     # Backup existing .dockerignore, replace with secrets-excluding one
