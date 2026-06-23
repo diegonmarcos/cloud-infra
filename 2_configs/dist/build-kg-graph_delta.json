@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 289,
-    "edges": 390,
+    "nodes": 286,
+    "edges": 386,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 88,
+      "service": 62,
+      "container": 87,
       "domain": 40,
       "repo": 3,
-      "module": 63,
+      "module": 62,
       "package": 28
     }
   },
@@ -427,32 +427,6 @@
         "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
         "role": "app",
         "port": 3102,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "cf_worker_http_to_wg_public_bridge",
-      "key": "service:cf_worker_http_to_wg_public_bridge",
-      "properties": {
-        "name": "cf-worker-http-to-wg-public-bridge",
-        "category": "app",
-        "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-        "domain": "api.diegonmarcos.com/cf-worker-bridge",
-        "port": 8092,
-        "vm": "oci-analytics",
-        "folder": "infra-api_tools-cf-worker-http-to-wg-public-bridge"
-      }
-    },
-    {
-      "table": "container",
-      "id": "cf_worker_http_to_wg_public_bridge",
-      "key": "container:cf_worker_http_to_wg_public_bridge",
-      "properties": {
-        "name": "cf-worker-http-to-wg-public-bridge",
-        "image": null,
-        "role": "app",
-        "port": 8092,
         "public": true
       }
     },
@@ -2519,17 +2493,6 @@
     },
     {
       "table": "module",
-      "id": "infra_api_tools_cf_worker_http_to_wg_public_bridge",
-      "key": "module:infra_api_tools_cf_worker_http_to_wg_public_bridge",
-      "properties": {
-        "name": "infra-api_tools-cf-worker-http-to-wg-public-bridge",
-        "repo": "cloud",
-        "category": "app",
-        "service": "cf-worker-http-to-wg-public-bridge"
-      }
-    },
-    {
-      "table": "module",
       "id": "infra_bld_cloud_builder_x",
       "key": "module:infra_bld_cloud_builder_x",
       "properties": {
@@ -3613,22 +3576,6 @@
       "from": "service:mattermost_mcp",
       "to": "container:mattermost_mcp",
       "key": "service:mattermost_mcp->runs_container->container:mattermost_mcp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:cf_worker_http_to_wg_public_bridge",
-      "to": "vm:oci_analytics",
-      "key": "service:cf_worker_http_to_wg_public_bridge->hosted_on->vm:oci_analytics",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:cf_worker_http_to_wg_public_bridge",
-      "to": "container:cf_worker_http_to_wg_public_bridge",
-      "key": "service:cf_worker_http_to_wg_public_bridge->runs_container->container:cf_worker_http_to_wg_public_bridge",
       "properties": {
         "role": "app"
       }
@@ -5490,20 +5437,6 @@
       "from": "module:infra_api_mattermost_mcp",
       "to": "service:mattermost_mcp",
       "key": "module:infra_api_mattermost_mcp->implements->service:mattermost_mcp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:infra_api_tools_cf_worker_http_to_wg_public_bridge",
-      "to": "repo:cloud",
-      "key": "module:infra_api_tools_cf_worker_http_to_wg_public_bridge->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:infra_api_tools_cf_worker_http_to_wg_public_bridge",
-      "to": "service:cf_worker_http_to_wg_public_bridge",
-      "key": "module:infra_api_tools_cf_worker_http_to_wg_public_bridge->implements->service:cf_worker_http_to_wg_public_bridge",
       "properties": {}
     },
     {
