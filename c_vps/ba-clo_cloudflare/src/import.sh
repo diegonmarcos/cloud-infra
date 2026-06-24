@@ -53,7 +53,10 @@ $addr"
 echo "=== A Records (multi-value + per-record overrides) ==="
 tf_adopt_cf 'cloudflare_record.a_records["api"]'         c17a25f69f5d7f80dbdf01b3a335cca1
 tf_adopt_cf 'cloudflare_record.a_records["*"]'           bcb3ccb212704a2448b17a62e6e8ce0a
-tf_adopt_cf 'cloudflare_record.a_records["*-10.0.0.1"]'  4db00b6a50f9e1fa9b01a06d8759b609
+# NOTE: a_records["*-10.0.0.1"] (the public mesh-IP wildcard) was REMOVED —
+# RFC1918 mesh IPs must not appear in public CF DNS (split-horizon: Hickory
+# serves the wg0 mesh answer). If it remains in CF/state, terraform apply
+# destroys it; do NOT re-import it.
 tf_adopt_cf 'cloudflare_record.a_records["mail"]'        74a508b19674dd730f371e29a5073b5d
 
 echo ""

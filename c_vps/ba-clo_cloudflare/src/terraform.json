@@ -9,12 +9,12 @@
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
   "dns_records": {
-    "_a_records_doc": "DEFAULT: wildcard '*' is multi-value [proxy_ip + 10.0.0.1] so every *.diegonmarcos.com is reachable from both public and wg0 clients with NO per-subdomain bookkeeping. PER-RECORD OVERRIDES: 'ip' field on any record overrides the global proxy_ip for that single name (used by 'api' to point at oci-analytics while everything else stays on gcp-proxy). 'extra_ips' adds more IPs to the multi-value set; the engine emits one cloudflare_record per (name, ip). All RFC1918 leaking acceptable per operator policy.",
+    "_a_records_doc": "SPLIT-HORIZON: PUBLIC Cloudflare wildcard '*' resolves to proxy_ip (public edge) ONLY — NO RFC1918 mesh IPs in public DNS (avoids topology leak + blackholing public clients that pick an unroutable internal IP). Internal wg0 mesh resolution is handled by Hickory (10.0.0.1:53, separate engine) which returns the mesh IP for wg clients. PER-RECORD OVERRIDES: 'ip' field on any record overrides the global proxy_ip for that single name. 'extra_ips' (if ever needed) adds public-routable IPs only to the multi-value set; the engine emits one cloudflare_record per (name, ip). NEVER put mesh/RFC1918 IPs in extra_ips — they belong in Hickory, not public CF.",
     "a_records": [
       { "name": "diegonmarcos.com",  "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",               "proxied": false, "ttl": 300, "comment": null },
-      { "name": "*",                 "proxied": false, "ttl": 1,   "extra_ips": ["10.0.0.1"], "comment": "Wildcard → oci-analytics (public edge) + 10.0.0.1 (gcp-proxy over wg0 for internal callers)" },
-      { "name": "api",               "proxied": false, "ttl": 300, "comment": "api.* hosts BOTH /pub/* (public — via oci-analytics) and wg-cloud routes (internal — via 10.0.0.1). Inherits wildcard pattern (multi-value)." },
+      { "name": "*",                 "proxied": false, "ttl": 1,   "comment": "Wildcard → oci-analytics (public edge) ONLY. Internal wg0 mesh resolution is split-horizon via Hickory (10.0.0.1:53), NOT a public CF record — keeps RFC1918 mesh IPs off public DNS." },
+      { "name": "api",               "proxied": false, "ttl": 300, "comment": "api.* → public edge (oci-analytics). Public /pub/* routes here; internal wg-cloud routes resolve via Hickory split-horizon, not a public mesh record." },
       { "name": "mail",              "proxied": false, "ttl": 300, "comment": "Explicit A — CF wildcard doesn't catch bare 'mail' label when MX exists at same name" }
     ],
 
