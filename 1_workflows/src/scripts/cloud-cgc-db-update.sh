@@ -1,18 +1,26 @@
 #!/bin/sh
 # ──────────────────────────────────────────────────────────────────────────
-#  cloud-cgc-db-update.sh — INCREMENTAL cloud-cgc octocode DB update (producer)
+#  cloud-cgc-db-update.sh — UNIVERSAL cloud-cgc octocode DB updater (producer)
 # ──────────────────────────────────────────────────────────────────────────
-#  GHCR-upstream incremental flow (NOT a reindex — never `octocode clear`):
-#    1. pull the last DB from GHCR        (cloud-cgc-db-pull.sh)
-#    2. octocode index each repo           (git-aware, CHANGED FILES ONLY)
-#       GraphRAG LLM phase → OpenRouter ($OPENROUTER_API_KEY); FastEmbed local.
-#    3. push the updated DB back to GHCR   (cloud-cgc-db-package.sh)
-#  Runs on x86 (GHA) — the DB (Lance + FastEmbed vectors) is arch-portable, so
-#  oci-apps (arm) + local just consume it. octocode version is pinned in
-#  build.json so the on-disk schema stays compatible across x86/arm/local.
-#  Thin-wrapper: ALL logic here; the GHA workflow only provides runtime
-#  (x86 octocode on PATH, GHCR login, $OPENROUTER_API_KEY, the repos checked out).
-#  First run with no upstream image bootstraps a full build once to seed GHCR.
+#  ONE reproducible script that runs IDENTICALLY anywhere (GHA x86, a VM, local).
+#  The CI YAML / Dagu DAG only TRIGGER this — they carry ZERO logic. Everything
+#  (octocode install, GHCR auth, fresh repo checkout, index, package, push) is
+#  here and data-driven from build.json.
+#
+#  GHCR-upstream INCREMENTAL flow (NOT a reindex — never `octocode clear`):
+#    0. ensure octocode on PATH (extract pinned x86 static binary from GHCR)
+#    1. ensure GHCR auth (docker login if a token is provided)
+#    2. ensure repos: clone/refresh each to its FRESH origin HEAD in a DEDICATED
+#       root (never the dev tree) — this is what guarantees "freshest HEAD"
+#    3. pull the last DB from GHCR (incremental base; bootstraps if absent)
+#    4. octocode index each repo — git-aware, CHANGED FILES ONLY
+#       GraphRAG LLM phase → OpenRouter ($OPENROUTER_API_KEY); FastEmbed local
+#    5. push the updated DB back to GHCR (single upstream for all consumers)
+#  The DB (Lance + FastEmbed vectors) is arch-portable; octocode version is
+#  pinned in build.json so the schema stays compatible across x86/arm/local.
+#
+#  Runtime the caller (YAML/DAG/shell) must provide: docker, git, jq + env:
+#    GITHUB_TOKEN (+ GITHUB_ACTOR) for GHCR/clone auth, OPENROUTER_API_KEY (opt).
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -20,22 +28,92 @@ ROOT="${CLOUD_ROOT:-$(cd "$HERE/../../.." && pwd)}"
 BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
 [ -f "$BJ" ] || { echo "::error::cloud-cgc-mcp build.json not found at $BJ"; exit 1; }
 
-IMAGE=$(jq -r '.db_publish.image'                 "$BJ")
-TAG=$(jq -r   '.db_publish.tag // "latest"'       "$BJ")
+IMAGE=$(jq -r   '.db_publish.image'                  "$BJ")
+TAG=$(jq -r     '.db_publish.tag // "latest"'        "$BJ")
 OCTO_HOME="${OCTOCODE_HOME:-$HOME/.local/share/octocode}"
-REPOS=$(jq -r '.runtime.octocode.index_repos[]'   "$BJ")
-REPOS_ROOT="${REPOS_ROOT:-${OCTOCODE_REPOS_ROOT:-$HOME/git}}"
+# DEDICATED clone root — NEVER the dev tree (~/git). The producer owns these
+# checkouts so it can reset --hard to the fresh origin HEAD without ever
+# touching your working copies. Override with OCTOCODE_REPOS_ROOT / REPOS_ROOT.
+REPOS_ROOT="${REPOS_ROOT:-${OCTOCODE_REPOS_ROOT:-$HOME/.cache/cgc-repos}}"
+REPOS=$(jq -r   '.runtime.octocode.index_repos[]'    "$BJ")
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
+OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
 CFG="$OCTO_HOME/config.toml"
+TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
+ACTOR="${GITHUB_ACTOR:-diegonmarcos}"
 export HOME OCTOCODE_HOME="$OCTO_HOME"
 
-# 1) seed the incremental base from GHCR (no-op if not seeded yet → full build)
+# 0) ensure octocode on PATH — extract the pinned x86 static binary from its GHCR
+#    image (data-driven). No-op when octocode is already installed (e.g. local).
+ensure_octocode() {
+  command -v octocode >/dev/null 2>&1 && { echo "[cgc-db] octocode: $(octocode --version 2>/dev/null)"; return 0; }
+  command -v docker >/dev/null 2>&1 || { echo "::error::need octocode or docker to obtain it"; exit 1; }
+  bindir="${CGC_BIN:-$HOME/.local/bin}"; mkdir -p "$bindir"
+  echo "[cgc-db] installing pinned octocode from $OCTO_X86"
+  docker pull -q "$OCTO_X86" >/dev/null
+  docker run --rm --entrypoint sh "$OCTO_X86" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
+  chmod +x "$bindir/octocode"
+  PATH="$bindir:$PATH"; export PATH
+  octocode --version
+}
+
+# 1) ensure GHCR auth — only if a token is provided (local is usually pre-authed).
+ensure_ghcr_auth() {
+  [ -n "$TOKEN" ] || { echo "[cgc-db] no token — assuming GHCR already authed"; return 0; }
+  echo "$TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin >/dev/null 2>&1 \
+    && echo "[cgc-db] GHCR login ok" || echo "[cgc-db] WARN GHCR login failed"
+}
+
+# 2) ensure each indexed repo is present at its FRESH origin HEAD in REPOS_ROOT.
+#    Data-driven local→github from build.json.repo_map. clone if missing, else
+#    fetch + reset --hard to the fetched tip. Safe (dedicated clones, not dev tree).
+ensure_repos() {
+  mkdir -p "$REPOS_ROOT"
+  jq -r '.runtime.octocode.repo_map | to_entries[] | "\(.key) \(.value)"' "$BJ" | while read -r lname remote; do
+    [ -n "$lname" ] || continue
+    d="$REPOS_ROOT/$lname"
+    if [ -n "$TOKEN" ]; then url="https://x-access-token:${TOKEN}@github.com/diegonmarcos/${remote}.git"
+    else url="https://github.com/diegonmarcos/${remote}.git"; fi
+    if [ -d "$d/.git" ]; then
+      echo "[cgc-db] refresh $lname ← origin (fresh HEAD)"
+      git -C "$d" remote set-url origin "$url" 2>/dev/null || true
+      git -C "$d" fetch --depth 1 -q origin 2>/dev/null \
+        && git -C "$d" reset --hard -q FETCH_HEAD 2>/dev/null \
+        || echo "[cgc-db] WARN refresh $lname failed (using existing checkout)"
+    else
+      echo "[cgc-db] clone $lname ← $remote (fresh HEAD)"
+      git clone --depth 1 -q "$url" "$d" 2>/dev/null || echo "[cgc-db] WARN clone $lname failed"
+    fi
+  done
+}
+
+# octocode (ignore crate) DEADLOCKS recursing nested submodules — each submodule
+# is its own repo (indexed separately). Exclude them via .git/info/exclude
+# (LOCAL + untracked → never touches tracked .gitignore). Data-driven from the
+# repo's own .gitmodules. Idempotent.
+exclude_submodules() {
+  _d="$1"; _gm="$_d/.gitmodules"; _ex="$_d/.git/info/exclude"
+  [ -f "$_gm" ] && [ -d "$_d/.git" ] || return 0
+  mkdir -p "$_d/.git/info"
+  awk -F'=' '/^[[:space:]]*path[[:space:]]*=/ { gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); print $2 }' "$_gm" | while IFS= read -r _p; do
+    [ -n "$_p" ] || continue
+    grep -qxF "/$_p/" "$_ex" 2>/dev/null || printf '/%s/\n' "$_p" >> "$_ex"
+    echo "[cgc-db] $_d · exclude submodule from octocode walk: $_p"
+  done
+}
+
+# ── run ───────────────────────────────────────────────────────────────────
+ensure_octocode
+ensure_ghcr_auth
+ensure_repos
+
+# 3) seed the incremental base from GHCR (no-op if not seeded yet → full build)
 mkdir -p "$OCTO_HOME"
 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || echo "[cgc-db] pull skipped — bootstrapping a fresh DB"
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
-# 2) force the GraphRAG LLM phase on (use_llm + model). awk, never sed (model is plain).
+# 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
 if [ "$USE_LLM" = "true" ] && [ -n "${OPENROUTER_API_KEY:-}" ] && [ -f "$CFG" ]; then
   octocode config --model "$LLM" --graphrag-enabled true >/dev/null 2>&1 || true
   awk -v m="$LLM" '
@@ -49,24 +127,7 @@ else
   echo "[cgc-db] GraphRAG structural-only (use_llm disabled or no OPENROUTER_API_KEY)"
 fi
 
-# octocode (ignore crate) DEADLOCKS recursing nested submodules — each submodule
-# is its own repo (indexed separately), so descending is duplicate work and on
-# large trees octocode hrtime-parks at 0 progress. Exclude them via
-# .git/info/exclude (LOCAL + untracked → never touches the repo's tracked
-# .gitignore, unlike reindex.sh's ephemeral-clone append). Data-driven from the
-# repo's own .gitmodules. Idempotent.
-exclude_submodules() {
-  _d="$1"; _gm="$_d/.gitmodules"; _ex="$_d/.git/info/exclude"
-  [ -f "$_gm" ] && [ -d "$_d/.git" ] || return 0
-  mkdir -p "$_d/.git/info"
-  awk -F'=' '/^[[:space:]]*path[[:space:]]*=/ { gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); print $2 }' "$_gm" | while IFS= read -r _p; do
-    [ -n "$_p" ] || continue
-    grep -qxF "/$_p/" "$_ex" 2>/dev/null || printf '/%s/\n' "$_p" >> "$_ex"
-    echo "[cgc-db] $_d · exclude submodule from octocode walk: $_p"
-  done
-}
-
-# 3) INCREMENTAL index per repo — git-aware, changed files only. NO `octocode clear`.
+# 4b) INCREMENTAL index per repo — git-aware, changed files only. NO `octocode clear`.
 command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >/dev/null 2>&1 || true
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
@@ -76,6 +137,6 @@ for r in $REPOS; do
   ( cd "$d" && octocode index ) 2>&1 | tail -4 || echo "[cgc-db] index $r FAILED (continuing)"
 done
 
-# 4) publish the updated DB back to GHCR (single upstream for all consumers)
+# 5) publish the updated DB back to GHCR (single upstream for all consumers)
 sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
 echo "[cgc-db] UPDATE COMPLETE → $IMAGE:$TAG"
