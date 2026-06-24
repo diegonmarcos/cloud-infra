@@ -2,11 +2,10 @@
 # ──────────────────────────────────────────────────────────────────────────
 #  cloud-cgc-db-package.sh — package an octocode DB directory → GHCR image + push
 # ──────────────────────────────────────────────────────────────────────────
-#  Shared packaging path (DRY) for BOTH:
-#    - cloud-cgc-db-update.sh  (producer: local octocode home → GHCR)
-#    - cloud-kg-db-snapshot.sh (durability: oci-apps octocode_db volume → GHCR)
-#  GHCR is the single upstream for the cloud-cgc octocode DB (semantic FastEmbed
-#  vectors + GraphRAG graph). Both consumers (oci-apps arm, local) pull it back.
+#  Packaging path used by cloud-cgc-db-update.sh (producer: local octocode home
+#  → GHCR). GHCR is the single upstream for the cloud-cgc octocode DB (semantic
+#  FastEmbed vectors + GraphRAG graph). Both consumers (oci-apps arm via the
+#  ops_octocode-db-pull DAG, and local) pull it back with cloud-cgc-db-pull.sh.
 #
 #  Args: $1=SRC_DIR (octocode home contents)  $2=IMAGE (ghcr.io/...)  $3=TAG
 # ──────────────────────────────────────────────────────────────────────────
