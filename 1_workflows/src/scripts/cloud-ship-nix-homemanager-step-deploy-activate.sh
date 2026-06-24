@@ -451,12 +451,44 @@ PREFLIGHT_EOF
         REMOTE_SCRIPT=$(_build_docker_activate_script)
         REMOTE_SCRIPT=$(printf '%s' "$REMOTE_SCRIPT" | sed "s|@@IMAGE@@|$HM_IMAGE|g; s|@@TAG@@|latest|g; s|@@HM_USER@@|$HM_USER|g")
 
-        set +e
-        printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
-        COMPOSE_RC=${PIPESTATUS[1]}
-        set -e
+        # ── Activate over SSH, with retry on transient tunnel drops ──
+        # The activation streams a multi-minute remote script (pull image →
+        # activation container cp -aR ~5-7GB closure → register → activate)
+        # over a single SSH session. On the CPU-constrained E2-Micro hubs the
+        # heavy cp starves WireGuard keepalive handling → the wg hub kicks the
+        # 10.0.0.200 cloud-builder peer → SSH drops with exit 255 mid-copy and
+        # the whole ship fails (oci-analytics wg-public-peer add, 2026-06-24).
+        # exit 255 is SSH's own "connection lost" code — distinct from any code
+        # the remote bash returns. The activation is fully idempotent (pull,
+        # container cp, --load-db, chown, activate all re-runnable; a dropped
+        # run rolls the generation back cleanly), so re-establishing the tunnel
+        # and re-running is safe. Retry ONLY on 255 (transient transport); a
+        # non-255 exit is a real remote-script error → fail fast, don't mask it.
+        # Knobs reuse the same build.retry.* config as run_with_retry (buildx).
+        _hm_attempts="$(get_config build.retry.attempts)"; [ -z "$_hm_attempts" ] && _hm_attempts=3
+        _hm_backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_hm_backoff" ] && _hm_backoff=30
+        _hm_try=0
+        COMPOSE_RC=1
+        while [ "$_hm_try" -lt "$_hm_attempts" ]; do
+            _hm_try=$(( _hm_try + 1 ))
+            log "Docker HM activate on $DEPLOY_HOST (attempt $_hm_try/$_hm_attempts)"
+            set +e
+            printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
+            COMPOSE_RC=${PIPESTATUS[1]}
+            set -e
+            [ "$COMPOSE_RC" -eq 0 ] && break
+            # Non-255 = remote script error (ENOSPC, daemon down, activate fail)
+            # → persistent, don't retry. 255 = transport drop → retry.
+            if [ "$COMPOSE_RC" -ne 255 ]; then
+                break
+            fi
+            if [ "$_hm_try" -lt "$_hm_attempts" ]; then
+                log "SSH dropped (exit 255) mid-activation — tunnel reset; retrying in ${_hm_backoff}s..."
+                sleep "$_hm_backoff"
+            fi
+        done
         if [ "$COMPOSE_RC" -ne 0 ]; then
-            log "FAILED (exit $COMPOSE_RC): Docker HM activate on $DEPLOY_HOST"
+            log "FAILED (exit $COMPOSE_RC): Docker HM activate on $DEPLOY_HOST (after $_hm_try attempt(s))"
             return 1
         fi
         log "Docker HM activated on $DEPLOY_HOST"
