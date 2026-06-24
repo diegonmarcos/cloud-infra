@@ -395,7 +395,6 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "c3-public-api",
-        "cf-worker-http-to-wg-public-bridge",
         "caddy-public"
       ],
       "container_count": 2
@@ -430,7 +429,7 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
-        "claude-api-superset",
+        "claude-superset-api",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -452,7 +451,7 @@
         "openobserve",
         "umami",
         "crowdsec",
-        "kg-mcp",
+        "cloud-cgc-mcp",
         "kg-store",
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
@@ -594,22 +593,22 @@
     }
   },
   "services": {
-    "claude-api-superset": {
+    "claude-superset-api": {
       "category": "agi",
       "vm": "oci-A1-f_0",
-      "folder": "ad-agi_claude-api-superset",
-      "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+      "folder": "ad-agi_claude-superset-api",
+      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "enabled": true,
       "port": 3117,
-      "dns": "claude-api-superset.app",
+      "dns": "claude-superset-api.app",
       "upstream": "10.0.0.6:3117",
       "containers": {
         "app": {
-          "container_name": "claude-api-superset",
-          "image": "ghcr.io/diegonmarcos/claude-api-superset:latest",
+          "container_name": "claude-superset-api",
+          "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
           "port": 3117,
           "port_env": "BRIDGE_PORT",
-          "dns": "claude-api-superset.app",
+          "dns": "claude-superset-api.app",
           "public": false,
           "healthcheck": "/health",
           "monitoring": null,
@@ -621,13 +620,13 @@
         }
       },
       "container_names": [
-        "claude-api-superset"
+        "claude-superset-api"
       ],
       "all_ports": [
         "3117"
       ],
       "all_dns": [
-        "claude-api-superset.app"
+        "claude-superset-api.app"
       ],
       "compose": {
         "containers": [],
@@ -1430,8 +1429,8 @@
         "_note": "URLs resolved at flake build time from cloud-data services{}. Container runs in bridge mode, so 127.0.0.1 will NOT reach host-bound services — we MUST use the WG IP (10.0.0.6) of whichever VM hosts the child MCP.",
         "infra": [
           {
-            "name": "kg-mcp",
-            "service": "kg-mcp",
+            "name": "cloud-cgc-mcp",
+            "service": "cloud-cgc-mcp",
             "path": "/mcp"
           }
         ],
@@ -1905,82 +1904,6 @@
         "CLAUDE_MODEL"
       ]
     },
-    "cf-worker-http-to-wg-public-bridge": {
-      "category": "app",
-      "vm": "oci-E2-f_1",
-      "folder": "infra-api_tools-cf-worker-http-to-wg-public-bridge",
-      "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-      "enabled": false,
-      "domain": "api.diegonmarcos.com/cf-worker-bridge",
-      "flake": "infra-api_tools-cf-worker-http-to-wg-public-bridge",
-      "port": 8092,
-      "dns": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.1.0.1:8092",
-      "containers": {
-        "app": {
-          "container_name": "cf-worker-http-to-wg-public-bridge",
-          "port": 8092,
-          "port_env": "LISTEN_PORT",
-          "dns": "cf-worker-http-to-wg-public-bridge.app",
-          "public": true,
-          "bind_host": "10.1.0.1",
-          "proxy": {
-            "type": "path",
-            "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/cf-worker-bridge",
-            "auth": "bearer"
-          },
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "cf-worker-http-to-wg-public-bridge"
-      ],
-      "all_ports": [
-        "8092"
-      ],
-      "all_dns": [
-        "cf-worker-http-to-wg-public-bridge.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "wg_only": false,
-          "type": "path",
-          "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/cf-worker-bridge",
-          "auth": "bearer"
-        }
-      },
-      "declared_ports": {
-        "app": 8092
-      },
-      "_retired": "2026-06-23: superseded by c3-public-api (/pub) + http-to-smtp-proxy-api. Disabled so the derive drops it from probe targets; kept for history.",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/cf-worker-bridge",
-        "api_url": "https://api.diegonmarcos.com/cf-worker-bridge/cf-worker-bridge",
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/cf-worker-bridge",
-        "endpoint_count": 1,
-        "display_name": "CF-Worker → wg-public Bridge",
-        "description": "POST raw RFC 5322 email body. Translates to SMTP and dual-delivers to maddy:25 + Stalwart:2025 over wg-public mesh. Used by CF email-forwarder Worker for inbound mail when oci-analytics is the public ingress (instead of gcp-proxy).",
-        "auth": "bearer"
-      },
-      "secret_env_vars": [
-        "SMTP_HOST",
-        "SMTP_PORT",
-        "API_KEY",
-        "LISTEN_PORT"
-      ]
-    },
     "http-to-smtp-proxy-api": {
       "category": "app",
       "vm": "gcp-E2-f_0",
@@ -2332,11 +2255,8 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "app.diegonmarcos.com",
-          "base_path": "/gitea",
-          "auth": "two_factor",
-          "domain": "git.diegonmarcos.com"
+          "domain": "git.diegonmarcos.com",
+          "auth": "two_factor"
         }
       },
       "declared_ports": {
@@ -4297,7 +4217,7 @@
         "messages": {
           "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
           "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
-          "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /kg-mcp/mcp",
+          "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
           "app_hub_fallback": "Not Found"
         }
       },
@@ -4529,7 +4449,7 @@
         "messages": {
           "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
           "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
-          "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /kg-mcp/mcp",
+          "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
           "app_hub_fallback": "Not Found"
         }
       },
@@ -4710,6 +4630,162 @@
         "auth": "bearer"
       }
     },
+    "cloud-cgc-mcp": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_cloud-cgc-mcp",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "enabled": true,
+      "flake": "user-ai_cloud-cgc-mcp",
+      "port": 3105,
+      "dns": "cloud-cgc-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "containers": {
+        "app": {
+          "container_name": "cloud-cgc-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+          "port": 3105,
+          "port_env": "MCP_HTTP_PORT",
+          "dns": "cloud-cgc-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/cloud-cgc-mcp"
+          },
+          "healthcheck": "/mcp",
+          "monitoring": null,
+          "volumes": [
+            "./data:/data:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-cgc-mcp"
+      ],
+      "all_ports": [
+        "3105"
+      ],
+      "all_dns": [
+        "cloud-cgc-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/cloud-cgc-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3105
+      },
+      "health": {
+        "path": "/mcp"
+      },
+      "db_publish": {
+        "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 1_workflows/src/scripts/cloud-kg-db-snapshot.sh.",
+        "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db",
+        "tag": "latest",
+        "volume": "octocode_db",
+        "host": "oci-apps"
+      },
+      "runtime": {
+        "git_root": "/repos",
+        "data_path": "/data",
+        "octocode": {
+          "repos_volume": "octocode_repos",
+          "repos_path": "/repos",
+          "db_volume": "octocode_db",
+          "db_path": "/home/appuser/.local/share/octocode",
+          "_db_upstream_comment": "GHCR is the SINGLE upstream for both octocode DBs (semantic FastEmbed vectors + GraphRAG graph). The producer (GHA x86, ship-cgc-db.yml) pulls db_publish.image, runs an INCREMENTAL octocode index on top, and pushes it back. oci-apps (arm) + local both CONSUME by pulling the same image — never build. Pinned octocode version keeps the on-disk DB schema compatible across x86/arm/local.",
+          "version": "0.12.2",
+          "octocode_images": {
+            "x86": "ghcr.io/diegonmarcos/octocode-fastembed-huggingface-graphrag-cpu-x86-linux-static:0.12.2",
+            "arm": "ghcr.io/diegonmarcos/octocode-fastembed-graphrag-indexed-arm:latest"
+          },
+          "update": {
+            "_comment": "update = INCREMENTAL (octocode index, git-aware, changed files only) on top of the GHCR DB. NOT a reindex (clear+rebuild). First run with no upstream image bootstraps a full build once to seed GHCR.",
+            "incremental": true,
+            "use_llm": true,
+            "llm_model": "openrouter:openai/gpt-4o-mini",
+            "schedule": "0 4 * * *"
+          },
+          "llm": {
+            "_comment": "octocode GraphRAG LLM -> claude-api-superset (kg-bridge successor), TWO providers with fallback. openai:* reads OPENAI_API_URL -> superset /v1 (3117); ollama:* reads OLLAMA_API_URL -> superset Ollama mimic (10.0.0.6:11436 — the superset binds the WG IP, not localhost). reindex.sh forces use_llm=true and tries `models` in order, falling back if a provider makes 0 superset /health calls. api_key is a throwaway.",
+            "openai_api_url": "http://10.0.0.6:3117/v1/chat/completions",
+            "ollama_api_url": "http://10.0.0.6:11436",
+            "api_key": "sk-dummy",
+            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
+            "health_url": "http://10.0.0.6:3117/health"
+          },
+          "index_repos": [
+            "cloud",
+            "unix",
+            "front",
+            "tools",
+            "cloud-data",
+            "front-data"
+          ],
+          "_repo_map_comment": "local index dir → GitHub repo to clone (producer GHA / arm DAG). Only 'front' differs (GitHub Pages repo). Data-driven — never hardcode in the workflow/DAG.",
+          "repo_map": {
+            "cloud": "cloud",
+            "unix": "unix",
+            "front": "diegonmarcos.github.io",
+            "tools": "tools",
+            "cloud-data": "cloud-data",
+            "front-data": "front-data"
+          },
+          "home": "/home/appuser",
+          "kg_store": {
+            "_comment": "reindex.sh ingests the infra graph delta into kg-store (SurrealDB) after building the code graph — unified 'build all graphs' job. Localhost host-network; ns/db/user data-driven; delta from the cgc bundle. KG_STORE_PASS (SurrealDB root) is wired as a shared secret later; until then the ingest gracefully no-ops.",
+            "url": "http://127.0.0.1:8001",
+            "ns": "infra",
+            "db": "production",
+            "user": "root",
+            "delta": "/app/graphs/build-kg-graph_delta.json"
+          }
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 48,
+        "resources_count": 2,
+        "prompts_count": 0,
+        "display_name": "Cloud CGC MCP",
+        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      },
+      "secret_env_vars": [
+        "KG_STORE_PASS"
+      ]
+    },
     "db-agent": {
       "category": "data",
       "vm": "all",
@@ -4753,140 +4829,6 @@
         "NTFY_URL",
         "NTFY_TOPIC",
         "BUP_REMOTE"
-      ]
-    },
-    "kg-mcp": {
-      "category": "obs",
-      "vm": "oci-A1-f_0",
-      "folder": "user-ai_kg-mcp",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "enabled": true,
-      "flake": "user-ai_kg-mcp",
-      "port": 3105,
-      "dns": "kg-mcp.app",
-      "upstream": "10.0.0.6:3105",
-      "containers": {
-        "app": {
-          "container_name": "kg-mcp",
-          "image": "ghcr.io/diegonmarcos/kg-mcp:latest",
-          "port": 3105,
-          "port_env": "MCP_HTTP_PORT",
-          "dns": "kg-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/cloud-cgc-mcp"
-          },
-          "healthcheck": "/mcp",
-          "monitoring": null,
-          "volumes": [
-            "./data:/data:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "kg-mcp"
-      ],
-      "all_ports": [
-        "3105"
-      ],
-      "all_dns": [
-        "kg-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/cloud-cgc-mcp",
-          "wg_only": true
-        }
-      },
-      "declared_ports": {
-        "app": 3105
-      },
-      "health": {
-        "path": "/mcp"
-      },
-      "db_publish": {
-        "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 1_workflows/src/scripts/cloud-kg-db-snapshot.sh.",
-        "image": "ghcr.io/diegonmarcos/kg-mcp-octocode-db",
-        "tag": "latest",
-        "volume": "octocode_db",
-        "host": "oci-apps"
-      },
-      "runtime": {
-        "git_root": "/repos",
-        "data_path": "/data",
-        "octocode": {
-          "repos_volume": "octocode_repos",
-          "repos_path": "/repos",
-          "db_volume": "octocode_db",
-          "db_path": "/home/appuser/.local/share/octocode",
-          "llm": {
-            "_comment": "octocode GraphRAG LLM -> claude-api-superset (kg-bridge successor), TWO providers with fallback. openai:* reads OPENAI_API_URL -> superset /v1 (3117); ollama:* reads OLLAMA_API_URL -> superset Ollama mimic (10.0.0.6:11436 — the superset binds the WG IP, not localhost). reindex.sh forces use_llm=true and tries `models` in order, falling back if a provider makes 0 superset /health calls. api_key is a throwaway.",
-            "openai_api_url": "http://10.0.0.6:3117/v1/chat/completions",
-            "ollama_api_url": "http://10.0.0.6:11436",
-            "api_key": "sk-dummy",
-            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
-            "health_url": "http://10.0.0.6:3117/health"
-          },
-          "index_repos": [
-            "cloud",
-            "unix",
-            "front",
-            "tools",
-            "cloud-data",
-            "front-data"
-          ],
-          "home": "/home/appuser",
-          "kg_store": {
-            "_comment": "reindex.sh ingests the infra graph delta into kg-store (SurrealDB) after building the code graph — unified 'build all graphs' job. Localhost host-network; ns/db/user data-driven; delta from the cgc bundle. KG_STORE_PASS (SurrealDB root) is wired as a shared secret later; until then the ingest gracefully no-ops.",
-            "url": "http://127.0.0.1:8001",
-            "ns": "infra",
-            "db": "production",
-            "user": "root",
-            "delta": "/app/graphs/build-kg-graph_delta.json"
-          }
-        }
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/mcp"
-        ]
-      },
-      "mcp": {
-        "has_mcp": true,
-        "mcp_url": null,
-        "transport": "streamable-http",
-        "endpoint_path": "/mcp",
-        "tools_count": 48,
-        "resources_count": 2,
-        "prompts_count": 0,
-        "display_name": "Cloud CGC MCP",
-        "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
-        "auth": "none",
-        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
-      },
-      "secret_env_vars": [
-        "KG_STORE_PASS"
       ]
     },
     "kg-store": {
@@ -4985,7 +4927,7 @@
             "key_source": "name"
           },
           {
-            "_comment": "octocode code-graph file nodes (full file-level mirror). One table; node_type property = file|source_file|test_file|config_file. Populated by a_solutions/user-ai_kg-mcp/src/code/octocode-export.py reading octocode's Lance graphrag_nodes per repo. key = <repo>:<path>.",
+            "_comment": "octocode code-graph file nodes (full file-level mirror). One table; node_type property = file|source_file|test_file|config_file. Populated by a_solutions/user-ai_cloud-cgc-mcp/src/code/octocode-export.py reading octocode's Lance graphrag_nodes per repo. key = <repo>:<path>.",
             "table": "file",
             "key_source": "path"
           }

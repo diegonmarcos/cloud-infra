@@ -197,18 +197,6 @@
       ]
     },
     {
-      "name": "cf-worker-http-to-wg-public-bridge",
-      "category": "app",
-      "vm": "oci-E2-f_1",
-      "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-      "domain": "api.diegonmarcos.com/cf-worker-bridge",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "cf-worker-http-to-wg-public-bridge"
-      ]
-    },
-    {
       "name": "chat-mattermost",
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -223,15 +211,15 @@
       ]
     },
     {
-      "name": "claude-api-superset",
+      "name": "claude-superset-api",
       "category": "agi",
       "vm": "oci-A1-f_0",
-      "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "domain": "—",
       "ports": [],
       "networks": [],
       "containers": [
-        "claude-api-superset"
+        "claude-superset-api"
       ]
     },
     {
@@ -244,6 +232,18 @@
       "networks": [],
       "containers": [
         "cloud-builder-x"
+      ]
+    },
+    {
+      "name": "cloud-cgc-mcp",
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "cloud-cgc-mcp"
       ]
     },
     {
@@ -529,18 +529,6 @@
       "networks": [],
       "containers": [
         "introspect-proxy"
-      ]
-    },
-    {
-      "name": "kg-mcp",
-      "category": "obs",
-      "vm": "oci-A1-f_0",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "domain": "—",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "kg-mcp"
       ]
     },
     {
@@ -1312,18 +1300,6 @@
       ]
     },
     {
-      "name": "cf-worker-http-to-wg-public-bridge",
-      "category": "app",
-      "vm": "oci-E2-f_1",
-      "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-      "domain": "api.diegonmarcos.com/cf-worker-bridge",
-      "ports": [],
-      "networks": [],
-      "containers": [
-        "cf-worker-http-to-wg-public-bridge"
-      ]
-    },
-    {
       "name": "chat-mattermost",
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1338,15 +1314,15 @@
       ]
     },
     {
-      "name": "claude-api-superset",
+      "name": "claude-superset-api",
       "category": "agi",
       "vm": "oci-A1-f_0",
-      "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "domain": "—",
       "ports": [],
       "networks": [],
       "containers": [
-        "claude-api-superset"
+        "claude-superset-api"
       ]
     },
     {
