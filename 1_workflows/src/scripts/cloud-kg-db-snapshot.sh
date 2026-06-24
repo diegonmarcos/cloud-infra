@@ -1,6 +1,6 @@
 #!/bin/sh
 # ──────────────────────────────────────────────────────────────────────────
-#  cloud-kg-db-snapshot.sh — publish the kg-mcp octocode GraphRAG DB to GHCR
+#  cloud-kg-db-snapshot.sh — publish the cloud-cgc-mcp octocode GraphRAG DB to GHCR
 # ──────────────────────────────────────────────────────────────────────────
 #  The live GraphRAG index (FastEmbed vectors + the LLM relationship graph,
 #  the expensive multi-hour build) lives ONLY in the `octocode_db` Docker
@@ -17,13 +17,13 @@
 #  `gh` visibility API — the local ship's PAT lacks that scope (it warns
 #  "could not flip to public"); the GHA token has it.
 #
-#  Config is data-driven from kg-mcp build.json `.db_publish` — never hardcoded.
+#  Config is data-driven from cloud-cgc-mcp build.json `.db_publish` — never hardcoded.
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
 
 ROOT="${CLOUD_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-BJ="${KG_BUILD_JSON:-$ROOT/a_solutions/user-ai_kg-mcp/build.json}"
-[ -f "$BJ" ] || { echo "::error::kg-mcp build.json not found at $BJ"; exit 1; }
+BJ="${KG_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
+[ -f "$BJ" ] || { echo "::error::cloud-cgc-mcp build.json not found at $BJ"; exit 1; }
 
 IMAGE=$(jq -r '.db_publish.image'        "$BJ")
 TAG=$(jq -r   '.db_publish.tag // "latest"' "$BJ")
@@ -49,12 +49,12 @@ echo "[kg-db] received $(du -h "$WORK/ctx/octocode-db.tar" | cut -f1) tar"
 
 # Minimal image: ADD auto-extracts the tar to /octocode-db. Restore by mounting
 # this image's /octocode-db into the octocode_db volume (init container or
-# `docker cp`) before kg-mcp starts.
+# `docker cp`) before cloud-cgc-mcp starts.
 cat > "$WORK/ctx/Dockerfile" <<'DOCKER'
 FROM busybox:latest
 ADD octocode-db.tar /octocode-db
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
-LABEL org.opencontainers.image.description="kg-mcp octocode GraphRAG index snapshot (FastEmbed vectors + LLM relationship graph) — restore into the octocode_db volume"
+LABEL org.opencontainers.image.description="cloud-cgc-mcp octocode GraphRAG index snapshot (FastEmbed vectors + LLM relationship graph) — restore into the octocode_db volume"
 DOCKER
 
 echo "[kg-db] building $IMAGE:$TAG ..."
