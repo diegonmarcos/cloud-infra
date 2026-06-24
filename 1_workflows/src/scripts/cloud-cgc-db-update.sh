@@ -49,11 +49,29 @@ else
   echo "[cgc-db] GraphRAG structural-only (use_llm disabled or no OPENROUTER_API_KEY)"
 fi
 
+# octocode (ignore crate) DEADLOCKS recursing nested submodules — each submodule
+# is its own repo (indexed separately), so descending is duplicate work and on
+# large trees octocode hrtime-parks at 0 progress. Exclude them via
+# .git/info/exclude (LOCAL + untracked → never touches the repo's tracked
+# .gitignore, unlike reindex.sh's ephemeral-clone append). Data-driven from the
+# repo's own .gitmodules. Idempotent.
+exclude_submodules() {
+  _d="$1"; _gm="$_d/.gitmodules"; _ex="$_d/.git/info/exclude"
+  [ -f "$_gm" ] && [ -d "$_d/.git" ] || return 0
+  mkdir -p "$_d/.git/info"
+  awk -F'=' '/^[[:space:]]*path[[:space:]]*=/ { gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); print $2 }' "$_gm" | while IFS= read -r _p; do
+    [ -n "$_p" ] || continue
+    grep -qxF "/$_p/" "$_ex" 2>/dev/null || printf '/%s/\n' "$_p" >> "$_ex"
+    echo "[cgc-db] $_d · exclude submodule from octocode walk: $_p"
+  done
+}
+
 # 3) INCREMENTAL index per repo — git-aware, changed files only. NO `octocode clear`.
 command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >/dev/null 2>&1 || true
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "[cgc-db] MISSING $d — skip"; continue; }
+  exclude_submodules "$d"
   echo "[cgc-db] === incremental index: $r ==="
   ( cd "$d" && octocode index ) 2>&1 | tail -4 || echo "[cgc-db] index $r FAILED (continuing)"
 done
