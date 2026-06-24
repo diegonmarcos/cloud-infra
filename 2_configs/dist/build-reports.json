@@ -560,17 +560,6 @@
       },
       "health": null
     },
-    "cf-worker-http-to-wg-public-bridge": {
-      "name": "cf-worker-http-to-wg-public-bridge",
-      "vm": "oci-E2-f_1",
-      "domain": "api.diegonmarcos.com/cf-worker-bridge",
-      "enabled": false,
-      "category": "app",
-      "ports": {
-        "app": 8092
-      },
-      "health": null
-    },
     "http-to-smtp-proxy-api": {
       "name": "http-to-smtp-proxy-api",
       "vm": "gcp-E2-f_0",
@@ -1391,15 +1380,6 @@
       "dns": "mattermost-mcp.app"
     },
     {
-      "service": "cf-worker-http-to-wg-public-bridge",
-      "dns": "cf-worker-http-to-wg-public-bridge.app"
-    },
-    {
-      "service": "cf-worker-http-to-wg-public-bridge",
-      "container": "app",
-      "dns": "cf-worker-http-to-wg-public-bridge.app"
-    },
-    {
       "service": "http-to-smtp-proxy-api",
       "dns": "http-to-smtp-proxy-api.app"
     },
@@ -2021,7 +2001,6 @@
         "provider": null,
         "services": [
           "c3-public-api",
-          "cf-worker-http-to-wg-public-bridge",
           "caddy-public"
         ]
       },
@@ -2256,17 +2235,6 @@
         "category": "app",
         "ports": {
           "app": 3102
-        },
-        "health": null
-      },
-      "cf-worker-http-to-wg-public-bridge": {
-        "name": "cf-worker-http-to-wg-public-bridge",
-        "vm": "oci-E2-f_1",
-        "domain": "api.diegonmarcos.com/cf-worker-bridge",
-        "enabled": false,
-        "category": "app",
-        "ports": {
-          "app": 8092
         },
         "health": null
       },
@@ -3051,7 +3019,14 @@
       },
       "timeout_secs": 10,
       "poll_interval_ms": 500,
-      "subject_prefix": "[url-health-e2e]"
+      "subject_prefix": "[url-health-e2e]",
+      "jmap": {
+        "host": "jmap.diegonmarcos.com",
+        "port": 443,
+        "username": "me@diegonmarcos.com"
+      },
+      "api_health_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api/",
+      "mcp_health_url": "https://mcp.diegonmarcos.com/mail-mcp/"
     }
   },
   "workflows": {
