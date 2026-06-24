@@ -33,13 +33,13 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 286,
-    "edges": 386,
+    "nodes": 285,
+    "edges": 384,
     "by_table": {
       "vm": 4,
       "service": 62,
       "container": 87,
-      "domain": 40,
+      "domain": 39,
       "repo": 3,
       "module": 62,
       "package": 28
@@ -120,25 +120,25 @@
     },
     {
       "table": "service",
-      "id": "claude_api_superset",
-      "key": "service:claude_api_superset",
+      "id": "claude_superset_api",
+      "key": "service:claude_superset_api",
       "properties": {
-        "name": "claude-api-superset",
+        "name": "claude-superset-api",
         "category": "agi",
-        "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+        "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
         "domain": null,
         "port": 3117,
         "vm": "oci-apps",
-        "folder": "ad-agi_claude-api-superset"
+        "folder": "ad-agi_claude-superset-api"
       }
     },
     {
       "table": "container",
-      "id": "claude_api_superset",
-      "key": "container:claude_api_superset",
+      "id": "claude_superset_api",
+      "key": "container:claude_superset_api",
       "properties": {
-        "name": "claude-api-superset",
-        "image": "ghcr.io/diegonmarcos/claude-api-superset:latest",
+        "name": "claude-superset-api",
+        "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
         "role": "app",
         "port": 3117,
         "public": false
@@ -1050,6 +1050,32 @@
     },
     {
       "table": "service",
+      "id": "cloud_cgc_mcp",
+      "key": "service:cloud_cgc_mcp",
+      "properties": {
+        "name": "cloud-cgc-mcp",
+        "category": "obs",
+        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+        "domain": null,
+        "port": 3105,
+        "vm": "oci-apps",
+        "folder": "user-ai_cloud-cgc-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_cgc_mcp",
+      "key": "container:cloud_cgc_mcp",
+      "properties": {
+        "name": "cloud-cgc-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+        "role": "app",
+        "port": 3105,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "db_agent",
       "key": "service:db_agent",
       "properties": {
@@ -1072,32 +1098,6 @@
         "role": "app",
         "port": null,
         "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "kg_mcp",
-      "key": "service:kg_mcp",
-      "properties": {
-        "name": "kg-mcp",
-        "category": "obs",
-        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-        "domain": null,
-        "port": 3105,
-        "vm": "oci-apps",
-        "folder": "user-ai_kg-mcp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "kg_mcp",
-      "key": "container:kg_mcp",
-      "properties": {
-        "name": "kg-mcp",
-        "image": "ghcr.io/diegonmarcos/kg-mcp:latest",
-        "role": "app",
-        "port": 3105,
-        "public": true
       }
     },
     {
@@ -2080,14 +2080,6 @@
     },
     {
       "table": "domain",
-      "id": "api_diegonmarcos_com/cf_worker_bridge",
-      "key": "domain:api_diegonmarcos_com/cf_worker_bridge",
-      "properties": {
-        "fqdn": "api.diegonmarcos.com/cf-worker-bridge"
-      }
-    },
-    {
-      "table": "domain",
       "id": "api_diegonmarcos_com/http_to_smtp_proxy_api",
       "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
       "properties": {
@@ -2361,13 +2353,13 @@
     },
     {
       "table": "module",
-      "id": "ad_agi_claude_api_superset",
-      "key": "module:ad_agi_claude_api_superset",
+      "id": "ad_agi_claude_superset_api",
+      "key": "module:ad_agi_claude_superset_api",
       "properties": {
-        "name": "ad-agi_claude-api-superset",
+        "name": "ad-agi_claude-superset-api",
         "repo": "cloud",
         "category": "agi",
-        "service": "claude-api-superset"
+        "service": "claude-superset-api"
       }
     },
     {
@@ -2724,6 +2716,17 @@
     },
     {
       "table": "module",
+      "id": "user_ai_cloud_cgc_mcp",
+      "key": "module:user_ai_cloud_cgc_mcp",
+      "properties": {
+        "name": "user-ai_cloud-cgc-mcp",
+        "repo": "cloud",
+        "category": "obs",
+        "service": "cloud-cgc-mcp"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_ai_db_agent",
       "key": "module:user_ai_db_agent",
       "properties": {
@@ -2731,17 +2734,6 @@
         "repo": "cloud",
         "category": "data",
         "service": "db-agent"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_ai_kg_mcp",
-      "key": "module:user_ai_kg_mcp",
-      "properties": {
-        "name": "user-ai_kg-mcp",
-        "repo": "cloud",
-        "category": "obs",
-        "service": "kg-mcp"
       }
     },
     {
@@ -3397,16 +3389,16 @@
   "edges": [
     {
       "table": "hosted_on",
-      "from": "service:claude_api_superset",
+      "from": "service:claude_superset_api",
       "to": "vm:oci_apps",
-      "key": "service:claude_api_superset->hosted_on->vm:oci_apps",
+      "key": "service:claude_superset_api->hosted_on->vm:oci_apps",
       "properties": {}
     },
     {
       "table": "runs_container",
-      "from": "service:claude_api_superset",
-      "to": "container:claude_api_superset",
-      "key": "service:claude_api_superset->runs_container->container:claude_api_superset",
+      "from": "service:claude_superset_api",
+      "to": "container:claude_superset_api",
+      "key": "service:claude_superset_api->runs_container->container:claude_superset_api",
       "properties": {
         "role": "app"
       }
@@ -3968,26 +3960,26 @@
       }
     },
     {
+      "table": "hosted_on",
+      "from": "service:cloud_cgc_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_cgc_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
       "table": "runs_container",
-      "from": "service:db_agent",
-      "to": "container:db_agent",
-      "key": "service:db_agent->runs_container->container:db_agent",
+      "from": "service:cloud_cgc_mcp",
+      "to": "container:cloud_cgc_mcp",
+      "key": "service:cloud_cgc_mcp->runs_container->container:cloud_cgc_mcp",
       "properties": {
         "role": "app"
       }
     },
     {
-      "table": "hosted_on",
-      "from": "service:kg_mcp",
-      "to": "vm:oci_apps",
-      "key": "service:kg_mcp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
       "table": "runs_container",
-      "from": "service:kg_mcp",
-      "to": "container:kg_mcp",
-      "key": "service:kg_mcp->runs_container->container:kg_mcp",
+      "from": "service:db_agent",
+      "to": "container:db_agent",
+      "key": "service:db_agent->runs_container->container:db_agent",
       "properties": {
         "role": "app"
       }
@@ -4666,15 +4658,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:cf_worker_http_to_wg_public_bridge",
-      "to": "service:caddy",
-      "key": "service:cf_worker_http_to_wg_public_bridge->proxied_by->service:caddy",
-      "properties": {
-        "domain": "api.diegonmarcos.com/cf-worker-bridge"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:http_to_smtp_proxy_api",
       "to": "service:caddy",
       "key": "service:http_to_smtp_proxy_api->proxied_by->service:caddy",
@@ -5028,13 +5011,6 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:api_diegonmarcos_com/cf_worker_bridge",
-      "to": "service:cf_worker_http_to_wg_public_bridge",
-      "key": "domain:api_diegonmarcos_com/cf_worker_bridge->routes_to->service:cf_worker_http_to_wg_public_bridge",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
       "from": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
       "to": "service:http_to_smtp_proxy_api",
       "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api->routes_to->service:http_to_smtp_proxy_api",
@@ -5273,16 +5249,16 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:ad_agi_claude_api_superset",
+      "from": "module:ad_agi_claude_superset_api",
       "to": "repo:cloud",
-      "key": "module:ad_agi_claude_api_superset->belongs_to_repo->repo:cloud",
+      "key": "module:ad_agi_claude_superset_api->belongs_to_repo->repo:cloud",
       "properties": {}
     },
     {
       "table": "implements",
-      "from": "module:ad_agi_claude_api_superset",
-      "to": "service:claude_api_superset",
-      "key": "module:ad_agi_claude_api_superset->implements->service:claude_api_superset",
+      "from": "module:ad_agi_claude_superset_api",
+      "to": "service:claude_superset_api",
+      "key": "module:ad_agi_claude_superset_api->implements->service:claude_superset_api",
       "properties": {}
     },
     {
@@ -5735,6 +5711,20 @@
     },
     {
       "table": "belongs_to_repo",
+      "from": "module:user_ai_cloud_cgc_mcp",
+      "to": "repo:cloud",
+      "key": "module:user_ai_cloud_cgc_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_cloud_cgc_mcp",
+      "to": "service:cloud_cgc_mcp",
+      "key": "module:user_ai_cloud_cgc_mcp->implements->service:cloud_cgc_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
       "from": "module:user_ai_db_agent",
       "to": "repo:cloud",
       "key": "module:user_ai_db_agent->belongs_to_repo->repo:cloud",
@@ -5745,20 +5735,6 @@
       "from": "module:user_ai_db_agent",
       "to": "service:db_agent",
       "key": "module:user_ai_db_agent->implements->service:db_agent",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_ai_kg_mcp",
-      "to": "repo:cloud",
-      "key": "module:user_ai_kg_mcp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_ai_kg_mcp",
-      "to": "service:kg_mcp",
-      "key": "module:user_ai_kg_mcp->implements->service:kg_mcp",
       "properties": {}
     },
     {

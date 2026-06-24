@@ -53,7 +53,6 @@
       },
       "containers": [
         "c3-public-api",
-        "cf-worker-http-to-wg-public-bridge",
         "caddy-public"
       ],
       "ports": [],
@@ -78,7 +77,7 @@
         "host_literal": true
       },
       "containers": [
-        "claude-api-superset",
+        "claude-superset-api",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -104,7 +103,7 @@
         "umami-db",
         "umami-setup",
         "crowdsec",
-        "kg-mcp",
+        "cloud-cgc-mcp",
         "kg-store",
         "ollama-hai",
         "rig-agentic-hai",
@@ -540,10 +539,10 @@
     "internal_zones": [],
     "derived_entries": [
       {
-        "name": "claude-api-superset.app",
+        "name": "claude-superset-api.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "claude-api-superset"
+        "service": "claude-superset-api"
       },
       {
         "name": "c3-analytics-api.app",
@@ -604,12 +603,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "mattermost-mcp"
-      },
-      {
-        "name": "cf-worker-http-to-wg-public-bridge.app",
-        "type": "A",
-        "value": "10.0.0.4",
-        "service": "cf-worker-http-to-wg-public-bridge"
       },
       {
         "name": "http-to-smtp-proxy-api.app",
@@ -726,10 +719,10 @@
         "service": "introspect-proxy"
       },
       {
-        "name": "kg-mcp.app",
+        "name": "cloud-cgc-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "kg-mcp"
+        "service": "cloud-cgc-mcp"
       },
       {
         "name": "ollama-hai.app",
@@ -963,21 +956,21 @@
     "cloudflare": []
   },
   "services": {
-    "claude-api-superset": {
+    "claude-superset-api": {
       "category": "agi",
       "vm": "oci-A1-f_0",
-      "folder": "ad-agi_claude-api-superset",
-      "description": "Claude API superset on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+      "folder": "ad-agi_claude-superset-api",
+      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "port": 3117,
-      "dns": "claude-api-superset.app",
+      "dns": "claude-superset-api.app",
       "upstream": "10.0.0.6:3117",
       "containers": {
         "app": {
-          "container_name": "claude-api-superset",
-          "image": "ghcr.io/diegonmarcos/claude-api-superset:latest",
+          "container_name": "claude-superset-api",
+          "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
           "port": 3117,
           "port_env": "BRIDGE_PORT",
-          "dns": "claude-api-superset.app",
+          "dns": "claude-superset-api.app",
           "public": false,
           "healthcheck": "/health",
           "monitoring": null,
@@ -989,13 +982,13 @@
         }
       },
       "container_names": [
-        "claude-api-superset"
+        "claude-superset-api"
       ],
       "all_ports": [
         "3117"
       ],
       "all_dns": [
-        "claude-api-superset.app"
+        "claude-superset-api.app"
       ],
       "compose": {
         "containers": [],
@@ -1749,61 +1742,6 @@
       },
       "flake": "infra-api_mattermost-mcp"
     },
-    "cf-worker-http-to-wg-public-bridge": {
-      "category": "app",
-      "vm": "oci-E2-f_1",
-      "folder": "infra-api_tools-cf-worker-http-to-wg-public-bridge",
-      "description": "HTTP-to-SMTP bridge on oci-analytics (the public-ingress VM in the wg-public mesh). CF Worker POSTs JSON email payloads to this container; container speaks SMTP over wg-public to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/cf-worker-bridge/. Mirrors aa-sui_tools-http-to-smtp-proxy-api shape but binds on the wg-public hub IP (10.1.0.1) and forwards over wg-public.",
-      "domain": "api.diegonmarcos.com/cf-worker-bridge",
-      "port": 8092,
-      "dns": "cf-worker-http-to-wg-public-bridge.app",
-      "upstream": "10.1.0.1:8092",
-      "containers": {
-        "app": {
-          "container_name": "cf-worker-http-to-wg-public-bridge",
-          "port": 8092,
-          "port_env": "LISTEN_PORT",
-          "dns": "cf-worker-http-to-wg-public-bridge.app",
-          "public": true,
-          "bind_host": "10.1.0.1",
-          "proxy": {
-            "type": "path",
-            "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/cf-worker-bridge",
-            "auth": "bearer"
-          },
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "cf-worker-http-to-wg-public-bridge"
-      ],
-      "all_ports": [
-        "8092"
-      ],
-      "all_dns": [
-        "cf-worker-http-to-wg-public-bridge.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "wg_only": false,
-          "type": "path",
-          "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/cf-worker-bridge",
-          "auth": "bearer"
-        }
-      },
-      "declared_ports": {
-        "app": 8092
-      },
-      "flake": "infra-api_tools-cf-worker-http-to-wg-public-bridge"
-    },
     "http-to-smtp-proxy-api": {
       "category": "app",
       "vm": "gcp-E2-f_0",
@@ -2052,11 +1990,8 @@
       },
       "proxy": {
         "primary": {
-          "type": "path",
-          "parent_domain": "app.diegonmarcos.com",
-          "base_path": "/gitea",
-          "auth": "two_factor",
-          "domain": "git.diegonmarcos.com"
+          "domain": "git.diegonmarcos.com",
+          "auth": "two_factor"
         }
       },
       "declared_ports": {
@@ -3624,6 +3559,72 @@
       },
       "flake": "infra-sec_introspect-proxy"
     },
+    "cloud-cgc-mcp": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_cloud-cgc-mcp",
+      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "port": 3105,
+      "dns": "cloud-cgc-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "containers": {
+        "app": {
+          "container_name": "cloud-cgc-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+          "port": 3105,
+          "port_env": "MCP_HTTP_PORT",
+          "dns": "cloud-cgc-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/cloud-cgc-mcp"
+          },
+          "healthcheck": "/mcp",
+          "monitoring": null,
+          "volumes": [
+            "./data:/data:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-cgc-mcp"
+      ],
+      "all_ports": [
+        "3105"
+      ],
+      "all_dns": [
+        "cloud-cgc-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/cloud-cgc-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3105
+      },
+      "health": {
+        "path": "/mcp"
+      },
+      "flake": "user-ai_cloud-cgc-mcp"
+    },
     "db-agent": {
       "category": "data",
       "vm": "all",
@@ -3649,72 +3650,6 @@
         "networks": []
       },
       "flake": "user-ai_db-agent"
-    },
-    "kg-mcp": {
-      "category": "obs",
-      "vm": "oci-A1-f_0",
-      "folder": "user-ai_kg-mcp",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
-      "port": 3105,
-      "dns": "kg-mcp.app",
-      "upstream": "10.0.0.6:3105",
-      "containers": {
-        "app": {
-          "container_name": "kg-mcp",
-          "image": "ghcr.io/diegonmarcos/kg-mcp:latest",
-          "port": 3105,
-          "port_env": "MCP_HTTP_PORT",
-          "dns": "kg-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/cloud-cgc-mcp"
-          },
-          "healthcheck": "/mcp",
-          "monitoring": null,
-          "volumes": [
-            "./data:/data:ro"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "kg-mcp"
-      ],
-      "all_ports": [
-        "3105"
-      ],
-      "all_dns": [
-        "kg-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/cloud-cgc-mcp",
-          "wg_only": true
-        }
-      },
-      "declared_ports": {
-        "app": 3105
-      },
-      "health": {
-        "path": "/mcp"
-      },
-      "flake": "user-ai_kg-mcp"
     },
     "kg-store": {
       "category": "data",
