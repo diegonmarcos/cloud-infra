@@ -3,7 +3,7 @@
   "enabled": true,
   "repos": [
     { "path": "~/git/cloud-data", "visibility": "public",  "scan_history": true,  "scan_tree": true },
-    { "path": "~/git/cloud",      "visibility": "private", "scan_history": true,  "scan_tree": true },
+    { "path": "~/git/cloud",      "visibility": "public",  "scan_history": true,  "scan_tree": true },
     { "path": "~/git/tools",      "visibility": "public",  "scan_history": true,  "scan_tree": true },
     { "path": "~/git/unix",       "visibility": "public",  "scan_history": true,  "scan_tree": true },
     { "path": "~/git/front",      "visibility": "public",  "scan_history": true,  "scan_tree": true }
@@ -170,6 +170,8 @@
     { "id": "bcrypt_hash",          "severity": "warning",  "regex": "\\$2[aby]?\\$\\d{2}\\$" },
     { "id": "url_embedded_creds",   "severity": "warning",  "regex": "(postgres(ql)?|mysql|mongodb|redis|amqp|ftp|https?)://[A-Za-z0-9._%+-]+:[A-Za-z0-9._%+=!*-]+@[^\\s]+" },
     { "id": "generic_high_entropy", "severity": "warning",  "regex": "(?i)(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|bearer[_-]?token|client[_-]?secret)[\"'\\s]*[:=][\"'\\s]*[A-Za-z0-9+/=_-]{24,}" },
+    { "id": "ntfy_access_token",    "severity": "critical", "regex": "\\btk_[A-Za-z0-9]{20,}\\b" },
+    { "id": "bare_token_json",      "severity": "critical", "regex": "(?i)\"(token|access_token)\"\\s*:\\s*\"[A-Za-z0-9_-]{16,}\"" },
     { "id": "db_password_env",      "severity": "critical", "regex": "(?i)(mysql|postgres(ql)?|mariadb|mongo(db)?|redis|db|database|matomo|admin|root|user|app)_?(root_?)?password[\"'\\s]*[:=][\"'\\s]*[^'\"\\s${}]{6,}" },
     { "id": "generic_password_env", "severity": "warning",  "regex": "(?i)\\b(password|passwd|passphrase|secret)[\"'\\s]*[:=][\"'\\s]*[^'\"\\s${}]{8,}" },
     { "id": "basic_auth_header",    "severity": "critical", "regex": "(?i)authorization\\s*:\\s*basic\\s+[A-Za-z0-9+/=]{16,}" },

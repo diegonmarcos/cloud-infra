@@ -3114,7 +3114,7 @@
       },
       {
         "path": "~/git/cloud",
-        "visibility": "private",
+        "visibility": "public",
         "scan_history": true,
         "scan_tree": true
       },
@@ -3622,6 +3622,16 @@
         "id": "generic_high_entropy",
         "severity": "warning",
         "regex": "(?i)(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|secret[_-]?key|bearer[_-]?token|client[_-]?secret)[\"'\\s]*[:=][\"'\\s]*[A-Za-z0-9+/=_-]{24,}"
+      },
+      {
+        "id": "ntfy_access_token",
+        "severity": "critical",
+        "regex": "\\btk_[A-Za-z0-9]{20,}\\b"
+      },
+      {
+        "id": "bare_token_json",
+        "severity": "critical",
+        "regex": "(?i)\"(token|access_token)\"\\s*:\\s*\"[A-Za-z0-9_-]{16,}\""
       },
       {
         "id": "db_password_env",
