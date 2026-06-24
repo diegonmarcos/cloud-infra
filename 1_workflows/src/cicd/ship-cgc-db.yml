@@ -1,0 +1,76 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  cloud-cgc octocode DB — INCREMENTAL update on x86 → GHCR     │
+# │                                                              │
+# │  GHCR is the SINGLE upstream for both octocode DBs (semantic  │
+# │  FastEmbed vectors + GraphRAG graph). This job (x86):         │
+# │    pull last DB ← GHCR → octocode index (incremental, LLM via │
+# │    OpenRouter) → push updated DB → GHCR. oci-apps (arm) +     │
+# │    local just CONSUME by pulling the same image.              │
+# │                                                              │
+# │  ALL logic in 1_workflows/src/scripts/cloud-cgc-db-update.sh. │
+# │  Runs on x86 because the DB is arch-portable data; the octo-  │
+# │  code version is pinned in build.json so arm/local stay       │
+# │  schema-compatible. update = incremental, NOT a reindex.      │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "cgc-db (octocode incremental update → GHCR)"
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    # Mirrors runtime.octocode.update.schedule in build.json (kept in sync).
+    - cron: "0 4 * * *"
+
+concurrency:
+  group: cgc-db-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: octocode incremental → GHCR
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_ACTOR: ${{ github.actor }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      BJ: a_solutions/user-ai_cloud-cgc-mcp/build.json
+      REPOS_ROOT: ${{ github.workspace }}/_repos
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: GHCR login
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      # Pinned x86 octocode static binary, extracted from the GHCR image declared
+      # in build.json (runtime.octocode.octocode_images.x86) — single source of truth.
+      - name: Install pinned octocode (x86)
+        run: |
+          IMG=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
+          echo "octocode image: $IMG"
+          docker pull -q "$IMG"
+          sudo sh -c "docker run --rm --entrypoint sh '$IMG' -c 'cat \"\$(command -v octocode)\"' > /usr/local/bin/octocode"
+          sudo chmod +x /usr/local/bin/octocode
+          octocode --version
+
+      # Clone the indexed repos (data-driven local→github from build.json.repo_map)
+      # into REPOS_ROOT — what cloud-cgc-db-update.sh indexes incrementally.
+      - name: Clone indexed repos
+        run: |
+          mkdir -p "$REPOS_ROOT"
+          jq -r '.runtime.octocode.repo_map | to_entries[] | "\(.key) \(.value)"' "$BJ" |
+          while read -r local remote; do
+            echo "=== clone $local ← $remote ==="
+            git clone --depth 1 \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/diegonmarcos/${remote}.git" \
+              "$REPOS_ROOT/$local" || echo "WARN: clone $local failed (continuing)"
+          done
+
+      # All logic lives here: pull GHCR DB → incremental index → push GHCR.
+      - name: Incremental octocode update → GHCR
+        run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
