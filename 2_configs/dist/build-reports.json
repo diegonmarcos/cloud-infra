@@ -409,8 +409,8 @@
     }
   ],
   "services": {
-    "claude-api-superset": {
-      "name": "claude-api-superset",
+    "claude-superset-api": {
+      "name": "claude-superset-api",
       "vm": "oci-A1-f_0",
       "domain": null,
       "enabled": true,
@@ -862,17 +862,8 @@
         "path": "/health"
       }
     },
-    "db-agent": {
-      "name": "db-agent",
-      "vm": "all",
-      "domain": null,
-      "enabled": true,
-      "category": "data",
-      "ports": null,
-      "health": null
-    },
-    "kg-mcp": {
-      "name": "kg-mcp",
+    "cloud-cgc-mcp": {
+      "name": "cloud-cgc-mcp",
       "vm": "oci-A1-f_0",
       "domain": null,
       "enabled": true,
@@ -883,6 +874,15 @@
       "health": {
         "path": "/mcp"
       }
+    },
+    "db-agent": {
+      "name": "db-agent",
+      "vm": "all",
+      "domain": null,
+      "enabled": true,
+      "category": "data",
+      "ports": null,
+      "health": null
     },
     "kg-store": {
       "name": "kg-store",
@@ -1281,13 +1281,13 @@
   },
   "dns_services": [
     {
-      "service": "claude-api-superset",
-      "dns": "claude-api-superset.app"
+      "service": "claude-superset-api",
+      "dns": "claude-superset-api.app"
     },
     {
-      "service": "claude-api-superset",
+      "service": "claude-superset-api",
       "container": "app",
-      "dns": "claude-api-superset.app"
+      "dns": "claude-superset-api.app"
     },
     {
       "service": "c3-analytics-api",
@@ -1555,13 +1555,13 @@
       "dns": "introspect-proxy.app"
     },
     {
-      "service": "kg-mcp",
-      "dns": "kg-mcp.app"
+      "service": "cloud-cgc-mcp",
+      "dns": "cloud-cgc-mcp.app"
     },
     {
-      "service": "kg-mcp",
+      "service": "cloud-cgc-mcp",
       "container": "app",
-      "dns": "kg-mcp.app"
+      "dns": "cloud-cgc-mcp.app"
     },
     {
       "service": "kg-store",
@@ -2011,7 +2011,7 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
-          "claude-api-superset",
+          "claude-superset-api",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -2033,7 +2033,7 @@
           "openobserve",
           "umami",
           "crowdsec",
-          "kg-mcp",
+          "cloud-cgc-mcp",
           "kg-store",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
@@ -2087,8 +2087,8 @@
       }
     },
     "services": {
-      "claude-api-superset": {
-        "name": "claude-api-superset",
+      "claude-superset-api": {
+        "name": "claude-superset-api",
         "vm": "oci-A1-f_0",
         "domain": null,
         "enabled": true,
@@ -2540,17 +2540,8 @@
           "path": "/health"
         }
       },
-      "db-agent": {
-        "name": "db-agent",
-        "vm": "all",
-        "domain": null,
-        "enabled": true,
-        "category": "data",
-        "ports": null,
-        "health": null
-      },
-      "kg-mcp": {
-        "name": "kg-mcp",
+      "cloud-cgc-mcp": {
+        "name": "cloud-cgc-mcp",
         "vm": "oci-A1-f_0",
         "domain": null,
         "enabled": true,
@@ -2561,6 +2552,15 @@
         "health": {
           "path": "/mcp"
         }
+      },
+      "db-agent": {
+        "name": "db-agent",
+        "vm": "all",
+        "domain": null,
+        "enabled": true,
+        "category": "data",
+        "ports": null,
+        "health": null
       },
       "kg-store": {
         "name": "kg-store",
@@ -3021,8 +3021,9 @@
       "poll_interval_ms": 1000,
       "subject_prefix": "[url-health-e2e]",
       "jmap": {
-        "host": "jmap.diegonmarcos.com",
-        "port": 443,
+        "_comment": "WG-direct to Stalwart on oci-mail (10.0.0.3:2443) — same transport as the IMAP leg. The public jmap.diegonmarcos.com edge is unreachable/slow from the CI runner.",
+        "host": "10.0.0.3",
+        "port": 2443,
         "username": "me@diegonmarcos.com"
       },
       "api_health_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api/",
