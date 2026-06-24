@@ -19,6 +19,9 @@
 #  The DB (Lance + FastEmbed vectors) is arch-portable; octocode version is
 #  pinned in build.json so the schema stays compatible across x86/arm/local.
 #
+#  INCREMENTAL-ONLY: requires an existing GHCR DB base (seed it once via
+#  cloud-cgc-db-package.sh of an already-built DB, or a prod-volume snapshot).
+#  It refuses a from-scratch full build (octocode's GraphRAG full build is ~12h).
 #  Runtime the caller (YAML/DAG/shell) must provide: docker, git, jq + env:
 #    GITHUB_TOKEN (+ GITHUB_ACTOR) for GHCR/clone auth, OPENROUTER_API_KEY (opt).
 # ──────────────────────────────────────────────────────────────────────────
@@ -108,9 +111,17 @@ ensure_octocode
 ensure_ghcr_auth
 ensure_repos
 
-# 3) seed the incremental base from GHCR (no-op if not seeded yet → full build)
+# 3) restore the incremental base from GHCR. The producer is INCREMENTAL-ONLY —
+# it must NEVER full-build from scratch (octocode's GraphRAG full build is ~12h,
+# O(N²) relationships). The base is created ONCE by a seed: cloud-cgc-db-package.sh
+# of an already-built octocode DB, or a prod-volume snapshot. Refuse without a base.
 mkdir -p "$OCTO_HOME"
-sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || echo "[cgc-db] pull skipped — bootstrapping a fresh DB"
+sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || true
+if [ -z "$(ls -A "$OCTO_HOME" 2>/dev/null | grep -v '^config\.toml$')" ]; then
+  echo "::error::no GHCR DB base restored — refusing a from-scratch full build (~12h)."
+  echo "::error::seed once first: sh $HERE/cloud-cgc-db-package.sh <existing-octocode-home> $IMAGE $TAG"
+  exit 1
+fi
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
 # 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
