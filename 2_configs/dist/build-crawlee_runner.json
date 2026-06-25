@@ -55,7 +55,6 @@
         "app": 8085
       },
       "vm": "gcp-proxy",
-      "healthcheck": "/healthz",
       "domain": "api.diegonmarcos.com/c3a",
       "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
       "api": {
@@ -80,7 +79,6 @@
         "app": 8081
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "api.diegonmarcos.com/c3-infra-api",
       "description": "C3 REST API — Cloud Control Center Fastify API",
       "api": {
@@ -106,7 +104,6 @@
         "app": 3100
       },
       "vm": "oci-apps",
-      "healthcheck": "/mcp",
       "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
       "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
       "api": {
@@ -138,7 +135,6 @@
         "app": 8087
       },
       "vm": "oci-analytics",
-      "healthcheck": "/health",
       "domain": "api.diegonmarcos.com/pub",
       "description": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
       "api": {
@@ -163,7 +159,6 @@
         "app": 8082
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "api.diegonmarcos.com/c3-services-api",
       "description": "C3 Services REST API — service API gateway Fastify API",
       "api": {
@@ -189,7 +184,6 @@
         "app": 3101
       },
       "vm": "oci-apps",
-      "healthcheck": "/mcp",
       "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
       "api": {
         "has_api": false,
@@ -220,7 +214,6 @@
         "app": 3106
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "mcp.diegonmarcos.com",
       "description": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
       "api": {
@@ -252,7 +245,6 @@
         "app": 3104
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "mcp.diegonmarcos.com",
       "description": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
       "api": {
@@ -406,7 +398,6 @@
         "app": 3002
       },
       "vm": "oci-apps",
-      "healthcheck": "curl -f http://localhost:3002/",
       "domain": "git.diegonmarcos.com",
       "description": "Self-hosted Git service",
       "api": {
@@ -451,7 +442,6 @@
         "app": 6379
       },
       "vm": "gcp-proxy",
-      "healthcheck": "redis-cli ping",
       "description": "In-memory data store",
       "api": {
         "has_api": false,
@@ -484,17 +474,6 @@
         "app": 8080
       },
       "vm": "oci-apps",
-      "healthcheck": {
-        "test": [
-          "CMD",
-          "wget",
-          "-qO-",
-          "http://127.0.0.1:8080/"
-        ],
-        "interval": "30s",
-        "timeout": "5s",
-        "retries": 3
-      },
       "domain": "mesh.diegonmarcos.com",
       "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
       "api": {
@@ -543,7 +522,6 @@
         "app": 8070
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "workflows.diegonmarcos.com",
       "description": "Dagu - Lightweight DAG-based workflow scheduler",
       "api": {
@@ -567,7 +545,6 @@
         "app": 8086
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "db.diegonmarcos.com",
       "description": "DBGate - Universal database manager for all cloud databases",
       "api": {
@@ -586,7 +563,6 @@
         "app": 8084
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "analytics.diegonmarcos.com/matomo",
       "description": "Matomo hybrid analytics (oci-apps)",
       "api": {
@@ -610,7 +586,6 @@
         "app": 8090
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "rss.diegonmarcos.com",
       "description": "Push notification server",
       "api": {
@@ -657,7 +632,6 @@
         "db": 5442
       },
       "vm": "oci-apps",
-      "healthcheck": "curl -sf http://localhost:3000/api/heartbeat || exit 1",
       "domain": "analytics.diegonmarcos.com",
       "description": "Umami Analytics - lightweight privacy-focused web analytics",
       "api": {
@@ -680,7 +654,6 @@
         "redis": 6380
       },
       "vm": "gcp-proxy",
-      "healthcheck": "/api/health",
       "domain": "auth.diegonmarcos.com",
       "description": "SSO and 2FA authentication portal",
       "api": {
@@ -765,7 +738,6 @@
         "app": 8088
       },
       "vm": "oci-apps",
-      "healthcheck": "cmd",
       "domain": "crowdsec.diegonmarcos.com",
       "description": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired.",
       "api": {
@@ -782,7 +754,6 @@
         "app": 4182
       },
       "vm": "gcp-proxy",
-      "healthcheck": "/health",
       "description": "OIDC token introspection sidecar for Caddy Bearer auth",
       "api": {
         "has_api": true,
@@ -809,7 +780,6 @@
         "proxy": 8789
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
       "api": {
         "has_api": false,
@@ -827,7 +797,6 @@
         "app": 3105
       },
       "vm": "oci-apps",
-      "healthcheck": "/mcp",
       "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
       "api": {
         "has_api": false,
@@ -924,7 +893,6 @@
         "app": 3108
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "description": "Central SQLite store of all Claude Code session transcripts — push/list/fetch so a session started on one device can be resumed from any other. WG-only sidecar on oci-apps; Node 22 built-in node:sqlite (phone-portable, no native deps).",
       "api": {
         "has_api": false,
@@ -943,7 +911,6 @@
         "db": 5435
       },
       "vm": "oci-apps",
-      "healthcheck": "/api/v4/system/ping",
       "domain": "chat.diegonmarcos.com",
       "description": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
       "api": {
@@ -967,7 +934,6 @@
         "app": 8889
       },
       "vm": "oci-mail",
-      "healthcheck": "/",
       "domain": "webmail.diegonmarcos.com",
       "description": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
       "api": {
@@ -1103,7 +1069,6 @@
         "app": 8008
       },
       "vm": "oci-apps",
-      "healthcheck": "/_matrix/client/versions",
       "domain": "matrix.diegonmarcos.com",
       "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
       "api": {
@@ -1127,7 +1092,6 @@
         "app": 8083
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "messenger.diegonmarcos.com",
       "description": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
       "api": {
@@ -1163,7 +1127,6 @@
         "app": 8888
       },
       "vm": "oci-mail",
-      "healthcheck": "/",
       "domain": "webmail.diegonmarcos.com",
       "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
       "api": {
@@ -1255,7 +1218,6 @@
         "app": 2443
       },
       "vm": "oci-mail",
-      "healthcheck": "/",
       "domain": "jmap.diegonmarcos.com",
       "description": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
       "api": {
@@ -1344,7 +1306,6 @@
         "minio_console": 9001
       },
       "vm": "oci-apps",
-      "healthcheck": "wget -qO /dev/null http://127.0.0.1:3000/health || exit 1",
       "domain": "api.diegonmarcos.com",
       "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
       "api": {
@@ -1368,7 +1329,6 @@
         "app": 8340
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "api.diegonmarcos.com/fin-api",
       "description": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
       "api": {
@@ -1392,7 +1352,6 @@
         "app": 3013
       },
       "vm": "oci-apps",
-      "healthcheck": "/api/v1/status",
       "domain": "photos.diegonmarcos.com",
       "description": "PhotoPrism AI-powered photo management (oci-flex-1)",
       "api": {
@@ -1431,7 +1390,6 @@
         "app": 5232
       },
       "vm": "oci-apps",
-      "healthcheck": "/.web/",
       "domain": "cal.diegonmarcos.com",
       "description": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
       "api": {
@@ -1455,7 +1413,6 @@
         "app": 8443
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "ide.diegonmarcos.com",
       "description": "VS Code IDE (ide.diegonmarcos.com)",
       "api": {
@@ -1474,7 +1431,6 @@
         "app": 5233
       },
       "vm": "oci-apps",
-      "healthcheck": "/.web/",
       "domain": "contacts.diegonmarcos.com",
       "description": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
       "api": {
@@ -1499,18 +1455,6 @@
         "db": 5436
       },
       "vm": "oci-apps",
-      "healthcheck": {
-        "test": [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://127.0.0.1:3012/',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
-        ],
-        "interval": "30s",
-        "timeout": "10s",
-        "retries": 3,
-        "start_period": "40s"
-      },
       "domain": "pad.diegonmarcos.com",
       "description": "Etherpad collaborative editor",
       "api": {
@@ -1532,7 +1476,6 @@
         "app": 3015
       },
       "vm": "oci-apps",
-      "healthcheck": "/health",
       "domain": "files.diegonmarcos.com",
       "description": "FileBrowser web file manager (NEW - not deployed yet)",
       "api": {
@@ -1556,7 +1499,6 @@
         "app": 3011
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "sheets.diegonmarcos.com",
       "description": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
       "api": {
@@ -1581,7 +1523,6 @@
         "db": 5439
       },
       "vm": "oci-apps",
-      "healthcheck": "/",
       "domain": "doc.diegonmarcos.com",
       "description": "Collaborative markdown editor",
       "api": {
@@ -1609,7 +1550,6 @@
         "valkey": 6379
       },
       "vm": "oci-apps",
-      "healthcheck": "wget -q --spider http://localhost:8080/api/healthz || exit 1",
       "domain": "paca.diegonmarcos.com",
       "description": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
       "api": {
@@ -1646,7 +1586,6 @@
         "app": 8880
       },
       "vm": "oci-apps",
-      "healthcheck": "/alive",
       "domain": "vault.diegonmarcos.com",
       "description": "Bitwarden password manager",
       "api": {
