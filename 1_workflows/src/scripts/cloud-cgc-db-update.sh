@@ -106,6 +106,37 @@ exclude_submodules() {
   done
 }
 
+# Propagate the freshly-pushed DB to the DEPLOYED consumer: SSH to the deploy
+# host and run cloud-cgc-db-restore.sh there (pull GHCR DB → restore the
+# octocode_db volume → restart the MCP container). This is what GUARANTEES the
+# deployed oci-apps server actually serves the new DB after every update — the
+# restore logic is streamed (sh -s), so nothing has to be pre-deployed. Data-
+# driven (host/volume/container from build.json). Non-fatal if unreachable
+# (e.g. mesh down). Caller provides WG + an SSH alias for db_publish.host.
+propagate_to_host() {
+  _host=$(jq -r '.db_publish.host // empty' "$BJ")
+  [ -n "$_host" ] && [ "$_host" != "local" ] || { echo "[cgc-db] no deploy host — skip propagate"; return 0; }
+  command -v ssh >/dev/null 2>&1 || { echo "[cgc-db] no ssh — skip propagate"; return 0; }
+  _vol=$(jq -r '.runtime.octocode.db_volume'   "$BJ")
+  _ctr=$(jq -r '.containers.app.container_name' "$BJ")
+  # Resolve the SSH target data-driven: in CI, build-gha.json maps the alias →
+  # user@wg_ip (no ~/.ssh/config needed); locally, fall back to the ssh alias.
+  _gha="$ROOT/2_configs/dist/build-gha.json"
+  _target="$_host"
+  if [ -f "$_gha" ]; then
+    _wgip=$(jq -r --arg h "$_host" '.vms[$h].wg_ip // empty'  "$_gha" 2>/dev/null)
+    _user=$(jq -r --arg h "$_host" '.vms[$h].user // "ubuntu"' "$_gha" 2>/dev/null)
+    [ -n "$_wgip" ] && _target="$_user@$_wgip"
+  fi
+  echo "[cgc-db] propagate → $_target (pull $IMAGE:$TAG + restart $_ctr)"
+  # shellcheck disable=SC2086
+  ssh ${CGC_SSH_OPTS:-} "$_target" \
+      "DB_IMAGE='$IMAGE:$TAG' DB_VOLUME='$_vol' MCP_CONTAINER='$_ctr' NTFY_URL='${NTFY_URL:-}' sh -s" \
+      < "$HERE/cloud-cgc-db-restore.sh" \
+    && echo "[cgc-db] propagate OK — $_host now serving the new DB" \
+    || echo "[cgc-db] WARN propagate to $_host failed (host unreachable / mesh down)"
+}
+
 # ── run ───────────────────────────────────────────────────────────────────
 ensure_octocode
 ensure_ghcr_auth
@@ -150,4 +181,9 @@ done
 
 # 5) publish the updated DB back to GHCR (single upstream for all consumers)
 sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+
+# 6) GUARANTEE the deployed consumer (oci-apps) pulls the new DB + restarts,
+#    so the live server serves it immediately — not only on the next DAG tick.
+propagate_to_host
+
 echo "[cgc-db] UPDATE COMPLETE → $IMAGE:$TAG"
