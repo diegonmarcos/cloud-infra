@@ -34,10 +34,14 @@ BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
 IMAGE=$(jq -r   '.db_publish.image'                  "$BJ")
 TAG=$(jq -r     '.db_publish.tag // "latest"'        "$BJ")
 OCTO_HOME="${OCTOCODE_HOME:-$HOME/.local/share/octocode}"
-# DEDICATED clone root — NEVER the dev tree (~/git). The producer owns these
-# checkouts so it can reset --hard to the fresh origin HEAD without ever
-# touching your working copies. Override with OCTOCODE_REPOS_ROOT / REPOS_ROOT.
-REPOS_ROOT="${REPOS_ROOT:-${OCTOCODE_REPOS_ROOT:-$HOME/.cache/cgc-repos}}"
+# FIXED clone root, identical everywhere. octocode keys each project by its
+# git-root path STRING, so to do incremental ON TOP of the existing GHCR/prod
+# DB (which was built in the octocode container at /repos), the producer MUST
+# clone+index at the SAME path. Anything $HOME-relative (varies per machine →
+# /home/diego vs /home/runner) creates a DISCONNECTED graph — the bug that made
+# the 357-node orphan instead of extending the 2148-node base. Data-driven from
+# build.json runtime.octocode.repos_path; NEVER the dev tree (~/git).
+REPOS_ROOT="${REPOS_ROOT:-${OCTOCODE_REPOS_ROOT:-$(jq -r '.runtime.octocode.repos_path // "/repos"' "$BJ")}}"
 REPOS=$(jq -r   '.runtime.octocode.index_repos[]'    "$BJ")
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
@@ -72,7 +76,8 @@ ensure_ghcr_auth() {
 #    Data-driven local→github from build.json.repo_map. clone if missing, else
 #    fetch + reset --hard to the fetched tip. Safe (dedicated clones, not dev tree).
 ensure_repos() {
-  mkdir -p "$REPOS_ROOT"
+  # /repos is root-owned on a fresh runner — create + own it (sudo) if needed.
+  mkdir -p "$REPOS_ROOT" 2>/dev/null || { sudo mkdir -p "$REPOS_ROOT" && sudo chown "$(id -un):$(id -gn)" "$REPOS_ROOT"; }
   jq -r '.runtime.octocode.repo_map | to_entries[] | "\(.key) \(.value)"' "$BJ" | while read -r lname remote; do
     [ -n "$lname" ] || continue
     d="$REPOS_ROOT/$lname"
