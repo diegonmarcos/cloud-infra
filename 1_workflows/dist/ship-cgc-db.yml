@@ -60,7 +60,12 @@ jobs:
 
       # Bring up the gha-runner WG peer → gcp-proxy hub (data-driven from
       # config.json). Reusable across all ship workflows — no inline WG logic.
+      # NON-FATAL: WG is only needed for the final propagate-to-oci-apps. The
+      # core job (pull GHCR DB → incremental index → push GHCR) needs no mesh,
+      # so a WG failure must not block the DB update — propagate degrades to a
+      # warning and oci-apps catches up via the pull DAG.
       - name: WireGuard up
+        continue-on-error: true
         run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
 
       # SSH key for oci-apps → a file; the update script reads CGC_SSH_OPTS and
