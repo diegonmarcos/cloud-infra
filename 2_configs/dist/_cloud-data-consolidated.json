@@ -156,7 +156,6 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
-        "claude-superset-api",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -178,6 +177,7 @@
         "openobserve",
         "umami",
         "crowdsec",
+        "claude-superset-api",
         "cloud-cgc-mcp",
         "kg-store",
         "ollama-hai",
@@ -732,83 +732,6 @@
     }
   },
   "services": {
-    "claude-superset-api": {
-      "category": "agi",
-      "vm": "oci-A1-f_0",
-      "folder": "ad-agi_claude-superset-api",
-      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
-      "enabled": true,
-      "port": 3117,
-      "dns": "claude-superset-api.app",
-      "upstream": "10.0.0.6:3117",
-      "containers": {
-        "app": {
-          "container_name": "claude-superset-api",
-          "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
-          "port": 3117,
-          "port_env": "BRIDGE_PORT",
-          "dns": "claude-superset-api.app",
-          "public": false,
-          "healthcheck": "/health",
-          "monitoring": null,
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "claude-superset-api"
-      ],
-      "all_ports": [
-        "3117"
-      ],
-      "all_dns": [
-        "claude-superset-api.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false
-      },
-      "declared_ports": {
-        "app": 3117,
-        "ollama": 11436,
-        "headroom": 8788,
-        "proxy": 8789
-      },
-      "health": {
-        "path": "/health"
-      },
-      "runtime": {
-        "model": "claude-sonnet-4-6",
-        "max_concurrency": 12,
-        "call_timeout_ms": 180000,
-        "headroom": {
-          "enabled": true,
-          "savings_profile": "agent-90",
-          "min_tokens_to_compress": 250,
-          "proxy_enabled": true,
-          "proxy_backend": "anthropic"
-        }
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/health"
-        ]
-      },
-      "secret_env_vars": [
-        "AUTHELIA_OIDC_TOKEN_CLAUDE_ADMIN"
-      ]
-    },
     "c3-analytics-api": {
       "category": "obs",
       "vm": "gcp-E2-f_0",
@@ -4770,6 +4693,84 @@
         "auth": "bearer"
       }
     },
+    "claude-superset-api": {
+      "category": "agi",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_claude-superset-api",
+      "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+      "enabled": true,
+      "flake": "user-ai_claude-superset-api",
+      "port": 3117,
+      "dns": "claude-superset-api.app",
+      "upstream": "10.0.0.6:3117",
+      "containers": {
+        "app": {
+          "container_name": "claude-superset-api",
+          "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
+          "port": 3117,
+          "port_env": "BRIDGE_PORT",
+          "dns": "claude-superset-api.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "claude-superset-api"
+      ],
+      "all_ports": [
+        "3117"
+      ],
+      "all_dns": [
+        "claude-superset-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3117,
+        "ollama": 11436,
+        "headroom": 8788,
+        "proxy": 8789
+      },
+      "health": {
+        "path": "/health"
+      },
+      "runtime": {
+        "model": "claude-sonnet-4-6",
+        "max_concurrency": 12,
+        "call_timeout_ms": 180000,
+        "headroom": {
+          "enabled": true,
+          "savings_profile": "agent-90",
+          "min_tokens_to_compress": 250,
+          "proxy_enabled": true,
+          "proxy_backend": "anthropic"
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ]
+      },
+      "secret_env_vars": [
+        "AUTHELIA_OIDC_TOKEN_CLAUDE_ADMIN"
+      ]
+    },
     "cloud-cgc-mcp": {
       "category": "obs",
       "vm": "oci-A1-f_0",
@@ -8658,12 +8659,6 @@
     "internal_zones": [],
     "derived_entries": [
       {
-        "name": "claude-superset-api.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "claude-superset-api"
-      },
-      {
         "name": "c3-analytics-api.app",
         "type": "A",
         "value": "10.0.0.1",
@@ -8836,6 +8831,12 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "introspect-proxy"
+      },
+      {
+        "name": "claude-superset-api.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "claude-superset-api"
       },
       {
         "name": "cloud-cgc-mcp.app",
@@ -9193,7 +9194,6 @@
         "is_public_ingress": false,
         "idle_shutdown": null,
         "containers": [
-          "claude-superset-api",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -9215,6 +9215,7 @@
           "openobserve",
           "umami",
           "crowdsec",
+          "claude-superset-api",
           "cloud-cgc-mcp",
           "kg-store",
           "ollama-hai",
@@ -9486,11 +9487,6 @@
       }
     },
     "services": {
-      "claude-superset-api": {
-        "dir": "ad-agi_claude-superset-api",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "c3-analytics-api": {
         "dir": "infra-api_c3-analytics-api",
         "vm": "gcp-proxy",
@@ -9649,6 +9645,11 @@
       "introspect-proxy": {
         "dir": "infra-sec_introspect-proxy",
         "vm": "gcp-proxy",
+        "has_docker": true
+      },
+      "claude-superset-api": {
+        "dir": "user-ai_claude-superset-api",
+        "vm": "oci-apps",
         "has_docker": true
       },
       "cloud-cgc-mcp": {
