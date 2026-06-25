@@ -6,12 +6,12 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1959,
+    "files": 1962,
     "by_lang": {
       "nix": 420,
       "sh": 320,
       "rust": 445,
-      "ts": 302,
+      "ts": 305,
       "js": 16,
       "py": 456
     },
@@ -20,9 +20,9 @@
       "script": 103,
       "shell": 207,
       "rust-module": 439,
-      "engine": 30,
+      "engine": 31,
       "nix-module": 283,
-      "module": 182,
+      "module": 184,
       "entrypoint": 23,
       "compose": 65,
       "mcp-tool": 90,
@@ -2780,7 +2780,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -2887,10 +2886,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -5256,7 +5254,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -5363,10 +5360,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -7823,7 +7819,8 @@
       "imports": [
         "fs",
         "path",
-        "yaml"
+        "yaml",
+        "./resolve-service-dir"
       ],
       "symbols": [
         "parseAuthelia(solutionsDir: string)"
@@ -7874,7 +7871,8 @@
       ],
       "imports": [
         "fs",
-        "path"
+        "path",
+        "./resolve-service-dir"
       ],
       "symbols": [
         "parseCaddyfile(solutionsDir: string)",
@@ -7926,7 +7924,8 @@
       ],
       "imports": [
         "fs",
-        "path"
+        "path",
+        "./resolve-service-dir"
       ],
       "symbols": [
         "parseDNSZones(solutionsDir: string)"
@@ -7961,13 +7960,31 @@
       "imports": [
         "fs",
         "path",
-        "yaml"
+        "yaml",
+        "./resolve-service-dir"
       ],
       "symbols": [
         "parseNtfy(solutionsDir: string)",
         "extractTopicsFromScanner(solutionsDir: string)",
         "extractPublisherMap(solutionsDir: string)",
         "extractUsersFromCompose(solutionsDir: string)"
+      ]
+    },
+    {
+      "path": "2_configs/src/engines/parsers/resolve-service-dir.ts",
+      "lang": "ts",
+      "role": "engine",
+      "exports": [
+        "resolveServiceDir",
+        "svcDir"
+      ],
+      "imports": [
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "resolveServiceDir(solutionsDir: string, serviceName: string)",
+        "svcDir(solutionsDir: string, serviceName: string, fallbackDir: string)"
       ]
     },
     {
@@ -12230,6 +12247,7 @@
       "imports": [
         "fastify",
         "../../registry/index.js",
+        "../../registry/reach.js",
         "../../shared/http.js"
       ],
       "symbols": [
@@ -12303,6 +12321,25 @@
       "symbols": [
         "searchPublicRegistry(query: string, limit = 10)",
         "getPublicServer(serverName: string, version = \"latest\")"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-services-api/src/code/registry/reach.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getReachUrl",
+        "reachServiceNames"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "pickAppPort(ports: Record<string, number> | undefined)",
+        "loadReachMap()",
+        "getReachUrl(name: string)",
+        "reachServiceNames()"
       ]
     },
     {
@@ -12985,6 +13022,25 @@
       "symbols": [
         "searchPublicRegistry(query: string, limit = 10)",
         "getPublicServer(serverName: string, version = \"latest\")"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/reach.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getReachUrl",
+        "reachServiceNames"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "pickAppPort(ports: Record<string, number> | undefined)",
+        "loadReachMap()",
+        "getReachUrl(name: string)",
+        "reachServiceNames()"
       ]
     },
     {

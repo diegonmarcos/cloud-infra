@@ -18,7 +18,8 @@ on:
   workflow_dispatch: {}
   schedule:
     # Mirrors runtime.octocode.update.schedule in build.json.
-    - cron: "0 4 * * *"
+    # 01:00 UTC = 03:00 Madrid (CEST, UTC+2 in summer).
+    - cron: "0 1 * * *"
 
 # Shares the single gha-runner WireGuard peer slot on the gcp-proxy hub with the
 # other ship workflows — serialise so a concurrent Ship can't kick our tunnel.
