@@ -4863,7 +4863,7 @@
             "incremental": true,
             "use_llm": false,
             "llm_model": "openrouter:openai/gpt-4o-mini",
-            "schedule": "0 4 * * *"
+            "schedule": "0 1 * * *"
           },
           "llm": {
             "_comment": "octocode GraphRAG LLM -> claude-api-superset (kg-bridge successor), TWO providers with fallback. openai:* reads OPENAI_API_URL -> superset /v1 (3117); ollama:* reads OLLAMA_API_URL -> superset Ollama mimic (10.0.0.6:11436 — the superset binds the WG IP, not localhost). reindex.sh forces use_llm=true and tries `models` in order, falling back if a provider makes 0 superset /health calls. api_key is a throwaway.",
@@ -5688,6 +5688,11 @@
       },
       "ollama": {
         "model": "deepseek-r1:14b-qwen-distill-q8_0"
+      },
+      "sidebar_categories": {
+        "ntfy": "NTFY",
+        "agents": "AGENTS",
+        "default_channels": "Projects"
       },
       "api": {
         "has_api": true,
@@ -9081,6 +9086,149 @@
     },
     "authelia": {
       "acl": []
+    },
+    "ntfy": {
+      "topics": [
+        {
+          "name": "all",
+          "category": "universal",
+          "desc": "Every message from every channel",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "dev_commits",
+          "category": "dev",
+          "desc": "Push/commit events",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "dev_pull-requests",
+          "category": "dev",
+          "desc": "PR open/close/merge events",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "dev_releases",
+          "category": "dev",
+          "desc": "Issues, releases, tags, forks",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "deploy_ship",
+          "category": "deploy",
+          "desc": "build.sh ship / GHA deploys",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "deploy_containers",
+          "category": "deploy",
+          "desc": "Container restarts, image pulls",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "health_mesh",
+          "category": "health",
+          "desc": "WireGuard mesh connectivity",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "health_endpoints",
+          "category": "health",
+          "desc": "HTTP service endpoint checks",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "health_dns",
+          "category": "health",
+          "desc": "DNS resolution checks",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "health_resources",
+          "category": "health",
+          "desc": "VM disk/memory/CPU usage",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "health_containers",
+          "category": "health",
+          "desc": "Docker container health",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "ops_backups",
+          "category": "ops",
+          "desc": "Backup freshness status",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "ops_reports",
+          "category": "ops",
+          "desc": "Daily/weekly summaries",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "sec_audit",
+          "category": "sec",
+          "desc": "Auth log analysis & brute-force detection",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "sec_tls",
+          "category": "sec",
+          "desc": "TLS certificate expiry warnings",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "sec_connections",
+          "category": "sec",
+          "desc": "SSH/sudo/connection events across VMs",
+          "publishers": [
+            "system"
+          ]
+        },
+        {
+          "name": "sec_yara",
+          "category": "sec",
+          "desc": "YARA malware scanner alerts & status",
+          "publishers": [
+            "system"
+          ]
+        }
+      ],
+      "users": [],
+      "enable_login": false,
+      "auth_default_access": "read-write"
     }
   },
   "_home_manager": {
