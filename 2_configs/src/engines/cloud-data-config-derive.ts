@@ -549,6 +549,22 @@ function deriveCaddy(c: any): DerivedFile[] {
       ...(wgOnly(proxy) ? { wg_only: true } : {}),
       comment: svc.description,
     });
+    // extra_paths: additional routes on the same parent_domain that proxy to a
+    // different upstream service. Declared in build.json proxy.primary.extra_paths[].
+    // upstream_service resolves to the named service's upstream (data-driven, no IPs).
+    for (const ep of (proxy.extra_paths ?? [])) {
+      if (!ep.base_path || !ep.upstream_service) continue;
+      const epSvc = (services as Record<string, any>)[ep.upstream_service];
+      if (!epSvc?.upstream) continue;
+      const epUpstream = rewriteUpstreamForCaddy(epSvc.vm, epSvc.upstream);
+      if (!epUpstream) continue;
+      pathGroups[pd].paths.push({
+        base_path: ep.base_path,
+        upstream: epUpstream,
+        ...(wgOnly(ep) ? { wg_only: true } : {}),
+        comment: `${ep.upstream_service} proxy (extra_path declared by ${svc.folder ?? "?"})`,
+      });
+    }
   }
 
   // Also scan flat routes for path-based entries that services don't have
@@ -2643,10 +2659,21 @@ function deriveServiceConnections(c: any): DerivedFile {
       }
     }
 
+    // Liveness probe target: app container's healthcheck path (fall back to any
+    // container that declares one). Lets the c3-services-api /reach endpoint probe
+    // ANY container, not just API/MCP services. null when none declared.
+    const appHc =
+      (svc.containers?.app?.healthcheck as string | undefined) ??
+      (Object.values((svc.containers ?? {}) as Record<string, any>).find(
+        (ct: any) => ct?.healthcheck,
+      ) as any)?.healthcheck ??
+      null;
+
     svcMap[svcName] = {
       ip: vmEntry.wg_ip,
       ports,
       vm: vmEntry.ssh_alias ?? svc.vm,
+      ...(appHc ? { healthcheck: appHc } : {}),
       ...(svc.domain ? { domain: svc.domain } : {}),
       ...(svc.description ? { description: svc.description } : {}),
       ...(svc.api ? { api: svc.api } : {}),
