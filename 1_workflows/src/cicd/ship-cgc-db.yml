@@ -1,15 +1,18 @@
 # ┌──────────────────────────────────────────────────────────────┐
 # │  cloud-cgc octocode DB — INCREMENTAL update on x86 → GHCR     │
+# │  → and PROPAGATE to the deployed oci-apps server.             │
 # │                                                              │
-# │  This workflow carries ZERO logic — it only provides the     │
-# │  runtime (checkout + secrets) and TRIGGERS the one universal  │
-# │  script. ALL routines (octocode install, GHCR auth, fresh    │
-# │  repo checkout, incremental index, package, push) live in    │
-# │  1_workflows/src/scripts/cloud-cgc-db-update.sh and run       │
-# │  identically anywhere (GHA / VM / local).                    │
+# │  This workflow carries ZERO business logic — it only          │
+# │  provisions runtime (checkout, deps, WireGuard, SSH key,      │
+# │  secrets) and TRIGGERS the one universal script. ALL routines │
+# │  (octocode install, GHCR auth, fresh repo checkout,           │
+# │  incremental index, package, push, AND propagate-to-oci-apps) │
+# │  live in 1_workflows/src/scripts/cloud-cgc-db-update.sh and   │
+# │  run identically anywhere. WireGuard is needed so the         │
+# │  producer can SSH into oci-apps to pull the new DB + restart. │
 # └──────────────────────────────────────────────────────────────┘
 
-name: "cgc-db (octocode incremental update → GHCR)"
+name: "cgc-db (octocode incremental update → GHCR → oci-apps)"
 
 on:
   workflow_dispatch: {}
@@ -17,13 +20,15 @@ on:
     # Mirrors runtime.octocode.update.schedule in build.json.
     - cron: "0 4 * * *"
 
+# Shares the single gha-runner WireGuard peer slot on the gcp-proxy hub with the
+# other ship workflows — serialise so a concurrent Ship can't kick our tunnel.
 concurrency:
-  group: cgc-db-update
+  group: ship-wg-runner
   cancel-in-progress: false
 
 jobs:
   update:
-    name: octocode incremental → GHCR
+    name: octocode incremental → GHCR → oci-apps
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
@@ -33,7 +38,29 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_ACTOR: ${{ github.actor }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
     steps:
-      - uses: actions/checkout@v4   # only to obtain the script + build.json
-      - name: cgc-db incremental update (all logic in the script)
+      - uses: actions/checkout@v4   # obtain the scripts + build.json + config.json
+
+      - name: Install runtime deps (wireguard-tools, jq)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
+
+      # Bring up the gha-runner WG peer → gcp-proxy hub (data-driven from
+      # config.json). Reusable across all ship workflows — no inline WG logic.
+      - name: WireGuard up
+        run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
+
+      # SSH key for oci-apps → a file; the update script reads CGC_SSH_OPTS and
+      # resolves the host's WG IP/user from build-gha.json itself (data-driven).
+      - name: Provision SSH key for propagation
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
+
+      # All logic lives here: octocode install → fresh repos → incremental index
+      # → push GHCR → propagate (SSH oci-apps → cloud-cgc-db-restore.sh).
+      - name: cgc-db incremental update + propagate
+        env:
+          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
