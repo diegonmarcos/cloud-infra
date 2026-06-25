@@ -157,3 +157,48 @@ gating the entrypoint reset.
   `b_infra/**` changes; a wg-public *client* add changes `2_configs/dist` (+ once Option A
   lands, `b_infra/**/dist`), so verify the gate still triggers — it should, since Option A makes
   gen-configs commit the `b_infra/**/dist` delta.
+
+---
+
+## 7. UPDATE 2026-06-25 — canonical fix landed; second gap found
+
+**Shipped & verified:** the workspace-mount fix (`2c6dce0ca`) works — gen-configs now
+**commits** (`d5b4652e4 ci(gen-configs): refresh dist/…`) and the committed **canonical**
+`2_configs/dist/_cloud-data-consolidated.json` now carries
+`native.wireguard_public.clients.surface.wg_public_key = hG1x8b4J…` (REAL). Root cause #1 fixed.
+
+**Second gap (still open):** the HM build reads the **per-VM**
+`b_infra/nixhm-sudo-<vm>/dist/pilot/_cloud-data-consolidated.json`, a **committed regular file
+dated Jun-10** that does *not* carry the wg-public section / surface. The propagation chain is:
+
+```
+2_configs/dist/_cloud-data-consolidated.json            (canonical — now has surface)
+  ▲ symlink  b_infra/_shared/modules/_cloud-data-consolidated.json
+  ▲ symlink  b_infra/_shared/vm-pilot/src/modules/_cloud-data-consolidated.json   (src — current)
+  ── cp -rL (step_build) ──▶  b_infra/nixhm-sudo-<vm>/dist/pilot/_cloud-data-consolidated.json
+                              (per-VM dist — STALE Jun-10, what the HM flake reads)
+```
+
+`cloud-ship-nix-homemanager-step-pull-pilot.sh` only *checks* the `src/pilot` symlink; the actual
+copy is `cp -rL` in **step_build**, which should resolve the symlink to the (now-surface) canonical.
+Yet a fresh HM ship after the canonical fix produced **gen 93 with no surface** (and the job's
+generation switched but content was identical to gen 92 → a no-op rebuild). So in CI the per-VM
+`dist/pilot` consolidated the HM flake reads is NOT being refreshed from the fixed canonical.
+
+**Hypotheses to check in a CI run (could not be done remotely):**
+1. `step_build`'s `cp -rL` does not overwrite the committed `dist/pilot/_cloud-data-consolidated.json`
+   (e.g. copies into a different path, or the flake reads the committed in-tree file directly).
+2. The committed per-VM `dist/pilot` snapshot should not be a stale regular file at all — it should
+   be a **symlink to the canonical** (like `_shared/modules/_cloud-data-consolidated.json` is), or be
+   regenerated+committed by gen-configs (it currently isn't — `2_configs/build.sh all` writes the
+   canonical, not the per-VM `dist/pilot`).
+
+**Likely fix (needs verification):** either (a) make `nixhm-sudo-<vm>/dist/pilot/_cloud-data-consolidated.json`
+a symlink to `../../../2_configs/dist/_cloud-data-consolidated.json` (always current, matches the
+existing `_shared/modules` pattern), or (b) have gen-configs/step_build regenerate that per-VM file
+from the canonical and commit it. Confirm by inspecting the file the HM `nix build` actually reads
+(add a `cat`/`jq .native|keys` debug line to step_build for one run).
+
+**Engine fixes shipped this investigation:**
+- `dc5cb8c5` — retry HM activation on transient SSH tunnel drop (exit 255).
+- `2c6dce0c` — mount runner workspace so gen-configs commits the regenerated dist (canonical fix).
