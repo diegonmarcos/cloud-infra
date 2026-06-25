@@ -84,24 +84,19 @@ jobs:
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           # Mount the runner's checkout AS the container's cloud repo so the
           # derive writes the regenerated dist/ INTO the workspace the commit
-          # step stages. Without this mount, gen-configs runs in the image-baked
+          # step stages. Without this, gen-configs runs on the image-baked
           # /root/git/cloud and its output is discarded with the --rm container
-          # → the commit step always saw "nothing to commit", so newly-declared
-          # cloud-data (e.g. wg-public clients + their vault keys) never reached
-          # origin and the running VMs read stale dist. The entrypoint's
-          # `git nuke` resets this mount to origin/main first (fine — gen-configs
-          # derives from canonical main), then the derive overwrites dist/.
-          # Root cause + alternatives: 0_tasks/PLAN_gen-configs-dist-propagation-fix.md
+          # → the commit step saw "nothing to commit", so newly-declared
+          # cloud-data (e.g. wg-public clients + vault keys) never reached origin.
+          # See 0_tasks/PLAN_gen-configs-dist-propagation-fix.md.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             --cap-add NET_ADMIN \
             -v "$HOME/git/vault:/root/git/vault:ro" \
             -v "$GITHUB_WORKSPACE:/root/git/cloud" \
             -e CLOUD_DATA_DEPLOY_KEY \
             cloud-builder gen-configs
-          # The container runs the derive as root inside the mounted workspace;
-          # reclaim ownership so the runner's `git add`/`commit` (next step) can
-          # write to .git (the container's root-owned git ops on the mounted
-          # .git would otherwise trip "dubious ownership" / EACCES on push).
+          # The container runs as root inside the mounted workspace; reclaim
+          # ownership so the runner's git add/commit (next step) can write .git.
           sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
 
       # Commit + push the regenerated dist/ back to main.
