@@ -42,7 +42,10 @@ jobs:
   update:
     name: octocode incremental → GHCR → oci-apps
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 350 < GHA's 360-min hard cap. Structural incremental (use_llm=false) is
+    # minutes, but the headroom guarantees a slow run is never silently killed
+    # mid-index (the 90-min cap cancelled run 28157540911 at exactly 90m).
+    timeout-minutes: 350
     permissions:
       contents: read
       packages: write
