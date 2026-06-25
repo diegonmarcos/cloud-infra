@@ -485,10 +485,16 @@ PREFLIGHT_EOF
             _hm_try=$(( _hm_try + 1 ))
             log "Docker HM activate on $DEPLOY_HOST (attempt $_hm_try/$_hm_attempts)"
             set +e
-            printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
+            # Keepalive: the activation streams a multi-minute remote script
+            # (incl. a ~2GB HM image pull on a 1GB E2-Micro). Without keepalive
+            # the idle tunnel drops mid-pull → exit 255. 20s × 60 = 20min grace.
+            printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS \
+                -o ServerAliveInterval=20 -o ServerAliveCountMax=60 \
+                "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
             COMPOSE_RC=${PIPESTATUS[1]}
             set -e
-            [ "$COMPOSE_RC" -eq 0 ] && break
+            # Explicit if — `[ ... ] && break` mid-loop can abort under set -e.
+            if [ "$COMPOSE_RC" -eq 0 ]; then break; fi
             # Non-255 = remote script error (ENOSPC, daemon down, activate fail)
             # → persistent, don't retry. 255 = transport drop → retry.
             if [ "$COMPOSE_RC" -ne 255 ]; then
