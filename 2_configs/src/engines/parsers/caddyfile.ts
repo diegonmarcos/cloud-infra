@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import { svcDir } from "./resolve-service-dir";
 
 export interface CaddyRoute {
   domain: string;
@@ -10,7 +11,7 @@ export interface CaddyRoute {
 }
 
 export function parseCaddyfile(solutionsDir: string): CaddyRoute[] {
-  const caddyfilePath = join(solutionsDir, "bb-sec_caddy", "dist", "Caddyfile");
+  const caddyfilePath = join(svcDir(solutionsDir, "caddy", "bb-sec_caddy"), "dist", "Caddyfile");
   if (!existsSync(caddyfilePath)) return [];
 
   const content = readFileSync(caddyfilePath, "utf-8");
