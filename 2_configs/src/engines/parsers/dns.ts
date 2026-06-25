@@ -1,5 +1,6 @@
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, basename } from "path";
+import { svcDir } from "./resolve-service-dir";
 
 export interface DNSRecord {
   name: string;
@@ -14,7 +15,7 @@ export interface DNSZone {
 }
 
 export function parseDNSZones(solutionsDir: string): DNSZone[] {
-  const zonesDir = join(solutionsDir, "ba-clo_hickory-dns", "dist", "zones");
+  const zonesDir = join(svcDir(solutionsDir, "hickory-dns", "ba-clo_hickory-dns"), "dist", "zones");
   if (!existsSync(zonesDir)) return [];
 
   const zones: DNSZone[] = [];

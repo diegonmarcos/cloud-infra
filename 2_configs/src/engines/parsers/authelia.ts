@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { parse as parseYaml } from "yaml";
+import { svcDir } from "./resolve-service-dir";
 
 export interface AutheliaACL {
   domain: string;
@@ -9,7 +10,7 @@ export interface AutheliaACL {
 }
 
 export function parseAuthelia(solutionsDir: string): AutheliaACL[] {
-  const configPath = join(solutionsDir, "bb-sec_authelia", "dist", "config", "configuration.yml.tpl");
+  const configPath = join(svcDir(solutionsDir, "authelia", "bb-sec_authelia"), "dist", "config", "configuration.yml.tpl");
   if (!existsSync(configPath)) return [];
 
   let content: string;

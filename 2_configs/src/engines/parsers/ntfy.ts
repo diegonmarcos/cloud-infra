@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { parse as parseYaml } from "yaml";
+import { svcDir } from "./resolve-service-dir";
 
 export interface NtfyTopic {
   name: string;
@@ -27,7 +28,7 @@ export function parseNtfy(solutionsDir: string): NtfyConfig | null {
   const topics = extractTopicsFromScanner(solutionsDir);
 
   let doc: any = null;
-  const configPath = join(solutionsDir, "bc-obs_ntfy", "dist", "etc", "server.yml");
+  const configPath = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "dist", "etc", "server.yml");
   if (existsSync(configPath)) {
     try {
       doc = parseYaml(readFileSync(configPath, "utf-8"));
@@ -54,7 +55,7 @@ function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
   // the single source of truth — topic-scanner.py, parsers/ntfy.ts, derive's
   // build-mattermost.json emitter, and chat-mattermost's compose.nix all
   // consume from here. Adding a topic = edit build.json + rebuild.
-  const buildJsonPath = join(solutionsDir, "bc-obs_ntfy", "build.json");
+  const buildJsonPath = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "build.json");
   if (existsSync(buildJsonPath)) {
     try {
       const buildJson = JSON.parse(readFileSync(buildJsonPath, "utf-8"));
@@ -76,7 +77,7 @@ function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
 
   // LEGACY fallback (kept until topic-scanner.py is migrated to read from
   // build.json itself; remove this branch after that migration).
-  const scannerPath = join(solutionsDir, "bc-obs_ntfy", "src", "code", "topic-scanner.py");
+  const scannerPath = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "src", "code", "topic-scanner.py");
   if (!existsSync(scannerPath)) return [];
 
   const content = readFileSync(scannerPath, "utf-8");
@@ -108,7 +109,7 @@ function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
 /** Scan bridge scripts for topic constants to build publisher mapping */
 function extractPublisherMap(solutionsDir: string): Map<string, string[]> {
   const map = new Map<string, string[]>();
-  const srcDir = join(solutionsDir, "bc-obs_ntfy", "src");
+  const srcDir = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "src");
 
   const bridges: { file: string; publisher: string }[] = [
     { file: "github-rss-to-ntfy.py", publisher: "github-rss" },
@@ -133,7 +134,7 @@ function extractPublisherMap(solutionsDir: string): Map<string, string[]> {
 function extractUsersFromCompose(solutionsDir: string): string[] {
   // Users are created via CLI commands in compose or setup scripts
   // For now, extract from docker-compose.yml entrypoint/command if present
-  const composePath = join(solutionsDir, "bc-obs_ntfy", "dist", "docker-compose.yml");
+  const composePath = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "dist", "docker-compose.yml");
   if (!existsSync(composePath)) return [];
 
   const content = readFileSync(composePath, "utf-8");
