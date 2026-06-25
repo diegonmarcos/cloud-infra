@@ -147,8 +147,14 @@ jobs:
           # Run — --cap-add NET_ADMIN bootstraps wg-quick inside the container
           # until new cloud-builder images ship with cap_add baked in compose.yaml.
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          # Mount the runner's checkout as the container's cloud repo so the
+          # HM build reads the CURRENT committed canonical cloud-data, not the
+          # image-baked /root/git/cloud (whose git-nuke-to-origin is unreliable
+          # → stale dist/pilot → newly-added wg-public peers silently dropped).
+          # step_build regenerates dist/ from src/ inside this mount; ephemeral.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             --cap-add NET_ADMIN \
             -v "$HOME/git/vault:/root/git/vault:ro" \
+            -v "$GITHUB_WORKSPACE:/root/git/cloud" \
             -e VM="${{ matrix.vm }}" \
             cloud-builder ship-hm ${{ matrix.vm }}
