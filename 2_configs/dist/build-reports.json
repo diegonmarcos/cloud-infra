@@ -409,22 +409,6 @@
     }
   ],
   "services": {
-    "claude-superset-api": {
-      "name": "claude-superset-api",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "agi",
-      "ports": {
-        "app": 3117,
-        "ollama": 11436,
-        "headroom": 8788,
-        "proxy": 8789
-      },
-      "health": {
-        "path": "/health"
-      }
-    },
     "c3-analytics-api": {
       "name": "c3-analytics-api",
       "vm": "gcp-E2-f_0",
@@ -862,6 +846,22 @@
         "path": "/health"
       }
     },
+    "claude-superset-api": {
+      "name": "claude-superset-api",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "agi",
+      "ports": {
+        "app": 3117,
+        "ollama": 11436,
+        "headroom": 8788,
+        "proxy": 8789
+      },
+      "health": {
+        "path": "/health"
+      }
+    },
     "cloud-cgc-mcp": {
       "name": "cloud-cgc-mcp",
       "vm": "oci-A1-f_0",
@@ -1281,15 +1281,6 @@
   },
   "dns_services": [
     {
-      "service": "claude-superset-api",
-      "dns": "claude-superset-api.app"
-    },
-    {
-      "service": "claude-superset-api",
-      "container": "app",
-      "dns": "claude-superset-api.app"
-    },
-    {
       "service": "c3-analytics-api",
       "dns": "c3-analytics-api.app"
     },
@@ -1553,6 +1544,15 @@
       "service": "introspect-proxy",
       "container": "app",
       "dns": "introspect-proxy.app"
+    },
+    {
+      "service": "claude-superset-api",
+      "dns": "claude-superset-api.app"
+    },
+    {
+      "service": "claude-superset-api",
+      "container": "app",
+      "dns": "claude-superset-api.app"
     },
     {
       "service": "cloud-cgc-mcp",
@@ -2011,7 +2011,6 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
-          "claude-superset-api",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -2033,6 +2032,7 @@
           "openobserve",
           "umami",
           "crowdsec",
+          "claude-superset-api",
           "cloud-cgc-mcp",
           "kg-store",
           "ollama-hai",
@@ -2087,22 +2087,6 @@
       }
     },
     "services": {
-      "claude-superset-api": {
-        "name": "claude-superset-api",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "agi",
-        "ports": {
-          "app": 3117,
-          "ollama": 11436,
-          "headroom": 8788,
-          "proxy": 8789
-        },
-        "health": {
-          "path": "/health"
-        }
-      },
       "c3-analytics-api": {
         "name": "c3-analytics-api",
         "vm": "gcp-E2-f_0",
@@ -2535,6 +2519,22 @@
         "category": "sec",
         "ports": {
           "app": 4182
+        },
+        "health": {
+          "path": "/health"
+        }
+      },
+      "claude-superset-api": {
+        "name": "claude-superset-api",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "agi",
+        "ports": {
+          "app": 3117,
+          "ollama": 11436,
+          "headroom": 8788,
+          "proxy": 8789
         },
         "health": {
           "path": "/health"
