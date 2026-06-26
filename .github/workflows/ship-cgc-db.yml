@@ -1,15 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                                                                  ║
-# ║   GENERATED FILE — DO NOT EDIT                                   ║
-# ║                                                                  ║
-# ║   Source : 1_workflows/src/cicd/ship-cgc-db.yml
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
-# ║                                                                  ║
-# ║   Manual edits will be overwritten on next build.                ║
-# ║                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 # ┌──────────────────────────────────────────────────────────────┐
 # │  cloud-cgc octocode DB — INCREMENTAL update on x86 → GHCR     │
 # │  → and PROPAGATE to the deployed oci-apps server.             │
@@ -33,6 +21,8 @@ on:
     # Mirrors runtime.octocode.update.schedule in build.json.
     # 02:23 UTC = 04:23 Madrid (CEST, UTC+2 in summer).
     - cron: "23 2 * * *"
+    # Second daily update: 01:30 UTC = 03:30 Madrid (CEST).
+    - cron: "30 1 * * *"
 
 # Shares the single gha-runner WireGuard peer slot on the gcp-proxy hub with the
 # other ship workflows — serialise so a concurrent Ship can't kick our tunnel.
