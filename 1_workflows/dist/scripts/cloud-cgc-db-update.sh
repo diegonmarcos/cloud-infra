@@ -55,7 +55,12 @@ OCTO_HOME="${OCTOCODE_HOME:-$HOME/.local/share/octocode}"
 # the 357-node orphan instead of extending the 2148-node base. Data-driven from
 # build.json runtime.octocode.repos_path; NEVER the dev tree (~/git).
 REPOS_ROOT="${REPOS_ROOT:-${OCTOCODE_REPOS_ROOT:-$(jq -r '.runtime.octocode.repos_path // "/repos"' "$BJ")}}"
-REPOS=$(jq -r   '.runtime.octocode.index_repos[]'    "$BJ")
+# CGC_INDEX_REPOS overrides build.json for split-job workflows (space-separated)
+if [ -n "${CGC_INDEX_REPOS:-}" ]; then
+  REPOS="$CGC_INDEX_REPOS"
+else
+  REPOS=$(jq -r '.runtime.octocode.index_repos[]' "$BJ")
+fi
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
@@ -202,6 +207,11 @@ sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
 
 # 6) GUARANTEE the deployed consumer (oci-apps) pulls the new DB + restarts,
 #    so the live server serves it immediately — not only on the next DAG tick.
-propagate_to_host
+#    CGC_SKIP_PROPAGATE=1 lets split-job workflows defer propagation to the last job.
+if [ "${CGC_SKIP_PROPAGATE:-}" = "1" ]; then
+  echo "[cgc-db] propagation deferred (CGC_SKIP_PROPAGATE=1)"
+else
+  propagate_to_host
+fi
 
 echo "[cgc-db] UPDATE COMPLETE → $IMAGE:$TAG"
