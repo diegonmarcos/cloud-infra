@@ -89,14 +89,18 @@ ensure_repos() {
     if [ -n "$TOKEN" ]; then url="https://x-access-token:${TOKEN}@github.com/diegonmarcos/${remote}.git"
     else url="https://github.com/diegonmarcos/${remote}.git"; fi
     if [ -d "$d/.git" ]; then
-      echo "[cgc-db] refresh $lname ← origin (fresh HEAD)"
+      echo "[cgc-db] refresh $lname ← origin (full history for incremental detection)"
       git -C "$d" remote set-url origin "$url" 2>/dev/null || true
-      git -C "$d" fetch --depth 1 -q origin 2>/dev/null \
+      git -C "$d" fetch -q origin 2>/dev/null \
         && git -C "$d" reset --hard -q FETCH_HEAD 2>/dev/null \
         || echo "[cgc-db] WARN refresh $lname failed (using existing checkout)"
     else
-      echo "[cgc-db] clone $lname ← $remote (fresh HEAD)"
-      git clone --depth 1 -q "$url" "$d" 2>/dev/null || echo "[cgc-db] WARN clone $lname failed"
+      echo "[cgc-db] clone $lname ← $remote (full history for incremental detection)"
+      # Full clone (no --depth): octocode stores the last-indexed commit in the DB and
+      # diffs against it to find changed files. --depth 1 puts that stored commit outside
+      # the shallow history → git can't resolve it → octocode re-indexes everything every
+      # run. Full clone is small overhead; the embedding speedup is enormous (minutes vs hours).
+      git clone -q "$url" "$d" 2>/dev/null || echo "[cgc-db] WARN clone $lname failed"
     fi
   done
 }
