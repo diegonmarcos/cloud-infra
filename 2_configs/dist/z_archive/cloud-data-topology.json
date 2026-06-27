@@ -86,6 +86,7 @@
         "mail-mcp",
         "mattermost-mcp",
         "cloud-builder-x",
+        "gha-runner",
         "borg-server",
         "bup-server",
         "gitea",
@@ -1766,6 +1767,52 @@
         "networks": []
       },
       "flake": "infra-bld_cloud-builder-x"
+    },
+    "gha-runner": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-bld_gha-runner",
+      "description": "GitHub Actions self-hosted runner on oci-apps — ARM64, no 6h timeout cap",
+      "containers": {
+        "app": {
+          "container_name": "gha-runner",
+          "image": "myoung34/github-runner:latest",
+          "port": null,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "volumes": [
+            "/var/run/docker.sock:/var/run/docker.sock",
+            "./work:/tmp/runner/work"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "4G",
+              "cpus": "3.0"
+            },
+            "reservations": {
+              "memory": "256M"
+            }
+          },
+          "read_only": false,
+          "protocol": null
+        }
+      },
+      "container_names": [
+        "gha-runner"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-bld_gha-runner"
     },
     "cloudflare-worker": {
       "category": "cloud",

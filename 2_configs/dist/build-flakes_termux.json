@@ -438,6 +438,7 @@
         "mail-mcp",
         "mattermost-mcp",
         "cloud-builder-x",
+        "gha-runner",
         "backup-borg",
         "backup-bup",
         "gitea",
@@ -476,7 +477,7 @@
         "revealmd",
         "vaultwarden"
       ],
-      "container_count": 61
+      "container_count": 62
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -1941,6 +1942,67 @@
           "platform": "linux/amd64,linux/arm64",
           "description": "Multi-arch builder Debian apt (no Nix, lighter)"
         }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "gha-runner": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-bld_gha-runner",
+      "description": "GitHub Actions self-hosted runner on oci-apps — ARM64, no 6h timeout cap",
+      "enabled": true,
+      "flake": "infra-bld_gha-runner",
+      "containers": {
+        "app": {
+          "container_name": "gha-runner",
+          "image": "myoung34/github-runner:latest",
+          "port": null,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "volumes": [
+            "/var/run/docker.sock:/var/run/docker.sock",
+            "./work:/tmp/runner/work"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "4G",
+              "cpus": "3.0"
+            },
+            "reservations": {
+              "memory": "256M"
+            }
+          },
+          "read_only": false,
+          "protocol": null
+        }
+      },
+      "container_names": [
+        "gha-runner"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "gha": {
+        "repo_url": "https://github.com/diegonmarcos/cloud",
+        "runner_name": "oci-apps-arm64",
+        "labels": "self-hosted,linux,arm64,oci-apps",
+        "runner_workdir": "/tmp/runner/work",
+        "_secret_comment": "secrets.yaml must contain ACCESS_TOKEN (GitHub classic PAT, repo scope) — used only for runner registration/deregistration. Each job token is auto-issued by GitHub."
       },
       "api": {
         "has_api": false,
