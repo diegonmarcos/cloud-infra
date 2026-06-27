@@ -51,6 +51,12 @@ fi
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
+OCTO_ARM=$(jq -r '.runtime.octocode.octocode_images.arm' "$BJ")
+# Arch-aware binary: ARM runner (oci-apps aarch64) uses the arm image; x86 GHA uses x86.
+case "$(uname -m)" in
+  aarch64|arm64) OCTO_IMAGE="$OCTO_ARM" ;;
+  *)             OCTO_IMAGE="$OCTO_X86" ;;
+esac
 CFG="$OCTO_HOME/config.toml"
 TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
 ACTOR="${GITHUB_ACTOR:-diegonmarcos}"
@@ -62,9 +68,9 @@ ensure_octocode() {
   command -v octocode >/dev/null 2>&1 && { echo "[cgc-db] octocode: $(octocode --version 2>/dev/null)"; return 0; }
   command -v docker >/dev/null 2>&1 || { echo "::error::need octocode or docker to obtain it"; exit 1; }
   bindir="${CGC_BIN:-$HOME/.local/bin}"; mkdir -p "$bindir"
-  echo "[cgc-db] installing pinned octocode from $OCTO_X86"
-  docker pull -q "$OCTO_X86" >/dev/null
-  docker run --rm --entrypoint sh "$OCTO_X86" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
+  echo "[cgc-db] installing pinned octocode from $OCTO_IMAGE (arch: $(uname -m))"
+  docker pull -q "$OCTO_IMAGE" >/dev/null
+  docker run --rm --entrypoint sh "$OCTO_IMAGE" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
   chmod +x "$bindir/octocode"
   PATH="$bindir:$PATH"; export PATH
   octocode --version

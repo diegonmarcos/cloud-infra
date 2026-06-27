@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "stalwart-sorter container config (service=stalwart, role=sorter)",
+    "description": "gha-runner container config (service=gha-runner, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,16 +28,35 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "stalwart-sorter",
-    "image": "python:3-alpine",
+    "container_name": "gha-runner",
+    "image": "myoung34/github-runner:latest",
+    "port": null,
+    "port_env": null,
+    "dns": null,
+    "public": false,
+    "proxy": null,
+    "healthcheck": null,
+    "volumes": [
+      "/var/run/docker.sock:/var/run/docker.sock",
+      "./work:/tmp/runner/work"
+    ],
+    "env_file": true,
+    "depends_on": [],
     "resources": {
-      "mem_limit": "64M",
-      "mem_reservation": "16M"
-    }
+      "limits": {
+        "memory": "4G",
+        "cpus": "3.0"
+      },
+      "reservations": {
+        "memory": "256M"
+      }
+    },
+    "read_only": false,
+    "protocol": null
   },
-  "service": "stalwart",
-  "role": "sorter",
-  "vm": "oci-mail",
+  "service": "gha-runner",
+  "role": "app",
+  "vm": "oci-apps",
   "services": {
     "c3-analytics-api": {
       "ip": "10.0.0.1",
@@ -1668,29 +1687,11 @@
       }
     }
   },
-  "recovery_mode": false,
-  "upstream_image": "stalwartlabs/stalwart:v0.14.1",
-  "timezone": "Europe/Madrid",
-  "mta_routes": [
-    {
-      "name": "oci-relay",
-      "description": "OCI Email Delivery (eu-marseille-1) — primary outbound relay; SMTP creds shared with maddy (same vault user/pass, region-bound)",
-      "address": "smtp.email.eu-marseille-1.oci.oraclecloud.com",
-      "port": 587,
-      "protocol": "smtp",
-      "implicit_tls": false,
-      "allow_invalid_certs": false,
-      "auth_username_env": "OCI_RELAYUSER",
-      "auth_secret_env": "OCI_RELAYPASSWORD",
-      "default_outbound": true
-    }
-  ],
-  "secret_env_vars": [
-    "ADMIN_PASSWORD",
-    "ME_PASSWORD",
-    "NOREPLY_PASSWORD",
-    "OCI_RELAYUSER",
-    "OCI_RELAYPASSWORD",
-    "DKIM_PRIVATE_KEY_B64"
-  ]
+  "gha": {
+    "repo_url": "https://github.com/diegonmarcos/cloud",
+    "runner_name": "oci-apps-arm64",
+    "labels": "self-hosted,linux,arm64,oci-apps",
+    "runner_workdir": "/tmp/runner/work",
+    "_secret_comment": "secrets.yaml must contain ACCESS_TOKEN (GitHub classic PAT, repo scope) — used only for runner registration/deregistration. Each job token is auto-issued by GitHub."
+  }
 }

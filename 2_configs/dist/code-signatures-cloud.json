@@ -6,25 +6,25 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1962,
+    "files": 1965,
     "by_lang": {
-      "nix": 420,
-      "sh": 320,
+      "nix": 422,
+      "sh": 321,
       "rust": 445,
       "ts": 305,
       "js": 16,
       "py": 456
     },
     "by_role": {
-      "flake": 72,
+      "flake": 73,
       "script": 103,
-      "shell": 207,
+      "shell": 208,
       "rust-module": 439,
       "engine": 31,
       "nix-module": 283,
       "module": 184,
       "entrypoint": 23,
-      "compose": 65,
+      "compose": 66,
       "mcp-tool": 90,
       "python": 453,
       "workflow-dag": 1,
@@ -2780,7 +2780,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -2887,10 +2886,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -5256,7 +5254,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -5363,10 +5360,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -16237,6 +16233,96 @@
       "exports": [
         "description",
         "wrap-upstream)\";",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-bld_gha-runner/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-bld_gha-runner/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "gha",
+        "services",
+        "gha-runner",
+        "image",
+        "container_name",
+        "restart",
+        "network_mode",
+        "env_file",
+        "environment",
+        "REPO_URL",
+        "RUNNER_NAME",
+        "LABELS",
+        "RUNNER_WORKDIR",
+        "RUNNER_SCOPE",
+        "EPHEMERAL",
+        "volumes",
+        "limits",
+        "reservations"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-bld_gha-runner/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "wrap",
         "nixpkgs"
       ],
       "imports": [

@@ -1,16 +1,12 @@
 # ┌──────────────────────────────────────────────────────────────┐
-# │  cloud-cgc octocode DB — INCREMENTAL update on x86 → GHCR     │
-# │  → and PROPAGATE to the deployed oci-apps server.             │
+# │  cloud-cgc octocode DB — INCREMENTAL update → GHCR          │
+# │  → PROPAGATE to the deployed oci-apps server.               │
 # │                                                              │
-# │  Split into 3 sequential jobs so each stays under GHA's 6h   │
-# │  (360-min) hosted-runner hard limit. Root cause: `cloud`      │
-# │  repo alone takes ~6h for structural embedding on x86 CPU.   │
+# │  Runs on oci-apps self-hosted runner (ARM64, 4 OCPUs, 24GB, │
+# │  no GHA 360m hard cap). All 6 repos in one job.             │
 # │                                                              │
-# │  Job order (each pulls GHCR DB, indexes its repos, pushes):  │
-# │    index-cloud  → index-unix  → index-rest+propagate         │
-# │                                                              │
-# │  ALL business logic lives in cloud-cgc-db-update.sh — ZERO   │
-# │  logic here. CGC_INDEX_REPOS overrides the repo list per job. │
+# │  ALL business logic lives in cloud-cgc-db-update.sh — ZERO  │
+# │  logic here.                                                 │
 # └──────────────────────────────────────────────────────────────┘
 
 name: "cgc-db (octocode incremental update → GHCR → oci-apps)"
@@ -24,13 +20,11 @@ on:
     # Second daily update: 01:30 UTC = 03:30 Madrid (CEST).
     - cron: "30 1 * * *"
 
-# Shares the single gha-runner WireGuard peer slot on the gcp-proxy hub with the
-# other ship workflows — serialise so a concurrent Ship can't kick our tunnel.
+# Serialise so concurrent Ship workflows don't race on shared resources.
 concurrency:
   group: ship-wg-runner
   cancel-in-progress: false
 
-# ── shared env + step templates ──────────────────────────────────────────────
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_ACTOR: ${{ github.actor }}
@@ -39,58 +33,14 @@ env:
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
 
 jobs:
-  # ── Job 1: cloud repo (largest — ~6h structural embedding alone) ────────────
-  index-cloud:
-    name: "1/3 · index cloud"
-    runs-on: ubuntu-latest
-    timeout-minutes: 355
+  update-db:
+    name: "cgc-db · index all repos + propagate"
+    runs-on: [self-hosted, linux, arm64, oci-apps]
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-      - name: Install runtime deps (wireguard-tools, jq)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
-      - name: cgc-db index cloud
-        env:
-          CGC_INDEX_REPOS: "cloud"
-          CGC_SKIP_PROPAGATE: "1"
-          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-        run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
-
-  # ── Job 2: unix repo (Android apps + NixOS, second-largest) ─────────────────
-  index-unix:
-    name: "2/3 · index unix"
-    needs: index-cloud
-    runs-on: ubuntu-latest
-    timeout-minutes: 355
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install runtime deps (wireguard-tools, jq)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
-      - name: cgc-db index unix
-        env:
-          CGC_INDEX_REPOS: "unix"
-          CGC_SKIP_PROPAGATE: "1"
-          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-        run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
-
-  # ── Job 3: remaining repos + propagate to oci-apps ───────────────────────────
-  index-rest:
-    name: "3/3 · index front+tools+cloud-data+front-data → propagate"
-    needs: index-unix
-    runs-on: ubuntu-latest
-    timeout-minutes: 355
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install runtime deps (wireguard-tools, jq)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
       - name: WireGuard up
         continue-on-error: true
         run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
@@ -98,8 +48,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: cgc-db index rest + propagate
+      - name: cgc-db incremental update + propagate
         env:
-          CGC_INDEX_REPOS: "front tools cloud-data front-data"
-          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh

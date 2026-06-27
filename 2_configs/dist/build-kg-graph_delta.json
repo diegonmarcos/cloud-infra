@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 285,
-    "edges": 384,
+    "nodes": 288,
+    "edges": 388,
     "by_table": {
       "vm": 4,
-      "service": 62,
-      "container": 87,
+      "service": 63,
+      "container": 88,
       "domain": 39,
       "repo": 3,
-      "module": 62,
+      "module": 63,
       "package": 28
     }
   },
@@ -425,6 +425,32 @@
       "properties": {
         "name": "cloud-builder-x",
         "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "gha_runner",
+      "key": "service:gha_runner",
+      "properties": {
+        "name": "gha-runner",
+        "category": "tools",
+        "description": "GitHub Actions self-hosted runner on oci-apps — ARM64, no 6h timeout cap",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "infra-bld_gha-runner"
+      }
+    },
+    {
+      "table": "container",
+      "id": "gha_runner",
+      "key": "container:gha_runner",
+      "properties": {
+        "name": "gha-runner",
+        "image": "myoung34/github-runner:latest",
         "role": "app",
         "port": null,
         "public": false
@@ -2485,6 +2511,17 @@
     },
     {
       "table": "module",
+      "id": "infra_bld_gha_runner",
+      "key": "module:infra_bld_gha_runner",
+      "properties": {
+        "name": "infra-bld_gha-runner",
+        "repo": "cloud",
+        "category": "tools",
+        "service": "gha-runner"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_cloud_cloudflare_worker",
       "key": "module:infra_cloud_cloudflare_worker",
       "properties": {
@@ -3568,6 +3605,22 @@
       "from": "service:cloud_builder_x",
       "to": "container:cloud_builder_x",
       "key": "service:cloud_builder_x->runs_container->container:cloud_builder_x",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:gha_runner",
+      "to": "vm:oci_apps",
+      "key": "service:gha_runner->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:gha_runner",
+      "to": "container:gha_runner",
+      "key": "service:gha_runner->runs_container->container:gha_runner",
       "properties": {
         "role": "app"
       }
@@ -5413,6 +5466,20 @@
       "from": "module:infra_bld_cloud_builder_x",
       "to": "service:cloud_builder_x",
       "key": "module:infra_bld_cloud_builder_x->implements->service:cloud_builder_x",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_bld_gha_runner",
+      "to": "repo:cloud",
+      "key": "module:infra_bld_gha_runner->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_bld_gha_runner",
+      "to": "service:gha_runner",
+      "key": "module:infra_bld_gha_runner->implements->service:gha_runner",
       "properties": {}
     },
     {
