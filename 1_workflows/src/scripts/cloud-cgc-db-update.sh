@@ -79,9 +79,14 @@ if [ -z "${CGC_SANDBOXED:-}" ] && [ "${CGC_NO_SANDBOX:-}" != "1" ]; then
   S_CPUW=$(jq -r '.runtime.octocode.update.cpu_weight // "10"'   "$BJ")
   S_IOW=$(jq -r  '.runtime.octocode.update.io_weight  // "10"'   "$BJ")
   if command -v systemd-run >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
-    echo "[cgc-db] freeze-proof scope: MemoryMax=$S_MEM MemorySwapMax=$S_SWAP CPUQuota=$S_CPUQ CPUWeight=$S_CPUW IOWeight=$S_IOW (cannot freeze host)"
+    # --scope units have no ExecContext, so SupplementaryGroups= is rejected and
+    # --uid/--gid drop the docker group → no daemon-socket access. Run with egid =
+    # the docker socket's group (data-derived, not hardcoded) so the sandboxed
+    # process keeps docker access while files stay owned by the invoking user.
+    S_DGID="$(stat -c %g /var/run/docker.sock 2>/dev/null || id -g)"
+    echo "[cgc-db] freeze-proof scope: MemoryMax=$S_MEM MemorySwapMax=$S_SWAP CPUQuota=$S_CPUQ CPUWeight=$S_CPUW IOWeight=$S_IOW gid=$S_DGID (cannot freeze host)"
     exec sudo -n -E systemd-run --scope --quiet --collect \
-      --uid="$(id -u)" --gid="$(id -g)" \
+      --uid="$(id -u)" --gid="$S_DGID" \
       -p MemoryMax="$S_MEM" -p MemorySwapMax="$S_SWAP" \
       -p CPUQuota="$S_CPUQ" -p CPUWeight="$S_CPUW" -p IOWeight="$S_IOW" \
       env CGC_SANDBOXED=1 sh "$SELF" "$@"
