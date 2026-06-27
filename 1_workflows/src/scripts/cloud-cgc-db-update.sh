@@ -62,18 +62,62 @@ TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
 ACTOR="${GITHUB_ACTOR:-diegonmarcos}"
 export HOME OCTOCODE_HOME="$OCTO_HOME"
 
-# 0) ensure octocode on PATH — extract the pinned x86 static binary from its GHCR
-#    image (data-driven). No-op when octocode is already installed (e.g. local).
+# ── 0) FREEZE-PROOFING ──────────────────────────────────────────────────────
+# Re-exec the ENTIRE producer inside a memory+CPU-bounded transient cgroup scope
+# so a runaway `octocode index` / docker build is OOM-killed in isolation and can
+# NEVER freeze the host: CPUQuota leaves a core free for sshd/WireGuard, and
+# MemoryMax + MemorySwapMax=0 kill the JOB, not the VM. Runs as the invoking user
+# (--uid/--gid → files stay user-owned) and inherits env through `sudo -E` so
+# secrets pass via the environment, never argv. Limits are data-driven
+# (build.json runtime.octocode.update.*). Degrades to nice/ionice when systemd-run
+# or passwordless sudo is unavailable; CGC_NO_SANDBOX=1 opts out (e.g. ephemeral CI).
+if [ -z "${CGC_SANDBOXED:-}" ] && [ "${CGC_NO_SANDBOX:-}" != "1" ]; then
+  SELF="$HERE/${0##*/}"
+  S_MEM=$(jq -r  '.runtime.octocode.update.mem_max    // "16G"'  "$BJ")
+  S_SWAP=$(jq -r '.runtime.octocode.update.swap_max   // "0"'    "$BJ")
+  S_CPUQ=$(jq -r '.runtime.octocode.update.cpu_quota  // "300%"' "$BJ")
+  S_CPUW=$(jq -r '.runtime.octocode.update.cpu_weight // "10"'   "$BJ")
+  S_IOW=$(jq -r  '.runtime.octocode.update.io_weight  // "10"'   "$BJ")
+  if command -v systemd-run >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+    echo "[cgc-db] freeze-proof scope: MemoryMax=$S_MEM MemorySwapMax=$S_SWAP CPUQuota=$S_CPUQ CPUWeight=$S_CPUW IOWeight=$S_IOW (cannot freeze host)"
+    exec sudo -n -E systemd-run --scope --quiet --collect \
+      --uid="$(id -u)" --gid="$(id -g)" \
+      -p MemoryMax="$S_MEM" -p MemorySwapMax="$S_SWAP" \
+      -p CPUQuota="$S_CPUQ" -p CPUWeight="$S_CPUW" -p IOWeight="$S_IOW" \
+      env CGC_SANDBOXED=1 sh "$SELF" "$@"
+  else
+    echo "[cgc-db] freeze-proof: systemd-run/sudo unavailable — nice/ionice fallback"
+    _pfx=""
+    command -v nice   >/dev/null 2>&1 && _pfx="nice -n 19"
+    command -v ionice >/dev/null 2>&1 && _pfx="$_pfx ionice -c2 -n7"
+    exec env CGC_SANDBOXED=1 $_pfx sh "$SELF" "$@"
+  fi
+fi
+
+# 0b) ensure a FastEmbed-CAPABLE octocode on PATH. A binary built WITHOUT FastEmbed
+#     (e.g. some nix/static builds — oci-apps' nix-profile octocode is one) fails
+#     `octocode index` at runtime; the producer would then package the UNCHANGED
+#     base = a silent no-op "update". So we VERIFY capability and, if the on-PATH
+#     octocode lacks it, extract the pinned image binary (the *-fastembed-* images
+#     are built with it). Pinned version keeps the DB schema compatible.
+octocode_has_fastembed() {  # $1 = octocode binary path/name
+  _t="$(mktemp -d)"; ( cd "$_t" && git init -q . >/dev/null 2>&1 ) || true
+  _o="$( ( cd "$_t" && "$1" index ) 2>&1 || true )"; rm -rf "$_t"
+  case "$_o" in *"FastEmbed support is not compiled in"*) return 1 ;; *) return 0 ;; esac
+}
 ensure_octocode() {
-  command -v octocode >/dev/null 2>&1 && { echo "[cgc-db] octocode: $(octocode --version 2>/dev/null)"; return 0; }
-  command -v docker >/dev/null 2>&1 || { echo "::error::need octocode or docker to obtain it"; exit 1; }
+  if command -v octocode >/dev/null 2>&1 && octocode_has_fastembed octocode; then
+    echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok)"; return 0
+  fi
+  command -v docker >/dev/null 2>&1 || { echo "::error::need a FastEmbed-capable octocode or docker to obtain it"; exit 1; }
   bindir="${CGC_BIN:-$HOME/.local/bin}"; mkdir -p "$bindir"
-  echo "[cgc-db] installing pinned octocode from $OCTO_IMAGE (arch: $(uname -m))"
+  echo "[cgc-db] on-PATH octocode missing/no-FastEmbed — extracting pinned $OCTO_IMAGE (arch: $(uname -m))"
   docker pull -q "$OCTO_IMAGE" >/dev/null
   docker run --rm --entrypoint sh "$OCTO_IMAGE" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
   chmod +x "$bindir/octocode"
   PATH="$bindir:$PATH"; export PATH
-  octocode --version
+  octocode_has_fastembed "$bindir/octocode" || { echo "::error::pinned image octocode ALSO lacks FastEmbed: $OCTO_IMAGE"; exit 1; }
+  echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok, from image)"
 }
 
 # 1) ensure GHCR auth — only if a token is provided (local is usually pre-authed).
@@ -193,10 +237,19 @@ fi
 command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >/dev/null 2>&1 || true
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
-  [ -d "$d" ] || { echo "[cgc-db] MISSING $d — skip"; continue; }
+  [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
   exclude_submodules "$d"
   echo "[cgc-db] === incremental index: $r ==="
-  ( cd "$d" && octocode index ) 2>&1 | tail -4 || echo "[cgc-db] index $r FAILED (continuing)"
+  # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
+  # failed index FATAL — never package/push an unindexed base as a fake update.
+  _log="$(mktemp)"
+  if ( cd "$d" && octocode index ) >"$_log" 2>&1; then
+    tail -4 "$_log"; rm -f "$_log"
+  else
+    _rc=$?
+    echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
+    tail -30 "$_log"; rm -f "$_log"; exit 1
+  fi
 done
 
 # 5) publish the updated DB back to GHCR (single upstream for all consumers)
