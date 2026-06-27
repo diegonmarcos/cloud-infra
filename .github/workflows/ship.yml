@@ -1,15 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                                                                  ║
-# ║   GENERATED FILE — DO NOT EDIT                                   ║
-# ║                                                                  ║
-# ║   Source : 1_workflows/src/cicd/ship.yml
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
-# ║                                                                  ║
-# ║   Manual edits will be overwritten on next build.                ║
-# ║                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 # ┌──────────────────────────────────────────────────────────────┐
 # │  Ship services to VMs                                        │
 # │                                                              │
@@ -180,6 +168,24 @@ jobs:
               CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$DIST_CONSUMERS" \
                 | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
               echo "::notice::dist-consumer ship: $DIST_CONSUMERS"
+
+              # Also deploy newly-registered services: present in HEAD's
+              # build-gha.json but absent in HEAD~1's. This fires when a new
+              # service is registered via 2_configs/src/builds/ symlink →
+              # gen-configs updates build-gha.json → Ship triggered by
+              # workflow_run but finds no a_solutions/*/src/** changes in HEAD
+              # (gen-configs only touches 2_configs/dist/). Without this, new
+              # services silently skip their first deploy.
+              GHA_REL="${GHA_CONFIG#$PWD/}"
+              NEW_SVCS=$(diff \
+                <(git show HEAD~1:"$GHA_REL" 2>/dev/null | jq -r '.services | keys[]' 2>/dev/null || true) \
+                <(jq -r '.services | keys[]' "$GHA_CONFIG" 2>/dev/null || true) \
+                | awk '/^>/{print $2}' | tr '\n' ' ')
+              if [ -n "$NEW_SVCS" ]; then
+                CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$NEW_SVCS" \
+                  | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+                echo "::notice::newly registered services: $NEW_SVCS"
+              fi
             fi
 
             VM_FILTER=""
