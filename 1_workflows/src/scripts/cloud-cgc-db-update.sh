@@ -52,6 +52,11 @@ LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
 OCTO_ARM=$(jq -r '.runtime.octocode.octocode_images.arm' "$BJ")
+# Data-driven exclude globs. octocode honours a gitignore-syntax `.noindex` file
+# (in addition to `.gitignore`). dist/, vendor/, z_archive/ are git-COMMITTED here
+# so `.gitignore` misses them — without this octocode embeds ~73% generated/vendored/
+# archived junk, bloating the graph and tripling every index. One `.noindex` per repo.
+NOINDEX_PATTERNS=$(jq -r '.runtime.octocode.noindex_patterns // [] | .[]' "$BJ" 2>/dev/null)
 # Arch-aware binary: ARM runner (oci-apps aarch64) uses the arm image; x86 GHA uses x86.
 case "$(uname -m)" in
   aarch64|arm64) OCTO_IMAGE="$OCTO_ARM" ;;
@@ -235,7 +240,17 @@ if [ "$USE_LLM" = "true" ] && [ -n "${OPENROUTER_API_KEY:-}" ] && [ -f "$CFG" ];
   grep -q "use_llm = true" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = true\n' >> "$CFG"
   echo "[cgc-db] GraphRAG LLM = $LLM (use_llm=true)"
 else
-  echo "[cgc-db] GraphRAG structural-only (use_llm disabled or no OPENROUTER_API_KEY)"
+  # Force structural-only to MATCH build.json (use_llm=false). The base config.toml
+  # may carry a STALE `use_llm = true` + an unreachable LLM model (e.g. ollama:*),
+  # which makes octocode block on per-batch LLM timeouts → glacial. Previously this
+  # branch only PRINTED "structural-only" without disabling it. Disable it for real.
+  if [ -f "$CFG" ]; then
+    octocode config --graphrag-enabled true >/dev/null 2>&1 || true
+    awk '/^[[:space:]]*use_llm[[:space:]]*=/ { print "use_llm = false"; next } { print }' \
+      "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
+    grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = false\n' >> "$CFG"
+  fi
+  echo "[cgc-db] GraphRAG structural-only (use_llm=false forced — no LLM calls)"
 fi
 
 # 4b) INCREMENTAL index per repo — git-aware, changed files only. NO `octocode clear`.
@@ -244,6 +259,11 @@ for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
   exclude_submodules "$d"
+  # Write the data-driven .noindex so octocode skips committed junk trees.
+  if [ -n "$NOINDEX_PATTERNS" ]; then
+    printf '%s\n' "$NOINDEX_PATTERNS" > "$d/.noindex"
+    echo "[cgc-db] $r · .noindex: $(printf '%s' "$NOINDEX_PATTERNS" | tr '\n' ' ')"
+  fi
   echo "[cgc-db] === incremental index: $r ==="
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
   # failed index FATAL — never package/push an unindexed base as a fake update.
