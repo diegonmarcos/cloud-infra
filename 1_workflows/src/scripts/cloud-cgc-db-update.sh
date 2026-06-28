@@ -130,7 +130,20 @@ ensure_octocode() {
   docker pull -q "$OCTO_IMAGE" >/dev/null
   docker run --rm --entrypoint sh "$OCTO_IMAGE" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
   chmod +x "$bindir/octocode"
+  # The arm image's octocode is DYNAMICALLY linked (unlike the x86 -static build):
+  # it needs libssl.so.3 + libcrypto.so.3 at runtime. A host usually has them, but a
+  # minimal runner (the gha-runner container) does NOT → "libssl.so.3: cannot open
+  # shared object file" (rc 127). Stream the libs from the SAME image (stdout, not a
+  # -v mount — under the docker-socket sibling setup a mount resolves to the HOST
+  # path) and point LD_LIBRARY_PATH at them → self-contained, runs anywhere.
+  for _l in libssl.so.3 libcrypto.so.3; do
+    docker run --rm --entrypoint sh "$OCTO_IMAGE" \
+      -c "_s=\$(find / -name '$_l' 2>/dev/null | head -1); [ -n \"\$_s\" ] && cat \"\$_s\"" \
+      > "$bindir/$_l" 2>/dev/null || true
+    [ -s "$bindir/$_l" ] || rm -f "$bindir/$_l"
+  done
   PATH="$bindir:$PATH"; export PATH
+  LD_LIBRARY_PATH="$bindir:${LD_LIBRARY_PATH:-}"; export LD_LIBRARY_PATH
   octocode_has_fastembed "$bindir/octocode" || { echo "::error::pinned image octocode ALSO lacks FastEmbed: $OCTO_IMAGE"; exit 1; }
   echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok, from image)"
 }
