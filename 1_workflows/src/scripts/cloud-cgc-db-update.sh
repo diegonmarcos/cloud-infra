@@ -230,8 +230,11 @@ propagate_to_host() {
 }
 
 # ── run ───────────────────────────────────────────────────────────────────
-ensure_octocode
+# GHCR auth FIRST — ensure_octocode pulls the (private) pinned octocode image, so
+# docker must be logged in before it runs. On a host with cached creds this order
+# was masked; a fresh runner container has none → "denied" on the image manifest.
 ensure_ghcr_auth
+ensure_octocode
 ensure_repos
 
 # 3) restore the incremental base from GHCR. The producer is INCREMENTAL-ONLY —
