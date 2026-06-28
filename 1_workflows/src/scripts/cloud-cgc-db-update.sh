@@ -83,7 +83,12 @@ if [ -z "${CGC_SANDBOXED:-}" ] && [ "${CGC_NO_SANDBOX:-}" != "1" ]; then
   S_CPUQ=$(jq -r '.runtime.octocode.update.cpu_quota  // "300%"' "$BJ")
   S_CPUW=$(jq -r '.runtime.octocode.update.cpu_weight // "10"'   "$BJ")
   S_IOW=$(jq -r  '.runtime.octocode.update.io_weight  // "10"'   "$BJ")
-  if command -v systemd-run >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+  # `-d /run/systemd/system` is the canonical "booted with systemd as init" test
+  # (systemctl uses it). Inside a container (e.g. the gha-runner) systemd-run exists
+  # but there is no system manager → scope creation dies with "Host is down". There
+  # the container's own cpus/memory limits already provide freeze-safety, so fall
+  # back to nice/ionice.
+  if [ -d /run/systemd/system ] && command -v systemd-run >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
     # --scope units have no ExecContext, so SupplementaryGroups= is rejected and
     # --uid/--gid drop the docker group → no daemon-socket access. Run with egid =
     # the docker socket's group (data-derived, not hardcoded) so the sandboxed
