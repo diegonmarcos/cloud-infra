@@ -20,9 +20,17 @@ let
   #    memory. >=50 sustained = imminent thrash/freeze. RAM-independent signal.
   #  - MemAvailable floor: hard backstop, scaled to RAM.
   memPsiCrit   = 50;
-  memAvailCrit = lib.max 80 (lib.min 2048 (ramMB / 12));
+  # True emergency floor (ramMB/24 ~= 42MB on a 1GB VM), NOT a normal-operation
+  # proxy. MemAvailable routinely dips low on small VMs while PSI stays ~0 (the
+  # kernel holds RAM as reclaimable page cache) — the old ramMB/12 (~85MB)
+  # false-fired at PSI(avg10)=0.18 / MemAvailable=78MB and shed the whole stack
+  # on a perfectly healthy box. PSI is the authoritative thrash signal; this
+  # floor is only a last-resort backstop for a fast OOM collapse PSI hasn't yet
+  # caught. Both arms are debounced (needBreaches) so a transient dip never sheds.
+  memAvailCrit = lib.max 40 (lib.min 512 (ramMB / 24));
   interval     = 15;   # seconds between checks
   backoff      = 120;  # seconds to wait after a shed before re-arming
+  needBreaches = 3;    # consecutive breaches (~45s) required before shedding
 in {
   home.file.".local/share/system-protection/load-shedder.sh" = {
     executable = true;
@@ -33,6 +41,7 @@ in {
       MEM_AVAIL_CRIT_MB=${toString memAvailCrit}
       INTERVAL=${toString interval}
       BACKOFF=${toString backoff}
+      NEED=${toString needBreaches}
 
       psi_mem_avg10() {
         # /proc/pressure/memory line: "some avg10=12.34 avg60=... total=..."
@@ -43,12 +52,19 @@ in {
 
       logger -t load-shedder "armed: shed docker when mem PSI(avg10) >= ''${MEM_PSI_CRIT}%% OR MemAvailable < ''${MEM_AVAIL_CRIT_MB}MB"
 
+      breaches=0
       while :; do
         # Integer part only (portable: no printf %f / locale dependency).
         PSI=$(psi_mem_avg10); PSI_I=''${PSI%%.*}; PSI_I=''${PSI_I:-0}
         AVAIL=$(mem_avail_mb 2>/dev/null || echo 999999)
 
         if [ "''${PSI_I:-0}" -ge "$MEM_PSI_CRIT" ] || [ "''${AVAIL:-999999}" -lt "$MEM_AVAIL_CRIT_MB" ]; then
+          breaches=$((breaches + 1))
+          logger -t load-shedder "pressure ''${breaches}/$NEED: PSI(avg10)=''${PSI} MemAvailable=''${AVAIL}MB"
+        else
+          breaches=0
+        fi
+        if [ "$breaches" -ge "$NEED" ]; then
           logger -t load-shedder "SHED: mem PSI(avg10)=''${PSI} MemAvailable=''${AVAIL}MB — stopping docker to protect WG/SSH"
           : > /run/load-shedder.fired 2>/dev/null || true
           # Stop the daemon + socket so socket-activation can't revive it; the
@@ -57,7 +73,7 @@ in {
           systemctl stop docker.socket 2>/dev/null || true
           systemctl stop docker.service 2>/dev/null || true
           logger -t load-shedder "SHED done — docker stopped, left DOWN (recover via build.sh ship). Backing off ''${BACKOFF}s"
-          sleep "$BACKOFF"
+          breaches=0; sleep "$BACKOFF"
         fi
         sleep "$INTERVAL"
       done
