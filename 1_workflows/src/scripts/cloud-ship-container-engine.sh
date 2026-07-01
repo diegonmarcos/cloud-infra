@@ -20,6 +20,29 @@ SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
 
+# ── Full-run logging: mirror EVERY verb's output to build.log ─────────
+# Matches the HM engine's BUILD_LOG_FILE convention. Self-reexec once through
+# `tee` so ALL output is captured — not just log() lines but raw step output
+# too (the status table, ssh passthrough, docker compose logs). Guard env var
+# prevents infinite recursion; exit code preserved via .build-rc so drift/fail
+# codes still propagate. build.log is gitignored fleet-wide.
+BUILD_LOG_FILE="$SERVICE_DIR/build.log"
+if [ -z "${BUILD_LOG_ACTIVE:-}" ]; then
+    export BUILD_LOG_ACTIVE=1
+    : > "$BUILD_LOG_FILE"
+    _rcfile="$(mktemp)"   # tmp, not SERVICE_DIR — no git-tracking risk
+    # set +e around the wrapped call: with errexit ON, a non-zero inner exit
+    # (e.g. status drift) aborts the { } group BEFORE `echo $?` runs, leaving
+    # _rcfile empty → `exit ""` → bash coerces to 2, mangling the real code.
+    # Re-invoke via absolute path through sh: $0 may be a bare relative name
+    # ("build.sh") not on PATH, so `"$0"` alone fails "command not found".
+    set +e
+    { sh "$SERVICE_DIR/$(basename "$0")" "$@" 2>&1; echo $? > "$_rcfile"; } | tee -a "$BUILD_LOG_FILE"
+    _rc="$(cat "$_rcfile" 2>/dev/null)"; [ -z "$_rc" ] && _rc=0
+    rm -f "$_rcfile"
+    exit "$_rc"
+fi
+
 # ── Config reader (node primary, python3 fallback) ────────────────────
 get_config() {
     [ ! -f "$CONFIG" ] && return 0
