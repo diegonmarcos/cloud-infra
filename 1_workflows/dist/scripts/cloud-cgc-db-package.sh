@@ -45,7 +45,12 @@ LABEL org.opencontainers.image.description="cloud-cgc-mcp octocode DB (semantic 
 DOCKER
 
 echo "[cgc-db] building $IMAGE:$TAG ..."
-docker build -t "$IMAGE:$TAG" "$WORK/ctx"
+# DOCKER_BUILDKIT=0 (legacy builder) for this trivial busybox+ADD image: buildx
+# tries to chown ~/.docker/buildx/activity/default, which fails when the producer
+# runs inside the freeze-proof scope with egid=docker (non-primary group) →
+# "operation not permitted". The legacy builder never touches that dir. The image
+# is a one-line FROM/ADD, so BuildKit features are irrelevant here.
+DOCKER_BUILDKIT=0 docker build -t "$IMAGE:$TAG" "$WORK/ctx"
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
 docker push "$IMAGE:$TAG"
 

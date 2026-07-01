@@ -43,5 +43,10 @@ docker pull -q "$IMAGE:$TAG" >/dev/null
 CID=$(docker create "$IMAGE:$TAG")
 trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
 mkdir -p "$TARGET"
+# Clean restore, not merge: clear the target first so stale project-hash dirs and
+# deleted-file embeddings from a previous DB don't linger and shadow the new graph
+# (GHCR is the single upstream — the target must MIRROR it, not accumulate). $TARGET
+# is always set (set -u + default above); we only clear its contents, never itself.
+rm -rf "$TARGET"/* "$TARGET"/.[!.]* 2>/dev/null || true
 docker cp "$CID:/octocode-db/." "$TARGET/"
 echo "[cgc-db] restored DB into $TARGET ($(du -sh "$TARGET" 2>/dev/null | cut -f1))"

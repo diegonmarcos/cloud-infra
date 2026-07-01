@@ -418,28 +418,64 @@ case "${1:-all}" in
                 "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' config --services 2>/dev/null | sort -u" 2>/dev/null)
             RUNNING=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
                 "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' ps --services --status=running 2>/dev/null | sort -u" 2>/dev/null)
-            if [ -n "$EXPECTED" ] && [ "$EXPECTED" != "$RUNNING" ]; then
+            if [ -z "$EXPECTED" ]; then
+                # Fail-SAFE: the probe could not enumerate desired services (SSH
+                # hiccup, docker daemon down at probe time — e.g. after a
+                # load-shedder stop — or compose file unreadable). An
+                # indeterminate probe must NEVER greenlight a skip: a shed or
+                # otherwise-stopped stack would then stay down forever, and
+                # `build.sh ship` (the documented shed-recovery) becomes a silent
+                # no-op. Force a redeploy; step_compose is idempotent and starts
+                # docker itself if it is down.
+                CONTAINERS_MISSING=true
+                log_warn "Could not enumerate compose services on $DEPLOY_HOST ($DEPLOY_PATH) — forcing redeploy (fail-safe)"
+            elif [ "$EXPECTED" != "$RUNNING" ]; then
                 CONTAINERS_MISSING=true
                 log_warn "Expected services not all running on $DEPLOY_HOST — forcing redeploy"
             fi
         fi
-        if [ "$OLD_HASH" = "$NEW_HASH" ] && [ -n "$NEW_HASH" ] && [ -z "$DOCKER_IMAGE_CHANGED" ] && [ -z "$SECRETS_CHANGED" ] && [ -z "$CONTAINERS_MISSING" ] && [ -z "${FORCE_DEPLOY:-}" ]; then
-            log "Config unchanged, no image rebuild, all containers running — skipping deploy+compose"
-        else
+        # ── Config-change gate — governs the rsync (step_deploy) ONLY. ──
+        # step_compose (up) is decoupled below and ALWAYS runs. This is the
+        # negation of the historical skip-gate: rsync only when the dist hash
+        # moved, the image was rebuilt, secrets changed, containers are missing,
+        # or a redeploy is forced.
+        CONFIG_CHANGED=""
+        if [ "$OLD_HASH" != "$NEW_HASH" ] || [ -z "$NEW_HASH" ] || [ -n "$DOCKER_IMAGE_CHANGED" ] || [ -n "$SECRETS_CHANGED" ] || [ -n "$CONTAINERS_MISSING" ] || [ -n "${FORCE_DEPLOY:-}" ]; then
+            CONFIG_CHANGED=true
+        fi
+
+        # (a) rsync configs to the VM — skip when nothing changed (cheap +
+        #     desirable). FORCE_DEPLOY / CONTAINERS_MISSING still force it.
+        if [ -n "$CONFIG_CHANGED" ]; then
             step_deploy
-            step_compose
-            # Bug #2 fix: hash written AFTER compose succeeds (not after deploy)
-            echo "$NEW_HASH" > "$SERVICE_DIR/.dist-hash"
+        else
+            log "Config unchanged, no secrets change — skipping rsync (step_deploy)"
+        fi
+
+        # (b) docker compose up -d — ALWAYS runs, decoupled from the gate above.
+        # WHY unconditional: coupling `up` to the config-change gate meant a
+        # container STOPPED out-of-band (load-shedder killing docker, VM reboot)
+        # with UNCHANGED source was never `up`'d again, so `build.sh ship` (the
+        # documented shed-recovery) was a silent no-op — gcp-proxy's whole stack
+        # (authelia, redis, hickory-dns, introspect-proxy, c3-analytics-api,
+        # caddy) sat Exited while two ship re-dispatches reported success
+        # (2026-06). `up -d` starts stopped containers; step_compose derives its
+        # recreate/pull policy from $DOCKER_IMAGE_CHANGED + $CONFIG_CHANGED, so on
+        # an unchanged stack this is a near-no-op that still heals a shed stack.
+        step_compose
+
+        # Persist hashes AFTER compose succeeds (Bug #2 fix) so future runs still
+        # detect unchanged config and skip the rsync. Idempotent when unchanged.
+        echo "$NEW_HASH" > "$SERVICE_DIR/.dist-hash"
+        if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
+            ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_HASH' > '$DEPLOY_PATH/.dist-hash'" 2>/dev/null || true
+        fi
+        if [ -f "$SERVICE_DIR/.secrets-hash-new" ]; then
+            cp "$SERVICE_DIR/.secrets-hash-new" "$SERVICE_DIR/.secrets-hash"
             if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
-                ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_HASH' > '$DEPLOY_PATH/.dist-hash'" 2>/dev/null || true
+                ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_SECRETS_HASH' > '$DEPLOY_PATH/.secrets-hash'" 2>/dev/null || true
             fi
-            if [ -f "$SERVICE_DIR/.secrets-hash-new" ]; then
-                cp "$SERVICE_DIR/.secrets-hash-new" "$SERVICE_DIR/.secrets-hash"
-                if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
-                    ssh $SSH_OPTS "$DEPLOY_HOST" "echo '$NEW_SECRETS_HASH' > '$DEPLOY_PATH/.secrets-hash'" 2>/dev/null || true
-                fi
-                rm -f "$SERVICE_DIR/.secrets-hash-new"
-            fi
+            rm -f "$SERVICE_DIR/.secrets-hash-new"
         fi
         ;;
     wrangler) step_wrangler ;;
