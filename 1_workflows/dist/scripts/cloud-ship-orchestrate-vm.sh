@@ -87,7 +87,11 @@ fi
 # Detect changed dirs (GHA provides HEAD~1, CLI/Dagu ships all)
 CHANGED_DIRS=""
 if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ]; then
-  CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+  # `a_solutions/*/src/` (trailing slash) is a directory pathspec that, combined with
+  # the `*`, MISSES files directly under src/ (e.g. src/compose.nix) — proven: it
+  # skipped a real cloud-cgc-mcp change. `**` recurses at any depth (matches the
+  # detect step in ship.yml). Without this, changed services are wrongly "unchanged".
+  CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 fi
 
 OK=0
@@ -105,13 +109,19 @@ while IFS='|' read -r dir name has_docker; do
     continue
   fi
 
-  # Skip unchanged (only in GHA push events)
-  if [ -n "$CHANGED_DIRS" ] && ! echo "$CHANGED_DIRS" | grep -q "$dir"; then
-    echo "SKIP $name (unchanged)"
-    SKIP=$((SKIP + 1))
-    TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
-      '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
-    continue
+  # Skip unchanged (only in GHA push events). Exact token match against the
+  # space-delimited CHANGED_DIRS — a substring grep could mis-match a similarly
+  # named folder (false deploy) or partial (false skip).
+  if [ -n "$CHANGED_DIRS" ]; then
+    _changed=0
+    case " $CHANGED_DIRS " in *" $dir "*) _changed=1 ;; esac
+    if [ "$_changed" -eq 0 ]; then
+      echo "SKIP $name (unchanged)"
+      SKIP=$((SKIP + 1))
+      TRACE_SERVICES=$(jq --arg n "$name" --arg d "$dir" \
+        '. + [{"name":$n,"dir":$d,"status":"skip","duration_s":0}]' <<< "$TRACE_SERVICES")
+      continue
+    fi
   fi
 
   BUILD_SH="a_solutions/${dir}/build.sh"
