@@ -6,10 +6,10 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1965,
+    "files": 1969,
     "by_lang": {
       "nix": 422,
-      "sh": 321,
+      "sh": 325,
       "rust": 445,
       "ts": 305,
       "js": 16,
@@ -17,7 +17,7 @@
     },
     "by_role": {
       "flake": 73,
-      "script": 103,
+      "script": 107,
       "shell": 208,
       "rust-module": 439,
       "engine": 31,
@@ -97,6 +97,7 @@
       "lang": "sh",
       "role": "script",
       "exports": [
+        "octocode_has_fastembed()",
         "ensure_octocode()",
         "ensure_ghcr_auth()",
         "ensure_repos()",
@@ -105,6 +106,7 @@
       ],
       "imports": [],
       "symbols": [
+        "octocode_has_fastembed()",
         "ensure_octocode()",
         "ensure_ghcr_auth()",
         "ensure_repos()",
@@ -888,6 +890,26 @@
         "get_config()",
         "step_build()",
         "step_secrets()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/test_step_docker_multiarch_tags.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
+      ],
+      "imports": [],
+      "symbols": [
+        "plan_docker_tags()",
+        "pass()",
+        "fail()",
+        "assert_has()",
+        "assert_count()"
       ]
     },
     {
@@ -2780,7 +2802,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -2887,10 +2908,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -5256,7 +5276,6 @@
       ],
       "symbols": [
         "default_tcp_secs()",
-        "default_fallback_markers()",
         "load()"
       ]
     },
@@ -5363,10 +5382,9 @@
       ],
       "symbols": [
         "load_public_targets()",
-        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n    fallback_markers: &[String],\n)",
-        "upstream_is_github_pages(upstream: &str)",
+        "run(\n    targets: Vec<CaddyTarget>,\n    bearer: Option<&str>,\n    parallel: usize,\n    timeouts: &Timeouts,\n)",
         "build_client(t: &Timeouts)",
-        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n    fallback_markers: &[String],\n)"
+        "probe_one(\n    client: &reqwest::Client,\n    target: CaddyTarget,\n    bearer: Option<&str>,\n)"
       ]
     },
     {
@@ -6344,6 +6362,36 @@
       ]
     },
     {
+      "path": "1_workflows/src/scripts/cloud-ship-container-step-logs.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "step_logs()"
+      ],
+      "imports": [],
+      "symbols": [
+        "step_logs()"
+      ]
+    },
+    {
+      "path": "1_workflows/src/scripts/cloud-ship-container-step-runtime.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "_compose_remote()",
+        "step_pull()",
+        "step_down()",
+        "step_restart()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_compose_remote()",
+        "step_pull()",
+        "step_down()",
+        "step_restart()"
+      ]
+    },
+    {
       "path": "1_workflows/src/scripts/cloud-ship-container-step-secrets-decrypt.sh",
       "lang": "sh",
       "role": "script",
@@ -6353,6 +6401,18 @@
       "imports": [],
       "symbols": [
         "step_secrets()"
+      ]
+    },
+    {
+      "path": "1_workflows/src/scripts/cloud-ship-container-step-status.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "step_status()"
+      ],
+      "imports": [],
+      "symbols": [
+        "step_status()"
       ]
     },
     {
@@ -37562,6 +37622,7 @@
         "app",
         "vmIp",
         "binariesImage",
+        "dbImage",
         "oct",
         "octocodeJob",
         "image",
@@ -37596,8 +37657,7 @@
         "MCP_HTTP_PORT",
         "MCP_HTTP_HOST",
         "CONFIG_PATH",
-        "GIT_ROOT",
-        "healthcheck"
+        "GIT_ROOT"
       ]
     },
     {
@@ -45338,12 +45398,15 @@
         "memAvailCrit",
         "interval",
         "backoff",
+        "needBreaches",
         "executable",
         "text",
         "MEM_PSI_CRIT",
         "MEM_AVAIL_CRIT_MB",
         "INTERVAL",
         "BACKOFF",
+        "NEED",
+        "breaches",
         "PSI",
         "AVAIL",
         "Description",
@@ -47401,12 +47464,15 @@
         "memAvailCrit",
         "interval",
         "backoff",
+        "needBreaches",
         "executable",
         "text",
         "MEM_PSI_CRIT",
         "MEM_AVAIL_CRIT_MB",
         "INTERVAL",
         "BACKOFF",
+        "NEED",
+        "breaches",
         "PSI",
         "AVAIL",
         "Description",
@@ -49379,12 +49445,15 @@
         "memAvailCrit",
         "interval",
         "backoff",
+        "needBreaches",
         "executable",
         "text",
         "MEM_PSI_CRIT",
         "MEM_AVAIL_CRIT_MB",
         "INTERVAL",
         "BACKOFF",
+        "NEED",
+        "breaches",
         "PSI",
         "AVAIL",
         "Description",
@@ -51361,12 +51430,15 @@
         "memAvailCrit",
         "interval",
         "backoff",
+        "needBreaches",
         "executable",
         "text",
         "MEM_PSI_CRIT",
         "MEM_AVAIL_CRIT_MB",
         "INTERVAL",
         "BACKOFF",
+        "NEED",
+        "breaches",
         "PSI",
         "AVAIL",
         "Description",
@@ -53341,12 +53413,15 @@
         "memAvailCrit",
         "interval",
         "backoff",
+        "needBreaches",
         "executable",
         "text",
         "MEM_PSI_CRIT",
         "MEM_AVAIL_CRIT_MB",
         "INTERVAL",
         "BACKOFF",
+        "NEED",
+        "breaches",
         "PSI",
         "AVAIL",
         "Description",
