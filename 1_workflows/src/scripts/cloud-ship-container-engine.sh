@@ -405,7 +405,18 @@ case "${1:-all}" in
                 "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' config --services 2>/dev/null | sort -u" 2>/dev/null)
             RUNNING=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
                 "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' ps --services --status=running 2>/dev/null | sort -u" 2>/dev/null)
-            if [ -n "$EXPECTED" ] && [ "$EXPECTED" != "$RUNNING" ]; then
+            if [ -z "$EXPECTED" ]; then
+                # Fail-SAFE: the probe could not enumerate desired services (SSH
+                # hiccup, docker daemon down at probe time — e.g. after a
+                # load-shedder stop — or compose file unreadable). An
+                # indeterminate probe must NEVER greenlight a skip: a shed or
+                # otherwise-stopped stack would then stay down forever, and
+                # `build.sh ship` (the documented shed-recovery) becomes a silent
+                # no-op. Force a redeploy; step_compose is idempotent and starts
+                # docker itself if it is down.
+                CONTAINERS_MISSING=true
+                log_warn "Could not enumerate compose services on $DEPLOY_HOST ($DEPLOY_PATH) — forcing redeploy (fail-safe)"
+            elif [ "$EXPECTED" != "$RUNNING" ]; then
                 CONTAINERS_MISSING=true
                 log_warn "Expected services not all running on $DEPLOY_HOST — forcing redeploy"
             fi
