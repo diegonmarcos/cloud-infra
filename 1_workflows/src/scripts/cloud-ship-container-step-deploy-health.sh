@@ -10,16 +10,25 @@ step_health() {
     local interval="${HEALTH_INTERVAL:-10}"
     local elapsed=0
 
+    # Compose file resolution — same as step_compose. Without -f the v2 layout
+    # (compose at compose/docker-compose.yml, not project root) makes
+    # `docker compose ps` find NO compose file → empty listing → false "No
+    # containers found". bash -c because the oci-apps login shell is fish.
+    local cf="-f $REMOTE_COMPOSE_REL --project-directory ."
+
     log "Waiting for containers to be healthy (timeout: ${timeout}s)..."
 
     while [ "$elapsed" -lt "$timeout" ]; do
         # Get all container statuses from compose project
         local statuses
-        statuses=$(ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps --format '{{.Name}}|{{.State}}|{{.Health}}' 2>/dev/null" || true)
+        statuses=$(ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && docker compose $cf ps --format \"{{.Name}}|{{.State}}|{{.Health}}\" 2>/dev/null'" || true)
 
         if [ -z "$statuses" ]; then
-            log "WARNING: No containers found"
-            return 1
+            # Transient during recreate — keep waiting rather than hard-fail.
+            log "No containers listed yet (${elapsed}s) — waiting"
+            sleep "$interval"
+            elapsed=$((elapsed + interval))
+            continue
         fi
 
         local all_ok=true
@@ -72,6 +81,6 @@ EOF
 
     # Timeout — show final state
     log "TIMEOUT: Not all containers healthy after ${timeout}s"
-    ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && docker compose ps" 2>/dev/null | while read -r l; do log "  $l"; done
+    ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && docker compose $cf ps'" 2>/dev/null | while read -r l; do log "  $l"; done
     return 1
 }
