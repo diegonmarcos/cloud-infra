@@ -53,22 +53,50 @@ step_compose() {
         fi
     fi
 
-    # Compose up policy: NEVER build on the deploy VM. All images are pre-built
-    # by the engine and pushed to GHCR (step_docker). VMs only PULL — they never
-    # rebuild. This keeps 1GB e2-micro VMs alive (compose `build` would OOM)
-    # and guarantees the running image matches what was tested in CI.
+    # ── Compose up policy: NEVER build on the deploy VM. ──
+    # All images are pre-built by the engine and pushed to GHCR (step_docker).
+    # VMs only PULL — they never rebuild. --no-build (ALWAYS set) keeps 1GB
+    # e2-micro VMs alive (compose `build` would OOM) and guarantees the running
+    # image matches what was tested in CI. `--build` in build.json's
+    # deploy.compose_flags is IGNORED; the engine logs a warning below.
     #
-    # `--build` in build.json's deploy.compose_flags is IGNORED at compose-up
-    # time; the engine logs a warning so the legacy flag can be cleaned up.
-    # --pull always (history: never → missing → always). The fleet pins
-    # :latest tags, so "missing" let a stale locally-cached image shadow a
-    # freshly-pushed GHCR image forever — crawlee's amd64 mispush (run
-    # 27409752538) kept winning over the corrected arm64 build on every
-    # redeploy because the tag already existed locally. "always" re-pulls at
-    # each deploy; on registry/auth failure compose errors instead of
-    # silently running stale bits (FAIL LOUDLY doctrine).
-    COMPOSE_UP_FLAGS="--no-build --pull always --force-recreate"
-    COMPOSE_PULL_FIRST="true"
+    # ── Recreate / pull policy: decoupled ensure-running vs. real redeploy ──
+    # step_compose now ALWAYS runs in the ship pipeline — even when nothing
+    # changed — so a container stopped out-of-band (load-shedder killing docker,
+    # VM reboot) is brought back `up` (gcp-proxy's whole stack sat Exited while
+    # two `ship` re-dispatches no-op'd, 2026-06). See the Phase-3 comment in
+    # cloud-ship-container-engine.sh. To keep that cheap, pull + recreate are
+    # derived from what actually changed:
+    #   • --pull always    → only when the image changed ($DOCKER_IMAGE_CHANGED).
+    #     The fleet pins :latest tags, so "missing" once let a stale locally
+    #     cached image shadow a freshly-pushed GHCR image forever — crawlee's
+    #     amd64 mispush (run 27409752538) kept winning over the corrected arm64
+    #     build. When the image is UNCHANGED there is nothing new to fetch, so we
+    #     use --pull missing (no needless registry hit; local cache authoritative).
+    #   • --force-recreate → only when image OR config changed. A pure
+    #     ensure-running `up -d` restarts stopped containers WITHOUT recreating
+    #     already-running ones, so re-running ship on an unchanged stack is a
+    #     near-no-op that still heals a shed/stopped container.
+    #
+    # DOCKER_IMAGE_CHANGED / CONFIG_CHANGED are set by the ship pipeline. When
+    # step_compose is invoked standalone (`build.sh compose`) both are UNSET; we
+    # then keep the historical full refresh (pull always + force-recreate) so the
+    # manual command still forces a clean redeploy.
+    if [ -z "${DOCKER_IMAGE_CHANGED+x}" ] && [ -z "${CONFIG_CHANGED+x}" ]; then
+        _PULL_POLICY="--pull always"; _RECREATE="--force-recreate"; COMPOSE_PULL_FIRST="true"
+    else
+        if [ -n "${DOCKER_IMAGE_CHANGED:-}" ]; then
+            _PULL_POLICY="--pull always"; COMPOSE_PULL_FIRST="true"
+        else
+            _PULL_POLICY="--pull missing"; COMPOSE_PULL_FIRST="false"
+        fi
+        if [ -n "${DOCKER_IMAGE_CHANGED:-}" ] || [ -n "${CONFIG_CHANGED:-}" ]; then
+            _RECREATE="--force-recreate"
+        else
+            _RECREATE=""
+        fi
+    fi
+    COMPOSE_UP_FLAGS="--no-build $_PULL_POLICY $_RECREATE"
     if echo "$COMPOSE_FLAGS" | grep -q -- '--build'; then
         log_warn "deploy.compose_flags contains --build but VM rebuilds are disabled — using --no-build (engine pushes pre-built images to GHCR)"
     fi
