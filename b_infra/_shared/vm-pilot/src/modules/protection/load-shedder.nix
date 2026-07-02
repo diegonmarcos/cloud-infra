@@ -23,10 +23,12 @@ let
   # cpu/mem/io PSI breaches for needBreaches ticks, we shed docker.
   memPsiCrit   = 50;
   cpuPsiCrit   = 50;
-  # io lowered 50→30 (2026-07-02): desktop forensics showed reclaim-thrash
-  # freezes present as SUSTAINED-MODERATE io pressure (avg10 ~2-8 spiking,
-  # avg300 climbing to 17 = frozen box) — a 50 gate never fires on that mode.
-  # 30 catches it; needBreaches=3 (~45s sustained) still filters short bursts.
+  # INCIDENT 2026-07-02: io gate 30 on SOME avg10 false-fired — 'some io'
+  # sits at ~31% on a healthy loaded server (any one task waiting counts),
+  # and the shedder took docker down fleet-wide (oci-apps + oci-analytics)
+  # within minutes of deploy. The freeze signal is io FULL avg10 (ALL tasks
+  # simultaneously stalled): ~0-3% healthy, sustained ≥30 = real stall.
+  # io now reads 'full' (see psi_avg10 call); cpu/mem stay on 'some'.
   ioPsiCrit    = 30;
   interval     = 15;   # seconds between checks
   backoff      = 120;  # seconds to wait after a shed before re-arming
@@ -45,20 +47,22 @@ in {
       BACKOFF=${toString backoff}
       NEED=${toString needBreaches}
 
-      # $1 = cpu|memory|io — returns integer part of "some avg10" (portable: no
-      # printf %f / locale dependency), 0 if unavailable.
-      psi_some_avg10() {
-        awk -F'avg10=' '/^some/ { split($2, a, " "); print a[1]; exit }' \
+      # $1 = cpu|memory|io, $2 = some|full — returns integer part of avg10
+      # (portable: no printf %f / locale dependency), 0 if unavailable.
+      # cpu/mem trigger on 'some'; io triggers on 'full' — 'some io' idles at
+      # ~31% on a loaded server and false-shed the whole fleet on 2026-07-02.
+      psi_avg10() {
+        awk -F'avg10=' -v kind="$2" '$1 ~ "^"kind { split($2, a, " "); print a[1]; exit }' \
           "/proc/pressure/$1" 2>/dev/null || echo 0
       }
 
-      logger -t load-shedder "armed (PSI-only): shed docker when cpu|mem|io PSI(some avg10) >= cpu''${CPU_PSI_CRIT}%%/mem''${MEM_PSI_CRIT}%%/io''${IO_PSI_CRIT}%%"
+      logger -t load-shedder "armed (PSI-only): shed docker when cpuPSI(some)>=''${CPU_PSI_CRIT}%% | memPSI(some)>=''${MEM_PSI_CRIT}%% | ioPSI(FULL)>=''${IO_PSI_CRIT}%%"
 
       breaches=0
       while :; do
-        CPU=$(psi_some_avg10 cpu);    CPU_I=''${CPU%%.*}; CPU_I=''${CPU_I:-0}
-        MEM=$(psi_some_avg10 memory); MEM_I=''${MEM%%.*}; MEM_I=''${MEM_I:-0}
-        IO=$(psi_some_avg10 io);      IO_I=''${IO%%.*};  IO_I=''${IO_I:-0}
+        CPU=$(psi_avg10 cpu some);    CPU_I=''${CPU%%.*}; CPU_I=''${CPU_I:-0}
+        MEM=$(psi_avg10 memory some); MEM_I=''${MEM%%.*}; MEM_I=''${MEM_I:-0}
+        IO=$(psi_avg10 io full);      IO_I=''${IO%%.*};  IO_I=''${IO_I:-0}
 
         if [ "$CPU_I" -ge "$CPU_PSI_CRIT" ] || [ "$MEM_I" -ge "$MEM_PSI_CRIT" ] || [ "$IO_I" -ge "$IO_PSI_CRIT" ]; then
           breaches=$((breaches + 1))
