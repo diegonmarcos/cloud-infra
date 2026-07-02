@@ -35,13 +35,15 @@ let
   # cpu/mem/io PSI breaches for needBreaches ticks, we shed docker.
   memPsiCrit   = 50;
   cpuPsiCrit   = 50;
-  # INCIDENT 2026-07-02: io gate 30 on SOME avg10 false-fired — 'some io'
-  # sits at ~31% on a healthy loaded server (any one task waiting counts),
-  # and the shedder took docker down fleet-wide (oci-apps + oci-analytics)
-  # within minutes of deploy. The freeze signal is io FULL avg10 (ALL tasks
-  # simultaneously stalled): ~0-3% healthy, sustained ≥30 = real stall.
-  # io now reads 'full' (see psi_avg10 call); cpu/mem stay on 'some'.
-  ioPsiCrit    = 30;
+  # INCIDENT 2026-07-02 (twice): io gate 30 on SOME false-fired on normal
+  # load (~31% idle-loaded); then FULL@30 fired at full=50 during a docker
+  # build — a legitimate deploy saturating the small disk while SSH stayed
+  # responsive. Deploys routinely reach full io ~50 on these VMs without
+  # freezing (WG/sshd hold FIFO + reserved memory). 80 = only a truly dead
+  # box; the primary freeze signal remains memPSI (per 2026-06 forensics).
+  # TODO(engine): suspend load-shedder during ship/compose windows like the
+  # desktop engine's suspend_during_build.system_services.
+  ioPsiCrit    = 80;
   interval     = 15;   # seconds between checks
   backoff      = 120;  # seconds to wait after a shed before re-arming
   needBreaches = 3;    # consecutive breaches (~45s) required before shedding
