@@ -36,11 +36,15 @@ if [ -z "$RUNNERS_JSON" ]; then
     fail "build-workflows.json not found under 2_configs/dist/ or repo root"
 else
     pass "runners.json found at $RUNNERS_JSON"
-    # Collect distinct docker.arch values from every service build.json
+    # Collect distinct docker.arch values from every service build.json.
+    # A service may declare a comma-separated multi-arch list ("amd64,arm64" —
+    # the engine stitches a multi-arch manifest from it), so split on commas:
+    # every INDIVIDUAL arch must have a runner; the comma string itself is not
+    # a runners.json key.
     declared_arches=$(find "$REPO_ROOT/a_solutions" -maxdepth 2 -name build.json \
         -not -path "*/z_archive/*" -print0 2>/dev/null \
         | xargs -0 -I{} jq -r '.docker.arch // empty' {} 2>/dev/null \
-        | sort -u | grep -v '^$' || true)
+        | tr ',' '\n' | sort -u | grep -v '^$' || true)
     for arch in $declared_arches; do
         if jq -e --arg a "$arch" '.runners[$a].type' "$RUNNERS_JSON" >/dev/null 2>&1; then
             pass "runners.json has entry for arch=$arch"
