@@ -13,7 +13,13 @@ step_deploy() {
             # `--rsync-path="bash -c rsync"` was previously used but invoked
             # rsync with NO arguments on the remote side → silent partial copy.
             # Rely on remote PATH (nix profile) finding rsync directly.
-            rsync -avz --delete "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
+            # P-filters (2026-07-03): never let --delete remove deployed
+            # secrets the secrets step placed (2026-07-02 mass-wipe incident).
+            rsync -avz --delete \
+                --filter='P .secrets' \
+                --filter='P .secrets.d' \
+                --filter='P .secrets.json' \
+                "$DIST_DIR/" "$DEPLOY_HOST:$REMOTE_PATH/" 2>&1 \
                 | grep -v "^sending\|^sent\|^total" || true
         else
             scp -r "$DIST_DIR/"* "$DEPLOY_HOST:$REMOTE_PATH/"
