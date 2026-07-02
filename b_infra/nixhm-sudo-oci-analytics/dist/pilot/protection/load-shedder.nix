@@ -27,23 +27,20 @@
 { config, pkgs, lib, ramMB, ... }:
 
 let
-  # PSI IS THE ONLY TRIGGER — three signals, no absolute metric. Each is the
-  # kernel "some avg10": % of the last 10s that ANY task stalled waiting on that
-  # resource. >=50 sustained = imminent thrash/freeze, RAM-independent. The old
-  # MemAvailable absolute floor was removed: it routinely false-fired on small
-  # VMs (kernel holds RAM as reclaimable cache while PSI stays ~0). If ANY of
-  # cpu/mem/io PSI breaches for needBreaches ticks, we shed docker.
-  memPsiCrit   = 50;
-  cpuPsiCrit   = 50;
-  # INCIDENT 2026-07-02 (twice): io gate 30 on SOME false-fired on normal
-  # load (~31% idle-loaded); then FULL@30 fired at full=50 during a docker
-  # build — a legitimate deploy saturating the small disk while SSH stayed
-  # responsive. Deploys routinely reach full io ~50 on these VMs without
-  # freezing (WG/sshd hold FIFO + reserved memory). 80 = only a truly dead
-  # box; the primary freeze signal remains memPSI (per 2026-06 forensics).
+  # MEMORY PSI IS THE ONLY SHED TRIGGER (as this module's header declares).
+  # INCIDENT 2026-07-02, THREE false sheds in one night proved cpu/io gates
+  # cannot work on a host that is also a BUILD host:
+  #   1. io SOME@30  → fired at ~31% normal loaded-server io
+  #   2. io FULL@30  → fired at full=50 during a legitimate docker build
+  #   3. cpu SOME@50 → fired at 69 while native arm64 image builds pegged
+  #      all cores — exactly what a build host is FOR.
+  # WG/sshd/dropbear survive cpu+io saturation by design (SCHED_FIFO +
+  # MemoryMin island) — only MEMORY thrash can take the box down (2026-06
+  # forensics: freezes were user.slice memory pressure, never cpu/io alone).
+  # cpu/io are still LOGGED for observability; they never trigger a shed.
   # TODO(engine): suspend load-shedder during ship/compose windows like the
   # desktop engine's suspend_during_build.system_services.
-  ioPsiCrit    = 80;
+  memPsiCrit   = 50;
   interval     = 15;   # seconds between checks
   backoff      = 120;  # seconds to wait after a shed before re-arming
   needBreaches = 3;    # consecutive breaches (~45s) required before shedding
@@ -53,24 +50,21 @@ in {
     text = ''
       #!/bin/sh
       # Load shedder — stop docker before the VM freezes; keep WG/SSH alive.
-      # PSI-ONLY: triggers on cpu OR mem OR io PSI (some avg10). No absolute metric.
+      # MEMORY-PSI-ONLY trigger (cpu/io logged for observability, never shed —
+      # three false sheds on 2026-07-02 proved them unusable on a build host).
       MEM_PSI_CRIT=${toString memPsiCrit}
-      CPU_PSI_CRIT=${toString cpuPsiCrit}
-      IO_PSI_CRIT=${toString ioPsiCrit}
       INTERVAL=${toString interval}
       BACKOFF=${toString backoff}
       NEED=${toString needBreaches}
 
       # $1 = cpu|memory|io, $2 = some|full — returns integer part of avg10
       # (portable: no printf %f / locale dependency), 0 if unavailable.
-      # cpu/mem trigger on 'some'; io triggers on 'full' — 'some io' idles at
-      # ~31% on a loaded server and false-shed the whole fleet on 2026-07-02.
       psi_avg10() {
         awk -F'avg10=' -v kind="$2" '$1 ~ "^"kind { split($2, a, " "); print a[1]; exit }' \
           "/proc/pressure/$1" 2>/dev/null || echo 0
       }
 
-      logger -t load-shedder "armed (PSI-only): shed docker when cpuPSI(some)>=''${CPU_PSI_CRIT}%% | memPSI(some)>=''${MEM_PSI_CRIT}%% | ioPSI(FULL)>=''${IO_PSI_CRIT}%%"
+      logger -t load-shedder "armed (MEMORY-PSI-ONLY): shed docker when memPSI(some)>=''${MEM_PSI_CRIT}%% sustained ''${NEED}x''${INTERVAL}s (cpu/io logged, never shed)"
 
       breaches=0
       while :; do
@@ -78,7 +72,7 @@ in {
         MEM=$(psi_avg10 memory some); MEM_I=''${MEM%%.*}; MEM_I=''${MEM_I:-0}
         IO=$(psi_avg10 io full);      IO_I=''${IO%%.*};  IO_I=''${IO_I:-0}
 
-        if [ "$CPU_I" -ge "$CPU_PSI_CRIT" ] || [ "$MEM_I" -ge "$MEM_PSI_CRIT" ] || [ "$IO_I" -ge "$IO_PSI_CRIT" ]; then
+        if [ "$MEM_I" -ge "$MEM_PSI_CRIT" ]; then
           breaches=$((breaches + 1))
           logger -t load-shedder "pressure ''${breaches}/$NEED: cpuPSI=''${CPU} memPSI=''${MEM} ioPSI=''${IO}"
         else
@@ -139,7 +133,7 @@ in {
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable load-shedder.service 2>/dev/null || true
     $SUDO systemctl restart load-shedder.service 2>/dev/null || true
-    echo "[load-shedder] deployed (PSI-only): cpu>=${toString cpuPsiCrit}%% | mem>=${toString memPsiCrit}%% | io>=${toString ioPsiCrit}%% → stop docker"
+    echo "[load-shedder] deployed (MEMORY-PSI-ONLY): mem>=${toString memPsiCrit}%% sustained → stop docker (cpu/io logged, never shed)"
     ) || echo "[load-shedder] FAILED — activation continues"
   '';
 }
