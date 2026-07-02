@@ -34,6 +34,7 @@ in {
   imports = [
     (import ./resource-bouncer.nix { inherit config pkgs lib ramMB; })
     (import ./watchdog.nix { inherit config pkgs lib ramMB; })
+    (import ./load-shedder.nix { inherit config pkgs lib ramMB; })
     (import ./rescue-ssh.nix { inherit config pkgs lib rescuePort; })
     (import ./scheduler.nix { inherit config pkgs lib ramMB; })
     (import ./layer2-identity.nix { inherit config pkgs lib ramMB cpus userName userId; })
