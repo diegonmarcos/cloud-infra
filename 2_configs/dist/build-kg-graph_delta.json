@@ -1798,7 +1798,7 @@
         "name": "etherpad",
         "category": "app",
         "description": "Etherpad collaborative editor",
-        "domain": "pad.diegonmarcos.com",
+        "domain": "app.diegonmarcos.com/etherpad",
         "port": 3012,
         "vm": "oci-apps",
         "folder": "user-prod_etherpad"
@@ -1836,7 +1836,7 @@
         "name": "filebrowser",
         "category": "app",
         "description": "FileBrowser web file manager (NEW - not deployed yet)",
-        "domain": "files.diegonmarcos.com",
+        "domain": "app.diegonmarcos.com/filebrowser",
         "port": 3015,
         "vm": "oci-apps",
         "folder": "user-prod_filebrowser"
@@ -1888,7 +1888,7 @@
         "name": "hedgedoc",
         "category": "app",
         "description": "Collaborative markdown editor",
-        "domain": "doc.diegonmarcos.com",
+        "domain": "app.diegonmarcos.com/hedgedoc",
         "port": 3018,
         "vm": "oci-apps",
         "folder": "user-prod_hedgedoc"
@@ -2322,18 +2322,18 @@
     },
     {
       "table": "domain",
-      "id": "pad_diegonmarcos_com",
-      "key": "domain:pad_diegonmarcos_com",
+      "id": "app_diegonmarcos_com/etherpad",
+      "key": "domain:app_diegonmarcos_com/etherpad",
       "properties": {
-        "fqdn": "pad.diegonmarcos.com"
+        "fqdn": "app.diegonmarcos.com/etherpad"
       }
     },
     {
       "table": "domain",
-      "id": "files_diegonmarcos_com",
-      "key": "domain:files_diegonmarcos_com",
+      "id": "app_diegonmarcos_com/filebrowser",
+      "key": "domain:app_diegonmarcos_com/filebrowser",
       "properties": {
-        "fqdn": "files.diegonmarcos.com"
+        "fqdn": "app.diegonmarcos.com/filebrowser"
       }
     },
     {
@@ -2346,10 +2346,10 @@
     },
     {
       "table": "domain",
-      "id": "doc_diegonmarcos_com",
-      "key": "domain:doc_diegonmarcos_com",
+      "id": "app_diegonmarcos_com/hedgedoc",
+      "key": "domain:app_diegonmarcos_com/hedgedoc",
       "properties": {
-        "fqdn": "doc.diegonmarcos.com"
+        "fqdn": "app.diegonmarcos.com/hedgedoc"
       }
     },
     {
@@ -4958,7 +4958,7 @@
       "to": "service:caddy",
       "key": "service:etherpad->proxied_by->service:caddy",
       "properties": {
-        "domain": "pad.diegonmarcos.com"
+        "domain": "app.diegonmarcos.com/etherpad"
       }
     },
     {
@@ -4967,7 +4967,7 @@
       "to": "service:caddy",
       "key": "service:filebrowser->proxied_by->service:caddy",
       "properties": {
-        "domain": "files.diegonmarcos.com"
+        "domain": "app.diegonmarcos.com/filebrowser"
       }
     },
     {
@@ -4985,7 +4985,7 @@
       "to": "service:caddy",
       "key": "service:hedgedoc->proxied_by->service:caddy",
       "properties": {
-        "domain": "doc.diegonmarcos.com"
+        "domain": "app.diegonmarcos.com/hedgedoc"
       }
     },
     {
@@ -5260,16 +5260,16 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:pad_diegonmarcos_com",
+      "from": "domain:app_diegonmarcos_com/etherpad",
       "to": "service:etherpad",
-      "key": "domain:pad_diegonmarcos_com->routes_to->service:etherpad",
+      "key": "domain:app_diegonmarcos_com/etherpad->routes_to->service:etherpad",
       "properties": {}
     },
     {
       "table": "routes_to",
-      "from": "domain:files_diegonmarcos_com",
+      "from": "domain:app_diegonmarcos_com/filebrowser",
       "to": "service:filebrowser",
-      "key": "domain:files_diegonmarcos_com->routes_to->service:filebrowser",
+      "key": "domain:app_diegonmarcos_com/filebrowser->routes_to->service:filebrowser",
       "properties": {}
     },
     {
@@ -5281,9 +5281,9 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:doc_diegonmarcos_com",
+      "from": "domain:app_diegonmarcos_com/hedgedoc",
       "to": "service:hedgedoc",
-      "key": "domain:doc_diegonmarcos_com->routes_to->service:hedgedoc",
+      "key": "domain:app_diegonmarcos_com/hedgedoc->routes_to->service:hedgedoc",
       "properties": {}
     },
     {
