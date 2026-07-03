@@ -31,6 +31,21 @@ LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
 LABEL org.opencontainers.image.description="cloud-cgc-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
 DOCKER
 
+# Reclaim disk BEFORE building. The DB image is ~1.6GB and the deploy host's docker
+# data-root runs hot (observed oci-apps: 88% full, 14GB reclaimable). Every rebuild of
+# :latest orphans the PREVIOUS version as a dangling (untagged) image; nothing GC's them,
+# so they pile up until `docker build` dies mid-layer with
+#   "failed to get digest sha256:… : … no such file or directory"
+# (an image-store write failure under disk pressure — exactly how run 28665357140 failed).
+# Prune dangling images only: they are untagged/superseded and reproducible from GHCR;
+# running services use TAGGED images + volumes, which prune never touches. Non-fatal.
+if command -v docker >/dev/null 2>&1; then
+  _free_before=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
+  docker image prune -f >/dev/null 2>&1 || true
+  _free_after=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
+  echo "[cgc-db] pruned dangling images — free KB ${_free_before:-?} -> ${_free_after:-?}"
+fi
+
 echo "[cgc-db] building $IMAGE:$TAG ..."
 # DOCKER_BUILDKIT=0 (legacy builder) for this trivial busybox+ADD image: buildx
 # tries to chown ~/.docker/buildx/activity/default, which fails when the producer
@@ -40,6 +55,9 @@ echo "[cgc-db] building $IMAGE:$TAG ..."
 DOCKER_BUILDKIT=0 docker build -t "$IMAGE:$TAG" "$WORK/ctx"
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
 docker push "$IMAGE:$TAG"
+# Drop the local tagged copy after a successful push — GHCR is the single store, and
+# keeping it locally just re-fills the data-root every run. Next run rebuilds trivially.
+docker rmi "$IMAGE:$TAG" >/dev/null 2>&1 || true
 
 # Flip the package public (pull convenience). Non-fatal — push already succeeded.
 if command -v gh >/dev/null 2>&1; then
