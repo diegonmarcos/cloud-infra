@@ -121,7 +121,23 @@ in {
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable load-shedder.service 2>/dev/null || true
     $SUDO systemctl restart load-shedder.service 2>/dev/null || true
-    echo "[load-shedder] deployed (MEMORY-PSI-ONLY): mem>=${toString memPsiCrit}%% sustained → stop docker (cpu/io logged, never shed)"
-    ) || echo "[load-shedder] FAILED — activation continues"
+
+    # VERIFY it actually armed. A silently-unguarded VM is exactly how oci-mail
+    # thrashed to 85%% memPSI with the shedder never firing (2026-07-03): the
+    # old activation swallowed install/start failures into a bare echo nobody
+    # sees, and never confirmed the service came up. Retry once, then FAIL LOUD
+    # + drop a persistent marker the health report surfaces.
+    $SUDO rm -f /run/load-shedder.deploy-failed 2>/dev/null || true
+    if ! $SUDO systemctl is-active --quiet load-shedder.service; then
+      sleep 2; $SUDO systemctl restart load-shedder.service 2>/dev/null || true; sleep 2
+    fi
+    if $SUDO systemctl is-active --quiet load-shedder.service; then
+      echo "[load-shedder] ARMED ✓ (MEMORY-PSI-ONLY: mem>=${toString memPsiCrit}%% sustained → stop docker)"
+    else
+      echo "[load-shedder] ✗✗✗ FAILED TO ARM — VM UNPROTECTED against memory thrash ✗✗✗" >&2
+      $SUDO sh -c 'echo "load-shedder inactive after HM activation $(date -u +%%FT%%TZ)" > /run/load-shedder.deploy-failed' 2>/dev/null || true
+      logger -p daemon.err -t load-shedder "DEPLOY FAILED — service inactive after activation; VM UNPROTECTED against memory thrash" 2>/dev/null || true
+    fi
+    ) || echo "[load-shedder] activation error (see above) — check 'systemctl status load-shedder'"
   '';
 }
