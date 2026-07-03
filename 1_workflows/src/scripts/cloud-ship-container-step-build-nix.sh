@@ -88,7 +88,15 @@ step_build() {
         IS_V2_ENGINE_PRE="true"
     fi
 
-    if [ "$IS_V2_ENGINE_PRE" = "true" ]; then
+    # HYBRID GUARD (2026-07-03): a v2 engine flake normally reads 2_configs/dist
+    # directly, so src/ symlink injection is skipped. BUT a v2 flake may ALSO
+    # reference an external *.json symlink verbatim inside a runCommand
+    # (cloud-spec: DATA=${./cloud-data.json} → ../../../2_configs/dist/...).
+    # Nix interns that symlink AS-IS → the target is outside the flake root →
+    # dangling symlink in the store → build dies with "jq: cloud-data.json: No
+    # such file". So v2 short-circuits ONLY when there are no external symlinks;
+    # a v2+symlink hybrid falls through and gets its symlinks dereferenced.
+    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$HAS_EXTERNAL_SYMLINKS" != "true" ]; then
         log "v2 engine flake — cloud-data accessed via 2_configs/dist, no src/ resolve needed"
     elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         # Resolve every external *.json symlink to a real file
