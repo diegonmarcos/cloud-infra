@@ -19,6 +19,8 @@ in {
     text = ''
       #!/bin/sh
       HOME=/home/ubuntu
+      # HM activation nohup inherits a minimal PATH — set explicitly
+      export PATH="$HOME/.nix-profile/bin:$HOME/.local/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin"
       SECRETS_D="$HOME/.config/home-manager/.secrets.d"
       CF_TOKEN_FILE="$SECRETS_D/CF_API_TOKEN"
       [ -f "$CF_TOKEN_FILE" ] || { echo "[tls-acme] No CF_API_TOKEN — skipping"; exit 0; }
