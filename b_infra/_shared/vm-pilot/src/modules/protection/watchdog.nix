@@ -254,7 +254,8 @@ in {
 
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable disk-swap.service disk-swap-maintenance.timer disk-watchdog.timer 2>/dev/null || true
-    $SUDO systemctl start disk-swap.service 2>/dev/null || true
+    # --no-block: dd writes 2GB on first run → saturates I/O → SSH keepalive stalls → exit 255
+    $SUDO systemctl start disk-swap.service --no-block 2>/dev/null || true
     $SUDO systemctl start disk-swap-maintenance.timer 2>/dev/null || true
     $SUDO systemctl start disk-watchdog.timer 2>/dev/null || true
 
