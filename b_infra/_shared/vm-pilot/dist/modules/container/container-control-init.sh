@@ -141,14 +141,24 @@ cmd_cloud_data_sync() {
   fi
 }
 
-# Resolve declared services from cloud-data manifest
+# Resolve declared services from per-VM manifest.
+# Probe order:
+#   1. /opt/scripts/build-vm.json — NEW canonical, deployed by home-manager
+#      from 2_configs/dist/build-vm-{vm}.json. cloud-data emits NOTHING; this
+#      is the only declarative source going forward.
+#   2. $CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json — LEGACY fallback
+#      for VMs not yet re-shipped under the new pattern. Remove once all VMs
+#      have been redeployed and verified.
+# Both files have the same `.services[].compose_path` shape (verified against
+# 2_configs/dist/build-vm-oci-mail.json).
 _get_services() {
   _json=""
-  for _p in "cloud-data-containers-${VM_ALIAS}.json"; do
-    _m=$(find "$CLOUD_DATA_DIR" -maxdepth 1 -name "$_p" 2>/dev/null | head -1)
-    [ -n "$_m" ] && _json="$_m" && break
+  for _p in "/opt/scripts/build-vm.json" "$CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json"; do
+    if [ -f "$_p" ] && [ -s "$_p" ] && jq -e '.services | length > 0' "$_p" >/dev/null 2>&1; then
+      _json="$_p" && break
+    fi
   done
-  [ -z "$_json" ] && { log_err "No manifest for vm=$VM_ALIAS"; return 1; }
+  [ -z "$_json" ] && { log_err "No manifest for vm=$VM_ALIAS (probed /opt/scripts/build-vm.json + $CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json)"; return 1; }
   jq -r '.services[].compose_path' "$_json"
 }
 
@@ -172,12 +182,16 @@ _service_up() {
   fi
 
   # Pull + run (no build — images are pre-built on GHCR)
-  if [ -f "$_dir/docker-compose.yml" ]; then
+  # Configs images extract compose under compose/ (2026-07-03 layout) —
+  # support both the legacy top-level and the compose/ subdir location.
+  _cdir="$_dir"
+  [ ! -f "$_cdir/docker-compose.yml" ] && [ -f "$_dir/compose/docker-compose.yml" ] && _cdir="$_dir/compose"
+  if [ -f "$_cdir/docker-compose.yml" ]; then
     _env=""
-    [ -f "$_dir/.secrets" ] && _env="--env-file .secrets"
+    [ -f "$_cdir/.secrets" ] && _env="--env-file .secrets"
     # Pre-hook (e.g. init.sh for secret substitution)
     [ -f "$_dir/init.sh" ] && (cd "$_dir" && sh init.sh) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
-    if (cd "$_dir" && docker compose $_env pull --quiet 2>/dev/null; docker compose $_env up -d --no-build --force-recreate) >/dev/null 2>&1; then
+    if (cd "$_cdir" && docker compose $_env pull --quiet 2>/dev/null; docker compose $_env up -d --no-build --force-recreate) >/dev/null 2>&1; then
       _s=$(( $(date +%s) - _start ))
       log "  [$_svc] ok (${_s}s)"
       return 0
@@ -196,10 +210,12 @@ _service_up() {
 _service_down() {
   _dir="$1"
   _svc=$(basename "$_dir")
-  if [ -f "$_dir/docker-compose.yml" ]; then
+  _cdir="$_dir"
+  [ ! -f "$_cdir/docker-compose.yml" ] && [ -f "$_dir/compose/docker-compose.yml" ] && _cdir="$_dir/compose"
+  if [ -f "$_cdir/docker-compose.yml" ]; then
     _env=""
-    [ -f "$_dir/.secrets" ] && _env="--env-file .secrets"
-    (cd "$_dir" && docker compose $_env down) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
+    [ -f "$_cdir/.secrets" ] && _env="--env-file .secrets"
+    (cd "$_cdir" && docker compose $_env down) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
     log "  [$_svc] stopped"
   fi
 }

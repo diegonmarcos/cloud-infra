@@ -30,7 +30,8 @@ let
   );
 
 in {
-  home.packages = [ pkgs.earlyoom pkgs.e2fsprogs ];
+  # earlyoom package dropped 2026-07-03 with the disabled unit below (ONLY-PSI directive)
+  home.packages = [ pkgs.e2fsprogs ];
 
   # ── Sysctl ────────────────────────────────────────────────────────────
   home.file.".local/share/system-protection/sysctl.conf".text = ''
@@ -94,25 +95,14 @@ in {
   '';
 
   # ── Earlyoom ──────────────────────────────────────────────────────────
-  home.file.".local/share/system-protection/earlyoom.service".text = ''
-    [Unit]
-    Description=Early OOM Daemon (system-protection)
-    After=multi-user.target
-    [Service]
-    Type=simple
-    ExecStart=${pkgs.earlyoom}/bin/earlyoom \
-      -m 10 -s 10 \
-      --prefer "^(containerd-shim|nix-daemon|nix-build|nix)" \
-      --avoid "^(sshd|ssh|systemd|earlyoom|dbus|wg-quick|wg)" \
-      -r 0
-    Restart=always
-    RestartSec=2
-    OOMScoreAdjust=-999
-    MemoryMin=10M
-    Nice=-20
-    [Install]
-    WantedBy=multi-user.target
-  '';
+  # DISABLED 2026-07-03 (user directive: 'remove ALL non-PSI triggers, ONLY
+  # PSI'). earlyoom has no PSI awareness at all — it is purely absolute
+  # free-mem%/free-swap% (-m 10 -s 10), the same class of bug that made the
+  # desktop's earlyoom false-kill plasmashell at PSI≈0. load-shedder.nix
+  # (armed, MEMORY-PSI-ONLY, memPsiCrit=50%) is this fleet's real memory-
+  # thrash protection — genuinely PSI-gated per its own header contract.
+  # Unit definition kept (commented ExecStart removed from activation below)
+  # so it can be restored if a non-PSI last-resort backstop is ever wanted.
 
   # SSH + WG + Docker scheduler configs moved to system-protection-scheduler-fifo-rr-cfs.nix
 
@@ -162,12 +152,17 @@ in {
     $SUDO cp -f "$SRC/zram-setup.sh" /opt/scripts/zram-setup.sh
     $SUDO chmod +x /opt/scripts/zram-setup.sh
     $SUDO cp -f "$SRC/zram-setup.service" /etc/systemd/system/zram-setup.service
-    $SUDO cp -f "$SRC/earlyoom.service" /etc/systemd/system/earlyoom.service
+
+    # earlyoom: disabled + torn down 2026-07-03 (ONLY-PSI directive) — it has
+    # no PSI awareness (absolute mem/swap% only); load-shedder.service is the
+    # real PSI-based memory-thrash protection for this fleet.
+    $SUDO systemctl stop earlyoom.service 2>/dev/null || true
+    $SUDO systemctl disable earlyoom.service 2>/dev/null || true
+    $SUDO rm -f /etc/systemd/system/earlyoom.service
 
     $SUDO systemctl daemon-reload
-    $SUDO systemctl enable zram-setup.service earlyoom.service 2>/dev/null || true
+    $SUDO systemctl enable zram-setup.service 2>/dev/null || true
     $SUDO systemctl start zram-setup.service 2>/dev/null || true
-    $SUDO systemctl restart earlyoom.service 2>/dev/null || true
 
     echo "[resource-bouncer] deployed: mem=${toString (minFreeKB / 1024)}MB-reserve zram=${toString zramSizeMB}MB docker-cap=${toString dockerMaxMB}MB"
     ) || echo "[resource-bouncer] FAILED — activation continues"
