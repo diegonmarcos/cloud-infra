@@ -198,6 +198,34 @@ exclude_submodules() {
   done
 }
 
+# SMART auto-noindex (GENERIC — zero hardcoded project paths). octocode CPU-pegs walking and
+# GraphRAG-graphing binary/asset blobs (bootloader theme PNGs, fonts, media, compiled objects).
+# Instead of a human maintaining a list of offending dirs, DETECT them: git's numstat vs the
+# empty tree prints '-' for every binary file, so we aggregate binary-vs-total per directory
+# and exclude any dir that is majority-binary. Regenerated each run → adapts as repos change.
+# Thresholds are data-driven (build.json runtime.octocode.smart_noindex.*). Appends to .noindex.
+smart_noindex() {
+  _d="$1"; _nx="$_d/.noindex"
+  [ -d "$_d/.git" ] || return 0
+  command -v git >/dev/null 2>&1 || return 0
+  _min=$(jq -r   '.runtime.octocode.smart_noindex.min_files    // 12'  "$BJ")
+  _ratio=$(jq -r '.runtime.octocode.smart_noindex.binary_ratio // 0.5' "$BJ")
+  _empty=$(git -C "$_d" hash-object -t tree /dev/null 2>/dev/null)
+  [ -n "$_empty" ] || return 0
+  _hits=$(git -C "$_d" diff --numstat "$_empty" HEAD 2>/dev/null | awk -v min="$_min" -v ratio="$_ratio" '
+    { path=$3; if (path=="" || path !~ /\//) next;
+      dir=path; sub(/\/[^\/]*$/,"",dir);      # immediate parent directory of the file
+      tot[dir]++; if ($1=="-") bin[dir]++; }
+    END { for (d in tot) if (tot[d]>=min && (bin[d]+0)/tot[d]>=ratio) print d"/"; }')
+  [ -n "$_hits" ] || return 0
+  # De-dup against whatever base patterns already landed in .noindex.
+  printf '%s\n' "$_hits" | while IFS= read -r _p; do
+    [ -n "$_p" ] || continue
+    grep -qxF "$_p" "$_nx" 2>/dev/null || printf '%s\n' "$_p" >> "$_nx"
+  done
+  echo "[cgc-db] $_d · smart-noindex auto-excluded binary-heavy dirs: $(printf '%s' "$_hits" | tr '\n' ' ')"
+}
+
 # Propagate the freshly-pushed DB to the DEPLOYED consumer: SSH to the deploy
 # host and run cloud-cgc-db-restore.sh there (pull GHCR DB → restore the
 # octocode_db volume → restart the MCP container). This is what GUARANTEES the
@@ -324,11 +352,14 @@ for r in $REPOS; do
   fi
 
   exclude_submodules "$d"
-  # Write the data-driven .noindex so octocode skips committed junk trees.
+  # Base .noindex from build.json conventions (dist/vendor/node_modules/z_archive/lockfiles).
+  : > "$d/.noindex"
   if [ -n "$NOINDEX_PATTERNS" ]; then
     printf '%s\n' "$NOINDEX_PATTERNS" > "$d/.noindex"
-    echo "[cgc-db] $r · .noindex: $(printf '%s' "$NOINDEX_PATTERNS" | tr '\n' ' ')"
+    echo "[cgc-db] $r · .noindex base: $(printf '%s' "$NOINDEX_PATTERNS" | tr '\n' ' ')"
   fi
+  # SMART: auto-append binary-dominated dirs (generic, no hardcoded paths).
+  smart_noindex "$d"
 
   echo "[cgc-db] === incremental index: $r (was=${last:-none} now=$cur) ==="
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
