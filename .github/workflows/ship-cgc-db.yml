@@ -2,11 +2,20 @@
 # │  cloud-cgc octocode DB — INCREMENTAL update → GHCR          │
 # │  → PROPAGATE to the deployed oci-apps server.               │
 # │                                                              │
-# │  Runs on oci-apps self-hosted runner (ARM64, 4 OCPUs, 24GB, │
-# │  no GHA 360m hard cap). All 6 repos in one job.             │
+# │  Runs on oci-apps self-hosted runner (ARM64, 4 OCPUs, 24GB).│
+# │                                                              │
+# │  SPLIT PER-REPO: the whole-fleet index took 6-11h and every │
+# │  run got CANCELLED before the push step (GHCR DB frozen).    │
+# │  Now ONE job per repo (max-parallel 1 on the single runner): │
+# │  each pulls the latest GHCR DB, indexes its repo, pushes —   │
+# │  so progress is committed incrementally and no single job    │
+# │  runs long enough to be cancelled. A final `finalize` job    │
+# │  indexes the last repo and propagates the complete DB to     │
+# │  oci-apps.                                                    │
 # │                                                              │
 # │  ALL business logic lives in cloud-cgc-db-update.sh — ZERO  │
-# │  logic here.                                                 │
+# │  logic here. CGC_INDEX_REPOS / CGC_SKIP_PROPAGATE are the    │
+# │  engine's existing split-job knobs.                          │
 # └──────────────────────────────────────────────────────────────┘
 
 name: "cgc-db (octocode incremental update → GHCR → oci-apps)"
@@ -33,8 +42,44 @@ env:
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
 
 jobs:
-  update-db:
-    name: "cgc-db · index all repos + propagate"
+  index:
+    name: "cgc-db · index ${{ matrix.repo }} (defer propagate)"
+    runs-on: [self-hosted, linux, arm64, oci-apps]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      # ONE repo at a time: single runner + a shared GHCR DB base each job
+      # pulls, extends and pushes. Parallel jobs would race on that base.
+      max-parallel: 1
+      # A slow/failed repo must NOT abort the others — each repo's push is
+      # independent, so keep going and let `finalize` run on what landed.
+      fail-fast: false
+      matrix:
+        repo: [cloud, unix, front, tools, cloud-data]
+    steps:
+      - uses: actions/checkout@v4
+      - name: WireGuard up
+        continue-on-error: true
+        run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
+      - name: Provision SSH key for propagation
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
+      - name: "cgc-db incremental index (${{ matrix.repo }})"
+        env:
+          CGC_INDEX_REPOS: ${{ matrix.repo }}
+          CGC_SKIP_PROPAGATE: "1"
+          CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
+
+  finalize:
+    name: "cgc-db · index front-data + propagate → oci-apps"
+    needs: index
+    # Run as long as the workflow wasn't cancelled — even if one repo job
+    # failed, the DB still advanced for the repos that pushed, so propagate
+    # what landed rather than skip the deploy entirely.
+    if: ${{ !cancelled() }}
     runs-on: [self-hosted, linux, arm64, oci-apps]
     permissions:
       contents: read
@@ -48,7 +93,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: cgc-db incremental update + propagate
+      - name: "cgc-db index front-data + propagate (oci-apps serves the new DB)"
         env:
+          CGC_INDEX_REPOS: "front-data"
           CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         run: sh 1_workflows/src/scripts/cloud-cgc-db-update.sh
