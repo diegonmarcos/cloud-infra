@@ -88,15 +88,16 @@ step_build() {
         IS_V2_ENGINE_PRE="true"
     fi
 
-    # HYBRID GUARD (2026-07-03): a v2 engine flake normally reads 2_configs/dist
-    # directly, so src/ symlink injection is skipped. BUT a v2 flake may ALSO
-    # reference an external *.json symlink verbatim inside a runCommand
-    # (cloud-spec: DATA=${./cloud-data.json} → ../../../2_configs/dist/...).
-    # Nix interns that symlink AS-IS → the target is outside the flake root →
-    # dangling symlink in the store → build dies with "jq: cloud-data.json: No
-    # such file". So v2 short-circuits ONLY when there are no external symlinks;
-    # a v2+symlink hybrid falls through and gets its symlinks dereferenced.
-    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$HAS_EXTERNAL_SYMLINKS" != "true" ]; then
+    # HYBRID GUARD v2 (2026-07-03, final form): EVERY v2 flake carries external
+    # per-service registry symlinks — the repo-wide git intern resolves them,
+    # so dereferencing is not just unnecessary, it deterministically BREAKS v2
+    # evals (every "(symlinks +flag)" build tonight failed; every short-circuit
+    # passed). The ONLY case that needs dereferencing is a PATH-INTERPOLATED
+    # symlink inside a runCommand (cloud-spec: DATA=''${./cloud-data.json}) —
+    # nix interns that single path verbatim → dangling in the store. That case
+    # is declared, not inferred: build.json build.dereference_symlinks=true.
+    DEREF_SYMLINKS=$(jq -r '.build.dereference_symlinks // false' "$CONFIG" 2>/dev/null)
+    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$DEREF_SYMLINKS" != "true" ]; then
         log "v2 engine flake — cloud-data accessed via 2_configs/dist, no src/ resolve needed"
     elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         # Resolve every external *.json symlink to a real file
@@ -151,6 +152,10 @@ step_build() {
     git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
     nix build --option eval-cache false --out-link "$SERVICE_DIR/.result" 2>"$BUILD_LOG" || {
         log_error "nix build failed:"
+        # BOTH streams (2026-07-03): the engine self-tees stdout into
+        # <service>/build.log; an error cat'd only to stderr never reaches it
+        # and failures debug blind ("Step 'build' failed" with no cause).
+        cat "$BUILD_LOG"
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
         for f in $CLOUD_DATA_STAGED; do
