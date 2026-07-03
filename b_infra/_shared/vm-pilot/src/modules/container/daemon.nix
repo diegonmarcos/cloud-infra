@@ -66,6 +66,21 @@
         echo "$DJNEW" | $SUDO tee "$DAEMON_DEST.tmp" > /dev/null
         $SUDO mv -f "$DAEMON_DEST.tmp" "$DAEMON_DEST"
         echo "[docker-daemon] daemon.json deployed"
+
+        # A changed daemon.json is INERT until dockerd re-reads it — nothing
+        # here reloaded docker, so the youki→runc default-runtime fix silently
+        # did NOT apply on oci-mail until a reboot (2026-07-03). Reload (SIGHUP)
+        # applies the live-reloadable subset without dropping containers; but
+        # runtime-level keys (default-runtime/runtimes) are NOT reloadable — a
+        # full docker restart (reboot / container-init) is required, so say so
+        # loudly instead of leaving the new config silently ineffective.
+        if $SUDO systemctl is-active --quiet docker; then
+          $SUDO systemctl reload docker 2>/dev/null \
+            && echo "[docker-daemon] docker reloaded (live-reloadable settings applied)" \
+            || echo "[docker-daemon] docker reload failed"
+          echo "[docker-daemon] ⚠ default-runtime/runtimes changes need a docker RESTART (reboot / container-init) to take effect — verify 'docker info | grep Default Runtime'" >&2
+          logger -p daemon.warning -t docker-daemon "daemon.json changed — reloaded; runtime-level keys need a docker restart to apply" 2>/dev/null || true
+        fi
       fi
       ) || echo "[docker-daemon] FAILED — see errors above, activation continues"
     '';
