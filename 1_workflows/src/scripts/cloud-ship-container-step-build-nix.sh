@@ -165,11 +165,18 @@ step_build() {
         return 1
     }
 
-    # Show warnings
+    # Show warnings.
+    # `|| true` (2026-07-03, THE tonight-wide transient-failure root cause):
+    # under pipefail, grep exits 1 when the (non-empty) nix stderr contains
+    # no warning/error/trace line — killing the step AFTER a successful nix
+    # build with only "Step 'build' failed (exit 1)" and no cause. Every
+    # "intermittent" build failure tonight (cgc-mcp, gitea, dagu, gha-runner,
+    # caddy-l4-image, chat-mattermost, gws-mcp) alternated with whether the
+    # dirty-tree warning happened to be present to satisfy the grep.
     if [ -s "$BUILD_LOG" ]; then
         grep -i 'warning\|error\|trace' "$BUILD_LOG" | while IFS= read -r line; do
             log_warn "$line"
-        done
+        done || true
     fi
     rm -f "$BUILD_LOG"
 
