@@ -25,14 +25,37 @@ let
     vms = consolidated._home_manager.vms or {};
   };
   vmData = cloudData.vms.${vmName};
-  publicPorts = map (p: { port = p.port; proto = p.proto; desc = p.desc; }) vmData.public_ports
-    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; }];
+  # Pass through `source` (and other optional fields) so firewall.nix mkPortRule
+  # can emit per-port -s CIDR. Previously this map only kept port/proto/desc —
+  # stripping `source` silently — so the WG-only restriction on gcp-proxy's
+  # 25/443 listeners didn't actually fire (deployed firewall.sh had no -s flag).
+  publicPorts = map (p: {
+    port = p.port;
+    proto = p.proto;
+    desc = p.desc;
+    source = p.source or "0.0.0.0/0";
+  }) vmData.public_ports
+    # Rescue SSH (Dropbear) — WG-only. Only WG handshake (51820/udp) and WG
+    # fallback (443/udp) are reachable from public; everything else, including
+    # rescue SSH, must be inside the mesh. Break-glass: WG-tunneled access from
+    # admin termux+WG.
+    ++ [{ port = vmData.rescue_port; proto = "tcp"; desc = "Rescue SSH (Dropbear)"; source = "10.0.0.0/24"; }];
+
+  # ── wg-public mesh membership (Phase 2 of zero-public-TCP plan) ─────
+  # Data-driven: a VM participates in wg-public iff it appears in
+  # consolidated.native.wireguard_public.peers[].name. No hardcoded VM lists.
+  wgPublicPeers = consolidated.native.wireguard_public.peers or [];
+  isWgPublicMember = lib.any (p: p.name == vmName) wgPublicPeers;
 in {
   imports = [
     # ── Protection (system-protection orchestrator imports: resource-bouncer,
     #    watchdog, rescue-ssh, scheduler, layer2-identity, dashboard, health-agent)
     (import ./protection/system-protection.nix { inherit config pkgs lib; inherit vmName; })
     (import ./protection/systemd-control.nix {})
+    # Cleanup stranded systemd units from migrations (data:
+    # nixhm-sudo-<vm>/build.json .obsolete_systemd_units[]). No-op when
+    # the array is empty or absent — safe on every VM.
+    (import ./protection/obsolete-cleanup.nix { inherit vmName; })
   ] ++ lib.optionals (vmName != "oci-apps") [
     ./protection/no-build-guard.nix        # WARNING: small VM — remind operators not to build
     ./container/no-build-guardrails.nix    # WARNING: docker wrapper — warns on build/--build
@@ -42,13 +65,14 @@ in {
     ./container/container.nix
 
     # ── Network
-    (import ./network/wireguard.nix { inherit vmName; })
+    # wg0 — private internal mesh (always present on every VM)
+    (import ./network/wireguard.nix { inherit vmName; interfaceName = "wg0"; meshKey = "wireguard"; secretEnvName = "WG_PRIVATE_KEY"; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
     ./network/dns-hickory.nix
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
 
     # ── Security
-    ./security/ssh-keys.nix
+    (import ./security/ssh-keys.nix { inherit vmName; })
     ./security/authorized-keys.nix
     (import ./security/sshd-hardening.nix { inherit vmName; })
     ./security/serial-console.nix
@@ -71,5 +95,16 @@ in {
     # ── Shared user config
     (import ./shared/bash-config.nix { inherit vmName; })
     ./shared/git-config.nix
+  ] ++ lib.optionals isWgPublicMember [
+    # ── wg-public — public-trust mesh (Phase 2 of zero-public-TCP plan)
+    # Conditionally imported for VMs listed in
+    # consolidated.native.wireguard_public.peers[].name. Currently:
+    # oci-analytics (hub), gcp-proxy, oci-mail, oci-apps (spokes).
+    (import ./network/wireguard.nix {
+      inherit vmName;
+      interfaceName = "wg-public";
+      meshKey       = "wireguard_public";
+      secretEnvName = "WG_PUBLIC_PRIVATE_KEY";
+    })
   ];
 }
