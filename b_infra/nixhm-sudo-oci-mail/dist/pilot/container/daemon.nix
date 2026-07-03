@@ -62,7 +62,9 @@
       DJNEW=$(cat "$DAEMON_SRC")
       DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
       if [ "$DJNEW" != "$DJOLD" ]; then
-        echo "$DJNEW" | $SUDO tee "$DAEMON_DEST" > /dev/null
+        # Atomic install (tmp + mv) — a half-written daemon.json bricks dockerd.
+        echo "$DJNEW" | $SUDO tee "$DAEMON_DEST.tmp" > /dev/null
+        $SUDO mv -f "$DAEMON_DEST.tmp" "$DAEMON_DEST"
         echo "[docker-daemon] daemon.json deployed"
       fi
       ) || echo "[docker-daemon] FAILED — see errors above, activation continues"
