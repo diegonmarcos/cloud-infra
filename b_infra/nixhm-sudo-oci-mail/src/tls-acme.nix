@@ -7,10 +7,10 @@ let
   tlsDir = "/opt/containers/maddy/tls";
   domain = "*.diegonmarcos.com";
   acmeEmail = "me@diegonmarcos.com";
-  acmeBin = "${pkgs.acme-sh}/bin/acme.sh";
+  # acme.sh installed standalone at runtime (no Nix package) to avoid adding a
+  # new package to home.packages which would invalidate the 2GB Nix store layer
+  # and cause oci-mail (1GB E2-micro, 270s pull timeout) to fail the docker pull.
 in {
-  home.packages = [ pkgs.acme-sh ];
-
   # Combined issue+renew script — handles both first-time issuance (no cert on disk)
   # and periodic renewal (--days 30). Installed to /etc/cron.monthly/ by activation.
   # Also called detached from activation to avoid blocking the SSH/HM session.
@@ -23,8 +23,14 @@ in {
       CF_TOKEN_FILE="$SECRETS_D/CF_API_TOKEN"
       [ -f "$CF_TOKEN_FILE" ] || { echo "[tls-acme] No CF_API_TOKEN — skipping"; exit 0; }
       export CF_Token="$(cat "$CF_TOKEN_FILE")"
-      ACME="${acmeBin}"
       TLS_DIR="${tlsDir}"
+      ACME="$HOME/.acme.sh/acme.sh"
+
+      # Bootstrap acme.sh standalone if not installed
+      if [ ! -x "$ACME" ]; then
+        echo "[tls-acme] Installing acme.sh standalone..."
+        curl -fsSL https://get.acme.sh | sh -s email="${acmeEmail}" || { echo "[tls-acme] acme.sh install failed"; exit 1; }
+      fi
 
       # First-time issuance if cert not present yet
       if [ ! -f "$TLS_DIR/fullchain.pem" ]; then
