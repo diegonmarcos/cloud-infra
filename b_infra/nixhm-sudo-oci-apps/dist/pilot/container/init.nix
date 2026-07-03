@@ -98,8 +98,15 @@ in {
   home.file."scripts".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts";
 
   # ── Docker daemon.json — youki (Rust) replaces runc (Go) as default runtime ──
-  home.file.".local/share/container-init/daemon.json".text = builtins.toJSON {
-    default-runtime = "youki";
+  # 2026-07-03 oci-mail incident: this module ALSO defined
+  # home.file.".../daemon.json".text while daemon.nix (via container.nix)
+  # defined it too — types.lines silently CONCATENATED both JSON objects and
+  # dockerd refused to boot. Contribute settings to the orchestrator's merged
+  # option instead; daemon.nix is the single serializer + deployer.
+  # youki registered but NOT default (2026-07-03): the whole fleet runs runc in
+  # production; youki 0.4.1 + systemd cgroup driver fails `create` on Ubuntu
+  # (verified on oci-mail). Opt in per-container until youki is proven.
+  docker.daemon.settings = {
     runtimes = {
       youki = { path = youkiBin; };
     };
@@ -169,20 +176,7 @@ in {
     [ -f "$SRC/build-vm.json" ] && $SUDO cp -f "$SRC/build-vm.json" /opt/scripts/build-vm.json
     $SUDO chmod +x /opt/scripts/container-init.sh
 
-    # Deploy daemon.json (youki runtime + log config)
-    $SUDO mkdir -p /etc/docker
-    DAEMON_JSON="$SRC/daemon.json"
-    DAEMON_DEST="/etc/docker/daemon.json"
-    DJNEW=$(cat "$DAEMON_JSON")
-    DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
-    if [ "$DJNEW" != "$DJOLD" ]; then
-      # Atomic install: 2026-07-03 oci-mail incident — a torn write during a
-      # watchdog reboot left two concatenated JSON objects in daemon.json,
-      # bricking dockerd at boot. tmp + mv is crash-safe; tee is not.
-      echo "$DJNEW" | $SUDO tee "$DAEMON_DEST.tmp" > /dev/null
-      $SUDO mv -f "$DAEMON_DEST.tmp" "$DAEMON_DEST"
-      echo "[container-init] daemon.json deployed (youki runtime)"
-    fi
+    # daemon.json deploy moved to daemon.nix (installDaemonJson) — single writer.
 
     # Deploy docker.service (only if changed)
     DOCKER_UNIT="$SRC/docker.service"
