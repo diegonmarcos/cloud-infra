@@ -86,15 +86,17 @@ in {
   home.file."scripts".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts";
 
   # ── Docker daemon.json — youki (Rust) replaces runc (Go) as default runtime ──
-  home.file.".local/share/container-init/daemon.json".text = builtins.toJSON {
+  # Contributed via the daemon.nix orchestrator's merge option, NEVER as a
+  # second home.file.".../daemon.json".text: `text` is type `lines`, so two
+  # declarations CONCATENATE into `{...}\n{...}` — invalid JSON that dockerd
+  # rejects on its next (re)start. That exact bomb kept docker down on oci-mail
+  # after the 2026-07-03 reboot (crash-loop restart #234) while the other VMs
+  # carried the same corrupt file latently (only bites on daemon restart).
+  # (log-driver/log-opts are owned by daemon-security.nix — one owner per key.)
+  docker.daemon.settings = {
     default-runtime = "youki";
     runtimes = {
       youki = { path = youkiBin; };
-    };
-    log-driver = "json-file";
-    log-opts = {
-      max-size = "10m";
-      max-file = "3";
     };
   };
 

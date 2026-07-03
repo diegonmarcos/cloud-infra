@@ -47,6 +47,18 @@
       DAEMON_SRC="$HOME/.local/share/container-init/daemon.json"
       DAEMON_DEST="/etc/docker/daemon.json"
       $SUDO mkdir -p /etc/docker
+
+      # GUARD: refuse to deploy malformed JSON. builtins.toJSON emits ONE
+      # object on ONE line; >1 '{'-lines means two modules both declared the
+      # home.file (types.lines silently CONCATENATES) — deploying that config
+      # kept dockerd crash-looping on oci-mail 2026-07-03. Keep last good
+      # config, fail LOUD.
+      if [ "$(grep -c '^{' "$DAEMON_SRC")" -gt 1 ]; then
+        echo "[docker-daemon] ✗✗✗ REFUSING deploy: daemon.json is CONCATENATED (duplicate home.file writers) — dockerd would crash-loop ✗✗✗" >&2
+        logger -p daemon.err -t docker-daemon "daemon.json malformed (concatenated writers) — deploy refused, keeping last good config" 2>/dev/null || true
+        exit 1
+      fi
+
       DJNEW=$(cat "$DAEMON_SRC")
       DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
       if [ "$DJNEW" != "$DJOLD" ]; then
