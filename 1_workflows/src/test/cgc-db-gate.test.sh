@@ -31,5 +31,26 @@ budget_break() { # $1=elapsed_min $2=max_min -> "break" or "go"
 [ "$(budget_break 330 330)" = break ] || fail "at budget must break"
 [ "$(budget_break 999 0)"   = go ]    || fail "budget 0 disables the gate"
 
+# smart_noindex detection: exclude a dir iff >=min_files AND >=binary_ratio binary (git numstat '-')
+detect() { # stdin=numstat lines, args: min ratio -> excluded dirs
+  awk -v min="$1" -v ratio="$2" '
+    { path=$3; if (path=="" || path !~ /\//) next; dir=path; sub(/\/[^\/]*$/,"",dir);
+      tot[dir]++; if ($1=="-") bin[dir]++; }
+    END { for (d in tot) if (tot[d]>=min && (bin[d]+0)/tot[d]>=ratio) print d"/"; }'
+}
+# 20 binary files in assets/ -> excluded
+out=$(printf -- '-\t-\tassets/i%02d.png\n' $(seq 1 20) | detect 12 0.5)
+[ "$out" = "assets/" ] || fail "binary-dominated dir must be excluded (got '$out')"
+# a source dir (all text, add counts numeric) -> NOT excluded
+out=$(printf '5\t2\tsrc/f%02d.kt\n' $(seq 1 20) | detect 12 0.5)
+[ -z "$out" ] || fail "source dir must NOT be excluded (got '$out')"
+# below min_files even if all binary -> NOT excluded
+out=$(printf -- '-\t-\ticons/i%d.svg\n' $(seq 1 5) | detect 12 0.5)
+[ -z "$out" ] || fail "dir under min_files must NOT be excluded (got '$out')"
+# mixed just over ratio (7 bin / 12) -> excluded
+out=$(printf -- '-\t-\tmix/b%d.png\n' $(seq 1 7); printf '1\t0\tmix/s%d.js\n' $(seq 1 5))
+out=$(printf '%s' "$out" | detect 12 0.5)
+[ "$out" = "mix/" ] || fail "dir over binary_ratio must be excluded (got '$out')"
+
 rm -f "$M"
-echo "PASS: all cgc-db gate cases"
+echo "PASS: all cgc-db gate + smart-noindex cases"
