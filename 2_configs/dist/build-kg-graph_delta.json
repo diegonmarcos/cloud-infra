@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 288,
-    "edges": 388,
+    "nodes": 284,
+    "edges": 381,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 88,
+      "service": 62,
+      "container": 86,
       "domain": 39,
       "repo": 3,
-      "module": 63,
+      "module": 62,
       "package": 28
     }
   },
@@ -1282,44 +1282,6 @@
     },
     {
       "table": "service",
-      "id": "cypht",
-      "key": "service:cypht",
-      "properties": {
-        "name": "cypht",
-        "category": "app",
-        "description": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
-        "domain": "webmail.diegonmarcos.com",
-        "port": 8889,
-        "vm": "oci-mail",
-        "folder": "user-comm_cypht"
-      }
-    },
-    {
-      "table": "container",
-      "id": "cypht",
-      "key": "container:cypht",
-      "properties": {
-        "name": "cypht",
-        "image": "cypht/cypht:latest",
-        "role": "app",
-        "port": 8889,
-        "public": true
-      }
-    },
-    {
-      "table": "container",
-      "id": "cypht_postgres",
-      "key": "container:cypht_postgres",
-      "properties": {
-        "name": "cypht-postgres",
-        "image": "postgres:16-alpine",
-        "role": "db",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "mail_puller",
       "key": "service:mail_puller",
       "properties": {
@@ -2226,14 +2188,6 @@
     },
     {
       "table": "domain",
-      "id": "webmail_diegonmarcos_com",
-      "key": "domain:webmail_diegonmarcos_com",
-      "properties": {
-        "fqdn": "webmail.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
       "id": "mail_puller_diegonmarcos_com",
       "key": "domain:mail_puller_diegonmarcos_com",
       "properties": {
@@ -2254,6 +2208,14 @@
       "key": "domain:messenger_diegonmarcos_com",
       "properties": {
         "fqdn": "messenger.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "webmail_diegonmarcos_com",
+      "key": "domain:webmail_diegonmarcos_com",
+      "properties": {
+        "fqdn": "webmail.diegonmarcos.com"
       }
     },
     {
@@ -2826,17 +2788,6 @@
         "repo": "cloud",
         "category": "app",
         "service": "chat-mattermost"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_comm_cypht",
-      "key": "module:user_comm_cypht",
-      "properties": {
-        "name": "user-comm_cypht",
-        "repo": "cloud",
-        "category": "app",
-        "service": "cypht"
       }
     },
     {
@@ -4123,31 +4074,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:cypht",
-      "to": "vm:oci_mail",
-      "key": "service:cypht->hosted_on->vm:oci_mail",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:cypht",
-      "to": "container:cypht",
-      "key": "service:cypht->runs_container->container:cypht",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:cypht",
-      "to": "container:cypht_postgres",
-      "key": "service:cypht->runs_container->container:cypht_postgres",
-      "properties": {
-        "role": "db"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:mail_puller",
       "to": "vm:oci_mail",
       "key": "service:mail_puller->hosted_on->vm:oci_mail",
@@ -4837,15 +4763,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:cypht",
-      "to": "service:caddy",
-      "key": "service:cypht->proxied_by->service:caddy",
-      "properties": {
-        "domain": "webmail.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:mail_puller",
       "to": "service:caddy",
       "key": "service:mail_puller->proxied_by->service:caddy",
@@ -5165,13 +5082,6 @@
       "from": "domain:chat_diegonmarcos_com",
       "to": "service:chat_mattermost",
       "key": "domain:chat_diegonmarcos_com->routes_to->service:chat_mattermost",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:webmail_diegonmarcos_com",
-      "to": "service:cypht",
-      "key": "domain:webmail_diegonmarcos_com->routes_to->service:cypht",
       "properties": {}
     },
     {
@@ -5872,20 +5782,6 @@
       "from": "module:user_comm_chat_mattermost",
       "to": "service:chat_mattermost",
       "key": "module:user_comm_chat_mattermost->implements->service:chat_mattermost",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_comm_cypht",
-      "to": "repo:cloud",
-      "key": "module:user_comm_cypht->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_cypht",
-      "to": "service:cypht",
-      "key": "module:user_comm_cypht->implements->service:cypht",
       "properties": {}
     },
     {

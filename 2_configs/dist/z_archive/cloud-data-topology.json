@@ -22,8 +22,6 @@
         "host_literal": true
       },
       "containers": [
-        "cypht",
-        "cypht-postgres",
         "mail-puller",
         "snappymail",
         "maddy",
@@ -754,12 +752,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "chat-mattermost"
-      },
-      {
-        "name": "cypht.app",
-        "type": "A",
-        "value": "10.0.0.3",
-        "service": "cypht"
       },
       {
         "name": "matrix-continuwuity.app",
@@ -4127,110 +4119,6 @@
         ]
       },
       "flake": "user-comm_chat-mattermost"
-    },
-    "cypht": {
-      "category": "app",
-      "vm": "oci-E2-f_0",
-      "folder": "user-comm_cypht",
-      "description": "Cypht webmail (multi-account IMAP/JMAP/EWS, RSS feeds, calendar) — webmail.diegonmarcos.com",
-      "domain": "webmail.diegonmarcos.com",
-      "port": 8889,
-      "dns": "cypht.app",
-      "upstream": "10.0.0.3:8889",
-      "containers": {
-        "app": {
-          "container_name": "cypht",
-          "image": "cypht/cypht:latest",
-          "port": 8889,
-          "port_env": null,
-          "dns": "cypht.app",
-          "public": true,
-          "proxy": {
-            "domain": "webmail.diegonmarcos.com",
-            "auth": "two_factor"
-          },
-          "healthcheck": "/",
-          "monitoring": null,
-          "volumes": [
-            "cypht_data:/var/lib/hm3"
-          ],
-          "env_file": true,
-          "depends_on": [
-            "cypht-postgres"
-          ],
-          "resources": {
-            "mem_limit": "256M",
-            "mem_reservation": "64M"
-          },
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": []
-        },
-        "db": {
-          "container_name": "cypht-postgres",
-          "image": "postgres:16-alpine",
-          "port": null,
-          "port_env": null,
-          "dns": null,
-          "public": false,
-          "proxy": null,
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "cypht_pgdata:/var/lib/postgresql/data"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": {
-            "mem_limit": "128M",
-            "mem_reservation": "32M"
-          },
-          "read_only": false,
-          "protocol": "tcp",
-          "extra_ports": [
-            {
-              "port": 5432,
-              "protocol": "tcp",
-              "bind": "127.0.0.1",
-              "desc": "PostgreSQL — loopback only (cypht co-located via host network)"
-            }
-          ],
-          "embedded_dbs": [
-            {
-              "engine": "postgres",
-              "path": "/var/lib/postgresql/data"
-            }
-          ]
-        }
-      },
-      "container_names": [
-        "cypht",
-        "cypht-postgres"
-      ],
-      "all_ports": [
-        "8889"
-      ],
-      "all_dns": [
-        "cypht.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "domain": "webmail.diegonmarcos.com",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 8889
-      },
-      "health": {
-        "path": "/"
-      },
-      "flake": "user-comm_cypht"
     },
     "mail-puller": {
       "category": "app",

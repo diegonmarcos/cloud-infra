@@ -2,9 +2,9 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 29,
+  "total": 28,
   "summary": {
-    "postgres": 7,
+    "postgres": 6,
     "mariadb": 2,
     "redis": 3,
     "sqlite": 10,
@@ -272,27 +272,6 @@
       "resources": null,
       "backup": true,
       "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
-    },
-    {
-      "service": "cypht",
-      "container": "cypht-postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "postgres:16-alpine",
-      "port": null,
-      "dns": null,
-      "volumes": [
-        "cypht_pgdata:/var/lib/postgresql/data"
-      ],
-      "resources": {
-        "mem_limit": "128M",
-        "mem_reservation": "32M"
-      },
-      "backup": false
     },
     {
       "service": "mail-puller",
@@ -1082,27 +1061,6 @@
         "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
       },
       {
-        "service": "cypht",
-        "container": "cypht-postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-E2-f_0",
-        "vm_alias": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "image": "postgres:16-alpine",
-        "port": null,
-        "dns": null,
-        "volumes": [
-          "cypht_pgdata:/var/lib/postgresql/data"
-        ],
-        "resources": {
-          "mem_limit": "128M",
-          "mem_reservation": "32M"
-        },
-        "backup": false
-      },
-      {
         "service": "crawlee-cloud",
         "container": "crawlee_db",
         "container_key": "db",
@@ -1861,27 +1819,6 @@
       "wg_ip": "10.0.0.3",
       "user": "ubuntu",
       "databases": [
-        {
-          "service": "cypht",
-          "container": "cypht-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-E2-f_0",
-          "vm_alias": "oci-mail",
-          "wg_ip": "10.0.0.3",
-          "image": "postgres:16-alpine",
-          "port": null,
-          "dns": null,
-          "volumes": [
-            "cypht_pgdata:/var/lib/postgresql/data"
-          ],
-          "resources": {
-            "mem_limit": "128M",
-            "mem_reservation": "32M"
-          },
-          "backup": false
-        },
         {
           "service": "mail-puller",
           "container": "mail-puller",
