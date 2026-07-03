@@ -164,7 +164,11 @@ in {
     DJNEW=$(cat "$DAEMON_JSON")
     DJOLD=$($SUDO cat "$DAEMON_DEST" 2>/dev/null || true)
     if [ "$DJNEW" != "$DJOLD" ]; then
-      echo "$DJNEW" | $SUDO tee "$DAEMON_DEST" > /dev/null
+      # Atomic install: 2026-07-03 oci-mail incident — a torn write during a
+      # watchdog reboot left two concatenated JSON objects in daemon.json,
+      # bricking dockerd at boot. tmp + mv is crash-safe; tee is not.
+      echo "$DJNEW" | $SUDO tee "$DAEMON_DEST.tmp" > /dev/null
+      $SUDO mv -f "$DAEMON_DEST.tmp" "$DAEMON_DEST"
       echo "[container-init] daemon.json deployed (youki runtime)"
     fi
 
