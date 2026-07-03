@@ -841,8 +841,13 @@ docker run --rm \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
         docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE $BUILD_ARGS_STR . && \
         docker push $FULL_IMAGE:latest && \
-        docker push $BINARIES_IMAGE:latest && \
-        docker logout ghcr.io >/dev/null 2>&1 || true' 2>&1
+        docker push $BINARIES_IMAGE:latest; \
+        rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
+# rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
+# the || true to the ENTIRE && chain — a failed build/push still wrote exit=0
+# to JOB_STATUS, the engine logged "Pushed", and stale/broken :latest images
+# were deployed (gws-mcp x86-venv poison, rig manifest-unknown). Only the
+# logout is non-fatal now; the chain's real exit code propagates.
 EOF
 
             # Launch detached. Subshell + nohup + redirected stdio + & lets
