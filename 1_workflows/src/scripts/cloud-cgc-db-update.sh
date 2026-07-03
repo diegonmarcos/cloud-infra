@@ -274,18 +274,63 @@ else
   echo "[cgc-db] GraphRAG structural-only (use_llm=false forced — no LLM calls)"
 fi
 
-# 4b) INCREMENTAL index per repo — git-aware, changed files only. NO `octocode clear`.
+# 4b) SMART INCREMENTAL index — per-repo change-GATED + checkpoint-PUSHED.
+#
+#   Why every prior run got CANCELLED: one job re-ran `octocode index` for ALL 6
+#   repos every time (~2.5h each incl. the GraphRAG relationship pass, which is
+#   O(graph) regardless of how few files changed) → ~15h → past the runner cap →
+#   cancelled BEFORE the single end-of-run push → GHCR DB never advanced.
+#
+#   Three engine-level fixes, all data-driven, NO topology change (still one job):
+#     • CHANGE GATE  — skip `octocode index` entirely for any repo whose git HEAD
+#       equals the commit last indexed into THIS DB. The last-indexed commit per
+#       repo lives in a manifest INSIDE the octocode home, so it is packaged and
+#       pulled with the DB (single source of truth, reproducible). Between twice-
+#       daily runs most repos are unchanged → seconds, not hours.
+#     • CHECKPOINT PUSH — package+push after EACH changed repo. A later cancel now
+#       loses at most the in-flight repo; every finished repo is already on GHCR
+#       AND recorded in the manifest, so the next run skips it and resumes the
+#       rest. The pipeline self-heals across runs instead of restarting from zero.
+#     • TIME BUDGET — stop taking on NEW repos past runtime.octocode.update.max_minutes
+#       and exit cleanly (already-pushed via checkpoints); the next run resumes the
+#       remainder via the change gate. We are never killed mid-repo after the budget.
 command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >/dev/null 2>&1 || true
+
+MANIFEST="$OCTO_HOME/.cgc-index-manifest.json"
+[ -s "$MANIFEST" ] || echo '{}' > "$MANIFEST"
+BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
+START_TS=$(date +%s)
+PUSHED=0
+
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
+
+  # TIME BUDGET: stop before the runner cap so we always reach a clean push+exit.
+  if [ -n "$BUDGET_MIN" ] && [ "$BUDGET_MIN" != "0" ]; then
+    _elapsed=$(( ( $(date +%s) - START_TS ) / 60 ))
+    if [ "$_elapsed" -ge "$BUDGET_MIN" ]; then
+      echo "[cgc-db] time budget ${BUDGET_MIN}m reached (${_elapsed}m elapsed) — deferring $r (+rest) to next run"
+      break
+    fi
+  fi
+
+  # CHANGE GATE: HEAD unchanged since last index into this DB → nothing to do.
+  cur=$(git -C "$d" rev-parse HEAD 2>/dev/null || echo "")
+  last=$(jq -r --arg r "$r" '.[$r] // ""' "$MANIFEST")
+  if [ -n "$cur" ] && [ "$cur" = "$last" ]; then
+    echo "[cgc-db] === skip $r — unchanged @ $cur ==="
+    continue
+  fi
+
   exclude_submodules "$d"
   # Write the data-driven .noindex so octocode skips committed junk trees.
   if [ -n "$NOINDEX_PATTERNS" ]; then
     printf '%s\n' "$NOINDEX_PATTERNS" > "$d/.noindex"
     echo "[cgc-db] $r · .noindex: $(printf '%s' "$NOINDEX_PATTERNS" | tr '\n' ' ')"
   fi
-  echo "[cgc-db] === incremental index: $r ==="
+
+  echo "[cgc-db] === incremental index: $r (was=${last:-none} now=$cur) ==="
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
@@ -296,15 +341,21 @@ for r in $REPOS; do
     echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
     tail -30 "$_log"; rm -f "$_log"; exit 1
   fi
+
+  # Record the indexed commit in the DB home (travels via package/pull), THEN
+  # checkpoint-push so this repo's progress is durable before we touch the next.
+  _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$MANIFEST" > "$_tmp" && mv "$_tmp" "$MANIFEST"
+  echo "[cgc-db] checkpoint publish after $r"
+  sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+  PUSHED=1
 done
 
-# 5) publish the updated DB back to GHCR (single upstream for all consumers)
-sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
-
-# 6) GUARANTEE the deployed consumer (oci-apps) pulls the new DB + restarts,
-#    so the live server serves it immediately — not only on the next DAG tick.
-#    CGC_SKIP_PROPAGATE=1 lets split-job workflows defer propagation to the last job.
-if [ "${CGC_SKIP_PROPAGATE:-}" = "1" ]; then
+# 5/6) Propagate to the deployed consumer (oci-apps) so it serves the new DB now.
+#      Only when something actually changed this cycle (checkpoints already pushed
+#      it to GHCR). CGC_SKIP_PROPAGATE=1 lets a caller defer propagation.
+if [ "$PUSHED" = "0" ]; then
+  echo "[cgc-db] no repo changed — DB already current, nothing to publish or propagate"
+elif [ "${CGC_SKIP_PROPAGATE:-}" = "1" ]; then
   echo "[cgc-db] propagation deferred (CGC_SKIP_PROPAGATE=1)"
 else
   propagate_to_host
