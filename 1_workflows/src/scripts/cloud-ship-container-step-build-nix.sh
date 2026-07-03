@@ -113,8 +113,12 @@ step_build() {
             CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
         done
         # include_cloud_data=true: also copy every 2_configs/dist/*.json into src/ (for services
-        # that need the whole dataset at runtime, e.g. c3-infra-mcp-api)
-        if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -d "$CLOUD_DATA_DIR" ]; then
+        # that need the whole dataset at runtime, e.g. c3-infra-mcp-api).
+        # NEVER for v2 engine flakes (2026-07-03): they read 2_configs/dist
+        # directly through the repo-wide git intern; dumping 60 alien JSONs
+        # into src/ broke their eval (rig, cgc-mcp) when the hybrid guard
+        # routed them here for symlink dereferencing.
+        if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -d "$CLOUD_DATA_DIR" ] && [ "$IS_V2_ENGINE_PRE" != "true" ]; then
             for f in "$CLOUD_DATA_DIR"/*.json; do
                 [ -f "$f" ] || continue
                 BASENAME=$(basename "$f")
