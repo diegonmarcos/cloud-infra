@@ -126,6 +126,10 @@
       "url": "https://paca.diegonmarcos.com/api/healthz"
     },
     {
+      "service": "send",
+      "url": "https://send.diegonmarcos.com/__lbheartbeat__"
+    },
+    {
       "service": "vaultwarden",
       "url": "https://vault.diegonmarcos.com/alive"
     }
@@ -250,6 +254,10 @@
     {
       "service": "paca",
       "domain": "paca.diegonmarcos.com"
+    },
+    {
+      "service": "send",
+      "domain": "send.diegonmarcos.com"
     },
     {
       "service": "vaultwarden",
@@ -380,6 +388,10 @@
     {
       "service": "paca",
       "domain": "paca.diegonmarcos.com"
+    },
+    {
+      "service": "send",
+      "domain": "send.diegonmarcos.com"
     },
     {
       "service": "vaultwarden",
@@ -1252,6 +1264,19 @@
       },
       "health": null
     },
+    "send": {
+      "name": "send",
+      "vm": "oci-A1-f_0",
+      "domain": "send.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 3016
+      },
+      "health": {
+        "path": "/__lbheartbeat__"
+      }
+    },
     "vaultwarden": {
       "name": "vaultwarden",
       "vm": "oci-A1-f_0",
@@ -1857,6 +1882,15 @@
       "dns": "revealmd.app"
     },
     {
+      "service": "send",
+      "dns": "send.app"
+    },
+    {
+      "service": "send",
+      "container": "app",
+      "dns": "send.app"
+    },
+    {
       "service": "vaultwarden",
       "dns": "vaultwarden.app"
     },
@@ -2043,6 +2077,7 @@
           "hedgedoc",
           "paca",
           "revealmd",
+          "send",
           "vaultwarden"
         ]
       },
@@ -2916,6 +2951,19 @@
           "app": 3014
         },
         "health": null
+      },
+      "send": {
+        "name": "send",
+        "vm": "oci-A1-f_0",
+        "domain": "send.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 3016
+        },
+        "health": {
+          "path": "/__lbheartbeat__"
+        }
       },
       "vaultwarden": {
         "name": "vaultwarden",

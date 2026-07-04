@@ -322,6 +322,13 @@
       "comment": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
     },
     {
+      "domain": "send.diegonmarcos.com",
+      "upstream": "10.0.0.6:3016",
+      "auth": "none",
+      "wg_only": true,
+      "comment": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
+    },
+    {
       "domain": "vault.diegonmarcos.com",
       "upstream": "10.0.0.6:8880",
       "auth": "none",
@@ -737,6 +744,10 @@
     {
       "service": "paca.app",
       "upstream": "10.0.0.6:8095"
+    },
+    {
+      "service": "send.app",
+      "upstream": "10.0.0.6:3016"
     },
     {
       "service": "vaultwarden.app",
@@ -1742,6 +1753,27 @@
     },
     {
       "kind": "redirect",
+      "service": "send_app.app",
+      "redirect_to": "https://send_app-http-3016.app",
+      "container": "send_app",
+      "container_key": "app",
+      "svc": "send",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "send_app-http-3016.app",
+      "container": "send_app",
+      "container_key": "app",
+      "svc": "send",
+      "vm": "oci-A1-f_0",
+      "port": 3016,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3016",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "vaultwarden.app",
       "redirect_to": "https://vaultwarden-http-8880.app",
       "container": "vaultwarden",
@@ -2233,6 +2265,16 @@
       "zone": "com",
       "service": null,
       "notes": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    {
+      "host": "send.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3016",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
     },
     {
       "host": "vault.diegonmarcos.com",
@@ -2777,6 +2819,16 @@
       "notes": null
     },
     {
+      "host": "send.app",
+      "path": null,
+      "upstream": "10.0.0.6:3016",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "vaultwarden.app",
       "path": null,
       "upstream": "10.0.0.6:8880",
@@ -3237,6 +3289,16 @@
       "zone": "com",
       "service": "paca",
       "notes": null
+    },
+    {
+      "host": "send_app-http-3016.app",
+      "path": null,
+      "upstream": "10.0.0.6:3016",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "send",
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "vaultwarden-http-8880.app",

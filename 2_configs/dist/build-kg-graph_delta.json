@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 284,
-    "edges": 381,
+    "nodes": 289,
+    "edges": 389,
     "by_table": {
       "vm": 4,
-      "service": 62,
-      "container": 86,
-      "domain": 39,
+      "service": 63,
+      "container": 88,
+      "domain": 40,
       "repo": 3,
-      "module": 62,
+      "module": 63,
       "package": 28
     }
   },
@@ -1968,6 +1968,44 @@
     },
     {
       "table": "service",
+      "id": "send",
+      "key": "service:send",
+      "properties": {
+        "name": "send",
+        "category": "app",
+        "description": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time.",
+        "domain": "send.diegonmarcos.com",
+        "port": 3016,
+        "vm": "oci-apps",
+        "folder": "user-prod_send"
+      }
+    },
+    {
+      "table": "container",
+      "id": "send_app",
+      "key": "container:send_app",
+      "properties": {
+        "name": "send_app",
+        "image": "registry.gitlab.com/timvisee/send:latest",
+        "role": "app",
+        "port": 3016,
+        "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "send_redis",
+      "key": "container:send_redis",
+      "properties": {
+        "name": "send_redis",
+        "image": "redis:7-alpine",
+        "role": "redis",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
       "id": "vaultwarden",
       "key": "service:vaultwarden",
       "properties": {
@@ -2320,6 +2358,14 @@
       "key": "domain:paca_diegonmarcos_com",
       "properties": {
         "fqdn": "paca.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "send_diegonmarcos_com",
+      "key": "domain:send_diegonmarcos_com",
+      "properties": {
+        "fqdn": "send.diegonmarcos.com"
       }
     },
     {
@@ -2997,6 +3043,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "paca"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_prod_send",
+      "key": "module:user_prod_send",
+      "properties": {
+        "name": "user-prod_send",
+        "repo": "cloud",
+        "category": "app",
+        "service": "send"
       }
     },
     {
@@ -4540,6 +4597,40 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:send",
+      "to": "vm:oci_apps",
+      "key": "service:send->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:send",
+      "to": "container:send_app",
+      "key": "service:send->runs_container->container:send_app",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "depends_on",
+      "from": "service:send",
+      "to": "service:redis",
+      "key": "service:send->depends_on->service:redis",
+      "properties": {
+        "type": "runtime"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:send",
+      "to": "container:send_redis",
+      "key": "service:send->runs_container->container:send_redis",
+      "properties": {
+        "role": "redis"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:vaultwarden",
       "to": "vm:oci_apps",
       "key": "service:vaultwarden->hosted_on->vm:oci_apps",
@@ -4916,6 +5007,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:send",
+      "to": "service:caddy",
+      "key": "service:send->proxied_by->service:caddy",
+      "properties": {
+        "domain": "send.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:vaultwarden",
       "to": "service:caddy",
       "key": "service:vaultwarden->proxied_by->service:caddy",
@@ -5201,6 +5301,13 @@
       "from": "domain:paca_diegonmarcos_com",
       "to": "service:paca",
       "key": "domain:paca_diegonmarcos_com->routes_to->service:paca",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:send_diegonmarcos_com",
+      "to": "service:send",
+      "key": "domain:send_diegonmarcos_com->routes_to->service:send",
       "properties": {}
     },
     {
@@ -6048,6 +6155,20 @@
       "from": "module:user_prod_paca",
       "to": "service:paca",
       "key": "module:user_prod_paca->implements->service:paca",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_prod_send",
+      "to": "repo:cloud",
+      "key": "module:user_prod_send->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_prod_send",
+      "to": "service:send",
+      "key": "module:user_prod_send->implements->service:send",
       "properties": {}
     },
     {
