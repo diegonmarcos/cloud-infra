@@ -76,9 +76,15 @@ let
     WG_UP="false"
     ip link show wg0 >/dev/null 2>&1 && WG_UP="true"
 
-    # Local port checks — read from cloud-data manifest if available, else common ports
-    MANIFEST="$REPO_DIR/cloud-data-containers-$VM.json"
-    if [ -f "$MANIFEST" ]; then
+    # Local port checks — probe per-VM manifest.
+    # Probe order (cloud-data emits NOTHING; new canonical lives in 2_configs/dist):
+    #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 2_configs/dist/build-vm-{vm}.json)
+    #   2. $REPO_DIR/cloud-data-containers-$VM.json  ← LEGACY fallback (cloud-data clone)
+    MANIFEST=""
+    for _p in "/opt/scripts/build-vm.json" "$REPO_DIR/cloud-data-containers-$VM.json"; do
+      [ -f "$_p" ] && [ -s "$_p" ] && MANIFEST="$_p" && break
+    done
+    if [ -n "$MANIFEST" ]; then
       PORT_LIST=$(python3 -c "import json; d=json.load(open('$MANIFEST')); print(' '.join(str(c.get('port','')) for c in d.get('containers',[]) if c.get('port')))" 2>/dev/null || echo "22 80 443 2200")
     else
       PORT_LIST="22 80 443 2200 8080 8443 9091"

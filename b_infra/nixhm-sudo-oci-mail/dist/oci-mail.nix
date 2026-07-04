@@ -23,6 +23,7 @@ let
 in {
   imports = [
     (import ./pilot/default.nix { vmName = "oci-mail"; })
+    ./tls-acme.nix
   ];
 
   home.username = vmData.user;

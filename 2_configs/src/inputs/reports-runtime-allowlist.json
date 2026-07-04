@@ -1,0 +1,11 @@
+{
+  "_comment": "Data-driven allowlist for sec-data's runtime container-capability checks (runtime.rs). Every entry is a narrowly-scoped exception -- (vm, container, category) -- for a capability that is genuinely required and already minimized (e.g. cap_add:[SYS_ADMIN] instead of privileged:true). Anything NOT listed here still reports at its normal severity. Downgrades to Info, never silently dropped, so a future accidental widening (e.g. someone adding privileged:true) is still caught.",
+  "entries": [
+    {
+      "vm": "oci-apps",
+      "container": "photoprism_rclone",
+      "category": "cap_sys_admin",
+      "reason": "rclone mount --allow-other needs cap_add:SYS_ADMIN for the FUSE mount() syscall (fusermount3 is a setuid-root helper); privileged:true was removed 2026-07-03 in favor of this narrower grant -- see a_solutions/user-media_photoprism/src/compose.nix."
+    }
+  ]
+}

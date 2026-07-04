@@ -98,22 +98,19 @@ in {
   home.file."scripts".source = config.lib.file.mkOutOfStoreSymlink "/opt/scripts";
 
   # ── Docker daemon.json — youki (Rust) replaces runc (Go) as default runtime ──
-  # 2026-07-03 oci-mail incident: this module ALSO defined
-  # home.file.".../daemon.json".text while daemon.nix (via container.nix)
-  # defined it too — types.lines silently CONCATENATED both JSON objects and
-  # dockerd refused to boot. Contribute settings to the orchestrator's merged
-  # option instead; daemon.nix is the single serializer + deployer.
+  # Contributed via the daemon.nix orchestrator's merge option, NEVER as a
+  # second home.file.".../daemon.json".text: `text` is type `lines`, so two
+  # declarations CONCATENATE into `{...}\n{...}` — invalid JSON that dockerd
+  # rejects on its next (re)start. That exact bomb kept docker down on oci-mail
+  # after the 2026-07-03 reboot (crash-loop restart #234) while the other VMs
+  # carried the same corrupt file latently (only bites on daemon restart).
+  # (log-driver/log-opts are owned by daemon-security.nix — one owner per key.)
   # youki registered but NOT default (2026-07-03): the whole fleet runs runc in
   # production; youki 0.4.1 + systemd cgroup driver fails `create` on Ubuntu
   # (verified on oci-mail). Opt in per-container until youki is proven.
   docker.daemon.settings = {
     runtimes = {
       youki = { path = youkiBin; };
-    };
-    log-driver = "json-file";
-    log-opts = {
-      max-size = "10m";
-      max-file = "3";
     };
   };
 

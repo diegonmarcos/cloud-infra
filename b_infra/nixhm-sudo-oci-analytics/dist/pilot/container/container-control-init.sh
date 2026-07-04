@@ -182,12 +182,16 @@ _service_up() {
   fi
 
   # Pull + run (no build — images are pre-built on GHCR)
-  if [ -f "$_dir/docker-compose.yml" ]; then
+  # Configs images extract compose under compose/ (2026-07-03 layout) —
+  # support both the legacy top-level and the compose/ subdir location.
+  _cdir="$_dir"
+  [ ! -f "$_cdir/docker-compose.yml" ] && [ -f "$_dir/compose/docker-compose.yml" ] && _cdir="$_dir/compose"
+  if [ -f "$_cdir/docker-compose.yml" ]; then
     _env=""
-    [ -f "$_dir/.secrets" ] && _env="--env-file .secrets"
+    [ -f "$_cdir/.secrets" ] && _env="--env-file .secrets"
     # Pre-hook (e.g. init.sh for secret substitution)
     [ -f "$_dir/init.sh" ] && (cd "$_dir" && sh init.sh) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
-    if (cd "$_dir" && docker compose $_env pull --quiet 2>/dev/null; docker compose $_env up -d --no-build --force-recreate) >/dev/null 2>&1; then
+    if (cd "$_cdir" && docker compose $_env pull --quiet 2>/dev/null; docker compose $_env up -d --no-build --force-recreate) >/dev/null 2>&1; then
       _s=$(( $(date +%s) - _start ))
       log "  [$_svc] ok (${_s}s)"
       return 0
@@ -206,10 +210,12 @@ _service_up() {
 _service_down() {
   _dir="$1"
   _svc=$(basename "$_dir")
-  if [ -f "$_dir/docker-compose.yml" ]; then
+  _cdir="$_dir"
+  [ ! -f "$_cdir/docker-compose.yml" ] && [ -f "$_dir/compose/docker-compose.yml" ] && _cdir="$_dir/compose"
+  if [ -f "$_cdir/docker-compose.yml" ]; then
     _env=""
-    [ -f "$_dir/.secrets" ] && _env="--env-file .secrets"
-    (cd "$_dir" && docker compose $_env down) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
+    [ -f "$_cdir/.secrets" ] && _env="--env-file .secrets"
+    (cd "$_cdir" && docker compose $_env down) 2>&1 | while read -r _l; do log "  [$_svc] $_l"; done
     log "  [$_svc] stopped"
   fi
 }

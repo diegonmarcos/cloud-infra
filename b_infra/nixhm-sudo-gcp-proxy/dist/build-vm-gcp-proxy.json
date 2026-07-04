@@ -4,8 +4,40 @@
   "vm_id": "gcp-E2-f_0",
   "services": [
     {
+      "name": "c3-analytics-api",
+      "dir": "infra-api_c3-analytics-api",
+      "compose_path": "/opt/containers/c3-analytics-api",
+      "images": [
+        "ghcr.io/diegonmarcos/c3-analytics-api:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "http-to-smtp-proxy-api",
+      "dir": "infra-api_tools-http-to-smtp-proxy-api",
+      "compose_path": "/opt/containers/http-to-smtp-proxy-api",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "postlite",
+      "dir": "infra-db_postlite",
+      "compose_path": "/opt/containers/postlite",
+      "images": [],
+      "has_docker_build": true
+    },
+    {
+      "name": "redis",
+      "dir": "infra-db_redis",
+      "compose_path": "/opt/containers/redis",
+      "images": [
+        "redis:alpine"
+      ],
+      "has_docker_build": true
+    },
+    {
       "name": "hickory-dns",
-      "dir": "ba-clo_hickory-dns",
+      "dir": "infra-net_hickory-dns",
       "compose_path": "/opt/containers/hickory-dns",
       "images": [
         "hickorydns/hickory-dns:latest"
@@ -14,7 +46,7 @@
     },
     {
       "name": "wireguard-mesh-ws-tunnel",
-      "dir": "bb-net_wireguard-mesh-ws-tunnel",
+      "dir": "infra-net_wireguard-mesh-ws-tunnel",
       "compose_path": "/opt/containers/wireguard-mesh-ws-tunnel",
       "images": [
         "ghcr.io/erebe/wstunnel:latest"
@@ -23,7 +55,7 @@
     },
     {
       "name": "authelia",
-      "dir": "bb-sec_authelia",
+      "dir": "infra-sec_authelia",
       "compose_path": "/opt/containers/authelia",
       "images": [
         "authelia/authelia:4.39.15",
@@ -34,51 +66,26 @@
     },
     {
       "name": "caddy",
-      "dir": "bb-sec_caddy",
+      "dir": "infra-sec_caddy",
       "compose_path": "/opt/containers/caddy",
       "images": [
-        "ghcr.io/diegonmarcos/caddy-l4:latest"
+        "ghcr.io/diegonmarcos/caddy-l4@sha256:d8309fad8a32c393ddf7a258b8dbfc990ea928372284804a08bd071a13df6b7c"
       ],
       "has_docker_build": true
     },
     {
       "name": "introspect-proxy",
-      "dir": "bb-sec_introspect-proxy",
+      "dir": "infra-sec_introspect-proxy",
       "compose_path": "/opt/containers/introspect-proxy",
       "images": [
         "ghcr.io/diegonmarcos/introspect-proxy:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "c3-analytics-api",
-      "dir": "bc-obs_c3-analytics-api",
-      "compose_path": "/opt/containers/c3-analytics-api",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-analytics-api:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "postlite",
-      "dir": "ca-dat_postlite",
-      "compose_path": "/opt/containers/postlite",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "redis",
-      "dir": "ca-dat_redis",
-      "compose_path": "/opt/containers/redis",
-      "images": [
-        "redis:alpine"
       ],
       "has_docker_build": true
     }
   ],
   "ssh_containers": [],
   "_meta": {
-    "generated_at": "2026-05-08T11:09:57.985Z",
+    "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",

@@ -2069,6 +2069,7 @@ function deriveBuildReports(c: any): DerivedFile {
   const workflows = readInput("reports-workflows.json");
   const repoScan = readInput("reports-repo-scan.json");
   const secScan = readInput("reports-sec-scan.json");
+  const runtimeAllowlist = readInput("reports-runtime-allowlist.json");
 
   return {
     name: "build-reports.json",
@@ -2099,6 +2100,7 @@ function deriveBuildReports(c: any): DerivedFile {
       workflows: workflows,
       repo_scan: repoScan,
       sec_scan: secScan,
+      runtime_allowlist: runtimeAllowlist,
     },
   };
 }
