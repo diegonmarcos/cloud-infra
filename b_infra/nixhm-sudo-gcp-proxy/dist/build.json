@@ -28,62 +28,49 @@
     "remote_build": false
   },
   "firewall": {
+    "_doc": "gcp-proxy is FULLY PRIVATE: listeners stay (Caddy :443 + :25 + caddy-l4 SNI mux), but firewall sources restrict reach to WG meshes only (10.0.0.0/24 wg0 + 10.1.0.0/24 wg-public). Public-internet traffic terminates at oci-analytics (the public-edge VM) and forwards over wg-public. 443/udp (WG fallback) MUST stay 0.0.0.0/0 — its purpose is to provide WG handshake on a port that hostile networks don't block; restricting it defeats the fallback. Engine: firewall.nix mkPortRule emits `-s ${source}` per entry; source = '0.0.0.0/0' means no -s flag (back-compat).",
     "public_ports": [
       {
-        "port": 80,
+        "port": 25,
         "proto": "tcp",
-        "desc": "HTTP (Caddy — currently unbound, Cloudflare handles HTTP→HTTPS)",
-        "source": "0.0.0.0/0",
+        "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — wg0 mesh source",
+        "source": "10.0.0.0/24",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 25,
+        "proto": "tcp",
+        "desc": "SMTP MX — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+        "source": "10.1.0.0/24",
         "owned_by": "caddy"
       },
       {
         "port": 443,
         "proto": "tcp",
-        "desc": "HTTPS (Caddy)",
-        "source": "0.0.0.0/0",
+        "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS) — wg0 mesh source",
+        "source": "10.0.0.0/24",
+        "owned_by": "caddy"
+      },
+      {
+        "port": 443,
+        "proto": "tcp",
+        "desc": "HTTPS — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+        "source": "10.1.0.0/24",
         "owned_by": "caddy"
       },
       {
         "port": 443,
         "proto": "udp",
-        "desc": "WireGuard fallback (NAT redirect → 51820/udp on hub) — for networks blocking 51820/udp",
-        "source": "0.0.0.0/0",
+        "desc": "WG fallback (NAT redirect → 51820/udp on hub) — wg0 mesh source. Operator decision 2026-05-22: WG handshake (51820/udp) is the ONLY public port; 443/udp fallback is no longer needed since the only external entry points are oci-analytics. Peers behind networks blocking 51820/udp lose the fallback path — accepted tradeoff.",
+        "source": "10.0.0.0/24",
         "owned_by": "wireguard"
       },
       {
-        "port": 993,
-        "proto": "tcp",
-        "desc": "IMAPS (Caddy L4 → oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
-        "port": 465,
-        "proto": "tcp",
-        "desc": "SMTPS (Caddy L4 → oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
-        "port": 2443,
-        "proto": "tcp",
-        "desc": "HTTPS/JMAP (Caddy L4 → stalwart on oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
-        "port": 2465,
-        "proto": "tcp",
-        "desc": "SMTPS (Caddy L4 → stalwart on oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
-      },
-      {
-        "port": 2993,
-        "proto": "tcp",
-        "desc": "IMAPS (Caddy L4 → stalwart on oci-mail)",
-        "source": "0.0.0.0/0",
-        "owned_by": "caddy"
+        "port": 443,
+        "proto": "udp",
+        "desc": "WG fallback — wg-public mesh source",
+        "source": "10.1.0.0/24",
+        "owned_by": "wireguard"
       }
     ]
   },

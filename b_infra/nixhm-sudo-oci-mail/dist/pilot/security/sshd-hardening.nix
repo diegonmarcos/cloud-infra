@@ -33,13 +33,22 @@ let
   vmData = cloudData.vms.${vmName} or null;
   publicPorts = if vmData == null then [] else (vmData.public_ports or []);
 
-  # Emit one `iptables -A INPUT -p <proto> --dport <port> -j ACCEPT` line per port.
+  # Emit one `iptables -A INPUT [-s <src>] -p <proto> --dport <port> ACCEPT`
+  # per port. The `source` field on each entry MUST be honored — without it
+  # ssh-firewall.sh re-flushes INPUT and adds public-source ACCEPTs that
+  # silently undo firewall.nix's WG-only rules (firewall.service runs first,
+  # ssh-firewall.service runs ~5s later). Two separate mkPortRule
+  # implementations — both must stay aligned with the same source-honoring
+  # semantics. Default 0.0.0.0/0 (no -s flag) for back-compat with entries
+  # that omit `source`.
   mkPortRule = p:
     let
       proto = p.proto or "tcp";
       desc  = p.desc or "port-${toString p.port}";
+      source = p.source or "0.0.0.0/0";
+      srcFlag = if source == "0.0.0.0/0" then "" else "-s ${source} ";
     in
-      ''iptables -A INPUT -p ${proto} --dport ${toString p.port} -m comment --comment "${desc}" -j ACCEPT'';
+      ''iptables -A INPUT ${srcFlag}-p ${proto} --dport ${toString p.port} -m comment --comment "${desc}" -j ACCEPT'';
 
   portRulesScript =
     if publicPorts == []

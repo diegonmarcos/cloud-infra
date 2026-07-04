@@ -35,6 +35,14 @@
       UPTIME=$(awk '{printf "%dd %dh", $1/86400, ($1%86400)/3600}' /proc/uptime 2>/dev/null || echo "?")
       WG_UP=$(ip link show wg0 >/dev/null 2>&1 && echo "true" || echo "false")
 
+      # Memory PSI (some avg10, int) — the load-shedder's trigger; surfaces
+      # thrash BEFORE OOM. And whether protection is actually ARMED: oci-mail
+      # ran with load-shedder inactive while thrashing to 85% memPSI (2026-07-03),
+      # invisible because the health report never checked either.
+      MEM_PSI=$(awk -F'avg10=' '/^some/{split($2,a," ");printf "%d",a[1];exit}' /proc/pressure/memory 2>/dev/null || echo 0)
+      SHED=$(systemctl is-active load-shedder.service 2>/dev/null || echo "unknown")
+      SHED_FAILED=$([ -f /run/load-shedder.deploy-failed ] && echo "true" || echo "false")
+
       # Docker containers via awk (POSIX, no subshell issues)
       TMPF=$(mktemp)
       docker ps -a --format '{{.Names}}|{{.Status}}' > "$TMPF" 2>/dev/null || true
@@ -68,6 +76,8 @@
         "load": "$LOAD",
         "uptime": "$UPTIME",
         "wg_up": $WG_UP,
+        "mem_psi": $MEM_PSI,
+        "protection": {"load_shedder": "$SHED", "deploy_failed": $SHED_FAILED},
         "containers_running": $CTR_RUNNING,
         "containers_total": $CTR_TOTAL,
         "containers": $CONTAINERS
