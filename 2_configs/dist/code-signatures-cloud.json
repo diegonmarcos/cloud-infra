@@ -6,14 +6,14 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 1973,
+    "files": 1974,
     "by_lang": {
       "nix": 423,
       "sh": 328,
       "rust": 445,
       "ts": 305,
       "js": 16,
-      "py": 456
+      "py": 457
     },
     "by_role": {
       "flake": 73,
@@ -26,7 +26,7 @@
       "entrypoint": 23,
       "compose": 66,
       "mcp-tool": 90,
-      "python": 453,
+      "python": 454,
       "workflow-dag": 1,
       "hook": 7,
       "file": 4
@@ -8121,6 +8121,7 @@
       "exports": [
         "parseNtfy",
         "NtfyTopic",
+        "NtfyProfile",
         "NtfyConfig"
       ],
       "imports": [
@@ -8132,6 +8133,7 @@
       "symbols": [
         "parseNtfy(solutionsDir: string)",
         "extractTopicsFromScanner(solutionsDir: string)",
+        "extractProfilesFromBuildJson(buildJsonPath: string, topics: NtfyTopic[])",
         "extractPublisherMap(solutionsDir: string)",
         "extractUsersFromCompose(solutionsDir: string)"
       ]
@@ -18179,6 +18181,36 @@
       ]
     },
     {
+      "path": "a_solutions/infra-obs_ntfy/src/code/rss-gateway.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "load_config()",
+        "ntfy_poll(topics: list[str])",
+        "iso8601(ts: int)",
+        "atom_feed(title: str, feed_id: str, base_url: str, messages: list[dict])",
+        "class Handler"
+      ],
+      "imports": [
+        "http.server",
+        "pathlib",
+        "datetime",
+        "xml.sax.saxutils",
+        "sys",
+        "json",
+        "time",
+        "urllib.request",
+        "urllib.error"
+      ],
+      "symbols": [
+        "load_config()",
+        "ntfy_poll(topics: list[str])",
+        "iso8601(ts: int)",
+        "atom_feed(title: str, feed_id: str, base_url: str, messages: list[dict])",
+        "class Handler"
+      ]
+    },
+    {
       "path": "a_solutions/infra-obs_ntfy/src/code/syslog-to-ntfy.py",
       "lang": "py",
       "role": "python",
@@ -18238,6 +18270,7 @@
         "cNtfy",
         "cSyslog",
         "cGithubRss",
+        "cRssGateway",
         "containerNtfy"
       ],
       "imports": [],
@@ -18246,6 +18279,7 @@
         "appC",
         "syslogC",
         "githubRssC",
+        "rssGatewayC",
         "binariesImage",
         "pythonImage",
         "tz",
@@ -18265,6 +18299,7 @@
         "command",
         "PYTHONUNBUFFERED",
         "github-rss",
+        "rss-gateway",
         "ntfy_cache"
       ]
     },
@@ -18291,7 +18326,24 @@
         "cNtfy",
         "cSyslog",
         "cGithubRss",
+        "cRssGateway",
         "usersJson",
+        "allTopics",
+        "allProfiles",
+        "resolveProfile",
+        "matched",
+        "id",
+        "title",
+        "feed",
+        "channels",
+        "name",
+        "desc",
+        "profilesConfig",
+        "version",
+        "base",
+        "profiles",
+        "category",
+        "profilesConfigAsset",
         "engine",
         "lib",
         "mkUserBlock",
@@ -18304,15 +18356,8 @@
         "container",
         "srcDir",
         "templates",
-        "name",
         "vars",
-        "DOMAIN",
-        "PORT",
-        "USER_BLOCKS",
-        "composeSpec",
-        "containerNtfy",
-        "extraAssets",
-        "title"
+        "DOMAIN"
       ]
     },
     {
