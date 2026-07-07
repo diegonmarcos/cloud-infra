@@ -659,9 +659,16 @@ function deriveCaddy(c: any): DerivedFile[] {
   // ntfy
   const ntfySvc = services["ntfy"];
   if (ntfySvc) {
+    // Resolve the rss-gateway sidecar upstream from build.json ports.rss_gateway + VM WG IP.
+    // The gateway runs on oci-apps (same VM as ntfy) — use vms[vm].wg_ip (in-scope here).
+    const ntfyGatewayPort = ntfySvc.ports?.rss_gateway;
+    const ntfyVmWgIp = vms[ntfySvc.vm]?.wg_ip;
+    const gatewayRaw = ntfyGatewayPort && ntfyVmWgIp ? `${ntfyVmWgIp}:${ntfyGatewayPort}` : undefined;
+    const gatewayUpstream = gatewayRaw ? rewriteUpstreamForCaddy(ntfySvc.vm, gatewayRaw) : undefined;
     special.ntfy = {
       domain: ntfySvc.domain ?? ntfySvc.proxy?.primary?.domain,
       upstream: rewriteUpstreamForCaddy(ntfySvc.vm, ntfySvc.upstream),
+      ...(gatewayUpstream ? { gateway_upstream: gatewayUpstream } : {}),
       comment: "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie",
       // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
       ...(wgOnly(ntfySvc.proxy?.primary) ? { wg_only: true } : {}),

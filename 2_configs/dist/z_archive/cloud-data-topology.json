@@ -95,6 +95,7 @@
         "matomo-hybrid",
         "ntfy",
         "syslog-bridge",
+        "rss-gateway",
         "github-rss",
         "openobserve",
         "umami",
@@ -2793,6 +2794,34 @@
           },
           "read_only": false
         },
+        "rss-gateway": {
+          "container_name": "rss-gateway",
+          "image": "python:3.11-slim",
+          "port": 8091,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./rss-gateway.py:/app/rss-gateway.py:ro",
+            "./configs/profiles-config.json:/etc/ntfy/profiles-config.json:ro"
+          ],
+          "env_file": false,
+          "depends_on": [
+            "app"
+          ],
+          "resources": {
+            "limits": {
+              "memory": "32M"
+            },
+            "reservations": {
+              "memory": "8M"
+            }
+          },
+          "read_only": false
+        },
         "github-rss": {
           "container_name": "github-rss",
           "image": "python:3.11-slim",
@@ -2825,10 +2854,12 @@
       "container_names": [
         "ntfy",
         "syslog-bridge",
+        "rss-gateway",
         "github-rss"
       ],
       "all_ports": [
-        "8090"
+        "8090",
+        "8091"
       ],
       "all_dns": [
         "ntfy.app"
@@ -2845,7 +2876,8 @@
         }
       },
       "declared_ports": {
-        "app": 8090
+        "app": 8090,
+        "rss_gateway": 8091
       },
       "health": {
         "path": "/"

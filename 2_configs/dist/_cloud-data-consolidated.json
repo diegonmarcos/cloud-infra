@@ -204,7 +204,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 64
+      "container_count": 65
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -3476,6 +3476,34 @@
           },
           "read_only": false
         },
+        "rss-gateway": {
+          "container_name": "rss-gateway",
+          "image": "python:3.11-slim",
+          "port": 8091,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./rss-gateway.py:/app/rss-gateway.py:ro",
+            "./configs/profiles-config.json:/etc/ntfy/profiles-config.json:ro"
+          ],
+          "env_file": false,
+          "depends_on": [
+            "app"
+          ],
+          "resources": {
+            "limits": {
+              "memory": "32M"
+            },
+            "reservations": {
+              "memory": "8M"
+            }
+          },
+          "read_only": false
+        },
         "github-rss": {
           "container_name": "github-rss",
           "image": "python:3.11-slim",
@@ -3508,10 +3536,12 @@
       "container_names": [
         "ntfy",
         "syslog-bridge",
+        "rss-gateway",
         "github-rss"
       ],
       "all_ports": [
-        "8090"
+        "8090",
+        "8091"
       ],
       "all_dns": [
         "ntfy.app"
@@ -3528,7 +3558,8 @@
         }
       },
       "declared_ports": {
-        "app": 8090
+        "app": 8090,
+        "rss_gateway": 8091
       },
       "health": {
         "path": "/"
@@ -3628,6 +3659,45 @@
           "name": "sec_yara",
           "category": "sec",
           "desc": "YARA malware scanner alerts & status"
+        }
+      ],
+      "_profiles_comment": "RSS profile groups — each profile is a named set of topic categories resolved at build time by the Nix flake into profiles-config.json. Cloud Mail and any RSS reader subscribe to ONE profile URL instead of N individual topic feeds. Categories: 'topics' key = explicit topic list; 'categories' key = all topics whose category field matches. Add a profile = edit here + rebuild; consumers (rss-gateway sidecar + Cloud Mail app) auto-pick up changes.",
+      "profiles": [
+        {
+          "id": "security",
+          "title": "Security",
+          "categories": [
+            "sec"
+          ]
+        },
+        {
+          "id": "cicd",
+          "title": "CI/CD",
+          "categories": [
+            "dev",
+            "deploy"
+          ]
+        },
+        {
+          "id": "health",
+          "title": "Health",
+          "categories": [
+            "health"
+          ]
+        },
+        {
+          "id": "ops",
+          "title": "Ops",
+          "categories": [
+            "ops"
+          ]
+        },
+        {
+          "id": "all",
+          "title": "Everything",
+          "topics": [
+            "all"
+          ]
         }
       ],
       "api": {
@@ -9237,9 +9307,132 @@
           ]
         }
       ],
+      "profiles": [
+        {
+          "id": "security",
+          "title": "Security",
+          "feed": "/feed/security.atom",
+          "channels": [
+            {
+              "name": "sec_audit",
+              "desc": "Auth log analysis & brute-force detection",
+              "feed": "/feed/c/sec_audit.atom"
+            },
+            {
+              "name": "sec_tls",
+              "desc": "TLS certificate expiry warnings",
+              "feed": "/feed/c/sec_tls.atom"
+            },
+            {
+              "name": "sec_connections",
+              "desc": "SSH/sudo/connection events across VMs",
+              "feed": "/feed/c/sec_connections.atom"
+            },
+            {
+              "name": "sec_yara",
+              "desc": "YARA malware scanner alerts & status",
+              "feed": "/feed/c/sec_yara.atom"
+            }
+          ]
+        },
+        {
+          "id": "cicd",
+          "title": "CI/CD",
+          "feed": "/feed/cicd.atom",
+          "channels": [
+            {
+              "name": "dev_commits",
+              "desc": "Push/commit events",
+              "feed": "/feed/c/dev_commits.atom"
+            },
+            {
+              "name": "dev_pull-requests",
+              "desc": "PR open/close/merge events",
+              "feed": "/feed/c/dev_pull-requests.atom"
+            },
+            {
+              "name": "dev_releases",
+              "desc": "Issues, releases, tags, forks",
+              "feed": "/feed/c/dev_releases.atom"
+            },
+            {
+              "name": "deploy_ship",
+              "desc": "build.sh ship / GHA deploys",
+              "feed": "/feed/c/deploy_ship.atom"
+            },
+            {
+              "name": "deploy_containers",
+              "desc": "Container restarts, image pulls",
+              "feed": "/feed/c/deploy_containers.atom"
+            }
+          ]
+        },
+        {
+          "id": "health",
+          "title": "Health",
+          "feed": "/feed/health.atom",
+          "channels": [
+            {
+              "name": "health_mesh",
+              "desc": "WireGuard mesh connectivity",
+              "feed": "/feed/c/health_mesh.atom"
+            },
+            {
+              "name": "health_endpoints",
+              "desc": "HTTP service endpoint checks",
+              "feed": "/feed/c/health_endpoints.atom"
+            },
+            {
+              "name": "health_dns",
+              "desc": "DNS resolution checks",
+              "feed": "/feed/c/health_dns.atom"
+            },
+            {
+              "name": "health_resources",
+              "desc": "VM disk/memory/CPU usage",
+              "feed": "/feed/c/health_resources.atom"
+            },
+            {
+              "name": "health_containers",
+              "desc": "Docker container health",
+              "feed": "/feed/c/health_containers.atom"
+            }
+          ]
+        },
+        {
+          "id": "ops",
+          "title": "Ops",
+          "feed": "/feed/ops.atom",
+          "channels": [
+            {
+              "name": "ops_backups",
+              "desc": "Backup freshness status",
+              "feed": "/feed/c/ops_backups.atom"
+            },
+            {
+              "name": "ops_reports",
+              "desc": "Daily/weekly summaries",
+              "feed": "/feed/c/ops_reports.atom"
+            }
+          ]
+        },
+        {
+          "id": "all",
+          "title": "Everything",
+          "feed": "/feed/all.atom",
+          "channels": [
+            {
+              "name": "all",
+              "desc": "Every message from every channel",
+              "feed": "/feed/c/all.atom"
+            }
+          ]
+        }
+      ],
       "users": [],
       "enable_login": false,
-      "auth_default_access": "read-write"
+      "auth_default_access": "read-write",
+      "base_url": "https://rss.diegonmarcos.com/feed"
     }
   },
   "_home_manager": {

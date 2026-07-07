@@ -33,12 +33,12 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 289,
-    "edges": 389,
+    "nodes": 290,
+    "edges": 390,
     "by_table": {
       "vm": 4,
       "service": 63,
-      "container": 88,
+      "container": 89,
       "domain": 40,
       "repo": 3,
       "module": 63,
@@ -777,6 +777,18 @@
         "image": "python:3.11-slim",
         "role": "syslog-bridge",
         "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "rss_gateway",
+      "key": "container:rss_gateway",
+      "properties": {
+        "name": "rss-gateway",
+        "image": "python:3.11-slim",
+        "role": "rss-gateway",
+        "port": 8091,
         "public": false
       }
     },
@@ -3818,6 +3830,15 @@
       "key": "service:ntfy->runs_container->container:syslog_bridge",
       "properties": {
         "role": "syslog-bridge"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:ntfy",
+      "to": "container:rss_gateway",
+      "key": "service:ntfy->runs_container->container:rss_gateway",
+      "properties": {
+        "role": "rss-gateway"
       }
     },
     {
