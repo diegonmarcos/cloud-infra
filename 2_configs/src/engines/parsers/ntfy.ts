@@ -10,11 +10,20 @@ export interface NtfyTopic {
   publishers: string[];
 }
 
+export interface NtfyProfile {
+  id: string;
+  title: string;
+  feed: string;
+  channels: Array<{ name: string; desc: string; feed: string }>;
+}
+
 export interface NtfyConfig {
   topics: NtfyTopic[];
+  profiles: NtfyProfile[];
   users: string[];
   enable_login: boolean;
   auth_default_access: string;
+  base_url?: string;
 }
 
 export function parseNtfy(solutionsDir: string): NtfyConfig | null {
@@ -41,11 +50,21 @@ export function parseNtfy(solutionsDir: string): NtfyConfig | null {
   // no information — leave it out of the consolidated to keep the schema clean.
   if (topics.length === 0 && doc == null) return null;
 
+  const buildJsonPath2 = join(svcDir(solutionsDir, "ntfy", "bc-obs_ntfy"), "build.json");
+  const profiles = extractProfilesFromBuildJson(buildJsonPath2, topics);
+  const domain = (() => {
+    try {
+      return JSON.parse(readFileSync(buildJsonPath2, "utf-8"))?.domain ?? undefined;
+    } catch { return undefined; }
+  })();
+
   return {
     topics,
+    profiles,
     users: extractUsersFromCompose(solutionsDir),
     enable_login: doc?.["enable-login"] ?? false,
     auth_default_access: doc?.["auth-default-access"] ?? "read-write",
+    ...(domain ? { base_url: `https://${domain}/feed` } : {}),
   };
 }
 
@@ -104,6 +123,32 @@ function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
   }
 
   return topics;
+}
+
+function extractProfilesFromBuildJson(buildJsonPath: string, topics: NtfyTopic[]): NtfyProfile[] {
+  if (!existsSync(buildJsonPath)) return [];
+  try {
+    const buildJson = JSON.parse(readFileSync(buildJsonPath, "utf-8"));
+    const rawProfiles: any[] = buildJson?.profiles ?? [];
+    const domain: string = buildJson?.domain ?? "rss.diegonmarcos.com";
+    return rawProfiles.map((p: any): NtfyProfile => {
+      const matched = Array.isArray(p.topics)
+        ? topics.filter(t => (p.topics as string[]).includes(t.name))
+        : topics.filter(t => (p.categories as string[] ?? []).includes(t.category));
+      return {
+        id: String(p.id),
+        title: String(p.title),
+        feed: `/feed/${p.id}.atom`,
+        channels: matched.map(t => ({
+          name: t.name,
+          desc: t.desc,
+          feed: `/feed/c/${t.name}.atom`,
+        })),
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 /** Scan bridge scripts for topic constants to build publisher mapping */

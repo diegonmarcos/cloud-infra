@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "c3-services-mcp container config (service=c3-services-mcp, role=app)",
+    "description": "rss-gateway container config (service=ntfy, role=rss-gateway)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,34 +28,35 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "c3-services-mcp",
-    "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
-    "port": 3101,
-    "port_env": "MCP_HTTP_PORT",
-    "dns": "c3-services-mcp.app",
-    "public": true,
-    "proxy": {
-      "streaming": true,
-      "type": "path",
-      "parent_domain": "mcp.diegonmarcos.com",
-      "base_path": "/c3-services-mcp"
-    },
-    "healthcheck": "/mcp",
+    "container_name": "rss-gateway",
+    "image": "python:3.11-slim",
+    "port": 8091,
+    "port_env": null,
+    "dns": null,
+    "public": false,
+    "proxy": null,
+    "healthcheck": null,
     "monitoring": null,
-    "volumes": [],
-    "env_file": true,
-    "depends_on": [],
+    "volumes": [
+      "./rss-gateway.py:/app/rss-gateway.py:ro",
+      "./configs/profiles-config.json:/etc/ntfy/profiles-config.json:ro"
+    ],
+    "env_file": false,
+    "depends_on": [
+      "app"
+    ],
     "resources": {
-      "mem_limit": "2G",
-      "mem_reservation": "256M",
-      "pids_limit": 256
+      "limits": {
+        "memory": "32M"
+      },
+      "reservations": {
+        "memory": "8M"
+      }
     },
-    "restart_policy": "unless-stopped",
-    "read_only": false,
-    "protocol": "http"
+    "read_only": false
   },
-  "service": "c3-services-mcp",
-  "role": "app",
+  "service": "ntfy",
+  "role": "rss-gateway",
   "vm": "oci-apps",
   "services": {
     "c3-analytics-api": {
@@ -1586,51 +1587,134 @@
       }
     }
   },
-  "runtime": {
-    "init": true,
-    "pids_limit": 512,
-    "_why_init": "proxy-mcp spawns no children, but tini is cheap insurance against future regressions and unblocks Node SIGTERM handling."
-  },
-  "proxied_mcps": {
-    "_note": "URLs resolved at flake build time from cloud-data services{}. Container runs in bridge mode, so 127.0.0.1 will NOT reach host-bound services — we MUST use the WG IP (10.0.0.6) of whichever VM hosts the child MCP.",
-    "infra": [
-      {
-        "name": "cloud-cgc-mcp",
-        "service": "cloud-cgc-mcp",
-        "path": "/mcp"
-      }
-    ],
-    "user": [
-      {
-        "name": "mattermost-mcp",
-        "service": "mattermost-mcp",
-        "path": "/mcp"
-      },
-      {
-        "name": "mail-mcp",
-        "service": "mail-mcp",
-        "path": "/mcp"
-      },
-      {
-        "name": "google-workspace-mcp",
-        "service": "google-workspace-mcp",
-        "path": "/mcp"
-      },
-      {
-        "name": "google-personal-mcp",
-        "service": "google-personal-mcp",
-        "path": "/mcp"
-      }
-    ],
-    "retry": {
-      "initial_ms": 10000,
-      "max_ms": 120000,
-      "max_retry_state_entries": 32,
-      "_why": "Bounded LRU so the retry-state Map can never grow beyond the declared child count (OOM H1 root cause). max_ms caps exponential backoff per child."
+  "timezone": "Europe/Paris",
+  "topics": [
+    {
+      "name": "all",
+      "category": "universal",
+      "desc": "Every message from every channel"
+    },
+    {
+      "name": "dev_commits",
+      "category": "dev",
+      "desc": "Push/commit events"
+    },
+    {
+      "name": "dev_pull-requests",
+      "category": "dev",
+      "desc": "PR open/close/merge events"
+    },
+    {
+      "name": "dev_releases",
+      "category": "dev",
+      "desc": "Issues, releases, tags, forks"
+    },
+    {
+      "name": "deploy_ship",
+      "category": "deploy",
+      "desc": "build.sh ship / GHA deploys"
+    },
+    {
+      "name": "deploy_containers",
+      "category": "deploy",
+      "desc": "Container restarts, image pulls"
+    },
+    {
+      "name": "health_mesh",
+      "category": "health",
+      "desc": "WireGuard mesh connectivity"
+    },
+    {
+      "name": "health_endpoints",
+      "category": "health",
+      "desc": "HTTP service endpoint checks"
+    },
+    {
+      "name": "health_dns",
+      "category": "health",
+      "desc": "DNS resolution checks"
+    },
+    {
+      "name": "health_resources",
+      "category": "health",
+      "desc": "VM disk/memory/CPU usage"
+    },
+    {
+      "name": "health_containers",
+      "category": "health",
+      "desc": "Docker container health"
+    },
+    {
+      "name": "ops_backups",
+      "category": "ops",
+      "desc": "Backup freshness status"
+    },
+    {
+      "name": "ops_reports",
+      "category": "ops",
+      "desc": "Daily/weekly summaries"
+    },
+    {
+      "name": "sec_audit",
+      "category": "sec",
+      "desc": "Auth log analysis & brute-force detection"
+    },
+    {
+      "name": "sec_tls",
+      "category": "sec",
+      "desc": "TLS certificate expiry warnings"
+    },
+    {
+      "name": "sec_connections",
+      "category": "sec",
+      "desc": "SSH/sudo/connection events across VMs"
+    },
+    {
+      "name": "sec_yara",
+      "category": "sec",
+      "desc": "YARA malware scanner alerts & status"
     }
-  },
+  ],
+  "profiles": [
+    {
+      "id": "security",
+      "title": "Security",
+      "categories": [
+        "sec"
+      ]
+    },
+    {
+      "id": "cicd",
+      "title": "CI/CD",
+      "categories": [
+        "dev",
+        "deploy"
+      ]
+    },
+    {
+      "id": "health",
+      "title": "Health",
+      "categories": [
+        "health"
+      ]
+    },
+    {
+      "id": "ops",
+      "title": "Ops",
+      "categories": [
+        "ops"
+      ]
+    },
+    {
+      "id": "all",
+      "title": "Everything",
+      "topics": [
+        "all"
+      ]
+    }
+  ],
   "secret_env_vars": [
-    "GITHUB_TOKEN",
-    "DAGU_BASIC_AUTH"
+    "NTFY_ADMIN_PASSWORD",
+    "NTFY_USER_PASSWORD"
   ]
 }
