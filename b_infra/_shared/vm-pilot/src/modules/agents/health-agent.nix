@@ -21,7 +21,24 @@
       DISK=$(df -h / 2>/dev/null | awk 'NR==2{printf "{\"used\":\"%s\",\"total\":\"%s\",\"pct\":\"%s\"}", $3, $2, $5}' || echo '{"used":"?","total":"?","pct":"?"}')
       LOAD=$(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null || echo "0 0 0")
       UPTIME=$(awk '{printf "%dd %dh", $1/86400, ($1%86400)/3600}' /proc/uptime 2>/dev/null || echo "?")
+      # P3: WG binary up/down + peer handshake staleness (detects silent tunnel death)
       WG_UP=$(ip link show wg0 >/dev/null 2>&1 && echo "true" || echo "false")
+      WG_PEERS_JSON="[]"
+      if [ "$WG_UP" = "true" ] && command -v wg >/dev/null 2>&1; then
+        WG_PEERS_JSON=$(wg show wg0 dump 2>/dev/null | awk '
+          BEGIN { printf "[" }
+          NR>1 {
+            now = systime()
+            ts = ($5+0 > 0) ? $5 : 0
+            age = (ts > 0) ? (now - ts) : -1
+            stale = (age < 0 || age > 180) ? "true" : "false"
+            if (NR>2) printf ","
+            printf "{\"pub_key\":\"%s\",\"endpoint\":\"%s\",\"handshake_age_secs\":%d,\"stale\":%s}",
+              $1, $3, age, stale
+          }
+          END { printf "]" }
+        ' || echo "[]")
+      fi
 
       # Memory PSI (some avg10, int) — the load-shedder's trigger; surfaces
       # thrash BEFORE OOM. And whether protection is actually ARMED: oci-mail
@@ -30,6 +47,52 @@
       MEM_PSI=$(awk -F'avg10=' '/^some/{split($2,a," ");printf "%d",a[1];exit}' /proc/pressure/memory 2>/dev/null || echo 0)
       SHED=$(systemctl is-active load-shedder.service 2>/dev/null || echo "unknown")
       SHED_FAILED=$([ -f /run/load-shedder.deploy-failed ] && echo "true" || echo "false")
+
+      # P5: If load-shedder deploy-failed, send a one-shot ntfy alert (do it every cycle
+      # so the alert fires even if the first delivery failed; ntfy deduplication by title
+      # prevents flooding — callers see it once per rate window).
+      if [ "$SHED_FAILED" = "true" ]; then
+        for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+          curl -sf --max-time 5 -X POST "$_ntfy" \
+            -H "Title: [$VM] LOAD SHEDDER NOT ARMED" \
+            -H "Priority: 5" \
+            -H "Tags: rotating_light,$VM,shedder" \
+            -d "VM is UNPROTECTED against memory thrash — load-shedder.service failed to start during last HM activation. Check: journalctl -u load-shedder.service" \
+            >/dev/null 2>&1 && break || true
+        done
+      fi
+
+      # P2: File descriptor exhaustion check — the 2026-06-19 fluent-bit EMFILE incident
+      # showed fd exhaustion silently kills WG/SSH accept() BEFORE any OOM signal.
+      # Read /proc/sys/fs/file-nr: "open allocated max" (3 fields; we want field1 and field3).
+      FD_JSON='{"open":0,"max":0,"pct":0,"status":"ok"}'
+      if [ -f /proc/sys/fs/file-nr ]; then
+        FD_JSON=$(awk '{
+          open=$1; max=$3
+          pct = (max>0) ? int(open*100/max) : 0
+          status = (pct>=90) ? "critical" : (pct>=70) ? "warn" : "ok"
+          printf "{\"open\":%d,\"max\":%d,\"pct\":%d,\"status\":\"%s\"}", open, max, pct, status
+        }' /proc/sys/fs/file-nr 2>/dev/null || echo '{"open":0,"max":0,"pct":0,"status":"ok"}')
+        # Alert on fd pressure
+        FD_PCT=$(echo "$FD_JSON" | awk -F'"pct":' '{split($2,a,",");print int(a[1])}')
+        if [ "${FD_PCT:-0}" -ge 90 ]; then
+          for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+            curl -sf --max-time 5 -X POST "$_ntfy" \
+              -H "Title: [$VM] FD EXHAUSTION CRITICAL" -H "Priority: 5" \
+              -H "Tags: rotating_light,$VM,fd" \
+              -d "File descriptors ${FD_PCT}%% used — WG/SSH will fail accept() when exhausted (2026-06-19 pattern)" \
+              >/dev/null 2>&1 && break || true
+          done
+        elif [ "${FD_PCT:-0}" -ge 70 ]; then
+          for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+            curl -sf --max-time 5 -X POST "$_ntfy" \
+              -H "Title: [$VM] FD pressure warning" -H "Priority: 3" \
+              -H "Tags: warning,$VM,fd" \
+              -d "File descriptors ${FD_PCT}%% used — monitor for leaks" \
+              >/dev/null 2>&1 && break || true
+          done
+        fi
+      fi
 
       # Docker containers via awk (POSIX, no subshell issues)
       TMPF=$(mktemp)
@@ -53,7 +116,7 @@
       ' "$TMPF" 2>/dev/null || echo "[]")
       rm -f "$TMPF"
 
-      # Write JSON
+      # Write JSON (extended with P2 fd + P3 WG peers)
       cat > "$OUT" <<EOF
       {
         "vm": "$VM",
@@ -64,7 +127,9 @@
         "load": "$LOAD",
         "uptime": "$UPTIME",
         "wg_up": $WG_UP,
+        "wg_peers": $WG_PEERS_JSON,
         "mem_psi": $MEM_PSI,
+        "fd": $FD_JSON,
         "protection": {"load_shedder": "$SHED", "deploy_failed": $SHED_FAILED},
         "containers_running": $CTR_RUNNING,
         "containers_total": $CTR_TOTAL,

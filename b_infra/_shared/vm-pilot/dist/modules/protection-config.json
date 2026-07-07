@@ -1,0 +1,46 @@
+{
+  "_warning": "Single source of truth for per-VM protection tuning. Consumed by: load-shedder.nix, tier1-apps.nix, health-agent.nix via builtins.fromJSON. Edit here + redeploy to tune — never edit inline in .nix files.",
+  "defaults": {
+    "_comment": "Applied to any VM not listed in vm_overrides",
+    "mem_psi_crit": 50,
+    "mem_psi_warn": 35,
+    "mem_psi_page": 65,
+    "interval_secs": 15,
+    "backoff_secs": 120,
+    "need_breaches": 3,
+    "fd_warn_pct": 70,
+    "fd_crit_pct": 90,
+    "wg_stale_secs": 180,
+    "tier1_services": []
+  },
+  "vm_overrides": {
+    "oci-mail": {
+      "_comment": "Mail stack — maddy+stalwart are tier-1, must survive shed",
+      "tier1_services": ["maddy", "stalwart", "mail-puller"],
+      "mem_psi_crit": 50,
+      "mem_psi_warn": 30,
+      "mem_psi_page": 65
+    },
+    "gcp-proxy": {
+      "_comment": "Proxy/mesh hub — caddy+authelia+introspect-proxy are tier-1",
+      "tier1_services": ["caddy", "introspect-proxy", "authelia", "hickory-dns", "wireguard-mesh-ws-tunnel"],
+      "mem_psi_crit": 55,
+      "mem_psi_warn": 35,
+      "mem_psi_page": 70
+    },
+    "oci-apps": {
+      "_comment": "App VM — no tier-1 apps (all can be shed); higher threshold due to build activity",
+      "tier1_services": [],
+      "mem_psi_crit": 50,
+      "mem_psi_warn": 40,
+      "mem_psi_page": 65
+    },
+    "oci-analytics": {
+      "_comment": "Analytics VM — umami/matomo can be shed freely",
+      "tier1_services": [],
+      "mem_psi_crit": 50,
+      "mem_psi_warn": 35,
+      "mem_psi_page": 65
+    }
+  }
+}
