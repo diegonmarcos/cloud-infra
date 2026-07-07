@@ -32,6 +32,44 @@ FULL_IMAGE="${IMAGE}:${TAG}"
 
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$PATH"
 
+# ── Self-heal: corrupt /etc/docker/daemon.json blocks dockerd entirely ──
+# 2026-07-03 oci-mail: a torn write left two concatenated JSON objects and
+# dockerd refused to boot — the docker-image HM delivery then can't repair
+# itself (pull needs the daemon). Restore the DECLARED copy (HM activation
+# output of the current generation) when the live file isn't valid JSON.
+DAEMON_JSON="/etc/docker/daemon.json"
+DECLARED_JSON="$HOME/.local/share/container-init/daemon.json"
+if command -v python3 >/dev/null 2>&1; then
+    if ! sudo python3 -c "import json; json.load(open('$DAEMON_JSON'))" 2>/dev/null; then
+        # The declared copy may itself carry the concatenation bug (duplicate
+        # home.file.text defs merged by types.lines) — salvage the FIRST JSON
+        # document from whichever source parses, so dockerd can boot and pull
+        # the fixed generation.
+        SALVAGE=$(sudo python3 - "$DECLARED_JSON" "$DAEMON_JSON" <<'PYEOF'
+import json, sys
+for path in sys.argv[1:]:
+    try:
+        raw = open(path).read()
+    except OSError:
+        continue
+    try:
+        obj, _ = json.JSONDecoder().raw_decode(raw.lstrip())
+        print(json.dumps(obj)); sys.exit(0)
+    except Exception:
+        continue
+sys.exit(1)
+PYEOF
+        ) || SALVAGE=""
+        if [ -n "$SALVAGE" ]; then
+            echo "[hm-docker] daemon.json invalid — salvaging first JSON document"
+            printf '%s\n' "$SALVAGE" | sudo tee "$DAEMON_JSON.tmp" > /dev/null
+            sudo mv -f "$DAEMON_JSON.tmp" "$DAEMON_JSON"
+            sudo systemctl restart docker 2>/dev/null || true
+            sleep 3
+        fi
+    fi
+fi
+
 # ── Pre-check: Docker daemon running? ──
 if [ -S "$DOCKER_SOCK" ]; then
     echo "[hm-docker] Docker socket found"
@@ -111,7 +149,9 @@ fi
 # ── Step 3: Run activation container ──
 echo "[hm-docker] Running activation container"
 if [ "$USE_CLI" = true ]; then
-    docker run --rm --name "$CONTAINER_NAME" -v /:/host -e HM_HOST_ROOT=/host "$FULL_IMAGE" 2>&1
+    # --runtime runc: activation must survive a broken default-runtime in
+    # daemon.json (2026-07-03: youki default bricked activation on oci-mail).
+    docker run --rm --runtime runc --name "$CONTAINER_NAME" -v /:/host -e HM_HOST_ROOT=/host "$FULL_IMAGE" 2>&1
 else
     CREATE_BODY="{
         \"Image\": \"${FULL_IMAGE}\",

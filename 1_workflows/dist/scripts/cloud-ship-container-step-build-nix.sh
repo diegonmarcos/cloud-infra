@@ -100,7 +100,16 @@ step_build() {
         IS_V2_ENGINE_PRE="true"
     fi
 
-    if [ "$IS_V2_ENGINE_PRE" = "true" ]; then
+    # HYBRID GUARD v2 (2026-07-03, final form): EVERY v2 flake carries external
+    # per-service registry symlinks — the repo-wide git intern resolves them,
+    # so dereferencing is not just unnecessary, it deterministically BREAKS v2
+    # evals (every "(symlinks +flag)" build tonight failed; every short-circuit
+    # passed). The ONLY case that needs dereferencing is a PATH-INTERPOLATED
+    # symlink inside a runCommand (cloud-spec: DATA=''${./cloud-data.json}) —
+    # nix interns that single path verbatim → dangling in the store. That case
+    # is declared, not inferred: build.json build.dereference_symlinks=true.
+    DEREF_SYMLINKS=$(jq -r '.build.dereference_symlinks // false' "$CONFIG" 2>/dev/null)
+    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$DEREF_SYMLINKS" != "true" ]; then
         log "v2 engine flake — cloud-data accessed via 2_configs/dist, no src/ resolve needed"
     elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         # Resolve every external *.json symlink to a real file
@@ -117,8 +126,12 @@ step_build() {
             CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
         done
         # include_cloud_data=true: also copy every 2_configs/dist/*.json into src/ (for services
-        # that need the whole dataset at runtime, e.g. c3-infra-mcp-api)
-        if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -d "$CLOUD_DATA_DIR" ]; then
+        # that need the whole dataset at runtime, e.g. c3-infra-mcp-api).
+        # NEVER for v2 engine flakes (2026-07-03): they read 2_configs/dist
+        # directly through the repo-wide git intern; dumping 60 alien JSONs
+        # into src/ broke their eval (rig, cgc-mcp) when the hybrid guard
+        # routed them here for symlink dereferencing.
+        if [ "$INCLUDE_CLOUD_DATA" = "true" ] && [ -d "$CLOUD_DATA_DIR" ] && [ "$IS_V2_ENGINE_PRE" != "true" ]; then
             for f in "$CLOUD_DATA_DIR"/*.json; do
                 [ -f "$f" ] || continue
                 BASENAME=$(basename "$f")
@@ -151,6 +164,10 @@ step_build() {
     git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
     nix build --option eval-cache false --out-link "$SERVICE_DIR/.result" 2>"$BUILD_LOG" || {
         log_error "nix build failed:"
+        # BOTH streams (2026-07-03): the engine self-tees stdout into
+        # <service>/build.log; an error cat'd only to stderr never reaches it
+        # and failures debug blind ("Step 'build' failed" with no cause).
+        cat "$BUILD_LOG"
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
         for f in $CLOUD_DATA_STAGED; do
@@ -160,11 +177,18 @@ step_build() {
         return 1
     }
 
-    # Show warnings
+    # Show warnings.
+    # `|| true` (2026-07-03, THE tonight-wide transient-failure root cause):
+    # under pipefail, grep exits 1 when the (non-empty) nix stderr contains
+    # no warning/error/trace line — killing the step AFTER a successful nix
+    # build with only "Step 'build' failed (exit 1)" and no cause. Every
+    # "intermittent" build failure tonight (cgc-mcp, gitea, dagu, gha-runner,
+    # caddy-l4-image, chat-mattermost, gws-mcp) alternated with whether the
+    # dirty-tree warning happened to be present to satisfy the grep.
     if [ -s "$BUILD_LOG" ]; then
         grep -i 'warning\|error\|trace' "$BUILD_LOG" | while IFS= read -r line; do
             log_warn "$line"
-        done
+        done || true
     fi
     rm -f "$BUILD_LOG"
 

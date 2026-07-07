@@ -33,6 +33,29 @@ SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
 
+# ── Full-run logging: mirror EVERY verb's output to build.log ─────────
+# Matches the HM engine's BUILD_LOG_FILE convention. Self-reexec once through
+# `tee` so ALL output is captured — not just log() lines but raw step output
+# too (the status table, ssh passthrough, docker compose logs). Guard env var
+# prevents infinite recursion; exit code preserved via .build-rc so drift/fail
+# codes still propagate. build.log is gitignored fleet-wide.
+BUILD_LOG_FILE="$SERVICE_DIR/build.log"
+if [ -z "${BUILD_LOG_ACTIVE:-}" ]; then
+    export BUILD_LOG_ACTIVE=1
+    : > "$BUILD_LOG_FILE"
+    _rcfile="$(mktemp)"   # tmp, not SERVICE_DIR — no git-tracking risk
+    # set +e around the wrapped call: with errexit ON, a non-zero inner exit
+    # (e.g. status drift) aborts the { } group BEFORE `echo $?` runs, leaving
+    # _rcfile empty → `exit ""` → bash coerces to 2, mangling the real code.
+    # Re-invoke via absolute path through sh: $0 may be a bare relative name
+    # ("build.sh") not on PATH, so `"$0"` alone fails "command not found".
+    set +e
+    { sh "$SERVICE_DIR/$(basename "$0")" "$@" 2>&1; echo $? > "$_rcfile"; } | tee -a "$BUILD_LOG_FILE"
+    _rc="$(cat "$_rcfile" 2>/dev/null)"; [ -z "$_rc" ] && _rc=0
+    rm -f "$_rcfile"
+    exit "$_rc"
+fi
+
 # ── Config reader (node primary, python3 fallback) ────────────────────
 get_config() {
     [ ! -f "$CONFIG" ] && return 0
@@ -300,6 +323,9 @@ for _step in \
     cloud-ship-container-step-deploy-rsync.sh \
     cloud-ship-container-step-deploy-compose.sh \
     cloud-ship-container-step-deploy-health.sh \
+    cloud-ship-container-step-status.sh \
+    cloud-ship-container-step-logs.sh \
+    cloud-ship-container-step-runtime.sh \
     cloud-ship-container-step-lifecycle.sh \
     cloud-ship-container-step-wrangler.sh \
     cloud-ship-container-step-wrangler-logs.sh \
@@ -324,15 +350,31 @@ echo "========================================"
 
 case "${1:-all}" in
     docker)   step_docker ;;
+    push)     step_docker ;;   # alias: build image + push to GHCR
     build)    step_build ;;
     docs)     step_docs ;;
     secrets)  step_secrets ;;
     verify)   step_verify_secrets ;;
     deploy)   step_deploy ;;
     compose)  step_compose ;;
+    up)       step_compose ;;   # alias: pull + up -d --no-build on VM
+    pull)     step_pull ;;
+    down)     step_down ;;
+    restart)  step_restart ;;
     compose-build) step_compose_build ;;
     configs-push) step_configs_push ;;
     health)   step_health ;;
+    status)   step_status ;;
+    logs)
+        # Wrangler services stream Cloudflare Worker logs; all others tail the
+        # VM container logs. Single arm — a duplicate `logs)` case would be
+        # dead code (first match wins).
+        if [ "$WRANGLER_DEPLOY" = "true" ]; then
+            shift; step_wrangler_logs "$@"
+        else
+            LOGS_TAIL="${2:-100}"; LOGS_FOLLOW="${3:-}"; step_logs
+        fi
+        ;;
     all)      step_build; step_docs; step_secrets; step_verify_secrets ;;
     ship)
         # Runner: where to build Docker images (auto, local, oci-apps, gha)
@@ -477,13 +519,22 @@ case "${1:-all}" in
             fi
             rm -f "$SERVICE_DIR/.secrets-hash-new"
         fi
+
+        # ── Phase 4: HEALTH GATE (rollout status --watch analogue) ──
+        # ship previously ended after compose with only a 3s `docker ps`
+        # glance in step_compose — a crash-looping or unhealthy container
+        # still reported a green ship. step_health waits for compose health
+        # (HEALTH_TIMEOUT, default 120s) and FAILS LOUDLY on crash-loop /
+        # unhealthy, dumping the last log lines. Skips cleanly when there is
+        # no deploy target (local services).
+        step_health
         ;;
     wrangler) step_wrangler ;;
-    logs)     shift; step_wrangler_logs "$@" ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;
-    redeploy) step_build; step_secrets; step_deploy; step_compose ;;
+    redeploy) step_build; step_secrets; step_deploy; step_compose; step_health ;;
+    rollout)  step_pull; step_compose; step_health ;;   # image-only reconcile, no rebuild
     clean)    rm -rf "$DIST_DIR" "$SERVICE_DIR/.result" "$SERVICE_DIR/.result-docs" "$SERVICE_DIR/.dist-hash"; log "Cleaned" ;;
     clean-remote) step_clean_remote "${2:-}" ;;
     *)
@@ -491,7 +542,7 @@ case "${1:-all}" in
         if [ -f "$CONFIG" ] && get_lifecycle "$1" | grep -q .; then
             run_lifecycle "$1"
         else
-            echo "Usage: $0 [docker|build|docs|secrets|deploy|compose|health|wrangler|all|ship|redeploy|clean|clean-remote|<lifecycle>]"
+            echo "Usage: $0 [build|push|pull|up|down|restart|deploy|compose|secrets|docs|health|status|logs|wrangler|all|ship|rollout|redeploy|clean|clean-remote|<lifecycle>]"
             echo "  docker       Build + push Docker image"
             echo "  build        Build nix flake -> dist/"
             echo "  docs         Build documentation -> dist/docs/"
@@ -499,14 +550,22 @@ case "${1:-all}" in
             echo "  deploy       Rsync dist/ -> VM (manifest-based, no --delete)"
             echo "  compose      Docker compose up on VM"
             echo "  health       Verify containers are healthy (post-deploy)"
+            echo "  push         Alias of 'docker' — build image + push to GHCR"
+            echo "  pull         Pull image(s) from GHCR onto the VM (no restart)"
+            echo "  up           Alias of 'compose' — pull + up -d --no-build on VM"
+            echo "  down         Stop + remove containers (named volumes persist)"
+            echo "  restart      Restart containers in place (no pull, no recreate)"
+            echo "  rollout      Image-only reconcile: pull + up + health (no rebuild)"
+            echo "  status       Reconcile report: GHCR digest vs running + health + config drift"
+            echo "  logs [tail] [follow]   Tail VM container logs (default 100 lines)"
             echo "  wrangler     Deploy Cloudflare Worker via wrangler"
             echo "  logs [since] [limit] [fmt]  Tail Cloudflare Worker observability logs (default: 15m, 100, pretty)"
             echo "  terraform    Terraform init + apply in dist/"
             echo "  tf-plan      build + secrets + terraform plan"
             echo "  tf-import    build + secrets + terraform import (from src/import.sh)"
             echo "  all          build + docs + secrets (default)"
-            echo "  ship         docker + build + secrets + deploy + compose (skips if unchanged)"
-            echo "  redeploy     build + secrets + deploy + compose (skip docker)"
+            echo "  ship         build + docker + secrets + deploy + compose + health (skips if unchanged)"
+            echo "  redeploy     build + secrets + deploy + compose + health (skip docker)"
             echo "  clean        Remove dist/ and build artifacts"
             echo "  clean-remote List non-manifest files on VM (--force to delete)"
             if [ -f "$CONFIG" ]; then

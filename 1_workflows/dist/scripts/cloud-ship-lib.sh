@@ -247,7 +247,16 @@ deploy_to_vm() {
             --sftp-known-hosts-file="$HOME/.ssh/known_hosts" \
             --transfers=4
     elif cmd_exists rsync; then
+        # P-filters (2026-07-03): protect deployed secrets from --delete.
+        # Any deploy whose local dist/ lacks .secrets (GHA runs, post-clean
+        # builds, secrets-step skips) used to WIPE the remote .secrets —
+        # 36 stacks on oci-apps lost theirs on 2026-07-02 and every env_file
+        # compose refused to start. Secrets are placed by the secrets step
+        # and must never be deleted by the file sync.
         rsync -avz --delete \
+            --filter='P .secrets' \
+            --filter='P .secrets.d' \
+            --filter='P .secrets.json' \
             -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=accept-new" \
             "$src" "$user@$ip:$dest"
     elif cmd_exists rclone; then

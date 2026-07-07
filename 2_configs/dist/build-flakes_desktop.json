@@ -4765,6 +4765,11 @@
       },
       "runtime": {
         "model": "claude-sonnet-4-6",
+        "_model_aliases_comment": "requested-id → real `claude --model` id. Callers pick a cheaper tier per request (cgc octocode indexing asks for claude-haiku); unknown/absent ids fall back to `model`.",
+        "model_aliases": {
+          "claude-sonnet": "claude-sonnet-4-6",
+          "claude-haiku": "claude-haiku-4-5"
+        },
         "max_concurrency": 12,
         "call_timeout_ms": 180000,
         "headroom": {
@@ -4904,7 +4909,7 @@
             "_comment": "update = INCREMENTAL (octocode index, git-aware, changed files only) on top of the GHCR DB. NOT a reindex (clear+rebuild). First run with no upstream image bootstraps a full build once to seed GHCR. use_llm=false: the 2148-node base is structural-only; the LLM GraphRAG phase makes one LLM call PER node (~hours over the full graph) and timed out the job. Structural incremental of changed files is minutes and matches the base.",
             "incremental": true,
             "use_llm": false,
-            "llm_model": "openrouter:openai/gpt-4o-mini",
+            "llm_model": "openrouter:anthropic/claude-haiku-4.5",
             "schedule": "23 2 * * *",
             "max_minutes": 330
           },
@@ -4913,7 +4918,7 @@
             "openai_api_url": "http://10.0.0.6:3117/v1/chat/completions",
             "ollama_api_url": "http://10.0.0.6:11436",
             "api_key": "sk-dummy",
-            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
+            "models": "ollama:claude-haiku openai:gpt-4o-mini",
             "health_url": "http://10.0.0.6:3117/health"
           },
           "index_repos": [
