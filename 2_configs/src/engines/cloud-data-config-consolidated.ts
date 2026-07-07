@@ -18,7 +18,7 @@
 //
 // Run: tsx cloud-data-config-consolidated.ts
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, lstatSync } from "fs";
 import { resolve, join } from "path";
 
 import { scanBuildJsons, normalizeToContainers, CATEGORY_PREFIX, type BuildJsonEntry, type ContainerSpec } from "./parsers/build-json.js";
@@ -862,6 +862,23 @@ function main() {
 
   const jsonStr = JSON.stringify(consolidated, null, 2) + "\n";
   writeFileSync(OUTPUT_JSON, jsonStr);
+
+  // Refresh MATERIALIZED service copies. Most consumers symlink
+  // a_solutions/<svc>/src/_cloud-data-consolidated.json → 2_configs/dist/, but
+  // services whose docker build context is src/ carry a real-file copy (a symlink
+  // escaping the context would break `docker build`). Nothing else refreshed those
+  // copies, so they silently went stale (observed: cloud-cgc-mcp serving a June
+  // topology in July). Discover-and-rewrite keeps 2_configs the sole emitter —
+  // no hardcoded service list; symlinked consumers are untouched (lstat).
+  for (const dir of readdirSync(SOLUTIONS_DIR)) {
+    const copy = join(SOLUTIONS_DIR, dir, "src", "_cloud-data-consolidated.json");
+    try {
+      if (lstatSync(copy).isFile()) {
+        writeFileSync(copy, jsonStr);
+        console.log(`cloud-data-config-consolidated: refreshed materialized copy ${dir}/src/`);
+      }
+    } catch { /* absent — nothing to refresh */ }
+  }
 
   console.log(`cloud-data-config-consolidated: written to ${CLOUD_DATA_DIR}`);
 

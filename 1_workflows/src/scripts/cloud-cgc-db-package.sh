@@ -47,12 +47,18 @@ if command -v docker >/dev/null 2>&1; then
 fi
 
 echo "[cgc-db] building $IMAGE:$TAG ..."
-# DOCKER_BUILDKIT=0 (legacy builder) for this trivial busybox+ADD image: buildx
-# tries to chown ~/.docker/buildx/activity/default, which fails when the producer
-# runs inside the freeze-proof scope with egid=docker (non-primary group) →
-# "operation not permitted". The legacy builder never touches that dir. The image
-# is a one-line FROM/ADD, so BuildKit features are irrelevant here.
-DOCKER_BUILDKIT=0 docker build -t "$IMAGE:$TAG" "$WORK/ctx"
+# BuildKit with an ISOLATED DOCKER_CONFIG. The legacy builder (DOCKER_BUILDKIT=0)
+# is NOT crash-safe on the shared oci-apps daemon: its parent-chain image store
+# corrupts under concurrent image ops — observed as both
+#   "failed to set parent sha256:…: unknown parent image ID"        (runs 28731867216, 28844070303)
+#   "failed to get digest sha256:…: imagedb/content/…: no such file" (run 28665357140)
+# BuildKit never touches that legacy store. The reason legacy was used before —
+# buildx chowns ~/.docker/buildx/activity, which fails inside the freeze-proof
+# scope (egid=docker, non-primary group) — is solved by pointing DOCKER_CONFIG at
+# a fresh temp dir owned by THIS process. Auth is irrelevant for the build (the
+# busybox base is a public pull); the push below uses the normally-authed config.
+mkdir -p "$WORK/dcfg"
+DOCKER_CONFIG="$WORK/dcfg" docker build -t "$IMAGE:$TAG" "$WORK/ctx"
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
 docker push "$IMAGE:$TAG"
 # Drop the local tagged copy after a successful push — GHCR is the single store, and
