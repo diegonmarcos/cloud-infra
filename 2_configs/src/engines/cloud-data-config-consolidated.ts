@@ -575,6 +575,12 @@ function main() {
       containers: vm.services,
       method: vm.method,
       gha: vm.gha,
+      // Per-VM protection-stack overrides (load-shedder / tier1-apps / health-agent /
+      // watchdog thresholds). Source of truth: b_infra/nixhm-sudo-<alias>/build.json
+      // .protection. Merged over native.protection defaults by the Nix consumers.
+      // Read via the SAME helper as public_ports/dashboard (correct b_infra path);
+      // absent → {} (VM inherits defaults).
+      protection: (loadVmHmBuild(vm.ssh_alias, CLOUD_ROOT)?.protection) ?? {},
     };
   }
 
@@ -776,6 +782,10 @@ function main() {
       dns: native.dns ?? { primary: "10.0.0.1", fallback: "1.1.1.1" },
       docker: native.docker ?? { subnet: "172.16.0.0/12", iptables: false },
       monitoring: native.monitoring ?? { ntfy_base: "https://rss.diegonmarcos.com" },
+      // Cross-VM protection-stack defaults. Consumed by vm-pilot protection modules
+      // (load-shedder / tier1-apps / health-agent / watchdog); per-VM overrides live
+      // under _home_manager.vms.<alias>.protection and win over these defaults.
+      protection: native.protection ?? {},
     },
     // Top-level convenience alias (also lives under native.wireguard_public).
     // Phase 1 of the wg-public mesh plan — consumers can read either path.

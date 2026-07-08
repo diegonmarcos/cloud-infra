@@ -4,7 +4,23 @@
 # Split from: system-protection-watchdog-petter-dropbear-health-agent.nix
 # Imported by: default.nix
 #
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, vmName, ... }:
+let
+  # P4: data-driven fd / wg-stale thresholds + ntfy base/topic. Single SoT:
+  # config.json native.protection (defaults) + b_infra/nixhm-sudo-<alias>/build.json
+  # .protection (per-VM overrides), emitted by 2_configs into native.protection +
+  # _home_manager.vms.<vmName>.protection.
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  protDefaults = consolidated.native.protection or {};
+  protVm       = (consolidated._home_manager.vms.${vmName} or {}).protection or {};
+  prot         = key: fallback: protVm.${key} or (protDefaults.${key} or fallback);
+
+  fdWarnPct  = prot "fd_warn_pct"   70;
+  fdCritPct  = prot "fd_crit_pct"   90;
+  wgStaleSec = prot "wg_stale_secs" 180;
+  ntfyBase   = consolidated.native.monitoring.ntfy_base or "https://rss.diegonmarcos.com";
+  ntfyTopic  = prot "ntfy_topic"    "health_resources";
+in
 {
   home.file.".local/share/system-protection/health-agent.sh" = {
     executable = true;
@@ -14,6 +30,14 @@
       VM=$(hostname -s 2>/dev/null || echo "unknown")
       OUT="/opt/health/latest.json"
       mkdir -p /opt/health
+
+      # P4: data-driven thresholds + ntfy routing (baked from consolidated protection block).
+      FD_WARN_PCT=${toString fdWarnPct}
+      FD_CRIT_PCT=${toString fdCritPct}
+      WG_STALE_SECS=${toString wgStaleSec}
+      NTFY_TOPIC="${ntfyTopic}"
+      # WG-direct ntfy (oci-apps :8090) first, then public edge — same pattern as the other agents.
+      NTFY_URLS="http://10.0.0.6:8090/$NTFY_TOPIC ${ntfyBase}/$NTFY_TOPIC"
 
       # Collect data
       MEM=$(free -m 2>/dev/null | awk '/Mem/{printf "{\"used\":%d,\"total\":%d,\"pct\":%d}", $3, $2, ($2>0 ? $3*100/$2 : 0)}' || echo '{"used":0,"total":0,"pct":0}')
@@ -25,13 +49,13 @@
       WG_UP=$(ip link show wg0 >/dev/null 2>&1 && echo "true" || echo "false")
       WG_PEERS_JSON="[]"
       if [ "$WG_UP" = "true" ] && command -v wg >/dev/null 2>&1; then
-        WG_PEERS_JSON=$(wg show wg0 dump 2>/dev/null | awk '
+        WG_PEERS_JSON=$(wg show wg0 dump 2>/dev/null | awk -v stale_secs="$WG_STALE_SECS" '
           BEGIN { printf "[" }
           NR>1 {
             now = systime()
             ts = ($5+0 > 0) ? $5 : 0
             age = (ts > 0) ? (now - ts) : -1
-            stale = (age < 0 || age > 180) ? "true" : "false"
+            stale = (age < 0 || age > stale_secs) ? "true" : "false"
             if (NR>2) printf ","
             printf "{\"pub_key\":\"%s\",\"endpoint\":\"%s\",\"handshake_age_secs\":%d,\"stale\":%s}",
               $1, $3, age, stale
@@ -52,12 +76,12 @@
       # so the alert fires even if the first delivery failed; ntfy deduplication by title
       # prevents flooding — callers see it once per rate window).
       if [ "$SHED_FAILED" = "true" ]; then
-        for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+        for _ntfy in $NTFY_URLS; do
           curl -sf --max-time 5 -X POST "$_ntfy" \
             -H "Title: [$VM] LOAD SHEDDER NOT ARMED" \
             -H "Priority: 5" \
             -H "Tags: rotating_light,$VM,shedder" \
-            -d "VM is UNPROTECTED against memory thrash — load-shedder.service failed to start during last HM activation. Check: journalctl -u load-shedder.service" \
+            -d "source=health-agent severity=page host=$VM service=load-shedder | VM is UNPROTECTED against memory thrash — load-shedder.service failed to start during last HM activation. Check: journalctl -u load-shedder.service" \
             >/dev/null 2>&1 && break || true
         done
       fi
@@ -67,28 +91,28 @@
       # Read /proc/sys/fs/file-nr: "open allocated max" (3 fields; we want field1 and field3).
       FD_JSON='{"open":0,"max":0,"pct":0,"status":"ok"}'
       if [ -f /proc/sys/fs/file-nr ]; then
-        FD_JSON=$(awk '{
+        FD_JSON=$(awk -v warn="$FD_WARN_PCT" -v crit="$FD_CRIT_PCT" '{
           open=$1; max=$3
           pct = (max>0) ? int(open*100/max) : 0
-          status = (pct>=90) ? "critical" : (pct>=70) ? "warn" : "ok"
+          status = (pct>=crit) ? "critical" : (pct>=warn) ? "warn" : "ok"
           printf "{\"open\":%d,\"max\":%d,\"pct\":%d,\"status\":\"%s\"}", open, max, pct, status
         }' /proc/sys/fs/file-nr 2>/dev/null || echo '{"open":0,"max":0,"pct":0,"status":"ok"}')
-        # Alert on fd pressure
+        # Alert on fd pressure (thresholds data-driven: FD_WARN_PCT / FD_CRIT_PCT)
         FD_PCT=$(echo "$FD_JSON" | awk -F'"pct":' '{split($2,a,",");print int(a[1])}')
-        if [ "${FD_PCT:-0}" -ge 90 ]; then
-          for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+        if [ "''${FD_PCT:-0}" -ge "$FD_CRIT_PCT" ]; then
+          for _ntfy in $NTFY_URLS; do
             curl -sf --max-time 5 -X POST "$_ntfy" \
               -H "Title: [$VM] FD EXHAUSTION CRITICAL" -H "Priority: 5" \
               -H "Tags: rotating_light,$VM,fd" \
-              -d "File descriptors ${FD_PCT}%% used — WG/SSH will fail accept() when exhausted (2026-06-19 pattern)" \
+              -d "source=health-agent severity=page host=$VM service=kernel-fd | File descriptors ''${FD_PCT}%% used (>=''${FD_CRIT_PCT}%%) — WG/SSH will fail accept() when exhausted (2026-06-19 pattern)" \
               >/dev/null 2>&1 && break || true
           done
-        elif [ "${FD_PCT:-0}" -ge 70 ]; then
-          for _ntfy in "http://10.0.0.6:8090/health_resources" "https://rss.diegonmarcos.com/health_resources"; do
+        elif [ "''${FD_PCT:-0}" -ge "$FD_WARN_PCT" ]; then
+          for _ntfy in $NTFY_URLS; do
             curl -sf --max-time 5 -X POST "$_ntfy" \
               -H "Title: [$VM] FD pressure warning" -H "Priority: 3" \
               -H "Tags: warning,$VM,fd" \
-              -d "File descriptors ${FD_PCT}%% used — monitor for leaks" \
+              -d "source=health-agent severity=warn host=$VM service=kernel-fd | File descriptors ''${FD_PCT}%% used (>=''${FD_WARN_PCT}%%) — monitor for leaks" \
               >/dev/null 2>&1 && break || true
           done
         fi

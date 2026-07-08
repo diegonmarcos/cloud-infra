@@ -13,29 +13,39 @@
 #
 # It does NOT reboot (watchdog-petter's reboot-loop bug) and does NOT
 # auto-restart docker — recovery is `build.sh ship` (no-auto-restart doctrine).
-# Tier-1 services configured in protection-config.json per VM.
+# Tier-1 services configured per VM in the consolidated protection block.
 #
-# P4: thresholds are data-driven from dist/modules/protection-config.json
-# with per-VM overrides — never hardcoded in this file.
+# P4: thresholds are data-driven from the consolidated cloud-data
+# (config.json native.protection defaults + b_infra/nixhm-sudo-<alias>/build.json
+# .protection per-VM overrides) — never hardcoded in this file.
 { config, pkgs, lib, ramMB, vmName, ... }:
 
 let
-  # Data-driven thresholds from protection-config.json (P4).
+  # Data-driven thresholds from the consolidated cloud-data (P4). Single source
+  # of truth: config.json native.protection (defaults) + b_infra/nixhm-sudo-<alias>/
+  # build.json .protection (per-VM overrides), emitted by 2_configs into
+  # native.protection and _home_manager.vms.<vmName>.protection respectively.
   # builtins.fromJSON reads at build time → baked into script; redeploy to change.
-  protConf = builtins.fromJSON (builtins.readFile ../../../dist/modules/protection-config.json);
-  vmConf   = protConf.vm_overrides.${vmName} or {};
-  defaults = protConf.defaults;
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  defaults     = consolidated.native.protection or {};
+  vmConf       = (consolidated._home_manager.vms.${vmName} or {}).protection or {};
+  # Per-VM override wins over default; safe fallback if both absent.
+  cfg          = key: fallback: vmConf.${key} or (defaults.${key} or fallback);
 
-  memPsiWarn   = vmConf.mem_psi_warn   or defaults.mem_psi_warn;    # notify only
-  memPsiCrit   = vmConf.mem_psi_crit   or defaults.mem_psi_crit;    # shed non-tier1
-  memPsiPage   = vmConf.mem_psi_page   or defaults.mem_psi_page;    # shed everything
-  interval     = vmConf.interval_secs  or defaults.interval_secs;
-  backoff      = vmConf.backoff_secs   or defaults.backoff_secs;
-  needBreaches = vmConf.need_breaches  or defaults.need_breaches;
+  memPsiWarn   = cfg "mem_psi_warn"  35;    # notify only
+  memPsiCrit   = cfg "mem_psi_crit"  50;    # shed non-tier1
+  memPsiPage   = cfg "mem_psi_page"  65;    # shed everything
+  interval     = cfg "interval_secs" 15;
+  backoff      = cfg "backoff_secs"  120;
+  needBreaches = cfg "need_breaches" 3;
 
   # Tier-1 services that survive graduated shed (stopped only on page-level).
-  tier1Services = vmConf.tier1_services or defaults.tier1_services;
+  tier1Services = cfg "tier1_services" [];
   tier1List     = builtins.concatStringsSep " " tier1Services;
+
+  # ntfy routing (data-driven): base URL + topic. §4A structured event body.
+  ntfyBase  = consolidated.native.monitoring.ntfy_base or "https://rss.diegonmarcos.com";
+  ntfyTopic = cfg "ntfy_topic" "health_resources";
 
   # MEMORY PSI IS THE ONLY SHED TRIGGER.
   # INCIDENT 2026-07-02, THREE false sheds proved cpu/io gates unusable on
@@ -49,7 +59,7 @@ in {
       # MEMORY-PSI-ONLY trigger (cpu/io logged, never shed — three false sheds 2026-07-02).
       # P1: notifies ntfy on every action (shed/warn/recovery).
       # Phase 2: graduated response — warn → shed non-tier1 → shed all.
-      # Tier-1 services (defined in protection-config.json) survive until last resort.
+      # Tier-1 services (from consolidated protection block) survive until last resort.
       MEM_PSI_WARN=${toString memPsiWarn}
       MEM_PSI_CRIT=${toString memPsiCrit}
       MEM_PSI_PAGE=${toString memPsiPage}
@@ -57,6 +67,8 @@ in {
       BACKOFF=${toString backoff}
       NEED=${toString needBreaches}
       TIER1_SERVICES="${tier1List}"    # space-separated container names to protect
+      NTFY_TOPIC="${ntfyTopic}"        # data-driven topic (default health_resources)
+      NTFY_BASE="${ntfyBase}"          # public-edge fallback base
       VM=$(hostname -s 2>/dev/null || echo unknown)
 
       # $1 = cpu|memory|io, $2 = some|full — integer part of avg10, 0 if unavailable
@@ -65,17 +77,21 @@ in {
           "/proc/pressure/$1" 2>/dev/null || echo 0
       }
 
-      # P1: notify ntfy — try WG-direct first (10.0.0.6=oci-apps:8090), then public edge.
-      # $1=priority(1-5) $2=topic $3=title $4=body
+      # P1/§4A: notify ntfy — try WG-direct first (10.0.0.6=oci-apps:8090), then
+      # public edge. Topic + base are data-driven ($NTFY_TOPIC/$NTFY_BASE). Body is
+      # a structured event (source/severity/host/service) so the future §4A broker
+      # can route it; today it lands on the configured topic.
+      # $1=priority(1-5) $2=severity(info|warn|crit|page) $3=title $4=body
       ntfy_send() {
-        _prio="$1"; _topic="$2"; _title="$3"; _body="$4"
+        _prio="$1"; _sev="$2"; _title="$3"; _body="$4"
+        _event="source=load-shedder severity=$_sev host=$VM service=docker | $_body"
         _sent=false
-        for _url in "http://10.0.0.6:8090/$_topic" "https://rss.diegonmarcos.com/$_topic"; do
+        for _url in "http://10.0.0.6:8090/$NTFY_TOPIC" "$NTFY_BASE/$NTFY_TOPIC"; do
           if curl -sf --max-time 5 -X POST "$_url" \
                -H "Title: [$VM] $_title" \
                -H "Priority: $_prio" \
                -H "Tags: shedder,$VM" \
-               -d "$_body" >/dev/null 2>&1; then
+               -d "$_event" >/dev/null 2>&1; then
             _sent=true; break
           fi
         done
@@ -89,7 +105,14 @@ in {
           # No tier1 services configured — fall through to full shed
           return 1
         fi
-        _running=$(docker ps --format '{{.Names}}' 2>/dev/null || echo "")
+        # §3C: shed NON-tier1 biggest-memory-first. Ordering is best-effort via a
+        # timeout-guarded `docker stats` (heavy under thrash, so hard-capped at 5s);
+        # on any failure we fall back to plain `docker ps` order. Either way ALL
+        # non-tier1 are stopped in one `docker stop`, so ordering only affects which
+        # frees first if the stop itself is slow — never correctness.
+        _running=$(timeout 5 docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' 2>/dev/null \
+                   | sort -k2 -h -r | awk '{print $1}')
+        [ -z "$_running" ] && _running=$(docker ps --format '{{.Names}}' 2>/dev/null || echo "")
         _to_stop=""
         for _c in $_running; do
           _is_t1=false
@@ -99,7 +122,7 @@ in {
           "$_is_t1" || _to_stop="$_to_stop $_c"
         done
         if [ -n "$_to_stop" ]; then
-          logger -t load-shedder "SHED-CRIT: stopping non-tier1:$_to_stop (keeping: $TIER1_SERVICES)"
+          logger -t load-shedder "SHED-CRIT: stopping non-tier1 (biggest-first):$_to_stop (keeping: $TIER1_SERVICES)"
           # shellcheck disable=SC2086
           docker stop $_to_stop 2>/dev/null || true
           return 0
@@ -122,7 +145,7 @@ in {
         # ── Warn level (no action, just notify) ───────────────────────────
         if [ "$MEM_I" -ge "$MEM_PSI_WARN" ] && [ "$MEM_I" -lt "$MEM_PSI_CRIT" ] && [ "$shed_level" -eq 0 ]; then
           logger -t load-shedder "WARN: memPSI=''${MEM} (threshold=$MEM_PSI_WARN)"
-          ntfy_send 3 "health_resources" "Memory pressure WARN" "memPSI=''${MEM}%% cpuPSI=''${CPU}%% ioPSI=''${IO}%%"
+          ntfy_send 3 "warn" "Memory pressure WARN" "memPSI=''${MEM}%% cpuPSI=''${CPU}%% ioPSI=''${IO}%%"
         fi
 
         # ── Crit level: track breaches ────────────────────────────────────
@@ -138,7 +161,7 @@ in {
           # Pressure subsided — reset + notify recovery if we had shed
           if [ "$shed_level" -gt 0 ]; then
             logger -t load-shedder "RECOVERY: memPSI=''${MEM} — pressure resolved (shed_level was $shed_level)"
-            ntfy_send 4 "health_resources" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). Manual docker restart required for non-tier1."
+            ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). Manual docker restart required for non-tier1."
             shed_level=0
           fi
           breaches_crit=0; breaches_page=0
@@ -147,7 +170,7 @@ in {
         # ── Page-level shed: stop everything ─────────────────────────────
         if [ "$breaches_page" -ge "$NEED" ] && [ "$shed_level" -lt 2 ]; then
           logger -t load-shedder "SHED-PAGE: memPSI=''${MEM} — stopping ALL docker (last resort)"
-          ntfy_send 5 "health_resources" "LOAD SHED — ALL DOCKER STOPPED" "LAST RESORT: memPSI=''${MEM}%% ≥ $MEM_PSI_PAGE%% × $NEED checks. ALL containers stopped. Recover: build.sh ship."
+          ntfy_send 5 "page" "LOAD SHED — ALL DOCKER STOPPED" "LAST RESORT: memPSI=''${MEM}%% ≥ $MEM_PSI_PAGE%% × $NEED checks. ALL containers stopped. Recover: build.sh ship."
           : > /run/load-shedder.fired 2>/dev/null || true
           systemctl stop docker.socket 2>/dev/null || true
           systemctl stop docker.service 2>/dev/null || true
@@ -158,13 +181,13 @@ in {
         elif [ "$breaches_crit" -ge "$NEED" ] && [ "$shed_level" -lt 1 ]; then
           logger -t load-shedder "SHED-CRIT: memPSI=''${MEM} — shedding non-tier1 containers"
           if shed_non_tier1; then
-            ntfy_send 4 "health_resources" "LOAD SHED — non-tier1 stopped" "memPSI=''${MEM}%% ≥ $MEM_PSI_CRIT%% × $NEED. Stopped non-tier1. Tier1 [${tier1List}] still running. Recover: build.sh ship."
+            ntfy_send 4 "crit" "LOAD SHED — non-tier1 stopped" "memPSI=''${MEM}%% ≥ $MEM_PSI_CRIT%% × $NEED. Stopped non-tier1. Tier1 [${tier1List}] still running. Recover: build.sh ship."
             : > /run/load-shedder.fired 2>/dev/null || true
             shed_level=1
           else
             # No non-tier1 to stop — escalate immediately to full shed
             logger -t load-shedder "SHED-PAGE (escalated): no non-tier1 containers to shed"
-            ntfy_send 5 "health_resources" "LOAD SHED — ALL DOCKER (escalated)" "All running containers are tier-1; stopping everything. memPSI=''${MEM}%%."
+            ntfy_send 5 "page" "LOAD SHED — ALL DOCKER (escalated)" "All running containers are tier-1; stopping everything. memPSI=''${MEM}%%."
             : > /run/load-shedder.fired 2>/dev/null || true
             systemctl stop docker.socket 2>/dev/null || true
             systemctl stop docker.service 2>/dev/null || true

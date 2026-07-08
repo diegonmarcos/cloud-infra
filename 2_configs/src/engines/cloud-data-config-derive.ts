@@ -2077,6 +2077,11 @@ function deriveBuildReports(c: any): DerivedFile {
   const repoScan = readInput("reports-repo-scan.json");
   const secScan = readInput("reports-sec-scan.json");
   const runtimeAllowlist = readInput("reports-runtime-allowlist.json");
+  // R2: DNS resolvers (hickory/public/google) — data-driven, no hardcoded IPs
+  // in checks.rs. Phase 1: tiers (T0–T3 cadence + check-list) for the tiered
+  // scan engine. Both are engine-owned configs read verbatim from inputs/.
+  const resolvers = readInput("reports-resolvers.json");
+  const tiers = readInput("reports-tiers.json");
 
   return {
     name: "build-reports.json",
@@ -2108,6 +2113,65 @@ function deriveBuildReports(c: any): DerivedFile {
       repo_scan: repoScan,
       sec_scan: secScan,
       runtime_allowlist: runtimeAllowlist,
+      resolvers: resolvers,
+      tiers: tiers,
+    },
+  };
+}
+
+// Enterprise notification broker policy → dist/build-notify.json.
+//
+// Reads the engine-owned POLICY source (2_configs/src/inputs/notify-policy.json:
+// severity map, routing table, dedup/flap/escalation/recovery, digest, status
+// page schema) VERBATIM, then enriches it with the LIVE ntfy topic list from the
+// consolidated file (configs.ntfy.topics — SoT is infra-obs_ntfy/build.json#topics).
+// This lets the broker validate every routing topic against the real taxonomy and
+// fail loud on drift, without duplicating the topic list. FIRE RULE 4 + 6: the
+// policy is data, the broker is a dumb engine over it.
+//
+// Consumed by infra-obs_ntfy/src/code/notify-broker.py via the
+// infra-obs_ntfy/src/build-notify.json symlink → 2_configs/dist/build-notify.json.
+function deriveBuildNotify(c: any): DerivedFile {
+  const ENGINE_DIR = import.meta.dirname!;
+  const INPUTS_DIR = resolve(ENGINE_DIR, "../inputs");
+  const policyPath = join(INPUTS_DIR, "notify-policy.json");
+
+  let policy: any = {};
+  if (existsSync(policyPath)) {
+    try {
+      policy = JSON.parse(readFileSync(policyPath, "utf-8"));
+    } catch (e) {
+      console.error(`[deriveBuildNotify] failed to parse ${policyPath}:`, e);
+    }
+  } else {
+    console.error(`[deriveBuildNotify] policy input not found at ${policyPath} — emitting empty policy`);
+  }
+
+  // Live topic list from the ntfy taxonomy SoT (build.json → configs.ntfy.topics).
+  const topicList: any[] = c.configs?.ntfy?.topics ?? [];
+  const validTopics = topicList.map((t: any) => t.name);
+
+  // Strip the leading _comment/_source scaffolding from the policy so the emitted
+  // file's _meta block is the single source of provenance (engine adds _warning
+  // + _meta.pipeline on write). Keep every functional block untouched.
+  const { _comment, _source, ...functionalPolicy } = policy;
+
+  return {
+    name: "build-notify.json",
+    data: {
+      _meta: {
+        description:
+          "Notification broker policy (severity/routing/dedup/flap/escalation/recovery/digest/status). " +
+          "Consumed by infra-obs_ntfy notify-broker.py.",
+        format_version: 1,
+      },
+      _generated: now(),
+      _source:
+        "2_configs/src/inputs/notify-policy.json + _cloud-data-consolidated.json#configs.ntfy.topics " +
+        "via cloud-data-config-derive.ts/build-notify",
+      // Live taxonomy the broker validates routing topics against.
+      valid_topics: validTopics,
+      ...functionalPolicy,
     },
   };
 }
@@ -3020,6 +3084,7 @@ function main() {
     deriveFirewallRules(consolidated),
     deriveMonitoringTargets(consolidated),  // legacy → z_archive
     deriveBuildReports(consolidated),       // new pattern → dist/build-reports.json
+    deriveBuildNotify(consolidated),        // dist/build-notify.json — notification broker policy
     deriveBackupTargets(consolidated),
     deriveContainerResources(consolidated),
     deriveLogRouting(consolidated),
