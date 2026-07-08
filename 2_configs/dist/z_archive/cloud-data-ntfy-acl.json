@@ -5,7 +5,7 @@
   "base_url": "https://rss.diegonmarcos.com",
   "auth_default_access": "read-write",
   "users": [],
-  "all_topics": "all,dev_commits,dev_pull-requests,dev_releases,deploy_ship,deploy_containers,health_mesh,health_endpoints,health_dns,health_resources,health_containers,ops_backups,ops_reports,sec_audit,sec_tls,sec_connections,sec_yara",
+  "all_topics": "all,dev_commits,dev_pull-requests,dev_releases,deploy_containers,deploy_ship,deploy_dagu,health_mesh,health_endpoints,health_dns,health_resources,health_containers,ops_backups,ops_reports,sec_audit,sec_tls,sec_connections,sec_yara,health_report_cloud-health-full-daily,health_report_cloud-health-full-2,health_report_cloud-mail-health-full,health_report_cloud-sec-data-report,health_report_cloud-sec-network-report",
   "categories": {
     "universal": [
       "all"
@@ -16,15 +16,21 @@
       "dev_releases"
     ],
     "deploy": [
+      "deploy_containers",
       "deploy_ship",
-      "deploy_containers"
+      "deploy_dagu"
     ],
     "health": [
       "health_mesh",
       "health_endpoints",
       "health_dns",
       "health_resources",
-      "health_containers"
+      "health_containers",
+      "health_report_cloud-health-full-daily",
+      "health_report_cloud-health-full-2",
+      "health_report_cloud-mail-health-full",
+      "health_report_cloud-sec-data-report",
+      "health_report_cloud-sec-network-report"
     ],
     "ops": [
       "ops_backups",
@@ -66,6 +72,13 @@
         "system"
       ]
     },
+    "deploy_containers": {
+      "category": "deploy",
+      "desc": "Container restarts, image pulls",
+      "publishers": [
+        "system"
+      ]
+    },
     "deploy_ship": {
       "category": "deploy",
       "desc": "build.sh ship / GHA deploys",
@@ -73,9 +86,9 @@
         "system"
       ]
     },
-    "deploy_containers": {
+    "deploy_dagu": {
       "category": "deploy",
-      "desc": "Container restarts, image pulls",
+      "desc": "Dagu DAG run failures",
       "publishers": [
         "system"
       ]
@@ -153,6 +166,41 @@
     "sec_yara": {
       "category": "sec",
       "desc": "YARA malware scanner alerts & status",
+      "publishers": [
+        "system"
+      ]
+    },
+    "health_report_cloud-health-full-daily": {
+      "category": "health",
+      "desc": "Daily full cloud health report",
+      "publishers": [
+        "system"
+      ]
+    },
+    "health_report_cloud-health-full-2": {
+      "category": "health",
+      "desc": "Secondary full cloud health report",
+      "publishers": [
+        "system"
+      ]
+    },
+    "health_report_cloud-mail-health-full": {
+      "category": "health",
+      "desc": "Full mail-stack health report",
+      "publishers": [
+        "system"
+      ]
+    },
+    "health_report_cloud-sec-data-report": {
+      "category": "health",
+      "desc": "Security data report",
+      "publishers": [
+        "system"
+      ]
+    },
+    "health_report_cloud-sec-network-report": {
+      "category": "health",
+      "desc": "Security network report",
       "publishers": [
         "system"
       ]

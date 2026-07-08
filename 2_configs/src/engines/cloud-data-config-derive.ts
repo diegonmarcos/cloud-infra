@@ -675,6 +675,10 @@ function deriveCaddy(c: any): DerivedFile[] {
       comment: "ntfy notifications -- 3-tier auth: JWT bearer, tk_ bearer, cookie",
       // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
       ...(wgOnly(ntfySvc.proxy?.primary) ? { wg_only: true } : {}),
+      // feed_auth:"none" → caddyfile.nix serves /feed/* with no Authelia/bearer
+      // (the whole site is already wg0-gated). Cloud Mail polls the RSS tree
+      // over the mesh without a token.
+      ...(ntfySvc.proxy?.primary?.feed_auth === "none" ? { feed_auth: "none" } : {}),
     };
   }
 
@@ -2150,9 +2154,12 @@ function deriveBuildNotify(c: any): DerivedFile {
     console.error(`[deriveBuildNotify] policy input not found at ${policyPath} — emitting empty policy`);
   }
 
-  // Live topic list from the ntfy taxonomy SoT (build.json → configs.ntfy.topics).
+  // Live topic list from the ntfy taxonomy SoT (build.json → configs.ntfy.topics)
+  // UNIONED with the generated RSS-channel topics (logs_*/app_*), else the broker
+  // drops every log/app event as an "unknown topic" (notify-broker.py).
   const topicList: any[] = c.configs?.ntfy?.topics ?? [];
-  const validTopics = topicList.map((t: any) => t.name);
+  const channelTopics = computeRssChannels(c).map((ch: any) => ch.topic);
+  const validTopics = Array.from(new Set([...topicList.map((t: any) => t.name), ...channelTopics]));
 
   // Strip the leading _comment/_source scaffolding from the policy so the emitted
   // file's _meta block is the single source of provenance (engine adds _warning
@@ -2430,6 +2437,102 @@ function deriveNtfyAcl(c: any): DerivedFile {
       all_topics: topicList.map((t: any) => t.name).join(","),
       categories,
       topics,
+    },
+  };
+}
+
+// ── RSS channel taxonomy for the Cloud Mail SUPER RSS READER ────────────────
+// Flat channel list (the app builds the folder tree by splitting `path` on "/").
+// Fully derived from consolidated topology — counts are computed, never
+// hardcoded (FIRE 4/6). Three sources:
+//   - declared ntfy topics carry their own `path`/`title` (build.json) →
+//     CICD / Security / Health / Ops / per-report channels;
+//   - one `logs_<container>` channel per container of every ENABLED service;
+//   - one `app_<service>` channel per user-app service (app|fin|mic|agi).
+// Each leaf feed is served by the rss-gateway at /feed/c/<topic>.atom.
+const RSS_APP_CATEGORIES = new Set(["app", "fin", "mic", "agi"]);
+
+function computeRssChannels(c: any): any[] {
+  const services = (c.services ?? {}) as Record<string, any>;
+  const vms = (c.vms ?? {}) as Record<string, any>;
+  const vmIdToAlias = buildVmIdToAlias(vms);
+  const declared: any[] = c.configs?.ntfy?.topics ?? [];
+
+  const channels: any[] = [];
+  const seen = new Set<string>();
+  const push = (ch: any) => {
+    if (seen.has(ch.topic)) return; // topic == identity; never emit twice
+    seen.add(ch.topic);
+    channels.push(ch);
+  };
+
+  // 1) Declared topics → their path/title (skip the "all" universal pseudo-topic
+  //    and any topic without a path — those are notify-only, not tree feeds).
+  for (const t of declared) {
+    if (t.name === "all" || !t.path) continue;
+    push({
+      id: t.name,
+      topic: t.name,
+      title: t.title ?? t.desc ?? t.name,
+      path: `${t.path}/${t.name}`,
+      category: t.category,
+      source: "declared",
+      feed: `/feed/c/${t.name}.atom`,
+    });
+  }
+
+  // 2) Logs — one channel per container across every ENABLED service.
+  for (const svc of Object.values(services)) {
+    if (svc.enabled === false) continue;
+    const alias = vmIdToAlias[svc.vm] ?? svc.vm;
+    for (const cn of (svc.container_names ?? [])) {
+      const topic = `logs_${cn}`;
+      push({
+        id: topic, topic,
+        title: cn,
+        path: `Cloud-Infra/Logs/${alias}/${cn}`,
+        category: "logs", source: "logs", vm: alias,
+        feed: `/feed/c/${topic}.atom`,
+        quiet: true, // flipped off per-VM as the log tailer lands (phase 3)
+      });
+    }
+  }
+
+  // 3) Apps — one channel per user-app service.
+  for (const [svcName, svc] of Object.entries(services)) {
+    if (svc.enabled === false || !RSS_APP_CATEGORIES.has(svc.category)) continue;
+    const topic = `app_${svcName}`;
+    push({
+      id: topic, topic,
+      title: svc.description ?? svcName,
+      path: `Cloud-Apps/${svc.category}/${svcName}`,
+      category: "apps", source: "apps",
+      feed: `/feed/c/${topic}.atom`,
+      quiet: true, // no per-app publisher yet (phase 4)
+    });
+  }
+
+  return channels;
+}
+
+function deriveNtfyRssChannels(c: any): DerivedFile {
+  const channels = computeRssChannels(c);
+  const domain = c.services?.ntfy?.dns?.domain ?? c.services?.ntfy?.domain ?? "rss.diegonmarcos.com";
+  const counts = {
+    declared: channels.filter((ch) => ch.source === "declared").length,
+    logs: channels.filter((ch) => ch.source === "logs").length,
+    apps: channels.filter((ch) => ch.source === "apps").length,
+    total: channels.length,
+  };
+  return {
+    name: "build-ntfy-rss-channels.json",
+    data: {
+      version: 1,
+      _generated: now(),
+      _source: "_cloud-data-consolidated.json via cloud-data-config-derive.ts/ntfy-rss-channels",
+      base: `https://${domain}/feed`,
+      counts,
+      channels,
     },
   };
 }
@@ -3094,6 +3197,7 @@ function main() {
     deriveCloudflareDns(consolidated),
     deriveMatomoSites(consolidated),
     deriveNtfyAcl(consolidated),
+    deriveNtfyRssChannels(consolidated), // dist/build-ntfy-rss-channels.json — Cloud Mail RSS tree
     deriveTopology(consolidated),
     deriveConfigs(consolidated),
     deriveDeps(consolidated),

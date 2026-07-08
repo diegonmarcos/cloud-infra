@@ -8,6 +8,10 @@ export interface NtfyTopic {
   category: string;
   desc: string;
   publishers: string[];
+  // RSS-tree placement (Cloud Mail SUPER RSS READER). `path` = parent folder,
+  // `title` = short leaf label. Optional — undeclared topics get no tree entry.
+  path?: string;
+  title?: string;
 }
 
 export interface NtfyProfile {
@@ -87,6 +91,8 @@ function extractTopicsFromScanner(solutionsDir: string): NtfyTopic[] {
           publishers: Array.isArray(t.publishers) && t.publishers.length > 0
             ? t.publishers.map(String)
             : publishers.get(String(t.name)) ?? ["system"],
+          ...(t.path ? { path: String(t.path) } : {}),
+          ...(t.title ? { title: String(t.title) } : {}),
         }));
       }
     } catch {

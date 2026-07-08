@@ -2806,7 +2806,8 @@
           "monitoring": null,
           "volumes": [
             "./assets/rss-gateway.py:/app/rss-gateway.py:ro",
-            "./assets/profiles-config.json:/etc/ntfy/profiles-config.json:ro"
+            "./assets/profiles-config.json:/etc/ntfy/profiles-config.json:ro",
+            "./assets/channels-config.json:/etc/ntfy/channels-config.json:ro"
           ],
           "env_file": false,
           "depends_on": [
@@ -2872,7 +2873,10 @@
       "proxy": {
         "primary": {
           "domain": "rss.diegonmarcos.com",
-          "auth": "ntfy-3tier"
+          "auth": "ntfy-3tier",
+          "wg_only": true,
+          "_feed_auth_comment": "The /feed/* RSS routes (rss-gateway) are served with NO Authelia/bearer — the whole rss.diegonmarcos.com site is already wg0-gated (wg_only), so on-mesh is the only way in. Cloud Mail (SUPER RSS READER) polls channels.json + per-topic Atom feeds over wg0 without a token. The ntfy app itself (publish/web UI) keeps ntfy-3tier.",
+          "feed_auth": "none"
         }
       },
       "declared_ports": {
