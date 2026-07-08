@@ -213,10 +213,17 @@ in
     fi
     $SUDO rm -f /etc/systemd/system/health-httpd.service
 
-    $SUDO systemctl daemon-reload
-    $SUDO systemctl enable health-agent.timer 2>/dev/null || true
-    $SUDO systemctl start health-agent.timer 2>/dev/null || true
-    $SUDO systemctl start health-agent.service 2>/dev/null || true
+    # ACTIVATION MUST NEVER BLOCK (2026-07-08 exit-255 deploy hang): every
+    # systemctl is timeout-capped, and the oneshot service start uses
+    # --no-block — a bare `systemctl start` on Type=oneshot waits for the whole
+    # collection script, stalling activation inside the deploy's SSH session.
+    echo "[health-agent] step: daemon-reload"
+    timeout 15 $SUDO systemctl daemon-reload || true
+    echo "[health-agent] step: enable+start timer"
+    timeout 10 $SUDO systemctl enable health-agent.timer 2>/dev/null || true
+    timeout 10 $SUDO systemctl start health-agent.timer 2>/dev/null || true
+    echo "[health-agent] step: kick first collection (no-block)"
+    timeout 10 $SUDO systemctl start --no-block health-agent.service 2>/dev/null || true
 
     echo "[health-agent] deployed: timer=5min (served via dashboard-httpd)"
     ) || echo "[health-agent] FAILED — activation continues"
