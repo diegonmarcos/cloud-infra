@@ -1,0 +1,19 @@
+{
+  "_comment": "R2: DNS resolvers used by the reports engine, data-driven so they are never hardcoded in checks.rs. `hickory` is the WireGuard-internal DNS hub (gcp-proxy). `public`/`google` are internet anycast constants used to cross-check public resolution — kept here so an operator can repoint them (e.g. to Quad9) without a Rust rebuild. Ports default to 53. reports-common/checks.rs reads this via build-reports.json:.resolvers.",
+  "hickory": {
+    "_comment": "Internal WG DNS (Hickory) hub. `vm` names the consolidated VM whose wg_ip is the resolver address — resolved at runtime so an IP change in topology propagates automatically. `ip` is a static fallback used only if the consolidated lookup fails.",
+    "vm": "gcp-E2-f_0",
+    "ip": "10.0.0.1",
+    "port": 53
+  },
+  "public": {
+    "_comment": "Cloudflare public anycast — internet constant, repointable here.",
+    "ip": "1.1.1.1",
+    "port": 53
+  },
+  "google": {
+    "_comment": "Google public anycast — internet constant, repointable here.",
+    "ip": "8.8.8.8",
+    "port": 53
+  }
+}

@@ -3745,6 +3745,76 @@
       }
     ]
   },
+  "resolvers": {
+    "_comment": "R2: DNS resolvers used by the reports engine, data-driven so they are never hardcoded in checks.rs. `hickory` is the WireGuard-internal DNS hub (gcp-proxy). `public`/`google` are internet anycast constants used to cross-check public resolution — kept here so an operator can repoint them (e.g. to Quad9) without a Rust rebuild. Ports default to 53. reports-common/checks.rs reads this via build-reports.json:.resolvers.",
+    "hickory": {
+      "_comment": "Internal WG DNS (Hickory) hub. `vm` names the consolidated VM whose wg_ip is the resolver address — resolved at runtime so an IP change in topology propagates automatically. `ip` is a static fallback used only if the consolidated lookup fails.",
+      "vm": "gcp-E2-f_0",
+      "ip": "10.0.0.1",
+      "port": 53
+    },
+    "public": {
+      "_comment": "Cloudflare public anycast — internet constant, repointable here.",
+      "ip": "1.1.1.1",
+      "port": 53
+    },
+    "google": {
+      "_comment": "Google public anycast — internet constant, repointable here.",
+      "ip": "8.8.8.8",
+      "port": 53
+    }
+  },
+  "tiers": {
+    "_comment": "Phase 1: tiered scan cadence + check-list, data-driven. reports-common Tier enum + --tier CLI flag read this via build-reports.json:.tiers. `interval_secs` is the target cadence; `max_age_secs` is the staleness budget the renderer uses to mark a report STALE (R1) — usually a small multiple of the interval to tolerate one missed run. `checks[]` names the check groups a tier runs; the crate maps names to collectors. Cheaper tiers run more often; deeper tiers run rarely and only off the 1GB VMs.",
+    "t0": {
+      "_comment": "Heartbeat — island liveness only. Cheapest: 1 TCP + 1 UDP per host. On-VM (health-agent), pushed to health_mesh.",
+      "interval_secs": 30,
+      "max_age_secs": 120,
+      "checks": [
+        "mesh",
+        "dropbear",
+        "ssh"
+      ]
+    },
+    "t1": {
+      "_comment": "Probe — public surface. No SSH. Runs on edge / GHA.",
+      "interval_secs": 120,
+      "max_age_secs": 600,
+      "checks": [
+        "urls",
+        "ports",
+        "tls",
+        "dns"
+      ]
+    },
+    "t2": {
+      "_comment": "Deep — SSH into VMs for host/container metrics. GHA over WG.",
+      "interval_secs": 900,
+      "max_age_secs": 2700,
+      "checks": [
+        "ssh",
+        "containers",
+        "psi",
+        "disk",
+        "fd",
+        "cert_san"
+      ]
+    },
+    "t3": {
+      "_comment": "Forensic — heavy log-mining + audits + scanners. Daily. GHA / oci-apps builder only, NEVER on 1GB VMs.",
+      "interval_secs": 86400,
+      "max_age_secs": 172800,
+      "checks": [
+        "logmine",
+        "caddy_audit",
+        "mesh_audit",
+        "cve",
+        "yara",
+        "secrets",
+        "backup_age"
+      ]
+    }
+  },
   "_meta": {
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",

@@ -1,0 +1,27 @@
+{
+  "_comment": "Phase 1: tiered scan cadence + check-list, data-driven. reports-common Tier enum + --tier CLI flag read this via build-reports.json:.tiers. `interval_secs` is the target cadence; `max_age_secs` is the staleness budget the renderer uses to mark a report STALE (R1) — usually a small multiple of the interval to tolerate one missed run. `checks[]` names the check groups a tier runs; the crate maps names to collectors. Cheaper tiers run more often; deeper tiers run rarely and only off the 1GB VMs.",
+  "t0": {
+    "_comment": "Heartbeat — island liveness only. Cheapest: 1 TCP + 1 UDP per host. On-VM (health-agent), pushed to health_mesh.",
+    "interval_secs": 30,
+    "max_age_secs": 120,
+    "checks": ["mesh", "dropbear", "ssh"]
+  },
+  "t1": {
+    "_comment": "Probe — public surface. No SSH. Runs on edge / GHA.",
+    "interval_secs": 120,
+    "max_age_secs": 600,
+    "checks": ["urls", "ports", "tls", "dns"]
+  },
+  "t2": {
+    "_comment": "Deep — SSH into VMs for host/container metrics. GHA over WG.",
+    "interval_secs": 900,
+    "max_age_secs": 2700,
+    "checks": ["ssh", "containers", "psi", "disk", "fd", "cert_san"]
+  },
+  "t3": {
+    "_comment": "Forensic — heavy log-mining + audits + scanners. Daily. GHA / oci-apps builder only, NEVER on 1GB VMs.",
+    "interval_secs": 86400,
+    "max_age_secs": 172800,
+    "checks": ["logmine", "caddy_audit", "mesh_audit", "cve", "yara", "secrets", "backup_age"]
+  }
+}

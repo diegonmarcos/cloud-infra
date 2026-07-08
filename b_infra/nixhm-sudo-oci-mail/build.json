@@ -34,6 +34,13 @@
     "dns": "oci-mail.app",
     "port": 7680
   },
+  "protection": {
+    "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Mail stack: maddy+stalwart are tier-1 (survive graduated shed until last resort).",
+    "tier1_services": ["maddy", "stalwart", "mail-puller"],
+    "mem_psi_warn": 30,
+    "mem_psi_crit": 50,
+    "mem_psi_page": 65
+  },
   "deploy": {
     "host": "oci-mail",
     "remote_path": "~/.config/home-manager"
