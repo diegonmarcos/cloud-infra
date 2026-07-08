@@ -659,9 +659,12 @@ function deriveCaddy(c: any): DerivedFile[] {
   // ntfy
   const ntfySvc = services["ntfy"];
   if (ntfySvc) {
-    // Resolve the rss-gateway sidecar upstream from build.json ports.rss_gateway + VM WG IP.
+    // Resolve the rss-gateway sidecar upstream from the gateway port + VM WG IP.
     // The gateway runs on oci-apps (same VM as ntfy) — use vms[vm].wg_ip (in-scope here).
-    const ntfyGatewayPort = ntfySvc.ports?.rss_gateway;
+    // Port comes from svc.declared_ports (the consolidator renames build.json
+    // `ports` → `declared_ports`; raw `.ports` is undefined post-consolidation —
+    // this was the `gateway_upstream: null` bug the ntfy-profiles tester caught).
+    const ntfyGatewayPort = ntfySvc.declared_ports?.rss_gateway ?? ntfySvc.ports?.rss_gateway;
     const ntfyVmWgIp = vms[ntfySvc.vm]?.wg_ip;
     const gatewayRaw = ntfyGatewayPort && ntfyVmWgIp ? `${ntfyVmWgIp}:${ntfyGatewayPort}` : undefined;
     const gatewayUpstream = gatewayRaw ? rewriteUpstreamForCaddy(ntfySvc.vm, gatewayRaw) : undefined;
