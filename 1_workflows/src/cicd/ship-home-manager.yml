@@ -34,6 +34,14 @@ concurrency:
 
 jobs:
   deploy:
+    # timeout-minutes caps each per-VM matrix job. Without it GitHub's 6h
+    # default applies: a wedged ship-hm (slow/failing nix-copy+activate onto a
+    # 1GB VM, or a dropped WG tunnel) holds this max-parallel:1 +
+    # cancel-in-progress:false group for hours, jamming EVERY subsequent
+    # home-manager deploy (observed 2026-07-08: a 1.5h wedge cascaded into
+    # repeated queue jams). 45m is generous for a first-build 5-7GB closure
+    # cp to a small VM yet kills a true hang, freeing the serialized group.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       # max-parallel: 1 — all matrix jobs share the same WireGuard address
