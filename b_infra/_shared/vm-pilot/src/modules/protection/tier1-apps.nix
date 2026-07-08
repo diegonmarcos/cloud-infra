@@ -199,12 +199,19 @@ lib.mkIf hasTier1 {
     # Deployed regardless of whether any compose opts in via cgroup_parent, so the
     # reservation exists the moment a service adopts it.
     $SUDO cp -f "$SRC/tier1.slice" /etc/systemd/system/tier1.slice
-    $SUDO systemctl daemon-reload
-    $SUDO systemctl start tier1.slice 2>/dev/null || true
-    $SUDO systemctl enable tier1-watchdog.service 2>/dev/null || true
-    $SUDO systemctl restart tier1-watchdog.service 2>/dev/null || true
+    # ACTIVATION MUST NEVER BLOCK (2026-07-08 exit-255 deploy hang): every
+    # systemctl timeout-capped + step markers so any stall is visible in the
+    # ship log instead of dying silently with the deploy's SSH session.
+    echo "[tier1-watchdog] step: daemon-reload"
+    timeout 15 $SUDO systemctl daemon-reload || true
+    echo "[tier1-watchdog] step: start tier1.slice"
+    timeout 10 $SUDO systemctl start tier1.slice 2>/dev/null || true
+    echo "[tier1-watchdog] step: enable+restart watchdog (no-block)"
+    timeout 10 $SUDO systemctl enable tier1-watchdog.service 2>/dev/null || true
+    timeout 10 $SUDO systemctl restart --no-block tier1-watchdog.service 2>/dev/null || true
+    sleep 2
 
-    if $SUDO systemctl is-active --quiet tier1-watchdog.service; then
+    if timeout 10 $SUDO systemctl is-active --quiet tier1-watchdog.service; then
       echo "[tier1-watchdog] ARMED ✓ (tier1: ${tier1List}) | tier1.slice reserve=${toString tier1ReserveMB}M"
     else
       echo "[tier1-watchdog] WARNING: failed to start — tier1 apps will not auto-recover" >&2
