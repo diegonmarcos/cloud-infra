@@ -450,44 +450,40 @@ case "${1:-all}" in
             fi
             [ "$NEW_SECRETS_HASH" != "$OLD_SECRETS_HASH" ] && SECRETS_CHANGED=true
         fi
-        # Check container-presence on VM. Smart-skip is wrong if the desired
-        # state (compose services running) doesn't match observed state — a
-        # service whose source hash hasn't changed but whose container has
-        # been stopped/removed otherwise silently stays down forever.
-        CONTAINERS_MISSING=""
-        if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
-            EXPECTED=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
-                "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' config --services 2>/dev/null | sort -u" 2>/dev/null)
-            RUNNING=$(ssh $SSH_OPTS "$DEPLOY_HOST" \
-                "docker compose -f '$DEPLOY_PATH/compose/docker-compose.yml' ps --services --status=running 2>/dev/null | sort -u" 2>/dev/null)
-            if [ -z "$EXPECTED" ]; then
-                # Fail-SAFE: the probe could not enumerate desired services (SSH
-                # hiccup, docker daemon down at probe time — e.g. after a
-                # load-shedder stop — or compose file unreadable). An
-                # indeterminate probe must NEVER greenlight a skip: a shed or
-                # otherwise-stopped stack would then stay down forever, and
-                # `build.sh ship` (the documented shed-recovery) becomes a silent
-                # no-op. Force a redeploy; step_compose is idempotent and starts
-                # docker itself if it is down.
-                CONTAINERS_MISSING=true
-                log_warn "Could not enumerate compose services on $DEPLOY_HOST ($DEPLOY_PATH) — forcing redeploy (fail-safe)"
-            elif [ "$EXPECTED" != "$RUNNING" ]; then
-                CONTAINERS_MISSING=true
-                log_warn "Expected services not all running on $DEPLOY_HOST — forcing redeploy"
-            fi
-        fi
+        # Container-presence probing used to live here (fail-safe force-redeploy
+        # when `docker compose ps` didn't match `config --services`). Removed
+        # 2026-07-08: it became redundant once step_compose was decoupled to
+        # ALWAYS run (see comment below) — that alone already guarantees a shed
+        # or stopped stack gets `up`'d again, with no probe required. Worse, the
+        # probe was actively harmful: it made two independent SSH round-trips
+        # and only checked the exit status of the first (EXPECTED) — a flaky or
+        # slow SSH call for the second (RUNNING) silently came back empty and
+        # was indistinguishable from "container confirmed down", which forced
+        # CONFIG_CHANGED=true and therefore step_compose's destructive
+        # `--force-recreate`. On 2026-07-08 this fired on an already-healthy
+        # `caddy` container (a transient probe hiccup right after a prior ship
+        # run), tore it down via force-recreate, and the following `docker
+        # compose up` then failed with a genuine SSH/rsync error — leaving
+        # caddy completely absent (outage across every service behind it).
+        # Deleting the probe removes the false-positive source entirely; real
+        # config/image/secrets changes still force recreate via the checks
+        # below, and step_compose's unconditional `up -d` still heals any
+        # container that is actually missing, without ever needing `--force-recreate`
+        # for that case (compose starts missing containers on a plain `up -d`
+        # regardless of the recreate flag — recreate only matters for containers
+        # that are already running with stale image/config).
+        #
         # ── Config-change gate — governs the rsync (step_deploy) ONLY. ──
         # step_compose (up) is decoupled below and ALWAYS runs. This is the
         # negation of the historical skip-gate: rsync only when the dist hash
-        # moved, the image was rebuilt, secrets changed, containers are missing,
-        # or a redeploy is forced.
+        # moved, the image was rebuilt, secrets changed, or a redeploy is forced.
         CONFIG_CHANGED=""
-        if [ "$OLD_HASH" != "$NEW_HASH" ] || [ -z "$NEW_HASH" ] || [ -n "$DOCKER_IMAGE_CHANGED" ] || [ -n "$SECRETS_CHANGED" ] || [ -n "$CONTAINERS_MISSING" ] || [ -n "${FORCE_DEPLOY:-}" ]; then
+        if [ "$OLD_HASH" != "$NEW_HASH" ] || [ -z "$NEW_HASH" ] || [ -n "$DOCKER_IMAGE_CHANGED" ] || [ -n "$SECRETS_CHANGED" ] || [ -n "${FORCE_DEPLOY:-}" ]; then
             CONFIG_CHANGED=true
         fi
 
         # (a) rsync configs to the VM — skip when nothing changed (cheap +
-        #     desirable). FORCE_DEPLOY / CONTAINERS_MISSING still force it.
+        #     desirable). FORCE_DEPLOY still forces it.
         if [ -n "$CONFIG_CHANGED" ]; then
             step_deploy
         else
