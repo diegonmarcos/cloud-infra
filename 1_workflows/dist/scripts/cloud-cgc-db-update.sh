@@ -340,6 +340,7 @@ command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >
 MANIFEST="$OCTO_HOME/.cgc-index-manifest.json"
 [ -s "$MANIFEST" ] || echo '{}' > "$MANIFEST"
 BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
+REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
 START_TS=$(date +%s)
 PUSHED=0
 
@@ -378,10 +379,19 @@ for r in $REPOS; do
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
-  if ( cd "$d" && octocode index ) >"$_log" 2>&1; then
-    tail -4 "$_log"; rm -f "$_log"
+  _rc=0
+  if [ -n "$REPO_TIMEOUT_MIN" ] && [ "$REPO_TIMEOUT_MIN" != "0" ]; then
+    ( cd "$d" && timeout "${REPO_TIMEOUT_MIN}m" octocode index ) >"$_log" 2>&1 || _rc=$?
   else
-    _rc=$?
+    ( cd "$d" && octocode index ) >"$_log" 2>&1 || _rc=$?
+  fi
+  if [ "$_rc" = "0" ]; then
+    tail -4 "$_log"; rm -f "$_log"
+  elif [ "$_rc" = "124" ]; then
+    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_MIN}m — skipping this cycle, will retry next run"
+    tail -10 "$_log"; rm -f "$_log"
+    continue
+  else
     echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
     tail -30 "$_log"; rm -f "$_log"; exit 1
   fi
