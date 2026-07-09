@@ -6,25 +6,25 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 8542,
+    "files": 8549,
     "by_lang": {
-      "nix": 428,
-      "sh": 340,
+      "nix": 432,
+      "sh": 343,
       "rust": 453,
       "ts": 305,
       "js": 18,
       "py": 6998
     },
     "by_role": {
-      "flake": 73,
+      "flake": 75,
       "script": 116,
-      "shell": 209,
+      "shell": 212,
       "rust-module": 447,
       "engine": 33,
       "nix-module": 289,
+      "compose": 68,
       "module": 186,
       "entrypoint": 65,
-      "compose": 66,
       "mcp-tool": 90,
       "python": 6953,
       "file": 6,
@@ -6692,6 +6692,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ],
       "imports": [],
@@ -6700,6 +6701,7 @@
         "_docker_err()",
         "_docker_return_cleanup()",
         "_entrypoint_json()",
+        "_docker_build_push_arch()",
         "_ensure_public()"
       ]
     },
@@ -9179,6 +9181,216 @@
       "symbols": [
         "pass()",
         "fail()"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-continuwuity/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-continuwuity/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "base_domain"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "self",
+        "binariesImage",
+        "serverName",
+        "delegated",
+        "services",
+        "continuwuity",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "environment",
+        "TZ",
+        "CONTINUWUITY_SERVER_NAME",
+        "CONTINUWUITY_ADDRESS",
+        "CONTINUWUITY_PORT",
+        "CONTINUWUITY_DATABASE_PATH",
+        "CONTINUWUITY_DATABASE_BACKEND",
+        "CONTINUWUITY_ALLOW_FEDERATION",
+        "CONTINUWUITY_ALLOW_REGISTRATION",
+        "CONTINUWUITY_REGISTRATION_TOKEN",
+        "CONTINUWUITY_WELL_KNOWN",
+        "CONTINUWUITY_ALLOW_PUBLIC_ROOM_DIRECTORY_OVER_FEDERATION",
+        "CONTINUWUITY_TRUSTED_SERVERS",
+        "volumes",
+        "limits",
+        "reservations",
+        "continuwuity_data"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-continuwuity/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "lib",
+        "base_domain",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-mautrix-whatsapp/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-mautrix-whatsapp/src/assets/compose-pre-hook.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "inject()"
+      ],
+      "imports": [],
+      "symbols": [
+        "inject()"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-mautrix-whatsapp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "base_domain"
+      ],
+      "imports": [],
+      "symbols": [
+        "binariesImage",
+        "services",
+        "mautrix-whatsapp",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "environment",
+        "TZ",
+        "volumes",
+        "limits",
+        "reservations"
+      ]
+    },
+    {
+      "path": "a_solutions/aa-sui_matrix-mautrix-whatsapp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "lib",
+        "base_domain",
+        "svc",
+        "self_",
+        "hs",
+        "vars",
+        "HOMESERVER_ADDRESS",
+        "DOMAIN",
+        "APPSERVICE_ADDRESS",
+        "APPSERVICE_HOSTNAME",
+        "APPSERVICE_PORT",
+        "ADMIN_USER",
+        "DB_URI",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "extraAssets",
+        "composeSpec",
+        "title"
       ]
     },
     {
@@ -13175,9 +13387,13 @@
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
+        "fs",
+        "path",
+        "os",
         "../../shared/http.js"
       ],
       "symbols": [
+        "resolveDagu()",
         "daguHeaders()",
         "registerDaguTools(server: McpServer)"
       ]
@@ -173392,6 +173608,7 @@
         "errPath",
         "protectedTpl",
         "protectedCustomTpl",
+        "emptyGuard",
         "mkProtected",
         "mkProtectedCustom",
         "wgGateBody",
@@ -173401,8 +173618,7 @@
         "sniSlug",
         "l4PlainTpl",
         "l4SniTpl",
-        "mkPlainRoute",
-        "pp"
+        "mkPlainRoute"
       ]
     },
     {

@@ -215,6 +215,12 @@
   ],
   "routes": [
     {
+      "domain": "matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8008",
+      "auth": "none",
+      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    {
       "domain": "git.diegonmarcos.com",
       "upstream": "10.0.0.6:3002",
       "comment": "Self-hosted Git service"
@@ -263,12 +269,6 @@
         "/api/v4/*"
       ],
       "comment": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
-    },
-    {
-      "domain": "matrix.diegonmarcos.com",
-      "upstream": "10.0.0.6:8008",
-      "auth": "none",
-      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "domain": "messenger.diegonmarcos.com",
@@ -588,6 +588,10 @@
   },
   "internal_routes": [
     {
+      "service": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008"
+    },
+    {
       "service": "c3-analytics-api.app",
       "upstream": "10.0.0.1:8085"
     },
@@ -690,10 +694,6 @@
     {
       "service": "mattermost.app",
       "upstream": "10.0.0.6:8065"
-    },
-    {
-      "service": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008"
     },
     {
       "service": "matrix-element.app",
@@ -801,6 +801,27 @@
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
+    {
+      "kind": "redirect",
+      "service": "continuwuity.app",
+      "redirect_to": "https://continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "port": 8008,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8008",
+      "source": "containers.app.port"
+    },
     {
       "kind": "redirect",
       "service": "c3-analytics-api.app",
@@ -1362,27 +1383,6 @@
       "port": 8065,
       "protocol": "http",
       "upstream": "10.0.0.6:8065",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "continuwuity.app",
-      "redirect_to": "https://continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "port": 8008,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8008",
       "source": "containers.app.port"
     },
     {
@@ -2107,6 +2107,16 @@
   ],
   "public_D_others": [
     {
+      "host": "matrix.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    {
       "host": "git.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3002",
@@ -2185,16 +2195,6 @@
       "zone": "com",
       "service": null,
       "notes": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
-    },
-    {
-      "host": "matrix.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "host": "messenger.diegonmarcos.com",
@@ -2418,6 +2418,16 @@
     }
   ],
   "private_A0_app_short": [
+    {
+      "host": "matrix-continuwuity.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
     {
       "host": "c3-analytics-api.app",
       "path": null,
@@ -2679,16 +2689,6 @@
       "notes": null
     },
     {
-      "host": "matrix-continuwuity.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "matrix-element.app",
       "path": null,
       "upstream": "10.0.0.6:8083",
@@ -2860,6 +2860,16 @@
     }
   ],
   "private_A1_app_canonical": [
+    {
+      "host": "continuwuity-http-8008.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-continuwuity",
+      "notes": null
+    },
     {
       "host": "c3-analytics-api-http-8085.app",
       "path": null,
@@ -3118,16 +3128,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "chat-mattermost",
-      "notes": null
-    },
-    {
-      "host": "continuwuity-http-8008.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "matrix-continuwuity",
       "notes": null
     },
     {

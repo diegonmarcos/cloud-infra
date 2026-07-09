@@ -428,6 +428,8 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
+        "matrix-continuwuity",
+        "matrix-mautrix-whatsapp",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -458,9 +460,7 @@
         "rig-agentic-sonn-14bq8",
         "session-memory",
         "chat-mattermost",
-        "matrix-continuwuity",
         "matrix-element",
-        "matrix-mautrix-whatsapp",
         "crawlee-cloud",
         "fin-api",
         "photoprism",
@@ -594,6 +594,185 @@
     }
   },
   "services": {
+    "matrix-continuwuity": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_matrix-continuwuity",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "enabled": true,
+      "domain": "matrix.diegonmarcos.com",
+      "flake": "user-comm_matrix-continuwuity",
+      "port": 8008,
+      "dns": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "containers": {
+        "app": {
+          "container_name": "continuwuity",
+          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+          "port": 8008,
+          "port_env": "CONTINUWUITY_PORT",
+          "dns": "matrix-continuwuity.app",
+          "public": true,
+          "proxy": {
+            "domain": "matrix.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/_matrix/client/versions",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "continuwuity_data:/var/lib/continuwuity"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "continuwuity"
+      ],
+      "all_ports": [
+        "8008"
+      ],
+      "all_dns": [
+        "matrix-continuwuity.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "wg_only": false,
+          "domain": "matrix.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "continuwuity_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "forgejo.ellis.link/continuwuation/continuwuity:latest",
+      "resources": {
+        "mem_limit": "768M",
+        "mem_reservation": "128M"
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/_matrix",
+        "api_url": "https://matrix.diegonmarcos.com/_matrix",
+        "healthcheck_paths": [
+          "/_matrix/client/versions"
+        ],
+        "type": "custom-rest",
+        "base_path": "/_matrix",
+        "display_name": "Matrix (Continuwuity)",
+        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
+        "auth": "bearer"
+      },
+      "secret_env_vars": [
+        "CONTINUWUITY_REGISTRATION_TOKEN"
+      ]
+    },
+    "matrix-mautrix-whatsapp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_matrix-mautrix-whatsapp",
+      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+      "enabled": true,
+      "flake": "user-comm_matrix-mautrix-whatsapp",
+      "port": 29318,
+      "dns": "matrix-mautrix-whatsapp.app",
+      "upstream": "10.0.0.6:29318",
+      "containers": {
+        "app": {
+          "container_name": "mautrix-whatsapp",
+          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+          "port": 29318,
+          "port_env": null,
+          "dns": "matrix-mautrix-whatsapp.app",
+          "public": false,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "db_path": "/data/mautrix-whatsapp.db",
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "mautrix-whatsapp"
+      ],
+      "all_ports": [
+        "29318"
+      ],
+      "all_dns": [
+        "matrix-mautrix-whatsapp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 29318
+      },
+      "monitoring": {
+        "tls_check": false,
+        "dns_check": false,
+        "endpoint_check": false
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mautrix_whatsapp_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
+      "resources": {
+        "mem_limit": "512M",
+        "mem_reservation": "64M"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "no-api"
+      },
+      "secret_env_vars": [
+        "AS_TOKEN",
+        "HS_TOKEN"
+      ]
+    },
     "c3-analytics-api": {
       "category": "obs",
       "vm": "gcp-E2-f_0",
@@ -5945,107 +6124,6 @@
         "GMAIL_APP_PASSWORD"
       ]
     },
-    "matrix-continuwuity": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "user-comm_matrix-continuwuity",
-      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-      "enabled": true,
-      "domain": "matrix.diegonmarcos.com",
-      "flake": "user-comm_matrix-continuwuity",
-      "port": 8008,
-      "dns": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008",
-      "containers": {
-        "app": {
-          "container_name": "continuwuity",
-          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
-          "port": 8008,
-          "port_env": "CONTINUWUITY_PORT",
-          "dns": "matrix-continuwuity.app",
-          "public": true,
-          "proxy": {
-            "domain": "matrix.diegonmarcos.com",
-            "auth": "none"
-          },
-          "healthcheck": "/_matrix/client/versions",
-          "monitoring": {
-            "tls_check": true,
-            "dns_check": true,
-            "endpoint_check": true
-          },
-          "volumes": [
-            "continuwuity_data:/var/lib/continuwuity"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "continuwuity"
-      ],
-      "all_ports": [
-        "8008"
-      ],
-      "all_dns": [
-        "matrix-continuwuity.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "wg_only": false,
-          "domain": "matrix.diegonmarcos.com",
-          "auth": "none"
-        }
-      },
-      "declared_ports": {
-        "app": 8008
-      },
-      "health": {
-        "path": "/_matrix/client/versions"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "continuwuity_data"
-        ]
-      },
-      "timezone": "Europe/Madrid",
-      "upstream_image": "forgejo.ellis.link/continuwuation/continuwuity:latest",
-      "resources": {
-        "mem_limit": "768M",
-        "mem_reservation": "128M"
-      },
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/_matrix",
-        "api_url": "https://matrix.diegonmarcos.com/_matrix",
-        "healthcheck_paths": [
-          "/_matrix/client/versions"
-        ],
-        "type": "custom-rest",
-        "base_path": "/_matrix",
-        "display_name": "Matrix (Continuwuity)",
-        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
-        "auth": "bearer"
-      },
-      "secret_env_vars": [
-        "CONTINUWUITY_REGISTRATION_TOKEN"
-      ]
-    },
     "matrix-element": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -6132,84 +6210,6 @@
         ],
         "type": "no-api"
       }
-    },
-    "matrix-mautrix-whatsapp": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "user-comm_matrix-mautrix-whatsapp",
-      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
-      "enabled": true,
-      "flake": "user-comm_matrix-mautrix-whatsapp",
-      "port": 29318,
-      "dns": "matrix-mautrix-whatsapp.app",
-      "upstream": "10.0.0.6:29318",
-      "containers": {
-        "app": {
-          "container_name": "mautrix-whatsapp",
-          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-          "port": 29318,
-          "port_env": null,
-          "dns": "matrix-mautrix-whatsapp.app",
-          "public": false,
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "./data:/data"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "db_path": "/data/mautrix-whatsapp.db",
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "mautrix-whatsapp"
-      ],
-      "all_ports": [
-        "29318"
-      ],
-      "all_dns": [
-        "matrix-mautrix-whatsapp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "declared_ports": {
-        "app": 29318
-      },
-      "monitoring": {
-        "tls_check": false,
-        "dns_check": false,
-        "endpoint_check": false
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "mautrix_whatsapp_data"
-        ]
-      },
-      "timezone": "Europe/Madrid",
-      "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
-      "resources": {
-        "mem_limit": "512M",
-        "mem_reservation": "64M"
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [],
-        "type": "no-api"
-      },
-      "secret_env_vars": [
-        "AS_TOKEN",
-        "HS_TOKEN"
-      ]
     },
     "snappymail": {
       "category": "app",

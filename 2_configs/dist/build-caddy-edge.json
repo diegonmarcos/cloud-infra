@@ -165,10 +165,16 @@
     "nexus.diegonmarcos.com",
     "suite.diegonmarcos.com",
     "maps.diegonmarcos.com",
-    "vpn.diegonmarcos.com",
-    "matrix.diegonmarcos.com"
+    "matrix.diegonmarcos.com",
+    "vpn.diegonmarcos.com"
   ],
   "public_routes": [
+    {
+      "domain": "matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8008",
+      "auth": "none",
+      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
     {
       "domain": "git.diegonmarcos.com",
       "upstream": "10.0.0.6:3002",
@@ -179,12 +185,6 @@
       "upstream": "10.0.0.1:8080",
       "auth": "none",
       "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
-    },
-    {
-      "domain": "matrix.diegonmarcos.com",
-      "upstream": "10.0.0.6:8008",
-      "auth": "none",
-      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     }
   ],
   "public_path_routes": [
