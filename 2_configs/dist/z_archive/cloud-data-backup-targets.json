@@ -4,6 +4,32 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/backup-targets",
   "targets": [
     {
+      "service": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "continuwuity_data"
+      ],
+      "databases": []
+    },
+    {
+      "service": "matrix-mautrix-whatsapp",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "mautrix_whatsapp_data"
+      ],
+      "databases": [
+        {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/mautrix-whatsapp.db"
+        }
+      ]
+    },
+    {
       "service": "gitea",
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
@@ -160,32 +186,6 @@
           "container_key": "app",
           "type": "sqlite",
           "path": "/var/lib/mail-puller/state.db"
-        }
-      ]
-    },
-    {
-      "service": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "continuwuity_data"
-      ],
-      "databases": []
-    },
-    {
-      "service": "matrix-mautrix-whatsapp",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "mautrix_whatsapp_data"
-      ],
-      "databases": [
-        {
-          "service": "matrix-mautrix-whatsapp",
-          "container": "mautrix-whatsapp",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/mautrix-whatsapp.db"
         }
       ]
     },
@@ -366,6 +366,13 @@
       "user": "ubuntu",
       "databases": [
         {
+          "service": "matrix-mautrix-whatsapp",
+          "container": "mautrix-whatsapp",
+          "container_key": "app",
+          "type": "sqlite",
+          "path": "/data/mautrix-whatsapp.db"
+        },
+        {
           "service": "gitea",
           "container": "gitea",
           "container_key": "app",
@@ -408,13 +415,6 @@
           "type": "postgres",
           "user": "mattermost",
           "db": "mattermost"
-        },
-        {
-          "service": "matrix-mautrix-whatsapp",
-          "container": "mautrix-whatsapp",
-          "container_key": "app",
-          "type": "sqlite",
-          "path": "/data/mautrix-whatsapp.db"
         },
         {
           "service": "crawlee-cloud",
@@ -484,13 +484,13 @@
         }
       ],
       "volumes": [
+        "continuwuity_data",
+        "mautrix_whatsapp_data",
         "gitea_data",
         "dbgate_data",
         "matomo_data",
         "mattermost_data",
         "mattermost_postgres",
-        "continuwuity_data",
-        "mautrix_whatsapp_data",
         "photoprism_originals",
         "photoprism_storage",
         "grist_data",

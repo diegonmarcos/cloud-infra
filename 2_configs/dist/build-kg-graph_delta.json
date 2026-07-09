@@ -120,6 +120,58 @@
     },
     {
       "table": "service",
+      "id": "matrix_continuwuity",
+      "key": "service:matrix_continuwuity",
+      "properties": {
+        "name": "matrix-continuwuity",
+        "category": "app",
+        "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+        "domain": "matrix.diegonmarcos.com",
+        "port": 8008,
+        "vm": "oci-apps",
+        "folder": "user-comm_matrix-continuwuity"
+      }
+    },
+    {
+      "table": "container",
+      "id": "continuwuity",
+      "key": "container:continuwuity",
+      "properties": {
+        "name": "continuwuity",
+        "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+        "role": "app",
+        "port": 8008,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "matrix_mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp",
+      "properties": {
+        "name": "matrix-mautrix-whatsapp",
+        "category": "app",
+        "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+        "domain": null,
+        "port": 29318,
+        "vm": "oci-apps",
+        "folder": "user-comm_matrix-mautrix-whatsapp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mautrix_whatsapp",
+      "key": "container:mautrix_whatsapp",
+      "properties": {
+        "name": "mautrix-whatsapp",
+        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+        "role": "app",
+        "port": 29318,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
       "id": "c3_analytics_api",
       "key": "service:c3_analytics_api",
       "properties": {
@@ -1320,32 +1372,6 @@
     },
     {
       "table": "service",
-      "id": "matrix_continuwuity",
-      "key": "service:matrix_continuwuity",
-      "properties": {
-        "name": "matrix-continuwuity",
-        "category": "app",
-        "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-        "domain": "matrix.diegonmarcos.com",
-        "port": 8008,
-        "vm": "oci-apps",
-        "folder": "user-comm_matrix-continuwuity"
-      }
-    },
-    {
-      "table": "container",
-      "id": "continuwuity",
-      "key": "container:continuwuity",
-      "properties": {
-        "name": "continuwuity",
-        "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
-        "role": "app",
-        "port": 8008,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
       "id": "matrix_element",
       "key": "service:matrix_element",
       "properties": {
@@ -1368,32 +1394,6 @@
         "role": "app",
         "port": 8083,
         "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "matrix_mautrix_whatsapp",
-      "key": "service:matrix_mautrix_whatsapp",
-      "properties": {
-        "name": "matrix-mautrix-whatsapp",
-        "category": "app",
-        "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
-        "domain": null,
-        "port": 29318,
-        "vm": "oci-apps",
-        "folder": "user-comm_matrix-mautrix-whatsapp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "mautrix_whatsapp",
-      "key": "container:mautrix_whatsapp",
-      "properties": {
-        "name": "mautrix-whatsapp",
-        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-        "role": "app",
-        "port": 29318,
-        "public": false
       }
     },
     {
@@ -2070,6 +2070,14 @@
     },
     {
       "table": "domain",
+      "id": "matrix_diegonmarcos_com",
+      "key": "domain:matrix_diegonmarcos_com",
+      "properties": {
+        "fqdn": "matrix.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "api_diegonmarcos_com/c3a",
       "key": "domain:api_diegonmarcos_com/c3a",
       "properties": {
@@ -2246,14 +2254,6 @@
     },
     {
       "table": "domain",
-      "id": "matrix_diegonmarcos_com",
-      "key": "domain:matrix_diegonmarcos_com",
-      "properties": {
-        "fqdn": "matrix.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
       "id": "messenger_diegonmarcos_com",
       "key": "domain:messenger_diegonmarcos_com",
       "properties": {
@@ -2395,6 +2395,28 @@
       "properties": {
         "name": "cloud",
         "role": "service-infra"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_comm_matrix_continuwuity",
+      "key": "module:user_comm_matrix_continuwuity",
+      "properties": {
+        "name": "user-comm_matrix-continuwuity",
+        "repo": "cloud",
+        "category": "app",
+        "service": "matrix-continuwuity"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_comm_matrix_mautrix_whatsapp",
+      "key": "module:user_comm_matrix_mautrix_whatsapp",
+      "properties": {
+        "name": "user-comm_matrix-mautrix-whatsapp",
+        "repo": "cloud",
+        "category": "app",
+        "service": "matrix-mautrix-whatsapp"
       }
     },
     {
@@ -2861,17 +2883,6 @@
     },
     {
       "table": "module",
-      "id": "user_comm_matrix_continuwuity",
-      "key": "module:user_comm_matrix_continuwuity",
-      "properties": {
-        "name": "user-comm_matrix-continuwuity",
-        "repo": "cloud",
-        "category": "app",
-        "service": "matrix-continuwuity"
-      }
-    },
-    {
-      "table": "module",
       "id": "user_comm_matrix_element",
       "key": "module:user_comm_matrix_element",
       "properties": {
@@ -2879,17 +2890,6 @@
         "repo": "cloud",
         "category": "app",
         "service": "matrix-element"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_comm_matrix_mautrix_whatsapp",
-      "key": "module:user_comm_matrix_mautrix_whatsapp",
-      "properties": {
-        "name": "user-comm_matrix-mautrix-whatsapp",
-        "repo": "cloud",
-        "category": "app",
-        "service": "matrix-mautrix-whatsapp"
       }
     },
     {
@@ -3444,6 +3444,38 @@
     }
   ],
   "edges": [
+    {
+      "table": "hosted_on",
+      "from": "service:matrix_continuwuity",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_continuwuity->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_continuwuity",
+      "to": "container:continuwuity",
+      "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_mautrix_whatsapp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "container:mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
+      "properties": {
+        "role": "app"
+      }
+    },
     {
       "table": "hosted_on",
       "from": "service:c3_analytics_api",
@@ -4168,22 +4200,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:matrix_continuwuity",
-      "to": "vm:oci_apps",
-      "key": "service:matrix_continuwuity->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:matrix_continuwuity",
-      "to": "container:continuwuity",
-      "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:matrix_element",
       "to": "vm:oci_apps",
       "key": "service:matrix_element->hosted_on->vm:oci_apps",
@@ -4194,22 +4210,6 @@
       "from": "service:matrix_element",
       "to": "container:matrix_element",
       "key": "service:matrix_element->runs_container->container:matrix_element",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:matrix_mautrix_whatsapp",
-      "to": "vm:oci_apps",
-      "key": "service:matrix_mautrix_whatsapp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:matrix_mautrix_whatsapp",
-      "to": "container:mautrix_whatsapp",
-      "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
       "properties": {
         "role": "app"
       }
@@ -4677,6 +4677,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:matrix_continuwuity",
+      "to": "service:caddy",
+      "key": "service:matrix_continuwuity->proxied_by->service:caddy",
+      "properties": {
+        "domain": "matrix.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:c3_analytics_api",
       "to": "service:caddy",
       "key": "service:c3_analytics_api->proxied_by->service:caddy",
@@ -4884,15 +4893,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:matrix_continuwuity",
-      "to": "service:caddy",
-      "key": "service:matrix_continuwuity->proxied_by->service:caddy",
-      "properties": {
-        "domain": "matrix.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:matrix_element",
       "to": "service:caddy",
       "key": "service:matrix_element->proxied_by->service:caddy",
@@ -5043,6 +5043,13 @@
       "properties": {
         "domain": "vault.diegonmarcos.com"
       }
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:matrix_diegonmarcos_com",
+      "to": "service:matrix_continuwuity",
+      "key": "domain:matrix_diegonmarcos_com->routes_to->service:matrix_continuwuity",
+      "properties": {}
     },
     {
       "table": "routes_to",
@@ -5214,13 +5221,6 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:matrix_diegonmarcos_com",
-      "to": "service:matrix_continuwuity",
-      "key": "domain:matrix_diegonmarcos_com->routes_to->service:matrix_continuwuity",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
       "from": "domain:messenger_diegonmarcos_com",
       "to": "service:matrix_element",
       "key": "domain:messenger_diegonmarcos_com->routes_to->service:matrix_element",
@@ -5336,6 +5336,34 @@
       "from": "domain:vault_diegonmarcos_com",
       "to": "service:vaultwarden",
       "key": "domain:vault_diegonmarcos_com->routes_to->service:vaultwarden",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_comm_matrix_continuwuity",
+      "to": "repo:cloud",
+      "key": "module:user_comm_matrix_continuwuity->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_comm_matrix_continuwuity",
+      "to": "service:matrix_continuwuity",
+      "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_comm_matrix_mautrix_whatsapp",
+      "to": "repo:cloud",
+      "key": "module:user_comm_matrix_mautrix_whatsapp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_comm_matrix_mautrix_whatsapp",
+      "to": "service:matrix_mautrix_whatsapp",
+      "key": "module:user_comm_matrix_mautrix_whatsapp->implements->service:matrix_mautrix_whatsapp",
       "properties": {}
     },
     {
@@ -5928,20 +5956,6 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:user_comm_matrix_continuwuity",
-      "to": "repo:cloud",
-      "key": "module:user_comm_matrix_continuwuity->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_matrix_continuwuity",
-      "to": "service:matrix_continuwuity",
-      "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
       "from": "module:user_comm_matrix_element",
       "to": "repo:cloud",
       "key": "module:user_comm_matrix_element->belongs_to_repo->repo:cloud",
@@ -5952,20 +5966,6 @@
       "from": "module:user_comm_matrix_element",
       "to": "service:matrix_element",
       "key": "module:user_comm_matrix_element->implements->service:matrix_element",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_comm_matrix_mautrix_whatsapp",
-      "to": "repo:cloud",
-      "key": "module:user_comm_matrix_mautrix_whatsapp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_matrix_mautrix_whatsapp",
-      "to": "service:matrix_mautrix_whatsapp",
-      "key": "module:user_comm_matrix_mautrix_whatsapp->implements->service:matrix_mautrix_whatsapp",
       "properties": {}
     },
     {

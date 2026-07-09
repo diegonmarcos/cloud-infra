@@ -5,6 +5,14 @@
   "suffix": "app",
   "caddy_ip": "10.0.0.1",
   "services": {
+    "matrix-continuwuity": {
+      "ip": "10.0.0.1",
+      "desc": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    "matrix-mautrix-whatsapp": {
+      "ip": "10.0.0.1",
+      "desc": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix."
+    },
     "c3-analytics-api": {
       "ip": "10.0.0.1",
       "desc": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
@@ -181,17 +189,9 @@
       "ip": "10.0.0.1",
       "desc": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops."
     },
-    "matrix-continuwuity": {
-      "ip": "10.0.0.1",
-      "desc": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
-    },
     "matrix-element": {
       "ip": "10.0.0.1",
       "desc": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
-    },
-    "matrix-mautrix-whatsapp": {
-      "ip": "10.0.0.1",
-      "desc": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix."
     },
     "snappymail": {
       "ip": "10.0.0.1",
