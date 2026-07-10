@@ -85,14 +85,18 @@ runs:
         # as <KEY>_FILE=<path>, NOT inline <KEY>=<value> — this is the intended
         # contract and must stay. Scalars (GITHUB_TOKEN, WG_PRIVATE_KEY) stay
         # inline. Accept EITHER form so both dialects validate as present.
-        for k in SOPS_AGE_KEY WG_PRIVATE_KEY GITHUB_TOKEN OCI_SSH_KEY GCP_PROXY_SSH_KEY GCP_T4_SSH_KEY; do
+        # Key set tracks the LIVE VM fleet (oci-mail, oci-analytics, oci-apps,
+        # gcp-proxy). gcp-t4 was decommissioned (moved to z_archive/) so its
+        # GCP_T4_SSH_KEY is no longer provisioned in vault — requiring it here
+        # would fail this check forever.
+        for k in SOPS_AGE_KEY WG_PRIVATE_KEY GITHUB_TOKEN OCI_SSH_KEY GCP_PROXY_SSH_KEY; do
           grep -qE "^${k}(_FILE)?=" "$ENV_FILE" || MISSING="$MISSING $k"
         done
         if [ -n "$MISSING" ]; then
           echo "::error::Missing required infra keys in vault-keys-bash.env:$MISSING"
           exit 1
         fi
-        echo "All 6 required infra keys present in vault-keys-bash.env (inline or _FILE)"
+        echo "All 5 required infra keys present in vault-keys-bash.env (inline or _FILE)"
 
         # Sanity: docker.envfile must carry at least the scalar (single-line)
         # secrets that cloud-builder's compose env_file: passes through. The
