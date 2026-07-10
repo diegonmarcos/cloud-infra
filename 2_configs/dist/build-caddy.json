@@ -380,6 +380,12 @@
           "comment": "C3 Services REST API — service API gateway Fastify API"
         },
         {
+          "base_path": "/scrappers",
+          "upstream": "10.0.0.6:3020",
+          "wg_only": true,
+          "comment": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
+        },
+        {
           "base_path": "/crawlee",
           "upstream": "10.0.0.6:3000",
           "wg_only": true,
@@ -706,6 +712,10 @@
     {
       "service": "stalwart.app",
       "upstream": "10.0.0.3:2443"
+    },
+    {
+      "service": "scrappers-api.app",
+      "upstream": "10.0.0.6:3020"
     },
     {
       "service": "crawlee.app",
@@ -1515,6 +1525,23 @@
     },
     {
       "kind": "redirect",
+      "service": "scrappers-api.app",
+      "redirect_to": "https://scrappers-api-null.app",
+      "container": "scrappers-api",
+      "container_key": "app",
+      "svc": "scrappers-api",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "portless",
+      "service": "scrappers-api-null.app",
+      "container": "scrappers-api",
+      "container_key": "app",
+      "svc": "scrappers-api",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "redirect",
       "service": "crawlee_api.app",
       "redirect_to": "https://crawlee_api-http-3000.app",
       "container": "crawlee_api",
@@ -2051,6 +2078,16 @@
       "zone": "com",
       "service": null,
       "notes": "C3 Services REST API — service API gateway Fastify API"
+    },
+    {
+      "host": "api.diegonmarcos.com",
+      "path": "/scrappers",
+      "upstream": "10.0.0.6:3020",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2719,6 +2756,16 @@
       "notes": null
     },
     {
+      "host": "scrappers-api.app",
+      "path": null,
+      "upstream": "10.0.0.6:3020",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "crawlee.app",
       "path": null,
       "upstream": "10.0.0.6:3000",
@@ -3350,6 +3397,16 @@
       "tls": "on_demand",
       "zone": "app",
       "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "scrappers-api-null.app",
+      "path": null,
+      "upstream": "204",
+      "kind": "portless",
+      "tls": "on_demand",
+      "zone": "app",
+      "service": "scrappers-api",
       "notes": null
     },
     {

@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 290,
-    "edges": 390,
+    "nodes": 293,
+    "edges": 396,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 89,
+      "service": 64,
+      "container": 90,
       "domain": 40,
       "repo": 3,
-      "module": 63,
+      "module": 64,
       "package": 28
     }
   },
@@ -142,32 +142,6 @@
         "role": "app",
         "port": 8008,
         "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "matrix_mautrix_whatsapp",
-      "key": "service:matrix_mautrix_whatsapp",
-      "properties": {
-        "name": "matrix-mautrix-whatsapp",
-        "category": "app",
-        "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
-        "domain": null,
-        "port": 29318,
-        "vm": "oci-apps",
-        "folder": "user-comm_matrix-mautrix-whatsapp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "mautrix_whatsapp",
-      "key": "container:mautrix_whatsapp",
-      "properties": {
-        "name": "mautrix-whatsapp",
-        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-        "role": "app",
-        "port": 29318,
-        "public": false
       }
     },
     {
@@ -1398,6 +1372,32 @@
     },
     {
       "table": "service",
+      "id": "matrix_mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp",
+      "properties": {
+        "name": "matrix-mautrix-whatsapp",
+        "category": "app",
+        "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+        "domain": null,
+        "port": 29318,
+        "vm": "oci-apps",
+        "folder": "user-comm_matrix-mautrix-whatsapp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mautrix_whatsapp",
+      "key": "container:mautrix_whatsapp",
+      "properties": {
+        "name": "mautrix-whatsapp",
+        "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+        "role": "app",
+        "port": 29318,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
       "id": "snappymail",
       "key": "service:snappymail",
       "properties": {
@@ -1484,6 +1484,32 @@
         "role": "sorter",
         "port": null,
         "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "scrappers_api",
+      "key": "service:scrappers_api",
+      "properties": {
+        "name": "scrappers-api",
+        "category": "data",
+        "description": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output.",
+        "domain": "api.diegonmarcos.com",
+        "port": 3020,
+        "vm": "oci-apps",
+        "folder": "user-data_scrappers-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "scrappers_api",
+      "key": "container:scrappers_api",
+      "properties": {
+        "name": "scrappers-api",
+        "image": "ghcr.io/diegonmarcos/scrappers-api:latest",
+        "role": "app",
+        "port": 3020,
+        "public": true
       }
     },
     {
@@ -2410,17 +2436,6 @@
     },
     {
       "table": "module",
-      "id": "user_comm_matrix_mautrix_whatsapp",
-      "key": "module:user_comm_matrix_mautrix_whatsapp",
-      "properties": {
-        "name": "user-comm_matrix-mautrix-whatsapp",
-        "repo": "cloud",
-        "category": "app",
-        "service": "matrix-mautrix-whatsapp"
-      }
-    },
-    {
-      "table": "module",
       "id": "infra_api_c3_analytics_api",
       "key": "module:infra_api_c3_analytics_api",
       "properties": {
@@ -2894,6 +2909,17 @@
     },
     {
       "table": "module",
+      "id": "user_comm_matrix_mautrix_whatsapp",
+      "key": "module:user_comm_matrix_mautrix_whatsapp",
+      "properties": {
+        "name": "user-comm_matrix-mautrix-whatsapp",
+        "repo": "cloud",
+        "category": "app",
+        "service": "matrix-mautrix-whatsapp"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_comm_snappymail",
       "key": "module:user_comm_snappymail",
       "properties": {
@@ -2923,6 +2949,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "stalwart"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_data_scrappers_api",
+      "key": "module:user_data_scrappers_api",
+      "properties": {
+        "name": "user-data_scrappers-api",
+        "repo": "cloud",
+        "category": "data",
+        "service": "scrappers-api"
       }
     },
     {
@@ -3456,22 +3493,6 @@
       "from": "service:matrix_continuwuity",
       "to": "container:continuwuity",
       "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:matrix_mautrix_whatsapp",
-      "to": "vm:oci_apps",
-      "key": "service:matrix_mautrix_whatsapp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:matrix_mautrix_whatsapp",
-      "to": "container:mautrix_whatsapp",
-      "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
       "properties": {
         "role": "app"
       }
@@ -4216,6 +4237,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_mautrix_whatsapp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_mautrix_whatsapp",
+      "to": "container:mautrix_whatsapp",
+      "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:snappymail",
       "to": "vm:oci_mail",
       "key": "service:snappymail->hosted_on->vm:oci_mail",
@@ -4269,6 +4306,22 @@
       "key": "service:stalwart->runs_container->container:stalwart_sorter",
       "properties": {
         "role": "sorter"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:scrappers_api",
+      "to": "vm:oci_apps",
+      "key": "service:scrappers_api->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:scrappers_api",
+      "to": "container:scrappers_api",
+      "key": "service:scrappers_api->runs_container->container:scrappers_api",
+      "properties": {
+        "role": "app"
       }
     },
     {
@@ -4929,6 +4982,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:scrappers_api",
+      "to": "service:caddy",
+      "key": "service:scrappers_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:crawlee_cloud",
       "to": "service:caddy",
       "key": "service:crawlee_cloud->proxied_by->service:caddy",
@@ -5250,6 +5312,13 @@
     {
       "table": "routes_to",
       "from": "domain:api_diegonmarcos_com",
+      "to": "service:scrappers_api",
+      "key": "domain:api_diegonmarcos_com->routes_to->service:scrappers_api",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com",
       "to": "service:crawlee_cloud",
       "key": "domain:api_diegonmarcos_com->routes_to->service:crawlee_cloud",
       "properties": {}
@@ -5350,20 +5419,6 @@
       "from": "module:user_comm_matrix_continuwuity",
       "to": "service:matrix_continuwuity",
       "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_comm_matrix_mautrix_whatsapp",
-      "to": "repo:cloud",
-      "key": "module:user_comm_matrix_mautrix_whatsapp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_matrix_mautrix_whatsapp",
-      "to": "service:matrix_mautrix_whatsapp",
-      "key": "module:user_comm_matrix_mautrix_whatsapp->implements->service:matrix_mautrix_whatsapp",
       "properties": {}
     },
     {
@@ -5970,6 +6025,20 @@
     },
     {
       "table": "belongs_to_repo",
+      "from": "module:user_comm_matrix_mautrix_whatsapp",
+      "to": "repo:cloud",
+      "key": "module:user_comm_matrix_mautrix_whatsapp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_comm_matrix_mautrix_whatsapp",
+      "to": "service:matrix_mautrix_whatsapp",
+      "key": "module:user_comm_matrix_mautrix_whatsapp->implements->service:matrix_mautrix_whatsapp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
       "from": "module:user_comm_snappymail",
       "to": "repo:cloud",
       "key": "module:user_comm_snappymail->belongs_to_repo->repo:cloud",
@@ -6008,6 +6077,20 @@
       "from": "module:user_comm_tools_stalwart",
       "to": "service:stalwart",
       "key": "module:user_comm_tools_stalwart->implements->service:stalwart",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_data_scrappers_api",
+      "to": "repo:cloud",
+      "key": "module:user_data_scrappers_api->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_data_scrappers_api",
+      "to": "service:scrappers_api",
+      "key": "module:user_data_scrappers_api->implements->service:scrappers_api",
       "properties": {}
     },
     {

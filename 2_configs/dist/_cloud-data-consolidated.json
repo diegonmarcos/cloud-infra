@@ -156,7 +156,6 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
         "matrix-continuwuity",
-        "matrix-mautrix-whatsapp",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -188,6 +187,8 @@
         "session-memory",
         "chat-mattermost",
         "matrix-element",
+        "matrix-mautrix-whatsapp",
+        "scrappers-api",
         "crawlee-cloud",
         "fin-api",
         "photoprism",
@@ -204,7 +205,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 65
+      "container_count": 66
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -855,84 +856,6 @@
       },
       "secret_env_vars": [
         "CONTINUWUITY_REGISTRATION_TOKEN"
-      ]
-    },
-    "matrix-mautrix-whatsapp": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "user-comm_matrix-mautrix-whatsapp",
-      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
-      "enabled": true,
-      "flake": "user-comm_matrix-mautrix-whatsapp",
-      "port": 29318,
-      "dns": "matrix-mautrix-whatsapp.app",
-      "upstream": "10.0.0.6:29318",
-      "containers": {
-        "app": {
-          "container_name": "mautrix-whatsapp",
-          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
-          "port": 29318,
-          "port_env": null,
-          "dns": "matrix-mautrix-whatsapp.app",
-          "public": false,
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [
-            "./data:/data"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "db_path": "/data/mautrix-whatsapp.db",
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "mautrix-whatsapp"
-      ],
-      "all_ports": [
-        "29318"
-      ],
-      "all_dns": [
-        "matrix-mautrix-whatsapp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "declared_ports": {
-        "app": 29318
-      },
-      "monitoring": {
-        "tls_check": false,
-        "dns_check": false,
-        "endpoint_check": false
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "mautrix_whatsapp_data"
-        ]
-      },
-      "timezone": "Europe/Madrid",
-      "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
-      "resources": {
-        "mem_limit": "512M",
-        "mem_reservation": "64M"
-      },
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [],
-        "type": "no-api"
-      },
-      "secret_env_vars": [
-        "AS_TOKEN",
-        "HS_TOKEN"
       ]
     },
     "c3-analytics-api": {
@@ -4725,7 +4648,9 @@
       "secret_env_vars": [
         "AUTHELIA_CLI_SECRET",
         "CF_API_TOKEN",
-        "NTFY_ADMIN_AUTH"
+        "NTFY_ADMIN_AUTH",
+        "MESH_CA_KEY",
+        "MESH_CA_CERT"
       ]
     },
     "caddy-l4-image": {
@@ -6373,6 +6298,84 @@
         "type": "no-api"
       }
     },
+    "matrix-mautrix-whatsapp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_matrix-mautrix-whatsapp",
+      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+      "enabled": true,
+      "flake": "user-comm_matrix-mautrix-whatsapp",
+      "port": 29318,
+      "dns": "matrix-mautrix-whatsapp.app",
+      "upstream": "10.0.0.6:29318",
+      "containers": {
+        "app": {
+          "container_name": "mautrix-whatsapp",
+          "image": "ghcr.io/diegonmarcos/matrix-mautrix-whatsapp-binaries:latest",
+          "port": 29318,
+          "port_env": null,
+          "dns": "matrix-mautrix-whatsapp.app",
+          "public": false,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "db_path": "/data/mautrix-whatsapp.db",
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "mautrix-whatsapp"
+      ],
+      "all_ports": [
+        "29318"
+      ],
+      "all_dns": [
+        "matrix-mautrix-whatsapp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 29318
+      },
+      "monitoring": {
+        "tls_check": false,
+        "dns_check": false,
+        "endpoint_check": false
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "mautrix_whatsapp_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
+      "resources": {
+        "mem_limit": "512M",
+        "mem_reservation": "64M"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "no-api"
+      },
+      "secret_env_vars": [
+        "AS_TOKEN",
+        "HS_TOKEN"
+      ]
+    },
     "snappymail": {
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -6884,6 +6887,91 @@
         "OCI_RELAYPASSWORD",
         "DKIM_PRIVATE_KEY_B64"
       ]
+    },
+    "scrappers-api": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "folder": "user-data_scrappers-api",
+      "description": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output.",
+      "enabled": true,
+      "domain": "api.diegonmarcos.com",
+      "flake": "user-data_scrappers-api",
+      "port": 3020,
+      "dns": "scrappers-api.app",
+      "upstream": "10.0.0.6:3020",
+      "containers": {
+        "app": {
+          "container_name": "scrappers-api",
+          "image": "ghcr.io/diegonmarcos/scrappers-api:latest",
+          "port": 3020,
+          "port_env": "PORT",
+          "public": true,
+          "proxy": {
+            "domain": "api.diegonmarcos.com",
+            "base_path": "/scrappers",
+            "auth": "two_factor"
+          },
+          "healthcheck": "curl -fsS http://127.0.0.1:3020/health >/dev/null 2>&1 || exit 1",
+          "env_file": true
+        }
+      },
+      "container_names": [
+        "scrappers-api"
+      ],
+      "all_ports": [
+        "3020"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/scrappers",
+          "auth": "two_factor",
+          "paths": {
+            "/openapi.json": {
+              "auth": "public"
+            },
+            "/health": {
+              "auth": "public"
+            }
+          },
+          "domain": "api.diegonmarcos.com"
+        }
+      },
+      "declared_ports": {
+        "app": 3020
+      },
+      "health": {
+        "path": "/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true
+      },
+      "timezone": "Europe/Paris",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/openapi.json",
+        "api_url": "https://api.diegonmarcos.com/openapi.json",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/openapi.json",
+        "base_path": "/scrappers",
+        "display_name": "Scrapers API",
+        "description": "Unified profile-scrape + generic-crawl API. Replaces crawlee-cloud.",
+        "auth": "two_factor"
+      }
     },
     "crawlee-cloud": {
       "category": "fin",
@@ -8869,12 +8957,6 @@
         "service": "matrix-continuwuity"
       },
       {
-        "name": "matrix-mautrix-whatsapp.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "matrix-mautrix-whatsapp"
-      },
-      {
         "name": "c3-analytics-api.app",
         "type": "A",
         "value": "10.0.0.1",
@@ -9095,6 +9177,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "matrix-element"
+      },
+      {
+        "name": "matrix-mautrix-whatsapp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "matrix-mautrix-whatsapp"
       },
       {
         "name": "snappymail.app",
@@ -9799,7 +9887,6 @@
         "idle_shutdown": null,
         "containers": [
           "matrix-continuwuity",
-          "matrix-mautrix-whatsapp",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -9831,6 +9918,8 @@
           "session-memory",
           "chat-mattermost",
           "matrix-element",
+          "matrix-mautrix-whatsapp",
+          "scrappers-api",
           "crawlee-cloud",
           "fin-api",
           "photoprism",
@@ -10113,11 +10202,6 @@
         "vm": "oci-apps",
         "has_docker": true
       },
-      "matrix-mautrix-whatsapp": {
-        "dir": "user-comm_matrix-mautrix-whatsapp",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "c3-analytics-api": {
         "dir": "infra-api_c3-analytics-api",
         "vm": "gcp-proxy",
@@ -10338,6 +10422,11 @@
         "vm": "oci-apps",
         "has_docker": true
       },
+      "matrix-mautrix-whatsapp": {
+        "dir": "user-comm_matrix-mautrix-whatsapp",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
       "snappymail": {
         "dir": "user-comm_snappymail",
         "vm": "oci-mail",
@@ -10351,6 +10440,11 @@
       "stalwart": {
         "dir": "user-comm_tools-stalwart",
         "vm": "oci-mail",
+        "has_docker": true
+      },
+      "scrappers-api": {
+        "dir": "user-data_scrappers-api",
+        "vm": "oci-apps",
         "has_docker": true
       },
       "crawlee-cloud": {

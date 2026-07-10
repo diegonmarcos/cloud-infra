@@ -86,22 +86,6 @@
         "auth": "bearer"
       }
     },
-    "matrix-mautrix-whatsapp": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 29318
-      },
-      "vm": "oci-apps",
-      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [],
-        "type": "no-api"
-      }
-    },
     "c3-analytics-api": {
       "ip": "10.0.0.1",
       "ports": {
@@ -1063,6 +1047,22 @@
         "type": "no-api"
       }
     },
+    "matrix-mautrix-whatsapp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 29318
+      },
+      "vm": "oci-apps",
+      "description": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [],
+        "type": "no-api"
+      }
+    },
     "snappymail": {
       "ip": "10.0.0.3",
       "ports": {
@@ -1237,6 +1237,29 @@
           "service": "manage_sieve",
           "role": "app"
         }
+      }
+    },
+    "scrappers-api": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3020
+      },
+      "vm": "oci-apps",
+      "healthcheck": "curl -fsS http://127.0.0.1:3020/health >/dev/null 2>&1 || exit 1",
+      "domain": "api.diegonmarcos.com",
+      "description": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/openapi.json",
+        "api_url": "https://api.diegonmarcos.com/openapi.json",
+        "healthcheck_paths": [],
+        "type": "openapi",
+        "spec_path": "/openapi.json",
+        "base_path": "/scrappers",
+        "display_name": "Scrapers API",
+        "description": "Unified profile-scrape + generic-crawl API. Replaces crawlee-cloud.",
+        "auth": "two_factor"
       }
     },
     "crawlee-cloud": {
