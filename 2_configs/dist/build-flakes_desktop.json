@@ -245,6 +245,11 @@
         "wg_ip": "10.0.0.200",
         "role": "client",
         "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
+      },
+      "health-runner": {
+        "wg_ip": "10.0.0.201",
+        "role": "client",
+        "wg_public_key": "VeUK6t5/oXQiACcqXgCGkzLZlP2iBTgPghhhwFADViQ="
       }
     }
   },
@@ -6279,8 +6284,7 @@
         "_repromoted_2026-07-09": "webmail.diegonmarcos.com re-promoted to SnappyMail. It was demoted 2026-04-27 for a handoff to a successor webmail service that was never finished (no build.json/src), so no route was ever emitted and the domain orphaned to the Caddy catch-all (200 wormhole). SnappyMail is healthy on oci-mail; restored primary per the demote note.",
         "primary": {
           "domain": "webmail.diegonmarcos.com",
-          "auth": "two_factor",
-          "landing_page": "mymail"
+          "auth": "two_factor"
         }
       },
       "declared_ports": {
@@ -6781,7 +6785,8 @@
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/scrappers",
           "auth": "two_factor",
-          "bypass_paths": [
+          "wg_only": false,
+          "public_paths": [
             "/scrappers/health",
             "/scrappers/openapi.json"
           ],
