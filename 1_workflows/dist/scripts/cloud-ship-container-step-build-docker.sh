@@ -13,6 +13,65 @@
 # Step: Build Docker image, push to GHCR
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
+# ── Ensure a GHCR container package is anonymously pullable (public). ──
+# Fleet VMs pull images anonymously (no `docker login` on the box), so a
+# PRIVATE package = "denied: denied" at compose-pull time → the deploy's
+# `--pull always --force-recreate` then tears down the running container and
+# can't start the replacement = outage (this exact class took dagu down
+# 2026-07-11: dagu-binaries stayed private, VM pull denied).
+#
+# Two failure modes handled:
+#   1. Propagation delay — a freshly created GHCR package is private by
+#      default and the visibility API is eventually-consistent (the flip
+#      denies for a short window after first push). RETRY with backoff.
+#      (Why dagu-configs flipped but dagu-binaries didn't in the same run.)
+#   2. Wrong token — the ephemeral GHA $GITHUB_TOKEN can push (write:packages)
+#      but the visibility flip is unreliable with it; prefer the owner-scoped
+#      vault PAT when present (same credential used for `docker login`).
+#
+# Verification is by ANONYMOUS pull (exactly what the VM does), not the
+# visibility field — that's the real precondition. Returns non-zero if the
+# package cannot be made publicly pullable; callers MUST treat that as fatal
+# and abort BEFORE any destructive compose.
+#   $1 = owner (e.g. diegonmarcos)   $2 = package (e.g. dagu-binaries)
+_ensure_image_public() {
+    _eip_owner="$1"; _eip_pkg="$2"
+    _eip_pullable() {
+        _t=$(curl -s "https://ghcr.io/token?scope=repository:${_eip_owner}/${_eip_pkg}:pull" | jq -r '.token // empty' 2>/dev/null)
+        [ -n "$_t" ] || return 1
+        _c=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $_t" \
+            -H 'Accept: application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json' \
+            "https://ghcr.io/v2/${_eip_owner}/${_eip_pkg}/manifests/latest" 2>/dev/null)
+        [ "$_c" = 200 ]
+    }
+    if _eip_pullable; then
+        log "Package ${_eip_pkg}: publicly pullable ✓"
+        return 0
+    fi
+    if ! command -v gh >/dev/null 2>&1; then
+        log_error "Package ${_eip_pkg}: not publicly pullable and gh unavailable to flip"
+        return 1
+    fi
+    _eip_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    _eip_tok=""
+    [ -f "$_eip_vault" ] && _eip_tok=$(cat "$_eip_vault")
+    _i=0
+    while [ "$_i" -lt 4 ]; do
+        _i=$((_i + 1))
+        log "Package ${_eip_pkg}: not public — flip to public (attempt ${_i}/4)"
+        GH_TOKEN="${_eip_tok:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}" \
+            gh api --method PUT "/user/packages/container/${_eip_pkg}/visibility" \
+            -f visibility=public >/dev/null 2>&1 || true
+        sleep $(( _i * 3 ))
+        if _eip_pullable; then
+            log "Package ${_eip_pkg} → public ✓"
+            return 0
+        fi
+    done
+    log_error "Package ${_eip_pkg}: could NOT be made publicly pullable after 4 attempts — refusing to deploy an image the VM cannot pull"
+    return 1
+}
+
 step_docker() {
     # jq returns the literal "null" for missing paths; treat both as empty.
     case "${DOCKER_IMAGE:-}" in
@@ -86,6 +145,12 @@ step_docker() {
     # Architecture from build.json (declarative, no hostname inference)
     ARCH="${DOCKER_ARCH:-amd64}"
     PLATFORM="linux/$ARCH"
+    # Multi-arch: docker.arch may be a CSV ("amd64,arm64"). Split into a list —
+    # a single entry keeps the byte-identical legacy path; >1 triggers native
+    # per-arch builds (amd64→local GHA, arm64→ssh oci-apps) then a
+    # `docker manifest create` stitch. NO qemu (each arch builds on its own
+    # native runner). Only claude-superset-api is multi-arch today.
+    IFS=',' read -ra ARCHES <<< "$(echo "$ARCH" | tr -d '[:space:]')"
     log "Docker build: $FULL_IMAGE (arch: $ARCH, runner: ${RUNNER:-auto})"
 
     # Smart hash: skip rebuild when src/ AND target arch unchanged
@@ -140,7 +205,18 @@ step_docker() {
                 _binaries_arch_match=1
             fi
             if [ "$_binaries_arch_match" = 1 ]; then
-                log "Docker src unchanged ($LOCAL_HASH), $BINARIES_IMG covers arch=$ARCH — skipping"
+                log "Docker src unchanged ($LOCAL_HASH), $BINARIES_IMG covers arch=$ARCH — skipping build"
+                # Public visibility is a DEPLOY precondition, not a build
+                # artifact: even when we skip the rebuild, the package must be
+                # anonymously pullable or the VM's compose-pull fails
+                # "denied: denied". Enforce idempotently here too — a package
+                # left private by a flaky first-push flip (dagu-binaries,
+                # 2026-07-11) would otherwise never self-heal on the skip path.
+                _skip_owner=$(echo "$BINARIES_IMG" | awk -F/ '{print $(NF-1)}')
+                if ! _ensure_image_public "$_skip_owner" "$BINARIES_PKG"; then
+                    log_error "step_docker: $BINARIES_IMG not publicly pullable — aborting before deploy (never tear down a running container for an unpullable image)"
+                    return 1
+                fi
                 return 0
             else
                 log "Docker src unchanged ($LOCAL_HASH) but $BINARIES_IMG missing or no arch=$ARCH variant (remote_archs=${_remote_archs:-none}) — forcing rebuild"
@@ -534,6 +610,20 @@ NEOF
         return 1
     fi
 
+    # Binaries tag (referenced by every dist/compose) — set once, used by the
+    # per-arch helper AND the multi-arch manifest stitch below.
+    BINARIES_IMAGE="${FULL_IMAGE}-binaries"
+
+    # ── Per-arch build+push (runner resolve + local/ssh + push) ───────────
+    # Args: <arch> <primary-tag> <sha-tag> <binaries-tag>. Single-arch callers
+    # pass (arch, latest, $SHA_TAG, latest) — byte-identical to the legacy path.
+    # Multi-arch callers pass per-arch tags (arch, $SHA-arch, arch). `local ARCH`
+    # shadows the outer value so all the `$ARCH`/`$PLATFORM` refs below are
+    # arch-correct with zero further edits.
+    _docker_build_push_arch() {
+      local ARCH="$1" _ptag="$2" _stag="$3" _btag="$4"
+      local PLATFORM="linux/$ARCH"
+
     RUNNER_TYPE="$(jq -r --arg a "$ARCH" '.runners[$a].type // empty' "$RUNNERS_JSON")"
     RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
     # Image identity: prefer III_unix/cb_containers-builders/build.json (the
@@ -630,15 +720,15 @@ NEOF
                 --cache-from "$FULL_IMAGE:latest" \
                 --cache-from "$BINARIES_IMAGE:latest" \
                 --progress=plain \
-                --tag "$FULL_IMAGE:latest" \
-                --tag "$FULL_IMAGE:$SHA_TAG" \
-                --tag "$BINARIES_IMAGE:latest" \
+                --tag "$FULL_IMAGE:$_ptag" \
+                --tag "$FULL_IMAGE:$_stag" \
+                --tag "$BINARIES_IMAGE:$_btag" \
                 --file "$DOCKERFILE_PATH" \
                 "${BUILD_ARGS_ARR[@]}" \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:$SHA_TAG" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$BINARIES_IMAGE:latest" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$FULL_IMAGE:$_stag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$BINARIES_IMAGE:$_btag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             ;;
 
         ssh)
@@ -851,9 +941,10 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:latest -t $BINARIES_IMAGE:latest -f $DOCKERFILE $BUILD_ARGS_STR . && \
-        docker push $FULL_IMAGE:latest && \
-        docker push $BINARIES_IMAGE:latest; \
+        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -t $FULL_IMAGE:$_stag -t $BINARIES_IMAGE:$_btag -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        docker push $FULL_IMAGE:$_ptag && \
+        docker push $FULL_IMAGE:$_stag && \
+        docker push $BINARIES_IMAGE:$_btag; \
         rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
 # rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
 # the || true to the ENTIRE && chain — a failed build/push still wrote exit=0
@@ -929,39 +1020,59 @@ DISPATCH_EOF
             return 1
             ;;
     esac
+    }  # end _docker_build_push_arch
+
+    # ── Single vs multi-arch dispatch ─────────────────────────────────────
+    if [ "${#ARCHES[@]}" -le 1 ]; then
+        # Legacy single-arch path — byte-identical tags (:latest, :$SHA, -binaries:latest).
+        _docker_build_push_arch "${ARCHES[0]:-$ARCH}" "latest" "$SHA_TAG" "latest" || return 1
+    else
+        # Native per-arch builds — each pushes its own :<arch> / -binaries:<arch>
+        # / :$SHA-<arch> tags on its own runner (NO qemu). Then stitch the native
+        # images into multi-arch manifest lists on this controller.
+        for _a in "${ARCHES[@]}"; do
+            [ -n "$_a" ] || continue
+            _docker_build_push_arch "$_a" "$_a" "$SHA_TAG-$_a" "$_a" || return 1
+        done
+        _img_tags=""; _bin_tags=""; _sha_tags=""
+        for _a in "${ARCHES[@]}"; do
+            [ -n "$_a" ] || continue
+            _img_tags="$_img_tags $FULL_IMAGE:$_a"
+            _bin_tags="$_bin_tags $BINARIES_IMAGE:$_a"
+            _sha_tags="$_sha_tags $FULL_IMAGE:$SHA_TAG-$_a"
+        done
+        log "Stitching multi-arch manifests (${ARCHES[*]}):$_img_tags"
+        # `manifest rm` clears any stale local manifest cache; --amend then builds
+        # the list from the freshly-pushed per-arch images on GHCR.
+        docker manifest rm "$FULL_IMAGE:latest"     >/dev/null 2>&1 || true
+        docker manifest create --amend "$FULL_IMAGE:latest" $_img_tags
+        docker manifest push "$FULL_IMAGE:latest"
+        docker manifest rm "$BINARIES_IMAGE:latest" >/dev/null 2>&1 || true
+        docker manifest create --amend "$BINARIES_IMAGE:latest" $_bin_tags
+        docker manifest push "$BINARIES_IMAGE:latest"
+        docker manifest rm "$FULL_IMAGE:$SHA_TAG"   >/dev/null 2>&1 || true
+        docker manifest create --amend "$FULL_IMAGE:$SHA_TAG" $_sha_tags
+        docker manifest push "$FULL_IMAGE:$SHA_TAG"
+    fi
 
     log "Pushed $FULL_IMAGE:latest"
     log "Pushed $BINARIES_IMAGE:latest"
 
-    # Ensure both GHCR packages are public — flip via gh API if not already.
-    # GITHUB_TOKEN works because both images carry the
-    # org.opencontainers.image.source label that links them to this repo.
-    _ensure_public() {
-        local pkg="$1"
-        if ! command -v gh >/dev/null 2>&1; then return 0; fi
-        local vis
-        vis=$(gh api "/user/packages/container/${pkg}" --jq '.visibility' 2>/dev/null || echo "unknown")
-        case "$vis" in
-            public)
-                log "Package $pkg: public ✓"
-                ;;
-            private|internal)
-                log "Package $pkg: $vis — flipping to public"
-                if gh api --method PUT "/user/packages/container/${pkg}/visibility" -f visibility=public >/dev/null 2>&1; then
-                    log "Package $pkg → public"
-                else
-                    log_warn "Package $pkg: could not flip to public (may need manual fix via GitHub UI)"
-                fi
-                ;;
-            unknown|"")
-                log_warn "Package $pkg: visibility check skipped (gh API unavailable)"
-                ;;
-        esac
-    }
+    # Ensure both GHCR packages are anonymously pullable (public) so fleet VMs
+    # can pull them. The -binaries image is the one the VM actually pulls, so
+    # THAT is a fatal gate: if it can't be made public, fail the build step so
+    # the deploy aborts BEFORE the destructive compose (which would otherwise
+    # tear down the running container and fail to pull the replacement). The
+    # base/cache package (dagu-configs etc.) is not pulled by VMs → best-effort.
     PKG_NAME=$(echo "$FULL_IMAGE" | awk -F/ '{print $NF}')
     BINARIES_PKG_NAME=$(echo "$BINARIES_IMAGE" | awk -F/ '{print $NF}')
-    _ensure_public "$PKG_NAME"
-    _ensure_public "$BINARIES_PKG_NAME"
+    _REG_OWNER=$(echo "$BINARIES_IMAGE" | awk -F/ '{print $(NF-1)}')
+    _ensure_image_public "$_REG_OWNER" "$PKG_NAME" \
+        || log_warn "Package $PKG_NAME not public (non-fatal: not pulled by VMs)"
+    if ! _ensure_image_public "$_REG_OWNER" "$BINARIES_PKG_NAME"; then
+        log_error "step_docker: $BINARIES_IMAGE could not be made public — failing so the deploy aborts before teardown"
+        return 1
+    fi
 
     mkdir -p "$DIST_DIR"
     echo "$LOCAL_HASH" > "$DIST_DIR/.docker-src-hash"
