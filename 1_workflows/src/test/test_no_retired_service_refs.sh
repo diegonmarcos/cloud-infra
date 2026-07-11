@@ -29,9 +29,14 @@ if [ ! -d "$REPO_ROOT/a_solutions/z_archive" ]; then
 fi
 
 # Derive the list of retired service names from z_archive/ dir names,
-# stripping the category prefix (aa-sui_, bc-obs_, etc.).
+# stripping the category prefix. Prefix is any run of lowercase letters +
+# dashes up to the first underscore — covers BOTH the legacy fixed-width
+# scheme (aa-sui_, bc-obs_) and the current word-word scheme (user-comm_,
+# infra-api_, user-prod_, …). The old `[a-z]{2}-[a-z]{3}_` only matched the
+# legacy form, so post-migration successors (user-comm_*) were never stripped
+# and slipped past the successor-skip below → false Phase-10 failures.
 retired=$(find "$REPO_ROOT/a_solutions/z_archive" -maxdepth 1 -type d -not -path "$REPO_ROOT/a_solutions/z_archive" -printf '%f\n' \
-    | sed -E 's/^[a-z]{2}-[a-z]{3}_//' \
+    | sed -E 's/^[a-z-]+_//' \
     | sort -u)
 
 if [ -z "$retired" ]; then
@@ -55,7 +60,7 @@ for svc in $retired; do
         # sauron-forwarder all derive from retired bb-sec_sauron and reference
         # "sauron" in prose / as container_name).
         consumer_dir=$(dirname "$f" | sed -E 's|.*/(a_solutions/[^/]+).*|\1|')
-        consumer_name=$(basename "$consumer_dir" | sed -E 's/^[a-z]{2}-[a-z]{3}_//')
+        consumer_name=$(basename "$consumer_dir" | sed -E 's/^[a-z-]+_//')
         case "$consumer_name" in
             "$svc"-*|*-"$svc"|"$svc")
                 # Successor or self — name carries the retired prefix/suffix legitimately.
