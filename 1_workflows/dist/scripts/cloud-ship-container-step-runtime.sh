@@ -50,3 +50,39 @@ step_restart() {
     log "Restarting $SERVICE_NAME on $DEPLOY_HOST"
     _compose_remote "restart"
 }
+
+# retire) Decommission the service: bring its containers DOWN on the VM (named
+# volumes PERSIST — data is never deleted here), then git-mv the whole service
+# folder into a_solutions/z_archive/ so 2_configs no longer scans it. Leaves the
+# move STAGED — review + commit + push to finalize. Volume/data purge is a
+# separate, deliberate, out-of-band step (hook-guarded; back up first).
+step_retire() {
+    CURRENT_STEP="retire"
+    log "═══ Retiring $SERVICE_NAME ═══"
+
+    # 1) Containers down on the VM (volumes persist). No-op if deploy.host unset.
+    step_down
+
+    # 2) Archive the service folder in-repo: <sol_root>/<name> → <sol_root>/z_archive/<name>
+    _sol_root="$(dirname "$SERVICE_DIR")"
+    _svc_name="$(basename "$SERVICE_DIR")"
+    if [ "$(basename "$_sol_root")" = "z_archive" ]; then
+        log "Already under z_archive — nothing to move"; return 0
+    fi
+    _dest="$_sol_root/z_archive/$_svc_name"
+    if [ -e "$_dest" ]; then
+        log_error "$_dest already exists — refusing to overwrite"; return 1
+    fi
+    mkdir -p "$_sol_root/z_archive"
+    if git -C "$_sol_root" mv "$_svc_name" "z_archive/$_svc_name" 2>/dev/null; then
+        log "Archived $_svc_name → z_archive/ (git mv, staged)"
+    else
+        # Untracked leftovers (e.g. a fresh dist/) can block git mv — move the
+        # tracked tree, then relocate the rest so the folder ends up whole.
+        mv "$SERVICE_DIR" "$_dest"
+        git -C "$_sol_root" add -A "z_archive/$_svc_name" "$_svc_name" 2>/dev/null || true
+        log "Archived $_svc_name → z_archive/ (moved + staged)"
+    fi
+    log "NEXT: review, then commit + push to finalize the decommission."
+    log "NOTE: named volumes on $DEPLOY_HOST persist — purge separately after backup."
+}
