@@ -6,9 +6,9 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2610,
+    "files": 2608,
     "by_lang": {
-      "nix": 432,
+      "nix": 430,
       "sh": 372,
       "rust": 627,
       "ts": 320,
@@ -16,13 +16,13 @@
       "js": 18
     },
     "by_role": {
-      "flake": 75,
+      "flake": 74,
       "script": 116,
       "shell": 236,
       "rust-module": 620,
       "engine": 39,
       "nix-module": 289,
-      "compose": 68,
+      "compose": 67,
       "python": 836,
       "file": 6,
       "entrypoint": 26,
@@ -29223,7 +29223,7 @@
         "./tools/syncthing.js",
         "./tools/ollama.js",
         "./tools/dagu.js",
-        "./tools/crawlee.js",
+        "./tools/scrappers.js",
         "./tools/authelia.js",
         "./tools/nocodb.js",
         "./tools/rig.js",
@@ -29263,7 +29263,7 @@
         "./tools/syncthing.js",
         "./tools/ollama.js",
         "./tools/dagu.js",
-        "./tools/crawlee.js",
+        "./tools/scrappers.js",
         "./tools/authelia.js",
         "./tools/nocodb.js",
         "./tools/rig.js",
@@ -29297,23 +29297,6 @@
       "symbols": [
         "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
         "registerAutheliaTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/crawlee.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerCrawleeTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "crawleeApi(method: string, path: string, body?: string)",
-        "registerCrawleeTools(server: McpServer)"
       ]
     },
     {
@@ -29622,6 +29605,23 @@
       "symbols": [
         "rigApi(method: string, base: string, path: string, body?: string)",
         "registerRigTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/scrappers.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerScrappersTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "scrappersApi(method: string, path: string, body?: string)",
+        "registerScrappersTools(server: McpServer)"
       ]
     },
     {
@@ -57071,6 +57071,34 @@
       ]
     },
     {
+      "path": "a_solutions/user-data_scrappers-api/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
       "path": "a_solutions/user-data_scrappers-api/src/code/main.py",
       "lang": "py",
       "role": "entrypoint",
@@ -57240,121 +57268,6 @@
         "baseImage",
         "apt",
         "title"
-      ]
-    },
-    {
-      "path": "a_solutions/user-fin_crawlee-cloud/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/user-fin_crawlee-cloud/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container"
-      ],
-      "imports": [],
-      "symbols": [
-        "c",
-        "app",
-        "runnerC",
-        "dashboardC",
-        "schedulerC",
-        "db",
-        "redis",
-        "minio",
-        "apiImage",
-        "runnerImage",
-        "dashboardImage",
-        "schedulerImage",
-        "apiPort",
-        "dashboardPort",
-        "minioPort",
-        "minioConsolePort",
-        "dbPort",
-        "redisPort",
-        "runtime",
-        "apiCmd",
-        "runnerCmd",
-        "schedulerCmd",
-        "repoContext",
-        "services",
-        "api",
-        "image",
-        "build",
-        "context",
-        "dockerfile",
-        "container_name",
-        "network_mode",
-        "env_file",
-        "environment",
-        "NODE_ENV",
-        "PORT",
-        "HOST",
-        "REDIS_URL",
-        "S3_ENDPOINT",
-        "S3_BUCKET",
-        "S3_REGION"
-      ]
-    },
-    {
-      "path": "a_solutions/user-fin_crawlee-cloud/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "inputs",
-        "crawlee-src",
-        "url",
-        "flake",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "packages",
-        "pkgs",
-        "patchedRepo",
-        "nativeBuildInputs",
-        "engineOut",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "title",
-        "default",
-        "passthru"
       ]
     },
     {

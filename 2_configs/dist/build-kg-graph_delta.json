@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 293,
-    "edges": 396,
+    "nodes": 284,
+    "edges": 382,
     "by_table": {
       "vm": 4,
-      "service": 64,
-      "container": 90,
+      "service": 63,
+      "container": 83,
       "domain": 40,
       "repo": 3,
-      "module": 64,
+      "module": 63,
       "package": 28
     }
   },
@@ -1514,104 +1514,6 @@
     },
     {
       "table": "service",
-      "id": "crawlee_cloud",
-      "key": "service:crawlee_cloud",
-      "properties": {
-        "name": "crawlee-cloud",
-        "category": "fin",
-        "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
-        "domain": "api.diegonmarcos.com",
-        "port": 3000,
-        "vm": "oci-apps",
-        "folder": "user-fin_crawlee-cloud"
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_api",
-      "key": "container:crawlee_api",
-      "properties": {
-        "name": "crawlee_api",
-        "image": "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-        "role": "app",
-        "port": 3000,
-        "public": true
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_runner",
-      "key": "container:crawlee_runner",
-      "properties": {
-        "name": "crawlee_runner",
-        "image": "ghcr.io/diegonmarcos/crawlee-cloud-runner:latest",
-        "role": "runner",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_dashboard",
-      "key": "container:crawlee_dashboard",
-      "properties": {
-        "name": "crawlee_dashboard",
-        "image": "ghcr.io/diegonmarcos/crawlee-cloud-dashboard:latest",
-        "role": "dashboard",
-        "port": 3001,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_scheduler",
-      "key": "container:crawlee_scheduler",
-      "properties": {
-        "name": "crawlee_scheduler",
-        "image": "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-        "role": "scheduler",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_db",
-      "key": "container:crawlee_db",
-      "properties": {
-        "name": "crawlee_db",
-        "image": "postgres:16-alpine",
-        "role": "db",
-        "port": 5434,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_redis",
-      "key": "container:crawlee_redis",
-      "properties": {
-        "name": "crawlee_redis",
-        "image": "redis:7-alpine",
-        "role": "redis",
-        "port": 6381,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "crawlee_minio",
-      "key": "container:crawlee_minio",
-      "properties": {
-        "name": "crawlee_minio",
-        "image": "minio/minio:latest",
-        "role": "minio",
-        "port": 9000,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "fin_api",
       "key": "service:fin_api",
       "properties": {
@@ -2960,17 +2862,6 @@
         "repo": "cloud",
         "category": "data",
         "service": "scrappers-api"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_fin_crawlee_cloud",
-      "key": "module:user_fin_crawlee_cloud",
-      "properties": {
-        "name": "user-fin_crawlee-cloud",
-        "repo": "cloud",
-        "category": "fin",
-        "service": "crawlee-cloud"
       }
     },
     {
@@ -4326,94 +4217,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:crawlee_cloud",
-      "to": "vm:oci_apps",
-      "key": "service:crawlee_cloud->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_api",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_api",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "depends_on",
-      "from": "service:crawlee_cloud",
-      "to": "service:redis",
-      "key": "service:crawlee_cloud->depends_on->service:redis",
-      "properties": {
-        "type": "runtime"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_runner",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_runner",
-      "properties": {
-        "role": "runner"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_dashboard",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_dashboard",
-      "properties": {
-        "role": "dashboard"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_scheduler",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_scheduler",
-      "properties": {
-        "role": "scheduler"
-      }
-    },
-    {
-      "table": "depends_on",
-      "from": "service:crawlee_cloud",
-      "to": "service:redis",
-      "key": "service:crawlee_cloud->depends_on->service:redis",
-      "properties": {
-        "type": "runtime"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_db",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_db",
-      "properties": {
-        "role": "db"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_redis",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_redis",
-      "properties": {
-        "role": "redis"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:crawlee_cloud",
-      "to": "container:crawlee_minio",
-      "key": "service:crawlee_cloud->runs_container->container:crawlee_minio",
-      "properties": {
-        "role": "minio"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:fin_api",
       "to": "vm:oci_apps",
       "key": "service:fin_api->hosted_on->vm:oci_apps",
@@ -4991,15 +4794,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:crawlee_cloud",
-      "to": "service:caddy",
-      "key": "service:crawlee_cloud->proxied_by->service:caddy",
-      "properties": {
-        "domain": "api.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:fin_api",
       "to": "service:caddy",
       "key": "service:fin_api->proxied_by->service:caddy",
@@ -5314,13 +5108,6 @@
       "from": "domain:api_diegonmarcos_com",
       "to": "service:scrappers_api",
       "key": "domain:api_diegonmarcos_com->routes_to->service:scrappers_api",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:api_diegonmarcos_com",
-      "to": "service:crawlee_cloud",
-      "key": "domain:api_diegonmarcos_com->routes_to->service:crawlee_cloud",
       "properties": {}
     },
     {
@@ -6091,20 +5878,6 @@
       "from": "module:user_data_scrappers_api",
       "to": "service:scrappers_api",
       "key": "module:user_data_scrappers_api->implements->service:scrappers_api",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_fin_crawlee_cloud",
-      "to": "repo:cloud",
-      "key": "module:user_fin_crawlee_cloud->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_fin_crawlee_cloud",
-      "to": "service:crawlee_cloud",
-      "key": "module:user_fin_crawlee_cloud->implements->service:crawlee_cloud",
       "properties": {}
     },
     {
