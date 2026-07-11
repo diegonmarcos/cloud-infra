@@ -361,6 +361,7 @@ case "${1:-all}" in
     pull)     step_pull ;;
     down)     step_down ;;
     restart)  step_restart ;;
+    retire)   step_retire ;;   # decommission: containers down (volumes persist) + git mv folder → z_archive
     compose-build) step_compose_build ;;
     configs-push) step_configs_push ;;
     health)   step_health ;;
@@ -538,7 +539,7 @@ case "${1:-all}" in
         if [ -f "$CONFIG" ] && get_lifecycle "$1" | grep -q .; then
             run_lifecycle "$1"
         else
-            echo "Usage: $0 [build|push|pull|up|down|restart|deploy|compose|secrets|docs|health|status|logs|wrangler|all|ship|rollout|redeploy|clean|clean-remote|<lifecycle>]"
+            echo "Usage: $0 [build|push|pull|up|down|restart|retire|deploy|compose|secrets|docs|health|status|logs|wrangler|all|ship|rollout|redeploy|clean|clean-remote|<lifecycle>]"
             echo "  docker       Build + push Docker image"
             echo "  build        Build nix flake -> dist/"
             echo "  docs         Build documentation -> dist/docs/"
