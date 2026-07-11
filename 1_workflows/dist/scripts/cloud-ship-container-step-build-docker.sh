@@ -557,15 +557,21 @@ NEOF
         return 0
     fi
 
-    # GHCR login — best-effort, three-tier fallback (mirrors the remote-runner
-    # branch at the bottom of this file for uniform auth across local + remote):
+    # GHCR login — token PRIORITY is deliberate and load-bearing for PUBLIC
+    # package visibility:
     #
-    #   1. Vault PAT (~/git/vault/...) — owner-scoped PAT with write:packages.
-    #      ALWAYS works when vault is present. Tried FIRST because the GHA
-    #      ephemeral $GITHUB_TOKEN has failed before with `denied:
-    #      permission_denied: write_package` (forked PR context, package-level
-    #      access lists, etc.); the vault PAT bypasses all of that.
-    #   2. $GITHUB_TOKEN — GHA workflow ephemeral, when running inside GHA.
+    #   1. $GITHUB_TOKEN (in GHA) — the repo's ephemeral Actions token. A package
+    #      first PUSHED with it is REPO-SCOPED and inherits the visibility of the
+    #      source repo (diegonmarcos/cloud is PUBLIC → the package is PUBLIC and
+    #      anonymously pullable). This is the ONLY way to get public packages
+    #      automatically: GitHub has NO API/GraphQL to flip visibility, and a
+    #      package first created by a user PAT is USER-SCOPED → defaults PRIVATE
+    #      forever (proven 2026-07-11: PAT-pushed dagu-binaries stayed private
+    #      even after delete+repush; fleet publics were each flipped once in the
+    #      UI). Pushing with GITHUB_TOKEN removes the manual UI step entirely.
+    #   2. Vault PAT — fallback for LOCAL/non-GHA runs (owner-scoped, write:packages).
+    #      NOTE: PAT-created packages are private-by-default; a NEW service first
+    #      shipped locally needs a one-time UI flip. In GHA we never fall here.
     #   3. `gh auth token` — interactive `gh` login (devs running locally).
     #
     # The login itself is REDUNDANT inside cloud-builder when the GHA runner
@@ -576,14 +582,13 @@ NEOF
     # `2>/dev/null` combined with set -e. Now: stderr is preserved (for
     # debuggability) and `|| true` keeps the pipeline going since downstream
     # `docker push` will surface its own error if auth is genuinely broken.
-    # Surfaced 2026-04-27 (ship run 24998359368) by step_docker ERR trap.
     VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
     GHCR_USER="${GHCR_USER:-diegonmarcos}"
-    if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
-        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1 \
-            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
-    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
+            | grep -vE '(^WARNING|credential helper|password will be stored)' || true
+    elif [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+        cat "$VAULT_GHCR_TOKEN_PATH" | docker login ghcr.io -u "$GHCR_USER" --password-stdin 2>&1 \
             | grep -vE '(^WARNING|credential helper|password will be stored)' || true
     elif command -v gh >/dev/null 2>&1; then
         gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null)" --password-stdin 2>&1 \
@@ -813,13 +818,25 @@ NEOF
             # failed → docker login failed → build/push failed → engine
             # logged misleading "Pushed" because the SSH | while-read pipe
             # swallowed the non-zero exit (no pipefail).
+            # Token PRIORITY: GITHUB_TOKEN first (repo-scoped push → package
+            # inherits the PUBLIC source repo → anonymously pullable). Vault PAT
+            # is the LOCAL/non-GHA fallback only — a PAT-pushed package is
+            # user-scoped and private-by-default (needs a one-time UI flip). See
+            # the local-push login block above for the full rationale. This is
+            # the REMOTE_BUILD (arm64-on-VM) push that dagu and every arm64
+            # service uses, so it MUST prefer GITHUB_TOKEN to get public images.
             VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
+            # When authenticating with GITHUB_TOKEN, the docker-login username
+            # must be the Actions actor (owner==actor==diegonmarcos here).
+            if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+                GHCR_USER="$GITHUB_ACTOR"
+            fi
             GHCR_TOKEN_VAL=""
-            if [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
-                GHCR_TOKEN_VAL=$(cat "$VAULT_GHCR_TOKEN_PATH")
-            elif [ -n "${GITHUB_TOKEN:-}" ]; then
+            if [ -n "${GITHUB_TOKEN:-}" ]; then
                 GHCR_TOKEN_VAL="$GITHUB_TOKEN"
+            elif [ -f "$VAULT_GHCR_TOKEN_PATH" ]; then
+                GHCR_TOKEN_VAL=$(cat "$VAULT_GHCR_TOKEN_PATH")
             else
                 log_error "no GHCR token available (vault: $VAULT_GHCR_TOKEN_PATH missing AND GITHUB_TOKEN unset)"
                 return 1
