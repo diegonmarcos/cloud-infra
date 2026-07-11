@@ -433,6 +433,13 @@ jobs:
           # container. Currently published images don't yet have cap_add in
           # their baked compose.yaml; this CLI flag is the bootstrap path
           # until the next cloud-builder image ships with it declared.
+          # Forward GITHUB_TOKEN + GITHUB_ACTOR INTO the container so the engine
+          # can push GHCR with the repo's Actions token. This is load-bearing
+          # for PUBLIC images: a package first pushed by GITHUB_TOKEN is
+          # repo-scoped and inherits the public repo's visibility (public);
+          # pushed by the vault PAT it is user-scoped and private forever. Without
+          # this forward, the engine's GITHUB_TOKEN branch is dead (docker compose
+          # run does NOT inherit host env) and every new image lands private.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             --cap-add NET_ADMIN \
             -v "$HOME/git/vault:/root/git/vault:ro" \
@@ -442,6 +449,8 @@ jobs:
             -v "${{ runner.temp }}/cargo-target:/cargo-target" \
             -e CARGO_HOME=/root/.cargo \
             -e CARGO_TARGET_DIR=/cargo-target \
+            -e GITHUB_TOKEN \
+            -e GITHUB_ACTOR \
             cloud-builder ship ${{ matrix.vm }}
 
       - name: Upload trace
