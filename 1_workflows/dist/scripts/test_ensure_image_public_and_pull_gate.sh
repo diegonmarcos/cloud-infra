@@ -15,9 +15,10 @@
 # Tester for the 2026-07-11 dagu-outage engine fixes:
 #
 #   1. _ensure_image_public (cloud-ship-container-step-build-docker.sh) —
-#      makes a GHCR package anonymously pullable (public) BEFORE deploy,
-#      retrying to ride out GHCR new-package propagation delay, and returns
-#      NON-ZERO (fatal) when it cannot — so the deploy aborts before the
+#      VERIFIES a GHCR package is anonymously pullable BEFORE deploy, retrying
+#      to ride out GHCR propagation lag on a fresh push (GitHub has no API to
+#      flip visibility, so it does NOT try). Returns NON-ZERO (fatal) when the
+#      package is genuinely private — so the deploy aborts before the
 #      destructive compose instead of tearing down a running container for an
 #      image the VM can't pull.
 #
@@ -54,7 +55,8 @@ gh()        { return 0; }
 #   public         → token ok + manifest 200
 #   private        → token ok + manifest 401 (forever)
 #   flip_on_2      → 401 on the first two manifest checks, 200 from the third
-#                    (simulates the visibility flip taking effect after a retry)
+#                    (simulates a fresh PUBLIC package becoming pullable once
+#                     GHCR propagation completes, after a retry)
 CURL_CALLS_FILE="$(mktemp)"
 echo 0 > "$CURL_CALLS_FILE"
 trap 'rm -f "$CURL_CALLS_FILE"' EXIT
@@ -96,10 +98,10 @@ else
     ok "un-pullable package → fatal (non-zero) — deploy will abort before teardown"
 fi
 
-# 3) Private that becomes pullable after a retry → returns 0.
+# 3) Fresh public package pullable after propagation retry → returns 0.
 echo 0 > "$CURL_CALLS_FILE"; PULLABLE_STATE=flip_on_2
 if _ensure_image_public diegonmarcos flips-after-retry-pkg; then
-    ok "package that flips on retry → success (exit 0)"
+    ok "package pullable after propagation retry → success (exit 0)"
 else
     bad "package pullable after retry should return 0"
 fi

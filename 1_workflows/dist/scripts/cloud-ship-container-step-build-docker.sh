@@ -18,21 +18,19 @@
 # PRIVATE package = "denied: denied" at compose-pull time → the deploy's
 # `--pull always --force-recreate` then tears down the running container and
 # can't start the replacement = outage (this exact class took dagu down
-# 2026-07-11: dagu-binaries stayed private, VM pull denied).
+# 2026-07-11: dagu-binaries was a private package, VM pull denied).
 #
-# Two failure modes handled:
-#   1. Propagation delay — a freshly created GHCR package is private by
-#      default and the visibility API is eventually-consistent (the flip
-#      denies for a short window after first push). RETRY with backoff.
-#      (Why dagu-configs flipped but dagu-binaries didn't in the same run.)
-#   2. Wrong token — the ephemeral GHA $GITHUB_TOKEN can push (write:packages)
-#      but the visibility flip is unreliable with it; prefer the owner-scoped
-#      vault PAT when present (same credential used for `docker login`).
-#
-# Verification is by ANONYMOUS pull (exactly what the VM does), not the
-# visibility field — that's the real precondition. Returns non-zero if the
-# package cannot be made publicly pullable; callers MUST treat that as fatal
-# and abort BEFORE any destructive compose.
+# IMPORTANT: GitHub has NO API to change package visibility — the endpoint
+# `PUT /user/packages/container/{pkg}/visibility` does NOT exist (confirmed
+# against the REST docs; it 404s). A package created by a fresh GHA push is
+# PUBLIC by default (it inherits from the public source repo); a package is
+# only private if it was first created under other conditions. So this
+# function does NOT try to flip visibility — it only VERIFIES anonymous
+# pullability (exactly what the VM does), retrying to clear GHCR propagation
+# lag on a fresh push. If the package is genuinely private, it returns
+# non-zero (FATAL) with the one real remediation: delete the package and let
+# the ship recreate it clean. Callers MUST treat non-zero as fatal and abort
+# BEFORE any destructive compose.
 #   $1 = owner (e.g. diegonmarcos)   $2 = package (e.g. dagu-binaries)
 _ensure_image_public() {
     _eip_owner="$1"; _eip_pkg="$2"
@@ -48,27 +46,23 @@ _ensure_image_public() {
         log "Package ${_eip_pkg}: publicly pullable ✓"
         return 0
     fi
-    if ! command -v gh >/dev/null 2>&1; then
-        log_error "Package ${_eip_pkg}: not publicly pullable and gh unavailable to flip"
-        return 1
-    fi
-    _eip_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
-    _eip_tok=""
-    [ -f "$_eip_vault" ] && _eip_tok=$(cat "$_eip_vault")
+    # Not yet pullable. Retry the pull-check with backoff to clear GHCR
+    # propagation lag on a freshly-pushed PUBLIC package. (No visibility flip —
+    # there is no API for it.)
     _i=0
     while [ "$_i" -lt 4 ]; do
         _i=$((_i + 1))
-        log "Package ${_eip_pkg}: not public — flip to public (attempt ${_i}/4)"
-        GH_TOKEN="${_eip_tok:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}" \
-            gh api --method PUT "/user/packages/container/${_eip_pkg}/visibility" \
-            -f visibility=public >/dev/null 2>&1 || true
         sleep $(( _i * 3 ))
         if _eip_pullable; then
-            log "Package ${_eip_pkg} → public ✓"
+            log "Package ${_eip_pkg}: publicly pullable ✓ (after ${_i} propagation retries)"
             return 0
         fi
     done
-    log_error "Package ${_eip_pkg}: could NOT be made publicly pullable after 4 attempts — refusing to deploy an image the VM cannot pull"
+    # Genuinely private — the VM cannot pull it and we cannot fix it via API.
+    log_error "Package ${_eip_pkg}: PRIVATE / not anonymously pullable — the VM cannot pull this image."
+    log_error "  GitHub has no API to make a package public. Delete it and re-push instead:"
+    log_error "    gh api --method DELETE /user/packages/container/${_eip_pkg}"
+    log_error "  then re-run this ship — a fresh GHA push recreates the package PUBLIC by default."
     return 1
 }
 
