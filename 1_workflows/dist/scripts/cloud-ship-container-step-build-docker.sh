@@ -59,10 +59,17 @@ _ensure_image_public() {
         fi
     done
     # Genuinely private — the VM cannot pull it and we cannot fix it via API.
+    # GitHub has NO API to change package visibility, AND a fresh push does NOT
+    # make it public — newly-created GHCR packages on this account default to
+    # PRIVATE (proven 2026-07-11: deleting dagu-binaries and re-pushing produced
+    # a private package again, while the pre-existing dagu base image stayed
+    # public in the same run). The fleet's public images are public only because
+    # each was flipped ONCE in the web UI. So the one real remediation is a
+    # one-time UI flip; deleting/re-pushing will NOT help.
     log_error "Package ${_eip_pkg}: PRIVATE / not anonymously pullable — the VM cannot pull this image."
-    log_error "  GitHub has no API to make a package public. Delete it and re-push instead:"
-    log_error "    gh api --method DELETE /user/packages/container/${_eip_pkg}"
-    log_error "  then re-run this ship — a fresh GHA push recreates the package PUBLIC by default."
+    log_error "  Make it public ONCE in the GitHub UI (no API exists; a fresh push stays private):"
+    log_error "    https://github.com/users/${_eip_owner}/packages/container/${_eip_pkg}/settings"
+    log_error "    → Danger Zone → Change visibility → Public,  then re-run this ship."
     return 1
 }
 
