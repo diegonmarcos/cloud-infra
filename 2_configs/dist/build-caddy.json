@@ -1516,19 +1516,23 @@
     {
       "kind": "redirect",
       "service": "scrappers-api.app",
-      "redirect_to": "https://scrappers-api-null.app",
+      "redirect_to": "https://scrappers-api-http-3020.app",
       "container": "scrappers-api",
       "container_key": "app",
       "svc": "scrappers-api",
       "vm": "oci-A1-f_0"
     },
     {
-      "kind": "portless",
-      "service": "scrappers-api-null.app",
+      "kind": "canonical",
+      "service": "scrappers-api-http-3020.app",
       "container": "scrappers-api",
       "container_key": "app",
       "svc": "scrappers-api",
-      "vm": "oci-A1-f_0"
+      "vm": "oci-A1-f_0",
+      "port": 3020,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3020",
+      "source": "containers.app.port"
     },
     {
       "kind": "redirect",
@@ -3197,6 +3201,16 @@
       "notes": null
     },
     {
+      "host": "scrappers-api-http-3020.app",
+      "path": null,
+      "upstream": "10.0.0.6:3020",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "scrappers-api",
+      "notes": null
+    },
+    {
       "host": "fin-api-http-8340.app",
       "path": null,
       "upstream": "10.0.0.6:8340",
@@ -3336,16 +3350,6 @@
       "tls": "on_demand",
       "zone": "app",
       "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "scrappers-api-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "scrappers-api",
       "notes": null
     },
     {

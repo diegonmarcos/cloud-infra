@@ -787,6 +787,12 @@
         "service": "stalwart"
       },
       {
+        "name": "scrappers-api.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "scrappers-api"
+      },
+      {
         "name": "fin-api.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -4815,6 +4821,8 @@
           "image": "ghcr.io/diegonmarcos/scrappers-api:latest",
           "port": 3020,
           "port_env": "PORT",
+          "protocol": "http",
+          "dns": "scrappers-api.app",
           "public": true,
           "proxy": {
             "domain": "api.diegonmarcos.com",
@@ -4831,7 +4839,9 @@
       "all_ports": [
         "3020"
       ],
-      "all_dns": [],
+      "all_dns": [
+        "scrappers-api.app"
+      ],
       "compose": {
         "containers": [],
         "ports": [],
