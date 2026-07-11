@@ -2,11 +2,11 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 28,
+  "total": 25,
   "summary": {
-    "postgres": 6,
+    "postgres": 5,
     "mariadb": 2,
-    "redis": 3,
+    "redis": 2,
     "sqlite": 10,
     "surrealdb": 1,
     "custom": 0,
@@ -18,8 +18,7 @@
     "grafana": 0,
     "parquet": 1,
     "files": 3,
-    "rocksdb": 1,
-    "minio": 1
+    "rocksdb": 1
   },
   "databases": [
     {
@@ -391,67 +390,6 @@
           "memory": "32M"
         }
       },
-      "backup": true
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_db",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5434,
-      "dns": "crawlee-db.app",
-      "user": "crawlee",
-      "db": "crawlee",
-      "healthcheck": "pg_isready -U $POSTGRES_USER",
-      "volumes": [
-        "crawlee_postgres:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://crawlee@10.0.0.6:5434/crawlee"
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_redis",
-      "container_key": "redis",
-      "type": "redis",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "redis:7-alpine",
-      "port": 6381,
-      "dns": "crawlee-redis.app",
-      "healthcheck": "redis-cli -p 6381 ping",
-      "volumes": [
-        "crawlee_redis:/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "redis://10.0.0.6:6381"
-    },
-    {
-      "service": "crawlee-cloud",
-      "container": "crawlee_minio",
-      "container_key": "minio",
-      "type": "minio",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "minio/minio:latest",
-      "port": 9000,
-      "dns": "crawlee-minio.app",
-      "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-      "volumes": [
-        "crawlee_minio:/data"
-      ],
-      "resources": null,
       "backup": true
     },
     {
@@ -912,26 +850,6 @@
         "resources": null,
         "backup": true,
         "connection": "redis://10.0.0.1:6380"
-      },
-      {
-        "service": "crawlee-cloud",
-        "container": "crawlee_redis",
-        "container_key": "redis",
-        "type": "redis",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "redis:7-alpine",
-        "port": 6381,
-        "dns": "crawlee-redis.app",
-        "healthcheck": "redis-cli -p 6381 ping",
-        "volumes": [
-          "crawlee_redis:/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "redis://10.0.0.6:6381"
       }
     ],
     "mariadb": [
@@ -1059,28 +977,6 @@
         "resources": null,
         "backup": true,
         "connection": "postgresql://mattermost@10.0.0.6:5435/mattermost"
-      },
-      {
-        "service": "crawlee-cloud",
-        "container": "crawlee_db",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5434,
-        "dns": "crawlee-db.app",
-        "user": "crawlee",
-        "db": "crawlee",
-        "healthcheck": "pg_isready -U $POSTGRES_USER",
-        "volumes": [
-          "crawlee_postgres:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://crawlee@10.0.0.6:5434/crawlee"
       },
       {
         "service": "etherpad",
@@ -1258,27 +1154,6 @@
             "memory": "32M"
           }
         },
-        "backup": true
-      }
-    ],
-    "minio": [
-      {
-        "service": "crawlee-cloud",
-        "container": "crawlee_minio",
-        "container_key": "minio",
-        "type": "minio",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "minio/minio:latest",
-        "port": 9000,
-        "dns": "crawlee-minio.app",
-        "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-        "volumes": [
-          "crawlee_minio:/data"
-        ],
-        "resources": null,
         "backup": true
       }
     ]
@@ -1494,67 +1369,6 @@
           "path": "/data/mautrix-whatsapp.db",
           "volumes": [
             "./data:/data"
-          ],
-          "resources": null,
-          "backup": true
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_db",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5434,
-          "dns": "crawlee-db.app",
-          "user": "crawlee",
-          "db": "crawlee",
-          "healthcheck": "pg_isready -U $POSTGRES_USER",
-          "volumes": [
-            "crawlee_postgres:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://crawlee@10.0.0.6:5434/crawlee"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_redis",
-          "container_key": "redis",
-          "type": "redis",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "redis:7-alpine",
-          "port": 6381,
-          "dns": "crawlee-redis.app",
-          "healthcheck": "redis-cli -p 6381 ping",
-          "volumes": [
-            "crawlee_redis:/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "redis://10.0.0.6:6381"
-        },
-        {
-          "service": "crawlee-cloud",
-          "container": "crawlee_minio",
-          "container_key": "minio",
-          "type": "minio",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "minio/minio:latest",
-          "port": 9000,
-          "dns": "crawlee-minio.app",
-          "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-          "volumes": [
-            "crawlee_minio:/data"
           ],
           "resources": null,
           "backup": true

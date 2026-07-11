@@ -386,12 +386,6 @@
           "comment": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
         },
         {
-          "base_path": "/crawlee",
-          "upstream": "10.0.0.6:3000",
-          "wg_only": true,
-          "comment": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
-        },
-        {
           "base_path": "/fin-api",
           "upstream": "10.0.0.6:8340",
           "wg_only": true,
@@ -716,10 +710,6 @@
     {
       "service": "scrappers-api.app",
       "upstream": "10.0.0.6:3020"
-    },
-    {
-      "service": "crawlee.app",
-      "upstream": "10.0.0.6:3000"
     },
     {
       "service": "fin-api.app",
@@ -1542,27 +1532,6 @@
     },
     {
       "kind": "redirect",
-      "service": "crawlee_api.app",
-      "redirect_to": "https://crawlee_api-http-3000.app",
-      "container": "crawlee_api",
-      "container_key": "app",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "crawlee_api-http-3000.app",
-      "container": "crawlee_api",
-      "container_key": "app",
-      "svc": "crawlee-cloud",
-      "vm": "oci-A1-f_0",
-      "port": 3000,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3000",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "fin-api.app",
       "redirect_to": "https://fin-api-http-8340.app",
       "container": "fin-api",
@@ -2088,16 +2057,6 @@
       "zone": "com",
       "service": null,
       "notes": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
-    },
-    {
-      "host": "api.diegonmarcos.com",
-      "path": "/crawlee",
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)"
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2766,16 +2725,6 @@
       "notes": null
     },
     {
-      "host": "crawlee.app",
-      "path": null,
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "fin-api.app",
       "path": null,
       "upstream": "10.0.0.6:8340",
@@ -3246,16 +3195,6 @@
       "zone": "com",
       "service": "stalwart",
       "notes": null
-    },
-    {
-      "host": "crawlee_api-http-3000.app",
-      "path": null,
-      "upstream": "10.0.0.6:3000",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "crawlee-cloud",
-      "notes": "underscore → TLS broken"
     },
     {
       "host": "fin-api-http-8340.app",
