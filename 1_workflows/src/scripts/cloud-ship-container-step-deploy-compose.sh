@@ -163,10 +163,35 @@ COMPOSE_HEADER
             # v2: compose at compose/ subdir; force project-dir=CWD for env_file/volumes resolution
             echo "COMPOSE_FILE_FLAG='-f $REMOTE_COMPOSE_REL --project-directory .'"
             [ -n "$LEGACY_COMPOSE_CLEANUP" ] && echo "$LEGACY_COMPOSE_CLEANUP"
-            [ "$COMPOSE_PULL_FIRST" = "true" ] && echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull --quiet 2>/dev/null || true'
+            # Pull-gate: when refreshing to a new image, OBTAIN it BEFORE tearing
+            # down the running container. A pull that fails (private/denied GHCR,
+            # registry down) must NOT proceed to `down` unless the image is
+            # already cached locally — otherwise a healthy container is destroyed
+            # for an image we can't start (dagu outage 2026-07-11: private
+            # dagu-binaries → pull denied → down → up couldn't pull → no
+            # container). Since the gate pulls explicitly, `up` uses --pull
+            # missing (below) so the cache-fallback path doesn't re-trigger the
+            # failing pull.
+            if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
+                cat <<'PULL_GATE'
+if ! docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull; then
+  echo "[compose-custom] pull failed — verifying local image cache before teardown" >&2
+  _miss=0
+  for _img in $(docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG config --images 2>/dev/null); do
+    docker image inspect "$_img" >/dev/null 2>&1 || { echo "[compose-custom] ERROR: $_img neither pullable nor cached locally" >&2; _miss=1; }
+  done
+  [ "$_miss" = 0 ] || { echo "[compose-custom] ERROR: refusing to tear down running container(s) for an unobtainable image" >&2; exit 1; }
+  echo "[compose-custom] images present locally — proceeding with cache" >&2
+fi
+PULL_GATE
+            fi
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             [ -n "$EVICT_NAMED" ] && echo "$EVICT_NAMED"
-            echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            # Gate already pulled → up must not re-pull (would re-hit the failure
+            # on the cache-fallback path). Swap always→missing for the up line.
+            _CUSTOM_UP_FLAGS="$COMPOSE_UP_FLAGS"
+            [ "$COMPOSE_PULL_FIRST" = "true" ] && _CUSTOM_UP_FLAGS="${COMPOSE_UP_FLAGS/--pull always/--pull missing}"
+            echo "docker compose \$COMPOSE_FILE_FLAG \$ENV_FILE_FLAG up -d $_CUSTOM_UP_FLAGS"
         } > "$TMP_SCRIPT"
         chmod +x "$TMP_SCRIPT"
 
@@ -194,9 +219,15 @@ COMPOSE_HEADER
         ENV_FILE_PROBE='ENV_FILE_FLAG="$([ -f compose/.secrets ] && echo --env-file compose/.secrets || { [ -f .secrets ] && echo --env-file .secrets; })"'
         log "Running docker compose up on $DEPLOY_HOST:$DEPLOY_PATH (compose=$REMOTE_COMPOSE_REL)"
         if [ "$COMPOSE_PULL_FIRST" = "true" ]; then
-            # Pull is tolerant: if GHCR auth missing or registry unreachable, fall
-            # back to locally cached image. Same pattern as COMPOSE_CUSTOM branch.
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG pull --quiet 2>/dev/null || true; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            # Pull-gate: obtain the new image BEFORE `down`. On pull failure,
+            # proceed only if every image is already cached locally; otherwise
+            # abort BEFORE teardown (never destroy a running container for an
+            # image we can't start — dagu outage 2026-07-11). Gate pulls
+            # explicitly → `up` uses --pull missing so the cache-fallback path
+            # doesn't re-hit the failing pull.
+            _STD_UP_FLAGS="${COMPOSE_UP_FLAGS/--pull always/--pull missing}"
+            PULL_GATE="docker compose $CF \$ENV_FILE_FLAG pull || { for _img in \$(docker compose $CF \$ENV_FILE_FLAG config --images 2>/dev/null); do docker image inspect \"\$_img\" >/dev/null 2>&1 || { echo \"ERROR: \$_img neither pullable nor cached — refusing teardown\" >&2; exit 1; }; done; }"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
         else
             PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
