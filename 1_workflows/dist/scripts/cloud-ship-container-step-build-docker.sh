@@ -141,7 +141,6 @@ step_docker() {
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
     DOCKERFILE="${DOCKER_FILE:-Dockerfile}"
-    SHA_TAG="${GITHUB_SHA:-$(git -C "$SERVICE_DIR" rev-parse HEAD 2>/dev/null || echo local)}"
 
     # Architecture from build.json (declarative, no hostname inference)
     ARCH="${DOCKER_ARCH:-amd64}"
@@ -621,13 +620,15 @@ NEOF
     BINARIES_IMAGE="${FULL_IMAGE}-binaries"
 
     # ── Per-arch build+push (runner resolve + local/ssh + push) ───────────
-    # Args: <arch> <primary-tag> <sha-tag> <binaries-tag>. Single-arch callers
-    # pass (arch, latest, $SHA_TAG, latest) — byte-identical to the legacy path.
-    # Multi-arch callers pass per-arch tags (arch, $SHA-arch, arch). `local ARCH`
-    # shadows the outer value so all the `$ARCH`/`$PLATFORM` refs below are
-    # arch-correct with zero further edits.
+    # Args: <arch> <primary-tag> <binaries-tag>. Single-arch callers pass
+    # (arch, latest, latest); multi-arch callers pass per-arch tags
+    # (arch, arch, arch). Images are tagged :latest / :<arch> only — NEVER by
+    # commit SHA (removed 2026-07-15: the SHA manifest stitch was the sole
+    # failure point and nothing pulls by hash — VMs + cache-from use :latest).
+    # `local ARCH` shadows the outer value so all `$ARCH`/`$PLATFORM` refs
+    # below are arch-correct with zero further edits.
     _docker_build_push_arch() {
-      local ARCH="$1" _ptag="$2" _stag="$3" _btag="$4"
+      local ARCH="$1" _ptag="$2" _btag="$3"
       local PLATFORM="linux/$ARCH"
 
     RUNNER_TYPE="$(jq -r --arg a "$ARCH" '.runners[$a].type // empty' "$RUNNERS_JSON")"
@@ -727,13 +728,11 @@ NEOF
                 --cache-from "$BINARIES_IMAGE:latest" \
                 --progress=plain \
                 --tag "$FULL_IMAGE:$_ptag" \
-                --tag "$FULL_IMAGE:$_stag" \
                 --tag "$BINARIES_IMAGE:$_btag" \
                 --file "$DOCKERFILE_PATH" \
                 "${BUILD_ARGS_ARR[@]}" \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:$_stag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             docker push "$BINARIES_IMAGE:$_btag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             ;;
 
@@ -959,9 +958,8 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -t $FULL_IMAGE:$_stag -t $BINARIES_IMAGE:$_btag -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -t $BINARIES_IMAGE:$_btag -f $DOCKERFILE $BUILD_ARGS_STR . && \
         docker push $FULL_IMAGE:$_ptag && \
-        docker push $FULL_IMAGE:$_stag && \
         docker push $BINARIES_IMAGE:$_btag; \
         rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
 # rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
@@ -1042,22 +1040,21 @@ DISPATCH_EOF
 
     # ── Single vs multi-arch dispatch ─────────────────────────────────────
     if [ "${#ARCHES[@]}" -le 1 ]; then
-        # Legacy single-arch path — byte-identical tags (:latest, :$SHA, -binaries:latest).
-        _docker_build_push_arch "${ARCHES[0]:-$ARCH}" "latest" "$SHA_TAG" "latest" || return 1
+        # Single-arch path — tags :latest + -binaries:latest (no SHA tag).
+        _docker_build_push_arch "${ARCHES[0]:-$ARCH}" "latest" "latest" || return 1
     else
         # Native per-arch builds — each pushes its own :<arch> / -binaries:<arch>
-        # / :$SHA-<arch> tags on its own runner (NO qemu). Then stitch the native
-        # images into multi-arch manifest lists on this controller.
+        # tags on its own runner (NO qemu). Then stitch the native images into
+        # multi-arch :latest manifest lists on this controller.
         for _a in "${ARCHES[@]}"; do
             [ -n "$_a" ] || continue
-            _docker_build_push_arch "$_a" "$_a" "$SHA_TAG-$_a" "$_a" || return 1
+            _docker_build_push_arch "$_a" "$_a" "$_a" || return 1
         done
-        _img_tags=""; _bin_tags=""; _sha_tags=""
+        _img_tags=""; _bin_tags=""
         for _a in "${ARCHES[@]}"; do
             [ -n "$_a" ] || continue
             _img_tags="$_img_tags $FULL_IMAGE:$_a"
             _bin_tags="$_bin_tags $BINARIES_IMAGE:$_a"
-            _sha_tags="$_sha_tags $FULL_IMAGE:$SHA_TAG-$_a"
         done
         log "Stitching multi-arch manifests (${ARCHES[*]}):$_img_tags"
         # `manifest rm` clears any stale local manifest cache; --amend then builds
@@ -1068,9 +1065,6 @@ DISPATCH_EOF
         docker manifest rm "$BINARIES_IMAGE:latest" >/dev/null 2>&1 || true
         docker manifest create --amend "$BINARIES_IMAGE:latest" $_bin_tags
         docker manifest push "$BINARIES_IMAGE:latest"
-        docker manifest rm "$FULL_IMAGE:$SHA_TAG"   >/dev/null 2>&1 || true
-        docker manifest create --amend "$FULL_IMAGE:$SHA_TAG" $_sha_tags
-        docker manifest push "$FULL_IMAGE:$SHA_TAG"
     fi
 
     log "Pushed $FULL_IMAGE:latest"
