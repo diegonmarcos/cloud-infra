@@ -47,6 +47,12 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
+    # Job-level so the composite fetch-vault action inherits SOPS_AGE_KEY and
+    # its Export step's inline branch succeeds (multi-line keys arrive as
+    # SOPS_AGE_KEY_FILE=<path> whose file isn't on the runner). Matches
+    # ship-gen-configs / ship / ship-home-manager.
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -96,22 +102,26 @@ jobs:
       # cloud-builder's compose.yaml references via env_file:. Without it,
       # `docker compose run cloud-builder` aborts: "env file ... not found".
       - name: Fetch vault
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         uses: ./.github/actions/fetch-vault
         with:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
       - name: Resolve builder image
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         uses: ./.github/actions/resolve-builder-image
 
       # GCP auth — writes a service-account JSON to $GOOGLE_APPLICATION_CREDENTIALS
       # on the runner. Mounted into cloud-builder below at a stable path.
       - name: Authenticate GCP
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           create_credentials_file: true
 
       - name: Run terraform inside cloud-builder
+        if: ${{ steps.paths.outputs.skip != 'true' }}
         env:
           INPUT_PROJECT: ${{ inputs.project }}
           EVENT_NAME: ${{ github.event_name }}
