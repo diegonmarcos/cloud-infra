@@ -25,12 +25,6 @@ name: "cgc-db (octocode incremental update → GHCR → oci-apps)"
 
 on:
   workflow_dispatch: {}
-  schedule:
-    # Mirrors runtime.octocode.update.schedule in build.json.
-    # 02:23 UTC = 04:23 Madrid (CEST, UTC+2 in summer).
-    - cron: "23 2 * * *"
-    # Second daily update: 01:30 UTC = 03:30 Madrid (CEST).
-    - cron: "30 1 * * *"
 
 # Serialise so concurrent Ship workflows don't race on shared resources.
 concurrency:
