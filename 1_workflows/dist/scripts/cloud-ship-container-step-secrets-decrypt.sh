@@ -69,15 +69,27 @@ step_secrets() {
 
     # ── .secrets.d/<KEY> (one file per key) ────────────────────────────
     # jq -r preserves multi-line values byte-for-byte (PEM, SSH keys, certs).
-    # Mode 0600 is required for SSH `ssh -i` to accept the key.
+    # Default dir 0700 / file 0600 — required for SSH `ssh -i` to accept a key.
+    #
+    # But .secrets.d/ is bind-mounted read-only into the container at /run/secrets,
+    # and a container that runs as a NON-ROOT user (image UID != the deploy user
+    # that owns these files) then can't traverse the 0700 dir or read the 0600
+    # file — the app silently falls back / fails to load the secret. Such services
+    # declare `secrets.container_readable = true` in build.json to get dir 0755 /
+    # file 0644 (host is single-tenant; the file is already exposed to exactly the
+    # container that would read it). Do NOT set this for services that mount an SSH
+    # private key — ssh(1) refuses a group/other-readable key. Data-driven, default
+    # stays strict. Fixed 2026-07-15 (g-workspace-mcp SA key unreadable by appuser).
+    _cr=$(jq -r '.secrets.container_readable // false' "$SERVICE_DIR/build.json" 2>/dev/null || echo false)
+    if [ "$_cr" = "true" ]; then _dmode=0755; _fmode=0644; else _dmode=0700; _fmode=0600; fi
     mkdir -p "$SECRETS_DIR/.secrets.d"
-    chmod 0700 "$SECRETS_DIR/.secrets.d"
+    chmod "$_dmode" "$SECRETS_DIR/.secrets.d"
     for key in $(echo "$_secrets_json" | jq -r 'keys[] | select(startswith("_") | not)'); do
         echo "$_secrets_json" | jq -r --arg k "$key" '.[$k] | tostring' > "$SECRETS_DIR/.secrets.d/$key"
-        chmod 0600 "$SECRETS_DIR/.secrets.d/$key"
+        chmod "$_fmode" "$SECRETS_DIR/.secrets.d/$key"
     done
     unset _secrets_json
-    log "Secrets split -> .secrets.d/ ($(ls "$SECRETS_DIR/.secrets.d" | wc -l) files, mode 0600)"
+    log "Secrets split -> .secrets.d/ ($(ls "$SECRETS_DIR/.secrets.d" | wc -l) files, dir $_dmode / files $_fmode)"
 
     # Extract JWKS key as PEM file (multi-line value can't go in env_file)
     if [ -n "${JWKS_FILE:-}" ] && [ -f "$SRC_DIR/$JWKS_FILE" ]; then
