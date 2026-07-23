@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 284,
-    "edges": 382,
+    "nodes": 288,
+    "edges": 388,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 83,
-      "domain": 40,
+      "service": 64,
+      "container": 84,
+      "domain": 41,
       "repo": 3,
-      "module": 63,
+      "module": 64,
       "package": 28
     }
   },
@@ -142,6 +142,32 @@
         "role": "app",
         "port": 8008,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "languagetool",
+      "key": "service:languagetool",
+      "properties": {
+        "name": "languagetool",
+        "category": "tools",
+        "description": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps",
+        "domain": "languagetool.diegonmarcos.com",
+        "port": 8010,
+        "vm": "oci-apps",
+        "folder": "infra-ai_languagetool"
+      }
+    },
+    {
+      "table": "container",
+      "id": "languagetool",
+      "key": "container:languagetool",
+      "properties": {
+        "name": "languagetool",
+        "image": "erikvl87/languagetool:latest",
+        "role": "app",
+        "port": 8010,
+        "public": false
       }
     },
     {
@@ -2006,6 +2032,14 @@
     },
     {
       "table": "domain",
+      "id": "languagetool_diegonmarcos_com",
+      "key": "domain:languagetool_diegonmarcos_com",
+      "properties": {
+        "fqdn": "languagetool.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "api_diegonmarcos_com/c3a",
       "key": "domain:api_diegonmarcos_com/c3a",
       "properties": {
@@ -2334,6 +2368,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "matrix-continuwuity"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_ai_languagetool",
+      "key": "module:infra_ai_languagetool",
+      "properties": {
+        "name": "infra-ai_languagetool",
+        "repo": "cloud",
+        "category": "tools",
+        "service": "languagetool"
       }
     },
     {
@@ -3384,6 +3429,22 @@
       "from": "service:matrix_continuwuity",
       "to": "container:continuwuity",
       "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:languagetool",
+      "to": "vm:oci_apps",
+      "key": "service:languagetool->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:languagetool",
+      "to": "container:languagetool",
+      "key": "service:languagetool->runs_container->container:languagetool",
       "properties": {
         "role": "app"
       }
@@ -4542,6 +4603,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:languagetool",
+      "to": "service:caddy",
+      "key": "service:languagetool->proxied_by->service:caddy",
+      "properties": {
+        "domain": "languagetool.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:c3_analytics_api",
       "to": "service:caddy",
       "key": "service:c3_analytics_api->proxied_by->service:caddy",
@@ -4909,6 +4979,13 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:languagetool_diegonmarcos_com",
+      "to": "service:languagetool",
+      "key": "domain:languagetool_diegonmarcos_com->routes_to->service:languagetool",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:api_diegonmarcos_com/c3a",
       "to": "service:c3_analytics_api",
       "key": "domain:api_diegonmarcos_com/c3a->routes_to->service:c3_analytics_api",
@@ -5206,6 +5283,20 @@
       "from": "module:user_comm_matrix_continuwuity",
       "to": "service:matrix_continuwuity",
       "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_ai_languagetool",
+      "to": "repo:cloud",
+      "key": "module:infra_ai_languagetool->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_ai_languagetool",
+      "to": "service:languagetool",
+      "key": "module:infra_ai_languagetool->implements->service:languagetool",
       "properties": {}
     },
     {
