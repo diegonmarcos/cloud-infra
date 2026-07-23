@@ -140,6 +140,10 @@
       "domain": "matrix.diegonmarcos.com"
     },
     {
+      "service": "languagetool",
+      "domain": "languagetool.diegonmarcos.com"
+    },
+    {
       "service": "c3-analytics-api",
       "domain": "api.diegonmarcos.com/c3a"
     },
@@ -268,6 +272,10 @@
     {
       "service": "matrix-continuwuity",
       "domain": "matrix.diegonmarcos.com"
+    },
+    {
+      "service": "languagetool",
+      "domain": "languagetool.diegonmarcos.com"
     },
     {
       "service": "c3-analytics-api",
@@ -432,6 +440,19 @@
       },
       "health": {
         "path": "/_matrix/client/versions"
+      }
+    },
+    "languagetool": {
+      "name": "languagetool",
+      "vm": "oci-A1-f_0",
+      "domain": "languagetool.diegonmarcos.com",
+      "enabled": true,
+      "category": "tools",
+      "ports": {
+        "app": 8010
+      },
+      "health": {
+        "path": "/v2/check"
       }
     },
     "c3-analytics-api": {
@@ -1307,6 +1328,15 @@
       "dns": "matrix-continuwuity.app"
     },
     {
+      "service": "languagetool",
+      "dns": "languagetool.app"
+    },
+    {
+      "service": "languagetool",
+      "container": "app",
+      "dns": "languagetool.app"
+    },
+    {
       "service": "c3-analytics-api",
       "dns": "c3-analytics-api.app"
     },
@@ -1974,6 +2004,7 @@
         "provider": null,
         "services": [
           "matrix-continuwuity",
+          "languagetool",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -2062,6 +2093,19 @@
         },
         "health": {
           "path": "/_matrix/client/versions"
+        }
+      },
+      "languagetool": {
+        "name": "languagetool",
+        "vm": "oci-A1-f_0",
+        "domain": "languagetool.diegonmarcos.com",
+        "enabled": true,
+        "category": "tools",
+        "ports": {
+          "app": 8010
+        },
+        "health": {
+          "path": "/v2/check"
         }
       },
       "c3-analytics-api": {
