@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "paca-api container config (service=paca, role=api)",
+    "description": "unbound-dns64 container config (service=unbound-dns64, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,30 +28,29 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "paca-api",
-    "image": "pacaai/paca-api:latest",
-    "port": 8080,
-    "port_env": "PORT",
-    "dns": "paca-api.app",
-    "public": false,
-    "healthcheck": "wget -q --spider http://localhost:8080/api/healthz || exit 1",
+    "container_name": "unbound-dns64",
+    "image": "ghcr.io/diegonmarcos/unbound-dns64:latest",
+    "port": 53,
+    "port_env": null,
+    "dns": "unbound-dns64.app",
+    "public": true,
+    "proxy": null,
+    "healthcheck": null,
+    "monitoring": null,
     "volumes": [
-      "paca_backend_plugins:/plugins",
-      "paca_frontend_plugins:/plugins-frontend",
-      "paca_mcp_plugins:/plugins-mcp"
+      "./configs/unbound.conf:/etc/unbound/unbound.conf:ro"
     ],
-    "env_file": true,
-    "depends_on": [
-      "db",
-      "valkey"
-    ],
-    "resources": null,
+    "env_file": false,
+    "depends_on": [],
+    "resources": {
+      "mem_limit": "64M"
+    },
     "read_only": false,
-    "protocol": "http"
+    "protocol": "udp"
   },
-  "service": "paca",
-  "role": "api",
-  "vm": "oci-apps",
+  "service": "unbound-dns64",
+  "role": "app",
+  "vm": "oci-analytics",
   "services": {
     "matrix-continuwuity": {
       "ip": "10.0.0.6",
@@ -1607,14 +1606,5 @@
         "auth": "bearer"
       }
     }
-  },
-  "secret_env_vars": [
-    "POSTGRES_PASSWORD",
-    "JWT_SECRET",
-    "ADMIN_PASSWORD",
-    "ENCRYPTION_KEY",
-    "STORAGE_ENDPOINT",
-    "STORAGE_ACCESS_KEY_ID",
-    "STORAGE_SECRET_ACCESS_KEY"
-  ]
+  }
 }

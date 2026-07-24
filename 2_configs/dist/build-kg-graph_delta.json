@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 288,
-    "edges": 388,
+    "nodes": 292,
+    "edges": 394,
     "by_table": {
       "vm": 4,
-      "service": 64,
-      "container": 84,
-      "domain": 41,
+      "service": 65,
+      "container": 85,
+      "domain": 42,
       "repo": 3,
-      "module": 64,
+      "module": 65,
       "package": 28
     }
   },
@@ -636,6 +636,32 @@
         "role": "app",
         "port": 53,
         "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "unbound_dns64",
+      "key": "service:unbound_dns64",
+      "properties": {
+        "name": "unbound-dns64",
+        "category": "infra-net",
+        "description": "DNS64 resolver for NAT64 — synthesises AAAA records for IPv4-only names so IPv6-only clients can reach the internet via the Tayga NAT64 translator",
+        "domain": "dns64.internal",
+        "port": 53,
+        "vm": "oci-analytics",
+        "folder": "infra-net_unbound-dns64"
+      }
+    },
+    {
+      "table": "container",
+      "id": "unbound_dns64",
+      "key": "container:unbound_dns64",
+      "properties": {
+        "name": "unbound-dns64",
+        "image": "ghcr.io/diegonmarcos/unbound-dns64:latest",
+        "role": "app",
+        "port": 53,
+        "public": true
       }
     },
     {
@@ -2112,6 +2138,14 @@
     },
     {
       "table": "domain",
+      "id": "dns64_internal",
+      "key": "domain:dns64_internal",
+      "properties": {
+        "fqdn": "dns64.internal"
+      }
+    },
+    {
+      "table": "domain",
       "id": "mesh_diegonmarcos_com",
       "key": "domain:mesh_diegonmarcos_com",
       "properties": {
@@ -2577,6 +2611,17 @@
         "repo": "cloud",
         "category": "cloud",
         "service": "hickory-dns"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_net_unbound_dns64",
+      "key": "module:infra_net_unbound_dns64",
+      "properties": {
+        "name": "infra-net_unbound-dns64",
+        "repo": "cloud",
+        "category": "infra-net",
+        "service": "unbound-dns64"
       }
     },
     {
@@ -3718,6 +3763,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:unbound_dns64",
+      "to": "vm:oci_analytics",
+      "key": "service:unbound_dns64->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:unbound_dns64",
+      "to": "container:unbound_dns64",
+      "key": "service:unbound_dns64->runs_container->container:unbound_dns64",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:wireguard_mesh",
       "to": "vm:oci_apps",
       "key": "service:wireguard_mesh->hosted_on->vm:oci_apps",
@@ -4711,6 +4772,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:unbound_dns64",
+      "to": "service:caddy",
+      "key": "service:unbound_dns64->proxied_by->service:caddy",
+      "properties": {
+        "domain": "dns64.internal"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:wireguard_mesh",
       "to": "service:caddy",
       "key": "service:wireguard_mesh->proxied_by->service:caddy",
@@ -5059,6 +5129,13 @@
       "from": "domain:dns_internal",
       "to": "service:hickory_dns",
       "key": "domain:dns_internal->routes_to->service:hickory_dns",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:dns64_internal",
+      "to": "service:unbound_dns64",
+      "key": "domain:dns64_internal->routes_to->service:unbound_dns64",
       "properties": {}
     },
     {
@@ -5549,6 +5626,20 @@
       "from": "module:infra_net_hickory_dns",
       "to": "service:hickory_dns",
       "key": "module:infra_net_hickory_dns->implements->service:hickory_dns",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_net_unbound_dns64",
+      "to": "repo:cloud",
+      "key": "module:infra_net_unbound_dns64->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_net_unbound_dns64",
+      "to": "service:unbound_dns64",
+      "key": "module:infra_net_unbound_dns64->implements->service:unbound_dns64",
       "properties": {}
     },
     {

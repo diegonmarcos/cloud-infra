@@ -712,6 +712,17 @@
       },
       "health": null
     },
+    "unbound-dns64": {
+      "name": "unbound-dns64",
+      "vm": "oci-E2-f_1",
+      "domain": "dns64.internal",
+      "enabled": true,
+      "category": "infra-net",
+      "ports": {
+        "dns": 53
+      },
+      "health": null
+    },
     "wireguard-mesh": {
       "name": "wireguard-mesh",
       "vm": "oci-A1-f_0",
@@ -1471,6 +1482,15 @@
       "dns": "hickory-dns.app"
     },
     {
+      "service": "unbound-dns64",
+      "dns": "unbound-dns64.app"
+    },
+    {
+      "service": "unbound-dns64",
+      "container": "app",
+      "dns": "unbound-dns64.app"
+    },
+    {
       "service": "wireguard-mesh",
       "dns": "wireguard-mesh.app"
     },
@@ -1993,6 +2013,7 @@
         "provider": null,
         "services": [
           "c3-public-api",
+          "unbound-dns64",
           "caddy-public"
         ]
       },
@@ -2360,6 +2381,17 @@
         "domain": "dns.internal",
         "enabled": true,
         "category": "cloud",
+        "ports": {
+          "dns": 53
+        },
+        "health": null
+      },
+      "unbound-dns64": {
+        "name": "unbound-dns64",
+        "vm": "oci-E2-f_1",
+        "domain": "dns64.internal",
+        "enabled": true,
+        "category": "infra-net",
         "ports": {
           "dns": 53
         },
