@@ -158,7 +158,7 @@ resource "oci_core_subnet" "main" {
   prohibit_public_ip_on_vnic = false
   prohibit_internet_ingress  = false
   # OCI two-phase: 1st apply enables VCN IPv6, 2nd apply carves the subnet /64
-  ipv6cidr_block             = length(oci_core_vcn.main.ipv6cidr_blocks) > 0 ? cidrsubnet(oci_core_vcn.main.ipv6cidr_blocks[0], 8, 0) : null
+  ipv6cidr_block = length(oci_core_vcn.main.ipv6cidr_blocks) > 0 ? cidrsubnet(oci_core_vcn.main.ipv6cidr_blocks[0], 8, 0) : null
 
   route_table_id    = oci_core_vcn.main.default_route_table_id
   security_list_ids = [oci_core_vcn.main.default_security_list_id]
@@ -250,6 +250,16 @@ resource "oci_objectstorage_bucket" "buckets" {
 # =============================================================================
 # OCI Email Delivery
 # =============================================================================
+
+# Adopt pre-existing OCI email senders into state (were created out-of-band; 409 on create otherwise)
+import {
+  to = oci_email_sender.senders["no-reply@diegonmarcos.com"]
+  id = "ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaav7k4dpbxnzv6irayxrean4giadgj24ud5tgihu5epbnq"
+}
+import {
+  to = oci_email_sender.senders["me@diegonmarcos.com"]
+  id = "ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaanfhq4goiw2nqft2jsperzqcgcnpn3wpyrwuabo3wbpqa"
+}
 
 resource "oci_email_sender" "senders" {
   for_each = toset(local.config.email_senders)
