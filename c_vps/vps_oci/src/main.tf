@@ -305,6 +305,20 @@ resource "oci_budget_alert_rule" "alerts" {
 }
 
 # =============================================================================
+# Analytics IPv6 — standalone resource (assign_ipv6ip in create_vnic_details
+# does not retrofit an already-existing instance; use oci_core_ipv6 instead)
+# =============================================================================
+
+data "oci_core_vnic_attachments" "analytics" {
+  compartment_id = var.compartment_ocid
+  instance_id    = oci_core_instance.vms["analytics_server"].id
+}
+
+resource "oci_core_ipv6" "analytics_v6" {
+  vnic_id = data.oci_core_vnic_attachments.analytics.vnic_attachments[0].vnic_id
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 
@@ -328,4 +342,8 @@ output "instances" {
 
 output "buckets" {
   value = { for name, b in oci_objectstorage_bucket.buckets : name => b.name }
+}
+
+output "analytics_ipv6" {
+  value = oci_core_ipv6.analytics_v6.ip_address
 }
