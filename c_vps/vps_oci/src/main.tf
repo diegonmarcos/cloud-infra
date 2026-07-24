@@ -56,6 +56,7 @@ resource "oci_core_vcn" "main" {
   compartment_id = var.compartment_ocid
   cidr_blocks    = [local.net.vcn_cidr]
   display_name   = local.net.vcn_name
+  is_ipv6enabled = true
 
   lifecycle {
     prevent_destroy = true
@@ -79,6 +80,12 @@ resource "oci_core_default_route_table" "main" {
 
   route_rules {
     destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_internet_gateway.main.id
+  }
+
+  route_rules {
+    destination       = "::/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.main.id
   }
@@ -150,6 +157,8 @@ resource "oci_core_subnet" "main" {
   display_name               = local.net.subnet_name
   prohibit_public_ip_on_vnic = false
   prohibit_internet_ingress  = false
+  # OCI two-phase: 1st apply enables VCN IPv6, 2nd apply carves the subnet /64
+  ipv6cidr_block             = length(oci_core_vcn.main.ipv6cidr_blocks) > 0 ? cidrsubnet(oci_core_vcn.main.ipv6cidr_blocks[0], 8, 0) : null
 
   route_table_id    = oci_core_vcn.main.default_route_table_id
   security_list_ids = [oci_core_vcn.main.default_security_list_id]
@@ -186,6 +195,7 @@ resource "oci_core_instance" "vms" {
     subnet_id        = oci_core_subnet.main.id
     display_name     = each.value.vnic_display_name
     assign_public_ip = true
+    assign_ipv6ip    = true
   }
 
   source_details {
