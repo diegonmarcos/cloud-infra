@@ -505,7 +505,13 @@ PREFLIGHT_EOF
         # and re-running is safe. Retry ONLY on 255 (transient transport); a
         # non-255 exit is a real remote-script error → fail fast, don't mask it.
         # Knobs reuse the same build.retry.* config as run_with_retry (buildx).
-        _hm_attempts="$(get_config build.retry.attempts)"; [ -z "$_hm_attempts" ] && _hm_attempts=3
+        # Constrained E2-Micro hubs (oci-analytics/gcp-proxy, 1GB) intermittently
+        # hard-drop the long activation SSH (exit 255) when a wg0 handshake blips
+        # mid-copy — keepalives can't save a hard drop, so we lean on retries.
+        # 8 attempts w/ PROGRESSIVE backoff spreads them across ~6min of varied
+        # load windows; healthy VMs still pass on attempt 1 (loop breaks on rc=0),
+        # so this never slows a clean deploy.
+        _hm_attempts="$(get_config build.retry.attempts)"; [ -z "$_hm_attempts" ] && _hm_attempts=8
         _hm_backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_hm_backoff" ] && _hm_backoff=30
         _hm_try=0
         COMPOSE_RC=1
@@ -529,8 +535,12 @@ PREFLIGHT_EOF
                 break
             fi
             if [ "$_hm_try" -lt "$_hm_attempts" ]; then
-                log "SSH dropped (exit 255) mid-activation — tunnel reset; retrying in ${_hm_backoff}s..."
-                sleep "$_hm_backoff"
+                # Progressive backoff: attempt N waits N×base (30,60,90,…) so
+                # later retries land in different load windows than the busy one
+                # that just dropped us.
+                _hm_wait=$(( _hm_backoff * _hm_try ))
+                log "SSH dropped (exit 255) mid-activation — tunnel reset; retrying in ${_hm_wait}s (attempt $_hm_try/$_hm_attempts)..."
+                sleep "$_hm_wait"
             fi
         done
         if [ "$COMPOSE_RC" -ne 0 ]; then
