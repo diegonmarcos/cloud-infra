@@ -42,6 +42,9 @@ in {
     vm.dirty_background_ratio = 5
     vm.watermark_scale_factor = 500
     net.ipv4.ip_forward = 1
+    # IPv6 forwarding — required for the ULA meshes' v6 full-tunnel / NAT64 to
+    # route through the hub (mirror of ip_forward for IPv6).
+    net.ipv6.conf.all.forwarding = 1
     # ── File-descriptor / inotify / PID exhaustion headroom ──────────────
     # 2026-06-19 incident: a fluent-bit fd leak drained the SYSTEM fd table on
     # gcp-proxy → every daemon (incl. FIFO-priority sshd / wg-quick / dropbear)

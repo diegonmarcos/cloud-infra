@@ -86,6 +86,7 @@ in {
     # ── Packages
     ./packages/node-npm-deps.nix
     ./packages/docker-pull-up.nix
+    ./packages/ghcr-hygiene.nix
 
     # ── Agents (new in vm-pilot)
     ./agents/journal-ntfy.nix
