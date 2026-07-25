@@ -505,44 +505,99 @@ PREFLIGHT_EOF
         # and re-running is safe. Retry ONLY on 255 (transient transport); a
         # non-255 exit is a real remote-script error → fail fast, don't mask it.
         # Knobs reuse the same build.retry.* config as run_with_retry (buildx).
-        # Constrained E2-Micro hubs (oci-analytics/gcp-proxy, 1GB) intermittently
-        # hard-drop the long activation SSH (exit 255) when a wg0 handshake blips
-        # mid-copy — keepalives can't save a hard drop, so we lean on retries.
-        # 8 attempts w/ PROGRESSIVE backoff spreads them across ~6min of varied
-        # load windows; healthy VMs still pass on attempt 1 (loop breaks on rc=0),
-        # so this never slows a clean deploy.
-        _hm_attempts="$(get_config build.retry.attempts)"; [ -z "$_hm_attempts" ] && _hm_attempts=8
-        _hm_backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_hm_backoff" ] && _hm_backoff=30
-        _hm_try=0
+        # PRIMARY: detached activation + polling. Root cause of the E2-Micro 255
+        # is that ONE ssh session is held open for the whole multi-minute
+        # activation, so a mid-copy wg0 blip hard-drops it (a mux can't save a
+        # single dropped stream — the master IS that connection). Instead: upload
+        # the script, launch it DETACHED on the VM (survives our disconnect via
+        # setsid+nohup), then POLL a result-marker over short commands — cheap
+        # because they reuse the existing ControlMaster mux. A dropped poll just
+        # reconnects; the activation keeps running. COMPOSE_RC becomes the job's
+        # REAL exit code (via `echo $? > rc`), not ssh's transport 255.
+        _ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
+        _tag="hm-act-$$"; _rsh="/tmp/$_tag.sh"; _rlog="/tmp/$_tag.log"; _rrc="/tmp/$_tag.rc"
         COMPOSE_RC=1
-        while [ "$_hm_try" -lt "$_hm_attempts" ]; do
-            _hm_try=$(( _hm_try + 1 ))
-            log "Docker HM activate on $DEPLOY_HOST (attempt $_hm_try/$_hm_attempts)"
+        _detach_started=0
+
+        # 1) Upload the activation script (short transfer; retry on 255).
+        _up=1
+        for _t in 1 2 3 4 5; do
             set +e
-            # Keepalive: the activation streams a multi-minute remote script
-            # (incl. a ~2GB HM image pull on a 1GB E2-Micro). Without keepalive
-            # the idle tunnel drops mid-pull → exit 255. 20s × 60 = 20min grace.
-            printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS \
-                -o ServerAliveInterval=20 -o ServerAliveCountMax=60 \
-                "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
-            COMPOSE_RC=${PIPESTATUS[1]}
-            set -e
-            # Explicit if — `[ ... ] && break` mid-loop can abort under set -e.
-            if [ "$COMPOSE_RC" -eq 0 ]; then break; fi
-            # Non-255 = remote script error (ENOSPC, daemon down, activate fail)
-            # → persistent, don't retry. 255 = transport drop → retry.
-            if [ "$COMPOSE_RC" -ne 255 ]; then
-                break
-            fi
-            if [ "$_hm_try" -lt "$_hm_attempts" ]; then
-                # Progressive backoff: attempt N waits N×base (30,60,90,…) so
-                # later retries land in different load windows than the busy one
-                # that just dropped us.
-                _hm_wait=$(( _hm_backoff * _hm_try ))
-                log "SSH dropped (exit 255) mid-activation — tunnel reset; retrying in ${_hm_wait}s (attempt $_hm_try/$_hm_attempts)..."
-                sleep "$_hm_wait"
-            fi
+            printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "cat > '$_rsh'"
+            _uc=$?; set -e
+            if [ "$_uc" -eq 0 ]; then _up=0; break; fi
+            [ "$_uc" -ne 255 ] && break
+            log "activation upload dropped (255) — retry $_t/5"; sleep $(( 10 * _t ))
         done
+
+        if [ "$_up" -eq 0 ]; then
+            # 2) Launch DETACHED — reparented to init, SIGHUP-immune, I/O detached;
+            #    the launch ssh returns immediately even if it drops right after.
+            set +e
+            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+              "rm -f '$_rrc' '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_LAUNCHED" \
+              2>&1 | tee -a "$BUILD_LOG_FILE"
+            set -e
+            _detach_started=1
+            log "Docker HM activate on $DEPLOY_HOST (detached; polling for completion)"
+
+            # 3) Poll the rc marker, streaming new log bytes. 120 × 15s = 30min.
+            _seen=0; _rcval=""
+            for _p in $(seq 1 120); do
+                set +e
+                _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; wc -c < '$_rlog' 2>/dev/null")
+                _pc=$?; set -e
+                if [ "$_pc" -eq 0 ]; then
+                    _chunk="${_out%%__HMRC__*}"
+                    _rest="${_out#*__HMRC__}"
+                    _rcpart="${_rest%%__HMSZ__*}"
+                    _szpart="${_rest#*__HMSZ__}"
+                    _rcpart="$(printf '%s' "$_rcpart" | tr -dc '0-9')"
+                    _szpart="$(printf '%s' "$_szpart" | tr -dc '0-9')"
+                    [ -n "$_chunk" ] && printf '%s' "$_chunk" | tee -a "$BUILD_LOG_FILE"
+                    [ -n "$_szpart" ] && _seen="$_szpart"
+                    if [ -n "$_rcpart" ]; then _rcval="$_rcpart"; break; fi
+                else
+                    log "poll reconnect (ssh $_pc) — activation still running on $DEPLOY_HOST"
+                fi
+                sleep 15
+            done
+
+            if [ -n "$_rcval" ]; then
+                COMPOSE_RC="$_rcval"
+            else
+                log "activation did not report completion within 30min on $DEPLOY_HOST"
+                COMPOSE_RC=1
+            fi
+            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "rm -f '$_rsh' '$_rlog' '$_rrc'" 2>/dev/null || true
+        fi
+
+        # FALLBACK: detach couldn't even start the upload → original inline stream
+        # with 255-retry, so the VM stays deployable if the detach path is unusable.
+        if [ "$_detach_started" -eq 0 ]; then
+            log "detached activation unavailable (upload failed) — falling back to inline stream"
+            _hm_attempts="$(get_config build.retry.attempts)"; [ -z "$_hm_attempts" ] && _hm_attempts=8
+            _hm_backoff="$(get_config build.retry.backoff_secs)"; [ -z "$_hm_backoff" ] && _hm_backoff=30
+            _hm_try=0; COMPOSE_RC=1
+            while [ "$_hm_try" -lt "$_hm_attempts" ]; do
+                _hm_try=$(( _hm_try + 1 ))
+                log "Docker HM activate on $DEPLOY_HOST (inline attempt $_hm_try/$_hm_attempts)"
+                set +e
+                printf '%s' "$REMOTE_SCRIPT" | ssh $SSH_OPTS \
+                    -o ServerAliveInterval=20 -o ServerAliveCountMax=60 \
+                    "$DEPLOY_HOST" "bash -s" 2>&1 | tee -a "$BUILD_LOG_FILE"
+                COMPOSE_RC=${PIPESTATUS[1]}
+                set -e
+                if [ "$COMPOSE_RC" -eq 0 ]; then break; fi
+                if [ "$COMPOSE_RC" -ne 255 ]; then break; fi
+                if [ "$_hm_try" -lt "$_hm_attempts" ]; then
+                    _hm_wait=$(( _hm_backoff * _hm_try ))
+                    log "SSH dropped (exit 255) — retrying in ${_hm_wait}s..."
+                    sleep "$_hm_wait"
+                fi
+            done
+        fi
         if [ "$COMPOSE_RC" -ne 0 ]; then
             log "FAILED (exit $COMPOSE_RC): Docker HM activate on $DEPLOY_HOST (after $_hm_try attempt(s))"
             return 1
