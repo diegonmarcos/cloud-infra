@@ -51,6 +51,9 @@ let
   # the wg-public listen port. Members run wg-quick@wg-public alongside wg0.
   wgPublicSubnet = cloudData.wireguardPublic.subnet or null;
   wgPublicPort   = cloudData.wireguardPublic.port or null;
+  # IPv6 ULA subnets — mirror of the v4 subnets for the ip6tables design.
+  wgSubnetV6       = cloudData.wireguard.subnet_v6 or null;
+  wgPublicSubnetV6 = cloudData.wireguardPublic.subnet_v6 or null;
   wgPublicHub    = cloudData.wireguardPublic.hub or null;
   wgPublicPeers  = cloudData.wireguardPublic.peers or [];
   isWgPublicPeer = lib.any (p: p.name == vmName) wgPublicPeers;
@@ -254,6 +257,47 @@ ${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
     iptables -A DOCKER-USER -s ${dockerSubnet} -j ACCEPT
     iptables -A DOCKER-USER -j DROP
     echo "[firewall] DOCKER-USER: declarative drop installed (wg-public peer=${if isWgPublicPeer then "yes" else "no"}, public-ingress=${if isPublicIngress then "yes" else "no"})"
+
+    # ══════════════════════════════════════════════════════════════
+    # PHASE 6: IPv6 — mirror the IPv4 filter/forward/NAT design
+    # ══════════════════════════════════════════════════════════════
+    # Same posture as the iptables rules above, for IPv6. Without this, v6
+    # mesh / wg-public traffic has NO forwarding or MASQUERADE, so a v6 full
+    # tunnel via this hub blackholes (the whole point of the ULA meshes).
+    # ICMPv6 + WG ports + ESTABLISHED are allowed BEFORE the DROP policy so the
+    # public v6 WG endpoint, neighbour-discovery and PMTU keep working.
+    if command -v ip6tables >/dev/null 2>&1; then
+      ip6tables -F INPUT   2>/dev/null || true
+      ip6tables -F FORWARD 2>/dev/null || true
+      ip6tables -t nat -F  2>/dev/null || true
+      # ── INPUT ──
+      ip6tables -A INPUT -i lo -j ACCEPT
+      ip6tables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+      ip6tables -A INPUT -p ipv6-icmp -j ACCEPT
+      ip6tables -A INPUT -i wg0 -j ACCEPT
+      ip6tables -A INPUT -p tcp --dport 22  -j ACCEPT
+      ip6tables -A INPUT -p tcp --dport 80  -j ACCEPT
+      ip6tables -A INPUT -p tcp --dport 443 -j ACCEPT
+      ip6tables -A INPUT -p udp --dport ${toString cloudData.wireguard.port} -j ACCEPT
+${lib.optionalString isWgPublicPeer ''      ip6tables -A INPUT -i wg-public -j ACCEPT
+''}${lib.optionalString (isWgPublicPeer && wgPublicSubnetV6 != null) ''      ip6tables -A INPUT -s ${wgPublicSubnetV6} -j ACCEPT
+''}${lib.optionalString (wgSubnetV6 != null) ''      ip6tables -A INPUT -s ${wgSubnetV6} -j ACCEPT
+''}${lib.optionalString (isWgPublicHub && wgPublicPort != null) ''      ip6tables -A INPUT -p udp --dport ${toString wgPublicPort} -j ACCEPT
+''}      ip6tables -P INPUT DROP 2>/dev/null || true
+      # ── FORWARD ──
+      ip6tables -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+      ip6tables -A FORWARD -i wg0 -j ACCEPT
+      ip6tables -A FORWARD -o wg0 -j ACCEPT
+${lib.optionalString isWgPublicPeer ''      ip6tables -A FORWARD -i wg-public -j ACCEPT
+      ip6tables -A FORWARD -o wg-public -j ACCEPT
+''}      ip6tables -P FORWARD DROP 2>/dev/null || true
+      # ── NAT: MASQUERADE v6 egress to the internet (mirror of the v4 rules) ──
+${lib.optionalString (wgSubnetV6 != null) ''      ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} -o eth0 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} -o ens4 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} ! -d ${wgSubnetV6} -j MASQUERADE 2>/dev/null || true
+''}${lib.optionalString (isWgPublicPeer && wgPublicSubnetV6 != null) ''      ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} -o eth0 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} -o ens4 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} ! -d ${wgPublicSubnetV6} -j MASQUERADE 2>/dev/null || true
+''}      echo "[firewall] IPv6 mirror applied: INPUT/FORWARD DROP + wg trust + v6 MASQUERADE"
+    else
+      echo "[firewall] ip6tables unavailable — IPv6 mirror skipped"
+    fi
 ${if isWgHub then ''
 
     # ══════════════════════════════════════════════════════════════
