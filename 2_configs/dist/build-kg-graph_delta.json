@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 295,
-    "edges": 398,
+    "nodes": 292,
+    "edges": 394,
     "by_table": {
       "vm": 4,
-      "service": 66,
-      "container": 86,
+      "service": 65,
+      "container": 85,
       "domain": 42,
       "repo": 3,
-      "module": 66,
+      "module": 65,
       "package": 28
     }
   },
@@ -1213,32 +1213,6 @@
         "image": null,
         "role": "app",
         "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "hermes_agent",
-      "key": "service:hermes_agent",
-      "properties": {
-        "name": "hermes-agent",
-        "category": "agi",
-        "description": "Nous Research Hermes Agent (autonomous, persistent-memory AI agent) on oci-apps. Messaging gateway (Telegram live, Mattermost scaffolded) backed by claude-superset-api (subscription CLI, no metered key). WG-internal, never public.",
-        "domain": null,
-        "port": 8642,
-        "vm": "oci-apps",
-        "folder": "user-ai_hermes-agent"
-      }
-    },
-    {
-      "table": "container",
-      "id": "hermes_agent",
-      "key": "container:hermes_agent",
-      "properties": {
-        "name": "hermes-agent",
-        "image": "nousresearch/hermes-agent:latest",
-        "role": "app",
-        "port": 8642,
         "public": false
       }
     },
@@ -2850,17 +2824,6 @@
     },
     {
       "table": "module",
-      "id": "user_ai_hermes_agent",
-      "key": "module:user_ai_hermes_agent",
-      "properties": {
-        "name": "user-ai_hermes-agent",
-        "repo": "cloud",
-        "category": "agi",
-        "service": "hermes-agent"
-      }
-    },
-    {
-      "table": "module",
       "id": "user_ai_ollama",
       "key": "module:user_ai_ollama",
       "properties": {
@@ -4165,22 +4128,6 @@
       "from": "service:db_agent",
       "to": "container:db_agent",
       "key": "service:db_agent->runs_container->container:db_agent",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:hermes_agent",
-      "to": "vm:oci_apps",
-      "key": "service:hermes_agent->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:hermes_agent",
-      "to": "container:hermes_agent",
-      "key": "service:hermes_agent->runs_container->container:hermes_agent",
       "properties": {
         "role": "app"
       }
@@ -5945,20 +5892,6 @@
       "from": "module:user_ai_db_agent",
       "to": "service:db_agent",
       "key": "module:user_ai_db_agent->implements->service:db_agent",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_ai_hermes_agent",
-      "to": "repo:cloud",
-      "key": "module:user_ai_hermes_agent->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_ai_hermes_agent",
-      "to": "service:hermes_agent",
-      "key": "module:user_ai_hermes_agent->implements->service:hermes_agent",
       "properties": {}
     },
     {
