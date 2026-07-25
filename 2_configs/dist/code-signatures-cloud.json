@@ -6,23 +6,23 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2028,
+    "files": 2031,
     "by_lang": {
-      "nix": 439,
-      "sh": 345,
+      "nix": 441,
+      "sh": 346,
       "rust": 453,
       "ts": 305,
       "js": 16,
       "py": 470
     },
     "by_role": {
-      "flake": 76,
+      "flake": 77,
       "script": 120,
-      "shell": 212,
+      "shell": 213,
       "rust-module": 447,
       "engine": 33,
       "nix-module": 294,
-      "compose": 69,
+      "compose": 70,
       "module": 184,
       "entrypoint": 24,
       "mcp-tool": 90,
@@ -38895,6 +38895,95 @@
         "binary",
         "baseImage",
         "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_hermes-agent/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_hermes-agent/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "rt",
+        "services",
+        "hermes-agent",
+        "image",
+        "container_name",
+        "network_mode",
+        "command",
+        "env_file",
+        "environment",
+        "HERMES_UID",
+        "HERMES_GID",
+        "TZ",
+        "TELEGRAM_ALLOWED_USERS",
+        "OPENAI_BASE_URL",
+        "OPENAI_MODEL",
+        "volumes",
+        "hermes_data"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_hermes-agent/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "wrap",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
         "title"
       ]
     },
