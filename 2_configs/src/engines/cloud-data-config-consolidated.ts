@@ -233,6 +233,7 @@ function main() {
       // public_ports MOVED to b_infra/nixhm-sudo-<alias>/build.json.firewall.public_ports
       // (loyal-firewalling-marmot.md Phase 1 — the home-manager sudo deploy that owns wg0+iptables also owns the port catalog)
       wg_ip: vm.wg_ip,
+      wg_ipv6: vm.wg_ipv6 ?? null,  // mesh ULA (fd0c:1d00::x), null on non-mesh VMs
       wg_public_key: vaultWgKeys[vm.ssh_alias] ?? null,  // vault is source of truth
       wg_port: vm.wg_port ?? 51820,
       wg_role: vm.wg_role ?? "spoke",
@@ -621,8 +622,21 @@ function main() {
     return entries;
   });
 
+  // Enrich mesh peers with wg_ipv6 (ULA) from config.json vms + clients (by name).
+  const wgIpv6ByName: Record<string, string> = {};
+  for (const vm of Object.values(vms) as any[]) {
+    if (vm.ssh_alias && vm.wg_ipv6) wgIpv6ByName[vm.ssh_alias] = vm.wg_ipv6;
+  }
+  for (const [cname, c] of Object.entries(native.wireguard?.clients ?? {}) as [string, any][]) {
+    if (c.wg_ipv6) wgIpv6ByName[cname] = c.wg_ipv6;
+  }
+  for (const peer of wgPeers) {
+    if (wgIpv6ByName[peer.name]) (peer as any).wg_ipv6 = wgIpv6ByName[peer.name];
+  }
+
   const wireguardSection = {
     subnet: native.wireguard?.subnet ?? "10.0.0.0/24",
+    subnet_v6: native.wireguard?.subnet_v6 ?? null,
     port: native.wireguard?.port ?? 51820,
     // Fallback port: hub-side NAT redirect on gcp-proxy (Phase 4: udp/<port_fallback> -> udp/<port>)
     // Clients on networks blocking udp/51820 (airport/hotel WiFi) switch to this port.
