@@ -33,14 +33,16 @@ let
 in {
   imports = [
     (import ./resource-bouncer.nix { inherit config pkgs lib ramMB; })
-    (import ./watchdog.nix { inherit config pkgs lib ramMB; })
-    (import ./load-shedder.nix { inherit config pkgs lib ramMB; })
+    (import ./watchdog.nix { inherit config pkgs lib ramMB vmName; })
+    (import ./load-shedder.nix { inherit config pkgs lib ramMB vmName; })
     (import ./rescue-ssh.nix { inherit config pkgs lib rescuePort; })
     (import ./scheduler.nix { inherit config pkgs lib ramMB; })
     (import ./layer2-identity.nix { inherit config pkgs lib ramMB cpus userName userId; })
     (import ./disk-ballast.nix { inherit config pkgs lib; })
+    # Phase 2: tier-1 app cgroup reservations + circuit-breaker auto-restart
+    (import ./tier1-apps.nix { inherit config pkgs lib vmName; })
     (import ../dashboard/dashboard.nix { inherit vmName; })
-    (import ../agents/health-agent.nix { inherit config pkgs lib; })
+    (import ../agents/health-agent.nix { inherit config pkgs lib vmName; })
     # guardrails.nix disabled (POSIX sh bug)
     # no-build-guard.nix imported by default.nix directly
   ];

@@ -4,6 +4,24 @@
   "vm_id": "oci-A1-f_0",
   "services": [
     {
+      "name": "matrix-continuwuity",
+      "dir": "user-comm_matrix-continuwuity",
+      "compose_path": "/opt/containers/matrix-continuwuity",
+      "images": [
+        "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "languagetool",
+      "dir": "infra-ai_languagetool",
+      "compose_path": "/opt/containers/languagetool",
+      "images": [
+        "erikvl87/languagetool:latest"
+      ],
+      "has_docker_build": false
+    },
+    {
       "name": "c3-infra-api",
       "dir": "infra-api_c3-infra-api",
       "compose_path": "/opt/containers/c3-infra-api",
@@ -162,6 +180,7 @@
       "images": [
         "binwiederhier/ntfy",
         "python:3.11-slim",
+        "python:3.11-slim",
         "python:3.11-slim"
       ],
       "has_docker_build": true
@@ -210,6 +229,15 @@
       "compose_path": "/opt/containers/cloud-cgc-mcp",
       "images": [
         "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "hermes-agent",
+      "dir": "user-ai_hermes-agent",
+      "compose_path": "/opt/containers/hermes-agent",
+      "images": [
+        "nousresearch/hermes-agent:latest"
       ],
       "has_docker_build": true
     },
@@ -266,15 +294,6 @@
       "has_docker_build": true
     },
     {
-      "name": "matrix-continuwuity",
-      "dir": "user-comm_matrix-continuwuity",
-      "compose_path": "/opt/containers/matrix-continuwuity",
-      "images": [
-        "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "matrix-element",
       "dir": "user-comm_matrix-element",
       "compose_path": "/opt/containers/matrix-element",
@@ -293,17 +312,11 @@
       "has_docker_build": true
     },
     {
-      "name": "crawlee-cloud",
-      "dir": "user-fin_crawlee-cloud",
-      "compose_path": "/opt/containers/crawlee-cloud",
+      "name": "scrappers-api",
+      "dir": "user-data_scrappers-api",
+      "compose_path": "/opt/containers/scrappers-api",
       "images": [
-        "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-        "ghcr.io/diegonmarcos/crawlee-cloud-runner:latest",
-        "ghcr.io/diegonmarcos/crawlee-cloud-dashboard:latest",
-        "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-        "postgres:16-alpine",
-        "redis:7-alpine",
-        "minio/minio:latest"
+        "ghcr.io/diegonmarcos/scrappers-api:latest"
       ],
       "has_docker_build": true
     },
@@ -421,6 +434,16 @@
       "compose_path": "/opt/containers/revealmd",
       "images": [
         "webpronl/reveal-md:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "send",
+      "dir": "user-prod_send",
+      "compose_path": "/opt/containers/send",
+      "images": [
+        "registry.gitlab.com/timvisee/send:latest",
+        "redis:7-alpine"
       ],
       "has_docker_build": true
     },

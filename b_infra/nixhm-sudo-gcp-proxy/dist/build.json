@@ -78,6 +78,13 @@
     "dns": "gcp-proxy.app",
     "port": 7680
   },
+  "protection": {
+    "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Proxy/mesh hub: caddy+introspect-proxy+authelia+hickory+wg-tunnel are tier-1 (survive graduated shed until last resort). Slightly higher PSI thresholds — this VM idles low and a brief spike is normal.",
+    "tier1_services": ["caddy", "introspect-proxy", "authelia", "hickory-dns", "wireguard-mesh-ws-tunnel"],
+    "mem_psi_warn": 35,
+    "mem_psi_crit": 55,
+    "mem_psi_page": 70
+  },
   "deploy": {
     "host": "gcp-proxy",
     "remote_path": "~/.config/home-manager"
