@@ -32,11 +32,17 @@ DOCKER_SOCK="unix:///var/run/docker.sock"
 dapi() { curl -sf --max-time 5 --unix-socket /var/run/docker.sock "http://localhost$1" 2>/dev/null; }
 # Only for actions (restart/prune) — with timeout (no nice/ionice wrapping; docker-real wrapper retired)
 dcli() { timeout 15 docker "$@" 2>/dev/null; }
-DOCKER_FAIL_THRESHOLD=120
+# P4: thresholds data-driven via env injected by watchdog.nix from the
+# consolidated protection block (config.json native.protection + per-VM
+# b_infra/nixhm-sudo-<alias>/build.json .protection). Env-with-default keeps
+# the script runnable standalone (tester) while the deployed unit sets real values.
+DOCKER_FAIL_THRESHOLD=${DOCKER_FAIL_THRESHOLD:-120}
+LOW_MEM_PRUNE_MB=${LOW_MEM_PRUNE_MB:-50}
 CTR_RESTART_TRACK=""
 HOSTNAME=$(hostname -s 2>/dev/null || cat /etc/hostname 2>/dev/null || echo "unknown")
 LOG=/var/log/watchdog-petter.log
-NTFY="http://10.0.0.1:8090/watchdog-dropbear"
+# NTFY base + topic data-driven (native.monitoring.ntfy_base + protection.ntfy_topic).
+NTFY="${NTFY:-http://10.0.0.1:8090/watchdog-dropbear}"
 BOOT_TIME=$(date -Is)
 CYCLE=0
 TICK=0
@@ -220,10 +226,10 @@ $ctr"
     fi
   done
 
-  # Low memory prune
+  # Low memory prune (threshold data-driven: LOW_MEM_PRUNE_MB)
   MEM_AVAIL=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 9999)
-  if [ "$MEM_AVAIL" -lt 50 ]; then
-    pre_action_report "DOCKER_PRUNE" "Low memory: ${MEM_AVAIL}MB available (<50MB threshold)" "docker system prune"
+  if [ "$MEM_AVAIL" -lt "$LOW_MEM_PRUNE_MB" ]; then
+    pre_action_report "DOCKER_PRUNE" "Low memory: ${MEM_AVAIL}MB available (<${LOW_MEM_PRUNE_MB}MB threshold)" "docker system prune"
     ntfy 4 "Low memory" "${MEM_AVAIL}MB available" "warning,brain"
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune" >/dev/null 2>&1 || true
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune" >/dev/null 2>&1 || true

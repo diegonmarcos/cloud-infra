@@ -22,10 +22,27 @@
 # Split from: system-protection-watchdog-petter-dropbear-health-agent.nix
 # Imported by: default.nix (via system-protection.nix orchestrator)
 #
-{ config, pkgs, lib, ramMB, ... }:
+{ config, pkgs, lib, ramMB, vmName, ... }:
 
 let
   diskSwapMB = if ramMB < 2048 then 2048 else ramMB;
+
+  # P4: data-driven watchdog-petter thresholds (disk tiers, docker-fail, low-mem
+  # prune) + ntfy base/topic. Single SoT: config.json native.protection (defaults)
+  # + b_infra/nixhm-sudo-<alias>/build.json .protection (per-VM overrides), emitted
+  # by 2_configs into native.protection and _home_manager.vms.<vmName>.protection.
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  protDefaults = consolidated.native.protection or {};
+  protVm       = (consolidated._home_manager.vms.${vmName} or {}).protection or {};
+  prot         = key: fallback: protVm.${key} or (protDefaults.${key} or fallback);
+
+  diskWarn      = prot "disk_warn_pct"        80;
+  diskHigh      = prot "disk_high_pct"        85;
+  diskEmerg     = prot "disk_emerg_pct"       90;
+  dockerFail    = prot "docker_fail_threshold" 120;
+  lowMemPrune   = prot "low_mem_prune_mb"     50;
+  ntfyBase      = consolidated.native.monitoring.ntfy_base or "https://rss.diegonmarcos.com";
+  ntfyTopic     = prot "ntfy_topic"           "watchdog-dropbear";
 in {
   # ── Disk swap ─────────────────────────────────────────────────────────
   home.file.".local/share/system-protection/disk-swap.sh" = {
@@ -224,6 +241,14 @@ in {
     [Service]
     Type=simple
     ExecStart=/opt/scripts/watchdog-petter.sh
+    # P4: thresholds data-driven from consolidated protection block (never hardcoded
+    # in the script). watchdog-petter.sh reads each as env-with-default.
+    Environment=DISK_WARN=${toString diskWarn}
+    Environment=DISK_HIGH=${toString diskHigh}
+    Environment=DISK_EMERG=${toString diskEmerg}
+    Environment=DOCKER_FAIL_THRESHOLD=${toString dockerFail}
+    Environment=LOW_MEM_PRUNE_MB=${toString lowMemPrune}
+    Environment=NTFY=${ntfyBase}/${ntfyTopic}
     OOMScoreAdjust=-999
     MemoryMax=32M
     MemoryMin=10M

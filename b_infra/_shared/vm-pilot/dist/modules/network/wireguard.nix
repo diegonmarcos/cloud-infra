@@ -58,6 +58,7 @@ let
     let ep = splitEndpoint (p.endpoint or null);
     in {
       address   = p.wg_ip;
+      addressV6 = p.wg_ipv6 or null;
       endpoint  = p.public_ip or (if ep.host == "" then null else ep.host);
       port      = p.wg_port or ep.port;
       publicKey = p.wg_public_key;
@@ -65,11 +66,14 @@ let
     };
   toClientEntry = name: c: {
     address   = c.wg_ip;
+    addressV6 = c.wg_ipv6 or null;
     endpoint  = null;
     port      = null;
     publicKey = c.wg_public_key;
     role      = c.role;
   };
+  # Mesh ULA v6 subnet (null on IPv4-only meshes / wg-public until added)
+  subnetV6 = cloudData.mesh.subnet_v6 or null;
 
   # Build topology from JSON peers (VMs) + clients (surface, termux)
   # Keep all peers (even with null keys) so every VM can find itself in the map.
@@ -94,18 +98,18 @@ let
   # Hub [Interface] with iptables forwarding + masquerade
   mkHubInterface = vm: ''
     [Interface]
-    Address = ${vm.address}/24
+    Address = ${vm.address}/24${lib.optionalString (vm.addressV6 or null != null) ", ${vm.addressV6}/64"}
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
     MTU = 1380
-    PostUp = iptables -I FORWARD -i ${interfaceName} -j ACCEPT; iptables -I FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE
-    PostDown = iptables -D FORWARD -i ${interfaceName} -j ACCEPT; iptables -D FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE
+    PostUp = iptables -I FORWARD -i ${interfaceName} -j ACCEPT; iptables -I FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE${lib.optionalString (subnetV6 != null) "; ip6tables -t nat -A POSTROUTING -s ${subnetV6} -o ${interfaceName} -j MASQUERADE || true"}
+    PostDown = iptables -D FORWARD -i ${interfaceName} -j ACCEPT; iptables -D FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE${lib.optionalString (subnetV6 != null) "; ip6tables -t nat -D POSTROUTING -s ${subnetV6} -o ${interfaceName} -j MASQUERADE || true"}
   '';
 
   # Spoke [Interface] — allow WireGuard traffic to reach Docker port mappings
   mkSpokeInterface = vm: ''
     [Interface]
-    Address = ${vm.address}/24
+    Address = ${vm.address}/24${lib.optionalString (vm.addressV6 or null != null) ", ${vm.addressV6}/64"}
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
     MTU = 1380
@@ -123,11 +127,11 @@ let
     "Endpoint = ${peer.endpoint}:${toString peer.port}\n"
   else "") +
   (if peer.role == "client" then
-    "AllowedIPs = ${peer.address}/32\n"
+    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}\n"
   else if peer.role == "hub" then
-    "AllowedIPs = ${cloudData.mesh.subnet}\n"
+    "AllowedIPs = ${cloudData.mesh.subnet}${lib.optionalString (subnetV6 != null) ", ${subnetV6}"}\n"
   else
-    "AllowedIPs = ${peer.address}/32\n"
+    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}\n"
   ) + (if peer.endpoint != null
        then "PersistentKeepalive = 25\n"
        else "");
@@ -244,8 +248,25 @@ in {
       $SUDO chmod 600 "$WG_CONF"
       $SUDO chown root:root "$WG_CONF"
       if $SUDO systemctl is-active wg-quick@${interfaceName} >/dev/null 2>&1; then
-        $SUDO systemctl restart wg-quick@${interfaceName}
-        echo "$WG_LOG_PREFIX wg-quick@${interfaceName} restarted"
+        # Live-apply WITHOUT downing wg0. A full `systemctl restart` (down+up)
+        # drops every mesh connection — including the deploy's own SSH, which
+        # rides wg0 — causing exit 255 + a rolled-back generation. Instead:
+        # `wg syncconf` updates peers/keys in place and `ip addr add` applies
+        # any new address (e.g. the IPv6 ULA). wg0 is NEVER downed, so this
+        # cannot brick the mesh — on any failure the interface simply stays up
+        # on its prior state.
+        WG_CMD="$HOME/.nix-profile/bin/wg"
+        WG_QUICK_BIN="$HOME/.nix-profile/bin/wg-quick"
+        if STRIPPED=$($SUDO "$WG_QUICK_BIN" strip ${interfaceName} 2>/dev/null) && [ -n "$STRIPPED" ]; then
+          echo "$STRIPPED" | $SUDO "$WG_CMD" syncconf ${interfaceName} /dev/stdin 2>/dev/null \
+            && echo "$WG_LOG_PREFIX ${interfaceName} peers synced live (no restart)" \
+            || echo "$WG_LOG_PREFIX ${interfaceName} syncconf failed — interface left up"
+        fi
+        # Apply [Interface] Address entries live (add-only; present → ignored).
+        echo "$NEW_CONF" | sed -n 's/^Address[[:space:]]*=[[:space:]]*//p' | tr ',' '\n' | while read -r _a; do
+          _a=$(echo "$_a" | tr -d '[:space:]'); [ -n "$_a" ] && { $SUDO ip address add "$_a" dev ${interfaceName} 2>/dev/null || true; }
+        done
+        echo "$WG_LOG_PREFIX ${interfaceName} live-synced (peers + addresses, no SSH-dropping restart)"
       fi
     fi
 

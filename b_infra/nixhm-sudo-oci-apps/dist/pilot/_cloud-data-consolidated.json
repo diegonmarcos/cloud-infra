@@ -51,6 +51,7 @@
       },
       "description": "Oracle Free - E2 Micro 0 - Mail Server",
       "wg_ip": "10.0.0.3",
+      "wg_ipv6": "fd0c:1d00::3",
       "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
       "wg_port": 51820,
       "wg_role": "spoke",
@@ -88,6 +89,7 @@
       },
       "description": "Oracle Free - E2 Micro 1 - Analytics + Workflows",
       "wg_ip": "10.0.0.4",
+      "wg_ipv6": "fd0c:1d00::4",
       "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
       "wg_port": 51820,
       "wg_role": "spoke",
@@ -121,9 +123,10 @@
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
       "services": [
         "c3-public-api",
+        "unbound-dns64",
         "caddy-public"
       ],
-      "container_count": 2
+      "container_count": 3
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -139,6 +142,7 @@
       },
       "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated",
       "wg_ip": "10.0.0.6",
+      "wg_ipv6": "fd0c:1d00::6",
       "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
       "wg_port": 51820,
       "wg_role": "spoke",
@@ -155,6 +159,8 @@
       },
       "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
       "services": [
+        "matrix-continuwuity",
+        "languagetool",
         "c3-infra-api",
         "c3-infra-mcp",
         "c3-services-api",
@@ -179,16 +185,16 @@
         "crowdsec",
         "claude-superset-api",
         "cloud-cgc-mcp",
+        "hermes-agent",
         "kg-store",
         "ollama-hai",
         "rig-agentic-hai-1.5bq4",
         "rig-agentic-sonn-14bq8",
         "session-memory",
         "chat-mattermost",
-        "matrix-continuwuity",
         "matrix-element",
         "matrix-mautrix-whatsapp",
-        "crawlee-cloud",
+        "scrappers-api",
         "fin-api",
         "photoprism",
         "news-gdelt",
@@ -201,9 +207,10 @@
         "hedgedoc",
         "paca",
         "revealmd",
+        "send",
         "vaultwarden"
       ],
-      "container_count": 62
+      "container_count": 61
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -216,6 +223,7 @@
       },
       "description": "GCloud Free - E2 Micro 0 - Central Proxy + Control",
       "wg_ip": "10.0.0.1",
+      "wg_ipv6": "fd0c:1d00::1",
       "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
       "wg_port": 51820,
       "wg_role": "hub",
@@ -301,6 +309,7 @@
       },
       "description": "Vast.ai On-Demand - RTX A4000 (16GB VRAM) - Ollama LLM fallback",
       "wg_ip": null,
+      "wg_ipv6": null,
       "wg_public_key": null,
       "wg_port": 51820,
       "wg_role": "spoke",
@@ -380,6 +389,7 @@
   "native": {
     "wireguard": {
       "subnet": "10.0.0.0/24",
+      "subnet_v6": "fd0c:1d00::/64",
       "port": 51820,
       "port_fallback": 443,
       "port_fallback_proto": "udp",
@@ -390,45 +400,58 @@
           "wg_ip": "10.0.0.3",
           "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
           "endpoint": "130.110.251.193:51820",
-          "role": "spoke"
+          "role": "spoke",
+          "wg_ipv6": "fd0c:1d00::3"
         },
         {
           "name": "oci-analytics",
           "wg_ip": "10.0.0.4",
           "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
           "endpoint": "129.151.228.66:51820",
-          "role": "spoke"
+          "role": "spoke",
+          "wg_ipv6": "fd0c:1d00::4"
         },
         {
           "name": "oci-apps",
           "wg_ip": "10.0.0.6",
           "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
           "endpoint": "82.70.229.129:51820",
-          "role": "spoke"
+          "role": "spoke",
+          "wg_ipv6": "fd0c:1d00::6"
         },
         {
           "name": "gcp-proxy",
           "wg_ip": "10.0.0.1",
           "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
           "endpoint": "35.226.147.64:51820",
-          "role": "hub"
+          "role": "hub",
+          "wg_ipv6": "fd0c:1d00::1"
         }
       ],
       "clients": {
         "surface": {
           "wg_ip": "10.0.0.5",
+          "wg_ipv6": "fd0c:1d00::5",
           "role": "client",
           "wg_public_key": "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY="
         },
         "termux": {
           "wg_ip": "10.0.0.9",
+          "wg_ipv6": "fd0c:1d00::9",
           "role": "client",
           "wg_public_key": "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA="
         },
         "gha-runner": {
           "wg_ip": "10.0.0.200",
+          "wg_ipv6": "fd0c:1d00::200",
           "role": "client",
           "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
+        },
+        "health-runner": {
+          "wg_ip": "10.0.0.201",
+          "wg_ipv6": "fd0c:1d00::201",
+          "role": "client",
+          "wg_public_key": "VeUK6t5/oXQiACcqXgCGkzLZlP2iBTgPghhhwFADViQ="
         }
       }
     },
@@ -507,6 +530,29 @@
     "monitoring": {
       "ntfy_base": "https://rss.diegonmarcos.com",
       "description": "ntfy push notification base URL"
+    },
+    "protection": {
+      "_doc": "Cross-VM defaults for the vm-pilot protection stack (load-shedder, tier1-apps watchdog, health-agent fd/wg checks, watchdog-petter disk/docker). Per-VM overrides live in b_infra/nixhm-sudo-<alias>/build.json .protection. Consumed (data-driven, never hardcoded in Nix) by: protection/load-shedder.nix, protection/tier1-apps.nix, protection/watchdog.nix, agents/health-agent.nix via consolidated._home_manager.vms.<alias>.protection merged over native.protection. Edit here + redeploy to retune.",
+      "mem_psi_warn": 35,
+      "mem_psi_crit": 50,
+      "mem_psi_page": 65,
+      "interval_secs": 15,
+      "backoff_secs": 120,
+      "need_breaches": 3,
+      "fd_warn_pct": 70,
+      "fd_crit_pct": 90,
+      "wg_stale_secs": 180,
+      "disk_warn_pct": 80,
+      "disk_high_pct": 85,
+      "disk_emerg_pct": 90,
+      "docker_fail_threshold": 120,
+      "low_mem_prune_mb": 50,
+      "tier1_services": [],
+      "tier1_mem_min_mb": 48,
+      "tier1_max_restarts": 3,
+      "tier1_reset_window_secs": 300,
+      "tier1_check_interval_secs": 30,
+      "ntfy_topic": "health_resources"
     }
   },
   "wireguard_public": {
@@ -732,6 +778,187 @@
     }
   },
   "services": {
+    "matrix-continuwuity": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_matrix-continuwuity",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "enabled": true,
+      "domain": "matrix.diegonmarcos.com",
+      "flake": "user-comm_matrix-continuwuity",
+      "port": 8008,
+      "dns": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "containers": {
+        "app": {
+          "container_name": "continuwuity",
+          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+          "port": 8008,
+          "port_env": "CONTINUWUITY_PORT",
+          "dns": "matrix-continuwuity.app",
+          "public": true,
+          "proxy": {
+            "domain": "matrix.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/_matrix/client/versions",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "continuwuity_data:/var/lib/continuwuity"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "continuwuity"
+      ],
+      "all_ports": [
+        "8008"
+      ],
+      "all_dns": [
+        "matrix-continuwuity.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "wg_only": false,
+          "domain": "matrix.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "continuwuity_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "upstream_image": "forgejo.ellis.link/continuwuation/continuwuity:latest",
+      "resources": {
+        "mem_limit": "768M",
+        "mem_reservation": "128M"
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/_matrix",
+        "api_url": "https://matrix.diegonmarcos.com/_matrix",
+        "healthcheck_paths": [
+          "/_matrix/client/versions"
+        ],
+        "type": "custom-rest",
+        "base_path": "/_matrix",
+        "display_name": "Matrix (Continuwuity)",
+        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
+        "auth": "bearer"
+      },
+      "secret_env_vars": [
+        "CONTINUWUITY_REGISTRATION_TOKEN"
+      ]
+    },
+    "languagetool": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-ai_languagetool",
+      "description": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps",
+      "enabled": true,
+      "domain": "languagetool.diegonmarcos.com",
+      "flake": "infra-ai_languagetool",
+      "port": 8010,
+      "dns": "languagetool.app",
+      "upstream": "10.0.0.6:8010",
+      "containers": {
+        "app": {
+          "container_name": "languagetool",
+          "image": "erikvl87/languagetool:latest",
+          "port": 8010,
+          "port_env": null,
+          "dns": "languagetool.app",
+          "public": false,
+          "proxy": {
+            "domain": "languagetool.diegonmarcos.com",
+            "wg_only": true
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "languagetool_data:/home/user/languagetool"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "2g",
+            "mem_reservation": "512m"
+          },
+          "read_only": false,
+          "protocol": "http",
+          "_ngrams_note": "N-gram language models (~24 GB) are DEFERRED. To enable: (1) download the desired language pack from https://languagetool.org/download/ngram-data/ to /opt/languagetool/ngrams on oci-apps; (2) add volume mount 'ngrams:/ngrams:ro' to this container; (3) set environment.languageModel='/ngrams' below. Rules-only mode is the current default."
+        }
+      },
+      "container_names": [
+        "languagetool"
+      ],
+      "all_ports": [
+        "8010"
+      ],
+      "all_dns": [
+        "languagetool.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "languagetool.diegonmarcos.com",
+          "wg_only": true,
+          "_doc": "wg_only:true → caddyfile.nix emits a remote_ip 10.0.0.0/24 gate (403 for anything off the WireGuard mesh). No Cloudflare A-record exists for this domain — fail-closed."
+        }
+      },
+      "declared_ports": {
+        "app": 8010
+      },
+      "health": {
+        "path": "/v2/check"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": false,
+        "_doc": "endpoint_check disabled: /v2/check requires POST body; TLS+DNS checks confirm reachability."
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "c3-analytics-api": {
       "category": "obs",
       "vm": "gcp-E2-f_0",
@@ -2673,6 +2900,66 @@
         "healthcheck_paths": []
       }
     },
+    "unbound-dns64": {
+      "category": "infra-net",
+      "vm": "oci-E2-f_1",
+      "folder": "infra-net_unbound-dns64",
+      "description": "DNS64 resolver for NAT64 — synthesises AAAA records for IPv4-only names so IPv6-only clients can reach the internet via the Tayga NAT64 translator",
+      "enabled": true,
+      "domain": "dns64.internal",
+      "flake": "infra-net_unbound-dns64",
+      "port": 53,
+      "dns": "unbound-dns64.app",
+      "upstream": "10.0.0.4:53",
+      "containers": {
+        "app": {
+          "container_name": "unbound-dns64",
+          "image": "ghcr.io/diegonmarcos/unbound-dns64:latest",
+          "port": 53,
+          "port_env": null,
+          "dns": "unbound-dns64.app",
+          "public": true,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./configs/unbound.conf:/etc/unbound/unbound.conf:ro"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "64M"
+          },
+          "read_only": false,
+          "protocol": "udp"
+        }
+      },
+      "container_names": [
+        "unbound-dns64"
+      ],
+      "all_ports": [
+        "53"
+      ],
+      "all_dns": [
+        "unbound-dns64.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "dns": 53
+      },
+      "upstream_image": "klutchell/unbound:latest",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "wireguard-mesh": {
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -3156,7 +3443,8 @@
         "AUTHELIA_BEARER_TOKEN",
         "UMAMI_USERNAME",
         "UMAMI_PASSWORD",
-        "HTTP_TO_SMTP_PROXY_API_KEY"
+        "HTTP_TO_SMTP_PROXY_API_KEY",
+        "STALWART_LOGIN_PASSWORD"
       ]
     },
     "dbgate": {
@@ -3475,6 +3763,35 @@
           },
           "read_only": false
         },
+        "rss-gateway": {
+          "container_name": "rss-gateway",
+          "image": "python:3.11-slim",
+          "port": 8091,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "./assets/rss-gateway.py:/app/rss-gateway.py:ro",
+            "./assets/profiles-config.json:/etc/ntfy/profiles-config.json:ro",
+            "./assets/channels-config.json:/etc/ntfy/channels-config.json:ro"
+          ],
+          "env_file": false,
+          "depends_on": [
+            "app"
+          ],
+          "resources": {
+            "limits": {
+              "memory": "32M"
+            },
+            "reservations": {
+              "memory": "8M"
+            }
+          },
+          "read_only": false
+        },
         "github-rss": {
           "container_name": "github-rss",
           "image": "python:3.11-slim",
@@ -3507,10 +3824,12 @@
       "container_names": [
         "ntfy",
         "syslog-bridge",
+        "rss-gateway",
         "github-rss"
       ],
       "all_ports": [
-        "8090"
+        "8090",
+        "8091"
       ],
       "all_dns": [
         "ntfy.app"
@@ -3523,11 +3842,15 @@
       "proxy": {
         "primary": {
           "domain": "rss.diegonmarcos.com",
-          "auth": "ntfy-3tier"
+          "auth": "ntfy-3tier",
+          "wg_only": true,
+          "_feed_auth_comment": "The /feed/* RSS routes (rss-gateway) are served with NO Authelia/bearer — the whole rss.diegonmarcos.com site is already wg0-gated (wg_only), so on-mesh is the only way in. Cloud Mail (SUPER RSS READER) polls channels.json + per-topic Atom feeds over wg0 without a token. The ntfy app itself (publish/web UI) keeps ntfy-3tier.",
+          "feed_auth": "none"
         }
       },
       "declared_ports": {
-        "app": 8090
+        "app": 8090,
+        "rss_gateway": 8091
       },
       "health": {
         "path": "/"
@@ -3541,92 +3864,206 @@
         "enabled": true
       },
       "timezone": "Europe/Paris",
-      "_topics_comment": "Source of truth for ntfy topics. Consumed by: (a) bc-obs_ntfy/src/code/topic-scanner.py (its own runtime topic list), (b) 2_configs/src/engines/parsers/ntfy.ts (publishes configs.ntfy.topics into _cloud-data-consolidated.json), (c) 2_configs/src/engines/cloud-data-config-derive.ts (emits topics into build-mattermost.json so chat-mattermost reads them via its src/build-mattermost.json symlink). Adding a topic = edit this array + rebuild; no separate sync-topics.sh or ntfy-topics.nix to chase.",
+      "_topics_comment": "Source of truth for ntfy topics. Consumed by: (a) bc-obs_ntfy/src/code/topic-scanner.py (its own runtime topic list), (b) 2_configs/src/engines/parsers/ntfy.ts (publishes configs.ntfy.topics — incl. path/title — into _cloud-data-consolidated.json), (c) 2_configs/src/engines/cloud-data-config-derive.ts (emits topics into build-mattermost.json AND the RSS taxonomy build-ntfy-rss-channels.json consumed by the Cloud Mail SUPER RSS READER). 'path' = parent folder in the Cloud Mail feed tree (leaf = the topic itself, display = 'title'); topics sharing a 'path' become siblings under that folder, so e.g. the three dev_* topics form a nested CICD/GH group. Adding a topic = edit this array + rebuild.",
       "topics": [
         {
           "name": "all",
           "category": "universal",
+          "title": "All",
           "desc": "Every message from every channel"
         },
         {
           "name": "dev_commits",
           "category": "dev",
+          "title": "Commits",
+          "path": "Cloud-Infra/CICD/GH",
           "desc": "Push/commit events"
         },
         {
           "name": "dev_pull-requests",
           "category": "dev",
+          "title": "Pull Requests",
+          "path": "Cloud-Infra/CICD/GH",
           "desc": "PR open/close/merge events"
         },
         {
           "name": "dev_releases",
           "category": "dev",
+          "title": "Releases & Tags",
+          "path": "Cloud-Infra/CICD/GH",
           "desc": "Issues, releases, tags, forks"
-        },
-        {
-          "name": "deploy_ship",
-          "category": "deploy",
-          "desc": "build.sh ship / GHA deploys"
         },
         {
           "name": "deploy_containers",
           "category": "deploy",
+          "title": "GHCR",
+          "path": "Cloud-Infra/CICD",
           "desc": "Container restarts, image pulls"
+        },
+        {
+          "name": "deploy_ship",
+          "category": "deploy",
+          "title": "Ship",
+          "path": "Cloud-Infra/CICD",
+          "desc": "build.sh ship / GHA deploys"
+        },
+        {
+          "name": "deploy_dagu",
+          "category": "deploy",
+          "title": "Dagu",
+          "path": "Cloud-Infra/CICD",
+          "desc": "Dagu DAG run failures"
         },
         {
           "name": "health_mesh",
           "category": "health",
+          "title": "Mesh",
+          "path": "Cloud-Infra/Health/Checks",
           "desc": "WireGuard mesh connectivity"
         },
         {
           "name": "health_endpoints",
           "category": "health",
+          "title": "Endpoints",
+          "path": "Cloud-Infra/Health/Checks",
           "desc": "HTTP service endpoint checks"
         },
         {
           "name": "health_dns",
           "category": "health",
+          "title": "DNS",
+          "path": "Cloud-Infra/Health/Checks",
           "desc": "DNS resolution checks"
         },
         {
           "name": "health_resources",
           "category": "health",
+          "title": "Resources",
+          "path": "Cloud-Infra/Health/Checks",
           "desc": "VM disk/memory/CPU usage"
         },
         {
           "name": "health_containers",
           "category": "health",
+          "title": "Containers",
+          "path": "Cloud-Infra/Health/Checks",
           "desc": "Docker container health"
         },
         {
           "name": "ops_backups",
           "category": "ops",
+          "title": "Backups",
+          "path": "Cloud-Infra/Ops",
           "desc": "Backup freshness status"
         },
         {
           "name": "ops_reports",
           "category": "ops",
+          "title": "Summaries",
+          "path": "Cloud-Infra/Ops",
           "desc": "Daily/weekly summaries"
         },
         {
           "name": "sec_audit",
           "category": "sec",
+          "title": "Audit",
+          "path": "Cloud-Infra/Security",
           "desc": "Auth log analysis & brute-force detection"
         },
         {
           "name": "sec_tls",
           "category": "sec",
+          "title": "TLS",
+          "path": "Cloud-Infra/Security",
           "desc": "TLS certificate expiry warnings"
         },
         {
           "name": "sec_connections",
           "category": "sec",
+          "title": "Connections",
+          "path": "Cloud-Infra/Security",
           "desc": "SSH/sudo/connection events across VMs"
         },
         {
           "name": "sec_yara",
           "category": "sec",
+          "title": "YARA",
+          "path": "Cloud-Infra/Security",
           "desc": "YARA malware scanner alerts & status"
+        },
+        {
+          "name": "health_report_cloud-health-full-daily",
+          "category": "health",
+          "title": "Health — Daily Full",
+          "path": "Cloud-Infra/Health/Reports",
+          "desc": "Daily full cloud health report"
+        },
+        {
+          "name": "health_report_cloud-health-full-2",
+          "category": "health",
+          "title": "Health — Full #2",
+          "path": "Cloud-Infra/Health/Reports",
+          "desc": "Secondary full cloud health report"
+        },
+        {
+          "name": "health_report_cloud-mail-health-full",
+          "category": "health",
+          "title": "Mail Health",
+          "path": "Cloud-Infra/Health/Reports",
+          "desc": "Full mail-stack health report"
+        },
+        {
+          "name": "health_report_cloud-sec-data-report",
+          "category": "health",
+          "title": "Security — Data",
+          "path": "Cloud-Infra/Health/Reports",
+          "desc": "Security data report"
+        },
+        {
+          "name": "health_report_cloud-sec-network-report",
+          "category": "health",
+          "title": "Security — Network",
+          "path": "Cloud-Infra/Health/Reports",
+          "desc": "Security network report"
+        }
+      ],
+      "_profiles_comment": "RSS profile groups — each profile is a named set of topic categories resolved at build time by the Nix flake into profiles-config.json. Cloud Mail and any RSS reader subscribe to ONE profile URL instead of N individual topic feeds. Categories: 'topics' key = explicit topic list; 'categories' key = all topics whose category field matches. Add a profile = edit here + rebuild; consumers (rss-gateway sidecar + Cloud Mail app) auto-pick up changes.",
+      "profiles": [
+        {
+          "id": "security",
+          "title": "Security",
+          "categories": [
+            "sec"
+          ]
+        },
+        {
+          "id": "cicd",
+          "title": "CI/CD",
+          "categories": [
+            "dev",
+            "deploy"
+          ]
+        },
+        {
+          "id": "health",
+          "title": "Health",
+          "categories": [
+            "health"
+          ]
+        },
+        {
+          "id": "ops",
+          "title": "Ops",
+          "categories": [
+            "ops"
+          ]
+        },
+        {
+          "id": "all",
+          "title": "Everything",
+          "topics": [
+            "all"
+          ]
         }
       ],
       "api": {
@@ -4373,7 +4810,9 @@
       "secret_env_vars": [
         "AUTHELIA_CLI_SECRET",
         "CF_API_TOKEN",
-        "NTFY_ADMIN_AUTH"
+        "NTFY_ADMIN_AUTH",
+        "MESH_CA_KEY",
+        "MESH_CA_CERT"
       ]
     },
     "caddy-l4-image": {
@@ -4827,8 +5266,18 @@
       },
       "runtime": {
         "model": "claude-sonnet-4-6",
+        "_model_aliases_comment": "requested-id → real `claude --model` id. Callers pick a cheaper tier per request (cgc octocode indexing asks for claude-haiku); unknown/absent ids fall back to `model`.",
+        "model_aliases": {
+          "claude-sonnet": "claude-sonnet-4-6",
+          "claude-haiku": "claude-haiku-4-5"
+        },
         "max_concurrency": 12,
         "call_timeout_ms": 180000,
+        "_sessions_comment": "Cross-device session store: devices push recent Claude Code sessions here (WG-only) so any device can restore them. dir is under container HOME; keep = max sessions retained per device.",
+        "sessions": {
+          "dir": ".claude-sessions",
+          "keep": 20
+        },
         "headroom": {
           "enabled": true,
           "savings_profile": "agent-90",
@@ -4966,16 +5415,17 @@
             "_comment": "update = INCREMENTAL (octocode index, git-aware, changed files only) on top of the GHCR DB. NOT a reindex (clear+rebuild). First run with no upstream image bootstraps a full build once to seed GHCR. use_llm=false: the 2148-node base is structural-only; the LLM GraphRAG phase makes one LLM call PER node (~hours over the full graph) and timed out the job. Structural incremental of changed files is minutes and matches the base.",
             "incremental": true,
             "use_llm": false,
-            "llm_model": "openrouter:openai/gpt-4o-mini",
-            "schedule": "23 2 * * *",
-            "max_minutes": 330
+            "llm_model": "openrouter:anthropic/claude-haiku-4.5",
+            "schedule": "",
+            "max_minutes": 330,
+            "repo_timeout_min": 90
           },
           "llm": {
             "_comment": "octocode GraphRAG LLM -> claude-api-superset (kg-bridge successor), TWO providers with fallback. openai:* reads OPENAI_API_URL -> superset /v1 (3117); ollama:* reads OLLAMA_API_URL -> superset Ollama mimic (10.0.0.6:11436 — the superset binds the WG IP, not localhost). reindex.sh forces use_llm=true and tries `models` in order, falling back if a provider makes 0 superset /health calls. api_key is a throwaway.",
             "openai_api_url": "http://10.0.0.6:3117/v1/chat/completions",
             "ollama_api_url": "http://10.0.0.6:11436",
             "api_key": "sk-dummy",
-            "models": "ollama:claude-sonnet openai:gpt-4o-mini",
+            "models": "ollama:claude-haiku openai:gpt-4o-mini",
             "health_url": "http://10.0.0.6:3117/health"
           },
           "index_repos": [
@@ -5080,6 +5530,71 @@
         "NTFY_URL",
         "NTFY_TOPIC",
         "BUP_REMOTE"
+      ]
+    },
+    "hermes-agent": {
+      "category": "agi",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_hermes-agent",
+      "description": "Nous Research Hermes Agent (autonomous, persistent-memory AI agent) on oci-apps. Messaging gateway (Telegram live, Mattermost scaffolded) backed by claude-superset-api (subscription CLI, no metered key). WG-internal, never public.",
+      "enabled": true,
+      "flake": "user-ai_hermes-agent",
+      "port": 8642,
+      "dns": "hermes-agent.app",
+      "upstream": "10.0.0.6:8642",
+      "containers": {
+        "app": {
+          "container_name": "hermes-agent",
+          "image": "nousresearch/hermes-agent:latest",
+          "port": 8642,
+          "port_env": null,
+          "dns": "hermes-agent.app",
+          "public": false,
+          "healthcheck": null,
+          "monitoring": null,
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "hermes-agent"
+      ],
+      "all_ports": [
+        "8642"
+      ],
+      "all_dns": [
+        "hermes-agent.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "api": 8642,
+        "dashboard": 9119
+      },
+      "runtime": {
+        "model": "claude-sonnet-4-6",
+        "backend_url": "http://10.0.0.6:3117/v1",
+        "api_mode": "chat_completions"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "secret_env_vars": [
+        "TELEGRAM_BOT_TOKEN",
+        "OPENAI_API_KEY"
       ]
     },
     "kg-store": {
@@ -5923,107 +6438,6 @@
         "GMAIL_APP_PASSWORD"
       ]
     },
-    "matrix-continuwuity": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "user-comm_matrix-continuwuity",
-      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-      "enabled": true,
-      "domain": "matrix.diegonmarcos.com",
-      "flake": "user-comm_matrix-continuwuity",
-      "port": 8008,
-      "dns": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008",
-      "containers": {
-        "app": {
-          "container_name": "continuwuity",
-          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
-          "port": 8008,
-          "port_env": "CONTINUWUITY_PORT",
-          "dns": "matrix-continuwuity.app",
-          "public": true,
-          "proxy": {
-            "domain": "matrix.diegonmarcos.com",
-            "auth": "none"
-          },
-          "healthcheck": "/_matrix/client/versions",
-          "monitoring": {
-            "tls_check": true,
-            "dns_check": true,
-            "endpoint_check": true
-          },
-          "volumes": [
-            "continuwuity_data:/var/lib/continuwuity"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "continuwuity"
-      ],
-      "all_ports": [
-        "8008"
-      ],
-      "all_dns": [
-        "matrix-continuwuity.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "wg_only": false,
-          "domain": "matrix.diegonmarcos.com",
-          "auth": "none"
-        }
-      },
-      "declared_ports": {
-        "app": 8008
-      },
-      "health": {
-        "path": "/_matrix/client/versions"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "continuwuity_data"
-        ]
-      },
-      "timezone": "Europe/Madrid",
-      "upstream_image": "forgejo.ellis.link/continuwuation/continuwuity:latest",
-      "resources": {
-        "mem_limit": "768M",
-        "mem_reservation": "128M"
-      },
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/_matrix",
-        "api_url": "https://matrix.diegonmarcos.com/_matrix",
-        "healthcheck_paths": [
-          "/_matrix/client/versions"
-        ],
-        "type": "custom-rest",
-        "base_path": "/_matrix",
-        "display_name": "Matrix (Continuwuity)",
-        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
-        "auth": "bearer"
-      },
-      "secret_env_vars": [
-        "CONTINUWUITY_REGISTRATION_TOKEN"
-      ]
-    },
     "matrix-element": {
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -6245,8 +6659,11 @@
         "networks": []
       },
       "proxy": {
-        "_demoted_2026-04-27": "Public webmail.diegonmarcos.com handed off to aa-sui_cypht (pure-kindling-pixel.md). SnappyMail keeps running on internal snappymail.app route only — fallback in case Cypht has issues. Re-promote by restoring primary + mail_hub fields and re-shipping caddy.",
-        "primary": null
+        "_repromoted_2026-07-09": "webmail.diegonmarcos.com re-promoted to SnappyMail. It was demoted 2026-04-27 for a handoff to a successor webmail service that was never finished (no build.json/src), so no route was ever emitted and the domain orphaned to the Caddy catch-all (200 wormhole). SnappyMail is healthy on oci-mail; restored primary per the demote note.",
+        "primary": {
+          "domain": "webmail.diegonmarcos.com",
+          "auth": "two_factor"
+        }
       },
       "declared_ports": {
         "app": 8888
@@ -6697,175 +7114,43 @@
         "DKIM_PRIVATE_KEY_B64"
       ]
     },
-    "crawlee-cloud": {
-      "category": "fin",
+    "scrappers-api": {
+      "category": "data",
       "vm": "oci-A1-f_0",
-      "folder": "user-fin_crawlee-cloud",
-      "description": "Self-hosted Crawlee Cloud — Apify-compatible scraping platform (API + Runner + Dashboard + Scheduler)",
+      "folder": "user-data_scrappers-api",
+      "description": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output.",
       "enabled": true,
       "domain": "api.diegonmarcos.com",
-      "flake": "user-fin_crawlee-cloud",
-      "port": 3000,
-      "dns": "crawlee.app",
-      "upstream": "10.0.0.6:3000",
+      "flake": "user-data_scrappers-api",
+      "port": 3020,
+      "dns": "scrappers-api.app",
+      "upstream": "10.0.0.6:3020",
       "containers": {
         "app": {
-          "container_name": "crawlee_api",
-          "image": "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-          "port": 3000,
+          "container_name": "scrappers-api",
+          "image": "ghcr.io/diegonmarcos/scrappers-api:latest",
+          "port": 3020,
           "port_env": "PORT",
-          "dns": "crawlee.app",
+          "protocol": "http",
+          "dns": "scrappers-api.app",
           "public": true,
           "proxy": {
             "domain": "api.diegonmarcos.com",
-            "base_path": "/crawlee",
+            "base_path": "/scrappers",
             "auth": "two_factor"
           },
-          "healthcheck": "wget -qO /dev/null http://127.0.0.1:3000/health || exit 1",
-          "monitoring": {
-            "tls_check": true
-          },
-          "volumes": [],
-          "env_file": true,
-          "depends_on": [
-            "db",
-            "redis",
-            "minio"
-          ],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        },
-        "runner": {
-          "container_name": "crawlee_runner",
-          "image": "ghcr.io/diegonmarcos/crawlee-cloud-runner:latest",
-          "port": null,
-          "port_env": null,
-          "dns": "crawlee-runner.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [
-            "/var/run/docker.sock:/var/run/docker.sock"
-          ],
-          "env_file": true,
-          "depends_on": [
-            "app"
-          ],
-          "resources": null,
-          "read_only": false
-        },
-        "dashboard": {
-          "container_name": "crawlee_dashboard",
-          "image": "ghcr.io/diegonmarcos/crawlee-cloud-dashboard:latest",
-          "port": 3001,
-          "port_env": "PORT",
-          "dns": "crawlee-dashboard.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [],
-          "env_file": false,
-          "depends_on": [
-            "app"
-          ],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        },
-        "scheduler": {
-          "container_name": "crawlee_scheduler",
-          "image": "ghcr.io/diegonmarcos/crawlee-cloud-api:latest",
-          "port": null,
-          "port_env": null,
-          "dns": "crawlee-scheduler.app",
-          "public": false,
-          "healthcheck": null,
-          "volumes": [],
-          "env_file": true,
-          "depends_on": [
-            "db",
-            "redis"
-          ],
-          "resources": null,
-          "read_only": false
-        },
-        "db": {
-          "container_name": "crawlee_db",
-          "image": "postgres:16-alpine",
-          "port": 5434,
-          "port_env": "PGPORT",
-          "dns": "crawlee-db.app",
-          "public": false,
-          "healthcheck": "pg_isready -U $POSTGRES_USER",
-          "volumes": [
-            "crawlee_postgres:/var/lib/postgresql/data"
-          ],
-          "env_file": true,
-          "resources": null,
-          "read_only": false,
-          "db_user": "crawlee",
-          "db_name": "crawlee",
-          "protocol": "tcp",
-          "db_engine": "postgres"
-        },
-        "redis": {
-          "container_name": "crawlee_redis",
-          "image": "redis:7-alpine",
-          "port": 6381,
-          "port_env": null,
-          "dns": "crawlee-redis.app",
-          "public": false,
-          "healthcheck": "redis-cli -p 6381 ping",
-          "volumes": [
-            "crawlee_redis:/data"
-          ],
-          "env_file": false,
-          "resources": null,
-          "read_only": false,
-          "protocol": "tcp",
-          "db_engine": "redis"
-        },
-        "minio": {
-          "container_name": "crawlee_minio",
-          "image": "minio/minio:latest",
-          "port": 9000,
-          "port_env": null,
-          "dns": "crawlee-minio.app",
-          "public": false,
-          "healthcheck": "curl -f http://localhost:9000/minio/health/live",
-          "volumes": [
-            "crawlee_minio:/data"
-          ],
-          "env_file": true,
-          "resources": null,
-          "read_only": false,
-          "protocol": "http",
-          "db_engine": "minio"
+          "healthcheck": "curl -fsS http://127.0.0.1:3020/health >/dev/null 2>&1 || exit 1",
+          "env_file": true
         }
       },
       "container_names": [
-        "crawlee_api",
-        "crawlee_runner",
-        "crawlee_dashboard",
-        "crawlee_scheduler",
-        "crawlee_db",
-        "crawlee_redis",
-        "crawlee_minio"
+        "scrappers-api"
       ],
       "all_ports": [
-        "3000",
-        "3001",
-        "5434",
-        "6381",
-        "9000"
+        "3020"
       ],
       "all_dns": [
-        "crawlee.app",
-        "crawlee-runner.app",
-        "crawlee-dashboard.app",
-        "crawlee-scheduler.app",
-        "crawlee-db.app",
-        "crawlee-redis.app",
-        "crawlee-minio.app"
+        "scrappers-api.app"
       ],
       "compose": {
         "containers": [],
@@ -6876,26 +7161,21 @@
         "primary": {
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/crawlee",
+          "base_path": "/scrappers",
           "auth": "two_factor",
-          "paths": {
-            "/openapi.json": {
-              "auth": "public"
-            }
-          },
+          "wg_only": false,
+          "public_paths": [
+            "/scrappers/health",
+            "/scrappers/openapi.json"
+          ],
           "domain": "api.diegonmarcos.com"
         }
       },
       "declared_ports": {
-        "app": 3000,
-        "dashboard": 3001,
-        "db": 5434,
-        "redis": 6381,
-        "minio": 9000,
-        "minio_console": 9001
+        "app": 3020
       },
       "health": {
-        "path": "/"
+        "path": "/health"
       },
       "monitoring": {
         "tls_check": true,
@@ -6905,20 +7185,7 @@
       "backup": {
         "enabled": true
       },
-      "runtime": {
-        "node_env": "production",
-        "log_level": "info",
-        "rate_limit_max": 1000,
-        "max_concurrent_runs": 5,
-        "actor_max_memory_mb": 2048,
-        "actor_default_memory_mb": 512,
-        "actor_timeout_secs": 3600,
-        "s3_bucket": "crawlee-cloud",
-        "s3_region": "us-east-1",
-        "s3_force_path_style": true,
-        "cors_origins": "https://api.diegonmarcos.com,http://localhost:3001",
-        "dashboard_hostname": "10.0.0.6"
-      },
+      "timezone": "Europe/Paris",
       "api": {
         "has_api": true,
         "has_web_ui": true,
@@ -6927,23 +7194,11 @@
         "healthcheck_paths": [],
         "type": "openapi",
         "spec_path": "/openapi.json",
-        "base_path": "/v2",
-        "endpoint_count": 74,
-        "display_name": "Crawlee Cloud Apify-Compatible API",
-        "description": "Self-hosted Apify-compatible web scraping platform with actors, runs, datasets, queues, and schedules.",
-        "auth": "api-key"
-      },
-      "secret_env_vars": [
-        "POSTGRES_USER",
-        "POSTGRES_PASSWORD",
-        "POSTGRES_DB",
-        "MINIO_USER",
-        "MINIO_PASSWORD",
-        "JWT_SECRET",
-        "ADMIN_EMAIL",
-        "ADMIN_PASSWORD",
-        "RUNNER_TOKEN"
-      ]
+        "base_path": "/scrappers",
+        "display_name": "Scrapers API",
+        "description": "Unified profile-scrape + generic-crawl API. Replaces crawlee-cloud.",
+        "auth": "two_factor"
+      }
     },
     "fin-api": {
       "category": "fin",
@@ -7778,7 +8033,7 @@
           "public": true,
           "proxy": {
             "domain": "sheets.diegonmarcos.com",
-            "auth": "two_factor"
+            "auth": "none"
           },
           "healthcheck": "/",
           "monitoring": {
@@ -7814,7 +8069,8 @@
       "proxy": {
         "primary": {
           "domain": "sheets.diegonmarcos.com",
-          "auth": "two_factor"
+          "auth": "none",
+          "wg_only": true
         }
       },
       "declared_ports": {
@@ -8240,6 +8496,127 @@
         "healthcheck_paths": []
       }
     },
+    "send": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-prod_send",
+      "description": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time.",
+      "enabled": true,
+      "domain": "send.diegonmarcos.com",
+      "flake": "user-prod_send",
+      "port": 3016,
+      "dns": "send.app",
+      "upstream": "10.0.0.6:3016",
+      "containers": {
+        "app": {
+          "container_name": "send_app",
+          "image": "registry.gitlab.com/timvisee/send:latest",
+          "port": 3016,
+          "port_env": null,
+          "dns": "send.app",
+          "public": true,
+          "proxy": {
+            "domain": "send.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/__lbheartbeat__",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "send_uploads:/uploads"
+          ],
+          "env_file": false,
+          "depends_on": [
+            "redis"
+          ],
+          "resources": {
+            "limits": {
+              "memory": "256M"
+            },
+            "reservations": {
+              "memory": "64M"
+            }
+          },
+          "read_only": false,
+          "protocol": "http"
+        },
+        "redis": {
+          "container_name": "send_redis",
+          "image": "redis:7-alpine",
+          "port": null,
+          "port_env": null,
+          "dns": null,
+          "public": false,
+          "proxy": null,
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [
+            "send_redis_data:/data"
+          ],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "limits": {
+              "memory": "64M"
+            },
+            "reservations": {
+              "memory": "16M"
+            }
+          },
+          "read_only": false
+        }
+      },
+      "container_names": [
+        "send_app",
+        "send_redis"
+      ],
+      "all_ports": [
+        "3016"
+      ],
+      "all_dns": [
+        "send.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "send.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 3016
+      },
+      "health": {
+        "path": "/__lbheartbeat__"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "send_config": {
+        "max_file_size_bytes": 2147483648,
+        "max_downloads": 20,
+        "default_expire_seconds": 86400,
+        "max_expire_seconds": 604800
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/__lbheartbeat__"
+        ]
+      }
+    },
     "vaultwarden": {
       "category": "mic",
       "vm": "oci-A1-f_0",
@@ -8553,6 +8930,18 @@
     "internal_zones": [],
     "derived_entries": [
       {
+        "name": "matrix-continuwuity.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "matrix-continuwuity"
+      },
+      {
+        "name": "languagetool.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "languagetool"
+      },
+      {
         "name": "c3-analytics-api.app",
         "type": "A",
         "value": "10.0.0.1",
@@ -8635,6 +9024,12 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "hickory-dns"
+      },
+      {
+        "name": "unbound-dns64.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "unbound-dns64"
       },
       {
         "name": "c3-spec.app",
@@ -8739,6 +9134,12 @@
         "service": "cloud-cgc-mcp"
       },
       {
+        "name": "hermes-agent.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "hermes-agent"
+      },
+      {
         "name": "ollama-hai.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -8767,12 +9168,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "chat-mattermost"
-      },
-      {
-        "name": "matrix-continuwuity.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "matrix-continuwuity"
       },
       {
         "name": "matrix-element.app",
@@ -8805,46 +9200,10 @@
         "service": "stalwart"
       },
       {
-        "name": "crawlee.app",
+        "name": "scrappers-api.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-runner.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-dashboard.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-scheduler.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-db.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-redis.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
-      },
-      {
-        "name": "crawlee-minio.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "crawlee-cloud"
+        "service": "scrappers-api"
       },
       {
         "name": "fin-api.app",
@@ -8955,6 +9314,12 @@
         "service": "revealmd"
       },
       {
+        "name": "send.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "send"
+      },
+      {
         "name": "vaultwarden.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -8978,7 +9343,8 @@
           "desc": "Every message from every channel",
           "publishers": [
             "system"
-          ]
+          ],
+          "title": "All"
         },
         {
           "name": "dev_commits",
@@ -8986,7 +9352,9 @@
           "desc": "Push/commit events",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/CICD/GH",
+          "title": "Commits"
         },
         {
           "name": "dev_pull-requests",
@@ -8994,7 +9362,9 @@
           "desc": "PR open/close/merge events",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/CICD/GH",
+          "title": "Pull Requests"
         },
         {
           "name": "dev_releases",
@@ -9002,15 +9372,9 @@
           "desc": "Issues, releases, tags, forks",
           "publishers": [
             "system"
-          ]
-        },
-        {
-          "name": "deploy_ship",
-          "category": "deploy",
-          "desc": "build.sh ship / GHA deploys",
-          "publishers": [
-            "system"
-          ]
+          ],
+          "path": "Cloud-Infra/CICD/GH",
+          "title": "Releases & Tags"
         },
         {
           "name": "deploy_containers",
@@ -9018,7 +9382,29 @@
           "desc": "Container restarts, image pulls",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/CICD",
+          "title": "GHCR"
+        },
+        {
+          "name": "deploy_ship",
+          "category": "deploy",
+          "desc": "build.sh ship / GHA deploys",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/CICD",
+          "title": "Ship"
+        },
+        {
+          "name": "deploy_dagu",
+          "category": "deploy",
+          "desc": "Dagu DAG run failures",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/CICD",
+          "title": "Dagu"
         },
         {
           "name": "health_mesh",
@@ -9026,7 +9412,9 @@
           "desc": "WireGuard mesh connectivity",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Health/Checks",
+          "title": "Mesh"
         },
         {
           "name": "health_endpoints",
@@ -9034,7 +9422,9 @@
           "desc": "HTTP service endpoint checks",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Health/Checks",
+          "title": "Endpoints"
         },
         {
           "name": "health_dns",
@@ -9042,7 +9432,9 @@
           "desc": "DNS resolution checks",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Health/Checks",
+          "title": "DNS"
         },
         {
           "name": "health_resources",
@@ -9050,7 +9442,9 @@
           "desc": "VM disk/memory/CPU usage",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Health/Checks",
+          "title": "Resources"
         },
         {
           "name": "health_containers",
@@ -9058,7 +9452,9 @@
           "desc": "Docker container health",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Health/Checks",
+          "title": "Containers"
         },
         {
           "name": "ops_backups",
@@ -9066,7 +9462,9 @@
           "desc": "Backup freshness status",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Ops",
+          "title": "Backups"
         },
         {
           "name": "ops_reports",
@@ -9074,7 +9472,9 @@
           "desc": "Daily/weekly summaries",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Ops",
+          "title": "Summaries"
         },
         {
           "name": "sec_audit",
@@ -9082,7 +9482,9 @@
           "desc": "Auth log analysis & brute-force detection",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Security",
+          "title": "Audit"
         },
         {
           "name": "sec_tls",
@@ -9090,7 +9492,9 @@
           "desc": "TLS certificate expiry warnings",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Security",
+          "title": "TLS"
         },
         {
           "name": "sec_connections",
@@ -9098,7 +9502,9 @@
           "desc": "SSH/sudo/connection events across VMs",
           "publishers": [
             "system"
-          ]
+          ],
+          "path": "Cloud-Infra/Security",
+          "title": "Connections"
         },
         {
           "name": "sec_yara",
@@ -9106,12 +9512,217 @@
           "desc": "YARA malware scanner alerts & status",
           "publishers": [
             "system"
+          ],
+          "path": "Cloud-Infra/Security",
+          "title": "YARA"
+        },
+        {
+          "name": "health_report_cloud-health-full-daily",
+          "category": "health",
+          "desc": "Daily full cloud health report",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/Health/Reports",
+          "title": "Health — Daily Full"
+        },
+        {
+          "name": "health_report_cloud-health-full-2",
+          "category": "health",
+          "desc": "Secondary full cloud health report",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/Health/Reports",
+          "title": "Health — Full #2"
+        },
+        {
+          "name": "health_report_cloud-mail-health-full",
+          "category": "health",
+          "desc": "Full mail-stack health report",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/Health/Reports",
+          "title": "Mail Health"
+        },
+        {
+          "name": "health_report_cloud-sec-data-report",
+          "category": "health",
+          "desc": "Security data report",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/Health/Reports",
+          "title": "Security — Data"
+        },
+        {
+          "name": "health_report_cloud-sec-network-report",
+          "category": "health",
+          "desc": "Security network report",
+          "publishers": [
+            "system"
+          ],
+          "path": "Cloud-Infra/Health/Reports",
+          "title": "Security — Network"
+        }
+      ],
+      "profiles": [
+        {
+          "id": "security",
+          "title": "Security",
+          "feed": "/feed/security.atom",
+          "channels": [
+            {
+              "name": "sec_audit",
+              "desc": "Auth log analysis & brute-force detection",
+              "feed": "/feed/c/sec_audit.atom"
+            },
+            {
+              "name": "sec_tls",
+              "desc": "TLS certificate expiry warnings",
+              "feed": "/feed/c/sec_tls.atom"
+            },
+            {
+              "name": "sec_connections",
+              "desc": "SSH/sudo/connection events across VMs",
+              "feed": "/feed/c/sec_connections.atom"
+            },
+            {
+              "name": "sec_yara",
+              "desc": "YARA malware scanner alerts & status",
+              "feed": "/feed/c/sec_yara.atom"
+            }
+          ]
+        },
+        {
+          "id": "cicd",
+          "title": "CI/CD",
+          "feed": "/feed/cicd.atom",
+          "channels": [
+            {
+              "name": "dev_commits",
+              "desc": "Push/commit events",
+              "feed": "/feed/c/dev_commits.atom"
+            },
+            {
+              "name": "dev_pull-requests",
+              "desc": "PR open/close/merge events",
+              "feed": "/feed/c/dev_pull-requests.atom"
+            },
+            {
+              "name": "dev_releases",
+              "desc": "Issues, releases, tags, forks",
+              "feed": "/feed/c/dev_releases.atom"
+            },
+            {
+              "name": "deploy_containers",
+              "desc": "Container restarts, image pulls",
+              "feed": "/feed/c/deploy_containers.atom"
+            },
+            {
+              "name": "deploy_ship",
+              "desc": "build.sh ship / GHA deploys",
+              "feed": "/feed/c/deploy_ship.atom"
+            },
+            {
+              "name": "deploy_dagu",
+              "desc": "Dagu DAG run failures",
+              "feed": "/feed/c/deploy_dagu.atom"
+            }
+          ]
+        },
+        {
+          "id": "health",
+          "title": "Health",
+          "feed": "/feed/health.atom",
+          "channels": [
+            {
+              "name": "health_mesh",
+              "desc": "WireGuard mesh connectivity",
+              "feed": "/feed/c/health_mesh.atom"
+            },
+            {
+              "name": "health_endpoints",
+              "desc": "HTTP service endpoint checks",
+              "feed": "/feed/c/health_endpoints.atom"
+            },
+            {
+              "name": "health_dns",
+              "desc": "DNS resolution checks",
+              "feed": "/feed/c/health_dns.atom"
+            },
+            {
+              "name": "health_resources",
+              "desc": "VM disk/memory/CPU usage",
+              "feed": "/feed/c/health_resources.atom"
+            },
+            {
+              "name": "health_containers",
+              "desc": "Docker container health",
+              "feed": "/feed/c/health_containers.atom"
+            },
+            {
+              "name": "health_report_cloud-health-full-daily",
+              "desc": "Daily full cloud health report",
+              "feed": "/feed/c/health_report_cloud-health-full-daily.atom"
+            },
+            {
+              "name": "health_report_cloud-health-full-2",
+              "desc": "Secondary full cloud health report",
+              "feed": "/feed/c/health_report_cloud-health-full-2.atom"
+            },
+            {
+              "name": "health_report_cloud-mail-health-full",
+              "desc": "Full mail-stack health report",
+              "feed": "/feed/c/health_report_cloud-mail-health-full.atom"
+            },
+            {
+              "name": "health_report_cloud-sec-data-report",
+              "desc": "Security data report",
+              "feed": "/feed/c/health_report_cloud-sec-data-report.atom"
+            },
+            {
+              "name": "health_report_cloud-sec-network-report",
+              "desc": "Security network report",
+              "feed": "/feed/c/health_report_cloud-sec-network-report.atom"
+            }
+          ]
+        },
+        {
+          "id": "ops",
+          "title": "Ops",
+          "feed": "/feed/ops.atom",
+          "channels": [
+            {
+              "name": "ops_backups",
+              "desc": "Backup freshness status",
+              "feed": "/feed/c/ops_backups.atom"
+            },
+            {
+              "name": "ops_reports",
+              "desc": "Daily/weekly summaries",
+              "feed": "/feed/c/ops_reports.atom"
+            }
+          ]
+        },
+        {
+          "id": "all",
+          "title": "Everything",
+          "feed": "/feed/all.atom",
+          "channels": [
+            {
+              "name": "all",
+              "desc": "Every message from every channel",
+              "feed": "/feed/c/all.atom"
+            }
           ]
         }
       ],
       "users": [],
       "enable_login": false,
-      "auth_default_access": "read-write"
+      "auth_default_access": "read-write",
+      "base_url": "https://rss.diegonmarcos.com/feed"
     }
   },
   "_home_manager": {
@@ -9149,6 +9760,17 @@
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
+        },
+        "protection": {
+          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Mail stack: maddy+stalwart are tier-1 (survive graduated shed until last resort).",
+          "tier1_services": [
+            "maddy",
+            "stalwart",
+            "mail-puller"
+          ],
+          "mem_psi_warn": 30,
+          "mem_psi_crit": 50,
+          "mem_psi_page": 65
         }
       },
       "oci-analytics": {
@@ -9192,13 +9814,15 @@
         "idle_shutdown": null,
         "containers": [
           "c3-public-api",
+          "unbound-dns64",
           "caddy-public"
         ],
         "method": "key",
         "gha": {
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
-        }
+        },
+        "protection": {}
       },
       "oci-apps": {
         "vm_id": "oci-A1-f_0",
@@ -9224,6 +9848,8 @@
         "is_public_ingress": false,
         "idle_shutdown": null,
         "containers": [
+          "matrix-continuwuity",
+          "languagetool",
           "c3-infra-api",
           "c3-infra-mcp",
           "c3-services-api",
@@ -9248,16 +9874,16 @@
           "crowdsec",
           "claude-superset-api",
           "cloud-cgc-mcp",
+          "hermes-agent",
           "kg-store",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
           "session-memory",
           "chat-mattermost",
-          "matrix-continuwuity",
           "matrix-element",
           "matrix-mautrix-whatsapp",
-          "crawlee-cloud",
+          "scrappers-api",
           "fin-api",
           "photoprism",
           "news-gdelt",
@@ -9270,6 +9896,7 @@
           "hedgedoc",
           "paca",
           "revealmd",
+          "send",
           "vaultwarden"
         ],
         "method": "key",
@@ -9277,6 +9904,7 @@
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
         },
+        "protection": {},
         "ssh_containers": [
           {
             "name": "c3-infra-api",
@@ -9392,6 +10020,19 @@
           "ssh_secret": "GCP_PROXY_SSH_KEY",
           "host_secret": "GCP_PROXY_HOST",
           "user_secret": "GCP_PROXY_USER"
+        },
+        "protection": {
+          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Proxy/mesh hub: caddy+introspect-proxy+authelia+hickory+wg-tunnel are tier-1 (survive graduated shed until last resort). Slightly higher PSI thresholds — this VM idles low and a brief spike is normal.",
+          "tier1_services": [
+            "caddy",
+            "introspect-proxy",
+            "authelia",
+            "hickory-dns",
+            "wireguard-mesh-ws-tunnel"
+          ],
+          "mem_psi_warn": 35,
+          "mem_psi_crit": 55,
+          "mem_psi_page": 70
         }
       },
       "vast-ollama": {
@@ -9417,7 +10058,8 @@
         "idle_shutdown": null,
         "containers": [],
         "method": "key",
-        "gha": null
+        "gha": null,
+        "protection": {}
       }
     },
     "ssh_config": [
@@ -9518,6 +10160,16 @@
       }
     },
     "services": {
+      "matrix-continuwuity": {
+        "dir": "user-comm_matrix-continuwuity",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "languagetool": {
+        "dir": "infra-ai_languagetool",
+        "vm": "oci-apps",
+        "has_docker": false
+      },
       "c3-analytics-api": {
         "dir": "infra-api_c3-analytics-api",
         "vm": "gcp-proxy",
@@ -9613,6 +10265,11 @@
         "vm": "gcp-proxy",
         "has_docker": true
       },
+      "unbound-dns64": {
+        "dir": "infra-net_unbound-dns64",
+        "vm": "oci-analytics",
+        "has_docker": true
+      },
       "wireguard-mesh": {
         "dir": "infra-net_wireguard-mesh",
         "vm": "oci-apps",
@@ -9693,6 +10350,11 @@
         "vm": "oci-apps",
         "has_docker": true
       },
+      "hermes-agent": {
+        "dir": "user-ai_hermes-agent",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
       "kg-store": {
         "dir": "user-ai_kg-store",
         "vm": "oci-apps",
@@ -9733,11 +10395,6 @@
         "vm": "oci-mail",
         "has_docker": true
       },
-      "matrix-continuwuity": {
-        "dir": "user-comm_matrix-continuwuity",
-        "vm": "oci-apps",
-        "has_docker": true
-      },
       "matrix-element": {
         "dir": "user-comm_matrix-element",
         "vm": "oci-apps",
@@ -9763,8 +10420,8 @@
         "vm": "oci-mail",
         "has_docker": true
       },
-      "crawlee-cloud": {
-        "dir": "user-fin_crawlee-cloud",
+      "scrappers-api": {
+        "dir": "user-data_scrappers-api",
         "vm": "oci-apps",
         "has_docker": true
       },
@@ -9825,6 +10482,11 @@
       },
       "revealmd": {
         "dir": "user-prod_revealmd",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "send": {
+        "dir": "user-prod_send",
         "vm": "oci-apps",
         "has_docker": true
       },

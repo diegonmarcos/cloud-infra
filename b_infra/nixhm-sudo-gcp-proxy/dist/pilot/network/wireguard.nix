@@ -58,6 +58,7 @@ let
     let ep = splitEndpoint (p.endpoint or null);
     in {
       address   = p.wg_ip;
+      addressV6 = p.wg_ipv6 or null;
       endpoint  = p.public_ip or (if ep.host == "" then null else ep.host);
       port      = p.wg_port or ep.port;
       publicKey = p.wg_public_key;
@@ -65,11 +66,14 @@ let
     };
   toClientEntry = name: c: {
     address   = c.wg_ip;
+    addressV6 = c.wg_ipv6 or null;
     endpoint  = null;
     port      = null;
     publicKey = c.wg_public_key;
     role      = c.role;
   };
+  # Mesh ULA v6 subnet (null on IPv4-only meshes / wg-public until added)
+  subnetV6 = cloudData.mesh.subnet_v6 or null;
 
   # Build topology from JSON peers (VMs) + clients (surface, termux)
   # Keep all peers (even with null keys) so every VM can find itself in the map.
@@ -94,18 +98,18 @@ let
   # Hub [Interface] with iptables forwarding + masquerade
   mkHubInterface = vm: ''
     [Interface]
-    Address = ${vm.address}/24
+    Address = ${vm.address}/24${lib.optionalString (vm.addressV6 or null != null) ", ${vm.addressV6}/64"}
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
     MTU = 1380
-    PostUp = iptables -I FORWARD -i ${interfaceName} -j ACCEPT; iptables -I FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE
-    PostDown = iptables -D FORWARD -i ${interfaceName} -j ACCEPT; iptables -D FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE
+    PostUp = iptables -I FORWARD -i ${interfaceName} -j ACCEPT; iptables -I FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -A POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE${lib.optionalString (subnetV6 != null) "; ip6tables -t nat -A POSTROUTING -s ${subnetV6} -o ${interfaceName} -j MASQUERADE || true"}
+    PostDown = iptables -D FORWARD -i ${interfaceName} -j ACCEPT; iptables -D FORWARD -o ${interfaceName} -j ACCEPT; iptables -t nat -D POSTROUTING -s ${cloudData.mesh.subnet} -o ${interfaceName} -j MASQUERADE${lib.optionalString (subnetV6 != null) "; ip6tables -t nat -D POSTROUTING -s ${subnetV6} -o ${interfaceName} -j MASQUERADE || true"}
   '';
 
   # Spoke [Interface] — allow WireGuard traffic to reach Docker port mappings
   mkSpokeInterface = vm: ''
     [Interface]
-    Address = ${vm.address}/24
+    Address = ${vm.address}/24${lib.optionalString (vm.addressV6 or null != null) ", ${vm.addressV6}/64"}
     ListenPort = ${toString vm.port}
     PrivateKey = __PRIVKEY__
     MTU = 1380
@@ -123,11 +127,11 @@ let
     "Endpoint = ${peer.endpoint}:${toString peer.port}\n"
   else "") +
   (if peer.role == "client" then
-    "AllowedIPs = ${peer.address}/32\n"
+    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}\n"
   else if peer.role == "hub" then
-    "AllowedIPs = ${cloudData.mesh.subnet}\n"
+    "AllowedIPs = ${cloudData.mesh.subnet}${lib.optionalString (subnetV6 != null) ", ${subnetV6}"}\n"
   else
-    "AllowedIPs = ${peer.address}/32\n"
+    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}\n"
   ) + (if peer.endpoint != null
        then "PersistentKeepalive = 25\n"
        else "");

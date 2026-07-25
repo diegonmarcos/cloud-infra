@@ -68,6 +68,7 @@ in {
     # wg0 — private internal mesh (always present on every VM)
     (import ./network/wireguard.nix { inherit vmName; interfaceName = "wg0"; meshKey = "wireguard"; secretEnvName = "WG_PRIVATE_KEY"; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
+    (import ./network/nat64-tayga.nix { inherit vmName; })
     ./network/dns-hickory.nix
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
 
