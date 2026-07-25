@@ -248,8 +248,25 @@ in {
       $SUDO chmod 600 "$WG_CONF"
       $SUDO chown root:root "$WG_CONF"
       if $SUDO systemctl is-active wg-quick@${interfaceName} >/dev/null 2>&1; then
-        $SUDO systemctl restart wg-quick@${interfaceName}
-        echo "$WG_LOG_PREFIX wg-quick@${interfaceName} restarted"
+        # Live-apply WITHOUT downing wg0. A full `systemctl restart` (down+up)
+        # drops every mesh connection — including the deploy's own SSH, which
+        # rides wg0 — causing exit 255 + a rolled-back generation. Instead:
+        # `wg syncconf` updates peers/keys in place and `ip addr add` applies
+        # any new address (e.g. the IPv6 ULA). wg0 is NEVER downed, so this
+        # cannot brick the mesh — on any failure the interface simply stays up
+        # on its prior state.
+        WG_CMD="$HOME/.nix-profile/bin/wg"
+        WG_QUICK_BIN="$HOME/.nix-profile/bin/wg-quick"
+        if STRIPPED=$($SUDO "$WG_QUICK_BIN" strip ${interfaceName} 2>/dev/null) && [ -n "$STRIPPED" ]; then
+          echo "$STRIPPED" | $SUDO "$WG_CMD" syncconf ${interfaceName} /dev/stdin 2>/dev/null \
+            && echo "$WG_LOG_PREFIX ${interfaceName} peers synced live (no restart)" \
+            || echo "$WG_LOG_PREFIX ${interfaceName} syncconf failed — interface left up"
+        fi
+        # Apply [Interface] Address entries live (add-only; present → ignored).
+        echo "$NEW_CONF" | sed -n 's/^Address[[:space:]]*=[[:space:]]*//p' | tr ',' '\n' | while read -r _a; do
+          _a=$(echo "$_a" | tr -d '[:space:]'); [ -n "$_a" ] && { $SUDO ip address add "$_a" dev ${interfaceName} 2>/dev/null || true; }
+        done
+        echo "$WG_LOG_PREFIX ${interfaceName} live-synced (peers + addresses, no SSH-dropping restart)"
       fi
     fi
 

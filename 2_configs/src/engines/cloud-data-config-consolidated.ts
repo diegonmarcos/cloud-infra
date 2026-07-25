@@ -700,6 +700,7 @@ function main() {
   }
   const wireguardPublicSection = wgPublicCfg ? {
     subnet: wgPublicCfg.subnet ?? "10.1.0.0/24",
+    subnet_v6: wgPublicCfg.subnet_v6 ?? null,
     port: wgPublicCfg.port ?? 51821,
     hub: wgPublicCfg.hub ?? null,
     _doc: wgPublicCfg._doc ?? null,
@@ -710,6 +711,7 @@ function main() {
       return {
         name: p.name,
         wg_ip: p.wg_ip,
+        wg_ipv6: p.wg_ipv6 ?? null,
         role: p.role ?? "spoke",
         endpoint,
         wg_public_key: vaultWgKeys[`${p.name}-public`] ?? null,
