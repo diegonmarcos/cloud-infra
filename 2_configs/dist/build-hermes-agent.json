@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "contacts-radicale container config (service=contacts-radicale, role=app)",
+    "description": "hermes-agent container config (service=hermes-agent, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,39 +28,21 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "contacts-radicale",
-    "image": "tomsquest/docker-radicale:latest",
-    "port": 5233,
+    "container_name": "hermes-agent",
+    "image": "nousresearch/hermes-agent:latest",
+    "port": 8642,
     "port_env": null,
-    "dns": "contacts.app",
-    "public": true,
-    "proxy": {
-      "domain": "contacts.diegonmarcos.com",
-      "auth": "two_factor"
-    },
-    "healthcheck": "/.web/",
-    "monitoring": {
-      "tls_check": true,
-      "dns_check": true,
-      "endpoint_check": true
-    },
-    "volumes": [
-      "./data:/data",
-      "./configs/config:/config/config:ro"
-    ],
-    "env_file": false,
+    "dns": "hermes-agent.app",
+    "public": false,
+    "healthcheck": null,
+    "monitoring": null,
+    "env_file": true,
     "depends_on": [],
     "resources": null,
     "read_only": false,
-    "protocol": "http",
-    "embedded_dbs": [
-      {
-        "engine": "files",
-        "path": "/data/collections"
-      }
-    ]
+    "protocol": "http"
   },
-  "service": "contacts-radicale",
+  "service": "hermes-agent",
   "role": "app",
   "vm": "oci-apps",
   "services": {
@@ -1636,8 +1618,13 @@
       }
     }
   },
-  "upstream_image": "tomsquest/docker-radicale:latest",
+  "runtime": {
+    "model": "claude-sonnet-4-6",
+    "backend_url": "http://10.0.0.6:3117/v1",
+    "api_mode": "chat_completions"
+  },
   "secret_env_vars": [
-    "RADICALE_USERS"
+    "TELEGRAM_BOT_TOKEN",
+    "OPENAI_API_KEY"
   ]
 }
