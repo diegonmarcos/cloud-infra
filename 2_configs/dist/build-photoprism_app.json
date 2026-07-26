@@ -37,7 +37,8 @@
     "proxy": {
       "domain": "photos.diegonmarcos.com",
       "auth": "two_factor",
-      "landing_page": "myphotos"
+      "landing_page": "myphotos",
+      "wg_only": true
     },
     "healthcheck": "/api/v1/status",
     "monitoring": {
@@ -47,7 +48,8 @@
     },
     "volumes": [
       "photoprism_storage:/photoprism/storage",
-      "/opt/containers/photoprism/originals:/photoprism/originals:ro"
+      "/opt/containers/photoprism/originals:/photoprism/originals:ro",
+      "photoprism_import:/photoprism/import"
     ],
     "env_file": true,
     "depends_on": [
