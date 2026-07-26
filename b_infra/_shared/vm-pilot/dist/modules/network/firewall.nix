@@ -278,7 +278,10 @@ ${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
     # tunnel via this hub blackholes (the whole point of the ULA meshes).
     # ICMPv6 + WG ports + ESTABLISHED are allowed BEFORE the DROP policy so the
     # public v6 WG endpoint, neighbour-discovery and PMTU keep working.
-    if command -v ip6tables >/dev/null 2>&1; then
+    if command -v ip6tables >/dev/null 2>&1 && [ -d /proc/sys/net/ipv6 ]; then
+      # Enable v6 forwarding here (tolerant) rather than as a declarative sysctl,
+      # so IPv6-disabled hosts (e.g. GCP e2-micro) don't fail activation.
+      sysctl -w net.ipv6.conf.all.forwarding=1 >/dev/null 2>&1 || true
       ip6tables -F INPUT   2>/dev/null || true
       ip6tables -F FORWARD 2>/dev/null || true
       ip6tables -t nat -F  2>/dev/null || true
