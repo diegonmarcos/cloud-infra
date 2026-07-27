@@ -1,0 +1,50 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/ship-cgc-kg-store.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │  cloud-cgc kg-store ingest — oci-apps LOCAL (workflow a)      │
+# │                                                              │
+# │  Mirrors the CURRENT octocode Lance DB (already restored      │
+# │  into the octocode_db volume by cloud-cgc-db-restore.sh)      │
+# │  into the kg-store (SurrealDB) per repo, then ingests the     │
+# │  infra graph delta. Closes the drift between the codegraph    │
+# │  (fresh) and the kg-store (only fed by manual reindex.sh).    │
+# │                                                              │
+# │  Runs on the oci-apps self-hosted runner — direct local       │
+# │  `docker exec cloud-cgc-mcp …` (no SSH, no WireGuard).        │
+# │  ALL logic lives in cloud-cgc-kg-ingest.sh — ZERO logic here. │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "cgc-kg-store (oci-apps local → SurrealDB)"
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: ship-wg-runner
+  cancel-in-progress: false
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_ACTOR: ${{ github.actor }}
+
+jobs:
+  kg-store-ingest:
+    name: "kg-store · mirror octocode → SurrealDB (local)"
+    runs-on: [self-hosted, linux, arm64, oci-apps]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: kg-store ingest (docker exec cloud-cgc-mcp)
+        # build.json is in the checkout → the script reads container name + repo list from it.
+        run: sh 1_workflows/src/scripts/cloud-cgc-kg-ingest.sh
