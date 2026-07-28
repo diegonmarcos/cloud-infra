@@ -974,6 +974,21 @@
       },
       "health": null
     },
+    "my-ai-api": {
+      "name": "my-ai-api",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "agi",
+      "ports": {
+        "app": 3217,
+        "ollama": 12436,
+        "headroom": 8890
+      },
+      "health": {
+        "path": "/health"
+      }
+    },
     "ollama": {
       "name": "ollama",
       "vm": "gcp-t4",
@@ -1665,6 +1680,15 @@
       "dns": "kg-store.app"
     },
     {
+      "service": "my-ai-api",
+      "dns": "my-ai-api.app"
+    },
+    {
+      "service": "my-ai-api",
+      "container": "app",
+      "dns": "my-ai-api.app"
+    },
+    {
       "service": "ollama",
       "dns": "ollama.app"
     },
@@ -2073,6 +2097,7 @@
           "cloud-cgc-mcp",
           "hermes-agent",
           "kg-store",
+          "my-ai-api",
           "ollama-hai",
           "rig-agentic-hai-1.5bq4",
           "rig-agentic-sonn-14bq8",
@@ -2669,6 +2694,21 @@
           "app": 8001
         },
         "health": null
+      },
+      "my-ai-api": {
+        "name": "my-ai-api",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "agi",
+        "ports": {
+          "app": 3217,
+          "ollama": 12436,
+          "headroom": 8890
+        },
+        "health": {
+          "path": "/health"
+        }
       },
       "ollama": {
         "name": "ollama",
