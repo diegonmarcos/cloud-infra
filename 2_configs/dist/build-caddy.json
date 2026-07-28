@@ -1,5 +1,5 @@
 {
-  "_warning": "DO NOT EDIT \u2014 AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
     "description": "Caddy route definitions -- consumed by flake.nix to generate Caddyfile",
     "format_version": 3,
@@ -19,8 +19,8 @@
       },
       "outputs": {
         "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
-        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service \u2014 derive output)",
-        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files \u2014 kept for soft-transition fallbacks; consumers should read consolidated instead)"
+        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
       },
       "rebuild_command": "bash 2_configs/build.sh all"
     }
@@ -32,7 +32,7 @@
     "admin_bind": "localhost:2019",
     "order": "respond before handle",
     "auto_https": "disable_redirects",
-    "_doc_wg_bind_ip": "Caddy's wg0 IP on gcp-proxy (10.0.0.1) \u2014 every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip). Caddy lives on gcp-proxy (the public-facing VM); reverse-proxy upstreams to internal services traverse the wg0 mesh (10.0.0.x). Engine resolveVmIpForCaddy() still prefers wg-public IPs (10.1.0.x) when both endpoints are peers \u2014 gcp-proxy is a wg-public peer (10.1.0.2) so mail-side upstreams keep using wg-public transit.",
+    "_doc_wg_bind_ip": "Caddy's wg0 IP on gcp-proxy (10.0.0.1) — every public *.diegonmarcos.com site block dual-binds to (0.0.0.0, wg_bind_ip). Caddy lives on gcp-proxy (the public-facing VM); reverse-proxy upstreams to internal services traverse the wg0 mesh (10.0.0.x). Engine resolveVmIpForCaddy() still prefers wg-public IPs (10.1.0.x) when both endpoints are peers — gcp-proxy is a wg-public peer (10.1.0.2) so mail-side upstreams keep using wg-public transit.",
     "wg_bind_ip": "10.0.0.1"
   },
   "on_demand_tls": {
@@ -182,27 +182,27 @@
     "page": "/srv/error.html"
   },
   "messages": {
-    "portless_placeholder": "Portless worker/sidecar \u2014 no HTTP endpoint",
-    "db_catalog_template": "DB catalog \u2014 container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
-    "mcp_hub_fallback": "MCP Hub \u2014 use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
+    "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
+    "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
+    "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
   "l4_routes": [
     {
       "port": 25,
       "upstream": "10.0.0.3:25",
-      "comment": "SMTP MX plain TCP \u2014 design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
+      "comment": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
     },
     {
       "port": 443,
       "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS via SNI on :443 \u2014 upstream flipped from Maddy:993 to Stalwart:2993 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
+      "comment": "IMAPS via SNI on :443 — upstream flipped from Maddy:993 to Stalwart:2993 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
       "sni": "imap.diegonmarcos.com"
     },
     {
       "port": 443,
       "upstream": "10.0.0.3:2465",
-      "comment": "SMTPS via SNI on :443 \u2014 upstream flipped from Maddy:465 to Stalwart:2465 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
+      "comment": "SMTPS via SNI on :443 — upstream flipped from Maddy:465 to Stalwart:2465 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)",
       "sni": "smtps.diegonmarcos.com"
     }
   ],
@@ -210,7 +210,7 @@
     {
       "domain": "mail.diegonmarcos.com",
       "target": "https://webmail.diegonmarcos.com{uri}",
-      "comment": "mail \u2192 webmail redirect"
+      "comment": "mail → webmail redirect"
     }
   ],
   "routes": [
@@ -218,13 +218,13 @@
       "domain": "matrix.diegonmarcos.com",
       "upstream": "10.0.0.6:8008",
       "auth": "none",
-      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) \u2014 central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "domain": "languagetool.diegonmarcos.com",
       "upstream": "10.0.0.6:8010",
       "wg_only": true,
-      "comment": "LanguageTool grammar/spell-check HTTP API \u2014 rules-only, no n-grams, WG-only sidecar on oci-apps"
+      "comment": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps"
     },
     {
       "domain": "git.diegonmarcos.com",
@@ -235,13 +235,13 @@
       "domain": "mesh.diegonmarcos.com",
       "upstream": "10.0.0.6:8080",
       "wg_only": true,
-      "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations \u2014 pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+      "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
     {
       "domain": "vpn.diegonmarcos.com",
       "upstream": "10.0.0.1:8080",
       "auth": "none",
-      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) \u2014 this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     {
       "domain": "workflows.diegonmarcos.com",
@@ -265,7 +265,7 @@
       "domain": "crowdsec.diegonmarcos.com",
       "upstream": "10.0.0.6:8088",
       "wg_only": true,
-      "comment": "CrowdSec behavioral IDS/IPS engine \u2014 DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
+      "comment": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
       "domain": "chat.diegonmarcos.com",
@@ -280,7 +280,7 @@
       "domain": "messenger.diegonmarcos.com",
       "upstream": "10.0.0.6:8083",
       "wg_only": true,
-      "comment": "Element Web \u2014 browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
+      "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
       "domain": "webmail.diegonmarcos.com",
@@ -294,7 +294,7 @@
       "tls_skip_verify": true,
       "auth": "none",
       "wg_only": true,
-      "comment": "Stalwart Mail Server \u2014 JMAP webmail backend (jmap.diegonmarcos.com)"
+      "comment": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     {
       "domain": "photos.diegonmarcos.com",
@@ -307,7 +307,7 @@
       "domain": "cal.diegonmarcos.com",
       "upstream": "10.0.0.6:5232",
       "wg_only": true,
-      "comment": "Radicale CalDAV server (calendars only) \u2014 cal.diegonmarcos.com"
+      "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
     },
     {
       "domain": "ide.diegonmarcos.com",
@@ -319,7 +319,7 @@
       "domain": "contacts.diegonmarcos.com",
       "upstream": "10.0.0.6:5233",
       "wg_only": true,
-      "comment": "Radicale CardDAV server (contacts / address books) \u2014 contacts.diegonmarcos.com"
+      "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
     {
       "domain": "sheets.diegonmarcos.com",
@@ -332,14 +332,14 @@
       "domain": "paca.diegonmarcos.com",
       "upstream": "10.0.0.6:8095",
       "wg_only": true,
-      "comment": "Paca \u2014 AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+      "comment": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
     },
     {
       "domain": "send.diegonmarcos.com",
       "upstream": "10.0.0.6:3016",
       "auth": "none",
       "wg_only": true,
-      "comment": "Send \u2014 self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
+      "comment": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
     },
     {
       "domain": "vault.diegonmarcos.com",
@@ -354,16 +354,10 @@
       "parent_domain": "api.diegonmarcos.com",
       "paths": [
         {
-          "base_path": "/api",
-          "upstream": "10.0.0.6:8081",
-          "wg_only": true,
-          "comment": "C3 infra-api health/profiling endpoints \u2014 proxied at /api/health/* and /api/profiling/* for the proxy.diegonmarcos.com dashboard (WG-only, no Authelia gate)"
-        },
-        {
           "base_path": "/c3a",
           "upstream": "10.0.0.1:8085",
           "wg_only": true,
-          "comment": "Public first-party analytics collector \u2014 passthrough proxy to matomo/umami/openobserve"
+          "comment": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
         },
         {
           "base_path": "/c3-infra-api",
@@ -372,7 +366,7 @@
             "/c3-infra-api/docs/json"
           ],
           "wg_only": true,
-          "comment": "C3 REST API \u2014 Cloud Control Center Fastify API"
+          "comment": "C3 REST API — Cloud Control Center Fastify API"
         },
         {
           "base_path": "/pub",
@@ -382,13 +376,13 @@
             "/pub/ready",
             "/pub/analytics/*"
           ],
-          "comment": "C3 Public API \u2014 single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
+          "comment": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
         },
         {
           "base_path": "/c3-services-api",
           "upstream": "10.0.0.6:8082",
           "wg_only": true,
-          "comment": "C3 Services REST API \u2014 service API gateway Fastify API"
+          "comment": "C3 Services REST API — service API gateway Fastify API"
         },
         {
           "base_path": "/scrappers",
@@ -397,13 +391,13 @@
             "/scrappers/health",
             "/scrappers/openapi.json"
           ],
-          "comment": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) \u2014 retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
+          "comment": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
         },
         {
           "base_path": "/fin-api",
           "upstream": "10.0.0.6:8340",
           "wg_only": true,
-          "comment": "Fincept Terminal backend (fin-api) \u2014 REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+          "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
         }
       ],
       "comment": "API hub -- path-based routing to backend APIs",
@@ -481,7 +475,7 @@
       "target_domain": "diegonmarcos.com",
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
-      "comment": "JMAP autoconfig \u2014 proxies to Stalwart (preserves per-user session)"
+      "comment": "JMAP autoconfig — proxies to Stalwart (preserves per-user session)"
     },
     {
       "path": "/jmap/*",
@@ -494,7 +488,7 @@
       "path": "/",
       "target_domain": "jmap.diegonmarcos.com",
       "redirect_to": "/.well-known/jmap",
-      "comment": "Bare host \u2192 JMAP discovery URL (308 redirect)"
+      "comment": "Bare host → JMAP discovery URL (308 redirect)"
     }
   ],
   "github_pages_proxies": [
@@ -2059,7 +2053,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Public first-party analytics collector \u2014 passthrough proxy to matomo/umami/openobserve"
+      "notes": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2069,7 +2063,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "C3 REST API \u2014 Cloud Control Center Fastify API"
+      "notes": "C3 REST API — Cloud Control Center Fastify API"
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2079,7 +2073,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "C3 Public API \u2014 single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
+      "notes": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2089,7 +2083,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "C3 Services REST API \u2014 service API gateway Fastify API"
+      "notes": "C3 Services REST API — service API gateway Fastify API"
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2099,7 +2093,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) \u2014 retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
+      "notes": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
     },
     {
       "host": "api.diegonmarcos.com",
@@ -2109,7 +2103,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Fincept Terminal backend (fin-api) \u2014 REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+      "notes": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
     }
   ],
   "public_C_app_paths": [
@@ -2153,7 +2147,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) \u2014 central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "host": "languagetool.diegonmarcos.com",
@@ -2163,7 +2157,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "LanguageTool grammar/spell-check HTTP API \u2014 rules-only, no n-grams, WG-only sidecar on oci-apps"
+      "notes": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps"
     },
     {
       "host": "git.diegonmarcos.com",
@@ -2183,7 +2177,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations \u2014 pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+      "notes": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
     {
       "host": "vpn.diegonmarcos.com",
@@ -2193,7 +2187,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) \u2014 this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+      "notes": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     {
       "host": "workflows.diegonmarcos.com",
@@ -2233,7 +2227,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "CrowdSec behavioral IDS/IPS engine \u2014 DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
+      "notes": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
       "host": "chat.diegonmarcos.com",
@@ -2253,7 +2247,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Element Web \u2014 browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
+      "notes": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
     {
       "host": "webmail.diegonmarcos.com",
@@ -2273,7 +2267,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Stalwart Mail Server \u2014 JMAP webmail backend (jmap.diegonmarcos.com)"
+      "notes": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
     },
     {
       "host": "photos.diegonmarcos.com",
@@ -2293,7 +2287,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Radicale CalDAV server (calendars only) \u2014 cal.diegonmarcos.com"
+      "notes": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
     },
     {
       "host": "ide.diegonmarcos.com",
@@ -2313,7 +2307,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Radicale CardDAV server (contacts / address books) \u2014 contacts.diegonmarcos.com"
+      "notes": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
     {
       "host": "sheets.diegonmarcos.com",
@@ -2333,7 +2327,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Paca \u2014 AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+      "notes": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
     },
     {
       "host": "send.diegonmarcos.com",
@@ -2343,7 +2337,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Send \u2014 self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
+      "notes": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
     },
     {
       "host": "vault.diegonmarcos.com",
@@ -2463,7 +2457,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "mail \u2192 webmail redirect"
+      "notes": "mail → webmail redirect"
     }
   ],
   "private_A0_app_short": [
@@ -3297,7 +3291,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "photoprism",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "calendar-radicale-http-5232.app",
@@ -3337,7 +3331,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "etherpad",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "filebrowser_app-http-3015.app",
@@ -3347,7 +3341,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "filebrowser",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "grist_app-http-3011.app",
@@ -3357,7 +3351,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "grist",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "hedgedoc_app-http-3018.app",
@@ -3367,7 +3361,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "hedgedoc",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "paca-gateway-http-8095.app",
@@ -3387,7 +3381,7 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "send",
-      "notes": "underscore \u2192 TLS broken"
+      "notes": "underscore → TLS broken"
     },
     {
       "host": "vaultwarden-http-8880.app",
@@ -3541,7 +3535,7 @@
       "tls": "on_demand",
       "zone": "db",
       "service": "filebrowser",
-      "notes": "engine=sqlite vm=oci-A1-f_0 underscore \u2192 TLS broken"
+      "notes": "engine=sqlite vm=oci-A1-f_0 underscore → TLS broken"
     },
     {
       "host": "vaultwarden-sqlite-null.db",
@@ -3615,7 +3609,7 @@
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "SMTP MX plain TCP \u2014 design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
+      "notes": "SMTP MX plain TCP — design-complete listener; GCP firewall currently blocks public, CF Worker is the active inbound bridge"
     },
     {
       "host": ":443",
@@ -3625,7 +3619,7 @@
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "IMAPS via SNI on :443 \u2014 upstream flipped from Maddy:993 to Stalwart:2993 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)"
+      "notes": "IMAPS via SNI on :443 — upstream flipped from Maddy:993 to Stalwart:2993 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)"
     },
     {
       "host": ":443",
@@ -3635,7 +3629,7 @@
       "tls": "none",
       "zone": "l4",
       "service": null,
-      "notes": "SMTPS via SNI on :443 \u2014 upstream flipped from Maddy:465 to Stalwart:2465 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)"
+      "notes": "SMTPS via SNI on :443 — upstream flipped from Maddy:465 to Stalwart:2465 per aa-sui_tools-stalwart/build.json _doc_l4_ports (Maddy retired)"
     }
   ],
   "others": [
