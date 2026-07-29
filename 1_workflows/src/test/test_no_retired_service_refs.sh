@@ -79,6 +79,7 @@ for svc in $retired; do
             | grep -vE "^[0-9]+:\s*#|^[0-9]+:\s*//" \
             | grep -vE '^[0-9]+:\s*"_doc[a-zA-Z0-9_]*"\s*:' \
             | grep -vE "[a-zA-Z0-9_/-]$svc|$svc[a-zA-Z0-9_/-]" \
+            | grep -vE "$svc[[:space:]]|[[:space:]]$svc" \
             | grep -vE '"(cmd|entrypoint|command|args|binary|apt|app_dir)"\s*:' \
             | grep -vE 'sed -i.*'"$svc"'|"\\bsed\\b.*'"$svc" \
             | grep -vE '"(action|path)"\s*:.*(compose_down|path_remove|path_create)|/opt/containers/'"$svc" \
