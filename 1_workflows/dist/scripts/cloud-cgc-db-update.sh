@@ -307,7 +307,7 @@ else
   # which makes octocode block on per-batch LLM timeouts → glacial. Previously this
   # branch only PRINTED "structural-only" without disabling it. Disable it for real.
   if [ -f "$CFG" ]; then
-    octocode config --graphrag-enabled true >/dev/null 2>&1 || true
+    octocode config --graphrag-enabled false >/dev/null 2>&1 || true
     awk '/^[[:space:]]*use_llm[[:space:]]*=/ { print "use_llm = false"; next } { print }' \
       "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
     grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = false\n' >> "$CFG"
