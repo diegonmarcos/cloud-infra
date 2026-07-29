@@ -721,13 +721,15 @@ NEOF
                     cp "$_real" "$_slink"
                 done
             fi
-            # Build and push both tags atomically via buildx --push so neither
-            # tag depends on the local docker image store. The old pattern
-            # (docker build -t FULL -t BINARIES + two docker push calls) failed
-            # on first-ever builds: the pre-pull 404s (|| true) left neither
-            # image in the local store, BuildKit loaded only the primary tag,
-            # and "docker push BINARIES" exited 1 with "does not exist locally".
-            docker buildx build \
+            # Classic `docker build` (NOT buildx): the arm64 cloud-builder image
+            # ships plain docker without the buildx plugin, so `docker buildx
+            # build` exits 127 ("requires exactly 1 argument" / plugin absent) —
+            # regression 2026-07-29 (google-workspace-mcp). Mirror the ssh)
+            # branch: build the primary tag only, then materialise the -binaries
+            # alias with `docker tag` before pushing both. This avoids the
+            # first-build "does not exist locally" failure (the pre-pull 404s
+            # left -binaries out of the store) WITHOUT depending on buildx.
+            docker build \
                 --network host \
                 --platform "$PLATFORM" \
                 --pull \
@@ -735,11 +737,12 @@ NEOF
                 --cache-from "$BINARIES_IMAGE:latest" \
                 --progress=plain \
                 --tag "$FULL_IMAGE:$_ptag" \
-                --tag "$BINARIES_IMAGE:$_btag" \
                 --file "$DOCKERFILE_PATH" \
                 "${BUILD_ARGS_ARR[@]}" \
-                --push \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker tag "$FULL_IMAGE:$_ptag" "$BINARIES_IMAGE:$_btag"
+            docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+            docker push "$BINARIES_IMAGE:$_btag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             ;;
 
         ssh)
