@@ -526,7 +526,11 @@ NEOF
     # with a `FROM <upstream>` line. Avoids requiring every Type-B service
     # (authelia, vaultwarden, …) to redundantly mirror the FROM line in
     # build.json.
+    # Skip auto-detect when native_build.type is explicitly set (image-wrapper/app
+    # already own BUILD_CONTEXT and DOCKERFILE; reading the nix-generated stub
+    # Dockerfile would clobber UPSTREAM_DECL and poison the docker build call).
     if [ -z "$UPSTREAM_DECL" ] \
+       && [ -z "${NATIVE_TYPE:-}" ] \
        && [ -f "$DIST_DIR/code/$ARCH/Dockerfile" ] \
        && grep -q '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" 2>/dev/null; then
         UPSTREAM_DECL="$(grep -m1 '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" | awk '{print $2}')"
