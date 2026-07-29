@@ -721,9 +721,16 @@ NEOF
                     cp "$_real" "$_slink"
                 done
             fi
-            DOCKER_BUILDKIT=1 docker build \
+            # Build and push both tags atomically via buildx --push so neither
+            # tag depends on the local docker image store. The old pattern
+            # (docker build -t FULL -t BINARIES + two docker push calls) failed
+            # on first-ever builds: the pre-pull 404s (|| true) left neither
+            # image in the local store, BuildKit loaded only the primary tag,
+            # and "docker push BINARIES" exited 1 with "does not exist locally".
+            docker buildx build \
                 --network host \
                 --platform "$PLATFORM" \
+                --pull \
                 --cache-from "$FULL_IMAGE:latest" \
                 --cache-from "$BINARIES_IMAGE:latest" \
                 --progress=plain \
@@ -731,9 +738,8 @@ NEOF
                 --tag "$BINARIES_IMAGE:$_btag" \
                 --file "$DOCKERFILE_PATH" \
                 "${BUILD_ARGS_ARR[@]}" \
+                --push \
                 "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$BINARIES_IMAGE:$_btag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
             ;;
 
         ssh)
@@ -958,10 +964,23 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -t $BINARIES_IMAGE:$_btag -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        docker tag $FULL_IMAGE:$_ptag $BINARIES_IMAGE:$_btag && \
         docker push $FULL_IMAGE:$_ptag && \
         docker push $BINARIES_IMAGE:$_btag; \
         rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
+# binaries-tag fix (2026-07-29): classic `docker build` with BuildKit enabled
+# only materialises the first --tag in the local image store on the remote
+# builder; the second --tag alias (-t $BINARIES_IMAGE) was named by BuildKit
+# during the build ("naming to ...-binaries done") but was absent from the
+# daemon store when the subsequent `docker push $BINARIES_IMAGE` ran →
+# "An image does not exist locally with the tag: ...-binaries" → exit 1 →
+# false build failure that aborted the ship before deploy (my-ai-api symptom,
+# 2026-07-29). Fix: drop -t $BINARIES_IMAGE from the build invocation and
+# materialise the alias explicitly with `docker tag` immediately after the
+# build succeeds, before the push. Matches the local) branch pattern which
+# uses buildx --push to push both tags atomically.
+#
 # rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
 # the || true to the ENTIRE && chain — a failed build/push still wrote exit=0
 # to JOB_STATUS, the engine logged "Pushed", and stale/broken :latest images
