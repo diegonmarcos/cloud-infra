@@ -976,24 +976,19 @@ docker run --rm \
         docker push $FULL_IMAGE:$_ptag && \
         docker push $BINARIES_IMAGE:$_btag; \
         rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
-# binaries-tag fix (2026-07-29): classic `docker build` with BuildKit enabled
-# only materialises the first --tag in the local image store on the remote
-# builder; the second --tag alias (-t $BINARIES_IMAGE) was named by BuildKit
-# during the build ("naming to ...-binaries done") but was absent from the
-# daemon store when the subsequent `docker push $BINARIES_IMAGE` ran →
-# "An image does not exist locally with the tag: ...-binaries" → exit 1 →
-# false build failure that aborted the ship before deploy (my-ai-api symptom,
-# 2026-07-29). Fix: drop -t $BINARIES_IMAGE from the build invocation and
-# materialise the alias explicitly with `docker tag` immediately after the
-# build succeeds, before the push. Matches the local) branch pattern which
-# uses buildx --push to push both tags atomically.
-#
-# rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
-# the || true to the ENTIRE && chain — a failed build/push still wrote exit=0
-# to JOB_STATUS, the engine logged "Pushed", and stale/broken :latest images
-# were deployed (gws-mcp x86-venv poison, rig manifest-unknown). Only the
-# logout is non-fatal now; the chain's real exit code propagates.
 EOF
+            # binaries-tag fix (2026-07-29): classic docker build with BuildKit enabled
+            # only materialises the first --tag in the local image store on the remote
+            # builder; the second --tag alias (-t BINARIES_IMAGE) was named by BuildKit
+            # during the build but was absent from the daemon store when the subsequent
+            # docker push BINARIES_IMAGE ran. Fix: drop -t BINARIES_IMAGE from the build
+            # invocation and materialise the alias explicitly with docker tag immediately
+            # after the build succeeds, before the push.
+            #
+            # rc-isolation (2026-07-03): the old trailing "&& docker logout || true" bound
+            # the || true to the ENTIRE && chain — a failed build/push still wrote exit=0
+            # to JOB_STATUS. Only the logout is non-fatal now; the chain's real exit code
+            # propagates.
 
             # Launch detached. Subshell + nohup + redirected stdio + & lets
             # the SSH connection close immediately while the build keeps
