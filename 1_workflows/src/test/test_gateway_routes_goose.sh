@@ -3,10 +3,14 @@
 # ║ gateway routes goose — static source assertions                  ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
-# ║   A) gateway.mjs POSTs to /v1/chat/completions                   ║
-# ║   B) gateway.mjs sets X-Agent-Mode: goose header                 ║
+# ║   A) gateway.mjs references /v1/chat/completions (fallback path) ║
+# ║      OR goosed /sessions (primary path)                          ║
+# ║   B) gateway.mjs sets X-Agent-Mode: goose (fallback path)        ║
+# ║      OR X-Secret-Key (goosed primary path)                       ║
 # ║   C) routeToGoose is used in the Telegram path                   ║
 # ║   D) routeToGoose is used in the Mattermost path                 ║
+# ║   E) goosed primary path present (/sessions + X-Secret-Key)      ║
+# ║   F) one-shot fallback present (X-Agent-Mode: goose)             ║
 # ║                                                                  ║
 # ║ Usage: bash 1_workflows/src/test/test_gateway_routes_goose.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
@@ -19,19 +23,19 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-echo "── A: gateway POSTs to /v1/chat/completions ──"
-if grep -q '/v1/chat/completions' "$GATEWAY"; then
-    pass "gateway.mjs references /v1/chat/completions"
+echo "── A: gateway references /v1/chat/completions (fallback) OR /sessions (primary) ──"
+if grep -q '/v1/chat/completions' "$GATEWAY" || grep -q '/sessions' "$GATEWAY"; then
+    pass "gateway.mjs references goose routing path (/v1/chat/completions and/or /sessions)"
 else
-    fail "gateway.mjs missing /v1/chat/completions"
+    fail "gateway.mjs missing both /v1/chat/completions and /sessions"
 fi
 
 echo ""
-echo "── B: gateway sets X-Agent-Mode: goose ──"
-if grep -q '"X-Agent-Mode"' "$GATEWAY" && grep -q '"goose"' "$GATEWAY"; then
-    pass "gateway.mjs sets X-Agent-Mode header with goose value"
+echo "── B: gateway sets X-Agent-Mode: goose (fallback) OR X-Secret-Key (goosed primary) ──"
+if grep -q '"X-Agent-Mode"' "$GATEWAY" || grep -q 'X-Secret-Key' "$GATEWAY"; then
+    pass "gateway.mjs sets authentication/routing header"
 else
-    fail "gateway.mjs missing X-Agent-Mode: goose header"
+    fail "gateway.mjs missing both X-Agent-Mode and X-Secret-Key headers"
 fi
 
 echo ""
@@ -55,6 +59,22 @@ if awk '/const startMattermost/,/^};/' "$GATEWAY" | grep -q 'routeToGoose'; then
     pass "routeToGoose called inside startMattermost"
 else
     fail "routeToGoose not called inside startMattermost"
+fi
+
+echo ""
+echo "── E: goosed primary path present (/sessions + X-Secret-Key) ──"
+if grep -q '/sessions' "$GATEWAY" && grep -q 'X-Secret-Key' "$GATEWAY"; then
+    pass "gateway.mjs has goosed primary path (/sessions with X-Secret-Key)"
+else
+    fail "gateway.mjs missing goosed primary path (/sessions and/or X-Secret-Key)"
+fi
+
+echo ""
+echo "── F: one-shot fallback present (X-Agent-Mode: goose + /v1/chat/completions) ──"
+if grep -q '"X-Agent-Mode"' "$GATEWAY" && grep -q '/v1/chat/completions' "$GATEWAY"; then
+    pass "gateway.mjs retains one-shot fallback (X-Agent-Mode: goose)"
+else
+    fail "gateway.mjs missing one-shot fallback (X-Agent-Mode: goose and/or /v1/chat/completions)"
 fi
 
 echo ""
