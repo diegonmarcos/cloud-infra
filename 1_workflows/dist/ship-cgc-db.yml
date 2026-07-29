@@ -25,6 +25,12 @@ name: "cgc-db (octocode incremental update → GHCR → oci-apps)"
 
 on:
   workflow_dispatch: {}
+  # Schedule is data-driven from build.json runtime.octocode.update.schedule.
+  # Twice daily (4:00 and 16:00 UTC): keeps the graph current with minimal runner load.
+  # The job is change-gated per repo (skips repos whose HEAD is already indexed)
+  # so unchanged repos cost seconds, not hours.
+  schedule:
+    - cron: "0 4,16 * * *"
 
 # Serialise so concurrent Ship workflows don't race on shared resources.
 concurrency:
