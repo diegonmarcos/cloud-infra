@@ -50,6 +50,8 @@ else
 fi
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
+CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
+TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
 OCTO_ARM=$(jq -r '.runtime.octocode.octocode_images.arm' "$BJ")
 # Data-driven exclude globs. octocode honours a gitignore-syntax `.noindex` file
@@ -294,7 +296,7 @@ else
   # which makes octocode block on per-batch LLM timeouts → glacial. Previously this
   # branch only PRINTED "structural-only" without disabling it. Disable it for real.
   if [ -f "$CFG" ]; then
-    octocode config --graphrag-enabled false >/dev/null 2>&1 || true
+    octocode config --graphrag-enabled false --code-embedding-model "$CODE_EMBED" --text-embedding-model "$TEXT_EMBED" >/dev/null 2>&1 || true
     awk '/^[[:space:]]*use_llm[[:space:]]*=/ { print "use_llm = false"; next } { print }' \
       "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
     grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = false\n' >> "$CFG"
