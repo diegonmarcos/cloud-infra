@@ -2,8 +2,11 @@
 # │  cloud-cgc octocode DB — INCREMENTAL update → GHCR          │
 # │  → PROPAGATE to the deployed oci-apps server.               │
 # │                                                              │
-# │  Runs on oci-apps self-hosted runner (ARM64, 4 OCPUs, 24GB, │
-# │  no GHA 360m hard cap). All 6 repos in one job.             │
+# │  Runs on GitHub-hosted ubuntu-latest x86 runner (~14GB disk).│
+# │  Using x86 avoids oci-apps disk pressure (disk full).        │
+# │  The octocode DB (FastEmbed vectors + graph) is arch-portable│
+# │  so an x86 index is consumed by arm oci-apps cgc-mcp fine.   │
+# │  Runner SSHes into oci-apps over WireGuard to propagate.     │
 # │                                                              │
 # │  ALL business logic lives in cloud-cgc-db-update.sh — ZERO  │
 # │  logic here.                                                 │
@@ -35,7 +38,7 @@ env:
 jobs:
   update-db:
     name: "cgc-db · index all repos + propagate"
-    runs-on: [self-hosted, linux, arm64, oci-apps]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
