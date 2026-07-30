@@ -263,13 +263,35 @@ propagate_to_host() {
     _user=$(jq -r --arg h "$_host" '.vms[$h].user // "ubuntu"' "$_gha" 2>/dev/null)
     [ -n "$_wgip" ] && _target="$_user@$_wgip"
   fi
-  echo "[cgc-db] propagate → $_target (pull $IMAGE:$TAG + restart $_ctr)"
+  # Safety guard: skip if source or destination identifiers are empty/missing.
+  [ -n "$_vol" ] && [ -d "$OCTO_HOME" ] && [ -n "$(ls -A "$OCTO_HOME" 2>/dev/null)" ] \
+    || { echo "[cgc-db] WARN propagate: empty OCTO_HOME/vol — skip"; return 0; }
+
+  # Install rsync on the runner if missing (idempotent — no-op when already present).
+  if ! command -v rsync >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get install -y -qq rsync
+  fi
+  command -v rsync >/dev/null 2>&1 || { echo "[cgc-db] WARN propagate: rsync unavailable — skip"; return 0; }
+
+  echo "[cgc-db] propagate → $_target (rsync $OCTO_HOME → /var/lib/docker/volumes/$_vol/_data/)"
+  # Stop the MCP container so the volume is quiescent during sync.
   # shellcheck disable=SC2086
-  ssh ${CGC_SSH_OPTS:-} "$_target" \
-      "DB_IMAGE='$IMAGE:$TAG' DB_VOLUME='$_vol' MCP_CONTAINER='$_ctr' NTFY_URL='${NTFY_URL:-}' sh -s" \
-      < "$HERE/cloud-cgc-db-restore.sh" \
-    && echo "[cgc-db] propagate OK — $_host now serving the new DB" \
-    || echo "[cgc-db] WARN propagate to $_host failed (host unreachable / mesh down)"
+  ssh ${CGC_SSH_OPTS:-} "$_target" "sudo docker stop $_ctr" || true
+  # Delta-only rsync into the live volume path via remote sudo.
+  # shellcheck disable=SC2086
+  if rsync -az --delete --rsync-path="sudo rsync" \
+      -e "ssh ${CGC_SSH_OPTS:-}" \
+      "$OCTO_HOME/" \
+      "$_target:/var/lib/docker/volumes/$_vol/_data/"; then
+    # shellcheck disable=SC2086
+    ssh ${CGC_SSH_OPTS:-} "$_target" "sudo docker start $_ctr"
+    echo "[cgc-db] propagate OK — $_host now serving the new DB (rsync)"
+  else
+    echo "[cgc-db] WARN propagate to $_host failed (host unreachable / mesh down)"
+    # shellcheck disable=SC2086
+    ssh ${CGC_SSH_OPTS:-} "$_target" "sudo docker start $_ctr" || true
+    return 0
+  fi
 }
 
 # ── run ───────────────────────────────────────────────────────────────────

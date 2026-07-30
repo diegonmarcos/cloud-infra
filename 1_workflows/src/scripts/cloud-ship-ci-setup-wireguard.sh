@@ -56,6 +56,12 @@ else
   HUB_PORT="$PORT_PRIMARY"
 fi
 
+# Install wireguard-tools if missing (idempotent — no-op on self-hosted runners where wg-quick exists).
+if ! command -v wg-quick >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
+  echo "[wireguard] installing wireguard-tools"
+  sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools iproute2
+fi
+
 echo "[wireguard] Setting up WireGuard (mode=$MODE) -> $HUB_IP:$HUB_PORT"
 umask 077
 cat > /tmp/wg0.conf << WGEOF
