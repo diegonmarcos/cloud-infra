@@ -15,8 +15,13 @@ env:
 jobs:
   propagate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
+      - name: GHCR login
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: WireGuard up
         run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
       - name: Provision SSH key
