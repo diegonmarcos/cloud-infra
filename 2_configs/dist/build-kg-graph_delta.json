@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 285,
-    "edges": 386,
+    "nodes": 292,
+    "edges": 396,
     "by_table": {
       "vm": 4,
-      "service": 63,
-      "container": 83,
-      "domain": 41,
+      "service": 65,
+      "container": 85,
+      "domain": 42,
       "repo": 3,
-      "module": 63,
+      "module": 65,
       "package": 28
     }
   },
@@ -142,6 +142,32 @@
         "role": "app",
         "port": 8008,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "alerts_api",
+      "key": "service:alerts_api",
+      "properties": {
+        "name": "alerts-api",
+        "category": "tools",
+        "description": "Security Alert Aggregation API",
+        "domain": null,
+        "port": 5050,
+        "vm": "oci-analytics",
+        "folder": "bc-obs_alerts-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "alerts_api",
+      "key": "container:alerts_api",
+      "properties": {
+        "name": "alerts-api",
+        "image": "",
+        "role": "app",
+        "port": 5050,
+        "public": false
       }
     },
     {
@@ -1590,6 +1616,32 @@
     },
     {
       "table": "service",
+      "id": "playlist_syncer",
+      "key": "service:playlist_syncer",
+      "properties": {
+        "name": "playlist-syncer",
+        "category": "app",
+        "description": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative.",
+        "domain": "playlist.diegonmarcos.com",
+        "port": 8090,
+        "vm": "oci-apps",
+        "folder": "user-media_playlist-syncer"
+      }
+    },
+    {
+      "table": "container",
+      "id": "playlist_syncer",
+      "key": "container:playlist_syncer",
+      "properties": {
+        "name": "playlist-syncer",
+        "image": "ghcr.io/diegonmarcos/playlist-syncer-binaries:latest",
+        "role": "app",
+        "port": 8090,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "news_gdelt",
       "key": "service:news_gdelt",
       "properties": {
@@ -2246,6 +2298,14 @@
     },
     {
       "table": "domain",
+      "id": "playlist_diegonmarcos_com",
+      "key": "domain:playlist_diegonmarcos_com",
+      "properties": {
+        "fqdn": "playlist.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "cal_diegonmarcos_com",
       "key": "domain:cal_diegonmarcos_com",
       "properties": {
@@ -2342,6 +2402,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "matrix-continuwuity"
+      }
+    },
+    {
+      "table": "module",
+      "id": "bc_obs_alerts_api",
+      "key": "module:bc_obs_alerts_api",
+      "properties": {
+        "name": "bc-obs_alerts-api",
+        "repo": "cloud",
+        "category": "tools",
+        "service": "alerts-api"
       }
     },
     {
@@ -2896,6 +2967,17 @@
     },
     {
       "table": "module",
+      "id": "user_media_playlist_syncer",
+      "key": "module:user_media_playlist_syncer",
+      "properties": {
+        "name": "user-media_playlist-syncer",
+        "repo": "cloud",
+        "category": "app",
+        "service": "playlist-syncer"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_news_news_gdelt",
       "key": "module:user_news_news_gdelt",
       "properties": {
@@ -3392,6 +3474,22 @@
       "from": "service:matrix_continuwuity",
       "to": "container:continuwuity",
       "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:alerts_api",
+      "to": "vm:oci_analytics",
+      "key": "service:alerts_api->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:alerts_api",
+      "to": "container:alerts_api",
+      "key": "service:alerts_api->runs_container->container:alerts_api",
       "properties": {
         "role": "app"
       }
@@ -4289,6 +4387,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:playlist_syncer",
+      "to": "vm:oci_apps",
+      "key": "service:playlist_syncer->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:playlist_syncer",
+      "to": "container:playlist_syncer",
+      "key": "service:playlist_syncer->runs_container->container:playlist_syncer",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:news_gdelt",
       "to": "vm:oci_apps",
       "key": "service:news_gdelt->hosted_on->vm:oci_apps",
@@ -4843,6 +4957,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:playlist_syncer",
+      "to": "service:caddy",
+      "key": "service:playlist_syncer->proxied_by->service:caddy",
+      "properties": {
+        "domain": "playlist.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:calendar_radicale",
       "to": "service:caddy",
       "key": "service:calendar_radicale->proxied_by->service:caddy",
@@ -5164,6 +5287,13 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:playlist_diegonmarcos_com",
+      "to": "service:playlist_syncer",
+      "key": "domain:playlist_diegonmarcos_com->routes_to->service:playlist_syncer",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:cal_diegonmarcos_com",
       "to": "service:calendar_radicale",
       "key": "domain:cal_diegonmarcos_com->routes_to->service:calendar_radicale",
@@ -5244,6 +5374,20 @@
       "from": "module:user_comm_matrix_continuwuity",
       "to": "service:matrix_continuwuity",
       "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:bc_obs_alerts_api",
+      "to": "repo:cloud",
+      "key": "module:bc_obs_alerts_api->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:bc_obs_alerts_api",
+      "to": "service:alerts_api",
+      "key": "module:bc_obs_alerts_api->implements->service:alerts_api",
       "properties": {}
     },
     {
@@ -5944,6 +6088,20 @@
       "from": "module:user_media_photoprism",
       "to": "service:photoprism",
       "key": "module:user_media_photoprism->implements->service:photoprism",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_media_playlist_syncer",
+      "to": "repo:cloud",
+      "key": "module:user_media_playlist_syncer->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_media_playlist_syncer",
+      "to": "service:playlist_syncer",
+      "key": "module:user_media_playlist_syncer->implements->service:playlist_syncer",
       "properties": {}
     },
     {

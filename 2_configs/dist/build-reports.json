@@ -430,6 +430,15 @@
         "path": "/_matrix/client/versions"
       }
     },
+    "alerts-api": {
+      "name": "alerts-api",
+      "vm": "oci-E2-f_1",
+      "domain": null,
+      "enabled": true,
+      "category": "tools",
+      "ports": null,
+      "health": null
+    },
     "languagetool": {
       "name": "languagetool",
       "vm": "oci-A1-f_0",
@@ -1288,6 +1297,15 @@
       "dns": "matrix-continuwuity.app"
     },
     {
+      "service": "alerts-api",
+      "dns": "alerts-api.app"
+    },
+    {
+      "service": "alerts-api",
+      "container": "app",
+      "dns": "alerts-api.app"
+    },
+    {
       "service": "languagetool",
       "dns": "languagetool.app"
     },
@@ -1940,6 +1958,7 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
+          "alerts-api",
           "c3-public-api",
           "unbound-dns64",
           "caddy-public"
@@ -2041,6 +2060,15 @@
         "health": {
           "path": "/_matrix/client/versions"
         }
+      },
+      "alerts-api": {
+        "name": "alerts-api",
+        "vm": "oci-E2-f_1",
+        "domain": null,
+        "enabled": true,
+        "category": "tools",
+        "ports": null,
+        "health": null
       },
       "languagetool": {
         "name": "languagetool",
