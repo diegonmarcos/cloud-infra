@@ -1,7 +1,6 @@
-# ONE-SHOT PROPAGATE — pulls the DB that green cgc-db runs already pushed to
-# GHCR and rsyncs it straight into oci-apps' octocode_db volume over the WG mesh,
-# then restarts cloud-cgc-mcp. Runs in ~5 min (no index). Mesh path proven via
-# the WG-up + hub-pubkey fixes. Manual dispatch only.
+# ONE-SHOT PROPAGATE — pulls the DB that green cgc-db runs upload to GHCR and
+# rsyncs it into oci-apps' octocode_db volume over the WG mesh. ~5 min, no index.
+# Manual dispatch. Fold into the engine once proven.
 name: "cgc-db propagate-only (GHCR DB -> oci-apps)"
 
 on:
@@ -28,7 +27,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: Pull GHCR DB + extract
+      - name: Pull GHCR DB + extract on runner
         run: |
           set -euo pipefail
           IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
@@ -36,18 +35,18 @@ jobs:
           mkdir -p /tmp/octodb
           docker run --rm -v /tmp/octodb:/out "$IMAGE" sh -c 'cp -a /octocode-db/. /out/'
           echo "extracted $(du -sh /tmp/octodb | cut -f1) to /tmp/octodb"
-      - name: rsync DB into oci-apps volume + restart cgc-mcp
+      - name: rsync DB into oci-apps octocode_db volume
         run: |
           set -euo pipefail
           SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15"
           TARGET="ubuntu@10.0.0.6"
           VOL="octocode_db"; CTR="cloud-cgc-mcp"
-          ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR" || true
-          # Wipe the old DB first (frees ~2.9G) so the new one fits oci-apps' tight disk.
-          ssh $SSHOPTS "$TARGET" "sudo find /var/lib/docker/volumes/$VOL/_data -mindepth 1 -delete"
-          ssh $SSHOPTS "$TARGET" "df -h / | tail -1"
-          rsync -az --inplace --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
+          echo "--- disk before ---"; ssh $SSHOPTS "$TARGET" "df -h / | tail -1"
+          # Stop the consumer if it exists (harmless if absent).
+          ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR 2>/dev/null || true"
+          # Sync the DB in (delta + delete stale). Disk has headroom now.
+          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
             /tmp/octodb/ "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
-          ssh $SSHOPTS "$TARGET" "sudo docker start $CTR"
+          ssh $SSHOPTS "$TARGET" "sudo docker start $CTR 2>/dev/null || true"
           echo "=== verify ==="
-          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; sudo docker ps --format '{{.Names}} {{.Status}}' | grep cgc"
+          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; df -h / | tail -1; sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'no cgc container (DB staged in volume)'"
