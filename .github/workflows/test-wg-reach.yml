@@ -1,8 +1,8 @@
-# DIAGNOSTIC — fast (~2 min) WG mesh + SSH reachability probe for the cgc-db
-# propagation path. Mirrors ship-cgc-db.yml's WG-up + SSH-provision steps, then
-# just tries to SSH into oci-apps (10.0.0.6) over the mesh. No index, no 5h wait.
-# Remove once cgc-db propagation is confirmed working.
-name: "test-wg-reach (diagnostic)"
+# ONE-SHOT PROPAGATE — pulls the DB that green cgc-db runs already pushed to
+# GHCR and rsyncs it straight into oci-apps' octocode_db volume over the WG mesh,
+# then restarts cloud-cgc-mcp. Runs in ~5 min (no index). Mesh path proven via
+# the WG-up + hub-pubkey fixes. Manual dispatch only.
+name: "cgc-db propagate-only (GHCR DB -> oci-apps)"
 
 on:
   workflow_dispatch: {}
@@ -13,7 +13,7 @@ env:
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
 
 jobs:
-  probe:
+  propagate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +23,23 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-          echo "key bytes: $(wc -c < ~/.ssh/cgc_deploy)"
-      - name: WG diagnostics
+      - name: Pull GHCR DB + extract
         run: |
-          echo "--- wg show ---"; sudo wg show || true
-          echo "--- ip addr wg0 ---"; ip addr show wg0 || true
-          echo "--- ping hub 10.0.0.1 ---"; ping -c2 -W3 10.0.0.1 || true
-          echo "--- ping oci-apps 10.0.0.6 ---"; ping -c2 -W3 10.0.0.6 || true
-      - name: SSH reach oci-apps
+          set -euo pipefail
+          IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
+          docker pull -q "$IMAGE"
+          mkdir -p /tmp/octodb
+          docker run --rm -v /tmp/octodb:/out "$IMAGE" sh -c 'cp -a /octocode-db/. /out/'
+          echo "extracted $(du -sh /tmp/octodb | cut -f1) to /tmp/octodb"
+      - name: rsync DB into oci-apps volume + restart cgc-mcp
         run: |
-          ssh -i ~/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-              -o ConnectTimeout=15 ubuntu@10.0.0.6 'echo REACHED-OCI-APPS: $(hostname); df -h / | tail -1'
+          set -euo pipefail
+          SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15"
+          TARGET="ubuntu@10.0.0.6"
+          VOL="octocode_db"; CTR="cloud-cgc-mcp"
+          ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR" || true
+          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
+            /tmp/octodb/ "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
+          ssh $SSHOPTS "$TARGET" "sudo docker start $CTR"
+          echo "=== verify ==="
+          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; sudo docker ps --format '{{.Names}} {{.Status}}' | grep cgc"
