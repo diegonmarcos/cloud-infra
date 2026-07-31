@@ -112,8 +112,8 @@ MAX_PARALLEL="${SHIP_PARALLEL:-$(( _CORES > 1 ? _CORES - 1 : 1 ))}"  # nproc-1, 
 # One persistent connection — all parallel services reuse it via ControlPath
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 ssh $SSH_OPTS -fNM "$VM" 2>/dev/null && log "SSH multiplex master established to $VM" || log "SSH multiplex: $VM unreachable (will retry per-service)"
-# Workers must REUSE the master, never race to create one
-SSH_OPTS="-o ControlMaster=no -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
+# ponytail: auto re-establishes a fresh master if the pre-warmed one dies mid-ship (exit 255 cascade fix)
+SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 
 # ── Warm declared arch runners (for cross-arch docker builds) ────
 # Services with docker.arch != HOST_ARCH need a remote builder (e.g. arm64
@@ -146,7 +146,7 @@ if [ -n "$RUNNERS_JSON" ]; then
         _host=$(jq -r --arg a "$_arch" '.runners[$a].host // empty' "$RUNNERS_JSON")
         [ "$_type" = "ssh" ] || continue
         [ -z "$_host" ] && continue
-        if ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -fNM "$_host" 2>/dev/null; then
+        if ssh -o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=300 -o ServerAliveInterval=15 -o ServerAliveCountMax=8 -fNM "$_host" 2>/dev/null; then
             log "Runner for arch=$_arch warmed: $_host"
             export "CLOUD_BUILDER_$(echo "$_arch" | tr '[:lower:]' '[:upper:]')_READY=1"
         else
