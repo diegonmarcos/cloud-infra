@@ -48,44 +48,45 @@ jobs:
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
           GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
         run: |
-          mkdir -p /tmp/reports-ssh
-          chmod 700 /tmp/reports-ssh
-          printf '%s\n' "$OCI_SSH_KEY"       > /tmp/reports-ssh/oci_key       && chmod 600 /tmp/reports-ssh/oci_key
-          printf '%s\n' "$GCP_PROXY_SSH_KEY" > /tmp/reports-ssh/gcp_proxy_key && chmod 600 /tmp/reports-ssh/gcp_proxy_key
-          printf '%s\n' "$GCP_T4_SSH_KEY"    > /tmp/reports-ssh/gcp_t4_key   && chmod 600 /tmp/reports-ssh/gcp_t4_key
-          cat > /tmp/reports-ssh/config <<'EOF'
-          Host oci-mail
-            HostName 10.0.0.3
-            User ubuntu
-            IdentityFile /root/.ssh/oci_key
-            StrictHostKeyChecking no
-            BatchMode yes
-          Host oci-analytics
-            HostName 10.0.0.4
-            User ubuntu
-            IdentityFile /root/.ssh/oci_key
-            StrictHostKeyChecking no
-            BatchMode yes
-          Host oci-apps
-            HostName 10.0.0.6
-            User ubuntu
-            IdentityFile /root/.ssh/oci_key
-            StrictHostKeyChecking no
-            BatchMode yes
-          Host gcp-proxy
-            HostName 10.0.0.1
-            User diego
-            IdentityFile /root/.ssh/gcp_proxy_key
-            StrictHostKeyChecking no
-            BatchMode yes
-          Host gcp-t4
-            HostName 10.0.0.8
-            User diego
-            IdentityFile /root/.ssh/gcp_t4_key
-            StrictHostKeyChecking no
-            BatchMode yes
-          EOF
-          chmod 600 /tmp/reports-ssh/config
+          sudo mkdir -p /tmp/reports-ssh
+          printf '%s\n' "$OCI_SSH_KEY"       | sudo tee /tmp/reports-ssh/oci_key       > /dev/null
+          printf '%s\n' "$GCP_PROXY_SSH_KEY" | sudo tee /tmp/reports-ssh/gcp_proxy_key > /dev/null
+          printf '%s\n' "$GCP_T4_SSH_KEY"    | sudo tee /tmp/reports-ssh/gcp_t4_key   > /dev/null
+          sudo tee /tmp/reports-ssh/config > /dev/null <<'EOF'
+Host oci-mail
+  HostName 10.0.0.3
+  User ubuntu
+  IdentityFile /root/.ssh/oci_key
+  StrictHostKeyChecking no
+  BatchMode yes
+Host oci-analytics
+  HostName 10.0.0.4
+  User ubuntu
+  IdentityFile /root/.ssh/oci_key
+  StrictHostKeyChecking no
+  BatchMode yes
+Host oci-apps
+  HostName 10.0.0.6
+  User ubuntu
+  IdentityFile /root/.ssh/oci_key
+  StrictHostKeyChecking no
+  BatchMode yes
+Host gcp-proxy
+  HostName 10.0.0.1
+  User diego
+  IdentityFile /root/.ssh/gcp_proxy_key
+  StrictHostKeyChecking no
+  BatchMode yes
+Host gcp-t4
+  HostName 10.0.0.8
+  User diego
+  IdentityFile /root/.ssh/gcp_t4_key
+  StrictHostKeyChecking no
+  BatchMode yes
+EOF
+          sudo chown -R root:root /tmp/reports-ssh
+          sudo chmod 700 /tmp/reports-ssh
+          sudo chmod 600 /tmp/reports-ssh/oci_key /tmp/reports-ssh/gcp_proxy_key /tmp/reports-ssh/gcp_t4_key /tmp/reports-ssh/config
 
       - name: Run reports
         run: |
