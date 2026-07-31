@@ -1,6 +1,9 @@
 # ONE-SHOT PROPAGATE — pulls the DB that green cgc-db runs upload to GHCR and
 # rsyncs it into oci-apps' octocode_db volume over the WG mesh. ~5 min, no index.
 # Manual dispatch. Fold into the engine once proven.
+#
+# ORDER MATTERS: pull the DB FIRST (slow), bring WG up LAST before rsync — the
+# tunnel has no keepalive, so an idle gap (a multi-minute pull) drops the route.
 name: "cgc-db propagate-only (GHCR DB -> oci-apps)"
 
 on:
@@ -21,13 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: GHCR login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      - name: WireGuard up
-        run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
-      - name: Provision SSH key
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: Pull GHCR DB + extract on runner
+      - name: Pull GHCR DB + extract on runner (SLOW — do before WG)
         run: |
           set -euo pipefail
           IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
@@ -35,18 +32,22 @@ jobs:
           mkdir -p /tmp/octodb
           docker run --rm -v /tmp/octodb:/out "$IMAGE" sh -c 'cp -a /octocode-db/. /out/'
           echo "extracted $(du -sh /tmp/octodb | cut -f1) to /tmp/octodb"
-      - name: rsync DB into oci-apps octocode_db volume
+      - name: Provision SSH key
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
+      - name: WireGuard up (fresh, right before use)
+        run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
+      - name: rsync DB into oci-apps octocode_db volume (immediately after WG)
         run: |
           set -euo pipefail
-          SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15"
+          SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=10"
           TARGET="ubuntu@10.0.0.6"
           VOL="octocode_db"; CTR="cloud-cgc-mcp"
-          echo "--- disk before ---"; ssh $SSHOPTS "$TARGET" "df -h / | tail -1"
-          # Stop the consumer if it exists (harmless if absent).
+          echo "--- reach check ---"; ssh $SSHOPTS "$TARGET" "echo reached; df -h / | tail -1"
           ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR 2>/dev/null || true"
-          # Sync the DB in (delta + delete stale). Disk has headroom now.
           rsync -az --delete --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
             /tmp/octodb/ "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
           ssh $SSHOPTS "$TARGET" "sudo docker start $CTR 2>/dev/null || true"
           echo "=== verify ==="
-          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; df -h / | tail -1; sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'no cgc container (DB staged in volume)'"
+          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; df -h / | tail -1; sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'DB staged in volume (no cgc container)'"
