@@ -18,10 +18,6 @@
       "url": "https://matrix.diegonmarcos.com/_matrix/client/versions"
     },
     {
-      "service": "c3-analytics-api",
-      "url": "https://api.diegonmarcos.com/c3a/c3a/healthz"
-    },
-    {
       "service": "c3-infra-api",
       "url": "https://api.diegonmarcos.com/c3-infra-api/c3-infra-api/health"
     },
@@ -142,10 +138,6 @@
     {
       "service": "languagetool",
       "domain": "languagetool.diegonmarcos.com"
-    },
-    {
-      "service": "c3-analytics-api",
-      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -276,10 +268,6 @@
     {
       "service": "languagetool",
       "domain": "languagetool.diegonmarcos.com"
-    },
-    {
-      "service": "c3-analytics-api",
-      "domain": "api.diegonmarcos.com/c3a"
     },
     {
       "service": "c3-infra-api",
@@ -453,19 +441,6 @@
       },
       "health": {
         "path": "/v2/check"
-      }
-    },
-    "c3-analytics-api": {
-      "name": "c3-analytics-api",
-      "vm": "gcp-E2-f_0",
-      "domain": "api.diegonmarcos.com/c3a",
-      "enabled": true,
-      "category": "obs",
-      "ports": {
-        "app": 8085
-      },
-      "health": {
-        "path": "/c3a/healthz"
       }
     },
     "c3-diego-personal-data-mcp": {
@@ -991,61 +966,6 @@
         "path": "/health"
       }
     },
-    "ollama": {
-      "name": "ollama",
-      "vm": "gcp-t4",
-      "domain": null,
-      "enabled": true,
-      "category": "agi",
-      "ports": {
-        "app": 11434
-      },
-      "health": null
-    },
-    "ollama-arm": {
-      "name": "ollama-arm",
-      "vm": "oci-apps-2",
-      "domain": null,
-      "enabled": true,
-      "category": "agi",
-      "ports": {
-        "app": 11434
-      },
-      "health": null
-    },
-    "ollama-hai": {
-      "name": "ollama-hai",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": false,
-      "category": "agi",
-      "ports": {
-        "app": 11435
-      },
-      "health": null
-    },
-    "rig-agentic-hai-1.5bq4": {
-      "name": "rig-agentic-hai-1.5bq4",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": false,
-      "category": "agi",
-      "ports": {
-        "app": 8091
-      },
-      "health": null
-    },
-    "rig-agentic-sonn-14bq8": {
-      "name": "rig-agentic-sonn-14bq8",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "agi",
-      "ports": {
-        "app": 8091
-      },
-      "health": null
-    },
     "session-memory": {
       "name": "session-memory",
       "vm": "oci-A1-f_0",
@@ -1377,15 +1297,6 @@
       "dns": "languagetool.app"
     },
     {
-      "service": "c3-analytics-api",
-      "dns": "c3-analytics-api.app"
-    },
-    {
-      "service": "c3-analytics-api",
-      "container": "app",
-      "dns": "c3-analytics-api.app"
-    },
-    {
       "service": "c3-infra-api",
       "dns": "c3-infra-api.app"
     },
@@ -1689,36 +1600,6 @@
       "service": "my-ai-api",
       "container": "app",
       "dns": "my-ai-api.app"
-    },
-    {
-      "service": "ollama",
-      "dns": "ollama.app"
-    },
-    {
-      "service": "ollama",
-      "container": "app",
-      "dns": "ollama.app"
-    },
-    {
-      "service": "ollama-arm",
-      "dns": "ollama-arm.app"
-    },
-    {
-      "service": "ollama-hai",
-      "dns": "ollama-hai.app"
-    },
-    {
-      "service": "ollama-hai",
-      "container": "app",
-      "dns": "ollama-hai.app"
-    },
-    {
-      "service": "rig-agentic-hai-1.5bq4",
-      "dns": "rig-agentic-hai-1.5bq4.app"
-    },
-    {
-      "service": "rig-agentic-sonn-14bq8",
-      "dns": "rig-agentic-sonn-14bq8.app"
     },
     {
       "service": "session-memory",
@@ -2100,9 +1981,6 @@
           "hermes-agent",
           "kg-store",
           "my-ai-api",
-          "ollama-hai",
-          "rig-agentic-hai-1.5bq4",
-          "rig-agentic-sonn-14bq8",
           "session-memory",
           "chat-mattermost",
           "matrix-element",
@@ -2131,7 +2009,6 @@
         "user": "diego",
         "provider": null,
         "services": [
-          "c3-analytics-api",
           "http-to-smtp-proxy-api",
           "postlite",
           "redis",
@@ -2176,19 +2053,6 @@
         },
         "health": {
           "path": "/v2/check"
-        }
-      },
-      "c3-analytics-api": {
-        "name": "c3-analytics-api",
-        "vm": "gcp-E2-f_0",
-        "domain": "api.diegonmarcos.com/c3a",
-        "enabled": true,
-        "category": "obs",
-        "ports": {
-          "app": 8085
-        },
-        "health": {
-          "path": "/c3a/healthz"
         }
       },
       "c3-diego-personal-data-mcp": {
@@ -2713,61 +2577,6 @@
         "health": {
           "path": "/health"
         }
-      },
-      "ollama": {
-        "name": "ollama",
-        "vm": "gcp-t4",
-        "domain": null,
-        "enabled": true,
-        "category": "agi",
-        "ports": {
-          "app": 11434
-        },
-        "health": null
-      },
-      "ollama-arm": {
-        "name": "ollama-arm",
-        "vm": "oci-apps-2",
-        "domain": null,
-        "enabled": true,
-        "category": "agi",
-        "ports": {
-          "app": 11434
-        },
-        "health": null
-      },
-      "ollama-hai": {
-        "name": "ollama-hai",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": false,
-        "category": "agi",
-        "ports": {
-          "app": 11435
-        },
-        "health": null
-      },
-      "rig-agentic-hai-1.5bq4": {
-        "name": "rig-agentic-hai-1.5bq4",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": false,
-        "category": "agi",
-        "ports": {
-          "app": 8091
-        },
-        "health": null
-      },
-      "rig-agentic-sonn-14bq8": {
-        "name": "rig-agentic-sonn-14bq8",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "agi",
-        "ports": {
-          "app": 8091
-        },
-        "health": null
       },
       "session-memory": {
         "name": "session-memory",

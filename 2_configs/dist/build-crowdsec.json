@@ -105,31 +105,6 @@
         "healthcheck_paths": []
       }
     },
-    "c3-analytics-api": {
-      "ip": "10.0.0.1",
-      "ports": {
-        "app": 8085
-      },
-      "vm": "gcp-proxy",
-      "healthcheck": "/healthz",
-      "domain": "api.diegonmarcos.com/c3a",
-      "description": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/c3a/docs/json",
-        "api_url": "https://api.diegonmarcos.com/c3a/c3a/docs/json",
-        "healthcheck_paths": [
-          "/healthz"
-        ],
-        "type": "openapi",
-        "spec_path": "/c3a/docs/json",
-        "base_path": "/c3a",
-        "display_name": "C3 Analytics Public Collector",
-        "description": "Public passthrough analytics collector. Browsers/sites POST to /c3a/{e|s|l}, file ingest /c3a/f, tracker /c3a/t.js.",
-        "auth": "none"
-      }
-    },
     "c3-infra-api": {
       "ip": "10.0.0.6",
       "ports": {
@@ -991,57 +966,6 @@
         "healthcheck_paths": [
           "/health"
         ]
-      }
-    },
-    "ollama-hai": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 11435
-      },
-      "vm": "oci-apps",
-      "description": "Ollama LLM server (ARM CPU) — qwen2.5:1.5b + nomic-embed-text for hai agent and octocode",
-      "api": {
-        "has_api": true,
-        "has_web_ui": false,
-        "api_path": "/api",
-        "api_url": null,
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/api",
-        "endpoint_count": 16,
-        "display_name": "Ollama LLM API (HAI)",
-        "description": "REST API for LLM inference and embeddings for HAI agent and octocode support.",
-        "auth": "none"
-      }
-    },
-    "rig-agentic-hai-1.5bq4": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 8091
-      },
-      "vm": "oci-apps",
-      "description": "Rig Agentic AI (HAI) — Lightweight Qwen 1.5B Q4 agent with strict allowlist guardrails",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      }
-    },
-    "rig-agentic-sonn-14bq8": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 8091
-      },
-      "vm": "oci-apps",
-      "description": "Rig Agentic AI (Heavy) — DeepSeek R1 14B Q8 agent with tool calling via C3 MCP",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
       }
     },
     "session-memory": {
