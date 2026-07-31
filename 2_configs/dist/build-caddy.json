@@ -304,6 +304,16 @@
       "comment": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
+      "domain": "playlist.diegonmarcos.com",
+      "upstream": "10.0.0.6:8090",
+      "wg_only": true,
+      "bypass_paths": [
+        "/api/auth/spotify/callback",
+        "/api/auth/youtube/callback"
+      ],
+      "comment": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative."
+    },
+    {
       "domain": "cal.diegonmarcos.com",
       "upstream": "10.0.0.6:5232",
       "wg_only": true,
@@ -730,6 +740,10 @@
     {
       "service": "photoprism.app",
       "upstream": "10.0.0.6:3013"
+    },
+    {
+      "service": "playlist-syncer.app",
+      "upstream": "10.0.0.6:8090"
     },
     {
       "service": "news-gdelt.app",
@@ -1611,6 +1625,27 @@
     },
     {
       "kind": "redirect",
+      "service": "playlist-syncer.app",
+      "redirect_to": "https://playlist-syncer-http-8090.app",
+      "container": "playlist-syncer",
+      "container_key": "app",
+      "svc": "playlist-syncer",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "playlist-syncer-http-8090.app",
+      "container": "playlist-syncer",
+      "container_key": "app",
+      "svc": "playlist-syncer",
+      "vm": "oci-A1-f_0",
+      "port": 8090,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8090",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "news-gdelt.app",
       "redirect_to": "https://news-gdelt-null.app",
       "container": "news-gdelt",
@@ -2280,6 +2315,16 @@
       "notes": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
+      "host": "playlist.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative."
+    },
+    {
       "host": "cal.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:5232",
@@ -2802,6 +2847,16 @@
       "notes": null
     },
     {
+      "host": "playlist-syncer.app",
+      "path": null,
+      "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "news-gdelt.app",
       "path": null,
       "upstream": "10.0.0.6:3019",
@@ -3292,6 +3347,16 @@
       "zone": "com",
       "service": "photoprism",
       "notes": "underscore → TLS broken"
+    },
+    {
+      "host": "playlist-syncer-http-8090.app",
+      "path": null,
+      "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "playlist-syncer",
+      "notes": null
     },
     {
       "host": "calendar-radicale-http-5232.app",

@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 298,
-    "edges": 402,
+    "nodes": 302,
+    "edges": 408,
     "by_table": {
       "vm": 4,
-      "service": 67,
-      "container": 87,
-      "domain": 42,
+      "service": 68,
+      "container": 88,
+      "domain": 43,
       "repo": 3,
-      "module": 67,
+      "module": 68,
       "package": 28
     }
   },
@@ -1694,6 +1694,32 @@
     },
     {
       "table": "service",
+      "id": "playlist_syncer",
+      "key": "service:playlist_syncer",
+      "properties": {
+        "name": "playlist-syncer",
+        "category": "app",
+        "description": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative.",
+        "domain": "playlist.diegonmarcos.com",
+        "port": 8090,
+        "vm": "oci-apps",
+        "folder": "user-media_playlist-syncer"
+      }
+    },
+    {
+      "table": "container",
+      "id": "playlist_syncer",
+      "key": "container:playlist_syncer",
+      "properties": {
+        "name": "playlist-syncer",
+        "image": "ghcr.io/diegonmarcos/playlist-syncer-binaries:latest",
+        "role": "app",
+        "port": 8090,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "news_gdelt",
       "key": "service:news_gdelt",
       "properties": {
@@ -2354,6 +2380,14 @@
       "key": "domain:photos_diegonmarcos_com",
       "properties": {
         "fqdn": "photos.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "playlist_diegonmarcos_com",
+      "key": "domain:playlist_diegonmarcos_com",
+      "properties": {
+        "fqdn": "playlist.diegonmarcos.com"
       }
     },
     {
@@ -3048,6 +3082,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "photoprism"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_media_playlist_syncer",
+      "key": "module:user_media_playlist_syncer",
+      "properties": {
+        "name": "user-media_playlist-syncer",
+        "repo": "cloud",
+        "category": "app",
+        "service": "playlist-syncer"
       }
     },
     {
@@ -4495,6 +4540,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:playlist_syncer",
+      "to": "vm:oci_apps",
+      "key": "service:playlist_syncer->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:playlist_syncer",
+      "to": "container:playlist_syncer",
+      "key": "service:playlist_syncer->runs_container->container:playlist_syncer",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:news_gdelt",
       "to": "vm:oci_apps",
       "key": "service:news_gdelt->hosted_on->vm:oci_apps",
@@ -5058,6 +5119,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:playlist_syncer",
+      "to": "service:caddy",
+      "key": "service:playlist_syncer->proxied_by->service:caddy",
+      "properties": {
+        "domain": "playlist.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:calendar_radicale",
       "to": "service:caddy",
       "key": "service:calendar_radicale->proxied_by->service:caddy",
@@ -5382,6 +5452,13 @@
       "from": "domain:photos_diegonmarcos_com",
       "to": "service:photoprism",
       "key": "domain:photos_diegonmarcos_com->routes_to->service:photoprism",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:playlist_diegonmarcos_com",
+      "to": "service:playlist_syncer",
+      "key": "domain:playlist_diegonmarcos_com->routes_to->service:playlist_syncer",
       "properties": {}
     },
     {
@@ -6222,6 +6299,20 @@
       "from": "module:user_media_photoprism",
       "to": "service:photoprism",
       "key": "module:user_media_photoprism->implements->service:photoprism",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_media_playlist_syncer",
+      "to": "repo:cloud",
+      "key": "module:user_media_playlist_syncer->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_media_playlist_syncer",
+      "to": "service:playlist_syncer",
+      "key": "module:user_media_playlist_syncer->implements->service:playlist_syncer",
       "properties": {}
     },
     {

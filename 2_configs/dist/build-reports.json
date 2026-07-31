@@ -94,6 +94,10 @@
       "url": "https://photos.diegonmarcos.com/api/v1/status"
     },
     {
+      "service": "playlist-syncer",
+      "url": "https://playlist.diegonmarcos.com/api/health"
+    },
+    {
       "service": "calendar-radicale",
       "url": "https://cal.diegonmarcos.com/.web/"
     },
@@ -226,6 +230,10 @@
     {
       "service": "photoprism",
       "domain": "photos.diegonmarcos.com"
+    },
+    {
+      "service": "playlist-syncer",
+      "domain": "playlist.diegonmarcos.com"
     },
     {
       "service": "calendar-radicale",
@@ -364,6 +372,10 @@
     {
       "service": "photoprism",
       "domain": "photos.diegonmarcos.com"
+    },
+    {
+      "service": "playlist-syncer",
+      "domain": "playlist.diegonmarcos.com"
     },
     {
       "service": "calendar-radicale",
@@ -1188,6 +1200,19 @@
         "path": "/api/v1/status"
       }
     },
+    "playlist-syncer": {
+      "name": "playlist-syncer",
+      "vm": "oci-A1-f_0",
+      "domain": "playlist.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8090
+      },
+      "health": {
+        "path": "/api/health"
+      }
+    },
     "news-gdelt": {
       "name": "news-gdelt",
       "vm": "oci-A1-f_0",
@@ -1825,6 +1850,15 @@
       "dns": "photoprism.app"
     },
     {
+      "service": "playlist-syncer",
+      "dns": "playlist-syncer.app"
+    },
+    {
+      "service": "playlist-syncer",
+      "container": "app",
+      "dns": "playlist-syncer.app"
+    },
+    {
       "service": "news-gdelt",
       "dns": "news-gdelt.app"
     },
@@ -2110,6 +2144,7 @@
           "scrappers-api",
           "fin-api",
           "photoprism",
+          "playlist-syncer",
           "news-gdelt",
           "calendar-radicale",
           "code-server",
@@ -2909,6 +2944,19 @@
         },
         "health": {
           "path": "/api/v1/status"
+        }
+      },
+      "playlist-syncer": {
+        "name": "playlist-syncer",
+        "vm": "oci-A1-f_0",
+        "domain": "playlist.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8090
+        },
+        "health": {
+          "path": "/api/health"
         }
       },
       "news-gdelt": {
