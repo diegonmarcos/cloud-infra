@@ -146,6 +146,8 @@ export interface BuildJsonEntry {
   flake?: string;
   folder: string;
   enabled?: boolean;             // default: true — set false to exclude from topology containers
+  archived_at?: string;          // ISO date — set when moving folder to a_solutions/z_archive/
+  archived_reason?: string;      // why it was retired — required alongside archived_at
   // Standardized routing fields
   port?: number;               // Main listening port (REQUIRED for routable services)
   dns?: string;                // Internal DNS name, e.g. "{name}.app" (REQUIRED for routable services)
@@ -297,6 +299,7 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
         "ports", "proxy", "health", "monitoring", "backup", "notifications",
         "docker", "secrets", "build", "compose", "lifecycle", "terraform",
         "multi_vm", "frozen", "version", "containers", "enabled",
+        "archived_at", "archived_reason",
         "api", "mcp",
       ]);
       const extra: Record<string, unknown> = {};
