@@ -46,6 +46,13 @@ _ensure_image_public() {
             return 0
         fi
     done
+    # ponytail: in GHA the VM is authenticated to GHCR via GITHUB_TOKEN
+    # (deploy-compose.sh pushes credentials before docker compose pull).
+    # Private is only fatal when running locally without vault credentials.
+    if [ -n "${GITHUB_TOKEN:-}" ]; then
+        log_warn "Package ${_eip_pkg}: PRIVATE (not anonymously pullable) — VM will pull via GITHUB_TOKEN. No action needed in GHA."
+        return 0
+    fi
     # Genuinely private — the VM cannot pull it and we cannot fix it via API.
     # GitHub has NO API to change package visibility, AND a fresh push does NOT
     # make it public — newly-created GHCR packages on this account default to
