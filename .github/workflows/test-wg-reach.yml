@@ -1,10 +1,8 @@
-# ONE-SHOT PROPAGATE — pulls the DB that green cgc-db runs upload to GHCR and
-# rsyncs it into oci-apps' octocode_db volume over the WG mesh. ~5 min, no index.
-# Manual dispatch. Fold into the engine once proven.
-#
-# ORDER MATTERS: pull the DB FIRST (slow), bring WG up LAST before rsync — the
-# tunnel has no keepalive, so an idle gap (a multi-minute pull) drops the route.
-name: "cgc-db propagate-only (GHCR DB -> oci-apps)"
+# ONE-SHOT PROPAGATE — trigger oci-apps to pull the GHCR DB ITSELF (fast, direct)
+# and load it into the octocode_db volume. WG only carries the short SSH command;
+# the ~3GB DB never traverses the flaky WG tunnel (that dropped mid-rsync).
+# Manual dispatch. Fold into the engine (cloud-cgc-db-restore.sh) once proven.
+name: "cgc-db propagate-only (oci-apps pulls GHCR DB)"
 
 on:
   workflow_dispatch: {}
@@ -22,32 +20,37 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
-      - name: GHCR login
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      - name: Pull GHCR DB + extract on runner (SLOW — do before WG)
-        run: |
-          set -euo pipefail
-          IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
-          docker pull -q "$IMAGE"
-          mkdir -p /tmp/octodb
-          docker run --rm -v /tmp/octodb:/out "$IMAGE" sh -c 'cp -a /octocode-db/. /out/'
-          echo "extracted $(du -sh /tmp/octodb | cut -f1) to /tmp/octodb"
       - name: Provision SSH key
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: WireGuard up (fresh, right before use)
+      - name: WireGuard up
         run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
-      - name: rsync DB into oci-apps octocode_db volume (immediately after WG)
+      - name: Trigger oci-apps to pull GHCR DB into the volume
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=10"
+          SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
           TARGET="ubuntu@10.0.0.6"
+          IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
           VOL="octocode_db"; CTR="cloud-cgc-mcp"
-          echo "--- reach check ---"; ssh $SSHOPTS "$TARGET" "echo reached; df -h / | tail -1"
-          ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR 2>/dev/null || true"
-          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
-            /tmp/octodb/ "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
-          ssh $SSHOPTS "$TARGET" "sudo docker start $CTR 2>/dev/null || true"
+          ssh $SSHOPTS "$TARGET" \
+            "GHCR_USER='$GHCR_USER' GHCR_TOKEN='$GHCR_TOKEN' IMAGE='$IMAGE' VOL='$VOL' CTR='$CTR' bash -s" <<'REMOTE'
+          set -e
+          echo "--- disk before ---"; df -h / | tail -1
+          echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          echo "--- pulling DB image on oci-apps (direct from GHCR) ---"
+          sudo docker pull -q "$IMAGE"
+          sudo docker stop "$CTR" 2>/dev/null || true
+          echo "--- loading DB into volume $VOL ---"
+          sudo docker run --rm -v "$VOL:/dst" "$IMAGE" sh -c 'rm -rf /dst/* && cp -a /octocode-db/. /dst/'
+          sudo docker start "$CTR" 2>/dev/null || true
+          sudo docker logout ghcr.io || true
+          sudo docker rmi "$IMAGE" 2>/dev/null || true
           echo "=== verify ==="
-          ssh $SSHOPTS "$TARGET" "sudo du -sh /var/lib/docker/volumes/$VOL/_data; df -h / | tail -1; sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'DB staged in volume (no cgc container)'"
+          sudo du -sh "/var/lib/docker/volumes/$VOL/_data"
+          df -h / | tail -1
+          sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'DB loaded in volume (no cgc container running)'
+          REMOTE
