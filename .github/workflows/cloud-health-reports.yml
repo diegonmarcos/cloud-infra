@@ -62,6 +62,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
 
+      - name: Fix dist permissions
+        run: sudo chmod -R a+rX "$GITHUB_WORKSPACE/I_cloud-data/reports/dist/"
+
       - name: Publish to cloud-data
         env:
           CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
