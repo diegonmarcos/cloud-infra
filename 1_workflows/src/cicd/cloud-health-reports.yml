@@ -24,9 +24,17 @@ jobs:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
-          token: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
+      - name: Fetch I_cloud-data submodule via SSH
+        env:
+          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no"
+          git submodule update --init --depth=1 I_cloud-data
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
