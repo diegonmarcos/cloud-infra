@@ -1,0 +1,36 @@
+# DIAGNOSTIC — fast (~2 min) WG mesh + SSH reachability probe for the cgc-db
+# propagation path. Mirrors ship-cgc-db.yml's WG-up + SSH-provision steps, then
+# just tries to SSH into oci-apps (10.0.0.6) over the mesh. No index, no 5h wait.
+# Remove once cgc-db propagation is confirmed working.
+name: "test-wg-reach (diagnostic)"
+
+on:
+  workflow_dispatch: {}
+
+env:
+  WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+  WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
+  OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: WireGuard up
+        run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
+      - name: Provision SSH key
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
+          echo "key bytes: $(wc -c < ~/.ssh/cgc_deploy)"
+      - name: WG diagnostics
+        run: |
+          echo "--- wg show ---"; sudo wg show || true
+          echo "--- ip addr wg0 ---"; ip addr show wg0 || true
+          echo "--- ping hub 10.0.0.1 ---"; ping -c2 -W3 10.0.0.1 || true
+          echo "--- ping oci-apps 10.0.0.6 ---"; ping -c2 -W3 10.0.0.6 || true
+      - name: SSH reach oci-apps
+        run: |
+          ssh -i ~/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+              -o ConnectTimeout=15 ubuntu@10.0.0.6 'echo REACHED-OCI-APPS: $(hostname); df -h / | tail -1'
