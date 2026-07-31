@@ -43,7 +43,10 @@ jobs:
           TARGET="ubuntu@10.0.0.6"
           VOL="octocode_db"; CTR="cloud-cgc-mcp"
           ssh $SSHOPTS "$TARGET" "sudo docker stop $CTR" || true
-          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
+          # Wipe the old DB first (frees ~2.9G) so the new one fits oci-apps' tight disk.
+          ssh $SSHOPTS "$TARGET" "sudo find /var/lib/docker/volumes/$VOL/_data -mindepth 1 -delete"
+          ssh $SSHOPTS "$TARGET" "df -h / | tail -1"
+          rsync -az --inplace --rsync-path="sudo rsync" -e "ssh $SSHOPTS" \
             /tmp/octodb/ "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
           ssh $SSHOPTS "$TARGET" "sudo docker start $CTR"
           echo "=== verify ==="
