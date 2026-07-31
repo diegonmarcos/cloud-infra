@@ -40,12 +40,14 @@ jobs:
             -e WG_PRIVATE_KEY \
             -e SOPS_AGE_KEY \
             -e GITHUB_TOKEN \
+            -e BEARER_TOKEN \
             ghcr.io/diegonmarcos/cloud-data-reports:latest \
             "$REPORT_TARGET"
         env:
           WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
 
       - name: Publish to cloud-data
         env:
