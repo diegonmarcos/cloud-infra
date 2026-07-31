@@ -53,6 +53,13 @@ WG=$(jq -c '.native.wireguard' "$CONFIG_JSON")
 HUB_VM=$(echo "$WG" | jq -r '.wg_hub')
 HUB_IP=$(jq -r --arg h "$HUB_VM" '.vms[$h].ip' "$CONFIG_JSON")
 HUB_PUBKEY=$(jq -r --arg h "$HUB_VM" '.vms[$h].wg_public_key' "$CONFIG_JSON")
+if [ -z "$HUB_PUBKEY" ] || [ "$HUB_PUBKEY" = "null" ]; then
+  HUB_PUBKEY="${WG_HUB_PUBKEY:-}"
+fi
+if [ -z "$HUB_PUBKEY" ]; then
+  echo "[wireguard] FATAL: hub public key not in config.json and WG_HUB_PUBKEY unset" >&2
+  exit 1
+fi
 SUBNET=$(echo "$WG"   | jq -r '.subnet')
 PORT_PRIMARY=$(echo "$WG"  | jq -r '.port')
 PORT_FALLBACK=$(echo "$WG" | jq -r '.port_fallback // empty')
