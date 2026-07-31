@@ -1,12 +1,6 @@
 name: Cloud Health Reports
 
 on:
-  push:
-    paths:
-      - 'I_cloud-data/reports/src/**'
-      - 'I_cloud-data/reports/Dockerfile'
-      - 'I_cloud-data/reports/build-deps.json'
-      - 'I_cloud-data/reports/entrypoint.sh'
   schedule:
     - cron: '17 6 * * *'
   workflow_dispatch:
@@ -21,44 +15,11 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
-  build-image:
-    name: Build & push reports image
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Restore cargo cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: ${{ runner.os }}-cargo-reports-${{ hashFiles('I_cloud-data/reports/src/**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-reports-
-
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        run: |
-          cd I_cloud-data/reports
-          docker build \
-            --cache-from ghcr.io/diegonmarcos/cloud-data-reports:latest \
-            -t ghcr.io/diegonmarcos/cloud-data-reports:latest \
-            -t ghcr.io/diegonmarcos/cloud-data-reports:${{ github.sha }} \
-            .
-          docker push ghcr.io/diegonmarcos/cloud-data-reports:latest
-          docker push ghcr.io/diegonmarcos/cloud-data-reports:${{ github.sha }}
-
   run-reports:
     name: Run reports
     runs-on: ubuntu-latest
-    needs: build-image
-    if: always() && !cancelled() && (needs.build-image.result == 'success' || needs.build-image.result == 'skipped')
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
     steps:
