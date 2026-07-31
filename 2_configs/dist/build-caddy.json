@@ -354,12 +354,6 @@
       "parent_domain": "api.diegonmarcos.com",
       "paths": [
         {
-          "base_path": "/c3a",
-          "upstream": "10.0.0.1:8085",
-          "wg_only": true,
-          "comment": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
-        },
-        {
           "base_path": "/c3-infra-api",
           "upstream": "10.0.0.6:8081",
           "public_paths": [
@@ -600,10 +594,6 @@
       "upstream": "10.0.0.6:8008"
     },
     {
-      "service": "c3-analytics-api.app",
-      "upstream": "10.0.0.1:8085"
-    },
-    {
       "service": "c3-infra-api.app",
       "upstream": "10.0.0.6:8081"
     },
@@ -698,10 +688,6 @@
     {
       "service": "cloud-cgc-mcp.app",
       "upstream": "10.0.0.6:3105"
-    },
-    {
-      "service": "rig-agentic-sonn-14bq8.app",
-      "upstream": "10.0.0.6:8091"
     },
     {
       "service": "mattermost.app",
@@ -832,27 +818,6 @@
       "port": 8008,
       "protocol": "http",
       "upstream": "10.0.0.6:8008",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "c3-analytics-api.app",
-      "redirect_to": "https://c3-analytics-api-http-8085.app",
-      "container": "c3-analytics-api",
-      "container_key": "app",
-      "svc": "c3-analytics-api",
-      "vm": "gcp-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "c3-analytics-api-http-8085.app",
-      "container": "c3-analytics-api",
-      "container_key": "app",
-      "svc": "c3-analytics-api",
-      "vm": "gcp-E2-f_0",
-      "port": 8085,
-      "protocol": "http",
-      "upstream": "10.0.0.1:8085",
       "source": "containers.app.port"
     },
     {
@@ -1374,27 +1339,6 @@
       "port": 3105,
       "protocol": "http",
       "upstream": "10.0.0.6:3105",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "rig-agentic-sonn-14bq8.app",
-      "redirect_to": "https://rig-agentic-sonn-14bq8-http-8091.app",
-      "container": "rig-agentic-sonn-14bq8",
-      "container_key": "app",
-      "svc": "rig-agentic-sonn-14bq8",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "rig-agentic-sonn-14bq8-http-8091.app",
-      "container": "rig-agentic-sonn-14bq8",
-      "container_key": "app",
-      "svc": "rig-agentic-sonn-14bq8",
-      "vm": "oci-A1-f_0",
-      "port": 8091,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8091",
       "source": "containers.app.port"
     },
     {
@@ -2047,16 +1991,6 @@
   "public_B_apis": [
     {
       "host": "api.diegonmarcos.com",
-      "path": "/c3a",
-      "upstream": "10.0.0.1:8085",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Public first-party analytics collector — passthrough proxy to matomo/umami/openobserve"
-    },
-    {
-      "host": "api.diegonmarcos.com",
       "path": "/c3-infra-api",
       "upstream": "10.0.0.6:8081",
       "kind": "reverse_proxy",
@@ -2472,16 +2406,6 @@
       "notes": null
     },
     {
-      "host": "c3-analytics-api.app",
-      "path": null,
-      "upstream": "10.0.0.1:8085",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "c3-infra-api.app",
       "path": null,
       "upstream": "10.0.0.6:8081",
@@ -2722,16 +2646,6 @@
       "notes": null
     },
     {
-      "host": "rig-agentic-sonn-14bq8.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "mattermost.app",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -2921,16 +2835,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "matrix-continuwuity",
-      "notes": null
-    },
-    {
-      "host": "c3-analytics-api-http-8085.app",
-      "path": null,
-      "upstream": "10.0.0.1:8085",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "c3-analytics-api",
       "notes": null
     },
     {
@@ -3171,16 +3075,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-cgc-mcp",
-      "notes": null
-    },
-    {
-      "host": "rig-agentic-sonn-14bq8-http-8091.app",
-      "path": null,
-      "upstream": "10.0.0.6:8091",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "rig-agentic-sonn-14bq8",
       "notes": null
     },
     {
