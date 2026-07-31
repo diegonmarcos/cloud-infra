@@ -50,6 +50,7 @@
         "host_literal": true
       },
       "containers": [
+        "alerts-api",
         "c3-public-api",
         "unbound-dns64",
         "caddy-public"
@@ -555,6 +556,12 @@
         "service": "matrix-continuwuity"
       },
       {
+        "name": "alerts-api.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "alerts-api"
+      },
+      {
         "name": "languagetool.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -1018,6 +1025,40 @@
         ]
       },
       "flake": "user-comm_matrix-continuwuity"
+    },
+    "alerts-api": {
+      "category": "tools",
+      "vm": "oci-E2-f_1",
+      "folder": "bc-obs_alerts-api",
+      "description": "Security Alert Aggregation API",
+      "port": 5050,
+      "dns": "alerts-api.app",
+      "upstream": "10.0.0.4:5050",
+      "containers": {
+        "app": {
+          "container_name": "alerts-api",
+          "image": "",
+          "public": false,
+          "port": 5050,
+          "dns": "alerts-api.app"
+        }
+      },
+      "container_names": [
+        "alerts-api"
+      ],
+      "all_ports": [
+        "5050"
+      ],
+      "all_dns": [
+        "alerts-api.app"
+      ],
+      "compose": {
+        "containers": [
+          "alerts-api"
+        ],
+        "ports": [],
+        "networks": []
+      }
     },
     "languagetool": {
       "category": "tools",

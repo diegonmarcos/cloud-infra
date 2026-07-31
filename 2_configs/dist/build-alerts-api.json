@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "google-workspace-mcp container config (service=google-workspace-mcp, role=app)",
+    "description": "alerts-api container config (service=alerts-api, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,32 +28,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "google-workspace-mcp",
-    "image": "ghcr.io/diegonmarcos/google-workspace-mcp:latest",
-    "port": 3104,
-    "port_env": "PORT",
-    "dns": "g-workspace-mcp.app",
-    "public": true,
-    "proxy": {
-      "streaming": true,
-      "type": "path",
-      "parent_domain": "mcp.diegonmarcos.com",
-      "base_path": "/g-workspace"
-    },
-    "healthcheck": "/health",
-    "monitoring": null,
-    "volumes": [
-      "./.secrets.d/GOOGLE_SERVICE_ACCOUNT_KEY:/run/secrets/service-account-key.json:ro"
-    ],
-    "env_file": false,
-    "depends_on": [],
-    "resources": null,
-    "read_only": false,
-    "protocol": "http"
+    "container_name": "alerts-api",
+    "image": "",
+    "public": false,
+    "port": 5050,
+    "dns": "alerts-api.app"
   },
-  "service": "google-workspace-mcp",
+  "service": "alerts-api",
   "role": "app",
-  "vm": "oci-apps",
+  "vm": "oci-analytics",
   "services": {
     "matrix-continuwuity": {
       "ip": "10.0.0.6",
@@ -1321,6 +1304,30 @@
         "auth": "bearer"
       }
     },
+    "playlist-syncer": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8090
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/api/health",
+      "domain": "playlist.diegonmarcos.com",
+      "description": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://playlist.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/api/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "Playlist Syncer",
+        "description": "Bidirectional Spotify / YouTube Music playlist sync (Spotube fork). REST API + web UI.",
+        "auth": "bearer"
+      }
+    },
     "news-gdelt": {
       "ip": "10.0.0.6",
       "ports": {
@@ -1594,9 +1601,5 @@
         "auth": "bearer"
       }
     }
-  },
-  "user_google_email": "me@diegonmarcos.com",
-  "secret_env_vars": [
-    "GOOGLE_SERVICE_ACCOUNT_KEY"
-  ]
+  }
 }
