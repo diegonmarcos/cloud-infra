@@ -1,8 +1,10 @@
-# ONE-SHOT PROPAGATE — trigger oci-apps to pull the GHCR DB ITSELF (fast, direct)
-# and load it into the octocode_db volume. WG only carries the short SSH command;
-# the ~3GB DB never traverses the flaky WG tunnel (that dropped mid-rsync).
-# Manual dispatch. Fold into the engine (cloud-cgc-db-restore.sh) once proven.
-name: "cgc-db propagate-only (oci-apps pulls GHCR DB)"
+# ONE-SHOT PROPAGATE — stream the GHCR DB layer directly into oci-apps'
+# octocode_db volume. The DB is ~6GB extracted; the docker-image path needs 2x
+# (image + extraction) which does NOT fit oci-apps' disk. Streaming the single
+# gzipped layer blob through tar writes only the 6GB extracted files — fits.
+# WG carries only the short SSH command; the blob is fetched oci-apps<-GHCR.
+# Manual dispatch. Fold into cloud-cgc-db-restore.sh once proven.
+name: "cgc-db propagate-only (stream GHCR layer -> oci-apps)"
 
 on:
   workflow_dispatch: {}
@@ -20,40 +22,51 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve GHCR pull token + DB layer digest
+        id: ghcr
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          IMGP="diegonmarcos/cloud-cgc-mcp-octocode-db"
+          TOK=$(curl -s -u "$GHCR_USER:$GHCR_TOKEN" "https://ghcr.io/token?scope=repository:$IMGP:pull" | jq -r .token)
+          # largest layer = the DB data layer
+          LAYER=$(curl -s -H "Authorization: Bearer $TOK" \
+            -H "Accept: application/vnd.docker.distribution.manifest.v2+json" \
+            "https://ghcr.io/v2/$IMGP/manifests/latest" \
+            | jq -r '.layers | max_by(.size) | .digest')
+          echo "layer=$LAYER"
+          echo "tok=$TOK" >> "$GITHUB_OUTPUT"
+          echo "layer=$LAYER" >> "$GITHUB_OUTPUT"
+          echo "imgp=$IMGP" >> "$GITHUB_OUTPUT"
       - name: Provision SSH key
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
       - name: WireGuard up
         run: bash 1_workflows/src/scripts/cloud-ship-ci-setup-wireguard.sh
-      - name: Trigger oci-apps to pull GHCR DB into the volume
+      - name: Stream DB layer into oci-apps octocode_db volume
         env:
-          GHCR_USER: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TOK: ${{ steps.ghcr.outputs.tok }}
+          LAYER: ${{ steps.ghcr.outputs.layer }}
+          IMGP: ${{ steps.ghcr.outputs.imgp }}
         run: |
           set -euo pipefail
           SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
           TARGET="ubuntu@10.0.0.6"
-          IMAGE="ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db:latest"
-          VOL="octocode_db"; CTR="cloud-cgc-mcp"
-          ssh $SSHOPTS "$TARGET" \
-            "GHCR_USER='$GHCR_USER' GHCR_TOKEN='$GHCR_TOKEN' IMAGE='$IMAGE' VOL='$VOL' CTR='$CTR' bash -s" <<'REMOTE'
+          ssh $SSHOPTS "$TARGET" "TOK='$TOK' LAYER='$LAYER' IMGP='$IMGP' CTR='cloud-cgc-mcp' VOL='octocode_db' bash -s" <<'REMOTE'
           set -e
-          echo "--- disk before ---"; df -h / | tail -1
-          echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
-          echo "--- pulling DB image on oci-apps (direct from GHCR; amd64 image, data is arch-neutral) ---"
-          sudo docker pull -q --platform linux/amd64 "$IMAGE"
+          echo "--- free before ---"; df -h / | awk 'NR==2{print $4}'
           sudo docker stop "$CTR" 2>/dev/null || true
-          echo "--- extracting DB into volume $VOL via docker cp (no exec, cross-arch safe) ---"
-          CID=$(sudo docker create --platform linux/amd64 "$IMAGE")
-          sudo find "/var/lib/docker/volumes/$VOL/_data" -mindepth 1 -delete
-          sudo docker cp "$CID:/octocode-db/." "/var/lib/docker/volumes/$VOL/_data/"
-          sudo docker rm "$CID"
+          sudo find /var/lib/docker/volumes/$VOL/_data -mindepth 1 -delete 2>/dev/null || true
+          echo "--- streaming layer blob -> tar into volume ---"
+          curl -sL -H "Authorization: Bearer $TOK" "https://ghcr.io/v2/$IMGP/blobs/$LAYER" \
+            | sudo tar xz -C /var/lib/docker/volumes/$VOL/_data --strip-components=1 octocode-db
           sudo docker start "$CTR" 2>/dev/null || true
-          sudo docker logout ghcr.io || true
-          sudo docker rmi "$IMAGE" 2>/dev/null || true
-          echo "=== verify ==="
-          sudo du -sh "/var/lib/docker/volumes/$VOL/_data"
-          df -h / | tail -1
-          sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'DB loaded in volume (no cgc container running)'
+          echo "=== VERIFY ==="
+          echo "DB size: $(sudo du -sh /var/lib/docker/volumes/$VOL/_data | cut -f1)"
+          sudo ls /var/lib/docker/volumes/$VOL/_data | head -6
+          echo "free after: $(df -h / | awk 'NR==2{print $4" ("$5")"}')"
+          sudo docker ps -a --format '{{.Names}} {{.Status}}' | grep -i cgc || echo 'DB in volume (no cgc container)'
           REMOTE
