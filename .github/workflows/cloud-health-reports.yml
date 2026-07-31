@@ -1,0 +1,95 @@
+name: Cloud Health Reports
+
+on:
+  push:
+    paths:
+      - 'I_cloud-data/reports/src/**'
+      - 'I_cloud-data/reports/Dockerfile'
+      - 'I_cloud-data/reports/build-deps.json'
+      - 'I_cloud-data/reports/entrypoint.sh'
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      report:
+        description: 'Report target (all|cloud|mail|url|sec-network|sec-data|daily-mail)'
+        default: 'all'
+
+concurrency:
+  group: cloud-health-reports
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-image:
+    name: Build & push reports image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-reports-${{ hashFiles('I_cloud-data/reports/src/**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-reports-
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push
+        run: |
+          cd I_cloud-data/reports
+          docker build \
+            --cache-from ghcr.io/diegonmarcos/cloud-data-reports:latest \
+            -t ghcr.io/diegonmarcos/cloud-data-reports:latest \
+            -t ghcr.io/diegonmarcos/cloud-data-reports:${{ github.sha }} \
+            .
+          docker push ghcr.io/diegonmarcos/cloud-data-reports:latest
+          docker push ghcr.io/diegonmarcos/cloud-data-reports:${{ github.sha }}
+
+  run-reports:
+    name: Run reports
+    runs-on: ubuntu-latest
+    needs: build-image
+    if: always() && !cancelled() && (needs.build-image.result == 'success' || needs.build-image.result == 'skipped')
+    env:
+      REPORT_TARGET: ${{ inputs.report || 'all' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull reports image
+        run: docker pull ghcr.io/diegonmarcos/cloud-data-reports:latest
+
+      - name: Run reports
+        run: |
+          docker run --rm \
+            --cap-add NET_ADMIN \
+            --network host \
+            -v "$GITHUB_WORKSPACE/I_cloud-data:/root/git/cloud-data" \
+            -e WG_PRIVATE_KEY \
+            -e SOPS_AGE_KEY \
+            -e GITHUB_TOKEN \
+            ghcr.io/diegonmarcos/cloud-data-reports:latest \
+            "$REPORT_TARGET"
+        env:
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add I_cloud-data/reports/dist/ I_cloud-data/reports/traces-gha/
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "chore: update health reports [skip ci]" && git push
