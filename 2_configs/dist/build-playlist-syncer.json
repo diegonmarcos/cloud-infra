@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
   "_meta": {
-    "description": "mattermost-mcp container config (service=mattermost-mcp, role=app)",
+    "description": "playlist-syncer container config (service=playlist-syncer, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
@@ -28,28 +28,43 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "mattermost-mcp",
-    "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
-    "port": 3102,
-    "port_env": "MCP_HTTP_PORT",
-    "dns": "mattermost-mcp.app",
+    "container_name": "playlist-syncer",
+    "image": "ghcr.io/diegonmarcos/playlist-syncer-binaries:latest",
+    "port": 8090,
+    "port_env": "PORT",
+    "dns": "playlist-syncer.app",
     "public": true,
     "proxy": {
-      "streaming": true,
-      "type": "path",
-      "parent_domain": "mcp.diegonmarcos.com",
-      "base_path": "/mattermost-mcp"
+      "domain": "playlist.diegonmarcos.com",
+      "auth": "two_factor",
+      "bypass_paths": [
+        "/api/auth/spotify/callback",
+        "/api/auth/youtube/callback"
+      ]
     },
-    "healthcheck": null,
-    "monitoring": null,
-    "volumes": [],
+    "healthcheck": "/api/health",
+    "monitoring": {
+      "tls_check": true,
+      "dns_check": true,
+      "endpoint_check": true
+    },
+    "volumes": [
+      "playlist_syncer_data:/data"
+    ],
     "env_file": true,
+    "environment": {
+      "APP_ENV": "production",
+      "PUBLIC_URL": "https://playlist.diegonmarcos.com",
+      "DB_PATH": "/data/spotube.db",
+      "SESSION_SECURE": "true",
+      "LOG_LEVEL": "info"
+    },
     "depends_on": [],
     "resources": null,
     "read_only": false,
     "protocol": "http"
   },
-  "service": "mattermost-mcp",
+  "service": "playlist-syncer",
   "role": "app",
   "vm": "oci-apps",
   "services": {
@@ -1670,12 +1685,5 @@
       }
     }
   },
-  "upstream_image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
-  "secret_env_vars": [
-    "MM_CLAUDE_PASSWORD",
-    "MM_URL",
-    "MM_TEAM_ID",
-    "MM_ADMIN_USERNAME",
-    "CLAUDE_MODEL"
-  ]
+  "timezone": "Europe/Madrid"
 }

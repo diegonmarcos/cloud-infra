@@ -500,6 +500,7 @@
         "scrappers-api",
         "fin-api",
         "photoprism",
+        "playlist-syncer",
         "news-gdelt",
         "calendar-radicale",
         "code-server",
@@ -513,7 +514,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 62
+      "container_count": 63
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -5697,6 +5698,8 @@
       "health": {
         "path": "/health"
       },
+      "_upstream_image_doc": "Top-level upstream_image marks this as a Type-B vendored-Dockerfile build: the ship engine builds src/code/Dockerfile (staged to dist/code/arm64/) natively on the arm64 cloud-builder. It is NOT injected as a FROM-override build-arg — it only selects BUILD_CONTEXT=dist/code/arch. The real multi-stage Dockerfile (builder compiles Headroom, runtime installs node) is preserved. The old docker.native_build:image-wrapper was WRONG: image-wrapper with no cmd made the native block skip AND blocked Type-B auto-detect, so CI silently built nothing and only recreated the stale image.",
+      "upstream_image": "python:3.13-slim",
       "runtime": {
         "model": "z-ai/glm-5",
         "_model_aliases_comment": "requested-id → OpenRouter slug. Callers pick a model per request; unknown/absent ids fall back to `model` (passthrough also works — OpenRouter accepts arbitrary slugs, so goose can send any OpenRouter model id directly). No Claude aliases here: this stack does not route Claude.",
@@ -7439,6 +7442,114 @@
         "OCI_S3_ACCESS_KEY",
         "OCI_S3_SECRET_KEY"
       ]
+    },
+    "playlist-syncer": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-media_playlist-syncer",
+      "description": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative.",
+      "enabled": true,
+      "domain": "playlist.diegonmarcos.com",
+      "flake": "user-media_playlist-syncer",
+      "port": 8090,
+      "dns": "playlist-syncer.app",
+      "upstream": "10.0.0.6:8090",
+      "containers": {
+        "app": {
+          "container_name": "playlist-syncer",
+          "image": "ghcr.io/diegonmarcos/playlist-syncer-binaries:latest",
+          "port": 8090,
+          "port_env": "PORT",
+          "dns": "playlist-syncer.app",
+          "public": true,
+          "proxy": {
+            "domain": "playlist.diegonmarcos.com",
+            "auth": "two_factor",
+            "bypass_paths": [
+              "/api/auth/spotify/callback",
+              "/api/auth/youtube/callback"
+            ]
+          },
+          "healthcheck": "/api/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "playlist_syncer_data:/data"
+          ],
+          "env_file": true,
+          "environment": {
+            "APP_ENV": "production",
+            "PUBLIC_URL": "https://playlist.diegonmarcos.com",
+            "DB_PATH": "/data/spotube.db",
+            "SESSION_SECURE": "true",
+            "LOG_LEVEL": "info"
+          },
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "playlist-syncer"
+      ],
+      "all_ports": [
+        "8090"
+      ],
+      "all_dns": [
+        "playlist-syncer.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "playlist.diegonmarcos.com",
+          "auth": "two_factor",
+          "bypass_paths": [
+            "/api/auth/spotify/callback",
+            "/api/auth/youtube/callback"
+          ]
+        }
+      },
+      "declared_ports": {
+        "app": 8090
+      },
+      "health": {
+        "path": "/api/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "strategy": "bup",
+        "volumes": [
+          "playlist_syncer_data"
+        ]
+      },
+      "timezone": "Europe/Madrid",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/api",
+        "api_url": "https://playlist.diegonmarcos.com/api",
+        "healthcheck_paths": [
+          "/api/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/api",
+        "display_name": "Playlist Syncer",
+        "description": "Bidirectional Spotify / YouTube Music playlist sync (Spotube fork). REST API + web UI.",
+        "auth": "bearer"
+      }
     },
     "news-gdelt": {
       "category": "tools",
