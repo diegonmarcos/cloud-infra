@@ -41,11 +41,14 @@ jobs:
           set -e
           echo "--- disk before ---"; df -h / | tail -1
           echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
-          echo "--- pulling DB image on oci-apps (direct from GHCR) ---"
-          sudo docker pull -q "$IMAGE"
+          echo "--- pulling DB image on oci-apps (direct from GHCR; amd64 image, data is arch-neutral) ---"
+          sudo docker pull -q --platform linux/amd64 "$IMAGE"
           sudo docker stop "$CTR" 2>/dev/null || true
-          echo "--- loading DB into volume $VOL ---"
-          sudo docker run --rm -v "$VOL:/dst" "$IMAGE" sh -c 'rm -rf /dst/* && cp -a /octocode-db/. /dst/'
+          echo "--- extracting DB into volume $VOL via docker cp (no exec, cross-arch safe) ---"
+          CID=$(sudo docker create --platform linux/amd64 "$IMAGE")
+          sudo find "/var/lib/docker/volumes/$VOL/_data" -mindepth 1 -delete
+          sudo docker cp "$CID:/octocode-db/." "/var/lib/docker/volumes/$VOL/_data/"
+          sudo docker rm "$CID"
           sudo docker start "$CTR" 2>/dev/null || true
           sudo docker logout ghcr.io || true
           sudo docker rmi "$IMAGE" 2>/dev/null || true
