@@ -29,6 +29,7 @@ jobs:
         env:
           CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
         run: |
+          git config --global --add safe.directory '*'
           mkdir -p ~/.ssh
           echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
