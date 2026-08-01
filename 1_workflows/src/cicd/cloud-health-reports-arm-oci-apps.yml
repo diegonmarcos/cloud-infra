@@ -22,6 +22,8 @@ jobs:
     runs-on: [self-hosted, linux, arm64, oci-apps]
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
+      # Runner work dir inside container is /tmp/runner/work; on host it is this path.
+      HOST_RUNNER_WORKDIR: /opt/containers/gha-runner/work-oci-apps-arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -49,27 +51,30 @@ jobs:
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
           GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
         run: |
-          mkdir -p /tmp/reports-ssh
-          printf '%s\n' "$OCI_SSH_KEY"       | tee /tmp/reports-ssh/oci_key       > /dev/null
-          printf '%s\n' "$GCP_PROXY_SSH_KEY" | tee /tmp/reports-ssh/gcp_proxy_key > /dev/null
-          printf '%s\n' "$GCP_T4_SSH_KEY"    | tee /tmp/reports-ssh/gcp_t4_key   > /dev/null
+          SSH_DIR="$GITHUB_WORKSPACE/.reports-ssh"
+          mkdir -p "$SSH_DIR"
+          printf '%s\n' "$OCI_SSH_KEY"       > "$SSH_DIR/oci_key"
+          printf '%s\n' "$GCP_PROXY_SSH_KEY" > "$SSH_DIR/gcp_proxy_key"
+          printf '%s\n' "$GCP_T4_SSH_KEY"    > "$SSH_DIR/gcp_t4_key"
           {
             echo "Host oci-mail";          echo "  HostName 10.0.0.3";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
             echo "Host oci-analytics";     echo "  HostName 10.0.0.4";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
             echo "Host oci-apps";          echo "  HostName 10.0.0.6";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
             echo "Host gcp-proxy";         echo "  HostName 10.0.0.1";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_proxy_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
             echo "Host gcp-t4";            echo "  HostName 10.0.0.8";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_t4_key";   echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-          } | tee /tmp/reports-ssh/config > /dev/null
-          chmod 700 /tmp/reports-ssh
-          chmod 600 /tmp/reports-ssh/oci_key /tmp/reports-ssh/gcp_proxy_key /tmp/reports-ssh/gcp_t4_key /tmp/reports-ssh/config
+          } > "$SSH_DIR/config"
+          chmod 700 "$SSH_DIR"
+          chmod 600 "$SSH_DIR/oci_key" "$SSH_DIR/gcp_proxy_key" "$SSH_DIR/gcp_t4_key" "$SSH_DIR/config"
 
       - name: Run reports
         run: |
+          # Translate container-side workspace path to host-side path for docker volume mounts.
+          HOST_WS="${HOST_RUNNER_WORKDIR}${GITHUB_WORKSPACE#/tmp/runner/work}"
           docker run --rm \
             --network host \
-            -v "$GITHUB_WORKSPACE:/root/git/cloud" \
-            -v "$GITHUB_WORKSPACE/I_cloud-data:/root/git/cloud-data" \
-            -v "/tmp/reports-ssh:/root/.ssh:ro" \
+            -v "${HOST_WS}:/root/git/cloud" \
+            -v "${HOST_WS}/I_cloud-data:/root/git/cloud-data" \
+            -v "${HOST_WS}/.reports-ssh:/root/.ssh:ro" \
             -e SOPS_AGE_KEY \
             -e GITHUB_TOKEN \
             -e BEARER_TOKEN \
