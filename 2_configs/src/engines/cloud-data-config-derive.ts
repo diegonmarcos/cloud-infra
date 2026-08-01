@@ -3292,11 +3292,12 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
 
   // ── Fleet.DB ─────────────────────────────────────────────────────────────
   const dbS3 = storage.map((s: any) => ({
-    id:     s.id ?? s.bucket,
-    bucket: s.bucket,
-    region: s.region ?? null,
+    id:       s.name ?? s.dns,
+    name:     s.name ?? null,
+    dns:      s.dns ?? null,
+    region:   s.region ?? null,
     provider: s.provider ?? null,
-    endpoint: s.endpoint ?? null,
+    endpoint: s.s3_endpoint ?? null,
   }));
 
   const dbHd: any[] = [];
@@ -3372,6 +3373,41 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// deriveCloudFleetMerged — dist/cloud-fleet-declared.json
+//
+// Full fleet snapshot: cloud containers + GH Pages front projects merged.
+// Reads the two sibling files just emitted in this run.
+// ═══════════════════════════════════════════════════════════════════════════
+function deriveCloudFleetMerged(): DerivedFile {
+  const containersSrc = join(CLOUD_DATA_DIR, "cloud-fleet-containers-declared.json");
+  const frontSrc      = join(GIT_BASE, "front", "2_configs", "dist", "front-fleet-gh-declared.json");
+
+  const containers = existsSync(containersSrc)
+    ? JSON.parse(readFileSync(containersSrc, "utf8"))
+    : null;
+
+  const frontPages = existsSync(frontSrc)
+    ? JSON.parse(readFileSync(frontSrc, "utf8"))
+    : [];
+
+  return {
+    name: "cloud-fleet-declared.json",
+    data: {
+      _meta: {
+        description: "Full declared fleet — cloud containers + GH Pages front projects. Source of truth for all fleet display.",
+        source_inputs: [
+          "2_configs/dist/cloud-fleet-containers-declared.json",
+          "front/2_configs/dist/front-fleet-gh-declared.json",
+        ],
+        generated_by: "cloud-data-config-derive.ts/cloud-fleet-declared",
+      },
+      cloud:       containers ?? {},
+      front_pages: frontPages,
+    },
+  };
+}
+
 function main() {
   console.log("cloud-data-config-derive: reading consolidated file...\n");
 
@@ -3422,6 +3458,7 @@ function main() {
     deriveKgDelta(consolidated),
     ...deriveExternalConsumers(consolidated),
     deriveCloudFleetDeclared(consolidated),     // dist/cloud-fleet-containers-declared.json
+    deriveCloudFleetMerged(),                   // dist/cloud-fleet-declared.json
   ];
 
   // Write all files (inject the rich DO NOT EDIT header + pipeline metadata into each).

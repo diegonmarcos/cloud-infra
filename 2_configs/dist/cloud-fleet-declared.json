@@ -1,0 +1,2188 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_meta": {
+    "description": "Full declared fleet — cloud containers + GH Pages front projects. Source of truth for all fleet display.",
+    "source_inputs": [
+      "2_configs/dist/cloud-fleet-containers-declared.json",
+      "front/2_configs/dist/front-fleet-gh-declared.json"
+    ],
+    "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
+    "generated_at": "",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+        "derive": "2_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 2_configs/build.sh all"
+    }
+  },
+  "cloud": {
+    "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+    "_meta": {
+      "description": "Declared cloud fleet — containers, VMs, storage, providers. Source of truth for all fleet display frontends.",
+      "source_inputs": [
+        "_cloud-data-consolidated.json"
+      ],
+      "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
+      "generated_at": "",
+      "pipeline": {
+        "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+        "source_inputs": [
+          "a_solutions/*/build.json (per-service declarations)",
+          "config.json (global topology + vms + dns + wireguard)",
+          "b_infra/*/build.json (per-VM HM config)",
+          "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+        ],
+        "engines": {
+          "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
+          "derive": "2_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+        },
+        "outputs": {
+          "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
+          "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+          "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+        },
+        "rebuild_command": "bash 2_configs/build.sh all"
+      }
+    },
+    "fleet": {
+      "containers": {
+        "infra-apps": [
+          {
+            "id": "alerts-api",
+            "name": "alerts-api",
+            "vm": "oci-E2-f_1",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 5050,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "languagetool",
+            "name": "languagetool",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "APIs-MCPs",
+            "port": 8010,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://languagetool.diegonmarcos.com"
+          },
+          {
+            "id": "c3-infra-api",
+            "name": "c3-infra-api",
+            "vm": "oci-A1-f_0",
+            "category": "sec",
+            "subgroup": "APIs-MCPs",
+            "port": 8081,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com/c3-infra-api"
+          },
+          {
+            "id": "c3-infra-mcp",
+            "name": "c3-infra-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "sec",
+            "subgroup": "APIs-MCPs",
+            "port": 3100,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mcp.diegonmarcos.com/c3-infra-mcp",
+            "mcp": true
+          },
+          {
+            "id": "c3-public-api",
+            "name": "c3-public-api",
+            "vm": "oci-E2-f_1",
+            "category": "obs",
+            "subgroup": "APIs-MCPs",
+            "port": 8087,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com/pub"
+          },
+          {
+            "id": "c3-services-api",
+            "name": "c3-services-api",
+            "vm": "oci-A1-f_0",
+            "category": "obs",
+            "subgroup": "APIs-MCPs",
+            "port": 8082,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com/c3-services-api"
+          },
+          {
+            "id": "c3-services-mcp",
+            "name": "c3-services-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "obs",
+            "subgroup": "APIs-MCPs",
+            "port": 3101,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null,
+            "mcp": true
+          },
+          {
+            "id": "cloud-builder-x",
+            "name": "cloud-builder-x",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Build",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "gha-runner",
+            "name": "gha-runner",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Build",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "backup-borg",
+            "name": "backup-borg",
+            "vm": "oci-A1-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": 2224,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "backup-bup",
+            "name": "backup-bup",
+            "vm": "oci-A1-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": 2223,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "gitea",
+            "name": "gitea",
+            "vm": "oci-A1-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": 3002,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://git.diegonmarcos.com"
+          },
+          {
+            "id": "postlite",
+            "name": "postlite",
+            "vm": "gcp-E2-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "redis",
+            "name": "redis",
+            "vm": "gcp-E2-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": 6379,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "hickory-dns",
+            "name": "hickory-dns",
+            "vm": "gcp-E2-f_0",
+            "category": "cloud",
+            "subgroup": "Network",
+            "port": 53,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://dns.internal"
+          },
+          {
+            "id": "unbound-dns64",
+            "name": "unbound-dns64",
+            "vm": "oci-E2-f_1",
+            "category": "infra-net",
+            "subgroup": "Network",
+            "port": 53,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://dns64.internal"
+          },
+          {
+            "id": "wireguard-mesh",
+            "name": "wireguard-mesh",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Network",
+            "port": 8080,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mesh.diegonmarcos.com"
+          },
+          {
+            "id": "wireguard-mesh-ws-tunnel",
+            "name": "wireguard-mesh-ws-tunnel",
+            "vm": "gcp-E2-f_0",
+            "category": "tools",
+            "subgroup": "Network",
+            "port": 8080,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://vpn.diegonmarcos.com"
+          },
+          {
+            "id": "cloud-spec",
+            "name": "cloud-spec",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "APIs-MCPs",
+            "port": 3080,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "dagu",
+            "name": "dagu",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 8070,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://workflows.diegonmarcos.com"
+          },
+          {
+            "id": "dbgate",
+            "name": "dbgate",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 8086,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://db.diegonmarcos.com"
+          },
+          {
+            "id": "matomo",
+            "name": "matomo",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 8084,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://analytics.diegonmarcos.com/matomo"
+          },
+          {
+            "id": "ntfy",
+            "name": "ntfy",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 8090,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://rss.diegonmarcos.com"
+          },
+          {
+            "id": "openobserve",
+            "name": "openobserve",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 5080,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://analytics.diegonmarcos.com/openobserve"
+          },
+          {
+            "id": "umami",
+            "name": "umami",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Observability",
+            "port": 3006,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://analytics.diegonmarcos.com"
+          },
+          {
+            "id": "authelia",
+            "name": "authelia",
+            "vm": "gcp-E2-f_0",
+            "category": "sec",
+            "subgroup": "Security",
+            "port": 9091,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://auth.diegonmarcos.com"
+          },
+          {
+            "id": "caddy",
+            "name": "caddy",
+            "vm": "gcp-E2-f_0",
+            "category": "sec",
+            "subgroup": "Security",
+            "port": 443,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://proxy.diegonmarcos.com"
+          },
+          {
+            "id": "caddy-public",
+            "name": "caddy-public",
+            "vm": "oci-E2-f_1",
+            "category": "sec",
+            "subgroup": "Security",
+            "port": 443,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "crowdsec",
+            "name": "crowdsec",
+            "vm": "oci-A1-f_0",
+            "category": "sec",
+            "subgroup": "Security",
+            "port": 8088,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://crowdsec.diegonmarcos.com"
+          },
+          {
+            "id": "introspect-proxy",
+            "name": "introspect-proxy",
+            "vm": "gcp-E2-f_0",
+            "category": "sec",
+            "subgroup": "Security",
+            "port": 4182,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "cloud-cgc-mcp",
+            "name": "cloud-cgc-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "obs",
+            "subgroup": "APIs-MCPs",
+            "port": 3105,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null,
+            "mcp": true
+          },
+          {
+            "id": "db-agent",
+            "name": "db-agent",
+            "vm": "all",
+            "category": "data",
+            "subgroup": "Data",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "kg-store",
+            "name": "kg-store",
+            "vm": "oci-A1-f_0",
+            "category": "data",
+            "subgroup": "Data",
+            "port": 8001,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "scrappers-api",
+            "name": "scrappers-api",
+            "vm": "oci-A1-f_0",
+            "category": "data",
+            "subgroup": "APIs-MCPs",
+            "port": 3020,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com"
+          },
+          {
+            "id": "news-gdelt",
+            "name": "news-gdelt",
+            "vm": "oci-A1-f_0",
+            "category": "tools",
+            "subgroup": "Data",
+            "port": 3019,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          }
+        ],
+        "user-apps": [
+          {
+            "id": "matrix-continuwuity",
+            "name": "matrix-continuwuity",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8008,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://matrix.diegonmarcos.com"
+          },
+          {
+            "id": "google-personal-mcp",
+            "name": "google-personal-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "AI-Agents",
+            "port": 3106,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mcp.diegonmarcos.com",
+            "mcp": true
+          },
+          {
+            "id": "google-workspace-mcp",
+            "name": "google-workspace-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "AI-Agents",
+            "port": 3104,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mcp.diegonmarcos.com",
+            "mcp": true
+          },
+          {
+            "id": "mail-mcp",
+            "name": "mail-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "AI-Agents",
+            "port": 3103,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mcp.diegonmarcos.com",
+            "mcp": true
+          },
+          {
+            "id": "mattermost-mcp",
+            "name": "mattermost-mcp",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "AI-Agents",
+            "port": 3102,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null,
+            "mcp": true
+          },
+          {
+            "id": "http-to-smtp-proxy-api",
+            "name": "http-to-smtp-proxy-api",
+            "vm": "gcp-E2-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8090,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api"
+          },
+          {
+            "id": "claude-superset-api",
+            "name": "claude-superset-api",
+            "vm": "oci-A1-f_0",
+            "category": "agi",
+            "subgroup": "AI-Agents",
+            "port": 3117,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "hermes-agent",
+            "name": "hermes-agent",
+            "vm": "oci-A1-f_0",
+            "category": "agi",
+            "subgroup": "AI-Agents",
+            "port": 8642,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "my-ai-api",
+            "name": "my-ai-api",
+            "vm": "oci-A1-f_0",
+            "category": "agi",
+            "subgroup": "AI-Agents",
+            "port": 3217,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "session-memory",
+            "name": "session-memory",
+            "vm": "oci-A1-f_0",
+            "category": "agi",
+            "subgroup": "AI-Agents",
+            "port": 3108,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "chat-mattermost",
+            "name": "chat-mattermost",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8065,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://chat.diegonmarcos.com"
+          },
+          {
+            "id": "mail-puller",
+            "name": "mail-puller",
+            "vm": "oci-E2-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mail-puller.diegonmarcos.com"
+          },
+          {
+            "id": "matrix-element",
+            "name": "matrix-element",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8083,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://messenger.diegonmarcos.com"
+          },
+          {
+            "id": "matrix-mautrix-whatsapp",
+            "name": "matrix-mautrix-whatsapp",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 29318,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "snappymail",
+            "name": "snappymail",
+            "vm": "oci-E2-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8888,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://webmail.diegonmarcos.com"
+          },
+          {
+            "id": "maddy",
+            "name": "maddy",
+            "vm": "oci-E2-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": null,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://mail.diegonmarcos.com"
+          },
+          {
+            "id": "stalwart",
+            "name": "stalwart",
+            "vm": "oci-E2-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 2443,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://jmap.diegonmarcos.com"
+          },
+          {
+            "id": "fin-api",
+            "name": "fin-api",
+            "vm": "oci-A1-f_0",
+            "category": "fin",
+            "subgroup": "Finance",
+            "port": 8340,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://api.diegonmarcos.com/fin-api"
+          },
+          {
+            "id": "photoprism",
+            "name": "photoprism",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Media",
+            "port": 3013,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://photos.diegonmarcos.com"
+          },
+          {
+            "id": "calendar-radicale",
+            "name": "calendar-radicale",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 5232,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://cal.diegonmarcos.com"
+          },
+          {
+            "id": "code-server",
+            "name": "code-server",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 8443,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://ide.diegonmarcos.com"
+          },
+          {
+            "id": "contacts-radicale",
+            "name": "contacts-radicale",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 5233,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://contacts.diegonmarcos.com"
+          },
+          {
+            "id": "etherpad",
+            "name": "etherpad",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3012,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://app.diegonmarcos.com/etherpad"
+          },
+          {
+            "id": "filebrowser",
+            "name": "filebrowser",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3015,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://app.diegonmarcos.com/filebrowser"
+          },
+          {
+            "id": "grist",
+            "name": "grist",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3011,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://sheets.diegonmarcos.com"
+          },
+          {
+            "id": "hedgedoc",
+            "name": "hedgedoc",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3018,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://app.diegonmarcos.com/hedgedoc"
+          },
+          {
+            "id": "paca",
+            "name": "paca",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 8095,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://paca.diegonmarcos.com"
+          },
+          {
+            "id": "revealmd",
+            "name": "revealmd",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3014,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": null
+          },
+          {
+            "id": "send",
+            "name": "send",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3016,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://send.diegonmarcos.com"
+          },
+          {
+            "id": "vaultwarden",
+            "name": "vaultwarden",
+            "vm": "oci-A1-f_0",
+            "category": "mic",
+            "subgroup": "Vault",
+            "port": 8880,
+            "private_ip": null,
+            "private_url": null,
+            "public_url": "https://vault.diegonmarcos.com"
+          }
+        ]
+      },
+      "db": {
+        "db-s3": [
+          {
+            "id": "cloud-backups-binaries-medias",
+            "name": "cloud-backups-binaries-medias",
+            "dns": "s3-backups-binaries.app",
+            "region": "eu-marseille-1",
+            "provider": "oci",
+            "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+          },
+          {
+            "id": "cloud-backups-db",
+            "name": "cloud-backups-db",
+            "dns": "s3-backups-db.app",
+            "region": "eu-marseille-1",
+            "provider": "oci",
+            "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+          },
+          {
+            "id": "cloud-backups-media",
+            "name": "cloud-backups-media",
+            "dns": "s3-backups-media.app",
+            "region": "eu-marseille-1",
+            "provider": "oci",
+            "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+          },
+          {
+            "id": "cloud-backups-non-binaries",
+            "name": "cloud-backups-non-binaries",
+            "dns": "s3-backups-nonbin.app",
+            "region": "eu-marseille-1",
+            "provider": "oci",
+            "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+          },
+          {
+            "id": "my-photos",
+            "name": "my-photos",
+            "dns": "s3-photos.app",
+            "region": "eu-marseille-1",
+            "provider": "oci",
+            "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+          }
+        ],
+        "db-hd": [
+          {
+            "id": "redis/app",
+            "service": "redis",
+            "container": "app",
+            "engine": "redis"
+          },
+          {
+            "id": "umami/db",
+            "service": "umami",
+            "container": "db",
+            "engine": "postgres"
+          },
+          {
+            "id": "authelia/redis",
+            "service": "authelia",
+            "container": "redis",
+            "engine": "redis"
+          },
+          {
+            "id": "kg-store/app",
+            "service": "kg-store",
+            "container": "app",
+            "engine": "surrealdb"
+          },
+          {
+            "id": "chat-mattermost/db",
+            "service": "chat-mattermost",
+            "container": "db",
+            "engine": "postgres"
+          },
+          {
+            "id": "photoprism/db",
+            "service": "photoprism",
+            "container": "db",
+            "engine": "mariadb"
+          },
+          {
+            "id": "etherpad/db",
+            "service": "etherpad",
+            "container": "db",
+            "engine": "postgres"
+          },
+          {
+            "id": "hedgedoc/db",
+            "service": "hedgedoc",
+            "container": "db",
+            "engine": "postgres"
+          },
+          {
+            "id": "paca/db",
+            "service": "paca",
+            "container": "db",
+            "engine": "postgres"
+          }
+        ]
+      },
+      "vms": {
+        "vm-x86": [
+          {
+            "id": "oci-E2-f_0",
+            "alias": "oci-mail",
+            "arch": "x86_64",
+            "wg_ip": null,
+            "provider": "VM"
+          },
+          {
+            "id": "oci-E2-f_1",
+            "alias": "oci-analytics",
+            "arch": "x86_64",
+            "wg_ip": null,
+            "provider": "VM"
+          },
+          {
+            "id": "gcp-E2-f_0",
+            "alias": "gcp-proxy",
+            "arch": "x86_64",
+            "wg_ip": null,
+            "provider": "e2-micro"
+          },
+          {
+            "id": "vast-RTX-p_0",
+            "alias": "vast-ollama",
+            "arch": "x86_64",
+            "wg_ip": null,
+            "provider": null
+          }
+        ],
+        "vm-arm": [
+          {
+            "id": "oci-A1-f_0",
+            "alias": "oci-apps",
+            "arch": "aarch64",
+            "wg_ip": null,
+            "provider": "VM"
+          }
+        ]
+      },
+      "providers": [
+        {
+          "id": "oci",
+          "provider": "Oracle Cloud",
+          "tier": "Free + Paid",
+          "infrastructure": "Terraform",
+          "has_terraform": true
+        },
+        {
+          "id": "gcloud",
+          "provider": "Google Cloud",
+          "tier": "Free + Paid (Spot)",
+          "infrastructure": "Terraform",
+          "has_terraform": true
+        },
+        {
+          "id": "aws",
+          "provider": "Amazon Web Services",
+          "tier": "Exploration",
+          "infrastructure": "Terraform",
+          "has_terraform": true
+        },
+        {
+          "id": "vast-ai",
+          "provider": "Vast.ai",
+          "tier": "On-demand rental",
+          "infrastructure": "Manual rental",
+          "has_terraform": true
+        },
+        {
+          "id": "hetzner",
+          "provider": "hetzner",
+          "tier": null,
+          "infrastructure": null,
+          "has_terraform": true
+        },
+        {
+          "id": "nvidia-llm-api",
+          "provider": "nvidia-llm-api",
+          "tier": null,
+          "infrastructure": null,
+          "has_terraform": true
+        },
+        {
+          "id": "resend",
+          "provider": "resend",
+          "tier": null,
+          "infrastructure": null,
+          "has_terraform": true
+        }
+      ]
+    },
+    "categories": {
+      "runners": [
+        {
+          "id": "cloud-builder-x",
+          "name": "cloud-builder-x",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Build",
+          "port": null,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": null
+        },
+        {
+          "id": "gha-runner",
+          "name": "gha-runner",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Build",
+          "port": null,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": null
+        },
+        {
+          "id": "dagu",
+          "name": "dagu",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 8070,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://workflows.diegonmarcos.com"
+        }
+      ],
+      "apis": [
+        {
+          "id": "languagetool",
+          "name": "languagetool",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "APIs-MCPs",
+          "port": 8010,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://languagetool.diegonmarcos.com"
+        },
+        {
+          "id": "c3-infra-api",
+          "name": "c3-infra-api",
+          "vm": "oci-A1-f_0",
+          "category": "sec",
+          "subgroup": "APIs-MCPs",
+          "port": 8081,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com/c3-infra-api"
+        },
+        {
+          "id": "c3-public-api",
+          "name": "c3-public-api",
+          "vm": "oci-E2-f_1",
+          "category": "obs",
+          "subgroup": "APIs-MCPs",
+          "port": 8087,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com/pub"
+        },
+        {
+          "id": "c3-services-api",
+          "name": "c3-services-api",
+          "vm": "oci-A1-f_0",
+          "category": "obs",
+          "subgroup": "APIs-MCPs",
+          "port": 8082,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com/c3-services-api"
+        },
+        {
+          "id": "gitea",
+          "name": "gitea",
+          "vm": "oci-A1-f_0",
+          "category": "data",
+          "subgroup": "Data",
+          "port": 3002,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://git.diegonmarcos.com"
+        },
+        {
+          "id": "hickory-dns",
+          "name": "hickory-dns",
+          "vm": "gcp-E2-f_0",
+          "category": "cloud",
+          "subgroup": "Network",
+          "port": 53,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://dns.internal"
+        },
+        {
+          "id": "unbound-dns64",
+          "name": "unbound-dns64",
+          "vm": "oci-E2-f_1",
+          "category": "infra-net",
+          "subgroup": "Network",
+          "port": 53,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://dns64.internal"
+        },
+        {
+          "id": "wireguard-mesh",
+          "name": "wireguard-mesh",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Network",
+          "port": 8080,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mesh.diegonmarcos.com"
+        },
+        {
+          "id": "wireguard-mesh-ws-tunnel",
+          "name": "wireguard-mesh-ws-tunnel",
+          "vm": "gcp-E2-f_0",
+          "category": "tools",
+          "subgroup": "Network",
+          "port": 8080,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://vpn.diegonmarcos.com"
+        },
+        {
+          "id": "dagu",
+          "name": "dagu",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 8070,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://workflows.diegonmarcos.com"
+        },
+        {
+          "id": "dbgate",
+          "name": "dbgate",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 8086,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://db.diegonmarcos.com"
+        },
+        {
+          "id": "matomo",
+          "name": "matomo",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 8084,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://analytics.diegonmarcos.com/matomo"
+        },
+        {
+          "id": "ntfy",
+          "name": "ntfy",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 8090,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://rss.diegonmarcos.com"
+        },
+        {
+          "id": "openobserve",
+          "name": "openobserve",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 5080,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://analytics.diegonmarcos.com/openobserve"
+        },
+        {
+          "id": "umami",
+          "name": "umami",
+          "vm": "oci-A1-f_0",
+          "category": "tools",
+          "subgroup": "Observability",
+          "port": 3006,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://analytics.diegonmarcos.com"
+        },
+        {
+          "id": "authelia",
+          "name": "authelia",
+          "vm": "gcp-E2-f_0",
+          "category": "sec",
+          "subgroup": "Security",
+          "port": 9091,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://auth.diegonmarcos.com"
+        },
+        {
+          "id": "caddy",
+          "name": "caddy",
+          "vm": "gcp-E2-f_0",
+          "category": "sec",
+          "subgroup": "Security",
+          "port": 443,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://proxy.diegonmarcos.com"
+        },
+        {
+          "id": "crowdsec",
+          "name": "crowdsec",
+          "vm": "oci-A1-f_0",
+          "category": "sec",
+          "subgroup": "Security",
+          "port": 8088,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://crowdsec.diegonmarcos.com"
+        },
+        {
+          "id": "scrappers-api",
+          "name": "scrappers-api",
+          "vm": "oci-A1-f_0",
+          "category": "data",
+          "subgroup": "APIs-MCPs",
+          "port": 3020,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com"
+        },
+        {
+          "id": "matrix-continuwuity",
+          "name": "matrix-continuwuity",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8008,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://matrix.diegonmarcos.com"
+        },
+        {
+          "id": "http-to-smtp-proxy-api",
+          "name": "http-to-smtp-proxy-api",
+          "vm": "gcp-E2-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8090,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api"
+        },
+        {
+          "id": "chat-mattermost",
+          "name": "chat-mattermost",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8065,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://chat.diegonmarcos.com"
+        },
+        {
+          "id": "mail-puller",
+          "name": "mail-puller",
+          "vm": "oci-E2-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": null,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mail-puller.diegonmarcos.com"
+        },
+        {
+          "id": "matrix-element",
+          "name": "matrix-element",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8083,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://messenger.diegonmarcos.com"
+        },
+        {
+          "id": "snappymail",
+          "name": "snappymail",
+          "vm": "oci-E2-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8888,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://webmail.diegonmarcos.com"
+        },
+        {
+          "id": "maddy",
+          "name": "maddy",
+          "vm": "oci-E2-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": null,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mail.diegonmarcos.com"
+        },
+        {
+          "id": "stalwart",
+          "name": "stalwart",
+          "vm": "oci-E2-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 2443,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://jmap.diegonmarcos.com"
+        },
+        {
+          "id": "fin-api",
+          "name": "fin-api",
+          "vm": "oci-A1-f_0",
+          "category": "fin",
+          "subgroup": "Finance",
+          "port": 8340,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://api.diegonmarcos.com/fin-api"
+        },
+        {
+          "id": "photoprism",
+          "name": "photoprism",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Media",
+          "port": 3013,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://photos.diegonmarcos.com"
+        },
+        {
+          "id": "calendar-radicale",
+          "name": "calendar-radicale",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 5232,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://cal.diegonmarcos.com"
+        },
+        {
+          "id": "code-server",
+          "name": "code-server",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 8443,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://ide.diegonmarcos.com"
+        },
+        {
+          "id": "contacts-radicale",
+          "name": "contacts-radicale",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 5233,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://contacts.diegonmarcos.com"
+        },
+        {
+          "id": "etherpad",
+          "name": "etherpad",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3012,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://app.diegonmarcos.com/etherpad"
+        },
+        {
+          "id": "filebrowser",
+          "name": "filebrowser",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3015,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://app.diegonmarcos.com/filebrowser"
+        },
+        {
+          "id": "grist",
+          "name": "grist",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3011,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://sheets.diegonmarcos.com"
+        },
+        {
+          "id": "hedgedoc",
+          "name": "hedgedoc",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3018,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://app.diegonmarcos.com/hedgedoc"
+        },
+        {
+          "id": "paca",
+          "name": "paca",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 8095,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://paca.diegonmarcos.com"
+        },
+        {
+          "id": "send",
+          "name": "send",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3016,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://send.diegonmarcos.com"
+        },
+        {
+          "id": "vaultwarden",
+          "name": "vaultwarden",
+          "vm": "oci-A1-f_0",
+          "category": "mic",
+          "subgroup": "Vault",
+          "port": 8880,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://vault.diegonmarcos.com"
+        }
+      ],
+      "mcps": [
+        {
+          "id": "c3-infra-mcp",
+          "name": "c3-infra-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "sec",
+          "subgroup": "APIs-MCPs",
+          "port": 3100,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mcp.diegonmarcos.com/c3-infra-mcp",
+          "mcp": true
+        },
+        {
+          "id": "c3-services-mcp",
+          "name": "c3-services-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "obs",
+          "subgroup": "APIs-MCPs",
+          "port": 3101,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": null,
+          "mcp": true
+        },
+        {
+          "id": "cloud-cgc-mcp",
+          "name": "cloud-cgc-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "obs",
+          "subgroup": "APIs-MCPs",
+          "port": 3105,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": null,
+          "mcp": true
+        },
+        {
+          "id": "google-personal-mcp",
+          "name": "google-personal-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "AI-Agents",
+          "port": 3106,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mcp.diegonmarcos.com",
+          "mcp": true
+        },
+        {
+          "id": "google-workspace-mcp",
+          "name": "google-workspace-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "AI-Agents",
+          "port": 3104,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mcp.diegonmarcos.com",
+          "mcp": true
+        },
+        {
+          "id": "mail-mcp",
+          "name": "mail-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "AI-Agents",
+          "port": 3103,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": "https://mcp.diegonmarcos.com",
+          "mcp": true
+        },
+        {
+          "id": "mattermost-mcp",
+          "name": "mattermost-mcp",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "AI-Agents",
+          "port": 3102,
+          "private_ip": null,
+          "private_url": null,
+          "public_url": null,
+          "mcp": true
+        }
+      ],
+      "db-dockers": [
+        {
+          "id": "redis/app",
+          "service": "redis",
+          "container": "app",
+          "engine": "redis"
+        },
+        {
+          "id": "umami/db",
+          "service": "umami",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "authelia/redis",
+          "service": "authelia",
+          "container": "redis",
+          "engine": "redis"
+        },
+        {
+          "id": "kg-store/app",
+          "service": "kg-store",
+          "container": "app",
+          "engine": "surrealdb"
+        },
+        {
+          "id": "chat-mattermost/db",
+          "service": "chat-mattermost",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "photoprism/db",
+          "service": "photoprism",
+          "container": "db",
+          "engine": "mariadb"
+        },
+        {
+          "id": "etherpad/db",
+          "service": "etherpad",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "hedgedoc/db",
+          "service": "hedgedoc",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "paca/db",
+          "service": "paca",
+          "container": "db",
+          "engine": "postgres"
+        }
+      ],
+      "db-s3": [
+        {
+          "id": "cloud-backups-binaries-medias",
+          "name": "cloud-backups-binaries-medias",
+          "dns": "s3-backups-binaries.app",
+          "region": "eu-marseille-1",
+          "provider": "oci",
+          "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+        },
+        {
+          "id": "cloud-backups-db",
+          "name": "cloud-backups-db",
+          "dns": "s3-backups-db.app",
+          "region": "eu-marseille-1",
+          "provider": "oci",
+          "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+        },
+        {
+          "id": "cloud-backups-media",
+          "name": "cloud-backups-media",
+          "dns": "s3-backups-media.app",
+          "region": "eu-marseille-1",
+          "provider": "oci",
+          "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+        },
+        {
+          "id": "cloud-backups-non-binaries",
+          "name": "cloud-backups-non-binaries",
+          "dns": "s3-backups-nonbin.app",
+          "region": "eu-marseille-1",
+          "provider": "oci",
+          "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+        },
+        {
+          "id": "my-photos",
+          "name": "my-photos",
+          "dns": "s3-photos.app",
+          "region": "eu-marseille-1",
+          "provider": "oci",
+          "endpoint": "https://axpmn3qtq4ig.compat.objectstorage.eu-marseille-1.oraclecloud.com"
+        }
+      ],
+      "db-hd": [
+        {
+          "id": "umami/db",
+          "service": "umami",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "kg-store/app",
+          "service": "kg-store",
+          "container": "app",
+          "engine": "surrealdb"
+        },
+        {
+          "id": "chat-mattermost/db",
+          "service": "chat-mattermost",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "photoprism/db",
+          "service": "photoprism",
+          "container": "db",
+          "engine": "mariadb"
+        },
+        {
+          "id": "etherpad/db",
+          "service": "etherpad",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "hedgedoc/db",
+          "service": "hedgedoc",
+          "container": "db",
+          "engine": "postgres"
+        },
+        {
+          "id": "paca/db",
+          "service": "paca",
+          "container": "db",
+          "engine": "postgres"
+        }
+      ],
+      "mesh-peers": [
+        {
+          "id": "oci-E2-f_0",
+          "alias": "oci-mail",
+          "arch": "x86_64",
+          "wg_ip": null,
+          "provider": "VM"
+        },
+        {
+          "id": "oci-E2-f_1",
+          "alias": "oci-analytics",
+          "arch": "x86_64",
+          "wg_ip": null,
+          "provider": "VM"
+        },
+        {
+          "id": "gcp-E2-f_0",
+          "alias": "gcp-proxy",
+          "arch": "x86_64",
+          "wg_ip": null,
+          "provider": "e2-micro"
+        },
+        {
+          "id": "vast-RTX-p_0",
+          "alias": "vast-ollama",
+          "arch": "x86_64",
+          "wg_ip": null,
+          "provider": null
+        },
+        {
+          "id": "oci-A1-f_0",
+          "alias": "oci-apps",
+          "arch": "aarch64",
+          "wg_ip": null,
+          "provider": "VM"
+        }
+      ]
+    }
+  },
+  "front_pages": [
+    {
+      "id": "a-Companies__leafy",
+      "project": "leafy",
+      "path": "a-Companies/leafy",
+      "category": "a-Companies",
+      "name": "Leafy",
+      "framework": "vanilla",
+      "deploy_name": "leafy",
+      "url": "https://diegonmarcos.github.io/leafy"
+    },
+    {
+      "id": "a-Companies__nexus",
+      "project": "nexus",
+      "path": "a-Companies/nexus",
+      "category": "a-Companies",
+      "name": "Nexus",
+      "framework": "vanilla",
+      "deploy_name": "nexus",
+      "url": "https://diegonmarcos.github.io/nexus"
+    },
+    {
+      "id": "a-Companies__stark",
+      "project": "stark",
+      "path": "a-Companies/stark",
+      "category": "a-Companies",
+      "name": "Stark",
+      "framework": "vanilla",
+      "deploy_name": "stark",
+      "url": "https://diegonmarcos.github.io/stark"
+    },
+    {
+      "id": "a-Individual__cv_pdf",
+      "project": "cv_pdf",
+      "path": "a-Individual/cv_pdf",
+      "category": "a-Individual",
+      "name": "CV PDF",
+      "framework": "vanilla",
+      "deploy_name": "cv_pdf",
+      "url": "https://diegonmarcos.github.io/cv_pdf"
+    },
+    {
+      "id": "a-Individual__cv_web",
+      "project": "cv_web",
+      "path": "a-Individual/cv_web",
+      "category": "a-Individual",
+      "name": "CV Web",
+      "framework": "vanilla",
+      "deploy_name": "cv_web",
+      "url": "https://diegonmarcos.github.io/cv_web"
+    },
+    {
+      "id": "a-Individual__landpage",
+      "project": "landpage",
+      "path": "a-Individual/landpage",
+      "category": "a-Individual",
+      "name": "Landpage",
+      "framework": "vanilla",
+      "deploy_name": "landpage",
+      "url": "https://diegonmarcos.github.io/landpage"
+    },
+    {
+      "id": "a-Portals__cloud",
+      "project": "cloud",
+      "path": "a-Portals/cloud",
+      "category": "a-Portals",
+      "name": "Cloud",
+      "framework": "vanilla",
+      "deploy_name": "cloud",
+      "url": "https://diegonmarcos.github.io/cloud"
+    },
+    {
+      "id": "a-Portals__linktree",
+      "project": "linktree",
+      "path": "a-Portals/linktree",
+      "category": "a-Portals",
+      "name": "Linktree",
+      "framework": "vanilla",
+      "deploy_name": "linktree",
+      "url": "https://diegonmarcos.github.io/linktree"
+    },
+    {
+      "id": "a-Portals__linktree_mindmap",
+      "project": "linktree_mindmap",
+      "path": "a-Portals/linktree_mindmap",
+      "category": "a-Portals",
+      "name": "Linktree Mindmap",
+      "framework": "vanilla",
+      "deploy_name": "linktree_mindmap",
+      "url": "https://diegonmarcos.github.io/linktree_mindmap"
+    },
+    {
+      "id": "a-Portals__linktree_pixel-world",
+      "project": "linktree_pixel-world",
+      "path": "a-Portals/linktree_pixel-world",
+      "category": "a-Portals",
+      "name": "Linktree Pixel World",
+      "framework": "vanilla",
+      "deploy_name": "linktree_pixel-world",
+      "url": "https://diegonmarcos.github.io/linktree_pixel-world"
+    },
+    {
+      "id": "a-Projects__Warehouse",
+      "project": "Warehouse",
+      "path": "a-Projects/Warehouse",
+      "category": "a-Projects",
+      "name": "SlabTwin 3D Warehouse",
+      "framework": "vanilla",
+      "deploy_name": "Warehouse",
+      "url": "https://diegonmarcos.github.io/Warehouse"
+    },
+    {
+      "id": "b-Data__myAstro",
+      "project": "myAstro",
+      "path": "b-Data/myAstro",
+      "category": "b-Data",
+      "name": "myAstro",
+      "framework": "vanilla",
+      "deploy_name": "myAstro",
+      "url": "https://diegonmarcos.github.io/myAstro"
+    },
+    {
+      "id": "b-Data__myfeed",
+      "project": "myfeed",
+      "path": "b-Data/myfeed",
+      "category": "b-Data",
+      "name": "MyFeed",
+      "framework": "vue",
+      "deploy_name": "myfeed",
+      "url": "https://diegonmarcos.github.io/myfeed"
+    },
+    {
+      "id": "b-Media__mySocials",
+      "project": "mySocials",
+      "path": "b-Media/mySocials",
+      "category": "b-Media",
+      "name": "mySocials",
+      "framework": "vanilla",
+      "deploy_name": "mySocials",
+      "url": "https://diegonmarcos.github.io/mySocials"
+    },
+    {
+      "id": "b-MyData__my-fin",
+      "project": "my-fin",
+      "path": "b-MyData/my-fin",
+      "category": "b-MyData",
+      "name": "My Financials",
+      "framework": "vanilla",
+      "deploy_name": "my-fin",
+      "url": "https://diegonmarcos.github.io/my-fin"
+    },
+    {
+      "id": "b-MyData__myTrackers",
+      "project": "myTrackers",
+      "path": "b-MyData/myTrackers",
+      "category": "b-MyData",
+      "name": "MyTrackers",
+      "framework": "vanilla",
+      "deploy_name": "myTrackers",
+      "url": "https://diegonmarcos.github.io/myTrackers"
+    },
+    {
+      "id": "b-MyData__myhealth",
+      "project": "myhealth",
+      "path": "b-MyData/myhealth",
+      "category": "b-MyData",
+      "name": "MyHealth",
+      "framework": "vanilla",
+      "deploy_name": "myhealth",
+      "url": "https://diegonmarcos.github.io/myhealth"
+    },
+    {
+      "id": "b-MyData__myhealth-profile",
+      "project": "myhealth-profile",
+      "path": "b-MyData/myhealth-profile",
+      "category": "b-MyData",
+      "name": "MyHealth Profile",
+      "framework": "vanilla",
+      "deploy_name": "myhealth-profile",
+      "url": "https://diegonmarcos.github.io/myhealth-profile"
+    },
+    {
+      "id": "b-MyData__myhealth-tracker",
+      "project": "myhealth-tracker",
+      "path": "b-MyData/myhealth-tracker",
+      "category": "b-MyData",
+      "name": "MyHealth Tracker",
+      "framework": "vanilla",
+      "deploy_name": "myhealth-tracker",
+      "url": "https://diegonmarcos.github.io/myhealth-tracker"
+    },
+    {
+      "id": "b-MyData__myid",
+      "project": "myid",
+      "path": "b-MyData/myid",
+      "category": "b-MyData",
+      "name": "myID",
+      "framework": "vanilla",
+      "deploy_name": "myid",
+      "url": "https://diegonmarcos.github.io/myid"
+    },
+    {
+      "id": "b-MyData__mymaps-mytrips",
+      "project": "mymaps-mytrips",
+      "path": "b-MyData/mymaps-mytrips",
+      "category": "b-MyData",
+      "name": "MyMaps MyTrips",
+      "framework": "vue",
+      "deploy_name": "mymaps-mytrips",
+      "url": "https://diegonmarcos.github.io/mymaps-mytrips"
+    },
+    {
+      "id": "b-MyData__myphotos",
+      "project": "myphotos",
+      "path": "b-MyData/myphotos",
+      "category": "b-MyData",
+      "name": "MyPhotos",
+      "framework": "vanilla",
+      "deploy_name": "myphotos",
+      "url": "https://diegonmarcos.github.io/myphotos"
+    },
+    {
+      "id": "b-Profiles__myprofile",
+      "project": "myprofile",
+      "path": "b-Profiles/myprofile",
+      "category": "b-Profiles",
+      "name": "MyProfile",
+      "framework": "sveltekit",
+      "deploy_name": "myprofile",
+      "url": "https://diegonmarcos.github.io/myprofile"
+    },
+    {
+      "id": "b-Projects__galaxy",
+      "project": "galaxy",
+      "path": "b-Projects/galaxy",
+      "category": "b-Projects",
+      "name": "Galaxy",
+      "framework": "sveltekit",
+      "deploy_name": "galaxy",
+      "url": "https://diegonmarcos.github.io/galaxy"
+    },
+    {
+      "id": "c-Circus__carto",
+      "project": "carto",
+      "path": "c-Circus/carto",
+      "category": "c-Circus",
+      "name": "Carto",
+      "framework": "vanilla",
+      "deploy_name": "carto",
+      "url": "https://diegonmarcos.github.io/carto"
+    },
+    {
+      "id": "c-Circus__games",
+      "project": "games",
+      "path": "c-Circus/games",
+      "category": "c-Circus",
+      "name": "Games",
+      "framework": "sveltekit",
+      "deploy_name": "games",
+      "url": "https://diegonmarcos.github.io/games"
+    },
+    {
+      "id": "c-Circus__movies",
+      "project": "movies",
+      "path": "c-Circus/movies",
+      "category": "c-Circus",
+      "name": "Movies",
+      "framework": "vue",
+      "deploy_name": "movies",
+      "url": "https://diegonmarcos.github.io/movies"
+    },
+    {
+      "id": "c-Circus__music",
+      "project": "music",
+      "path": "c-Circus/music",
+      "category": "c-Circus",
+      "name": "Music",
+      "framework": "vue",
+      "deploy_name": "music",
+      "url": "https://diegonmarcos.github.io/music"
+    },
+    {
+      "id": "c-Cloud__api",
+      "project": "api",
+      "path": "c-Cloud/api",
+      "category": "c-Cloud",
+      "name": "API",
+      "framework": "vanilla",
+      "deploy_name": "api",
+      "url": "https://diegonmarcos.github.io/api"
+    },
+    {
+      "id": "c-Cloud__mcp-api-swagger",
+      "project": "mcp-api-swagger",
+      "path": "c-Cloud/mcp-api-swagger",
+      "category": "c-Cloud",
+      "name": "mcp-api-swagger",
+      "framework": "vanilla",
+      "deploy_name": "mcp-api-swagger",
+      "url": "https://diegonmarcos.github.io/mcp-api-swagger"
+    },
+    {
+      "id": "c-Cloud__skills_mcp",
+      "project": "skills_mcp",
+      "path": "c-Cloud/skills_mcp",
+      "category": "c-Cloud",
+      "name": "Skills MCP",
+      "framework": "vanilla",
+      "deploy_name": "skills_mcp",
+      "url": "https://diegonmarcos.github.io/skills_mcp"
+    },
+    {
+      "id": "c-LabTools__Music_DAW_LLMS",
+      "project": "Music_DAW_LLMS",
+      "path": "c-LabTools/Music_DAW_LLMS",
+      "category": "c-LabTools",
+      "name": "LMMS",
+      "framework": "vanilla",
+      "deploy_name": "Music_DAW_LLMS",
+      "url": "https://diegonmarcos.github.io/Music_DAW_LLMS"
+    },
+    {
+      "id": "c-LabTools__Music_DJ-Mixer_Mixxx",
+      "project": "Music_DJ-Mixer_Mixxx",
+      "path": "c-LabTools/Music_DJ-Mixer_Mixxx",
+      "category": "c-LabTools",
+      "name": "Mixxx",
+      "framework": "vanilla",
+      "deploy_name": "Music_DJ-Mixer_Mixxx",
+      "url": "https://diegonmarcos.github.io/Music_DJ-Mixer_Mixxx"
+    },
+    {
+      "id": "c-LabTools__central_bank",
+      "project": "central_bank",
+      "path": "c-LabTools/central_bank",
+      "category": "c-LabTools",
+      "name": "CentralBank",
+      "framework": "vanilla",
+      "deploy_name": "central_bank",
+      "url": "https://diegonmarcos.github.io/central_bank"
+    },
+    {
+      "id": "c-LabTools__fin-terminal",
+      "project": "fin-terminal",
+      "path": "c-LabTools/fin-terminal",
+      "category": "c-LabTools",
+      "name": "FinTerminal",
+      "framework": "vanilla",
+      "deploy_name": "fin-terminal",
+      "url": "https://diegonmarcos.github.io/fin-terminal"
+    },
+    {
+      "id": "c-LabTools__market_watch",
+      "project": "market_watch",
+      "path": "c-LabTools/market_watch",
+      "category": "c-LabTools",
+      "name": "MarketWatch",
+      "framework": "vanilla",
+      "deploy_name": "market_watch",
+      "url": "https://diegonmarcos.github.io/market_watch"
+    },
+    {
+      "id": "c-LabTools__news",
+      "project": "news",
+      "path": "c-LabTools/news",
+      "category": "c-LabTools",
+      "name": "GDELTNews",
+      "framework": "vanilla",
+      "deploy_name": "news",
+      "url": "https://diegonmarcos.github.io/news"
+    },
+    {
+      "id": "c-LabTools__sailytics",
+      "project": "sailytics",
+      "path": "c-LabTools/sailytics",
+      "category": "c-LabTools",
+      "name": "Sailyng",
+      "framework": "vanilla",
+      "deploy_name": "sailytics",
+      "url": "https://diegonmarcos.github.io/sailytics"
+    },
+    {
+      "id": "c-Suite__json-vision",
+      "project": "json-vision",
+      "path": "c-Suite/json-vision",
+      "category": "c-Suite",
+      "name": "JSON Vision",
+      "framework": "vue",
+      "deploy_name": "json-vision",
+      "url": "https://diegonmarcos.github.io/json-vision"
+    },
+    {
+      "id": "c-Suite__myhealth-feedyourself",
+      "project": "myhealth-feedyourself",
+      "path": "c-Suite/myhealth-feedyourself",
+      "category": "c-Suite",
+      "name": "MyHealth FeedYourself",
+      "framework": "vanilla",
+      "deploy_name": "myhealth-feedyourself",
+      "url": "https://diegonmarcos.github.io/myhealth-feedyourself"
+    },
+    {
+      "id": "c-Suite__mymail",
+      "project": "mymail",
+      "path": "c-Suite/mymail",
+      "category": "c-Suite",
+      "name": "MyMail",
+      "framework": "vanilla",
+      "deploy_name": "mymail",
+      "url": "https://diegonmarcos.github.io/mymail"
+    },
+    {
+      "id": "c-Suite__mymaps",
+      "project": "mymaps",
+      "path": "c-Suite/mymaps",
+      "category": "c-Suite",
+      "name": "MyMaps",
+      "framework": "vanilla",
+      "deploy_name": "mymaps",
+      "url": "https://diegonmarcos.github.io/mymaps"
+    },
+    {
+      "id": "c-Suite__mymaps-maps",
+      "project": "mymaps-maps",
+      "path": "c-Suite/mymaps-maps",
+      "category": "c-Suite",
+      "name": "MyMaps Maps",
+      "framework": "sveltekit",
+      "deploy_name": "mymaps-maps",
+      "url": "https://diegonmarcos.github.io/mymaps-maps"
+    },
+    {
+      "id": "c-Suite__mymaps-navigation",
+      "project": "mymaps-navigation",
+      "path": "c-Suite/mymaps-navigation",
+      "category": "c-Suite",
+      "name": "MyMaps Navigation",
+      "framework": "sveltekit",
+      "deploy_name": "mymaps-navigation",
+      "url": "https://diegonmarcos.github.io/mymaps-navigation"
+    },
+    {
+      "id": "c-Suite__suite",
+      "project": "suite",
+      "path": "c-Suite/suite",
+      "category": "c-Suite",
+      "name": "Suite",
+      "framework": "vanilla",
+      "deploy_name": "suite",
+      "url": "https://diegonmarcos.github.io/suite"
+    },
+    {
+      "id": "c-Suite__tldraw",
+      "project": "tldraw",
+      "path": "c-Suite/tldraw",
+      "category": "c-Suite",
+      "name": "tldraw",
+      "framework": "react",
+      "deploy_name": "tldraw",
+      "url": "https://diegonmarcos.github.io/tldraw"
+    },
+    {
+      "id": "e-Others__others",
+      "project": "others",
+      "path": "e-Others/others",
+      "category": "e-Others",
+      "name": "Others",
+      "framework": "vanilla",
+      "deploy_name": "others",
+      "url": "https://diegonmarcos.github.io/others"
+    }
+  ]
+}
