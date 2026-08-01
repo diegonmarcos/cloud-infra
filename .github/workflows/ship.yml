@@ -378,6 +378,14 @@ jobs:
           echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
 
       - name: Ship via cloud-builder
+        # Fail fast instead of burning the full 45m job ceiling: a single
+        # stuck build/push/ssh inside this step (WG hiccup, cold docker
+        # cache, oci-builder hang) should surface as its own timeout well
+        # before the job-level timeout-minutes:45 above force-kills the
+        # whole job (misreported as "cancelled"). 25 min leaves headroom
+        # for the earlier setup steps (checkout, vault, cache restore,
+        # image pull) within the 45 min job budget.
+        timeout-minutes: 25
         env:
           CHANGED_DIRS: ${{ matrix.changed_dirs }}
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
