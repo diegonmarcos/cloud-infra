@@ -40,6 +40,11 @@ step_compose() {
     GHCR_TOKEN_FILE="${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token"
     if [ -f "$GHCR_TOKEN_FILE" ]; then
         GHCR_TOKEN_VAL="$(cat "$GHCR_TOKEN_FILE")"
+    elif [ -n "${GITHUB_TOKEN:-}" ]; then
+        # ponytail: GHA context — vault not mounted, fall back to Actions token
+        GHCR_TOKEN_VAL="$GITHUB_TOKEN"
+    fi
+    if [ -n "${GHCR_TOKEN_VAL:-}" ]; then
         # Use bash -c explicitly: target VMs may use fish/zsh as login shell
         # (e.g. oci-apps's diego user runs fish), and fish does not support
         # bash if/then/fi syntax; this wrapper guarantees POSIX semantics.
