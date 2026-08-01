@@ -3157,6 +3157,221 @@ function deriveKgDelta(c: any): DerivedFile {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// deriveCloudFleetDeclared — dist/cloud-fleet-containers-declared.json
+//
+// Wide fleet snapshot: every declared container/service with Fleet grouping
+// (Infra-Apps / User-Apps / DB / VMs / Providers) and cross-cut Categories
+// (APIs, MCPs, Runners, db-Dockers, db-S3, db-HD, mesh-peers).
+//
+// This file is the source of truth for fleet display in cloud-superapp,
+// linktree, front portals, and admin panels — replace all local hardcoded
+// service lists with a fetch of this file.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Map consolidated `category` → Fleet group + subcategory (subgroup label). */
+const CATEGORY_TO_FLEET: Record<string, { group: "infra-apps" | "user-apps"; subgroup: string }> = {
+  // Infra
+  "sec":       { group: "infra-apps", subgroup: "Security" },
+  "net":       { group: "infra-apps", subgroup: "Network" },
+  "infra-net": { group: "infra-apps", subgroup: "Network" },
+  "obs":       { group: "infra-apps", subgroup: "Observability" },
+  "cloud":     { group: "infra-apps", subgroup: "APIs-MCPs" },
+  // User
+  "app":       { group: "user-apps",  subgroup: "Productivity" },
+  "agi":       { group: "user-apps",  subgroup: "AI-Agents" },
+  "mic":       { group: "user-apps",  subgroup: "Communications" },
+  "fin":       { group: "user-apps",  subgroup: "Finance" },
+};
+
+/** Per-service subgroup overrides (takes precedence over CATEGORY_TO_FLEET). */
+const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-apps"; subgroup: string }> = {
+  // tools → differentiate by function
+  "dagu":                   { group: "infra-apps", subgroup: "Observability" },
+  "dbgate":                 { group: "infra-apps", subgroup: "Observability" },
+  "matomo":                 { group: "infra-apps", subgroup: "Observability" },
+  "umami":                  { group: "infra-apps", subgroup: "Observability" },
+  "openobserve":            { group: "infra-apps", subgroup: "Observability" },
+  "ntfy":                   { group: "infra-apps", subgroup: "Observability" },
+  "cloud-spec":             { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-builder-x":        { group: "infra-apps", subgroup: "Build" },
+  "gha-runner":             { group: "infra-apps", subgroup: "Build" },
+  "news-gdelt":             { group: "infra-apps", subgroup: "Data" },
+  "wireguard-mesh":         { group: "infra-apps", subgroup: "Network" },
+  "wireguard-mesh-ws-tunnel": { group: "infra-apps", subgroup: "Network" },
+  "wireguard-public":       { group: "infra-apps", subgroup: "Network" },
+  "hickory-dns":            { group: "infra-apps", subgroup: "Network" },
+  "alerts-api":             { group: "infra-apps", subgroup: "Observability" },
+  "languagetool":           { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "postlite":               { group: "infra-apps", subgroup: "Data" },
+  "redis":                  { group: "infra-apps", subgroup: "Data" },
+  // data → split: gitea/backups=Data, rest=APIs-MCPs
+  "gitea":                  { group: "infra-apps", subgroup: "Data" },
+  "backup-borg":            { group: "infra-apps", subgroup: "Data" },
+  "backup-bup":             { group: "infra-apps", subgroup: "Data" },
+  "db-agent":               { group: "infra-apps", subgroup: "Data" },
+  "kg-store":               { group: "infra-apps", subgroup: "Data" },
+  "scrappers-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-diego-personal-data-mcp": { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-infra-api":           { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-infra-mcp":           { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-public-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-services-api":        { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "c3-services-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-cgc-mcp":          { group: "infra-apps", subgroup: "APIs-MCPs" },
+  // app → subgroup by domain/function
+  "chat-mattermost":        { group: "user-apps",  subgroup: "Communications" },
+  "matrix-element":         { group: "user-apps",  subgroup: "Communications" },
+  "matrix-mautrix-whatsapp": { group: "user-apps", subgroup: "Communications" },
+  "matrix-continuwuity":    { group: "user-apps",  subgroup: "Communications" },
+  "snappymail":             { group: "user-apps",  subgroup: "Communications" },
+  "maddy":                  { group: "user-apps",  subgroup: "Communications" },
+  "stalwart":               { group: "user-apps",  subgroup: "Communications" },
+  "mail-puller":            { group: "user-apps",  subgroup: "Communications" },
+  "http-to-smtp-proxy-api": { group: "user-apps",  subgroup: "Communications" },
+  "google-personal-mcp":    { group: "user-apps",  subgroup: "AI-Agents" },
+  "google-workspace-mcp":   { group: "user-apps",  subgroup: "AI-Agents" },
+  "mail-mcp":               { group: "user-apps",  subgroup: "AI-Agents" },
+  "mattermost-mcp":         { group: "user-apps",  subgroup: "AI-Agents" },
+  "claude-superset-api":    { group: "user-apps",  subgroup: "AI-Agents" },
+  "hermes-agent":           { group: "user-apps",  subgroup: "AI-Agents" },
+  "my-ai-api":              { group: "user-apps",  subgroup: "AI-Agents" },
+  "session-memory":         { group: "user-apps",  subgroup: "AI-Agents" },
+  "photoprism":             { group: "user-apps",  subgroup: "Media" },
+  "vaultwarden":            { group: "user-apps",  subgroup: "Vault" },
+  "calendar-radicale":      { group: "user-apps",  subgroup: "Productivity" },
+  "contacts-radicale":      { group: "user-apps",  subgroup: "Productivity" },
+  "etherpad":               { group: "user-apps",  subgroup: "Productivity" },
+  "hedgedoc":               { group: "user-apps",  subgroup: "Productivity" },
+  "grist":                  { group: "user-apps",  subgroup: "Productivity" },
+  "filebrowser":            { group: "user-apps",  subgroup: "Productivity" },
+  "code-server":            { group: "user-apps",  subgroup: "Productivity" },
+  "revealmd":               { group: "user-apps",  subgroup: "Productivity" },
+  "send":                   { group: "user-apps",  subgroup: "Productivity" },
+  "paca":                   { group: "user-apps",  subgroup: "Productivity" },
+  "fin-api":                { group: "user-apps",  subgroup: "Finance" },
+};
+
+const RUNNER_SERVICES = new Set(["gha-runner", "cloud-builder-x", "dagu"]);
+
+function deriveCloudFleetDeclared(c: any): DerivedFile {
+  const services: Record<string, any> = c.services ?? {};
+  const vms: Record<string, any>      = c.vms ?? {};
+  const vpss: Record<string, any>     = c.vpss ?? {};
+  const storage: any[]                = Array.isArray(c.storage) ? c.storage : [];
+
+  // ── Build service entry ──────────────────────────────────────────────────
+  function svcEntry(id: string, svc: any) {
+    const domain: string = svc.domain ?? "";
+    return {
+      id,
+      name:        svc.name ?? id,
+      vm:          svc.vm ?? null,
+      category:    svc.category ?? null,
+      subgroup:    (SERVICE_SUBGROUP_OVERRIDE[id] ?? CATEGORY_TO_FLEET[svc.category ?? ""])?.subgroup ?? null,
+      port:        svc.port ?? null,
+      private_ip:  svc.wg_ip ?? null,
+      private_url: svc.wg_url ?? (svc.port ? null : null),
+      public_url:  domain ? `https://${domain}` : null,
+      mcp:         svc.mcp ? true : undefined,
+    };
+  }
+
+  // ── Fleet.Containers ────────────────────────────────────────────────────
+  const infraApps: any[] = [];
+  const userApps:  any[] = [];
+
+  for (const [id, svc] of Object.entries(services)) {
+    if ((svc as any).vm === "local" && !(svc as any).domain) continue; // skip pure local/virtual entries
+    const mapping = SERVICE_SUBGROUP_OVERRIDE[id] ?? CATEGORY_TO_FLEET[(svc as any).category ?? ""];
+    if (!mapping) continue; // cloudflare-worker, front-end, db-agent(all) — skip unclassified
+    const entry = svcEntry(id, svc as any);
+    if (mapping.group === "infra-apps") infraApps.push(entry);
+    else userApps.push(entry);
+  }
+
+  // ── Fleet.DB ─────────────────────────────────────────────────────────────
+  const dbS3 = storage.map((s: any) => ({
+    id:     s.id ?? s.bucket,
+    bucket: s.bucket,
+    region: s.region ?? null,
+    provider: s.provider ?? null,
+    endpoint: s.endpoint ?? null,
+  }));
+
+  const dbHd: any[] = [];
+  for (const [svcId, svc] of Object.entries(services)) {
+    for (const [ctName, ct] of Object.entries((svc as any).containers ?? {})) {
+      const engine = (ct as any).db_engine;
+      if (!engine) continue;
+      dbHd.push({ id: `${svcId}/${ctName}`, service: svcId, container: ctName, engine });
+    }
+  }
+
+  // ── Fleet.VMs ─────────────────────────────────────────────────────────────
+  const vmX86: any[] = [];
+  const vmArm: any[] = [];
+  for (const [vmId, vm] of Object.entries(vms)) {
+    const entry = {
+      id:      vmId,
+      alias:   (vm as any).ssh_alias ?? vmId,
+      arch:    (vm as any).specs?.arch ?? null,
+      wg_ip:   (vm as any).wg?.ip ?? null,
+      provider: (vm as any).specs?.shape?.split(".")?.[0] ?? null,
+    };
+    if ((vm as any).specs?.arch === "aarch64") vmArm.push(entry);
+    else vmX86.push(entry);
+  }
+
+  // ── Fleet.Providers ───────────────────────────────────────────────────────
+  const providers = Object.entries(vpss).map(([id, vps]) => ({
+    id,
+    provider:        (vps as any).provider ?? id,
+    tier:            (vps as any).tier ?? null,
+    infrastructure:  (vps as any).infrastructure_type ?? null,
+    has_terraform:   (vps as any).has_terraform ?? false,
+  }));
+
+  // ── Categories (cross-cut) ─────────────────────────────────────────────
+  const allContainers = [...infraApps, ...userApps];
+  const categories = {
+    runners:     allContainers.filter(e => RUNNER_SERVICES.has(e.id)),
+    apis:        allContainers.filter(e => e.public_url && !e.mcp),
+    mcps:        allContainers.filter(e => e.mcp),
+    "db-dockers": dbHd,
+    "db-s3":     dbS3,
+    "db-hd":     dbHd.filter(e => ["postgres", "mariadb", "surrealdb"].includes(e.engine)),
+    "mesh-peers": [...vmX86, ...vmArm],
+  };
+
+  return {
+    name: "cloud-fleet-containers-declared.json",
+    data: {
+      _meta: {
+        description: "Declared cloud fleet — containers, VMs, storage, providers. Source of truth for all fleet display frontends.",
+        source_inputs: ["_cloud-data-consolidated.json"],
+        generated_by:  "cloud-data-config-derive.ts/cloud-fleet-containers-declared",
+      },
+      fleet: {
+        containers: {
+          "infra-apps": infraApps,
+          "user-apps":  userApps,
+        },
+        db: {
+          "db-s3": dbS3,
+          "db-hd": dbHd,
+        },
+        vms: {
+          "vm-x86": vmX86,
+          "vm-arm": vmArm,
+        },
+        providers,
+      },
+      categories,
+    },
+  };
+}
+
 function main() {
   console.log("cloud-data-config-derive: reading consolidated file...\n");
 
@@ -3206,6 +3421,7 @@ function main() {
     deriveKgSchema(consolidated),
     deriveKgDelta(consolidated),
     ...deriveExternalConsumers(consolidated),
+    deriveCloudFleetDeclared(consolidated),     // dist/cloud-fleet-containers-declared.json
   ];
 
   // Write all files (inject the rich DO NOT EDIT header + pipeline metadata into each).
