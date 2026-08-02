@@ -3270,8 +3270,8 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
       category:    svc.category ?? null,
       subgroup:    (SERVICE_SUBGROUP_OVERRIDE[id] ?? CATEGORY_TO_FLEET[svc.category ?? ""])?.subgroup ?? null,
       port:        svc.port ?? null,
-      private_ip:  svc.wg_ip ?? null,
-      private_url: svc.wg_url ?? (svc.port ? null : null),
+      private_ip:  (vms[svc.vm ?? ""] ?? {}).wg_ip ?? null,
+      private_url: svc.port ? `https://${id}.app` : null,
       public_url:  domain ? `https://${domain}` : null,
       mcp:         svc.mcp ? true : undefined,
     };
