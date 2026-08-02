@@ -67,6 +67,9 @@ step_compose() {
             ssh $SSH_OPTS "$DEPLOY_HOST" "rm -f $_ghcr_tok" >/dev/null 2>&1 || true
         fi
     fi
+    # Clear stale non-root docker credentials so public GHCR images pull
+    # anonymously without an expired ubuntu-user token causing "denied".
+    ssh_with_retry "$DEPLOY_HOST" "docker logout ghcr.io >/dev/null 2>&1 || true"
 
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then
