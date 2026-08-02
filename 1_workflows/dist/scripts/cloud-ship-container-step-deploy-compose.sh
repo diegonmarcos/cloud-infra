@@ -55,9 +55,29 @@ step_compose() {
             fi
             sudo mkdir -p /root/.docker
         '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
-        # Login as root so `sudo docker compose pull` can fetch private GHCR images
-        ssh_with_retry "$DEPLOY_HOST" "echo '$GHCR_TOKEN_VAL' | sudo docker login ghcr.io -u diegonmarcos --password-stdin >/dev/null 2>&1" || \
-            log_warn "GHCR login on $DEPLOY_HOST failed (non-fatal — public images still work)"
+        # Login as root so `sudo docker compose pull` can fetch private GHCR images.
+        #
+        # Detached, not ssh_with_retry: `docker login` does a network round-trip
+        # to ghcr.io from the VM and takes ~60s on a loaded/distant host. Held
+        # over one ssh session it dropped with 255 on all 3 attempts
+        # (chat-mattermost → oci-apps, runs 30756461937 / 30757890274), the
+        # failure was swallowed as "non-fatal", and every subsequent private
+        # image pull then failed with the far less obvious `denied: denied`.
+        #
+        # The token goes over stdin into a umask-077 file rather than into the
+        # uploaded payload — ssh_run_detached leaves that script on /tmp while
+        # it runs, and a secret has no business sitting there.
+        _ghcr_tok="/tmp/.ghcr-tok-$$"
+        printf '%s\n' "$GHCR_TOKEN_VAL" \
+            | ssh $SSH_OPTS "$DEPLOY_HOST" "umask 077; cat > $_ghcr_tok" || true
+        if ssh_run_detached "$DEPLOY_HOST" \
+               "sudo docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1; _rc=\$?; rm -f $_ghcr_tok; exit \$_rc" \
+               "ghcr-login-$(basename "$DEPLOY_PATH")"; then
+            log "GHCR login OK on $DEPLOY_HOST"
+        else
+            log_warn "GHCR login on $DEPLOY_HOST failed — pulls of PRIVATE ghcr.io images will fail with 'denied' below; public images still work"
+            ssh $SSH_OPTS "$DEPLOY_HOST" "rm -f $_ghcr_tok" >/dev/null 2>&1 || true
+        fi
     fi
 
     # Pre-hook (runs on VM before containers start)
