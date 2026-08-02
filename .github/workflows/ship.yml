@@ -239,13 +239,11 @@ jobs:
     # blocking every subsequent push for hours. Surfaced 2026-06-05 on
     # run 27027587805 — Ship → oci-analytics hung from 16:41 and was
     # still in_progress 1h+ later, queueing every follow-up ship.
-    # 45 min was NOT enough: measured on run 30751065637 (oci-apps),
-    # pre-dispatch work alone (image pull, WG, repo+submodule sync onto the
-    # arm64 builder — ~6.9k files) burned 17 min, leaving under 18 min for a
-    # cold arm64 build whose layer export alone runs 10+ min. 90 min gives
-    # the real work room; the engine's own deadline (SHIP_DEADLINE_EPOCH,
-    # below) is what surfaces a genuinely stuck build, with diagnostics.
-    timeout-minutes: 90
+    # 45 min covers cold image builds (~10 min each) + 3-retry SSH
+    # deploys + compose recreate with a healthy buffer. If a real build
+    # takes longer than 45 min, that's its own bug to surface, not
+    # something to silently absorb at the workflow level.
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write
@@ -387,15 +385,7 @@ jobs:
         # whole job (misreported as "cancelled"). 25 min leaves headroom
         # for the earlier setup steps (checkout, vault, cache restore,
         # image pull) within the 45 min job budget.
-        #
-        # Any static value here races the engine's own build-poll budget:
-        # pre-dispatch work is variable (17 min measured on run 30751065637),
-        # so "step budget minus a guess" is never right and GHA's useless
-        # "step timed out" wins over the engine's diagnostic. Fixed by giving
-        # the engine the real wall-clock deadline (SHIP_DEADLINE_EPOCH) so it
-        # clamps its poll budget to whatever time is actually left.
-        # This ceiling is now just the outer backstop.
-        timeout-minutes: 80
+        timeout-minutes: 25
         env:
           CHANGED_DIRS: ${{ matrix.changed_dirs }}
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
@@ -417,11 +407,6 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           TRACE_DIR: ${{ runner.temp }}/traces
         run: |
-          # Wall-clock deadline for this step, handed to the engine so the
-          # build-dispatch poll loop can clamp its budget to the time that
-          # actually remains instead of a static constant that outlives the
-          # step ceiling. 80 min step - 3 min slack for teardown/artifacts.
-          export SHIP_DEADLINE_EPOCH=$(( $(date +%s) + 4620 ))
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
           # which reads III_unix/cb_containers-builders/build.json (master).
@@ -474,7 +459,6 @@ jobs:
             -e CARGO_TARGET_DIR=/cargo-target \
             -e GITHUB_TOKEN \
             -e GITHUB_ACTOR \
-            -e SHIP_DEADLINE_EPOCH \
             cloud-builder ship ${{ matrix.vm }}
 
       - name: Upload trace
