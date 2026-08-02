@@ -243,7 +243,7 @@ jobs:
     # deploys + compose recreate with a healthy buffer. If a real build
     # takes longer than 45 min, that's its own bug to surface, not
     # something to silently absorb at the workflow level.
-    timeout-minutes: 45
+    timeout-minutes: 90
     permissions:
       contents: read
       packages: write
@@ -381,11 +381,17 @@ jobs:
         # Fail fast instead of burning the full 45m job ceiling: a single
         # stuck build/push/ssh inside this step (WG hiccup, cold docker
         # cache, oci-builder hang) should surface as its own timeout well
-        # before the job-level timeout-minutes:45 above force-kills the
-        # whole job (misreported as "cancelled"). 25 min leaves headroom
+        # before the job-level timeout-minutes:90 above force-kills the
+        # whole job (misreported as "cancelled"). 80 min leaves headroom
         # for the earlier setup steps (checkout, vault, cache restore,
-        # image pull) within the 45 min job budget.
-        timeout-minutes: 25
+        # image pull) within the 90 min job budget.
+        #
+        # A static inner budget is not enough on its own: pre-dispatch work
+        # took 17 min in run 30751065637, so any constant that outlives the
+        # step ceiling still gets force-killed. SHIP_DEADLINE_EPOCH (below)
+        # hands the engine the real wall-clock deadline so the build-dispatch
+        # poll loop clamps itself to the time that actually remains.
+        timeout-minutes: 80
         env:
           CHANGED_DIRS: ${{ matrix.changed_dirs }}
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
@@ -407,6 +413,11 @@ jobs:
           GITHUB_SHA: ${{ github.sha }}
           TRACE_DIR: ${{ runner.temp }}/traces
         run: |
+          # Wall-clock deadline for this step, handed to the engine so the
+          # build-dispatch poll loop can clamp its budget to the time that
+          # actually remains instead of a static constant that outlives the
+          # step ceiling. 80 min step - 3 min slack for teardown/artifacts.
+          export SHIP_DEADLINE_EPOCH=$(( $(date +%s) + 4620 ))
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
           # which reads III_unix/cb_containers-builders/build.json (master).
@@ -459,6 +470,7 @@ jobs:
             -e CARGO_TARGET_DIR=/cargo-target \
             -e GITHUB_TOKEN \
             -e GITHUB_ACTOR \
+            -e SHIP_DEADLINE_EPOCH \
             cloud-builder ship ${{ matrix.vm }}
 
       - name: Upload trace
