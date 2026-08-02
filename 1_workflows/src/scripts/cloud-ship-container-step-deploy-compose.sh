@@ -202,7 +202,11 @@ PULL_GATE
 
         log "Deploying + running $SCRIPT_NAME on $DEPLOY_HOST"
         rsync -az "$TMP_SCRIPT" "$DEPLOY_HOST:$DEPLOY_PATH/$SCRIPT_NAME"
-        ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && sh $SCRIPT_NAME && rm -f $SCRIPT_NAME"
+        # Same reasoning as the standard path below — this custom script also
+        # pulls images, so it must not hold a single ssh session open either.
+        ssh_run_detached "$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH && sh $SCRIPT_NAME; _rc=\$?; rm -f $SCRIPT_NAME; exit \$_rc" \
+            "compose-custom-$(basename "$DEPLOY_PATH")"
         rm -f "$TMP_SCRIPT"
         trap - EXIT
     else
@@ -236,7 +240,11 @@ PULL_GATE
         else
             PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
-        ssh_with_retry "$DEPLOY_HOST" "bash -c '$PAYLOAD'"
+        # Detached + poll, NOT one long-held ssh: the pull/extract can run for
+        # minutes with an almost-idle ssh channel, which is exactly when the
+        # wg path to the CI runner lapses and drops the stream (exit 255).
+        # See ssh_run_detached in cloud-ship-container-engine.sh.
+        ssh_run_detached "$DEPLOY_HOST" "$PAYLOAD" "compose-$(basename "$DEPLOY_PATH")"
     fi
 
     # Post-hook

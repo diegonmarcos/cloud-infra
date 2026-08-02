@@ -268,6 +268,88 @@ ssh_with_retry() {
     done
     return "$_swr_ec"
 }
+
+# ── Run a LONG remote command without holding one ssh session open for it ──
+# The recurring `exit 255` mid-deploy shares one structural cause: a
+# multi-minute step (image pull + extract) keeps a single ssh stream open, and
+# that channel is nearly idle while the VM extracts layers (image bytes come
+# from GHCR direct, not through ssh). Whatever drops it — a wg blip on the CI
+# runner's tunnel, a stateful middlebox, sshd side — the whole deploy dies with
+# it, and a ControlMaster mux cannot save it: the master IS that connection.
+# (c3-public-api → oci-analytics, 2026-08-02: extract stalled at 12.32/26.16MB,
+# 78s of silence, then 255. sshd logged no disconnect; the exact trigger is NOT
+# established — this fix removes the dependency on the session surviving at all
+# rather than betting on diagnosing it.)
+#
+# So: upload the script, launch it DETACHED (setsid+nohup ⇒ survives our
+# disconnect), then POLL a result-marker with short commands. A dropped poll
+# just reconnects while the work keeps running, and the returned code is the
+# REAL remote exit code (`echo $? > rc`), never ssh's transport 255.
+# Same pattern already proven for home-manager activation
+# (cloud-ship-nix-homemanager-step-deploy-activate.sh, 2026-06-24).
+ssh_run_detached() {
+    _srd_host="$1"; _srd_payload="$2"; _srd_label="${3:-remote}"
+    # Shorter probes than the mux default: we WANT a dead poll to fail fast and
+    # reconnect rather than block for the full keepalive budget.
+    _srd_ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
+    _srd_tag="ship-$(echo "$_srd_label" | tr -c 'A-Za-z0-9_.-' '-')-$$"
+    _srd_sh="/tmp/${_srd_tag}.sh"
+    _srd_log="/tmp/${_srd_tag}.log"
+    _srd_rc="/tmp/${_srd_tag}.rc"
+    _srd_timeout="${SSH_DETACH_TIMEOUT:-900}"
+
+    # 1) Upload the payload as a script (short transfer — retry on transport 255).
+    _srd_u=1
+    for _srd_t in 1 2 3 4 5; do
+        printf '%s\n' "$_srd_payload" \
+            | ssh $SSH_OPTS $_srd_ka "$_srd_host" "cat > '$_srd_sh'" && _srd_u=0 || _srd_u=$?
+        [ "$_srd_u" -eq 0 ] && break
+        [ "$_srd_u" -ne 255 ] && return "$_srd_u"
+        log_warn "${_srd_label}: upload dropped (255) — retry ${_srd_t}/5"
+        sleep $(( 5 * _srd_t ))
+    done
+    [ "$_srd_u" -eq 0 ] || return "$_srd_u"
+
+    # 2) Launch detached. Reparented to init and I/O-detached, so this ssh
+    #    returns immediately and may even drop right after without harm.
+    _srd_l=1
+    for _srd_t in 1 2 3; do
+        ssh $SSH_OPTS $_srd_ka "$_srd_host" \
+            "rm -f '$_srd_rc'; setsid nohup bash -c 'bash \"$_srd_sh\" > \"$_srd_log\" 2>&1; echo \$? > \"$_srd_rc\"' >/dev/null 2>&1 </dev/null & echo started" \
+            >/dev/null && _srd_l=0 || _srd_l=$?
+        [ "$_srd_l" -eq 0 ] && break
+        [ "$_srd_l" -ne 255 ] && return "$_srd_l"
+        log_warn "${_srd_label}: launch dropped (255) — retry ${_srd_t}/3"
+        sleep $(( 5 * _srd_t ))
+    done
+    [ "$_srd_l" -eq 0 ] || return "$_srd_l"
+
+    # 3) Poll for the rc marker. Transport failures here are non-fatal by design.
+    _srd_w=0
+    _srd_rcval=""
+    while [ "$_srd_w" -lt "$_srd_timeout" ]; do
+        _srd_rcval=$(ssh $SSH_OPTS $_srd_ka "$_srd_host" "cat '$_srd_rc' 2>/dev/null" 2>/dev/null || true)
+        case "$_srd_rcval" in
+            "" | *[!0-9]*) ;;   # not finished (or poll dropped) — keep waiting
+            *) break ;;
+        esac
+        sleep 5
+        _srd_w=$(( _srd_w + 5 ))
+    done
+
+    # 4) Ship the remote output back so CI logs still show pull/up progress.
+    ssh $SSH_OPTS $_srd_ka "$_srd_host" "cat '$_srd_log' 2>/dev/null" 2>/dev/null || true
+    ssh $SSH_OPTS $_srd_ka "$_srd_host" "rm -f '$_srd_sh' '$_srd_log' '$_srd_rc'" >/dev/null 2>&1 || true
+
+    case "$_srd_rcval" in
+        "" | *[!0-9]*)
+            log_error "${_srd_label}: no exit code after ${_srd_timeout}s — treating as failure"
+            return 124
+            ;;
+    esac
+    return "$_srd_rcval"
+}
+
 rsync_with_retry() {
     _rwr_n="${SSH_RETRY_N:-3}"
     _rwr_bo="${SSH_RETRY_BACKOFF:-5}"
