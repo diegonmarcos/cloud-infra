@@ -1,0 +1,122 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/cloud-health-reports-arm-oci-apps.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+name: Cloud Health Reports (ARM oci-apps)
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      report:
+        description: 'Report target (all|cloud|mail|url|sec-network|sec-data|daily-mail)'
+        default: 'all'
+
+concurrency:
+  group: cloud-health-reports-arm-oci-apps
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run-reports:
+    name: Run reports
+    runs-on: [self-hosted, linux, arm64, oci-apps]
+    env:
+      REPORT_TARGET: ${{ inputs.report || 'all' }}
+      # Runner work dir inside container is /tmp/runner/work; on host it is this path.
+      HOST_RUNNER_WORKDIR: /opt/containers/gha-runner/work-oci-apps-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch I_cloud-data submodule via SSH
+        env:
+          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+        run: |
+          git config --global --add safe.directory '*'
+          mkdir -p ~/.ssh
+          echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no"
+          git submodule update --init --depth=1 I_cloud-data
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull reports image
+        run: docker pull ghcr.io/diegonmarcos/cloud-data-reports:arm64
+
+      - name: Setup SSH config for reports container
+        env:
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+          GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+          GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+        run: |
+          SSH_DIR="$GITHUB_WORKSPACE/.reports-ssh"
+          mkdir -p "$SSH_DIR"
+          printf '%s\n' "$OCI_SSH_KEY"       > "$SSH_DIR/oci_key"
+          printf '%s\n' "$GCP_PROXY_SSH_KEY" > "$SSH_DIR/gcp_proxy_key"
+          printf '%s\n' "$GCP_T4_SSH_KEY"    > "$SSH_DIR/gcp_t4_key"
+          {
+            echo "Host oci-mail";          echo "  HostName 10.0.0.3";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+            echo "Host oci-analytics";     echo "  HostName 10.0.0.4";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+            echo "Host oci-apps";          echo "  HostName 10.0.0.6";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+            echo "Host gcp-proxy";         echo "  HostName 10.0.0.1";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_proxy_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+            echo "Host gcp-t4";            echo "  HostName 10.0.0.8";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_t4_key";   echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+          } > "$SSH_DIR/config"
+          chmod 700 "$SSH_DIR"
+          chmod 600 "$SSH_DIR/oci_key" "$SSH_DIR/gcp_proxy_key" "$SSH_DIR/gcp_t4_key" "$SSH_DIR/config"
+
+      - name: Run reports
+        run: |
+          # Translate container-side workspace path to host-side path for docker volume mounts.
+          HOST_WS="${HOST_RUNNER_WORKDIR}${GITHUB_WORKSPACE#/tmp/runner/work}"
+          docker run --rm \
+            --network host \
+            -v "${HOST_WS}:/root/git/cloud" \
+            -v "${HOST_WS}/I_cloud-data:/root/git/cloud-data" \
+            -v "${HOST_WS}/.reports-ssh:/root/.ssh:ro" \
+            -e SOPS_AGE_KEY \
+            -e GITHUB_TOKEN \
+            -e BEARER_TOKEN \
+            -e REQUIRE_BEARER=false \
+            ghcr.io/diegonmarcos/cloud-data-reports:arm64 \
+            "$REPORT_TARGET"
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+
+      - name: Fix dist permissions
+        run: chmod -R a+rX "$GITHUB_WORKSPACE/I_cloud-data/reports/dist/"
+
+      - name: Publish to cloud-data
+        env:
+          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          git clone --depth=1 \
+            --config core.sshCommand="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" \
+            git@github.com:diegonmarcos/cloud-data.git /tmp/cd
+          cp -r "$GITHUB_WORKSPACE/I_cloud-data/reports/dist/." /tmp/cd/reports/dist/
+          cd /tmp/cd
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/dist/
+          git diff --cached --quiet && echo "No changes to commit" || \
+            git commit -m "chore: update health reports $(date -u +%Y-%m-%dT%H:%M:%SZ)" && \
+            git push
