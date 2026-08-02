@@ -6,12 +6,12 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2658,
+    "files": 2671,
     "by_lang": {
       "nix": 437,
       "sh": 356,
       "rust": 702,
-      "ts": 299,
+      "ts": 312,
       "py": 847,
       "js": 17
     },
@@ -24,8 +24,8 @@
       "nix-module": 299,
       "compose": 65,
       "python": 842,
-      "module": 173,
-      "mcp-tool": 95,
+      "module": 184,
+      "mcp-tool": 97,
       "entrypoint": 23,
       "workflow-dag": 2,
       "hook": 7,
@@ -221,6 +221,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -233,6 +234,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -9420,6 +9422,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -9432,6 +9435,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -12074,6 +12078,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -12086,6 +12091,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -12263,6 +12269,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -12275,6 +12282,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -12356,6 +12364,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -12368,6 +12377,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -12584,6 +12594,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -12596,6 +12607,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -12618,7 +12630,13 @@
         "./routes/observability.js",
         "./routes/security.js",
         "./routes/finops.js",
-        "./routes/publicLogs.js"
+        "./routes/publicLogs.js",
+        "./routes/metrics.js",
+        "./routes/logs.js",
+        "./routes/alerts.js",
+        "./routes/events.js",
+        "./routes/reports.js",
+        "../shared/libs/poller.js"
       ],
       "symbols": [
         "buildApp()"
@@ -12670,6 +12688,41 @@
       ]
     },
     {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/alerts.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerAlertsRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "zod",
+        "zod-to-json-schema",
+        "../../shared/libs/db.js"
+      ],
+      "symbols": [
+        "parseId(idStr: string, reply: { code: (n: number)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/events.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "EventType",
+        "TimelineEvent",
+        "registerEventsRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "../../shared/libs/db.js"
+      ],
+      "symbols": [
+        "fetchCiEvents()",
+        "inWindow(ts: string, from?: string, to?: string)"
+      ]
+    },
+    {
       "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/finops.ts",
       "lang": "ts",
       "role": "module",
@@ -12707,6 +12760,43 @@
       ]
     },
     {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/logs.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerLogsRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "child_process",
+        "../../shared/libs/config.js",
+        "../../shared/libs/async-ssh.js",
+        "../../shared/libs/db.js",
+        "../../shared/libs/validators.js"
+      ],
+      "symbols": [
+        "guessLevel(line: string)",
+        "resolveTargets(service?: string)",
+        "pullAndIndex(vm: string, container: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/metrics.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerMetricsRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "../../shared/libs/db.js"
+      ],
+      "symbols": [
+        "parseMetric(m: unknown)",
+        "applyStep(points: { ts: string; value: number }[], stepSeconds?: number)"
+      ]
+    },
+    {
       "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/observability.ts",
       "lang": "ts",
       "role": "module",
@@ -12726,9 +12816,12 @@
         "../../shared/libs/notify.js",
         "../../shared/libs/db.js",
         "../../shared/libs/config.js",
-        "../../shared/libs/ops.js"
+        "../../shared/libs/ops.js",
+        "../../shared/libs/poller.js"
       ],
-      "symbols": []
+      "symbols": [
+        "computeSlo(vm: string | undefined, targetPercent: number, hours: number)"
+      ]
     },
     {
       "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/operations.ts",
@@ -12740,7 +12833,10 @@
       "imports": [
         "fastify",
         "../../shared/libs/control.js",
-        "../../shared/libs/ops.js"
+        "../../shared/libs/ops.js",
+        "../../shared/libs/docker.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/ssh.js"
       ],
       "symbols": [
         "registerOperationsRoutes(app: FastifyInstance)"
@@ -12760,6 +12856,23 @@
       ],
       "symbols": [
         "registerPublicLogsRoutes(app: FastifyInstance)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/reports.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "REPORT_RUNNERS",
+        "REPORT_KINDS",
+        "REPORT_FAMILIES",
+        "registerReportsRoutes"
+      ],
+      "imports": [
+        "fastify"
+      ],
+      "symbols": [
+        "ghHeaders(token?: string)"
       ]
     },
     {
@@ -12815,6 +12928,22 @@
         "renderSwaggerEndpoints(el,spec)",
         "renderGroup(list)",
         "runSwaggerEndpoint(idx,method,pathTemplate)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/shared/libs/__selfcheck__.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert"
+      ],
+      "symbols": [
+        "compareOp(value: number, op: string, threshold: number)",
+        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
+        "foldBucket(values: number[])",
+        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
+        "bucket5m(ts: Date)"
       ]
     },
     {
@@ -13088,13 +13217,25 @@
         "getAlertState",
         "updateAlertState",
         "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
+        "recordMetricSample",
+        "queryMetricSeries",
+        "getLatestMetric",
+        "getTopByMetric",
+        "rollupMetrics",
+        "pruneMetrics",
+        "listAlertRules",
+        "getAlertRule",
+        "createAlertRule",
+        "updateAlertRule",
+        "deleteAlertRule",
+        "getOpenAlertForRule",
+        "recordAlertFired",
+        "recordAlertResolved",
+        "ackAlert",
+        "getActiveAlerts",
+        "getAlertHistory",
+        "insertLogLines",
+        "searchLogLines"
       ],
       "imports": [
         "better-sqlite3",
@@ -13115,7 +13256,29 @@
         "getDeployHistory(query: DeployQuery = {})",
         "getAlertState(vm: string)",
         "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
+        "pruneOldRecords(daysToKeep = 30)",
+        "bucket5m(ts: Date)",
+        "recordMetricSample(target: string, metric: MetricName, value: number)",
+        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
+        "getLatestMetric(target: string, metric: MetricName)",
+        "getTopByMetric(metric: MetricName, limit = 10)",
+        "rollupMetrics(rawRetentionHours = 6)",
+        "pruneMetrics(daysToKeep = 30)",
+        "rowToRule(r: Record<string, unknown>)",
+        "listAlertRules()",
+        "getAlertRule(id: number)",
+        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
+        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
+        "deleteAlertRule(id: number)",
+        "rowToHistory(r: Record<string, unknown>)",
+        "getOpenAlertForRule(ruleId: number)",
+        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
+        "recordAlertResolved(id: number)",
+        "ackAlert(id: number)",
+        "getActiveAlerts()",
+        "getAlertHistory(limit = 100)",
+        "insertLogLines(lines: LogLine[])",
+        "searchLogLines(query: LogSearchQuery)"
       ]
     },
     {
@@ -13204,7 +13367,16 @@
         "pullUpContainer",
         "pullUpVmFleet",
         "pullUpCloudFleet",
-        "dockerSystemDf"
+        "dockerSystemDf",
+        "updateContainer",
+        "containerStatsOne",
+        "inspectContainerDetails",
+        "checkImageUpdate",
+        "runAllowlistedExecCommand",
+        "ContainerStats",
+        "ContainerDetails",
+        "ImageUpdateStatus",
+        "EXEC_COMMAND_ALLOWLIST"
       ],
       "imports": [
         "./ssh.js",
@@ -13235,7 +13407,12 @@
         "pullUpContainer(\n  service: string,\n)",
         "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
         "pullUpCloudFleet()",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
+        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
       ]
     },
     {
@@ -13523,6 +13700,7 @@
         "getConfigsSlice",
         "getDepsSlice",
         "FRONT_DEPS_PATH",
+        "FRONT_TOPOLOGY_PATH",
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
@@ -13531,8 +13709,7 @@
         "C3_API_PUBLIC",
         "FRONT_DIR",
         "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
+        "REPOS"
       ],
       "imports": [
         "fs",
@@ -13546,6 +13723,40 @@
         "readConsolidated()",
         "resolveC3Api()",
         "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/shared/libs/poller.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getLastFleetHealthSnapshot",
+        "evaluateAlertRules",
+        "startPoller",
+        "stopPoller",
+        "TICK_INTERVAL_MS",
+        "pollerEvents",
+        "FleetHealthSnapshot"
+      ],
+      "imports": [
+        "events",
+        "./config.js",
+        "./async-ssh.js",
+        "./db.js",
+        "./notify.js"
+      ],
+      "symbols": [
+        "getLastFleetHealthSnapshot()",
+        "sampleAllTargets()",
+        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
+        "parsePercent(s?: string)",
+        "parseNetBytes(s?: string)",
+        "parseSize(s: string)",
+        "compareOp(value: number, op: string, threshold: number)",
+        "evaluateAlertRules()",
+        "runTick()",
+        "startPoller()",
+        "stopPoller()"
       ]
     },
     {
@@ -13850,6 +14061,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -13862,6 +14074,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -14289,6 +14502,22 @@
       ]
     },
     {
+      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/__selfcheck__.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert"
+      ],
+      "symbols": [
+        "compareOp(value: number, op: string, threshold: number)",
+        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
+        "foldBucket(values: number[])",
+        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
+        "bucket5m(ts: Date)"
+      ]
+    },
+    {
       "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/async-exec.ts",
       "lang": "ts",
       "role": "module",
@@ -14559,13 +14788,25 @@
         "getAlertState",
         "updateAlertState",
         "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
+        "recordMetricSample",
+        "queryMetricSeries",
+        "getLatestMetric",
+        "getTopByMetric",
+        "rollupMetrics",
+        "pruneMetrics",
+        "listAlertRules",
+        "getAlertRule",
+        "createAlertRule",
+        "updateAlertRule",
+        "deleteAlertRule",
+        "getOpenAlertForRule",
+        "recordAlertFired",
+        "recordAlertResolved",
+        "ackAlert",
+        "getActiveAlerts",
+        "getAlertHistory",
+        "insertLogLines",
+        "searchLogLines"
       ],
       "imports": [
         "better-sqlite3",
@@ -14586,7 +14827,29 @@
         "getDeployHistory(query: DeployQuery = {})",
         "getAlertState(vm: string)",
         "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
+        "pruneOldRecords(daysToKeep = 30)",
+        "bucket5m(ts: Date)",
+        "recordMetricSample(target: string, metric: MetricName, value: number)",
+        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
+        "getLatestMetric(target: string, metric: MetricName)",
+        "getTopByMetric(metric: MetricName, limit = 10)",
+        "rollupMetrics(rawRetentionHours = 6)",
+        "pruneMetrics(daysToKeep = 30)",
+        "rowToRule(r: Record<string, unknown>)",
+        "listAlertRules()",
+        "getAlertRule(id: number)",
+        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
+        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
+        "deleteAlertRule(id: number)",
+        "rowToHistory(r: Record<string, unknown>)",
+        "getOpenAlertForRule(ruleId: number)",
+        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
+        "recordAlertResolved(id: number)",
+        "ackAlert(id: number)",
+        "getActiveAlerts()",
+        "getAlertHistory(limit = 100)",
+        "insertLogLines(lines: LogLine[])",
+        "searchLogLines(query: LogSearchQuery)"
       ]
     },
     {
@@ -14675,7 +14938,16 @@
         "pullUpContainer",
         "pullUpVmFleet",
         "pullUpCloudFleet",
-        "dockerSystemDf"
+        "dockerSystemDf",
+        "updateContainer",
+        "containerStatsOne",
+        "inspectContainerDetails",
+        "checkImageUpdate",
+        "runAllowlistedExecCommand",
+        "ContainerStats",
+        "ContainerDetails",
+        "ImageUpdateStatus",
+        "EXEC_COMMAND_ALLOWLIST"
       ],
       "imports": [
         "./ssh.js",
@@ -14706,7 +14978,12 @@
         "pullUpContainer(\n  service: string,\n)",
         "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
         "pullUpCloudFleet()",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
+        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
       ]
     },
     {
@@ -14994,6 +15271,7 @@
         "getConfigsSlice",
         "getDepsSlice",
         "FRONT_DEPS_PATH",
+        "FRONT_TOPOLOGY_PATH",
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
@@ -15002,8 +15280,7 @@
         "C3_API_PUBLIC",
         "FRONT_DIR",
         "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
+        "REPOS"
       ],
       "imports": [
         "fs",
@@ -15017,6 +15294,40 @@
         "readConsolidated()",
         "resolveC3Api()",
         "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/poller.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getLastFleetHealthSnapshot",
+        "evaluateAlertRules",
+        "startPoller",
+        "stopPoller",
+        "TICK_INTERVAL_MS",
+        "pollerEvents",
+        "FleetHealthSnapshot"
+      ],
+      "imports": [
+        "events",
+        "./config.js",
+        "./async-ssh.js",
+        "./db.js",
+        "./notify.js"
+      ],
+      "symbols": [
+        "getLastFleetHealthSnapshot()",
+        "sampleAllTargets()",
+        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
+        "parsePercent(s?: string)",
+        "parseNetBytes(s?: string)",
+        "parseSize(s: string)",
+        "compareOp(value: number, op: string, threshold: number)",
+        "evaluateAlertRules()",
+        "runTick()",
+        "startPoller()",
+        "stopPoller()"
       ]
     },
     {
@@ -15302,6 +15613,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -15314,6 +15626,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -15551,6 +15864,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -15563,6 +15877,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -15975,6 +16290,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -15987,6 +16303,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -16719,6 +17036,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -16731,6 +17049,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -17056,6 +17375,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -17068,6 +17388,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19037,6 +19358,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -19049,6 +19371,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19510,6 +19833,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -19522,6 +19846,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19696,6 +20021,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -19708,6 +20034,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19821,6 +20148,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -19833,6 +20161,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19903,6 +20232,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -19915,6 +20245,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -19995,6 +20326,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20007,6 +20339,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20041,6 +20374,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20053,6 +20387,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20129,6 +20464,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20141,6 +20477,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20222,6 +20559,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20234,6 +20572,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20380,6 +20719,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20392,6 +20732,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20474,6 +20815,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20486,6 +20828,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20578,6 +20921,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20590,6 +20934,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20687,6 +21032,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20699,6 +21045,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -20798,6 +21145,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -20810,6 +21158,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -21156,6 +21505,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -21168,6 +21518,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -21256,6 +21607,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -21268,6 +21620,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -21371,6 +21724,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -21383,6 +21737,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -21506,6 +21861,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -21518,6 +21874,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -21689,6 +22046,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -21701,6 +22059,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22068,6 +22427,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22080,6 +22440,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22177,6 +22538,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22189,6 +22551,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22324,6 +22687,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22336,6 +22700,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22452,6 +22817,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22464,6 +22830,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22531,6 +22898,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22543,6 +22911,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22681,6 +23050,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22693,6 +23063,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22831,6 +23202,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22843,6 +23215,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -22929,6 +23302,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -22941,6 +23315,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -23050,6 +23425,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -23062,6 +23438,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -39333,6 +39710,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -39345,6 +39723,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -39468,6 +39847,22 @@
         "bridge_calls()",
         "set_provider()",
         "exclude_submodules()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_cloud-cgc-mcp/src/code/shared/libs/__selfcheck__.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert"
+      ],
+      "symbols": [
+        "compareOp(value: number, op: string, threshold: number)",
+        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
+        "foldBucket(values: number[])",
+        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
+        "bucket5m(ts: Date)"
       ]
     },
     {
@@ -39741,13 +40136,25 @@
         "getAlertState",
         "updateAlertState",
         "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
+        "recordMetricSample",
+        "queryMetricSeries",
+        "getLatestMetric",
+        "getTopByMetric",
+        "rollupMetrics",
+        "pruneMetrics",
+        "listAlertRules",
+        "getAlertRule",
+        "createAlertRule",
+        "updateAlertRule",
+        "deleteAlertRule",
+        "getOpenAlertForRule",
+        "recordAlertFired",
+        "recordAlertResolved",
+        "ackAlert",
+        "getActiveAlerts",
+        "getAlertHistory",
+        "insertLogLines",
+        "searchLogLines"
       ],
       "imports": [
         "better-sqlite3",
@@ -39768,7 +40175,29 @@
         "getDeployHistory(query: DeployQuery = {})",
         "getAlertState(vm: string)",
         "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
+        "pruneOldRecords(daysToKeep = 30)",
+        "bucket5m(ts: Date)",
+        "recordMetricSample(target: string, metric: MetricName, value: number)",
+        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
+        "getLatestMetric(target: string, metric: MetricName)",
+        "getTopByMetric(metric: MetricName, limit = 10)",
+        "rollupMetrics(rawRetentionHours = 6)",
+        "pruneMetrics(daysToKeep = 30)",
+        "rowToRule(r: Record<string, unknown>)",
+        "listAlertRules()",
+        "getAlertRule(id: number)",
+        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
+        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
+        "deleteAlertRule(id: number)",
+        "rowToHistory(r: Record<string, unknown>)",
+        "getOpenAlertForRule(ruleId: number)",
+        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
+        "recordAlertResolved(id: number)",
+        "ackAlert(id: number)",
+        "getActiveAlerts()",
+        "getAlertHistory(limit = 100)",
+        "insertLogLines(lines: LogLine[])",
+        "searchLogLines(query: LogSearchQuery)"
       ]
     },
     {
@@ -39857,7 +40286,16 @@
         "pullUpContainer",
         "pullUpVmFleet",
         "pullUpCloudFleet",
-        "dockerSystemDf"
+        "dockerSystemDf",
+        "updateContainer",
+        "containerStatsOne",
+        "inspectContainerDetails",
+        "checkImageUpdate",
+        "runAllowlistedExecCommand",
+        "ContainerStats",
+        "ContainerDetails",
+        "ImageUpdateStatus",
+        "EXEC_COMMAND_ALLOWLIST"
       ],
       "imports": [
         "./ssh.js",
@@ -39888,7 +40326,12 @@
         "pullUpContainer(\n  service: string,\n)",
         "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
         "pullUpCloudFleet()",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
+        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
       ]
     },
     {
@@ -40176,6 +40619,7 @@
         "getConfigsSlice",
         "getDepsSlice",
         "FRONT_DEPS_PATH",
+        "FRONT_TOPOLOGY_PATH",
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
@@ -40184,8 +40628,7 @@
         "C3_API_PUBLIC",
         "FRONT_DIR",
         "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
+        "REPOS"
       ],
       "imports": [
         "fs",
@@ -40199,6 +40642,40 @@
         "readConsolidated()",
         "resolveC3Api()",
         "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_cloud-cgc-mcp/src/code/shared/libs/poller.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getLastFleetHealthSnapshot",
+        "evaluateAlertRules",
+        "startPoller",
+        "stopPoller",
+        "TICK_INTERVAL_MS",
+        "pollerEvents",
+        "FleetHealthSnapshot"
+      ],
+      "imports": [
+        "events",
+        "./config.js",
+        "./async-ssh.js",
+        "./db.js",
+        "./notify.js"
+      ],
+      "symbols": [
+        "getLastFleetHealthSnapshot()",
+        "sampleAllTargets()",
+        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
+        "parsePercent(s?: string)",
+        "parseNetBytes(s?: string)",
+        "parseSize(s: string)",
+        "compareOp(value: number, op: string, threshold: number)",
+        "evaluateAlertRules()",
+        "runTick()",
+        "startPoller()",
+        "stopPoller()"
       ]
     },
     {
@@ -40551,6 +41028,22 @@
       ]
     },
     {
+      "path": "a_solutions/user-ai_cloud-cgc-mcp/src/code/tools/shared/libs/__selfcheck__.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [],
+      "imports": [
+        "node:assert"
+      ],
+      "symbols": [
+        "compareOp(value: number, op: string, threshold: number)",
+        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
+        "foldBucket(values: number[])",
+        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
+        "bucket5m(ts: Date)"
+      ]
+    },
+    {
       "path": "a_solutions/user-ai_cloud-cgc-mcp/src/code/tools/shared/libs/async-exec.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -40821,13 +41314,25 @@
         "getAlertState",
         "updateAlertState",
         "pruneOldRecords",
-        "HealthRecord",
-        "HealthHistoryQuery",
-        "HealthHistoryRow",
-        "AuditQuery",
-        "AuditRow",
-        "DeployQuery",
-        "DeployRow"
+        "recordMetricSample",
+        "queryMetricSeries",
+        "getLatestMetric",
+        "getTopByMetric",
+        "rollupMetrics",
+        "pruneMetrics",
+        "listAlertRules",
+        "getAlertRule",
+        "createAlertRule",
+        "updateAlertRule",
+        "deleteAlertRule",
+        "getOpenAlertForRule",
+        "recordAlertFired",
+        "recordAlertResolved",
+        "ackAlert",
+        "getActiveAlerts",
+        "getAlertHistory",
+        "insertLogLines",
+        "searchLogLines"
       ],
       "imports": [
         "better-sqlite3",
@@ -40848,7 +41353,29 @@
         "getDeployHistory(query: DeployQuery = {})",
         "getAlertState(vm: string)",
         "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)"
+        "pruneOldRecords(daysToKeep = 30)",
+        "bucket5m(ts: Date)",
+        "recordMetricSample(target: string, metric: MetricName, value: number)",
+        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
+        "getLatestMetric(target: string, metric: MetricName)",
+        "getTopByMetric(metric: MetricName, limit = 10)",
+        "rollupMetrics(rawRetentionHours = 6)",
+        "pruneMetrics(daysToKeep = 30)",
+        "rowToRule(r: Record<string, unknown>)",
+        "listAlertRules()",
+        "getAlertRule(id: number)",
+        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
+        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
+        "deleteAlertRule(id: number)",
+        "rowToHistory(r: Record<string, unknown>)",
+        "getOpenAlertForRule(ruleId: number)",
+        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
+        "recordAlertResolved(id: number)",
+        "ackAlert(id: number)",
+        "getActiveAlerts()",
+        "getAlertHistory(limit = 100)",
+        "insertLogLines(lines: LogLine[])",
+        "searchLogLines(query: LogSearchQuery)"
       ]
     },
     {
@@ -40937,7 +41464,16 @@
         "pullUpContainer",
         "pullUpVmFleet",
         "pullUpCloudFleet",
-        "dockerSystemDf"
+        "dockerSystemDf",
+        "updateContainer",
+        "containerStatsOne",
+        "inspectContainerDetails",
+        "checkImageUpdate",
+        "runAllowlistedExecCommand",
+        "ContainerStats",
+        "ContainerDetails",
+        "ImageUpdateStatus",
+        "EXEC_COMMAND_ALLOWLIST"
       ],
       "imports": [
         "./ssh.js",
@@ -40968,7 +41504,12 @@
         "pullUpContainer(\n  service: string,\n)",
         "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
         "pullUpCloudFleet()",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)"
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
+        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
       ]
     },
     {
@@ -41256,6 +41797,7 @@
         "getConfigsSlice",
         "getDepsSlice",
         "FRONT_DEPS_PATH",
+        "FRONT_TOPOLOGY_PATH",
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
@@ -41264,8 +41806,7 @@
         "C3_API_PUBLIC",
         "FRONT_DIR",
         "FRONT_BUILD_SCRIPT",
-        "REPOS",
-        "resolveConfigPath"
+        "REPOS"
       ],
       "imports": [
         "fs",
@@ -41279,6 +41820,40 @@
         "readConsolidated()",
         "resolveC3Api()",
         "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_cloud-cgc-mcp/src/code/tools/shared/libs/poller.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "getLastFleetHealthSnapshot",
+        "evaluateAlertRules",
+        "startPoller",
+        "stopPoller",
+        "TICK_INTERVAL_MS",
+        "pollerEvents",
+        "FleetHealthSnapshot"
+      ],
+      "imports": [
+        "events",
+        "./config.js",
+        "./async-ssh.js",
+        "./db.js",
+        "./notify.js"
+      ],
+      "symbols": [
+        "getLastFleetHealthSnapshot()",
+        "sampleAllTargets()",
+        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
+        "parsePercent(s?: string)",
+        "parseNetBytes(s?: string)",
+        "parseSize(s: string)",
+        "compareOp(value: number, op: string, threshold: number)",
+        "evaluateAlertRules()",
+        "runTick()",
+        "startPoller()",
+        "stopPoller()"
       ]
     },
     {
@@ -41573,6 +42148,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -41585,6 +42161,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -41706,6 +42283,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -41718,6 +42296,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -41796,6 +42375,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -41808,6 +42388,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -41911,6 +42492,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -41923,6 +42505,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -57999,6 +58582,7 @@
         "rt",
         "ports",
         "gw",
+        "binariesImage",
         "services",
         "my-ai-api",
         "image",
@@ -58077,6 +58661,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58089,6 +58674,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58187,6 +58773,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58199,6 +58786,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58426,6 +59014,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58438,6 +59027,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58653,6 +59243,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58665,6 +59256,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58753,6 +59345,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58765,6 +59358,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58841,6 +59435,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58853,6 +59448,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -58950,6 +59546,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -58962,6 +59559,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -59048,6 +59646,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -59060,6 +59659,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -59222,6 +59822,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -59234,6 +59835,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -59395,6 +59997,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -59407,6 +60010,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -59672,6 +60276,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -59684,6 +60289,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62004,6 +62610,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62016,6 +62623,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62117,6 +62725,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62129,6 +62738,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62281,6 +62891,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62293,6 +62904,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62377,6 +62989,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62389,6 +63002,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62465,6 +63079,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62477,6 +63092,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62561,6 +63177,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62573,6 +63190,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62674,6 +63292,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62686,6 +63305,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62773,6 +63393,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62785,6 +63406,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62867,6 +63489,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62879,6 +63502,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -62980,6 +63604,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -62992,6 +63617,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -63094,6 +63720,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -63106,6 +63733,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -63185,6 +63813,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -63197,6 +63826,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
@@ -63288,6 +63918,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ],
       "imports": [],
@@ -63300,6 +63931,7 @@
         "log_warn()",
         "log_error()",
         "ssh_with_retry()",
+        "ssh_run_detached()",
         "rsync_with_retry()"
       ]
     },
