@@ -87,10 +87,15 @@ jobs:
         with:
           vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
 
+      - name: Resolve builder image
+        uses: ./.github/actions/resolve-builder-image
+
       - name: Ship via cloud-builder
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          IMAGE="ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"
+          # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
+          # which reads III_unix/cb_containers-builders/build.json (master).
+          IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           # NET_ADMIN + /dev/net/tun — required for wg-quick up wg0 inside
           # the builder (SSH to the arm64 runner is WG-only, never public).
