@@ -244,8 +244,16 @@ ssh_with_retry() {
     _swr_attempt=0
     _swr_ec=0
     while [ "$_swr_attempt" -le "$_swr_n" ]; do
-        ssh $SSH_OPTS "$@"
-        _swr_ec=$?
+        # `&& x || y` (not a bare call + $?) — this file runs under `set -e`, and
+        # a bare failing `ssh` here is untested, so errexit killed the whole ship
+        # ON THE FIRST 255 and this retry loop never iterated. It only ever
+        # retried at `if ! ssh_with_retry ...` call sites, where errexit is
+        # suspended. Bare call sites — including the pull/down/up PAYLOAD in
+        # cloud-ship-container-step-deploy-compose.sh — died instantly instead
+        # (c3-public-api → oci-analytics, 2026-08-02: exit 255 mid-layer-extract
+        # with no retry warning logged; and worse, a 255 landing between `down`
+        # and `up` left the container removed and never recreated).
+        ssh $SSH_OPTS "$@" && _swr_ec=0 || _swr_ec=$?
         [ "$_swr_ec" -eq 0 ] && return 0
         # Exit 255 = SSH-level error (timeout / reset). Retry.
         # Other exit codes = remote command failed; do NOT retry.
@@ -266,8 +274,9 @@ rsync_with_retry() {
     _rwr_attempt=0
     _rwr_ec=0
     while [ "$_rwr_attempt" -le "$_rwr_n" ]; do
-        rsync "$@"
-        _rwr_ec=$?
+        # Same errexit trap as ssh_with_retry above — bare `rsync` under `set -e`
+        # aborted the ship before the retry loop could run.
+        rsync "$@" && _rwr_ec=0 || _rwr_ec=$?
         [ "$_rwr_ec" -eq 0 ] && return 0
         # rsync exit 12/30/255 = transport error (broken pipe, conn-reset,
         # ssh error). Retry. Other codes (perm, disk, partial) = real.
