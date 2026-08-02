@@ -1,15 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                                                                  ║
-# ║   GENERATED FILE — DO NOT EDIT                                   ║
-# ║                                                                  ║
-# ║   Source : 1_workflows/src/scripts/cloud-ship-container-step-build-docker.sh
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
-# ║                                                                  ║
-# ║   Manual edits will be overwritten on next build.                ║
-# ║                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 # Step: Build Docker image, push to GHCR
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
@@ -1012,6 +1000,24 @@ DISPATCH_EOF
             # Poll loop: data-driven from runners.json
             _poll_int=$(jq -r '.dispatch.poll_interval_seconds // 15' "$RUNNERS_JSON" 2>/dev/null)
             _poll_max=$(jq -r '.dispatch.max_duration_seconds // 1800' "$RUNNERS_JSON" 2>/dev/null)
+            # Clamp to the time the CALLER actually has left. Pre-dispatch work
+            # (image pull, WG, repo+submodule sync onto the builder) is highly
+            # variable — 17 min on run 30751065637 — so a static budget kept
+            # outliving the CI step ceiling: the loop never reached its own
+            # limit and GHA killed the job with a bare "step timed out" instead
+            # of this function's error + remote log tail. SHIP_DEADLINE_EPOCH is
+            # optional; unset (local runs) keeps the declared budget.
+            if [ -n "${SHIP_DEADLINE_EPOCH:-}" ]; then
+                _remaining=$((SHIP_DEADLINE_EPOCH - $(date +%s) - 120))
+                if [ "$_remaining" -lt 60 ]; then
+                    log_error "Only ${_remaining}s left before the ship deadline — not enough to poll build job $JOB_ID"
+                    return 1
+                fi
+                if [ "$_remaining" -lt "$_poll_max" ]; then
+                    log "  ↳ poll budget clamped ${_poll_max}s → ${_remaining}s (ship deadline)"
+                    _poll_max=$_remaining
+                fi
+            fi
             _poll_tail=$(jq -r '.dispatch.tail_log_lines // 200' "$RUNNERS_JSON" 2>/dev/null)
             _job_status=""
             _elapsed=0
