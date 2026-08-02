@@ -1,15 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                                                                  ║
-# ║   GENERATED FILE — DO NOT EDIT                                   ║
-# ║                                                                  ║
-# ║   Source : 1_workflows/src/scripts/cloud-ship-container-step-deploy-compose.sh
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
-# ║                                                                  ║
-# ║   Manual edits will be overwritten on next build.                ║
-# ║                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 # Step: Run containers on VM via docker compose (standard or custom)
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
@@ -66,7 +54,16 @@ step_compose() {
             log "Skipping pre_hook '$COMPOSE_PRE_HOOK' — container entrypoint"
         else
             log "Running pre-hook: $COMPOSE_PRE_HOOK"
-            ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_PRE_HOOK && ./$COMPOSE_PRE_HOOK"
+            # Detached, not ssh_with_retry: hooks are minute-scale remote work
+            # (fetch-mcp-bearer.sh does an OIDC round-trip), and holding one ssh
+            # session open for them hits the same transport drop the compose
+            # payload hits. chat-mattermost → oci-apps, 2026-08-02: every attempt
+            # died at ~60s with exit 255, and each retry re-ran the whole hook
+            # from scratch — 4 runs, ~6 min, then the ship failed. Detached keeps
+            # the hook running across a dropped poll and returns its REAL rc.
+            ssh_run_detached "$DEPLOY_HOST" \
+                "cd $DEPLOY_PATH && chmod +x $COMPOSE_PRE_HOOK && ./$COMPOSE_PRE_HOOK" \
+                "prehook-$(basename "$DEPLOY_PATH")"
         fi
     fi
 
@@ -262,7 +259,9 @@ PULL_GATE
     # Post-hook
     if [ -n "$COMPOSE_POST_HOOK" ]; then
         log "Running post-hook: $COMPOSE_POST_HOOK"
-        ssh_with_retry "$DEPLOY_HOST" "cd $DEPLOY_PATH && chmod +x $COMPOSE_POST_HOOK && ./$COMPOSE_POST_HOOK"
+        ssh_run_detached "$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH && chmod +x $COMPOSE_POST_HOOK && ./$COMPOSE_POST_HOOK" \
+            "posthook-$(basename "$DEPLOY_PATH")"
     fi
 
     # Verify
