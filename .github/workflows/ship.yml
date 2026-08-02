@@ -385,7 +385,14 @@ jobs:
         # whole job (misreported as "cancelled"). 25 min leaves headroom
         # for the earlier setup steps (checkout, vault, cache restore,
         # image pull) within the 45 min job budget.
-        timeout-minutes: 25
+        #
+        # Must stay ABOVE build.json .dispatch.max_duration_seconds (1500s)
+        # plus pre-dispatch work (~7 min: image pull, WG, rsync, probe).
+        # At 25 min it sat BELOW that budget, so the poll loop could never
+        # reach its own limit — a slow arm64 layer export surfaced as GHA's
+        # useless "step timed out" instead of the engine's "build job did not
+        # complete within Ns" with the remote log tail. Run 30749128838.
+        timeout-minutes: 35
         env:
           CHANGED_DIRS: ${{ matrix.changed_dirs }}
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
