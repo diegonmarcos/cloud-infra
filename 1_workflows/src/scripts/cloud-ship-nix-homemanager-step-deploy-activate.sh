@@ -609,10 +609,51 @@ PREFLIGHT_EOF
         log "Activating on $DEPLOY_HOST (remote build)"
         SWITCH_CMD="export PATH=\$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\$PATH; . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh 2>/dev/null || true; for cmd in nix-build nix-instantiate nix-env nix-store nix-channel; do if ! command -v \$cmd >/dev/null 2>&1; then NIX_BIN=\$(dirname \$(command -v nix)); ln -sf nix \$NIX_BIN/\$cmd 2>/dev/null || sudo ln -sf nix \$NIX_BIN/\$cmd; fi; done; cd $REMOTE_PATH && nix run home-manager/release-24.11 -- switch --option eval-cache false --flake .#$HM_CONFIG -b backup"
         log "Remote cmd: $SWITCH_CMD"
+        # Apply the same detached activation pattern used for Docker delivery:
+        # nix run home-manager -- switch takes 2-10 minutes and a blocking SSH
+        # session dies (exit 255) when WireGuard blips mid-eval. Upload the
+        # script, launch it detached (nohup+setsid, SIGHUP-immune), poll a
+        # result marker over short cheap reconnections instead.
+        _ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
+        _tag="hm-rb-$$"; _rsh="/tmp/$_tag.sh"; _rlog="/tmp/$_tag.log"; _rrc="/tmp/$_tag.rc"
+        SWITCH_RC=1
         set +e
-        ssh_vm "bash -c '$SWITCH_CMD'" 2>&1 | tee -a "$BUILD_LOG_FILE"
-        SWITCH_RC=${PIPESTATUS[0]}
-        set -e
+        printf '#!/bin/bash\nset -e\n%s\n' "$SWITCH_CMD" | ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "cat > '$_rsh'"
+        _up=$?; set -e
+        if [ "$_up" -eq 0 ]; then
+            set +e
+            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+              "rm -f '$_rrc' '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_RB_LAUNCHED" \
+              2>&1 | tee -a "$BUILD_LOG_FILE"
+            set -e
+            log "Remote build HM switch on $DEPLOY_HOST (detached; polling, max 60min)"
+            _seen=0; _rcval=""
+            for _p in $(seq 1 240); do
+                set +e
+                _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; wc -c < '$_rlog' 2>/dev/null")
+                _pc=$?; set -e
+                if [ "$_pc" -eq 0 ]; then
+                    _chunk="${_out%%__HMRC__*}"
+                    _rest="${_out#*__HMRC__}"
+                    _rcpart="$(printf '%s' "${_rest%%__HMSZ__*}" | tr -dc '0-9')"
+                    _szpart="$(printf '%s' "${_rest#*__HMSZ__}" | tr -dc '0-9')"
+                    [ -n "$_chunk" ] && printf '%s' "$_chunk" | tee -a "$BUILD_LOG_FILE"
+                    [ -n "$_szpart" ] && _seen="$_szpart"
+                    if [ -n "$_rcpart" ]; then _rcval="$_rcpart"; break; fi
+                else
+                    log "poll reconnect (ssh $_pc) — remote build still running on $DEPLOY_HOST"
+                fi
+                sleep 15
+            done
+            if [ -n "$_rcval" ]; then
+                SWITCH_RC="$_rcval"
+            else
+                log "remote build HM switch did not complete within 60min on $DEPLOY_HOST"
+                SWITCH_RC=1
+            fi
+            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "rm -f '$_rsh' '$_rlog' '$_rrc'" 2>/dev/null || true
+        fi
         if [ "$SWITCH_RC" -ne 0 ]; then
             log "FAILED (exit $SWITCH_RC): HM switch on $DEPLOY_HOST"
             return 1
