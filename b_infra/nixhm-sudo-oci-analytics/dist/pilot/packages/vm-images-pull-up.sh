@@ -49,6 +49,16 @@ log() {
 
 die() { log "FATAL: $1"; exit 1; }
 
+# Resolve the directory that contains docker-compose.yml.
+# Accepts the service root; returns root or root/compose/, empty if neither.
+find_compose_dir() {
+  if [ -f "$1/docker-compose.yml" ]; then
+    printf '%s' "$1"
+  elif [ -f "$1/compose/docker-compose.yml" ]; then
+    printf '%s' "$1/compose"
+  fi
+}
+
 # ── Pre-flight ──────────────────────────────────────────────────
 if ! docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
   log "Docker not running — starting"
@@ -100,13 +110,14 @@ if [ -n "$MANIFEST" ]; then
           PULL_FAIL=$((PULL_FAIL + 1))
         fi
       done
-    elif [ -d "$COMPOSE_PATH" ] && [ -f "$COMPOSE_PATH/docker-compose.yml" ]; then
+    elif [ -d "$COMPOSE_PATH" ] && [ -n "$(find_compose_dir "$COMPOSE_PATH")" ]; then
       # Fallback: extract images from compose and pull individually
       # (docker compose pull spawns heavy Go binary — kills E2 micros)
+      EFF_COMPOSE=$(find_compose_dir "$COMPOSE_PATH")
       ENV_FLAG=""
-      [ -f "$COMPOSE_PATH/.secrets" ] && ENV_FLAG="--env-file $COMPOSE_PATH/.secrets"
+      [ -f "$EFF_COMPOSE/.secrets" ] && ENV_FLAG="--env-file $EFF_COMPOSE/.secrets"
       log "[$IDX] PULL IMAGES: $NAME"
-      if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
+      if (cd "$EFF_COMPOSE" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
         PULL_OK=$((PULL_OK + 1))
       else
         PULL_FAIL=$((PULL_FAIL + 1))
@@ -130,14 +141,15 @@ if [ -n "$MANIFEST" ]; then
 
     [ -n "$FILTER" ] && [ "$NAME" != "$FILTER" ] && continue
     [ -d "$COMPOSE_PATH" ] || { log "SKIP: $NAME ($COMPOSE_PATH not found)"; continue; }
-    [ -f "$COMPOSE_PATH/docker-compose.yml" ] || { log "SKIP: $NAME (no docker-compose.yml)"; continue; }
+    EFF_COMPOSE=$(find_compose_dir "$COMPOSE_PATH")
+    [ -n "$EFF_COMPOSE" ] || { log "SKIP: $NAME (no docker-compose.yml)"; continue; }
     IDX=$((IDX + 1))
 
     ENV_FLAG=""
-    [ -f "$COMPOSE_PATH/.secrets" ] && ENV_FLAG="--env-file $COMPOSE_PATH/.secrets"
+    [ -f "$EFF_COMPOSE/.secrets" ] && ENV_FLAG="--env-file $EFF_COMPOSE/.secrets"
 
     log "[$IDX] UP: $NAME"
-    if (cd "$COMPOSE_PATH" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
+    if (cd "$EFF_COMPOSE" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       log "[$IDX] UP OK: $NAME"
       UP_OK=$((UP_OK + 1))
     else
@@ -158,7 +170,7 @@ else
   TOTAL=0
   for dir in "$CONTAINERS_DIR"/*/; do
     [ -d "$dir" ] || continue
-    [ -f "$dir/docker-compose.yml" ] || continue
+    [ -n "$(find_compose_dir "$dir")" ] || continue
     name=$(basename "$dir")
     [ -n "$FILTER" ] && [ "$name" != "$FILTER" ] && continue
     SERVICES="$SERVICES $name"
@@ -174,10 +186,11 @@ else
   for name in $SERVICES; do
     IDX=$((IDX + 1))
     dir="$CONTAINERS_DIR/$name"
+    eff_dir=$(find_compose_dir "$dir")
     ENV_FLAG=""
-    [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file $dir/.secrets"
+    [ -f "$eff_dir/.secrets" ] && ENV_FLAG="--env-file $eff_dir/.secrets"
     log "[$IDX/$TOTAL] PULL: $name"
-    if (cd "$dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
+    if (cd "$eff_dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
       PULL_OK=$((PULL_OK + 1))
     else
       PULL_FAIL=$((PULL_FAIL + 1))
@@ -193,10 +206,11 @@ else
   for name in $SERVICES; do
     IDX=$((IDX + 1))
     dir="$CONTAINERS_DIR/$name"
+    eff_dir=$(find_compose_dir "$dir")
     ENV_FLAG=""
-    [ -f "$dir/.secrets" ] && ENV_FLAG="--env-file $dir/.secrets"
+    [ -f "$eff_dir/.secrets" ] && ENV_FLAG="--env-file $eff_dir/.secrets"
     log "[$IDX/$TOTAL] UP: $name"
-    if (cd "$dir" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
+    if (cd "$eff_dir" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       UP_OK=$((UP_OK + 1))
     else
       UP_FAIL=$((UP_FAIL + 1))
