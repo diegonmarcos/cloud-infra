@@ -38,10 +38,8 @@ fi
 
 # ── Pull/rebase before pushing ──────────────────────────────────────────────
 # Ensures the push never fails due to diverged remote — mirrors `git sync`.
-if ! git pull --rebase --no-recurse-submodules 2>&1; then
-  echo "[pre-push] pull --rebase failed — resolve conflicts then try again." >&2
-  exit 1
-fi
+git pull --rebase --no-recurse-submodules 2>&1 || \
+  echo "[pre-push] pull --rebase skipped — git will reject non-fast-forward natively." >&2
 
 # Skip during interactive rebase / merge / bisect — don't compound state.
 if [ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] \

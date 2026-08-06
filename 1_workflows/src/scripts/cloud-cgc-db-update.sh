@@ -303,7 +303,7 @@ fi
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
 # 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
-if [ "$USE_LLM" = "true" ] && [ -n "${OPENROUTER_API_KEY:-}" ] && [ -f "$CFG" ]; then
+if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   octocode config --model "$LLM" --graphrag-enabled true >/dev/null 2>&1 || true
   awk -v m="$LLM" '
     /^[[:space:]]*use_llm[[:space:]]*=/            { print "use_llm = true"; next }
