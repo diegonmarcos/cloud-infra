@@ -87,6 +87,13 @@ do_build() {
         ok "→ $(relp "$DIST_DIR")/.gitignore"
     fi
 
+    # Gitattributes (src/gitattributes → dist/.gitattributes)
+    if [ -f "$SRC_DIR/gitattributes" ]; then
+        step "rendering .gitattributes"
+        inject_header "$SRC_DIR/gitattributes" "$DIST_DIR/.gitattributes"
+        ok "→ $(relp "$DIST_DIR")/.gitattributes"
+    fi
+
     # Gitconfig (src/gitconfig → dist/)
     if [ -f "$SRC_DIR/gitconfig" ]; then
         step "rendering gitconfig (will be included by .git/config in deploy phase)"
