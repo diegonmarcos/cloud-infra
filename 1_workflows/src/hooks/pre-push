@@ -25,7 +25,7 @@ fi
 
 # ── Pull/rebase before pushing ──────────────────────────────────────────────
 # Ensures the push never fails due to diverged remote — mirrors `git sync`.
-if ! git pull --rebase 2>&1; then
+if ! git pull --rebase --no-recurse-submodules 2>&1; then
   echo "[pre-push] pull --rebase failed — resolve conflicts then try again." >&2
   exit 1
 fi
