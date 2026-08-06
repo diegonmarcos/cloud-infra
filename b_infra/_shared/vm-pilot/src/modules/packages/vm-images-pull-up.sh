@@ -58,8 +58,9 @@ fi
 if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin 2>/dev/null
   log "GHCR: logged in"
-elif [ -f "$HOME/.docker/config.json" ]; then
-  log "GHCR: using existing credentials"
+else
+  docker logout ghcr.io >/dev/null 2>&1 || true
+  log "GHCR: no token — cleared stale creds, using anonymous pull"
 fi
 
 # ── Discover services ───────────────────────────────────────────
