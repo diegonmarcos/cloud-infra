@@ -7,6 +7,10 @@
 # ║        ./build.sh deploy       # dist → .github/ + repo root    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -e
+chmod +x "$0"
+
+# Prefer termux coreutils over nix cp, which fails with libpthread on Android.
+export PATH="/data/data/com.termux.nix/files/usr/bin:$PATH"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
