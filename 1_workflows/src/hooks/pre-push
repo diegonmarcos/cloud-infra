@@ -23,6 +23,13 @@ if [ -t 2 ]; then
   printf   '└───────────────────────────────────────────────────────────────┘\033[0m\n' >&2
 fi
 
+# ── Pull/rebase before pushing ──────────────────────────────────────────────
+# Ensures the push never fails due to diverged remote — mirrors `git sync`.
+if ! git pull --rebase 2>&1; then
+  echo "[pre-push] pull --rebase failed — resolve conflicts then try again." >&2
+  exit 1
+fi
+
 # Skip during interactive rebase / merge / bisect — don't compound state.
 if [ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] \
    || [ -d "$(git rev-parse --git-path rebase-apply 2>/dev/null)" ] \

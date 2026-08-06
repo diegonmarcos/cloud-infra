@@ -67,12 +67,12 @@ if ! docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
   docker version --format '{{.Server.Version}}' >/dev/null 2>&1 || die "Docker failed to start"
 fi
 
-# GHCR login
-if [ -f "$HOME/.docker/config.json" ]; then
-  log "GHCR: using existing credentials"
-elif [ -n "${GITHUB_TOKEN:-}" ]; then
+# GHCR login - always refresh when token available; stale stored creds cause "denied" on public images
+if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo "$GITHUB_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin 2>/dev/null
   log "GHCR: logged in"
+elif [ -f "$HOME/.docker/config.json" ]; then
+  log "GHCR: using existing credentials"
 fi
 
 # ── Discover services ───────────────────────────────────────────
