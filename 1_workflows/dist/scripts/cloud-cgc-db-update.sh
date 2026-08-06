@@ -1,17 +1,4 @@
 #!/bin/sh
-
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                                                                  ║
-# ║   GENERATED FILE — DO NOT EDIT                                   ║
-# ║                                                                  ║
-# ║   Source : 1_workflows/src/scripts/cloud-cgc-db-update.sh
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
-# ║                                                                  ║
-# ║   Manual edits will be overwritten on next build.                ║
-# ║                                                                  ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 # ──────────────────────────────────────────────────────────────────────────
 #  cloud-cgc-db-update.sh — UNIVERSAL cloud-cgc octocode DB updater (producer)
 # ──────────────────────────────────────────────────────────────────────────
@@ -316,15 +303,18 @@ fi
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
 # 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
-if [ "$USE_LLM" = "true" ] && [ -n "${OPENROUTER_API_KEY:-}" ] && [ -f "$CFG" ]; then
+if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   octocode config --model "$LLM" --graphrag-enabled true >/dev/null 2>&1 || true
   awk -v m="$LLM" '
+    /^\[graphrag\]/                                { in_gr=1 }
+    /^\[/ && !/^\[graphrag\]/                      { in_gr=0 }
+    in_gr && /^[[:space:]]*enabled[[:space:]]*=/   { print "enabled = true"; next }
     /^[[:space:]]*use_llm[[:space:]]*=/            { print "use_llm = true"; next }
     /^[[:space:]]*description_model[[:space:]]*=/  { print "description_model = \"" m "\""; next }
     /^[[:space:]]*relationship_model[[:space:]]*=/ { print "relationship_model = \"" m "\""; next }
     { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
-  grep -q "use_llm = true" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = true\n' >> "$CFG"
-  echo "[cgc-db] GraphRAG LLM = $LLM (use_llm=true)"
+  grep -q "use_llm = true" "$CFG" 2>/dev/null || printf '\n[graphrag]\nenabled = true\nuse_llm = true\n' >> "$CFG"
+  echo "[cgc-db] GraphRAG LLM = $LLM (enabled=true use_llm=true)"
 else
   # Force structural-only to MATCH build.json (use_llm=false). The base config.toml
   # may carry a STALE `use_llm = true` + an unreachable LLM model (e.g. ollama:*),
@@ -332,11 +322,15 @@ else
   # branch only PRINTED "structural-only" without disabling it. Disable it for real.
   if [ -f "$CFG" ]; then
     octocode config --graphrag-enabled false --code-embedding-model "$CODE_EMBED" --text-embedding-model "$TEXT_EMBED" >/dev/null 2>&1 || true
-    awk '/^[[:space:]]*use_llm[[:space:]]*=/ { print "use_llm = false"; next } { print }' \
-      "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
-    grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nuse_llm = false\n' >> "$CFG"
+    awk '
+      /^\[graphrag\]/                              { in_gr=1 }
+      /^\[/ && !/^\[graphrag\]/                    { in_gr=0 }
+      in_gr && /^[[:space:]]*enabled[[:space:]]*=/ { print "enabled = false"; next }
+      /^[[:space:]]*use_llm[[:space:]]*=/          { print "use_llm = false"; next }
+      { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
+    grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nenabled = false\nuse_llm = false\n' >> "$CFG"
   fi
-  echo "[cgc-db] GraphRAG structural-only (use_llm=false forced — no LLM calls)"
+  echo "[cgc-db] GraphRAG structural-only (enabled=false use_llm=false forced — no LLM calls)"
 fi
 
 # 4b) SMART INCREMENTAL index — per-repo change-GATED + checkpoint-PUSHED.
