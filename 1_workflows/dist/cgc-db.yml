@@ -1,0 +1,90 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/cgc-db.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ┌──────────────────────────────────────────────────────────────┐
+# │  cloud-cgc octocode DB — TWO-PHASE ORCHESTRATOR.            │
+# │                                                              │
+# │  Schedule + workflow_dispatch entry point. Carries ZERO      │
+# │  logic: it only chains the reusable cgc-db-index.yml twice,   │
+# │  once per phase, in order.                                   │
+# │                                                              │
+# │    1. semantic — structural FastEmbed index (USE_LLM=false), │
+# │       change-gated on the .cgc-manifest-semantic.json commit │
+# │       per repo.                                              │
+# │    2. graphrag — LLM relationship enrichment (USE_LLM=true),  │
+# │       runs ONLY after semantic succeeds, change-gated on its │
+# │       OWN .cgc-manifest-graphrag.json so it is not skipped    │
+# │       by semantic having advanced HEAD.                      │
+# │                                                              │
+# │  Schedule is data-driven from build.json                     │
+# │    runtime.octocode.update.schedule (twice daily 4/16 UTC).  │
+# │                                                              │
+# │  workflow_dispatch supports running a SINGLE phase manually   │
+# │  via the `phase` input (both | semantic | graphrag).        │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "cgc-db (two-phase octocode index → GHCR → oci-apps)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "Which phase(s) to run manually."
+        required: false
+        default: both
+        type: choice
+        options:
+          - both
+          - semantic
+          - graphrag
+  # Schedule is data-driven from build.json runtime.octocode.update.schedule.
+  # Twice daily (4:00 and 16:00 UTC): keeps the graph current with minimal runner
+  # load. Each phase is change-gated per repo (skips repos whose HEAD is already
+  # indexed in that phase's manifest) so unchanged repos cost seconds, not hours.
+  schedule:
+    - cron: "0 4,16 * * *"
+
+# Serialise so concurrent Ship workflows don't race on shared resources. The
+# orchestrator does no work itself; the reusable jobs it calls share the
+# ship-wg-runner group. cancel-in-progress is false so a running semantic→graphrag
+# chain is NEVER cancelled mid-flight — the sequential chain always completes.
+concurrency:
+  group: ship-wg-runner
+  cancel-in-progress: false
+
+jobs:
+  # Phase 1 — structural semantic index. Runs unless the manual dispatch asked for
+  # graphrag only. On schedule (event_name != workflow_dispatch) it always runs.
+  semantic:
+    name: "phase · semantic"
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'semantic' }}
+    uses: ./.github/workflows/cgc-db-index.yml
+    with:
+      phase: semantic
+    secrets: inherit
+
+  # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic and only
+  # proceeds if semantic succeeded, so the chain completes end-to-end. A graphrag-only
+  # manual dispatch skips the semantic dependency entirely (needs is conditional).
+  graphrag:
+    name: "phase · graphrag"
+    needs: semantic
+    if: >-
+      ${{
+        always()
+        && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'graphrag')
+        && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped')
+      }}
+    uses: ./.github/workflows/cgc-db-index.yml
+    with:
+      phase: graphrag
+    secrets: inherit
