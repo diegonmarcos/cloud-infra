@@ -98,11 +98,16 @@ cloud_paths_gha_config() {
 }
 
 # Public: build-workflows.json — arch → runner mapping (amd64=local,
-# arm64=ssh oci-apps cloud-builder-x). Migrated 2026-05-09 from the legacy
-# runners.json that lived under I_cloud-data/ (now z_archive). Source-of-truth
-# is now 1_workflows/build.json (.runners + .probe + .dispatch), aggregated
-# by 2_configs/build.sh into dist/build-workflows.json. Schema unchanged:
-# .runners[$arch].{type,host,builder_image}.
+# arm64=local). Both arches build natively on the arch-matching GHA hosted
+# runner (amd64→ubuntu-latest, arm64→ubuntu-24.04-arm), selected per-VM in
+# .github/workflows/ship.yml from .vms[].specs.arch. Migrated 2026-08-07 off
+# the arm64=ssh oci-apps cloud-builder-x path (cold cacheless arm64 builds
+# exceeded the ship clock). Migrated 2026-05-09 from the legacy runners.json
+# that lived under I_cloud-data/ (now z_archive). Source-of-truth is now
+# 1_workflows/build.json (.runners + .probe + .dispatch), aggregated by
+# 2_configs/build.sh into dist/build-workflows.json. Schema unchanged:
+# .runners[$arch].{type,host?,builder_image?}; the ssh runner-type is still
+# supported for any future remote-builder arch (currently unused).
 cloud_paths_runners() {
     _cpr_root="$(_cloud_paths_root)" || return 1
     _cloud_paths_first_existing "build-workflows.json" \
