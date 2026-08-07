@@ -6809,6 +6809,11 @@
           "default_outbound": true
         }
       ],
+      "_doc_allowed_ips": "IP ranges trusted by Stalwart's fail2ban/auth-ban (v0.16.5 stores these as AllowedIp registry objects; the old config.toml server.allowed-ip is dead because config.toml is not loaded). activate.sh upserts these via JMAP so internal clients on the WG mesh + docker bridge are never banned. Keep in sync with the wg0 /24 and the stalwart_default bridge /16.",
+      "allowed_ips": [
+        "10.0.0.0/24",
+        "172.18.0.0/16"
+      ],
       "api": {
         "has_api": false,
         "has_web_ui": true,
