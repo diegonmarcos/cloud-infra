@@ -150,7 +150,12 @@ step_docker() {
 
     # Smart hash: skip rebuild when src/ AND target arch unchanged
     # (arch must be part of the key — same src built for different arch produces different image)
-    LOCAL_HASH=$(find "$SRC_DIR" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' -not -name 'secrets.yaml' -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
+    # compose.nix is EXCLUDED: it renders docker-compose.yml (runtime env / networking /
+    # healthcheck) and is NEVER a Docker build input — like secrets.yaml. Including it made a
+    # compose-only change (e.g. a BRIDGE_BIND env tweak) churn LOCAL_HASH → force a full image
+    # rebuild (for my-ai-api: an ~80-min arm64 rust/pyo3 build on the oci-apps cloud-builder that
+    # timed out). Runtime-only files must not invalidate the image-rebuild cache key.
+    LOCAL_HASH=$(find "$SRC_DIR" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' -not -name 'secrets.yaml' -not -name 'compose.nix' -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
     LOCAL_HASH="${LOCAL_HASH}-${ARCH}"
     if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
         REMOTE_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.docker-src-hash 2>/dev/null" 2>/dev/null || true)
