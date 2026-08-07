@@ -208,9 +208,44 @@ jobs:
             fi
           fi
 
+          # ── Per-VM hosted-runner selection (native, no QEMU) ──
+          # Each Ship job builds its VM's Docker images on the GHA runner it
+          # runs on (build.json .runners.<arch>.type = "local"). So the runner
+          # arch MUST match the target VM's arch: aarch64 VMs (oci-apps) →
+          # ubuntu-24.04-arm; x86_64 VMs → ubuntu-latest. Authoritative arch
+          # source is .vms[].specs.arch in _cloud-data-consolidated.json,
+          # keyed by the VM's ssh_alias (== the matrix `vm` value). We build an
+          # ssh_alias→runner map here and attach a `runner` field to every
+          # matrix entry; ship.runs-on reads ${{ matrix.runner }}. Any VM not
+          # found in the map defaults to ubuntu-latest (x86) — safe, because
+          # the only arm64 VM is oci-apps and it is present in the map.
+          _CONS_FOR_ARCH=""
+          for _p in \
+              "/app/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/2_configs/dist/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+              [ -f "$_p" ] && { _CONS_FOR_ARCH="$_p"; break; }
+          done
+          if [ -n "$_CONS_FOR_ARCH" ]; then
+            RUNNER_MAP=$(jq -c '
+              .vms | to_entries
+              | map({
+                  key: .value.ssh_alias,
+                  value: (if (.value.specs.arch // "") == "aarch64"
+                          then "ubuntu-24.04-arm" else "ubuntu-latest" end)
+                })
+              | from_entries
+            ' "$_CONS_FOR_ARCH")
+          else
+            echo "::warning::_cloud-data-consolidated.json not found — all Ship jobs default to ubuntu-latest (x86). arm64 VMs will build cross-arch and may fail."
+            RUNNER_MAP='{}'
+          fi
+
           # ── Build matrix JSON ──
           MATRIX_JSON=$(jq -c \
-            --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" '
+            --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" \
+            --argjson runner_map "$RUNNER_MAP" '
             ($changed | split(" ") | map(select(. != ""))) as $cl |
             .services | to_entries | group_by(.value.vm)
             | map({
@@ -219,7 +254,7 @@ jobs:
                   if ($cl | length) == 0 then "" else [$cl[] | select(. as $d | $a | any(. == $d))] | join(" ") end)
               })
             | map(select(($vm_filter == "" or .vm == $vm_filter) and (($cl | length) == 0 or (.changed | length) > 0)))
-            | map({vm: .vm, changed_dirs: .changed})
+            | map({vm: .vm, changed_dirs: .changed, runner: ($runner_map[.vm] // "ubuntu-latest")})
           ' "$GHA_CONFIG")
 
           echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
@@ -232,7 +267,12 @@ jobs:
     name: "Ship → ${{ matrix.vm }}"
     needs: detect
     if: needs.detect.outputs.has_vms == 'true'
-    runs-on: ubuntu-latest
+    # Per-VM native runner: aarch64 VMs (oci-apps) → ubuntu-24.04-arm so their
+    # Docker images build natively (build.json .runners.arm64.type=local, no
+    # QEMU, no SSH dispatch to oci-apps); x86_64 VMs → ubuntu-latest. The
+    # `runner` field is set per matrix entry in the detect job from the VM's
+    # specs.arch. Defaults to ubuntu-latest if a VM is missing from the map.
+    runs-on: ${{ matrix.runner }}
     # Ceiling on a per-VM ship pass. Without this, an SSH session that
     # stalls (NAT timeout, WG tunnel hiccup, oci-builder hang) holds the
     # `ship-<vm>` concurrency group open until GHA's default 6h timeout,
@@ -279,6 +319,21 @@ jobs:
         with:
           fetch-depth: 2
           submodules: true
+
+      # QEMU binfmt — ONLY on the arm64 runner, and ONLY needed by the single
+      # multi-arch service (claude-superset-api, docker.arch="amd64,arm64",
+      # deploys to oci-apps/arm64). Its arm64 leg builds natively on this arm
+      # runner; its amd64 leg is built here via emulation. Every OTHER service
+      # is single-arch and builds natively on its arch-matching runner, so this
+      # step is a cheap no-op (binfmt registration) for them. x86 runners never
+      # hit this — their only cross-arch need (arm64) was the reason we moved
+      # arm64 to its own native runner in the first place. If claude-superset-api
+      # is ever made arm64-only, this step can be dropped entirely.
+      - name: Set up QEMU (arm runner only — for the one multi-arch service's amd64 leg)
+        if: runner.arch == 'ARM64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64
 
       # Always regenerate dist/build-{name}.json + cloud-data-*.json from
       # build.json sources. Each ship job runs against fresh data —

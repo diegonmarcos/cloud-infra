@@ -110,10 +110,15 @@ echo ""
 echo "── 4: unreachable ssh runner causes engine to exit 1 ──"
 
 # Smoke-test the guard path: synthesize a temp runners.json with an
-# unreachable host, source step_docker, stub log()/log_error()/ssh, call it.
+# unreachable ssh host, source step_docker, stub log()/log_error()/ssh, call it.
+# NOTE: the shipped default is now arm64.type="local" (native GHA arm64 runner,
+# migrated 2026-08-07 off the oci-apps ssh cloud-builder). The ssh runner-type
+# code path is still supported for any future remote-builder arch, so this test
+# forces .runners.arm64 into the ssh form to exercise the unreachable-ssh guard
+# regardless of the shipped default.
 tmp=$(mktemp -d)
 cp "$RUNNERS_JSON" "$tmp/runners.json"
-jq '.runners.arm64.host = "nonexistent-host.invalid"' "$RUNNERS_JSON" > "$tmp/runners.json.new"
+jq '.runners.arm64 = {"type":"ssh","host":"nonexistent-host.invalid","builder_image":"ghcr.io/diegonmarcos/cloud-builder-x-deb-nixhm:latest"}' "$RUNNERS_JSON" > "$tmp/runners.json.new"
 mv "$tmp/runners.json.new" "$tmp/runners.json"
 
 # Dockerfile must exist, otherwise step_docker takes the compose-build-owns-image
