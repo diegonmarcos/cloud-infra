@@ -49,7 +49,12 @@ else
   REPOS=$(jq -r '.runtime.octocode.index_repos[]' "$BJ")
 fi
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
-USE_LLM=$(jq -r '.runtime.octocode.update.use_llm'   "$BJ")
+# USE_LLM selects the GraphRAG LLM phase. Two-phase orchestration (cgc-db.yml →
+# cgc-db-index.yml) drives this via the environment: the `semantic` phase exports
+# USE_LLM=false, the `graphrag` phase exports USE_LLM=true. The ENVIRONMENT is
+# authoritative; build.json runtime.octocode.update.use_llm is only the fallback
+# default when the caller does not set USE_LLM (e.g. a bare local invocation).
+USE_LLM="${USE_LLM:-$(jq -r '.runtime.octocode.update.use_llm' "$BJ")}"
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
@@ -355,7 +360,23 @@ fi
 #       remainder via the change gate. We are never killed mid-repo after the budget.
 command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >/dev/null 2>&1 || true
 
-MANIFEST="$OCTO_HOME/.cgc-index-manifest.json"
+# PER-PHASE manifest: each phase (semantic / graphrag) tracks its OWN last-indexed
+# commit per repo, so the change gate for one phase is independent of the other.
+# Without this, the semantic phase advances HEAD in a single shared manifest and the
+# graphrag phase — which needs to enrich the SAME commit with LLM relationships —
+# would be skipped as "unchanged" and never run. CGC_MANIFEST_PHASE selects the file
+# (semantic → .cgc-manifest-semantic.json, graphrag → .cgc-manifest-graphrag.json).
+# Both manifests live inside OCTO_HOME so they are packaged into and pulled from the
+# GHCR DB snapshot, travelling with the DB (single reproducible source of truth).
+# Falls back to the legacy single-manifest filename when no phase is set (bare local
+# invocation), preserving the pre-two-phase behaviour.
+MANIFEST_PHASE="${CGC_MANIFEST_PHASE:-}"
+if [ -n "$MANIFEST_PHASE" ]; then
+  MANIFEST="$OCTO_HOME/.cgc-manifest-${MANIFEST_PHASE}.json"
+else
+  MANIFEST="$OCTO_HOME/.cgc-index-manifest.json"
+fi
+echo "[cgc-db] phase=${MANIFEST_PHASE:-default} USE_LLM=$USE_LLM manifest=$(basename "$MANIFEST")"
 [ -s "$MANIFEST" ] || echo '{}' > "$MANIFEST"
 BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
 REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
