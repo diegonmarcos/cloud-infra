@@ -936,6 +936,10 @@ REMOTE_REPAIR
             # /workspace). Surfaced 2026-04-27 (ship run 25000440517).
             JOB_ID="${SERVICE_NAME}-build-$(date +%s)-$$"
             REMOTE_JOB_DIR="/tmp/cloud-builder-jobs"
+            # Free-space floor the runner must have before we start a build
+            # (see the disk guard inside the heredoc below).
+            _min_free_gb=$(jq -r '.dispatch.min_free_gb // 20' "$RUNNERS_JSON" 2>/dev/null)
+            case "$_min_free_gb" in ''|*[!0-9]*) _min_free_gb=20 ;; esac
             JOB_CMD="$REMOTE_JOB_DIR/$JOB_ID.cmd"
             JOB_LOG="$REMOTE_JOB_DIR/$JOB_ID.log"
             JOB_STATUS="$REMOTE_JOB_DIR/$JOB_ID.status"
@@ -955,6 +959,20 @@ REMOTE_REPAIR
             ssh_with_retry "$RUNNER_HOST" "mkdir -p $REMOTE_JOB_DIR && cat > $JOB_CMD && chmod +x $JOB_CMD" <<EOF
 #!/bin/bash
 set -e -o pipefail
+# Disk guard. The arm64 runner shares one 96G disk between the docker graph,
+# ~95 volumes and every image we build, and a parallel ship exhausted it
+# (run 31095284540: buildx died with "no space left on device" — and, far less
+# obviously, the VM's \`docker login\` silently failed too, because writing
+# /root/.docker/config.json also needs space, which then showed up only as
+# "denied: denied" on later private pulls). Reclaim BEFORE building rather
+# than diagnosing a full disk from three unrelated symptoms afterwards.
+_free_gb=\$(df -PBG /var/lib/docker 2>/dev/null | awk 'NR==2{gsub("G","",\$4);print \$4}')
+if [ -n "\$_free_gb" ] && [ "\$_free_gb" -lt $_min_free_gb ]; then
+    echo "[disk] only \${_free_gb}G free (< ${_min_free_gb}G) — pruning build cache and stale images"
+    docker builder prune -af >/dev/null 2>&1 || true
+    docker image prune -af --filter 'until=168h' >/dev/null 2>&1 || true
+    echo "[disk] \$(df -PBG /var/lib/docker | awk 'NR==2{print \$4}') free after prune"
+fi
 docker run --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $REMOTE_TOKEN_FILE:/tmp/ghcr-token:ro \
