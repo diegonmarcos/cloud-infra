@@ -776,6 +776,18 @@ function main() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
+  // Expand gitea mirror policy against the real inventory
+  // ═══════════════════════════════════════════════════════════════════════
+  // Hand-listed mirrors drift from reality in both directions, and both had
+  // already happened: `front` named a repo that has never existed (so that
+  // mirror could only ever fail), and `cloud-data` — private on GitHub — was
+  // mirrored WITHOUT private:true, meaning gitea republished a private repo.
+  // Deriving the list from the fetched inventory makes both impossible:
+  // every repo is covered, and visibility is copied from the real repo rather
+  // than remembered by hand.
+  expandGiteaMirrors(services, githubInventory);
+
+  // ═══════════════════════════════════════════════════════════════════════
   // Assemble consolidated output
   // ═══════════════════════════════════════════════════════════════════════
 
@@ -1235,3 +1247,40 @@ function buildDatabases(services: Record<string, any>, storage: any[], owner: an
 // ═══════════════════════════════════════════════════════════════════════════
 
 main();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// expandGiteaMirrors — mirror_policy + inventory → concrete gitea.mirrors
+//
+// Discovered by shape: any service declaring gitea.mirror_policy gets its
+// mirrors expanded, so no service id is named here. A service that still
+// hand-lists gitea.mirrors is left untouched, which keeps this backwards
+// compatible and makes the migration opt-in per service.
+// ═══════════════════════════════════════════════════════════════════════════
+function expandGiteaMirrors(services: Record<string, any>, githubInventory: any): void {
+  const repos: any[] = githubInventory?.repos ?? [];
+  const owner: string = githubInventory?.owner ?? "";
+  if (!repos.length) return;
+
+  for (const [svcId, svc] of Object.entries<any>(services ?? {})) {
+    const policy = svc?.gitea?.mirror_policy;
+    if (!policy) continue;
+
+    const exclude = new Set<string>(policy.exclude ?? []);
+    const includeForks: boolean = policy.include_forks === true;
+
+    const mirrors: Record<string, any> = {};
+    for (const r of repos) {
+      if (exclude.has(r.name)) continue;
+      if (r.fork && !includeForks) continue;
+      mirrors[r.name] = {
+        upstream: `https://github.com/${owner}/${r.name}.git`,
+        // Copied from the repo's REAL visibility — a private upstream must
+        // never land in gitea as a public mirror.
+        ...(r.visibility === "private" ? { private: true } : {}),
+      };
+    }
+    svc.gitea.mirrors = mirrors;
+    const priv = Object.values(mirrors).filter((m: any) => m.private).length;
+    console.log(`  gitea mirrors (${svcId}): ${Object.keys(mirrors).length} repos (${priv} private)${includeForks ? "" : ", forks excluded"}`);
+  }
+}
