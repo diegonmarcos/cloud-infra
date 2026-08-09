@@ -312,16 +312,38 @@ ssh_run_detached() {
     [ "$_srd_l" -eq 0 ] || return "$_srd_l"
 
     # 3) Poll for the rc marker. Transport failures here are non-fatal by design.
-    _srd_w=0
+    #
+    # The deadline is an IDLE timeout, not a wall-clock one: each poll also
+    # reads the remote log's size, and any growth resets the clock. A first
+    # pull of a multi-GB image (cgc-mcp is ~4.5G) extracts layers for well
+    # over 15 minutes while streaming progress the whole time — a flat
+    # wall-clock limit killed those deploys mid-extraction and left the
+    # service down, which is worse than waiting. A genuinely wedged remote
+    # still fails, because a wedged process stops writing. SSH_DETACH_MAX is
+    # the absolute ceiling so a process that chatters forever can't hang CI.
+    _srd_w=0          # seconds since the remote last produced output
+    _srd_elapsed=0    # total seconds waited
+    _srd_max="${SSH_DETACH_MAX:-7200}"
+    _srd_size=""
     _srd_rcval=""
-    while [ "$_srd_w" -lt "$_srd_timeout" ]; do
-        _srd_rcval=$(ssh $SSH_OPTS $_srd_ka "$_srd_host" "cat '$_srd_rc' 2>/dev/null" 2>/dev/null || true)
+    while [ "$_srd_w" -lt "$_srd_timeout" ] && [ "$_srd_elapsed" -lt "$_srd_max" ]; do
+        # One round trip for both probes: "<rc>|<log size>".
+        _srd_probe=$(ssh $SSH_OPTS $_srd_ka "$_srd_host" \
+            "cat '$_srd_rc' 2>/dev/null; printf '|'; wc -c < '$_srd_log' 2>/dev/null" 2>/dev/null || true)
+        _srd_rcval=$(printf '%s' "${_srd_probe%%|*}" | tr -d ' \n')
+        _srd_new=$(printf '%s' "${_srd_probe#*|}" | tr -d ' \n')
         case "$_srd_rcval" in
             "" | *[!0-9]*) ;;   # not finished (or poll dropped) — keep waiting
             *) break ;;
         esac
         sleep 5
-        _srd_w=$(( _srd_w + 5 ))
+        _srd_elapsed=$(( _srd_elapsed + 5 ))
+        if [ -n "$_srd_new" ] && [ "$_srd_new" != "$_srd_size" ]; then
+            _srd_size="$_srd_new"   # remote is still working — reset the idle clock
+            _srd_w=0
+        else
+            _srd_w=$(( _srd_w + 5 ))
+        fi
     done
 
     # 4) Ship the remote output back so CI logs still show pull/up progress.
@@ -330,7 +352,11 @@ ssh_run_detached() {
 
     case "$_srd_rcval" in
         "" | *[!0-9]*)
-            log_error "${_srd_label}: no exit code after ${_srd_timeout}s — treating as failure"
+            if [ "$_srd_elapsed" -ge "$_srd_max" ]; then
+                log_error "${_srd_label}: no exit code after ${_srd_elapsed}s (absolute ceiling ${_srd_max}s) — treating as failure"
+            else
+                log_error "${_srd_label}: no output for ${_srd_timeout}s (${_srd_elapsed}s elapsed) — treating as failure"
+            fi
             return 124
             ;;
     esac
