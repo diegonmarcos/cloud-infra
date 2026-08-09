@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ pre-push — rebase submodules onto their upstream HEAD            ║
+# ║ pre-push — block non-main remote refs; rebase submodules         ║
 # ║                                                                  ║
 # ║ Source: cloud/1_workflows/src/hooks/pre-push                     ║
 # ║ Active via [core] hooksPath = 1_workflows/dist/hooks             ║
+# ║                                                                  ║
+# ║ Main-only policy, remote half: `reference-transaction` blocks    ║
+# ║ creating a LOCAL branch, but `git push origin HEAD:new-branch`   ║
+# ║ never touches a local ref, so it slips past that hook and would  ║
+# ║ create a branch straight on the remote. Reject any push whose    ║
+# ║ destination ref isn't refs/heads/main or refs/heads/master,      ║
+# ║ before the network call happens.                                 ║
 # ║                                                                  ║
 # ║ Before every push, sync each submodule worktree to its remote    ║
 # ║ HEAD (rebased). Pointer bumps in the parent repo are NOT         ║
@@ -12,6 +19,29 @@
 # ║ local worktree reflects upstream before the push goes out.       ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -uo pipefail
+
+# ── Main-only policy: reject any push targeting a non-main ref ──────
+# stdin lines: <local ref> <local oid> <remote ref> <remote oid>
+_blocked=""
+while read -r _lref _loid _rref _roid; do
+  case "$_rref" in
+    refs/heads/main|refs/heads/master|refs/tags/*) : ;;
+    refs/heads/*)
+      _blocked="${_blocked}  ${_rref#refs/heads/}\n"
+      ;;
+  esac
+done
+
+if [ -n "$_blocked" ]; then
+  {
+    printf '\n\033[31mBLOCKED: pushing to a non-main branch is disabled (main-only policy).\033[0m\n'
+    printf '  attempted:\n'
+    printf "$_blocked"
+    printf '  Work directly on main — push there instead.\n'
+    printf '  Source   : 1_workflows/src/hooks/pre-push\n\n'
+  } >&2
+  exit 1
+fi
 
 # ── Safer-alternative reminder ──────────────────────────────────────
 if [ -t 2 ]; then
