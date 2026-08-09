@@ -28,15 +28,12 @@ name: Fetch GitHub repos
 # noticed and it silently never synced. buildDatabases now cross-checks every
 # declaration against this inventory and reports `_dangling_declarations`.
 #
-# SCOPE: PUBLIC REPOS ONLY. `cloud` is a public repository, so private repo
-# NAMES must never be committed here — that is a disclosure even though no
-# secret is involved. This job therefore runs with the repo-scoped
-# github.token, which cannot see private repos at all: least privilege is the
-# control, and the explicit private-entry check is only a backstop. The
-# private half of the inventory is produced where the vault credentials
-# already live and committed to the PRIVATE cloud-data submodule as
-# I_cloud-data/github-repos-private.json; the consolidator merges it when
-# present and builds public-only when it is not.
+# SECRETS: `cloud` is a public repository, but repo NAMES are not sensitive —
+# the full inventory including private repos is committed here by design. What
+# must never land in the repo is the TOKEN. It is read from the vault at run
+# time (GH Actions masks it in logs) and only the resulting names are written.
+# Enumerating private repos needs that token: the repo-scoped github.token
+# cannot see them and would silently produce a public-only list.
 
 on:
   schedule:
@@ -63,39 +60,39 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # fetch-vault runs `vault/build.sh env`, which decrypts with sops —
+      # without this the action dies with "No SOPS age key available".
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fetch vault
+        uses: ./.github/actions/fetch-vault
+        with:
+          vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
+
       - name: Fetch repo inventory
         env:
-          # DELIBERATELY the repo-scoped default token, never the vault's.
-          # This job writes a file into a PUBLIC repo, so it must not be able
-          # to see private repos in the first place — a privileged token here
-          # would publish private repo names on the next commit. Least
-          # privilege is the control; the guard below is only the backstop.
-          GH_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
+          # Token comes from the vault, never from a file in this repo.
+          set +u; . "$HOME/git/vault/vault-keys-bash.env"; set -u
+          export GH_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN missing from vault-keys-bash.env}"
           page=1
           echo '[]' > /tmp/acc.json
           while :; do
             curl -sS -H "Authorization: Bearer $GH_TOKEN" \
                  -H "Accept: application/vnd.github+json" \
-                 "https://api.github.com/users/$OWNER/repos?per_page=100&type=owner&page=$page" \
+                 "https://api.github.com/user/repos?per_page=100&affiliation=owner&page=$page" \
                  > /tmp/raw.json
             # An error response is an OBJECT, not an array. Fail on it — an
             # earlier version fell back to a narrower endpoint on error and
             # silently wrote a truncated inventory over a complete one while
             # reporting success. No silent degradation.
             if ! jq -e 'type == "array"' /tmp/raw.json >/dev/null 2>&1; then
-              echo "::error::/users/$OWNER/repos did not return a list. Response: $(head -c 300 /tmp/raw.json)"
-              exit 1
-            fi
-            # Backstop: if a privileged token is ever wired in by mistake, fail
-            # rather than write private names into this public repo.
-            if jq -e '[.[] | select(.private == true)] | length > 0' /tmp/raw.json >/dev/null 2>&1; then
-              echo "::error::response contains PRIVATE repos — this file is committed to a PUBLIC repo. Refusing. Use the cloud-data-side job for the private inventory."
+              echo "::error::/user/repos did not return a list — token cannot enumerate repos. Response: $(head -c 300 /tmp/raw.json)"
               exit 1
             fi
             n=$(jq 'length' /tmp/raw.json)
@@ -121,10 +118,9 @@ jobs:
 
           # Sorted by pushed_at desc so the diff is stable run to run.
           jq --arg owner "$OWNER" --arg now "$(date -u +%FT%TZ)" '{
-            _warning: "FETCHED DATA — do not hand-edit. Refreshed by .github/workflows/fetch-github-repos.yml using the repo-scoped github.token, which by construction can only see PUBLIC repos.",
-            _doc: "PUBLIC repo inventory only. `cloud` is a public repository, so private repo NAMES must never be committed here — the private half lives in the private cloud-data submodule (I_cloud-data/github-repos-private.json). The consolidator merges the two when the private submodule is present and degrades to public-only when it is not.",
-            _source: "GitHub API (public)",
-            visibility_scope: "public-only",
+            _warning: "FETCHED DATA — do not hand-edit. Refreshed by .github/workflows/fetch-github-repos.yml.",
+            _doc: "Source of truth for WHICH REPOS EXIST — all repos, public and private. Repo NAMES are not sensitive; the token used to fetch them is, and never leaves the vault / GH secrets. Declarations (gitea.mirrors / octocode.repo_map) are a policy selection over this, never a substitute.",
+            _source: "GitHub API",
             fetched_at: $now,
             owner: $owner,
             repos: ([.[] | {name: .name, visibility: (.visibility // (if .private then "private" else "public" end)), fork: .fork, pushed_at: .pushed_at}] | sort_by(.pushed_at) | reverse)
