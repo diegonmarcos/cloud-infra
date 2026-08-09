@@ -20,6 +20,11 @@ on:
   schedule:
     - cron: "0 6 * * 1"          # Mondays 06:00 UTC — repo lists move slowly
   workflow_dispatch:
+    inputs:
+      allow_shrink:
+        description: "Permit the inventory to lose repos (only if repos were genuinely deleted)"
+        required: false
+        default: "false"
   push:
     paths:
       - "1_workflows/src/cicd/fetch-github-repos.yml"
@@ -36,6 +41,11 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # fetch-vault runs `vault/build.sh env`, which decrypts with sops — the
+      # action fails with "No SOPS age key available" without this. ship.yml
+      # passes it the same way.
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -59,27 +69,43 @@ jobs:
           GH_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN missing from vault-keys-bash.env}"
           export GH_TOKEN
           page=1
-          : > /tmp/raw.json
           echo '[]' > /tmp/acc.json
           while :; do
             curl -sS -H "Authorization: Bearer $GH_TOKEN" \
                  -H "Accept: application/vnd.github+json" \
                  "https://api.github.com/user/repos?per_page=100&affiliation=owner&page=$page" \
                  > /tmp/raw.json
-            n=$(jq 'length' /tmp/raw.json)
-            # A token without user scope returns an object (error), not an array.
-            if ! jq -e 'type == "array"' /tmp/raw.json >/dev/null; then
-              echo "::warning::/user/repos unavailable for this token — falling back to /users/$OWNER/repos (public only)"
-              curl -sS -H "Authorization: Bearer $GH_TOKEN" \
-                   -H "Accept: application/vnd.github+json" \
-                   "https://api.github.com/users/$OWNER/repos?per_page=100&page=$page" \
-                   > /tmp/raw.json
-              n=$(jq 'length' /tmp/raw.json)
+            # A token lacking scope returns an OBJECT (error), not an array.
+            # There is deliberately NO fallback to /users/$OWNER/repos: that
+            # endpoint is public-only, so falling back would quietly drop every
+            # private repo and overwrite a complete inventory with a partial
+            # one. That is exactly what happened on the first run of this
+            # workflow — 27 repos became 19, all private ones lost, and it
+            # reported success. A bad token must fail, not silently truncate.
+            if ! jq -e 'type == "array"' /tmp/raw.json >/dev/null 2>&1; then
+              echo "::error::/user/repos did not return a list — token lacks scope to enumerate repos. Response: $(head -c 300 /tmp/raw.json)"
+              exit 1
             fi
+            n=$(jq 'length' /tmp/raw.json)
             jq -s '.[0] + .[1]' /tmp/acc.json /tmp/raw.json > /tmp/acc.next && mv /tmp/acc.next /tmp/acc.json
             [ "$n" -lt 100 ] && break
             page=$((page + 1))
           done
+
+          # Second belt: a token can be valid yet scoped to fewer repos than
+          # last time. Never let an inventory shrink silently — losing a repo
+          # here turns its declarations into false "dangling" reports
+          # downstream. Shrinking requires a human via workflow_dispatch.
+          if [ -f 2_configs/src/inputs/github-repos.json ]; then
+            before=$(jq '.repos | length' 2_configs/src/inputs/github-repos.json)
+            after=$(jq 'length' /tmp/acc.json)
+            if [ "$after" -lt "$before" ] && [ "${{ github.event.inputs.allow_shrink }}" != "true" ]; then
+              echo "::error::inventory would shrink ${before} -> ${after}. Refusing: this usually means a token scope regression, not deleted repos. Re-run via workflow_dispatch with allow_shrink=true if the loss is real."
+              jq -r --slurpfile new /tmp/acc.json '.repos[].name' 2_configs/src/inputs/github-repos.json \
+                | grep -vxF -f <(jq -r '.[].name' /tmp/acc.json) | sed 's/^/  missing: /' || true
+              exit 1
+            fi
+          fi
 
           # Sorted by pushed_at desc so the diff is stable run to run.
           jq --arg owner "$OWNER" --arg now "$(date -u +%FT%TZ)" '{
