@@ -10,7 +10,7 @@
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
-name: Cloud Health Reports (ARM oci-apps)
+name: Cloud Health Reports (ARM GHA)
 
 on:
   schedule:
@@ -31,7 +31,7 @@ permissions:
 jobs:
   run-reports:
     name: Run reports
-    runs-on: [self-hosted, linux, arm64, oci-apps]
+    runs-on: ubuntu-24.04-arm
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
       # Runner work dir inside container is /tmp/runner/work; on host it is this path.
