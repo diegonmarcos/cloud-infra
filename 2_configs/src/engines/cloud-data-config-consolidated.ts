@@ -164,15 +164,37 @@ function main() {
   // so the build stays offline and deterministic. Absent file degrades to an
   // empty inventory rather than failing: a fresh clone that has never run the
   // fetch should still build.
+  // `cloud` is a PUBLIC repository. The public inventory may therefore only
+  // ever contain public repos — committing private repo NAMES here leaks them
+  // to anyone browsing the repo, which is a disclosure even though no secret
+  // is involved. The private half is produced where the vault credentials
+  // already live and stored in the PRIVATE cloud-data submodule; it is merged
+  // in only when that submodule is checked out. A public clone therefore
+  // builds cleanly with public-only data and cannot leak anything.
   const GITHUB_REPOS_JSON = join(CONFIGS_DIR, "src", "inputs", "github-repos.json");
-  const githubInventory: any = existsSync(GITHUB_REPOS_JSON)
-    ? readJson(GITHUB_REPOS_JSON)
-    : { repos: [] };
-  if (!existsSync(GITHUB_REPOS_JSON)) {
-    console.warn("  WARN: src/inputs/github-repos.json missing — git registry will be empty");
-  } else {
-    console.log(`  github-repos.json: ${githubInventory.repos?.length ?? 0} repos (fetched ${githubInventory.fetched_at ?? "?"})`);
+  const GITHUB_REPOS_PRIVATE_JSON = join(CLOUD_ROOT, "I_cloud-data", "github-repos-private.json");
+
+  const publicInv: any = existsSync(GITHUB_REPOS_JSON) ? readJson(GITHUB_REPOS_JSON) : { repos: [] };
+  const privateInv: any = existsSync(GITHUB_REPOS_PRIVATE_JSON) ? readJson(GITHUB_REPOS_PRIVATE_JSON) : null;
+
+  // Hard stop rather than a warning: a private entry reaching the public file
+  // means the fetch used a privileged token, and silently accepting it would
+  // publish the names on the next commit.
+  const strays = (publicInv.repos ?? []).filter((r: any) => r?.visibility === "private");
+  if (strays.length) {
+    console.error(`FATAL: ${GITHUB_REPOS_JSON} contains ${strays.length} PRIVATE repo(s) — this file is committed to a public repository.`);
+    console.error(`       offending: ${strays.map((r: any) => r.name).join(", ")}`);
+    process.exit(1);
   }
+
+  const githubInventory: any = {
+    ...publicInv,
+    repos: [...(publicInv.repos ?? []), ...(privateInv?.repos ?? [])],
+  };
+  console.log(
+    `  github repos: ${publicInv.repos?.length ?? 0} public` +
+    (privateInv ? ` + ${privateInv.repos?.length ?? 0} private (cloud-data)` : " (private overlay absent — public-only build)")
+  );
   const configVms: Record<string, any> = config.vms ?? {};
   const aliasMap = buildAliasMap(configVms);
   console.log(`  config.json: ${Object.keys(configVms).length} VMs, owner=${config.owner?.name}`);
