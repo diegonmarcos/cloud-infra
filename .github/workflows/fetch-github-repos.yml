@@ -1,0 +1,115 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/cicd/fetch-github-repos.yml
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+name: Fetch GitHub repos
+
+# Refreshes 2_configs/src/inputs/github-repos.json — the source of truth for
+# WHICH REPOS EXIST.
+#
+# Why a scheduled fetch-and-commit rather than an API call inside build.sh:
+# the consolidator runs offline and reproducibly (same inputs → byte-identical
+# output), and every consumer — home-manager, CI, a fresh clone — depends on
+# that. Calling GitHub mid-build would make the output depend on network,
+# auth, and the moment it ran. Fetching on a schedule and committing the
+# result keeps the data real AND the build hermetic.
+#
+# What this protects against: gitea.mirrors and octocode.repo_map are policy
+# declarations. They cannot answer "does this repo exist" — and when a mirror
+# pointed at diegonmarcos/front, a repo that has never existed, nothing
+# noticed and it silently never synced. buildDatabases now cross-checks every
+# declaration against this inventory and reports `_dangling_declarations`.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"          # Mondays 06:00 UTC — repo lists move slowly
+  workflow_dispatch:
+  push:
+    paths:
+      - "1_workflows/src/cicd/fetch-github-repos.yml"
+      - ".github/workflows/fetch-github-repos.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-github-repos
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch repo inventory
+        env:
+          # Needs to see private repos, so the default GITHUB_TOKEN (scoped to
+          # this repo) is not enough — falls back to it so the job still runs
+          # and simply reports fewer repos rather than failing.
+          GH_TOKEN: ${{ secrets.REPO_INVENTORY_TOKEN || github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          page=1
+          : > /tmp/raw.json
+          echo '[]' > /tmp/acc.json
+          while :; do
+            curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                 -H "Accept: application/vnd.github+json" \
+                 "https://api.github.com/user/repos?per_page=100&affiliation=owner&page=$page" \
+                 > /tmp/raw.json
+            n=$(jq 'length' /tmp/raw.json)
+            # A token without user scope returns an object (error), not an array.
+            if ! jq -e 'type == "array"' /tmp/raw.json >/dev/null; then
+              echo "::warning::/user/repos unavailable for this token — falling back to /users/$OWNER/repos (public only)"
+              curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+                   -H "Accept: application/vnd.github+json" \
+                   "https://api.github.com/users/$OWNER/repos?per_page=100&page=$page" \
+                   > /tmp/raw.json
+              n=$(jq 'length' /tmp/raw.json)
+            fi
+            jq -s '.[0] + .[1]' /tmp/acc.json /tmp/raw.json > /tmp/acc.next && mv /tmp/acc.next /tmp/acc.json
+            [ "$n" -lt 100 ] && break
+            page=$((page + 1))
+          done
+
+          # Sorted by pushed_at desc so the diff is stable run to run.
+          jq --arg owner "$OWNER" --arg now "$(date -u +%FT%TZ)" '{
+            _warning: "FETCHED DATA — do not hand-edit. Refreshed by .github/workflows/fetch-github-repos.yml.",
+            _doc: "Source of truth for WHICH REPOS EXIST. Declarations (gitea.mirrors / octocode.repo_map) are a policy selection over this, never a substitute.",
+            _source: "GitHub API",
+            fetched_at: $now,
+            owner: $owner,
+            repos: ([.[] | {name: .name, visibility: (.visibility // (if .private then "private" else "public" end)), fork: .fork, pushed_at: .pushed_at}] | sort_by(.pushed_at) | reverse)
+          }' /tmp/acc.json > 2_configs/src/inputs/github-repos.json
+
+          echo "repos: $(jq '.repos | length' 2_configs/src/inputs/github-repos.json)"
+
+      - name: Commit if changed
+        run: |
+          set -euo pipefail
+          # fetched_at always moves; only commit when the repo LIST changed,
+          # otherwise this would push a no-op commit every single week.
+          if git diff --quiet -- 2_configs/src/inputs/github-repos.json; then
+            echo "no change"; exit 0
+          fi
+          if [ -z "$(git diff -- 2_configs/src/inputs/github-repos.json | grep -E '^[+-] +"(name|visibility|fork)"' || true)" ]; then
+            echo "only fetched_at/pushed_at moved — skipping commit"
+            git checkout -- 2_configs/src/inputs/github-repos.json
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 2_configs/src/inputs/github-repos.json
+          git commit -m "chore(configs): refresh GitHub repo inventory"
+          git push origin HEAD:main

@@ -158,6 +158,21 @@ function main() {
     process.exit(1);
   }
   const config = readJson(CONFIG_JSON) as any;
+
+  // ── 1a. Fetched GitHub inventory — SoT for which repos exist ────────────
+  // Refreshed by .github/workflows/fetch-github-repos.yml, committed as data
+  // so the build stays offline and deterministic. Absent file degrades to an
+  // empty inventory rather than failing: a fresh clone that has never run the
+  // fetch should still build.
+  const GITHUB_REPOS_JSON = join(CONFIGS_DIR, "src", "inputs", "github-repos.json");
+  const githubInventory: any = existsSync(GITHUB_REPOS_JSON)
+    ? readJson(GITHUB_REPOS_JSON)
+    : { repos: [] };
+  if (!existsSync(GITHUB_REPOS_JSON)) {
+    console.warn("  WARN: src/inputs/github-repos.json missing — git registry will be empty");
+  } else {
+    console.log(`  github-repos.json: ${githubInventory.repos?.length ?? 0} repos (fetched ${githubInventory.fetched_at ?? "?"})`);
+  }
   const configVms: Record<string, any> = config.vms ?? {};
   const aliasMap = buildAliasMap(configVms);
   console.log(`  config.json: ${Object.keys(configVms).length} VMs, owner=${config.owner?.name}`);
@@ -810,7 +825,7 @@ function main() {
     services,
     firewalls,
     storage,
-    databases: buildDatabases(services, storage, config.owner ?? {}),
+    databases: buildDatabases(services, storage, config.owner ?? {}, githubInventory),
     dns,
     configs,
     // Embedded sub-outputs (previously separate generators)
@@ -1052,7 +1067,7 @@ function volumeForPath(volumes: string[], path: string | undefined) {
   return parsed[0] ?? { type: "unknown", ref: null as any, mount: null };
 }
 
-function buildDatabases(services: Record<string, any>, storage: any[], owner: any): any {
+function buildDatabases(services: Record<string, any>, storage: any[], owner: any, githubInventory: any): any {
   const entries: any[] = [];
   // From the owner block in the SoT — never a literal.
   const ownerGithub: string = owner?.github ?? "";
@@ -1115,39 +1130,76 @@ function buildDatabases(services: Record<string, any>, storage: any[], owner: an
     });
   }
 
-  // Git remotes are datastores too — gitea mirrors them, octocode indexes them.
-  // Both providers are DISCOVERED by shape, not named: any service declaring
-  // runtime.octocode.repo_map contributes GitHub remotes, any service declaring
-  // gitea.mirrors contributes mirrors. Nothing here hardcodes a service id, an
-  // owner, or a forge URL — renaming or adding a service is picked up for free.
+  // ── Git remotes ──────────────────────────────────────────────────────────
+  // WHICH REPOS EXIST is answered by the fetched GitHub inventory, never by
+  // our own declarations. gitea.mirrors and octocode.repo_map answer a
+  // different question — which repos we mirror and index — and are applied
+  // here as FLAGS on top of the real inventory. Deriving existence from the
+  // declarations is what let a gitea mirror point at diegonmarcos/front, a
+  // repo that has never existed, and silently never sync.
+  //
+  // Both providers are still discovered by shape (any service declaring
+  // runtime.octocode.repo_map / gitea.mirrors), so no service id is named.
+  const declaredIndex = new Map<string, { indexedBy?: string; localDir?: string }>();
+  const declaredMirror = new Map<string, { by: string; upstream: string | null; vm: any; backup: any }>();
+  const danglingDeclarations: any[] = [];
+
   for (const [svcId, svc] of Object.entries<any>(services ?? {})) {
     if (!svc || typeof svc !== "object") continue;
-
     const oc = svc.runtime?.octocode;
     if (oc?.repo_map) {
-      const indexed: string[] = oc.index_repos ?? [];
+      const idx: string[] = oc.index_repos ?? [];
       for (const [localDir, repo] of Object.entries<any>(oc.repo_map)) {
-        entries.push({
-          id: `git#gh/${repo}`, service: svcId, container: null,
-          engine: "git", kind: "git-remote", host: "github",
-          repo: `${ownerGithub}/${repo}`, local_dir: localDir,
-          indexed: indexed.includes(localDir),
-          persistence: { type: "git", ref: `${githubBase}/${ownerGithub}/${repo}.git`, mount: null },
-          vm: svc.vm ?? null, backup: { enabled: false, strategy: null },
-        });
+        if (idx.includes(localDir)) declaredIndex.set(String(repo), { indexedBy: svcId, localDir });
       }
     }
-
     for (const [name, m] of Object.entries<any>(svc.gitea?.mirrors ?? {})) {
-      entries.push({
-        id: `git#gitea/${name}`, service: svcId, container: null,
-        engine: "git", kind: "git-remote", host: "gitea",
-        repo: name, upstream: m?.upstream ?? null,
-        persistence: { type: "git", ref: m?.upstream ?? null, mount: null },
-        vm: svc.vm ?? null,
-        backup: { enabled: svc.backup?.enabled ?? false, strategy: svc.backup?.strategy ?? null },
+      const upstream: string | null = m?.upstream ?? null;
+      const repoName = upstream
+        ? upstream.replace(/\.git$/, "").split("/").pop()!
+        : name;
+      declaredMirror.set(repoName, {
+        by: svcId, upstream, vm: svc.vm ?? null, backup: svc.backup ?? {},
       });
     }
+  }
+
+  const inventory: any[] = githubInventory?.repos ?? [];
+  const known = new Set(inventory.map(r => r.name));
+
+  for (const r of inventory) {
+    const idx = declaredIndex.get(r.name);
+    const mir = declaredMirror.get(r.name);
+    entries.push({
+      id: `git#gh/${r.name}`, service: idx?.indexedBy ?? mir?.by ?? null, container: null,
+      engine: "git", kind: "git-remote", host: "github",
+      repo: `${ownerGithub}/${r.name}`,
+      visibility: r.visibility ?? null, fork: r.fork ?? false, pushed_at: r.pushed_at ?? null,
+      indexed: Boolean(idx), local_dir: idx?.localDir ?? null,
+      mirrored: Boolean(mir),
+      persistence: { type: "git", ref: `${githubBase}/${ownerGithub}/${r.name}.git`, mount: null },
+      vm: null, backup: { enabled: false, strategy: null },
+    });
+    if (mir) {
+      entries.push({
+        id: `git#gitea/${r.name}`, service: mir.by, container: null,
+        engine: "git", kind: "git-remote", host: "gitea",
+        repo: r.name, upstream: mir.upstream,
+        persistence: { type: "git", ref: mir.upstream, mount: null },
+        vm: mir.vm,
+        backup: { enabled: mir.backup?.enabled ?? false, strategy: mir.backup?.strategy ?? null },
+      });
+    }
+  }
+
+  // A declaration naming a repo that does not exist is a live defect: the
+  // mirror or index job for it can only ever fail. Surfaced in the output
+  // rather than thrown, so one stale entry does not block every build.
+  for (const [repo, mir] of declaredMirror) {
+    if (!known.has(repo)) danglingDeclarations.push({ kind: "gitea-mirror", repo, upstream: mir.upstream, declared_by: mir.by });
+  }
+  for (const [repo, idx] of declaredIndex) {
+    if (!known.has(repo)) danglingDeclarations.push({ kind: "octocode-index", repo, declared_by: idx.indexedBy });
   }
 
   const tally = (key: string) =>
@@ -1157,8 +1209,18 @@ function buildDatabases(services: Record<string, any>, storage: any[], owner: an
     }, {});
 
   return {
-    _doc: "Canonical registry of every datastore. `kind` is what it is; `persistence.type` is where it survives. Fleet groups project one axis — never hand-maintain a parallel list.",
-    _counts: { total: entries.length, by_kind: tally("kind"), by_persistence: tally("persistence") },
+    _doc: "Canonical registry of every datastore. `kind` is what it is; `persistence.type` is where it survives. Fleet groups project one axis — never hand-maintain a parallel list. Git existence comes from the fetched GitHub inventory (src/inputs/github-repos.json); mirrored/indexed are declaration-driven flags on top.",
+    _counts: {
+      total: entries.length,
+      by_kind: tally("kind"),
+      by_persistence: tally("persistence"),
+      github_repos: (githubInventory?.repos ?? []).length,
+      github_indexed: entries.filter(e => e.host === "github" && e.indexed).length,
+      github_mirrored: entries.filter(e => e.host === "github" && e.mirrored).length,
+    },
+    // Non-empty means a declaration points at a repo that does not exist —
+    // its mirror/index job cannot ever succeed.
+    _dangling_declarations: danglingDeclarations,
     entries,
   };
 }
