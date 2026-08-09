@@ -810,7 +810,7 @@ function main() {
     services,
     firewalls,
     storage,
-    databases: buildDatabases(services, storage),
+    databases: buildDatabases(services, storage, config.owner ?? {}),
     dns,
     configs,
     // Embedded sub-outputs (previously separate generators)
@@ -1052,8 +1052,22 @@ function volumeForPath(volumes: string[], path: string | undefined) {
   return parsed[0] ?? { type: "unknown", ref: null as any, mount: null };
 }
 
-function buildDatabases(services: Record<string, any>, storage: any[]): any {
+function buildDatabases(services: Record<string, any>, storage: any[], owner: any): any {
   const entries: any[] = [];
+  // From the owner block in the SoT — never a literal.
+  const ownerGithub: string = owner?.github ?? "";
+  // Derived from the same place the mirrors point at, so the forge host is not
+  // asserted here either; falls back to github.com only if nothing declares it.
+  const githubBase: string = (() => {
+    for (const svc of Object.values<any>(services ?? {})) {
+      for (const m of Object.values<any>(svc?.gitea?.mirrors ?? {})) {
+        const u = String(m?.upstream ?? "");
+        const hit = u.match(/^(https?:\/\/[^/]+)\//);
+        if (hit) return hit[1];
+      }
+    }
+    return "https://github.com";
+  })();
 
   for (const [svcId, svc] of Object.entries(services ?? {})) {
     if (!svc || typeof svc !== "object") continue;
@@ -1102,30 +1116,38 @@ function buildDatabases(services: Record<string, any>, storage: any[]): any {
   }
 
   // Git remotes are datastores too — gitea mirrors them, octocode indexes them.
-  const ghRepoMap: Record<string, string> =
-    services?.["cloud-cgc-mcp"]?.runtime?.octocode?.repo_map ?? {};
-  const indexed: string[] = services?.["cloud-cgc-mcp"]?.runtime?.octocode?.index_repos ?? [];
-  const owner = "diegonmarcos";
-  for (const [localDir, repo] of Object.entries(ghRepoMap)) {
-    entries.push({
-      id: `git#gh/${repo}`, service: "cloud-cgc-mcp", container: null,
-      engine: "git", kind: "git-remote", host: "github",
-      repo: `${owner}/${repo}`, local_dir: localDir,
-      indexed: indexed.includes(localDir),
-      persistence: { type: "git", ref: `https://github.com/${owner}/${repo}.git`, mount: null },
-      vm: null, backup: { enabled: false, strategy: null },
-    });
-  }
-  const mirrors: Record<string, any> = services?.gitea?.gitea?.mirrors ?? {};
-  for (const [name, m] of Object.entries(mirrors)) {
-    entries.push({
-      id: `git#gitea/${name}`, service: "gitea", container: null,
-      engine: "git", kind: "git-remote", host: "gitea",
-      repo: name, upstream: (m as any)?.upstream ?? null,
-      persistence: { type: "git", ref: (m as any)?.upstream ?? null, mount: null },
-      vm: services?.gitea?.vm ?? null,
-      backup: { enabled: services?.gitea?.backup?.enabled ?? false, strategy: null },
-    });
+  // Both providers are DISCOVERED by shape, not named: any service declaring
+  // runtime.octocode.repo_map contributes GitHub remotes, any service declaring
+  // gitea.mirrors contributes mirrors. Nothing here hardcodes a service id, an
+  // owner, or a forge URL — renaming or adding a service is picked up for free.
+  for (const [svcId, svc] of Object.entries<any>(services ?? {})) {
+    if (!svc || typeof svc !== "object") continue;
+
+    const oc = svc.runtime?.octocode;
+    if (oc?.repo_map) {
+      const indexed: string[] = oc.index_repos ?? [];
+      for (const [localDir, repo] of Object.entries<any>(oc.repo_map)) {
+        entries.push({
+          id: `git#gh/${repo}`, service: svcId, container: null,
+          engine: "git", kind: "git-remote", host: "github",
+          repo: `${ownerGithub}/${repo}`, local_dir: localDir,
+          indexed: indexed.includes(localDir),
+          persistence: { type: "git", ref: `${githubBase}/${ownerGithub}/${repo}.git`, mount: null },
+          vm: svc.vm ?? null, backup: { enabled: false, strategy: null },
+        });
+      }
+    }
+
+    for (const [name, m] of Object.entries<any>(svc.gitea?.mirrors ?? {})) {
+      entries.push({
+        id: `git#gitea/${name}`, service: svcId, container: null,
+        engine: "git", kind: "git-remote", host: "gitea",
+        repo: name, upstream: m?.upstream ?? null,
+        persistence: { type: "git", ref: m?.upstream ?? null, mount: null },
+        vm: svc.vm ?? null,
+        backup: { enabled: svc.backup?.enabled ?? false, strategy: svc.backup?.strategy ?? null },
+      });
+    }
   }
 
   const tally = (key: string) =>
