@@ -1,4 +1,17 @@
 #!/bin/sh
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_workflows/src/scripts/cloud-cgc-db-update.sh
+# ║   Engine : 1_workflows/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_workflows/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # ──────────────────────────────────────────────────────────────────────────
 #  cloud-cgc-db-update.sh — UNIVERSAL cloud-cgc octocode DB updater (producer)
 # ──────────────────────────────────────────────────────────────────────────
