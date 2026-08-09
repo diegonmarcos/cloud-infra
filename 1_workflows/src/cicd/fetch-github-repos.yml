@@ -39,15 +39,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The credential already exists — no new secret. fetch-vault clones the
+      # vault with VAULT_DEPLOY_KEY (the same SSH key config.json points at,
+      # vault/A0_keys/ssh) and generates vault-keys-bash.env, which carries
+      # GITHUB_TOKEN. That token sees private repos; the repo-scoped default
+      # github.token does not, and would silently under-report the inventory.
+      - name: Fetch vault
+        uses: ./.github/actions/fetch-vault
+        with:
+          vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
+
       - name: Fetch repo inventory
         env:
-          # Needs to see private repos, so the default GITHUB_TOKEN (scoped to
-          # this repo) is not enough — falls back to it so the job still runs
-          # and simply reports fewer repos rather than failing.
-          GH_TOKEN: ${{ secrets.REPO_INVENTORY_TOKEN || github.token }}
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
+          # Source the vault-provided token rather than a workflow secret.
+          set +u; . "$HOME/git/vault/vault-keys-bash.env"; set -u
+          GH_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN missing from vault-keys-bash.env}"
+          export GH_TOKEN
           page=1
           : > /tmp/raw.json
           echo '[]' > /tmp/acc.json
