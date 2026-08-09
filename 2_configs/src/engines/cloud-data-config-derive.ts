@@ -3290,24 +3290,27 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
     else userApps.push(entry);
   }
 
-  // ── Fleet.DB ─────────────────────────────────────────────────────────────
-  const dbS3 = storage.map((s: any) => ({
-    id:       s.name ?? s.dns,
-    name:     s.name ?? null,
-    dns:      s.dns ?? null,
-    region:   s.region ?? null,
-    provider: s.provider ?? null,
-    endpoint: s.s3_endpoint ?? null,
-  }));
+  // ── Fleet.DB — projection of the canonical registry ───────────────────────
+  // consolidated.databases.entries is the single source of truth (see
+  // buildDatabases). Groups below are pure filters over its two axes, so a new
+  // datastore shows up everywhere by declaring it once. Previously this block
+  // rebuilt its own list from db_engine only, which silently omitted all 14
+  // embedded stores (stalwart rocksdb, every sqlite, radicale flat files) and
+  // let `db-hd` mean "all db containers" in fleet.db but "postgres|mariadb|
+  // surrealdb" in categories — two different lists under one name.
+  const dbEntries: any[] = (c as any).databases?.entries ?? [];
+  const byKind = (k: string) => dbEntries.filter(e => e.kind === k);
+  const byPersistence = (t: string) => dbEntries.filter(e => e.persistence?.type === t);
 
-  const dbHd: any[] = [];
-  for (const [svcId, svc] of Object.entries(services)) {
-    for (const [ctName, ct] of Object.entries((svc as any).containers ?? {})) {
-      const engine = (ct as any).db_engine;
-      if (!engine) continue;
-      dbHd.push({ id: `${svcId}/${ctName}`, service: svcId, container: ctName, engine });
-    }
-  }
+  const dbContainers   = byKind("container");
+  const dbEmbedded     = byKind("embedded");
+  const dbS3           = byKind("object-store");
+  const dbGitGh        = dbEntries.filter(e => e.kind === "git-remote" && e.host === "github");
+  const dbGitGitea     = dbEntries.filter(e => e.kind === "git-remote" && e.host === "gitea");
+  const dbDockerVolume = byPersistence("docker-volume");
+  const dbDockerBind   = byPersistence("docker-bind");
+  // Anything whose bytes land on a VM disk, however they are mounted.
+  const dbHd = [...dbDockerVolume, ...dbDockerBind];
 
   // ── Fleet.VMs ─────────────────────────────────────────────────────────────
   const vmX86: any[] = [];
@@ -3339,9 +3342,14 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
     runners:     allContainers.filter(e => RUNNER_SERVICES.has(e.id)),
     apis:        allContainers.filter(e => e.public_url && !e.mcp),
     mcps:        allContainers.filter(e => e.mcp),
-    "db-dockers": dbHd,
-    "db-s3":     dbS3,
-    "db-hd":     dbHd.filter(e => ["postgres", "mariadb", "surrealdb"].includes(e.engine)),
+    "db-dockers":       dbContainers,
+    "db-embedded":      dbEmbedded,
+    "db-s3":            dbS3,
+    "db-hd":            dbHd,
+    "db-docker-volume": dbDockerVolume,
+    "db-docker-bind":   dbDockerBind,
+    "git#gh":           dbGitGh,
+    "git#gitea":        dbGitGitea,
     "mesh-peers": [...vmX86, ...vmArm],
   };
 
@@ -3358,9 +3366,16 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
           "infra-apps": infraApps,
           "user-apps":  userApps,
         },
+        // Same objects as categories.* above — one registry, two views.
         db: {
-          "db-s3": dbS3,
-          "db-hd": dbHd,
+          "db-dockers":       dbContainers,
+          "db-embedded":      dbEmbedded,
+          "db-s3":            dbS3,
+          "db-hd":            dbHd,
+          "db-docker-volume": dbDockerVolume,
+          "db-docker-bind":   dbDockerBind,
+          "git#gh":           dbGitGh,
+          "git#gitea":        dbGitGitea,
         },
         vms: {
           "vm-x86": vmX86,
@@ -3379,13 +3394,18 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
 // Full fleet snapshot: cloud containers + GH Pages front projects merged.
 // Reads the two sibling files just emitted in this run.
 // ═══════════════════════════════════════════════════════════════════════════
-function deriveCloudFleetMerged(): DerivedFile {
+// `containers` is passed in rather than re-read from dist/. Every derivation
+// runs before anything is written, so reading the sibling file off disk here
+// returned the PREVIOUS build's copy — cloud-fleet-declared.json silently
+// lagged one build behind cloud-fleet-containers-declared.json forever. Taking
+// the in-memory object makes the two consistent within a single run. The disk
+// read stays only as a fallback for a standalone invocation.
+function deriveCloudFleetMerged(containersData?: any): DerivedFile {
   const containersSrc = join(CLOUD_DATA_DIR, "cloud-fleet-containers-declared.json");
   const frontSrc      = join(GIT_BASE, "front", "2_configs", "dist", "front-fleet-gh-declared.json");
 
-  const containers = existsSync(containersSrc)
-    ? JSON.parse(readFileSync(containersSrc, "utf8"))
-    : null;
+  const containers = containersData
+    ?? (existsSync(containersSrc) ? JSON.parse(readFileSync(containersSrc, "utf8")) : null);
 
   const frontPages = existsSync(frontSrc)
     ? JSON.parse(readFileSync(frontSrc, "utf8"))
@@ -3425,6 +3445,10 @@ function main() {
     mkdirSync(ARCHIVE_DIR, { recursive: true });
   }
 
+  // Built once and reused: the merged fleet file consumes this object
+  // directly instead of re-reading it from dist/ (see deriveCloudFleetMerged).
+  const fleetContainers = deriveCloudFleetDeclared(consolidated);
+
   // Run all derivations
   const derived: DerivedFile[] = [
     ...deriveBuildVm(consolidated),                  // dist/build-vm-{vm}.json — per-VM service manifest
@@ -3457,8 +3481,8 @@ function main() {
     deriveKgSchema(consolidated),
     deriveKgDelta(consolidated),
     ...deriveExternalConsumers(consolidated),
-    deriveCloudFleetDeclared(consolidated),     // dist/cloud-fleet-containers-declared.json
-    deriveCloudFleetMerged(),                   // dist/cloud-fleet-declared.json
+    fleetContainers,                            // dist/cloud-fleet-containers-declared.json
+    deriveCloudFleetMerged(fleetContainers.data), // dist/cloud-fleet-declared.json
   ];
 
   // Write all files (inject the rich DO NOT EDIT header + pipeline metadata into each).
