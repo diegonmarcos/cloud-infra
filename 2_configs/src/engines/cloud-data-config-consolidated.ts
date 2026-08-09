@@ -810,6 +810,7 @@ function main() {
     services,
     firewalls,
     storage,
+    databases: buildDatabases(services, storage),
     dns,
     configs,
     // Embedded sub-outputs (previously separate generators)
@@ -1002,6 +1003,141 @@ function readSystemDeps(config: any): {
     system: config.deps?.system ?? {},
     build: config.deps?.build ?? {},
     optional: config.deps?.optional ?? {},
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// buildDatabases — one canonical registry of every datastore we own
+//
+// Before this existed the answer to "what databases do we have" was spread
+// across three places that disagreed: containers carrying `db_engine`, the
+// `embedded_dbs` declarations (14 of them — stalwart's rocksdb, every sqlite
+// file, radicale's flat files — which no fleet category listed at all), and
+// the S3 bucket list. Git repos were nowhere, despite being the store behind
+// gitea and the octocode index.
+//
+// Two orthogonal axes are kept deliberately separate, because conflating them
+// is what made the old `db-hd` category mean two different things in two
+// files:
+//
+//   kind        WHAT it is        container | embedded | object-store | git-remote
+//   persistence WHERE it survives docker-volume | docker-bind | s3 | git | unknown
+//
+// A postgres container is kind=container persistence=docker-volume; stalwart's
+// rocksdb is kind=embedded persistence=docker-volume; a bucket is
+// kind=object-store persistence=s3. Fleet groups are then a pure projection of
+// one axis or the other, never a hand-maintained third list.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** "src:dst[:mode]" → {type, ref, mount}. A leading / means a host bind. */
+function classifyVolume(spec: string): { type: string; ref: string; mount: string | null } {
+  const [src, dst] = String(spec).split(":");
+  return {
+    type:  src.startsWith("/") ? "docker-bind" : "docker-volume",
+    ref:   src,
+    mount: dst ?? null,
+  };
+}
+
+/** Pick the volume whose mountpoint contains `path` — that is what actually
+ *  persists an embedded store. Falls back to the container's first volume. */
+function volumeForPath(volumes: string[], path: string | undefined) {
+  const parsed = (volumes ?? []).map(classifyVolume);
+  if (path) {
+    const hit = parsed
+      .filter(v => v.mount && path.startsWith(v.mount))
+      .sort((a, b) => (b.mount!.length - a.mount!.length))[0];   // longest match wins
+    if (hit) return hit;
+  }
+  return parsed[0] ?? { type: "unknown", ref: null as any, mount: null };
+}
+
+function buildDatabases(services: Record<string, any>, storage: any[]): any {
+  const entries: any[] = [];
+
+  for (const [svcId, svc] of Object.entries(services ?? {})) {
+    if (!svc || typeof svc !== "object") continue;
+    const vm = (svc as any).vm ?? null;
+    const backup = (svc as any).backup ?? {};
+    for (const [ctName, ct] of Object.entries<any>((svc as any).containers ?? {})) {
+      const vols: string[] = ct.volumes ?? [];
+
+      // A container whose whole job is being a database.
+      if (ct.db_engine) {
+        const p = volumeForPath(vols, undefined);
+        entries.push({
+          id: `${svcId}/${ctName}`, service: svcId, container: ctName,
+          engine: ct.db_engine, kind: "container",
+          persistence: { type: p.type, ref: p.ref, mount: p.mount },
+          port: ct.port ?? null, vm,
+          backup: { enabled: backup.enabled ?? false, strategy: backup.strategy ?? null },
+        });
+      }
+
+      // Datastores living *inside* an application container.
+      for (const edb of (ct.embedded_dbs ?? []) as any[]) {
+        if (!edb?.engine) continue;
+        const p = volumeForPath(vols, edb.path);
+        entries.push({
+          id: `${svcId}/${ctName}#${edb.engine}`, service: svcId, container: ctName,
+          engine: edb.engine, kind: "embedded", path: edb.path ?? null,
+          persistence: { type: p.type, ref: p.ref, mount: p.mount },
+          port: edb.port ?? null, vm,
+          backup: { enabled: backup.enabled ?? false, strategy: backup.strategy ?? null },
+        });
+      }
+    }
+  }
+
+  // Object storage.
+  for (const s of storage ?? []) {
+    entries.push({
+      id: s.name, service: null, container: null,
+      engine: "s3", kind: "object-store",
+      persistence: { type: "s3", ref: s.name, mount: null },
+      provider: s.provider ?? null, region: s.region ?? null,
+      tier: s.tier ?? null, endpoint: s.s3_endpoint ?? null, dns: s.dns ?? null,
+      vm: null, backup: { enabled: false, strategy: null },
+    });
+  }
+
+  // Git remotes are datastores too — gitea mirrors them, octocode indexes them.
+  const ghRepoMap: Record<string, string> =
+    services?.["cloud-cgc-mcp"]?.runtime?.octocode?.repo_map ?? {};
+  const indexed: string[] = services?.["cloud-cgc-mcp"]?.runtime?.octocode?.index_repos ?? [];
+  const owner = "diegonmarcos";
+  for (const [localDir, repo] of Object.entries(ghRepoMap)) {
+    entries.push({
+      id: `git#gh/${repo}`, service: "cloud-cgc-mcp", container: null,
+      engine: "git", kind: "git-remote", host: "github",
+      repo: `${owner}/${repo}`, local_dir: localDir,
+      indexed: indexed.includes(localDir),
+      persistence: { type: "git", ref: `https://github.com/${owner}/${repo}.git`, mount: null },
+      vm: null, backup: { enabled: false, strategy: null },
+    });
+  }
+  const mirrors: Record<string, any> = services?.gitea?.gitea?.mirrors ?? {};
+  for (const [name, m] of Object.entries(mirrors)) {
+    entries.push({
+      id: `git#gitea/${name}`, service: "gitea", container: null,
+      engine: "git", kind: "git-remote", host: "gitea",
+      repo: name, upstream: (m as any)?.upstream ?? null,
+      persistence: { type: "git", ref: (m as any)?.upstream ?? null, mount: null },
+      vm: services?.gitea?.vm ?? null,
+      backup: { enabled: services?.gitea?.backup?.enabled ?? false, strategy: null },
+    });
+  }
+
+  const tally = (key: string) =>
+    entries.reduce<Record<string, number>>((a, e) => {
+      const k = key === "kind" ? e.kind : e.persistence?.type ?? "unknown";
+      a[k] = (a[k] ?? 0) + 1; return a;
+    }, {});
+
+  return {
+    _doc: "Canonical registry of every datastore. `kind` is what it is; `persistence.type` is where it survives. Fleet groups project one axis — never hand-maintain a parallel list.",
+    _counts: { total: entries.length, by_kind: tally("kind"), by_persistence: tally("persistence") },
+    entries,
   };
 }
 
