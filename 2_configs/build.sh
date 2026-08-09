@@ -155,13 +155,65 @@ clean() {
     log "Cleaned $DIST"
 }
 
+
+# ── dotfiles ────────────────────────────────────────────────────────────────
+# src/dotfiles/<tool>/ → dist/dotfiles/<tool>/ → <repo>/<target>/
+#
+# Same src→dist→deploy shape as 1_workflows, with one deliberate difference:
+# the target directory is NEVER purged. .claude/ and .obsidian/ mix managed
+# config with per-machine state (pane layout, local permission overrides), so
+# a purge-then-copy would clobber another device's state on every build. See
+# src/dotfiles/manifest.json:never_manage.
+#
+# Portable by design: plain file copying, no dependency on this repo's TS
+# engines, so the whole module can be copied into any repo as-is.
+dotfiles() {
+    DF_SRC="$SCRIPT_DIR/src/dotfiles"
+    DF_DIST="$DIST/dotfiles"
+    MANIFEST="$DF_SRC/manifest.json"
+
+    [ -d "$DF_SRC" ] || { log "no src/dotfiles — skipping"; return 0; }
+    [ -f "$MANIFEST" ] || { echo "FATAL: $MANIFEST missing" >&2; exit 1; }
+
+    # Validate every source file before touching the working tree — a
+    # half-deployed set of broken JSON is worse than not deploying.
+    for f in $(find "$DF_SRC" -name '*.json'); do
+        python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
+            || { echo "FATAL: invalid JSON: $f" >&2; exit 1; }
+    done
+
+    rm -rf "$DF_DIST"
+    mkdir -p "$DF_DIST"
+
+    TOOLS=$(python3 -c "import json;print(' '.join(json.load(open('$MANIFEST'))['targets']))")
+    for tool in $TOOLS; do
+        target=$(python3 -c "import json;print(json.load(open('$MANIFEST'))['targets']['$tool'])")
+        [ -d "$DF_SRC/$tool" ] || { log "  dotfiles: no src for '$tool' — skipping"; continue; }
+
+        mkdir -p "$DF_DIST/$tool" "$CLOUD_ROOT/$target"
+        cp -f "$DF_SRC/$tool"/* "$DF_DIST/$tool"/ 2>/dev/null || true
+        cp -f "$DF_DIST/$tool"/* "$CLOUD_ROOT/$target"/ 2>/dev/null || true
+        n=$(ls -1 "$DF_DIST/$tool" 2>/dev/null | wc -l | tr -d ' ')
+        log "  dotfiles: $tool -> $target ($n files)"
+    done
+
+    # Report what was intentionally left alone, so "why is workspace.json not
+    # in src/" never has to be rediscovered.
+    python3 - "$MANIFEST" <<'PYEOF'
+import json,sys
+m=json.load(open(sys.argv[1]))
+print("  dotfiles: preserved (machine state, never managed): " + ", ".join(m.get("never_manage",[])))
+PYEOF
+}
+
 case "${1:-all}" in
     link-builds) link_builds ;;
     consolidate) consolidate ;;
     derive)      derive ;;
     test)        run_tests ;;
+    dotfiles)    dotfiles ;;
     clean)       clean ;;
-    all)         link_builds; consolidate; derive ;;
-    ship)        link_builds; consolidate; derive; run_tests ;;
-    *)           echo "Usage: $0 [all|link-builds|consolidate|derive|test|clean|ship]"; exit 1 ;;
+    all)         link_builds; consolidate; derive; dotfiles ;;
+    ship)        link_builds; consolidate; derive; dotfiles; run_tests ;;
+    *)           echo "Usage: $0 [all|link-builds|consolidate|derive|dotfiles|test|clean|ship]"; exit 1 ;;
 esac
