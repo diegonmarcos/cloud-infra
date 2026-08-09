@@ -2391,31 +2391,100 @@
       "ssh_listen_host": "10.0.0.6",
       "gitea": {
         "org": "diego",
+        "_mirrors_doc": "Mirrors are DERIVED, not listed here. The consolidator expands mirror_policy against the fetched GitHub inventory (2_configs/src/inputs/github-repos.json) into the concrete gitea.mirrors map, setting private:true from each repo's real visibility. Hand-listing them drifted: `front` pointed at a repo that has never existed and silently never synced, and `cloud-data` — private on GitHub — was mirrored WITHOUT private:true, i.e. published.",
+        "mirror_policy": {
+          "source": "github-inventory",
+          "include_forks": false,
+          "_include_forks_doc": "FairEmail and octocode are upstream forks; mirroring them copies other people's code with no backup value. Flip to true to include them.",
+          "exclude": [],
+          "_exclude_doc": "Repo names to skip entirely. Empty = mirror every non-fork repo in the inventory."
+        },
+        "mirror_interval": "1h",
         "mirrors": {
-          "unix": {
-            "upstream": "https://github.com/diegonmarcos/unix.git"
-          },
           "cloud": {
             "upstream": "https://github.com/diegonmarcos/cloud.git"
           },
           "cloud-data": {
-            "upstream": "https://github.com/diegonmarcos/cloud-data.git"
+            "upstream": "https://github.com/diegonmarcos/cloud-data.git",
+            "private": true
           },
-          "front": {
-            "upstream": "https://github.com/diegonmarcos/front.git"
+          "unix": {
+            "upstream": "https://github.com/diegonmarcos/unix.git"
+          },
+          "diegonmarcos.github.io": {
+            "upstream": "https://github.com/diegonmarcos/diegonmarcos.github.io.git"
+          },
+          "diegonmarcos": {
+            "upstream": "https://github.com/diegonmarcos/diegonmarcos.git"
+          },
+          "notes": {
+            "upstream": "https://github.com/diegonmarcos/notes.git",
+            "private": true
+          },
+          "cloud-data-lfs": {
+            "upstream": "https://github.com/diegonmarcos/cloud-data-lfs.git",
+            "private": true
           },
           "front-data": {
             "upstream": "https://github.com/diegonmarcos/front-data.git"
           },
-          "tools": {
-            "upstream": "https://github.com/diegonmarcos/tools.git"
+          "front-assets-cdn": {
+            "upstream": "https://github.com/diegonmarcos/front-assets-cdn.git"
           },
           "vault": {
             "upstream": "https://github.com/diegonmarcos/vault.git",
             "private": true
+          },
+          "tools": {
+            "upstream": "https://github.com/diegonmarcos/tools.git"
+          },
+          "front-galaxy-gaia": {
+            "upstream": "https://github.com/diegonmarcos/front-galaxy-gaia.git",
+            "private": true
+          },
+          "front-asset-cdn": {
+            "upstream": "https://github.com/diegonmarcos/front-asset-cdn.git",
+            "private": true
+          },
+          "cloud-android": {
+            "upstream": "https://github.com/diegonmarcos/cloud-android.git"
+          },
+          "cloud-master": {
+            "upstream": "https://github.com/diegonmarcos/cloud-master.git"
+          },
+          "back-System": {
+            "upstream": "https://github.com/diegonmarcos/back-System.git"
+          },
+          "ml-Agentic": {
+            "upstream": "https://github.com/diegonmarcos/ml-Agentic.git"
+          },
+          "lecole42": {
+            "upstream": "https://github.com/diegonmarcos/lecole42.git",
+            "private": true
+          },
+          "dev": {
+            "upstream": "https://github.com/diegonmarcos/dev.git",
+            "private": true
+          },
+          "ops-Mylibs": {
+            "upstream": "https://github.com/diegonmarcos/ops-Mylibs.git"
+          },
+          "back-Graphic": {
+            "upstream": "https://github.com/diegonmarcos/back-Graphic.git"
+          },
+          "back-Algo": {
+            "upstream": "https://github.com/diegonmarcos/back-Algo.git"
+          },
+          "ml-MachineLearning": {
+            "upstream": "https://github.com/diegonmarcos/ml-MachineLearning.git"
+          },
+          "cyber-Cyberwarfare": {
+            "upstream": "https://github.com/diegonmarcos/cyber-Cyberwarfare.git"
+          },
+          "ml-DataScience": {
+            "upstream": "https://github.com/diegonmarcos/ml-DataScience.git"
           }
-        },
-        "mirror_interval": "1h"
+        }
       },
       "upstream_image": "gitea/gitea:latest",
       "api": {
