@@ -1,6 +1,6 @@
 {
   "name": "1_workflows",
-  "description": "GHA workflows + ship-engine generator. Source: src/cicd/*.yml + src/scripts/*.sh -> Dist: .github/workflows/*.yml + 1_workflows/dist/scripts/. Owns the runner-image registry.",
+  "description": "GHA workflows + ship-engine generator. Source: src/cicd/*.yml + src/scripts/*.sh -> Dist: .github/workflows/*.yml + 1_workflows/dist/scripts/. Runner-image registry topology lives in cloud-builders-runner.json.",
   "build": {
     "type": "script-only",
     "entry": "build.sh"
@@ -9,15 +9,7 @@
     "host": "local",
     "note": "Outputs are .github/workflows/ and dist/scripts/ \u2014 committed to git."
   },
-  "runners_doc": "Runner-image registry: arch -> {type, host?, builder_image?}. Migrated from the legacy runners.json that lived under I_cloud-data/ (Step 3, 2026-05-09 \u2014 now z_archive). Consumed by 1_workflows/src/scripts/cloud-ship-container-step-build-docker.sh and cloud-ship-ci-builder-dispatch.sh via 2_configs/dist/build-workflows.json (symlinked from 1_workflows/src/build-workflows.json). 2_configs/build.sh aggregates this build.json's runners + probe + dispatch fields into dist/build-workflows.json. amd64 = local build on the x86 GHA runner (ubuntu-latest). arm64 = local build on the native GHA arm64 runner (ubuntu-24.04-arm) \u2014 the Ship job's runs-on is selected per-VM-arch in .github/workflows/ship.yml (detect job derives runner from .vms[].specs.arch), so both arches build natively on the arch-matching hosted runner with NO QEMU and NO SSH dispatch. Migrated 2026-08-07 off the oci-apps ssh cloud-builder-x runner (cold arm64 builds exceeded the ship clock on the cacheless, disk-pressured VM). The ssh runner-type path and .probe/.dispatch tunables remain in the engine for any future remote-builder arch but are currently unused. Probe retry/backoff lets the engine survive transient SSH timeouts on any ssh-type runner (WG flap, sshd MaxStartups burst).",
-  "runners": {
-    "amd64": {
-      "type": "local"
-    },
-    "arm64": {
-      "type": "local"
-    }
-  },
+  "runners_doc": "Runner-image registry topology (arch -> {type, host?, builder_image?, runs_on, docker_arch, uname}) now lives in 1_workflows/cloud-builders-runner.json (single source of truth, extracted 2026-08-09). 2_configs/src/engines/derive-build-workflows.ts prefers cloud-builders-runner.json's .runners when present, falling back to this file's .runners (removed here \u2014 kept only as a fallback contract) for older checkouts missing the new file. Consumed by 1_workflows/src/scripts/cloud-ship-container-step-build-docker.sh and cloud-ship-ci-builder-dispatch.sh via 2_configs/dist/build-workflows.json (symlinked from 1_workflows/src/build-workflows.json). 2_configs/build.sh aggregates the runners + this build.json's probe + dispatch fields into dist/build-workflows.json. amd64 = local build on the x86 GHA runner (ubuntu-latest). arm64 = local build on the native GHA arm64 runner (ubuntu-24.04-arm) \u2014 the Ship job's runs-on is selected per-VM-arch in .github/workflows/ship.yml (detect job derives runner from .vms[].specs.arch), so both arches build natively on the arch-matching hosted runner with NO QEMU and NO SSH dispatch. Migrated 2026-08-07 off the oci-apps ssh cloud-builder-x runner (cold arm64 builds exceeded the ship clock on the cacheless, disk-pressured VM). The ssh runner-type path and .probe/.dispatch tunables remain in the engine for any future remote-builder arch but are currently unused. Probe retry/backoff lets the engine survive transient SSH timeouts on any ssh-type runner (WG flap, sshd MaxStartups burst).",
   "probe": {
     "retries": 3,
     "backoff_seconds": 5,
