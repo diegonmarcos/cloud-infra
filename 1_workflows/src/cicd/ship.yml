@@ -74,7 +74,9 @@ jobs:
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
           git submodule sync --recursive
           # Private submodule authenticates via the SSH deploy key; public ones stay on HTTPS.
-          git config submodule.cloud-data.url git@github.com:diegonmarcos/cloud-data.git
+          # insteadOf (not submodule.<name>.url) so the rewrite also covers the NESTED
+          # occurrence at III_unix/I_cloud-data — a per-submodule url only fixes top level.
+          git config --global url."git@github.com:diegonmarcos/cloud-data.git".insteadOf "https://github.com/diegonmarcos/cloud-data.git"
           git submodule update --init --recursive
 
       # Path-relevance: skip if upstream commit didn't touch a_solutions/
@@ -333,7 +335,9 @@ jobs:
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
           git submodule sync --recursive
           # Private submodule authenticates via the SSH deploy key; public ones stay on HTTPS.
-          git config submodule.cloud-data.url git@github.com:diegonmarcos/cloud-data.git
+          # insteadOf (not submodule.<name>.url) so the rewrite also covers the NESTED
+          # occurrence at III_unix/I_cloud-data — a per-submodule url only fixes top level.
+          git config --global url."git@github.com:diegonmarcos/cloud-data.git".insteadOf "https://github.com/diegonmarcos/cloud-data.git"
           git submodule update --init --recursive
 
       # QEMU binfmt — ONLY on the arm64 runner, and ONLY needed by the single
