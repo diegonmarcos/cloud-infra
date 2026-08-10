@@ -27,7 +27,10 @@
 # Source: 1_configs/src/deploy/test/test_docker_compose_no_build.sh
 set -u
 
-REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 PASS=0; FAIL=0
 red()   { printf '\033[0;31m%s\033[0m\n' "$*"; }
 green() { printf '\033[0;32m%s\033[0m\n' "$*"; }

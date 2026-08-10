@@ -63,7 +63,14 @@ runs:
           printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
           chmod 600 ~/.ssh/cloud_data_key
           ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          # Persist BOTH halves in ~/.gitconfig, not just this step's env.
+          # The insteadOf rewrite is global and outlives the step, so a later
+          # step's `git submodule update --remote` resolves cloud-data to its
+          # SSH URL — and then fails "Permission denied (publickey)" if the
+          # key only ever lived in this step's exported GIT_SSH_COMMAND.
+          # core.sshCommand keeps the two in sync for the whole job.
+          git config --global core.sshCommand \
+            "ssh -i $HOME/.ssh/cloud_data_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
           git config --global \
             url."git@github.com:diegonmarcos/cloud-data.git".insteadOf \
             "https://github.com/diegonmarcos/cloud-data.git"

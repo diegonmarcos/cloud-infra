@@ -10,7 +10,10 @@
 # workflow forgets the action, before the build step regenerates dist.
 set -eu
 
-REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 CICD_DIR="$REPO_ROOT/1_configs/src/deploy/gha/cicd"
 
 [ -d "$CICD_DIR" ] || { echo "::error::$CICD_DIR not found"; exit 1; }

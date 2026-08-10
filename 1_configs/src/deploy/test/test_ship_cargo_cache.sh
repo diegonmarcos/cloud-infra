@@ -19,7 +19,10 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 SHIP_YML="$REPO_ROOT/1_configs/src/deploy/gha/cicd/ship.yml"
 DOCKER_BUILD_SH="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 

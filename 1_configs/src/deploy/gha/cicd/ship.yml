@@ -65,11 +65,13 @@ jobs:
 
       # Allowlist-based: `--init --recursive` aborts on the first submodule CI
       # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
-      # own .gitmodules is SSH-only). Ship only needs cloud-data.
-      - name: Init submodules (cloud-data only)
+      # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
+      # (cb_containers-builders/build.json — the builder-image master that the
+      # resolve-builder-image action reads).
+      - name: Init submodules (cloud-data + unix)
         uses: ./.github/actions/init-submodules
         with:
-          include: cloud-data
+          include: cloud-data unix
           recursive: "true"
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
@@ -320,11 +322,13 @@ jobs:
 
       # Allowlist-based: `--init --recursive` aborts on the first submodule CI
       # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
-      # own .gitmodules is SSH-only). Ship only needs cloud-data.
-      - name: Init submodules (cloud-data only)
+      # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
+      # (cb_containers-builders/build.json — the builder-image master that the
+      # resolve-builder-image action reads).
+      - name: Init submodules (cloud-data + unix)
         uses: ./.github/actions/init-submodules
         with:
-          include: cloud-data
+          include: cloud-data unix
           recursive: "true"
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 

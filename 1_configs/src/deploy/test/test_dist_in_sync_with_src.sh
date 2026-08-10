@@ -13,7 +13,10 @@
 # fails the lint with a clear message pointing at the build step.
 set -eu
 
-REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 
 [ -f "$REPO_ROOT/1_configs/build.sh" ] || { echo "::error::build.sh not found"; exit 1; }
 
@@ -38,7 +41,15 @@ find "$REPO_ROOT/.github/workflows" -maxdepth 1 -name '*.yml' -exec cp {} "$TMP/
 
 DRIFT=0
 
-if ! diff -rq "$TMP/dist-before" "$REPO_ROOT/1_configs/dist" >/tmp/dist-drift 2>&1; then
+# --no-dereference: dist/ legitimately holds symlinks that point into
+# submodule build outputs (e.g. front-fleet-gh-declared.json →
+# III_front/2_configs/dist/). Those targets are absent unless the
+# submodule has been built, and without this flag diff reports the
+# dangling link as "No such file or directory" and the test fails for
+# a reason that has nothing to do with src→dist drift. Comparing the
+# link targets themselves is also the more correct check here: the
+# engine owns the link, not the file behind it.
+if ! diff -rq --no-dereference "$TMP/dist-before" "$REPO_ROOT/1_configs/dist" >/tmp/dist-drift 2>&1; then
     if [ -s /tmp/dist-drift ]; then
         echo "::error::1_configs/dist/ is out of sync with 1_configs/src/"
         echo "Drift:"
