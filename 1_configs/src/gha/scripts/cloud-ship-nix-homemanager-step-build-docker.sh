@@ -16,7 +16,11 @@ step_docker_package() {
 
     NIX_TMP=$(mktemp)
     set +e
-    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder/src"
+    # cloud-builder's deps devShell. Was "$SERVICE_DIR/../../workflows/src/
+    # cloud-builder" — a path that stopped existing when 1_workflows was
+    # absorbed into 1_configs, so the -d guard below has been silently taking
+    # the no-devShell fallback ever since. The flake now lives with the service.
+    DEPS_FLAKE="${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/infra-bld_cloud-builder-x/src"
     if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
         log "Using deps devShell from $DEPS_FLAKE"
         nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
@@ -196,7 +200,7 @@ ACTIVATE_EOF
     # Substitutions are LITERAL (sed-no-regex via awk) for {{SERVICE_NAME}},
     # {{HM_ACTIVATION_PATH}}, {{HM_USER}}.
     # STEPS_DIR is /home/.../cloud/1_configs/src/gha/scripts (set in engine.sh)
-    HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-$STEPS_DIR/../../../b_infra/_shared/vm-pilot/src/Dockerfile.transport}"
+    HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-${CLOUD_ROOT:?CLOUD_ROOT unset}/b_infra/_shared/vm-pilot/src/Dockerfile.transport}"
     if [ ! -f "$HM_DOCKERFILE_TPL" ]; then
         log "ERROR: vm-pilot transport Dockerfile template missing: $HM_DOCKERFILE_TPL"
         return 1

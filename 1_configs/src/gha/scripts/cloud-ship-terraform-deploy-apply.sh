@@ -14,7 +14,7 @@ export CLOUD_ROOT="$REPO_ROOT"  # ensure-deps.sh / cloud-paths.sh read this
 # 1_configs/src/lib/ensure-deps.sh on 2026-04-28 so any future engine
 # (terraform, ship, gen-configs, …) gets the same idempotent bootstrap.
 LIB_DIR="$REPO_ROOT/1_configs/src/lib"
-# shellcheck source=../../engine/libs/ensure-deps.sh
+# shellcheck source=../../lib/ensure-deps.sh
 [ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 
 # Local fallback for fresh clones where libs/ might not be deployed yet —
