@@ -1,4 +1,10 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# Shebang is bash, not sh, ON PURPOSE. This engine sources the
+# cloud-ship-container-step-*.sh scripts, which use bash-only constructs
+# (`read -ra` arrays, `<<<` here-strings, `< <(...)` process substitution).
+# Under a dash /bin/sh every service build.sh — all 72 symlink to this file —
+# died at the first `.` with "Syntax error: redirection unexpected". It only
+# went unnoticed because CI runs inside cloud-builder, where /bin/sh is bash.
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ Container Engine — dispatcher + config                          ║
 # ║                                                                  ║
@@ -37,7 +43,9 @@ if [ -z "${BUILD_LOG_ACTIVE:-}" ]; then
     # Re-invoke via absolute path through sh: $0 may be a bare relative name
     # ("build.sh") not on PATH, so `"$0"` alone fails "command not found".
     set +e
-    { sh "$SERVICE_DIR/$(basename "$0")" "$@" 2>&1; echo $? > "$_rcfile"; } | tee -a "$BUILD_LOG_FILE"
+    # bash, not sh: this re-exec is what actually runs the build, so calling it
+    # with sh reintroduced dash regardless of the shebang above.
+    { bash "$SERVICE_DIR/$(basename "$0")" "$@" 2>&1; echo $? > "$_rcfile"; } | tee -a "$BUILD_LOG_FILE"
     _rc="$(cat "$_rcfile" 2>/dev/null)"; [ -z "$_rc" ] && _rc=0
     rm -f "$_rcfile"
     exit "$_rc"
@@ -406,7 +414,7 @@ trap '_exit_status=$?; if [ -n "$CURRENT_STEP" ] && [ "$_exit_status" -ne 0 ]; t
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 # Template + prefix map live in 1_configs/src/engine/libs/generated-header.json.
-INJECT_HEADER="$STEPS_DIR/../libs/inject-header.sh"
+INJECT_HEADER="$STEPS_DIR/../../engine/libs/inject-header.sh"
 ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-container-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 # Source step files — tolerate any missing step (graceful degradation).

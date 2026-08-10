@@ -294,7 +294,7 @@ step_compose() {
         # Single source of truth: 1_configs/src/inputs/hm-config.json
         # ALSO read by b_infra/_shared/vm-pilot/src/modules/protection/disk-ballast.nix
         # via symlinked b_infra/_shared/modules/hm-config.json.
-        HM_CONFIG_FILE="$STEPS_DIR/../data/hm-config.json"
+        HM_CONFIG_FILE="$STEPS_DIR/../../inputs/hm-config.json"
         MIN_FREE_GB=$(jq -r '.min_size_ballast_file_gb' "$HM_CONFIG_FILE" 2>/dev/null)
         : "${MIN_FREE_GB:=10}"  # fallback if the JSON read fails for any reason
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
