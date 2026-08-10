@@ -40,7 +40,7 @@ These are concrete defects, not design. Every one is a "fix the engine, data-dri
 | # | Bug | File | Fix |
 |---|-----|------|-----|
 | R1 | **No staleness detection** — a report from days ago is served as if fresh; false RED masks reality (and would mask a real outage too). | `reports-common/src/run_state.rs`, `output.rs` | Stamp `generated_at` + `max_age`; renderer marks report STALE if older than tier cadence. Tester: backdate `_run_state.json`, assert STALE banner. |
-| R2 | **Hardcoded DNS resolvers** `10.0.0.1` / `1.1.1.1` / `8.8.8.8`. | `reports-common/src/checks.rs:10,62,72` | Read from `build-reports.json` (already the config SoT, exists at `2_configs/dist/build-reports.json`). |
+| R2 | **Hardcoded DNS resolvers** `10.0.0.1` / `1.1.1.1` / `8.8.8.8`. | `reports-common/src/checks.rs:10,62,72` | Read from `build-reports.json` (already the config SoT, exists at `1_configs/dist/build-reports.json`). |
 | R3 | **Hardcoded mail submission endpoints** `smtps://10.0.0.3:465`, `:2465`. | `cloud-health-full-daily/src/send.sh:36-37` | Derive from consolidated JSON `vms[].services[]`. |
 | R4 | **`MAIL_PORTS` TODO stub** — mail port check never implemented. | `cloud-health-full-daily/src/health_full2/stack/sections.rs` | Implement as data-driven port list from build-caddy.json L4 map. |
 | R5 | **Recon apex hardcoded fallback** `diegonmarcos.com`. | `reports/recon/recon.sh:18` | Fail loud if consolidated JSON missing; do not silently fall back. |
@@ -181,7 +181,7 @@ The taxonomy in `infra-obs_ntfy/build.json` is good and data-driven. Changes:
 
 ### Deliverables
 
-- `build-notify.json` (severity map + routing table + escalation policy) in `2_configs` SoT.
+- `build-notify.json` (severity map + routing table + escalation policy) in `1_configs` SoT.
 - Broker module + producers refactored to emit events.
 - `status.json` writer in reports + a front project for the page.
 - **Tester:** feed synthetic events → assert routing/dedup/escalation transitions (pure-function table test, no network).

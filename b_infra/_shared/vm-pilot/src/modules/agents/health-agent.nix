@@ -8,7 +8,7 @@
 let
   # P4: data-driven fd / wg-stale thresholds + ntfy base/topic. Single SoT:
   # config.json native.protection (defaults) + b_infra/nixhm-sudo-<alias>/build.json
-  # .protection (per-VM overrides), emitted by 2_configs into native.protection +
+  # .protection (per-VM overrides), emitted by 1_configs into native.protection +
   # _home_manager.vms.<vmName>.protection.
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
   protDefaults = consolidated.native.protection or {};

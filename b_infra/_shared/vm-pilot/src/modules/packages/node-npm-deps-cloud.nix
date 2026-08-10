@@ -18,7 +18,7 @@ in {
     for _p in \
       /app/_cloud-data-consolidated.json \
       /opt/containers/cloud-data/_cloud-data-consolidated.json \
-      "$HOME/git/cloud/2_configs/dist/_cloud-data-consolidated.json" \
+      "$HOME/git/cloud/1_configs/dist/_cloud-data-consolidated.json" \
       "$HOME/git/cloud/cloud-data/_cloud-data-consolidated.json"; do
       [ -f "$_p" ] && CLOUD_DEPS="$_p" && break
     done

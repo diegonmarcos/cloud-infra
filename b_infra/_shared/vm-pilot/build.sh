@@ -12,7 +12,7 @@ IMAGE=$(node -e "console.log(require('$CONFIG').docker.image)" 2>/dev/null \
 
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-INJECT_HEADER="$REPO_ROOT/1_workflows/src/libs/inject-header.sh"
+INJECT_HEADER="$REPO_ROOT/1_configs/src/libs/inject-header.sh"
 export REPO_ROOT ENGINE_NAME="b_infra/_shared/vm-pilot/build.sh"
 
 step_build() {

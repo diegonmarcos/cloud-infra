@@ -4,7 +4,7 @@
 # Idempotent — every import is gated on `terraform state list`, so it is safe
 # to call on every pipeline run. Already-tracked resources are skipped.
 #
-# Hook point: 1_workflows/src/scripts/cloud-ship-terraform-deploy-apply.sh
+# Hook point: 1_configs/src/scripts/cloud-ship-terraform-deploy-apply.sh
 # calls `./import.sh` right after `terraform init`, before `plan`. Same
 # pattern as c_vps/vps_oci/src/import.sh and c_vps/ba-clo_cloudflare/src/import.sh.
 #

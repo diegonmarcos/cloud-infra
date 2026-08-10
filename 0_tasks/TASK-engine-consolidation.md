@@ -1,4 +1,4 @@
-# Plan: Consolidate All Cloud Engines into `1_workflows/src/scripts/`
+# Plan: Consolidate All Cloud Engines into `1_configs/src/scripts/`
 
 ## Context
 
@@ -9,15 +9,15 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 ## COMPLETED
 
 ### Phase 1: Repo restructure + script consolidation
-- `workflows/` → `1_workflows/` (git mv + all refs)
+- `workflows/` → `1_configs/` (git mv + all refs)
 - `cloud-data/` → `I_cloud-data/`, `tools/` → `II_tools/` (submodule renames)
 - `static/` → `cicd/` (GHA workflow YAMLs)
-- All scripts consolidated into `1_workflows/src/scripts/` with `cloud-ship-*`/`cloud-health-*` naming
+- All scripts consolidated into `1_configs/src/scripts/` with `cloud-ship-*`/`cloud-health-*` naming
 - Both engines moved as-is: `a_solutions/_engine.sh` → `cloud-ship-container-engine.sh`, `b_infra/_engine.sh` → `cloud-ship-nix-homemanager-engine.sh`
 - 58 service + 5 HM symlinks updated
 - Cross-references updated (script-to-script, cicd/*.yml, Dagu partial)
 - `build.sh workflow`: src→dist→deploy for ALL files, header injection, symlink always recreated
-- TS engines moved to cloud-data/1_workflows/src/scripts/ and renamed: cloud-data-config-consolidated.ts, cloud-data-config-derive.ts, master cloud-data-config.ts (+ gen-gha-config.ts remaining as symlink)
+- TS engines moved to cloud-data/1_configs/src/scripts/ and renamed: cloud-data-config-consolidated.ts, cloud-data-config-derive.ts, master cloud-data-config.ts (+ gen-gha-config.ts remaining as symlink)
 - `.gitmodules` uses HTTPS (not SSH)
 - `setup-wireguard.sh` created (was missing)
 - `config.json` bug fixed (`iproute2` → `ip`)
@@ -42,7 +42,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 
 ### Phase 3: Extract build.sh logic into scripts
 
-**Goal**: `cloud/build.sh` becomes ~100-line pure dispatcher. All logic moves to `1_workflows/src/scripts/`.
+**Goal**: `cloud/build.sh` becomes ~100-line pure dispatcher. All logic moves to `1_configs/src/scripts/`.
 
 #### Step 3.1: Create libraries
 | Script | Description |
@@ -57,7 +57,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 |--------|--------|-------------|
 | `cloud-ship-repo-deps.sh` | `cmd_deps()` | Install deps from config.json |
 | `cloud-ship-repo-config-gen.sh` | `cmd_config()` | Generate cloud-data JSONs via tsx |
-| `cloud-ship-repo-workflow-gen.sh` | `cmd_workflow()` + `1_workflows/build.sh` | Build workflows src→dist→.github |
+| `cloud-ship-repo-workflow-gen.sh` | `cmd_workflow()` + `1_configs/build.sh` | Build workflows src→dist→.github |
 | `cloud-ship-repo-secrets.sh` | `cmd_secrets()` | List/encrypt/decrypt secrets |
 | `cloud-ship-repo-ssh.sh` | `cmd_ssh()` | SSH into a VM |
 | `cloud-ship-repo-status.sh` | `cmd_status()` | Docker ps on VM |
@@ -70,7 +70,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 
 #### Step 3.3: Rewrite `cloud/build.sh` as pure dispatcher (~100 lines)
 
-#### Step 3.4: Remove `1_workflows/build.sh` (absorbed)
+#### Step 3.4: Remove `1_configs/build.sh` (absorbed)
 
 ### Phase 4: Engine decomposition
 
@@ -148,7 +148,7 @@ Auto-select: `declared_arch == host_arch → local`, `arm64 on x86 + oci-apps re
 1. Phase 3.1 — create libraries
 2. Phase 3.2 — extract 12 command scripts
 3. Phase 3.3 — rewrite build.sh as dispatcher
-4. Phase 3.4 — remove 1_workflows/build.sh
+4. Phase 3.4 — remove 1_configs/build.sh
 5. Phase 4 — decompose container engine + HM engine
 6. Phase 5 — bug fixes (#1-#5)
 7. Phase 6 — Dagu + GHA consolidation

@@ -304,9 +304,10 @@ cloud/
 │   ├── cloud_architecture.json   Architecture data
 │   └── cloud_control.json        Control plane data
 │
-├── 1_workflows/                  Shared CI/CD workflow engine
-│   ├── build.sh                  Workflow builder
-│   └── src/                      Workflow source + scripts
+├── 1_configs/                    Repo configuration engine (dotfiles + CI/CD)
+│   ├── build.sh                  Config + workflow builder
+│   └── src/                      git-repo/ git-hooks/ gha/ app-claude/
+│                                 app-vscode/ app-obsidian/ engines/ scripts/
 │
 ├── .github/workflows/            GitHub Actions CI/CD
 │   ├── ship.yml                  Unified ship workflow (auto-deploy on push)

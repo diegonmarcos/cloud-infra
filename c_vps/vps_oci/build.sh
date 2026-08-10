@@ -1,1 +1,1 @@
-../../1_workflows/src/scripts/cloud-ship-terraform-engine.sh
+../../1_configs/src/scripts/cloud-ship-terraform-engine.sh
