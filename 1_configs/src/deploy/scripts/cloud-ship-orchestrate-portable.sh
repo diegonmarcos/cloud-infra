@@ -49,11 +49,11 @@ REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT" || die "Cannot cd to $REPO_ROOT"
 
 # ── Resolve cloud-builder image from unix master ──────────────
-# Source of truth: III_unix/cb_containers-builders/build.json (.images key).
+# Source of truth: II_Unix/cb_containers-builders/build.json (.images key).
 # Never paste the literal — it drifts when unix renames the image.
 resolve_builder_image() {
-  _master="$REPO_ROOT/III_unix/cb_containers-builders/build.json"
-  [ -f "$_master" ] || die "III_unix/cb_containers-builders/build.json not found — run 'git submodule update --init III_unix'"
+  _master="$REPO_ROOT/II_Unix/cb_containers-builders/build.json"
+  [ -f "$_master" ] || die "II_Unix/cb_containers-builders/build.json not found — run 'git submodule update --init II_Unix'"
   _ghcr=$(jq -r '.images["cloud-builder-x-deb-nixhm"].ghcr // empty' "$_master" 2>/dev/null)
   [ -n "$_ghcr" ] && [ "$_ghcr" != "null" ] || die "No .images['cloud-builder-x-deb-nixhm'].ghcr in $_master"
   printf '%s:latest' "$_ghcr"

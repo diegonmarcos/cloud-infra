@@ -77,7 +77,7 @@ step_compose_build() {
     # ── Arch guard (no QEMU, no cross-arch fallback — same doctrine as the
     # runner matrix). `docker compose build` compiles on the HOST arch no
     # matter what platform we log; when the workflow's builder-image
-    # resolution fails (e.g. stale III_unix submodule pointer, run
+    # resolution fails (e.g. stale II_Unix submodule pointer, run
     # 27409752538) the engine silently ran on the amd64 GHA runner, pushed
     # amd64 images for an arm64 target, and the VM died with exec-format-
     # error. FAIL LOUDLY instead.

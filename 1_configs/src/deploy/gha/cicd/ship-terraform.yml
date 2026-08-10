@@ -44,9 +44,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Allowlist: `submodules: true` aborts checkout on the first submodule
+      # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
+      # cloud-master's own .gitmodules is SSH-only). Init just what is used.
+      - uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data unix
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - name: Path relevance gate
         id: paths
@@ -62,7 +70,7 @@ jobs:
 
       - name: Update submodules
         if: ${{ steps.paths.outputs.skip != 'true' }}
-        run: git submodule update --remote
+        run: git submodule update --remote -- I_cloud-data II_Unix
 
       # NO local dist/ regen — gen-configs already ran first and committed
       # the canonical dist/ to origin/main, which actions/checkout pulled.
@@ -140,7 +148,7 @@ jobs:
           set -eu
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
-          # which reads III_unix/cb_containers-builders/build.json (master).
+          # which reads II_Unix/cb_containers-builders/build.json (master).
           IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           # Pull the canonical compose.yaml from the image, then run terraform

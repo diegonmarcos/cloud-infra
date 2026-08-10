@@ -33,10 +33,10 @@ CONFIG="$REPO_ROOT/config.json"
 # be stale until the pin is bumped post-commit).
 if [ -d "${HOME}/git/unix/cb_containers-builders" ]; then
     UNIX_DIR="${HOME}/git/unix"
-elif [ -d "$REPO_ROOT/III_unix" ]; then
-    UNIX_DIR="$REPO_ROOT/III_unix"
+elif [ -d "$REPO_ROOT/II_Unix" ]; then
+    UNIX_DIR="$REPO_ROOT/II_Unix"
 else
-    echo "  ✗ no unix repo found (checked ~/git/unix and III_unix submodule)" >&2
+    echo "  ✗ no unix repo found (checked ~/git/unix and II_Unix submodule)" >&2
     exit 1
 fi
 DEPS_SH="$UNIX_DIR/cb_containers-builders/dist/docker-deps.sh"

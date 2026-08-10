@@ -29,7 +29,7 @@
 # ║   .host               — required when .type == "ssh"             ║
 # ║                                                                  ║
 # ║ Image identity is NOT in this file — it lives in                 ║
-# ║   III_unix/cb_containers-builders/build.json                     ║
+# ║   II_Unix/cb_containers-builders/build.json                     ║
 # ║ (the producer's master). Legacy .runners[$a].builder_image is    ║
 # ║ accepted for back-compat but not required.                       ║
 # ║                                                                  ║

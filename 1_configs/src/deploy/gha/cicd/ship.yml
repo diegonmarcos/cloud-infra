@@ -63,21 +63,15 @@ jobs:
           submodules: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Init submodules (SSH deploy key for private cloud-data)
-        env:
-          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
-          chmod 600 ~/.ssh/cloud_data_key
-          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
-          git submodule sync --recursive
-          # Private submodule authenticates via the SSH deploy key; public ones stay on HTTPS.
-          # insteadOf (not submodule.<name>.url) so the rewrite also covers the NESTED
-          # occurrence at III_unix/I_cloud-data — a per-submodule url only fixes top level.
-          git config --global url."git@github.com:diegonmarcos/cloud-data.git".insteadOf "https://github.com/diegonmarcos/cloud-data.git"
-          git submodule update --init --recursive
+      # Allowlist-based: `--init --recursive` aborts on the first submodule CI
+      # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
+      # own .gitmodules is SSH-only). Ship only needs cloud-data.
+      - name: Init submodules (cloud-data only)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data
+          recursive: "true"
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       # Path-relevance: skip if upstream commit didn't touch a_solutions/
       # OR 1_configs/dist/build-*.json (whose changes propagate to symlinked
@@ -324,21 +318,15 @@ jobs:
           fetch-depth: 2
           submodules: false
 
-      - name: Init submodules (SSH deploy key for private cloud-data)
-        env:
-          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
-          chmod 600 ~/.ssh/cloud_data_key
-          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
-          git submodule sync --recursive
-          # Private submodule authenticates via the SSH deploy key; public ones stay on HTTPS.
-          # insteadOf (not submodule.<name>.url) so the rewrite also covers the NESTED
-          # occurrence at III_unix/I_cloud-data — a per-submodule url only fixes top level.
-          git config --global url."git@github.com:diegonmarcos/cloud-data.git".insteadOf "https://github.com/diegonmarcos/cloud-data.git"
-          git submodule update --init --recursive
+      # Allowlist-based: `--init --recursive` aborts on the first submodule CI
+      # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
+      # own .gitmodules is SSH-only). Ship only needs cloud-data.
+      - name: Init submodules (cloud-data only)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data
+          recursive: "true"
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       # QEMU binfmt — ONLY on the arm64 runner, and ONLY needed by the single
       # multi-arch service (claude-superset-api, docker.arch="amd64,arm64",
@@ -495,7 +483,7 @@ jobs:
           export SHIP_DEADLINE_EPOCH=$(( $(date +%s) + 4620 ))
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
-          # which reads III_unix/cb_containers-builders/build.json (master).
+          # which reads II_Unix/cb_containers-builders/build.json (master).
           IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           mkdir -p "$TRACE_DIR"

@@ -4,7 +4,7 @@
 # Installed into every submodule's gitdir hooks/pre-commit by
 # 1_configs/build.sh do_deploy. Any commit attempt inside a submodule
 # fails silently — no banner, no message, just exit 1. Edits go to the
-# upstream clone instead (e.g. ~/git/unix/, NOT cloud/III_unix/);
+# upstream clone instead (e.g. ~/git/unix/, NOT cloud/II_Unix/);
 # pin bumps come from the Auto-sync GHA workflow.
 #
 # Bypass: NONE.

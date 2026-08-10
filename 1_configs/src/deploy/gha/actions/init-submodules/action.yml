@@ -1,0 +1,99 @@
+name: "Init submodules (allowlist)"
+description: |
+  Initialise ONLY the submodules a CI job can actually clone, selected by
+  submodule NAME from .gitmodules.
+
+  Why an allowlist and not `submodules: true` / `--init --recursive`:
+  this repo declares submodules that no CI credential covers. `vault`,
+  `notes` and `cloud-data-lfs` are private and are not reachable with the
+  cloud-data deploy key; `cloud-master` is a grouping repo whose own
+  .gitmodules points at SSH URLs (including vault, and cloud itself), so
+  recursing into it drags the same failures in one level down. git aborts
+  the whole step on the FIRST unreachable submodule, so a single
+  unclonable entry takes the entire job with it — that is exactly how Ship
+  died on 2026-08-09 ("could not read Username for 'https://github.com':
+  ... clone of vault into submodule path IV_vault failed").
+
+  Selection is by NAME, not path, so it survives directory renames (the
+  I_/II_/III_ restructure renamed every submodule path). Names that are
+  declared but have no gitlink in the tree are dropped, since passing them
+  as a pathspec would make git error instead of no-op.
+
+  vault is never needed here: jobs that want it use the fetch-vault action
+  with its own VAULT_DEPLOY_KEY.
+
+inputs:
+  include:
+    description: "Space-separated submodule NAMES from .gitmodules to initialise."
+    required: false
+    default: "cloud-data"
+  recursive:
+    description: "Recurse into nested submodules of the included ones ('true'/'false')."
+    required: false
+    default: "false"
+  cloud_data_deploy_key:
+    description: |
+      SSH private key with read access to diegonmarcos/cloud-data. When set,
+      an insteadOf rewrite sends the HTTPS cloud-data URL over SSH — applied
+      globally (not as submodule.<name>.url) so it also covers the NESTED
+      occurrence at II_Unix/I_cloud-data.
+    required: false
+    default: ""
+
+outputs:
+  paths:
+    description: "Space-separated submodule paths that were initialised."
+    value: ${{ steps.init.outputs.paths }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Initialise allowlisted submodules
+      id: init
+      shell: bash
+      env:
+        INCLUDE: ${{ inputs.include }}
+        RECURSIVE: ${{ inputs.recursive }}
+        CLOUD_DATA_DEPLOY_KEY: ${{ inputs.cloud_data_deploy_key }}
+      run: |
+        set -eu
+
+        if [ -n "$CLOUD_DATA_DEPLOY_KEY" ]; then
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
+          chmod 600 ~/.ssh/cloud_data_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git config --global \
+            url."git@github.com:diegonmarcos/cloud-data.git".insteadOf \
+            "https://github.com/diegonmarcos/cloud-data.git"
+        fi
+
+        git submodule sync --recursive >/dev/null
+
+        # name → path, restricted to the allowlist AND to names that actually
+        # have a gitlink recorded in the tree.
+        paths=""
+        while read -r key value; do
+          name=${key#submodule.}; name=${name%.path}
+          case " $INCLUDE " in *" $name "*) ;; *) continue ;; esac
+          if ! git ls-files -s -- "$value" | grep -q '^160000'; then
+            echo "::warning::submodule '$name' ($value) is declared in .gitmodules but has no gitlink — skipping"
+            continue
+          fi
+          paths="$paths $value"
+        done < <(git config -f .gitmodules --get-regexp '^submodule\..*\.path$')
+
+        if [ -z "$paths" ]; then
+          echo "::notice::no submodules to initialise (include='$INCLUDE')"
+          echo "paths=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        echo "initialising:$paths"
+        rec=""
+        [ "$RECURSIVE" = "true" ] && rec="--recursive"
+        # shellcheck disable=SC2086
+        git submodule update --init $rec -- $paths
+
+        echo "paths=${paths# }" >> "$GITHUB_OUTPUT"

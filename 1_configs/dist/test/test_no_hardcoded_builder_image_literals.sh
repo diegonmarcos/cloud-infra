@@ -16,7 +16,7 @@
 # ║ Phase 34 tester — no hardcoded cloud-builder-x image literals    ║
 # ║                                                                  ║
 # ║ Wrapper-layer drift guard. The engine scripts read the image     ║
-# ║ from III_unix/cb_containers-builders/build.json (data-driven).   ║
+# ║ from II_Unix/cb_containers-builders/build.json (data-driven).   ║
 # ║ Wrappers (GHA YAMLs, composite actions, orchestrate scripts)     ║
 # ║ MUST resolve from the same source — never re-paste the literal.  ║
 # ║                                                                  ║
@@ -27,9 +27,9 @@
 # ║ data drift until the next image rename.                          ║
 # ║                                                                  ║
 # ║ Allowlist (literal IS expected):                                 ║
-# ║   • III_unix/cb_containers-builders/build.json (master)          ║
-# ║   • III_unix/cb_containers-builders/src/docker/compose.yaml      ║
-# ║   • III_unix/cb_containers-builders/src/docker/entrypoint.sh     ║
+# ║   • II_Unix/cb_containers-builders/build.json (master)          ║
+# ║   • II_Unix/cb_containers-builders/src/docker/compose.yaml      ║
+# ║   • II_Unix/cb_containers-builders/src/docker/entrypoint.sh     ║
 # ║   • Comment lines (# / //)                                       ║
 # ║   • This test file itself                                        ║
 # ║                                                                  ║
@@ -67,15 +67,15 @@ SCAN_ROOTS=(
   "$REPO_ROOT/1_configs/dist/scripts"
 )
 # unix-side wrappers — only the CANONICAL source path (1_configs/src/deploy/gha/cicd).
-# III_unix/.github/workflows/ is dist and will follow source after rebuild;
-# III_unix/workflows/src/static/ is legacy/stale (not the active source).
-if [ -d "$REPO_ROOT/III_unix/1_configs/src/deploy/gha/cicd" ]; then
-  SCAN_ROOTS+=("$REPO_ROOT/III_unix/1_configs/src/deploy/gha/cicd")
+# II_Unix/.github/workflows/ is dist and will follow source after rebuild;
+# II_Unix/workflows/src/static/ is legacy/stale (not the active source).
+if [ -d "$REPO_ROOT/II_Unix/1_configs/src/deploy/gha/cicd" ]; then
+  SCAN_ROOTS+=("$REPO_ROOT/II_Unix/1_configs/src/deploy/gha/cicd")
 fi
 
 # Allowlist: paths where the literal IS the source of truth (master + producer).
 # Match by repo-relative path suffix.
-ALLOWLIST_REGEX='^III_unix/cb_containers-builders/(build\.json$|src/docker/(compose\.yaml|entrypoint\.sh|.*Dockerfile.*))$'
+ALLOWLIST_REGEX='^II_Unix/cb_containers-builders/(build\.json$|src/docker/(compose\.yaml|entrypoint\.sh|.*Dockerfile.*))$'
 
 echo "── Scanning wrapper layer for hardcoded image literals ──"
 echo "  pattern: $PATTERN"
@@ -104,7 +104,7 @@ done
 if [ "${#HITS[@]}" -eq 0 ]; then
     pass "no hardcoded cloud-builder-x literals found in wrapper layer"
 else
-    fail "${#HITS[@]} hardcoded literal(s) found — must read from III_unix/cb_containers-builders/build.json:"
+    fail "${#HITS[@]} hardcoded literal(s) found — must read from II_Unix/cb_containers-builders/build.json:"
     for h in "${HITS[@]}"; do
         printf "    %s\n" "$h" >&2
     done

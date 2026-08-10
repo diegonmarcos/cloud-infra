@@ -667,7 +667,7 @@ NEOF
 
     RUNNER_TYPE="$(jq -r --arg a "$ARCH" '.runners[$a].type // empty' "$RUNNERS_JSON")"
     RUNNER_HOST="$(jq -r --arg a "$ARCH" '.runners[$a].host // empty' "$RUNNERS_JSON")"
-    # Image identity: prefer III_unix/cb_containers-builders/build.json (the
+    # Image identity: prefer II_Unix/cb_containers-builders/build.json (the
     # producer's master). Back-compat: fall back to legacy
     # .runners[$a].builder_image in build-workflows.json if master not
     # checked out. The legacy field may be removed once all consumers are
@@ -675,8 +675,8 @@ NEOF
     RUNNER_IMAGE=""
     UNIX_MASTER=""
     for _u in \
-        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/III_unix/cb_containers-builders/build.json" \
-        "$SRC_DIR/III_unix/cb_containers-builders/build.json"; do
+        "${CLOUD_ROOT:-$SERVICE_DIR/../..}/II_Unix/cb_containers-builders/build.json" \
+        "$SRC_DIR/II_Unix/cb_containers-builders/build.json"; do
         [ -f "$_u" ] && { UNIX_MASTER="$_u"; break; }
     done
     if [ -n "$UNIX_MASTER" ]; then
@@ -778,7 +778,7 @@ NEOF
 
         ssh)
             [ -z "$RUNNER_HOST" ]  && { log_error "runners[$ARCH].host missing in $(basename "$RUNNERS_JSON")"; return 1; }
-            [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked III_unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
+            [ -z "$RUNNER_IMAGE" ] && { log_error "cloud-builder-x image not resolved (checked II_Unix/cb_containers-builders/build.json [.images.cloud-builder-x-deb-nixhm.ghcr] and $(basename "$RUNNERS_JSON") [.runners[$ARCH].builder_image])"; return 1; }
 
             # Save prior pipefail state and enable pipefail for the entire
             # SSH-builder branch. The branch contains multiple

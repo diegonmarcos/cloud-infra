@@ -42,7 +42,7 @@ mapfile -t HITS < <(
     --exclude-dir='z_archive' \
     --exclude-dir='_archive' \
     --exclude-dir='node_modules' \
-    --exclude-dir='III_unix' \
+    --exclude-dir='II_Unix' \
     --exclude-dir='II_tools' \
     --exclude-dir='d_myhardware' \
     2>/dev/null \

@@ -82,7 +82,7 @@ jobs:
         run: |
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
-          # which reads III_unix/cb_containers-builders/build.json (master).
+          # which reads II_Unix/cb_containers-builders/build.json (master).
           IMAGE="$BUILDER_IMAGE"
           docker pull "$IMAGE"
           # NET_ADMIN + /dev/net/tun — required for wg-quick up wg0 inside

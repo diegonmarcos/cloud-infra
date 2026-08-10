@@ -83,7 +83,7 @@ echo "── cloud-builder entrypoint brings WG up when the key is set ──"
 # Source of truth lives in unix submodule
 ENTRYPOINT=""
 for base in \
-    "$REPO_ROOT/III_unix/cb_containers-builders/src/docker" \
+    "$REPO_ROOT/II_Unix/cb_containers-builders/src/docker" \
     "$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/src/docker"; do
     if [ -f "$base/entrypoint.sh" ]; then
         ENTRYPOINT="$base/entrypoint.sh"
@@ -92,7 +92,7 @@ for base in \
 done
 
 if [ -z "$ENTRYPOINT" ]; then
-    echo "  (III_unix not present — skipping entrypoint check)"
+    echo "  (II_Unix not present — skipping entrypoint check)"
 else
     if grep -qE 'WG_PRIVATE_KEY' "$ENTRYPOINT" && grep -qE 'wg-quick up' "$ENTRYPOINT"; then
         pass "entrypoint.sh brings wg0 up when WG_PRIVATE_KEY is set"
