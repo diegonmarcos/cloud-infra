@@ -16,7 +16,10 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 WF_DIR="$REPO_ROOT/.github/workflows"
 
 # ship-gen-configs is the head of the cascade — it does NOT depend on itself,

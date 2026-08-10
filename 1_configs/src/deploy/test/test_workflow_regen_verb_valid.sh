@@ -13,7 +13,10 @@
 # of them. Catches future verb renames OR typos.
 set -eu
 
-REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 CICD_DIR="$REPO_ROOT/1_configs/src/deploy/gha/cicd"
 CONFIG_BUILD="$REPO_ROOT/1_configs/build.sh"
 
@@ -21,7 +24,12 @@ CONFIG_BUILD="$REPO_ROOT/1_configs/build.sh"
 [ -f "$CONFIG_BUILD" ] || { echo "::error::$CONFIG_BUILD not found"; exit 1; }
 
 # Extract valid verbs from the case statement (e.g. `all)`, `derive)`).
-VALID_VERBS=$(awk '/^\s*case "?\$\{?1/,/esac/{ if (match($0, /^[[:space:]]+([a-z][a-z-]*[a-z])\)/, a)) print a[1] }' "$CONFIG_BUILD" | sort -u)
+# sed, not awk: the previous version used `match($0, re, arr)`, a gawk-only
+# 3-argument form. GitHub's ubuntu runners ship mawk, where that is a syntax
+# error — the extraction produced nothing and the test failed on every run
+# regardless of the workflows' actual content.
+VALID_VERBS=$(sed -n '/^case /,/^esac/p' "$CONFIG_BUILD" \
+    | sed -nE 's/^[[:space:]]+([a-z][a-z-]*[a-z])\).*/\1/p' | sort -u)
 if [ -z "$VALID_VERBS" ]; then
     echo "::error::Could not extract valid verbs from $CONFIG_BUILD case statement"
     exit 1

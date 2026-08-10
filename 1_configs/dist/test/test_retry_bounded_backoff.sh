@@ -29,7 +29,10 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
+# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# different depths, so one literal count is wrong for one of the two copies.
+REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 SVC_DIR="$REPO_ROOT/a_solutions/infra-api_c3-services-mcp"
 # v2 engine cutover (2026-04-22) moved code under src/code/. Keep backward-
 # compatible resolution so the tester still works if either layout is used.
