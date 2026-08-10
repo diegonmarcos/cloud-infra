@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-container-engine.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-container-engine.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -423,12 +423,12 @@ DOCKER_IMAGE_CHANGED=""
 trap '_exit_status=$?; if [ -n "$CURRENT_STEP" ] && [ "$_exit_status" -ne 0 ]; then log_error "Step '\''$CURRENT_STEP'\'' failed (exit $_exit_status)"; fi' EXIT
 
 # ── Source all step files ─────────────────────────────────────────────
-# Steps are in the same directory as this engine (1_configs/src/deploy/scripts/)
+# Steps are in the same directory as this engine (1_configs/src/gha/scripts/)
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
-# Template + prefix map live in 1_configs/src/engine/libs/generated-header.json.
+# Template + prefix map live in 1_configs/src/lib/generated-header.json.
 INJECT_HEADER="$STEPS_DIR/../../engine/libs/inject-header.sh"
-ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-container-engine.sh"
+ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-container-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 # Source step files — tolerate any missing step (graceful degradation).
 # A step file may be absent inside cloud-builder when its /root/git/cloud

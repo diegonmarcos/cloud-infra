@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-health-http-public.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-health-http-public.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -20,7 +20,7 @@ set -euo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 cd "$REPO_ROOT"
 
-R="1_configs/dist/build-caddy.json"
+R="1_cloud-configs/dist/build-caddy.json"
 [ ! -f "$R" ] && echo "ERROR: $R not found" >&2 && exit 1
 
 URLS="/tmp/urls-$$.txt"

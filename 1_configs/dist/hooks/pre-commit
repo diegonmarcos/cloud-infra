@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/git-hooks/pre-commit
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/git/hooks/pre-commit
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ pre-commit — block secrets from ever reaching a commit           ║
 # ║                                                                  ║
-# ║ Source: cloud/1_configs/src/deploy/git-hooks/pre-commit                     ║
+# ║ Source: cloud/1_configs/src/git/hooks/pre-commit                     ║
 # ║ Deploy: build.sh workflow → 1_configs/dist/hooks/                ║
 # ║ Active: via .gitconfig [core] hooksPath = 1_configs/dist/hooks   ║
 # ║                                                                  ║
@@ -284,7 +284,7 @@ while IFS= read -r f; do
         # GitHub Actions workflow YAMLs (engine paths): named-about-secrets
         # files here (e.g. lint-secrets-coverage.yml) define CI lint/audit
         # jobs — never secret containers. Required GHA shape: on: + jobs:.
-        .github/workflows/*.yml|1_configs/src/deploy/gha/cicd/*.yml|1_configs/dist/*.yml)
+        .github/workflows/*.yml|1_configs/src/gha/cicd/*.yml|1_configs/dist/*.yml)
             if grep -qE '^on:' "$f" 2>/dev/null && grep -qE '^jobs:' "$f" 2>/dev/null; then
                 continue
             fi
@@ -343,7 +343,7 @@ fi
 # Skip when already inside a regen commit (guard against hook re-entry).
 # ══════════════════════════════════════════════════════════
 if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
-   && echo "$STAGED" | grep -qE '^(1_configs/src/engine/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'; then
+   && echo "$STAGED" | grep -qE '^(1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   BUILD_SH="$REPO_ROOT/1_configs/build.sh"
   if [ -x "$BUILD_SH" ]; then

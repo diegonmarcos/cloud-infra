@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/gha/cicd/ship-gen-configs.yml
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/cicd/ship-gen-configs.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,7 +25,7 @@ on:
       - "a_solutions/infra-sec_authelia/src/**"
       - "a_solutions/infra-net_hickory-dns/src/**"
       - "1_configs/src/**"
-      - "1_configs/dist/1_configs/src/deploy/scripts/**"
+      - "1_configs/dist/1_configs/src/gha/scripts/**"
   workflow_dispatch:
 
 permissions:
@@ -115,7 +115,7 @@ jobs:
 
       # Commit + push the regenerated dist/ back to main.
       #
-      # The orchestrator script (1_configs/src/deploy/scripts/cloud-ship-orchestrate-gen-configs.sh)
+      # The orchestrator script (1_configs/src/gha/scripts/cloud-ship-orchestrate-gen-configs.sh)
       # explicitly says "The regenerated files are committed by the standard
       # ci flow (the workflow caller commits + pushes)" — but until this step
       # was added, no such commit happened. dist/ on origin diverged from what

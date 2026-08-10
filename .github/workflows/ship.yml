@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/gha/cicd/ship.yml
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/cicd/ship.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -16,7 +16,7 @@
 # │  Thin GHA wrapper around ship.sh — all logic lives in the    │
 # │  POSIX script, making it portable to Dagu, CLI, or any CI.   │
 # │                                                              │
-# │  Script: 1_configs/src/deploy/scripts/ship.sh                       │
+# │  Script: 1_configs/src/gha/scripts/ship.sh                       │
 # └──────────────────────────────────────────────────────────────┘
 
 name: Ship
@@ -32,16 +32,16 @@ on:
   push:
     paths:
       - "a_solutions/*/src/**"
-      # 1_configs/dist/build-*.json are the regenerated config files that
+      # 1_cloud-configs/dist/build-*.json are the regenerated config files that
       # services in a_solutions/*/src/ symlink to (e.g.
-      # bb-sec_caddy/src/build-caddy.json → ../../../1_configs/dist/build-caddy.json).
+      # bb-sec_caddy/src/build-caddy.json → ../../../1_cloud-configs/dist/build-caddy.json).
       # When the dist file regenerates (because someone edited
       # 1_configs/src/), git records the content change on the dist file
       # path — the symlink itself is unchanged so `a_solutions/*/src/**`
       # would miss it. Adding the dist path here closes the gap; the detect
       # step (below) reverse-walks the symlinks to map changed dist files
       # back to their consuming services.
-      - "1_configs/dist/build-*.json"
+      - "1_cloud-configs/dist/build-*.json"
     branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
@@ -88,17 +88,17 @@ jobs:
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       # Path-relevance: skip if upstream commit didn't touch a_solutions/
-      # OR 1_configs/dist/build-*.json (whose changes propagate to symlinked
+      # OR 1_cloud-configs/dist/build-*.json (whose changes propagate to symlinked
       # consumers in a_solutions/*/src/).
       - name: Path relevance gate
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
           CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
-              | grep -E '^(a_solutions/|1_configs/dist/build-)' | head -1 || true)
+              | grep -E '^(a_solutions/|1_cloud-configs/dist/build-)' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::skip — no a_solutions/ or 1_configs/dist/build-* changes in upstream commit"
+            echo "::notice::skip — no a_solutions/ or 1_cloud-configs/dist/build-* changes in upstream commit"
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -113,12 +113,12 @@ jobs:
           # Reuse the portable detect logic from ship.sh
           # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
           # (per-service build-{name}.json convention; derived from
-          # _cloud-data-consolidated.json by 1_configs/src/engine/cloud-data-config-derive.ts).
+          # _cloud-data-consolidated.json by 1_cloud-configs/src/derive/cloud-data-config-derive.ts).
           # Legacy paths kept as fallbacks during rollout.
           GHA_CONFIG=""
           for _p in \
               "/app/build-gha.json" \
-              "${CLOUD_ROOT:-$PWD}/1_configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/build-gha.json" \
               "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
               "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
               [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
@@ -128,7 +128,7 @@ jobs:
               _CONS=""
               for _p in \
                   "/app/_cloud-data-consolidated.json" \
-                  "${CLOUD_ROOT:-$PWD}/1_configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
                   "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
                   "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
                   [ -f "$_p" ] && { _CONS="$_p"; break; }
@@ -168,12 +168,12 @@ jobs:
             CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' \
               | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 
-            # Also pick up consumers of regenerated 1_configs/dist/build-*.json
+            # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json
             # files. Reverse-walk each service's src/ for symlinks resolving to
             # any changed dist file, and append the owning service dir to
             # CHANGED_DIRS. Without this, edits to 1_configs/src/ regenerate
             # the dist but no Ship runs for the symlinked consumers.
-            DIST_CHANGED=$(git diff --name-only HEAD~1 HEAD -- '1_configs/dist/build-*.json' 2>/dev/null)
+            DIST_CHANGED=$(git diff --name-only HEAD~1 HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
             if [ -n "$DIST_CHANGED" ]; then
               DIST_CONSUMERS=""
               for _df in $DIST_CHANGED; do
@@ -195,7 +195,7 @@ jobs:
 
               # Also deploy newly-registered services: present in HEAD's
               # build-gha.json but absent in HEAD~1's. This fires when a new
-              # service is registered via 1_configs/src/inputs/builds/ symlink →
+              # service is registered via 1_cloud-configs/src/inputs/builds/ symlink →
               # gen-configs updates build-gha.json → Ship triggered by
               # workflow_run but finds no a_solutions/*/src/** changes in HEAD
               # (gen-configs only touches 1_configs/dist/). Without this, new
@@ -234,7 +234,7 @@ jobs:
           _CONS_FOR_ARCH=""
           for _p in \
               "/app/_cloud-data-consolidated.json" \
-              "${CLOUD_ROOT:-$PWD}/1_configs/dist/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
               "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
               "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
               [ -f "$_p" ] && { _CONS_FOR_ARCH="$_p"; break; }
@@ -366,7 +366,12 @@ jobs:
       # 1_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing
       # (engine-side ensure_node_deps — fix lives in the engine, not here).
       - name: Regenerate dist/ from build.json sources
-        run: bash 1_configs/build.sh all
+        run: |
+          # Two engines since the 1_cloud-configs split: 1_configs renders the
+          # repo's own config (workflows, hooks, git dotfiles), 1_cloud-configs
+          # derives every build-*.json the services consume. This step needs
+          # the latter; the former is already committed by ship-gen-configs.
+          bash 1_cloud-configs/build.sh all
 
       # Vault clone — provides ~/git/vault/vault-keys-docker.envfile that
       # cloud-builder's compose.yaml references via env_file:. Without it,
@@ -413,7 +418,7 @@ jobs:
           GHA_CONFIG=""
           for _p in \
               "/app/build-gha.json" \
-              "${CLOUD_ROOT:-$PWD}/1_configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/build-gha.json" \
               "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
               "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
               [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
@@ -423,7 +428,7 @@ jobs:
               _CONS=""
               for _p in \
                   "/app/_cloud-data-consolidated.json" \
-                  "${CLOUD_ROOT:-$PWD}/1_configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
                   "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
                   "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
                   [ -f "$_p" ] && { _CONS="$_p"; break; }

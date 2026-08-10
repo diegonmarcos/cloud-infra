@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_workflows_fetch_vault.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_workflows_fetch_vault.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -18,16 +18,16 @@
 # compose.yaml aborts with `env file ... not found` (proven failure mode on
 # 2026-04-25 ship runs).
 #
-# Source-level test: scans 1_configs/src/deploy/gha/cicd/*.yml (the templates), not
+# Source-level test: scans 1_configs/src/gha/cicd/*.yml (the templates), not
 # .github/workflows/*.yml (the dist) — so the test fails the moment a new
 # workflow forgets the action, before the build step regenerates dist.
 set -eu
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-CICD_DIR="$REPO_ROOT/1_configs/src/deploy/gha/cicd"
+CICD_DIR="$REPO_ROOT/1_configs/src/gha/cicd"
 
 [ -d "$CICD_DIR" ] || { echo "::error::$CICD_DIR not found"; exit 1; }
 

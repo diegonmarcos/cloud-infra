@@ -4,15 +4,15 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_lint_pipeline_referenced_files_tracked.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_lint_pipeline_referenced_files_tracked.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
-# Test: every `bash 1_configs/src/deploy/test/<file>.sh` invocation in
+# Test: every `bash 1_configs/src/test/<file>.sh` invocation in
 # lint-pipeline.yml references a file that exists in the repo AND is
 # git-tracked AND is executable.
 #
@@ -24,17 +24,17 @@
 set -eu
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-LINT="$REPO_ROOT/1_configs/src/deploy/gha/cicd/lint-pipeline.yml"
+LINT="$REPO_ROOT/1_configs/src/gha/cicd/lint-pipeline.yml"
 
 [ -f "$LINT" ] || { echo "::error::$LINT not found"; exit 1; }
 
 FAIL=0
 EXAMINED=0
 
-# Extract every `bash 1_configs/src/deploy/test/<file>.sh` (and dist/test/<file>.sh).
+# Extract every `bash 1_configs/src/test/<file>.sh` (and dist/test/<file>.sh).
 while IFS= read -r path; do
     [ -z "$path" ] && continue
     EXAMINED=$((EXAMINED + 1))

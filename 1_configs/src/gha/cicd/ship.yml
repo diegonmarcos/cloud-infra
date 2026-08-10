@@ -1,0 +1,598 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  Ship services to VMs                                        │
+# │                                                              │
+# │  Thin GHA wrapper around ship.sh — all logic lives in the    │
+# │  POSIX script, making it portable to Dagu, CLI, or any CI.   │
+# │                                                              │
+# │  Script: 1_configs/src/gha/scripts/ship.sh                       │
+# └──────────────────────────────────────────────────────────────┘
+
+name: Ship
+
+# Two triggers, by intent:
+#   push        → src/ change (code only) auto-ships immediately. gen-configs
+#                 doesn't need to regen dist/ because no declaration changed.
+#   workflow_run → declaration change (build.json, config.json, etc.) made
+#                 gen-configs run; ship.yml waits for the new dist/ to land
+#                 in origin/main, THEN ships from canonical truth.
+# Manual workflow_dispatch always available.
+on:
+  push:
+    paths:
+      - "a_solutions/*/src/**"
+      # 1_cloud-configs/dist/build-*.json are the regenerated config files that
+      # services in a_solutions/*/src/ symlink to (e.g.
+      # bb-sec_caddy/src/build-caddy.json → ../../../1_cloud-configs/dist/build-caddy.json).
+      # When the dist file regenerates (because someone edited
+      # 1_configs/src/), git records the content change on the dist file
+      # path — the symlink itself is unchanged so `a_solutions/*/src/**`
+      # would miss it. Adding the dist path here closes the gap; the detect
+      # step (below) reverse-walks the symlinks to map changed dist files
+      # back to their consuming services.
+      - "1_cloud-configs/dist/build-*.json"
+    branches: [main]
+  workflow_run:
+    workflows: ["Ship → gen-configs (cloud-data)"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Comma-separated service dirs (e.g. bb-sec_caddy,bc-obs_ntfy) or 'all'"
+        required: false
+        default: "all"
+      vm:
+        description: "Target VM (e.g. gcp-proxy, oci-apps) or 'all'"
+        required: false
+        default: "all"
+
+jobs:
+  # ── Detect which VMs have changed services ──────────────────
+  detect:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    # Skip when triggered by gen-configs failure
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      has_vms: ${{ steps.matrix.outputs.has_vms }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: false
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Allowlist-based: `--init --recursive` aborts on the first submodule CI
+      # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
+      # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
+      # (cb_containers-builders/build.json — the builder-image master that the
+      # resolve-builder-image action reads).
+      - name: Init submodules (cloud-data + unix)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data unix
+          recursive: "true"
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
+      # Path-relevance: skip if upstream commit didn't touch a_solutions/
+      # OR 1_cloud-configs/dist/build-*.json (whose changes propagate to symlinked
+      # consumers in a_solutions/*/src/).
+      - name: Path relevance gate
+        id: paths
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
+              | grep -E '^(a_solutions/|1_cloud-configs/dist/build-)' | head -1 || true)
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::skip — no a_solutions/ or 1_cloud-configs/dist/build-* changes in upstream commit"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      # NO local dist/ regen — gen-configs already ran first and committed
+      # the canonical dist/ to origin/main, which actions/checkout pulled.
+
+      - name: Build VM matrix
+        id: matrix
+        if: ${{ steps.paths.outputs.skip != 'true' }}
+        run: |
+          # Reuse the portable detect logic from ship.sh
+          # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
+          # (per-service build-{name}.json convention; derived from
+          # _cloud-data-consolidated.json by 1_cloud-configs/src/derive/cloud-data-config-derive.ts).
+          # Legacy paths kept as fallbacks during rollout.
+          GHA_CONFIG=""
+          for _p in \
+              "/app/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
+              [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+          done
+          if [ -z "$GHA_CONFIG" ]; then
+              # Fallback: extract _gha slice from consolidated.
+              _CONS=""
+              for _p in \
+                  "/app/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+                  [ -f "$_p" ] && { _CONS="$_p"; break; }
+              done
+              if [ -n "$_CONS" ]; then
+                  echo "::warning::build-gha.json not found; deriving from $_CONS — run 1_configs/build.sh to materialise the canonical file."
+                  GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+                  jq '
+                    ._gha as $g
+                    | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                    | $g
+                    | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+                  ' "$_CONS" > "$GHA_CONFIG"
+              fi
+          fi
+          [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 1_configs/build.sh" >&2; exit 1; }
+
+          # ── Resolve args from GHA inputs ──
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            INPUT_SERVICES="${{ github.event.inputs.services }}"
+            INPUT_VM="${{ github.event.inputs.vm }}"
+            if [ "$INPUT_SERVICES" = "all" ] && [ "$INPUT_VM" = "all" ]; then
+              CHANGED_DIRS=""; VM_FILTER=""
+            elif [ "$INPUT_SERVICES" != "all" ]; then
+              CHANGED_DIRS=$(printf '%s' "$INPUT_SERVICES" | tr ',' ' '); VM_FILTER=""
+            else
+              CHANGED_DIRS=""; VM_FILTER="$INPUT_VM"
+            fi
+          else
+            # Pathspec NOTE: `a_solutions/*/src/` (with trailing slash) is
+            # interpreted by git as a directory pathspec that DOES NOT recurse
+            # into nested files like src/code/arm64/Dockerfile (verified 2026-06-05
+            # commit dbaf52371 — Dockerfile change missed by detect, matrix
+            # emitted empty, Ship → ${{ matrix.vm }} reported "skipped" even
+            # though the source changed and warranted a rebuild). The fix is to
+            # use a recursive glob: `**` matches at any depth under src/.
+            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' \
+              | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+
+            # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json
+            # files. Reverse-walk each service's src/ for symlinks resolving to
+            # any changed dist file, and append the owning service dir to
+            # CHANGED_DIRS. Without this, edits to 1_configs/src/ regenerate
+            # the dist but no Ship runs for the symlinked consumers.
+            DIST_CHANGED=$(git diff --name-only HEAD~1 HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
+            if [ -n "$DIST_CHANGED" ]; then
+              DIST_CONSUMERS=""
+              for _df in $DIST_CHANGED; do
+                _df_abs="$PWD/$_df"
+                for _svc_dir in a_solutions/*/src; do
+                  for _link in "$_svc_dir"/*.json; do
+                    [ -L "$_link" ] || continue
+                    _target=$(readlink -f "$_link" 2>/dev/null || true)
+                    if [ "$_target" = "$_df_abs" ]; then
+                      _svc=$(echo "$_svc_dir" | awk -F/ '{print $2}')
+                      DIST_CONSUMERS="$DIST_CONSUMERS $_svc"
+                    fi
+                  done
+                done
+              done
+              CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$DIST_CONSUMERS" \
+                | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+              echo "::notice::dist-consumer ship: $DIST_CONSUMERS"
+
+              # Also deploy newly-registered services: present in HEAD's
+              # build-gha.json but absent in HEAD~1's. This fires when a new
+              # service is registered via 1_cloud-configs/src/inputs/builds/ symlink →
+              # gen-configs updates build-gha.json → Ship triggered by
+              # workflow_run but finds no a_solutions/*/src/** changes in HEAD
+              # (gen-configs only touches 1_configs/dist/). Without this, new
+              # services silently skip their first deploy.
+              GHA_REL="${GHA_CONFIG#$PWD/}"
+              NEW_SVCS=$(diff \
+                <(git show HEAD~1:"$GHA_REL" 2>/dev/null | jq -r '.services | keys[]' 2>/dev/null || true) \
+                <(jq -r '.services | keys[]' "$GHA_CONFIG" 2>/dev/null || true) \
+                | awk '/^>/{print $2}' | tr '\n' ' ')
+              if [ -n "$NEW_SVCS" ]; then
+                CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$NEW_SVCS" \
+                  | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+                echo "::notice::newly registered services: $NEW_SVCS"
+              fi
+            fi
+
+            VM_FILTER=""
+            if [ -z "$CHANGED_DIRS" ]; then
+              echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+              echo "has_vms=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # ── Per-VM hosted-runner selection (native, no QEMU) ──
+          # Each Ship job builds its VM's Docker images on the GHA runner it
+          # runs on (build.json .runners.<arch>.type = "local"). So the runner
+          # arch MUST match the target VM's arch: aarch64 VMs (oci-apps) →
+          # ubuntu-24.04-arm; x86_64 VMs → ubuntu-latest. Authoritative arch
+          # source is .vms[].specs.arch in _cloud-data-consolidated.json,
+          # keyed by the VM's ssh_alias (== the matrix `vm` value). We build an
+          # ssh_alias→runner map here and attach a `runner` field to every
+          # matrix entry; ship.runs-on reads ${{ matrix.runner }}. Any VM not
+          # found in the map defaults to ubuntu-latest (x86) — safe, because
+          # the only arm64 VM is oci-apps and it is present in the map.
+          _CONS_FOR_ARCH=""
+          for _p in \
+              "/app/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+              "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+              [ -f "$_p" ] && { _CONS_FOR_ARCH="$_p"; break; }
+          done
+          if [ -n "$_CONS_FOR_ARCH" ]; then
+            RUNNER_MAP=$(jq -c '
+              .vms | to_entries
+              | map({
+                  key: .value.ssh_alias,
+                  value: (if (.value.specs.arch // "") == "aarch64"
+                          then "ubuntu-24.04-arm" else "ubuntu-latest" end)
+                })
+              | from_entries
+            ' "$_CONS_FOR_ARCH")
+          else
+            echo "::warning::_cloud-data-consolidated.json not found — all Ship jobs default to ubuntu-latest (x86). arm64 VMs will build cross-arch and may fail."
+            RUNNER_MAP='{}'
+          fi
+
+          # ── Build matrix JSON ──
+          MATRIX_JSON=$(jq -c \
+            --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" \
+            --argjson runner_map "$RUNNER_MAP" '
+            ($changed | split(" ") | map(select(. != ""))) as $cl |
+            .services | to_entries | group_by(.value.vm)
+            | map({
+                vm: .[0].value.vm,
+                changed: ([.[] | .value.dir] as $a |
+                  if ($cl | length) == 0 then "" else [$cl[] | select(. as $d | $a | any(. == $d))] | join(" ") end)
+              })
+            | map(select(($vm_filter == "" or .vm == $vm_filter) and (($cl | length) == 0 or (.changed | length) > 0)))
+            | map({vm: .vm, changed_dirs: .changed, runner: ($runner_map[.vm] // "ubuntu-latest")})
+          ' "$GHA_CONFIG")
+
+          echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
+          COUNT=$(printf '%s' "$MATRIX_JSON" | jq 'length')
+          [ "$COUNT" -gt 0 ] && echo "has_vms=true" >> "$GITHUB_OUTPUT" || echo "has_vms=false" >> "$GITHUB_OUTPUT"
+          echo "VMs: $COUNT — $(printf '%s' "$MATRIX_JSON" | jq -r '.[].vm' | tr '\n' ' ')"
+
+  # ── Ship: one matrix job per VM, calls ship.sh per-VM path ──
+  ship:
+    name: "Ship → ${{ matrix.vm }}"
+    needs: detect
+    if: needs.detect.outputs.has_vms == 'true'
+    # Per-VM native runner: aarch64 VMs (oci-apps) → ubuntu-24.04-arm so their
+    # Docker images build natively (build.json .runners.arm64.type=local, no
+    # QEMU, no SSH dispatch to oci-apps); x86_64 VMs → ubuntu-latest. The
+    # `runner` field is set per matrix entry in the detect job from the VM's
+    # specs.arch. Defaults to ubuntu-latest if a VM is missing from the map.
+    runs-on: ${{ matrix.runner }}
+    # Ceiling on a per-VM ship pass. Without this, an SSH session that
+    # stalls (NAT timeout, WG tunnel hiccup, oci-builder hang) holds the
+    # `ship-<vm>` concurrency group open until GHA's default 6h timeout,
+    # blocking every subsequent push for hours. Surfaced 2026-06-05 on
+    # run 27027587805 — Ship → oci-analytics hung from 16:41 and was
+    # still in_progress 1h+ later, queueing every follow-up ship.
+    # 45 min covers cold image builds (~10 min each) + 3-retry SSH
+    # deploys + compose recreate with a healthy buffer. If a real build
+    # takes longer than 45 min, that's its own bug to surface, not
+    # something to silently absorb at the workflow level.
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      fail-fast: false
+      # Serialized: all parallel ship jobs use the same gha-runner WG key
+      # (vault/A0_keys/providers/wireguard/gha-runner/, pubkey
+      # QEPkGSsJXX...). Parallel jobs race for the single registered peer
+      # slot on the gcp-proxy hub — whichever wg-quick handshake lands
+      # last "wins" the endpoint, the others silently lose reply packets
+      # and every subsequent SSH to a wg_ip target fails with exit 255.
+      # max-parallel:1 serializes matrix jobs so only one job at a time
+      # holds the wg slot. Trade-off: total ship time scales linearly with
+      # VM count instead of in parallel. Proper fix (per-job WG identity
+      # pool) tracked separately — needs new keys + hub peer entries +
+      # entrypoint refactor + image rebuild.
+      max-parallel: 1
+    concurrency:
+      group: ship-${{ matrix.vm }}
+      cancel-in-progress: false
+    env:
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
+      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
+      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
+      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: false
+
+      # Allowlist-based: `--init --recursive` aborts on the first submodule CI
+      # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
+      # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
+      # (cb_containers-builders/build.json — the builder-image master that the
+      # resolve-builder-image action reads).
+      - name: Init submodules (cloud-data + unix)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data unix
+          recursive: "true"
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
+      # QEMU binfmt — ONLY on the arm64 runner, and ONLY needed by the single
+      # multi-arch service (claude-superset-api, docker.arch="amd64,arm64",
+      # deploys to oci-apps/arm64). Its arm64 leg builds natively on this arm
+      # runner; its amd64 leg is built here via emulation. Every OTHER service
+      # is single-arch and builds natively on its arch-matching runner, so this
+      # step is a cheap no-op (binfmt registration) for them. x86 runners never
+      # hit this — their only cross-arch need (arm64) was the reason we moved
+      # arm64 to its own native runner in the first place. If claude-superset-api
+      # is ever made arm64-only, this step can be dropped entirely.
+      - name: Set up QEMU (arm runner only — for the one multi-arch service's amd64 leg)
+        if: runner.arch == 'ARM64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64
+
+      # Always regenerate dist/build-{name}.json + cloud-data-*.json from
+      # build.json sources. Each ship job runs against fresh data —
+      # the bundled dist/ files in the image come from THIS step, not
+      # from the cloud repo's HEAD checkout.
+      # 1_configs/build.sh self-bootstraps tsx + yaml + nunjucks if missing
+      # (engine-side ensure_node_deps — fix lives in the engine, not here).
+      - name: Regenerate dist/ from build.json sources
+        run: |
+          # Two engines since the 1_cloud-configs split: 1_configs renders the
+          # repo's own config (workflows, hooks, git dotfiles), 1_cloud-configs
+          # derives every build-*.json the services consume. This step needs
+          # the latter; the former is already committed by ship-gen-configs.
+          bash 1_cloud-configs/build.sh all
+
+      # Vault clone — provides ~/git/vault/vault-keys-docker.envfile that
+      # cloud-builder's compose.yaml references via env_file:. Without it,
+      # `docker compose run cloud-builder` aborts: "env file ... not found".
+      - name: Fetch vault
+        uses: ./.github/actions/fetch-vault
+        with:
+          vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
+
+      # ── Cache warming: cargo registry/git + target dir ─────────────────
+      # Rust services (fin-api, mail-puller, rig-agentic-*, http-to-smtp-proxy-api)
+      # run a host-side `cargo build` inside cloud-builder. Without cache,
+      # every build re-downloads ~500MB of crates and recompiles from scratch
+      # (5-10 min per service). We restore ~/.cargo/{registry,git} keyed on
+      # all Cargo.lock files in the repo, plus a per-arch shared target/
+      # dir at $RUNNER_TEMP/cargo-target. Mounted into cloud-builder at
+      # /root/.cargo and /cargo-target via -v flags in the run step below.
+      - name: Restore Rust cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ runner.temp }}/cargo-target
+          key: ${{ runner.os }}-cargo-${{ matrix.vm }}-${{ hashFiles('a_solutions/**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.vm }}-
+            ${{ runner.os }}-cargo-
+
+      # ── Cache warming: pre-pull cloud-builder image (single docker layer pull) ──
+      - name: Prepare cloud-builder + cache mounts
+        run: |
+          mkdir -p "$HOME/.cargo/registry" "$HOME/.cargo/git" "${{ runner.temp }}/cargo-target"
+          # Avoid permission churn on cache restore — cloud-builder runs as root
+          chmod -R a+rwX "$HOME/.cargo" "${{ runner.temp }}/cargo-target" 2>/dev/null || true
+
+      - name: Resolve builder image
+        uses: ./.github/actions/resolve-builder-image
+
+      - name: Resolve SSH credentials
+        id: ssh
+        run: |
+          # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
+          GHA_CONFIG=""
+          for _p in \
+              "/app/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
+              [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+          done
+          if [ -z "$GHA_CONFIG" ]; then
+              # Fallback: extract _gha slice from consolidated.
+              _CONS=""
+              for _p in \
+                  "/app/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+                  [ -f "$_p" ] && { _CONS="$_p"; break; }
+              done
+              if [ -n "$_CONS" ]; then
+                  echo "::warning::build-gha.json not found; deriving from $_CONS — run 1_configs/build.sh to materialise the canonical file."
+                  GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+                  jq '
+                    ._gha as $g
+                    | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                    | $g
+                    | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+                  ' "$_CONS" > "$GHA_CONFIG"
+              fi
+          fi
+          [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 1_configs/build.sh" >&2; exit 1; }
+          VM="${{ matrix.vm }}"
+          # All VMs (including gcp-proxy) reach the runner via WG IP. Public
+          # :22 on gcp-proxy is closed by host iptables since the public-surface
+          # collapse (2026-05-08) — only :443/:51820/:25 are exposed. Falling
+          # through to the cloud-data lookup gives wg_ip=10.0.0.1.
+          case "$VM" in
+            *)         KEY="$OCI_SSH_KEY"
+                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
+                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
+          esac
+          echo "ssh_key<<EOFKEY" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$KEY"  >> "$GITHUB_OUTPUT"
+          echo "EOFKEY"         >> "$GITHUB_OUTPUT"
+          echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
+
+      - name: Ship via cloud-builder
+        # Fail fast instead of burning the full 45m job ceiling: a single
+        # stuck build/push/ssh inside this step (WG hiccup, cold docker
+        # cache, oci-builder hang) should surface as its own timeout well
+        # before the job-level timeout-minutes:90 above force-kills the
+        # whole job (misreported as "cancelled"). 80 min leaves headroom
+        # for the earlier setup steps (checkout, vault, cache restore,
+        # image pull) within the 90 min job budget.
+        #
+        # A static inner budget is not enough on its own: pre-dispatch work
+        # took 17 min in run 30751065637, so any constant that outlives the
+        # step ceiling still gets force-killed. SHIP_DEADLINE_EPOCH (below)
+        # hands the engine the real wall-clock deadline so the build-dispatch
+        # poll loop clamps itself to the time that actually remains.
+        timeout-minutes: 80
+        env:
+          CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
+          SSH_HOST: ${{ steps.ssh.outputs.ssh_host }}
+          SSH_USER: ${{ steps.ssh.outputs.ssh_user }}
+          SSH_ALIAS: ${{ matrix.vm }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          # WG is required for *.wg_ip targets (oci-mail 10.0.0.3, oci-apps
+          # 10.0.0.2, etc.). Without it the entrypoint's wg-quick block skips
+          # and every ssh to a WG-only VM times out. ship-home-manager.yml has
+          # passed this secret since day 1 — ship.yml was missing it.
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ACTIONS: true
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REPOSITORY: diegonmarcos/cloud
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          TRACE_DIR: ${{ runner.temp }}/traces
+        run: |
+          # Wall-clock deadline for this step, handed to the engine so the
+          # build-dispatch poll loop can clamp its budget to the time that
+          # actually remains instead of a static constant that outlives the
+          # step ceiling. 80 min step - 3 min slack for teardown/artifacts.
+          export SHIP_DEADLINE_EPOCH=$(( $(date +%s) + 4620 ))
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
+          # which reads II_Unix/cb_containers-builders/build.json (master).
+          IMAGE="$BUILDER_IMAGE"
+          docker pull "$IMAGE"
+          mkdir -p "$TRACE_DIR"
+          # Write secrets to runner filesystem — compose mounts them :ro into container
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<SSHEOF
+          Host $SSH_ALIAS
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            # Tighter keepalive (was 30s) — GHA cloud-builder → VM SSH was
+            # dropping during long-running compose+post_hook steps (~40s),
+            # presumably from intermediate WG/NAT idle timeouts. 10s ping
+            # x 10 max-missed = 100s grace; well within typical NAT TCP
+            # idle window (60-180s) and keeps the path "warm".
+            ServerAliveInterval 10
+            ServerAliveCountMax 10
+            TCPKeepAlive yes
+          SSHEOF
+          chmod 600 ~/.ssh/config
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          # Run cloud-builder via compose (image has compose.yaml with writable SSH mount)
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          # --cap-add NET_ADMIN — required for wg-quick up wg0 inside the
+          # container. Currently published images don't yet have cap_add in
+          # their baked compose.yaml; this CLI flag is the bootstrap path
+          # until the next cloud-builder image ships with it declared.
+          # Forward GITHUB_TOKEN + GITHUB_ACTOR INTO the container so the engine
+          # can push GHCR with the repo's Actions token. This is load-bearing
+          # for PUBLIC images: a package first pushed by GITHUB_TOKEN is
+          # repo-scoped and inherits the public repo's visibility (public);
+          # pushed by the vault PAT it is user-scoped and private forever. Without
+          # this forward, the engine's GITHUB_TOKEN branch is dead (docker compose
+          # run does NOT inherit host env) and every new image lands private.
+          docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
+            --cap-add NET_ADMIN \
+            -v "$HOME/git/vault:/root/git/vault:ro" \
+            -e TRACE_DIR=/traces \
+            -v "$TRACE_DIR:/traces" \
+            -v "$HOME/.cargo:/root/.cargo" \
+            -v "${{ runner.temp }}/cargo-target:/cargo-target" \
+            -e CARGO_HOME=/root/.cargo \
+            -e CARGO_TARGET_DIR=/cargo-target \
+            -e GITHUB_TOKEN \
+            -e GITHUB_ACTOR \
+            -e SHIP_DEADLINE_EPOCH \
+            cloud-builder ship ${{ matrix.vm }}
+
+      - name: Upload trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-${{ matrix.vm }}
+          path: ${{ runner.temp }}/traces/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ── Collect traces: single push to cloud-data ───────────────
+  collect-traces:
+    name: Collect traces
+    needs: ship
+    if: always() && needs.detect.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: trace-*
+          merge-multiple: true
+          path: traces/
+
+      - name: Push traces
+        env:
+          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+        run: |
+          ls traces/*.json 2>/dev/null || { echo "No traces"; exit 0; }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/cloud_data_key
+          chmod 600 ~/.ssh/cloud_data_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cloud_data_key -o StrictHostKeyChecking=no"
+          git clone --depth 1 git@github.com:diegonmarcos/cloud-data.git /tmp/cd
+          cd /tmp/cd
+          git config user.name  "Claude"
+          git config user.email "noreply@anthropic.com"
+          mkdir -p reports/traces-gha
+          for f in "$GITHUB_WORKSPACE/traces/"*.json; do
+            [ -f "$f" ] || continue
+            VM=$(jq -r '.vm' "$f"); T="reports/traces-gha/${VM}.json"
+            if [ -f "$T" ]; then
+              jq --slurpfile n "$f" '. + $n | .[-200:]' "$T" > "${T}.tmp" && mv "${T}.tmp" "$T"
+            else
+              jq -s '.' "$f" > "$T"
+            fi
+          done
+          git add reports/traces-gha/
+          git diff --cached --quiet && { echo "No changes"; exit 0; }
+          git commit -m "auto: traces [skip ci]"
+          i=0; while [ $i -lt 3 ]; do i=$((i+1)); git push origin main && break
+            echo "Retry $i..."; git pull --rebase origin main 2>/dev/null || true; done

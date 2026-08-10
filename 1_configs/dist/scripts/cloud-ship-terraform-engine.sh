@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-terraform-engine.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-terraform-engine.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -35,11 +35,11 @@ SERVICE_NAME="$(basename "$SERVICE_DIR" | sed 's/^[a-z]*-[a-z]*_//; s/^vps_//')"
 SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
-STEPS_DIR="$(cd "$(dirname "$0")/../../1_configs/src/deploy/scripts" 2>/dev/null && pwd)"
+STEPS_DIR="$(cd "$(dirname "$0")/../../1_configs/src/gha/scripts" 2>/dev/null && pwd)"
 [ -z "$STEPS_DIR" ] && STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 INJECT_HEADER="$STEPS_DIR/../../engine/libs/inject-header.sh"
-ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-terraform-engine.sh"
+ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-terraform-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 
 log()       { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }

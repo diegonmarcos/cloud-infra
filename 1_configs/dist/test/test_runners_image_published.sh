@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_runners_image_published.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_runners_image_published.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -28,12 +28,12 @@
 # ║ Skipped when gh is unauthenticated (local dev without token).    ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║
-# ║   bash 1_configs/src/deploy/test/test_runners_image_published.sh      ║
+# ║   bash 1_configs/src/test/test_runners_image_published.sh      ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 
@@ -56,7 +56,7 @@ fi
 RUNNERS_JSON=""
 for p in \
     "/app/build-workflows.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/build-workflows.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done

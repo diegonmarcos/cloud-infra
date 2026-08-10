@@ -146,7 +146,7 @@ cmd_decrypt() {
   local CONSOLIDATED_JSON=""
   for _candidate in \
     "/app/_cloud-data-consolidated.json" \
-    "$CLOUD_ROOT/1_configs/dist/_cloud-data-consolidated.json" \
+    "$CLOUD_ROOT/1_cloud-configs/dist/_cloud-data-consolidated.json" \
     "$CLOUD_ROOT/cloud-data/_cloud-data-consolidated.json" \
     "$CLOUD_ROOT/_cloud-data-consolidated.json"
   do

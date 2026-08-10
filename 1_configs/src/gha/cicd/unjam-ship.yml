@@ -1,0 +1,78 @@
+name: Unjam Ship
+
+# Ship serialises deploys per VM via the `ship-<vm>` concurrency group with
+# cancel-in-progress:false. That is correct — parallel ships race for the
+# single gha-runner WG peer slot — but it means one wedged Ship job blocks
+# every later ship to that VM until GHA's 90-minute job ceiling fires. On
+# 2026-08-09 a Ship job hung in `Ship via cloud-builder` on the old
+# wall-clock watchdog and held ship-oci-apps for over half an hour, keeping
+# both a hermes .secrets restore and a my-ai-api fix queued behind it.
+#
+# Cancelling a run needs actions:write. The repo's app integrations do not
+# carry that scope (the REST cancel endpoint 403s), but a workflow's own
+# GITHUB_TOKEN can be granted it — which is the whole reason this exists as
+# a workflow rather than a direct API call.
+#
+# Deliberately conservative: only Ship runs, only in_progress ones, and only
+# those already older than the threshold, so a healthy long build (cold
+# multi-GB image pulls legitimately run 20+ minutes) is never cancelled by
+# accident. Raise stale_minutes if you are pruning during a known-slow ship.
+
+on:
+  workflow_dispatch:
+    inputs:
+      stale_minutes:
+        description: "Cancel in-progress Ship runs older than this many minutes"
+        required: false
+        default: "25"
+  push:
+    paths:
+      - "1_configs/src/gha/cicd/unjam-ship.yml"
+      - ".github/workflows/unjam-ship.yml"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  unjam:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel wedged Ship runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STALE_MINUTES: ${{ github.event.inputs.stale_minutes || '25' }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          now=$(date -u +%s)
+
+          runs=$(curl -sS \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$api/actions/workflows/ship.yml/runs?status=in_progress&per_page=50")
+
+          count=$(echo "$runs" | jq '.workflow_runs | length')
+          echo "in-progress Ship runs: $count  (threshold ${STALE_MINUTES}m)"
+          [ "$count" -gt 0 ] || { echo "nothing to unjam"; exit 0; }
+
+          cancelled=0
+          # run_started_at is when the run actually began, not when it queued.
+          while read -r id started; do
+            [ -n "$id" ] || continue
+            age=$(( (now - $(date -u -d "$started" +%s)) / 60 ))
+            if [ "$age" -ge "$STALE_MINUTES" ]; then
+              echo "cancelling run $id (in_progress ${age}m)"
+              curl -sS -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "$api/actions/runs/$id/cancel" \
+                -o /dev/null -w '  -> HTTP %{http_code}\n'
+              cancelled=$(( cancelled + 1 ))
+            else
+              echo "leaving run $id (in_progress ${age}m < ${STALE_MINUTES}m)"
+            fi
+          done < <(echo "$runs" | jq -r '.workflow_runs[] | "\(.id) \(.run_started_at)"')
+
+          echo "cancelled $cancelled run(s)"

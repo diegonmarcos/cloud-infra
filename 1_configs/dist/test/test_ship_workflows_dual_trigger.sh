@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_ship_workflows_dual_trigger.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_ship_workflows_dual_trigger.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,12 +25,12 @@
 #
 # This test catches it at compile time — `bash 1_configs/build.sh build` will
 # call this in dist/ regen testing if invoked, OR run directly:
-#   bash 1_configs/src/deploy/test/test_ship_workflows_dual_trigger.sh
+#   bash 1_configs/src/test/test_ship_workflows_dual_trigger.sh
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 WF_DIR="$REPO_ROOT/.github/workflows"

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_service_header_present.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_service_header_present.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,15 +25,15 @@
 # ║   Services without the flag are skipped — Phase 2 rolls out      ║
 # ║   gradually, one service at a time, as they opt in.              ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_service_header_present.sh  ║
+# ║ Usage: bash 1_configs/src/test/test_service_header_present.sh  ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-HEADER_JSON="$REPO_ROOT/1_configs/src/engine/libs/generated-header.json"
+HEADER_JSON="$REPO_ROOT/1_configs/src/lib/generated-header.json"
 MARKER="$(jq -r '.marker' "$HEADER_JSON")"
 
 FAIL=0

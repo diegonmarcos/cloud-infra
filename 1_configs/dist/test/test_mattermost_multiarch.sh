@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_mattermost_multiarch.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_mattermost_multiarch.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -31,12 +31,12 @@
 # ║ on oci-apps cloud-builder via the ship pipeline; this test       ║
 # ║ catches accidental regressions in the source declarations.       ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_mattermost_multiarch.sh    ║
+# ║ Usage: bash 1_configs/src/test/test_mattermost_multiarch.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 SVC_DIR="$REPO_ROOT/a_solutions/user-comm_chat-mattermost"

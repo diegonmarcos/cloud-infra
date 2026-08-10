@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_repo_config_gen_engine_resolution.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_repo_config_gen_engine_resolution.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,10 +17,10 @@
 # fresh checkout layout.
 #
 # Regression: the script searched for the engine at
-#   <p>/1_configs/src/deploy/scripts/cloud-data-config.ts
+#   <p>/1_configs/src/gha/scripts/cloud-data-config.ts
 # inside three legacy roots (1_configs/dist, sibling cloud-data,
 # /root/git/cloud-data). Post the 2026-04 engine reorg, the .ts files
-# moved to cloud/1_configs/src/engine/ and the canonical entry point
+# moved to cloud/1_cloud-configs/src/derive/ and the canonical entry point
 # became cloud/1_configs/build.sh. Every gen-configs CI run logged
 # "SKIP: cloud-data engine not found" and exited 1 — failure surfaced
 # at run 24964978001 right after the cloud-builder entrypoint started
@@ -36,7 +36,7 @@
 set -euo pipefail
 
 REPO="${GIT_BASE:-$HOME/git}/cloud"
-SCRIPT="$REPO/1_configs/src/deploy/scripts/cloud-ship-repo-config-gen.sh"
+SCRIPT="$REPO/1_configs/src/gha/scripts/cloud-ship-repo-config-gen.sh"
 FAILS=0
 
 [ -f "$SCRIPT" ] || { echo "✗ $SCRIPT not found"; exit 1; }
@@ -61,7 +61,7 @@ fi
 
 # 2. Legacy fallback retained
 if grep -q 'cloud-data-config\.ts' "$SCRIPT"; then
-    echo "✓ legacy fallback (1_configs/src/deploy/scripts/cloud-data-config.ts) still present"
+    echo "✓ legacy fallback (1_configs/src/gha/scripts/cloud-data-config.ts) still present"
 else
     echo "✗ legacy fallback removed — back-compat broken"
     FAILS=$((FAILS + 1))
@@ -76,10 +76,10 @@ else
 fi
 
 # 4. The engine .ts file the legacy fallback expected lives at the new path
-if [ -f "$REPO/1_configs/src/engine/cloud-data-config.ts" ]; then
-    echo "✓ cloud-data-config.ts at new location: 1_configs/src/engine/"
+if [ -f "$REPO/1_cloud-configs/src/derive/cloud-data-config.ts" ]; then
+    echo "✓ cloud-data-config.ts at new location: 1_cloud-configs/src/derive/"
 else
-    echo "✗ 1_configs/src/engine/cloud-data-config.ts missing"
+    echo "✗ 1_cloud-configs/src/derive/cloud-data-config.ts missing"
     FAILS=$((FAILS + 1))
 fi
 

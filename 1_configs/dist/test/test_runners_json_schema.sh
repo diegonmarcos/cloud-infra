@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_runners_json_schema.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_runners_json_schema.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -33,12 +33,12 @@
 # ║ (the producer's master). Legacy .runners[$a].builder_image is    ║
 # ║ accepted for back-compat but not required.                       ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_runners_json_schema.sh     ║
+# ║ Usage: bash 1_configs/src/test/test_runners_json_schema.sh     ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 
@@ -50,7 +50,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 RUNNERS_JSON=""
 for p in \
     "/app/build-workflows.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/build-workflows.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done

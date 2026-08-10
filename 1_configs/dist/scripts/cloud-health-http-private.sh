@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-health-http-private.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-health-http-private.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -26,7 +26,7 @@ cd "$REPO_ROOT"
 CONS=""
 for _p in \
     "/app/_cloud-data-consolidated.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
     [ -f "$_p" ] && { CONS="$_p"; break; }

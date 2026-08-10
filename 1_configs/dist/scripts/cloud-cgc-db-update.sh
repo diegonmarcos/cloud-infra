@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-cgc-db-update.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-cgc-db-update.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -261,7 +261,7 @@ propagate_to_host() {
   _ctr=$(jq -r '.containers.app.container_name' "$BJ")
   # Resolve the SSH target data-driven: in CI, build-gha.json maps the alias →
   # user@wg_ip (no ~/.ssh/config needed); locally, fall back to the ssh alias.
-  _gha="$ROOT/1_configs/dist/build-gha.json"
+  _gha="$ROOT/1_cloud-configs/dist/build-gha.json"
   _target="$_host"
   if [ -f "$_gha" ]; then
     _wgip=$(jq -r --arg h "$_host" '.vms[$h].wg_ip // empty'  "$_gha" 2>/dev/null)

@@ -1,0 +1,354 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_generated": "",
+  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/dns-services",
+  "suffix": "app",
+  "caddy_ip": "10.0.0.1",
+  "services": {
+    "matrix-continuwuity": {
+      "ip": "10.0.0.1",
+      "desc": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    "alerts-api": {
+      "ip": "10.0.0.1",
+      "desc": "Security Alert Aggregation API"
+    },
+    "languagetool": {
+      "ip": "10.0.0.1",
+      "desc": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps"
+    },
+    "c3-infra-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 REST API — Cloud Control Center Fastify API"
+    },
+    "c3-infra-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)"
+    },
+    "c3-public-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
+    },
+    "c3-services-api": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Services REST API — service API gateway Fastify API"
+    },
+    "c3-services-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)"
+    },
+    "g-personal-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account"
+    },
+    "g-workspace-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport"
+    },
+    "mail-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API"
+    },
+    "mattermost-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost MCP server — chat tools via HTTP transport"
+    },
+    "http-to-smtp-proxy-api": {
+      "ip": "10.0.0.1",
+      "desc": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]"
+    },
+    "backup-borg": {
+      "ip": "10.0.0.1",
+      "desc": "Media Backups SSH Server (Borg deduplication)"
+    },
+    "backup-bup": {
+      "ip": "10.0.0.1",
+      "desc": "Database Backups SSH Server (bup)"
+    },
+    "gitea": {
+      "ip": "10.0.0.1",
+      "desc": "Self-hosted Git service"
+    },
+    "redis": {
+      "ip": "10.0.0.1",
+      "desc": "In-memory data store"
+    },
+    "hickory-dns": {
+      "ip": "10.0.0.1",
+      "desc": "Internal DNS server for WireGuard mesh (per-service .app zones)"
+    },
+    "unbound-dns64": {
+      "ip": "10.0.0.1",
+      "desc": "DNS64 resolver for NAT64 — synthesises AAAA records for IPv4-only names so IPv6-only clients can reach the internet via the Tayga NAT64 translator"
+    },
+    "wireguard-mesh": {
+      "ip": "10.0.0.1",
+      "desc": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
+    },
+    "wireguard-mesh-ws-tunnel": {
+      "ip": "10.0.0.1",
+      "desc": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+    },
+    "c3-spec": {
+      "ip": "10.0.0.1",
+      "desc": "Unified Cloud Documentation Portal"
+    },
+    "dagu": {
+      "ip": "10.0.0.1",
+      "desc": "Dagu - Lightweight DAG-based workflow scheduler"
+    },
+    "dbgate": {
+      "ip": "10.0.0.1",
+      "desc": "DBGate - Universal database manager for all cloud databases"
+    },
+    "matomo": {
+      "ip": "10.0.0.1",
+      "desc": "Matomo hybrid analytics (oci-apps)"
+    },
+    "ntfy": {
+      "ip": "10.0.0.1",
+      "desc": "Push notification server"
+    },
+    "openobserve": {
+      "ip": "10.0.0.1",
+      "desc": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack."
+    },
+    "umami": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "umami-db": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "umami-setup": {
+      "ip": "10.0.0.1",
+      "desc": "Umami Analytics - lightweight privacy-focused web analytics"
+    },
+    "authelia": {
+      "ip": "10.0.0.1",
+      "desc": "SSO and 2FA authentication portal"
+    },
+    "authelia-redis": {
+      "ip": "10.0.0.1",
+      "desc": "SSO and 2FA authentication portal"
+    },
+    "caddy": {
+      "ip": "10.0.0.1",
+      "desc": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)"
+    },
+    "caddy-public": {
+      "ip": "10.0.0.1",
+      "desc": "Caddy public-edge L7 allowlist on oci-analytics. Terminates TLS on :8443, serves ONLY the declared-public allowlist (build-caddy-public.json: gh-pages, no-auth subdomains, well-known, explicit public_paths), and FORWARDS everything else to the private hub gcp-proxy over wg-public (10.1.0.2:443). Fail-closed: any host/path not explicitly allowlisted is forwarded to gcp-proxy, whose @wg gate 403s public clients."
+    },
+    "crowdsec": {
+      "ip": "10.0.0.1",
+      "desc": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
+    },
+    "introspect-proxy": {
+      "ip": "10.0.0.1",
+      "desc": "OIDC token introspection sidecar for Caddy Bearer auth"
+    },
+    "claude-superset-api": {
+      "ip": "10.0.0.1",
+      "desc": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public."
+    },
+    "cloud-cgc-mcp": {
+      "ip": "10.0.0.1",
+      "desc": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search"
+    },
+    "hermes-agent": {
+      "ip": "10.0.0.1",
+      "desc": "Nous Research Hermes Agent (autonomous, persistent-memory AI agent) on oci-apps. Messaging gateway (Telegram live, Mattermost scaffolded) backed by claude-superset-api (subscription CLI, no metered key). WG-internal, never public."
+    },
+    "kg-store": {
+      "ip": "10.0.0.1",
+      "desc": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search"
+    },
+    "my-ai-api": {
+      "ip": "10.0.0.1",
+      "desc": "my-ai API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by OpenRouter (no Claude subscription, no metered Anthropic key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Sibling of claude-superset-api; the agent face for this stack is goose (my-ai wraps goose, claude-superset keeps claude-cli). Internal WG-only sidecar, never public."
+    },
+    "session-memory": {
+      "ip": "10.0.0.1",
+      "desc": "Central SQLite store of all Claude Code session transcripts — push/list/fetch so a session started on one device can be resumed from any other. WG-only sidecar on oci-apps; Node 22 built-in node:sqlite (phone-portable, no native deps)."
+    },
+    "mattermost": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    "mattermost-postgres": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    "mattermost-bots": {
+      "ip": "10.0.0.1",
+      "desc": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    "mail-puller": {
+      "ip": "10.0.0.1",
+      "desc": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops."
+    },
+    "matrix-element": {
+      "ip": "10.0.0.1",
+      "desc": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
+    },
+    "matrix-mautrix-whatsapp": {
+      "ip": "10.0.0.1",
+      "desc": "mautrix-whatsapp bridge (appservice) for the Continuwuity homeserver. WG-only, no public route. Links a WhatsApp account via QR into Matrix."
+    },
+    "snappymail": {
+      "ip": "10.0.0.1",
+      "desc": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
+    },
+    "maddy": {
+      "ip": "10.0.0.1",
+      "desc": "Maddy Mail Server (mail.diegonmarcos.com)"
+    },
+    "stalwart": {
+      "ip": "10.0.0.1",
+      "desc": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)"
+    },
+    "scrappers-api": {
+      "ip": "10.0.0.1",
+      "desc": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output."
+    },
+    "fin-api": {
+      "ip": "10.0.0.1",
+      "desc": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools"
+    },
+    "photoprism": {
+      "ip": "10.0.0.1",
+      "desc": "PhotoPrism AI-powered photo management (oci-flex-1)"
+    },
+    "playlist-syncer": {
+      "ip": "10.0.0.1",
+      "desc": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative."
+    },
+    "news-gdelt": {
+      "ip": "10.0.0.1",
+      "desc": "GDELT News Aggregator — Fastify API with SQLite cache"
+    },
+    "calendar": {
+      "ip": "10.0.0.1",
+      "desc": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
+    },
+    "code-server": {
+      "ip": "10.0.0.1",
+      "desc": "VS Code IDE (ide.diegonmarcos.com)"
+    },
+    "contacts": {
+      "ip": "10.0.0.1",
+      "desc": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
+    },
+    "etherpad": {
+      "ip": "10.0.0.1",
+      "desc": "Etherpad collaborative editor"
+    },
+    "etherpad-db": {
+      "ip": "10.0.0.1",
+      "desc": "Etherpad collaborative editor"
+    },
+    "filebrowser": {
+      "ip": "10.0.0.1",
+      "desc": "FileBrowser web file manager (NEW - not deployed yet)"
+    },
+    "grist": {
+      "ip": "10.0.0.1",
+      "desc": "Grist spreadsheet/database (sheets.diegonmarcos.com)"
+    },
+    "hedgedoc": {
+      "ip": "10.0.0.1",
+      "desc": "Collaborative markdown editor"
+    },
+    "hedgedoc-db": {
+      "ip": "10.0.0.1",
+      "desc": "Collaborative markdown editor"
+    },
+    "paca": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-api": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-web": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-realtime": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-valkey": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "paca-postgres": {
+      "ip": "10.0.0.1",
+      "desc": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1)."
+    },
+    "revealmd": {
+      "ip": "10.0.0.1",
+      "desc": "Reveal.js markdown presentations (not deployed)"
+    },
+    "send": {
+      "ip": "10.0.0.1",
+      "desc": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time."
+    },
+    "vaultwarden": {
+      "ip": "10.0.0.1",
+      "desc": "Bitwarden password manager"
+    },
+    "s3-backups-binaries": {
+      "ip": "10.0.0.1",
+      "desc": "S3 bucket: cloud-backups-binaries-medias"
+    },
+    "s3-backups-db": {
+      "ip": "10.0.0.1",
+      "desc": "S3 bucket: cloud-backups-db"
+    },
+    "s3-backups-media": {
+      "ip": "10.0.0.1",
+      "desc": "S3 bucket: cloud-backups-media"
+    },
+    "s3-backups-nonbin": {
+      "ip": "10.0.0.1",
+      "desc": "S3 bucket: cloud-backups-non-binaries"
+    },
+    "s3-photos": {
+      "ip": "10.0.0.1",
+      "desc": "S3 bucket: my-photos"
+    }
+  },
+  "vms": {
+    "1": "gcp-proxy",
+    "3": "oci-mail",
+    "4": "oci-analytics",
+    "6": "oci-apps"
+  },
+  "_meta": {
+    "generated_at": "",
+    "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "1_cloud-configs/src/derive/cloud-data-config-consolidated.ts",
+        "derive": "1_cloud-configs/src/derive/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "1_cloud-configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 1_configs/build.sh all"
+    }
+  }
+}

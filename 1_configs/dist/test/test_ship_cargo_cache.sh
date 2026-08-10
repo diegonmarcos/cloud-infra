@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_ship_cargo_cache.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_ship_cargo_cache.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -28,16 +28,16 @@
 # ║   4. Docker layer cache (already wired in build-docker step) is  ║
 # ║      still in place: --cache-from in the docker build line.      ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_ship_cargo_cache.sh        ║
+# ║ Usage: bash 1_configs/src/test/test_ship_cargo_cache.sh        ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-SHIP_YML="$REPO_ROOT/1_configs/src/deploy/gha/cicd/ship.yml"
-DOCKER_BUILD_SH="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
+SHIP_YML="$REPO_ROOT/1_configs/src/gha/cicd/ship.yml"
+DOCKER_BUILD_SH="$REPO_ROOT/1_configs/src/gha/scripts/cloud-ship-container-step-build-docker.sh"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

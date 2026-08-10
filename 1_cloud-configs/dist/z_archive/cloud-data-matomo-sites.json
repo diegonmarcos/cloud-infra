@@ -1,0 +1,250 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_generated": "",
+  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/matomo-sites",
+  "sites": [
+    {
+      "name": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "url": "https://matrix.diegonmarcos.com",
+      "service": "matrix-continuwuity"
+    },
+    {
+      "name": "LanguageTool grammar/spell-check HTTP API — rules-only, no n-grams, WG-only sidecar on oci-apps",
+      "url": "https://languagetool.diegonmarcos.com",
+      "service": "languagetool"
+    },
+    {
+      "name": "C3 REST API — Cloud Control Center Fastify API",
+      "url": "https://api.diegonmarcos.com/c3-infra-api",
+      "service": "c3-infra-api"
+    },
+    {
+      "name": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
+      "url": "https://mcp.diegonmarcos.com/c3-infra-mcp",
+      "service": "c3-infra-mcp"
+    },
+    {
+      "name": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke.",
+      "url": "https://api.diegonmarcos.com/pub",
+      "service": "c3-public-api"
+    },
+    {
+      "name": "C3 Services REST API — service API gateway Fastify API",
+      "url": "https://api.diegonmarcos.com/c3-services-api",
+      "service": "c3-services-api"
+    },
+    {
+      "name": "Google Personal Account MCP server — Gmail (IMAP/SMTP via App Password) for personal Google accounts, multi-account",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "google-personal-mcp"
+    },
+    {
+      "name": "Google Workspace MCP server — Gmail, Calendar, Drive, Docs, Sheets via HTTP transport",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "google-workspace-mcp"
+    },
+    {
+      "name": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+      "url": "https://mcp.diegonmarcos.com",
+      "service": "mail-mcp"
+    },
+    {
+      "name": "HTTP-to-SMTP bridge sidecar of Caddy on gcp-proxy. CF Worker POSTs JSON email payloads to this container (because GCP blocks outbound TCP/25); container speaks SMTP over WG to maddy:25 + stalwart:2025 on oci-mail. Public path: api.diegonmarcos.com/http-to-smtp-proxy-api/ [DECOMMISSIONED 2026-05-21]",
+      "url": "https://api.diegonmarcos.com/http-to-smtp-proxy-api",
+      "service": "http-to-smtp-proxy-api"
+    },
+    {
+      "name": "Self-hosted Git service",
+      "url": "https://git.diegonmarcos.com",
+      "service": "gitea"
+    },
+    {
+      "name": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "url": "https://dns.internal",
+      "service": "hickory-dns"
+    },
+    {
+      "name": "DNS64 resolver for NAT64 — synthesises AAAA records for IPv4-only names so IPv6-only clients can reach the internet via the Tayga NAT64 translator",
+      "url": "https://dns64.internal",
+      "service": "unbound-dns64"
+    },
+    {
+      "name": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
+      "url": "https://mesh.diegonmarcos.com",
+      "service": "wireguard-mesh"
+    },
+    {
+      "name": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP.",
+      "url": "https://vpn.diegonmarcos.com",
+      "service": "wireguard-mesh-ws-tunnel"
+    },
+    {
+      "name": "Dagu - Lightweight DAG-based workflow scheduler",
+      "url": "https://workflows.diegonmarcos.com",
+      "service": "dagu"
+    },
+    {
+      "name": "DBGate - Universal database manager for all cloud databases",
+      "url": "https://db.diegonmarcos.com",
+      "service": "dbgate"
+    },
+    {
+      "name": "Matomo hybrid analytics (oci-apps)",
+      "url": "https://analytics.diegonmarcos.com/matomo",
+      "service": "matomo"
+    },
+    {
+      "name": "Push notification server",
+      "url": "https://rss.diegonmarcos.com",
+      "service": "ntfy"
+    },
+    {
+      "name": "OpenObserve - single-binary observability platform (logs + traces + metrics + RUM). Replaces LGTM stack.",
+      "url": "https://analytics.diegonmarcos.com/openobserve",
+      "service": "openobserve"
+    },
+    {
+      "name": "Umami Analytics - lightweight privacy-focused web analytics",
+      "url": "https://analytics.diegonmarcos.com",
+      "service": "umami"
+    },
+    {
+      "name": "SSO and 2FA authentication portal",
+      "url": "https://auth.diegonmarcos.com",
+      "service": "authelia"
+    },
+    {
+      "name": "Caddy reverse proxy + security dashboard (gcp-proxy, wg0 bind)",
+      "url": "https://proxy.diegonmarcos.com",
+      "service": "caddy"
+    },
+    {
+      "name": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired.",
+      "url": "https://crowdsec.diegonmarcos.com",
+      "service": "crowdsec"
+    },
+    {
+      "name": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot",
+      "url": "https://chat.diegonmarcos.com",
+      "service": "chat-mattermost"
+    },
+    {
+      "name": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "url": "https://mail-puller.diegonmarcos.com",
+      "service": "mail-puller"
+    },
+    {
+      "name": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA.",
+      "url": "https://messenger.diegonmarcos.com",
+      "service": "matrix-element"
+    },
+    {
+      "name": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
+      "url": "https://webmail.diegonmarcos.com",
+      "service": "snappymail"
+    },
+    {
+      "name": "Maddy Mail Server (mail.diegonmarcos.com)",
+      "url": "https://mail.diegonmarcos.com",
+      "service": "maddy"
+    },
+    {
+      "name": "Stalwart Mail Server — JMAP webmail backend (jmap.diegonmarcos.com)",
+      "url": "https://jmap.diegonmarcos.com",
+      "service": "stalwart"
+    },
+    {
+      "name": "Unified scrapers API (Instagram / Pinterest / LinkedIn / generic crawl) — retires crawlee-cloud. Lean single-container FastAPI, on-demand, flat-JSON output.",
+      "url": "https://api.diegonmarcos.com",
+      "service": "scrappers-api"
+    },
+    {
+      "name": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools",
+      "url": "https://api.diegonmarcos.com/fin-api",
+      "service": "fin-api"
+    },
+    {
+      "name": "PhotoPrism AI-powered photo management (oci-flex-1)",
+      "url": "https://photos.diegonmarcos.com",
+      "service": "photoprism"
+    },
+    {
+      "name": "Spotube — bidirectional Spotify <-> YouTube Music playlist sync (playlist.diegonmarcos.com). Self-hosted Soundiiz alternative.",
+      "url": "https://playlist.diegonmarcos.com",
+      "service": "playlist-syncer"
+    },
+    {
+      "name": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com",
+      "url": "https://cal.diegonmarcos.com",
+      "service": "calendar-radicale"
+    },
+    {
+      "name": "VS Code IDE (ide.diegonmarcos.com)",
+      "url": "https://ide.diegonmarcos.com",
+      "service": "code-server"
+    },
+    {
+      "name": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com",
+      "url": "https://contacts.diegonmarcos.com",
+      "service": "contacts-radicale"
+    },
+    {
+      "name": "Etherpad collaborative editor",
+      "url": "https://app.diegonmarcos.com/etherpad",
+      "service": "etherpad"
+    },
+    {
+      "name": "FileBrowser web file manager (NEW - not deployed yet)",
+      "url": "https://app.diegonmarcos.com/filebrowser",
+      "service": "filebrowser"
+    },
+    {
+      "name": "Grist spreadsheet/database (sheets.diegonmarcos.com)",
+      "url": "https://sheets.diegonmarcos.com",
+      "service": "grist"
+    },
+    {
+      "name": "Collaborative markdown editor",
+      "url": "https://app.diegonmarcos.com/hedgedoc",
+      "service": "hedgedoc"
+    },
+    {
+      "name": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
+      "url": "https://paca.diegonmarcos.com",
+      "service": "paca"
+    },
+    {
+      "name": "Send — self-hosted end-to-end encrypted ephemeral file sharing (timvisee/send, Firefox Send fork). Files encrypted client-side; server sees only ciphertext. Links self-destruct after configured downloads or time.",
+      "url": "https://send.diegonmarcos.com",
+      "service": "send"
+    },
+    {
+      "name": "Bitwarden password manager",
+      "url": "https://vault.diegonmarcos.com",
+      "service": "vaultwarden"
+    }
+  ],
+  "_meta": {
+    "generated_at": "",
+    "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "1_cloud-configs/src/derive/cloud-data-config-consolidated.ts",
+        "derive": "1_cloud-configs/src/derive/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "1_cloud-configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 1_configs/build.sh all"
+    }
+  }
+}

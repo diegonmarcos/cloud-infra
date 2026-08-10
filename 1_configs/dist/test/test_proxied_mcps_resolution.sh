@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_proxied_mcps_resolution.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_proxied_mcps_resolution.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -21,15 +21,15 @@
 # ║                                                                  ║
 # ║ Data-driven (FIRE RULE 3): no hardcoded service list.            ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_proxied_mcps_resolution.sh ║
+# ║ Usage: bash 1_configs/src/test/test_proxied_mcps_resolution.sh ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-DERIVED_DIR="$REPO_ROOT/1_configs/dist"
+DERIVED_DIR="$REPO_ROOT/1_cloud-configs/dist"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -54,7 +54,7 @@ for hub_json in "${HUBS[@]}"; do
   derived="$DERIVED_DIR/build-${hub}.json"
 
   if [ ! -f "$derived" ]; then
-    fail "$hub: derived $derived missing — run 1_configs/build.sh"
+    fail "$hub: derived $derived missing — run 1_cloud-configs/build.sh"
     continue
   fi
 

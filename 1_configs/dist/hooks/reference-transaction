@@ -2,7 +2,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ reference-transaction — forbid creating new local branches       ║
 # ║                                                                  ║
-# ║ Source: cloud/1_configs/src/deploy/git-hooks/reference-transaction        ║
+# ║ Source: cloud/1_configs/src/git/hooks/reference-transaction        ║
 # ║ Active via [core] hooksPath = 1_configs/dist/hooks             ║
 # ║                                                                  ║
 # ║ Main-only policy: this repo is worked on directly on `main`.     ║
@@ -30,7 +30,7 @@ while read -r old _new ref; do
           printf '\n\033[31mBLOCKED: creating new local branches is disabled (main-only policy).\033[0m\n'
           printf '  attempted : %s\n' "${ref#refs/heads/}"
           printf '  Work directly on main.\n'
-          printf '  Source    : 1_configs/src/deploy/git-hooks/reference-transaction\n\n'
+          printf '  Source    : 1_configs/src/git/hooks/reference-transaction\n\n'
         } >&2
         exit 1
       fi
