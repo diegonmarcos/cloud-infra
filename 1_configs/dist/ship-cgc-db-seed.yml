@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/gha/cicd/ship-cgc-db-seed.yml
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/cicd/ship-cgc-db-seed.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,7 +17,7 @@
 # │  DB already on oci-apps (octocode_db volume, the ~12h full     │
 # │  GraphRAG build) → GHCR. The incremental producer then builds  │
 # │  on THIS base — never from scratch. ZERO logic in YAML; all in │
-# │  1_configs/src/deploy/scripts/cloud-cgc-db-seed.sh. WireGuard is    │
+# │  1_configs/src/gha/ops/cloud-cgc-db-seed.sh. WireGuard is    │
 # │  needed to SSH oci-apps and stream the volume.                 │
 # └──────────────────────────────────────────────────────────────┘
 
@@ -50,7 +50,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
 
       - name: WireGuard up
-        run: bash 1_configs/src/deploy/scripts/cloud-ship-ci-setup-wireguard.sh
+        run: bash 1_configs/src/gha/scripts/cloud-ship-ci-setup-wireguard.sh
 
       - name: Provision SSH key
         run: |
@@ -60,4 +60,4 @@ jobs:
       - name: Seed GHCR from existing oci-apps DB (all logic in the script)
         env:
           CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-        run: sh 1_configs/src/deploy/scripts/cloud-cgc-db-seed.sh
+        run: sh 1_configs/src/gha/ops/cloud-cgc-db-seed.sh

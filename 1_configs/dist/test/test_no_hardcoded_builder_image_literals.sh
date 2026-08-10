@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_no_hardcoded_builder_image_literals.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_no_hardcoded_builder_image_literals.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -34,12 +34,12 @@
 # ║   • This test file itself                                        ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║
-# ║   bash 1_configs/src/deploy/test/test_no_hardcoded_builder_image_literals.sh
+# ║   bash 1_configs/src/test/test_no_hardcoded_builder_image_literals.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 SELF="${BASH_SOURCE[0]}"
@@ -62,18 +62,18 @@ PATTERN='ghcr\.io/diegonmarcos/cloud-builder-x[a-zA-Z0-9_-]*:'
 SCAN_ROOTS=(
   "$REPO_ROOT/.github/workflows"
   "$REPO_ROOT/.github/actions"
-  "$REPO_ROOT/1_configs/src/deploy/gha/cicd"
-  "$REPO_ROOT/1_configs/src/deploy/gha/actions"
-  "$REPO_ROOT/1_configs/src/deploy/scripts"
+  "$REPO_ROOT/1_configs/src/gha/cicd"
+  "$REPO_ROOT/1_configs/src/gha/actions"
+  "$REPO_ROOT/1_configs/src/gha/scripts"
   "$REPO_ROOT/1_configs/dist/cicd"
   "$REPO_ROOT/1_configs/dist/actions"
   "$REPO_ROOT/1_configs/dist/scripts"
 )
-# unix-side wrappers — only the CANONICAL source path (1_configs/src/deploy/gha/cicd).
+# unix-side wrappers — only the CANONICAL source path (1_configs/src/gha/cicd).
 # II_Unix/.github/workflows/ is dist and will follow source after rebuild;
 # II_Unix/workflows/src/static/ is legacy/stale (not the active source).
-if [ -d "$REPO_ROOT/II_Unix/1_configs/src/deploy/gha/cicd" ]; then
-  SCAN_ROOTS+=("$REPO_ROOT/II_Unix/1_configs/src/deploy/gha/cicd")
+if [ -d "$REPO_ROOT/II_Unix/1_configs/src/gha/cicd" ]; then
+  SCAN_ROOTS+=("$REPO_ROOT/II_Unix/1_configs/src/gha/cicd")
 fi
 
 # Allowlist: paths where the literal IS the source of truth (master + producer).

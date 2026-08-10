@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_gitignore_synced.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_gitignore_synced.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,7 +17,7 @@
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   The repo-root .gitignore is derived from                       ║
-# ║   1_configs/src/gitignore via the workflow engine.             ║
+# ║   1_configs/src/git/gitignore via the workflow engine.             ║
 # ║                                                                  ║
 # ║ Invariants (post-header-injection):                              ║
 # ║   1. src/gitignore exists (the source of truth)                  ║
@@ -27,19 +27,19 @@
 # ║                                                                  ║
 # ║ Drift means someone hand-edited one of the three copies.         ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_gitignore_synced.sh        ║
+# ║ Usage: bash 1_configs/src/test/test_gitignore_synced.sh        ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 
-SRC="$REPO_ROOT/1_configs/src/gitignore"
+SRC="$REPO_ROOT/1_configs/src/git/gitignore"
 DIST="$REPO_ROOT/1_configs/dist/.gitignore"
 ROOT="$REPO_ROOT/.gitignore"
-HEADER_JSON="$REPO_ROOT/1_configs/src/engine/libs/generated-header.json"
+HEADER_JSON="$REPO_ROOT/1_configs/src/lib/generated-header.json"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -48,7 +48,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 MARKER="$(jq -r '.marker' "$HEADER_JSON")"
 
 echo "── .gitignore must be owned by 1_configs/src/ ──"
-[ -f "$SRC" ]  && pass "source exists: 1_configs/src/gitignore"         || fail "missing source: 1_configs/src/gitignore"
+[ -f "$SRC" ]  && pass "source exists: 1_configs/src/git/gitignore"         || fail "missing source: 1_configs/src/git/gitignore"
 [ -f "$DIST" ] && pass "dist artifact exists: 1_configs/dist/.gitignore" || fail "missing dist (run ./1_configs/build.sh build)"
 [ -f "$ROOT" ] && pass "deployed copy exists: .gitignore"                  || fail "missing deploy (run ./1_configs/build.sh deploy)"
 

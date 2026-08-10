@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-git-sync.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-git-sync.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ cloud-git-sync.sh — smart, verbose, non-destructive `git sync`   ║
 # ║                                                                  ║
-# ║ Source: cloud/1_configs/src/deploy/scripts/cloud-git-sync.sh          ║
+# ║ Source: cloud/1_configs/src/gha/ops/cloud-git-sync.sh          ║
 # ║ Wired : 1_configs/src/gitconfig  →  [alias] sync               ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║

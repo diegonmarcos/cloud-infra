@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -194,9 +194,9 @@ ensure_ssh_host_alias() {
     # Workspace root: env override > /root/git default (CI mount path).
     # Bare /root/git/... literals are forbidden by test_engine_workspace_paths_derived.
     local _ws="${WORKSPACE:-/root/git}"
-    for cand in "$_ws/cloud/1_configs/dist/_cloud-data-consolidated.json" \
+    for cand in "$_ws/cloud/1_cloud-configs/dist/_cloud-data-consolidated.json" \
                 "$_ws/cloud-data/_cloud-data-consolidated.json" \
-                "${HOME}/git/cloud/1_configs/dist/_cloud-data-consolidated.json"; do
+                "${HOME}/git/cloud/1_cloud-configs/dist/_cloud-data-consolidated.json"; do
         [ -f "$cand" ] && cons="$cand" && break
     done
     if [ -n "$cons" ] && command -v jq >/dev/null 2>&1; then
@@ -259,7 +259,7 @@ REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 INJECT_HEADER="$STEPS_DIR/../../engine/libs/inject-header.sh"
-ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-nix-homemanager-engine.sh"
+ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-nix-homemanager-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-pull-pilot.sh"
 . "$STEPS_DIR/cloud-ship-nix-homemanager-step-build-flake.sh"

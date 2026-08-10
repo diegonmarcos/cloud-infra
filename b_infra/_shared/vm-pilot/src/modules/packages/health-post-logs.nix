@@ -66,7 +66,7 @@ let
 
     # Local port checks — probe per-VM manifest.
     # Probe order (cloud-data emits NOTHING; new canonical lives in 1_configs/dist):
-    #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 1_configs/dist/build-vm-{vm}.json)
+    #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 1_cloud-configs/dist/build-vm-{vm}.json)
     #   2. $REPO_DIR/cloud-data-containers-$VM.json  ← LEGACY fallback (cloud-data clone)
     MANIFEST=""
     for _p in "/opt/scripts/build-vm.json" "$REPO_DIR/cloud-data-containers-$VM.json"; do

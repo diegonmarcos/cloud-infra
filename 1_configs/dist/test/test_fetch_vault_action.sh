@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_fetch_vault_action.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_fetch_vault_action.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -34,8 +34,8 @@
 set -euo pipefail
 
 REPO="${GIT_BASE:-$HOME/git}/cloud"
-ACTION="$REPO/1_configs/src/deploy/gha/actions/fetch-vault/action.yml"
-CICD_DIR="$REPO/1_configs/src/deploy/gha/cicd"
+ACTION="$REPO/1_configs/src/gha/actions/fetch-vault/action.yml"
+CICD_DIR="$REPO/1_configs/src/gha/cicd"
 FAILS=0
 
 [ -f "$ACTION" ] || { echo "✗ source action.yml not found at $ACTION"; exit 1; }

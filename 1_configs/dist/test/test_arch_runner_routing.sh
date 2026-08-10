@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_arch_runner_routing.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_arch_runner_routing.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -22,22 +22,22 @@
 # ║   3. The illegal QEMU fallback branch is gone                    ║
 # ║   4. Unreachable ssh runner → engine exits 1 (no silent fallback)║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_arch_runner_routing.sh     ║
+# ║ Usage: bash 1_configs/src/test/test_arch_runner_routing.sh     ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-SCRIPTS="$REPO_ROOT/1_configs/src/deploy/scripts"
+SCRIPTS="$REPO_ROOT/1_configs/src/gha/scripts"
 DOCKER_STEP="$SCRIPTS/cloud-ship-container-step-build-docker.sh"
 DISPATCH="$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"
 
 RUNNERS_JSON=""
 for p in \
     "/app/build-workflows.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/build-workflows.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/build-workflows.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/src/build-workflows.json"; do
     [ -f "$p" ] && { RUNNERS_JSON="$p"; break; }
 done
@@ -138,8 +138,8 @@ if bash -c "
     SRC_DIR=$tmp
     DIST_DIR=$tmp
     CLOUD_ROOT=$tmp
-    mkdir -p $tmp/1_configs/dist
-    cp $tmp/runners.json $tmp/1_configs/dist/build-workflows.json
+    mkdir -p $tmp/1_cloud-configs/dist
+    cp $tmp/runners.json $tmp/1_cloud-configs/dist/build-workflows.json
     DOCKER_IMAGE=ghcr.io/x/fake
     DOCKER_REGISTRY=
     DOCKER_ARCH=arm64

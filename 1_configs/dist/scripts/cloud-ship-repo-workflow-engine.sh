@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -36,7 +36,7 @@ HOOKS_TARGET="$TARGET_DIR/hooks"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 # Template + prefix map live in $SRC_DIR/engine/libs/generated-header.json.
 export REPO_ROOT
-export ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh"
+export ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh"
 # shellcheck source=../../engine/libs/inject-header.sh
 . "$SRC_DIR/engine/libs/inject-header.sh"
 

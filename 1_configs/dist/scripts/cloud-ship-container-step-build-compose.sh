@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-container-step-build-compose.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-container-step-build-compose.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -94,7 +94,7 @@ step_compose_build() {
         RUNNERS_JSON=""
         for _p in \
             "/app/build-workflows.json" \
-            "${CLOUD_ROOT:-$SERVICE_DIR/../..}/1_configs/dist/build-workflows.json" \
+            "${CLOUD_ROOT:-$SERVICE_DIR/../..}/1_cloud-configs/dist/build-workflows.json" \
             "$SRC_DIR/build-workflows.json"; do
             [ -f "$_p" ] && { RUNNERS_JSON="$_p"; break; }
         done

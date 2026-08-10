@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-health-full.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-health-full.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,7 +25,7 @@ cd "$REPO_ROOT"
 TOPO=""
 for _p in \
     "/app/_cloud-data-consolidated.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/_cloud-data-consolidated.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json" \
     "/app/cloud-data-topology.json" \
@@ -36,7 +36,7 @@ for _p in \
     [ -f "$_p" ] && { TOPO="$_p"; break; }
 done
 [ -n "$TOPO" ] || { echo "FATAL: _cloud-data-consolidated.json (or legacy cloud-data-topology.json) not found" >&2; exit 1; }
-ROUTES="1_configs/dist/build-caddy.json"
+ROUTES="1_cloud-configs/dist/build-caddy.json"
 
 PASS=0; FAIL=0; WARN=0; TOTAL=0
 ok()   { PASS=$((PASS+1)); TOTAL=$((TOTAL+1)); printf "  ✓ %s\n" "$*"; }

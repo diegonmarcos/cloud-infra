@@ -1,202 +1,323 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ cloud/1_configs — consolidate + derive every cloud-data JSON    ║
+# ║ Workflow engine: build (src→dist) + deploy (dist→.github/)       ║
 # ║                                                                  ║
-# ║ Reads: cloud/a_solutions/*/build.json, cloud/config.json,       ║
-# ║        cloud/b_infra/*/build.json, vault/**        ║
-# ║ Writes: cloud/1_configs/dist/*.json                             ║
-# ║                                                                  ║
-# ║ Usage: ./build.sh [all|consolidate|derive|test|clean]           ║
+# ║ Usage: ./build.sh              # build + deploy (default)        ║
+# ║        ./build.sh build        # src → dist only                 ║
+# ║        ./build.sh deploy       # dist → .github/ + repo root    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -e
+chmod +x "$0"
+
+# Prefer termux coreutils over nix cp, which fails with libpthread on Android.
+export PATH="/data/data/com.termux.nix/files/usr/bin:$PATH"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENGINES="$SCRIPT_DIR/src/engine"
-BUILDS="$SCRIPT_DIR/src/inputs/builds"
-DIST="$SCRIPT_DIR/dist"
-CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
-export CLOUD_ROOT  # cloud-paths.sh / ensure-deps.sh read this
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SRC_DIR="$SCRIPT_DIR/src"
+DIST_DIR="$SCRIPT_DIR/dist"
+TARGET_DIR="$REPO_ROOT/.github/workflows"
+SCRIPTS_TARGET="$TARGET_DIR/scripts"
+HOOKS_TARGET="$TARGET_DIR/hooks"
 
-# Emitters now write empty strings for `_generated` / `generated_at` (see
-# 1_configs/src/engine/cloud-data-config-derive.ts:`now`). No timestamp env
-# var needed — the SOURCE_DATE_EPOCH approach broke because pre-commit hooks
-# run BEFORE the commit object exists, so HEAD's timestamp belongs to the
-# PARENT commit, changing every push.
+# Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+# Template + prefix map live in $SRC_DIR/lib/generated-header.json.
+export REPO_ROOT
+export ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh"
+# shellcheck source=../libs/inject-header.sh
+. "$SRC_DIR/lib/inject-header.sh"
 
-# Source shared engine libs (idempotent, guard against double-source).
-LIB_DIR="$CLOUD_ROOT/1_configs/src/engine/libs"
-# shellcheck source=../1_configs/src/engine/libs/engine-traps.sh
-[ -f "$LIB_DIR/engine-traps.sh" ] && . "$LIB_DIR/engine-traps.sh"
-# shellcheck source=../1_configs/src/engine/libs/cloud-paths.sh
-[ -f "$LIB_DIR/cloud-paths.sh" ] && . "$LIB_DIR/cloud-paths.sh"
-# shellcheck source=../1_configs/src/engine/libs/ensure-deps.sh
-[ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
+log()      { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
+phase()    { printf "\n[%s] ═══ %s ═══\n" "$(date '+%H:%M:%S')" "$1"; }
+step()     { printf "[%s]   • %s\n" "$(date '+%H:%M:%S')" "$1"; }
+ok()       { printf "[%s]     ✓ %s\n" "$(date '+%H:%M:%S')" "$1"; }
+# Concise relative path renderer for log lines
+relp()     { printf '%s' "${1#$REPO_ROOT/}"; }
+count_glob() { ls -1 $1 2>/dev/null | wc -l | tr -d ' '; }
 
-# log defined by engine-traps.sh; define a fallback if libs are unavailable
-# (e.g. running this script before the libs are deployed in someone's
-# checkout — defensive, lib loading is the happy path).
-if ! command -v log >/dev/null 2>&1; then
-    log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
-fi
+do_build() {
+    phase "BUILD  src/ → dist/  (purpose: render every artifact with the GENERATED-FILE banner so dist/ is the canonical compiled form)"
+    # dist/ has exactly one owner again. Before the 1_cloud-configs split this
+    # directory was shared with the config engine (build-*.json landed here too),
+    # so the purge had to hand-list the subtrees this engine owns — and a missed
+    # entry left stale generated files behind looking healthy. One owner means a
+    # plain wipe is both correct and self-maintaining.
+    step "purging $(relp "$DIST_DIR")/"
+    rm -rf "$DIST_DIR"
+    mkdir -p "$DIST_DIR" "$DIST_DIR/scripts" "$DIST_DIR/hooks" "$DIST_DIR/test"
+    ok "$(relp "$DIST_DIR")/ ready"
 
-# ensure_node_deps now lives in 1_configs/src/engine/libs/ensure-deps.sh
-# (sourced above). Define a thin local fallback so this script still
-# works on a fresh clone where libs/ might not yet be deployed.
-if ! command -v ensure_node_deps >/dev/null 2>&1; then
-    ensure_node_deps() {
-        if command -v tsx >/dev/null 2>&1; then return 0; fi
-        if [ -x "$CLOUD_ROOT/node_modules/.bin/tsx" ]; then
-            export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"; return 0
-        fi
-        if ! command -v npm >/dev/null 2>&1; then
-            log "ensure_node_deps: ERROR npm not found"; return 1
-        fi
-        log "ensure_node_deps (fallback): bootstrapping engine deps"
-        PKGS=""
-        if [ -f "$CLOUD_ROOT/config.json" ] && command -v jq >/dev/null 2>&1; then
-            PKGS=$(jq -r '.deps.node.required[]?' "$CLOUD_ROOT/config.json" 2>/dev/null | tr '\n' ' ')
-        fi
-        [ -z "$PKGS" ] && PKGS="tsx yaml nunjucks ajv ajv-formats"
-        (cd "$CLOUD_ROOT" && npm install --silent --no-save $PKGS) || return 1
-        export PATH="$CLOUD_ROOT/node_modules/.bin:$PATH"
-    }
-fi
-
-# Mirror every a_solutions/<folder>/build.json as
-# 1_configs/src/inputs/builds/build-<folder>.json (symlink). Declarative index —
-# one place to list every service's raw build.json.
-link_builds() {
-    mkdir -p "$BUILDS"
-    # Drop stale build-*.json symlinks first
-    command find "$BUILDS" -maxdepth 1 -name 'build-*.json' -type l -delete 2>/dev/null
-    count=0
-    for svc in "$SOLUTIONS_DIR"/*/; do
-        [ -d "$svc" ] || continue
-        folder=$(basename "$svc")
-        bj="$svc/build.json"
-        [ -f "$bj" ] || [ -L "$bj" ] || continue
-        # Depth derived from $BUILDS, not hardcoded: this directory moved from
-        # src/builds to src/inputs/builds and a literal ../../../ silently
-        # produced 73 dangling links that only a broken-symlink sweep caught.
-        rel=$(command realpath --relative-to="$BUILDS" "$SOLUTIONS_DIR/$folder/build.json" 2>/dev/null) \
-            || rel="$CLOUD_ROOT/a_solutions/$folder/build.json"
-        ln -s "$rel" "$BUILDS/build-$folder.json"
-        count=$((count + 1))
-    done
-    log "Linked $count a_solutions/*/build.json → src/builds/build-{folder}.json"
-}
-
-consolidate() {
-    ensure_node_deps
-    mkdir -p "$DIST"
-    log "Consolidating → $DIST/_cloud-data-consolidated.json"
-    tsx "$ENGINES/cloud-data-config-consolidated.ts"
-}
-
-derive() {
-    ensure_node_deps
-    mkdir -p "$DIST"
-    DERIVERS_JSON="$SCRIPT_DIR/src/derivers.json"
-    if [ -f "$DERIVERS_JSON" ] && command -v jq >/dev/null 2>&1; then
-        count=$(jq '.derivers | length' "$DERIVERS_JSON")
-        log "Deriving via $count derivers from src/derivers.json → $DIST/"
-        i=0
-        while [ "$i" -lt "$count" ]; do
-            name=$(jq -r ".derivers[$i].name"   "$DERIVERS_JSON")
-            rel=$( jq -r ".derivers[$i].script" "$DERIVERS_JSON")
-            [ -f "$SCRIPT_DIR/$rel" ] || { log "ERROR: deriver '$name' script missing: $rel"; exit 1; }
-            log "  → $name ($rel)"
-            tsx "$SCRIPT_DIR/$rel" || { log "FAILED: deriver '$name'"; exit 1; }
-            i=$((i + 1))
-        done
-    else
-        # Fallback when jq is unavailable or the JSON hasn't been deployed yet —
-        # keep the canonical deriver running so the pipeline never silently
-        # produces an incomplete dist/. New derivers MUST be added to
-        # derivers.json, not here.
-        log "WARN: derivers.json or jq unavailable — running only the canonical cloud-data-config-derive.ts"
-        tsx "$ENGINES/cloud-data-config-derive.ts"
+    # Static workflows (src/gha/cicd/*.yml → dist/)
+    step "rendering workflows  $(relp "$SRC_DIR")/cicd/*.yml  →  $(relp "$DIST_DIR")/*.yml"
+    _n=0
+    # A glob that matches nothing is silent: the loop body never runs, the
+    # deploy step copies zero files, and the previously-deployed .github/
+    # copies stay in place looking healthy. That is exactly what happened when
+    # cicd/ moved under gha/ — workflow edits stopped propagating with no
+    # error. Fail loudly instead.
+    if ! ls "$SRC_DIR"/gha/cicd/*.yml >/dev/null 2>&1; then
+        echo "FATAL: no workflows found at $SRC_DIR/gha/cicd/*.yml" >&2
+        exit 1
     fi
-    cache_download_generator
-}
-
-# ══════════════════════════════════════════════════════════════════════
-# cache_download_generator — engines-ship cache step
-# ══════════════════════════════════════════════════════════════════════
-# Pulls hand-edited / externally-cached fixtures from the cloud-data
-# submodule into dist/. Acts like the "secrets" step (sops decryption →
-# dist/.secrets) but for cached/static data files rather than encrypted
-# secrets — the engine treats both as inputs the build pipeline must
-# materialise into dist/ before downstream consumers (image build,
-# deploy) can run.
-#
-# Source preference: sibling clone (live edits) → in-repo submodule
-# (committed). Each entry can declare its own source if needed.
-#
-# 2026-05-09: cloud-data-runners.json migrated out — runner-image registry
-# now lives in 1_configs/build.json and is materialised by the
-# build-workflows deriver (registered in src/derivers.json). This loop
-# stays as a no-op stub so future cached fixtures can be re-added without
-# touching the pipeline shape.
-cache_download_generator() {
-    : # currently no cached fixtures — kept as extension point
-}
-
-run_tests() {
-    [ -f "$ENGINES/test-build-per-container.sh" ] || return 0
-    log "Running tests..."
-    fails=0
-    for t in "$ENGINES/"test-*.sh; do
-        [ -f "$t" ] || continue
-        bash "$t" || fails=$((fails + 1))
+    for f in "$SRC_DIR"/gha/cicd/*.yml; do
+        [ -f "$f" ] || continue
+        inject_header "$f" "$DIST_DIR/$(basename "$f")"
+        _n=$((_n+1))
     done
-    [ $fails -eq 0 ] || { log "Tests failed: $fails"; exit 1; }
-    log "All tests passed"
+    ok "$_n workflow(s) → $(relp "$DIST_DIR")/"
+
+    # Scripts (src/gha/scripts/ + src/gha/ops/ → dist/scripts/)
+    #
+    # ops/ renders into the SAME dist/scripts/ as the ship engine. The split is
+    # editorial — ship/* is machinery the workflows drive, ops/* is what you run
+    # by hand — but both install to .github/workflows/scripts/ and workflows
+    # reference them by bare filename, so the install path must not change.
+    for _sub in scripts ops; do
+        [ -d "$SRC_DIR/gha/$_sub" ] || continue
+        step "rendering $_sub      $(relp "$SRC_DIR")/gha/$_sub/  →  $(relp "$DIST_DIR")/scripts/"
+        inject_header_tree "$SRC_DIR/gha/$_sub" "$DIST_DIR/scripts"
+    done
+    ok "$(count_glob "$DIST_DIR/scripts/*") files → $(relp "$DIST_DIR")/scripts/"
+
+    # Hooks (src/git-hooks/ → dist/hooks/)
+    if [ -d "$SRC_DIR/git/hooks" ]; then
+        step "rendering hooks      $(relp "$SRC_DIR")/hooks/    →  $(relp "$DIST_DIR")/hooks/"
+        inject_header_tree "$SRC_DIR/git/hooks" "$DIST_DIR/hooks"
+        ok "$(count_glob "$DIST_DIR/hooks/*") files → $(relp "$DIST_DIR")/hooks/"
+    fi
+
+    # Tests (src/test/ → dist/test/)
+    if [ -d "$SRC_DIR/test" ]; then
+        step "rendering tests      $(relp "$SRC_DIR")/test/     →  $(relp "$DIST_DIR")/test/    (preflight testers for ship-* workflows)"
+        inject_header_tree "$SRC_DIR/test" "$DIST_DIR/test"
+        ok "$(count_glob "$DIST_DIR/test/*") files → $(relp "$DIST_DIR")/test/"
+    fi
+
+    # Gitmodules (src/gitconfigs/gitmodules → dist/.gitmodules)
+    if [ -f "$SRC_DIR/git/gitmodules" ]; then
+        step "rendering .gitmodules"
+        inject_header "$SRC_DIR/git/gitmodules" "$DIST_DIR/.gitmodules"
+        ok "→ $(relp "$DIST_DIR")/.gitmodules"
+    fi
+
+    # Gitignore (src/gitconfigs/gitignore → dist/.gitignore)
+    if [ -f "$SRC_DIR/git/gitignore" ]; then
+        step "rendering .gitignore"
+        inject_header "$SRC_DIR/git/gitignore" "$DIST_DIR/.gitignore"
+        ok "→ $(relp "$DIST_DIR")/.gitignore"
+    fi
+
+    # Gitattributes (src/gitconfigs/gitattributes → dist/.gitattributes)
+    if [ -f "$SRC_DIR/git/gitattributes" ]; then
+        step "rendering .gitattributes"
+        inject_header "$SRC_DIR/git/gitattributes" "$DIST_DIR/.gitattributes"
+        ok "→ $(relp "$DIST_DIR")/.gitattributes"
+    fi
+
+    # Gitconfig (src/gitconfigs/gitconfig → dist/)
+    if [ -f "$SRC_DIR/git/gitconfig" ]; then
+        step "rendering gitconfig (will be included by .git/config in deploy phase)"
+        inject_header "$SRC_DIR/git/gitconfig" "$DIST_DIR/gitconfig"
+        ok "→ $(relp "$DIST_DIR")/gitconfig"
+    fi
+
+    # GHA actions (src/gha/actions/ → dist/actions/)
+    if [ -d "$SRC_DIR/gha/actions" ]; then
+        step "rendering GHA composite actions  $(relp "$SRC_DIR")/actions/  →  $(relp "$DIST_DIR")/actions/"
+        inject_header_tree "$SRC_DIR/gha/actions" "$DIST_DIR/actions"
+        ok "$(count_glob "$DIST_DIR/actions/*") action(s) → $(relp "$DIST_DIR")/actions/"
+    fi
+
+    # GHA flake (src/flake.nix, src/flake.lock → dist/)
+    if [ -f "$SRC_DIR/gha/flake.nix" ]; then
+        step "rendering flake.nix"
+        inject_header "$SRC_DIR/gha/flake.nix" "$DIST_DIR/flake.nix"
+        ok "→ $(relp "$DIST_DIR")/flake.nix"
+    fi
+    if [ -f "$SRC_DIR/gha/flake.lock" ]; then
+        step "rendering flake.lock (verbatim — in skip_basenames for header injection)"
+        inject_header "$SRC_DIR/gha/flake.lock" "$DIST_DIR/flake.lock"
+        ok "→ $(relp "$DIST_DIR")/flake.lock"
+    fi
+    log "BUILD complete — dist/ is the canonical compiled form"
 }
 
-clean() {
-    rm -rf "$DIST"
-    log "Cleaned $DIST"
-}
+do_deploy() {
+    phase "DEPLOY  dist/ → install paths  (purpose: copy compiled artifacts to where GHA / git / submodules actually read them)"
+    mkdir -p "$TARGET_DIR" "$SCRIPTS_TARGET" "$HOOKS_TARGET"
 
+    # Workflows
+    step "deploying workflows  $(relp "$DIST_DIR")/*.yml  →  $(relp "$TARGET_DIR")/  (where GitHub Actions reads them)"
+    _n=0
+    for f in "$DIST_DIR"/*.yml; do
+        [ -f "$f" ] || continue
+        cp "$f" "$TARGET_DIR/"
+        _n=$((_n+1))
+    done
+    ok "$_n workflow(s) → $(relp "$TARGET_DIR")/"
+
+    # Scripts
+    if [ -d "$DIST_DIR/scripts" ]; then
+        step "deploying scripts  $(relp "$DIST_DIR")/scripts/  →  $(relp "$SCRIPTS_TARGET")/  (consumed by workflow run: blocks)"
+        cp -r "$DIST_DIR/scripts/"* "$SCRIPTS_TARGET/" 2>/dev/null || true
+        chmod +x "$SCRIPTS_TARGET/"*.sh 2>/dev/null || true
+        ok "$(count_glob "$SCRIPTS_TARGET/*") files → $(relp "$SCRIPTS_TARGET")/"
+    fi
+
+    # Hooks
+    if [ -d "$DIST_DIR/hooks" ]; then
+        step "deploying hooks  $(relp "$DIST_DIR")/hooks/  →  $(relp "$HOOKS_TARGET")/  (git hooksPath points here via gitconfig include)"
+        cp -r "$DIST_DIR/hooks/"* "$HOOKS_TARGET/" 2>/dev/null || true
+        chmod +x "$HOOKS_TARGET/"*.sh 2>/dev/null || true
+        ok "$(count_glob "$HOOKS_TARGET/*") files → $(relp "$HOOKS_TARGET")/"
+    fi
+
+    # GHA actions (dist/actions/ → .github/actions/)
+    if [ -d "$DIST_DIR/actions" ]; then
+        step "deploying GHA composite actions  $(relp "$DIST_DIR")/actions/  →  .github/actions/"
+        mkdir -p "$REPO_ROOT/.github/actions"
+        cp -r "$DIST_DIR/actions/"* "$REPO_ROOT/.github/actions/" 2>/dev/null || true
+        ok "$(count_glob "$REPO_ROOT/.github/actions/*") action(s) → .github/actions/"
+    fi
+
+    # GHA flake (dist/flake.{nix,lock} → .github/)
+    for f in flake.nix flake.lock; do
+        if [ -f "$DIST_DIR/$f" ]; then
+            step "deploying $f  $(relp "$DIST_DIR")/$f  →  .github/$f  (used by GHA setup-nix actions)"
+            cp "$DIST_DIR/$f" "$REPO_ROOT/.github/$f"
+            ok "→ .github/$f"
+        fi
+    done
+
+    # Repo-root configs (.gitmodules etc)
+    for f in "$DIST_DIR"/.git*; do
+        [ -f "$f" ] || continue
+        step "deploying $(basename "$f")  $(relp "$f")  →  repo root  (canonical for git to consume)"
+        cp "$f" "$REPO_ROOT/"
+        ok "→ $(basename "$f")"
+    done
+
+    # Sync submodules: ensure all entries in .gitmodules are registered + cloned
+    if [ -f "$REPO_ROOT/.gitmodules" ]; then
+        step "reconciling submodules from .gitmodules (register + clone any new ones, sync URLs, update all)"
+        # Read declared submodules from .gitmodules
+        git -C "$REPO_ROOT" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | while read -r key path; do
+            name=$(echo "$key" | sed 's/^submodule\.\(.*\)\.path$/\1/')
+            url=$(git -C "$REPO_ROOT" config --file .gitmodules "submodule.$name.url" 2>/dev/null || true)
+            if git -C "$REPO_ROOT" ls-files --stage "$path" 2>/dev/null | grep -q '^160000'; then
+                ok "submodule '$name' already registered at $path"
+            else
+                log "submodule '$name' not in index — adding from .gitmodules ($url → $path)"
+                git -C "$REPO_ROOT" submodule add --force --name "$name" "$url" "$path" 2>&1 | while IFS= read -r line; do
+                    log "  $line"
+                done
+            fi
+        done
+        git -C "$REPO_ROOT" submodule sync 2>/dev/null || true
+        git -C "$REPO_ROOT" submodule update --init 2>&1 | while IFS= read -r line; do
+            log "  submodule: $line"
+        done
+        ok "submodules synced"
+
+        # Install read-only pre-commit hook in each submodule's gitdir.
+        # Submodules are read-only — commits inside them desync the parent
+        # gitlink. This hook hard-blocks any `git commit` from inside a
+        # submodule worktree. Source: cloud-submodule-readonly-pre-commit.sh.
+        step "installing read-only pre-commit hooks in each submodule (blocks commits-from-inside that would desync the parent gitlink)"
+        RO_HOOK_SRC="$DIST_DIR/scripts/cloud-submodule-readonly-pre-commit.sh"
+        if [ -f "$RO_HOOK_SRC" ]; then
+            git -C "$REPO_ROOT" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | while read -r _key _path; do
+                [ -n "$_path" ] || continue
+                [ -d "$REPO_ROOT/$_path/.git" ] || [ -f "$REPO_ROOT/$_path/.git" ] || continue
+                _sm_hooks=$(git -C "$REPO_ROOT/$_path" rev-parse --git-path hooks 2>/dev/null)
+                [ -n "$_sm_hooks" ] || continue
+                # rev-parse may return relative path (relative to the submodule
+                # worktree). Normalize to absolute.
+                case "$_sm_hooks" in
+                    /*) _hooks_abs="$_sm_hooks" ;;
+                    *)  _hooks_abs="$REPO_ROOT/$_path/$_sm_hooks" ;;
+                esac
+                mkdir -p "$_hooks_abs"
+                cp -f "$RO_HOOK_SRC" "$_hooks_abs/pre-commit"
+                chmod +x "$_hooks_abs/pre-commit"
+                ok "submodule '$_path' → read-only pre-commit installed"
+            done
+            unset _key _path _sm_hooks _hooks_abs
+        fi
+    fi
+
+    # Gitconfig → include in .git/config
+    # Reconcile: unset any local keys owned by dist/gitconfig so they cannot
+    # shadow the declared config (last-wins makes post-include entries win).
+    if [ -f "$DIST_DIR/gitconfig" ]; then
+        step "reconciling local .git/config to include $(relp "$DIST_DIR")/gitconfig (unsets shadowing local keys, then add include.path)"
+        _gc_section=""
+        while IFS= read -r line; do
+            case "$line" in
+                \[*\])
+                    _gc_section=$(printf '%s' "$line" | sed 's/^\[\([^]]*\)\]$/\1/' | tr '[:upper:]' '[:lower:]')
+                    ;;
+                *=*)
+                    [ -z "$_gc_section" ] && continue
+                    _gc_key=$(printf '%s' "$line" | sed -n 's/^[[:space:]]*\([a-zA-Z][a-zA-Z0-9]*\)[[:space:]]*=.*/\1/p' | tr '[:upper:]' '[:lower:]')
+                    [ -n "$_gc_key" ] && git -C "$REPO_ROOT" config --local --unset "${_gc_section}.${_gc_key}" 2>/dev/null || true
+                    ;;
+            esac
+        done < "$DIST_DIR/gitconfig"
+        unset _gc_section _gc_key
+        git -C "$REPO_ROOT" config --local include.path ../1_configs/dist/gitconfig 2>/dev/null || true
+        ok "gitconfig include wired into .git/config"
+    fi
+
+    log "DEPLOY complete — every artifact is at its install path"
+}
 
 # ── dotfiles ────────────────────────────────────────────────────────────────
-# src/dotfiles/<tool>/ → dist/dotfiles/<tool>/ → <repo>/<target>/
+# src/apps/<tool>/ → dist/dotfiles/<tool>/ → <repo>/<target>/
 #
-# Same src→dist→deploy shape as 1_configs, with one deliberate difference:
-# the target directory is NEVER purged. .claude/ and .obsidian/ mix managed
-# config with per-machine state (pane layout, local permission overrides), so
-# a purge-then-copy would clobber another device's state on every build. See
-# src/dotfiles/manifest.json:never_manage.
-#
-# Portable by design: plain file copying, no dependency on this repo's TS
-# engines, so the whole module can be copied into any repo as-is.
-dotfiles() {
-    sh "$SCRIPT_DIR/src/engine/libs/deploy-dotfiles.sh" \
-       "$SCRIPT_DIR/src/deploy" "$DIST/dotfiles" "$CLOUD_ROOT"
+# Deliberately NOT purge-then-copy: .claude/ and .obsidian/ mix managed config
+# with per-machine state (pane layout, local permission overrides), so the
+# target dir is never wiped. See src/apps/manifest.json:never_manage.
+do_dotfiles() {
+    phase "DOTFILES  src/apps/ → dist/dotfiles/ → repo root"
+    sh "$SRC_DIR/lib/deploy-dotfiles.sh" "$SRC_DIR/apps" "$DIST_DIR/dotfiles" "$REPO_ROOT"
 }
 
+CMD="${1:-ship}"
+case "$CMD" in
+    # build       = src/  → dist/                  (compile only)
+    # deploy/ship = src/  → dist/  → install path  (full pipeline; default)
+    # `ship` matches the rest of the cloud repo's per-service `build.sh ship`
+    # convention; `deploy`/`all` kept as synonyms for muscle memory.
+    dotfiles)
+        log "MODE: dotfiles  (src/apps/ → dist/dotfiles/ → repo root)"
+        do_dotfiles
+        ;;
+    build)
+        log "MODE: build  (src/ → dist/ — compile only, no deploy)"
+        do_build
+        log "FINISHED — dist/ ready. Run \`$0 deploy\` (or \`ship\`) to push it to install paths."
+        ;;
+    deploy|ship|all|"")
+        log "MODE: ${CMD:-ship}  (src/ → dist/ → install paths — full pipeline)"
+        do_build
+        do_deploy
+        do_dotfiles
+        log "FINISHED — every artifact compiled AND installed at its target path."
+        ;;
+    *)
+        cat >&2 <<USAGE
+Usage: $0 [build | ship | deploy]
 
-# ── gha ─────────────────────────────────────────────────────────────────────
-# The former 1_workflows engine, absorbed here: renders src/gha/{cicd,actions},
-# src/git-hooks and src/git-repo into dist/ and installs them at .github/ and
-# the repo root. Kept as its own script rather than inlined — it is a full
-# build+deploy pipeline with its own verbs, and merging the two dispatchers
-# would have made this reorganisation a rewrite instead of a move.
-gha() {
-    bash "$SCRIPT_DIR/build-gha.sh" "${1:-ship}"
-}
+  build           src/                       → dist/                              (compile only — no deploy)
+  ship  (default) src/  → dist/  → installed (full pipeline; default)
+  deploy          src/  → dist/  → installed (alias for ship)
+  dotfiles        src/apps/ → dist/dotfiles/ → .claude/ .vscode/ .obsidian/
 
-case "${1:-all}" in
-    link-builds) link_builds ;;
-    consolidate) consolidate ;;
-    derive)      derive ;;
-    test)        run_tests ;;
-    dotfiles)    dotfiles ;;
-    gha)         gha "${2:-ship}" ;;
-    clean)       clean ;;
-    all)         link_builds; consolidate; derive; dotfiles; gha ;;
-    ship)        link_builds; consolidate; derive; dotfiles; gha; run_tests ;;
-    *)           echo "Usage: $0 [all|link-builds|consolidate|derive|dotfiles|gha|test|clean|ship]"; exit 1 ;;
+After 'ship'/'deploy', .github/workflows/, .github/actions/, .github/flake.{nix,lock},
+.gitmodules, .gitignore, gitconfig include, scripts/, hooks/, and submodule
+read-only pre-commits are all in place.
+USAGE
+        exit 1
+        ;;
 esac

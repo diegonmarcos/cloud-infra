@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_precommit_allows_gha_workflow.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_precommit_allows_gha_workflow.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,18 +17,18 @@
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   The pre-commit content-scan allows workflow YAMLs under the    ║
-# ║   engine paths (.github/workflows/, 1_configs/src/deploy/gha/cicd/,       ║
+# ║   engine paths (.github/workflows/, 1_configs/src/gha/cicd/,       ║
 # ║   1_configs/dist/) whose filename mentions secrets BUT whose   ║
 # ║   content is a proper GHA workflow (has `on:` and `jobs:`).      ║
 # ║                                                                  ║
 # ║   Non-workflow files with secret-ish names must still be blocked.║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_precommit_allows_gha_...   ║
+# ║ Usage: bash 1_configs/src/test/test_precommit_allows_gha_...   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 HOOK="$REPO_ROOT/1_configs/dist/hooks/pre-commit"

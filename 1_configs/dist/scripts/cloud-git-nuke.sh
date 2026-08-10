@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-git-nuke.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-git-nuke.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ cloud-git-nuke.sh — bulletproof reset-from-origin `git nuke`     ║
 # ║                                                                  ║
-# ║ Source: cloud/1_configs/src/deploy/scripts/cloud-git-nuke.sh          ║
+# ║ Source: cloud/1_configs/src/gha/ops/cloud-git-nuke.sh          ║
 # ║ Wired : 1_configs/src/gitconfig  →  [alias] nuke               ║
 # ║                                                                  ║
 # ║ Sibling of `git sync` — same fan-out, opposite contract:         ║

@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/gha/cicd/cgc-db-index.yml
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/cicd/cgc-db-index.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -71,7 +71,7 @@ jobs:
           esac
       - name: WireGuard up
         continue-on-error: true
-        run: bash 1_configs/src/deploy/scripts/cloud-ship-ci-setup-wireguard.sh
+        run: bash 1_configs/src/gha/scripts/cloud-ship-ci-setup-wireguard.sh
       - name: Provision SSH key for propagation
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -85,4 +85,4 @@ jobs:
           # phase → PER-PHASE manifest so each phase change-gates independently and
           # graphrag is not skipped just because semantic already advanced HEAD.
           CGC_MANIFEST_PHASE: ${{ inputs.phase }}
-        run: sh 1_configs/src/deploy/scripts/cloud-cgc-db-update.sh
+        run: sh 1_configs/src/gha/ops/cloud-cgc-db-update.sh

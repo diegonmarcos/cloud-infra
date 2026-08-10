@@ -1,0 +1,238 @@
+{
+  "_comment": "Notification broker POLICY source (engine-owned input). Read verbatim by 1_cloud-configs/src/derive/cloud-data-config-derive.ts/deriveBuildNotify, enriched with the live ntfy topic list from _cloud-data-consolidated.json, and emitted to 1_cloud-configs/dist/build-notify.json. That dist file is the SoT consumed by infra-obs_ntfy/src/code/notify-broker.py (symlinked in as src/build-notify.json). Changes here take effect on the next `bash 1_configs/build.sh all` + service ship. FIRE RULE 4 + 6: routing/severity/escalation is data here, never hardcoded in the broker.",
+
+  "ntfy": {
+    "_comment": "Broker publishes over WG-direct to the ntfy container on oci-apps (never the public edge — avoids auth + round-trip). Public URL kept for click-actions in notifications.",
+    "wg_base_url": "http://10.0.0.6:8090",
+    "public_base_url": "https://rss.diegonmarcos.com",
+    "timeout_secs": 5,
+    "publish_to_all_topic": true,
+    "all_topic": "all"
+  },
+
+  "channels": {
+    "_comment": "Transport definitions. Secret material is referenced by secrets.yaml KEY NAME only — never inline. Broker reads the value from its .secrets env at runtime (build.sh secrets → dist/.secrets). matrix/resend keys must be added to infra-obs_ntfy/src/secrets.yaml (sops) before enabling those channels.",
+    "ntfy": {
+      "kind": "ntfy",
+      "enabled": true,
+      "token_env": "NTFY_BROKER_TOKEN"
+    },
+    "matrix": {
+      "kind": "matrix",
+      "enabled": true,
+      "homeserver": "https://matrix.diegonmarcos.com",
+      "room": "!ops-alerts:diegonmarcos.com",
+      "token_env": "MATRIX_BROKER_TOKEN"
+    },
+    "email": {
+      "kind": "email",
+      "enabled": true,
+      "transport": "resend",
+      "from": "alerts@diegonmarcos.com",
+      "to": "me@diegonmarcos.com",
+      "resend_key_env": "RESEND_API_KEY",
+      "smtp_host_env": "MADDY_SMTP_IP",
+      "smtp_port": 465
+    }
+  },
+
+  "severity_map": {
+    "_comment": "event.source + event class → base severity. Broker looks up event.severity first (explicit wins); if a producer sends only a raw `class`, this maps it. Keys are `<source>.<class>` with `<class>` fallback and a final `default`.",
+    "default": "info",
+    "by_class": {
+      "heartbeat_miss": "page",
+      "mesh_peer_down": "page",
+      "island_down": "page",
+      "load_shed_tier1": "page",
+      "deploy_failed": "page",
+      "fd_exhaustion": "crit",
+      "load_shed": "crit",
+      "container_down": "crit",
+      "endpoint_down": "crit",
+      "cert_expired": "crit",
+      "disk_full": "crit",
+      "oom_kill": "crit",
+      "psi_high": "warn",
+      "disk_warn": "warn",
+      "cert_expiring": "warn",
+      "flapping": "warn",
+      "backup_stale": "warn",
+      "deploy_ok": "info",
+      "recovered": "info",
+      "heartbeat_ok": "info"
+    }
+  },
+
+  "routing": {
+    "_comment": "(match, severity) → list of channels. `match` is tried most-specific first: `service:<name>`, then `category:<cat>`, then `default`. severity level implies floor: a `page` also gets everything routed for `crit`. Topics reference EXISTING ntfy taxonomy names from build.json#topics; the broker validates them against the live topic list emitted by the engine and fails loud on an unknown topic.",
+    "rules": [
+      {
+        "match": "category:mesh",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_mesh" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_mesh" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_mesh" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_mesh" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:containers",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_containers" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_containers" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_containers" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_containers" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:endpoints",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_endpoints" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_endpoints" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_endpoints" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_endpoints" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:resources",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_resources" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_resources" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_resources" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_resources" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:dns",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_dns" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_dns" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_dns" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_dns" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:security",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "sec_audit" }],
+          "warn": [{ "kind": "ntfy", "topic": "sec_audit" }],
+          "crit": [{ "kind": "ntfy", "topic": "sec_audit" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "sec_audit" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:tls",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "sec_tls" }],
+          "warn": [{ "kind": "ntfy", "topic": "sec_tls" }],
+          "crit": [{ "kind": "ntfy", "topic": "sec_tls" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "sec_tls" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:deploy",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "deploy_ship" }],
+          "warn": [{ "kind": "ntfy", "topic": "deploy_ship" }],
+          "crit": [{ "kind": "ntfy", "topic": "deploy_ship" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "deploy_ship" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "category:backups",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "ops_backups" }],
+          "warn": [{ "kind": "ntfy", "topic": "ops_backups" }],
+          "crit": [{ "kind": "ntfy", "topic": "ops_backups" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "ops_backups" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      },
+      {
+        "match": "default",
+        "channels": {
+          "info": [{ "kind": "ntfy", "topic": "health_resources" }],
+          "warn": [{ "kind": "ntfy", "topic": "health_resources" }],
+          "crit": [{ "kind": "ntfy", "topic": "health_resources" }, { "kind": "matrix" }],
+          "page": [{ "kind": "ntfy", "topic": "health_resources" }, { "kind": "matrix" }, { "kind": "email" }]
+        }
+      }
+    ]
+  },
+
+  "category_by_unit": {
+    "_comment": "systemd unit name (glob) → event category. Producers that only know a unit name (journal-ntfy) resolve category here. Longest literal prefix wins; `*` is a suffix wildcard.",
+    "load-shedder": "resources",
+    "tier1-watchdog": "resources",
+    "tier1-apps": "resources",
+    "health-agent": "resources",
+    "evidence-collector*": "resources",
+    "fluent-bit": "resources",
+    "log-shipper": "resources",
+    "wg-quick*": "mesh",
+    "wireguard*": "mesh",
+    "sshd": "mesh",
+    "dropbear": "mesh",
+    "docker*": "containers",
+    "containerd*": "containers",
+    "maddy": "endpoints",
+    "stalwart": "endpoints",
+    "mail-puller*": "endpoints",
+    "caddy": "endpoints",
+    "introspect-proxy": "endpoints",
+    "authelia": "endpoints",
+    "crowdsec": "security",
+    "fail2ban": "security",
+    "dagu*": "deploy"
+  },
+
+  "dedup": {
+    "_comment": "Collapse identical `key` within window_secs. First event fires; repeats within the window are suppressed (counted). Keyed by (key, severity). Per-key override in `by_key`.",
+    "window_secs": 300,
+    "by_key": {}
+  },
+
+  "flap": {
+    "_comment": "If a key transitions between alerting/recovered N times within window_secs, emit ONE `flapping` warn and mute further transitions until quiet for window_secs.",
+    "enabled": true,
+    "transitions": 4,
+    "window_secs": 900,
+    "mute_after_flap_secs": 1800
+  },
+
+  "escalation": {
+    "_comment": "Unacked alerts escalate. A `warn` unacked for warn_to_crit_secs becomes `crit`; a `crit` unacked for crit_to_page_secs becomes `page`. Ack (via ntfy action button → broker ack endpoint) or recovery resets the ladder. Escalation is evaluated on each broker tick against persisted state.",
+    "enabled": true,
+    "warn_to_crit_secs": 900,
+    "crit_to_page_secs": 1800
+  },
+
+  "recovery": {
+    "_comment": "When a `recovered`/`*_ok` event arrives for a key that is currently alerting, emit a paired 'resolved' notice to the same channels the alert used, then clear the key's state. Pairing is by `key`.",
+    "enabled": true,
+    "notice_severity": "info"
+  },
+
+  "state": {
+    "_comment": "Broker persists dedup/flap/escalation/recovery state to a small local JSON file (append-free, rewritten atomically). sqlite only if query latency ever matters — YAGNI for now.",
+    "path": "/var/cache/ntfy/notify-state.json",
+    "history_jsonl": "/var/cache/ntfy/notify-history.jsonl",
+    "history_max_lines": 5000
+  },
+
+  "digest": {
+    "_comment": "Daily + weekly rollup posted to ops_reports topic + email. Reads the reports history JSONL written by the tiered reports engine (Phase 1). weekly_day is emitted alongside the daily on that weekday.",
+    "enabled": true,
+    "daily_time": "08:00",
+    "weekly_day": "monday",
+    "topic": "ops_reports",
+    "email": true,
+    "reports_history_jsonl": "/opt/health/history/reports.jsonl"
+  },
+
+  "status_page": {
+    "_comment": "status.json schema written by the reports engine (Phase 1), consumed by the front status page (PORTAL_DATA). Broker does not write it; the schema lives here as the shared contract. States: green|yellow|red|unknown|stale.",
+    "output_path": "/opt/health/status.json",
+    "public_url": "https://status.diegonmarcos.com",
+    "topic_on_change": "health_endpoints"
+  }
+}

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_no_dead_nix_install_branch.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_no_dead_nix_install_branch.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -24,15 +24,15 @@
 # ║ This test prevents the dead path from creeping back. If you      ║
 # ║ truly need persistence, declare the dep in a flake.              ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_no_dead_nix_install_branch.sh
+# ║ Usage: bash 1_configs/src/test/test_no_dead_nix_install_branch.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-LIB="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-lib.sh"
+LIB="$REPO_ROOT/1_configs/src/gha/scripts/cloud-ship-lib.sh"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -50,7 +50,7 @@ while IFS= read -r f; do
              | grep -vE '^[0-9]+:\s*#' \
              | grep -vE '^[0-9]+:\s*//' \
              || true)
-done < <(find "$REPO_ROOT/1_configs/src/deploy/scripts" -name 'cloud-ship-*.sh' -type f 2>/dev/null)
+done < <(find "$REPO_ROOT/1_configs/src/gha/scripts" -name 'cloud-ship-*.sh' -type f 2>/dev/null)
 
 if [ "${#HITS[@]}" -eq 0 ]; then
     pass "no executable 'nix profile install' calls (host-state mutation forbidden)"

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-orchestrate-vm.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-orchestrate-vm.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -32,7 +32,7 @@ TRACE_SERVICES="[]"
 GHA_CONFIG=""
 for _p in \
     "/app/build-gha.json" \
-    "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/build-gha.json" \
+    "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/build-gha.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/build-gha.json" \
     "${CLOUD_ROOT:-$REPO_ROOT}/build-gha.json"; do
     [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
@@ -42,7 +42,7 @@ if [ -z "$GHA_CONFIG" ]; then
     _CONS_FOR_GHA=""
     for _p in \
         "/app/_cloud-data-consolidated.json" \
-        "${CLOUD_ROOT:-$REPO_ROOT}/1_configs/dist/_cloud-data-consolidated.json" \
+        "${CLOUD_ROOT:-$REPO_ROOT}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
         "${CLOUD_ROOT:-$REPO_ROOT}/cloud-data/_cloud-data-consolidated.json" \
         "${CLOUD_ROOT:-$REPO_ROOT}/_cloud-data-consolidated.json"; do
         [ -f "$_p" ] && { _CONS_FOR_GHA="$_p"; break; }

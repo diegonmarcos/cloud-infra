@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-nix-homemanager-step-build-docker.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/scripts/cloud-ship-nix-homemanager-step-build-docker.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -207,7 +207,7 @@ ACTIVATE_EOF
     # Source-of-truth: b_infra/_shared/vm-pilot/src/Dockerfile.transport
     # Substitutions are LITERAL (sed-no-regex via awk) for {{SERVICE_NAME}},
     # {{HM_ACTIVATION_PATH}}, {{HM_USER}}.
-    # STEPS_DIR is /home/.../cloud/1_configs/src/deploy/scripts (set in engine.sh)
+    # STEPS_DIR is /home/.../cloud/1_configs/src/gha/scripts (set in engine.sh)
     HM_DOCKERFILE_TPL="${HM_TRANSPORT_DOCKERFILE:-$STEPS_DIR/../../../b_infra/_shared/vm-pilot/src/Dockerfile.transport}"
     if [ ! -f "$HM_DOCKERFILE_TPL" ]; then
         log "ERROR: vm-pilot transport Dockerfile template missing: $HM_DOCKERFILE_TPL"

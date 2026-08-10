@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/gha/cicd/fetch-github-repos.yml
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/cicd/fetch-github-repos.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -12,7 +12,7 @@
 
 name: Fetch GitHub repos
 
-# Refreshes 1_configs/src/inputs/github-repos.json — the source of truth for
+# Refreshes 1_cloud-configs/src/inputs/github-repos.json — the source of truth for
 # WHICH REPOS EXIST.
 #
 # Why a scheduled fetch-and-commit rather than an API call inside build.sh:
@@ -46,7 +46,7 @@ on:
         default: "false"
   push:
     paths:
-      - "1_configs/src/deploy/gha/cicd/fetch-github-repos.yml"
+      - "1_configs/src/gha/cicd/fetch-github-repos.yml"
       - ".github/workflows/fetch-github-repos.yml"
 
 permissions:
@@ -105,12 +105,12 @@ jobs:
           # last time. Never let an inventory shrink silently — losing a repo
           # here turns its declarations into false "dangling" reports
           # downstream. Shrinking requires a human via workflow_dispatch.
-          if [ -f 1_configs/src/inputs/github-repos.json ]; then
-            before=$(jq '.repos | length' 1_configs/src/inputs/github-repos.json)
+          if [ -f 1_cloud-configs/src/inputs/github-repos.json ]; then
+            before=$(jq '.repos | length' 1_cloud-configs/src/inputs/github-repos.json)
             after=$(jq 'length' /tmp/acc.json)
             if [ "$after" -lt "$before" ] && [ "${{ github.event.inputs.allow_shrink }}" != "true" ]; then
               echo "::error::inventory would shrink ${before} -> ${after}. Refusing: this usually means a token scope regression, not deleted repos. Re-run via workflow_dispatch with allow_shrink=true if the loss is real."
-              jq -r --slurpfile new /tmp/acc.json '.repos[].name' 1_configs/src/inputs/github-repos.json \
+              jq -r --slurpfile new /tmp/acc.json '.repos[].name' 1_cloud-configs/src/inputs/github-repos.json \
                 | grep -vxF -f <(jq -r '.[].name' /tmp/acc.json) | sed 's/^/  missing: /' || true
               exit 1
             fi
@@ -124,25 +124,25 @@ jobs:
             fetched_at: $now,
             owner: $owner,
             repos: ([.[] | {name: .name, visibility: (.visibility // (if .private then "private" else "public" end)), fork: .fork, pushed_at: .pushed_at}] | sort_by(.pushed_at) | reverse)
-          }' /tmp/acc.json > 1_configs/src/inputs/github-repos.json
+          }' /tmp/acc.json > 1_cloud-configs/src/inputs/github-repos.json
 
-          echo "repos: $(jq '.repos | length' 1_configs/src/inputs/github-repos.json)"
+          echo "repos: $(jq '.repos | length' 1_cloud-configs/src/inputs/github-repos.json)"
 
       - name: Commit if changed
         run: |
           set -euo pipefail
           # fetched_at always moves; only commit when the repo LIST changed,
           # otherwise this would push a no-op commit every single week.
-          if git diff --quiet -- 1_configs/src/inputs/github-repos.json; then
+          if git diff --quiet -- 1_cloud-configs/src/inputs/github-repos.json; then
             echo "no change"; exit 0
           fi
-          if [ -z "$(git diff -- 1_configs/src/inputs/github-repos.json | grep -E '^[+-] +"(name|visibility|fork)"' || true)" ]; then
+          if [ -z "$(git diff -- 1_cloud-configs/src/inputs/github-repos.json | grep -E '^[+-] +"(name|visibility|fork)"' || true)" ]; then
             echo "only fetched_at/pushed_at moved — skipping commit"
-            git checkout -- 1_configs/src/inputs/github-repos.json
+            git checkout -- 1_cloud-configs/src/inputs/github-repos.json
             exit 0
           fi
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
-          git add 1_configs/src/inputs/github-repos.json
+          git add 1_cloud-configs/src/inputs/github-repos.json
           git commit -m "chore(configs): refresh GitHub repo inventory"
           git push origin HEAD:main

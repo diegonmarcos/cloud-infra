@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/git-hooks/pre-push
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/git/hooks/pre-push
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ pre-push — block non-main remote refs; rebase submodules         ║
 # ║                                                                  ║
-# ║ Source: cloud/1_configs/src/deploy/git-hooks/pre-push                     ║
+# ║ Source: cloud/1_configs/src/git/hooks/pre-push                     ║
 # ║ Active via [core] hooksPath = 1_configs/dist/hooks             ║
 # ║                                                                  ║
 # ║ Main-only policy, remote half: `reference-transaction` blocks    ║
@@ -51,7 +51,7 @@ if [ -n "$_blocked" ]; then
     printf '  attempted:\n'
     printf "$_blocked"
     printf '  Work directly on main — push there instead.\n'
-    printf '  Source   : 1_configs/src/deploy/git-hooks/pre-push\n\n'
+    printf '  Source   : 1_configs/src/git/hooks/pre-push\n\n'
   } >&2
   exit 1
 fi

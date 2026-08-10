@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_docker_npm_baked_into_image.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_docker_npm_baked_into_image.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -35,12 +35,12 @@
 # config.json:.deps.docker_npm has a corresponding `npm install -g`
 # line in the rendered docker-deps.sh.
 #
-# Run:  bash 1_configs/src/deploy/test/test_docker_npm_baked_into_image.sh
+# Run:  bash 1_configs/src/test/test_docker_npm_baked_into_image.sh
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 CONFIG="$REPO_ROOT/config.json"
@@ -97,7 +97,7 @@ else
 fi
 
 # Test 4: terraform engine no longer runtime-installs wrangler
-ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-terraform-deploy-apply.sh"
+ENGINE="$REPO_ROOT/1_configs/src/gha/scripts/cloud-ship-terraform-deploy-apply.sh"
 if grep -qE '^[[:space:]]*npm install -g wrangler[[:space:]]*$' "$ENGINE"; then
     fail "terraform engine still runs 'npm install -g wrangler' — bake-into-image fix incomplete"
 else

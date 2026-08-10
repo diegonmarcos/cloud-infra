@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/scripts/cloud-cgc-db-seed.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/gha/ops/cloud-cgc-db-seed.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -38,7 +38,7 @@ VOLUME=$(jq -r '.db_publish.volume // .runtime.octocode.db_volume' "$BJ")
 [ -n "$IMAGE" ] && [ -n "$HOST" ] && [ -n "$VOLUME" ] || { echo "::error::need db_publish.{image,host,volume}"; exit 1; }
 
 # Resolve the SSH target data-driven (CI: user@wg_ip from build-gha.json; local: ssh alias).
-GHA="$ROOT/1_configs/dist/build-gha.json"
+GHA="$ROOT/1_cloud-configs/dist/build-gha.json"
 TARGET="$HOST"
 if [ -f "$GHA" ]; then
   WGIP=$(jq -r --arg h "$HOST" '.vms[$h].wg_ip // empty'  "$GHA" 2>/dev/null)

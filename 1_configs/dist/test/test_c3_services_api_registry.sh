@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/deploy/test/test_c3_services_api_registry.sh
-# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/test/test_c3_services_api_registry.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -15,7 +15,7 @@
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║ c3-services-api registry — declarative pipeline tests            ║
 # ║                                                                  ║
-# ║ Asserts every service in 1_configs/dist/build-c3-services-api    ║
+# ║ Asserts every service in 1_cloud-configs/dist/build-c3-services-api    ║
 # ║ .json's `services` map carries an `api` and/or `mcp` block       ║
 # ║ matching what was declared in each peer's build.json. This is    ║
 # ║ the registry the c3-services-api container reads at startup      ║
@@ -32,15 +32,15 @@
 # ║      consumer at read time (mcp.has_mcp=false)                   ║
 # ║   6. validate-build-schema.ts passes (api/mcp blocks valid)      ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/deploy/test/test_c3_services_api_registry.sh ║
+# ║ Usage: bash 1_configs/src/test/test_c3_services_api_registry.sh ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 # Repo root by upward search, not a fixed ../../.. — this file exists at BOTH
-# 1_configs/src/deploy/test/ and 1_configs/dist/test/ (generated), which sit at
+# 1_configs/src/test/ and 1_configs/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-BUILD_FILE="$REPO_ROOT/1_configs/dist/build-c3-services-api.json"
+BUILD_FILE="$REPO_ROOT/1_cloud-configs/dist/build-c3-services-api.json"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -109,7 +109,7 @@ else
 fi
 
 echo "── 6: schema-gate (api/mcp blocks valid in every build.json) ──"
-if (cd "$REPO_ROOT/1_configs/src/engine" && npx tsx validate-build-schema.ts >/dev/null 2>&1); then
+if (cd "$REPO_ROOT/1_cloud-configs/src/derive" && npx tsx validate-build-schema.ts >/dev/null 2>&1); then
   pass "validate-build-schema.ts passes"
 else
   fail "validate-build-schema.ts failed"
