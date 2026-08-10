@@ -86,31 +86,31 @@ do_build() {
         ok "$(count_glob "$DIST_DIR/test/*") files → $(relp "$DIST_DIR")/test/"
     fi
 
-    # Gitmodules (src/modules/gitmodules → dist/.gitmodules)
-    if [ -f "$SRC_DIR/modules/gitmodules" ]; then
+    # Gitmodules (src/gitconfigs/gitmodules → dist/.gitmodules)
+    if [ -f "$SRC_DIR/gitconfigs/gitmodules" ]; then
         step "rendering .gitmodules"
-        inject_header "$SRC_DIR/modules/gitmodules" "$DIST_DIR/.gitmodules"
+        inject_header "$SRC_DIR/gitconfigs/gitmodules" "$DIST_DIR/.gitmodules"
         ok "→ $(relp "$DIST_DIR")/.gitmodules"
     fi
 
-    # Gitignore (src/gitignore → dist/.gitignore)
-    if [ -f "$SRC_DIR/gitignore" ]; then
+    # Gitignore (src/gitconfigs/gitignore → dist/.gitignore)
+    if [ -f "$SRC_DIR/gitconfigs/gitignore" ]; then
         step "rendering .gitignore"
-        inject_header "$SRC_DIR/gitignore" "$DIST_DIR/.gitignore"
+        inject_header "$SRC_DIR/gitconfigs/gitignore" "$DIST_DIR/.gitignore"
         ok "→ $(relp "$DIST_DIR")/.gitignore"
     fi
 
-    # Gitattributes (src/gitattributes → dist/.gitattributes)
-    if [ -f "$SRC_DIR/gitattributes" ]; then
+    # Gitattributes (src/gitconfigs/gitattributes → dist/.gitattributes)
+    if [ -f "$SRC_DIR/gitconfigs/gitattributes" ]; then
         step "rendering .gitattributes"
-        inject_header "$SRC_DIR/gitattributes" "$DIST_DIR/.gitattributes"
+        inject_header "$SRC_DIR/gitconfigs/gitattributes" "$DIST_DIR/.gitattributes"
         ok "→ $(relp "$DIST_DIR")/.gitattributes"
     fi
 
-    # Gitconfig (src/gitconfig → dist/)
-    if [ -f "$SRC_DIR/gitconfig" ]; then
+    # Gitconfig (src/gitconfigs/gitconfig → dist/)
+    if [ -f "$SRC_DIR/gitconfigs/gitconfig" ]; then
         step "rendering gitconfig (will be included by .git/config in deploy phase)"
-        inject_header "$SRC_DIR/gitconfig" "$DIST_DIR/gitconfig"
+        inject_header "$SRC_DIR/gitconfigs/gitconfig" "$DIST_DIR/gitconfig"
         ok "→ $(relp "$DIST_DIR")/gitconfig"
     fi
 
