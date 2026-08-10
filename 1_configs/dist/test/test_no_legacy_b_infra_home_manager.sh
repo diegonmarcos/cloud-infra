@@ -70,7 +70,7 @@ fi
 # Test 4: cloud-side source files do not reference the legacy path.
 # Excludes: submodules, dist/, z_archive/, *.build-log, .claude/settings.local.
 STALE=$(git -C "$REPO_ROOT" grep -l 'b_infra/home-manager' \
-        ":!I_cloud-data" ":!II_tools" ":!III_unix" \
+        ":!I_cloud-data" ":!II_tools" ":!II_Unix" \
         ":!*/dist/*" ":!*/z_archive/*" ":!**/.build-log" \
         ":!.claude/settings.local.json" 2>/dev/null || true)
 if [ -n "$STALE" ]; then

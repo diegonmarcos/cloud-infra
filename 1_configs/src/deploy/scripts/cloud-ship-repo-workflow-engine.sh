@@ -45,7 +45,16 @@ do_build() {
     # Static workflows (src/gha/cicd/*.yml → dist/)
     step "rendering workflows  $(relp "$SRC_DIR")/cicd/*.yml  →  $(relp "$DIST_DIR")/*.yml"
     _n=0
-    for f in "$SRC_DIR"/cicd/*.yml; do
+    # A glob that matches nothing is silent: the loop body never runs, the
+    # deploy step copies zero files, and the previously-deployed .github/
+    # copies stay in place looking healthy. That is exactly what happened when
+    # cicd/ moved under gha/ — workflow edits stopped propagating with no
+    # error. Fail loudly instead.
+    if ! ls "$SRC_DIR"/deploy/gha/cicd/*.yml >/dev/null 2>&1; then
+        echo "FATAL: no workflows found at $SRC_DIR/deploy/gha/cicd/*.yml" >&2
+        exit 1
+    fi
+    for f in "$SRC_DIR"/deploy/gha/cicd/*.yml; do
         [ -f "$f" ] || continue
         inject_header "$f" "$DIST_DIR/$(basename "$f")"
         _n=$((_n+1))

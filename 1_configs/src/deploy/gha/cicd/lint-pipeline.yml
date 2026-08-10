@@ -15,7 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
+
+      # Allowlist: `submodules: true` aborts checkout on the first submodule
+      # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
+      # cloud-master's own .gitmodules is SSH-only). Init just what is used.
+      - uses: ./.github/actions/init-submodules
+        with:
+          include: cloud-data unix
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
       - name: Fail on broken symlinks in build contexts
         run: |
           set -e
@@ -124,7 +133,7 @@ jobs:
         run: bash 1_configs/src/deploy/test/test_lint_pipeline_referenced_files_tracked.sh
       - name: Phase 34 — no hardcoded cloud-builder-x image literals in wrappers
         # Wrapper-layer drift guard. Engine scripts read image from
-        # III_unix/cb_containers-builders/build.json (data-driven); wrappers
+        # II_Unix/cb_containers-builders/build.json (data-driven); wrappers
         # MUST resolve from the same source — never re-paste the literal.
         # See test header for the 2026-05-05 root-cause story.
         run: bash 1_configs/src/deploy/test/test_no_hardcoded_builder_image_literals.sh
@@ -147,7 +156,7 @@ jobs:
         run: bash 1_configs/src/deploy/test/test_no_dead_nix_install_branch.sh
       - name: Phase 39 — legacy unix workflows/src/static/ removed
         # Stale source tree (hardcoded literals); active source is
-        # III_unix/1_configs/src/deploy/gha/cicd/. Skipped if III_unix not checked out.
+        # II_Unix/1_configs/src/deploy/gha/cicd/. Skipped if II_Unix not checked out.
         run: bash 1_configs/src/deploy/test/test_no_legacy_unix_static_workflows.sh
       - name: Phase 40 — cloud-data-*.json consumers probe dist/z_archive/
         # Derive script archives deprecated cloud-data-*.json slices to

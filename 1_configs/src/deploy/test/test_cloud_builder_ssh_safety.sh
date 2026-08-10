@@ -9,7 +9,7 @@
 # ║   Host secrets must mount at /mnt/host-ssh and entrypoint.sh     ║
 # ║   copies them into /root/.ssh with chown root:root + chmod.      ║
 # ║                                                                  ║
-# ║   Source of truth: III_unix submodule →                          ║
+# ║   Source of truth: II_Unix submodule →                          ║
 # ║     cb_containers-builders/src/docker/compose.yaml               ║
 # ║     cb_containers-builders/src/docker/entrypoint.sh              ║
 # ║                                                                  ║
@@ -23,7 +23,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 COMPOSE=""
 ENTRYPOINT=""
 for base in \
-    "$REPO_ROOT/III_unix/cb_containers-builders/src/docker" \
+    "$REPO_ROOT/II_Unix/cb_containers-builders/src/docker" \
     "$REPO_ROOT/a_solutions/infra-bld_cloud-builder-x/src/docker"; do
     if [ -f "$base/compose.yaml" ]; then
         COMPOSE="$base/compose.yaml"
@@ -38,7 +38,7 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
 if [ -z "$COMPOSE" ]; then
     echo "── cloud-builder source not present in checkout ──"
-    echo "  (III_unix submodule not initialised — nothing to assert)"
+    echo "  (II_Unix submodule not initialised — nothing to assert)"
     exit 0
 fi
 
