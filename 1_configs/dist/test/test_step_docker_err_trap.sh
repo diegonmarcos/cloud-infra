@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_step_docker_err_trap.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_step_docker_err_trap.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -24,7 +24,7 @@
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-SCRIPT="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-build-docker.sh"
+SCRIPT="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 
 [ -f "$SCRIPT" ] || { echo "::error::$SCRIPT not found"; exit 1; }
 

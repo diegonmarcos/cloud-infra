@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_proxied_mcps_resolution.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_proxied_mcps_resolution.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -21,7 +21,7 @@
 # ║                                                                  ║
 # ║ Data-driven (FIRE RULE 3): no hardcoded service list.            ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_proxied_mcps_resolution.sh ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_proxied_mcps_resolution.sh ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

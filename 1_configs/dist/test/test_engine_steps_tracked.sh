@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_engine_steps_tracked.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_engine_steps_tracked.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -35,7 +35,7 @@
 # ║ Fix when this fails:                                              ║
 # ║   git add <referenced-but-untracked-path>                         ║
 # ║                                                                   ║
-# ║ Usage: bash 1_configs/src/test/test_engine_steps_tracked.sh     ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_engine_steps_tracked.sh     ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -50,17 +50,17 @@ echo "── Every referenced cloud-ship-*-step-*.sh MUST be tracked ──"
 
 # Scan ENGINES only — files that source/exec other engine steps for real.
 # Excluded:
-#   1_configs/src/test/    (tests mention filenames as fixtures, e.g. heredocs)
+#   1_configs/src/deploy/test/    (tests mention filenames as fixtures, e.g. heredocs)
 #   1_configs/dist/        (generated mirror of src/ — duplicate references)
 # Included:
 #   per-service build.sh symlinks → consolidated engine
-#   1_configs/src/scripts/ engines/orchestrators
-#   1_configs/src/gha/cicd/    workflow source
+#   1_configs/src/deploy/scripts/ engines/orchestrators
+#   1_configs/src/deploy/gha/cicd/    workflow source
 #   .github/workflows/       generated workflows (also tracked)
 mapfile -t scan_files < <(
   git ls-files \
-    '1_configs/src/scripts/*.sh' \
-    '1_configs/src/gha/cicd/*.yml' \
+    '1_configs/src/deploy/scripts/*.sh' \
+    '1_configs/src/deploy/gha/cicd/*.yml' \
     '.github/workflows/*.yml' \
     'a_solutions/*/build.sh' \
   2>/dev/null | sort -u
@@ -84,10 +84,10 @@ fi
 CHECKED=0
 for step in "${referenced[@]}"; do
   # Resolve to canonical source path. The engine clone (cloud-builder) reads
-  # from 1_configs/src/scripts/. dist/scripts is the generated mirror used
+  # from 1_configs/src/deploy/scripts/. dist/scripts is the generated mirror used
   # by the local dev loop. Both must be tracked if the script is referenced
   # so the GHA runner and the cloud-builder container both find it.
-  src_path="1_configs/src/scripts/$step"
+  src_path="1_configs/src/deploy/scripts/$step"
   dist_path="1_configs/dist/scripts/$step"
 
   src_tracked=0

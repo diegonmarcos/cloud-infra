@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_secrets_v2_layout_path.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_secrets_v2_layout_path.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -28,7 +28,7 @@
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-SCRIPT="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-secrets-decrypt.sh"
+SCRIPT="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-secrets-decrypt.sh"
 
 [ -f "$SCRIPT" ] || { echo "::error::$SCRIPT not found"; exit 1; }
 

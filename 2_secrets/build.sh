@@ -13,7 +13,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENGINE="$SCRIPT_DIR/src/engines/secrets.sh"
+ENGINE="$SCRIPT_DIR/src/engine/secrets.sh"
 DIST="$SCRIPT_DIR/dist"
 BUILDS="$SCRIPT_DIR/src/builds"
 

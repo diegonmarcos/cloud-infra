@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_npm_lockfile_present.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_npm_lockfile_present.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -20,7 +20,7 @@
 # ║   'npm ci' ships a package-lock.json in src/. Without it the     ║
 # ║   CI container fails with EUSAGE.                                ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_npm_lockfile_present.sh    ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_npm_lockfile_present.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_step_docker_guards.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_step_docker_guards.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -22,12 +22,12 @@
 # ║   G) for type=binary, the engine runs NATIVE_CMD before checking ║
 # ║      that the binary exists (fixes http-to-smtp-proxy-api)       ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_step_docker_guards.sh      ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_step_docker_guards.sh      ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-DOCKER_STEP="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-build-docker.sh"
+DOCKER_STEP="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

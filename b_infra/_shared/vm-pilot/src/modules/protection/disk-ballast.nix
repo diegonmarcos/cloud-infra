@@ -1,7 +1,7 @@
 # System Protection — Disk Ballast (declarative reserve, replaces ext4 -m 5)
 #
 # Pre-allocates a userland file at /var/disk-reserve/ballast.bin sized to the
-# HM-activation reservation declared in 1_configs/src/data/hm-config.json
+# HM-activation reservation declared in 1_configs/src/inputs/hm-config.json
 # (single SoT, also read by the engine). Acts as the universal buffer area:
 #
 #   1. HM activation pre-flight (cloud-ship-nix-homemanager-step-deploy-activate.sh:264)
@@ -26,7 +26,7 @@
 # Imported by: system-protection.nix orchestrator
 #
 # Single source of truth for the ballast/activation-reservation size:
-#   1_configs/src/data/hm-config.json :: .min_size_ballast_file_gb
+#   1_configs/src/inputs/hm-config.json :: .min_size_ballast_file_gb
 # Symlinked into vm-pilot via _shared/modules/hm-config.json.
 # Engine pre-flight reads the same JSON. ONE field, ONE place.
 { config, pkgs, lib, ... }:

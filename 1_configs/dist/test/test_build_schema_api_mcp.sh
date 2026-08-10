@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_build_schema_api_mcp.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_build_schema_api_mcp.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -30,13 +30,13 @@
 # ║   7. validate-build-schema.ts ACCEPTS a well-formed api block.   ║
 # ║   8. validate-build-schema.ts ACCEPTS a well-formed mcp block.   ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_build_schema_api_mcp.sh    ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_build_schema_api_mcp.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 SCHEMA="$REPO_ROOT/a_solutions/build.schema.json"
-VALIDATOR="$REPO_ROOT/1_configs/src/engines/validate-build-schema.ts"
+VALIDATOR="$REPO_ROOT/1_configs/src/engine/validate-build-schema.ts"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
@@ -49,14 +49,14 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-HARNESS="$REPO_ROOT/1_configs/src/engines/_validate-block-fixture.ts"
+HARNESS="$REPO_ROOT/1_configs/src/engine/_validate-block-fixture.ts"
 
 run_harness() {  # block, fixture-content -> echoes VALID|INVALID (always exit 0)
   local block="$1"
   local fixture="$2"
   local fpath="$TMPDIR/fixture.json"
   printf '%s' "$fixture" > "$fpath"
-  (cd "$REPO_ROOT/1_configs/src/engines" && npx tsx "$HARNESS" "$SCHEMA" "$fpath" "$block" 2>&1) || true
+  (cd "$REPO_ROOT/1_configs/src/engine" && npx tsx "$HARNESS" "$SCHEMA" "$fpath" "$block" 2>&1) || true
 }
 
 echo "── 1: schema declares api block with required:[type], additionalProperties:false ──"
@@ -74,7 +74,7 @@ else
 fi
 
 echo "── 3: validate-build-schema.ts passes on current repo ──"
-if (cd "$REPO_ROOT/1_configs/src/engines" && npx tsx "$VALIDATOR" >/dev/null 2>&1); then
+if (cd "$REPO_ROOT/1_configs/src/engine" && npx tsx "$VALIDATOR" >/dev/null 2>&1); then
   pass "current repo validates clean"
 else
   fail "validator regression on current repo"

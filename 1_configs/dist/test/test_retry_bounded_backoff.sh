@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_retry_bounded_backoff.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_retry_bounded_backoff.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,7 +25,7 @@
 # ║   Also asserts build.json declares resources.mem_limit and       ║
 # ║   restart_policy — otherwise a crash leaves the container dead.  ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_retry_bounded_backoff.sh   ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_retry_bounded_backoff.sh   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

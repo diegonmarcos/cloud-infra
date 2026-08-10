@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_build_container_json_pattern.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_build_container_json_pattern.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -27,7 +27,7 @@
 # ║   ../../../1_configs/dist/build-<container>.json (real file)       ║
 # ║   OR  ../build-<container>.json (service-local real file)        ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_build_container_json_pattern.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_build_container_json_pattern.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

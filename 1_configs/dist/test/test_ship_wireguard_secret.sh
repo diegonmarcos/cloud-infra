@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_ship_wireguard_secret.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_ship_wireguard_secret.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -26,7 +26,7 @@
 # ║   a wg_ip requires the workflows that target it to forward the   ║
 # ║   secret.                                                         ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_ship_wireguard_secret.sh   ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_ship_wireguard_secret.sh   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -79,8 +79,8 @@ else
 fi
 
 # Workflows that matrix over those VMs must pass WG_PRIVATE_KEY.
-for wf in "$REPO_ROOT"/1_configs/src/gha/cicd/ship.yml \
-          "$REPO_ROOT"/1_configs/src/gha/cicd/ship-home-manager.yml; do
+for wf in "$REPO_ROOT"/1_configs/src/deploy/gha/cicd/ship.yml \
+          "$REPO_ROOT"/1_configs/src/deploy/gha/cicd/ship-home-manager.yml; do
     [ -f "$wf" ] || continue
     name=$(basename "$wf")
     if grep -qE '^\s*WG_PRIVATE_KEY:\s*\$\{\{\s*secrets\.WG_PRIVATE_KEY\s*\}\}' "$wf"; then

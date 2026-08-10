@@ -11,26 +11,26 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENGINES="$SCRIPT_DIR/src/engines"
-BUILDS="$SCRIPT_DIR/src/builds"
+ENGINES="$SCRIPT_DIR/src/engine"
+BUILDS="$SCRIPT_DIR/src/inputs/builds"
 DIST="$SCRIPT_DIR/dist"
 CLOUD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
 export CLOUD_ROOT  # cloud-paths.sh / ensure-deps.sh read this
 
 # Emitters now write empty strings for `_generated` / `generated_at` (see
-# 1_configs/src/engines/cloud-data-config-derive.ts:`now`). No timestamp env
+# 1_configs/src/engine/cloud-data-config-derive.ts:`now`). No timestamp env
 # var needed — the SOURCE_DATE_EPOCH approach broke because pre-commit hooks
 # run BEFORE the commit object exists, so HEAD's timestamp belongs to the
 # PARENT commit, changing every push.
 
 # Source shared engine libs (idempotent, guard against double-source).
-LIB_DIR="$CLOUD_ROOT/1_configs/src/libs"
-# shellcheck source=../1_configs/src/libs/engine-traps.sh
+LIB_DIR="$CLOUD_ROOT/1_configs/src/engine/libs"
+# shellcheck source=../1_configs/src/engine/libs/engine-traps.sh
 [ -f "$LIB_DIR/engine-traps.sh" ] && . "$LIB_DIR/engine-traps.sh"
-# shellcheck source=../1_configs/src/libs/cloud-paths.sh
+# shellcheck source=../1_configs/src/engine/libs/cloud-paths.sh
 [ -f "$LIB_DIR/cloud-paths.sh" ] && . "$LIB_DIR/cloud-paths.sh"
-# shellcheck source=../1_configs/src/libs/ensure-deps.sh
+# shellcheck source=../1_configs/src/engine/libs/ensure-deps.sh
 [ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 
 # log defined by engine-traps.sh; define a fallback if libs are unavailable
@@ -40,7 +40,7 @@ if ! command -v log >/dev/null 2>&1; then
     log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 fi
 
-# ensure_node_deps now lives in 1_configs/src/libs/ensure-deps.sh
+# ensure_node_deps now lives in 1_configs/src/engine/libs/ensure-deps.sh
 # (sourced above). Define a thin local fallback so this script still
 # works on a fresh clone where libs/ might not yet be deployed.
 if ! command -v ensure_node_deps >/dev/null 2>&1; then
@@ -64,7 +64,7 @@ if ! command -v ensure_node_deps >/dev/null 2>&1; then
 fi
 
 # Mirror every a_solutions/<folder>/build.json as
-# 1_configs/src/builds/build-<folder>.json (symlink). Declarative index —
+# 1_configs/src/inputs/builds/build-<folder>.json (symlink). Declarative index —
 # one place to list every service's raw build.json.
 link_builds() {
     mkdir -p "$BUILDS"
@@ -76,7 +76,12 @@ link_builds() {
         folder=$(basename "$svc")
         bj="$svc/build.json"
         [ -f "$bj" ] || [ -L "$bj" ] || continue
-        ln -s "../../../a_solutions/$folder/build.json" "$BUILDS/build-$folder.json"
+        # Depth derived from $BUILDS, not hardcoded: this directory moved from
+        # src/builds to src/inputs/builds and a literal ../../../ silently
+        # produced 73 dangling links that only a broken-symlink sweep caught.
+        rel=$(command realpath --relative-to="$BUILDS" "$SOLUTIONS_DIR/$folder/build.json" 2>/dev/null) \
+            || rel="$CLOUD_ROOT/a_solutions/$folder/build.json"
+        ln -s "$rel" "$BUILDS/build-$folder.json"
         count=$((count + 1))
     done
     log "Linked $count a_solutions/*/build.json → src/builds/build-{folder}.json"
@@ -168,8 +173,8 @@ clean() {
 # Portable by design: plain file copying, no dependency on this repo's TS
 # engines, so the whole module can be copied into any repo as-is.
 dotfiles() {
-    sh "$SCRIPT_DIR/src/libs/deploy-dotfiles.sh" \
-       "$SCRIPT_DIR/src" "$DIST/dotfiles" "$CLOUD_ROOT"
+    sh "$SCRIPT_DIR/src/engine/libs/deploy-dotfiles.sh" \
+       "$SCRIPT_DIR/src/deploy" "$DIST/dotfiles" "$CLOUD_ROOT"
 }
 
 

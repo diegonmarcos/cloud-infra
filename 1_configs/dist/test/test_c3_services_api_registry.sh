@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_c3_services_api_registry.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_c3_services_api_registry.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -32,7 +32,7 @@
 # ║      consumer at read time (mcp.has_mcp=false)                   ║
 # ║   6. validate-build-schema.ts passes (api/mcp blocks valid)      ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_c3_services_api_registry.sh ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_c3_services_api_registry.sh ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -106,7 +106,7 @@ else
 fi
 
 echo "── 6: schema-gate (api/mcp blocks valid in every build.json) ──"
-if (cd "$REPO_ROOT/1_configs/src/engines" && npx tsx validate-build-schema.ts >/dev/null 2>&1); then
+if (cd "$REPO_ROOT/1_configs/src/engine" && npx tsx validate-build-schema.ts >/dev/null 2>&1); then
   pass "validate-build-schema.ts passes"
 else
   fail "validate-build-schema.ts failed"

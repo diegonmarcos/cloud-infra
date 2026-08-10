@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_mattermost_multiarch.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_mattermost_multiarch.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -31,7 +31,7 @@
 # ║ on oci-apps cloud-builder via the ship pipeline; this test       ║
 # ║ catches accidental regressions in the source declarations.       ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_mattermost_multiarch.sh    ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_mattermost_multiarch.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

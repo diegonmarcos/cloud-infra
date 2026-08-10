@@ -4,22 +4,22 @@
   "derivers": [
     {
       "name": "config-derive",
-      "script": "src/engines/cloud-data-config-derive.ts",
+      "script": "src/engine/cloud-data-config-derive.ts",
       "description": "Per-consumer JSON files (build-*.json + cloud-data-*.json archive) from _cloud-data-consolidated.json"
     },
     {
       "name": "mesh-snapshot",
-      "script": "src/engines/derive-mesh-snapshot.ts",
+      "script": "src/engine/derive-mesh-snapshot.ts",
       "description": "WireGuard mesh + wstunnel TCP/443 fallback snapshot consumed by bb-net_wireguard-mesh panel as PORTAL_DATA[mesh]"
     },
     {
       "name": "build-workflows",
-      "script": "src/engines/derive-build-workflows.ts",
-      "description": "Runner-image registry (runners + probe + dispatch) extracted from 1_configs/build.json. Replaces legacy cloud-data-runners.json. Consumed by 1_configs/src/scripts/cloud-ship-* and tests via symlink 1_configs/src/build-workflows.json -> ../../1_configs/dist/build-workflows.json"
+      "script": "src/engine/derive-build-workflows.ts",
+      "description": "Runner-image registry (runners + probe + dispatch) extracted from 1_configs/build.json. Replaces legacy cloud-data-runners.json. Consumed by 1_configs/src/deploy/scripts/cloud-ship-* and tests via symlink 1_configs/src/build-workflows.json -> ../../1_configs/dist/build-workflows.json"
     },
     {
       "name": "code-signatures",
-      "script": "src/engines/derive-code-signatures.ts",
+      "script": "src/engine/derive-code-signatures.ts",
       "description": "Per-file code signatures (exports/imports/symbols, no bodies) for the cloud repo → dist/code-signatures-cloud.json. Deterministic structure layer feeding the kg-graph code nodes/edges AND the Opus semantic GraphRAG pass (~244k tokens vs 5.6M full source)."
     }
   ]

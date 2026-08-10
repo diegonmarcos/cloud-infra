@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/scripts/cloud-ship-terraform-deploy-apply.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-terraform-deploy-apply.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -24,9 +24,9 @@ export CLOUD_ROOT="$REPO_ROOT"  # ensure-deps.sh / cloud-paths.sh read this
 
 # ── Dependencies — sourced from shared lib ────────────────────────
 # Was 3 inline `ensure_*` functions; consolidated into
-# 1_configs/src/libs/ensure-deps.sh on 2026-04-28 so any future engine
+# 1_configs/src/engine/libs/ensure-deps.sh on 2026-04-28 so any future engine
 # (terraform, ship, gen-configs, …) gets the same idempotent bootstrap.
-LIB_DIR="$REPO_ROOT/1_configs/src/libs"
+LIB_DIR="$REPO_ROOT/1_configs/src/engine/libs"
 # shellcheck source=../libs/ensure-deps.sh
 [ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 

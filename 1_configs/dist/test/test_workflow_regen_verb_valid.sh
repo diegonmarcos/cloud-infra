@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_workflow_regen_verb_valid.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_workflow_regen_verb_valid.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -27,7 +27,7 @@
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-CICD_DIR="$REPO_ROOT/1_configs/src/gha/cicd"
+CICD_DIR="$REPO_ROOT/1_configs/src/deploy/gha/cicd"
 CONFIG_BUILD="$REPO_ROOT/1_configs/build.sh"
 
 [ -d "$CICD_DIR" ] || { echo "::error::$CICD_DIR not found"; exit 1; }

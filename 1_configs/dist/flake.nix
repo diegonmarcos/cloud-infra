@@ -3,7 +3,7 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : 1_configs/src/flake.nix
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
