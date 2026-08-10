@@ -5,7 +5,7 @@
 # ║ Runs fetch-vault composite → populates vault-keys-bash.env → compose   ║
 # ║ env_file picks it up.                                             ║
 # ║                                                                  ║
-# ║ Apply by copying to 1_workflows/src/cicd/ship.yml once            ║
+# ║ Apply by copying to 1_configs/src/gha/cicd/ship.yml once            ║
 # ║ VAULT_DEPLOY_KEY is set in cloud-repo GHA secrets.                ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
@@ -44,7 +44,7 @@ jobs:
         id: matrix
         run: |
           # 2026-04-27 migrated: cloud-data-gha-config.json → _cloud-data-consolidated.json[._gha]
-          jq '._gha' "2_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
+          jq '._gha' "1_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
           GHA_CONFIG="/tmp/_gha-config.json"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             INPUT_SERVICES="${{ github.event.inputs.services }}"
@@ -116,7 +116,7 @@ jobs:
           set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
 
           # 2026-04-27 migrated: cloud-data-gha-config.json → _cloud-data-consolidated.json[._gha]
-          jq '._gha' "2_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
+          jq '._gha' "1_configs/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
           GHA_CONFIG="/tmp/_gha-config.json"
           VM="${{ matrix.vm }}"
 

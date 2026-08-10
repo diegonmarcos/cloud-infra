@@ -11,7 +11,7 @@ purpose; **commercial use is not granted** without a separate license. This is a
 ## What the root license covers
 
 All the licensor's own work: the Nix flakes, `build.sh`/`build.json` engine,
-`1_workflows/`, `2_configs/`, `3_secrets/`, and the per-service source under
+`1_configs/`, `1_configs/`, `2_secrets/`, and the per-service source under
 `a_solutions/*/src/` that is original to this project.
 
 ## Carve-outs (NOT under the noncommercial license)

@@ -8,8 +8,8 @@
 <meta http-equiv="Expires" content="0">
 <title>C3 Cloud Data</title>
 <link rel="stylesheet" href="style.css">
-<script src="1_workflows/src/libs/marked.min.js"></script>
-<script src="1_workflows/src/libs/purify.min.js"></script>
+<script src="1_configs/src/libs/marked.min.js"></script>
+<script src="1_configs/src/libs/purify.min.js"></script>
 </head>
 <body>
 
@@ -57,8 +57,8 @@ async function init() {
   }
 
   reportsManifest = await fetchManifest('4_reports');
-  dataManifest = await fetchManifest('2_configs');
-  secretsManifest = await fetchManifest('3_secrets');
+  dataManifest = await fetchManifest('1_configs');
+  secretsManifest = await fetchManifest('2_secrets');
 
   if (!reportsManifest.length && !dataManifest.length && !secretsManifest.length) {
     document.getElementById('main').innerHTML = '<div class="error">No data found</div>';
@@ -118,7 +118,7 @@ async function loadPage(page, silent) {
   currentPage = page;
   setActive(page.file);
   const main = document.getElementById('main');
-  isSecretPage = page.file.startsWith('3_secrets/');
+  isSecretPage = page.file.startsWith('2_secrets/');
   isReportPage = page.file.startsWith('4_reports/') && page.file.endsWith('.md');
   const isReportHtml = page.file.startsWith('4_reports/') && page.file.endsWith('.html');
 
@@ -434,8 +434,8 @@ async function runSearch(query) {
       }
     }
     const reportResults = results.filter(p => p.file.startsWith('4_reports/'));
-    const dataResults = results.filter(p => !p.file.startsWith('3_secrets/') && !p.file.startsWith('4_reports/'));
-    const secretResults = results.filter(p => p.file.startsWith('3_secrets/'));
+    const dataResults = results.filter(p => !p.file.startsWith('2_secrets/') && !p.file.startsWith('4_reports/'));
+    const secretResults = results.filter(p => p.file.startsWith('2_secrets/'));
     navReports.innerHTML = reportResults
       .map(p => '<a href="#' + slug(p.file) + '" class="report-link">' + p.name + '</a>').join('');
     navData.innerHTML = dataResults

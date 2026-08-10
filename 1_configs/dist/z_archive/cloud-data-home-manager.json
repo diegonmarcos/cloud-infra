@@ -1,0 +1,533 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_generated": "",
+  "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/home-manager",
+  "owner": {
+    "name": "Diego Marcos",
+    "email": "diegonmarcos@gmail.com",
+    "domain": "diegonmarcos.com",
+    "github": "diegonmarcos"
+  },
+  "home_manager": {
+    "state_version": "24.11"
+  },
+  "vms": {
+    "oci-mail": {
+      "vm_id": "oci-E2-f_0",
+      "ip": "130.110.251.193",
+      "wg_ip": "10.0.0.3",
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "user": "ubuntu",
+      "home": "/home/ubuntu",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 0,
+        "arch": "x86_64",
+        "shape": "VM.Standard.E2.1.Micro",
+        "cloud_name": "oci-E2-f_0",
+        "cloud_zone": "eu-marseille-1",
+        "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
+      },
+      "public_ports": [],
+      "is_public_ingress": false,
+      "idle_shutdown": null,
+      "containers": [
+        "mail-puller",
+        "snappymail",
+        "maddy",
+        "stalwart"
+      ],
+      "method": "key",
+      "gha": {
+        "ssh_secret": "OCI_SSH_KEY",
+        "host_literal": true
+      },
+      "protection": {
+        "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Mail stack: maddy+stalwart are tier-1 (survive graduated shed until last resort).",
+        "tier1_services": [
+          "maddy",
+          "stalwart",
+          "mail-puller"
+        ],
+        "mem_psi_warn": 30,
+        "mem_psi_crit": 50,
+        "mem_psi_page": 65
+      }
+    },
+    "oci-analytics": {
+      "vm_id": "oci-E2-f_1",
+      "ip": "129.151.228.66",
+      "wg_ip": "10.0.0.4",
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "user": "ubuntu",
+      "home": "/home/ubuntu",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 0,
+        "arch": "x86_64",
+        "shape": "VM.Standard.E2.1.Micro",
+        "cloud_name": "oci-E2-f_1",
+        "cloud_zone": "eu-marseille-1",
+        "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
+      },
+      "public_ports": [
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (public ingress — caddy-public layer4 SNI mux: mail→maddy, public→L7, rest→gcp-proxy)",
+          "source": "0.0.0.0/0",
+          "owned_by": "caddy-public"
+        },
+        {
+          "port": 51821,
+          "proto": "udp",
+          "desc": "WireGuard wg-public hub — handshake ingress (open enrollment mesh)",
+          "source": "0.0.0.0/0",
+          "owned_by": "wireguard-public",
+          "_doc": "Should be auto-derived by engine from wireguard_public.hub == this VM's alias AND wireguard_public.port. Until that engine refactor, declared explicitly here so the hub actually receives WG handshakes."
+        }
+      ],
+      "is_public_ingress": true,
+      "idle_shutdown": null,
+      "containers": [
+        "alerts-api",
+        "c3-public-api",
+        "unbound-dns64",
+        "caddy-public"
+      ],
+      "method": "key",
+      "gha": {
+        "ssh_secret": "OCI_SSH_KEY",
+        "host_literal": true
+      },
+      "protection": {}
+    },
+    "oci-apps": {
+      "vm_id": "oci-A1-f_0",
+      "ip": "82.70.229.129",
+      "wg_ip": "10.0.0.6",
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "user": "ubuntu",
+      "home": "/home/ubuntu",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 24,
+        "disk_gb": 0,
+        "arch": "aarch64",
+        "shape": "VM.Standard.A1.Flex",
+        "cloud_name": "oci-A1-f_0",
+        "cloud_zone": "eu-marseille-1",
+        "instance_id": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
+      },
+      "public_ports": [],
+      "is_public_ingress": false,
+      "idle_shutdown": null,
+      "containers": [
+        "matrix-continuwuity",
+        "languagetool",
+        "c3-infra-api",
+        "c3-infra-mcp",
+        "c3-services-api",
+        "c3-services-mcp",
+        "google-personal-mcp",
+        "google-workspace-mcp",
+        "mail-mcp",
+        "mattermost-mcp",
+        "gha-runner",
+        "backup-borg",
+        "backup-bup",
+        "gitea",
+        "wireguard-mesh",
+        "cloud-spec",
+        "dagu",
+        "dbgate",
+        "matomo",
+        "ntfy",
+        "openobserve",
+        "umami",
+        "crowdsec",
+        "claude-superset-api",
+        "cloud-cgc-mcp",
+        "hermes-agent",
+        "kg-store",
+        "my-ai-api",
+        "session-memory",
+        "chat-mattermost",
+        "matrix-element",
+        "matrix-mautrix-whatsapp",
+        "scrappers-api",
+        "fin-api",
+        "photoprism",
+        "playlist-syncer",
+        "news-gdelt",
+        "calendar-radicale",
+        "code-server",
+        "contacts-radicale",
+        "etherpad",
+        "filebrowser",
+        "grist",
+        "hedgedoc",
+        "paca",
+        "revealmd",
+        "send",
+        "vaultwarden"
+      ],
+      "method": "key",
+      "gha": {
+        "ssh_secret": "OCI_SSH_KEY",
+        "host_literal": true
+      },
+      "protection": {},
+      "ssh_containers": [
+        {
+          "name": "c3-infra-api",
+          "uid": 0,
+          "ssh_dir": "/root/.ssh",
+          "keys": [
+            "vault_id_rsa",
+            "vault_id_rsa.pub",
+            "google_compute_engine",
+            "google_compute_engine.pub"
+          ]
+        },
+        {
+          "name": "c3-infra-mcp",
+          "uid": 0,
+          "ssh_dir": "/root/.ssh",
+          "keys": [
+            "vault_id_rsa",
+            "vault_id_rsa.pub",
+            "google_compute_engine",
+            "google_compute_engine.pub"
+          ]
+        },
+        {
+          "name": "dagu",
+          "uid": 0,
+          "ssh_dir": "/root/.ssh",
+          "keys": [
+            "vault_id_rsa",
+            "vault_id_rsa.pub",
+            "google_compute_engine",
+            "google_compute_engine.pub"
+          ]
+        }
+      ]
+    },
+    "gcp-proxy": {
+      "vm_id": "gcp-E2-f_0",
+      "ip": "35.226.147.64",
+      "wg_ip": "10.0.0.1",
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "hub",
+      "user": "diego",
+      "home": "/home/diego",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": 1,
+        "ram_gb": 1,
+        "disk_gb": 30,
+        "arch": "x86_64",
+        "shape": "e2-micro"
+      },
+      "public_ports": [
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — wg0 mesh source",
+          "source": "10.0.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 25,
+          "proto": "tcp",
+          "desc": "SMTP MX — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+          "source": "10.1.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS) — wg0 mesh source",
+          "source": "10.0.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "desc": "HTTPS — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+          "source": "10.1.0.0/24",
+          "owned_by": "caddy"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WG fallback (NAT redirect → 51820/udp on hub) — wg0 mesh source. Operator decision 2026-05-22: WG handshake (51820/udp) is the ONLY public port; 443/udp fallback is no longer needed since the only external entry points are oci-analytics. Peers behind networks blocking 51820/udp lose the fallback path — accepted tradeoff.",
+          "source": "10.0.0.0/24",
+          "owned_by": "wireguard"
+        },
+        {
+          "port": 443,
+          "proto": "udp",
+          "desc": "WG fallback — wg-public mesh source",
+          "source": "10.1.0.0/24",
+          "owned_by": "wireguard"
+        }
+      ],
+      "is_public_ingress": true,
+      "idle_shutdown": null,
+      "containers": [
+        "http-to-smtp-proxy-api",
+        "postlite",
+        "redis",
+        "hickory-dns",
+        "wireguard-mesh-ws-tunnel",
+        "authelia",
+        "caddy",
+        "introspect-proxy"
+      ],
+      "method": "gcloud",
+      "gha": {
+        "ssh_secret": "GCP_PROXY_SSH_KEY",
+        "host_secret": "GCP_PROXY_HOST",
+        "user_secret": "GCP_PROXY_USER"
+      },
+      "protection": {
+        "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Proxy/mesh hub: caddy+introspect-proxy+authelia+hickory+wg-tunnel are tier-1 (survive graduated shed until last resort). Slightly higher PSI thresholds — this VM idles low and a brief spike is normal.",
+        "tier1_services": [
+          "caddy",
+          "introspect-proxy",
+          "authelia",
+          "hickory-dns",
+          "wireguard-mesh-ws-tunnel"
+        ],
+        "mem_psi_warn": 35,
+        "mem_psi_crit": 55,
+        "mem_psi_page": 70
+      }
+    },
+    "vast-ollama": {
+      "vm_id": "vast-RTX-p_0",
+      "ip": "TBD",
+      "wg_ip": null,
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "user": "root",
+      "home": "/root",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": null,
+        "ram_gb": null,
+        "disk_gb": null,
+        "arch": "x86_64",
+        "gpu": "RTX A4000",
+        "vram_gb": 16
+      },
+      "public_ports": [],
+      "is_public_ingress": false,
+      "idle_shutdown": null,
+      "containers": [],
+      "method": "key",
+      "gha": null,
+      "protection": {}
+    }
+  },
+  "wireguard": {
+    "subnet": "10.0.0.0/24",
+    "subnet_v6": "fd0c:1d00::/64",
+    "port": 51820,
+    "port_fallback": 443,
+    "port_fallback_proto": "udp",
+    "hub": "gcp-E2-f_0",
+    "peers": [
+      {
+        "name": "oci-mail",
+        "wg_ip": "10.0.0.3",
+        "wg_public_key": null,
+        "endpoint": "130.110.251.193:51820",
+        "role": "spoke",
+        "wg_ipv6": "fd0c:1d00::3",
+        "wg_port": 51820,
+        "public_ip": "130.110.251.193"
+      },
+      {
+        "name": "oci-analytics",
+        "wg_ip": "10.0.0.4",
+        "wg_public_key": null,
+        "endpoint": "129.151.228.66:51820",
+        "role": "spoke",
+        "wg_ipv6": "fd0c:1d00::4",
+        "wg_port": 51820,
+        "public_ip": "129.151.228.66"
+      },
+      {
+        "name": "oci-apps",
+        "wg_ip": "10.0.0.6",
+        "wg_public_key": null,
+        "endpoint": "82.70.229.129:51820",
+        "role": "spoke",
+        "wg_ipv6": "fd0c:1d00::6",
+        "wg_port": 51820,
+        "public_ip": "82.70.229.129"
+      },
+      {
+        "name": "gcp-proxy",
+        "wg_ip": "10.0.0.1",
+        "wg_public_key": null,
+        "endpoint": "35.226.147.64:51820",
+        "role": "hub",
+        "wg_ipv6": "fd0c:1d00::1",
+        "wg_port": 51820,
+        "public_ip": "35.226.147.64"
+      }
+    ],
+    "clients": {
+      "surface": {
+        "wg_ip": "10.0.0.5",
+        "wg_ipv6": "fd0c:1d00::5",
+        "role": "client",
+        "wg_public_key": null
+      },
+      "termux": {
+        "wg_ip": "10.0.0.9",
+        "wg_ipv6": "fd0c:1d00::9",
+        "role": "client",
+        "wg_public_key": null
+      },
+      "gha-runner": {
+        "wg_ip": "10.0.0.200",
+        "wg_ipv6": "fd0c:1d00::200",
+        "role": "client",
+        "wg_public_key": null
+      },
+      "health-runner": {
+        "wg_ip": "10.0.0.201",
+        "wg_ipv6": "fd0c:1d00::201",
+        "role": "client",
+        "wg_public_key": null
+      }
+    }
+  },
+  "dns": {
+    "primary": "10.0.0.1",
+    "fallback": "1.1.1.1",
+    "description": "Hickory DNS on gcp-proxy (WG IP) + Cloudflare fallback"
+  },
+  "docker": {
+    "subnet": "172.16.0.0/12",
+    "iptables": false,
+    "description": "Docker bridge subnet, iptables managed by firewall.nix"
+  },
+  "monitoring": {
+    "ntfy_base": "https://rss.diegonmarcos.com",
+    "description": "ntfy push notification base URL"
+  },
+  "ssh_config": [
+    {
+      "host": "oci-mail",
+      "hostname": "10.0.0.3",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 22
+    },
+    {
+      "host": "oci-mail-dropbear",
+      "hostname": "10.0.0.3",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 2200
+    },
+    {
+      "host": "oci-analytics",
+      "hostname": "10.0.0.4",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 22
+    },
+    {
+      "host": "oci-analytics-dropbear",
+      "hostname": "10.0.0.4",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 2200
+    },
+    {
+      "host": "oci-apps",
+      "hostname": "10.0.0.6",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 22
+    },
+    {
+      "host": "oci-apps-dropbear",
+      "hostname": "10.0.0.6",
+      "user": "ubuntu",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 2200
+    },
+    {
+      "host": "gcp-proxy",
+      "hostname": "10.0.0.1",
+      "user": "diego",
+      "identity_file": "~/.ssh/google_compute_engine",
+      "port": 22
+    },
+    {
+      "host": "gcp-proxy-dropbear",
+      "hostname": "10.0.0.1",
+      "user": "diego",
+      "identity_file": "~/.ssh/google_compute_engine",
+      "port": 2200
+    },
+    {
+      "host": "vast-ollama",
+      "hostname": "TBD",
+      "user": "root",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 22
+    },
+    {
+      "host": "vast-ollama-dropbear",
+      "hostname": "TBD",
+      "user": "root",
+      "identity_file": "~/.ssh/vault_id_rsa",
+      "port": 2200
+    }
+  ],
+  "_meta": {
+    "generated_at": "",
+    "generated_by": "1_configs/src/engines/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "1_configs/src/engines/cloud-data-config-consolidated.ts",
+        "derive": "1_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "1_configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "1_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "1_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 1_configs/build.sh all"
+    }
+  }
+}

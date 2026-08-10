@@ -63,8 +63,8 @@ in {
   # ── build-vm.json (NEW canonical per-VM manifest) ────────────────────
   # Source-of-truth migration: replaces the legacy cloud-data-containers-{vm}.json
   # that vm-pilot used to pull at runtime from the cloud-data git clone.
-  # The canonical file lives at 2_configs/dist/build-vm-{vmName}.json (emitted
-  # by the 2_configs derive pipeline; cloud-data emits NOTHING). The
+  # The canonical file lives at 1_configs/dist/build-vm-{vmName}.json (emitted
+  # by the 1_configs derive pipeline; cloud-data emits NOTHING). The
   # nixhm-sudo-{vm}/src/build-vm-{vm}.json symlink resolves to that file, and
   # the home-manager staging engine copies it into the dist flake root —
   # i.e. dist/build-vm-{vm}.json, parallel to dist/pilot/. From this file

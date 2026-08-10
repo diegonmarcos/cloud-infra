@@ -93,8 +93,8 @@ From `/tmp/session-wip-backup-1776794133/`:
 | `test-src-v2.sh` | `a_solutions/_shared/test-src-v2.sh` (chmod +x) |
 | `oidc-clients.json` | `a_solutions/bb-sec_authelia/src/oidc-clients.json` |
 | `authelia-templates/` | `a_solutions/bb-sec_authelia/src/templates/` |
-| `test_precommit_blocks_forced_add.sh` | `1_workflows/src/test/` (chmod +x) |
-| `test_precommit_blocks_plaintext_secret.sh` | `1_workflows/src/test/` (chmod +x) |
+| `test_precommit_blocks_forced_add.sh` | `1_configs/src/test/` (chmod +x) |
+| `test_precommit_blocks_plaintext_secret.sh` | `1_configs/src/test/` (chmod +x) |
 
 Restore command:
 ```bash
@@ -103,8 +103,8 @@ cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-
 cp -a $BK/oidc-clients.json ~/git/cloud/a_solutions/bb-sec_authelia/src/
 mkdir -p ~/git/cloud/a_solutions/bb-sec_authelia/src/templates
 cp -a $BK/authelia-templates/* ~/git/cloud/a_solutions/bb-sec_authelia/src/templates/
-cp -a $BK/test_precommit_*.sh ~/git/cloud/1_workflows/src/test/
-chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/1_workflows/src/test/test_precommit_*.sh
+cp -a $BK/test_precommit_*.sh ~/git/cloud/1_configs/src/test/
+chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/1_configs/src/test/test_precommit_*.sh
 ```
 
 ### B.2 — Modified-file edits (REVERTED, need replay)
@@ -142,7 +142,7 @@ Add after the `**/*.pem` line:
 **/dist/.build/
 ```
 
-#### B.2.3 — `1_workflows/src/hooks/pre-commit`
+#### B.2.3 — `1_configs/src/git-hooks/pre-commit`
 
 Insert after `BLOCKED=""` (at top):
 
@@ -214,16 +214,16 @@ fi
 
 ```bash
 sed -i 's/git -C "\$SERVICE_DIR\/\.\.\/\.\." add -f /git -C "$SERVICE_DIR\/..\/.." add /g' \
-  ~/git/cloud/1_workflows/src/scripts/cloud-ship-container-step-build-nix.sh
+  ~/git/cloud/1_configs/src/scripts/cloud-ship-container-step-build-nix.sh
 sed -i 's/git -C "\$REPO_ROOT" add -f /git -C "$REPO_ROOT" add /g' \
-  ~/git/cloud/1_workflows/src/scripts/cloud-ship-ci-builder-dispatch.sh
+  ~/git/cloud/1_configs/src/scripts/cloud-ship-ci-builder-dispatch.sh
 ```
 
 (3 + 1 = 4 occurrences total)
 
 #### B.2.5 — Ship-engine v2-awareness
 
-**`1_workflows/src/scripts/cloud-ship-container-engine.sh`** — insert before `SSH_OPTS=` line:
+**`1_configs/src/scripts/cloud-ship-container-engine.sh`** — insert before `SSH_OPTS=` line:
 ```bash
 # ── Layout version detection (v1 flat vs v2 categorised) ─────────────
 LAYOUT_V2=0
@@ -268,10 +268,10 @@ if ! nix eval --impure ".#docs.drvPath" >/dev/null 2>&1 \
 fi
 ```
 
-#### B.2.6 — Regenerate `1_workflows/dist/` after edits
+#### B.2.6 — Regenerate `1_configs/dist/` after edits
 
 ```bash
-cd ~/git/cloud/1_workflows && ./build.sh build
+cd ~/git/cloud/1_configs && ./build.sh build
 ```
 
 ---
@@ -374,8 +374,8 @@ cd .. && ./build.sh build
 ~/git/cloud/a_solutions/_shared/test-src-v2.sh  ~/git/cloud/a_solutions/aa-sui_tools-smtp-proxy/src  # expect 11/11
 ~/git/cloud/a_solutions/_shared/test-dist-v2.sh ~/git/cloud/a_solutions/bb-sec_authelia/dist         # expect 48/48
 ~/git/cloud/a_solutions/_shared/test-dist-v2.sh ~/git/cloud/a_solutions/aa-sui_tools-smtp-proxy/dist # expect 39/39
-~/git/cloud/1_workflows/src/test/test_precommit_blocks_forced_add.sh                                  # expect 3/3
-~/git/cloud/1_workflows/src/test/test_precommit_blocks_plaintext_secret.sh                            # expect 8/8
+~/git/cloud/1_configs/src/test/test_precommit_blocks_forced_add.sh                                  # expect 3/3
+~/git/cloud/1_configs/src/test/test_precommit_blocks_plaintext_secret.sh                            # expect 8/8
 
 # Compose parse with real .secrets
 cd ~/git/cloud/a_solutions/bb-sec_authelia/dist && \
@@ -430,8 +430,8 @@ cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-
 cp -a $BK/oidc-clients.json ~/git/cloud/a_solutions/bb-sec_authelia/src/
 mkdir -p ~/git/cloud/a_solutions/bb-sec_authelia/src/templates
 cp -a $BK/authelia-templates/* ~/git/cloud/a_solutions/bb-sec_authelia/src/templates/
-cp -a $BK/test_precommit_*.sh ~/git/cloud/1_workflows/src/test/
-chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/1_workflows/src/test/test_precommit_*.sh
+cp -a $BK/test_precommit_*.sh ~/git/cloud/1_configs/src/test/
+chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/1_configs/src/test/test_precommit_*.sh
 
 # ═══ 3. THEN REPLAY PART B.2, B.3 — see sections above ═══
 ```

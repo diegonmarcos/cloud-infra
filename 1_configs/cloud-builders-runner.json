@@ -1,0 +1,7 @@
+{
+  "_comment": "Single source of truth for CI build-runner topology, per docker architecture. type=local → build natively on the GHA runner (no remote builder / no QEMU); type=ssh → dispatch to runners.<arch>.host running builder_image. runs_on is the GitHub Actions runner label a job targeting this arch must use. Consumed via 1_configs/dist/build-workflows.json (.runners), emitted by 1_configs/src/engines/derive-build-workflows.ts.",
+  "runners": {
+    "amd64": { "type": "local", "runs_on": "ubuntu-latest",   "docker_arch": "amd64", "uname": "x86_64" },
+    "arm64": { "type": "local", "runs_on": "ubuntu-24.04-arm", "docker_arch": "arm64", "uname": "aarch64" }
+  }
+}
