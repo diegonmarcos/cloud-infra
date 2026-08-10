@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_engine_step_sourcing_tolerant.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_engine_step_sourcing_tolerant.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -28,7 +28,7 @@
 set -eu
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
-ENGINE="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-engine.sh"
+ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-engine.sh"
 
 [ -f "$ENGINE" ] || { echo "::error::$ENGINE not found"; exit 1; }
 
@@ -64,7 +64,7 @@ fi
 #    catcher: a step added under src/scripts/ but forgotten in the engine
 #    loader will never source).
 declare -i refs=0 known=0
-for step_file in "$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-"*.sh; do
+for step_file in "$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-"*.sh; do
     [ -f "$step_file" ] || continue
     known=$((known + 1))
     base=$(basename "$step_file")

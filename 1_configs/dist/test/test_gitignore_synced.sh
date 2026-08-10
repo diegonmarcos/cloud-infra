@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_gitignore_synced.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_gitignore_synced.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -27,7 +27,7 @@
 # ║                                                                  ║
 # ║ Drift means someone hand-edited one of the three copies.         ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_gitignore_synced.sh        ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_gitignore_synced.sh        ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -36,7 +36,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 SRC="$REPO_ROOT/1_configs/src/gitignore"
 DIST="$REPO_ROOT/1_configs/dist/.gitignore"
 ROOT="$REPO_ROOT/.gitignore"
-HEADER_JSON="$REPO_ROOT/1_configs/src/libs/generated-header.json"
+HEADER_JSON="$REPO_ROOT/1_configs/src/engine/libs/generated-header.json"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

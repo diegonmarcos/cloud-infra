@@ -218,6 +218,6 @@ Git configuration files deployed to repo root.
 
 | From | To | Count |
 |------|----|-------|
-| `a_solutions/*/build.sh` | `../../1_configs/src/scripts/cloud-ship-container-engine.sh` | 58 |
-| `b_infra/*/build.sh` | `../../../1_configs/src/scripts/cloud-ship-nix-homemanager-engine.sh` | 5 |
+| `a_solutions/*/build.sh` | `../../1_configs/src/deploy/scripts/cloud-ship-container-engine.sh` | 58 |
+| `b_infra/*/build.sh` | `../../../1_configs/src/deploy/scripts/cloud-ship-nix-homemanager-engine.sh` | 5 |
 | `.github/workflows/scripts` | `../../1_configs/dist/scripts` | 1 |

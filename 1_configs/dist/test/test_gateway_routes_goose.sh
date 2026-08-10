@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_gateway_routes_goose.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_gateway_routes_goose.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -25,7 +25,7 @@
 # ║   E) goosed primary path present (/sessions + X-Secret-Key)      ║
 # ║   F) one-shot fallback present (X-Agent-Mode: goose)             ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_gateway_routes_goose.sh    ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_gateway_routes_goose.sh    ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

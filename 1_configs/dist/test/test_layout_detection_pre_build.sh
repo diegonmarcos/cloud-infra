@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_layout_detection_pre_build.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_layout_detection_pre_build.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -29,12 +29,12 @@
 # ║ a fresh (no-dist) state, asserting it returns the right path.    ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║
-# ║   bash 1_configs/src/test/test_layout_detection_pre_build.sh   ║
+# ║   bash 1_configs/src/deploy/test/test_layout_detection_pre_build.sh   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-ENGINE="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-engine.sh"
+ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-engine.sh"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

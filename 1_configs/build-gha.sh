@@ -21,11 +21,11 @@ SCRIPTS_TARGET="$TARGET_DIR/scripts"
 HOOKS_TARGET="$TARGET_DIR/hooks"
 
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
-# Template + prefix map live in $SRC_DIR/libs/generated-header.json.
+# Template + prefix map live in $SRC_DIR/engine/libs/generated-header.json.
 export REPO_ROOT
-export ENGINE_NAME="1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh"
+export ENGINE_NAME="1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh"
 # shellcheck source=../libs/inject-header.sh
-. "$SRC_DIR/libs/inject-header.sh"
+. "$SRC_DIR/engine/libs/inject-header.sh"
 
 log()      { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 phase()    { printf "\n[%s] ═══ %s ═══\n" "$(date '+%H:%M:%S')" "$1"; }
@@ -63,58 +63,58 @@ do_build() {
     ok "$_n workflow(s) → $(relp "$DIST_DIR")/"
 
     # Scripts (src/scripts/ → dist/scripts/)
-    if [ -d "$SRC_DIR/scripts" ]; then
+    if [ -d "$SRC_DIR/deploy/scripts" ]; then
         step "rendering scripts    $(relp "$SRC_DIR")/scripts/  →  $(relp "$DIST_DIR")/scripts/"
-        inject_header_tree "$SRC_DIR/scripts" "$DIST_DIR/scripts"
+        inject_header_tree "$SRC_DIR/deploy/scripts" "$DIST_DIR/scripts"
         ok "$(count_glob "$DIST_DIR/scripts/*") files → $(relp "$DIST_DIR")/scripts/"
     fi
 
     # Hooks (src/git-hooks/ → dist/hooks/)
-    if [ -d "$SRC_DIR/git-hooks" ]; then
+    if [ -d "$SRC_DIR/deploy/git-hooks" ]; then
         step "rendering hooks      $(relp "$SRC_DIR")/hooks/    →  $(relp "$DIST_DIR")/hooks/"
-        inject_header_tree "$SRC_DIR/git-hooks" "$DIST_DIR/hooks"
+        inject_header_tree "$SRC_DIR/deploy/git-hooks" "$DIST_DIR/hooks"
         ok "$(count_glob "$DIST_DIR/hooks/*") files → $(relp "$DIST_DIR")/hooks/"
     fi
 
     # Tests (src/test/ → dist/test/)
-    if [ -d "$SRC_DIR/test" ]; then
+    if [ -d "$SRC_DIR/deploy/test" ]; then
         step "rendering tests      $(relp "$SRC_DIR")/test/     →  $(relp "$DIST_DIR")/test/    (preflight testers for ship-* workflows)"
-        inject_header_tree "$SRC_DIR/test" "$DIST_DIR/test"
+        inject_header_tree "$SRC_DIR/deploy/test" "$DIST_DIR/test"
         ok "$(count_glob "$DIST_DIR/test/*") files → $(relp "$DIST_DIR")/test/"
     fi
 
     # Gitmodules (src/gitconfigs/gitmodules → dist/.gitmodules)
-    if [ -f "$SRC_DIR/git-repo/gitmodules" ]; then
+    if [ -f "$SRC_DIR/deploy/git-repo/gitmodules" ]; then
         step "rendering .gitmodules"
-        inject_header "$SRC_DIR/git-repo/gitmodules" "$DIST_DIR/.gitmodules"
+        inject_header "$SRC_DIR/deploy/git-repo/gitmodules" "$DIST_DIR/.gitmodules"
         ok "→ $(relp "$DIST_DIR")/.gitmodules"
     fi
 
     # Gitignore (src/gitconfigs/gitignore → dist/.gitignore)
-    if [ -f "$SRC_DIR/git-repo/gitignore" ]; then
+    if [ -f "$SRC_DIR/deploy/git-repo/gitignore" ]; then
         step "rendering .gitignore"
-        inject_header "$SRC_DIR/git-repo/gitignore" "$DIST_DIR/.gitignore"
+        inject_header "$SRC_DIR/deploy/git-repo/gitignore" "$DIST_DIR/.gitignore"
         ok "→ $(relp "$DIST_DIR")/.gitignore"
     fi
 
     # Gitattributes (src/gitconfigs/gitattributes → dist/.gitattributes)
-    if [ -f "$SRC_DIR/git-repo/gitattributes" ]; then
+    if [ -f "$SRC_DIR/deploy/git-repo/gitattributes" ]; then
         step "rendering .gitattributes"
-        inject_header "$SRC_DIR/git-repo/gitattributes" "$DIST_DIR/.gitattributes"
+        inject_header "$SRC_DIR/deploy/git-repo/gitattributes" "$DIST_DIR/.gitattributes"
         ok "→ $(relp "$DIST_DIR")/.gitattributes"
     fi
 
     # Gitconfig (src/gitconfigs/gitconfig → dist/)
-    if [ -f "$SRC_DIR/git-repo/gitconfig" ]; then
+    if [ -f "$SRC_DIR/deploy/git-repo/gitconfig" ]; then
         step "rendering gitconfig (will be included by .git/config in deploy phase)"
-        inject_header "$SRC_DIR/git-repo/gitconfig" "$DIST_DIR/gitconfig"
+        inject_header "$SRC_DIR/deploy/git-repo/gitconfig" "$DIST_DIR/gitconfig"
         ok "→ $(relp "$DIST_DIR")/gitconfig"
     fi
 
     # GHA actions (src/gha/actions/ → dist/actions/)
-    if [ -d "$SRC_DIR/gha/actions" ]; then
+    if [ -d "$SRC_DIR/deploy/gha/actions" ]; then
         step "rendering GHA composite actions  $(relp "$SRC_DIR")/actions/  →  $(relp "$DIST_DIR")/actions/"
-        inject_header_tree "$SRC_DIR/gha/actions" "$DIST_DIR/actions"
+        inject_header_tree "$SRC_DIR/deploy/gha/actions" "$DIST_DIR/actions"
         ok "$(count_glob "$DIST_DIR/actions/*") action(s) → $(relp "$DIST_DIR")/actions/"
     fi
 

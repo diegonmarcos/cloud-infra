@@ -1,4 +1,4 @@
-# Plan: Consolidate All Cloud Engines into `1_configs/src/scripts/`
+# Plan: Consolidate All Cloud Engines into `1_configs/src/deploy/scripts/`
 
 ## Context
 
@@ -12,12 +12,12 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 - `workflows/` → `1_configs/` (git mv + all refs)
 - `cloud-data/` → `I_cloud-data/`, `tools/` → `II_tools/` (submodule renames)
 - `static/` → `cicd/` (GHA workflow YAMLs)
-- All scripts consolidated into `1_configs/src/scripts/` with `cloud-ship-*`/`cloud-health-*` naming
+- All scripts consolidated into `1_configs/src/deploy/scripts/` with `cloud-ship-*`/`cloud-health-*` naming
 - Both engines moved as-is: `a_solutions/_engine.sh` → `cloud-ship-container-engine.sh`, `b_infra/_engine.sh` → `cloud-ship-nix-homemanager-engine.sh`
 - 58 service + 5 HM symlinks updated
 - Cross-references updated (script-to-script, cicd/*.yml, Dagu partial)
 - `build.sh workflow`: src→dist→deploy for ALL files, header injection, symlink always recreated
-- TS engines moved to cloud-data/1_configs/src/scripts/ and renamed: cloud-data-config-consolidated.ts, cloud-data-config-derive.ts, master cloud-data-config.ts (+ gen-gha-config.ts remaining as symlink)
+- TS engines moved to cloud-data/1_configs/src/deploy/scripts/ and renamed: cloud-data-config-consolidated.ts, cloud-data-config-derive.ts, master cloud-data-config.ts (+ gen-gha-config.ts remaining as symlink)
 - `.gitmodules` uses HTTPS (not SSH)
 - `setup-wireguard.sh` created (was missing)
 - `config.json` bug fixed (`iproute2` → `ip`)
@@ -42,7 +42,7 @@ Shell-based infrastructure control plane for 5 VMs / 58 services. The engine is 
 
 ### Phase 3: Extract build.sh logic into scripts
 
-**Goal**: `cloud/build.sh` becomes ~100-line pure dispatcher. All logic moves to `1_configs/src/scripts/`.
+**Goal**: `cloud/build.sh` becomes ~100-line pure dispatcher. All logic moves to `1_configs/src/deploy/scripts/`.
 
 #### Step 3.1: Create libraries
 | Script | Description |

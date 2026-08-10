@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/scripts/cloud-ship-orchestrate-profile.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-orchestrate-profile.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -14,7 +14,7 @@
 
 set -e
 CLOUD_ROOT="${CLOUD_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-. "$CLOUD_ROOT/1_configs/src/scripts/cloud-ship-lib.sh"
+. "$CLOUD_ROOT/1_configs/src/deploy/scripts/cloud-ship-lib.sh"
 
 # Profile ship — deploy services by tier from a profile JSON
 cmd_profile_ship() {

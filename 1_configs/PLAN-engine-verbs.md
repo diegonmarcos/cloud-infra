@@ -2,7 +2,7 @@
 
 **Status:** SPEC — awaiting approval
 **Scope decision:** incremental verb layer (no rewrite of the 17 step files) + live GHCR-digest reconcile
-**Engine touched:** `1_configs/src/scripts/cloud-ship-container-engine.sh` (+ new step files)
+**Engine touched:** `1_configs/src/deploy/scripts/cloud-ship-container-engine.sh` (+ new step files)
 **Blast radius:** every `a_solutions/*` service (build.sh is a symlink) — verbs appear fleet-wide with zero per-service change.
 
 ---
@@ -67,7 +67,7 @@ The engine already enforces the physical model: VMs never build (`step_compose` 
    - → `InSync | Drift`; plus `step_health` state rollup + `dist`-hash vs VM `.dist-hash`. Emits a compact table.
 3. **`step-logs.sh` (NEW):** ssh VM `docker compose -f <compose> logs --tail ${N:-100} [--follow]`.
 4. **`ship` calls `step_health`** as its final phase (today it only does a 3s `docker ps` glance — real gap).
-5. **`verbs.json` (`1_configs/src/libs/verbs.json`):** declares composite sequences; dispatcher reads it instead of hardcoding `ship`/`rollout`/`rollback` order. Atomic verbs stay 1:1 with functions (no verb-DSL — avoid over-engineering).
+5. **`verbs.json` (`1_configs/src/engine/libs/verbs.json`):** declares composite sequences; dispatcher reads it instead of hardcoding `ship`/`rollout`/`rollback` order. Atomic verbs stay 1:1 with functions (no verb-DSL — avoid over-engineering).
 6. **Reconcile skip** upgrades from `.dist-hash` + `.image-changed` flag to: *skip iff `status` reports InSync && healthy*. Level-triggered, converges.
 
 ---

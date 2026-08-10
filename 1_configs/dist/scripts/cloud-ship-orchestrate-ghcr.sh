@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/scripts/cloud-ship-orchestrate-ghcr.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-orchestrate-ghcr.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -23,7 +23,7 @@ cd "$REPO_ROOT"
 
 # 2026-04-27 migrated: cloud-data-gha-config.json -> build-gha.json
 # (per-service build-{name}.json convention; derived from
-# _cloud-data-consolidated.json by 1_configs/src/engines/cloud-data-config-derive.ts).
+# _cloud-data-consolidated.json by 1_configs/src/engine/cloud-data-config-derive.ts).
 # Legacy paths kept as fallbacks during rollout.
 GHA_CONFIG=""
 for _p in \

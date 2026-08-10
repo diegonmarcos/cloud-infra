@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_compose_no_build_on_vm.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_compose_no_build_on_vm.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -26,12 +26,12 @@
 # ║ to `--build`.                                                    ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║
-# ║   bash 1_configs/src/test/test_compose_no_build_on_vm.sh       ║
+# ║   bash 1_configs/src/deploy/test/test_compose_no_build_on_vm.sh       ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-ENGINE="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-deploy-compose.sh"
+ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-deploy-compose.sh"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

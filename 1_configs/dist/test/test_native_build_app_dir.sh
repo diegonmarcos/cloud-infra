@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_native_build_app_dir.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_native_build_app_dir.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -30,7 +30,7 @@
 # ║ Data-driven (FIRE RULE 3): walks every build.json automatically. ║
 # ║                                                                  ║
 # ║ Usage:                                                           ║
-# ║   bash 1_configs/src/test/test_native_build_app_dir.sh         ║
+# ║   bash 1_configs/src/deploy/test/test_native_build_app_dir.sh         ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_dispatch_hygiene.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_dispatch_hygiene.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -20,13 +20,13 @@
 # ║   I) only dispatch updates 1_configs/dist submodule; nix step      ║
 # ║      honours CLOUD_DATA_PRESTAGED_BY_CI flag                     ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_dispatch_hygiene.sh        ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_dispatch_hygiene.sh        ║
 # ║        (also invoked from .github/workflows/ship-ci-image.yml)   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SCRIPTS="$REPO_ROOT/1_configs/src/scripts"
+SCRIPTS="$REPO_ROOT/1_configs/src/deploy/scripts"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

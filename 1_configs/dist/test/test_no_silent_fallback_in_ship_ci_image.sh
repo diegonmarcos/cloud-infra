@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_no_silent_fallback_in_ship_ci_image.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_no_silent_fallback_in_ship_ci_image.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -26,7 +26,7 @@
 # ║ Comments referencing the old name are fine (historical context); ║
 # ║ executable refs (file path lookups) must be gone.                ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_no_silent_fallback_in_ship_ci_image.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_no_silent_fallback_in_ship_ci_image.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -40,8 +40,8 @@ echo "── No executable refs to legacy cloud-data-gha-config.json ──"
 
 # Check both ship.yml and ship-ci-image.yml — same fallback class.
 for src in \
-    "$REPO_ROOT/1_configs/src/gha/cicd/ship-ci-image.yml" \
-    "$REPO_ROOT/1_configs/src/gha/cicd/ship.yml"; do
+    "$REPO_ROOT/1_configs/src/deploy/gha/cicd/ship-ci-image.yml" \
+    "$REPO_ROOT/1_configs/src/deploy/gha/cicd/ship.yml"; do
     [ -f "$src" ] || continue
     rel="${src#$REPO_ROOT/}"
     # Find references to the legacy filename, then strip out comment lines.

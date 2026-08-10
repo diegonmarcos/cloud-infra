@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_ssh_builder_pins_workspace.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_ssh_builder_pins_workspace.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -38,12 +38,12 @@
 # ║   prepend `cd <mount> &&` to the sh -c payload (see commit        ║
 # ║   141f67633 for the canonical form).                              ║
 # ║                                                                   ║
-# ║ Usage: bash 1_configs/src/test/test_ssh_builder_pins_workspace.sh ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_ssh_builder_pins_workspace.sh ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SCRIPT="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-build-docker.sh"
+SCRIPT="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 
 [ -f "$SCRIPT" ] || { echo "::error::$SCRIPT not found"; exit 1; }
 

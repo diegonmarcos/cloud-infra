@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_cloud_data_zarchive_probe.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_cloud_data_zarchive_probe.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,7 +17,7 @@
 # ║ dist/z_archive/ as a fallback                                    ║
 # ║                                                                  ║
 # ║ Audit follow-up (2026-05-05): the derive script (1_configs/      ║
-# ║ src/engines/cloud-data-config-derive.ts) intentionally emits     ║
+# ║ src/engine/cloud-data-config-derive.ts) intentionally emits     ║
 # ║ deprecated `cloud-data-*.json` slices to dist/z_archive/, with   ║
 # ║ a top-level comment claiming "Every consumer's path-priority     ║
 # ║ chain has been updated to look in z_archive." That update was    ║
@@ -32,12 +32,12 @@
 # ║ 1_configs/build.json + dist/build-workflows.json (2026-05-09)  ║
 # ║ and is no longer relevant to this fallback probe.                ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_cloud_data_zarchive_probe.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_cloud_data_zarchive_probe.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SCRIPTS="$REPO_ROOT/1_configs/src/scripts"
+SCRIPTS="$REPO_ROOT/1_configs/src/deploy/scripts"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

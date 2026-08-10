@@ -26,7 +26,7 @@ Phase A MUST ship and run clean for at least one week before Phase B starts.
 | Stalwart listeners | `cloud/a_solutions/aa-sui_tools-stalwart/src/templates/config.toml.tpl` | hard-coded `bind = "[::]:2025"`, `bind = "[::]:2993"`, etc. |
 | smtp-proxy listener | `cloud/a_solutions/aa-sui_tools-smtp-proxy/` | audit during implementation — currently public on :8080 |
 | Caddy L4 renderer | `cloud/a_solutions/bb-sec_caddy/src/caddyfile.nix` lines 168-189 | `mkL4Section` no-ops when `l4_routes == []` — no Caddy edit needed |
-| Derive | `cloud/1_configs/src/engines/cloud-data-config-derive.ts` lines ~334-360 | builds `l4_routes[]` by picking mail ports out of gcp-proxy `public_ports[]` via a hardcoded `l4Map` dict. Drop this block once gcp-proxy has no mail ports. |
+| Derive | `cloud/1_configs/src/engine/cloud-data-config-derive.ts` lines ~334-360 | builds `l4_routes[]` by picking mail ports out of gcp-proxy `public_ports[]` via a hardcoded `l4Map` dict. Drop this block once gcp-proxy has no mail ports. |
 | Firewall module | `cloud/b_infra/_shared/vm-pilot/src/modules/network/firewall.nix` | owns ALL chains, `iptables -A INPUT -i wg0 -j ACCEPT` already present. |
 | WireGuard module | `cloud/b_infra/_shared/vm-pilot/src/modules/network/wireguard.nix` | single-interface. Phase B refactors it to multi-interface. |
 | Vault WG keys | `cloud/../vault/A0_keys/providers/wireguard/` | per-VM keys for wg0 |
@@ -123,7 +123,7 @@ Rule of thumb: **every listener line in every template must be data-driven from 
 
 ## A.5 Derive engine — no change
 
-`cloud/1_configs/src/engines/cloud-data-config-derive.ts` stays as-is. The `l4Map` block is the declared mapping between a gcp-proxy public port and its Caddy L4 upstream. Once mail ports are removed from gcp-proxy `public_ports[]` (§ A.6), `l4Map` has nothing to look up → `l4_routes[]` renders empty → Caddy layer4 is empty.
+`cloud/1_configs/src/engine/cloud-data-config-derive.ts` stays as-is. The `l4Map` block is the declared mapping between a gcp-proxy public port and its Caddy L4 upstream. Once mail ports are removed from gcp-proxy `public_ports[]` (§ A.6), `l4Map` has nothing to look up → `l4_routes[]` renders empty → Caddy layer4 is empty.
 
 **Do not delete `l4Map`.** It is the reversibility contract: if mail returns to public-facing, one data edit (re-add the port to `public_ports[]`) restores Caddy L4 routing. Deleting the mapping would turn that data edit into a code+data change.
 
@@ -202,7 +202,7 @@ grep -E 'bind\s*=\s*"10\.0\.0\.3:2465"' "$S"
 jq -e '.l4_routes | length == 0' ../1_configs/dist/build-caddy.json
 
 # l4Map code still present — reversibility contract
-grep -q 'const l4Map' ../1_configs/src/engines/cloud-data-config-derive.ts
+grep -q 'const l4Map' ../1_configs/src/engine/cloud-data-config-derive.ts
 
 echo "[PASS] mail listeners bind to 10.0.0.3; Caddy l4_routes empty; l4Map preserved"
 ```

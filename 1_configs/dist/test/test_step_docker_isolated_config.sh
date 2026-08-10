@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_step_docker_isolated_config.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_step_docker_isolated_config.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -33,12 +33,12 @@
 # cross-service / cross-process uniqueness, and the path is cleaned up on
 # function exit.
 #
-# Run:  bash 1_configs/src/test/test_step_docker_isolated_config.sh
+# Run:  bash 1_configs/src/deploy/test/test_step_docker_isolated_config.sh
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-ENGINE="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-build-docker.sh"
+ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 
 PASS=0
 FAIL=0

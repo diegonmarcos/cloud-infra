@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_generated_header_present.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_generated_header_present.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,22 +17,22 @@
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   Every text artifact built by                                   ║
-# ║   1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh     ║
+# ║   1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh     ║
 # ║   carries the "GENERATED FILE — DO NOT EDIT" banner defined in   ║
-# ║   1_configs/src/libs/generated-header.json.                    ║
+# ║   1_configs/src/engine/libs/generated-header.json.                    ║
 # ║                                                                  ║
 # ║ Covers: dist/*.yml, dist/scripts/, dist/hooks/, dist/test/,      ║
 # ║         dist/.gitignore, dist/.gitmodules, dist/gitconfig, and   ║
 # ║         the deployed copies (.github/workflows/, repo-root dot-  ║
 # ║         files). JSON artifacts: asserts `_generated` root key.   ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_generated_header_present.sh║
+# ║ Usage: bash 1_configs/src/deploy/test/test_generated_header_present.sh║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 DIST="$REPO_ROOT/1_configs/dist"
-HEADER_JSON="$REPO_ROOT/1_configs/src/libs/generated-header.json"
+HEADER_JSON="$REPO_ROOT/1_configs/src/engine/libs/generated-header.json"
 
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_engine_workspace_paths_derived.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_engine_workspace_paths_derived.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -30,7 +30,7 @@
 # ║ Forbidden:                                                       ║
 # ║   - Bare `/root/git/cloud/...` or `/root/git/cloud-data/...`     ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_engine_workspace_paths_derived.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_engine_workspace_paths_derived.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -58,7 +58,7 @@ while IFS= read -r f; do
              | grep -vE '^[0-9]+:\s*#' \
              | grep -vE '^[0-9]+:\s*//' \
              || true)
-done < <(find "$REPO_ROOT/1_configs/src/scripts" -name 'cloud-ship-*.sh' -type f 2>/dev/null)
+done < <(find "$REPO_ROOT/1_configs/src/deploy/scripts" -name 'cloud-ship-*.sh' -type f 2>/dev/null)
 
 if [ "${#HITS[@]}" -eq 0 ]; then
     pass "all engine scripts derive workspace paths from \$WORKSPACE / env defaults"

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_arch_runner_routing.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_arch_runner_routing.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -22,12 +22,12 @@
 # ║   3. The illegal QEMU fallback branch is gone                    ║
 # ║   4. Unreachable ssh runner → engine exits 1 (no silent fallback)║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_arch_runner_routing.sh     ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_arch_runner_routing.sh     ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-SCRIPTS="$REPO_ROOT/1_configs/src/scripts"
+SCRIPTS="$REPO_ROOT/1_configs/src/deploy/scripts"
 DOCKER_STEP="$SCRIPTS/cloud-ship-container-step-build-docker.sh"
 DISPATCH="$SCRIPTS/cloud-ship-ci-builder-dispatch.sh"
 

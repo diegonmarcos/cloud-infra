@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_ship_terraform_fetch_depth.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_ship_terraform_fetch_depth.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -29,7 +29,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 FILES=(
-  "$REPO_ROOT/1_configs/src/gha/cicd/ship-terraform.yml"
+  "$REPO_ROOT/1_configs/src/deploy/gha/cicd/ship-terraform.yml"
   "$REPO_ROOT/1_configs/dist/ship-terraform.yml"
   "$REPO_ROOT/.github/workflows/ship-terraform.yml"
 )

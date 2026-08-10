@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_runners_json_schema.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_runners_json_schema.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -33,7 +33,7 @@
 # ║ (the producer's master). Legacy .runners[$a].builder_image is    ║
 # ║ accepted for back-compat but not required.                       ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_runners_json_schema.sh     ║
+# ║ Usage: bash 1_configs/src/deploy/test/test_runners_json_schema.sh     ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

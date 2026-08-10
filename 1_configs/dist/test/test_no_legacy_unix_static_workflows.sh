@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_no_legacy_unix_static_workflows.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_no_legacy_unix_static_workflows.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -17,7 +17,7 @@
 # ║                                                                  ║
 # ║ Audit follow-up (2026-05-05): unix repo had two workflow source  ║
 # ║ trees in parallel:                                               ║
-# ║   • unix/1_configs/src/gha/cicd/   (active, builds via build.sh)   ║
+# ║   • unix/1_configs/src/deploy/gha/cicd/   (active, builds via build.sh)   ║
 # ║   • unix/workflows/src/static/   (legacy, hardcoded literals)    ║
 # ║                                                                  ║
 # ║ The legacy tree had hardcoded image refs that violated the       ║
@@ -27,7 +27,7 @@
 # ║ Skipped if III_unix submodule isn't checked out (so the test     ║
 # ║ still passes during the submodule-pin gap).                      ║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_no_legacy_unix_static_workflows.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_no_legacy_unix_static_workflows.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 
@@ -59,7 +59,7 @@ for f in workflows/src/static/ship-builders.yml workflows/src/static/ship-contai
 done
 
 # Also assert the active source tree exists — sanity check.
-for f in 1_configs/src/gha/cicd/ship-builders.yml 1_configs/src/gha/cicd/ship-containers.yml; do
+for f in 1_configs/src/deploy/gha/cicd/ship-builders.yml 1_configs/src/deploy/gha/cicd/ship-containers.yml; do
     if [ -e "$unix_root/$f" ]; then
         pass "active source present: III_unix/$f"
     else

@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_container_name_matches_declaration.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_container_name_matches_declaration.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -29,7 +29,7 @@
 # ║ Also validates: every service with `on_demand: true` has this    ║
 # ║ flag recognised in the schema (future: health reports honour it).║
 # ║                                                                  ║
-# ║ Usage: bash 1_configs/src/test/test_container_name_matches_declaration.sh
+# ║ Usage: bash 1_configs/src/deploy/test/test_container_name_matches_declaration.sh
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eo pipefail
 

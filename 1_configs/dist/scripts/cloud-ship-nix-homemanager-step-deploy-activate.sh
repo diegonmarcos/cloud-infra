@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/scripts/cloud-ship-nix-homemanager-step-deploy-activate.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/scripts/cloud-ship-nix-homemanager-step-deploy-activate.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -291,7 +291,7 @@ step_compose() {
         # Fix: pre-flight prune docker + truncate runaway logs + journal
         # vacuum before any pull/cp/activate runs. Data-driven threshold:
         #   build.json:.vm.disk.activation_min_free_gb (default 10).
-        # Single source of truth: 1_configs/src/data/hm-config.json
+        # Single source of truth: 1_configs/src/inputs/hm-config.json
         # ALSO read by b_infra/_shared/vm-pilot/src/modules/protection/disk-ballast.nix
         # via symlinked b_infra/_shared/modules/hm-config.json.
         HM_CONFIG_FILE="$STEPS_DIR/../data/hm-config.json"

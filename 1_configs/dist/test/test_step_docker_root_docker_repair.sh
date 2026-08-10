@@ -4,8 +4,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_configs/src/test/test_step_docker_root_docker_repair.sh
-# ║   Engine : 1_configs/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Source : 1_configs/src/deploy/test/test_step_docker_root_docker_repair.sh
+# ║   Engine : 1_configs/src/deploy/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -33,12 +33,12 @@
 # path MUST nuke a directory at /root/.docker/config.json before logging
 # in. Removing the guard regresses the bug.
 #
-# Run:  bash 1_configs/src/test/test_step_docker_root_docker_repair.sh
+# Run:  bash 1_configs/src/deploy/test/test_step_docker_root_docker_repair.sh
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-ENGINE="$REPO_ROOT/1_configs/src/scripts/cloud-ship-container-step-build-docker.sh"
+ENGINE="$REPO_ROOT/1_configs/src/deploy/scripts/cloud-ship-container-step-build-docker.sh"
 
 PASS=0
 FAIL=0

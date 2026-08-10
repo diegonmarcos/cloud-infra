@@ -29,7 +29,7 @@ MADDY_CONF="../a_solutions/user-comm_tools-maddy/dist/configs/maddy.conf.tpl"
 STALWART_CONF="../a_solutions/user-comm_tools-stalwart/dist/configs/config.toml"
 STALWART_COMPOSE="../a_solutions/user-comm_tools-stalwart/dist/compose/docker-compose.yml"
 CADDY_JSON="dist/build-caddy.json"
-DERIVE_SRC="src/engines/cloud-data-config-derive.ts"
+DERIVE_SRC="src/engine/cloud-data-config-derive.ts"
 
 # ── Maddy: user-facing ports bind to 10.0.0.3 ───────────────────────────────
 check "maddy: SMTPS 465 binds 10.0.0.3" \
