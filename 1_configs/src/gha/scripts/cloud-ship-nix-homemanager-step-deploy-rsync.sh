@@ -40,7 +40,10 @@ step_deploy() {
         log "Nix cmd: $NIX_BUILD_CMD"
 
         NIX_TMP=$(mktemp)
-        DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder/src"
+        # cloud-builder's deps devShell. Was "$SERVICE_DIR/../../workflows/
+        # src/cloud-builder/src" — dead since 1_workflows was absorbed into
+        # 1_configs, so the -d guard silently took the no-devShell fallback.
+        DEPS_FLAKE="${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/infra-bld_cloud-builder-x/src"
         set +e
         cd "$DIST_DIR"
         if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then

@@ -38,7 +38,7 @@ CONFIG="$SERVICE_DIR/build.json"
 STEPS_DIR="$(cd "$(dirname "$0")/../../1_configs/src/gha/scripts" 2>/dev/null && pwd)"
 [ -z "$STEPS_DIR" ] && STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
-INJECT_HEADER="$STEPS_DIR/../../engine/libs/inject-header.sh"
+INJECT_HEADER="$STEPS_DIR/../../lib/inject-header.sh"
 ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-terraform-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 
@@ -111,8 +111,8 @@ case "${1:-help}" in
     import)       step_build; step_secrets; step_terraform_import ;;
     ship)         step_build; step_secrets; step_terraform ;;
     clean)        rm -rf "$DIST_DIR"; log "removed $DIST_DIR" ;;
-    test)         "$STEPS_DIR/../../../a_solutions/_shared/test-src-terraform.sh" "$SRC_DIR" \
-                  && "$STEPS_DIR/../../../a_solutions/_shared/test-dist-terraform.sh" "$DIST_DIR" ;;
+    test)         "${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/_shared/test-src-terraform.sh" "$SRC_DIR" \
+                  && "${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/_shared/test-dist-terraform.sh" "$DIST_DIR" ;;
     help|*)
         echo "Usage: $(basename "$0") [build|secrets|plan|apply|import|ship|clean|test]"
         echo "  build    Copy src/*.tf → dist/"

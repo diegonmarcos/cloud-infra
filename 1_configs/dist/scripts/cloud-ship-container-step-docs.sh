@@ -26,7 +26,11 @@ step_docs() {
     fi
 
     log "Building documentation..."
-    DEPS_FLAKE="$SERVICE_DIR/../../workflows/src/cloud-builder"
+    # cloud-builder's deps devShell. Was "$SERVICE_DIR/../../workflows/src/
+    # cloud-builder" — a path that stopped existing when 1_workflows was
+    # absorbed into 1_configs, so the -d guard below has been silently taking
+    # the no-devShell fallback ever since. The flake now lives with the service.
+    DEPS_FLAKE="${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/infra-bld_cloud-builder-x/src"
     if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
         nix develop "$DEPS_FLAKE#" --command bash -c "cd '$SRC_DIR' && nix build --option eval-cache false .#docs --out-link '$SERVICE_DIR/.result-docs'"
     else

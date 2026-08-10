@@ -23,7 +23,12 @@
 set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-HOOK="$SCRIPT_DIR/../hooks/pre-commit"
+# Explicit path, not $SCRIPT_DIR/../hooks — that only resolved from the
+# generated dist/test/ copy, never from src/, so running this tester from
+# the source tree always failed on a missing hook. Matches the form
+# test_precommit_allows_gha_workflow.sh already used.
+REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
+HOOK="$REPO_ROOT/1_configs/dist/hooks/pre-commit"
 [ -x "$HOOK" ] || { echo "FAIL: pre-commit hook missing: $HOOK" >&2; exit 1; }
 
 PASS=0; FAIL=0

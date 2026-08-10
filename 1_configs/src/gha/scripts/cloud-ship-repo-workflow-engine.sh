@@ -24,7 +24,7 @@ HOOKS_TARGET="$TARGET_DIR/hooks"
 # Template + prefix map live in $SRC_DIR/engine/libs/generated-header.json.
 export REPO_ROOT
 export ENGINE_NAME="1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh"
-# shellcheck source=../../engine/libs/inject-header.sh
+# shellcheck source=../../lib/inject-header.sh
 . "$SRC_DIR/engine/libs/inject-header.sh"
 
 log()      { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
