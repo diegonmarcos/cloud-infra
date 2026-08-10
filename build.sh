@@ -3,13 +3,13 @@
 # ║ Cloud Orchestrator — pure dispatcher                            ║
 # ║                                                                  ║
 # ║ Zero logic here. All commands delegate to scripts in             ║
-# ║ 1_configs/src/deploy/scripts/cloud-ship-*.sh                         ║
+# ║ 1_configs/src/gha/scripts/cloud-ship-*.sh                         ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -e
 
 CLOUD_ROOT="$(cd "$(dirname "$0")" && pwd)"
 export CLOUD_ROOT
-SCRIPTS="$CLOUD_ROOT/1_configs/src/deploy/scripts"
+SCRIPTS="$CLOUD_ROOT/1_configs/src/gha/scripts"
 
 # Source shared library (config, helpers, deps check)
 . "$SCRIPTS/cloud-ship-lib.sh"
