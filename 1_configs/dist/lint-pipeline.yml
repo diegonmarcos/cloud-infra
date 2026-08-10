@@ -175,6 +175,17 @@ jobs:
         # dist/z_archive/. Every consumer's probe chain MUST include a
         # dist/z_archive/<file> candidate or it silently 404s.
         run: bash 1_configs/src/test/test_cloud_data_zarchive_probe.sh
+      # Phases 41-43: three testers that lived in gha/scripts/ instead of test/
+      # and were never wired into any workflow. They were consolidated into
+      # test/ by the 1_cloud-configs split; wiring them in is what stops them
+      # rotting again — one of them had been failing on an ambient GITHUB_TOKEN
+      # for as long as it existed, which nothing would have caught.
+      - name: Phase 41 — _ensure_image_public fatal-path + pull gate ordering
+        run: bash 1_configs/src/test/test_ensure_image_public_and_pull_gate.sh
+      - name: Phase 42 — step_docker emits multi-arch tags
+        run: bash 1_configs/src/test/test_step_docker_multiarch_tags.sh
+      - name: Phase 43 — step_secrets writes container-readable .secrets
+        run: bash 1_configs/src/test/test_step_secrets_container_readable.sh
       - name: Phase 33 — dist/ + .github/workflows/ in sync with src/ (no agent drift)
         # report-only: false-positives in CI when local + origin match but
         # CI's freshly-built dist differs (likely env-dependent — node/npm

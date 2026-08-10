@@ -156,6 +156,23 @@ do_deploy() {
     done
     ok "$_n workflow(s) → $(relp "$TARGET_DIR")/"
 
+    # Remove workflows whose source is gone. Deploy used to be copy-only, so a
+    # workflow deleted from src/ stayed in .github/ forever — and GitHub keeps
+    # RUNNING it on its schedule. It also let a hand-written file survive there
+    # with no source at all (test-wg-reach.yml did, for months, failing the
+    # generated-header check the whole time). Safe to purge now that
+    # .github/workflows/ has exactly one owner; before the 1_cloud-configs
+    # split a second engine wrote here and this would have deleted its output.
+    _orphans=0
+    for f in "$TARGET_DIR"/*.yml; do
+        [ -f "$f" ] || continue
+        [ -f "$DIST_DIR/$(basename "$f")" ] && continue
+        step "removing orphan workflow $(basename "$f") — no source in $(relp "$SRC_DIR")/gha/cicd/"
+        rm -f "$f"
+        _orphans=$((_orphans+1))
+    done
+    [ "$_orphans" -gt 0 ] && ok "$_orphans orphan workflow(s) removed"
+
     # Scripts
     if [ -d "$DIST_DIR/scripts" ]; then
         step "deploying scripts  $(relp "$DIST_DIR")/scripts/  →  $(relp "$SCRIPTS_TARGET")/  (consumed by workflow run: blocks)"

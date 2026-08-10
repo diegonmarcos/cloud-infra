@@ -1,9 +1,27 @@
-# ONE-SHOT PROPAGATE — stream the GHCR DB layer directly into oci-apps'
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_configs/src/gha/cicd/cgc-db-propagate.yml
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./1_configs/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# Stream the GHCR DB layer directly into oci-apps'
 # octocode_db volume. The DB is ~6GB extracted; the docker-image path needs 2x
 # (image + extraction) which does NOT fit oci-apps' disk. Streaming the single
 # gzipped layer blob through tar writes only the 6GB extracted files — fits.
 # WG carries only the short SSH command; the blob is fetched oci-apps<-GHCR.
 # Manual dispatch. Fold into cloud-cgc-db-restore.sh once proven.
+#
+# Was hand-written straight into .github/workflows/test-wg-reach.yml — a name
+# left over from whatever it was copied from, and a file with no source, so
+# every `build.sh` left it untouched and the generated-header check failed on
+# it indefinitely. Promoted into src 2026-08-10 and renamed to match what it
+# actually does.
 name: "cgc-db propagate-only (stream GHCR layer -> oci-apps)"
 
 on:

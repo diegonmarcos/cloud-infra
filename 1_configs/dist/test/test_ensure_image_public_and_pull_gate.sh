@@ -43,6 +43,14 @@ pass=0; fail=0
 ok()   { pass=$((pass+1)); echo "  ok: $1"; }
 bad()  { fail=$((fail+1)); echo "  FAIL: $1"; }
 
+# _ensure_image_public has a documented early-return: when GITHUB_TOKEN is set
+# the VM pulls via that token, so a private package is a warning rather than a
+# fatal. Cases 2/4 below assert the FATAL path, which means the ambient
+# environment must not leak a token in — it is set both on GHA runners and in
+# this repo's dev containers, which is why this tester passed locally for
+# whoever wrote it and failed everywhere else.
+unset GITHUB_TOKEN
+
 # ── Stubs (must exist before sourcing so the helper closes over them) ──
 log()       { :; }
 log_warn()  { :; }
