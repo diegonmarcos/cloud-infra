@@ -20,7 +20,11 @@ step_docker_package() {
     # cloud-builder" — a path that stopped existing when 1_workflows was
     # absorbed into 1_configs, so the -d guard below has been silently taking
     # the no-devShell fallback ever since. The flake now lives with the service.
-    DEPS_FLAKE="${CLOUD_ROOT:?CLOUD_ROOT unset}/a_solutions/infra-bld_cloud-builder-x/src"
+    # The devShell is an OPTIMISATION, not a requirement — the `-d` guard below
+    # already falls back to a bare `nix build`. `${CLOUD_ROOT:?}` turned that
+    # optional lookup into a hard abort under `set -u`, so a missing env var
+    # failed the whole deploy instead of taking the fallback. Degrade instead.
+    DEPS_FLAKE="${CLOUD_ROOT:-}/a_solutions/infra-bld_cloud-builder-x/src"
     if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
         log "Using deps devShell from $DEPS_FLAKE"
         nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
