@@ -291,7 +291,7 @@ cloud/
 │   ├── 5-infos/                  Info/diagnostic scripts
 │   └── 6-unix-mcp-api/           MCP API tools
 │
-├── 0_docs/                       Architecture documentation
+├── 0_specs/                       Architecture documentation
 │   ├── Cloud-spec.md             Cloud specification
 │   ├── cloud_architecture.json   Architecture data
 │   └── cloud_control.json        Control plane data

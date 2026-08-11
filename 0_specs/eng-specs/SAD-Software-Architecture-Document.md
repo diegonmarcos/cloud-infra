@@ -117,7 +117,7 @@ cloud/
 ├── c_vps/           ← Cloud provider configs (the "how to provision")
 ├── I_cloud-data/    ← Generated config hub (the "derived truth")
 ├── II_tools/        ← Operational toolkit (the "how to operate")
-├── 0_docs/          ← Documentation (the "why")
+├── 0_specs/          ← Documentation (the "why")
 ├── 1_configs/     ← CI/CD engine (the "how to ship")
 └── .github/         ← GHA workflow definitions
 ```
