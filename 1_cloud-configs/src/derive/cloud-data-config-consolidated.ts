@@ -194,7 +194,38 @@ function main() {
     }
     console.log(`  vault/wireguard: ${Object.keys(vaultWgKeys).length} public keys`);
   } else {
-    console.log("  vault/wireguard: NOT FOUND — WG public keys will be null");
+    console.log("  vault/wireguard: NOT FOUND — falling back to previously derived keys");
+  }
+
+  // Carry forward the keys already in the last derived output when the vault is
+  // absent. The vault lives in a SEPARATE repo (~/git/vault) that GHA runners
+  // never check out, so every CI derive re-emitted `wg_public_key: null` and
+  // committed those nulls over good values. Downstream that is fatal, not
+  // cosmetic: vm-pilot's wireguard.nix throws `VM "<x>" has null wg_public_key`
+  // and the whole home-manager deploy dies (2026-08-11, all 4 VMs).
+  //
+  // A public key is not a secret and never rotates silently, so the last known
+  // value is always a better answer than null. The vault still wins whenever it
+  // is present, so a real rotation propagates on the next local derive.
+  if (existsSync(OUTPUT_JSON)) {
+    try {
+      const prev = JSON.parse(readFileSync(OUTPUT_JSON, "utf8"));
+      let carried = 0;
+      const harvest = (name?: string | null, key?: string | null) => {
+        if (!name || !key) return;
+        if (vaultWgKeys[name]) return;   // vault wins
+        vaultWgKeys[name] = key;
+        carried++;
+      };
+      for (const p of prev?.native?.wireguard?.peers ?? []) harvest(p?.name, p?.wg_public_key);
+      for (const p of prev?.native?.wireguard_public?.peers ?? []) {
+        harvest(p?.name ? `${p.name}-public` : null, p?.wg_public_key);
+      }
+      for (const [name, vm] of Object.entries<any>(prev?.vms ?? {})) harvest(name, vm?.wg_public_key);
+      if (carried > 0) console.log(`  carried forward ${carried} WG public keys from previous output`);
+    } catch (e) {
+      console.log(`  WARN: could not read previous output for WG key carry-forward: ${e}`);
+    }
   }
 
   // ── 2. Parse Terraform for VM specs, storage, firewalls ────────────────
