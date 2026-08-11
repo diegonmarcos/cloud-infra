@@ -27,6 +27,12 @@ set -Eeuo pipefail
 
 SERVICE_DIR="$(cd "$(dirname "$0")" && pwd)"
 SERVICE_NAME="$(basename "$SERVICE_DIR")"
+# Repo root: SERVICE_DIR is b_infra/nixhm-sudo-<vm>, so ../.. is the cloud repo.
+# Steps use this to locate shared flakes. It was never set, so step-build-docker's
+# `${CLOUD_ROOT:?}` killed every deploy under `set -u` before any nix build ran
+# (2026-08-11: 4/4 VMs failed this way). Honour a caller-provided value if any.
+CLOUD_ROOT="${CLOUD_ROOT:-$(cd "$SERVICE_DIR/../.." && pwd)}"
+export CLOUD_ROOT
 SRC_DIR="$SERVICE_DIR/src"
 DIST_DIR="$SERVICE_DIR/dist"
 CONFIG="$SERVICE_DIR/build.json"
