@@ -644,6 +644,17 @@ function deriveCaddy(c: any): DerivedFile[] {
       // Authelia/bearer — without this the endpoint is fully public.
       // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
       ...(wgOnly(proxy) ? { wg_only: true } : {}),
+      // bearer_auth: widens the gate above to "WG peers, OR a valid
+      // Authelia-issued bearer token". caddyfile.nix verifies the token by
+      // forward_auth against the introspection upstream; no token and no mesh
+      // means 403. Source of truth: build.json proxy.primary.bearer_auth.
+      //
+      // Deliberately opt-in per endpoint, and deliberately rare: it is the only
+      // way an MCP endpoint is reachable from off-mesh, so every service that
+      // sets it widens the public surface by exactly one path. Today only
+      // c3-infra-mcp has it, so an agent that cannot join WireGuard (a
+      // container, CI, Claude Code on the web) has exactly one door.
+      ...(proxy?.bearer_auth === true ? { bearer_auth: true } : {}),
     });
   }
   const mcpRoutes = mcpEndpoints.length > 0 ? [{
