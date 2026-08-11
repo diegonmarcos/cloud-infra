@@ -18,9 +18,25 @@
 # broken config.
 set -eu
 
-# AUTHELIA_OIDC_TOKENS_DIR is already exported by unix's Claude settings
-# (da_my-ai/src/data/claude/settings.base.json). The fallback is for shells that
-# never sourced it — CI, a container, a fresh machine.
+# Source 1: the token straight from the environment.
+#
+# For hosts with no vault checkout — a cloud container, CI, Claude Code on the
+# web. Those get a fresh filesystem every session, so the file below never
+# exists there and the endpoint stays unreachable no matter what is committed.
+# Set AUTHELIA_BEARER_TOKEN in the environment instead and this works anywhere.
+#
+# Prefer a NARROW client for that: the environment is readable by every session
+# in it, and claude-admin is full-admin for 10 years. monitoring-read (or a
+# per-purpose client) is the better thing to expose that way.
+if [ -n "${AUTHELIA_BEARER_TOKEN:-}" ]; then
+    node -e 'process.stdout.write(JSON.stringify({Authorization:"Bearer "+process.argv[1]}))' "$AUTHELIA_BEARER_TOKEN" 2>/dev/null \
+        || printf '%s\n' '{}'
+    exit 0
+fi
+
+# Source 2: the vault checkout. AUTHELIA_OIDC_TOKENS_DIR is already exported by
+# unix's Claude settings (da_my-ai/src/data/claude/settings.base.json). The
+# fallback path is the standard ~/git layout.
 TOKENS_DIR="${AUTHELIA_OIDC_TOKENS_DIR:-$HOME/git/vault/A0_keys/providers/authelia/signed-bearer_jwt/tokens}"
 TOKEN_FILE="$TOKENS_DIR/claude-admin.json"
 
