@@ -27,8 +27,8 @@ Covers all subsystems: build engine, service deployment pipeline, home-manager V
 
 ### 1.4 References
 - `README.md` — User-facing overview
-- `0_docs/eng-specs/Cloud-spec.md` — Full cloud specification
-- `0_docs/eng-specs/cloud_architecture.json` — Machine-readable architecture
+- `0_specs/eng-specs/Cloud-spec.md` — Full cloud specification
+- `0_specs/eng-specs/cloud_architecture.json` — Machine-readable architecture
 - `I_cloud-data/manifest.json` — Generated data index
 
 ---
