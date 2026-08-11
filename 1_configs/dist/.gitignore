@@ -108,3 +108,21 @@ b_infra/nixhm-sudo-*/dist/.secrets.d/
 ## themselves the first time every service build.sh was exercised.
 build.log
 **/build.log
+
+# ── Agent/editor machine state ───────────────────────────────────────────────
+## These sit inside directories that ARE committed (.claude/, .obsidian/), so
+## they need naming individually — the deploy step already treats them as
+## "machine state, never managed" and refuses to overwrite them, but nothing
+## stopped them being committed. vault and tools each shipped a
+## settings.local.json full of one machine's Bash permission grants, including
+## absolute paths into a repo layout that no longer exists.
+##
+## Committed alongside, deliberately: .claude/settings.json (shared config) and
+## .mcp.json (generated, identical everywhere).
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude.json
+.claude.json.backup
+.claude.json.tmp.*
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
