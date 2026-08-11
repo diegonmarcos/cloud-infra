@@ -550,7 +550,7 @@ PREFLIGHT_EOF
             #    the launch ssh returns immediately even if it drops right after.
             set +e
             ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-              "rm -f '$_rrc' '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_LAUNCHED" \
+              "rm -f '$_rrc'; : > '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_LAUNCHED" \
               2>&1 | tee -a "$BUILD_LOG_FILE"
             set -e
             _detach_started=1
@@ -561,7 +561,7 @@ PREFLIGHT_EOF
             for _p in $(seq 1 120); do
                 set +e
                 _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; wc -c < '$_rlog' 2>/dev/null")
+                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; stat -c %s '$_rlog' 2>/dev/null || printf 0")
                 _pc=$?; set -e
                 if [ "$_pc" -eq 0 ]; then
                     _chunk="${_out%%__HMRC__*}"
@@ -638,7 +638,7 @@ PREFLIGHT_EOF
         if [ "$_up" -eq 0 ]; then
             set +e
             ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-              "rm -f '$_rrc' '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_RB_LAUNCHED" \
+              "rm -f '$_rrc'; : > '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_RB_LAUNCHED" \
               2>&1 | tee -a "$BUILD_LOG_FILE"
             set -e
             log "Remote build HM switch on $DEPLOY_HOST (detached; polling, max 60min)"
@@ -646,7 +646,7 @@ PREFLIGHT_EOF
             for _p in $(seq 1 240); do
                 set +e
                 _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; wc -c < '$_rlog' 2>/dev/null")
+                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; stat -c %s '$_rlog' 2>/dev/null || printf 0")
                 _pc=$?; set -e
                 if [ "$_pc" -eq 0 ]; then
                     _chunk="${_out%%__HMRC__*}"

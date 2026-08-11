@@ -68,6 +68,27 @@ function main(): void {
     servers[name] = {
       type: 'http',
       url: `https://${proxy.parent_domain}${proxy.base_path}${endpoint}`,
+      // proxy.primary.bearer_auth → the endpoint is gated on an Authelia bearer token
+      // (Caddy: @wg → @bearer → 403), so Claude Code must present one. The token
+      // CANNOT go in this file: .mcp.json is committed verbatim into every repo
+      // under cloud. headersHelper runs at connection time and reads it from
+      // vault instead, so only the script path is committed.
+      //
+      // ${CLAUDE_PROJECT_DIR:-.} — the helper ships with the dotfiles module to
+      // <repo>/.claude/, and the default keeps it working in contexts that do
+      // not set the variable (the helper itself degrades to {} when vault is
+      // absent, so an unauthenticated clone still loads the server and gets an
+      // honest 403 rather than a broken config).
+      // Keyed on proxy.primary.bearer_auth — the SAME flag that makes caddyfile.nix
+      // emit the @bearer branch — so the gate and the credential can never
+      // diverge. Deliberately NOT .mcp.auth: that field describes the SERVICE's
+      // own auth, and mattermost-mcp already sets it to "bearer" for its own
+      // Mattermost token while sitting behind a plain wg_only gate. Keying on it
+      // would attach the Authelia token to a server that neither needs nor
+      // accepts it.
+      ...(d?.proxy?.primary?.bearer_auth === true
+        ? { headersHelper: 'sh "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-auth-headers.sh"' }
+        : {}),
     };
   }
 
