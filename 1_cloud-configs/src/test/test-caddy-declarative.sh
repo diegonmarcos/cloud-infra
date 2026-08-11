@@ -29,12 +29,29 @@ for k in "${REQUIRED_KEYS[@]}"; do
 done
 ok "all 9 required keys present in $CLOUD_JSON"
 
-# 2) Caddy src/ references the JSON (real file or symlink both OK — engine handles either)
+# 2) Caddy src/ must reference the JSON as a SYMLINK, not a copy.
+#
+# "real file or symlink both OK" was the old rule, and it hid a live outage.
+# A regular file here is a FROZEN SNAPSHOT: flake.nix reads this path, so Caddy
+# builds from whatever the file contained when it stopped being a link, while
+# derive keeps updating dist/build-caddy.json. Nothing looks wrong — the build
+# succeeds and gen-configs correctly reports "dist/ unchanged, nothing to
+# commit" — but the deployed Caddyfile silently drifts from source. That is
+# exactly how the c3-infra-mcp bearer gate was authored, committed, and never
+# reached Caddy (4a8b1703d → 2c56195c4).
+#
+# The committed mode is what matters: a symlink in the worktree that is a
+# regular file in the index still ships the snapshot.
 if [ ! -e "$CADDY_JSON" ]; then
   echo "  staging: $CADDY_JSON (symlink → ../../../1_cloud-configs/dist/build-caddy.json)"
   ln -sf "../../../1_cloud-configs/dist/build-caddy.json" "$CADDY_JSON"
 fi
-ok "$CADDY_JSON present ($(stat -c '%F' "$CADDY_JSON" 2>/dev/null || echo unknown))"
+[ -L "$CADDY_JSON" ] || err "$CADDY_JSON is a regular file, not a symlink — Caddy would build from a frozen snapshot. Fix: ln -sf ../../../1_cloud-configs/dist/build-caddy.json $CADDY_JSON"
+CADDY_JSON_MODE=$(git -C "$REPO/cloud" ls-files -s -- "${CADDY_JSON#"$REPO/cloud/"}" 2>/dev/null | awk '{print $1}')
+if [ -n "$CADDY_JSON_MODE" ] && [ "$CADDY_JSON_MODE" != "120000" ]; then
+  err "$CADDY_JSON is committed as mode $CADDY_JSON_MODE (regular file), not 120000 (symlink) — the deploy would use a frozen snapshot even though the worktree looks right"
+fi
+ok "$CADDY_JSON is a symlink (committed mode ${CADDY_JSON_MODE:-unknown})"
 
 # 3) nix build — flake can't follow a symlink pointing outside its own source tree,
 #    so temporarily resolve to a real file (same behavior as the build engine at ship time).
@@ -47,14 +64,25 @@ if [ -L "$CADDY_JSON" ]; then
   echo "  resolved symlink → real file for nix build"
 fi
 
-BUILD_OUT=$(cd "$CADDY_SRC" && nix build --impure --no-link --print-out-paths 2>&1 | tail -1)
+# The restore MUST be a trap, not a straight-line statement. This script runs
+# `set -euo pipefail`, so a failing `nix build` aborts at the assignment below
+# and every line after it is skipped — including the restore. One failed build
+# then leaves the symlink replaced by a regular file, and committing that
+# working tree is precisely the freeze described above. A trap also covers
+# Ctrl-C and timeouts.
+restore_caddy_json_symlink() {
+  if [ "${WAS_SYMLINK:-false}" = true ] && [ ! -L "$CADDY_JSON" ]; then
+    rm -f "$CADDY_JSON"
+    ln -sf "../../../1_cloud-configs/dist/build-caddy.json" "$CADDY_JSON"
+    echo "  restored symlink after nix build"
+  fi
+}
+trap restore_caddy_json_symlink EXIT INT TERM
+
+BUILD_OUT=$(cd "$CADDY_SRC" && nix build --impure --no-link --print-out-paths 2>&1 | tail -1) || true
 NIX_RC=$?
 
-if $WAS_SYMLINK; then
-  rm "$CADDY_JSON"
-  ln -sf "../../../1_cloud-configs/dist/build-caddy.json" "$CADDY_JSON"
-  echo "  restored symlink after nix build"
-fi
+restore_caddy_json_symlink
 
 [ $NIX_RC -eq 0 ] || err "nix build failed"
 [ -d "$BUILD_OUT" ] || err "nix build produced no output: $BUILD_OUT"
