@@ -21,7 +21,7 @@
 #      (node-npm-deps-cloud.nix, gen-claude-md.sh, ship-services.sh,
 #      secrets.sh) lands on a real file with the expected slice.
 #
-# This test is registered by 1_configs/build.sh `run_tests` (which iterates
+# This test is registered by 9_others/build.sh `run_tests` (which iterates
 # test-*.sh). No imperative arg-passing — fixture is the live engine output.
 
 set -euo pipefail
@@ -81,7 +81,7 @@ fi
 echo ""
 echo "── 2. engine emits one build-{name}.json per consumer ──"
 if [ ! -f "$CONSOLIDATED" ]; then
-    fail "$CONSOLIDATED missing — run bash 1_configs/build.sh all"
+    fail "$CONSOLIDATED missing — run bash 9_others/build.sh all"
     echo "test-external-consumers: FAIL ($FAILS)"
     exit 1
 fi

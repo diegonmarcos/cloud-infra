@@ -1,7 +1,7 @@
 // _validate-block-fixture.ts — Test helper for the schema-gate test.
 //
 // Validates a single JSON fixture against a sub-schema (api or mcp) of
-// build.schema.json. Used by 1_configs/src/test/test_build_schema_api_mcp.sh.
+// build.schema.json. Used by 9_others/test/test_build_schema_api_mcp.sh.
 //
 // Usage: npx tsx _validate-block-fixture.ts <schema-path> <fixture-path> <block>
 //   exit 0 + "VALID"   on pass

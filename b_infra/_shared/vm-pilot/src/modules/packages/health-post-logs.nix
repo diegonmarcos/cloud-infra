@@ -65,7 +65,7 @@ let
     ip link show wg0 >/dev/null 2>&1 && WG_UP="true"
 
     # Local port checks — probe per-VM manifest.
-    # Probe order (cloud-data emits NOTHING; new canonical lives in 1_configs/dist):
+    # Probe order (cloud-data emits NOTHING; new canonical lives in 1_cicd/dist):
     #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 1_cloud-configs/dist/build-vm-{vm}.json)
     #   2. $REPO_DIR/cloud-data-containers-$VM.json  ← LEGACY fallback (cloud-data clone)
     MANIFEST=""

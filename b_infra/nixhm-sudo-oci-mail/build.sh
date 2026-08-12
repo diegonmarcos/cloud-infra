@@ -1,1 +1,1 @@
-../../1_configs/src/gha/scripts/cloud-ship-nix-homemanager-engine.sh
+../../1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh

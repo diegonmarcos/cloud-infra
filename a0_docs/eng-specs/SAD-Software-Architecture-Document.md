@@ -118,7 +118,7 @@ cloud/
 ├── I_cloud-data/    ← Generated config hub (the "derived truth")
 ├── II_tools/        ← Operational toolkit (the "how to operate")
 ├── a0_docs/          ← Documentation (the "why")
-├── 1_configs/     ← CI/CD engine (the "how to ship")
+├── 9_others/     ← CI/CD engine (the "how to ship")
 └── .github/         ← GHA workflow definitions
 ```
 
@@ -188,7 +188,7 @@ Client → Cloudflare → gcp-proxy:443
 git push → pre-push hook (git.yaml)
     → cloud-data-config-consolidated.ts reads all build.json + config.json → _cloud-data-consolidated.json
     → cloud-data-config-derive.ts produces per-consumer JSON files
-    (orchestrated by cloud-data-config.ts in cloud-data/1_configs/src/deploy/scripts/)
+    (orchestrated by cloud-data-config.ts in cloud-data/9_others/src/deploy/scripts/)
     → committed to I_cloud-data/
     → GHA ship-gen-configs.yml detects changes → deploys consumers
 ```

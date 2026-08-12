@@ -304,7 +304,7 @@ cloud/
 │   ├── cloud_architecture.json   Architecture data
 │   └── cloud_control.json        Control plane data
 │
-├── 1_configs/                    Repo configuration engine (dotfiles + CI/CD)
+├── 9_others/                    Repo configuration engine (dotfiles + CI/CD)
 │   ├── build.sh                  Config + workflow builder
 │   └── src/                      git-repo/ git-hooks/ gha/ app-claude/
 │                                 app-vscode/ app-obsidian/ engines/ scripts/

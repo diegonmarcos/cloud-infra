@@ -23,7 +23,7 @@
 let
   # Data-driven thresholds from the consolidated cloud-data (P4). Single source
   # of truth: config.json native.protection (defaults) + b_infra/nixhm-sudo-<alias>/
-  # build.json .protection (per-VM overrides), emitted by 1_configs into
+  # build.json .protection (per-VM overrides), emitted by 9_others into
   # native.protection and _home_manager.vms.<vmName>.protection respectively.
   # builtins.fromJSON reads at build time → baked into script; redeploy to change.
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);

@@ -32,7 +32,7 @@ FAILS=0
 if [ -f "$DIST" ]; then
     echo "✓ $DIST exists"
 else
-    echo "✗ $DIST missing — run cloud/1_configs/build.sh all"
+    echo "✗ $DIST missing — run cloud/9_others/build.sh all"
     exit 1
 fi
 

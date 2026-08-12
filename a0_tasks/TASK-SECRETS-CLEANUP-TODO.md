@@ -55,7 +55,7 @@ Two issues were interleaved:
 
 | # | task | priority | status |
 |---|------|----------|---|
-| L1 | Root-cause the silent `git reset --hard` wipe | — | ✅ investigated: no autonomous trigger found (no cron, no systemd timer, no `git sync` alias, no shell function). Git hooks at `1_configs/dist/hooks/` only rebase submodules. If wipes recur, enable `.git/config` reflog tracing |
+| L1 | Root-cause the silent `git reset --hard` wipe | — | ✅ investigated: no autonomous trigger found (no cron, no systemd timer, no `git sync` alias, no shell function). Git hooks at `0_git/dist/hooks/` only rebase submodules. If wipes recur, enable `.git/config` reflog tracing |
 | L2 | Document in `~/.claude/CLAUDE.md`: long sessions must start with rescue tag + snapshot | low | ✅ added `E.1.2 Long Session Safety` to both `~/git/unix/{ba,bb}_flakes_*/src/modules/dotfiles/claude/CLAUDE.md`; deploys via `build.sh switch` |
 | L3 | Verify `lint-secrets-coverage.yml` GHA workflow runs green on next PR | low | ⏳ workflow is correctly gated on `pull_request`; hasn't fired yet because all recent commits went to `main` directly. Will run on next PR |
 | L4 | VM sanity check (= R7) | — | ✅ done (see R7) |

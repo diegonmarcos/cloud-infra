@@ -25,7 +25,7 @@ err() { echo "✗ $*" >&2; FAILS=$((FAILS + 1)); }
 ok()  { echo "✓ $*"; }
 
 for f in "$CONSOLIDATED" "$CHANNELS" "$CADDY" "$NOTIFY"; do
-  [ -f "$f" ] || { err "missing $f (run 1_configs/build.sh all)"; }
+  [ -f "$f" ] || { err "missing $f (run 9_others/build.sh all)"; }
 done
 [ "$FAILS" -eq 0 ] || { echo "== $FAILS pre-flight failures =="; exit 1; }
 

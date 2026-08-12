@@ -24,7 +24,7 @@ err() { echo "✗ $*" >&2; FAILS=$((FAILS + 1)); }
 ok()  { echo "✓ $*"; }
 
 [ -f "$BUILD_JSON" ]    || { err "build.json missing at $BUILD_JSON"; exit 1; }
-[ -f "$CONSOLIDATED" ]  || { err "consolidated missing at $CONSOLIDATED (run 1_configs/build.sh consolidate)"; exit 1; }
+[ -f "$CONSOLIDATED" ]  || { err "consolidated missing at $CONSOLIDATED (run 9_others/build.sh consolidate)"; exit 1; }
 
 # ── 1. Profile → channel resolution recomputed from build.json ────────────────
 # For each profile: expected channels = topics matching .categories, OR the

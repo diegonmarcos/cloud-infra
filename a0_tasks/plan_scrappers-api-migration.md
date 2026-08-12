@@ -31,7 +31,7 @@ lean runtime (single container, on-demand shell-out, flat JSON) · drop Postgres
 - `infra-api_c3-services-mcp/.../discovery.ts` → registry list includes `"crawlee-cloud"`.
 - `infra-api_c3-infra-api` dashboards → `crawlee-api.html`.
 - `front` → `c-Cloud/api` project references crawlee.
-- `1_configs` derived data (caddy route, dns, topology) + backup DAG.
+- `9_others` derived data (caddy route, dns, topology) + backup DAG.
 
 ---
 
@@ -50,7 +50,7 @@ GET  /health
 GET  /openapi.json  (public)
 ```
 
-- **Data-driven targets** — `scrappers.json` (service `src/` or `1_configs/inputs/`) lists
+- **Data-driven targets** — `scrappers.json` (service `src/` or `9_others/inputs/`) lists
   `{platform, handle/url, schedule, output_path}`. Engine reads it; **no hardcoded handles**.
 - **Output** — flat JSON to a mounted, restic-backed dir (`backup.enabled`), optionally pushed to
   `front-data` / gitea. No DB, no object store.
@@ -96,7 +96,7 @@ drift test. **Tester:** MCP tool call hits scrappers-api; drift test passes; das
 restic + get explicit approval before removing; otherwise leave orphaned. **Tester:**
 `api.diegonmarcos.com/crawlee/` 404; scrappers route 200; `docker ps` on oci-apps shows no `crawlee_*`.
 
-**Phase 6 — Cleanup.** Delete crawlee GHCR images, docs, `1_configs` references; regenerate derived
+**Phase 6 — Cleanup.** Delete crawlee GHCR images, docs, `9_others` references; regenerate derived
 data. **Tester:** `grep -r crawlee` across repos returns only historical/plan references.
 
 ---

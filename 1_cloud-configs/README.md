@@ -18,7 +18,7 @@ build.sh      link-builds | consolidate | derive | test | clean | all | ship
 ## What is deliberately NOT here
 
 No `.git*`, no `.github/` workflows, no editor dotfiles. Those are
-repo-universal and live in `1_configs/`, which every one of the repos carries
+repo-universal and live in `9_others/`, which every one of the repos carries
 as the same module. This split happened on 2026-08-10; before it, one module
 held both and its `dist/` had two writers — which is why its purge step had to
 hand-list the subtrees it owned, and why retired services' `build-*.json`
@@ -26,9 +26,9 @@ lingered for months (24 of them, found during the split).
 
 ## Dependency direction
 
-`1_cloud-configs` sources shared shell libs from `1_configs/src/lib/`
+`1_cloud-configs` sources shared shell libs from `9_others/src/`
 (engine-traps, ensure-deps, cloud-paths). The dependency runs one way only:
-1_configs never reads anything from here.
+9_others never reads anything from here.
 
 ## Consumers
 

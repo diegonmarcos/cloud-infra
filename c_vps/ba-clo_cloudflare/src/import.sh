@@ -5,7 +5,7 @@
 # call on every pipeline run. First run imports the world; subsequent runs are
 # pure no-ops (the gate skips everything already in state).
 #
-# Hook point: 1_configs/src/deploy/scripts/cloud-ship-terraform-deploy-apply.sh
+# Hook point: 9_others/src/deploy/scripts/cloud-ship-terraform-deploy-apply.sh
 # calls `./import.sh` right after `terraform init`, before `plan`. Same
 # pattern as c_vps/vps_oci/src/import.sh.
 #

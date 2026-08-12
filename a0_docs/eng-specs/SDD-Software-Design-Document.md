@@ -162,7 +162,7 @@ System protection stack (deployed to all 5 VMs):
 
 ### 5.3 Cloud-Data Generation
 
-Engine: `I_cloud-data/1_configs/src/deploy/scripts/cloud-data-config.ts` (master) → `cloud-data-config-consolidated.ts` + `cloud-data-config-derive.ts`
+Engine: `I_cloud-data/9_others/src/deploy/scripts/cloud-data-config.ts` (master) → `cloud-data-config-consolidated.ts` + `cloud-data-config-derive.ts`
 
 **Input**: All `build.json` files + `config.json`
 **Output**: 26 per-concern JSON files + `_cloud-data-consolidated.json`

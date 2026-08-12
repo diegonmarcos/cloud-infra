@@ -104,7 +104,7 @@ cmd_decrypt() {
     # Decrypt directly to JSON — no text parsing of YAML, structured data only.
     # This aggregator is a human-facing viewer (NOT a container deploy pipeline),
     # so it exports *everything* including _-prefixed metadata like _credentials.
-    # The per-service container engine (1_configs/.../step-secrets-decrypt.sh)
+    # The per-service container engine (9_others/.../step-secrets-decrypt.sh)
     # applies the _-prefix filter when producing .secrets for VMs.
     if SERVICE_JSON=$(sops -d --output-type json "$yaml" 2>/dev/null); then
 
