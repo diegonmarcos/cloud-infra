@@ -27,7 +27,23 @@ step_docker_package() {
     log "Nix cmd: $NIX_BUILD_CMD"
 
     NIX_TMP=$(mktemp)
-    set +e
+    # trap - ERR IS THE ACTUAL FIX FOR THE SWALLOWED NIX ERRORS.
+    #
+    # The engine runs `set -Eeuo pipefail` with `trap _on_error ERR`, and
+    # _on_error exits. `set +e` clears errexit but does NOT disarm an ERR trap,
+    # so a failing `nix develop` fired the trap and exited the whole engine
+    # BEFORE `NIX_RC=$?` was assigned — making the entire diagnostic block below
+    # ("ERROR: nix build failed" / "Full nix output:") unreachable dead code.
+    # Every nix failure therefore surfaced as a bare
+    #     FATAL: step 'docker-package' failed (exit 1)
+    # with the eval error discarded.
+    #
+    # An earlier attempt (94ce350ce) guarded the `cat "$NIX_TMP"` lines instead.
+    # That was the wrong line: both sit AFTER `set -e`, i.e. after the trap has
+    # already exited the process. Proven by run 31619077590 attempt 2, which had
+    # synced to 94ce350ce ("HEAD is now at 94ce350") and STILL logged a bare
+    # FATAL with no nix output.
+    set +e; trap - ERR
     # cloud-builder's deps devShell. Was "$SERVICE_DIR/../../workflows/src/
     # cloud-builder" — a path that stopped existing when 1_workflows was
     # absorbed into 9_others, so the -d guard below has been silently taking
@@ -45,7 +61,7 @@ step_docker_package() {
         eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
         NIX_RC=$?
     fi
-    set -e
+    trap _on_error ERR; set -e
     NIX_OUT=$(cat "$NIX_TMP" 2>/dev/null || true)
     # GUARDED ON PURPOSE — this line used to swallow the very error it exists
     # to record. `set -e` is restored on the line above, so if $BUILD_LOG_FILE
