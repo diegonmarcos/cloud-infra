@@ -41,14 +41,50 @@ step_docker_package() {
     # optional lookup into a hard abort under `set -u`, so a missing env var
     # failed the whole deploy instead of taking the fallback. Degrade instead.
     DEPS_FLAKE="${CLOUD_ROOT:-}/a_solutions/infra-bld_cloud-builder-x/src"
-    if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
-        log "Using deps devShell from $DEPS_FLAKE"
-        nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
-        NIX_RC=$?
-    else
-        eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
-        NIX_RC=$?
-    fi
+    # RETRY THE WHOLE BUILD — a fixed-output fetch can fail for reasons that have
+    # nothing to do with this repo, and nix's own download-attempts is not enough.
+    #
+    # 2026-08-12: every VM using this step failed with
+    #   error: Cannot build '...octocode-0.12.2-huggingface-...tar.gz.drv'
+    #     > curl: (22) The requested URL returned error: 503   (x4)
+    #     > error: cannot download ... from any mirror
+    # The asset was fine — `gh release view` showed it uploaded at 27050620
+    # bytes, and a plain curl returned 200 minutes later. GitHub's release CDN
+    # had a transient 503 window, and nix's built-in download-attempts (the four
+    # curl lines) were all consumed INSIDE that window, so the build failed and
+    # took the deploy with it.
+    #
+    # A fetch failure is not a code failure and must not be terminal: waiting and
+    # trying again is the correct response. NIX_BUILD_ATTEMPTS/NIX_BUILD_BACKOFF
+    # are overridable for testing. Only the LAST attempt's output is kept in
+    # $NIX_TMP, which is what the diagnostic block below reports — so a genuine
+    # eval error still surfaces in full rather than being masked by retries.
+    _nix_attempts="${NIX_BUILD_ATTEMPTS:-3}"
+    _nix_backoff="${NIX_BUILD_BACKOFF:-45}"
+    _nix_try=0
+    while : ; do
+        _nix_try=$(( _nix_try + 1 ))
+        [ "$_nix_try" -gt 1 ] && log "nix build: retry $_nix_try/$_nix_attempts"
+        if [ -d "$DEPS_FLAKE" ] && command -v nix >/dev/null 2>&1; then
+            [ "$_nix_try" -eq 1 ] && log "Using deps devShell from $DEPS_FLAKE"
+            nix develop "$DEPS_FLAKE#" --command bash -c "cd '$DIST_DIR' && $NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
+        else
+            eval "$NIX_BUILD_CMD" >"$NIX_TMP" 2>&1
+            NIX_RC=$?
+        fi
+        [ "$NIX_RC" -eq 0 ] && break
+        [ "$_nix_try" -ge "$_nix_attempts" ] && break
+        # Retry only what a retry can plausibly fix. An eval error (undefined
+        # variable, missing attribute, syntax) is deterministic — retrying it
+        # just burns 90s per VM and delays the real report.
+        if ! grep -qiE 'curl: \([0-9]+\)|cannot download|unable to download|Connection (timed out|reset)|TLS|temporar|503|502|504|429' "$NIX_TMP"; then
+            log "nix build: failure is not transient (no fetch/network error) — not retrying"
+            break
+        fi
+        log "nix build: transient fetch failure — sleeping ${_nix_backoff}s"
+        sleep "$_nix_backoff"
+    done
     trap _on_error ERR; set -e
     NIX_OUT=$(cat "$NIX_TMP" 2>/dev/null || true)
     # GUARDED ON PURPOSE — this line used to swallow the very error it exists

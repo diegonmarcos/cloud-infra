@@ -337,13 +337,24 @@ fi
 
 # ══════════════════════════════════════════════════════════
 # Regenerate 1_cicd/dist/ if any engine input changed
-# Triggers on staged changes to: engine code, per-service build.json,
-# per-VM home-manager build.json, or root config.json.
+# Triggers on staged changes to: ENGINE SOURCES (1_cicd/src/), the derive
+# inputs, per-service build.json, per-VM home-manager build.json, or root
+# config.json.
+#
+# 1_cicd/src/ WAS MISSING FROM THIS LIST AND IT COST A FULL DAY (2026-08-12).
+# CI executes the GENERATED copies, so an engine fix committed to
+# 1_cicd/src/scripts/ alone is invisible to every workflow until somebody
+# notices by hand. Two fixes shipped "done" that day and simply never ran:
+# the terraform inject-header path fix, and the SSH-timeout + fail-closed-gate
+# fix (0dfe680c2) — the latter was diagnosed as still-broken on a live run
+# before anyone realised dist/ had never been rebuilt. The hook is the only
+# thing that keeps src and dist honest, and it was skipping the one directory
+# that holds the engines.
 # Auto-stages any resulting diffs so dist/ stays in sync with src/.
 # Skip when already inside a regen commit (guard against hook re-entry).
 # ══════════════════════════════════════════════════════════
 if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
-   && echo "$STAGED" | grep -qE '^(1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'; then
+   && echo "$STAGED" | grep -qE '^(1_cicd/src/|1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   BUILD_SH="$REPO_ROOT/9_others/build.sh"
   if [ -x "$BUILD_SH" ]; then
@@ -353,10 +364,57 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
       tail -20 /tmp/configs-regen.log >&2
       exit 1
     fi
-    # Auto-stage regenerated dist files (only if content actually changed)
-    if ! git diff --quiet -- 1_cicd/dist/; then
-      git add 1_cicd/dist/
-      echo "[pre-commit] 1_cicd/dist/ updated + staged."
+    # Auto-stage EVERY tier build.sh regenerates, not just 1_cicd/dist/.
+    #
+    # `build.sh all` also rewrites .github/workflows/ (and .github/actions/),
+    # and GitHub Actions reads those PHYSICAL files — not 1_cicd/dist/. Staging
+    # only dist/ meant a commit could carry a freshly regenerated dist while
+    # leaving the workflow YAML that CI actually executes stale, so the two
+    # halves of one change shipped in different commits (or never).
+    #
+    # Each path is staged only when its content actually changed, so this stays
+    # a no-op for commits that touch none of them.
+    for _regen_path in 1_cicd/dist/ .github/workflows/ .github/actions/; do
+      if [ -e "$REPO_ROOT/$_regen_path" ] && ! git diff --quiet -- "$_regen_path"; then
+        git add "$_regen_path"
+        echo "[pre-commit] $_regen_path updated + staged."
+      fi
+    done
+
+    # THE DERIVER IS NOT PART OF 9_others/build.sh — run it explicitly.
+    #
+    # 9_others/build.sh only references 1_cloud-configs in comments; it never
+    # invokes it. So editing 1_cloud-configs/src/derive/ triggered this block,
+    # regenerated every OTHER tier, printed success, and left the one artifact
+    # the edit was about — _cloud-data-consolidated.json — untouched.
+    #
+    # That is the exact bug class behind the 2026-08-12 fleet outage: the
+    # carry-forward fix for the WireGuard client keys was correct in the deriver
+    # source while the compiled JSON still carried wg_public_key: null, which is
+    # what actually unmeshed the CI runner. A deriver change whose output never
+    # ships is indistinguishable from no change at all.
+    #
+    # Only runs when a derive input is staged, so ordinary commits are unaffected.
+    # The deriver reads the vault at ~/git/vault; on a machine without it the
+    # keys carry forward from the previous output rather than being nulled.
+    if echo "$STAGED" | grep -qE '^1_cloud-configs/src/'; then
+      CONFIGS_SH="$REPO_ROOT/1_cloud-configs/build.sh"
+      if [ -x "$CONFIGS_SH" ]; then
+        echo "[pre-commit] derive input staged — running 1_cloud-configs/build.sh consolidate"
+        if ! "$CONFIGS_SH" consolidate >/tmp/derive-regen.log 2>&1; then
+          echo "[pre-commit] 1_cloud-configs/build.sh failed — aborting commit. See /tmp/derive-regen.log" >&2
+          tail -20 /tmp/derive-regen.log >&2
+          exit 1
+        fi
+        # The consolidated JSON is propagated into a_solutions/*/src/ copies, so
+        # stage those too or the service images ship stale fleet data.
+        for _derived in 1_cloud-configs/dist/ a_solutions/; do
+          if ! git diff --quiet -- "$_derived"; then
+            git add "$_derived"
+            echo "[pre-commit] $_derived updated + staged (derive)."
+          fi
+        done
+      fi
     fi
   fi
 fi
