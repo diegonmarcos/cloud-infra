@@ -146,9 +146,29 @@ lib.mkIf enabled {
       # netplan refuses world-readable configs (warns and may ignore them).
       $SUDO chmod 600 "$DST"
       # `netplan apply` re-applies ALL configs including OCI's cloud-init one,
-      # so a broken drop-in takes IPv4 with it. --no-block so a hung apply can
-      # never wedge the deploy; the address also comes up on next boot anyway.
-      $SUDO netplan apply 2>&1 | ${pkgs.gnugrep}/bin/grep -v '^$' || true
+      # so a broken drop-in takes IPv4 with it.
+      #
+      # RUN IT DETACHED — DO NOT run it in the foreground of this activation.
+      # netplan apply restarts networking on a host that is reachable ONLY over
+      # the network being restarted, so it can hang the very SSH session this
+      # deploy is running through. An earlier revision of this file carried a
+      # comment claiming "--no-block so a hung apply can never wedge the deploy"
+      # while the command had no such flag — and netplan apply has no
+      # --no-block option at all; that is a systemctl flag. The protection was
+      # described but never implemented. On 2026-08-12 the oci-analytics deploy
+      # hung for exactly its 45-minute timeout and was cancelled; that
+      # particular hang happened earlier in the Ship step (the drop-in was never
+      # written, so this line was not the cause), but it is precisely the
+      # failure this line would produce once activation does reach it, on the
+      # one VM that hosts the wg-public hub.
+      #
+      # systemd-run detaches it from this session so activation returns
+      # immediately, and RuntimeMaxSec bounds it so a wedged apply cannot linger.
+      # The address also comes up on next boot from the file alone, so a killed
+      # apply costs nothing permanent.
+      $SUDO systemd-run --unit=ipv6-guest-netplan --collect \
+        --property=RuntimeMaxSec=120 \
+        netplan apply 2>&1 | ${pkgs.gnugrep}/bin/grep -v '^$' || true
       echo "[ipv6-guest] applied netplan drop-in for $IFACE"
     fi
 
