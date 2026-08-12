@@ -380,5 +380,41 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
         echo "[pre-commit] $_regen_path updated + staged."
       fi
     done
+
+    # THE DERIVER IS NOT PART OF 9_others/build.sh — run it explicitly.
+    #
+    # 9_others/build.sh only references 1_cloud-configs in comments; it never
+    # invokes it. So editing 1_cloud-configs/src/derive/ triggered this block,
+    # regenerated every OTHER tier, printed success, and left the one artifact
+    # the edit was about — _cloud-data-consolidated.json — untouched.
+    #
+    # That is the exact bug class behind the 2026-08-12 fleet outage: the
+    # carry-forward fix for the WireGuard client keys was correct in the deriver
+    # source while the compiled JSON still carried wg_public_key: null, which is
+    # what actually unmeshed the CI runner. A deriver change whose output never
+    # ships is indistinguishable from no change at all.
+    #
+    # Only runs when a derive input is staged, so ordinary commits are unaffected.
+    # The deriver reads the vault at ~/git/vault; on a machine without it the
+    # keys carry forward from the previous output rather than being nulled.
+    if echo "$STAGED" | grep -qE '^1_cloud-configs/src/'; then
+      CONFIGS_SH="$REPO_ROOT/1_cloud-configs/build.sh"
+      if [ -x "$CONFIGS_SH" ]; then
+        echo "[pre-commit] derive input staged — running 1_cloud-configs/build.sh consolidate"
+        if ! "$CONFIGS_SH" consolidate >/tmp/derive-regen.log 2>&1; then
+          echo "[pre-commit] 1_cloud-configs/build.sh failed — aborting commit. See /tmp/derive-regen.log" >&2
+          tail -20 /tmp/derive-regen.log >&2
+          exit 1
+        fi
+        # The consolidated JSON is propagated into a_solutions/*/src/ copies, so
+        # stage those too or the service images ship stale fleet data.
+        for _derived in 1_cloud-configs/dist/ a_solutions/; do
+          if ! git diff --quiet -- "$_derived"; then
+            git add "$_derived"
+            echo "[pre-commit] $_derived updated + staged (derive)."
+          fi
+        done
+      fi
+    fi
   fi
 fi
