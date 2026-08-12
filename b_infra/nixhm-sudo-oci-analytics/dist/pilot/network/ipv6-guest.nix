@@ -53,9 +53,36 @@
 let
   enabled = vmName == "oci-analytics";
 
+  # The address OCI assigned to this VNIC. Source of truth is terraform:
+  # c_vps/vps_oci, output analytics_ipv6 (oci_core_ipv6.analytics_v6).
+  # Search token: ANALYTICS_IPV6 — must match wireguard-public-endpoints.json
+  # hub.host_v6 in the unix repo, or the laptop dials an address the VM does
+  # not hold. Same hardcode-with-a-token convention nat64-tayga.nix uses for
+  # NAT64_PREFIX.
+  analyticsIpv6 = "2603:c026:c104:8f00:0:c704:63b:6eee";
+
+  # /128, not /64. OCI routes the assigned address to the VNIC as a host route;
+  # claiming the whole /64 on the interface would make the guest believe every
+  # neighbour in the subnet is link-local and blackhole them.
+  analyticsIpv6Cidr = "${analyticsIpv6}/128";
+
   # Primary NIC. OCI Ubuntu images name it ens3 (virtio) — resolved at RUNTIME
   # from the default route rather than hardcoded, because a wrong interface name
   # yields a netplan file that applies cleanly and does nothing at all.
+  #
+  # STATIC ADDRESS + RA FOR THE ROUTE. The address is deterministic (terraform
+  # assigned it) so it is asserted directly, which removes the dependency on OCI
+  # actually serving DHCPv6 — the open question that made the first attempt a
+  # coin flip.
+  #
+  # The GATEWAY is deliberately NOT hardcoded. OCI publishes no static IPv6
+  # gateway: its documented method takes the default route from Router
+  # Advertisement, and the virtual router's link-local address varies per subnet
+  # and is not derivable from anything in this repo. Guessing it would install a
+  # bogus default route ON THE VM THAT HOSTS THE wg-public HUB — i.e. it could
+  # cut the fleet off from the machine needed to undo it. accept-ra takes the
+  # route from the authority that owns it; dhcp6 stays on as a belt-and-braces
+  # second path to the same answer. Neither can install a wrong route.
   netplanDropIn = ''
     # Managed by home-manager (ipv6-guest.nix) — do not edit.
     # Drop-in over OCI's cloud-init config; cloud-init rewrites
@@ -66,6 +93,8 @@ let
         @IFACE@:
           dhcp6: true
           accept-ra: true
+          addresses:
+            - ${analyticsIpv6Cidr}
   '';
 in
 lib.mkIf enabled {
@@ -119,11 +148,26 @@ lib.mkIf enabled {
     ${pkgs.coreutils}/bin/sleep 3
     V6=$(${pkgs.iproute2}/bin/ip -6 addr show dev "$IFACE" scope global 2>/dev/null \
          | ${pkgs.gawk}/bin/awk '/inet6/ {print $2; exit}')
+    V6ROUTE=$(${pkgs.iproute2}/bin/ip -6 route show default 2>/dev/null | ${pkgs.coreutils}/bin/head -1)
+
+    # ADDRESS AND ROUTE ARE REPORTED SEPARATELY ON PURPOSE. The address is now
+    # asserted statically, so it comes up whether or not the network cooperates
+    # — meaning "has an address" no longer proves anything works. Only the
+    # default route, which must come from RA, tells you the VM can actually
+    # answer off-subnet traffic like a WireGuard handshake from a v6-only WiFi.
+    # Reporting them together would let a half-working state read as success.
     if [ -n "$V6" ]; then
-      echo "[ipv6-guest] OK — $IFACE has global IPv6 $V6"
+      echo "[ipv6-guest] address OK — $IFACE has global IPv6 $V6"
     else
-      echo "[ipv6-guest] WARNING: $IFACE still has NO global IPv6." >&2
-      echo "[ipv6-guest] OCI may not serve RA/DHCPv6 in this subnet; a static address + gateway would then be required." >&2
+      echo "[ipv6-guest] WARNING: $IFACE has NO global IPv6 despite a static address in netplan." >&2
+      echo "[ipv6-guest] Check that netplan applied: netplan get; journalctl -u systemd-networkd" >&2
+    fi
+    if [ -n "$V6ROUTE" ]; then
+      echo "[ipv6-guest] route OK — default via: $V6ROUTE"
+    else
+      echo "[ipv6-guest] WARNING: NO IPv6 default route. The address is configured but OFF-SUBNET TRAFFIC CANNOT WORK —" >&2
+      echo "[ipv6-guest] a WireGuard handshake from an IPv6-only network will still fail. OCI is not sending RAs on this" >&2
+      echo "[ipv6-guest] subnet; the gateway must then be obtained from OCI (it is NOT derivable) and set explicitly." >&2
     fi
     ) || echo "[ipv6-guest] activation failed; deploy continues"
   '';
