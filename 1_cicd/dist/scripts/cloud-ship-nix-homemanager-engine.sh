@@ -96,10 +96,18 @@ run_logged() {
     _desc="$1"; shift
     log "RUN: $_desc"
     log "CMD: $*"
-    set +e
+    # `trap - ERR` IS REQUIRED HERE — `set +e` ALONE DOES NOT DISARM AN ERR TRAP.
+    # This file runs under `set -Eeuo pipefail` with `trap _on_error ERR`, and
+    # _on_error calls `exit`. In bash, `set +e` only clears errexit; the ERR trap
+    # still fires on any failing simple command. So without this the failing
+    # command below killed the whole engine BEFORE `_exit` was assigned, and the
+    # `log "FAILED (exit ...)"` line was unreachable dead code.
+    # Verified in bash 5.2.37 (2026-08-12): with the trap armed, `set +e; false;
+    # RC=$?` exits immediately and RC is never assigned.
+    set +e; trap - ERR
     "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
     _exit=${PIPESTATUS[0]}
-    set -e
+    trap _on_error ERR; set -e
     if [ "$_exit" -ne 0 ]; then
         log "FAILED (exit $_exit): $_desc"
         return "$_exit"
@@ -137,11 +145,17 @@ run_with_retry() {
         _try=$(( _try + 1 ))
         log "RUN: $_desc (attempt $_try/$_attempts, timeout ${_timeout}s)"
         log "CMD: $*"
-        set +e
+        # trap - ERR: see run_logged. Without it the ERR trap exits the engine on
+        # the FIRST failing attempt, so retries 2..N never run and no
+        # "FAILED (exit N) ... (attempt 1/3)" line is ever logged. Observed in
+        # b_infra/nixhm-sudo-oci-mail/build.log: a buildx failure on attempt 1/3
+        # produced an immediate "FATAL: step 'docker-push' failed" with attempts
+        # 2 and 3 silently skipped — the retry logic has never actually run.
+        set +e; trap - ERR
         # --kill-after=30s: SIGKILL children 30s after SIGTERM if still alive
         timeout --kill-after=30s "${_timeout}s" "$@" 2>&1 | tee -a "$BUILD_LOG_FILE"
         _exit=${PIPESTATUS[0]}
-        set -e
+        trap _on_error ERR; set -e
 
         if [ "$_exit" -eq 0 ]; then
             log "OK: $_desc (attempt $_try)"
@@ -158,10 +172,14 @@ run_with_retry() {
         if [ "$_try" -lt "$_attempts" ]; then
             if [ -n "${RETRY_RECOVERY_CMD:-}" ]; then
                 log "Recovery hook: $RETRY_RECOVERY_CMD"
-                set +e
+                # trap - ERR: see run_logged. A recovery hook is EXPECTED to fail
+                # sometimes (that is why its exit code is logged rather than
+                # checked); without disarming the trap, a failing hook killed the
+                # deploy outright instead of falling through to the next attempt.
+                set +e; trap - ERR
                 bash -c "$RETRY_RECOVERY_CMD" 2>&1 | tee -a "$BUILD_LOG_FILE"
                 _rec_exit=${PIPESTATUS[0]}
-                set -e
+                trap _on_error ERR; set -e
                 log "Recovery hook exit: $_rec_exit"
             fi
             log "Retrying in ${_backoff}s..."
