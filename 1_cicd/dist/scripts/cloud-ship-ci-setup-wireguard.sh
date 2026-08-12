@@ -88,6 +88,29 @@ cat > /tmp/wg0.conf << WGEOF
 [Interface]
 PrivateKey = ${WG_PRIVATE_KEY}
 Address = ${CLIENT_WG_IP}/24
+# MTU MUST MATCH THE VMs. Do not delete, and do not "restore the default".
+#
+# Every VM pins MTU = 1380 (vm-pilot/src/modules/network/wireguard.nix:92,103).
+# This config had NO MTU line, so wg-quick applied its default of 1420 — meaning
+# every frame between 1381 and 1420 bytes sent by the runner was silently
+# dropped by the far side, with no ICMP to trigger PMTU discovery (ICMP is
+# filtered on these paths).
+#
+# The failure is vicious because it is PARTIAL: the TCP handshake is tiny and
+# succeeds, so the port reads as open and the tunnel looks healthy — only the
+# first big frame dies. For SSH that frame is the key exchange, so connections
+# hang and then fail at SSH2_MSG_KEX_ECDH_REPLY. In CI that surfaced as
+# "ssh: connect to host 10.0.0.4 port 22: Connection timed out" on the deploy's
+# pre-flight, which reads like an unreachable host and is not one.
+#
+# Reproduced from a workstation on the same mesh, ControlPath=none so no
+# multiplexed session could mask it (2026-08-12):
+#   wg0 MTU 1420 -> fresh ssh FAILS at 20.6s, dies at KEX  (3/3 attempts)
+#   wg0 MTU 1200 -> fresh ssh OK in 3.3s                   (2/2 attempts)
+# Multiplexing is exactly why this hid for so long: an already-established
+# ControlMaster keeps working, so interactive testing "proves" the host is
+# reachable while every fresh connection the runner makes fails.
+MTU = 1380
 
 [Peer]
 PublicKey = ${HUB_PUBKEY}
