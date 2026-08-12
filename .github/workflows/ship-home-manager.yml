@@ -63,7 +63,34 @@ jobs:
       # is ~30% slower but every VM gets a clean tunnel.
       max-parallel: 1
       matrix:
-        vm: [gcp-proxy, oci-mail, oci-analytics, oci-apps]
+        # ORDER IS LOAD-BEARING: gcp-proxy MUST BE LAST. NEVER FIRST.
+        #
+        # gcp-proxy is the wg0 mesh HUB (10.0.0.1). Every other VM's deploy
+        # tunnels through it, and the runner reaches all of them as 10.0.0.200
+        # over that hub. Deploying to gcp-proxy therefore severs the path every
+        # remaining job needs — combined with max-parallel: 1 above, anything
+        # queued behind it dies with it.
+        #
+        # It is also the smallest box in the fleet: a GCP e2-micro, 1 GB RAM
+        # (944 MB usable, ~209 MB available in steady state), which receives a
+        # ~2 GB docker image during activation. On 2026-08-12 that wedged it
+        # completely — RUNNING at the hypervisor but no SSH, no WireGuard, no
+        # ICMP — and because it was FIRST in this list it took the mesh down
+        # before oci-mail, oci-analytics or oci-apps had run. All four jobs then
+        # failed with "ssh: connect to host 10.0.0.1 port 22: Connection timed
+        # out", which reads as four independent failures and is really one: the
+        # hub died and everything behind it lost its route. Two consecutive runs
+        # (31600637799, 31610340030) failed this way before the shared cause was
+        # found, and recovery needed an out-of-band console reset because every
+        # remote path — mesh SSH, rescue SSH, mesh DNS, even the gcloud MCP
+        # proxy — runs through that host.
+        #
+        # Last means a wedge costs only its own job and the mesh stays intact
+        # for everything before it. This does NOT make deploying to gcp-proxy
+        # safe — it bounds the blast radius to one VM instead of four. The real
+        # fix is to stop shipping a 2 GB image to a 1 GB VM that is also the
+        # fleet's single point of routing.
+        vm: [oci-analytics, oci-mail, oci-apps, gcp-proxy]
     runs-on: ubuntu-latest
     name: ${{ matrix.vm }}
     permissions:
@@ -116,28 +143,31 @@ jobs:
             # produced an empty CHANGED and skipped. A skip reports the job as
             # SUCCESS, so any git fault here (missing HEAD^ under a shallower
             # checkout, a bad ref, a detached-head edge case) would silently
-            # turn every deploy into a green no-op. That is the worst possible
-            # direction to fail in: the fleet stops being updated and the
-            # dashboard says everything is fine. Capture git's exit status
-            # separately and, if the diff could not be computed, DEPLOY rather
+            # turn every deploy into a green no-op: the fleet stops being
+            # updated while the dashboard says everything is fine. That is the
+            # worst possible direction to fail in. Capture git's exit status
+            # separately and, if the diff cannot be computed, DEPLOY rather
             # than assume there was nothing to do.
             DIFF_OUT=$(git diff --name-only HEAD^ HEAD 2>&1); DIFF_RC=$?
             if [ "$DIFF_RC" -ne 0 ]; then
               echo "::warning::path-relevance diff failed (exit $DIFF_RC) — deploying rather than skipping. git said: ${DIFF_OUT}"
+              CHANGED="forced-by-diff-failure"
             else
               CHANGED=$(printf '%s\n' "$DIFF_OUT" | grep -E '^b_infra/' | head -1 || true)
-              if [ -z "$CHANGED" ]; then
-                echo "skip=true" >> "$GITHUB_OUTPUT"
-                echo "::notice::skip — no b_infra/ changes in upstream commit"
-                # Make a no-deploy run unmistakable on the run page. A skipped
-                # gate still reports the JOB as green, which reads identically
-                # to a successful deploy in the runs list; without this note,
-                # a deploy path that has been broken for days looks healthy.
-                echo "### ⏭️ ${VM}: NO DEPLOY PERFORMED" >> "$GITHUB_STEP_SUMMARY"
-                echo "Gate skipped this VM — upstream commit touched no \`b_infra/\` paths." >> "$GITHUB_STEP_SUMMARY"
-                echo "This run being green does **not** mean the VM was updated." >> "$GITHUB_STEP_SUMMARY"
-                exit 0
-              fi
+            fi
+            if [ -z "$CHANGED" ]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::skip — no b_infra/ changes in upstream commit"
+              # Make a no-deploy run unmistakable on the run page. A skipped
+              # gate still reports the JOB as green, which in the runs list is
+              # indistinguishable from a successful deploy. Without this note a
+              # deploy path that has been broken for days looks perfectly
+              # healthy — which is exactly what happened here: every recent
+              # green run had skipped, so nobody saw that shipping was broken.
+              echo "### ⏭️ ${VM}: NO DEPLOY PERFORMED" >> "$GITHUB_STEP_SUMMARY"
+              echo "Gate skipped this VM — upstream commit touched no \`b_infra/\` paths." >> "$GITHUB_STEP_SUMMARY"
+              echo "This run being green does **not** mean the VM was updated." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
             fi
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
