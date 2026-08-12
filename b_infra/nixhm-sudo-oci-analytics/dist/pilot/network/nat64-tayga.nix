@@ -74,6 +74,19 @@ let
     data-dir      /var/db/tayga
   '';
 
+  # PERSISTENT v6 forwarding. firewall.nix enables it with a bare `sysctl -w`,
+  # deliberately, so that IPv6-disabled hosts (GCP e2-micro) don't fail
+  # activation — but `sysctl -w` is runtime-only. After a reboot v6 forwarding
+  # is OFF until the next home-manager activation happens to run, and NAT64
+  # silently stops forwarding until then. Writing it as a file is safe HERE in a
+  # way it is not globally: this module is gated to oci-analytics, which
+  # demonstrably has working IPv6.
+  sysctlConf = ''
+    # Managed by home-manager (nat64-tayga.nix) — do not edit
+    net.ipv6.conf.all.forwarding = 1
+    net.ipv4.ip_forward = 1
+  '';
+
   taygaUnit = ''
     [Unit]
     Description=Tayga NAT64 translator
@@ -127,6 +140,7 @@ in lib.mkIf enabled {
 
   home.file.".local/share/nat64-tayga/tayga.conf".text = taygaConf;
   home.file.".local/share/nat64-tayga/nat64-tayga.service".text = taygaUnit;
+  home.file.".local/share/nat64-tayga/99-nat64.conf".text = sysctlConf;
 
   home.activation.installNat64Tayga = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
     (
@@ -144,6 +158,14 @@ in lib.mkIf enabled {
 
     # Ensure tayga data dir exists
     $SUDO mkdir -p /var/db/tayga
+
+    # Persist v6 forwarding BEFORE tayga starts — a translator that cannot
+    # forward is worse than one that is absent, because everything reports
+    # healthy while packets die.
+    $SUDO mkdir -p /etc/sysctl.d
+    $SUDO cp -f "$SRC/99-nat64.conf" /etc/sysctl.d/99-nat64.conf
+    $SUDO chmod 644 /etc/sysctl.d/99-nat64.conf
+    $SUDO sysctl -q -p /etc/sysctl.d/99-nat64.conf 2>/dev/null || true
 
     # Deploy config + unit
     $SUDO cp -f "$SRC/tayga.conf" /etc/tayga.conf
