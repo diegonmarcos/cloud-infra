@@ -38,6 +38,19 @@ CONFIG="$SERVICE_DIR/build.json"
 STEPS_DIR="$(cd "$(dirname "$0")/../../1_cicd/src/scripts" 2>/dev/null && pwd)"
 [ -z "$STEPS_DIR" ] && STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
+#
+# 2026-08-12: this pointed at $STEPS_DIR/../../lib/inject-header.sh — i.e.
+# 1_cicd/lib/ — which does not exist. The reorg in ead280004 ("cloud repos moved
+# to the root") left the lib at 9_others/src/inject-header.sh without updating
+# this line, so EVERY project symlinking to this engine (12 of them) died on
+#     .../1_cicd/src/scripts/../../lib/inject-header.sh: No such file or directory
+# and could not regenerate dist/ at all.
+#
+# That is not cosmetic: GHA deploys dist/, so a dist/ that cannot be rebuilt
+# silently keeps shipping whatever it last contained. It is exactly how
+# c_vps/vps_oci/dist/main.tf stayed missing the entire IPv6 build-out that
+# src/main.tf already had — the work was written and never shipped, and nothing
+# reported a problem because the generator was never reached.
 INJECT_HEADER="$STEPS_DIR/../../../9_others/src/inject-header.sh"
 ENGINE_NAME="1_cicd/src/scripts/cloud-ship-terraform-engine.sh"
 export INJECT_HEADER ENGINE_NAME
