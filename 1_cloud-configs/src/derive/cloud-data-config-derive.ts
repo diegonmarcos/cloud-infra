@@ -13,7 +13,7 @@ import { resolve, join } from "path";
 // ═══════════════════════════════════════════════════════════════════════════
 
 const ENGINE_DIR = import.meta.dirname!;
-// Script lives at: cloud/1_cloud-configs/src/derive — 2 levels up = cloud/1_configs
+// Script lives at: cloud/1_cloud-configs/src/derive — 2 levels up = cloud/9_others
 const CONFIGS_DIR = resolve(ENGINE_DIR, "../..");
 const CLOUD_ROOT = resolve(CONFIGS_DIR, "..");
 const GIT_BASE = process.env.GIT_BASE ?? resolve(CLOUD_ROOT, "..");
@@ -1812,7 +1812,7 @@ function deriveGhaConfig(c: any): DerivedFile {
   // 2026-04-27 renamed: cloud-data-gha-config.json → build-gha.json.
   // Reason: aligns with the per-service build-{name}.json convention — every
   // ship-system config is a build-*.json. Consumers (.github/workflows/ship.yml,
-  // 1_configs/src/gha/scripts/cloud-ship-orchestrate-{ghcr,vm}.sh) prefer this
+  // 1_cicd/src/scripts/cloud-ship-orchestrate-{ghcr,vm}.sh) prefer this
   // path; the legacy name lingers as a fallback during rollout.
   return {
     name: "build-gha.json",
@@ -3413,7 +3413,7 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
 // read stays only as a fallback for a standalone invocation.
 function deriveCloudFleetMerged(containersData?: any): DerivedFile {
   const containersSrc = join(CLOUD_DATA_DIR, "cloud-fleet-containers-declared.json");
-  const frontSrc      = join(GIT_BASE, "front", "1_configs", "dist", "front-fleet-gh-declared.json");
+  const frontSrc      = join(GIT_BASE, "front", "9_others", "dist", "front-fleet-gh-declared.json");
 
   const containers = containersData
     ?? (existsSync(containersSrc) ? JSON.parse(readFileSync(containersSrc, "utf8")) : null);
@@ -3505,7 +3505,7 @@ function main() {
   //                    block emitted by cloud-data-config-consolidated.ts so any
   //                    consumer reading either the master or a derived file can
   //                    trace back to the source-of-truth in one read.
-  const DO_NOT_EDIT = "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.";
+  const DO_NOT_EDIT = "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.";
   const PIPELINE_META = {
     description: "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
     source_inputs: [
@@ -3523,7 +3523,7 @@ function main() {
       per_container: "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
       archived: "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)",
     },
-    rebuild_command: "bash 1_configs/build.sh all",
+    rebuild_command: "bash 9_others/build.sh all",
   };
   const summary: string[] = [];
   for (const file of derived) {
@@ -3593,7 +3593,7 @@ function main() {
   // dist/manifest.json — paths relative to dist/ (for tooling that reads dist directly)
   const manifestJson = JSON.stringify(manifestEntries, null, 2) + "\n";
   writeFileSync(join(CLOUD_DATA_DIR, "manifest.json"), manifestJson);
-  // 1_configs/manifest.json — paths with dist/ prefix (for dashboard at cloud/ root)
+  // 9_others/manifest.json — paths with dist/ prefix (for dashboard at cloud/ root)
   const rootManifest = manifestEntries.map((e) => ({ ...e, file: `dist/${e.file}` }));
   writeFileSync(join(CONFIGS_DIR, "manifest.json"), JSON.stringify(rootManifest, null, 2) + "\n");
 

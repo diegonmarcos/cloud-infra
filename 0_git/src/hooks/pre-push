@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║ pre-push — block non-main remote refs; rebase submodules         ║
+# ║                                                                  ║
+# ║ Source: cloud/0_git/src/hooks/pre-push                     ║
+# ║ Active via [core] hooksPath = 0_git/dist/hooks             ║
+# ║                                                                  ║
+# ║ Main-only policy, remote half: `reference-transaction` blocks    ║
+# ║ creating a LOCAL branch, but `git push origin HEAD:new-branch`   ║
+# ║ never touches a local ref, so it slips past that hook and would  ║
+# ║ create a branch straight on the remote. Reject any push whose    ║
+# ║ destination ref isn't refs/heads/main or refs/heads/master,      ║
+# ║ before the network call happens.                                 ║
+# ║                                                                  ║
+# ║ Before every push, sync each submodule worktree to its remote    ║
+# ║ HEAD (rebased). Pointer bumps in the parent repo are NOT         ║
+# ║ auto-staged — that remains the responsibility of the GHA         ║
+# ║ sync-submodules workflow on main. This hook only ensures the     ║
+# ║ local worktree reflects upstream before the push goes out.       ║
+# ╚══════════════════════════════════════════════════════════════════╝
+set -uo pipefail
+
+# ── Main-only policy: reject any push targeting a non-main ref ──────
+# stdin lines: <local ref> <local oid> <remote ref> <remote oid>
+_blocked=""
+while read -r _lref _loid _rref _roid; do
+  case "$_rref" in
+    refs/heads/main|refs/heads/master|refs/tags/*) : ;;
+    refs/heads/*)
+      _blocked="${_blocked}  ${_rref#refs/heads/}\n"
+      ;;
+  esac
+done
+
+if [ -n "$_blocked" ]; then
+  {
+    printf '\n\033[31mBLOCKED: pushing to a non-main branch is disabled (main-only policy).\033[0m\n'
+    printf '  attempted:\n'
+    printf "$_blocked"
+    printf '  Work directly on main — push there instead.\n'
+    printf '  Source   : 0_git/src/hooks/pre-push\n\n'
+  } >&2
+  exit 1
+fi
+
+# ── Safer-alternative reminder ──────────────────────────────────────
+if [ -t 2 ]; then
+  printf '\033[33m\n┌─ git push ─ tip ──────────────────────────────────────────────┐\n' >&2
+  printf   '│ Prefer `git sync` — safer: auto-stash + rebase + submodules.  │\n' >&2
+  printf   '│   git sync remote   (origin wins on conflict, default)        │\n' >&2
+  printf   '│   git sync local    (local commits win on conflict)           │\n' >&2
+  printf   '│   script: 1_cicd/dist/scripts/cloud-git-sync.sh          │\n' >&2
+  printf   '└───────────────────────────────────────────────────────────────┘\033[0m\n' >&2
+fi
+
+# ── Pull/rebase before pushing ──────────────────────────────────────────────
+# Ensures the push never fails due to diverged remote — mirrors `git sync`.
+git pull --rebase --no-recurse-submodules 2>&1 || \
+  echo "[pre-push] pull --rebase skipped — git will reject non-fast-forward natively." >&2
+
+# Skip during interactive rebase / merge / bisect — don't compound state.
+if [ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] \
+   || [ -d "$(git rev-parse --git-path rebase-apply 2>/dev/null)" ] \
+   || [ -f "$(git rev-parse --git-path MERGE_HEAD   2>/dev/null)" ] \
+   || [ -f "$(git rev-parse --git-path BISECT_LOG   2>/dev/null)" ]; then
+  exit 0
+fi
+
+# Skip if no submodules declared
+[ -f .gitmodules ] || exit 0
+
+echo "[pre-push] rebasing submodules onto upstream HEAD..."
+if ! git submodule update --init --recursive --remote --rebase; then
+  echo "[pre-push] submodule rebase reported errors — continuing (non-blocking)." >&2
+fi
+exit 0

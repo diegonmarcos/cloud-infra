@@ -10,10 +10,10 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 #
 # This module is the derive job and nothing else. No git config, no GHA
-# workflows, no dotfiles — those are 1_configs, which every repo carries.
+# workflows, no dotfiles — those are 9_others, which every repo carries.
 # The only thing here that is not a pure input→output transform is the
-# shared shell libs it sources from 1_configs/src/lib (see LIB_DIR below):
-# 1_cloud-configs depends on 1_configs, never the reverse.
+# shared shell libs it sources from 9_others/src (see LIB_DIR below):
+# 1_cloud-configs depends on 9_others, never the reverse.
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -31,12 +31,12 @@ export CLOUD_ROOT  # cloud-paths.sh / ensure-deps.sh read this
 # PARENT commit, changing every push.
 
 # Source shared engine libs (idempotent, guard against double-source).
-LIB_DIR="$CLOUD_ROOT/1_configs/src/lib"
-# shellcheck source=../1_configs/src/lib/engine-traps.sh
+LIB_DIR="$CLOUD_ROOT/9_others/src"
+# shellcheck source=../9_others/src/engine-traps.sh
 [ -f "$LIB_DIR/engine-traps.sh" ] && . "$LIB_DIR/engine-traps.sh"
-# shellcheck source=../1_configs/src/lib/cloud-paths.sh
+# shellcheck source=../9_others/src/cloud-paths.sh
 [ -f "$LIB_DIR/cloud-paths.sh" ] && . "$LIB_DIR/cloud-paths.sh"
-# shellcheck source=../1_configs/src/lib/ensure-deps.sh
+# shellcheck source=../9_others/src/ensure-deps.sh
 [ -f "$LIB_DIR/ensure-deps.sh" ] && . "$LIB_DIR/ensure-deps.sh"
 
 # log defined by engine-traps.sh; define a fallback if libs are unavailable
@@ -46,7 +46,7 @@ if ! command -v log >/dev/null 2>&1; then
     log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 fi
 
-# ensure_node_deps now lives in 1_configs/src/lib/ensure-deps.sh
+# ensure_node_deps now lives in 9_others/src/ensure-deps.sh
 # (sourced above). Define a thin local fallback so this script still
 # works on a fresh clone where libs/ might not yet be deployed.
 if ! command -v ensure_node_deps >/dev/null 2>&1; then

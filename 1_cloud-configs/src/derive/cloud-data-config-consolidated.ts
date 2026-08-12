@@ -37,7 +37,7 @@ import { parseMailu } from "./parsers/mailu.js";
 // ═══════════════════════════════════════════════════════════════════════════
 
 const ENGINE_DIR = import.meta.dirname!;
-// Script lives at: cloud/1_cloud-configs/src/derive — 2 levels up = cloud/1_configs
+// Script lives at: cloud/1_cloud-configs/src/derive — 2 levels up = cloud/9_others
 const CONFIGS_DIR = resolve(ENGINE_DIR, "../..");
 const CLOUD_ROOT = resolve(CONFIGS_DIR, "..");
 const GIT_BASE = process.env.GIT_BASE ?? resolve(CLOUD_ROOT, "..");
@@ -823,7 +823,7 @@ function main() {
   // ═══════════════════════════════════════════════════════════════════════
 
   const consolidated = {
-    _warning: "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+    _warning: "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
     _meta: {
       version: 2,
       generated_at: reproducibleNow(),
@@ -845,7 +845,7 @@ function main() {
           per_container: "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container in topology, plus one for each container-less service)",
           archived: "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)",
         },
-        rebuild_command: "bash 1_configs/build.sh all",
+        rebuild_command: "bash 9_others/build.sh all",
       },
     },
     owner: config.owner ?? {},
@@ -958,7 +958,7 @@ function main() {
   // services whose docker build context is src/ carry a real-file copy (a symlink
   // escaping the context would break `docker build`). Nothing else refreshed those
   // copies, so they silently went stale (observed: cloud-cgc-mcp serving a June
-  // topology in July). Discover-and-rewrite keeps 1_configs the sole emitter —
+  // topology in July). Discover-and-rewrite keeps 9_others the sole emitter —
   // no hardcoded service list; symlinked consumers are untouched (lstat).
   for (const dir of readdirSync(SOLUTIONS_DIR)) {
     const copy = join(SOLUTIONS_DIR, dir, "src", "_cloud-data-consolidated.json");

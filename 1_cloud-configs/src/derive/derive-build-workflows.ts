@@ -7,16 +7,16 @@
 // `.runners` unchanged if it is absent), and emits dist/build-workflows.json
 // — the file consumed by:
 //
-//   • 1_configs/src/gha/scripts/cloud-ship-ci-builder-dispatch.sh
-//   • 1_configs/src/gha/scripts/cloud-ship-container-step-build-docker.sh
-//   • 1_configs/src/lib/cloud-paths.sh
-//   • 1_configs/src/gha/cicd/lint-pipeline.yml
-//   • 1_configs/src/test/test_runners_*.sh
-//   • 1_configs/src/test/test_arch_runner_routing.sh
-//   • 1_configs/src/test/test_no_hardcoded_builder_image_literals.sh
+//   • 1_cicd/src/scripts/cloud-ship-ci-builder-dispatch.sh
+//   • 1_cicd/src/scripts/cloud-ship-container-step-build-docker.sh
+//   • 9_others/src/cloud-paths.sh
+//   • 1_cicd/src/cicd/lint-pipeline.yml
+//   • 9_others/test/test_runners_*.sh
+//   • 9_others/test/test_arch_runner_routing.sh
+//   • 9_others/test/test_no_hardcoded_builder_image_literals.sh
 //
 // Pattern mirrors every other build-{container}.json: consumers reach this
-// file via the symlink 1_configs/src/build-workflows.json →
+// file via the symlink 9_others/src/build-workflows.json →
 // ../../1_cloud-configs/dist/build-workflows.json (FIRE-RULE 6 — no hardcoded
 // inline data; the registry lives in cloud-builders-runner.json, the dist
 // file is derived).

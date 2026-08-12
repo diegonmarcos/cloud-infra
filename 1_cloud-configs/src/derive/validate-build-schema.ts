@@ -10,7 +10,7 @@
 // Invocation:
 //   npx tsx 1_cloud-configs/src/derive/validate-build-schema.ts
 //
-// CI gate via 1_configs/src/test/test_build_schema_api_mcp.sh.
+// CI gate via 9_others/test/test_build_schema_api_mcp.sh.
 
 import { readFileSync, readdirSync, statSync } from "fs";
 import { resolve, join } from "path";
