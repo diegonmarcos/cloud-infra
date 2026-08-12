@@ -222,6 +222,33 @@ function main() {
         harvest(p?.name ? `${p.name}-public` : null, p?.wg_public_key);
       }
       for (const [name, vm] of Object.entries<any>(prev?.vms ?? {})) harvest(name, vm?.wg_public_key);
+      // CLIENTS TOO — they were missing here, and it broke the mesh silently.
+      //
+      // `clients` (surface, termux, gha-runner, health-runner) is a DICT, not a
+      // list, so it was skipped when the carry-forward above was written for
+      // the 2026-08-11 VM incident. The consequence is worse for clients than
+      // for VMs: wireguard.nix's hub config does
+      //     peers = lib.filterAttrs (n: v: ... && v.publicKey != null) topology
+      // so a null key does not throw like it does for a VM — the peer is
+      // silently DROPPED from the hub's wg0 config. No error, no warning, the
+      // deploy goes green, and the client simply can never handshake again.
+      //
+      // That is what took the fleet out on 2026-08-12. gha-runner (10.0.0.200)
+      // is the identity CI uses to reach every VM, so with its key nulled the
+      // runner could not join the mesh at all and EVERY home-manager deploy
+      // failed with "ssh: connect to host 10.0.0.1 port 22: Connection timed
+      // out". That looked like a dead hub — it was a missing peer. The Surface
+      // (10.0.0.5) went the same way and lost mesh access on the hub's next
+      // reboot, which is when the runtime-only peer entry disappeared.
+      //
+      // Public keys are not secrets and do not rotate silently, so the last
+      // known value always beats null; the vault still wins when present.
+      for (const [name, c] of Object.entries<any>(prev?.native?.wireguard?.clients ?? {})) {
+        harvest(name, c?.wg_public_key ?? c?.public_key);
+      }
+      for (const [name, c] of Object.entries<any>(prev?.native?.wireguard_public?.clients ?? {})) {
+        harvest(name ? `${name}-public` : null, c?.wg_public_key ?? c?.public_key);
+      }
       if (carried > 0) console.log(`  carried forward ${carried} WG public keys from previous output`);
     } catch (e) {
       console.log(`  WARN: could not read previous output for WG key carry-forward: ${e}`);
