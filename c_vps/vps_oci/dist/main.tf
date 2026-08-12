@@ -371,7 +371,3 @@ output "instances" {
 output "buckets" {
   value = { for name, b in oci_objectstorage_bucket.buckets : name => b.name }
 }
-
-output "analytics_ipv6" {
-  value = oci_core_ipv6.analytics_v6.ip_address
-}
