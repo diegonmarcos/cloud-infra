@@ -302,8 +302,37 @@ step_compose() {
         : "${MIN_FREE_GB:=10}"  # fallback if the JSON read fails for any reason
         log "Pre-flight: ensuring ≥${MIN_FREE_GB}GB free on $DEPLOY_HOST"
         # POSIX df: column 4 is Available KB. Convert to GB.
-        FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
-        : "${FREE_KB:=0}"
+        # DISTINGUISH "CANNOT REACH THE VM" FROM "VM IS FULL".
+        # This used to be `FREE_KB=$(ssh_vm ... 2>/dev/null); : "${FREE_KB:=0}"`,
+        # which discarded both the SSH stderr and its exit status. An
+        # unreachable VM therefore produced FREE_KB=0 -> FREE_GB=0 -> "below
+        # threshold" -> the engine ran the whole prune/cleanup path (more SSH
+        # calls, each also failing) before dying with a bare exit 255 and no
+        # statement anywhere that the host was simply unreachable. On
+        # 2026-08-12 all four VMs failed this way and the logs said only
+        # "FATAL: step 'compose' failed (exit 255)" — the disk was never the
+        # problem, and the message actively pointed at the wrong subsystem.
+        # Fail loudly and immediately instead: a connectivity fault is not a
+        # capacity fault and must not be silently reinterpreted as one.
+        set +e
+        FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'")
+        SSH_RC=$?
+        set -e
+        if [ "$SSH_RC" -ne 0 ]; then
+            log "FATAL: cannot reach $DEPLOY_HOST over SSH (exit $SSH_RC) — aborting before cleanup."
+            log "  This is a CONNECTIVITY failure, not a disk-space failure."
+            log "  The deploy SSH rides the WireGuard mesh; check the runner's"
+            log "  wg peer and that $DEPLOY_HOST is up, then re-run."
+            exit "$SSH_RC"
+        fi
+        # Non-numeric (or empty) output means df/awk misbehaved, which is also
+        # not a capacity signal — treat it as a hard error rather than 0.
+        case "${FREE_KB:-}" in
+            ''|*[!0-9]*)
+                log "FATAL: unparseable df output from $DEPLOY_HOST: '${FREE_KB:-<empty>}'"
+                exit 1
+                ;;
+        esac
         FREE_GB=$(( FREE_KB / 1024 / 1024 ))
         log "  free: ${FREE_GB}GB / threshold: ${MIN_FREE_GB}GB"
         if [ "$FREE_GB" -lt "$MIN_FREE_GB" ]; then
