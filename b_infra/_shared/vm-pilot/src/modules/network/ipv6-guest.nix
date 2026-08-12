@@ -21,6 +21,27 @@
 # its prefix 2603:c026:c104:8f00:ff9b::/96 is carved from a /64 the OS has never
 # brought up, so nothing routes to it either. One fix, both features.
 #
+# CONFIRMED ON THE INSTANCE 2026-08-12 — both halves of this module's premise
+# were checked directly on oci-analytics rather than inferred from a failing
+# handshake:
+#   ip -6 addr show dev ens3 scope global
+#     -> fd0c:1d00::4/64, fd0c:1d01::1/64        (the two ULA mesh addresses)
+#     -> NO 2603:… address. The OCI-assigned IPv6 was genuinely absent.
+#   ip -6 route show default
+#     -> default via fe80::200:17ff:fe89:a0df dev ens3 proto ra
+# So the ROUTE was already there and correct, arriving by Router Advertisement,
+# while the ADDRESS was the only missing piece. That is exactly the split this
+# module assumes, and it settles the open question below: OCI *does* send RAs on
+# this subnet, so accept-ra genuinely supplies the default route and the gateway
+# never has to be hardcoded.
+#
+# Adding the address by hand (ip -6 addr add …/128 dev ens3) and repointing the
+# laptop's wg-public peer at [2603:…:6eee]:51821 made the tunnel work on the
+# first attempt: handshake 22s and refreshing, `received` moving for the first
+# time ever on IPv6 (6.74 -> 6.83 KiB), and 3/3 ping replies to 10.1.0.1 through
+# the tunnel. That hand-added address is session-only and disappears on reboot —
+# this module is what makes it survive.
+#
 # WHY RA/DHCPv6 AND NOT A STATIC ADDRESS
 # ──────────────────────────────────────
 # A static address needs a gateway, and getting an OCI IPv6 gateway wrong
