@@ -212,7 +212,7 @@ Architecture:
 **Model choice**: default to Ollama `llama3.1:8b-instruct-q4` (cheap, local). Config in cgc-mcp's `build.json` lets you swap models without code changes. Benchmark table in the PR.
 
 **Tests — Phase 4**:
-- **T4.1**: On a synthetic fixture of 50 hand-labeled edges, enricher agrees with humans ≥80% (precision+recall ≥0.8). Fixture lives in `cloud/0_tasks/fixtures/sckg-enrich-gold.json`.
+- **T4.1**: On a synthetic fixture of 50 hand-labeled edges, enricher agrees with humans ≥80% (precision+recall ≥0.8). Fixture lives in `cloud/a0_tasks/fixtures/sckg-enrich-gold.json`.
 - **T4.2**: Zero illegal predicates committed (schema-validator is a hard gate).
 - **T4.3**: Idempotence — re-running enrichment on the same edges yields same predicates ≥95% (determinism check for the model+temperature=0 config).
 

@@ -2,7 +2,7 @@
 
 > **Source of issues**: `reports/build.sh all` run on 2026-04-21,
 > deep-debugged 2026-04-22 via MCP `obs_debug_*` + `docker_inspect`.
-> **Triage doc**: `0_specs/TASK_ERRORS_triage_20260421.md` (buckets A/B/C)
+> **Triage doc**: `a0_docs/TASK_ERRORS_triage_20260421.md` (buckets A/B/C)
 > **Related executed fix**: `A2.5` desktop disk defense (DONE 2026-04-22)
 >
 > **Goal**: every ❌/⚠ in the next `reports/build.sh all` run maps
