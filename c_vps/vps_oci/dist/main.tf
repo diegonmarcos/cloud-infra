@@ -3,8 +3,8 @@
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
 # ║   Source : c_vps/vps_oci/src/main.tf
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-terraform-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Engine : 1_configs/src/gha/scripts/cloud-ship-terraform-engine.sh
+# ║   Rebuild: ./1_configs/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -68,6 +68,7 @@ resource "oci_core_vcn" "main" {
   compartment_id = var.compartment_ocid
   cidr_blocks    = [local.net.vcn_cidr]
   display_name   = local.net.vcn_name
+  is_ipv6enabled = true
 
   lifecycle {
     prevent_destroy = true
@@ -91,6 +92,12 @@ resource "oci_core_default_route_table" "main" {
 
   route_rules {
     destination       = "0.0.0.0/0"
+    destination_type  = "CIDR_BLOCK"
+    network_entity_id = oci_core_internet_gateway.main.id
+  }
+
+  route_rules {
+    destination       = "::/0"
     destination_type  = "CIDR_BLOCK"
     network_entity_id = oci_core_internet_gateway.main.id
   }
@@ -162,6 +169,8 @@ resource "oci_core_subnet" "main" {
   display_name               = local.net.subnet_name
   prohibit_public_ip_on_vnic = false
   prohibit_internet_ingress  = false
+  # OCI two-phase: 1st apply enables VCN IPv6, 2nd apply carves the subnet /64
+  ipv6cidr_block = length(oci_core_vcn.main.ipv6cidr_blocks) > 0 ? cidrsubnet(oci_core_vcn.main.ipv6cidr_blocks[0], 8, 0) : null
 
   route_table_id    = oci_core_vcn.main.default_route_table_id
   security_list_ids = [oci_core_vcn.main.default_security_list_id]
@@ -198,6 +207,7 @@ resource "oci_core_instance" "vms" {
     subnet_id        = oci_core_subnet.main.id
     display_name     = each.value.vnic_display_name
     assign_public_ip = true
+    assign_ipv6ip    = true
   }
 
   source_details {
@@ -253,6 +263,16 @@ resource "oci_objectstorage_bucket" "buckets" {
 # OCI Email Delivery
 # =============================================================================
 
+# Adopt pre-existing OCI email senders into state (were created out-of-band; 409 on create otherwise)
+import {
+  to = oci_email_sender.senders["no-reply@diegonmarcos.com"]
+  id = "ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaav7k4dpbxnzv6irayxrean4giadgj24ud5tgihu5epbnq"
+}
+import {
+  to = oci_email_sender.senders["me@diegonmarcos.com"]
+  id = "ocid1.emailsender.oc1.eu-marseille-1.amaaaaaauadvczaanfhq4goiw2nqft2jsperzqcgcnpn3wpyrwuabo3wbpqa"
+}
+
 resource "oci_email_sender" "senders" {
   for_each = toset(local.config.email_senders)
 
@@ -297,6 +317,36 @@ resource "oci_budget_alert_rule" "alerts" {
 }
 
 # =============================================================================
+# Analytics IPv6 — standalone resource (assign_ipv6ip in create_vnic_details
+# does not retrofit an already-existing instance; use oci_core_ipv6 instead)
+# =============================================================================
+
+data "oci_core_vnic_attachments" "analytics" {
+  compartment_id = var.compartment_ocid
+  instance_id    = oci_core_instance.vms["analytics_server"].id
+}
+
+resource "oci_core_ipv6" "analytics_v6" {
+  vnic_id = data.oci_core_vnic_attachments.analytics.vnic_attachments[0].vnic_id
+}
+
+# The assigned address was computed and then THROWN AWAY (2026-08-12): this
+# resource has existed with no output, so nothing downstream could ever learn
+# the address. That is why oci-analytics still has no AAAA record and why
+# wireguard-public-endpoints.json still carries only an IPv4 hub literal —
+# every consumer is blocked on a value terraform already knows.
+#
+# Consequence, observed in the field the same day: on an IPv6-only WiFi with no
+# NAT64, both WG tunnels are unreachable (their endpoints are IPv4 literals) and
+# the laptop has no path to the fleet at all. An IPv6 endpoint for the
+# wg-public hub fixes that outright — udp/51821 and udp/443 are ALREADY open to
+# ::/0 in this file's security_rules, so the only missing piece is the address.
+output "analytics_ipv6" {
+  description = "oci-analytics public IPv6 — wg-public hub endpoint for IPv6-only uplinks. Feed into cloud/config.json (gcp/oci VM entry), the Cloudflare AAAA for wg.diegonmarcos.com, and wireguard-public-endpoints.json hub.host_v6."
+  value       = oci_core_ipv6.analytics_v6.ip_address
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 
@@ -320,4 +370,8 @@ output "instances" {
 
 output "buckets" {
   value = { for name, b in oci_objectstorage_bucket.buckets : name => b.name }
+}
+
+output "analytics_ipv6" {
+  value = oci_core_ipv6.analytics_v6.ip_address
 }

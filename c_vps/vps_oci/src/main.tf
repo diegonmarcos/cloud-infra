@@ -318,6 +318,22 @@ resource "oci_core_ipv6" "analytics_v6" {
   vnic_id = data.oci_core_vnic_attachments.analytics.vnic_attachments[0].vnic_id
 }
 
+# The assigned address was computed and then THROWN AWAY (2026-08-12): this
+# resource has existed with no output, so nothing downstream could ever learn
+# the address. That is why oci-analytics still has no AAAA record and why
+# wireguard-public-endpoints.json still carries only an IPv4 hub literal —
+# every consumer is blocked on a value terraform already knows.
+#
+# Consequence, observed in the field the same day: on an IPv6-only WiFi with no
+# NAT64, both WG tunnels are unreachable (their endpoints are IPv4 literals) and
+# the laptop has no path to the fleet at all. An IPv6 endpoint for the
+# wg-public hub fixes that outright — udp/51821 and udp/443 are ALREADY open to
+# ::/0 in this file's security_rules, so the only missing piece is the address.
+output "analytics_ipv6" {
+  description = "oci-analytics public IPv6 — wg-public hub endpoint for IPv6-only uplinks. Feed into cloud/config.json (gcp/oci VM entry), the Cloudflare AAAA for wg.diegonmarcos.com, and wireguard-public-endpoints.json hub.host_v6."
+  value       = oci_core_ipv6.analytics_v6.ip_address
+}
+
 # =============================================================================
 # Outputs
 # =============================================================================
