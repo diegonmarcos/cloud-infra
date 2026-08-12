@@ -38,7 +38,7 @@ CONFIG="$SERVICE_DIR/build.json"
 STEPS_DIR="$(cd "$(dirname "$0")/../../1_cicd/src/scripts" 2>/dev/null && pwd)"
 [ -z "$STEPS_DIR" ] && STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
-INJECT_HEADER="$STEPS_DIR/../../lib/inject-header.sh"
+INJECT_HEADER="$STEPS_DIR/../../../9_others/src/inject-header.sh"
 ENGINE_NAME="1_cicd/src/scripts/cloud-ship-terraform-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 

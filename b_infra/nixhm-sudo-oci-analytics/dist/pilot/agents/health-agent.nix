@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-analytics/src/pilot/agents/health-agent.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/agents/health-agent.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -20,7 +20,7 @@
 let
   # P4: data-driven fd / wg-stale thresholds + ntfy base/topic. Single SoT:
   # config.json native.protection (defaults) + b_infra/nixhm-sudo-<alias>/build.json
-  # .protection (per-VM overrides), emitted by 2_configs into native.protection +
+  # .protection (per-VM overrides), emitted by 9_others into native.protection +
   # _home_manager.vms.<vmName>.protection.
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
   protDefaults = consolidated.native.protection or {};

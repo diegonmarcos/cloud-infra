@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-analytics/src/pilot/security/sshd-hardening.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/security/sshd-hardening.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -56,6 +56,29 @@ let
     else builtins.concatStringsSep "\n  " (map mkPortRule publicPorts);
 
   portCount = toString (builtins.length publicPorts);
+
+  # ── wg-public mesh (2026-08-11) ────────────────────────────────────────
+  # BUG this fixes: ssh-firewall.sh does `iptables -F INPUT` and rebuilds the
+  # chain from scratch ~5s AFTER firewall.nix ran, but it only knew about the
+  # wg0 mesh — so every wg-public rule firewall.nix had emitted was silently
+  # wiped. IPv6 survived only because this script never touches ip6tables,
+  # which is why services-server answered on fd0c:1d01::1 but dropped every
+  # IPv4 packet from 10.1.0.0/24. Mirrors firewall.nix's bindings/rules so the
+  # "both firewalls produce identical INPUT chains" claim above is true again.
+  # The hub's 51821/udp listener is NOT re-emitted here: it is already declared
+  # in nixhm-sudo-<vm>/build.json firewall.public_ports, so portRulesScript
+  # covers it. Only the mesh-trust rules were missing.
+  wgPublic       = consolidated.native.wireguard_public or {};
+  wgPublicSubnet = wgPublic.subnet or null;
+  wgPublicPeers  = wgPublic.peers or [];
+  isWgPublicPeer = lib.any (p: p.name == vmName) wgPublicPeers;
+
+  wgPublicRules = builtins.concatStringsSep "\n" (
+    lib.optionals (isWgPublicPeer && wgPublicSubnet != null) [
+      "iptables -A INPUT -i wg-public -j ACCEPT"
+      "iptables -A INPUT -s ${wgPublicSubnet} -j ACCEPT"
+    ]
+  );
 in
 {
   home.activation.sshdHardening = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -122,6 +145,9 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -s 10.0.0.0/24 -j ACCEPT
 iptables -A INPUT -p udp --dport 51820 -j ACCEPT
+
+# wg-public mesh (data-driven from consolidated.native.wireguard_public)
+${wgPublicRules}
 
 # Per-VM public ports (data-driven from nixhm-sudo-${vmName}/build.json.firewall.public_ports)
 ${portRulesScript}

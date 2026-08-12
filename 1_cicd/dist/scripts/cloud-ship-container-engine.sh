@@ -427,7 +427,7 @@ trap '_exit_status=$?; if [ -n "$CURRENT_STEP" ] && [ "$_exit_status" -ne 0 ]; t
 STEPS_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
 # Shared lib: stamps every dist/ artifact with the GENERATED-FILE banner.
 # Template + prefix map live in 9_others/src/generated-header.json.
-INJECT_HEADER="$STEPS_DIR/../../lib/inject-header.sh"
+INJECT_HEADER="$STEPS_DIR/../../../9_others/src/inject-header.sh"
 ENGINE_NAME="1_cicd/src/scripts/cloud-ship-container-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 # Source step files — tolerate any missing step (graceful degradation).

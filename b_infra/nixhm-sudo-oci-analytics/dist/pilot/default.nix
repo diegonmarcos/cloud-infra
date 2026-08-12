@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-analytics/src/pilot/default.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/default.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -68,6 +68,9 @@ in {
     # wg0 — private internal mesh (always present on every VM)
     (import ./network/wireguard.nix { inherit vmName; interfaceName = "wg0"; meshKey = "wireguard"; secretEnvName = "WG_PRIVATE_KEY"; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
+    # MUST come before nat64-tayga: tayga's prefix is carved from the /64 that
+    # this module brings up in the guest. Without it tayga has nothing to route.
+    (import ./network/ipv6-guest.nix { inherit vmName; })
     (import ./network/nat64-tayga.nix { inherit vmName; })
     ./network/dns-hickory.nix
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)
@@ -86,6 +89,7 @@ in {
     # ── Packages
     ./packages/node-npm-deps.nix
     ./packages/docker-pull-up.nix
+    ./packages/ghcr-hygiene.nix
 
     # ── Agents (new in vm-pilot)
     ./agents/journal-ntfy.nix
