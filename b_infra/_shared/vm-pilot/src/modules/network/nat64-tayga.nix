@@ -37,6 +37,20 @@ let
   tunDevice  = "nat64";
   tunIpv4    = "192.168.255.1";
 
+  # Tun MTU. NOT the default 1500 — and getting it wrong produces the most
+  # deceptive failure in this stack: TCP connects, small replies arrive, every
+  # large response vanishes. That reads as "no internet" while every check you
+  # would think to run reports healthy.
+  #
+  # NAT64 clients arrive over wg-public, MTU 1380. Translating IPv4 -> IPv6
+  # GROWS the header by 20 bytes (20 -> 40), so a 1380-byte IPv4 reply becomes a
+  # 1400-byte IPv6 packet that cannot leave a 1380 interface. 1380 - 20 = 1360.
+  # At 1360, tayga tells IPv4 senders "Frag Needed, MTU 1360" and everything it
+  # emits fits inside wg-public.
+  #
+  # INVARIANT: nat64Mtu = wg-public MTU - 20. Re-derive if wg-public changes.
+  nat64Mtu = "1360";
+
   taygaConf = ''
     # Managed by home-manager (nat64-tayga.nix) — do not edit
     tun-device    ${tunDevice}
@@ -61,6 +75,7 @@ let
     ExecStart=${pkgs.tayga}/bin/tayga -d --config /etc/tayga.conf
     # Bring up the tun, add routes, install MASQUERADE after Tayga creates the
     # tun device. $(ip …) probes which outbound iface is default-routed.
+    ExecStartPost=${pkgs.iproute2}/bin/ip link set ${tunDevice} mtu ${nat64Mtu}
     ExecStartPost=${pkgs.iproute2}/bin/ip link set ${tunDevice} up
     ExecStartPost=${pkgs.iproute2}/bin/ip route add ${nat64Prefix} dev ${tunDevice} 2>/dev/null || true
     ExecStartPost=${pkgs.iproute2}/bin/ip route add ${xlatePool} dev ${tunDevice} 2>/dev/null || true
@@ -71,6 +86,19 @@ let
         -s ${xlatePool} -o "$$OIFACE" -j MASQUERADE 2>/dev/null || \
       ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
         -s ${xlatePool} -o "$$OIFACE" -j MASQUERADE'
+    # FORWARD accepts for the tun. NOT OPTIONAL — this module shipped without
+    # them and NAT64 was dead on arrival. oci-analytics runs -P FORWARD DROP
+    # with per-interface accepts (wg0, wg-public), so a client packet reaches
+    # the tun via "-i wg-public" and then the TRANSLATED packet leaving the tun
+    # matches no rule and is silently dropped. End state: tayga running, routes
+    # correct, MASQUERADE present, and zero connectivity — nothing looks broken.
+    # Verified 2026-08-12: adding these turned a 15s timeout into HTTP 200.
+    ExecStartPost=/bin/sh -c 'for t in ${pkgs.iptables}/bin/iptables ${pkgs.iptables}/bin/ip6tables; do \
+      for d in -i -o; do \
+        $$t -C FORWARD $$d ${tunDevice} -j ACCEPT 2>/dev/null || \
+        $$t -A FORWARD $$d ${tunDevice} -j ACCEPT; \
+      done; \
+    done'
     Restart=on-failure
     RestartSec=10
     # Tayga needs to create/open the tun device and write state to /var/db/tayga
