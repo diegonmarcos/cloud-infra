@@ -1,5 +1,5 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
     "description": "cloud-cgc-mcp container config (service=cloud-cgc-mcp, role=app)",
     "format_version": 1,
@@ -22,7 +22,7 @@
         "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
         "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
       },
-      "rebuild_command": "bash 1_configs/build.sh all"
+      "rebuild_command": "bash 9_others/build.sh all"
     }
   },
   "_generated": "",
@@ -1607,7 +1607,7 @@
     }
   },
   "db_publish": {
-    "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 1_configs/src/deploy/scripts/cloud-kg-db-snapshot.sh.",
+    "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 9_others/src/deploy/scripts/cloud-kg-db-snapshot.sh.",
     "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp-octocode-db",
     "tag": "latest",
     "volume": "octocode_db",
@@ -1669,7 +1669,7 @@
         "text_embedding_model": "fastembed:nomic-ai/nomic-embed-text-v1.5"
       },
       "llm": {
-        "_comment": "octocode GraphRAG LLM -> my-ai-api (OpenRouter-backed, port 3217). openai:* reads OPENAI_API_URL -> my-ai-api /v1 (3217); ollama:* reads OLLAMA_API_URL -> my-ai-api Ollama mimic (12436). Both faces route to OpenRouter; api_key is passed through and must match OPENROUTER_API_KEY in the container (my-ai-api src/secrets.yaml). Model: deepseek/deepseek-v4-pro — 80.6% SWE-bench, 1M ctx, $0.44/$0.87.",
+        "_comment": "octocode GraphRAG LLM -> my-ai-api (OpenRouter-backed, port 3217). openai:* reads OPENAI_API_URL -> my-ai-api /v1 (3217); ollama:* reads OLLAMA_API_URL -> my-ai-api Ollama mimic (12436). Both faces route to OpenRouter; api_key is passed through and must match OPENROUTER_API_KEY in the container (my-ai-api src/secrets.yaml). my-ai-api's default model is deepseek/deepseek-v4-flash-0731, but that default does not apply here: llm_model below names the slug this service sends, and my-ai-api falls back to its default only when the caller sends none.",
         "openai_api_url": "http://10.0.0.6:3217/v1/chat/completions",
         "ollama_api_url": "http://10.0.0.6:12436",
         "api_key": "sk-dummy",
