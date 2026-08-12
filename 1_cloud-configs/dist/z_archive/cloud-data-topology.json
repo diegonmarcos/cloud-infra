@@ -1,5 +1,5 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "owner": {
     "name": "Diego Marcos",
     "email": "diegonmarcos@gmail.com",
@@ -489,7 +489,7 @@
       {
         "name": "oci-mail",
         "wg_ip": "10.0.0.3",
-        "wg_public_key": null,
+        "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
         "endpoint": "130.110.251.193:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::3"
@@ -497,7 +497,7 @@
       {
         "name": "oci-analytics",
         "wg_ip": "10.0.0.4",
-        "wg_public_key": null,
+        "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
         "endpoint": "129.151.228.66:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::4"
@@ -505,7 +505,7 @@
       {
         "name": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "wg_public_key": null,
+        "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
         "endpoint": "82.70.229.129:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::6"
@@ -513,7 +513,7 @@
       {
         "name": "gcp-proxy",
         "wg_ip": "10.0.0.1",
-        "wg_public_key": null,
+        "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
         "endpoint": "35.226.147.64:51820",
         "role": "hub",
         "wg_ipv6": "fd0c:1d00::1"
@@ -1373,7 +1373,7 @@
         "networks": []
       },
       "proxy": {
-        "_doc": "Mixed-auth service. Default for base_path = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /health, /ready, /analytics/* sub-paths are public — declared via the engine-supported public_paths[] array (1_configs/src/engine/cloud-data-config-derive.ts:507 → caddyfile.nix:432 emits a pre-auth `handle <pp>` block per entry that strip_prefix base_path then reverse_proxy upstream).",
+        "_doc": "Mixed-auth service. Default for base_path = Bearer-gated via introspect-proxy (same as c3-infra-api write routes). The /health, /ready, /analytics/* sub-paths are public — declared via the engine-supported public_paths[] array (9_others/src/engine/cloud-data-config-derive.ts:507 → caddyfile.nix:432 emits a pre-auth `handle <pp>` block per entry that strip_prefix base_path then reverse_proxy upstream).",
         "primary": {
           "wg_only": false,
           "auth": "two_factor",
@@ -6332,7 +6332,7 @@
         {
           "name": "oci-mail",
           "wg_ip": "10.0.0.3",
-          "wg_public_key": null,
+          "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
           "endpoint": "130.110.251.193:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::3"
@@ -6340,7 +6340,7 @@
         {
           "name": "oci-analytics",
           "wg_ip": "10.0.0.4",
-          "wg_public_key": null,
+          "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
           "endpoint": "129.151.228.66:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::4"
@@ -6348,7 +6348,7 @@
         {
           "name": "oci-apps",
           "wg_ip": "10.0.0.6",
-          "wg_public_key": null,
+          "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
           "endpoint": "82.70.229.129:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::6"
@@ -6356,7 +6356,7 @@
         {
           "name": "gcp-proxy",
           "wg_ip": "10.0.0.1",
-          "wg_public_key": null,
+          "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
           "endpoint": "35.226.147.64:51820",
           "role": "hub",
           "wg_ipv6": "fd0c:1d00::1"
@@ -6585,7 +6585,7 @@
         "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
         "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
       },
-      "rebuild_command": "bash 1_configs/build.sh all"
+      "rebuild_command": "bash 9_others/build.sh all"
     }
   }
 }

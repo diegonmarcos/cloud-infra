@@ -1,5 +1,5 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 1_configs/build.sh all`.",
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
     "description": "my-ai-api container config (service=my-ai-api, role=app)",
     "format_version": 1,
@@ -22,7 +22,7 @@
         "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
         "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
       },
-      "rebuild_command": "bash 1_configs/build.sh all"
+      "rebuild_command": "bash 9_others/build.sh all"
     }
   },
   "_generated": "",
@@ -1599,7 +1599,7 @@
   },
   "upstream_image": "python:3.13-slim",
   "runtime": {
-    "model": "deepseek/deepseek-v4-pro",
+    "model": "deepseek/deepseek-v4-flash-0731",
     "_model_aliases_comment": "requested-id → OpenRouter slug. Callers pick a model per request; unknown/absent ids fall back to `model` (passthrough also works — OpenRouter accepts arbitrary slugs, so goose can send any OpenRouter model id directly). No Claude aliases here: this stack does not route Claude.",
     "model_aliases": {
       "glm": "z-ai/glm-5",
