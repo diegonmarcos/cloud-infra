@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-analytics/src/pilot/container/container.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/container/container.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
