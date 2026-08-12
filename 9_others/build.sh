@@ -233,6 +233,20 @@ do_deploy() {
         fi
     done
 
+    # LICENSE — copied VERBATIM, never header-injected.
+    #
+    # Every other artifact here gets the GENERATED-FILE banner stamped into it.
+    # A licence must not: GitHub's licence detector and SPDX scanners match the
+    # text, and a banner above it can make a recognised licence unrecognised.
+    # Altering the text of a licence is also not a cosmetic act. So it is a
+    # plain copy, source of truth in 0_git/src/ like the other git files.
+    if [ -f "$GIT_SRC/LICENSE" ]; then
+        step "copying LICENSE (verbatim — no generated-file banner)"
+        cp "$GIT_SRC/LICENSE" "$GIT_DIST/LICENSE"
+        cp "$GIT_SRC/LICENSE" "$REPO_ROOT/LICENSE"
+        ok "→ LICENSE"
+    fi
+
     # Repo-root configs (.gitmodules etc)
     for f in "$GIT_DIST"/.git*; do
         [ -f "$f" ] || continue
