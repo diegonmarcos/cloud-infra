@@ -19,7 +19,8 @@
 
   "security_rules": {
     "egress": [
-      { "destination": "0.0.0.0/0", "protocol": "all", "stateless": false }
+      { "destination": "0.0.0.0/0", "protocol": "all", "stateless": false },
+      { "destination": "::/0",      "protocol": "all", "stateless": false, "description": "IPv6 egress. Its absence was a silent, total IPv6 outage. OCI security lists are STATEFUL, so the ::/0 ingress rules below (udp/51821, udp+tcp/53, udp/443) admit a WireGuard handshake and let its reply back out — IPv6 therefore LOOKS alive. But anything the instance ORIGINATES over IPv6 was dropped at the VNIC, including neighbour solicitation to the gateway: ping -6 <gw> was 100% loss and the RA default route looked dead. So oci-analytics had no IPv6 internet, and a phone routing ::/0 through the wg-public hub had its native-IPv6 SYNs blackholed while NAT64 traffic worked — NAT64 converts to IPv4, and IPv4 egress was already allowed. Mirrors the 0.0.0.0/0 rule above; the route table already sends ::/0 to the internet gateway (main.tf:87)." }
     ],
     "ingress": [
       { "source": "0.0.0.0/0", "protocol": "17", "port": 51820, "description": "WireGuard wg0 — admin mesh bootstrap" },
