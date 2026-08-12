@@ -223,7 +223,30 @@ EOF
 ensure_ssh_host_alias
 
 # ── SSH multiplexing ────────────────────────────────────────────────
+# TIMEOUTS AND KEEPALIVES ARE LOAD-BEARING — do not drop them for brevity.
+# Every deploy SSH rides the WireGuard mesh, which can stall or drop without
+# ever closing the socket. With no options beyond multiplexing, that produced
+# two distinct failure shapes, both observed 2026-08-12:
+#   * exit 255 mid-step, preceded by "mux_client_request_session: read from
+#     master failed: Broken pipe" — the control master died and nothing
+#     detected it until the next write.
+#   * a job hanging until its 45-minute timeout-minutes cap and being
+#     cancelled (oci-analytics, 14:12:28 -> 14:57:54), because a connect that
+#     never completes has no deadline of its own.
+# ConnectTimeout bounds the initial handshake; ServerAlive* detects a dead
+# tunnel in ~60s (4 x 15s) instead of blocking on an unacknowledged write;
+# BatchMode makes a missing/locked key fail immediately rather than waiting on
+# a prompt that no CI runner will ever answer.
+#
+# These INTENTIONALLY override the weaker values ensure_ssh_host_alias writes
+# into ~/.ssh/config above (ServerAliveInterval 30 / CountMax 10 = 300s to
+# notice a dead link, and no ConnectTimeout or BatchMode at all): command-line
+# -o beats the config file, so the effective detection window is 60s. Do not
+# "deduplicate" these against that block — the config file is also used by
+# humans running the engine by hand, where longer keepalives are reasonable.
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-hm-%r@%h -o ControlPersist=120"
+SSH_OPTS="$SSH_OPTS -o ConnectTimeout=15 -o BatchMode=yes"
+SSH_OPTS="$SSH_OPTS -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
 # Bootstrap-time overrides for new VMs not yet in trusted SSH topology
 # (e.g., freshly provisioned via Terraform with ephemeral IP, before WG
 # is up). Setting SSH_HOST_OVERRIDE/SSH_KEY_OVERRIDE lets the engine
