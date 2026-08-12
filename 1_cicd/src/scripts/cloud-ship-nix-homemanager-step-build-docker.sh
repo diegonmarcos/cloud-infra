@@ -34,8 +34,20 @@ step_docker_package() {
         NIX_RC=$?
     fi
     set -e
-    NIX_OUT=$(cat "$NIX_TMP")
-    cat "$NIX_TMP" >> "$BUILD_LOG_FILE"
+    NIX_OUT=$(cat "$NIX_TMP" 2>/dev/null || true)
+    # GUARDED ON PURPOSE — this line used to swallow the very error it exists
+    # to record. `set -e` is restored on the line above, so if $BUILD_LOG_FILE
+    # is unset, its directory is missing, or it is not writable, this append
+    # aborts the whole step RIGHT BEFORE the `if [ "$NIX_RC" -ne 0 ]` block
+    # below that prints the nix output. The caller then reports only
+    # "FATAL: step 'docker-package' failed (exit 1)" with no explanation.
+    #
+    # Observed 2026-08-12 on oci-mail: nix build failed 18s after starting and
+    # the job log jumped straight from "Nix cmd: ..." to FATAL — no eval error,
+    # no trace, nothing actionable. Diagnosing a build failure with the build
+    # output discarded is guesswork, and the archival copy is strictly less
+    # important than the message the operator actually reads.
+    cat "$NIX_TMP" >> "$BUILD_LOG_FILE" 2>/dev/null || true
     rm -f "$NIX_TMP"
 
     if [ "$NIX_RC" -ne 0 ]; then
