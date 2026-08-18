@@ -35,7 +35,7 @@ set -euo pipefail
 # resolved them from its own directory. It moved to test/ when the suite was
 # consolidated in one place — resolve the steps from the scripts dir instead.
 HERE="$(cd "$(dirname "$0")" && pwd)"
-STEPS="$(cd "$HERE/../gha/scripts" && pwd)"
+STEPS="$(cd "$HERE/../../1_cicd/src/scripts" && pwd)"
 DOCKER_STEP="$STEPS/cloud-ship-container-step-build-docker.sh"
 DEPLOY_STEP="$STEPS/cloud-ship-container-step-deploy-compose.sh"
 

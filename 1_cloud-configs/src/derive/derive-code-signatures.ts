@@ -21,7 +21,7 @@ import { join, relative, extname, dirname, basename } from "path";
 
 const SKIP_DIR = new Set(["node_modules", ".git", "dist", "z_archive", "z-archive", ".wrangler", "result", ".cargo-home", "target", ".terraform"]);
 const SKIP_SUFFIX = [".lock", ".min.js", "-lock.json", ".map"];
-const SKIP_SUBMODULE = ["i_cloud-data", "iii_unix", "ii_tools", "iii_front-data"];
+const SKIP_SUBMODULE = ["cloud"];
 const LANG: Record<string, string> = {
   ".ts": "ts", ".tsx": "ts", ".mts": "ts", ".js": "js", ".mjs": "js", ".cjs": "js",
   ".nix": "nix", ".sh": "sh", ".bash": "sh", ".rs": "rust", ".py": "py",
@@ -128,7 +128,7 @@ function walk(root: string, dir: string, out: FileSig[]): void {
     try { st = statSync(full); } catch { continue; }
     const rel = relative(root, full);
     const relLow = rel.toLowerCase();
-    if (SKIP_SUBMODULE.some((s) => relLow.startsWith(s))) continue;
+    if (SKIP_SUBMODULE.some((s) => relLow === s || relLow.startsWith(s + "/"))) continue;
     if (st.isDirectory()) { walk(root, full, out); continue; }
     if (!st.isFile() || st.size > MAX_FILE) continue;
     if (SKIP_SUFFIX.some((s) => relLow.endsWith(s))) continue;

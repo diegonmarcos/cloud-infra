@@ -112,6 +112,48 @@
         "ttl": 300,
         "comment": "CAA: restrict cert issuance to Let's Encrypt only"
       }
+    ],
+
+    "srv_records": [
+      {
+        "key": "srv_imaps",
+        "name": "_imaps._tcp",
+        "service": "_imaps",
+        "proto": "_tcp",
+        "domain": "diegonmarcos.com",
+        "priority": 0,
+        "weight": 1,
+        "port": 443,
+        "target": "imap.diegonmarcos.com",
+        "ttl": 300,
+        "comment": "RFC 6186: IMAPS autodiscovery -> imap. :443 (SNI mux at public edge)"
+      },
+      {
+        "key": "srv_submissions",
+        "name": "_submissions._tcp",
+        "service": "_submissions",
+        "proto": "_tcp",
+        "domain": "diegonmarcos.com",
+        "priority": 0,
+        "weight": 1,
+        "port": 443,
+        "target": "smtps.diegonmarcos.com",
+        "ttl": 300,
+        "comment": "RFC 6186: SMTP submission over TLS autodiscovery -> smtps. :443 (SNI mux at public edge)"
+      },
+      {
+        "key": "srv_jmap",
+        "name": "_jmap._tcp",
+        "service": "_jmap",
+        "proto": "_tcp",
+        "domain": "diegonmarcos.com",
+        "priority": 0,
+        "weight": 1,
+        "port": 443,
+        "target": "jmap.diegonmarcos.com",
+        "ttl": 300,
+        "comment": "RFC 8620: JMAP session autodiscovery -> jmap. :443 (Stalwart)"
+      }
     ]
   },
 
@@ -133,6 +175,16 @@
         "match_type": "literal",
         "match_field": "to",
         "match_value": "me@diegonmarcos.com",
+        "action_type": "worker",
+        "action_value": ["email-forwarder"]
+      },
+      {
+        "name": "Forward postmaster (DMARC/TLS-RPT reports)",
+        "enabled": true,
+        "priority": 1,
+        "match_type": "literal",
+        "match_field": "to",
+        "match_value": "postmaster@diegonmarcos.com",
         "action_type": "worker",
         "action_value": ["email-forwarder"]
       }

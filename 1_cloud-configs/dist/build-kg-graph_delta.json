@@ -112,7 +112,7 @@
         "user": "diego",
         "provider": "gcp",
         "arch": "x86_64",
-        "cpu_count": 1,
+        "cpu_count": 2,
         "ram_gb": 1,
         "disk_gb": 30,
         "description": "GCloud Free - E2 Micro 0 - Central Proxy + Control"
@@ -1351,7 +1351,7 @@
       "properties": {
         "name": "mail-puller",
         "category": "app",
-        "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+        "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and delivers into Maddy via SMTP submission (:465 implicit TLS; Maddy dual-writes to Stalwart). Declarative source list in src/sources.json; OAuth2 creds via sops.",
         "domain": "mail-puller.diegonmarcos.com",
         "port": null,
         "vm": "oci-mail",
@@ -1494,7 +1494,7 @@
       "key": "container:stalwart",
       "properties": {
         "name": "stalwart",
-        "image": "stalwartlabs/stalwart:v0.14.1",
+        "image": "stalwartlabs/stalwart:v0.16.5",
         "role": "app",
         "port": 2443,
         "public": true
@@ -3446,10 +3446,10 @@
     },
     {
       "table": "repo",
-      "id": "unix",
-      "key": "repo:unix",
+      "id": "cloud_unix",
+      "key": "repo:cloud_unix",
       "properties": {
-        "name": "unix"
+        "name": "cloud-unix"
       }
     },
     {
@@ -6519,9 +6519,9 @@
     },
     {
       "table": "consumes",
-      "from": "repo:unix",
+      "from": "repo:cloud_unix",
       "to": "repo:cloud",
-      "key": "repo:unix->consumes->repo:cloud",
+      "key": "repo:cloud_unix->consumes->repo:cloud",
       "properties": {
         "consumer": "flakes_desktop",
         "via": "cloud-data slice"
@@ -6529,9 +6529,9 @@
     },
     {
       "table": "consumes",
-      "from": "repo:unix",
+      "from": "repo:cloud_unix",
       "to": "repo:cloud",
-      "key": "repo:unix->consumes->repo:cloud",
+      "key": "repo:cloud_unix->consumes->repo:cloud",
       "properties": {
         "consumer": "flakes_termux",
         "via": "cloud-data slice"
@@ -6539,9 +6539,9 @@
     },
     {
       "table": "consumes",
-      "from": "repo:unix",
+      "from": "repo:cloud_unix",
       "to": "repo:cloud",
-      "key": "repo:unix->consumes->repo:cloud",
+      "key": "repo:cloud_unix->consumes->repo:cloud",
       "properties": {
         "consumer": "builders",
         "via": "cloud-data slice"
