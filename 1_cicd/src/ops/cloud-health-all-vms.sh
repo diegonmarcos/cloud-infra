@@ -12,7 +12,7 @@ VMS="gcp-proxy gcp-t4 oci-apps oci-analytics oci-mail"
 
 if [ -n "${GITHUB_ACTIONS:-}" ]; then
   # In GHA: trigger unified health workflow + HTTP checks
-  REPO="${GITHUB_REPOSITORY:-diegonmarcos/cloud}"
+  REPO="${GITHUB_REPOSITORY:-diegonmarcos/cloud-infra}"
   echo "Triggering Health → VMs (all)"
   gh workflow run "health.yml" --repo "$REPO" --ref main || echo "WARN: failed to trigger health.yml"
   gh workflow run "health-http-public.yml" --repo "$REPO" --ref main || true

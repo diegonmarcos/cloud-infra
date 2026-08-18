@@ -208,7 +208,7 @@ ship_vm() {
       -e GITHUB_ACTOR="${GITHUB_ACTOR:-}" \
       -e GITHUB_ACTIONS="${GITHUB_ACTIONS:-}" \
       -e GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-manual}" \
-      -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-diegonmarcos/cloud}" \
+      -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-diegonmarcos/cloud-infra}" \
       -e GITHUB_RUN_ID="${GITHUB_RUN_ID:-local}" \
       -e GITHUB_SHA="${GITHUB_SHA:-$(git rev-parse --short HEAD 2>/dev/null || echo unknown)}" \
       "$_builder_image" \

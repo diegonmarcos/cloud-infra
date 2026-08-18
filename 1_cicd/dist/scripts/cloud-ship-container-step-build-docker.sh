@@ -375,7 +375,7 @@ RUN ${NATIVE_CMD}
 ${USER_LINE}
 ${USER_SWITCH}
 ${ENV_LINE}
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 ENTRYPOINT []
 ${CMD_LINE}
 NEOF
@@ -415,7 +415,7 @@ ${ENV_LINE}
 WORKDIR /app
 COPY ${APP_DIR_REL} /app
 ENTRYPOINT []
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 ${CMD_LINE}
 NEOF
             # Stamp the engine-generated Dockerfile.native with the canonical
@@ -464,7 +464,7 @@ RUN ${NATIVE_CMD}
 FROM ${NATIVE_BASE:-debian:bookworm-slim}
 ${APT_LINE}
 COPY --from=native-build /build/${NATIVE_BINARY} /usr/local/bin/${BINARY_NAME}
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 CMD ["${BINARY_NAME}"]
 NEOF
                 [ -x "$INJECT_HEADER" ] && "$INJECT_HEADER" stamp "$DIST_DIR/Dockerfile.native" "$DIST_DIR/Dockerfile.native" || true
@@ -532,7 +532,7 @@ NEOF
 FROM ${NATIVE_BASE:-debian:bookworm-slim}
 ${APT_LINE}
 COPY ${BINARY_NAME} /usr/local/bin/${BINARY_NAME}
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 CMD ["${BINARY_NAME}"]
 NEOF
             # Stamp the engine-generated Dockerfile.native with the canonical
@@ -607,7 +607,7 @@ NEOF
     #
     #   1. $GITHUB_TOKEN (in GHA) — the repo's ephemeral Actions token. A package
     #      first PUSHED with it is REPO-SCOPED and inherits the visibility of the
-    #      source repo (diegonmarcos/cloud is PUBLIC → the package is PUBLIC and
+    #      source repo (diegonmarcos/cloud-infra is PUBLIC → the package is PUBLIC and
     #      anonymously pullable). This is the ONLY way to get public packages
     #      automatically: GitHub has NO API/GraphQL to flip visibility, and a
     #      package first created by a user PAT is USER-SCOPED → defaults PRIVATE

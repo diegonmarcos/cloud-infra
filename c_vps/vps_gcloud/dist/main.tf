@@ -52,7 +52,7 @@ provider "google-beta" {
 variable "ssh_public_key" {
   description = "SSH public key for diego user"
   type        = string
-  # Set via: TF_VAR_ssh_public_key=$(cat ~/git/vault/A0_keys/ssh/google_compute_engine.pub)
+  # Set via: TF_VAR_ssh_public_key=$(cat ~/git/cloud-vault/A0_keys/ssh/google_compute_engine.pub)
   # Or via build.sh which reads from vault automatically
 }
 

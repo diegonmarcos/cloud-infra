@@ -34,7 +34,7 @@
 ## SSH Access
 ```bash
 ssh oci-apps-2
-# Key: ~/git/vault/A0_keys/ssh/oci_key
+# Key: ~/git/cloud-vault/A0_keys/ssh/oci_key
 ```
 
 ## Notes

@@ -11,7 +11,7 @@
 
 ## 🚨 PART A — LEAK PURGE (DO FIRST)
 
-### 4 exposures on public `github.com/diegonmarcos/cloud`
+### 4 exposures on public `github.com/diegonmarcos/cloud-infra`
 
 | # | Leak | Original commits (pre-rewrite SHAs) |
 |---|------|-----|
@@ -46,7 +46,7 @@ git filter-repo \
   --force
 
 # filter-repo drops origin — re-add
-git remote add origin git@github.com:diegonmarcos/cloud.git
+git remote add origin git@github.com:diegonmarcos/cloud-infra.git
 
 # Force-push (rewrites remote history; GitHub stale-ref cache holds ~90 days)
 git push --force-with-lease origin main
@@ -421,7 +421,7 @@ git filter-repo \
   --replace-text /tmp/leak-blobs.txt \
   --path a_solutions/aa-sui_tools-stalwart/src/secrets.yaml.new --invert-paths \
   --force
-git remote add origin git@github.com:diegonmarcos/cloud.git
+git remote add origin git@github.com:diegonmarcos/cloud-infra.git
 git push --force-with-lease origin main
 
 # ═══ 2. RESTORE SESSION WIP ═══

@@ -37,7 +37,7 @@
 ```bash
 ssh gcp-ollama
 # or: gcloud compute ssh ollama-spot-gpu --zone us-central1-a
-# Key: ~/git/vault/A0_keys/ssh/google_compute_engine
+# Key: ~/git/cloud-vault/A0_keys/ssh/google_compute_engine
 ```
 
 ## Services Running

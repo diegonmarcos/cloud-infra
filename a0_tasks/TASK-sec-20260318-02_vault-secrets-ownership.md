@@ -73,7 +73,7 @@ GHA needs to clone the private vault repo to resolve symlinks during `build.sh s
 
 ### Steps
 
-6. Generate read-only SSH deploy key for `diegonmarcos/vault`
+6. Generate read-only SSH deploy key for `diegonmarcos/cloud-vault`
 7. Add `VAULT_DEPLOY_KEY` to cloud repo GitHub Secrets
 8. Update `.github/actions/setup-deps/action.yml` — add vault clone step:
 
@@ -90,7 +90,7 @@ inputs:
     echo "${{ inputs.vault_deploy_key }}" > ~/.ssh/vault_deploy
     chmod 600 ~/.ssh/vault_deploy
     GIT_SSH_COMMAND="ssh -i ~/.ssh/vault_deploy -o StrictHostKeyChecking=no" \
-      git clone --depth 1 git@github.com:diegonmarcos/vault.git "$GITHUB_WORKSPACE/../vault"
+      git clone --depth 1 git@github.com:diegonmarcos/cloud-vault.git "$GITHUB_WORKSPACE/../vault"
 ```
 
 **GHA runner layout** (symlinks resolve correctly):

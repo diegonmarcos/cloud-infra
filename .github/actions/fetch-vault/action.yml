@@ -12,7 +12,7 @@
 
 name: "Fetch Vault Secrets"
 description: |
-  Clones diegonmarcos/vault via VAULT_DEPLOY_KEY (read-only SSH deploy key)
+  Clones diegonmarcos/cloud-vault via VAULT_DEPLOY_KEY (read-only SSH deploy key)
   and runs vault/build.sh env to generate ~/git/cloud-vault/vault-keys-bash.env. All
   infrastructure secrets (SSH keys, SOPS age, WG privatekey, GHCR token)
   land in that one file, which cloud-builder's compose.yaml mounts via
@@ -21,7 +21,7 @@ description: |
 
 inputs:
   vault_deploy_key:
-    description: "SSH private key with read access to diegonmarcos/vault"
+    description: "SSH private key with read access to diegonmarcos/cloud-vault"
     required: true
   vault_ref:
     description: "Branch/tag/SHA in vault repo to check out"
@@ -48,7 +48,7 @@ runs:
         ssh-keyscan github.com 2>/dev/null >> ~/.ssh/known_hosts
         GIT_SSH_COMMAND="ssh -i ~/.ssh/vault_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
           git clone --depth 1 --branch "${{ inputs.vault_ref }}" \
-            git@github.com:diegonmarcos/vault.git \
+            git@github.com:diegonmarcos/cloud-vault.git \
             "$HOME/git/cloud-vault"
         echo "Vault cloned at $HOME/git/cloud-vault @ $(git -C "$HOME/git/cloud-vault" rev-parse --short HEAD)"
 

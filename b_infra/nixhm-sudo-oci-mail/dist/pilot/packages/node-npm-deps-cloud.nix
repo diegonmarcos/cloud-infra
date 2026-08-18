@@ -30,8 +30,8 @@ in {
     for _p in \
       /app/_cloud-data-consolidated.json \
       /opt/containers/cloud-data/_cloud-data-consolidated.json \
-      "$HOME/git/cloud/2_configs/dist/_cloud-data-consolidated.json" \
-      "$HOME/git/cloud/cloud-data/_cloud-data-consolidated.json"; do
+      "$HOME/git/cloud-infra/2_configs/dist/_cloud-data-consolidated.json" \
+      "$HOME/git/cloud-infra/cloud-data/_cloud-data-consolidated.json"; do
       [ -f "$_p" ] && CLOUD_DEPS="$_p" && break
     done
     CLOUD_OUT="$HOME/.node_modules/.cloud-deps-merged.json"
