@@ -1,5 +1,5 @@
 name: "Resolve cloud-builder image"
-description: "Read the canonical cloud-builder-x image ref from II_Unix/cb_containers-builders/build.json. Single source of truth for the multi-arch CI builder image."
+description: "Read the canonical cloud-builder-x image ref from the unix repo's cb_containers-builders/build.json. Single source of truth for the multi-arch CI builder image."
 
 # Why this exists:
 #   The cloud-builder-x-deb-nixhm image is owned by the unix repo
@@ -9,9 +9,29 @@ description: "Read the canonical cloud-builder-x image ref from II_Unix/cb_conta
 #   from the master at job start, exporting BUILDER_IMAGE for downstream
 #   steps. No literal IS allowed in any wrapper after this lands.
 #
-# Prerequisites:
-#   - Caller must have run actions/checkout@v4 with submodules: true,
-#     so II_Unix/ is populated. Action fails loud if it isn't.
+# HOW THE MASTER IS REACHED (2026-08-18 — every workflow was red for a day)
+# ────────────────────────────────────────────────────────────────────────
+#   This action used to read "$GITHUB_WORKSPACE/II_Unix/cb_containers-builders/
+#   build.json" and told you to fix it with `actions/checkout submodules: true`.
+#   Both halves are now wrong:
+#
+#     - II_Unix/ has not existed since the fleet repos were renamed to cloud-*.
+#       The local working copy is III_unix/, but that path is in
+#       .git/info/exclude — it is NOT tracked and NOT a submodule, so it is
+#       absent on a runner no matter what checkout does. Renaming the path in
+#       here would have fixed nothing.
+#     - The only submodule left is `cloud`, a read-only fleet INDEX that carries
+#       relative symlinks (cloud-unix -> ../cloud-unix). Those dangle by design
+#       inside a submodule checkout, so `cloud/cloud-unix/...` is empty in CI.
+#
+#   So there was no on-runner path to the master at all, and every workflow
+#   died here at "Resolve builder image".
+#
+#   Fix: keep the file canonical in cloud-unix (do NOT copy it here — that is
+#   exactly the drift this action exists to prevent) and FETCH it. cloud-unix is
+#   PUBLIC, so this needs no credential, no submodule and no extra checkout step
+#   in the eight workflows that call this. A local checkout, when one happens to
+#   exist, still wins so local/act runs stay offline-capable.
 
 inputs:
   variant:
@@ -22,6 +42,18 @@ inputs:
     description: "Image tag to append"
     required: false
     default: "latest"
+  source_repo:
+    description: "owner/repo holding the canonical builder build.json. Public, so no token is used."
+    required: false
+    default: "diegonmarcos/cloud-unix"
+  source_ref:
+    description: "Git ref to read the master from."
+    required: false
+    default: "main"
+  source_path:
+    description: "Path to build.json inside source_repo."
+    required: false
+    default: "cb_containers-builders/build.json"
 
 outputs:
   image:
@@ -31,24 +63,60 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Resolve image from II_Unix/cb_containers-builders/build.json
+    - name: Resolve image from unix cb_containers-builders/build.json
       id: resolve
       shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+        TAG: ${{ inputs.tag }}
+        SOURCE_REPO: ${{ inputs.source_repo }}
+        SOURCE_REF: ${{ inputs.source_ref }}
+        SOURCE_PATH: ${{ inputs.source_path }}
       run: |
         set -euo pipefail
-        master="$GITHUB_WORKSPACE/II_Unix/cb_containers-builders/build.json"
-        if [ ! -f "$master" ]; then
-          echo "::error::Master image source not found: $master"
-          echo "::error::Did the workflow check out submodules? (actions/checkout@v4 with submodules: true)"
+
+        # Local checkouts first: a developer running this outside GitHub (or a
+        # workflow that genuinely does check unix out) must not depend on the
+        # network. None of these exist on a stock runner — that is expected, and
+        # the fetch below is the normal CI path, not a fallback for breakage.
+        master=""
+        for c in \
+          "$GITHUB_WORKSPACE/III_unix/$SOURCE_PATH" \
+          "$GITHUB_WORKSPACE/cloud/cloud-unix/$SOURCE_PATH" \
+          "$GITHUB_WORKSPACE/../cloud-unix/$SOURCE_PATH"
+        do
+          if [ -f "$c" ]; then master="$c"; break; fi
+        done
+
+        if [ -n "$master" ]; then
+          echo "Using local master: $master"
+        else
+          # Fetch the single 700-byte file rather than cloning the repo.
+          url="https://raw.githubusercontent.com/${SOURCE_REPO}/${SOURCE_REF}/${SOURCE_PATH}"
+          master="$RUNNER_TEMP/cloud-builder-build.json"
+          echo "No local checkout of the unix master; fetching $url"
+          if ! curl -fsSL --retry 3 --retry-delay 2 --max-time 30 -o "$master" "$url"; then
+            echo "::error::Could not fetch the builder master from $url"
+            echo "::error::Is ${SOURCE_REPO} still public and does ${SOURCE_PATH} still exist on ${SOURCE_REF}?"
+            exit 1
+          fi
+        fi
+
+        # Fail on a truncated/HTML response before jq turns it into a confusing
+        # parse error 20 lines downstream.
+        if ! jq -e . "$master" >/dev/null 2>&1; then
+          echo "::error::Builder master is not valid JSON: $master"
+          head -c 300 "$master" || true
           exit 1
         fi
-        ghcr=$(jq -r --arg v "${{ inputs.variant }}" '.images[$v].ghcr // empty' "$master")
+
+        ghcr=$(jq -r --arg v "$VARIANT" '.images[$v].ghcr // empty' "$master")
         if [ -z "$ghcr" ] || [ "$ghcr" = "null" ]; then
-          echo "::error::Variant '${{ inputs.variant }}' not found in $master .images"
+          echo "::error::Variant '$VARIANT' not found in $master .images"
           echo "::error::Available variants: $(jq -r '.images | keys | join(", ")' "$master")"
           exit 1
         fi
-        image="${ghcr}:${{ inputs.tag }}"
-        echo "Resolved BUILDER_IMAGE=$image (master: II_Unix/cb_containers-builders/build.json)"
+        image="${ghcr}:${TAG}"
+        echo "Resolved BUILDER_IMAGE=$image (master: ${SOURCE_REPO}/${SOURCE_PATH}@${SOURCE_REF})"
         echo "BUILDER_IMAGE=$image" >> "$GITHUB_ENV"
         echo "image=$image" >> "$GITHUB_OUTPUT"
