@@ -29,7 +29,7 @@ null in the committed cloud-data the HM build reads** — when every upstream in
 | Consolidator logic (`cloud-data-config-consolidated.ts`) | ✅ correct — `vaultWgKeys[<name>-public]` scan is generic |
 | **Local** `9_others/build.sh consolidate` on my vault | ✅ emits `surface=hG1x8b4JXsD0r0TXVD…` (REAL) |
 | CI gen-configs sees the vault | ✅ log: `vault/wireguard: 15 public keys` (same count as local) |
-| CI gen-configs runs the full pipeline | ✅ log: `Using engine: 9_others/build.sh all` → `Consolidating → /root/git/cloud/1_cicd/dist/_cloud-data-consolidated.json` |
+| CI gen-configs runs the full pipeline | ✅ log: `Using engine: 9_others/build.sh all` → `Consolidating → /root/git/cloud-infra/1_cicd/dist/_cloud-data-consolidated.json` |
 | **Committed** canonical `1_cicd/dist/_cloud-data-consolidated.json` | ❌ `surface=NULL` (termux/.10/.11 = REAL) |
 | gen-configs commit step | ❌ "dist/ unchanged — nothing to commit" |
 
@@ -43,23 +43,23 @@ runs the consolidate — yet the committed file stays NULL and the commit no-ops
 ```
 docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
   --cap-add NET_ADMIN \
-  -v "$HOME/git/vault:/root/git/vault:ro" \
+  -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
   -e CLOUD_DATA_DEPLOY_KEY \
   cloud-builder gen-configs
 ```
 
 - `cloud-builder gen-configs` → `cloud-ship-orchestrate-gen-configs.sh` → `build.sh config`
   → `cloud-ship-repo-config-gen.sh` → **`bash $CLOUD_ROOT/9_others/build.sh all`**.
-- `$CLOUD_ROOT` inside the container is the **image-baked** `/root/git/cloud`, which the
+- `$CLOUD_ROOT` inside the container is the **image-baked** `/root/git/cloud-infra`, which the
   entrypoint **`git fetch origin main && reset --hard origin/main`** before running
   (`cb_containers-builders/src/docker/entrypoint.sh`).
 - `compose.yaml` mounts **only** docker.sock + `/mnt/host-{ssh,sops,gh}` (`:ro`) + docker
-  config; the `docker run` adds `/root/git/vault:ro`. **The runner's cloud checkout
+  config; the `docker run` adds `/root/git/cloud-vault:ro`. **The runner's cloud checkout
   (`$GITHUB_WORKSPACE`) is never mounted into the container.**
 - The container is **`--rm`**.
 
 So the derive writes the fresh `1_cicd/dist/` (with `surface=REAL`) into the **container's
-ephemeral** `/root/git/cloud/1_cicd/dist`, which is **discarded on container exit**. The
+ephemeral** `/root/git/cloud-infra/1_cicd/dist`, which is **discarded on container exit**. The
 workflow's next step —
 
 ```
@@ -84,9 +84,9 @@ Run the derive directly against the runner's `$GITHUB_WORKSPACE` so its output l
 checkout the commit step stages.
 
 - In `ship-gen-configs.yml`, add to the `docker compose run`:
-  `-v "$GITHUB_WORKSPACE:/root/git/cloud"` (read-write) and an env flag e.g.
+  `-v "$GITHUB_WORKSPACE:/root/git/cloud-infra"` (read-write) and an env flag e.g.
   `-e CLOUD_REPO_MOUNTED=1`.
-- In `entrypoint.sh`, **skip the `fetch/reset --hard origin/main` for `/root/git/cloud` when
+- In `entrypoint.sh`, **skip the `fetch/reset --hard origin/main` for `/root/git/cloud-infra` when
   `CLOUD_REPO_MOUNTED=1`** (the runner already checked out the correct `head_sha`; a reset
   would discard the workspace state and re-introduce the staleness). Keep resets for the
   *other* baked repos.
@@ -99,11 +99,11 @@ checkout the commit step stages.
 Keep the container hermetic; copy its regenerated dist back to the runner before committing.
 
 - Use a writable **output mount** for just the dist trees, e.g.
-  `-v "$GITHUB_WORKSPACE/1_cicd/dist:/root/git/cloud/1_cicd/dist"` (+ the
+  `-v "$GITHUB_WORKSPACE/1_cicd/dist:/root/git/cloud-infra/1_cicd/dist"` (+ the
   `b_infra/**/dist`, `a_solutions/*/src/_cloud-data-consolidated.json` targets), **and** make
   the entrypoint reset use `git checkout -- :/` / `clean -fdx -e <mounted dirs>` so it does
   **not** clobber the mounted output dirs.
-- Or, no mounts: after `docker compose run`, `docker cp <container>:/root/git/cloud/1_cicd/dist/. 1_cicd/dist/` (requires a non-`--rm` run + explicit name + cleanup).
+- Or, no mounts: after `docker compose run`, `docker cp <container>:/root/git/cloud-infra/1_cicd/dist/. 1_cicd/dist/` (requires a non-`--rm` run + explicit name + cleanup).
 - Pros: container stays on its own clone (closest to today). Cons: the reset-vs-mount
   interaction is fiddly; partial-tree mounts are error-prone.
 

@@ -45,7 +45,7 @@ step_configs_push() {
     # ("ghcr_login: command not found" broke configs-push, 2026-06-23). Falls
     # through on FAILURE (not just a missing file) so an expired vault PAT still
     # reaches GITHUB_TOKEN; skip the push if every method fails.
-    _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
     _ghcr_user="${GHCR_USER:-diegonmarcos}"
     if [ -f "$_vault_tok" ] && docker login ghcr.io -u "$_ghcr_user" --password-stdin < "$_vault_tok" >/dev/null 2>&1; then
         log "GHCR login OK (vault)"

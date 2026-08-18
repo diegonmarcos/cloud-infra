@@ -8,7 +8,7 @@
 # ║ (cb_containers-builders/src/docker/entrypoint.sh:248-249) does    ║
 # ║ `cd $GIT_ROOT/cloud` before exec'ing the bash|sh dispatch case,   ║
 # ║ OVERRIDING docker's -w flag. Without an explicit `cd /workspace`  ║
-# ║ in the sh -c payload, docker build runs from /root/git/cloud and  ║
+# ║ in the sh -c payload, docker build runs from /root/git/cloud-infra and  ║
 # ║ can't find the engine-generated Dockerfile.native (rsync'd to     ║
 # ║ /workspace). Result: "ERROR: failed to read dockerfile".          ║
 # ║                                                                   ║

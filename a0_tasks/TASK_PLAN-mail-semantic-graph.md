@@ -247,7 +247,7 @@ Steps:
 
 ## 10. Implementer notes
 
-- Absolute paths. `git -C /home/diego/git/cloud ...`.
+- Absolute paths. `git -C /home/diego/git/cloud-infra ...`.
 - Use MCP tools for all VM-side checks (`obs_debug_docker_exec`, `devops_ssh_check`, `devops_workflows_dagu_trigger`). No raw ssh one-liners.
 - Secrets (Ollama API key if ever needed, NFS creds, etc.): sops pipeline only.
 - Never commit submodule paths; use the auto-sync GHA.

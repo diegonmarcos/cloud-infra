@@ -34,7 +34,7 @@ a_solutions/ba-clo_cloudflare-worker/{src,dist}/wrangler.toml     (redact 2 stri
 ### Purge command (single pass via filter-repo)
 
 ```bash
-cd ~/git/cloud
+cd ~/git/cloud-infra
 # Blob file already written at /tmp/leak-blobs.txt containing:
 #   21dd4572b47aaf91fc5d3f9cabcc88f9e6e7984e==>REDACTED_OCI_S3_KEY
 #   eyJhbGciOiJSUzI1NiIsImtpZCI6Im1haW4iLCJ0eXAiOiJhdCtqd3QifQ==>REDACTED_C3_BEARER_PREFIX
@@ -99,12 +99,12 @@ From `/tmp/session-wip-backup-1776794133/`:
 Restore command:
 ```bash
 BK=/tmp/session-wip-backup-1776794133
-cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-v2.sh ~/git/cloud/a_solutions/_shared/
-cp -a $BK/oidc-clients.json ~/git/cloud/a_solutions/bb-sec_authelia/src/
-mkdir -p ~/git/cloud/a_solutions/bb-sec_authelia/src/templates
-cp -a $BK/authelia-templates/* ~/git/cloud/a_solutions/bb-sec_authelia/src/templates/
-cp -a $BK/test_precommit_*.sh ~/git/cloud/9_others/src/deploy/test/
-chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/9_others/src/deploy/test/test_precommit_*.sh
+cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-v2.sh ~/git/cloud-infra/a_solutions/_shared/
+cp -a $BK/oidc-clients.json ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/
+mkdir -p ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/templates
+cp -a $BK/authelia-templates/* ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/templates/
+cp -a $BK/test_precommit_*.sh ~/git/cloud-infra/9_others/src/deploy/test/
+chmod +x ~/git/cloud-infra/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud-infra/9_others/src/deploy/test/test_precommit_*.sh
 ```
 
 ### B.2 — Modified-file edits (REVERTED, need replay)
@@ -214,9 +214,9 @@ fi
 
 ```bash
 sed -i 's/git -C "\$SERVICE_DIR\/\.\.\/\.\." add -f /git -C "$SERVICE_DIR\/..\/.." add /g' \
-  ~/git/cloud/9_others/src/deploy/scripts/cloud-ship-container-step-build-nix.sh
+  ~/git/cloud-infra/9_others/src/deploy/scripts/cloud-ship-container-step-build-nix.sh
 sed -i 's/git -C "\$REPO_ROOT" add -f /git -C "$REPO_ROOT" add /g' \
-  ~/git/cloud/9_others/src/deploy/scripts/cloud-ship-ci-builder-dispatch.sh
+  ~/git/cloud-infra/9_others/src/deploy/scripts/cloud-ship-ci-builder-dispatch.sh
 ```
 
 (3 + 1 = 4 occurrences total)
@@ -271,7 +271,7 @@ fi
 #### B.2.6 — Regenerate `1_cicd/dist/` after edits
 
 ```bash
-cd ~/git/cloud/9_others && ./build.sh build
+cd ~/git/cloud-infra/9_others && ./build.sh build
 ```
 
 ---
@@ -370,17 +370,17 @@ cd .. && ./build.sh build
 ### B.4 — Validation gate (must be green before commits)
 
 ```bash
-~/git/cloud/a_solutions/_shared/test-src-v2.sh  ~/git/cloud/a_solutions/bb-sec_authelia/src          # expect 8/8
-~/git/cloud/a_solutions/_shared/test-src-v2.sh  ~/git/cloud/a_solutions/aa-sui_tools-smtp-proxy/src  # expect 11/11
-~/git/cloud/a_solutions/_shared/test-dist-v2.sh ~/git/cloud/a_solutions/bb-sec_authelia/dist         # expect 48/48
-~/git/cloud/a_solutions/_shared/test-dist-v2.sh ~/git/cloud/a_solutions/aa-sui_tools-smtp-proxy/dist # expect 39/39
-~/git/cloud/9_others/src/deploy/test/test_precommit_blocks_forced_add.sh                                  # expect 3/3
-~/git/cloud/9_others/src/deploy/test/test_precommit_blocks_plaintext_secret.sh                            # expect 8/8
+~/git/cloud-infra/a_solutions/_shared/test-src-v2.sh  ~/git/cloud-infra/a_solutions/bb-sec_authelia/src          # expect 8/8
+~/git/cloud-infra/a_solutions/_shared/test-src-v2.sh  ~/git/cloud-infra/a_solutions/aa-sui_tools-smtp-proxy/src  # expect 11/11
+~/git/cloud-infra/a_solutions/_shared/test-dist-v2.sh ~/git/cloud-infra/a_solutions/bb-sec_authelia/dist         # expect 48/48
+~/git/cloud-infra/a_solutions/_shared/test-dist-v2.sh ~/git/cloud-infra/a_solutions/aa-sui_tools-smtp-proxy/dist # expect 39/39
+~/git/cloud-infra/9_others/src/deploy/test/test_precommit_blocks_forced_add.sh                                  # expect 3/3
+~/git/cloud-infra/9_others/src/deploy/test/test_precommit_blocks_plaintext_secret.sh                            # expect 8/8
 
 # Compose parse with real .secrets
-cd ~/git/cloud/a_solutions/bb-sec_authelia/dist && \
+cd ~/git/cloud-infra/a_solutions/bb-sec_authelia/dist && \
   docker compose -f compose/docker-compose.yml --project-directory . config --quiet
-cd ~/git/cloud/a_solutions/aa-sui_tools-smtp-proxy/dist && \
+cd ~/git/cloud-infra/a_solutions/aa-sui_tools-smtp-proxy/dist && \
   docker compose -f compose/docker-compose.yml --project-directory . config --quiet
 ```
 
@@ -415,7 +415,7 @@ Pre-commit hook (hardened in step 1) will smoke-test every subsequent commit.
 
 ```bash
 # ═══ 1. PURGE LEAKS FROM HISTORY + REMOTE ═══
-cd ~/git/cloud
+cd ~/git/cloud-infra
 git checkout -b pre-purge-wip && git add -A && git commit -m "WIP" --allow-empty && git checkout main
 git filter-repo \
   --replace-text /tmp/leak-blobs.txt \
@@ -426,12 +426,12 @@ git push --force-with-lease origin main
 
 # ═══ 2. RESTORE SESSION WIP ═══
 BK=/tmp/session-wip-backup-1776794133
-cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-v2.sh ~/git/cloud/a_solutions/_shared/
-cp -a $BK/oidc-clients.json ~/git/cloud/a_solutions/bb-sec_authelia/src/
-mkdir -p ~/git/cloud/a_solutions/bb-sec_authelia/src/templates
-cp -a $BK/authelia-templates/* ~/git/cloud/a_solutions/bb-sec_authelia/src/templates/
-cp -a $BK/test_precommit_*.sh ~/git/cloud/9_others/src/deploy/test/
-chmod +x ~/git/cloud/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud/9_others/src/deploy/test/test_precommit_*.sh
+cp -a $BK/engine.nix $BK/compose-defaults.json $BK/test-dist-v2.sh $BK/test-src-v2.sh ~/git/cloud-infra/a_solutions/_shared/
+cp -a $BK/oidc-clients.json ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/
+mkdir -p ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/templates
+cp -a $BK/authelia-templates/* ~/git/cloud-infra/a_solutions/bb-sec_authelia/src/templates/
+cp -a $BK/test_precommit_*.sh ~/git/cloud-infra/9_others/src/deploy/test/
+chmod +x ~/git/cloud-infra/a_solutions/_shared/test-{dist,src}-v2.sh ~/git/cloud-infra/9_others/src/deploy/test/test_precommit_*.sh
 
 # ═══ 3. THEN REPLAY PART B.2, B.3 — see sections above ═══
 ```

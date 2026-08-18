@@ -21,8 +21,8 @@ _load_cf_credentials() {
     unset CF_API_TOKEN CF_API_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY CLOUDFLARE_EMAIL 2>/dev/null || true
 
     for cf_env in \
-        "$HOME/git/vault/A0_keys/providers/cloudflare/api-key_opaque/cloudflare.env" \
-        "/home/diego/git/vault/A0_keys/providers/cloudflare/api-key_opaque/cloudflare.env"; do
+        "$HOME/git/cloud-vault/A0_keys/providers/cloudflare/api-key_opaque/cloudflare.env" \
+        "/home/diego/git/cloud-vault/A0_keys/providers/cloudflare/api-key_opaque/cloudflare.env"; do
         if [ -f "$cf_env" ]; then
             _key=$(grep '^CF_API_KEY=' "$cf_env" | cut -d= -f2)
             _email=$(grep '^CF_API_EMAIL=' "$cf_env" | cut -d= -f2)

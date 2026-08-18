@@ -44,7 +44,7 @@ echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
 
 ```bash
 # From your local machine, deploy to specific VM:
-cd ~/git/cloud/a_solutions/home-manager
+cd ~/git/cloud-infra/a_solutions/home-manager
 
 # Deploy to gcp-proxy
 nix run home-manager/release-24.11 -- switch --flake .#diego@gcp-proxy

@@ -113,7 +113,7 @@ jobs:
         run: |
           set -eu
           # Load vault env so OCI_SSH_KEY, GCP_PROXY_SSH_KEY, GCP_T4_SSH_KEY are present
-          set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+          set -a; . "$HOME/git/cloud-vault/vault-keys-bash.env"; set +a
 
           # 2026-04-27 migrated: cloud-data-gha-config.json → _cloud-data-consolidated.json[._gha]
           jq '._gha' "1_cicd/dist/_cloud-data-consolidated.json" > /tmp/_gha-config.json
@@ -154,7 +154,7 @@ jobs:
         run: |
           set -eu
           # Load vault env so GITHUB_TOKEN, WG_PRIVATE_KEY, SOPS_AGE_KEY flow to container
-          set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+          set -a; . "$HOME/git/cloud-vault/vault-keys-bash.env"; set +a
           export GITHUB_TOKEN WG_PRIVATE_KEY SOPS_AGE_KEY
 
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
@@ -178,12 +178,12 @@ jobs:
           chmod 600 ~/.ssh/config
 
           # compose.yaml inside the image already has:
-          #   env_file: ~/git/vault/vault-keys-bash.env (required: false)
+          #   env_file: ~/git/cloud-vault/vault-keys-bash.env (required: false)
           #   cap_add:  NET_ADMIN
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cb.yaml
           docker compose -f /tmp/cb.yaml run --rm \
             --cap-add NET_ADMIN \
-            -v "$HOME/git/vault:/root/git/vault:ro" \
+            -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
             cloud-builder ship ${{ matrix.vm }}

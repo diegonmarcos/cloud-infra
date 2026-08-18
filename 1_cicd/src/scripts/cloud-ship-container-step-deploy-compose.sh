@@ -25,7 +25,7 @@ step_compose() {
     # as a JSON file. Idempotent: no-op when the path is a regular file or
     # missing. Same fix applied to RUNNER_HOST in step_docker (line ~458).
     # Re-login follows so private GHCR pulls work.
-    GHCR_TOKEN_FILE="${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token"
+    GHCR_TOKEN_FILE="${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token"
     if [ -f "$GHCR_TOKEN_FILE" ]; then
         GHCR_TOKEN_VAL="$(cat "$GHCR_TOKEN_FILE")"
     elif [ -n "${GITHUB_TOKEN:-}" ]; then

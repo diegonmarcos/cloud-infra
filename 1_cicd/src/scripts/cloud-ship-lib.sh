@@ -122,15 +122,15 @@ export SOPS_AGE_KEY_FILE
 # SSH key - auto-detect
 if [ -f "$HOME/.ssh/id_rsa" ]; then
     SSH_KEY="$HOME/.ssh/id_rsa"
-elif [ -f "$HOME/git/vault/A0_keys/ssh/id_rsa" ]; then
-    SSH_KEY="$HOME/git/vault/A0_keys/ssh/id_rsa"
+elif [ -f "$HOME/git/cloud-vault/A0_keys/ssh/id_rsa" ]; then
+    SSH_KEY="$HOME/git/cloud-vault/A0_keys/ssh/id_rsa"
 else
     SSH_KEY=$(jq -r '.ssh_key // empty' "$CONFIG_FILE" 2>/dev/null || true)
 fi
 
 # SSH config for GCP proxy (mobile)
-if [ -f "$HOME/git/vault/A0_keys/config_mobile" ]; then
-    SSH_CONFIG="$HOME/git/vault/A0_keys/config_mobile"
+if [ -f "$HOME/git/cloud-vault/A0_keys/config_mobile" ]; then
+    SSH_CONFIG="$HOME/git/cloud-vault/A0_keys/config_mobile"
 fi
 
 # =============================================================================
@@ -148,7 +148,7 @@ cmd_exists() { command -v "$1" >/dev/null 2>&1; }
 # unauthenticated and the push died "denied: write_package" (ship.yml, 2026-06-22).
 # Returns 0 on the first method that succeeds, 1 if all fail.
 ghcr_login() {
-    _gl_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    _gl_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
     _gl_user="${GHCR_USER:-diegonmarcos}"
     if [ -f "$_gl_vault" ] && docker login ghcr.io -u "$_gl_user" --password-stdin < "$_gl_vault" >/dev/null 2>&1; then
         log "GHCR login OK (vault)"; return 0

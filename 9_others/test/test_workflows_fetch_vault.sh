@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Test: every CICD source workflow that runs `cloud-builder` via docker MUST
 # call the fetch-vault composite action first. Without it, the runner has no
-# ~/git/vault/vault-keys-docker.envfile and the cloud-builder image's baked
+# ~/git/cloud-vault/vault-keys-docker.envfile and the cloud-builder image's baked
 # compose.yaml aborts with `env file ... not found` (proven failure mode on
 # 2026-04-25 ship runs).
 #

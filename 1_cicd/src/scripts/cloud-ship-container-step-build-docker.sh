@@ -615,7 +615,7 @@ NEOF
     # `2>/dev/null` combined with set -e. Now: stderr is preserved (for
     # debuggability) and `|| true` keeps the pipeline going since downstream
     # `docker push` will surface its own error if auth is genuinely broken.
-    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
     GHCR_USER="${GHCR_USER:-diegonmarcos}"
     if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
@@ -860,10 +860,10 @@ NEOF
             rsync_with_retry -avzL --delete "$BUILD_CONTEXT/" "$RUNNER_HOST:$REMOTE_BUILD_DIR/"
 
             # GHCR token: read where vault IS available (this side — runner-side
-            # cloud-builder has ~/git/vault mounted by ship.yml), then ship to
+            # cloud-builder has ~/git/cloud-vault mounted by ship.yml), then ship to
             # the remote VM via SSH stdin. Avoids requiring vault on every VM
             # that hosts cloud-builder-x. Surfaced 2026-04-27 (ship run
-            # 24998852451): /home/ubuntu/git/vault on oci-apps was an empty
+            # 24998852451): /home/ubuntu/git/cloud-vault on oci-apps was an empty
             # stub dir; cat'ing the token inside cloud-builder-x silently
             # failed → docker login failed → build/push failed → engine
             # logged misleading "Pushed" because the SSH | while-read pipe
@@ -875,7 +875,7 @@ NEOF
             # the local-push login block above for the full rationale. This is
             # the REMOTE_BUILD (arm64-on-VM) push that dagu and every arm64
             # service uses, so it MUST prefer GITHUB_TOKEN to get public images.
-            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
             # When authenticating with GITHUB_TOKEN, the docker-login username
             # must be the Actions actor (owner==actor==diegonmarcos here).
@@ -975,7 +975,7 @@ REMOTE_REPAIR
             # (cb_containers-builders/src/docker/entrypoint.sh:248-249) does
             # `cd $GIT_ROOT/cloud` before exec'ing the user command, OVERRIDING
             # docker's -w flag. Without the explicit cd, docker build runs from
-            # /root/git/cloud and can't find Dockerfile.native (rsync'd to
+            # /root/git/cloud-infra and can't find Dockerfile.native (rsync'd to
             # /workspace). Surfaced 2026-04-27 (ship run 25000440517).
             JOB_ID="${SERVICE_NAME}-build-$(date +%s)-$$"
             REMOTE_JOB_DIR="/tmp/cloud-builder-jobs"

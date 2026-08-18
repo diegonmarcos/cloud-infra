@@ -2935,7 +2935,7 @@ curl -H "Authorization: Bearer $TOKEN" https://db.diegonmarcos.com/api/v2/meta/b
 
 **Introspect Proxy Location:** `gcp-f-micro_1:/opt/introspect-proxy`
 
-**Reference:** `/home/diego/git/cloud/a_solutions/all/back-security/introspect-proxy/DEPLOY.md`
+**Reference:** `/home/diego/git/cloud-infra/a_solutions/all/back-security/introspect-proxy/DEPLOY.md`
 
 ---
 

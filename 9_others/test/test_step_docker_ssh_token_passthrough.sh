@@ -3,7 +3,7 @@
 # (no vault dependency on the remote VM) and uses pipefail so failures in
 # the SSH | while-read pipe propagate instead of silently returning 0.
 #
-# Bug surfaced 2026-04-27 (ship run 24998852451): /home/ubuntu/git/vault
+# Bug surfaced 2026-04-27 (ship run 24998852451): /home/ubuntu/git/cloud-vault
 # on oci-apps was an empty stub dir; cat'ing the token inside cloud-builder-x
 # silently failed; docker login failed; build/push failed; the SSH | while-read
 # pipe swallowed the non-zero exit (no pipefail); engine logged a misleading
@@ -20,10 +20,10 @@ SCRIPT="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-container-step-build-docker.sh"
 
 FAIL=0
 
-# 1) The SSH-builder branch must NOT bind-mount the host's ~/git/vault — the
+# 1) The SSH-builder branch must NOT bind-mount the host's ~/git/cloud-vault — the
 #    remote VM may not have vault. Token is shipped via SSH stdin instead.
-if grep -qE '\\?\$HOME/git/vault.*home/diego/git/vault' "$SCRIPT"; then
-    printf "  FAIL SSH-builder branch still bind-mounts \$HOME/git/vault — vault may not exist on the remote VM\n"
+if grep -qE '\\?\$HOME/git/cloud-vault.*home/diego/git/cloud-vault' "$SCRIPT"; then
+    printf "  FAIL SSH-builder branch still bind-mounts \$HOME/git/cloud-vault — vault may not exist on the remote VM\n"
     FAIL=1
 else
     printf "  OK  no host vault bind-mount in SSH-builder branch\n"
@@ -72,9 +72,9 @@ else
 fi
 
 # 7) sh -c body must `cd /workspace` before docker build. Cloud-builder-x's
-#    entrypoint cd's to /root/git/cloud BEFORE exec'ing the user command,
+#    entrypoint cd's to /root/git/cloud-infra BEFORE exec'ing the user command,
 #    overriding docker's -w flag. Without explicit cd, docker build runs from
-#    /root/git/cloud and can't find Dockerfile rsync'd to /workspace.
+#    /root/git/cloud-infra and can't find Dockerfile rsync'd to /workspace.
 if grep -qE "cd /workspace && \\\\?$" "$SCRIPT" || grep -qE 'cd /workspace &&' "$SCRIPT"; then
     printf "  OK  sh -c body explicitly cd's to /workspace (entrypoint cwd guard)\n"
 else
