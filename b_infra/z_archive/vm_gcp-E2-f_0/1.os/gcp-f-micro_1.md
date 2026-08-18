@@ -34,7 +34,7 @@
 
 ## SSH Access
 ```bash
-ssh -F ~/git/vault/config_mobile gcp-proxy
+ssh -F ~/git/cloud-vault/config_mobile gcp-proxy
 # or: gcloud compute ssh arch-1 --zone us-central1-a
 ```
 

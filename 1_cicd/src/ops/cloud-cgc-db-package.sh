@@ -27,7 +27,7 @@ echo "[cgc-db] packaged $(du -h "$WORK/ctx/octocode-db.tar" | cut -f1) from $SRC
 cat > "$WORK/ctx/Dockerfile" <<'DOCKER'
 FROM busybox:latest
 ADD octocode-db.tar /octocode-db
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud"
+LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 LABEL org.opencontainers.image.description="cloud-cgc-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
 DOCKER
 

@@ -44,15 +44,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 CONFIG="$REPO_ROOT/config.json"
-# Resolve unix repo. Prefer the standalone clone at ~/git/unix (the
+# Resolve unix repo. Prefer the standalone clone at ~/git/cloud-unix (the
 # editable SOURCE), fall back to the submodule pin in cloud (which can
 # be stale until the pin is bumped post-commit).
-if [ -d "${HOME}/git/unix/cb_containers-builders" ]; then
-    UNIX_DIR="${HOME}/git/unix"
+if [ -d "${HOME}/git/cloud-unix/cb_containers-builders" ]; then
+    UNIX_DIR="${HOME}/git/cloud-unix"
 elif [ -d "$REPO_ROOT/II_Unix" ]; then
     UNIX_DIR="$REPO_ROOT/II_Unix"
 else
-    echo "  ✗ no unix repo found (checked ~/git/unix and II_Unix submodule)" >&2
+    echo "  ✗ no unix repo found (checked ~/git/cloud-unix and II_Unix submodule)" >&2
     exit 1
 fi
 DEPS_SH="$UNIX_DIR/cb_containers-builders/dist/docker-deps.sh"

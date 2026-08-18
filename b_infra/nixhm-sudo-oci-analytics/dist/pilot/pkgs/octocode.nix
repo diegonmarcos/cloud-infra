@@ -17,7 +17,7 @@ let
   assets = {
     x86_64-linux = {
       # Custom build with --features huggingface (local Jina AI embeddings, no API key)
-      url = "https://github.com/diegonmarcos/unix/releases/download/octocode-${version}-hf/octocode-${version}-huggingface-x86_64-linux-nixos.tar.gz";
+      url = "https://github.com/diegonmarcos/cloud-unix/releases/download/octocode-${version}-hf/octocode-${version}-huggingface-x86_64-linux-nixos.tar.gz";
       hash = "sha256:0irb6rirddsazirzwmjw22j3mpskgqw94nc3zzs8mag4i1lzpn3x";
     };
     aarch64-linux = {

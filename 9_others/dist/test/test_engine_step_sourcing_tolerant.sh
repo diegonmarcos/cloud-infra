@@ -17,7 +17,7 @@
 # `. <path>` which aborts the engine before any step runs.
 #
 # Failure mode 2026-04-27 (run 24994988037): cloud-builder image's stale
-# /root/git/cloud lacked cloud-ship-container-step-verify-secret-consumption.sh
+# /root/git/cloud-infra lacked cloud-ship-container-step-verify-secret-consumption.sh
 # because the entrypoint's repo sync silently failed. Engine source line
 # aborted with "No such file or directory" before printing the service
 # header — c3-services-mcp + mail-mcp ship attempts both failed at line 188

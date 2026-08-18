@@ -142,8 +142,8 @@ check "delivery-time: NO gawk-only builtins in code (strtonum/gensub/asorti/…)
 check "delivery-time: decode_2047 handles RFC 2047 Q-encoded subject without gawk" \
     bash -c '
         eval "$(awk "/^decode_2047\\(\\) \\{/,/^\\}/" '"'$SRC/mail-sieve-subset-delivery-time.sh'"')"
-        out="$(decode_2047 "=?utf-8?q?[diegonmarcos/cloud]_Run_failed?=")"
-        [ "$out" = "[diegonmarcos/cloud] Run failed" ]
+        out="$(decode_2047 "=?utf-8?q?[diegonmarcos/cloud-infra]_Run_failed?=")"
+        [ "$out" = "[diegonmarcos/cloud-infra] Run failed" ]
     '
 
 # 12b. post-hoc dispatch case includes apply-rules (catches removed-branch

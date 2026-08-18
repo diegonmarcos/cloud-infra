@@ -51,19 +51,19 @@ Once instance starts (~5 min):
 
 ```bash
 # Edit your SSH config
-nano ~/git/vault/A0_keys/config_mobile
+nano ~/git/cloud-vault/A0_keys/config_mobile
 
 # Add this entry (update HostName and Port from Vast.ai):
 Host vast-ollama
     HostName ssh4.vast.ai          # Replace with your actual host
     Port 12345                      # Replace with your actual port
     User root
-    IdentityFile /data/data/com.termux.nix/files/home/git/vault/A0_keys/ssh/id_ed25519
+    IdentityFile /data/data/com.termux.nix/files/home/git/cloud-vault/A0_keys/ssh/id_ed25519
     IdentitiesOnly yes
     ServerAliveInterval 60
 ```
 
-See template: `~/git/cloud/b_infra/vm_vast-RTX-p_0/1.os/ssh-config-template`
+See template: `~/git/cloud-infra/b_infra/vm_vast-RTX-p_0/1.os/ssh-config-template`
 
 ### Step 5: Connect & Setup
 
@@ -72,7 +72,7 @@ See template: `~/git/cloud/b_infra/vm_vast-RTX-p_0/1.os/ssh-config-template`
 ssh vast-ollama
 
 # Run setup script (on remote instance)
-curl -fsSL https://raw.githubusercontent.com/diegonmarcos/cloud/main/b_infra/vm_vast-RTX-p_0/2.setup/vast-ollama-setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/diegonmarcos/cloud-infra/main/b_infra/vm_vast-RTX-p_0/2.setup/vast-ollama-setup.sh | bash
 
 # Or if you already cloned this repo on the instance:
 /path/to/cloud/b_infra/vm_vast-RTX-p_0/2.setup/vast-ollama-setup.sh
@@ -112,7 +112,7 @@ ollama run llama2:13b
 
 This VM is now tracked in your cloud infrastructure:
 
-**Config**: `~/git/cloud/config.json`
+**Config**: `~/git/cloud-infra/config.json`
 ```json
 {
   "vast-RTX-p_0": {

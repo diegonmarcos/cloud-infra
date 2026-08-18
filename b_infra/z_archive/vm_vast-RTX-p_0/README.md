@@ -30,7 +30,7 @@ Once your instance starts, get connection details from Vast.ai console:
 
 ```bash
 # Example: ssh -p 12345 root@ssh4.vast.ai
-# Update ~/git/vault/A0_keys/config_mobile with actual values
+# Update ~/git/cloud-vault/A0_keys/config_mobile with actual values
 ```
 
 ### 3. Connect & Verify
@@ -93,8 +93,8 @@ curl http://$VAST_IP:11434/api/generate -d '{
 ## Integration with Your Cloud
 
 This instance is tracked in:
-- **Config**: `~/git/cloud/config.json`
-- **SSH**: `~/git/vault/A0_keys/config_mobile` (alias: `vast-ollama`)
+- **Config**: `~/git/cloud-infra/config.json`
+- **SSH**: `~/git/cloud-vault/A0_keys/config_mobile` (alias: `vast-ollama`)
 - **MCP**: Accessible via `cloud-infra` MCP server
 
 ## Recommended Models for 16GB VRAM

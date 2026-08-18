@@ -16,7 +16,7 @@
 # ║ Phase 36 tester — engine scripts derive workspace paths          ║
 # ║                                                                  ║
 # ║ Audit P1 #4 (2026-05-05): cloud-ship-nix-homemanager-engine.sh   ║
-# ║ hardcoded `/root/git/cloud/...` and `/root/git/cloud-data/...`,  ║
+# ║ hardcoded `/root/git/cloud-infra/...` and `/root/git/cloud-data/...`,  ║
 # ║ which breaks if the mount path differs (e.g. /workspace, local    ║
 # ║ dev runs). Engine scripts MUST derive paths from $WORKSPACE or    ║
 # ║ a default, not literal /root/git/.                               ║
@@ -28,7 +28,7 @@
 # ║   - Inline doc strings (e.g. "// :ro at /root/.docker/...")       ║
 # ║                                                                  ║
 # ║ Forbidden:                                                       ║
-# ║   - Bare `/root/git/cloud/...` or `/root/git/cloud-data/...`     ║
+# ║   - Bare `/root/git/cloud-infra/...` or `/root/git/cloud-data/...`     ║
 # ║                                                                  ║
 # ║ Usage: bash 9_others/test/test_engine_workspace_paths_derived.sh
 # ╚══════════════════════════════════════════════════════════════════╝

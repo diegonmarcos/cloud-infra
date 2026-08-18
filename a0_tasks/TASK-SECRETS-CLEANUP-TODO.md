@@ -81,7 +81,7 @@ Two issues were interleaved:
 
 ```bash
 cd /tmp && rm -rf _verify.git
-git clone --bare --quiet git@github.com:diegonmarcos/cloud.git _verify.git
+git clone --bare --quiet git@github.com:diegonmarcos/cloud-infra.git _verify.git
 while IFS= read -r n; do
   [ -z "$n" ] && continue
   printf "%-55s %s hits\n" "$n" "$(git -C _verify.git log --all -S"$n" --oneline | wc -l)"

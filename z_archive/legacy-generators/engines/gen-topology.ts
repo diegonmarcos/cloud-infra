@@ -425,7 +425,7 @@ function detectSSHKey(): string {
   const candidates = [
     join(home, ".ssh", "id_rsa"),
     join(home, "git", "vault", "A0_keys", "ssh", "id_rsa"),
-    "/home/diego/git/vault/A0_keys/ssh/id_rsa",
+    "/home/diego/git/cloud-vault/A0_keys/ssh/id_rsa",
   ];
   return candidates.find((p) => existsSync(p)) || candidates[0];
 }

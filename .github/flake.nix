@@ -27,7 +27,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     # Live config.json from GitHub — always fresh, never stale
     config-json = {
-      url = "https://raw.githubusercontent.com/diegonmarcos/cloud/main/config.json";
+      url = "https://raw.githubusercontent.com/diegonmarcos/cloud-infra/main/config.json";
       flake = false;
     };
   };
