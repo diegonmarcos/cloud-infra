@@ -29,7 +29,7 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
     "container_name": "stalwart",
-    "image": "stalwartlabs/stalwart:v0.14.1",
+    "image": "stalwartlabs/stalwart:v0.16.5",
     "port": 2443,
     "_doc_dual_bind": "Phase 4 of public-surface collapse: each port dual-binds on wg0 (10.0.0.3) AND wg-public (10.1.0.3). Caddy on oci-analytics reaches mail ports via wg-public mesh; legacy clients on wg0 keep working unchanged. compose.nix expands `bind` arrays into one host-port mapping per IP.",
     "_doc_container_port": "v0.16 binds protocols on STANDARD ports inside the container (SMTP:25, IMAPS:993, SMTPS:465, HTTPS:443, Sieve:4190) — listeners are not configurable in v0.16 schema. We map host_offset → container_standard so external clients keep using offset ports (maddy owns the standard ones on the host network until decommissioned).",
@@ -264,7 +264,7 @@
         "base_path": "/pub",
         "endpoint_count": 5,
         "display_name": "C3 Public API",
-        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
+        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy over WG (Maddy dual-writes to Stalwart). /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
         "auth": "mixed"
       }
     },
@@ -1083,7 +1083,7 @@
       "ports": {},
       "vm": "oci-mail",
       "domain": "mail-puller.diegonmarcos.com",
-      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and delivers into Maddy via SMTP submission (:465 implicit TLS; Maddy dual-writes to Stalwart). Declarative source list in src/sources.json; OAuth2 creds via sops.",
       "api": {
         "has_api": false,
         "has_web_ui": true,
@@ -1682,7 +1682,7 @@
     }
   },
   "recovery_mode": false,
-  "upstream_image": "stalwartlabs/stalwart:v0.14.1",
+  "upstream_image": "stalwartlabs/stalwart:v0.16.5",
   "timezone": "Europe/Madrid",
   "mta_routes": [
     {

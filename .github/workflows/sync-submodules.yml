@@ -36,11 +36,11 @@ jobs:
       # Only the pins this job actually bumps need to be checked out.
       - uses: ./.github/actions/init-submodules
         with:
-          include: cloud-data unix
+          include: cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - name: Update submodules
-        run: git submodule update --remote -- I_cloud-data II_Unix
+        run: git submodule update --remote -- cloud
 
       - name: Run
         shell: bash {0}
@@ -59,7 +59,7 @@ jobs:
           # has bumped, exit=0 when nothing changed.
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
-          git add 1_cicd/dist I_cloud-data II_Unix
+          git add 1_cicd/dist cloud
           if ! git diff --cached --ignore-submodules=none --quiet; then
             git commit -m "auto: update submodules [skip ci]"
             git push

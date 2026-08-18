@@ -288,6 +288,29 @@ resource "cloudflare_record" "caa_records" {
 }
 
 # =============================================================================
+# DNS Records — SRV (RFC 6186 / RFC 8620 mail autodiscovery)
+# =============================================================================
+
+resource "cloudflare_record" "srv_records" {
+  for_each = { for r in local.dns.srv_records : r.key => r }
+
+  zone_id = var.cloudflare_zone_id
+  name    = each.value.name
+  type    = "SRV"
+  data {
+    service  = each.value.service
+    proto    = each.value.proto
+    name     = each.value.domain
+    priority = each.value.priority
+    weight   = each.value.weight
+    port     = each.value.port
+    target   = each.value.target
+  }
+  ttl     = each.value.ttl
+  comment = each.value.comment
+}
+
+# =============================================================================
 # Cloudflare Tunnel
 # =============================================================================
 

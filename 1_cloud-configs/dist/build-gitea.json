@@ -197,7 +197,7 @@
         "base_path": "/pub",
         "endpoint_count": 5,
         "display_name": "C3 Public API",
-        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy + Stalwart over WG. /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
+        "description": "Single public-edge API on oci-analytics. /mail/http-to-smtp (Bearer) bridges CF Worker -> Maddy over WG (Maddy dual-writes to Stalwart). /analytics/{matomo|umami|openobserve}/* (public) passes through to first-party analytics backends.",
         "auth": "mixed"
       }
     },
@@ -1016,7 +1016,7 @@
       "ports": {},
       "vm": "oci-mail",
       "domain": "mail-puller.diegonmarcos.com",
-      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and dual-delivers into Maddy + Stalwart via SMTP submission. Declarative source list in src/sources.json; OAuth2 creds via sops.",
+      "description": "Rust sidecar — IMAP-IDLE pulls from external providers (Gmail, Outlook/Live, …) and delivers into Maddy via SMTP submission (:465 implicit TLS; Maddy dual-writes to Stalwart). Declarative source list in src/sources.json; OAuth2 creds via sops.",
       "api": {
         "has_api": false,
         "has_web_ui": true,
@@ -1628,17 +1628,37 @@
     },
     "mirror_interval": "1h",
     "mirrors": {
-      "cloud": {
-        "upstream": "https://github.com/diegonmarcos/cloud-infra.git"
+      "cloud-unix": {
+        "upstream": "https://github.com/diegonmarcos/cloud-unix.git"
       },
       "diegonmarcos.github.io": {
         "upstream": "https://github.com/diegonmarcos/diegonmarcos.github.io.git"
       },
+      "cloud-data": {
+        "upstream": "https://github.com/diegonmarcos/cloud-data.git",
+        "private": true
+      },
+      "cloud-infra": {
+        "upstream": "https://github.com/diegonmarcos/cloud-infra.git"
+      },
+      "cloud-mykonsole-dtk": {
+        "upstream": "https://github.com/diegonmarcos/cloud-mykonsole-dtk.git"
+      },
       "cloud-android": {
         "upstream": "https://github.com/diegonmarcos/cloud-android.git"
       },
-      "cloud-master": {
-        "upstream": "https://github.com/diegonmarcos/cloud-infra.git"
+      "cloud-vault": {
+        "upstream": "https://github.com/diegonmarcos/cloud-vault.git",
+        "private": true
+      },
+      "front-assets-cdn": {
+        "upstream": "https://github.com/diegonmarcos/front-assets-cdn.git"
+      },
+      "diegonmarcos": {
+        "upstream": "https://github.com/diegonmarcos/diegonmarcos.git"
+      },
+      "git-repos-master": {
+        "upstream": "https://github.com/diegonmarcos/git-repos-master.git"
       },
       "front-galaxy-gaia": {
         "upstream": "https://github.com/diegonmarcos/front-galaxy-gaia.git",
@@ -1648,34 +1668,17 @@
         "upstream": "https://github.com/diegonmarcos/front-unity.git",
         "private": true
       },
-      "front-assets-cdn": {
-        "upstream": "https://github.com/diegonmarcos/front-assets-cdn.git"
-      },
       "front-data": {
         "upstream": "https://github.com/diegonmarcos/front-data.git"
+      },
+      "cloud": {
+        "upstream": "https://github.com/diegonmarcos/cloud.git"
       },
       "cloud-data-lfs": {
         "upstream": "https://github.com/diegonmarcos/cloud-data-lfs.git",
         "private": true
       },
-      "cloud-data": {
-        "upstream": "https://github.com/diegonmarcos/cloud-data.git",
-        "private": true
-      },
-      "vault": {
-        "upstream": "https://github.com/diegonmarcos/cloud-vault.git",
-        "private": true
-      },
-      "tools": {
-        "upstream": "https://github.com/diegonmarcos/cloud-mykonsole-dtk.git"
-      },
-      "unix": {
-        "upstream": "https://github.com/diegonmarcos/cloud-unix.git"
-      },
-      "diegonmarcos": {
-        "upstream": "https://github.com/diegonmarcos/diegonmarcos.git"
-      },
-      "notes": {
+      "cloud-notes": {
         "upstream": "https://github.com/diegonmarcos/cloud-notes.git",
         "private": true
       },

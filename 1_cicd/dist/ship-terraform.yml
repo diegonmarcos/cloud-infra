@@ -65,7 +65,7 @@ jobs:
       # cloud-master's own .gitmodules is SSH-only). Init just what is used.
       - uses: ./.github/actions/init-submodules
         with:
-          include: cloud-data unix
+          include: cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - name: Path relevance gate
@@ -79,10 +79,6 @@ jobs:
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
-
-      - name: Update submodules
-        if: ${{ steps.paths.outputs.skip != 'true' }}
-        run: git submodule update --remote -- I_cloud-data II_Unix
 
       # NO local dist/ regen — gen-configs already ran first and committed
       # the canonical dist/ to origin/main, which actions/checkout pulled.
