@@ -165,7 +165,7 @@ Look in: Cloudflare Worker source (`ba-clo_cloudflare-worker/src/`), maddy routi
 7. Edit smtp-proxy template equivalently.
 8. Edit `aa-sui_tools-{maddy,stalwart,smtp-proxy}/src/flake.nix` — extend the substitution map to export `BIND_<port>` for each `extra_ports[].bind` entry (fallback `0.0.0.0`).
 9. Edit `cloud/config.json` — delete mail ports per A.6. **Do not touch `cloud-data-config-derive.ts`.**
-10. Regenerate derived JSONs: `cd /home/diego/git/cloud/9_others && ./build.sh`.
+10. Regenerate derived JSONs: `cd /home/diego/git/cloud-infra/9_others && ./build.sh`.
 11. Commit + push. GHA deploys in order:
     - `ship-gen-configs.yml` — regenerates cloud-data outputs.
     - `ship-oci-mail.yml` — rebuilds maddy + stalwart + smtp-proxy with new bind addresses.
@@ -392,7 +392,7 @@ Phase B is a two-commit rollout (add wg-mail, flip bind). Rollback = revert the 
 
 ## Notes for the implementer
 
-- **Absolute paths everywhere**. `git -C /home/diego/git/cloud ...` — never `cd`.
+- **Absolute paths everywhere**. `git -C /home/diego/git/cloud-infra ...` — never `cd`.
 - **MCP tools for VM checks**: `obs_debug_ssh_exec`, `devops_ssh_check`, `obs_debug_docker_exec`. Never raw ssh + shell one-liners.
 - **Secrets**: Phase B adds new key material. Use the sops pipeline — see `feedback_never-hardcode-secrets.md`.
 - **No "easy fixes"**: if a Nix substitution looks cumbersome, fix the flake's templating engine; do not hand-edit rendered outputs.

@@ -191,10 +191,10 @@ ssh oci-apps
 
 ```bash
 # Get token (interactive, opens browser for 2FA)
-python ~/git/vault/A0_keys/providers/authelia/oauth/get_token.py
+python ~/git/cloud-vault/A0_keys/providers/authelia/oauth/get_token.py
 
 # Use token
-TOKEN=$(jq -r .access_token ~/git/vault/A0_keys/providers/authelia/oauth/authelia_tokens.json)
+TOKEN=$(jq -r .access_token ~/git/cloud-vault/A0_keys/providers/authelia/oauth/authelia_tokens.json)
 curl -H "Authorization: Bearer $TOKEN" https://photos.diegonmarcos.com/api/v1/status
 ```
 

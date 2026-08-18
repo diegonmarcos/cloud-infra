@@ -1,7 +1,7 @@
 name: "Fetch Vault Secrets"
 description: |
   Clones diegonmarcos/vault via VAULT_DEPLOY_KEY (read-only SSH deploy key)
-  and runs vault/build.sh env to generate ~/git/vault/vault-keys-bash.env. All
+  and runs vault/build.sh env to generate ~/git/cloud-vault/vault-keys-bash.env. All
   infrastructure secrets (SSH keys, SOPS age, WG privatekey, GHCR token)
   land in that one file, which cloud-builder's compose.yaml mounts via
   env_file. After this action, the only GHA-provided secret needed for
@@ -37,23 +37,23 @@ runs:
         GIT_SSH_COMMAND="ssh -i ~/.ssh/vault_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
           git clone --depth 1 --branch "${{ inputs.vault_ref }}" \
             git@github.com:diegonmarcos/vault.git \
-            "$HOME/git/vault"
-        echo "Vault cloned at $HOME/git/vault @ $(git -C "$HOME/git/vault" rev-parse --short HEAD)"
+            "$HOME/git/cloud-vault"
+        echo "Vault cloned at $HOME/git/cloud-vault @ $(git -C "$HOME/git/cloud-vault" rev-parse --short HEAD)"
 
     - name: Generate vault-keys-bash.env
       id: generate
       shell: bash
       run: |
         set -eu
-        cd "$HOME/git/vault"
+        cd "$HOME/git/cloud-vault"
         # build.sh env = generate_env — reads every provider + env_from_files
         # and writes 6 dialect files: bash.env, fish.fish, systemd.envfile,
         # docker.envfile, systemd.yaml, pub.json. Failing to generate any of
         # them is a hard error (downstream cloud-builder mounts docker.envfile
         # via compose env_file: — silent miss = the original CI breakage).
         bash ./build.sh env
-        ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
-        DOCKER_ENV="$HOME/git/vault/vault-keys-docker.envfile"
+        ENV_FILE="$HOME/git/cloud-vault/vault-keys-bash.env"
+        DOCKER_ENV="$HOME/git/cloud-vault/vault-keys-docker.envfile"
         [ -f "$ENV_FILE" ]   || { echo "::error::vault-keys-bash.env not generated";   exit 1; }
         [ -f "$DOCKER_ENV" ] || { echo "::error::vault-keys-docker.envfile not generated (cloud-builder compose.yaml mounts this — Ship/gen-configs will abort downstream)"; exit 1; }
         KEYS=$(grep -cvE '^(#|$)' "$ENV_FILE" || true)
@@ -66,8 +66,8 @@ runs:
       shell: bash
       run: |
         set -eu
-        ENV_FILE="$HOME/git/vault/vault-keys-bash.env"
-        DOCKER_ENV="$HOME/git/vault/vault-keys-docker.envfile"
+        ENV_FILE="$HOME/git/cloud-vault/vault-keys-bash.env"
+        DOCKER_ENV="$HOME/git/cloud-vault/vault-keys-docker.envfile"
         MISSING=""
         # Multi-line secrets (age key, PEM SSH keys) are emitted by generate_env
         # as <KEY>_FILE=<path>, NOT inline <KEY>=<value> — this is the intended
@@ -109,7 +109,7 @@ runs:
         # or SOPS_AGE_KEY_FILE=<path> (new multi-line contract from generate_env).
         # Prefer inline; fall back to copying the file the path points at.
         # shellcheck disable=SC1091
-        set -a; . "$HOME/git/vault/vault-keys-bash.env"; set +a
+        set -a; . "$HOME/git/cloud-vault/vault-keys-bash.env"; set +a
         if [ -n "${SOPS_AGE_KEY:-}" ]; then
           printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
         elif [ -n "${SOPS_AGE_KEY_FILE:-}" ] && [ -f "${SOPS_AGE_KEY_FILE}" ]; then

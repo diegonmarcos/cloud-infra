@@ -431,7 +431,7 @@ INJECT_HEADER="$STEPS_DIR/../../../9_others/src/inject-header.sh"
 ENGINE_NAME="1_cicd/src/scripts/cloud-ship-container-engine.sh"
 export INJECT_HEADER ENGINE_NAME
 # Source step files — tolerate any missing step (graceful degradation).
-# A step file may be absent inside cloud-builder when its /root/git/cloud
+# A step file may be absent inside cloud-builder when its /root/git/cloud-infra
 # clone is older than the engine's expected fileset (e.g. cloud-builder
 # image baked before a new step script landed in the cloud repo, and the
 # entrypoint's sync silently failed). Without `-f` guards, a missing file

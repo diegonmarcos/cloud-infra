@@ -163,7 +163,7 @@ Sources & mappings:
 ```jsonc
 {
   "sources": [
-    { "kind": "repo_ts",     "root": "/home/diego/git/cloud",  "extractors": ["tree-sitter-ts", "tree-sitter-nix"] },
+    { "kind": "repo_ts",     "root": "/home/diego/git/cloud-infra",  "extractors": ["tree-sitter-ts", "tree-sitter-nix"] },
     { "kind": "build_json",  "glob":  "a_solutions/*/build.json" },
     { "kind": "reports_json","glob":  "cloud-data/cloud-data-*.json" },
     { "kind": "terraform",   "root":  "b_infra/terraform" }
@@ -298,7 +298,7 @@ Each phase gets its own PR; the tester in that phase is the merge gate.
 
 ## 10. Implementer notes
 
-- Absolute paths. `git -C /home/diego/git/cloud ...`.
+- Absolute paths. `git -C /home/diego/git/cloud-infra ...`.
 - MCP-first for every VM check (`obs_debug_docker_exec`, `devops_workflows_dagu_trigger`). No raw ssh one-liners.
 - Secrets: none expected in this pipeline; if one appears in a log, the ingest whitelist must drop the property — never commit a redaction list that implies the secret existed.
 - Never edit `dist/` / deployed outputs — always source + `build.sh`.

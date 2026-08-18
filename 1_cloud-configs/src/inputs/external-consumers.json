@@ -3,14 +3,14 @@
   "_meta": {
     "description": "External-consumers registry. Each entry produces one 1_cloud-configs/dist/build-{name}.json containing the declared slices of _cloud-data-consolidated.json. Mirror of the per-container `deriveContainerConfigs` pattern, extended to non-container services in unix/ + cloud-data/ + similar repos.",
     "format_version": 1,
-    "consumer_repo_pattern": "External consumer repos pick up their build file via a sync step in their build.sh. Recommended pattern: cp ~/git/cloud/1_cloud-configs/dist/build-{name}.json <consumer_repo>/build-{name}.json (or symlink at clone time).",
+    "consumer_repo_pattern": "External consumer repos pick up their build file via a sync step in their build.sh. Recommended pattern: cp ~/git/cloud-infra/1_cloud-configs/dist/build-{name}.json <consumer_repo>/build-{name}.json (or symlink at clone time).",
     "rebuild_command": "bash 9_others/build.sh all"
   },
   "consumers": [
     {
       "name": "flakes_desktop",
-      "description": "Home-manager desktop flake (~/git/unix/ba_flakes_desktop). Activates on dev laptops, Surface, and any non-VM workstation.",
-      "consumer_path": "~/git/unix/ba_flakes_desktop",
+      "description": "Home-manager desktop flake (~/git/cloud-unix/ba_flakes_desktop). Activates on dev laptops, Surface, and any non-VM workstation.",
+      "consumer_path": "~/git/cloud-unix/ba_flakes_desktop",
       "replaces": [
         "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
         "cloud-data-wireguard-peers.json (WG mesh peers + DNS routing)",
@@ -28,8 +28,8 @@
     },
     {
       "name": "flakes_termux",
-      "description": "Home-manager Termux flake (~/git/unix/bb_flakes_termux). Activates on Android via nix-on-droid; subset of desktop (no WG, no docker).",
-      "consumer_path": "~/git/unix/bb_flakes_termux",
+      "description": "Home-manager Termux flake (~/git/cloud-unix/bb_flakes_termux). Activates on Android via nix-on-droid; subset of desktop (no WG, no docker).",
+      "consumer_path": "~/git/cloud-unix/bb_flakes_termux",
       "replaces": [
         "cloud-data-deps.json (npm dependencies merged into ~/.node_modules)",
         "cloud-data-topology.json (CLAUDE.md generation)"
@@ -45,8 +45,8 @@
     },
     {
       "name": "builders",
-      "description": "Container-builder images (~/git/unix/cb_containers-builders). Builds the cloud-builder-x docker image used by GHA + local ship runs.",
-      "consumer_path": "~/git/unix/cb_containers-builders",
+      "description": "Container-builder images (~/git/cloud-unix/cb_containers-builders). Builds the cloud-builder-x docker image used by GHA + local ship runs.",
+      "consumer_path": "~/git/cloud-unix/cb_containers-builders",
       "replaces": [
         "cloud-data-gha-config.json (vm wg_ip/host/user lookup + service matrix for ship-services.sh)"
       ],

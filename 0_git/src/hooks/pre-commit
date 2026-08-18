@@ -47,8 +47,8 @@ if [ -n "$SUBMODULE_PATHS" ]; then
     echo >&2
     echo "Submodules are read-only here. Edit the source repo instead:" >&2
     echo "  cloud/I_cloud-data → ~/git/cloud-data" >&2
-    echo "  cloud/II_Unix     → ~/git/unix" >&2
-    echo "  cloud/II_tools     → ~/git/tools" >&2
+    echo "  cloud/II_Unix     → ~/git/cloud-unix" >&2
+    echo "  cloud/II_tools     → ~/git/cloud-mykonsole-dtk" >&2
     echo "Commit + push there, then 'git submodule update --remote' here." >&2
     exit 1
   fi
@@ -382,7 +382,7 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
     # ships is indistinguishable from no change at all.
     #
     # Only runs when a derive input is staged, so ordinary commits are unaffected.
-    # The deriver reads the vault at ~/git/vault; on a machine without it the
+    # The deriver reads the vault at ~/git/cloud-vault; on a machine without it the
     # keys carry forward from the previous output rather than being nulled.
     if echo "$STAGED" | grep -qE '^1_cloud-configs/src/'; then
       CONFIGS_SH="$REPO_ROOT/1_cloud-configs/build.sh"

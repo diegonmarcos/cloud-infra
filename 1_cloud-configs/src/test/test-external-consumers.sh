@@ -166,8 +166,8 @@ echo "── 5. each consumer's actual read path resolves to a real file ──"
 # and that the file at that path has the .deps.node.merged.dependencies
 # shape the activation script expects.
 for who in desktop termux; do
-    NIX_FILE="$HOME/git/unix/ba_flakes_${who}/src/modules/node-npm-deps-cloud.nix"
-    [ "$who" = "termux" ] && NIX_FILE="$HOME/git/unix/bb_flakes_${who}/src/modules/node-npm-deps-cloud.nix"
+    NIX_FILE="$HOME/git/cloud-unix/ba_flakes_${who}/src/modules/node-npm-deps-cloud.nix"
+    [ "$who" = "termux" ] && NIX_FILE="$HOME/git/cloud-unix/bb_flakes_${who}/src/modules/node-npm-deps-cloud.nix"
     if [ ! -f "$NIX_FILE" ]; then
         fail "$NIX_FILE missing"
         continue
@@ -189,8 +189,8 @@ done
 # 5b. gen-claude-md.sh — must reference build-flakes_{desktop,termux}.json
 # and the file must have .vms + .services with at least one entry.
 for who in desktop termux; do
-    GEN="$HOME/git/unix/ba_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
-    [ "$who" = "termux" ] && GEN="$HOME/git/unix/bb_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
+    GEN="$HOME/git/cloud-unix/ba_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
+    [ "$who" = "termux" ] && GEN="$HOME/git/cloud-unix/bb_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
     if [ ! -f "$GEN" ]; then
         fail "$GEN missing"
         continue
@@ -211,7 +211,7 @@ for who in desktop termux; do
 done
 
 # 5c. cb_containers-builders/ship-services.sh must reference build-builders.json
-SHIP="$HOME/git/unix/cb_containers-builders/src/docker/ship-services.sh"
+SHIP="$HOME/git/cloud-unix/cb_containers-builders/src/docker/ship-services.sh"
 if [ -f "$SHIP" ] && grep -q "build-builders.json" "$SHIP"; then
     pass "ship-services.sh references build-builders.json"
 else

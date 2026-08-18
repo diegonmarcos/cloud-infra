@@ -150,7 +150,7 @@ Must return `220` banner after Request 2 is approved.
 
 ```bash
 # 1. Build + deploy Mailu (only service that changes)
-cd ~/git/cloud/a_solutions/aa-sui_tools-mailu && build.sh ship
+cd ~/git/cloud-infra/a_solutions/aa-sui_tools-mailu && build.sh ship
 
 # 2. Set rDNS via OCI CLI (if not already set)
 

@@ -198,7 +198,7 @@ function main() {
   }
 
   // Carry forward the keys already in the last derived output when the vault is
-  // absent. The vault lives in a SEPARATE repo (~/git/vault) that GHA runners
+  // absent. The vault lives in a SEPARATE repo (~/git/cloud-vault) that GHA runners
   // never check out, so every CI derive re-emitted `wg_public_key: null` and
   // committed those nulls over good values. Downstream that is fatal, not
   // cosmetic: vm-pilot's wireguard.nix throws `VM "<x>" has null wg_public_key`
@@ -877,7 +877,7 @@ function main() {
     },
     owner: config.owner ?? {},
     home_manager: config.home_manager ?? { state_version: "24.11" },
-    ssh_key: config.ssh_key ?? "/home/diego/git/vault/A0_keys/ssh/id_rsa",
+    ssh_key: config.ssh_key ?? "/home/diego/git/cloud-vault/A0_keys/ssh/id_rsa",
     remote_base: config.remote_base ?? "/opt/containers",
     engine_folder: config.engine_folder ?? "bc-obs_c3-infra-mcp",
     vms,

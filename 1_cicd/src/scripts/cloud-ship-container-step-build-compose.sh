@@ -35,7 +35,7 @@ step_compose_build() {
     # GHCR login — vault PAT first (owner-scoped, has write:packages and works
     # even when GHA $GITHUB_TOKEN is denied by package access lists / fork
     # context); then GHA env; then `gh` CLI (interactive devs).
-    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/vault/A0_keys/providers/github/api-key_opaque/token}"
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
     GHCR_USER="${GHCR_USER:-diegonmarcos}"
     # Logins are guarded with `|| true` (mirrors step_docker): inside the
     # cloud-builder ~/.docker/config.json is a RO bind mount, so docker login

@@ -41,7 +41,7 @@ vastai ssh-url <instance-id>
 # → ssh://root@ssh4.vast.ai:12345
 
 # Update vault SSH config
-# ~/git/vault/A0_keys/config_mobile  (Host vast-ollama)
+# ~/git/cloud-vault/A0_keys/config_mobile  (Host vast-ollama)
 ```
 
 ## Billing
@@ -60,4 +60,4 @@ vastai destroy instance <id>  # full stop, no more charges
 
 - Not on WireGuard mesh — Ollama API is public (use firewall or SSH tunnel)
 - No static IP — update SSH config and any API consumers after each rental
-- Credentials: `~/git/vault/A0_keys/providers/vast-ai/`
+- Credentials: `~/git/cloud-vault/A0_keys/providers/vast-ai/`

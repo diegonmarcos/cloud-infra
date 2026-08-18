@@ -207,7 +207,7 @@ ensure_ssh_host_alias() {
     local _ws="${WORKSPACE:-/root/git}"
     for cand in "$_ws/cloud/1_cloud-configs/dist/_cloud-data-consolidated.json" \
                 "$_ws/cloud-data/_cloud-data-consolidated.json" \
-                "${HOME}/git/cloud/1_cloud-configs/dist/_cloud-data-consolidated.json"; do
+                "${HOME}/git/cloud-infra/1_cloud-configs/dist/_cloud-data-consolidated.json"; do
         [ -f "$cand" ] && cons="$cand" && break
     done
     if [ -n "$cons" ] && command -v jq >/dev/null 2>&1; then
