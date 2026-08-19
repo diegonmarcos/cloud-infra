@@ -26,6 +26,11 @@
       "name": "mcp-json",
       "script": "src/derive/derive-mcp-json.ts",
       "doc": "Project-scoped MCP server registry -> dist/mcp.json, copied into every repo as .mcp.json. Replaces cloud's tracked symlink to /home/diego/.mcp.json, which dangled everywhere but one laptop."
+    },
+    {
+      "name": "dagu-repo-map",
+      "script": "src/derive/derive-dagu-repo-map.ts",
+      "doc": "Stamps ops_git-sync.yaml REPO_MAP from cloud-cgc-mcp build.json .runtime.octocode.repo_map. That DAG is the single writer of the octocode_repos volume; its hand-copied map went stale across the cloud-* rename (cloud:cloud cloned the symlink index repo, not cloud-infra; front-data was missing). Also fails the build if an index_repos entry has no repo_map entry, which would abort cloud-cgc-db-update.sh at :388."
     }
   ]
 }
