@@ -4,6 +4,9 @@
 //      - containers.<x>.port → requires sibling containers.<x>.protocol
 //      - containers.<x>.extra_ports[] → each element must be {port, protocol}
 //      - proxy.primary.l4_ports[] → requires `protocol` on each entry
+//   C) No two services claim the same routed URL (host + base_path, or SNI name).
+//      The deriver silently emits ONE route and drops the rest, so a collision is
+//      invisible at build time and only shows up as a service that never answers.
 //
 // READ-ONLY. Exits non-zero on any violation.
 //
@@ -25,14 +28,40 @@ interface Ref {
   file: string;
 }
 interface Violation {
-  kind: "DUPLICATE_CONTAINER_NAME" | "MISSING_PROTOCOL" | "INVALID_PROTOCOL" | "EXTRA_PORT_NOT_OBJECT";
+  kind: "DUPLICATE_CONTAINER_NAME" | "MISSING_PROTOCOL" | "INVALID_PROTOCOL" | "EXTRA_PORT_NOT_OBJECT" | "DUPLICATE_URL";
   service: string;
   file: string;
   detail: string;
 }
 
 const byName = new Map<string, Ref[]>();
+const byUrl = new Map<string, Ref[]>();
 const violations: Violation[] = [];
+
+// Every routed URL a build.json claims, normalised to `host[/base_path]`.
+// parent_domain wins over domain: several services omit the path suffix in
+// `domain`, so it disagrees with the route they actually get.
+function urlClaims(bj: any): string[] {
+  const out = new Set<string>();
+  for (const [key, val] of Object.entries(bj.proxy ?? {})) {
+    // well_known entries graft paths onto ANOTHER service's vhost on purpose
+    // (e.g. caddy grafting /.well-known/jmap onto stalwart's host) — co-declaration,
+    // not a competing claim.
+    if (key === "well_known") continue;
+    for (const entry of (Array.isArray(val) ? val : [val])) {
+    const e = entry as any;
+    if (!e || typeof e !== "object") continue;
+    for (const l4 of e.l4_ports ?? []) if (l4?.sni) out.add(String(l4.sni).trim());
+    const host = e.parent_domain ?? e.domain ?? e.domains ?? e.target_domain;
+    if (!host) continue;
+    const path = e.parent_domain ? (e.base_path ?? "") : "";
+    for (const h of (Array.isArray(host) ? host : String(host).split(",")))
+      out.add((h.trim() + path).replace(/\/+$/, ""));
+    }
+  }
+  out.delete("");
+  return [...out];
+}
 
 for (const d of readdirSync(SOLUTIONS_DIR).sort()) {
   const p = join(SOLUTIONS_DIR, d);
@@ -42,6 +71,14 @@ for (const d of readdirSync(SOLUTIONS_DIR).sort()) {
   try { bj = JSON.parse(readFileSync(bjPath, "utf-8")); } catch { continue; }
   const service = bj.name ?? d;
   const containers = bj.containers ?? {};
+
+  // C: duplicate routed URL — collected before the no-containers bail-out below,
+  // since a proxy-only build.json still claims a URL.
+  for (const url of urlClaims(bj)) {
+    const list = byUrl.get(url) ?? [];
+    list.push({ service, container_key: d, file: bjPath });
+    byUrl.set(url, list);
+  }
 
   if (Object.keys(containers).length === 0) {
     const list = byName.get(service) ?? [];
@@ -102,6 +139,21 @@ for (const d of readdirSync(SOLUTIONS_DIR).sort()) {
 }
 
 // Duplicate container_name check
+// Keyed on the service DIRECTORY, not bj.name: two dirs can carry the same
+// `name` (aa-sui_matrix-continuwuity and user-comm_matrix-continuwuity both say
+// "matrix-continuwuity"), and that is exactly the case worth catching.
+const urlDupes = [...byUrl.entries()].filter(
+  ([, refs]) => new Set(refs.map(r => r.container_key)).size > 1,
+);
+for (const [url, refs] of urlDupes) {
+  violations.push({
+    kind: "DUPLICATE_URL",
+    service: refs.map(r => r.container_key).join(" + "),
+    file: refs.map(r => r.file).join(", "),
+    detail: `url "${url}" claimed by ${refs.length} service dirs (${[...new Set(refs.map(r => r.container_key))].join(", ")}) — the deriver emits one route and silently drops the rest`,
+  });
+}
+
 const dupes = [...byName.entries()].filter(([, refs]) => refs.length > 1);
 for (const [name, refs] of dupes) {
   violations.push({
