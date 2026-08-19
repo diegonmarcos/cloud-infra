@@ -91,6 +91,7 @@ jobs:
             -e GITHUB_TOKEN \
             -e BEARER_TOKEN \
             -e REQUIRE_BEARER=false \
+            -e REPORTS_DIR=/root/git/cloud-data/y_old/reports \
             ghcr.io/diegonmarcos/cloud-data-reports:arm64 \
             "$REPORT_TARGET"
         env:
@@ -99,7 +100,7 @@ jobs:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
 
       - name: Fix dist permissions
-        run: chmod -R a+rX "$GITHUB_WORKSPACE/I_cloud-data/reports/dist/"
+        run: chmod -R a+rX "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/"
 
       - name: Publish to cloud-data
         env:
@@ -112,7 +113,7 @@ jobs:
           git clone --depth=1 \
             --config core.sshCommand="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" \
             git@github.com:diegonmarcos/cloud-data.git /tmp/cd
-          cp -r "$GITHUB_WORKSPACE/I_cloud-data/reports/dist/." /tmp/cd/reports/dist/
+          cp -r "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/." /tmp/cd/reports/dist/
           cd /tmp/cd
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
