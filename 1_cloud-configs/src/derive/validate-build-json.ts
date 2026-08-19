@@ -138,10 +138,10 @@ for (const d of readdirSync(SOLUTIONS_DIR).sort()) {
   }
 }
 
-// Duplicate container_name check
+// Duplicate routed URL check.
 // Keyed on the service DIRECTORY, not bj.name: two dirs can carry the same
-// `name` (aa-sui_matrix-continuwuity and user-comm_matrix-continuwuity both say
-// "matrix-continuwuity"), and that is exactly the case worth catching.
+// `name` (a rename that left the old dir behind does exactly this), and that
+// stale-twin case is the one worth catching.
 const urlDupes = [...byUrl.entries()].filter(
   ([, refs]) => new Set(refs.map(r => r.container_key)).size > 1,
 );
@@ -154,6 +154,7 @@ for (const [url, refs] of urlDupes) {
   });
 }
 
+// Duplicate container_name check.
 const dupes = [...byName.entries()].filter(([, refs]) => refs.length > 1);
 for (const [name, refs] of dupes) {
   violations.push({
