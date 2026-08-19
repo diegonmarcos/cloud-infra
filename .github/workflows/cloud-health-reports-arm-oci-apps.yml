@@ -95,7 +95,7 @@ jobs:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
 
       - name: Fix dist permissions
-        run: chmod -R a+rX "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/"
+        run: sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/"
 
       - name: Publish to cloud-data
         env:
