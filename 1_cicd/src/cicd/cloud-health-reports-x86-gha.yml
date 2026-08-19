@@ -100,11 +100,11 @@ jobs:
           git clone --depth=1 \
             --config core.sshCommand="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" \
             git@github.com:diegonmarcos/cloud-data.git /tmp/cd
-          cp -r "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/." /tmp/cd/reports/dist/
+          cp -r "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/." /tmp/cd/y_old/reports/dist/
           cd /tmp/cd
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
-          git add reports/dist/
+          git add y_old/reports/dist/
           git diff --cached --quiet && echo "No changes to commit" || \
             git commit -m "chore: update health reports $(date -u +%Y-%m-%dT%H:%M:%SZ)" && \
             git push
