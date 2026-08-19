@@ -34,22 +34,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
-      # Runner work dir inside container is /tmp/runner/work; on host it is this path.
-      HOST_RUNNER_WORKDIR: /opt/containers/gha-runner/work-oci-apps-arm64
     steps:
       - uses: actions/checkout@v4
-
-      - name: Fetch cloud-data via SSH
-        env:
-          CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
-        run: |
-          git config --global --add safe.directory '*'
-          mkdir -p ~/.ssh
-          echo "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no"
-          git clone --depth=1 git@github.com:diegonmarcos/cloud-data.git I_cloud-data
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -80,18 +66,26 @@ jobs:
 
       - name: Run reports
         run: |
-          # Translate container-side workspace path to host-side path for docker volume mounts.
-          HOST_WS="${HOST_RUNNER_WORKDIR}${GITHUB_WORKSPACE#/tmp/runner/work}"
+          # NOTE: this runner (ubuntu-24.04-arm) is a genuine GitHub-hosted
+          # runner, NOT a self-hosted docker-in-docker box — $GITHUB_WORKSPACE
+          # is a real path on the same host the docker daemon runs on, exactly
+          # like the x86/plain variants. The HOST_RUNNER_WORKDIR/HOST_WS
+          # translation this step used to do was leftover from an earlier
+          # self-hosted "oci-apps" runner setup and had gone stale (it no
+          # longer matched this runner's real work-dir layout at all), which
+          # is WHY both mounts silently resolved to empty directories and the
+          # whole job died with "No such file or directory" (2026-08-14 -
+          # 2026-08-19 outage). Mount $GITHUB_WORKSPACE directly — no
+          # translation needed.
           docker run --rm \
             --network host \
-            -v "${HOST_WS}:/root/git/cloud-infra" \
-            -v "${HOST_WS}/I_cloud-data:/root/git/cloud-data" \
-            -v "${HOST_WS}/.reports-ssh:/root/.ssh:ro" \
+            -v "$GITHUB_WORKSPACE:/root/git/cloud-infra" \
+            -v "$GITHUB_WORKSPACE/.reports-ssh:/root/.ssh:ro" \
             -e SOPS_AGE_KEY \
             -e GITHUB_TOKEN \
             -e BEARER_TOKEN \
             -e REQUIRE_BEARER=false \
-            -e REPORTS_DIR=/root/git/cloud-data/y_old/reports \
+            -e REPORTS_DIR=/root/git/cloud-infra/a_solutions/infra-obs_reports/src \
             -e CLOUD_DATA_DIR=/root/git/cloud-infra/1_cloud-configs/dist \
             ghcr.io/diegonmarcos/cloud-data-reports:arm64 \
             "$REPORT_TARGET"
@@ -101,7 +95,7 @@ jobs:
           BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
 
       - name: Fix dist permissions
-        run: chmod -R a+rX "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/"
+        run: chmod -R a+rX "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/"
 
       - name: Publish to cloud-data
         env:
@@ -114,7 +108,8 @@ jobs:
           git clone --depth=1 \
             --config core.sshCommand="ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=no" \
             git@github.com:diegonmarcos/cloud-data.git /tmp/cd
-          cp -r "$GITHUB_WORKSPACE/I_cloud-data/y_old/reports/dist/." /tmp/cd/y_old/reports/dist/
+          mkdir -p /tmp/cd/y_old/reports/dist
+          cp -r "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/." /tmp/cd/y_old/reports/dist/
           cd /tmp/cd
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
