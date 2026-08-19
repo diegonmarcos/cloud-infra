@@ -250,6 +250,11 @@ while IFS= read -r f; do
     # Allow-listed filename patterns (references/templates, not values)
     case "$f" in
         *.example|*.template|*.tpl|*.pub|*_PUB) continue ;;
+        # YARA detection rulesets (e.g. yara-rules/**/credential_leak.yar) are
+        # regex/pattern libraries used to SCAN FOR leaked secrets, not secret
+        # containers themselves — a filename like "credential_leak.yar" trips
+        # the "credential" match despite holding zero real values.
+        *.yar|*.yara) continue ;;
         */.secrets-hash*|*/.secrets-env-var-names*) continue ;;
         *secrets-env-var-names*.json|*cloud-data-secrets-env-var-names.json) continue ;;
         *secrets-subst.nix) continue ;;
