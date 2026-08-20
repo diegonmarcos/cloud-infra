@@ -168,10 +168,31 @@ ensure_ghcr_auth() {
 ensure_repos() {
   # /repos is root-owned on a fresh runner — create + own it (sudo) if needed.
   mkdir -p "$REPOS_ROOT" 2>/dev/null || { sudo mkdir -p "$REPOS_ROOT" && sudo chown "$(id -un):$(id -gn)" "$REPOS_ROOT"; }
+  # `jq | while read` runs the loop body in a SUBSHELL, so an `exit` inside it kills only
+  # that subshell and the script sails on. Record failures in a marker file and act on it
+  # after the pipeline, where we are back in the function's own shell.
+  _clonefail="$REPOS_ROOT/.cgc-clone-failed"
+  rm -f "$_clonefail"
   jq -r '.runtime.octocode.repo_map | to_entries[] | "\(.key) \(.value)"' "$BJ" | while read -r lname remote; do
     [ -n "$lname" ] || continue
     d="$REPOS_ROOT/$lname"
-    if [ -n "$TOKEN" ]; then url="https://x-access-token:${TOKEN}@github.com/diegonmarcos/${remote}.git"
+    # PRIVATE repos need a deploy key. $TOKEN here is the job's GITHUB_TOKEN, which is scoped
+    # to THIS repo only — it can never clone a different private repo, so `clone cloud-data`
+    # failed on every run and the repo was simply absent from the DB. Per-repo deploy keys are
+    # the established pattern in this repo (CLOUD_DATA_DEPLOY_KEY). The lookup below is generic
+    # — env CGC_DEPLOY_KEY_<local_dir, with - and . folded to _>; only the secret wiring in
+    # cgc-db-index.yml is per-repo, because Actions resolves secrets by literal name only.
+    unset GIT_SSH_COMMAND
+    eval "_key=\${CGC_DEPLOY_KEY_$(printf '%s' "$lname" | tr -c '[:alnum:]' '_'):-}"
+    if [ -n "$_key" ]; then
+      mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+      _kf="$HOME/.ssh/cgc_${lname}"
+      printf '%s\n' "$_key" > "$_kf" && chmod 600 "$_kf"
+      # IdentitiesOnly: a deploy key grants ONE repo, so an agent offering several keys
+      # authenticates as whichever is accepted first and then 403s on the wrong repo.
+      export GIT_SSH_COMMAND="ssh -i $_kf -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
+      url="git@github.com:diegonmarcos/${remote}.git"
+    elif [ -n "$TOKEN" ]; then url="https://x-access-token:${TOKEN}@github.com/diegonmarcos/${remote}.git"
     else url="https://github.com/diegonmarcos/${remote}.git"; fi
     if [ -d "$d/.git" ]; then
       echo "[cgc-db] refresh $lname ← origin (full history for incremental detection)"
@@ -185,9 +206,18 @@ ensure_repos() {
       # diffs against it to find changed files. --depth 1 puts that stored commit outside
       # the shallow history → git can't resolve it → octocode re-indexes everything every
       # run. Full clone is small overhead; the embedding speedup is enormous (minutes vs hours).
-      git clone -q "$url" "$d" 2>/dev/null || echo "[cgc-db] WARN clone $lname failed"
+      # Fail FAST, not four hours later. A missing repo is already fatal at the publish gate
+      # ("refusing to publish an incomplete DB"), so warning here only buys a full pass of
+      # embedding work before the same failure — and it read as a harmless warning for days
+      # while cloud-data went unindexed. Same outcome, surfaced at minute one.
+      git clone -q "$url" "$d" 2>/dev/null || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
     fi
   done
+  if [ -f "$_clonefail" ]; then
+    rm -f "$_clonefail"
+    echo "::error::[cgc-db] one or more repos failed to clone — refusing to spend a full indexing pass on a set that cannot publish"
+    return 1
+  fi
 }
 
 # octocode (ignore crate) DEADLOCKS recursing nested submodules — each submodule
@@ -388,10 +418,19 @@ for r in $REPOS; do
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
 
   # TIME BUDGET: stop before the runner cap so we always reach a clean push+exit.
+  # RESERVE the repo's worst case (a full repo_timeout_min) BEFORE admitting it. Gating
+  # only on "budget not yet spent" admits a repo at minute 299 that is then allowed to run
+  # repo_timeout_min longer — so the true worst case is max_minutes + repo_timeout_min, not
+  # max_minutes. That overshoots GitHub's hard job ceiling, which kills the runner mid-repo:
+  # no final package/push, and the checkpoint for the in-flight repo is lost. Reserving up
+  # front is what actually makes the "never killed mid-repo" invariant above true.
+  # A repo_timeout_min of 0 (no per-repo timeout) reserves nothing and keeps the old gate.
   if [ -n "$BUDGET_MIN" ] && [ "$BUDGET_MIN" != "0" ]; then
     _elapsed=$(( ( $(date +%s) - START_TS ) / 60 ))
-    if [ "$_elapsed" -ge "$BUDGET_MIN" ]; then
-      echo "[cgc-db] time budget ${BUDGET_MIN}m reached (${_elapsed}m elapsed) — deferring $r (+rest) to next run"
+    _reserve="${REPO_TIMEOUT_MIN:-0}"
+    [ -n "$_reserve" ] || _reserve=0
+    if [ $(( _elapsed + _reserve )) -ge "$BUDGET_MIN" ]; then
+      echo "[cgc-db] time budget ${BUDGET_MIN}m would be exceeded (${_elapsed}m elapsed + ${_reserve}m worst case) — deferring $r (+rest) to next run"
       break
     fi
   fi
