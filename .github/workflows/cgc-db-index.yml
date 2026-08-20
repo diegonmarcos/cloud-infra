@@ -53,11 +53,25 @@ env:
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
   WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+  # PRIVATE index_repos: GITHUB_TOKEN above is scoped to cloud-infra alone and can never
+  # clone another private repo — cloud-data failed here on every run and was silently absent
+  # from the DB. ensure_repos() reads CGC_DEPLOY_KEY_<local_dir, non-alnum folded to _>, so
+  # the script stays generic; only this wiring is per-repo, because Actions resolves secrets
+  # by literal name and cannot index into them dynamically. Add one line per private repo in
+  # .runtime.octocode.index_repos — public repos need nothing.
+  CGC_DEPLOY_KEY_cloud_data: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
 jobs:
   index:
     name: "cgc-db · ${{ inputs.phase }} · index all repos + propagate"
     runs-on: ubuntu-latest
+    # DECLARED, not inherited. GitHub's default job ceiling is 360m; leaving it implicit is
+    # what let build.json drift to max_minutes=300 + repo_timeout_min=285 (worst case 585m)
+    # with nothing to reconcile it against — GitHub then killed the job mid-repo and the run
+    # published nothing. Keep this the single stated ceiling and keep build.json under it:
+    #   max_minutes + repo_timeout_min <= timeout-minutes
+    # The ~90m slack covers clone, packaging and the per-repo GHCR checkpoint pushes.
+    timeout-minutes: 330
     permissions:
       contents: read
       packages: write
