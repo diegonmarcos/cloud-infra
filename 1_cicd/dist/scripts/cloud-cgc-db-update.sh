@@ -502,7 +502,16 @@ for r in $REPOS; do
   # SMART: auto-append binary-dominated dirs (generic, no hardcoded paths).
   smart_noindex "$d"
 
-  echo "[cgc-db] === incremental index: $r (was=${last:-none} now=$cur) ==="
+  # Throughput + pressure, so the NEXT run diagnoses itself instead of needing a log
+  # archaeology pass. 2026-08-20 measured ~5.2s/file on a structural no-LLM index, which is
+  # ~100x too slow and is the real root cause behind every symptom above; the suspect is the
+  # 16G DB (du -sh, cloud-cgc-db-pull.sh) restored under MemoryMax=16G + MemorySwapMax=0 on
+  # a 16GB runner, i.e. page cache thrash on every vector lookup. Do NOT tune mem_max on a
+  # hunch — these two lines plus the files/min below say whether it is memory or disk.
+  _files=$(git -C "$d" ls-files 2>/dev/null | wc -l)
+  echo "[cgc-db] $r · pressure before index: mem=$(free -g 2>/dev/null | awk '/^Mem:/{print $3"/"$2"G used, "$6"G cache"}') disk=$(df -h "$OCTO_HOME" 2>/dev/null | awk 'NR==2{print $4" free"}')"
+  _t0=$(date +%s)
+  echo "[cgc-db] === incremental index: $r (was=${last:-none} now=$cur, ${_files} files) ==="
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
@@ -512,6 +521,10 @@ for r in $REPOS; do
   else
     ( cd "$d" && octocode index ) >"$_log" 2>&1 || _rc=$?
   fi
+  # s/file is exact on success and a lower bound on timeout (denominator is the full file
+  # count, but only part of it got indexed) — either way it is the number to watch.
+  _dt=$(( $(date +%s) - _t0 ))
+  echo "[cgc-db] $r · index took ${_dt}s for ${_files} files ($(awk -v d="$_dt" -v f="$_files" 'BEGIN{printf (f>0? "%.2f":"n/a"), d/(f>0?f:1)}')s/file, rc=$_rc)"
   if [ "$_rc" = "0" ]; then
     tail -4 "$_log"; rm -f "$_log"
   elif [ "$_rc" = "124" ]; then
