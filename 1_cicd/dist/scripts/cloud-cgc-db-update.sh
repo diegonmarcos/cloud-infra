@@ -223,7 +223,17 @@ ensure_repos() {
       # ("refusing to publish an incomplete DB"), so warning here only buys a full pass of
       # embedding work before the same failure — and it read as a harmless warning for days
       # while cloud-data went unindexed. Same outcome, surfaced at minute one.
-      git clone -q "$url" "$d" 2>/dev/null || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
+      # --filter=blob:none, NOT --depth: the comment above is right that shallow history
+      # breaks incremental detection, but that argument is about COMMITS. A blobless clone
+      # keeps the entire commit graph (so octocode's stored last-indexed commit still
+      # resolves) and omits only historical file contents, fetching blobs on demand for the
+      # checkout it actually walks. Runner disk is the binding constraint here — the DB
+      # alone restores to 16G on a ~14G runner — so not downloading every blob of every
+      # past commit for seven repos is free headroom. Falls back to a full clone if the
+      # remote refuses partial clone, so this can never be the thing that fails a run.
+      git clone -q --filter=blob:none "$url" "$d" 2>/dev/null \
+        || git clone -q "$url" "$d" 2>/dev/null \
+        || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
     fi
   done
   if [ -f "$_clonefail" ]; then
@@ -337,6 +347,25 @@ ensure_ghcr_auth
 ensure_octocode
 ensure_repos
 
+# SMALLEST-FIRST. index_repos is authoring order, not run order, and it happened to put
+# the two largest repos first — both blew their repo_timeout_min, consumed the whole
+# max_minutes budget, and the remaining five were deferred with "deferring front (+rest)".
+# Net effect on 2026-08-20: 180m spent, zero repos indexed, nothing published, while five
+# repos that finish in minutes never got a turn. Ordering by tracked-file count ascending
+# makes every run publish the cheap repos FIRST, so a giant that cannot finish can only
+# ever cost itself its own slot — never the whole cycle. Measured from the clone (git
+# ls-files), not declared in build.json, so it stays true as repos grow. Ties keep
+# authoring order; a repo whose count cannot be read sorts last rather than blocking.
+order_repos_by_size() {
+  for _r in $REPOS; do
+    _n=$(git -C "$REPOS_ROOT/$_r" ls-files 2>/dev/null | wc -l)
+    [ "$_n" -gt 0 ] 2>/dev/null || _n=99999999
+    printf '%s\t%s\n' "$_n" "$_r"
+  done | sort -n -s -k1,1 | cut -f2
+}
+REPOS=$(order_repos_by_size)
+echo "[cgc-db] index order (smallest first): $(printf '%s' "$REPOS" | tr '\n' ' ')"
+
 # 3) restore the incremental base from GHCR. The producer is INCREMENTAL-ONLY —
 # it must NEVER full-build from scratch (octocode's GraphRAG full build is ~12h,
 # O(N²) relationships). The base is created ONCE by a seed: cloud-cgc-db-package.sh
@@ -425,6 +454,10 @@ BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
 REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
 START_TS=$(date +%s)
 PUSHED=0
+# Outcome tally. "no repo changed — DB already current" was printed on 2026-08-20 after two
+# repos had TIMED OUT and five were deferred: a green log during a six-day outage. Count
+# every terminal state per repo so the summary can never claim currency it has not earned.
+N_INDEX=0; N_SKIP=0; N_TIMEOUT=0; N_DEFER=0
 
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
@@ -443,7 +476,9 @@ for r in $REPOS; do
     _reserve="${REPO_TIMEOUT_MIN:-0}"
     [ -n "$_reserve" ] || _reserve=0
     if [ $(( _elapsed + _reserve )) -ge "$BUDGET_MIN" ]; then
-      echo "[cgc-db] time budget ${BUDGET_MIN}m would be exceeded (${_elapsed}m elapsed + ${_reserve}m worst case) — deferring $r (+rest) to next run"
+      _n_left=0; for _q in $REPOS; do _n_left=$(( _n_left + 1 )); done
+      N_DEFER=$(( _n_left - N_INDEX - N_SKIP - N_TIMEOUT ))
+      echo "[cgc-db] time budget ${BUDGET_MIN}m would be exceeded (${_elapsed}m elapsed + ${_reserve}m worst case) — deferring $r (+${N_DEFER} total) to next run"
       break
     fi
   fi
@@ -453,6 +488,7 @@ for r in $REPOS; do
   last=$(jq -r --arg r "$r" '.[$r] // ""' "$MANIFEST")
   if [ -n "$cur" ] && [ "$cur" = "$last" ]; then
     echo "[cgc-db] === skip $r — unchanged @ $cur ==="
+    N_SKIP=$(( N_SKIP + 1 ))
     continue
   fi
 
@@ -479,8 +515,22 @@ for r in $REPOS; do
   if [ "$_rc" = "0" ]; then
     tail -4 "$_log"; rm -f "$_log"
   elif [ "$_rc" = "124" ]; then
-    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_MIN}m — skipping this cycle, will retry next run"
+    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_MIN}m — publishing PARTIAL progress, will resume next run"
     tail -10 "$_log"; rm -f "$_log"
+    N_TIMEOUT=$(( N_TIMEOUT + 1 ))
+    # PUBLISH the partial index, but do NOT advance the manifest. Those two are separate
+    # decisions and conflating them is what made the outage permanent: on timeout the
+    # embeddings octocode already wrote ARE in the DB, yet the old code discarded them by
+    # returning without a push, so every run redid and rediscarded the same 55% of
+    # cloud-infra forever — a repo too big for one timeout could never finish, ever.
+    # Pushing without advancing the manifest is the safe half of the pair: the repo stays
+    # "not indexed" and retries next run, but the work it did survives in the base DB, so
+    # successive runs ratchet forward instead of resetting. Worst case if octocode does not
+    # skip already-embedded files, this costs one extra push and converges no slower than
+    # before; it cannot mark a repo done that is not done, because the manifest is untouched.
+    echo "[cgc-db] checkpoint publish after $r (PARTIAL — manifest not advanced)"
+    sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+    PUSHED=1
     continue
   else
     echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
@@ -493,13 +543,20 @@ for r in $REPOS; do
   echo "[cgc-db] checkpoint publish after $r"
   sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
   PUSHED=1
+  N_INDEX=$(( N_INDEX + 1 ))
 done
+
+echo "[cgc-db] SUMMARY phase=${MANIFEST_PHASE:-default}: ${N_INDEX} indexed, ${N_SKIP} unchanged, ${N_TIMEOUT} timed out, ${N_DEFER} deferred"
 
 # 5/6) Propagate to the deployed consumer (oci-apps) so it serves the new DB now.
 #      Only when something actually changed this cycle (checkpoints already pushed
 #      it to GHCR). CGC_SKIP_PROPAGATE=1 lets a caller defer propagation.
-if [ "$PUSHED" = "0" ]; then
+if [ "$PUSHED" = "0" ] && [ "$N_TIMEOUT" = "0" ] && [ "$N_DEFER" = "0" ]; then
   echo "[cgc-db] no repo changed — DB already current, nothing to publish or propagate"
+elif [ "$PUSHED" = "0" ]; then
+  # NOT the same as "already current" — this is an incomplete cycle. Say so loudly enough
+  # that a scheduled run reads as the outage it is, instead of six days of quiet green.
+  echo "::warning::[cgc-db] nothing published: ${N_TIMEOUT} repo(s) timed out, ${N_DEFER} deferred — DB is STALE, not current"
 elif [ "${CGC_SKIP_PROPAGATE:-}" = "1" ]; then
   echo "[cgc-db] propagation deferred (CGC_SKIP_PROPAGATE=1)"
 else
