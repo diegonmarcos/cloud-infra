@@ -70,11 +70,28 @@ echo "[cgc-db] building $IMAGE:$TAG ..."
 # busybox base is a public pull); the push below uses the normally-authed config.
 mkdir -p "$WORK/dcfg"
 DOCKER_CONFIG="$WORK/dcfg" docker build -t "$IMAGE:$TAG" "$WORK/ctx"
+# Free the context tar the INSTANT the build no longer needs it. It is ~15G and the EXIT
+# trap only fires when this script ends, so it was otherwise held through the whole push
+# and into the next repo's index — one of three simultaneous 15G copies (DB + tar + image)
+# that made checkpoint #3 fail with "no space left on device" on 2026-08-21.
+rm -f "$WORK/ctx/octocode-db.tar" 2>/dev/null || true
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
 docker push "$IMAGE:$TAG"
 # Drop the local tagged copy after a successful push — GHCR is the single store, and
 # keeping it locally just re-fills the data-root every run. Next run rebuilds trivially.
 docker rmi "$IMAGE:$TAG" >/dev/null 2>&1 || true
+# Release THIS build's BuildKit cache now rather than at the next checkpoint. Note the
+# DOCKER_CONFIG: the build above runs with a per-invocation config dir, so a prune without
+# it addresses different builder state — which is exactly why the pre-build prune on
+# 2026-08-21 reported "free KB 25939472 -> 25939468", reclaiming 4KB of a 15G cache while
+# the checkpoint that followed died for want of space. Same config in, space actually out.
+if command -v docker >/dev/null 2>&1; then
+  _fb=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
+  DOCKER_CONFIG="$WORK/dcfg" docker builder prune -af >/dev/null 2>&1 || true
+  docker image prune -f >/dev/null 2>&1 || true
+  _fa=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
+  echo "[cgc-db] post-push reclaim — free KB ${_fb:-?} -> ${_fa:-?}"
+fi
 
 # Flip the package public (pull convenience). Non-fatal — push already succeeded.
 if command -v gh >/dev/null 2>&1; then
