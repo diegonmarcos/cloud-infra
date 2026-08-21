@@ -425,6 +425,173 @@ checkpoint_publish() {  # $1 = repo local name
   fi
 }
 
+# BOOTSTRAP config.toml (per-repo mode only). Production incident 2026-08-21 (run
+# 32502667627, all 7 matrix jobs, identical): before cgc-db-base:latest ever exists
+# on GHCR (the very first cycle), the base/self restore above is a no-op —
+# cloud-cgc-db-pull.sh warns-and-continues on a missing image (see its own header)
+# — so OCTO_HOME has NO config.toml at this point. octocode 0.12.2 (verified
+# against the exact pinned binary: a bare `octocode config` with no flags prints
+# usage and creates NOTHING, but `octocode index`/`octocode config --show` in a
+# config-less home silently AUTO-GENERATE one using octocode's OWN compiled-in
+# embedding defaults — voyage:voyage-code-3 / voyage:voyage-3.5-lite, CLOUD models
+# needing VOYAGE_API_KEY) — so `octocode index` then dies at the very first
+# embedding call with "VOYAGE_API_KEY environment variable not set", before a
+# single file is indexed. The OLD fallback here (`octocode config`, no flags) was
+# a silent no-op, which is why this was never caught: it looks like it handles
+# the missing-file case but does not.
+#
+# Our models are LOCAL fastembed — build.json .runtime.octocode.update.
+# code_embedding_model / text_embedding_model, already parsed into $CODE_EMBED /
+# $TEXT_EMBED above — ONE source of truth; a wrong/missing model here silently
+# drop_tables data on a later restore (see cloud-cgc-db-package.sh's base-image
+# DESC). We do NOT shell out to `octocode config --code-embedding-model ...` to
+# generate this file, even though that CLI flow does exist and IS used below
+# (4a/4b) against a config.toml that already exists: that command writes to
+# octocode's OWN resolved home directory (derived from $HOME, NOT from
+# $OCTOCODE_HOME/$OCTO_HOME — verified against the pinned 0.12.2 binary, which has
+# no env var or CLI flag to relocate its data dir at all), so it cannot be trusted
+# to land the file at $CFG. Writing the file directly guarantees it lands exactly
+# where the rest of this script (and every later restore) expects it. Schema below
+# is octocode 0.12.2's OWN generated default (verified byte-for-byte against a
+# fresh `octocode config --show` in an empty home on the pinned version) with only
+# the two [embedding] lines swapped for build.json's models — every other default
+# is left exactly as octocode itself would generate it.
+bootstrap_config_toml() {
+  [ -f "$CFG" ] && return 0
+  mkdir -p "$(dirname "$CFG")"
+  cat > "$CFG" <<CFGEOF
+version = 1
+
+[llm]
+model = "openrouter:openai/gpt-4o-mini"
+timeout = 120
+temperature = 0.7
+max_tokens = 4000
+
+[index]
+chunk_size = 2000
+chunk_overlap = 100
+embeddings_batch_size = 16
+embeddings_max_tokens_per_batch = 100000
+flush_frequency = 2
+require_git = true
+
+[search]
+max_results = 20
+similarity_threshold = 0.65
+output_format = "markdown"
+max_files = 10
+context_lines = 3
+search_block_max_characters = 400
+
+[search.reranker]
+enabled = false
+model = "voyage:rerank-2.5"
+top_k_candidates = 50
+final_top_k = 10
+
+[search.hybrid]
+enabled = false
+default_vector_weight = 0.7
+default_keyword_weight = 0.3
+keyword_path_weight = 2.0
+keyword_content_weight = 1.0
+keyword_symbols_weight = 2.5
+keyword_title_weight = 3.0
+
+[embedding]
+code_model = "$CODE_EMBED"
+text_model = "$TEXT_EMBED"
+
+[graphrag]
+enabled = false
+use_llm = false
+
+[graphrag.llm]
+description_model = "openrouter:openai/gpt-4o-mini"
+relationship_model = "openrouter:openai/gpt-4o-mini"
+ai_batch_size = 8
+max_batch_tokens = 16384
+batch_timeout_seconds = 60
+fallback_to_individual = true
+max_sample_tokens = 1500
+confidence_threshold = 0.6
+architectural_weight = 0.9
+relationship_system_prompt = """
+You are an expert software architect specializing in code analysis. Analyze the provided code files and identify meaningful ARCHITECTURAL relationships that go beyond simple imports.
+
+Focus on these relationship types:
+- 'imports': Module/package imports and dependencies
+- 'implements': Interface implementation, trait implementation
+- 'extends': Class inheritance, module extension
+- 'calls': Function/method calls between modules
+- 'uses': Utility usage, service consumption
+- 'configures': Configuration setup, dependency injection
+- 'factory_creates': Factory pattern instantiation
+- 'observer_pattern': Event listening, callback registration
+- 'strategy_pattern': Algorithm selection, behavior delegation
+- 'adapter_pattern': Interface adaptation, wrapper usage
+- 'architectural_dependency': High-level system dependencies
+
+Respond with a JSON array of relationships. Each relationship must include:
+- source_path: relative path of source file
+- target_path: relative path of target file
+- relation_type: one of the types listed above
+- description: specific explanation of HOW the relationship works
+- confidence: 0.0-1.0 confidence score (use 0.8+ for clear relationships)
+
+Only include relationships with clear architectural significance. Avoid trivial imports."""
+description_system_prompt = """
+You are a senior software engineer analyzing code architecture. Provide a concise 2-3 sentence description of the file's ROLE and PURPOSE in the system.
+
+Focus on:
+- What architectural layer this file belongs to (API, business logic, data access, utilities, etc.)
+- Its primary responsibility and how it contributes to the system
+- Key patterns or architectural decisions it implements
+
+Avoid listing specific functions/classes. Instead, describe the file's architectural significance and how it fits into the larger system design."""
+CFGEOF
+  echo "[cgc-db] bootstrap: wrote config.toml (models: code=$CODE_EMBED text=$TEXT_EMBED)"
+}
+
+# AUTO-SEED the shared base image (per-repo mode only) — the other half of the
+# 2026-08-21 bootstrap incident (see bootstrap_config_toml() above). Before this,
+# cgc-db-base:latest had to be seeded OUT OF BAND by a human running
+# cloud-cgc-db-package.sh once; every matrix cycle before that seed hit the same
+# missing-config crash. Once THIS job has published a checkpoint, OCTO_HOME holds
+# at minimum a valid config.toml (bootstrap-written above, or already restored) —
+# package+push it as the base image the same way a human seed would, via
+# cloud-cgc-db-package.sh's existing "base" mode (auto-detected from the
+# cgc-db-base image name — see that script's header). Its build_base_tar()
+# already tolerates a PARTIAL root state (config.toml alone is enough; it only
+# errors if NONE of config.toml/fastembed/sentencetransformer exist), so this is
+# safe even on the very first repo of the very first cycle.
+#
+# GUARD: BASE_SEEDED (reset once per job run, above the repo loop) — only the
+# FIRST repo in THIS job attempts a seed; a second attempt in the same job would
+# just re-push the same root state for no benefit. RACES BETWEEN PARALLEL MATRIX
+# JOBS are deliberately left unguarded: every job in a cycle restores the SAME
+# (missing) base and indexes with the SAME build.json models, so their
+# config.toml/fastembed content converges to the same bytes regardless of which
+# repo produced it — concurrent pushes to cgc-db-base:latest are idempotent,
+# last-write-wins on content that is the same either way.
+seed_base_if_missing() {
+  [ "$BASE_SEEDED" = "1" ] && return 0
+  BASE_SEEDED=1
+  if docker manifest inspect "$BASE_IMAGE" >/dev/null 2>&1; then
+    echo "[cgc-db] base image $BASE_IMAGE already on GHCR — skip auto-seed"
+    return 0
+  fi
+  _sbm_img="${BASE_IMAGE%:*}"
+  case "$BASE_IMAGE" in *:*) _sbm_tag="${BASE_IMAGE##*:}" ;; *) _sbm_tag="latest" ;; esac
+  echo "[cgc-db] $BASE_IMAGE missing on GHCR — auto-seeding from this job's octocode home"
+  if CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$_sbm_img" "$_sbm_tag"; then
+    echo "[cgc-db] auto-seed OK — $BASE_IMAGE published"
+  else
+    echo "::warning::[cgc-db] auto-seed of $BASE_IMAGE failed — next job's bootstrap will retry"
+  fi
+}
+
 # ── run ───────────────────────────────────────────────────────────────────
 # GHCR auth FIRST — ensure_octocode pulls the (private) pinned octocode image, so
 # docker must be logged in before it runs. On a host with cached creds this order
@@ -480,6 +647,10 @@ else
     exit 1
   fi
 fi
+# FIX 1 (per-repo mode only — see bootstrap_config_toml() above for why): must run
+# BEFORE the generic fallback below, which is a documented no-op for this exact
+# case (kept, untouched, as the monolith-mode safety net it always was).
+[ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && bootstrap_config_toml
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
 # 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
@@ -557,6 +728,10 @@ BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
 REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
 START_TS=$(date +%s)
 PUSHED=0
+# FIX 2 guard (per-repo mode) — see seed_base_if_missing() above: only the FIRST
+# repo in this job attempts a base-image seed, even if this job indexes more than
+# one repo (CGC_INDEX_REPOS can list several). Meaningless/unused in monolith mode.
+BASE_SEEDED=0
 # Outcome tally. "no repo changed — DB already current" was printed on 2026-08-20 after two
 # repos had TIMED OUT and five were deferred: a green log during a six-day outage. Count
 # every terminal state per repo so the summary can never claim currency it has not earned.
@@ -675,6 +850,10 @@ for r in $REPOS; do
   _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$MANIFEST" > "$_tmp" && mv "$_tmp" "$MANIFEST"
   echo "[cgc-db] checkpoint publish after $r"
   checkpoint_publish "$r"
+  # FIX 2 — see seed_base_if_missing() above. Only after a genuinely SUCCESSFUL
+  # index + checkpoint (not the PARTIAL/timeout branch above): the home now holds
+  # a complete config.toml + whatever model caches this index run touched.
+  [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && seed_base_if_missing
   PUSHED=1
   N_INDEX=$(( N_INDEX + 1 ))
 done
