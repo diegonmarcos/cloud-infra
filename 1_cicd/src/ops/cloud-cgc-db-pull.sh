@@ -37,3 +37,15 @@ mkdir -p "$TARGET"
 rm -rf "$TARGET"/* "$TARGET"/.[!.]* 2>/dev/null || true
 docker cp "$CID:/octocode-db/." "$TARGET/"
 echo "[cgc-db] restored DB into $TARGET ($(du -sh "$TARGET" 2>/dev/null | cut -f1))"
+# Drop the transport image the moment its contents are on disk. It is pure dead weight
+# after the cp — nothing reads it again — but at ~15G it was pinning a second full copy
+# of the DB in docker storage for the WHOLE run, on top of the extracted copy. That is
+# what starved the per-repo checkpoints on 2026-08-21: front-data published fine, then
+# cloud-android's build died with "no space left on device" after disk fell 54G -> 24G
+# -> 10G. Freeing it here is worth ~15G and costs nothing, since a later checkpoint
+# rebuilds the image from the extracted DB rather than from this one. Non-fatal: the
+# container is removed by the EXIT trap regardless, and a failed rmi only wastes space.
+docker rm -f "$CID" >/dev/null 2>&1 || true
+docker rmi "$IMAGE:$TAG" >/dev/null 2>&1 \
+  && echo "[cgc-db] freed transport image $IMAGE:$TAG ($(df -Pk "$TARGET" 2>/dev/null | awk 'NR==2{printf "%.0fG free", $4/1048576}'))" \
+  || true
