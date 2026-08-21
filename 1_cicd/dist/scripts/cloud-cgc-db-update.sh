@@ -61,6 +61,23 @@ if [ -n "${CGC_INDEX_REPOS:-}" ]; then
 else
   REPOS=$(jq -r '.runtime.octocode.index_repos[]' "$BJ")
 fi
+# DENY CHECK — derive-repo-map.ts only validates the STATIC build.json index_repos
+# at derive time; CGC_INDEX_REPOS above lets a caller (a local run with real deploy/SSH
+# keys, say) override REPOS at runtime and skip that check entirely. The shared /repos
+# volume is what cloud-cgc-mcp indexes, so a denied repo (e.g. cloud-vault, the
+# credential store) reaching this loop gets embedded in the GraphRAG DB and
+# checkpoint-pushed to GHCR — i.e. published. Re-check the FINAL $REPOS (whichever path
+# set it) against the SAME deny list, data-driven from build.json — never hardcode a name.
+DENY=$(jq -r '(.runtime.octocode.sync_exclude // {}) | keys[]?' "$BJ")
+for _r in $REPOS; do
+  for _d in $DENY; do
+    if [ "$_r" = "$_d" ]; then
+      _reason=$(jq -r --arg r "$_r" '.runtime.octocode.sync_exclude[$r] // "denied"' "$BJ")
+      echo "::error::[cgc-db] refusing to index '$_r' — denied by .runtime.octocode.sync_exclude ($_reason)"
+      exit 1
+    fi
+  done
+done
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 # USE_LLM selects the GraphRAG LLM phase. Two-phase orchestration (cgc-db.yml →
 # cgc-db-index.yml) drives this via the environment: the `semantic` phase exports
