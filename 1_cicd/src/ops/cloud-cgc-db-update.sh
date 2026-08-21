@@ -582,7 +582,7 @@ for r in $REPOS; do
     # skip already-embedded files, this costs one extra push and converges no slower than
     # before; it cannot mark a repo done that is not done, because the manifest is untouched.
     echo "[cgc-db] checkpoint publish after $r (PARTIAL — manifest not advanced)"
-    sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+    CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
     PUSHED=1
     continue
   else
@@ -594,7 +594,7 @@ for r in $REPOS; do
   # checkpoint-push so this repo's progress is durable before we touch the next.
   _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$MANIFEST" > "$_tmp" && mv "$_tmp" "$MANIFEST"
   echo "[cgc-db] checkpoint publish after $r"
-  sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+  CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
   PUSHED=1
   N_INDEX=$(( N_INDEX + 1 ))
 done

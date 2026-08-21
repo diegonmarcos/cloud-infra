@@ -106,15 +106,54 @@ if command -v docker >/dev/null 2>&1; then
   echo "[cgc-db] post-push reclaim — free KB ${_fb:-?} -> ${_fa:-?}"
 fi
 
-# Flip the package public (pull convenience). Non-fatal — push already succeeded.
+# VISIBILITY: this package MUST stay private, and the code used to force the opposite.
+#
+# The octocode DB is a searchable index of the FULL CONTENT of every repo in
+# .runtime.octocode.index_repos, and that list includes cloud-data, which is a PRIVATE repo
+# (it needs CGC_DEPLOY_KEY_cloud_data to clone at all). Publishing this image therefore
+# publishes private source, embedded and reconstructible, to anyone who can docker pull.
+#
+# Until now this script actively tried to flip it PUBLIC after every checkpoint "for pull
+# convenience". It stayed private by accident only — the call fails for want of a
+# packages-admin token, logged every run as "could not flip ... public". A single token
+# upgrade would have silently published it.
+#
+# Enforce the invariant instead of hoping: if any index_repo is private, the package must be
+# private, and a public one is corrected here rather than merely reported. Consumers pull
+# with credentials (oci-apps and the runner both already docker login to GHCR), so private
+# costs nothing operationally.
 if command -v gh >/dev/null 2>&1; then
-  vis=$(gh api "/user/packages/container/${PKG}" --jq '.visibility' 2>/dev/null || echo unknown)
-  if [ "$vis" != "public" ]; then
-    gh api --method PUT "/user/packages/container/${PKG}/visibility" -f visibility=public >/dev/null 2>&1 \
-      && echo "[cgc-db] $PKG → public" \
-      || echo "::warning::could not flip $PKG public (needs packages-admin token or the GitHub UI)"
+  # BJ belongs to the CALLER (cloud-cgc-db-update.sh); this script only receives src/image/tag.
+  # Take it from the environment, else derive it from this script's location, else fall back
+  # to "assume private is required" — the fail-safe direction, since the only action taken
+  # below is making a public package private.
+  _bj="${CGC_BUILD_JSON:-}"
+  if [ -z "$_bj" ]; then
+    _root=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." 2>/dev/null && pwd || echo "")
+    _bj="${_root:+$_root/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
+  fi
+  _priv=""
+  if [ -n "$_bj" ] && [ -f "$_bj" ]; then
+    for _r in $(jq -r '.runtime.octocode.repo_map | to_entries[] | .value' "$_bj" 2>/dev/null); do
+      if [ "$(gh repo view "diegonmarcos/$_r" --json isPrivate --jq .isPrivate 2>/dev/null)" = "true" ]; then
+        _priv="$_priv $_r"
+      fi
+    done
   else
-    echo "[cgc-db] package $PKG already public"
+    _priv=" (build.json unreadable — assuming private)"
+  fi
+  vis=$(gh api "/user/packages/container/${PKG}" --jq '.visibility' 2>/dev/null || echo unknown)
+  if [ -n "$_priv" ]; then
+    if [ "$vis" = "public" ]; then
+      echo "::error::[cgc-db] $PKG is PUBLIC but indexes private repo(s):$_priv — forcing private"
+      gh api --method PUT "/user/packages/container/${PKG}/visibility" -f visibility=private >/dev/null 2>&1 \
+        && echo "[cgc-db] $PKG → private (corrected)" \
+        || echo "::error::[cgc-db] could NOT make $PKG private — private source is exposed, fix in the GitHub UI now"
+    else
+      echo "[cgc-db] $PKG visibility=$vis (correct — indexes private repo(s):$_priv)"
+    fi
+  else
+    echo "[cgc-db] $PKG visibility=$vis (no private repo in index_repos)"
   fi
 fi
 echo "[cgc-db] DONE → $IMAGE:$TAG"
