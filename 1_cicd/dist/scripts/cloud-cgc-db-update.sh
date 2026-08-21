@@ -471,14 +471,30 @@ for r in $REPOS; do
   # no final package/push, and the checkpoint for the in-flight repo is lost. Reserving up
   # front is what actually makes the "never killed mid-repo" invariant above true.
   # A repo_timeout_min of 0 (no per-repo timeout) reserves nothing and keeps the old gate.
+  # ADAPTIVE RESERVE. A FIXED reserve deadlocks: it must be large enough for the slowest
+  # repo to finish (cloud-unix needs ~200m+ at measured throughput) yet small enough that a
+  # repo is still admitted late in the run — and those cannot both hold, because admission
+  # requires elapsed + reserve <= max_minutes. With reserve=180 nothing is admitted after
+  # 120m; raise it so the giants fit and they are never admitted at all, since the small
+  # repos alone consume ~75m. Clamp instead: give each repo the SMALLER of its configured
+  # ceiling and the budget actually left. Worst case is still bounded by max_minutes (the
+  # clamp can never hand out more time than remains), giants get every minute available
+  # rather than a fixed slice, and a repo is only skipped when too little time remains to
+  # be worth starting. REPO_TIMEOUT_MIN is now a CEILING, not a reservation.
+  REPO_TIMEOUT_EFF="$REPO_TIMEOUT_MIN"
   if [ -n "$BUDGET_MIN" ] && [ "$BUDGET_MIN" != "0" ]; then
     _elapsed=$(( ( $(date +%s) - START_TS ) / 60 ))
+    _remain=$(( BUDGET_MIN - _elapsed ))
     _reserve="${REPO_TIMEOUT_MIN:-0}"
     [ -n "$_reserve" ] || _reserve=0
-    if [ $(( _elapsed + _reserve )) -ge "$BUDGET_MIN" ]; then
+    # Clamp the ceiling to what is left; 0 means "no ceiling configured" so take the remainder.
+    if [ "$_reserve" = "0" ] || [ "$_remain" -lt "$_reserve" ]; then REPO_TIMEOUT_EFF="$_remain"; fi
+    # Floor: starting a repo with only a few minutes left burns a 15G checkpoint push for
+    # almost no indexing. Defer instead and give it a full slice next run.
+    if [ "$_remain" -lt "${CGC_MIN_SLICE_MIN:-20}" ]; then
       _n_left=0; for _q in $REPOS; do _n_left=$(( _n_left + 1 )); done
       N_DEFER=$(( _n_left - N_INDEX - N_SKIP - N_TIMEOUT ))
-      echo "[cgc-db] time budget ${BUDGET_MIN}m would be exceeded (${_elapsed}m elapsed + ${_reserve}m worst case) — deferring $r (+${N_DEFER} total) to next run"
+      echo "[cgc-db] only ${_remain}m of the ${BUDGET_MIN}m budget left (<${CGC_MIN_SLICE_MIN:-20}m floor) — deferring $r (+${N_DEFER} total) to next run"
       break
     fi
   fi
@@ -516,8 +532,9 @@ for r in $REPOS; do
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
   _rc=0
-  if [ -n "$REPO_TIMEOUT_MIN" ] && [ "$REPO_TIMEOUT_MIN" != "0" ]; then
-    ( cd "$d" && timeout "${REPO_TIMEOUT_MIN}m" octocode index ) >"$_log" 2>&1 || _rc=$?
+  if [ -n "$REPO_TIMEOUT_EFF" ] && [ "$REPO_TIMEOUT_EFF" != "0" ]; then
+    echo "[cgc-db] $r · slice ${REPO_TIMEOUT_EFF}m (ceiling ${REPO_TIMEOUT_MIN:-none}m, budget left ${_remain:-?}m)"
+    ( cd "$d" && timeout "${REPO_TIMEOUT_EFF}m" octocode index ) >"$_log" 2>&1 || _rc=$?
   else
     ( cd "$d" && octocode index ) >"$_log" 2>&1 || _rc=$?
   fi
@@ -528,7 +545,7 @@ for r in $REPOS; do
   if [ "$_rc" = "0" ]; then
     tail -4 "$_log"; rm -f "$_log"
   elif [ "$_rc" = "124" ]; then
-    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_MIN}m — publishing PARTIAL progress, will resume next run"
+    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_EFF}m slice — publishing PARTIAL progress, will resume next run"
     tail -10 "$_log"; rm -f "$_log"
     N_TIMEOUT=$(( N_TIMEOUT + 1 ))
     # PUBLISH the partial index, but do NOT advance the manifest. Those two are separate
