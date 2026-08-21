@@ -31,7 +31,15 @@ LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-inf
 LABEL org.opencontainers.image.description="cloud-cgc-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
 DOCKER
 
-# Reclaim disk BEFORE building. The DB image is ~1.6GB and the deploy host's docker
+# Reclaim disk BEFORE building. NOTE the size below is badly stale: the DB image was
+# ~1.6GB when this was written and is ~15G as of 2026-08-21 (du -sh of the octocode home
+# reports 16G). At that size the old "prune dangling images" step is no longer sufficient
+# on a CI runner, because BuildKit's build cache also retains a full copy of the 15G layer
+# and `docker image prune` does not touch it. Per-repo checkpointing then compounds it:
+# each checkpoint writes a 15G context tar AND a 15G image, so the second checkpoint of a
+# run hit "no space left on device" even with 26G free after a prune. Prune the builder
+# cache too — it is reproducible by definition and nothing depends on it surviving.
+# The DB image is ~1.6GB and the deploy host's docker
 # data-root runs hot (observed oci-apps: 88% full, 14GB reclaimable). Every rebuild of
 # :latest orphans the PREVIOUS version as a dangling (untagged) image; nothing GC's them,
 # so they pile up until `docker build` dies mid-layer with
@@ -42,8 +50,11 @@ DOCKER
 if command -v docker >/dev/null 2>&1; then
   _free_before=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
   docker image prune -f >/dev/null 2>&1 || true
+  # BuildKit cache holds its own copy of the 15G layer and survives `image prune`; with a
+  # DB this size that cache alone is the difference between a checkpoint fitting and not.
+  docker builder prune -af >/dev/null 2>&1 || true
   _free_after=$(df -Pk /var/lib/docker 2>/dev/null | awk 'NR==2{print $4}')
-  echo "[cgc-db] pruned dangling images — free KB ${_free_before:-?} -> ${_free_after:-?}"
+  echo "[cgc-db] pruned dangling images + builder cache — free KB ${_free_before:-?} -> ${_free_after:-?}"
 fi
 
 echo "[cgc-db] building $IMAGE:$TAG ..."
