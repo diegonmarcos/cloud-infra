@@ -1,0 +1,289 @@
+#!/bin/sh
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/ops/cloud-cgc-db-restore-all.sh
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ──────────────────────────────────────────────────────────────────────────
+#  cloud-cgc-db-restore-all.sh — restore a full octocode home from the
+#  per-repo GHCR images (multi-image consumer restore)
+# ──────────────────────────────────────────────────────────────────────────
+#  ARCHITECTURE (see cloud-cgc-db-package.sh header, which produces these
+#  images): one GHCR image per repo — ghcr.io/diegonmarcos/cgc-db-<local_name>
+#  — plus one shared base image ghcr.io/diegonmarcos/cgc-db-base:latest
+#  carrying the octocode home ROOT state (config.toml + fastembed/ +
+#  sentencetransformer/ model caches — never project data). Each image's
+#  /octocode-db/. is exactly what a `docker cp` from a throwaway container
+#  should drop into the target home: base → {config.toml, fastembed/,
+#  sentencetransformer/}; a repo image → its single <project_id>/ dir.
+#
+#  This is the CONSUMER side of that split, replacing the single-image
+#  cloud-cgc-db-pull.sh / cloud-cgc-db-restore.sh path once a target has
+#  cut over to the matrix producer. Both old scripts are UNTOUCHED and stay
+#  the default until cutover — see the callers (dagu DAG, compose.nix).
+#
+#  SEQUENCE (stage first, swap once):
+#    1. base image  → STAGING          (hard error if missing — nothing to
+#                                        seed from; see the seed instruction
+#                                        printed below)
+#    2. each repo image → STAGING      (missing image = bootstrap tolerance:
+#                                        warn + skip, not fatal — a matrix
+#                                        producer publishes repos one at a
+#                                        time and the home is legitimately
+#                                        incomplete until every job has run
+#                                        at least once)
+#    3. verify: (# project dirs staged) == (# repo images actually pulled).
+#       This is what catches a name COLLISION between two repo images —
+#       cp -a would silently merge two different <project_id>/ dirs into
+#       one, and an aggregate count is the only thing that would ever
+#       notice — as well as a corrupt or empty image.
+#    4. ONLY once (1)-(3) all succeed: wipe TARGET once, cp -a STAGING in.
+#  Every fallible step (network pulls, image extraction, the count check)
+#  happens in STAGING before TARGET is touched at all, so any failure along
+#  the way leaves TARGET exactly as it was — never half-wiped. Re-running is
+#  safe: STAGING is always a fresh mktemp -d and TARGET is only ever touched
+#  by the single final swap.
+#
+#  Per-image docker hygiene mirrors cloud-cgc-db-pull.sh: docker rm the
+#  throwaway container AND docker rmi the transport image right after each
+#  cp — the known 15G-pinning leak class documented there and in
+#  cloud-cgc-db-package.sh (N images left tagged locally == N copies of the
+#  DB pinned in the docker data-root at once; this restores potentially
+#  index_repos-many images in one run, so the leak would be N-times worse
+#  here than in the single-image path if left unfreed).
+#
+#  Args:    $1 = target octocode home dir (default: $OCTOCODE_HOME or
+#           ~/.local/share/octocode — same default as cloud-cgc-db-pull.sh).
+#           Ignored when CGC_DB_TARGET_VOLUME is set (see below).
+#  Env:
+#    CGC_DB_TARGET_VOLUME optional. When set, TARGET/$1 is ignored and the
+#                         final swap writes into this docker NAMED VOLUME
+#                         instead of a host path, via a throwaway container
+#                         (`docker run -v $CGC_DB_TARGET_VOLUME:/dst ...`) —
+#                         the SAME idiom cloud-cgc-db-restore.sh already uses
+#                         and for the same reason: a named volume's host-side
+#                         data dir is typically root-owned, and the oci-apps
+#                         DAG runs this over SSH as a plain (non-root) user
+#                         that only has docker-group socket access, not host
+#                         root. The compose.nix db-restore path does not need
+#                         this — compose mounts the volume INTO the container
+#                         at oct.db_path, so from inside there it already IS
+#                         a plain, directly-writable directory.
+#    CGC_BUILD_JSON       override build.json path
+#    CGC_INDEX_REPOS      space-separated repo list, overrides build.json
+#                         .runtime.octocode.index_repos (mirrors
+#                         cloud-cgc-db-update.sh's CGC_INDEX_REPOS — same
+#                         override, same variable name, for one mental model)
+#    CGC_DB_IMAGE_PREFIX  default build.json .per_repo_publish.image_prefix
+#                         (falls back to ghcr.io/diegonmarcos/cgc-db-)
+#    CGC_DB_BASE_IMAGE    default build.json .per_repo_publish.base_image
+#                         (falls back to ${CGC_DB_IMAGE_PREFIX}base:${CGC_DB_TAG})
+#    CGC_DB_TAG           default build.json .per_repo_publish.tag (falls
+#                         back to latest)
+#    CGC_BOOTSTRAP_TOLERANT  when "1": a MISSING base image (nothing published
+#                         to GHCR yet — the very first scheduled run before any
+#                         cloud-cgc-db-package.sh seed) prints a ::warning:: and
+#                         exits 0 instead of the hard ::error::/exit 1 below,
+#                         BEFORE any target (host dir or CGC_DB_TARGET_VOLUME)
+#                         is touched. Set by the cgc-db-index.yml restore-all
+#                         job (CI cron path) so the very first scheduled run —
+#                         before any base image has ever been seeded — goes
+#                         green instead of red and blocking the graphrag phase
+#                         behind it. Unset (default) keeps the hard error for
+#                         the dagu/manual restore path, where a missing base
+#                         really is an operator mistake to surface loudly.
+#
+#  A per-repo image (cloud-cgc-db-package-repo.sh) also carries that repo's
+#  OWN top-level .cgc-manifest-*.json / .cgc-index-manifest.json — producer
+#  change-gate bookkeeping, not consumer state. Copying N repo images into
+#  one staging tree would otherwise clobber that file N-1 times (same path,
+#  last repo wins) with no signal anything was lost, since the count check
+#  below only looks at directories. This script's callers (the oci-apps DAG
+#  and the compose db-restore profile) are pure query consumers that never
+#  read those manifests — the producer keeps its OWN authoritative copy via
+#  cloud-cgc-db-pull.sh's CGC_PULL_MERGE (one repo + base at a time, so there
+#  is nothing to clobber there) — so this script deliberately DROPS them
+#  after staging each repo rather than leave one arbitrary repo's stale
+#  bookkeeping sitting in a home it does not describe.
+#    MCP_CONTAINER, NTFY_URL   optional — restart + notify after a
+#                         successful restore, same optional/no-op-if-unset
+#                         contract as cloud-cgc-db-restore.sh. Kept HERE
+#                         rather than in the DAG/compose caller, because
+#                         both of those carry zero logic of their own.
+#
+#  Requires: docker, jq on PATH. GHCR auth (if any image is private) is the
+#  caller's responsibility, same as every other cgc-db consumer script here.
+# ──────────────────────────────────────────────────────────────────────────
+set -eu
+HERE="$(cd "$(dirname "$0")" && pwd)"
+
+# build.json is read LAZILY, only for whichever of TAG/IMAGE_PREFIX/BASE_IMAGE/
+# REPOS below the caller did NOT already supply via env. A deployed context
+# with no repo checkout (the oci-apps DAG, the compose db-restore-multi
+# service) supplies all four and never touches it — mirroring
+# cloud-cgc-db-restore.sh's own env-first design ("the VM has no repo
+# checkout"). A bare local invocation with none of those set still works
+# exactly as before, resolving build.json from this script's own location.
+BJ="${CGC_BUILD_JSON:-}"
+need_bj() {
+  [ -n "$BJ" ] && [ -f "$BJ" ] && return 0
+  _root="${CLOUD_ROOT:-$(cd "$HERE/../../.." 2>/dev/null && pwd || echo "")}"
+  BJ="${_root:+$_root/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
+  [ -n "$BJ" ] && [ -f "$BJ" ] && return 0
+  echo "::error::cloud-cgc-mcp build.json not found — needed because CGC_DB_TAG/CGC_DB_IMAGE_PREFIX/CGC_DB_BASE_IMAGE/CGC_INDEX_REPOS were not all supplied via env. Set CGC_BUILD_JSON, or supply every one of those (as the oci-apps DAG and the compose db-restore-multi service do)."
+  exit 1
+}
+
+TARGET="${1:-${OCTOCODE_HOME:-$HOME/.local/share/octocode}}"
+TAG="${CGC_DB_TAG:-}"
+[ -n "$TAG" ] || { need_bj; TAG=$(jq -r '.per_repo_publish.tag // "latest"' "$BJ"); }
+IMAGE_PREFIX="${CGC_DB_IMAGE_PREFIX:-}"
+[ -n "$IMAGE_PREFIX" ] || { need_bj; IMAGE_PREFIX=$(jq -r '.per_repo_publish.image_prefix // "ghcr.io/diegonmarcos/cgc-db-"' "$BJ"); }
+BASE_IMAGE="${CGC_DB_BASE_IMAGE:-}"
+if [ -z "$BASE_IMAGE" ]; then
+  need_bj
+  BASE_IMAGE=$(jq -r '.per_repo_publish.base_image // empty' "$BJ")
+fi
+[ -n "$BASE_IMAGE" ] || BASE_IMAGE="${IMAGE_PREFIX}base:${TAG}"
+
+if [ -n "${CGC_INDEX_REPOS:-}" ]; then
+  REPOS="$CGC_INDEX_REPOS"
+else
+  need_bj
+  REPOS=$(jq -r '.runtime.octocode.index_repos[]' "$BJ")
+fi
+[ -n "$REPOS" ] || { echo "::error::no repos to restore — empty .runtime.octocode.index_repos and CGC_INDEX_REPOS unset"; exit 1; }
+set -- $REPOS
+TOTAL=$#
+
+STAGING=$(mktemp -d)
+CURRENT_CID=""
+cleanup() {
+  [ -n "$CURRENT_CID" ] && docker rm -f "$CURRENT_CID" >/dev/null 2>&1
+  CURRENT_CID=""
+  [ -n "${STAGING:-}" ] && [ -d "$STAGING" ] && rm -rf "$STAGING" 2>/dev/null
+  return 0
+}
+trap cleanup EXIT
+
+# Extract one already-pulled image's /octocode-db/. into STAGING. Always
+# removes the throwaway container (including on a failed `docker cp`, via
+# CURRENT_CID + the EXIT trap above); the transport image is the caller's
+# call (base: drop once after staging; repo: drop after every pull — see
+# the loop below and the header comment on why that matters here).
+stage_image() { # $1 = image ref
+  CURRENT_CID=$(docker create "$1")
+  docker cp "$CURRENT_CID:/octocode-db/." "$STAGING/"
+  docker rm -f "$CURRENT_CID" >/dev/null 2>&1 || true
+  CURRENT_CID=""
+}
+
+# Directories in STAGING that hold PROJECT data — everything except the
+# base-mode root-state entries. Deliberately the SAME exclusion set as
+# cloud-cgc-db-package.sh's find_project_dir(); keep the two in sync.
+count_project_dirs() {
+  _n=0
+  for _e in "$STAGING"/*/; do
+    [ -d "$_e" ] || continue
+    case "${_e%/}" in
+      */fastembed | */sentencetransformer) continue ;;
+    esac
+    _n=$((_n + 1))
+  done
+  echo "$_n"
+}
+
+# ── 1) base image — hard error: no base means nothing to restore onto ─────
+#    EXCEPT under CGC_BOOTSTRAP_TOLERANT=1 (see header): the very first
+#    scheduled run before any base has ever been seeded is not an operator
+#    error, it is bootstrap — warn and exit 0 BEFORE touching TARGET at all.
+echo "[cgc-db-restore-all] base: $BASE_IMAGE"
+if ! docker manifest inspect "$BASE_IMAGE" >/dev/null 2>&1; then
+  if [ "${CGC_BOOTSTRAP_TOLERANT:-}" = "1" ]; then
+    echo "::warning::[cgc-db-restore-all] base image $BASE_IMAGE not found on GHCR — bootstrap: nothing to propagate yet"
+    exit 0
+  fi
+  echo "::error::[cgc-db-restore-all] base image $BASE_IMAGE not found on GHCR."
+  echo "::error::[cgc-db-restore-all] seed it once from an existing octocode home's root state: sh $HERE/cloud-cgc-db-package.sh <octocode-home-dir> $BASE_IMAGE latest"
+  exit 1
+fi
+docker pull -q "$BASE_IMAGE" >/dev/null
+stage_image "$BASE_IMAGE"
+docker rmi "$BASE_IMAGE" >/dev/null 2>&1 || true
+echo "[cgc-db-restore-all] base staged"
+
+# ── 2) each repo image — bootstrap tolerance: missing = warn + continue ────
+FOUND=0
+MISSING=""
+for r in "$@"; do
+  img="${IMAGE_PREFIX}${r}:${TAG}"
+  if ! docker manifest inspect "$img" >/dev/null 2>&1; then
+    echo "::warning::[cgc-db-restore-all] $img not published yet — skipping $r (bootstrap tolerance)"
+    MISSING="$MISSING $r"
+    continue
+  fi
+  docker pull -q "$img" >/dev/null
+  stage_image "$img"
+  # Drop this repo's own change-gate manifest (see header) — it would silently
+  # clobber the next repo's at the same path otherwise, and neither consumer
+  # wired to this script reads it.
+  rm -f "$STAGING"/.cgc-manifest-*.json "$STAGING"/.cgc-index-manifest.json 2>/dev/null || true
+  docker rmi "$img" >/dev/null 2>&1 || true
+  FOUND=$((FOUND + 1))
+  echo "[cgc-db-restore-all] staged $r ($FOUND/$TOTAL)"
+done
+
+# ── 3) verify before TARGET is touched at all ───────────────────────────────
+STAGED=$(count_project_dirs)
+if [ "$STAGED" -ne "$FOUND" ]; then
+  echo "::error::[cgc-db-restore-all] staged project-dir count ($STAGED) != repo images pulled ($FOUND) — refusing to swap into $TARGET"
+  echo "::error::[cgc-db-restore-all] a name collision between two repo images (cp -a silently merging two different <project_id>/ dirs), or a malformed image, produces exactly this mismatch"
+  exit 1
+fi
+if [ -n "$MISSING" ]; then
+  echo "[cgc-db-restore-all] verified: $FOUND/$TOTAL repos staged (missing:$MISSING)"
+else
+  echo "[cgc-db-restore-all] verified: $FOUND/$TOTAL repos staged"
+fi
+
+# ── 4) swap: everything fallible already happened in STAGING ───────────────
+if [ -n "${CGC_DB_TARGET_VOLUME:-}" ]; then
+  # Container-mediated write — see CGC_DB_TARGET_VOLUME in the header. busybox
+  # is always pullable; -v NAME:/dst auto-creates the volume if it somehow
+  # doesn't exist yet, matching plain `docker run -v name:...` behaviour.
+  docker run --rm -v "$CGC_DB_TARGET_VOLUME:/dst" -v "$STAGING:/src:ro" busybox \
+    sh -c 'rm -rf /dst/* /dst/.[!.]* 2>/dev/null; cp -a /src/. /dst/'
+  echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into volume $CGC_DB_TARGET_VOLUME"
+else
+  mkdir -p "$TARGET"
+  rm -rf "$TARGET"/* "$TARGET"/.[!.]* 2>/dev/null || true
+  cp -a "$STAGING"/. "$TARGET"/
+  echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into $TARGET ($(du -sh "$TARGET" 2>/dev/null | cut -f1))"
+fi
+
+# ── optional: restart + notify (mirrors cloud-cgc-db-restore.sh; kept here
+# because the DAG and the compose caller both carry zero logic of their own)
+CONTAINER="${MCP_CONTAINER:-}"
+NTFY="${NTFY_URL:-}"
+if [ -n "$CONTAINER" ]; then
+  docker restart "$CONTAINER" >/dev/null 2>&1 && echo "[cgc-db-restore-all] restarted $CONTAINER" \
+    || echo "[cgc-db-restore-all] WARN restart $CONTAINER failed"
+fi
+if [ -n "$NTFY" ]; then
+  if [ -n "$MISSING" ]; then
+    _msg="cloud-cgc octocode DB restored (multi-image) — $FOUND/$TOTAL repos, missing:$MISSING"
+  else
+    _msg="cloud-cgc octocode DB restored (multi-image) — $FOUND/$TOTAL repos"
+  fi
+  [ -n "$CONTAINER" ] && _msg="$_msg + $CONTAINER restarted"
+  curl -sf -d "$_msg" -H "Title: cgc-db restore-all" -H "Tags: arrow_down,white_check_mark" "$NTFY/ops" >/dev/null 2>&1 || true
+fi
+echo "[cgc-db-restore-all] RESTORE COMPLETE"

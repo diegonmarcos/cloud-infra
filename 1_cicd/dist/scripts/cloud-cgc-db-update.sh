@@ -78,6 +78,22 @@ for _r in $REPOS; do
     fi
   done
 done
+# Same deny list, ALSO checked against .runtime.octocode.repo_map — a separate list
+# (local_name → github remote) that ensure_repos() below clones from independently of
+# $REPOS/index_repos. A denied name added to repo_map (by hand, bypassing derive-repo-
+# map.ts) would otherwise clone straight to the shared REPOS_ROOT unchecked — this loop
+# above only ever sees $REPOS, never repo_map's keys. Inert today (repo_map has no
+# sync_exclude entry), but the whole point of a deny list is to hold even when someone
+# adds one by hand later.
+for _r in $(jq -r '(.runtime.octocode.repo_map // {}) | keys[]?' "$BJ"); do
+  for _d in $DENY; do
+    if [ "$_r" = "$_d" ]; then
+      _reason=$(jq -r --arg r "$_r" '.runtime.octocode.sync_exclude[$r] // "denied"' "$BJ")
+      echo "::error::[cgc-db] refusing to clone '$_r' — denied by .runtime.octocode.sync_exclude ($_reason), present in .runtime.octocode.repo_map"
+      exit 1
+    fi
+  done
+done
 LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 # USE_LLM selects the GraphRAG LLM phase. Two-phase orchestration (cgc-db.yml →
 # cgc-db-index.yml) drives this via the environment: the `semantic` phase exports
@@ -392,6 +408,23 @@ propagate_to_host() {
   fi
 }
 
+# Checkpoint-push after one repo. CGC_PACKAGE_MODE=per-repo (matrix CI) packages
+# ONLY that repo's own project dir into its OWN GHCR image; the default
+# "monolith" mode keeps packaging the WHOLE octocode home into the single
+# shared db_publish.image, unchanged. Same script either way —
+# cloud-cgc-db-package.sh auto-detects repo/base/monolith packaging mode from
+# the image name (${IMAGE##*/} — "cgc-db-<repo>" vs "cgc-db-base" vs anything
+# else), so the only difference here is WHICH image name is passed.
+# REPO_PREFIX/REPO_TAG are set once above (per-repo restore-base branch) —
+# reused here rather than re-reading build.json per repo.
+checkpoint_publish() {  # $1 = repo local name
+  if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+    CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "${REPO_PREFIX}${1}" "$REPO_TAG"
+  else
+    CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+  fi
+}
+
 # ── run ───────────────────────────────────────────────────────────────────
 # GHCR auth FIRST — ensure_octocode pulls the (private) pinned octocode image, so
 # docker must be logged in before it runs. On a host with cached creds this order
@@ -423,12 +456,29 @@ echo "[cgc-db] index order (smallest first): $(printf '%s' "$REPOS" | tr '\n' ' 
 # it must NEVER full-build from scratch (octocode's GraphRAG full build is ~12h,
 # O(N²) relationships). The base is created ONCE by a seed: cloud-cgc-db-package.sh
 # of an already-built octocode DB, or a prod-volume snapshot. Refuse without a base.
+#
+# CGC_PACKAGE_MODE=per-repo (matrix CI): OCTO_HOME is a FRESH per-job dir, and
+# there is no monolith base to refuse-without — restore the SHARED base image
+# (config.toml + fastembed/ + sentencetransformer/ caches, NOT the 15G monolith)
+# then, layered on top, THIS repo's own prior per-repo checkpoint image if one
+# exists. A repo with no prior image starts empty — that is the documented
+# first-build case (per-repo images bootstrap from empty), not an error.
 mkdir -p "$OCTO_HOME"
-sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || true
-if [ -z "$(ls -A "$OCTO_HOME" 2>/dev/null | grep -v '^config\.toml$')" ]; then
-  echo "::error::no GHCR DB base restored — refusing a from-scratch full build (~12h)."
-  echo "::error::seed once first: sh $HERE/cloud-cgc-db-package.sh <existing-octocode-home> $IMAGE $TAG"
-  exit 1
+if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+  BASE_IMAGE=$(jq -r '.per_repo_publish.base_image // "ghcr.io/diegonmarcos/cgc-db-base:latest"' "$BJ")
+  REPO_PREFIX=$(jq -r '.per_repo_publish.image_prefix // "ghcr.io/diegonmarcos/cgc-db-"' "$BJ")
+  REPO_TAG=$(jq -r '.per_repo_publish.tag // "latest"' "$BJ")
+  sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "$BASE_IMAGE" || true
+  for _r in $REPOS; do
+    CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${_r}:${REPO_TAG}" || true
+  done
+else
+  sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || true
+  if [ -z "$(ls -A "$OCTO_HOME" 2>/dev/null | grep -v '^config\.toml$')" ]; then
+    echo "::error::no GHCR DB base restored — refusing a from-scratch full build (~12h)."
+    echo "::error::seed once first: sh $HERE/cloud-cgc-db-package.sh <existing-octocode-home> $IMAGE $TAG"
+    exit 1
+  fi
 fi
 [ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
 
@@ -612,7 +662,7 @@ for r in $REPOS; do
     # skip already-embedded files, this costs one extra push and converges no slower than
     # before; it cannot mark a repo done that is not done, because the manifest is untouched.
     echo "[cgc-db] checkpoint publish after $r (PARTIAL — manifest not advanced)"
-    CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+    checkpoint_publish "$r"
     PUSHED=1
     continue
   else
@@ -624,7 +674,7 @@ for r in $REPOS; do
   # checkpoint-push so this repo's progress is durable before we touch the next.
   _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$MANIFEST" > "$_tmp" && mv "$_tmp" "$MANIFEST"
   echo "[cgc-db] checkpoint publish after $r"
-  CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
+  checkpoint_publish "$r"
   PUSHED=1
   N_INDEX=$(( N_INDEX + 1 ))
 done
@@ -634,7 +684,15 @@ echo "[cgc-db] SUMMARY phase=${MANIFEST_PHASE:-default}: ${N_INDEX} indexed, ${N
 # 5/6) Propagate to the deployed consumer (oci-apps) so it serves the new DB now.
 #      Only when something actually changed this cycle (checkpoints already pushed
 #      it to GHCR). CGC_SKIP_PROPAGATE=1 lets a caller defer propagation.
-if [ "$PUSHED" = "0" ] && [ "$N_TIMEOUT" = "0" ] && [ "$N_DEFER" = "0" ]; then
+#      CGC_PACKAGE_MODE=per-repo ALWAYS skips this rsync-whole-home path, even if a
+#      caller forgot CGC_SKIP_PROPAGATE=1: OCTO_HOME here is a fresh home that has, at
+#      most, the shared base state plus ONE repo's project dir — rsync --delete'ing
+#      that over the live volume (which holds every OTHER repo's data too) would
+#      DESTROY the rest. The matrix workflow's own restore-all job (base + every
+#      per-repo image, assembled together) propagates instead.
+if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+  echo "[cgc-db] per-repo mode — propagate_to_host (rsync whole home) is never used here; the matrix workflow's restore-all job propagates instead"
+elif [ "$PUSHED" = "0" ] && [ "$N_TIMEOUT" = "0" ] && [ "$N_DEFER" = "0" ]; then
   echo "[cgc-db] no repo changed — DB already current, nothing to publish or propagate"
 elif [ "$PUSHED" = "0" ]; then
   # NOT the same as "already current" — this is an incomplete cycle. Say so loudly enough
@@ -646,4 +704,8 @@ else
   propagate_to_host
 fi
 
-echo "[cgc-db] UPDATE COMPLETE → $IMAGE:$TAG"
+if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+  echo "[cgc-db] UPDATE COMPLETE → ${REPO_PREFIX:-}<repo>:${REPO_TAG:-latest} (per-repo)"
+else
+  echo "[cgc-db] UPDATE COMPLETE → $IMAGE:$TAG"
+fi
