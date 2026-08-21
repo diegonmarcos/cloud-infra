@@ -178,6 +178,37 @@ ensure_ghcr_auth() {
 # 2) ensure each indexed repo is present at its FRESH origin HEAD in REPOS_ROOT.
 #    Data-driven local→github from build.json.repo_map. clone if missing, else
 #    fetch + reset --hard to the fetched tip. Safe (dedicated clones, not dev tree).
+# DETERMINISTIC MTIMES — the single reason indexing never converged.
+#
+# octocode's incremental reindex is mtime-based: it stores a per-file modification time in
+# LanceDB (src/store/metadata.rs: "File metadata (per-file modification time, for
+# incremental reindex)", store_file_metadata/get_file_mtime) and re-indexes any file whose
+# filesystem mtime differs from the stored one. Git does NOT preserve mtimes, and this
+# runner has no persistent /repos, so every run clones fresh and stamps EVERY file with the
+# clone time. Octocode then correctly concludes the entire tree changed and re-embeds all
+# of it — 1884 files for cloud-infra when only 16 actually changed since its last-indexed
+# commit. That is the whole story behind the "5.2s/file" (it is real embedding work, not a
+# stall) and behind the giants never finishing at any timeout setting.
+#
+# Fix: set each file's mtime to the timestamp of the last commit that touched it. That is
+# deterministic across clones (verified: identical output over repeated runs) yet still
+# changes exactly when the file's content changes, so genuine edits are still detected —
+# a fixed constant would be stable but would also mask real changes forever.
+# Equivalent to git-restore-mtime without taking the dependency.
+restore_mtimes() {
+  _rd="$1"
+  [ -d "$_rd/.git" ] || return 0
+  # One pass over history, newest first: the FIRST time a path appears is its last change.
+  # Deleted paths still appear in history, so skip anything not present in the worktree —
+  # touch would otherwise CREATE them and pollute the tree octocode walks.
+  git -C "$_rd" log --pretty=format:'@%ct' --name-only --no-renames 2>/dev/null \
+  | awk '/^@/{t=substr($0,2);next} NF && !seen[$0]++ {print t" "$0}' \
+  | while read -r _ts _f; do
+      [ -e "$_rd/$_f" ] || continue
+      touch -h -d "@$_ts" "$_rd/$_f" 2>/dev/null || true
+    done
+}
+
 ensure_repos() {
   # /repos is root-owned on a fresh runner — create + own it (sudo) if needed.
   mkdir -p "$REPOS_ROOT" 2>/dev/null || { sudo mkdir -p "$REPOS_ROOT" && sudo chown "$(id -un):$(id -gn)" "$REPOS_ROOT"; }
@@ -235,6 +266,11 @@ ensure_repos() {
         || git clone -q "$url" "$d" 2>/dev/null \
         || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
     fi
+    # After BOTH paths: a refresh (reset --hard) rewrites mtimes on every touched file just
+    # as a clone does, so neither path can be trusted to carry stable mtimes on its own.
+    _mt0=$(date +%s)
+    restore_mtimes "$d"
+    echo "[cgc-db] $lname · restored deterministic mtimes in $(( $(date +%s) - _mt0 ))s"
   done
   if [ -f "$_clonefail" ]; then
     rm -f "$_clonefail"
