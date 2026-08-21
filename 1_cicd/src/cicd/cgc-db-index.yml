@@ -17,11 +17,38 @@
 # │                            last-indexed commit per repo and   │
 # │                            is not skipped by the other phase. │
 # │                                                              │
-# │  Runs on GitHub-hosted ubuntu-latest x86 runner (~14GB disk).│
+# │  MATRIX: one job per repo (repos job resolves index_repos     │
+# │  from build.json into a JSON list at runtime — GitHub          │
+# │  matrices are static YAML, so this is the established         │
+# │  read-config/emit-fromJSON pattern this repo already uses     │
+# │  in ship.yml's `detect` job; the src→dist→.github header-     │
+# │  injection engine (9_others/build.sh) does NOT template       │
+# │  build.json values into workflow content, it only stamps a    │
+# │  banner, so there is no build-time injection path to reuse    │
+# │  here). Each job indexes ONE repo into a FRESH octocode home  │
+# │  (never the 15G monolith base) and packages ONLY that repo's  │
+# │  own project into its own ghcr.io/diegonmarcos/cgc-db-<repo>   │
+# │  image (cloud-cgc-db-update.sh CGC_PACKAGE_MODE=per-repo).    │
+# │  fail-fast: false — one repo timing out or failing must never  │
+# │  cancel the others. Per-job propagation is OFF                │
+# │  (CGC_SKIP_PROPAGATE=1); the restore-all job below runs        │
+# │  ONCE per phase, after every matrix job settles (if: always(),│
+# │  so a partial matrix still propagates whatever DID publish):  │
+# │  cloud-cgc-db-restore-all.sh (Task 4) assembles the shared     │
+# │  base + every per-repo image into one octocode home on the     │
+# │  runner, then rsync streams that home onto oci-apps.          │
+# │                                                              │
+# │  Runs on GitHub-hosted ubuntu-latest x86 runners (~14GB disk).│
 # │  Using x86 avoids oci-apps disk pressure (disk full).        │
 # │  The octocode DB (FastEmbed vectors + graph) is arch-portable│
 # │  so an x86 index is consumed by arm oci-apps cgc-mcp fine.   │
 # │  Runner SSHes into oci-apps over WireGuard to propagate.     │
+# │                                                              │
+# │  MONOLITH PATH NOT YET RETIRED: cloud-cgc-db-update.sh's      │
+# │  default (non per-repo) mode, cloud-cgc-db-package.sh, and     │
+# │  db_publish.image keep working untouched — the monolith        │
+# │  publish/propagate is retired only after this matrix is        │
+# │  proven green, per the migration plan.                        │
 # └──────────────────────────────────────────────────────────────┘
 
 name: "cgc-db-index (reusable octocode index phase)"
@@ -46,23 +73,18 @@ env:
   # from the DB. ensure_repos() reads CGC_DEPLOY_KEY_<local_dir, non-alnum folded to _>, so
   # the script stays generic; only this wiring is per-repo, because Actions resolves secrets
   # by literal name and cannot index into them dynamically. Add one line per private repo in
-  # .runtime.octocode.index_repos — public repos need nothing.
+  # .runtime.octocode.index_repos — public repos need nothing. Declared at the WORKFLOW level
+  # so it reaches every job below (repos/index/restore-all) without repeating it per job.
   CGC_DEPLOY_KEY_cloud_data: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
 jobs:
-  index:
-    name: "cgc-db · ${{ inputs.phase }} · index all repos + propagate"
+  # ── Resolve the repo matrix from build.json (data-driven; see header) ──
+  repos:
+    name: "cgc-db · ${{ inputs.phase }} · resolve repo matrix"
     runs-on: ubuntu-latest
-    # DECLARED, not inherited. GitHub's default job ceiling is 360m; leaving it implicit is
-    # what let build.json drift to max_minutes=300 + repo_timeout_min=285 (worst case 585m)
-    # with nothing to reconcile it against — GitHub then killed the job mid-repo and the run
-    # published nothing. Keep this the single stated ceiling and keep build.json under it:
-    #   max_minutes + repo_timeout_min <= timeout-minutes
-    # The ~90m slack covers clone, packaging and the per-repo GHCR checkpoint pushes.
-    timeout-minutes: 330
-    permissions:
-      contents: read
-      packages: write
+    timeout-minutes: 10
+    outputs:
+      repos: ${{ steps.repos.outputs.repos }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate phase input
@@ -71,6 +93,116 @@ jobs:
             semantic|graphrag) : ;;
             *) echo "::error::unknown phase '${{ inputs.phase }}' (expected semantic|graphrag)"; exit 1 ;;
           esac
+      - name: Resolve .runtime.octocode.index_repos → matrix JSON
+        id: repos
+        run: |
+          set -eu
+          BJ="a_solutions/user-ai_cloud-cgc-mcp/build.json"
+          [ -f "$BJ" ] || { echo "::error::$BJ not found"; exit 1; }
+          REPOS_JSON=$(jq -c '[.runtime.octocode.index_repos[]]' "$BJ")
+          COUNT=$(printf '%s' "$REPOS_JSON" | jq 'length')
+          [ "$COUNT" -gt 0 ] || { echo "::error::.runtime.octocode.index_repos is empty — nothing to index"; exit 1; }
+          echo "repos=$REPOS_JSON" >> "$GITHUB_OUTPUT"
+          echo "[cgc-db] ${{ inputs.phase }} matrix ($COUNT repos): $(printf '%s' "$REPOS_JSON" | jq -r 'join(" ")')"
+
+  # ── One job per repo. fail-fast: false — one repo's failure/timeout must
+  # never cancel the others; each publishes to its OWN GHCR image so a
+  # failure is isolated to that one repo's checkpoint, not the whole cycle.
+  index:
+    name: "cgc-db · ${{ inputs.phase }} · ${{ matrix.repo }}"
+    needs: repos
+    runs-on: ubuntu-latest
+    # Same declared ceiling as the pre-matrix single job (see build.json
+    # .runtime.octocode.update._budget_comment): max_minutes(300) is the true
+    # worst case per repo now that repo_timeout_min is a clamp, not a
+    # reservation, so 330 leaves slack for clone + packaging + push. Per-job
+    # now, not per-cycle — a slow repo no longer eats every other repo's turn.
+    timeout-minutes: 330
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        repo: ${{ fromJson(needs.repos.outputs.repos) }}
+    steps:
+      - uses: actions/checkout@v4
+      # Kept "as today" per the matrix design even though propagation (the
+      # only thing that needs a live WG tunnel) is off in this job — a WG
+      # handshake race between N parallel matrix jobs sharing one gha-runner
+      # peer slot (see ship.yml's max-parallel:1 note) is therefore harmless
+      # here: continue-on-error swallows it, and nothing downstream in THIS
+      # job depends on WG being up (restore-all, not this job, propagates).
+      - name: WireGuard up
+        continue-on-error: true
+        run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
+      - name: Fresh per-repo octocode home
+        run: |
+          mkdir -p "$RUNNER_TEMP/octocode-home"
+          echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home" >> "$GITHUB_ENV"
+      - name: "cgc-db incremental update — ${{ matrix.repo }} only (checkpoint push, no propagate)"
+        # No SSH key / CGC_SSH_OPTS here (unlike the pre-matrix single job): with
+        # CGC_SKIP_PROPAGATE=1 + CGC_PACKAGE_MODE=per-repo, update.sh's
+        # propagate_to_host() is NEVER reached in this job (see cloud-cgc-db-update.sh),
+        # so provisioning deploy-key material on every one of N parallel runners would
+        # be pure unused attack surface. restore-all below is the only job that needs it.
+        env:
+          # phase → USE_LLM (environment is authoritative over build.json).
+          # semantic = structural only (no LLM); graphrag = LLM relationship pass.
+          USE_LLM: ${{ inputs.phase == 'graphrag' && 'true' || 'false' }}
+          # phase → PER-PHASE manifest so each phase change-gates independently and
+          # graphrag is not skipped just because semantic already advanced HEAD.
+          CGC_MANIFEST_PHASE: ${{ inputs.phase }}
+          # ONE repo, indexed into the FRESH home set up above.
+          CGC_INDEX_REPOS: ${{ matrix.repo }}
+          # Per-repo packaging path (cloud-cgc-db-package.sh, mode auto-detected
+          # from the image name) instead of monolith package+propagate — see
+          # cloud-cgc-db-update.sh checkpoint_publish().
+          CGC_PACKAGE_MODE: per-repo
+          # Propagation is centralised in the restore-all job below, which runs ONCE
+          # per phase after every matrix job settles, not once per repo per job.
+          CGC_SKIP_PROPAGATE: "1"
+        run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
+
+  # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
+  # per phase. if: always() so a partial/failed matrix still propagates
+  # whatever DID publish this run instead of leaving oci-apps stale on a
+  # single unrelated repo's failure; this job's own success is what gates
+  # the phase.
+  #
+  # cloud-cgc-db-restore-all.sh (Task 4) assembles base + every per-repo
+  # image into a LOCAL target dir — it runs docker directly against whatever
+  # host it is invoked on, the same contract as cloud-cgc-db-pull.sh, not an
+  # SSH-remote script. So this job assembles the full home HERE on the runner
+  # (where build.json/GHCR-auth/docker already are, from the checkout above),
+  # then transports the assembled result onto oci-apps with the SAME
+  # rsync-into-the-live-volume mechanism cloud-cgc-db-update.sh's
+  # propagate_to_host() already uses for the monolith path (stop container,
+  # rsync --delete, start container) — proven, not reinvented.
+  restore-all:
+    name: "cgc-db · ${{ inputs.phase }} · restore-all → oci-apps"
+    needs: index
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read
+    env:
+      # BOOTSTRAP: this cron job's very first run ever has no base image on GHCR
+      # yet (nothing seeded, no matrix job publishes the base — see
+      # cloud-cgc-db-package.sh). Without this, cloud-cgc-db-restore-all.sh hard-
+      # errors on the missing base and this job goes red, which — because cgc-db.yml
+      # gates the graphrag phase on the semantic phase's result — blocks graphrag too,
+      # on every scheduled run, forever, until someone manually seeds a base out of
+      # band. CGC_BOOTSTRAP_TOLERANT=1 makes a missing base a ::warning:: + exit 0
+      # instead, so the cycle goes green and simply has nothing to propagate yet.
+      # The dagu/manual restore path (cloud-cgc-db-restore-all.sh invoked directly,
+      # not through this workflow) does NOT set this and keeps the hard error, since
+      # there a missing base is an operator mistake worth surfacing loudly.
+      CGC_BOOTSTRAP_TOLERANT: "1"
+    steps:
+      - uses: actions/checkout@v4
       - name: WireGuard up
         continue-on-error: true
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
@@ -78,13 +210,53 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
-      - name: cgc-db incremental update + propagate
+      - name: GHCR auth (restore-all pulls every per-repo image itself)
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Assemble full octocode home locally (base + every per-repo image)
+        id: assemble
+        run: |
+          set -eu
+          HOME_DIR="$RUNNER_TEMP/octocode-home-full"
+          mkdir -p "$HOME_DIR"
+          sh 1_cicd/src/ops/cloud-cgc-db-restore-all.sh "$HOME_DIR"
+          echo "home=$HOME_DIR" >> "$GITHUB_OUTPUT"
+          # CGC_BOOTSTRAP_TOLERANT (above) makes a missing base exit 0 with NOTHING
+          # staged into HOME_DIR — it never reaches the swap step in restore-all.sh.
+          # Detect that here and skip the rsync below: rsync --delete from an EMPTY
+          # source would otherwise wipe the live octocode DB volume on oci-apps.
+          if [ -z "$(ls -A "$HOME_DIR" 2>/dev/null)" ]; then
+            echo "[cgc-db] restore-all: bootstrap — nothing assembled, skipping propagate"
+            echo "assembled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "assembled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: rsync assembled home → oci-apps octocode_db volume
+        if: steps.assemble.outputs.assembled == 'true'
         env:
-          CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-          # phase → USE_LLM (environment is authoritative over build.json).
-          # semantic = structural only (no LLM); graphrag = LLM relationship pass.
-          USE_LLM: ${{ inputs.phase == 'graphrag' && 'true' || 'false' }}
-          # phase → PER-PHASE manifest so each phase change-gates independently and
-          # graphrag is not skipped just because semantic already advanced HEAD.
-          CGC_MANIFEST_PHASE: ${{ inputs.phase }}
-        run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
+          CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
+          ASSEMBLED_HOME: ${{ steps.assemble.outputs.home }}
+        run: |
+          set -eu
+          BJ="a_solutions/user-ai_cloud-cgc-mcp/build.json"
+          VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
+          CTR=$(jq -r '.containers.app.container_name' "$BJ")
+          HOST=$(jq -r '.db_publish.host' "$BJ")
+          # Same SSH-target resolution as cloud-cgc-db-update.sh's propagate_to_host()
+          # and cloud-cgc-db-seed.sh: user@wg_ip from build-gha.json in CI, ssh alias locally.
+          GHA="1_cloud-configs/dist/build-gha.json"
+          TARGET="$HOST"
+          if [ -f "$GHA" ]; then
+            WGIP=$(jq -r --arg h "$HOST" '.vms[$h].wg_ip // empty'  "$GHA" 2>/dev/null)
+            SUSER=$(jq -r --arg h "$HOST" '.vms[$h].user // "ubuntu"' "$GHA" 2>/dev/null)
+            [ -n "$WGIP" ] && TARGET="$SUSER@$WGIP"
+          fi
+          command -v rsync >/dev/null 2>&1 || sudo apt-get install -y -qq rsync
+          echo "[cgc-db] restore-all → $TARGET (rsync $ASSEMBLED_HOME → volume $VOL)"
+          # shellcheck disable=SC2086
+          ssh $CGC_SSH_OPTS "$TARGET" "sudo docker stop $CTR" || true
+          # shellcheck disable=SC2086
+          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $CGC_SSH_OPTS" \
+            "$ASSEMBLED_HOME/" "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
+          # shellcheck disable=SC2086
+          ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR"
+          echo "[cgc-db] restore-all OK — $HOST now serving the freshly assembled multi-image DB"
