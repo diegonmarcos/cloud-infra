@@ -120,32 +120,6 @@
     },
     {
       "table": "service",
-      "id": "matrix_continuwuity",
-      "key": "service:matrix_continuwuity",
-      "properties": {
-        "name": "matrix-continuwuity",
-        "category": "app",
-        "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-        "domain": "matrix.diegonmarcos.com",
-        "port": 8008,
-        "vm": "oci-apps",
-        "folder": "user-comm_matrix-continuwuity"
-      }
-    },
-    {
-      "table": "container",
-      "id": "continuwuity",
-      "key": "container:continuwuity",
-      "properties": {
-        "name": "continuwuity",
-        "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
-        "role": "app",
-        "port": 8008,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
       "id": "alerts_api",
       "key": "service:alerts_api",
       "properties": {
@@ -1192,25 +1166,25 @@
     },
     {
       "table": "service",
-      "id": "cloud_cgc_mcp",
-      "key": "service:cloud_cgc_mcp",
+      "id": "cloud_cgc_pub_mcp",
+      "key": "service:cloud_cgc_pub_mcp",
       "properties": {
-        "name": "cloud-cgc-mcp",
+        "name": "cloud-cgc-pub-mcp",
         "category": "obs",
-        "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+        "description": "Cloud CGC Pub MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
         "domain": null,
         "port": 3105,
         "vm": "oci-apps",
-        "folder": "user-ai_cloud-cgc-mcp"
+        "folder": "user-ai_cloud-cgc-pub-mcp"
       }
     },
     {
       "table": "container",
-      "id": "cloud_cgc_mcp",
-      "key": "container:cloud_cgc_mcp",
+      "id": "cloud_cgc_pub_mcp",
+      "key": "container:cloud_cgc_pub_mcp",
       "properties": {
-        "name": "cloud-cgc-mcp",
-        "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+        "name": "cloud-cgc-pub-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest",
         "role": "app",
         "port": 3105,
         "public": true
@@ -1394,6 +1368,32 @@
         "role": "app",
         "port": null,
         "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "matrix_continuwuity",
+      "key": "service:matrix_continuwuity",
+      "properties": {
+        "name": "matrix-continuwuity",
+        "category": "app",
+        "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+        "domain": "matrix.diegonmarcos.com",
+        "port": 8008,
+        "vm": "oci-apps",
+        "folder": "user-comm_matrix-continuwuity"
+      }
+    },
+    {
+      "table": "container",
+      "id": "continuwuity",
+      "key": "container:continuwuity",
+      "properties": {
+        "name": "continuwuity",
+        "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+        "role": "app",
+        "port": 8008,
+        "public": true
       }
     },
     {
@@ -2076,14 +2076,6 @@
     },
     {
       "table": "domain",
-      "id": "matrix_diegonmarcos_com",
-      "key": "domain:matrix_diegonmarcos_com",
-      "properties": {
-        "fqdn": "matrix.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
       "id": "languagetool_diegonmarcos_com",
       "key": "domain:languagetool_diegonmarcos_com",
       "properties": {
@@ -2268,6 +2260,14 @@
     },
     {
       "table": "domain",
+      "id": "matrix_diegonmarcos_com",
+      "key": "domain:matrix_diegonmarcos_com",
+      "properties": {
+        "fqdn": "matrix.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "messenger_diegonmarcos_com",
       "key": "domain:messenger_diegonmarcos_com",
       "properties": {
@@ -2417,17 +2417,6 @@
       "properties": {
         "name": "cloud",
         "role": "service-infra"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_comm_matrix_continuwuity",
-      "key": "module:user_comm_matrix_continuwuity",
-      "properties": {
-        "name": "user-comm_matrix-continuwuity",
-        "repo": "cloud",
-        "category": "app",
-        "service": "matrix-continuwuity"
       }
     },
     {
@@ -2839,13 +2828,13 @@
     },
     {
       "table": "module",
-      "id": "user_ai_cloud_cgc_mcp",
-      "key": "module:user_ai_cloud_cgc_mcp",
+      "id": "user_ai_cloud_cgc_pub_mcp",
+      "key": "module:user_ai_cloud_cgc_pub_mcp",
       "properties": {
-        "name": "user-ai_cloud-cgc-mcp",
+        "name": "user-ai_cloud-cgc-pub-mcp",
         "repo": "cloud",
         "category": "obs",
-        "service": "cloud-cgc-mcp"
+        "service": "cloud-cgc-pub-mcp"
       }
     },
     {
@@ -2912,6 +2901,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "mail-puller"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_comm_matrix_continuwuity",
+      "key": "module:user_comm_matrix_continuwuity",
+      "properties": {
+        "name": "user-comm_matrix-continuwuity",
+        "repo": "cloud",
+        "category": "app",
+        "service": "matrix-continuwuity"
       }
     },
     {
@@ -3499,22 +3499,6 @@
     }
   ],
   "edges": [
-    {
-      "table": "hosted_on",
-      "from": "service:matrix_continuwuity",
-      "to": "vm:oci_apps",
-      "key": "service:matrix_continuwuity->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:matrix_continuwuity",
-      "to": "container:continuwuity",
-      "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
-      "properties": {
-        "role": "app"
-      }
-    },
     {
       "table": "hosted_on",
       "from": "service:alerts_api",
@@ -4148,16 +4132,16 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:cloud_cgc_mcp",
+      "from": "service:cloud_cgc_pub_mcp",
       "to": "vm:oci_apps",
-      "key": "service:cloud_cgc_mcp->hosted_on->vm:oci_apps",
+      "key": "service:cloud_cgc_pub_mcp->hosted_on->vm:oci_apps",
       "properties": {}
     },
     {
       "table": "runs_container",
-      "from": "service:cloud_cgc_mcp",
-      "to": "container:cloud_cgc_mcp",
-      "key": "service:cloud_cgc_mcp->runs_container->container:cloud_cgc_mcp",
+      "from": "service:cloud_cgc_pub_mcp",
+      "to": "container:cloud_cgc_pub_mcp",
+      "key": "service:cloud_cgc_pub_mcp->runs_container->container:cloud_cgc_pub_mcp",
       "properties": {
         "role": "app"
       }
@@ -4265,6 +4249,22 @@
       "from": "service:mail_puller",
       "to": "container:mail_puller",
       "key": "service:mail_puller->runs_container->container:mail_puller",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:matrix_continuwuity",
+      "to": "vm:oci_apps",
+      "key": "service:matrix_continuwuity->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:matrix_continuwuity",
+      "to": "container:continuwuity",
+      "key": "service:matrix_continuwuity->runs_container->container:continuwuity",
       "properties": {
         "role": "app"
       }
@@ -4708,15 +4708,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:matrix_continuwuity",
-      "to": "service:caddy",
-      "key": "service:matrix_continuwuity->proxied_by->service:caddy",
-      "properties": {
-        "domain": "matrix.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:languagetool",
       "to": "service:caddy",
       "key": "service:languagetool->proxied_by->service:caddy",
@@ -4933,6 +4924,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:matrix_continuwuity",
+      "to": "service:caddy",
+      "key": "service:matrix_continuwuity->proxied_by->service:caddy",
+      "properties": {
+        "domain": "matrix.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:matrix_element",
       "to": "service:caddy",
       "key": "service:matrix_element->proxied_by->service:caddy",
@@ -5092,13 +5092,6 @@
       "properties": {
         "domain": "vault.diegonmarcos.com"
       }
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:matrix_diegonmarcos_com",
-      "to": "service:matrix_continuwuity",
-      "key": "domain:matrix_diegonmarcos_com->routes_to->service:matrix_continuwuity",
-      "properties": {}
     },
     {
       "table": "routes_to",
@@ -5277,6 +5270,13 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:matrix_diegonmarcos_com",
+      "to": "service:matrix_continuwuity",
+      "key": "domain:matrix_diegonmarcos_com->routes_to->service:matrix_continuwuity",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:messenger_diegonmarcos_com",
       "to": "service:matrix_element",
       "key": "domain:messenger_diegonmarcos_com->routes_to->service:matrix_element",
@@ -5399,20 +5399,6 @@
       "from": "domain:vault_diegonmarcos_com",
       "to": "service:vaultwarden",
       "key": "domain:vault_diegonmarcos_com->routes_to->service:vaultwarden",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_comm_matrix_continuwuity",
-      "to": "repo:cloud",
-      "key": "module:user_comm_matrix_continuwuity->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_matrix_continuwuity",
-      "to": "service:matrix_continuwuity",
-      "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
       "properties": {}
     },
     {
@@ -5935,16 +5921,16 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:user_ai_cloud_cgc_mcp",
+      "from": "module:user_ai_cloud_cgc_pub_mcp",
       "to": "repo:cloud",
-      "key": "module:user_ai_cloud_cgc_mcp->belongs_to_repo->repo:cloud",
+      "key": "module:user_ai_cloud_cgc_pub_mcp->belongs_to_repo->repo:cloud",
       "properties": {}
     },
     {
       "table": "implements",
-      "from": "module:user_ai_cloud_cgc_mcp",
-      "to": "service:cloud_cgc_mcp",
-      "key": "module:user_ai_cloud_cgc_mcp->implements->service:cloud_cgc_mcp",
+      "from": "module:user_ai_cloud_cgc_pub_mcp",
+      "to": "service:cloud_cgc_pub_mcp",
+      "key": "module:user_ai_cloud_cgc_pub_mcp->implements->service:cloud_cgc_pub_mcp",
       "properties": {}
     },
     {
@@ -6029,6 +6015,20 @@
       "from": "module:user_comm_mail_puller",
       "to": "service:mail_puller",
       "key": "module:user_comm_mail_puller->implements->service:mail_puller",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_comm_matrix_continuwuity",
+      "to": "repo:cloud",
+      "key": "module:user_comm_matrix_continuwuity->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_comm_matrix_continuwuity",
+      "to": "service:matrix_continuwuity",
+      "key": "module:user_comm_matrix_continuwuity->implements->service:matrix_continuwuity",
       "properties": {}
     },
     {

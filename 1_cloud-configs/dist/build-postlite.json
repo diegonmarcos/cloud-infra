@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
-    "description": "postlite-authelia container config (service=authelia, role=postlite)",
+    "description": "postlite container config (service=postlite, role=_doc_postlite-authelia)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
@@ -27,31 +27,9 @@
   },
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
-  "container": {
-    "container_name": "postlite-authelia",
-    "image": "ghcr.io/diegonmarcos/postlite:latest",
-    "port": null,
-    "port_env": null,
-    "public": false,
-    "healthcheck": null,
-    "volumes": [],
-    "env_file": false,
-    "depends_on": [
-      "app"
-    ],
-    "resources": {
-      "limits": {
-        "memory": "64M"
-      },
-      "reservations": {
-        "memory": "16M"
-      }
-    },
-    "read_only": false,
-    "protocol": "tcp"
-  },
-  "service": "authelia",
-  "role": "postlite",
+  "container": "Declared by infra-sec_authelia/build.json, which carries the real spec (image, volumes, depends_on) and deploys it as authelia's sidecar. A bare stub here made two build.json files claim the same container_name — the owner declares, the catalogue only points.",
+  "service": "postlite",
+  "role": "_doc_postlite-authelia",
   "vm": "gcp-proxy",
   "services": {
     "alerts-api": {
@@ -1604,32 +1582,5 @@
         "auth": "bearer"
       }
     }
-  },
-  "timezone": "Europe/Madrid",
-  "secret_env_vars": [
-    "AUTHELIA_JWT_SECRET",
-    "AUTHELIA_SESSION_SECRET",
-    "AUTHELIA_STORAGE_ENCRYPTION_KEY",
-    "AUTHELIA_REDIS_PASSWORD",
-    "AUTHELIA_OIDC_HMAC_SECRET",
-    "AUTHELIA_USER_DIEGO_HASH",
-    "AUTHELIA_OIDC_CLIENT_NPM_SECRET",
-    "AUTHELIA_OIDC_CLIENT_NOCODB_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLI_SECRET",
-    "AUTHELIA_SMTP_PASSWORD",
-    "AUTHELIA_OIDC_JWKS_KEY",
-    "AUTHELIA_OIDC_CLIENT_CLOUDFLARE_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_SECRET",
-    "AUTHELIA_OIDC_CLIENT_DAGU_SECRET",
-    "AUTHELIA_OIDC_CLIENT_C3_MCP_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MONITORING_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MATTERMOST_SECRET",
-    "AUTHELIA_OIDC_CLIENT_DAGU_CC_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MATTERMOST_CC_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLOUD_ADMIN_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_OPUS_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_SONNET_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_HAIKU_SECRET",
-    "AUTHELIA_USER_ME_TOTP_SECRET"
-  ]
+  }
 }

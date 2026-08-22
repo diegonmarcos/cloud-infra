@@ -77,7 +77,6 @@
         "host_literal": true
       },
       "containers": [
-        "continuwuity",
         "languagetool",
         "c3-infra-api",
         "c3-infra-mcp",
@@ -106,7 +105,7 @@
         "umami-setup",
         "crowdsec",
         "claude-superset-api",
-        "cloud-cgc-mcp",
+        "cloud-cgc-pub-mcp",
         "hermes-agent",
         "kg-store",
         "my-ai-api",
@@ -114,6 +113,7 @@
         "mattermost",
         "mattermost-postgres",
         "mattermost-bots",
+        "continuwuity",
         "matrix-element",
         "mautrix-whatsapp",
         "scrappers-api",
@@ -172,7 +172,7 @@
         "postlite-npm",
         "postlite-vaultwarden",
         "postlite-ntfy",
-        "postlite-authelia",
+        null,
         "sqlite-npm",
         "sqlite-vaultwarden",
         "sqlite-ntfy",
@@ -552,12 +552,6 @@
     "internal_zones": [],
     "derived_entries": [
       {
-        "name": "matrix-continuwuity.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "matrix-continuwuity"
-      },
-      {
         "name": "alerts-api.app",
         "type": "A",
         "value": "10.0.0.4",
@@ -750,10 +744,10 @@
         "service": "claude-superset-api"
       },
       {
-        "name": "cloud-cgc-mcp.app",
+        "name": "cloud-cgc-pub-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "cloud-cgc-mcp"
+        "service": "cloud-cgc-pub-mcp"
       },
       {
         "name": "hermes-agent.app",
@@ -790,6 +784,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "chat-mattermost"
+      },
+      {
+        "name": "matrix-continuwuity.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "matrix-continuwuity"
       },
       {
         "name": "matrix-element.app",
@@ -957,83 +957,6 @@
     "cloudflare": []
   },
   "services": {
-    "matrix-continuwuity": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "user-comm_matrix-continuwuity",
-      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-      "domain": "matrix.diegonmarcos.com",
-      "port": 8008,
-      "dns": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008",
-      "containers": {
-        "app": {
-          "container_name": "continuwuity",
-          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
-          "port": 8008,
-          "port_env": "CONTINUWUITY_PORT",
-          "dns": "matrix-continuwuity.app",
-          "public": true,
-          "proxy": {
-            "domain": "matrix.diegonmarcos.com",
-            "auth": "none"
-          },
-          "healthcheck": "/_matrix/client/versions",
-          "monitoring": {
-            "tls_check": true,
-            "dns_check": true,
-            "endpoint_check": true
-          },
-          "volumes": [
-            "continuwuity_data:/var/lib/continuwuity"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "continuwuity"
-      ],
-      "all_ports": [
-        "8008"
-      ],
-      "all_dns": [
-        "matrix-continuwuity.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "primary": {
-          "wg_only": false,
-          "domain": "matrix.diegonmarcos.com",
-          "auth": "none"
-        }
-      },
-      "declared_ports": {
-        "app": 8008
-      },
-      "health": {
-        "path": "/_matrix/client/versions"
-      },
-      "monitoring": {
-        "tls_check": true,
-        "dns_check": true,
-        "endpoint_check": true
-      },
-      "backup": {
-        "enabled": true,
-        "volumes": [
-          "continuwuity_data"
-        ]
-      },
-      "flake": "user-comm_matrix-continuwuity"
-    },
     "alerts-api": {
       "category": "tools",
       "vm": "oci-E2-f_1",
@@ -2136,9 +2059,7 @@
         "postlite-ntfy": {
           "container_name": "postlite-ntfy"
         },
-        "postlite-authelia": {
-          "container_name": "postlite-authelia"
-        },
+        "_doc_postlite-authelia": "Declared by infra-sec_authelia/build.json, which carries the real spec (image, volumes, depends_on) and deploys it as authelia's sidecar. A bare stub here made two build.json files claim the same container_name — the owner declares, the catalogue only points.",
         "sqlite-npm": {
           "container_name": "sqlite-npm"
         },
@@ -2156,7 +2077,7 @@
         "postlite-npm",
         "postlite-vaultwarden",
         "postlite-ntfy",
-        "postlite-authelia",
+        null,
         "sqlite-npm",
         "sqlite-vaultwarden",
         "sqlite-ntfy",
@@ -2960,6 +2881,7 @@
           "container_name": "rss-gateway",
           "image": "python:3.11-slim",
           "port": 8091,
+          "protocol": "http",
           "port_env": null,
           "dns": null,
           "public": false,
@@ -3853,27 +3775,27 @@
       },
       "flake": "user-ai_claude-superset-api"
     },
-    "cloud-cgc-mcp": {
+    "cloud-cgc-pub-mcp": {
       "category": "obs",
       "vm": "oci-A1-f_0",
-      "folder": "user-ai_cloud-cgc-mcp",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "folder": "user-ai_cloud-cgc-pub-mcp",
+      "description": "Cloud CGC Pub MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
       "port": 3105,
-      "dns": "cloud-cgc-mcp.app",
+      "dns": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "containers": {
         "app": {
-          "container_name": "cloud-cgc-mcp",
-          "image": "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest",
+          "container_name": "cloud-cgc-pub-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest",
           "port": 3105,
           "port_env": "MCP_HTTP_PORT",
-          "dns": "cloud-cgc-mcp.app",
+          "dns": "cloud-cgc-pub-mcp.app",
           "public": true,
           "proxy": {
             "streaming": true,
             "type": "path",
             "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/cloud-cgc-mcp"
+            "base_path": "/cloud-cgc-pub-mcp"
           },
           "healthcheck": "/mcp",
           "monitoring": null,
@@ -3888,13 +3810,13 @@
         }
       },
       "container_names": [
-        "cloud-cgc-mcp"
+        "cloud-cgc-pub-mcp"
       ],
       "all_ports": [
         "3105"
       ],
       "all_dns": [
-        "cloud-cgc-mcp.app"
+        "cloud-cgc-pub-mcp.app"
       ],
       "compose": {
         "containers": [],
@@ -3907,7 +3829,7 @@
           "streaming": true,
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/cloud-cgc-mcp",
+          "base_path": "/cloud-cgc-pub-mcp",
           "wg_only": true
         }
       },
@@ -3917,7 +3839,7 @@
       "health": {
         "path": "/mcp"
       },
-      "flake": "user-ai_cloud-cgc-mcp"
+      "flake": "user-ai_cloud-cgc-pub-mcp"
     },
     "db-agent": {
       "category": "data",
@@ -4329,6 +4251,83 @@
         ]
       },
       "flake": "user-comm_mail-puller"
+    },
+    "matrix-continuwuity": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_matrix-continuwuity",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "domain": "matrix.diegonmarcos.com",
+      "port": 8008,
+      "dns": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "containers": {
+        "app": {
+          "container_name": "continuwuity",
+          "image": "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest",
+          "port": 8008,
+          "port_env": "CONTINUWUITY_PORT",
+          "dns": "matrix-continuwuity.app",
+          "public": true,
+          "proxy": {
+            "domain": "matrix.diegonmarcos.com",
+            "auth": "none"
+          },
+          "healthcheck": "/_matrix/client/versions",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "continuwuity_data:/var/lib/continuwuity"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "continuwuity"
+      ],
+      "all_ports": [
+        "8008"
+      ],
+      "all_dns": [
+        "matrix-continuwuity.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "wg_only": false,
+          "domain": "matrix.diegonmarcos.com",
+          "auth": "none"
+        }
+      },
+      "declared_ports": {
+        "app": 8008
+      },
+      "health": {
+        "path": "/_matrix/client/versions"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "backup": {
+        "enabled": true,
+        "volumes": [
+          "continuwuity_data"
+        ]
+      },
+      "flake": "user-comm_matrix-continuwuity"
     },
     "matrix-element": {
       "category": "app",
@@ -5259,6 +5258,7 @@
           "container_name": "news-gdelt",
           "image": "ghcr.io/diegonmarcos/news-gdelt:latest",
           "port": 3019,
+          "protocol": "http",
           "port_env": "PORT"
         }
       },
