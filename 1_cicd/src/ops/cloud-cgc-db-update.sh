@@ -186,12 +186,48 @@ if [ -z "${CGC_SANDBOXED:-}" ] && [ "${CGC_NO_SANDBOX:-}" != "1" ]; then
   fi
 fi
 
+# ── GUARANTEED NON-GIT SCRATCH DIR — STRAY-PREVENT, production incident (run
+# 32572923354): packaging died with "expected exactly ONE project directory
+# ... found 2". octocode initializes a project dir for the CWD's git repo on
+# (apparently) ANY invocation, keyed by sha256(normalized origin URL) — so it
+# is STABLE across runs for any git repo with a real origin. This script never
+# `cd`s its own top-level shell anywhere (only inside `( cd ... && ... )`
+# subshells for command substitution / the per-repo index below), so every
+# BARE octocode call runs with this script's AMBIENT cwd — which in CI is the
+# cloud-infra checkout itself ($GITHUB_WORKSPACE, a real git repo with a
+# stable origin). A pre-index octocode call (version probe / config bootstrap,
+# below) therefore silently stamped a stable stray <project_id>/ for
+# cloud-infra into the octocode home BEFORE the target repo's own index ever
+# ran, so packaging's exactly-one check (find_project_dir) saw that stray plus
+# the target's own dir and hard-errored on every job.
+# Every octocode invocation below that is NOT the actual 'octocode index' of a
+# target repo (version probes, config bootstrap/mutation) is cd'd into this
+# dir instead of running at the ambient cwd. Freshly created and deliberately
+# left un-git-init'd — octocode's CWD-based project resolution has no git repo
+# to key off here, so it cannot stamp anything. One dir for the whole script
+# run (nothing inside it needs to persist between calls); created AFTER the
+# freeze-proofing re-exec above so it belongs to the actual worker process.
+CGC_SCRATCH="$(mktemp -d)"
+trap 'rm -rf "$CGC_SCRATCH"' EXIT
+
 # 0b) ensure a FastEmbed-CAPABLE octocode on PATH. A binary built WITHOUT FastEmbed
 #     (e.g. some nix/static builds — oci-apps' nix-profile octocode is one) fails
 #     `octocode index` at runtime; the producer would then package the UNCHANGED
 #     base = a silent no-op "update". So we VERIFY capability and, if the on-PATH
 #     octocode lacks it, extract the pinned image binary (the *-fastembed-* images
 #     are built with it). Pinned version keeps the DB schema compatible.
+# AUDITED (STRAY-PREVENT): this IS an `octocode index` call, but it already runs cd'd
+# into its own fresh mktemp -d ($_t, unique per call) — never the ambient cwd
+# / cloud-infra checkout — so it cannot be the stable-per-job stray described
+# above. It DOES `git init` that dir first: octocode's config default is
+# require_git=true (see bootstrap_config_toml() below), so an ungit'd dir
+# risks failing on "not a git repository" before ever reaching the FastEmbed
+# capability check this probe exists to observe — leave it as is. $_t has no
+# origin remote, so even if it stamps a project entry, that entry's key is not
+# derived from a stable origin URL the way cloud-infra's is; harmless
+# left-over strays from this call (if any) are still handled generically by
+# STRAY-SELECT's before/after diff in the per-repo loop, which excludes anything
+# already present before the target repo's own index runs.
 octocode_has_fastembed() {  # $1 = octocode binary path/name
   _t="$(mktemp -d)"; ( cd "$_t" && git init -q . >/dev/null 2>&1 ) || true
   _o="$( ( cd "$_t" && "$1" index ) 2>&1 || true )"; rm -rf "$_t"
@@ -199,7 +235,7 @@ octocode_has_fastembed() {  # $1 = octocode binary path/name
 }
 ensure_octocode() {
   if command -v octocode >/dev/null 2>&1 && octocode_has_fastembed octocode; then
-    echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok)"; return 0
+    echo "[cgc-db] octocode: $(cd "$CGC_SCRATCH" && octocode --version 2>/dev/null) (FastEmbed ok)"; return 0
   fi
   command -v docker >/dev/null 2>&1 || { echo "::error::need a FastEmbed-capable octocode or docker to obtain it"; exit 1; }
   bindir="${CGC_BIN:-$HOME/.local/bin}"; mkdir -p "$bindir"
@@ -222,7 +258,7 @@ ensure_octocode() {
   PATH="$bindir:$PATH"; export PATH
   LD_LIBRARY_PATH="$bindir:${LD_LIBRARY_PATH:-}"; export LD_LIBRARY_PATH
   octocode_has_fastembed "$bindir/octocode" || { echo "::error::pinned image octocode ALSO lacks FastEmbed: $OCTO_IMAGE"; exit 1; }
-  echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok, from image)"
+  echo "[cgc-db] octocode: $(cd "$CGC_SCRATCH" && octocode --version 2>/dev/null) (FastEmbed ok, from image)"
 }
 
 # 1) ensure GHCR auth — only if a token is provided (local is usually pre-authed).
@@ -432,6 +468,71 @@ propagate_to_host() {
   fi
 }
 
+# STRAY-SELECT — ROBUST PROJECT-DIR SELECTION (per-repo mode). "exactly one dir under
+# OCTO_HOME" (package.sh's find_project_dir) is the WRONG invariant to check
+# BEFORE packaging: production incident (run 32572923354) — a stray project
+# dir (see STRAY-PREVENT above for the leading cause; STRAY-SELECT is deliberately
+# independent of STRAY-PREVENT actually catching every cause, since strays can in
+# principle come from anywhere) sat in OCTO_HOME BEFORE this repo's own index
+# ran, so find_project_dir saw two dirs and hard-errored instead of packaging.
+#
+# Snapshot the set of project dirs immediately BEFORE this repo's `octocode
+# index`, and derive the target from the DIFF against the set immediately
+# AFTER, instead of a bare count:
+#   • exactly one NEW dir            → that is the target (a fresh index —
+#                                       true whether OCTO_HOME started clean
+#                                       or already had unrelated stray dirs;
+#                                       those simply are not "new")
+#   • zero new, exactly one TOUCHED  → that is the target (re-index of a
+#                                       project dir this job already restored
+#                                       from a prior per-repo checkpoint —
+#                                       "touched" = some file under it has an
+#                                       mtime newer than a marker stamped
+#                                       right before the index ran)
+#   • anything else                  → ambiguous; name the sets and hard-error
+#                                       rather than guess (0 new+0 touched, or
+#                                       >1 new, or >1 touched-with-no-new all
+#                                       land here)
+# Mirrors find_project_dir's fastembed/sentencetransformer exclusion (root-
+# state model caches, never project dirs) so the two never disagree.
+project_dirs_snapshot() {  # $1=OCTO_HOME → stdout: one dir name per line
+  for _pds_e in "$1"/*; do
+    [ -d "$_pds_e" ] || continue
+    _pds_b="${_pds_e##*/}"
+    case "$_pds_b" in fastembed|sentencetransformer) continue ;; esac
+    printf '%s\n' "$_pds_b"
+  done
+}
+
+resolve_project_dir() {  # $1=OCTO_HOME $2=BEFORE(newline list) $3=MARKER(mtime ref file) → stdout: dir name; rc!=0 on ambiguous
+  _rpd_home="$1"; _rpd_before="$2"; _rpd_marker="$3"
+  _rpd_after=$(project_dirs_snapshot "$_rpd_home")
+  _rpd_new="" _rpd_n_new=0
+  for _rpd_d in $_rpd_after; do
+    printf '%s\n' "$_rpd_before" | grep -qxF "$_rpd_d" || { _rpd_new="$_rpd_new $_rpd_d"; _rpd_n_new=$((_rpd_n_new + 1)); }
+  done
+  if [ "$_rpd_n_new" -eq 1 ]; then
+    printf '%s\n' "${_rpd_new# }"
+    return 0
+  fi
+  if [ "$_rpd_n_new" -eq 0 ]; then
+    _rpd_touched="" _rpd_n_touched=0
+    for _rpd_d in $_rpd_after; do
+      # Preexisting dir (present before too) whose contents changed since $_rpd_marker was stamped.
+      [ -n "$(find "$_rpd_home/$_rpd_d" -newer "$_rpd_marker" -print -quit 2>/dev/null)" ] \
+        && { _rpd_touched="$_rpd_touched $_rpd_d"; _rpd_n_touched=$((_rpd_n_touched + 1)); }
+    done
+    if [ "$_rpd_n_touched" -eq 1 ]; then
+      printf '%s\n' "${_rpd_touched# }"
+      return 0
+    fi
+    echo "::error::[cgc-db] ambiguous project-dir diff under $_rpd_home: before=[$(printf '%s' "$_rpd_before" | tr '\n' ' ')] after=[$(printf '%s' "$_rpd_after" | tr '\n' ' ')] new=0 touched=$_rpd_n_touched[$(printf '%s' "$_rpd_touched" | tr '\n' ' ')] — cannot determine which dir this index produced" >&2
+    return 1
+  fi
+  echo "::error::[cgc-db] ambiguous project-dir diff under $_rpd_home: before=[$(printf '%s' "$_rpd_before" | tr '\n' ' ')] after=[$(printf '%s' "$_rpd_after" | tr '\n' ' ')] new=$_rpd_n_new[$(printf '%s' "$_rpd_new" | tr '\n' ' ')] — expected exactly one new dir" >&2
+  return 1
+}
+
 # Checkpoint-push after one repo. CGC_PACKAGE_MODE=per-repo (matrix CI) packages
 # ONLY that repo's own project dir into its OWN GHCR image; the default
 # "monolith" mode keeps packaging the WHOLE octocode home into the single
@@ -441,9 +542,17 @@ propagate_to_host() {
 # else), so the only difference here is WHICH image name is passed.
 # REPO_PREFIX/REPO_TAG are set once above (per-repo restore-base branch) —
 # reused here rather than re-reading build.json per repo.
+# CGC_PROJECT_DIR (STRAY-SELECT) — when the per-repo loop below has already resolved
+# THIS checkpoint's project dir via the before/after diff (_proj_resolved),
+# pass it through so package.sh's own find_project_dir (an exactly-one count
+# over the WHOLE home, which is exactly the fragile invariant STRAY-SELECT replaces)
+# is bypassed for this call. Empty when unresolved (e.g. monolith mode, where
+# packaging tars the whole home and never looks at project dirs at all) —
+# package.sh falls back to find_project_dir precisely as before for any
+# caller that does not set it.
 checkpoint_publish() {  # $1 = repo local name
   if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
-    CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "${REPO_PREFIX}${1}" "$REPO_TAG"
+    CGC_BUILD_JSON="$BJ" CGC_PROJECT_DIR="${_proj_resolved:-}" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "${REPO_PREFIX}${1}" "$REPO_TAG"
   else
     CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
   fi
@@ -675,11 +784,18 @@ fi
 # BEFORE the generic fallback below, which is a documented no-op for this exact
 # case (kept, untouched, as the monolith-mode safety net it always was).
 [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && bootstrap_config_toml
-[ -f "$CFG" ] || octocode config >/dev/null 2>&1 || true
+[ -f "$CFG" ] || ( cd "$CGC_SCRATCH" && octocode config ) >/dev/null 2>&1 || true
 
 # 4a) force the GraphRAG LLM phase on (use_llm + model). awk, never sed.
+# STRAY-PREVENT: `octocode config` here (and in the else branch below) is a bare,
+# non-index octocode invocation — cd into CGC_SCRATCH (see its definition
+# above) rather than the script's ambient cwd, so it cannot stamp a project
+# dir for the CI checkout. This is best-effort only: the awk block right
+# after each call is what actually enforces the resulting config.toml state
+# either way, so this cd change cannot regress correctness even if the CLI
+# call itself behaves differently outside a git repo.
 if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
-  octocode config --model "$LLM" --graphrag-enabled true >/dev/null 2>&1 || true
+  ( cd "$CGC_SCRATCH" && octocode config --model "$LLM" --graphrag-enabled true ) >/dev/null 2>&1 || true
   awk -v m="$LLM" '
     /^\[graphrag\]/                                { in_gr=1 }
     /^\[/ && !/^\[graphrag\]/                      { in_gr=0 }
@@ -696,7 +812,7 @@ else
   # which makes octocode block on per-batch LLM timeouts → glacial. Previously this
   # branch only PRINTED "structural-only" without disabling it. Disable it for real.
   if [ -f "$CFG" ]; then
-    octocode config --graphrag-enabled false --code-embedding-model "$CODE_EMBED" --text-embedding-model "$TEXT_EMBED" >/dev/null 2>&1 || true
+    ( cd "$CGC_SCRATCH" && octocode config --graphrag-enabled false --code-embedding-model "$CODE_EMBED" --text-embedding-model "$TEXT_EMBED" ) >/dev/null 2>&1 || true
     awk '
       /^\[graphrag\]/                              { in_gr=1 }
       /^\[/ && !/^\[graphrag\]/                    { in_gr=0 }
@@ -853,6 +969,15 @@ for r in $REPOS; do
   # hunch — these two lines plus the files/min below say whether it is memory or disk.
   _files=$(git -C "$d" ls-files 2>/dev/null | wc -l)
   echo "[cgc-db] $r · pressure before index: mem=$(free -g 2>/dev/null | awk '/^Mem:/{print $3"/"$2"G used, "$6"G cache"}') disk=$(df -h "$OCTO_HOME" 2>/dev/null | awk 'NR==2{print $4" free"}')"
+  # STRAY-SELECT (per-repo mode only — see project_dirs_snapshot()/resolve_project_dir()
+  # above): snapshot the project dirs under OCTO_HOME and stamp an mtime marker
+  # RIGHT BEFORE this repo's own index, so the diff after it can tell which dir
+  # this specific index run produced/touched regardless of what else is in the home.
+  _before_dirs="" _idx_marker=""
+  if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+    _before_dirs=$(project_dirs_snapshot "$OCTO_HOME")
+    _idx_marker=$(mktemp)
+  fi
   _t0=$(date +%s)
   echo "[cgc-db] === incremental index: $r (was=${last:-none} now=$cur, ${_files} files) ==="
   # Capture octocode's REAL exit status (a pipe to `tail` would mask it) and make a
@@ -869,6 +994,18 @@ for r in $REPOS; do
   # count, but only part of it got indexed) — either way it is the number to watch.
   _dt=$(( $(date +%s) - _t0 ))
   echo "[cgc-db] $r · index took ${_dt}s for ${_files} files ($(awk -v d="$_dt" -v f="$_files" 'BEGIN{printf (f>0? "%.2f":"n/a"), d/(f>0?f:1)}')s/file, rc=$_rc)"
+  # STRAY-SELECT resolution — only for runs that actually reached/touched a project
+  # dir (rc=0 success or rc=124 partial, both checkpoint below); a hard failure
+  # (the else branch) exits before ever reaching checkpoint_publish, so it needs no
+  # resolved dir. Ambiguity is fatal here, same severity as an index failure: we
+  # refuse to package/push a checkpoint we cannot positively identify.
+  _proj_resolved=""
+  if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && { [ "$_rc" = "0" ] || [ "$_rc" = "124" ]; }; then
+    _proj_resolved=$(resolve_project_dir "$OCTO_HOME" "$_before_dirs" "$_idx_marker") \
+      || { rm -f "$_idx_marker" "$_log" 2>/dev/null; echo "::error::[cgc-db] $r · cannot identify which project dir this index produced — refusing to package/push an unidentifiable checkpoint"; exit 1; }
+    echo "[cgc-db] $r · resolved project dir: $_proj_resolved"
+  fi
+  rm -f "$_idx_marker" 2>/dev/null || true
   if [ "$_rc" = "0" ]; then
     tail -4 "$_log"; rm -f "$_log"
   elif [ "$_rc" = "124" ]; then
