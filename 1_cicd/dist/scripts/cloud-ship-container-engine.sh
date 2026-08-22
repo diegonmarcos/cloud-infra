@@ -345,6 +345,25 @@ ssh_run_detached() {
     _srd_w=0          # seconds since the remote last produced output
     _srd_elapsed=0    # total seconds waited
     _srd_max="${SSH_DETACH_MAX:-7200}"
+    # Clamp the ceiling to the time the CI step actually has left. The default
+    # 7200s is DOUBLE ship.yml's 80-min step budget, so on a slow VM the loop
+    # could never reach its own limit: GHA SIGKILLed the step instead, which
+    # killed the poller AND the remote deploy with it, and printed a bare
+    # "step timed out" rather than the remote log tail. Worse, that failure
+    # mode is a livelock — a first-ever multi-GB pull restarts from zero every
+    # run and never finishes (cloud-cgc-pub-mcp, 2026-08-22: `docker compose
+    # pull` ran 69 min extracting an 863MB layer, was killed 11 min short, and
+    # cached nothing). Clamping lets the loop exit first, report honestly, and
+    # leave the detached remote process running so the NEXT run finds the pull
+    # already done. Same pattern as the build-dispatch poll clamp.
+    if [ -n "${SHIP_DEADLINE_EPOCH:-}" ]; then
+        _srd_left=$((SHIP_DEADLINE_EPOCH - $(date +%s) - 120))
+        [ "$_srd_left" -lt 60 ] && _srd_left=60
+        if [ "$_srd_left" -lt "$_srd_max" ]; then
+            log "  ↳ ${_srd_label}: detach ceiling clamped ${_srd_max}s → ${_srd_left}s (ship deadline)"
+            _srd_max=$_srd_left
+        fi
+    fi
     _srd_size=""
     _srd_rcval=""
     while [ "$_srd_w" -lt "$_srd_timeout" ] && [ "$_srd_elapsed" -lt "$_srd_max" ]; do
@@ -369,7 +388,18 @@ ssh_run_detached() {
 
     # 4) Ship the remote output back so CI logs still show pull/up progress.
     ssh $SSH_OPTS $_srd_ka "$_srd_host" "cat '$_srd_log' 2>/dev/null" 2>/dev/null || true
-    ssh $SSH_OPTS $_srd_ka "$_srd_host" "rm -f '$_srd_sh' '$_srd_log' '$_srd_rc'" >/dev/null 2>&1 || true
+    # Only clean up once the remote actually FINISHED (rc present). If we gave up
+    # first, the detached process is still working — deleting its script and log
+    # would blind the next run and the operator both. Leaving them is harmless:
+    # each launch uses a fresh $$-tagged name, and the files are in /tmp.
+    case "$_srd_rcval" in
+        "" | *[!0-9]*)
+            log_warn "${_srd_label}: leaving /tmp/${_srd_tag}.{sh,log,rc} on $_srd_host — remote may still be running"
+            ;;
+        *)
+            ssh $SSH_OPTS $_srd_ka "$_srd_host" "rm -f '$_srd_sh' '$_srd_log' '$_srd_rc'" >/dev/null 2>&1 || true
+            ;;
+    esac
 
     case "$_srd_rcval" in
         "" | *[!0-9]*)
