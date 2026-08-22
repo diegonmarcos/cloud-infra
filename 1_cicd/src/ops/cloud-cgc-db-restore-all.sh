@@ -64,6 +64,14 @@
 #                         this — compose mounts the volume INTO the container
 #                         at oct.db_path, so from inside there it already IS
 #                         a plain, directly-writable directory.
+#    CGC_DB_OWNER         optional "uid:gid" to chown -R the restored tree to.
+#                         REQUIRED whenever the consumer runs as a different uid
+#                         than whoever runs this script, which is the normal
+#                         case: the images extract as the invoking user (1001
+#                         over the oci-apps SSH path) while cloud-cgc-pub-mcp
+#                         runs as appuser 10001:999, and octocode then fails
+#                         with "Permission denied (os error 13)" because it
+#                         opens the project dir read-write. Unset = no chown.
 #    CGC_BUILD_JSON       override build.json path
 #    CGC_INDEX_REPOS      space-separated repo list, overrides build.json
 #                         .runtime.octocode.index_repos (mirrors
@@ -262,8 +270,10 @@ if [ -n "${CGC_DB_TARGET_VOLUME:-}" ]; then
   # every tool call died with "Permission denied (os error 13)" while every child
   # dir sat there readable at 0755. Consumers mount this volume read-only as an
   # unrelated uid, so the root has to be world-traversable.
-  docker run --rm -v "$CGC_DB_TARGET_VOLUME:/dst" -v "$STAGING:/src:ro" busybox \
-    sh -c 'rm -rf /dst/* /dst/.[!.]* 2>/dev/null; cp -a /src/. /dst/; chmod 0755 /dst'
+  docker run --rm -e CGC_DB_OWNER="${CGC_DB_OWNER:-}" \
+    -v "$CGC_DB_TARGET_VOLUME:/dst" -v "$STAGING:/src:ro" busybox \
+    sh -c 'rm -rf /dst/* /dst/.[!.]* 2>/dev/null; cp -a /src/. /dst/; chmod 0755 /dst
+           [ -n "$CGC_DB_OWNER" ] && chown -R "$CGC_DB_OWNER" /dst; :'
   echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into volume $CGC_DB_TARGET_VOLUME"
 else
   mkdir -p "$TARGET"
@@ -272,6 +282,8 @@ else
   # Same reason as the volume branch above: cp -a copies mktemp -d's 0700 onto
   # TARGET, which locks out any consumer running as a different uid.
   chmod 0755 "$TARGET"
+  [ -n "${CGC_DB_OWNER:-}" ] && chown -R "$CGC_DB_OWNER" "$TARGET" 2>/dev/null
+  :
   echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into $TARGET ($(du -sh "$TARGET" 2>/dev/null | cut -f1))"
 fi
 
