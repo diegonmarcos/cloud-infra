@@ -63,8 +63,8 @@ resolve_bj() {
     return 0
   fi
   _rbj_root=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." 2>/dev/null && pwd || echo "")
-  if [ -n "$_rbj_root" ] && [ -f "$_rbj_root/a_solutions/user-ai_cloud-cgc-mcp/build.json" ]; then
-    printf '%s\n' "$_rbj_root/a_solutions/user-ai_cloud-cgc-mcp/build.json"
+  if [ -n "$_rbj_root" ] && [ -f "$_rbj_root/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json" ]; then
+    printf '%s\n' "$_rbj_root/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
     return 0
   fi
   return 1
@@ -263,17 +263,17 @@ mkdir -p "$WORK/ctx"
 case "$MODE" in
   base)
     build_base_tar "$SRC" "$WORK/ctx/octocode-db.tar"
-    DESC="cloud-cgc-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
+    DESC="cloud-cgc-pub-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
     ;;
   repo)
     PROJ=$(find_project_dir "$SRC") || exit 1
     echo "[cgc-db] $PKG · single project dir detected: $PROJ"
     build_repo_tar "$SRC" "$WORK/ctx/octocode-db.tar" "$PROJ"
-    DESC="cloud-cgc-mcp octocode DB for $LOCAL_NAME (single <project_id>/ dir: semantic FastEmbed vectors + GraphRAG graph). Visibility matches the $LOCAL_NAME repo. Restore into an octocode home ROOTED by cgc-db-base:latest via cp -a."
+    DESC="cloud-cgc-pub-mcp octocode DB for $LOCAL_NAME (single <project_id>/ dir: semantic FastEmbed vectors + GraphRAG graph). Visibility matches the $LOCAL_NAME repo. Restore into an octocode home ROOTED by cgc-db-base:latest via cp -a."
     ;;
   monolith|*)
     tar cf "$WORK/ctx/octocode-db.tar" -C "$SRC" .
-    DESC="cloud-cgc-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
+    DESC="cloud-cgc-pub-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
     ;;
 esac
 [ -s "$WORK/ctx/octocode-db.tar" ] || { echo "::error::empty DB tar from $SRC (mode=$MODE)"; exit 1; }

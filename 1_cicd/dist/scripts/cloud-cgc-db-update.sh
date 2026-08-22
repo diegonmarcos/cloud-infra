@@ -41,12 +41,49 @@
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="${CLOUD_ROOT:-$(cd "$HERE/../../.." && pwd)}"
-BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
-[ -f "$BJ" ] || { echo "::error::cloud-cgc-mcp build.json not found at $BJ"; exit 1; }
+BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
+[ -f "$BJ" ] || { echo "::error::cloud-cgc-pub-mcp build.json not found at $BJ"; exit 1; }
 
 IMAGE=$(jq -r   '.db_publish.image'                  "$BJ")
 TAG=$(jq -r     '.db_publish.tag // "latest"'        "$BJ")
 OCTO_HOME="${OCTOCODE_HOME:-$HOME/.local/share/octocode}"
+# ── XDG alignment (per-repo/matrix mode only) — production incident 2026-08-21
+# (run 32512759559): octocode 0.12.2 has NO relocation knob of its own
+# (verified against the pinned binary's storage.rs:39-47) — it derives its OWN
+# data dir from $XDG_DATA_HOME (preferred) else $HOME/.local/share, full stop.
+# OCTOCODE_HOME/OCTO_HOME above is OUR variable only; octocode never reads it.
+# Every octocode invocation below (ensure_octocode, `octocode config`,
+# `octocode index`) resolves its home from XDG_DATA_HOME/HOME alone, no matter
+# what OCTO_HOME points at — so the two must be made to agree BEFORE the first
+# such invocation, or octocode silently indexes into one directory while this
+# script packages another.
+#   monolith mode (default, untouched below): OCTO_HOME defaults to
+#     $HOME/.local/share/octocode — the SAME path octocode itself resolves
+#     with XDG_DATA_HOME unset. The two can never disagree, which is WHY this
+#     path has always worked with no XDG handling at all.
+#   per-repo mode (matrix CI, cgc-db-index.yml): OCTOCODE_HOME is set to a
+#     FRESH per-job dir under $RUNNER_TEMP (e.g. $RUNNER_TEMP/octocode-home),
+#     never $HOME/.local/share/octocode — so without the export below,
+#     `octocode index` silently writes the real DB to
+#     $HOME/.local/share/octocode instead (that run: octocode indexed fine,
+#     every job then failed "no project directory found" packaging the
+#     empty, un-written OCTO_HOME). Fix: require/normalize OCTO_HOME to END
+#     in "/octocode" and export XDG_DATA_HOME as its PARENT, so octocode's
+#     own $XDG_DATA_HOME/octocode resolution lands exactly on $OCTO_HOME —
+#     the same directory bootstrap_config_toml (below) already writes
+#     config.toml into, now kept in alignment for the DB itself too.
+if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+  case "$OCTO_HOME" in
+    */octocode) ;;
+    *)
+      echo "::warning::[cgc-db] CGC_PACKAGE_MODE=per-repo: OCTOCODE_HOME ($OCTO_HOME) does not end in /octocode — normalizing to $OCTO_HOME/octocode so octocode's own XDG_DATA_HOME resolution lands on it"
+      OCTO_HOME="$OCTO_HOME/octocode"
+      ;;
+  esac
+  mkdir -p "$OCTO_HOME"
+  XDG_DATA_HOME="${OCTO_HOME%/octocode}"
+  export XDG_DATA_HOME
+fi
 # FIXED clone root, identical everywhere. octocode keys each project by its
 # git-root path STRING, so to do incremental ON TOP of the existing GHCR/prod
 # DB (which was built in the octocode container at /repos), the producer MUST
@@ -64,7 +101,7 @@ fi
 # DENY CHECK — derive-repo-map.ts only validates the STATIC build.json index_repos
 # at derive time; CGC_INDEX_REPOS above lets a caller (a local run with real deploy/SSH
 # keys, say) override REPOS at runtime and skip that check entirely. The shared /repos
-# volume is what cloud-cgc-mcp indexes, so a denied repo (e.g. cloud-vault, the
+# volume is what cloud-cgc-pub-mcp indexes, so a denied repo (e.g. cloud-vault, the
 # credential store) reaching this loop gets embedded in the GraphRAG DB and
 # checkpoint-pushed to GHCR — i.e. published. Re-check the FINAL $REPOS (whichever path
 # set it) against the SAME deny list, data-driven from build.json — never hardcode a name.
@@ -741,6 +778,22 @@ for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
 
+  # GRAPHRAG SKIP (data-driven, .runtime.octocode.graphrag_skip — no hardcoded names
+  # here). Pure prose/text corpora (e.g. cloud-my-ai_memory) have no code semantics to
+  # relate, so the GraphRAG LLM relationship pass is real per-node LLM cost for zero
+  # graph nodes. Only the graphrag phase (USE_LLM=true) skips these repos — structural/
+  # FastEmbed indexing (the semantic phase, USE_LLM=false) still runs normally for them,
+  # so they are fully search/embed-able, just never LLM-graphed. Checked BEFORE the time
+  # budget below so a skipped repo never consumes a reserve slot or gets counted deferred.
+  if [ "$USE_LLM" = "true" ]; then
+    _gskip=$(jq -r --arg r "$r" '(.runtime.octocode.graphrag_skip // []) | index($r) != null' "$BJ")
+    if [ "$_gskip" = "true" ]; then
+      echo "[cgc-db] === graphrag skip: $r (text corpus, no code graph — .runtime.octocode.graphrag_skip) ==="
+      N_SKIP=$(( N_SKIP + 1 ))
+      continue
+    fi
+  fi
+
   # TIME BUDGET: stop before the runner cap so we always reach a clean push+exit.
   # RESERVE the repo's worst case (a full repo_timeout_min) BEFORE admitting it. Gating
   # only on "budget not yet spent" admits a repo at minute 299 that is then allowed to run
@@ -792,6 +845,15 @@ for r in $REPOS; do
   if [ -n "$NOINDEX_PATTERNS" ]; then
     printf '%s\n' "$NOINDEX_PATTERNS" > "$d/.noindex"
     echo "[cgc-db] $r · .noindex base: $(printf '%s' "$NOINDEX_PATTERNS" | tr '\n' ' ')"
+  fi
+  # PER-REPO noindex extension (data-driven, .runtime.octocode.noindex_extra keyed by
+  # local repo name — no hardcoded paths here). Layered on top of the global base above,
+  # for content only ONE repo needs excluded (e.g. cloud-my-ai_memory's a_sessions/ and
+  # a_commits/ — see build.json's _noindex_extra_comment for why).
+  NOINDEX_EXTRA=$(jq -r --arg r "$r" '((.runtime.octocode.noindex_extra // {})[$r] // []) | .[]' "$BJ" 2>/dev/null)
+  if [ -n "$NOINDEX_EXTRA" ]; then
+    printf '%s\n' "$NOINDEX_EXTRA" >> "$d/.noindex"
+    echo "[cgc-db] $r · .noindex extra: $(printf '%s' "$NOINDEX_EXTRA" | tr '\n' ' ')"
   fi
   # SMART: auto-append binary-dominated dirs (generic, no hardcoded paths).
   smart_noindex "$d"

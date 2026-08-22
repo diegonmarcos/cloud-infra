@@ -201,7 +201,7 @@ step_docker() {
             #     ambiguity. `docker manifest inspect` could return failure on
             #     transient auth glitches even when the image existed (and
             #     vice versa) — caused 6 services (google-workspace-mcp,
-            #     rig-agentic-{sonn,hai}, cloud-cgc-mcp, news-gdelt, postlite)
+            #     rig-agentic-{sonn,hai}, cloud-cgc-pub-mcp, news-gdelt, postlite)
             #     to remain stale after the binaries-tag fix landed
             #     (8ec41cb5, 2026-04-25): src/ unchanged → skip path →
             #     never rebuilt → never pushed -binaries (Phase 16 contract).

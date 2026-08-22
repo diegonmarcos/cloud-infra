@@ -1130,7 +1130,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // Source of truth: wg_only !== true (private = wg_only:true; public = field omitted). This is the
   // SAME flag the gcp-proxy @wg gate keys on, so the edge allowlist and the hub gate can NEVER
   // diverge. NOT the public_* taxonomy — that is a ZONE label that includes wg_only:true MCP/API
-  // services (e.g. mcp.../cloud-cgc-mcp), so using it would expose ~32 private services.
+  // services (e.g. mcp.../cloud-cgc-pub-mcp), so using it would expose ~32 private services.
   const isPublic = (e: any) => e?.wg_only !== true;
   const publicSubdomainRoutes = dedupedRoutes.filter(isPublic);
   const publicPathRoutes = filteredPathRoutes
@@ -3229,7 +3229,7 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "c3-public-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-services-api":        { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-services-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
-  "cloud-cgc-mcp":          { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-cgc-pub-mcp":      { group: "infra-apps", subgroup: "APIs-MCPs" },
   // app → subgroup by domain/function
   "chat-mattermost":        { group: "user-apps",  subgroup: "Communications" },
   "matrix-element":         { group: "user-apps",  subgroup: "Communications" },

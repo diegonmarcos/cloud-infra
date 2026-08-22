@@ -35,7 +35,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          IMGP="diegonmarcos/cloud-cgc-mcp-octocode-db"
+          IMGP="diegonmarcos/cloud-cgc-pub-mcp-octocode-db"
           TOK=$(curl -s -u "$GHCR_USER:$GHCR_TOKEN" "https://ghcr.io/token?scope=repository:$IMGP:pull" | jq -r .token)
           # largest layer = the DB data layer
           LAYER=$(curl -s -H "Authorization: Bearer $TOK" \
@@ -61,7 +61,7 @@ jobs:
           set -euo pipefail
           SSHOPTS="-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
           TARGET="ubuntu@10.0.0.6"
-          ssh $SSHOPTS "$TARGET" "TOK='$TOK' LAYER='$LAYER' IMGP='$IMGP' CTR='cloud-cgc-mcp' VOL='octocode_db' bash -s" <<'REMOTE'
+          ssh $SSHOPTS "$TARGET" "TOK='$TOK' LAYER='$LAYER' IMGP='$IMGP' CTR='cloud-cgc-pub-mcp' VOL='octocode_db' bash -s" <<'REMOTE'
           set -e
           echo "--- free before ---"; df -h / | awk 'NR==2{print $4}'
           sudo docker stop "$CTR" 2>/dev/null || true

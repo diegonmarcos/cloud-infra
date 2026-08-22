@@ -17,7 +17,7 @@
 # ──────────────────────────────────────────────────────────────────────────
 #  Snapshots the already-built octocode DB on the deploy host (oci-apps
 #  `octocode_db` volume — the comprehensive ~12h GraphRAG full build, ~2148
-#  nodes) → GHCR `cloud-cgc-mcp-octocode-db:latest`. This is the BOOTSTRAP base
+#  nodes) → GHCR `cloud-cgc-pub-mcp-octocode-db:latest`. This is the BOOTSTRAP base
 #  the incremental producer builds on. NEVER rebuild from scratch — preserve
 #  this. Run once (or to re-base) from anywhere that can SSH the host (GHA WG).
 #
@@ -28,8 +28,8 @@
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="${CLOUD_ROOT:-$(cd "$HERE/../../.." && pwd)}"
-BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
-[ -f "$BJ" ] || { echo "::error::cloud-cgc-mcp build.json not found at $BJ"; exit 1; }
+BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
+[ -f "$BJ" ] || { echo "::error::cloud-cgc-pub-mcp build.json not found at $BJ"; exit 1; }
 
 IMAGE=$(jq -r '.db_publish.image'                       "$BJ")
 TAG=$(jq -r   '.db_publish.tag // "latest"'             "$BJ")

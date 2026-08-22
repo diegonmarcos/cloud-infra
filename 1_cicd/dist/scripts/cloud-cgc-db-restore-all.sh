@@ -136,9 +136,9 @@ BJ="${CGC_BUILD_JSON:-}"
 need_bj() {
   [ -n "$BJ" ] && [ -f "$BJ" ] && return 0
   _root="${CLOUD_ROOT:-$(cd "$HERE/../../.." 2>/dev/null && pwd || echo "")}"
-  BJ="${_root:+$_root/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
+  BJ="${_root:+$_root/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
   [ -n "$BJ" ] && [ -f "$BJ" ] && return 0
-  echo "::error::cloud-cgc-mcp build.json not found — needed because CGC_DB_TAG/CGC_DB_IMAGE_PREFIX/CGC_DB_BASE_IMAGE/CGC_INDEX_REPOS were not all supplied via env. Set CGC_BUILD_JSON, or supply every one of those (as the oci-apps DAG and the compose db-restore-multi service do)."
+  echo "::error::cloud-cgc-pub-mcp build.json not found — needed because CGC_DB_TAG/CGC_DB_IMAGE_PREFIX/CGC_DB_BASE_IMAGE/CGC_INDEX_REPOS were not all supplied via env. Set CGC_BUILD_JSON, or supply every one of those (as the oci-apps DAG and the compose db-restore-multi service do)."
   exit 1
 }
 
