@@ -165367,7 +165367,9 @@
       "exports": [
         "handle_mail_admin_users",
         "handle_mail_admin_domains",
-        "registerAdminTools"
+        "registerAdminTools",
+        "mailAdminUsersSchema",
+        "mailAdminDomainsSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -165388,7 +165390,10 @@
         "handle_mail_send",
         "handle_mail_reply",
         "handle_mail_forward",
-        "registerComposeTools"
+        "registerComposeTools",
+        "mailSendSchema",
+        "mailReplySchema",
+        "mailForwardSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -165415,7 +165420,10 @@
         "handle_debug_outbound",
         "handle_debug_inbound",
         "handle_debug_trace",
-        "registerDebugTools"
+        "registerDebugTools",
+        "debugOutboundSchema",
+        "debugInboundSchema",
+        "debugTraceSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -165455,7 +165463,17 @@
         "handle_mail_download_attachment",
         "handle_mail_create_folder",
         "handle_mail_delete_folder",
-        "registerInboxTools"
+        "registerInboxTools",
+        "mailListFoldersSchema",
+        "mailListMessagesSchema",
+        "mailReadSchema",
+        "mailSearchSchema",
+        "mailFlagSchema",
+        "mailMoveSchema",
+        "mailDeleteSchema",
+        "mailDownloadAttachmentSchema",
+        "mailCreateFolderSchema",
+        "mailDeleteFolderSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -165484,6 +165502,7 @@
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
+        "parseMethodParams",
         "registerMetaTool"
       ],
       "imports": [
@@ -165497,6 +165516,7 @@
         "./stalwart.js"
       ],
       "symbols": [
+        "parseMethodParams(method: string, params: unknown)",
         "registerMetaTool(server: McpServer)"
       ]
     },
@@ -165539,7 +165559,14 @@
         "handle_resend_domain_verify",
         "handle_resend_domain_dns",
         "handle_resend_api_keys",
-        "registerResendTools"
+        "registerResendTools",
+        "resendSendSchema",
+        "resendGetSchema",
+        "resendListSchema",
+        "resendDomainsSchema",
+        "resendDomainVerifySchema",
+        "resendDomainDnsSchema",
+        "resendApiKeysSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -165566,7 +165593,10 @@
         "handle_stalwart_admin_accounts",
         "handle_stalwart_admin_domains",
         "handle_stalwart_admin_settings",
-        "registerStalwartTools"
+        "registerStalwartTools",
+        "stalwartAdminAccountsSchema",
+        "stalwartAdminDomainsSchema",
+        "stalwartAdminSettingsSchema"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -166214,6 +166244,8 @@
       ],
       "imports": [],
       "symbols": [
+        "deliverToMaddyWithRetry(rawEmail, to, env, attempts, backoffsMs)",
+        "notifyMeshLegLost(env, { messageId, from, to, status })",
         "deliverToMaddy(rawEmail, to, env)",
         "deliverToGoogle(rawEmail, env)",
         "getGoogleAccessToken(env)",
@@ -207855,13 +207887,16 @@
         "tokio_rustls::",
         "tokio_util::compat::",
         "std::env",
-        "crate::"
+        "crate::",
+        "of"
       ],
       "symbols": [
         "process(&mut self, _challenge: &[u8])",
         "tls_config()",
         "run(src: &Source, mbox: &str, cfg: &Config, state: State)",
         "one_cycle(src: &Source, mbox: &str, cfg: &Config, state: &State)",
+        "initial_from_uid(session: &mut Session<ImapStream>, since: &str, uid_next: Option<u32>)",
+        "to_imap_date(s: &str)",
         "fetch_and_deliver(\n    session: &mut Session<ImapStream>,\n    src: &Source,\n    mbox: &str,\n    cfg: &Config,\n    state: &State,\n    from_uid: u32,\n    uidvalidity: u32,\n)"
       ]
     },
@@ -207908,6 +207943,7 @@
         "open",
         "get_cursor",
         "set_cursor",
+        "was_delivered",
         "record_delivered",
         "State"
       ],
@@ -207919,7 +207955,8 @@
       "symbols": [
         "get_cursor(&self, source_id: &str, mailbox: &str)",
         "set_cursor(&self, source_id: &str, mailbox: &str, uidvalidity: u32, last_uid: u32)",
-        "record_delivered(&self, source_id: &str, mailbox: &str, uid: u32, msg_id: Option<&str>)"
+        "was_delivered(&self, source_id: &str, target: &str, message_id: &str)",
+        "record_delivered(&self, source_id: &str, target: &str, message_id: &str)"
       ]
     },
     {
