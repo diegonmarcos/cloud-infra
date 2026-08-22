@@ -6,25 +6,25 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 9032,
+    "files": 9036,
     "by_lang": {
       "nix": 440,
-      "sh": 343,
-      "ts": 315,
-      "py": 7385,
+      "sh": 345,
+      "ts": 316,
+      "py": 7386,
       "js": 25,
       "rust": 524
     },
     "by_role": {
       "flake": 72,
-      "script": 109,
-      "shell": 227,
+      "script": 110,
+      "shell": 228,
       "module": 212,
       "engine": 1,
       "nix-module": 304,
-      "python": 7338,
+      "python": 7339,
       "compose": 64,
-      "mcp-tool": 98,
+      "mcp-tool": 99,
       "entrypoint": 65,
       "file": 14,
       "workflow-dag": 2,
@@ -262,6 +262,18 @@
       "imports": [],
       "symbols": [
         "check_url()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-health-mail-full.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "tolerance_ok()"
+      ],
+      "imports": [],
+      "symbols": [
+        "tolerance_ok()"
       ]
     },
     {
@@ -1247,6 +1259,18 @@
       "imports": [],
       "symbols": [
         "check_url()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/ops/cloud-health-mail-full.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "tolerance_ok()"
+      ],
+      "imports": [],
+      "symbols": [
+        "tolerance_ok()"
       ]
     },
     {
@@ -164385,6 +164409,29 @@
       ]
     },
     {
+      "path": "a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "gmail_service(user: str)",
+        "count_since(svc, epoch_seconds: int)",
+        "main()"
+      ],
+      "imports": [
+        "datetime",
+        "google.oauth2",
+        "google.auth.transport.requests",
+        "googleapiclient.discovery",
+        "argparse",
+        "sys"
+      ],
+      "symbols": [
+        "gmail_service(user: str)",
+        "count_since(svc, epoch_seconds: int)",
+        "main()"
+      ]
+    },
+    {
       "path": "a_solutions/infra-api_google-workspace-mcp/src/code/gmail/gmail_tools.py",
       "lang": "py",
       "role": "python",
@@ -165518,6 +165565,22 @@
       "symbols": [
         "parseMethodParams(method: string, params: unknown)",
         "registerMetaTool(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_mail-mcp/src/code/mcp/tools/others/count-since.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [],
+      "imports": [
+        "../../shared/imap.js",
+        "../../shared/config.js"
+      ],
+      "symbols": [
+        "authHeader(user: string, pass: string)",
+        "countMaddy(sinceDate: Date)",
+        "countStalwart(sinceIso: string)",
+        "main()"
       ]
     },
     {
@@ -171388,11 +171451,11 @@
         "X_AUTHELIA_CONFIG_FILTERS",
         "volumes",
         "ports",
-        "networks",
         "cap_add",
         "limits",
         "reservations",
         "command",
+        "networks",
         "healthcheck",
         "test",
         "interval",
@@ -171401,7 +171464,8 @@
         "start_period",
         "authelia_data",
         "authelia_redis_data",
-        "auth-net"
+        "auth-net",
+        "driver"
       ]
     },
     {
@@ -207906,8 +207970,11 @@
       "role": "rust-module",
       "exports": [],
       "imports": [
+        "futures::FutureExt",
+        "std::panic::AssertUnwindSafe",
         "anyhow::Result",
-        "tracing_subscriber::EnvFilter"
+        "tracing_subscriber::EnvFilter",
+        "the"
       ],
       "symbols": [
         "main()"
