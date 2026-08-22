@@ -267,13 +267,24 @@ if [ -n "${CGC_DB_TARGET_VOLUME:-}" ]; then
   # Container-mediated write — see CGC_DB_TARGET_VOLUME in the header. busybox
   # is always pullable; -v NAME:/dst auto-creates the volume if it somehow
   # doesn't exist yet, matching plain `docker run -v name:...` behaviour.
+  # chmod 0755 AFTER the cp is load-bearing, not tidiness. `cp -a /src/. /dst/`
+  # stamps the SOURCE directory's mode and owner onto /dst, and $STAGING comes
+  # from `mktemp -d`, which is 0700 owned by whoever ran this (uid 1001 over the
+  # oci-apps SSH path). The app container runs as a different uid (10001), so the
+  # volume root came back 0700 1001:1001 and octocode could not even traverse in:
+  # every tool call died with "Permission denied (os error 13)" while every child
+  # dir sat there readable at 0755. Consumers mount this volume read-only as an
+  # unrelated uid, so the root has to be world-traversable.
   docker run --rm -v "$CGC_DB_TARGET_VOLUME:/dst" -v "$STAGING:/src:ro" busybox \
-    sh -c 'rm -rf /dst/* /dst/.[!.]* 2>/dev/null; cp -a /src/. /dst/'
+    sh -c 'rm -rf /dst/* /dst/.[!.]* 2>/dev/null; cp -a /src/. /dst/; chmod 0755 /dst'
   echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into volume $CGC_DB_TARGET_VOLUME"
 else
   mkdir -p "$TARGET"
   rm -rf "$TARGET"/* "$TARGET"/.[!.]* 2>/dev/null || true
   cp -a "$STAGING"/. "$TARGET"/
+  # Same reason as the volume branch above: cp -a copies mktemp -d's 0700 onto
+  # TARGET, which locks out any consumer running as a different uid.
+  chmod 0755 "$TARGET"
   echo "[cgc-db-restore-all] restored $FOUND repo(s) + base into $TARGET ($(du -sh "$TARGET" 2>/dev/null | cut -f1))"
 fi
 
