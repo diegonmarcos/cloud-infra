@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 9_others/src/../test/cgc-db-package.test.sh
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Tester for cloud-cgc-db-package.sh's per-repo/base packaging (2026-08-21):
 #   - MODE auto-detection from the image name (monolith / base / repo:<name>)
 #   - single-project-dir detection (0 dirs = error, 2+ dirs = error naming them)

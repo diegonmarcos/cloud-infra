@@ -222,7 +222,7 @@ step_build() {
             done
             log "Included 1_cicd/dist/*.json + *.md in dist/"
         fi
-        # Include config.json from repo root (needed by cloud-cgc-mcp)
+        # Include config.json from repo root (needed by cloud-cgc-pub-mcp)
         if [ -f "$REPO_ROOT/config.json" ]; then
             cp "$REPO_ROOT/config.json" "$DIST_DIR/"
             log "Included config.json in dist/"

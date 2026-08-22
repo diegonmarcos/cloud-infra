@@ -76,6 +76,7 @@ env:
   # .runtime.octocode.index_repos — public repos need nothing. Declared at the WORKFLOW level
   # so it reaches every job below (repos/index/restore-all) without repeating it per job.
   CGC_DEPLOY_KEY_cloud_data: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+  CGC_DEPLOY_KEY_cloud_my_ai_memory: ${{ secrets.CLOUD_MY_AI_MEMORY_DEPLOY_KEY }}
 
 jobs:
   # ── Resolve the repo matrix from build.json (data-driven; see header) ──
@@ -97,7 +98,7 @@ jobs:
         id: repos
         run: |
           set -eu
-          BJ="a_solutions/user-ai_cloud-cgc-mcp/build.json"
+          BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
           [ -f "$BJ" ] || { echo "::error::$BJ not found"; exit 1; }
           REPOS_JSON=$(jq -c '[.runtime.octocode.index_repos[]]' "$BJ")
           COUNT=$(printf '%s' "$REPOS_JSON" | jq 'length')
@@ -137,9 +138,17 @@ jobs:
         continue-on-error: true
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
       - name: Fresh per-repo octocode home
+        # Must end in /octocode: cloud-cgc-db-update.sh's per-repo mode exports
+        # XDG_DATA_HOME as this path's PARENT so octocode 0.12.2's own
+        # $XDG_DATA_HOME/octocode resolution (it has no relocation knob of its
+        # own — storage.rs:39-47) lands exactly here instead of silently
+        # writing the real DB to $HOME/.local/share/octocode (production
+        # incident: run 32512759559, every job "no project directory found").
+        # update.sh normalizes+warns if this ever drifts, but the source of
+        # truth should already conform.
         run: |
-          mkdir -p "$RUNNER_TEMP/octocode-home"
-          echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/octocode-home/octocode"
+          echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home/octocode" >> "$GITHUB_ENV"
       - name: "cgc-db incremental update — ${{ matrix.repo }} only (checkpoint push, no propagate)"
         # No SSH key / CGC_SSH_OPTS here (unlike the pre-matrix single job): with
         # CGC_SKIP_PROPAGATE=1 + CGC_PACKAGE_MODE=per-repo, update.sh's
@@ -237,7 +246,7 @@ jobs:
           ASSEMBLED_HOME: ${{ steps.assemble.outputs.home }}
         run: |
           set -eu
-          BJ="a_solutions/user-ai_cloud-cgc-mcp/build.json"
+          BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
           VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
           CTR=$(jq -r '.containers.app.container_name' "$BJ")
           HOST=$(jq -r '.db_publish.host' "$BJ")

@@ -3,7 +3,7 @@
 # ║ goose config has cgc — static YAML assertions                    ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
-# ║   A) goose-config.yaml references cloud-cgc-mcp MCP endpoint    ║
+# ║   A) goose-config.yaml references cloud-cgc-pub-mcp MCP endpoint    ║
 # ║   B) goose-config.yaml sets provider base at 127.0.0.1:3217     ║
 # ║                                                                  ║
 # ║ Usage: bash 9_others/test/test_goose_has_cgc.sh           ║
@@ -20,11 +20,11 @@ FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 
-echo "── A: cloud-cgc-mcp endpoint in goose config ──"
+echo "── A: cloud-cgc-pub-mcp endpoint in goose config ──"
 if grep -q 'http://10.0.0.6:3105/mcp' "$CONFIG"; then
-    pass "goose-config.yaml contains cloud-cgc-mcp URI http://10.0.0.6:3105/mcp"
+    pass "goose-config.yaml contains cloud-cgc-pub-mcp URI http://10.0.0.6:3105/mcp"
 else
-    fail "goose-config.yaml missing cloud-cgc-mcp URI http://10.0.0.6:3105/mcp"
+    fail "goose-config.yaml missing cloud-cgc-pub-mcp URI http://10.0.0.6:3105/mcp"
 fi
 
 echo ""

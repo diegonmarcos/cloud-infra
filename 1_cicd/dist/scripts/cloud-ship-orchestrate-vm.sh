@@ -89,7 +89,7 @@ CHANGED_DIRS=""
 if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ]; then
   # `a_solutions/*/src/` (trailing slash) is a directory pathspec that, combined with
   # the `*`, MISSES files directly under src/ (e.g. src/compose.nix) — proven: it
-  # skipped a real cloud-cgc-mcp change. `**` recurses at any depth (matches the
+  # skipped a real cloud-cgc-pub-mcp change. `**` recurses at any depth (matches the
   # detect step in ship.yml). Without this, changed services are wrongly "unchanged".
   CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 fi

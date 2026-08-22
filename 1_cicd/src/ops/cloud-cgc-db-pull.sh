@@ -4,7 +4,7 @@
 # ──────────────────────────────────────────────────────────────────────────
 #  GHCR is the SINGLE upstream. Both consumers use this same script so local and
 #  oci-apps always run an identical DB:
-#    - local:    target = ~/.local/share/octocode   (cloud-cgc-mcp-local)
+#    - local:    target = ~/.local/share/octocode   (cloud-cgc-pub-mcp-local)
 #    - oci-apps: target = the octocode_db volume mount (Dagu ops_octocode-db-pull)
 #  Data-driven: image/tag come from build.json `.db_publish`. Never hardcoded.
 #
@@ -24,8 +24,8 @@
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
 ROOT="${CLOUD_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}"
-BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-mcp/build.json}"
-[ -f "$BJ" ] || { echo "::error::cloud-cgc-mcp build.json not found at $BJ"; exit 1; }
+BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
+[ -f "$BJ" ] || { echo "::error::cloud-cgc-pub-mcp build.json not found at $BJ"; exit 1; }
 
 TARGET="${1:-${OCTOCODE_HOME:-$HOME/.local/share/octocode}}"
 IMAGE_ARG="${2:-${CGC_PULL_IMAGE:-}}"

@@ -3,15 +3,15 @@
 #  cloud-cgc-db-restore.sh — restore the cloud-cgc octocode DB FROM GHCR (arm consumer)
 # ──────────────────────────────────────────────────────────────────────────
 #  Universal restore routine, runs ON the target host (oci-apps): pull the GHCR
-#  DB image → copy it into the octocode_db volume → restart cloud-cgc-mcp →
+#  DB image → copy it into the octocode_db volume → restart cloud-cgc-pub-mcp →
 #  notify. The Dagu DAG carries ZERO logic — it only deploys this script (via
 #  vm-pilot to /opt/scripts) and TRIGGERS it over SSH.
 #
 #  Config from env (the DAG passes these, mirroring build.json — the VM has no
 #  repo checkout), with build.json fallback when CGC_BUILD_JSON points at one:
-#    DB_IMAGE      ghcr.io/…/cloud-cgc-mcp-octocode-db:latest   (.db_publish.image:tag)
+#    DB_IMAGE      ghcr.io/…/cloud-cgc-pub-mcp-octocode-db:latest   (.db_publish.image:tag)
 #    DB_VOLUME     octocode_db                                  (.runtime.octocode.db_volume)
-#    MCP_CONTAINER cloud-cgc-mcp                                (.containers.app.container_name)
+#    MCP_CONTAINER cloud-cgc-pub-mcp                                (.containers.app.container_name)
 #    NTFY_URL      http://10.0.0.6:8090                         (optional)
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
