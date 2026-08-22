@@ -34,8 +34,30 @@
 #
 #  Sourced with CGC_PKG_SOURCE_ONLY=1, this file defines every function below
 #  and calls NONE of them — a test harness can then invoke find_project_dir /
-#  build_base_tar / build_repo_tar / visibility_* directly against the real
-#  logic (stubbing gh/jq as needed) instead of maintaining a parallel copy.
+#  build_base_tar / build_repo_tar / resolve_repo_source_label /
+#  resolve_repo_desired_visibility / verify_or_delete_repo_pkg / visibility_* /
+#  push_with_retry directly against the real logic (stubbing gh/docker/jq as
+#  needed) instead of maintaining a parallel copy.
+#
+#  INCIDENT (2026-08-22, run 32574580997): cgc-db-cloud-data — the GHCR index of
+#  the PRIVATE cloud-data repo — was created PUBLIC and had to be emergency-
+#  deleted. Root cause, two parts:
+#   (a) GitHub's package REST API has NO set-visibility endpoint for user
+#       packages — PUT and PATCH both 404. Every "correct visibility via gh api"
+#       call below this comment used to silently no-op, including the fail-safe
+#       that was supposed to force cgc-db-cloud-data back to private. The ONLY
+#       verb that actually works is DELETE /user/packages/container/<name>.
+#   (b) GHCR auto-links a brand-new package to whatever repo its
+#       org.opencontainers.image.source LABEL names, and the CREATED visibility
+#       is inherited from THAT repo. This file hardcoded the LABEL to the
+#       PUBLIC cloud-infra repo on every image, repo mode included — so a
+#       private repo's very first per-repo checkpoint was born public, before
+#       any visibility check downstream ever ran.
+#  Fixed here: repo mode's LABEL now resolves to the TARGET repo
+#  (resolve_repo_source_label) so the package is correct BY CONSTRUCTION, and a
+#  post-push BACKSTOP (verify_or_delete_repo_pkg) deletes-and-fails instead of
+#  pretending a dead PUT fixed anything. base/monolith modes are unaffected —
+#  their LABEL stays cloud-infra, see each mode's block in main() below.
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
 
@@ -139,53 +161,104 @@ build_repo_tar() { # $1=SRC $2=TARFILE $3=PROJECT_DIR_NAME
     "$_brt_proj"
 }
 
-# VISIBILITY — repo mode. Resolve the repo's REMOTE name via repo_map, ask
-# GitHub whether it is private, and make the package MATCH: private⇒private is
-# corrected loudly (::error::, a drift here means private source is exposed);
-# public⇒public just restores pull convenience. Fail-safe in every direction
-# that leaves the desired visibility undetermined: unmapped local_name, an
-# unreadable build.json, or a `gh repo view` failure all resolve to private.
-visibility_repo() { # $1=PKG $2=LOCAL_NAME
-  _vr_pkg="$1"; _vr_local="$2"
-  _vr_bj=$(resolve_bj) || _vr_bj=""
-  _vr_remote=""
-  if [ -n "$_vr_bj" ]; then
-    _vr_remote=$(jq -r --arg l "$_vr_local" '.runtime.octocode.repo_map[$l] // empty' "$_vr_bj" 2>/dev/null)
-  fi
-  if [ -z "$_vr_remote" ]; then
-    _vr_desired=private
-    echo "::error::[cgc-db] $_vr_pkg: local_name '$_vr_local' not found in repo_map (or build.json unreadable) — fail-safe: treating as private"
+# ONE local_name -> GitHub remote-name lookup (cloud/repos.json, via
+# .runtime.octocode.repo_map), shared by the LABEL resolver
+# (resolve_repo_source_label, pre-push) and the visibility resolver
+# (resolve_repo_desired_visibility, post-push) so repo_map is only ever read
+# one way. rc!=0 (empty stdout) when build.json is unreadable or local_name
+# isn't a repo_map key — every caller must fail safe on that, never assume
+# public.
+resolve_remote_name() { # $1=LOCAL_NAME → stdout: remote name; rc!=0 if unresolved
+  _rrn_bj=$(resolve_bj) || return 1
+  _rrn_remote=$(jq -r --arg l "$1" '.runtime.octocode.repo_map[$l] // empty' "$_rrn_bj" 2>/dev/null)
+  [ -n "$_rrn_remote" ] || return 1
+  printf '%s\n' "$_rrn_remote"
+}
+
+# LABEL PER TARGET — repo mode (ITEM 1, the actual fix; see file header for the
+# incident). GHCR auto-links a NEW package to whatever repo
+# org.opencontainers.image.source names, and the CREATED visibility inherits
+# THAT repo's visibility. Point the LABEL at the repo actually being packaged
+# instead of the hardcoded (public) cloud-infra: private repo → private
+# package, correct by construction — no visibility check needed after the
+# fact for the common case. If local_name can't be resolved (repo_map/registry
+# drift), OMIT the LABEL rather than falling back to cloud-infra: an unlinked
+# package is not known to inherit PUBLIC from anywhere, and the post-push
+# verify_or_delete_repo_pkg() backstop still catches it if it somehow comes up
+# public anyway.
+resolve_repo_source_label() { # $1=PKG (for error msg) $2=LOCAL_NAME → stdout: LABEL value; rc 1 (empty stdout) if unresolved
+  _rsl_remote=$(resolve_remote_name "$2") || {
+    echo "::error::[cgc-db] $1: cannot resolve GitHub URL for local_name '$2' (repo_map lookup failed) — omitting org.opencontainers.image.source LABEL; the post-push visibility backstop will delete the package if it ends up public"
+    return 1
+  }
+  printf 'https://github.com/diegonmarcos/%s\n' "$_rsl_remote"
+}
+
+# Shared desired-visibility resolver for repo mode: local_name -> repo_map ->
+# remote -> `gh repo view --json isPrivate`. Sets _rdv_desired (private|public)
+# and _rdv_remote (resolved remote, or empty if unresolved) as globals for the
+# caller — used only by verify_or_delete_repo_pkg() below. Fail-safe in every
+# direction that leaves the desired visibility undetermined: unmapped
+# local_name, an unreadable build.json, or a `gh repo view` failure all
+# resolve to private.
+resolve_repo_desired_visibility() { # $1=PKG (for error msg) $2=LOCAL_NAME
+  _rdv_pkg="$1"; _rdv_local="$2"
+  _rdv_remote=$(resolve_remote_name "$_rdv_local") || _rdv_remote=""
+  if [ -z "$_rdv_remote" ]; then
+    _rdv_desired=private
+    echo "::error::[cgc-db] $_rdv_pkg: local_name '$_rdv_local' not found in repo_map (or build.json unreadable) — fail-safe: treating as private"
   else
-    _vr_ispriv=$(gh repo view "diegonmarcos/$_vr_remote" --json isPrivate --jq .isPrivate 2>/dev/null || echo "")
-    case "$_vr_ispriv" in
-      true)  _vr_desired=private ;;
-      false) _vr_desired=public ;;
+    _rdv_ispriv=$(gh repo view "diegonmarcos/$_rdv_remote" --json isPrivate --jq .isPrivate 2>/dev/null || echo "")
+    case "$_rdv_ispriv" in
+      true)  _rdv_desired=private ;;
+      false) _rdv_desired=public ;;
       *)
-        _vr_desired=private
-        echo "::error::[cgc-db] $_vr_pkg: could not determine visibility of diegonmarcos/$_vr_remote — fail-safe: treating as private"
+        _rdv_desired=private
+        echo "::error::[cgc-db] $_rdv_pkg: could not determine visibility of diegonmarcos/$_rdv_remote — fail-safe: treating as private"
         ;;
     esac
   fi
-  _vr_vis=$(gh api "/user/packages/container/${_vr_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
-  if [ "$_vr_vis" = "$_vr_desired" ]; then
-    echo "[cgc-db] $_vr_pkg visibility=$_vr_vis (correct — repo diegonmarcos/${_vr_remote:-?} desired=$_vr_desired)"
+}
+
+# VERIFY-OR-DELETE BACKSTOP — repo mode (ITEM 2). GitHub's package REST API has
+# NO set-visibility endpoint (PUT/PATCH both 404, see file header) — a "force
+# it back to private" call can never actually fix a public package, so don't
+# pretend one does. Instead: after the push, ask what visibility the package
+# ACTUALLY got created/left with. A public-desired repo skips the check
+# entirely (nothing to leak, not worth the extra API call). A private-desired
+# repo (including every fail-safe-undetermined case from
+# resolve_repo_desired_visibility) whose package is not private is an active
+# leak: log it loudly, DELETE the package (the one verb that works), and exit
+# 1 — the artifact must not survive being public. This is the backstop for
+# resolve_repo_source_label() above: normally the LABEL fix alone means this
+# function finds everything already correct and returns 0 immediately.
+verify_or_delete_repo_pkg() { # $1=PKG $2=LOCAL_NAME → rc 0 ok/skip; exits the WHOLE SCRIPT (not just this fn) on a caught leak
+  _vd_pkg="$1"; _vd_local="$2"
+  resolve_repo_desired_visibility "$_vd_pkg" "$_vd_local"
+  if [ "$_rdv_desired" = "public" ]; then
+    echo "[cgc-db] $_vd_pkg: repo diegonmarcos/${_rdv_remote:-?} is public — skipping post-push visibility check"
     return 0
   fi
-  if [ "$_vr_desired" = "private" ]; then
-    echo "::error::[cgc-db] $_vr_pkg is $_vr_vis but must be private (repo diegonmarcos/${_vr_remote:-unresolved} is private or undetermined) — forcing private"
-  else
-    echo "[cgc-db] $_vr_pkg visibility=$_vr_vis — correcting to public (repo diegonmarcos/$_vr_remote is public, restoring pull convenience)"
+  _vd_vis=$(gh api "/user/packages/container/${_vd_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
+  if [ "$_vd_vis" = "private" ]; then
+    echo "[cgc-db] $_vd_pkg visibility=private (correct — repo diegonmarcos/${_rdv_remote:-unresolved} is private or undetermined)"
+    return 0
   fi
-  gh api --method PUT "/user/packages/container/${_vr_pkg}/visibility" -f visibility="$_vr_desired" >/dev/null 2>&1 \
-    && echo "[cgc-db] $_vr_pkg → $_vr_desired (corrected)" \
-    || echo "::error::[cgc-db] could NOT set $_vr_pkg to $_vr_desired — fix in the GitHub UI now"
+  echo "::error::[cgc-db] $_vd_pkg is $_vd_vis but must be private (repo diegonmarcos/${_rdv_remote:-unresolved} is private or undetermined) — GitHub's package API cannot SET visibility (no PUT/PATCH endpoint), deleting instead of leaving private source exposed"
+  gh api --method DELETE "/user/packages/container/${_vd_pkg}" >/dev/null 2>&1 \
+    && echo "::error::[cgc-db] $_vd_pkg DELETED (was $_vd_vis, repo is private) — re-run packaging once any repo_map/registry drift is fixed" \
+    || echo "::error::[cgc-db] could NOT delete $_vd_pkg — private source may still be exposed, delete it in the GitHub UI NOW"
+  exit 1
 }
 
 # VISIBILITY — base mode. No associated repo, and none is needed: the base
 # image carries model caches + config only (ARCHITECTURE), never project
-# content, so there is nothing to leak. Always public, for pull convenience —
-# failing to flip it is only an inconvenience (private stays pullable to
-# anyone already docker-logged-in), so this is a warning, never ::error::.
+# content, so there is nothing to leak. Should always be public, for pull
+# convenience. GitHub's package REST API has NO set-visibility endpoint
+# (PUT/PATCH both 404, see file header) so a drift here cannot be
+# auto-corrected — only reported. Warning only, never ::error::: a private
+# base package is an inconvenience (still pullable to anyone already
+# docker-logged-in), never a leak.
 visibility_base() { # $1=PKG
   _vb_pkg="$1"
   _vb_vis=$(gh api "/user/packages/container/${_vb_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
@@ -193,10 +266,7 @@ visibility_base() { # $1=PKG
     echo "[cgc-db] $_vb_pkg visibility=public (correct — base image carries no project content)"
     return 0
   fi
-  echo "[cgc-db] $_vb_pkg visibility=$_vb_vis — setting public (base image: model caches + config only, safe to share)"
-  gh api --method PUT "/user/packages/container/${_vb_pkg}/visibility" -f visibility=public >/dev/null 2>&1 \
-    && echo "[cgc-db] $_vb_pkg → public (corrected)" \
-    || echo "::warning::[cgc-db] could not set $_vb_pkg public — leaving as $_vb_vis"
+  echo "::warning::[cgc-db] $_vb_pkg visibility=$_vb_vis (want public) — cannot auto-correct: GitHub's package API has no set-visibility endpoint. Fix by hand in the GitHub UI, or ignore (base image carries no project content to leak)."
 }
 
 # MODE auto-detection from the image name (see file header table). A pure
@@ -210,7 +280,7 @@ detect_mode() { # $1=PKG → stdout: "monolith" | "base" | "repo:<local_name>"
   esac
 }
 
-# VISIBILITY — monolith mode (UNCHANGED behaviour, moved into a function).
+# VISIBILITY — monolith mode.
 #
 # The octocode DB is a searchable index of the FULL CONTENT of every repo in
 # .runtime.octocode.index_repos, and that list includes cloud-data, which is a
@@ -218,10 +288,12 @@ detect_mode() { # $1=PKG → stdout: "monolith" | "base" | "repo:<local_name>"
 # this image therefore publishes private source, embedded and reconstructible,
 # to anyone who can docker pull.
 #
-# Enforce the invariant instead of hoping: if any index_repo is private, the
-# package must be private, and a public one is corrected here rather than
-# merely reported. Consumers pull with credentials (oci-apps and the runner
-# both already docker login to GHCR), so private costs nothing operationally.
+# Detect the invariant (if any index_repo is private, the package must be
+# private) and report loudly on drift — see the ::error:: branch below for why
+# this can only REPORT, not correct, since 2026-08-22 (GitHub's package API
+# has no set-visibility endpoint). Consumers pull with credentials (oci-apps
+# and the runner both already docker login to GHCR), so private costs nothing
+# operationally.
 visibility_monolith() { # $1=PKG
   _vm_pkg="$1"
   _vm_bj=$(resolve_bj) || _vm_bj=""
@@ -238,16 +310,64 @@ visibility_monolith() { # $1=PKG
   _vm_vis=$(gh api "/user/packages/container/${_vm_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
   if [ -n "$_vm_priv" ]; then
     if [ "$_vm_vis" = "public" ]; then
-      echo "::error::[cgc-db] $_vm_pkg is PUBLIC but indexes private repo(s):$_vm_priv — forcing private"
-      gh api --method PUT "/user/packages/container/${_vm_pkg}/visibility" -f visibility=private >/dev/null 2>&1 \
-        && echo "[cgc-db] $_vm_pkg → private (corrected)" \
-        || echo "::error::[cgc-db] could NOT make $_vm_pkg private — private source is exposed, fix in the GitHub UI now"
+      # GitHub's package REST API has NO set-visibility endpoint (PUT/PATCH both
+      # 404, see file header) — a "force private" PUT here always silently
+      # no-ops, which is exactly how this branch used to print an ::error:: and
+      # then ALSO silently fail to fix anything, while the script kept going
+      # and CI stayed green with private source exposed. Kept LOUD (unlike
+      # base) because this DOES leak: cloud-data is private and this image
+      # indexes its full content. No DELETE backstop here — unlike per-repo
+      # packaging (verify_or_delete_repo_pkg), the monolith image is not
+      # something this script can safely delete-and-recreate mid-run (see
+      # db_publish's header comment: it stays the legacy path until the
+      # per-repo matrix is proven green). Manual fix in the GitHub UI is
+      # required until the monolith path is retired.
+      echo "::error::[cgc-db] $_vm_pkg is PUBLIC but indexes private repo(s):$_vm_priv — GitHub's package API cannot fix this (no set-visibility endpoint) — DELETE OR PRIVATE IT IN THE GITHUB UI NOW, private source is exposed"
     else
       echo "[cgc-db] $_vm_pkg visibility=$_vm_vis (correct — indexes private repo(s):$_vm_priv)"
     fi
   else
     echo "[cgc-db] $_vm_pkg visibility=$_vm_vis (no private repo in index_repos)"
   fi
+}
+
+# PUSH RETRY (ITEM 4). cloud-android died on run 32574580997 mid-run: a
+# transient `docker push` failure AFTER a perfect index+package, no retry, so
+# a checkpoint that had done all the real (expensive) work was thrown away
+# over a flaky network blip. 3 attempts, short linear backoff (5s, 10s)
+# between them, preserving the REAL docker exit code on final failure — the
+# caller (cloud-cgc-db-update.sh) branches on that exit code, so swallowing it
+# into a generic 1 would be its own bug. CGC_PUSH_RETRY_SLEEP overrides the
+# backoff (used by the test harness to run this in well under a second; unset
+# in every real caller).
+push_with_retry() { # $1=IMAGE:TAG → rc: 0 on success, else the LAST docker push's exit code after 3 attempts
+  _pwr_ref="$1"
+  _pwr_max=3
+  _pwr_attempt=1
+  while [ "$_pwr_attempt" -le "$_pwr_max" ]; do
+    # `docker push ... && return 0` (NOT `if docker push ...; then return 0; fi`).
+    # Bash/POSIX quirk verified against a minimal repro: an `if` compound whose
+    # condition is false and has no `else` reports exit status 0 for the WHOLE
+    # `if`, not the failing condition's own code ("or zero if no condition
+    # tested true" — bash(1)) — so `_pwr_rc=$?` right after `fi` always read 0,
+    # never the real docker rc. That made `return "$_pwr_rc"` return 0 on EVERY
+    # path, including all-3-attempts-failed: the caller's
+    # `push_with_retry ... || exit $?` would never fire, and the script would
+    # sail on to `docker rmi` / visibility checks / "DONE" as if a never-pushed
+    # image had shipped. `&&` is a short-circuit list, not an `if`: on failure
+    # $? IS the failed command's own code, and being non-final in an AND-OR
+    # list it is also exempt from `set -e` (only cmd1 ran; cmd2 didn't).
+    docker push "$_pwr_ref" && return 0
+    _pwr_rc=$?
+    if [ "$_pwr_attempt" -lt "$_pwr_max" ]; then
+      _pwr_sleep="${CGC_PUSH_RETRY_SLEEP:-$((_pwr_attempt * 5))}"
+      echo "::warning::[cgc-db] docker push attempt $_pwr_attempt/$_pwr_max failed (rc=$_pwr_rc) for $_pwr_ref — retrying in ${_pwr_sleep}s" >&2
+      sleep "$_pwr_sleep"
+    fi
+    _pwr_attempt=$((_pwr_attempt + 1))
+  done
+  echo "::error::[cgc-db] docker push failed after $_pwr_max attempts for $_pwr_ref (rc=$_pwr_rc)" >&2
+  return "$_pwr_rc"
 }
 
 # ── main ─────────────────────────────────────────────────────────────────
@@ -277,15 +397,21 @@ case "$MODE" in
   base)
     build_base_tar "$SRC" "$WORK/ctx/octocode-db.tar"
     DESC="cloud-cgc-pub-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
+    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
     ;;
   repo)
     PROJ=$(resolve_repo_project_dir "$SRC") || exit 1
     build_repo_tar "$SRC" "$WORK/ctx/octocode-db.tar" "$PROJ"
     DESC="cloud-cgc-pub-mcp octocode DB for $LOCAL_NAME (single <project_id>/ dir: semantic FastEmbed vectors + GraphRAG graph). Visibility matches the $LOCAL_NAME repo. Restore into an octocode home ROOTED by cgc-db-base:latest via cp -a."
+    # ITEM 1 — LABEL PER TARGET (see resolve_repo_source_label + file header).
+    # Empty SRC_URL (repo_map/registry drift) means the LABEL is OMITTED below,
+    # not defaulted to cloud-infra — verify_or_delete_repo_pkg() is the backstop.
+    SRC_URL=$(resolve_repo_source_label "$PKG" "$LOCAL_NAME") || SRC_URL=""
     ;;
   monolith|*)
     tar cf "$WORK/ctx/octocode-db.tar" -C "$SRC" .
     DESC="cloud-cgc-pub-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
+    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
     ;;
 esac
 [ -s "$WORK/ctx/octocode-db.tar" ] || { echo "::error::empty DB tar from $SRC (mode=$MODE)"; exit 1; }
@@ -296,7 +422,15 @@ echo "[cgc-db] packaged $(du -h "$WORK/ctx/octocode-db.tar" | cut -f1) from $SRC
 cat > "$WORK/ctx/Dockerfile" <<DOCKER
 FROM busybox:latest
 ADD octocode-db.tar /octocode-db
-LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
+DOCKER
+# org.opencontainers.image.source drives GHCR's auto-link (see file header) —
+# base/monolith always carry it (cloud-infra); repo mode carries it ONLY when
+# resolve_repo_source_label() above resolved a target repo. Omitted (not
+# defaulted) on failure — see that function's comment for why.
+if [ -n "$SRC_URL" ]; then
+  printf 'LABEL org.opencontainers.image.source="%s"\n' "$SRC_URL" >> "$WORK/ctx/Dockerfile"
+fi
+cat >> "$WORK/ctx/Dockerfile" <<DOCKER
 LABEL org.opencontainers.image.description="$DESC"
 DOCKER
 
@@ -348,7 +482,7 @@ DOCKER_CONFIG="$WORK/dcfg" docker build -t "$IMAGE:$TAG" "$WORK/ctx"
 # that made checkpoint #3 fail with "no space left on device" on 2026-08-21.
 rm -f "$WORK/ctx/octocode-db.tar" 2>/dev/null || true
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
-docker push "$IMAGE:$TAG"
+push_with_retry "$IMAGE:$TAG" || exit $?
 # Drop the local tagged copy after a successful push — GHCR is the single store, and
 # keeping it locally just re-fills the data-root every run. Next run rebuilds trivially.
 docker rmi "$IMAGE:$TAG" >/dev/null 2>&1 || true
@@ -365,10 +499,13 @@ if command -v docker >/dev/null 2>&1; then
   echo "[cgc-db] post-push reclaim — free KB ${_fb:-?} -> ${_fa:-?}"
 fi
 
-# VISIBILITY — dispatched per mode (see the visibility_* functions above).
+# VISIBILITY — dispatched per mode (see the functions above). repo mode's
+# check is the ITEM 2 verify-or-delete BACKSTOP, not a "correct it" pass —
+# resolve_repo_source_label() earlier is what makes the package correct BY
+# CONSTRUCTION; this only catches (and kills) it if that still wasn't enough.
 if command -v gh >/dev/null 2>&1; then
   case "$MODE" in
-    repo)     visibility_repo "$PKG" "$LOCAL_NAME" ;;
+    repo)     verify_or_delete_repo_pkg "$PKG" "$LOCAL_NAME" ;;
     base)     visibility_base "$PKG" ;;
     monolith) visibility_monolith "$PKG" ;;
   esac
