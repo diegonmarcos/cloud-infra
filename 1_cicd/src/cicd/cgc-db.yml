@@ -60,9 +60,18 @@ jobs:
       phase: semantic
     secrets: inherit
 
-  # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic and only
-  # proceeds if semantic succeeded, so the chain completes end-to-end. A graphrag-only
-  # manual dispatch skips the semantic dependency entirely (needs is conditional).
+  # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
+  # graphrag-only manual dispatch skips that dependency entirely (needs is conditional).
+  #
+  # `failure` is ACCEPTED, not just success. Since the per-repo split, semantic is a
+  # fail-fast:false matrix — one repo failing is the NORMAL case (a private repo with
+  # no checkpoint image, a transient push drop), and it makes the whole reusable-
+  # workflow result `failure` even when every other repo published fine. Gating on
+  # `success` therefore skipped GraphRAG for ALL repos whenever ANY single repo failed:
+  # run 32574580997 indexed 6 of 8 repos cleanly and still produced zero graph nodes.
+  # That gate was correct for the old SERIAL job (all-or-nothing); it is wrong for a
+  # per-repo matrix, where each graphrag job restores its own repo's image and stands
+  # or falls alone. `cancelled` stays excluded — that means the operator stopped the run.
   graphrag:
     name: "phase · graphrag"
     needs: semantic
@@ -70,7 +79,7 @@ jobs:
       ${{
         always()
         && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'graphrag')
-        && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped')
+        && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped' || needs.semantic.result == 'failure')
       }}
     uses: ./.github/workflows/cgc-db-index.yml
     with:
