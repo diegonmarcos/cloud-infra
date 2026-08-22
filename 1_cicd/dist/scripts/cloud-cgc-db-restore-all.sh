@@ -206,15 +206,23 @@ count_project_dirs() {
 #    scheduled run before any base has ever been seeded is not an operator
 #    error, it is bootstrap — warn and exit 0 BEFORE touching TARGET at all.
 echo "[cgc-db-restore-all] base: $BASE_IMAGE"
-if ! docker manifest inspect "$BASE_IMAGE" >/dev/null 2>&1; then
+# Keep the probe's stderr. It used to be thrown away with `2>&1 >/dev/null`, so
+# EVERY failure mode — DNS, auth, TLS, rate limit, genuinely-absent image — printed
+# the same "not found on GHCR", which sent us seeding an image that already existed.
+# The real message on 2026-08-22 was `lookup ghcr.io on 127.0.0.11:53: i/o timeout`:
+# a compose-bridge DNS fault, not a missing image (see compose.nix network_mode).
+_base_err=$(docker manifest inspect "$BASE_IMAGE" 2>&1 >/dev/null) || {
   if [ "${CGC_BOOTSTRAP_TOLERANT:-}" = "1" ]; then
-    echo "::warning::[cgc-db-restore-all] base image $BASE_IMAGE not found on GHCR — bootstrap: nothing to propagate yet"
+    echo "::warning::[cgc-db-restore-all] base image $BASE_IMAGE not readable on GHCR — bootstrap: nothing to propagate yet"
+    echo "::warning::[cgc-db-restore-all] docker said: ${_base_err:-<no output>}"
     exit 0
   fi
-  echo "::error::[cgc-db-restore-all] base image $BASE_IMAGE not found on GHCR."
-  echo "::error::[cgc-db-restore-all] seed it once from an existing octocode home's root state: sh $HERE/cloud-cgc-db-package.sh <octocode-home-dir> $BASE_IMAGE latest"
+  echo "::error::[cgc-db-restore-all] base image $BASE_IMAGE not readable on GHCR."
+  echo "::error::[cgc-db-restore-all] docker said: ${_base_err:-<no output>}"
+  echo "::error::[cgc-db-restore-all] if that is a DNS/network error the image is probably fine — check egress before re-seeding."
+  echo "::error::[cgc-db-restore-all] otherwise seed it once from an existing octocode home's root state: sh $HERE/cloud-cgc-db-package.sh <octocode-home-dir> $BASE_IMAGE latest"
   exit 1
-fi
+}
 docker pull -q "$BASE_IMAGE" >/dev/null
 stage_image "$BASE_IMAGE"
 docker rmi "$BASE_IMAGE" >/dev/null 2>&1 || true
