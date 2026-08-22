@@ -34,30 +34,6 @@
   "role": "sqlite-npm",
   "vm": "gcp-proxy",
   "services": {
-    "matrix-continuwuity": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 8008
-      },
-      "vm": "oci-apps",
-      "healthcheck": "/_matrix/client/versions",
-      "domain": "matrix.diegonmarcos.com",
-      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/_matrix",
-        "api_url": "https://matrix.diegonmarcos.com/_matrix",
-        "healthcheck_paths": [
-          "/_matrix/client/versions"
-        ],
-        "type": "custom-rest",
-        "base_path": "/_matrix",
-        "display_name": "Matrix (Continuwuity)",
-        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
-        "auth": "bearer"
-      }
-    },
     "alerts-api": {
       "ip": "10.0.0.4",
       "ports": {
@@ -855,14 +831,14 @@
         ]
       }
     },
-    "cloud-cgc-mcp": {
+    "cloud-cgc-pub-mcp": {
       "ip": "10.0.0.6",
       "ports": {
         "app": 3105
       },
       "vm": "oci-apps",
       "healthcheck": "/mcp",
-      "description": "Cloud CGC MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
+      "description": "Cloud CGC Pub MCP — Code Graph Context: infra knowledge, specs, docs, semantic code search",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -880,7 +856,7 @@
         "tools_count": 48,
         "resources_count": 2,
         "prompts_count": 0,
-        "display_name": "Cloud CGC MCP",
+        "display_name": "Cloud CGC Pub MCP",
         "description": "Code Graph Context: cloud specs, docs, inventory, configs, skills; Octocode semantic search; CodeGraph analysis (future).",
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
@@ -994,6 +970,30 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
+      }
+    },
+    "matrix-continuwuity": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8008
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/_matrix/client/versions",
+      "domain": "matrix.diegonmarcos.com",
+      "description": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/_matrix",
+        "api_url": "https://matrix.diegonmarcos.com/_matrix",
+        "healthcheck_paths": [
+          "/_matrix/client/versions"
+        ],
+        "type": "custom-rest",
+        "base_path": "/_matrix",
+        "display_name": "Matrix (Continuwuity)",
+        "description": "Matrix client-server + federation API served by the Continuwuity homeserver.",
+        "auth": "bearer"
       }
     },
     "matrix-element": {

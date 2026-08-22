@@ -4,15 +4,6 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/backup-targets",
   "targets": [
     {
-      "service": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "volumes": [
-        "continuwuity_data"
-      ],
-      "databases": []
-    },
-    {
       "service": "gitea",
       "vm": "oci-A1-f_0",
       "vm_alias": "oci-apps",
@@ -171,6 +162,15 @@
           "path": "/var/lib/mail-puller/state.db"
         }
       ]
+    },
+    {
+      "service": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "vm_alias": "oci-apps",
+      "volumes": [
+        "continuwuity_data"
+      ],
+      "databases": []
     },
     {
       "service": "matrix-mautrix-whatsapp",
@@ -453,12 +453,12 @@
         }
       ],
       "volumes": [
-        "continuwuity_data",
         "gitea_data",
         "dbgate_data",
         "matomo_data",
         "mattermost_data",
         "mattermost_postgres",
+        "continuwuity_data",
         "mautrix_whatsapp_data",
         "photoprism_originals",
         "photoprism_storage",

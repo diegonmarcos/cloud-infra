@@ -361,14 +361,14 @@
             "public_url": null
           },
           {
-            "id": "cloud-cgc-mcp",
-            "name": "cloud-cgc-mcp",
+            "id": "cloud-cgc-pub-mcp",
+            "name": "cloud-cgc-pub-mcp",
             "vm": "oci-A1-f_0",
             "category": "obs",
             "subgroup": "APIs-MCPs",
             "port": 3105,
             "private_ip": "10.0.0.6",
-            "private_url": "https://cloud-cgc-mcp.app",
+            "private_url": "https://cloud-cgc-pub-mcp.app",
             "public_url": null,
             "mcp": true
           },
@@ -418,17 +418,6 @@
           }
         ],
         "user-apps": [
-          {
-            "id": "matrix-continuwuity",
-            "name": "matrix-continuwuity",
-            "vm": "oci-A1-f_0",
-            "category": "app",
-            "subgroup": "Communications",
-            "port": 8008,
-            "private_ip": "10.0.0.6",
-            "private_url": "https://matrix-continuwuity.app",
-            "public_url": "https://matrix.diegonmarcos.com"
-          },
           {
             "id": "google-personal-mcp",
             "name": "google-personal-mcp",
@@ -553,6 +542,17 @@
             "private_ip": "10.0.0.3",
             "private_url": null,
             "public_url": "https://mail-puller.diegonmarcos.com"
+          },
+          {
+            "id": "matrix-continuwuity",
+            "name": "matrix-continuwuity",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Communications",
+            "port": 8008,
+            "private_ip": "10.0.0.6",
+            "private_url": "https://matrix-continuwuity.app",
+            "public_url": "https://matrix.diegonmarcos.com"
           },
           {
             "id": "matrix-element",
@@ -2139,7 +2139,7 @@
         "git#gh": [
           {
             "id": "git#gh/cloud-unix",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2149,7 +2149,7 @@
             "fork": false,
             "pushed_at": "2026-08-18T13:07:34Z",
             "indexed": true,
-            "local_dir": "unix",
+            "local_dir": "cloud-unix",
             "mirrored": true,
             "persistence": {
               "type": "git",
@@ -2164,7 +2164,7 @@
           },
           {
             "id": "git#gh/diegonmarcos.github.io",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2189,7 +2189,7 @@
           },
           {
             "id": "git#gh/cloud-data",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2214,7 +2214,7 @@
           },
           {
             "id": "git#gh/cloud-infra",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2224,7 +2224,7 @@
             "fork": false,
             "pushed_at": "2026-08-18T13:01:08Z",
             "indexed": true,
-            "local_dir": "cloud",
+            "local_dir": "cloud-infra",
             "mirrored": true,
             "persistence": {
               "type": "git",
@@ -2239,7 +2239,7 @@
           },
           {
             "id": "git#gh/cloud-mykonsole-dtk",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2249,7 +2249,7 @@
             "fork": false,
             "pushed_at": "2026-08-18T12:34:06Z",
             "indexed": true,
-            "local_dir": "tools",
+            "local_dir": "cloud-mykonsole-dtk",
             "mirrored": true,
             "persistence": {
               "type": "git",
@@ -2264,7 +2264,7 @@
           },
           {
             "id": "git#gh/cloud-android",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2289,7 +2289,7 @@
           },
           {
             "id": "git#gh/cloud-vault",
-            "service": "gitea",
+            "service": null,
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2300,7 +2300,7 @@
             "pushed_at": "2026-08-18T12:34:02Z",
             "indexed": false,
             "local_dir": null,
-            "mirrored": true,
+            "mirrored": false,
             "persistence": {
               "type": "git",
               "ref": "https://github.com/diegonmarcos/cloud-vault.git",
@@ -2439,7 +2439,7 @@
           },
           {
             "id": "git#gh/front-data",
-            "service": "cloud-cgc-mcp",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2901,26 +2901,6 @@
             "persistence": {
               "type": "git",
               "ref": "https://github.com/diegonmarcos/cloud-android.git",
-              "mount": null
-            },
-            "vm": "oci-A1-f_0",
-            "backup": {
-              "enabled": true,
-              "strategy": null
-            }
-          },
-          {
-            "id": "git#gitea/cloud-vault",
-            "service": "gitea",
-            "container": null,
-            "engine": "git",
-            "kind": "git-remote",
-            "host": "gitea",
-            "repo": "cloud-vault",
-            "upstream": "https://github.com/diegonmarcos/cloud-vault.git",
-            "persistence": {
-              "type": "git",
-              "ref": "https://github.com/diegonmarcos/cloud-vault.git",
               "mount": null
             },
             "vm": "oci-A1-f_0",
@@ -3640,17 +3620,6 @@
           "public_url": "https://api.diegonmarcos.com"
         },
         {
-          "id": "matrix-continuwuity",
-          "name": "matrix-continuwuity",
-          "vm": "oci-A1-f_0",
-          "category": "app",
-          "subgroup": "Communications",
-          "port": 8008,
-          "private_ip": "10.0.0.6",
-          "private_url": "https://matrix-continuwuity.app",
-          "public_url": "https://matrix.diegonmarcos.com"
-        },
-        {
           "id": "http-to-smtp-proxy-api",
           "name": "http-to-smtp-proxy-api",
           "vm": "gcp-E2-f_0",
@@ -3682,6 +3651,17 @@
           "private_ip": "10.0.0.3",
           "private_url": null,
           "public_url": "https://mail-puller.diegonmarcos.com"
+        },
+        {
+          "id": "matrix-continuwuity",
+          "name": "matrix-continuwuity",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Communications",
+          "port": 8008,
+          "private_ip": "10.0.0.6",
+          "private_url": "https://matrix-continuwuity.app",
+          "public_url": "https://matrix.diegonmarcos.com"
         },
         {
           "id": "matrix-element",
@@ -3897,14 +3877,14 @@
           "mcp": true
         },
         {
-          "id": "cloud-cgc-mcp",
-          "name": "cloud-cgc-mcp",
+          "id": "cloud-cgc-pub-mcp",
+          "name": "cloud-cgc-pub-mcp",
           "vm": "oci-A1-f_0",
           "category": "obs",
           "subgroup": "APIs-MCPs",
           "port": 3105,
           "private_ip": "10.0.0.6",
-          "private_url": "https://cloud-cgc-mcp.app",
+          "private_url": "https://cloud-cgc-pub-mcp.app",
           "public_url": null,
           "mcp": true
         },
@@ -5330,7 +5310,7 @@
       "git#gh": [
         {
           "id": "git#gh/cloud-unix",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5340,7 +5320,7 @@
           "fork": false,
           "pushed_at": "2026-08-18T13:07:34Z",
           "indexed": true,
-          "local_dir": "unix",
+          "local_dir": "cloud-unix",
           "mirrored": true,
           "persistence": {
             "type": "git",
@@ -5355,7 +5335,7 @@
         },
         {
           "id": "git#gh/diegonmarcos.github.io",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5380,7 +5360,7 @@
         },
         {
           "id": "git#gh/cloud-data",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5405,7 +5385,7 @@
         },
         {
           "id": "git#gh/cloud-infra",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5415,7 +5395,7 @@
           "fork": false,
           "pushed_at": "2026-08-18T13:01:08Z",
           "indexed": true,
-          "local_dir": "cloud",
+          "local_dir": "cloud-infra",
           "mirrored": true,
           "persistence": {
             "type": "git",
@@ -5430,7 +5410,7 @@
         },
         {
           "id": "git#gh/cloud-mykonsole-dtk",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5440,7 +5420,7 @@
           "fork": false,
           "pushed_at": "2026-08-18T12:34:06Z",
           "indexed": true,
-          "local_dir": "tools",
+          "local_dir": "cloud-mykonsole-dtk",
           "mirrored": true,
           "persistence": {
             "type": "git",
@@ -5455,7 +5435,7 @@
         },
         {
           "id": "git#gh/cloud-android",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5480,7 +5460,7 @@
         },
         {
           "id": "git#gh/cloud-vault",
-          "service": "gitea",
+          "service": null,
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5491,7 +5471,7 @@
           "pushed_at": "2026-08-18T12:34:02Z",
           "indexed": false,
           "local_dir": null,
-          "mirrored": true,
+          "mirrored": false,
           "persistence": {
             "type": "git",
             "ref": "https://github.com/diegonmarcos/cloud-vault.git",
@@ -5630,7 +5610,7 @@
         },
         {
           "id": "git#gh/front-data",
-          "service": "cloud-cgc-mcp",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -6092,26 +6072,6 @@
           "persistence": {
             "type": "git",
             "ref": "https://github.com/diegonmarcos/cloud-android.git",
-            "mount": null
-          },
-          "vm": "oci-A1-f_0",
-          "backup": {
-            "enabled": true,
-            "strategy": null
-          }
-        },
-        {
-          "id": "git#gitea/cloud-vault",
-          "service": "gitea",
-          "container": null,
-          "engine": "git",
-          "kind": "git-remote",
-          "host": "gitea",
-          "repo": "cloud-vault",
-          "upstream": "https://github.com/diegonmarcos/cloud-vault.git",
-          "persistence": {
-            "type": "git",
-            "ref": "https://github.com/diegonmarcos/cloud-vault.git",
             "mount": null
           },
           "vm": "oci-A1-f_0",

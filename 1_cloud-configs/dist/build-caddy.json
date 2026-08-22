@@ -186,7 +186,7 @@
   "messages": {
     "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
     "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
-    "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-mcp/mcp",
+    "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-pub-mcp/mcp",
     "app_hub_fallback": "Not Found"
   },
   "l4_routes": [
@@ -216,12 +216,6 @@
     }
   ],
   "routes": [
-    {
-      "domain": "matrix.diegonmarcos.com",
-      "upstream": "10.0.0.6:8008",
-      "auth": "none",
-      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
-    },
     {
       "domain": "languagetool.diegonmarcos.com",
       "upstream": "10.0.0.6:8010",
@@ -277,6 +271,12 @@
         "/api/v4/*"
       ],
       "comment": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    {
+      "domain": "matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8008",
+      "auth": "none",
+      "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "domain": "messenger.diegonmarcos.com",
@@ -571,13 +571,13 @@
           "wg_only": true
         },
         {
-          "base_path": "/cloud-cgc-mcp",
+          "base_path": "/cloud-cgc-pub-mcp",
           "upstream": "10.0.0.6:3105",
           "wg_only": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /cloud-cgc-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /cloud-cgc-pub-mcp/mcp"
     }
   ],
   "special": {
@@ -616,10 +616,6 @@
     }
   },
   "internal_routes": [
-    {
-      "service": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008"
-    },
     {
       "service": "c3-infra-api.app",
       "upstream": "10.0.0.6:8081"
@@ -713,12 +709,16 @@
       "upstream": "10.0.0.6:8088"
     },
     {
-      "service": "cloud-cgc-mcp.app",
+      "service": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105"
     },
     {
       "service": "mattermost.app",
       "upstream": "10.0.0.6:8065"
+    },
+    {
+      "service": "matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008"
     },
     {
       "service": "matrix-element.app",
@@ -830,27 +830,6 @@
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
-    {
-      "kind": "redirect",
-      "service": "continuwuity.app",
-      "redirect_to": "https://continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "continuwuity-http-8008.app",
-      "container": "continuwuity",
-      "container_key": "app",
-      "svc": "matrix-continuwuity",
-      "vm": "oci-A1-f_0",
-      "port": 8008,
-      "protocol": "http",
-      "upstream": "10.0.0.6:8008",
-      "source": "containers.app.port"
-    },
     {
       "kind": "redirect",
       "service": "c3-infra-api.app",
@@ -1336,19 +1315,19 @@
     },
     {
       "kind": "redirect",
-      "service": "cloud-cgc-mcp.app",
-      "redirect_to": "https://cloud-cgc-mcp-http-3105.app",
-      "container": "cloud-cgc-mcp",
+      "service": "cloud-cgc-pub-mcp.app",
+      "redirect_to": "https://cloud-cgc-pub-mcp-http-3105.app",
+      "container": "cloud-cgc-pub-mcp",
       "container_key": "app",
-      "svc": "cloud-cgc-mcp",
+      "svc": "cloud-cgc-pub-mcp",
       "vm": "oci-A1-f_0"
     },
     {
       "kind": "canonical",
-      "service": "cloud-cgc-mcp-http-3105.app",
-      "container": "cloud-cgc-mcp",
+      "service": "cloud-cgc-pub-mcp-http-3105.app",
+      "container": "cloud-cgc-pub-mcp",
       "container_key": "app",
-      "svc": "cloud-cgc-mcp",
+      "svc": "cloud-cgc-pub-mcp",
       "vm": "oci-A1-f_0",
       "port": 3105,
       "protocol": "http",
@@ -1374,6 +1353,27 @@
       "port": 8065,
       "protocol": "http",
       "upstream": "10.0.0.6:8065",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "continuwuity.app",
+      "redirect_to": "https://continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "continuwuity-http-8008.app",
+      "container": "continuwuity",
+      "container_key": "app",
+      "svc": "matrix-continuwuity",
+      "vm": "oci-A1-f_0",
+      "port": 8008,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8008",
       "source": "containers.app.port"
     },
     {
@@ -1591,19 +1591,23 @@
     {
       "kind": "redirect",
       "service": "news-gdelt.app",
-      "redirect_to": "https://news-gdelt-null.app",
+      "redirect_to": "https://news-gdelt-http-3019.app",
       "container": "news-gdelt",
       "container_key": "app",
       "svc": "news-gdelt",
       "vm": "oci-A1-f_0"
     },
     {
-      "kind": "portless",
-      "service": "news-gdelt-null.app",
+      "kind": "canonical",
+      "service": "news-gdelt-http-3019.app",
       "container": "news-gdelt",
       "container_key": "app",
       "svc": "news-gdelt",
-      "vm": "oci-A1-f_0"
+      "vm": "oci-A1-f_0",
+      "port": 3019,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3019",
+      "source": "containers.app.port"
     },
     {
       "kind": "redirect",
@@ -2014,7 +2018,7 @@
     },
     {
       "host": "mcp.diegonmarcos.com",
-      "path": "/cloud-cgc-mcp",
+      "path": "/cloud-cgc-pub-mcp",
       "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "public",
@@ -2109,16 +2113,6 @@
   ],
   "public_D_others": [
     {
-      "host": "matrix.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
-    },
-    {
       "host": "languagetool.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8010",
@@ -2207,6 +2201,16 @@
       "zone": "com",
       "service": null,
       "notes": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
+    },
+    {
+      "host": "matrix.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
     },
     {
       "host": "messenger.diegonmarcos.com",
@@ -2441,16 +2445,6 @@
   ],
   "private_A0_app_short": [
     {
-      "host": "matrix-continuwuity.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "c3-infra-api.app",
       "path": null,
       "upstream": "10.0.0.6:8081",
@@ -2681,7 +2675,7 @@
       "notes": null
     },
     {
-      "host": "cloud-cgc-mcp.app",
+      "host": "cloud-cgc-pub-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
@@ -2694,6 +2688,16 @@
       "host": "mattermost.app",
       "path": null,
       "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "matrix-continuwuity.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2882,16 +2886,6 @@
     }
   ],
   "private_A1_app_canonical": [
-    {
-      "host": "continuwuity-http-8008.app",
-      "path": null,
-      "upstream": "10.0.0.6:8008",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "matrix-continuwuity",
-      "notes": null
-    },
     {
       "host": "c3-infra-api-http-8081.app",
       "path": null,
@@ -3123,13 +3117,13 @@
       "notes": null
     },
     {
-      "host": "cloud-cgc-mcp-http-3105.app",
+      "host": "cloud-cgc-pub-mcp-http-3105.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
-      "service": "cloud-cgc-mcp",
+      "service": "cloud-cgc-pub-mcp",
       "notes": null
     },
     {
@@ -3140,6 +3134,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "chat-mattermost",
+      "notes": null
+    },
+    {
+      "host": "continuwuity-http-8008.app",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "matrix-continuwuity",
       "notes": null
     },
     {
@@ -3253,6 +3257,16 @@
       "notes": null
     },
     {
+      "host": "news-gdelt-http-3019.app",
+      "path": null,
+      "upstream": "10.0.0.6:3019",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "news-gdelt",
+      "notes": null
+    },
+    {
       "host": "calendar-radicale-http-5232.app",
       "path": null,
       "upstream": "10.0.0.6:5232",
@@ -3362,16 +3376,6 @@
       "tls": "on_demand",
       "zone": "app",
       "service": "stalwart",
-      "notes": null
-    },
-    {
-      "host": "news-gdelt-null.app",
-      "path": null,
-      "upstream": "204",
-      "kind": "portless",
-      "tls": "on_demand",
-      "zone": "app",
-      "service": "news-gdelt",
       "notes": null
     }
   ],

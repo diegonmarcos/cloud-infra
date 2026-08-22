@@ -356,8 +356,16 @@ fi
 # Auto-stages any resulting diffs so dist/ stays in sync with src/.
 # Skip when already inside a regen commit (guard against hook re-entry).
 # ══════════════════════════════════════════════════════════
+# A "derive input" is any source the 1_cloud-configs derive pipeline reads:
+# 1_cicd engine sources, the deriver scripts themselves, or any service's
+# hand-curated build.json (a_solutions/*, b_infra/nixhm-sudo-*, or the root
+# config.json). Defined ONCE and reused below — both for this outer regen
+# gate and for the "actually run the deriver" gate further down — so the
+# two can never drift apart again. They already had: see the 2026-08-22
+# note further down for what that cost.
+DERIVE_TRIGGER_RE='^(1_cicd/src/|1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'
 if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
-   && echo "$STAGED" | grep -qE '^(1_cicd/src/|1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'; then
+   && echo "$STAGED" | grep -qE "$DERIVE_TRIGGER_RE"; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
   BUILD_SH="$REPO_ROOT/9_others/build.sh"
   if [ -x "$BUILD_SH" ]; then
@@ -400,11 +408,36 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
     # Only runs when a derive input is staged, so ordinary commits are unaffected.
     # The deriver reads the vault at ~/git/cloud-vault; on a machine without it the
     # keys carry forward from the previous output rather than being nulled.
-    if echo "$STAGED" | grep -qE '^1_cloud-configs/src/'; then
+    if echo "$STAGED" | grep -qE "$DERIVE_TRIGGER_RE"; then
       CONFIGS_SH="$REPO_ROOT/1_cloud-configs/build.sh"
       if [ -x "$CONFIGS_SH" ]; then
-        echo "[pre-commit] derive input staged — running 1_cloud-configs/build.sh consolidate"
-        if ! "$CONFIGS_SH" consolidate >/tmp/derive-regen.log 2>&1; then
+        echo "[pre-commit] derive input staged — running 1_cloud-configs/build.sh consolidate + derive"
+        # 2026-08-22 (run 32574580997): this branch used to (a) gate on the
+        # narrower '^1_cloud-configs/src/' instead of $DERIVE_TRIGGER_RE, and
+        # (b) run ONLY `consolidate`. Both were bugs:
+        #  (a) repo-map's own input is a_solutions/*/build.json .index_repos,
+        #      which is hand-curated (see derive-repo-map.ts's header) — a
+        #      commit that ONLY edits a service build.json, touching nothing
+        #      under 1_cloud-configs/src/, is the EXPECTED way this fires,
+        #      not an edge case the old regex was right to exclude.
+        #  (b) consolidate() and derive() are separate 1_cloud-configs/build.sh
+        #      subcommands (see its case statement). derive() is the ONE that
+        #      loops derivers.json and actually invokes derive-repo-map.ts
+        #      (repo-map), derive-mesh-snapshot.ts, derive-build-workflows.ts,
+        #      derive-code-signatures.ts, and derive-mcp-json.ts; consolidate()
+        #      only writes _cloud-data-consolidated.json — a different
+        #      artifact. So every registered deriver, repo-map included,
+        #      silently never ran here, no matter how often this branch fired.
+        # Together that is exactly how a_solutions/user-ai_cloud-cgc-pub-mcp/
+        # build.json ended up with cloud-my-ai_memory in index_repos but
+        # missing from repo_map: the commit that added it DID also stage
+        # 1_cloud-configs/src/derive/derive-repo-map.ts (an unrelated rename
+        # edit), so even the old narrow regex fired — and `consolidate` ran
+        # successfully — but `derive` was never called, so repo-map's write
+        # into build.json never happened. Run both below, consolidate first:
+        # derive's config-derive step reads consolidate's own output, the
+        # same order build.sh's own `all`/`ship` targets already use.
+        if ! "$CONFIGS_SH" consolidate >/tmp/derive-regen.log 2>&1 || ! "$CONFIGS_SH" derive >>/tmp/derive-regen.log 2>&1; then
           echo "[pre-commit] 1_cloud-configs/build.sh failed — aborting commit. See /tmp/derive-regen.log" >&2
           tail -20 /tmp/derive-regen.log >&2
           exit 1

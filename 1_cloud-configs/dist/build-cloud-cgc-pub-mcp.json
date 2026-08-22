@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
-    "description": "postlite-authelia container config (service=authelia, role=postlite)",
+    "description": "cloud-cgc-pub-mcp container config (service=cloud-cgc-pub-mcp, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
@@ -28,31 +28,32 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "postlite-authelia",
-    "image": "ghcr.io/diegonmarcos/postlite:latest",
-    "port": null,
-    "port_env": null,
-    "public": false,
-    "healthcheck": null,
-    "volumes": [],
-    "env_file": false,
-    "depends_on": [
-      "app"
-    ],
-    "resources": {
-      "limits": {
-        "memory": "64M"
-      },
-      "reservations": {
-        "memory": "16M"
-      }
+    "container_name": "cloud-cgc-pub-mcp",
+    "image": "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest",
+    "port": 3105,
+    "port_env": "MCP_HTTP_PORT",
+    "dns": "cloud-cgc-pub-mcp.app",
+    "public": true,
+    "proxy": {
+      "streaming": true,
+      "type": "path",
+      "parent_domain": "mcp.diegonmarcos.com",
+      "base_path": "/cloud-cgc-pub-mcp"
     },
+    "healthcheck": "/mcp",
+    "monitoring": null,
+    "volumes": [
+      "./data:/data:ro"
+    ],
+    "env_file": false,
+    "depends_on": [],
+    "resources": null,
     "read_only": false,
-    "protocol": "tcp"
+    "protocol": "http"
   },
-  "service": "authelia",
-  "role": "postlite",
-  "vm": "gcp-proxy",
+  "service": "cloud-cgc-pub-mcp",
+  "role": "app",
+  "vm": "oci-apps",
   "services": {
     "alerts-api": {
       "ip": "10.0.0.4",
@@ -1605,31 +1606,151 @@
       }
     }
   },
-  "timezone": "Europe/Madrid",
+  "db_publish": {
+    "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 9_others/src/deploy/scripts/cloud-kg-db-snapshot.sh.",
+    "image": "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-octocode-db",
+    "tag": "latest",
+    "volume": "octocode_db",
+    "host": "oci-apps"
+  },
+  "per_repo_publish": {
+    "_comment": "MATRIX CI packaging target (cgc-db-index.yml matrix jobs; CGC_PACKAGE_MODE=per-repo in cloud-cgc-db-update.sh), replacing db_publish for per-repo checkpoints during the migration. One GHCR image per indexed repo: <image_prefix><local_name>:<tag>, e.g. ghcr.io/diegonmarcos/cgc-db-cloud-data:latest -- built by cloud-cgc-db-package.sh (mode auto-detected from the image name) from that repo's own <project_id>/ dir only. Visibility mirrors the repo's OWN GitHub visibility (gh repo view --json isPrivate on repo_map[local_name]): private repo -> private package, public -> public, force-corrected at publish if drifted. base_image carries the SHARED octocode home root state (config.toml + fastembed/ + sentencetransformer/ model caches) restored before indexing so embedding models stay pinned identical across every per-repo image -- a mismatch silently drop_tables a repo. Read back by cloud-cgc-db-restore-all.sh (consumer side) with the same three keys. db_publish above stays the monolith path until the matrix is proven green; do not delete it.",
+    "image_prefix": "ghcr.io/diegonmarcos/cgc-db-",
+    "base_image": "ghcr.io/diegonmarcos/cgc-db-base:latest",
+    "tag": "latest"
+  },
+  "runtime": {
+    "git_root": "/repos",
+    "data_path": "/data",
+    "octocode": {
+      "repos_volume": "octocode_repos",
+      "repos_path": "/repos",
+      "noindex_patterns": [
+        "z_archive/",
+        "y_old/",
+        "vendor/",
+        "node_modules/",
+        "dist/",
+        "reports/",
+        "ea_upstreams-sources/",
+        "upstream/",
+        "ea_keyboard-heliboard/",
+        "ea_keyboard-dicts/",
+        "*.min.js",
+        "*.min.css",
+        "*.map",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "*.png",
+        "*.svg",
+        "*.jpg",
+        "*.jpeg",
+        "*.gif",
+        "*.ico",
+        "*.webp",
+        "*.pdf",
+        "*.geojson",
+        "*mapping.txt",
+        "**/generated/",
+        "*.aar",
+        "*.jar",
+        "*.apk",
+        "*.dict",
+        "*.so",
+        "*.keystore",
+        "*.bin",
+        "*.icns",
+        "*.efi",
+        "a_solutions/*/src/build-*.json"
+      ],
+      "_noindex_extra_comment": "PER-REPO noindex additions (data-driven, keyed by local repo name) layered ON TOP of noindex_patterns above, for content only ONE repo needs excluded. cloud-my-ai_memory: a_sessions/ holds raw Claude Code session transcripts (giant, opaque tool-result JSON that would abort the index; the text is invisible to embeddings anyway) and a_commits/ holds 18 rewritten-wholesale JSON snapshots up to 7.5MB each (embedding noise + whole-file-JSON abort risk). Honored by cloud-cgc-db-update.sh next to NOINDEX_PATTERNS.",
+      "noindex_extra": {
+        "cloud-my-ai_memory": [
+          "a_sessions/",
+          "a_commits/"
+        ]
+      },
+      "db_volume": "octocode_db",
+      "db_path": "/home/appuser/.local/share/octocode",
+      "_db_upstream_comment": "GHCR is the SINGLE upstream for both octocode DBs (semantic FastEmbed vectors + GraphRAG graph). The producer (GHA x86, ship-cgc-db.yml) pulls db_publish.image, runs an INCREMENTAL octocode index on top, and pushes it back. oci-apps (arm) + local both CONSUME by pulling the same image — never build. Pinned octocode version keeps the on-disk DB schema compatible across x86/arm/local.",
+      "version": "0.12.2",
+      "octocode_images": {
+        "x86": "ghcr.io/diegonmarcos/octocode-fastembed-huggingface-graphrag-cpu-x86-linux-static:0.12.2",
+        "arm": "ghcr.io/diegonmarcos/octocode-fastembed-graphrag-indexed-arm:latest"
+      },
+      "update": {
+        "mem_max": "16G",
+        "swap_max": "0",
+        "cpu_quota": "300%",
+        "cpu_weight": "100",
+        "io_weight": "10",
+        "_comment": "update = INCREMENTAL (octocode index, git-aware, changed files only) on top of the GHCR DB. NOT a reindex (clear+rebuild). First run with no upstream image bootstraps a full build once to seed GHCR. Structural incremental of changed files is minutes and matches the base.",
+        "_two_phase_comment": "TWO-PHASE ORCHESTRATION (.github/workflows/cgc-db.yml → cgc-db-index.yml). The schedule fires the orchestrator, which chains the reusable index workflow twice: (1) phase=semantic runs octocode index with USE_LLM=false (structural FastEmbed only, minutes), change-gated on .cgc-manifest-semantic.json; then (2) phase=graphrag runs with USE_LLM=true (the LLM relationship pass: one call PER node, hours over the full graph) ONLY after semantic succeeds, change-gated on its OWN .cgc-manifest-graphrag.json so it is NOT skipped just because semantic already advanced HEAD. The PHASE is the source of truth for USE_LLM — the cgc-db-index.yml job exports USE_LLM into the environment, which OVERRIDES the use_llm field below. Both manifests live inside the octocode home so they travel with the GHCR DB snapshot. workflow_dispatch can run a single phase via the `phase` input (both|semantic|graphrag).",
+        "_use_llm_comment": "FALLBACK DEFAULT ONLY — not the authority. cloud-cgc-db-update.sh reads this ONLY when the environment does not set USE_LLM (e.g. a bare local invocation with no phase). In CI the two-phase orchestrator always sets USE_LLM per phase, so this value is not consulted there. Kept false so a phase-less local run stays cheap/structural.",
+        "incremental": true,
+        "use_llm": false,
+        "llm_model": "openai:qwen/qwen3-coder-30b-a3b-instruct",
+        "schedule": "0 4,16 * * *",
+        "_budget_comment": "repo_timeout_min is a CEILING, not a reservation (corrected 2026-08-21). The gate clamps each repo's slice to min(ceiling, max_minutes - elapsed), so worst-case wall time is max_minutes ALONE and the invariant is simply max_minutes <= timeout-minutes (330) minus slack for the final propagate. The earlier 'max + repo <= timeout' rule described the pre-reserve gate; kept afterwards it deadlocked admission — a FIXED reserve must be big enough for the slowest repo (cloud-unix ~200m+ at measured throughput) yet small enough to still admit a repo late in a run, and both cannot hold, so the giants were never admitted at all while the small repos alone consumed ~75m.",
+        "max_minutes": 300,
+        "repo_timeout_min": 240,
+        "code_embedding_model": "fastembed:nomic-ai/nomic-embed-text-v1.5",
+        "text_embedding_model": "fastembed:nomic-ai/nomic-embed-text-v1.5"
+      },
+      "llm": {
+        "_comment": "octocode GraphRAG LLM -> my-ai-api (OpenRouter-backed, port 3217). openai:* reads OPENAI_API_URL -> my-ai-api /v1 (3217); ollama:* reads OLLAMA_API_URL -> my-ai-api Ollama mimic (12436). Both faces route to OpenRouter; api_key is passed through and must match OPENROUTER_API_KEY in the container (my-ai-api src/secrets.yaml). my-ai-api's default model is deepseek/deepseek-v4-flash-0731, but that default does not apply here: llm_model below names the slug this service sends, and my-ai-api falls back to its default only when the caller sends none.",
+        "openai_api_url": "http://10.0.0.6:3217/v1/chat/completions",
+        "ollama_api_url": "http://10.0.0.6:12436",
+        "api_key": "sk-dummy",
+        "models": "openai:qwen/qwen3-coder-30b-a3b-instruct",
+        "health_url": "http://10.0.0.6:3217/health"
+      },
+      "index_repos": [
+        "cloud-infra",
+        "cloud-unix",
+        "front",
+        "cloud-mykonsole-dtk",
+        "cloud-data",
+        "front-data",
+        "cloud-android",
+        "cloud-my-ai_memory"
+      ],
+      "_repo_map_comment": "GENERATED by 1_cloud-configs/src/derive/derive-repo-map.ts from cloud/repos.json, scoped to index_repos. DO NOT EDIT — add the repo to the registry and to index_repos instead.",
+      "repo_map": {
+        "cloud-infra": "cloud-infra",
+        "cloud-unix": "cloud-unix",
+        "front": "diegonmarcos.github.io",
+        "cloud-mykonsole-dtk": "cloud-mykonsole-dtk",
+        "cloud-data": "cloud-data",
+        "front-data": "front-data",
+        "cloud-android": "cloud-android",
+        "cloud-my-ai_memory": "my-ai_memory"
+      },
+      "_graphrag_skip_comment": "Subset of index_repos (data-driven, no hardcoded names in the script) whose GraphRAG LLM relationship pass is skipped entirely — pure prose/text corpora have no code semantics to relate, so the pass is zero graph nodes for real per-node LLM cost. Structural/FastEmbed indexing (the semantic phase, USE_LLM=false) still runs normally; only the graphrag phase (USE_LLM=true) skips these repos. Honored by cloud-cgc-db-update.sh's per-repo loop.",
+      "graphrag_skip": [
+        "cloud-my-ai_memory"
+      ],
+      "home": "/home/appuser",
+      "kg_store": {
+        "_comment": "reindex.sh ingests the infra graph delta into kg-store (SurrealDB) after building the code graph — unified 'build all graphs' job. Localhost host-network; ns/db/user data-driven; delta from the cgc bundle. KG_STORE_PASS (SurrealDB root) is wired as a shared secret later; until then the ingest gracefully no-ops.",
+        "url": "http://127.0.0.1:8001",
+        "ns": "infra",
+        "db": "production",
+        "user": "root",
+        "delta": "/app/graphs/build-kg-graph_delta.json"
+      },
+      "smart_noindex": {
+        "_comment": "generic auto-noindex: exclude any dir where >=binary_ratio of its >=min_files tracked files are binary (git numstat). No hardcoded project paths.",
+        "min_files": 12,
+        "binary_ratio": 0.5
+      },
+      "sync_exclude": {
+        "cloud-vault": "credential store — cloud-cgc-pub-mcp indexes the shared volume; secrets would be embedded in the GraphRAG DB"
+      }
+    }
+  },
   "secret_env_vars": [
-    "AUTHELIA_JWT_SECRET",
-    "AUTHELIA_SESSION_SECRET",
-    "AUTHELIA_STORAGE_ENCRYPTION_KEY",
-    "AUTHELIA_REDIS_PASSWORD",
-    "AUTHELIA_OIDC_HMAC_SECRET",
-    "AUTHELIA_USER_DIEGO_HASH",
-    "AUTHELIA_OIDC_CLIENT_NPM_SECRET",
-    "AUTHELIA_OIDC_CLIENT_NOCODB_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLI_SECRET",
-    "AUTHELIA_SMTP_PASSWORD",
-    "AUTHELIA_OIDC_JWKS_KEY",
-    "AUTHELIA_OIDC_CLIENT_CLOUDFLARE_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_SECRET",
-    "AUTHELIA_OIDC_CLIENT_DAGU_SECRET",
-    "AUTHELIA_OIDC_CLIENT_C3_MCP_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MONITORING_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MATTERMOST_SECRET",
-    "AUTHELIA_OIDC_CLIENT_DAGU_CC_SECRET",
-    "AUTHELIA_OIDC_CLIENT_MATTERMOST_CC_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLOUD_ADMIN_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_OPUS_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_SONNET_SECRET",
-    "AUTHELIA_OIDC_CLIENT_CLAUDE_HAIKU_SECRET",
-    "AUTHELIA_USER_ME_TOTP_SECRET"
+    "KG_STORE_PASS"
   ]
 }
