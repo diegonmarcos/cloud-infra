@@ -99,6 +99,32 @@ find_project_dir() { # $1=SRC → stdout: project dir name; rc!=0 on 0-or-2+
   printf '%s\n' "${_fpd_dirs# }"
 }
 
+# REPO-MODE PROJECT DIR RESOLUTION. CGC_PROJECT_DIR (env, optional): the caller
+# (cloud-cgc-db-update.sh's per-repo loop, STRAY-SELECT) may already know exactly
+# which project dir this checkpoint is for, resolved via a before/after diff
+# around its own `octocode index` call rather than a bare count over the whole
+# SRC dir — which is what find_project_dir() does, and which production
+# incident (run 32572923354) showed is the WRONG invariant whenever a stray dir
+# (from anywhere) sits in SRC alongside the real one. When the caller passes an
+# answer, trust it (still validated: must exist as a dir under SRC, so a typo'd
+# or stale CGC_PROJECT_DIR fails loudly rather than silently packaging nothing)
+# and skip find_project_dir() entirely. Any caller that does not set it —
+# including every caller of this script that predates STRAY-SELECT — gets the
+# exact original exactly-one behaviour, unchanged.
+resolve_repo_project_dir() { # $1=SRC → stdout: project dir name; rc!=0 on failure
+  _rrp_src="$1"
+  if [ -n "${CGC_PROJECT_DIR:-}" ]; then
+    [ -d "$_rrp_src/$CGC_PROJECT_DIR" ] || {
+      echo "::error::[cgc-db] CGC_PROJECT_DIR='$CGC_PROJECT_DIR' does not exist under $_rrp_src" >&2
+      return 1
+    }
+    echo "[cgc-db] project dir given by caller (before/after diff): $CGC_PROJECT_DIR" >&2
+    printf '%s\n' "$CGC_PROJECT_DIR"
+    return 0
+  fi
+  find_project_dir "$_rrp_src"
+}
+
 # BASE tar: explicit allowlist of root-state entries only. Robust even if $SRC
 # also happens to hold project dirs (an allowlist can never leak one) — unlike
 # a denylist, which would need to know every project id in advance.
@@ -266,8 +292,7 @@ case "$MODE" in
     DESC="cloud-cgc-pub-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
     ;;
   repo)
-    PROJ=$(find_project_dir "$SRC") || exit 1
-    echo "[cgc-db] $PKG · single project dir detected: $PROJ"
+    PROJ=$(resolve_repo_project_dir "$SRC") || exit 1
     build_repo_tar "$SRC" "$WORK/ctx/octocode-db.tar" "$PROJ"
     DESC="cloud-cgc-pub-mcp octocode DB for $LOCAL_NAME (single <project_id>/ dir: semantic FastEmbed vectors + GraphRAG graph). Visibility matches the $LOCAL_NAME repo. Restore into an octocode home ROOTED by cgc-db-base:latest via cp -a."
     ;;
