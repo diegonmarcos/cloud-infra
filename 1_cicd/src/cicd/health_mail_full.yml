@@ -1,0 +1,42 @@
+name: Health Mail Full
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: health-mail-full
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  mail-health:
+    name: Mail health (liveness + cross-store reconciliation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH config
+        env:
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/oci_key
+          chmod 600 ~/.ssh/oci_key
+          {
+            echo "Host oci-analytics"; echo "  HostName 10.0.0.4"; echo "  User ubuntu"; echo "  IdentityFile ~/.ssh/oci_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+            echo "Host oci-apps";      echo "  HostName 10.0.0.6"; echo "  User ubuntu"; echo "  IdentityFile ~/.ssh/oci_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
+          } >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      - name: Run mail health check
+        env:
+          NTFY_URL: ${{ secrets.NTFY_URL }}
+          AUTHELIA_BEARER_TOKEN: ${{ secrets.AUTHELIA_BEARER_TOKEN }}
+          AUTHELIA_TOKEN_URL: ${{ secrets.AUTHELIA_TOKEN_URL }}
+          AUTHELIA_OIDC_CLIENT_ID: ${{ secrets.AUTHELIA_OIDC_CLIENT_ID }}
+          AUTHELIA_OIDC_CLIENT_SECRET: ${{ secrets.AUTHELIA_OIDC_CLIENT_SECRET }}
+        run: bash 1_cicd/src/ops/cloud-health-mail-full.sh
