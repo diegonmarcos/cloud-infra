@@ -331,10 +331,21 @@ ensure_repos() {
       url="git@github.com:diegonmarcos/${remote}.git"
     elif [ -n "$TOKEN" ]; then url="https://x-access-token:${TOKEN}@github.com/diegonmarcos/${remote}.git"
     else url="https://github.com/diegonmarcos/${remote}.git"; fi
+    # octocode keys each project's DB dir on sha256(normalized origin URL)[..16], so
+    # origin MUST NOT carry credentials. The token path above baked a per-run secret
+    # into that hash, which meant (a) the id never matched what a consumer computes
+    # from its own tokenless checkout — the per-repo images restored onto oci-apps
+    # landed in dirs nothing would ever read, so every query silently built a fresh
+    # empty index — and (b) the id changed whenever the token rotated, which is where
+    # the monolith's drift of stale project-hash dirs came from. The SSH deploy-key
+    # path was always fine (git@host:path normalizes to the same thing), so this only
+    # ever bit the token repos, i.e. the public ones. Fetch with the credentialed URL
+    # explicitly and keep origin canonical and stable.
+    canon="https://github.com/diegonmarcos/${remote}.git"
     if [ -d "$d/.git" ]; then
       echo "[cgc-db] refresh $lname ← origin (full history for incremental detection)"
-      git -C "$d" remote set-url origin "$url" 2>/dev/null || true
-      git -C "$d" fetch -q origin 2>/dev/null \
+      git -C "$d" remote set-url origin "$canon" 2>/dev/null || true
+      git -C "$d" fetch -q "$url" 2>/dev/null \
         && git -C "$d" reset --hard -q FETCH_HEAD 2>/dev/null \
         || echo "[cgc-db] WARN refresh $lname failed (using existing checkout)"
     else
@@ -358,6 +369,9 @@ ensure_repos() {
       git clone -q --filter=blob:none "$url" "$d" 2>/dev/null \
         || git clone -q "$url" "$d" 2>/dev/null \
         || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
+      # Same reason as the refresh path: strip any credential back out of origin so
+      # the project_id octocode derives is the canonical, consumer-matching one.
+      git -C "$d" remote set-url origin "$canon" 2>/dev/null || true
     fi
     # After BOTH paths: a refresh (reset --hard) rewrites mtimes on every touched file just
     # as a clone does, so neither path can be trusted to carry stable mtimes on its own.
