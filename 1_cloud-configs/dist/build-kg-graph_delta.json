@@ -33,12 +33,12 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 295,
-    "edges": 398,
+    "nodes": 296,
+    "edges": 399,
     "by_table": {
       "vm": 4,
       "service": 66,
-      "container": 86,
+      "container": 87,
       "domain": 42,
       "repo": 3,
       "module": 66,
@@ -1188,6 +1188,18 @@
         "role": "app",
         "port": 3105,
         "public": true
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_cgc_pvt_mcp",
+      "key": "container:cloud_cgc_pvt_mcp",
+      "properties": {
+        "name": "cloud-cgc-pvt-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest",
+        "role": "pvt",
+        "port": 3107,
+        "public": false
       }
     },
     {
@@ -4144,6 +4156,15 @@
       "key": "service:cloud_cgc_pub_mcp->runs_container->container:cloud_cgc_pub_mcp",
       "properties": {
         "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_cgc_pub_mcp",
+      "to": "container:cloud_cgc_pvt_mcp",
+      "key": "service:cloud_cgc_pub_mcp->runs_container->container:cloud_cgc_pvt_mcp",
+      "properties": {
+        "role": "pvt"
       }
     },
     {

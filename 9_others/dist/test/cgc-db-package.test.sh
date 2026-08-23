@@ -123,56 +123,106 @@ cat > "$W/bj.json" <<'JSON'
 JSON
 export CGC_BUILD_JSON="$W/bj.json"
 
-# Stub gh: `repo view` returns $STUB_ISPRIVATE; `api .../visibility` (GET)
-# returns $STUB_CUR_VIS; `api --method PUT .../visibility -f visibility=X`
-# is logged (so the test can assert WHICH visibility was requested) and
-# succeeds unless $STUB_PUT_RC=1.
+# Stub gh: `repo view` returns $STUB_ISPRIVATE; `api <path> --jq .visibility`
+# (GET) returns $STUB_CUR_VIS, or rc 1 when it is "absent" (package does not
+# exist, which is what the pre-push gate keys on); `api --method DELETE <path>`
+# is logged so a test can assert whether a delete was attempted, and succeeds
+# unless $STUB_DELETE_RC=1.
+#
+# There is deliberately no PUT case. An earlier revision of this file asserted
+# that each branch PUT a corrected visibility; GitHub has no set-visibility
+# endpoint, that design was abandoned, and those assertions went stale and red
+# while the script moved to delete-or-refuse. They are rewritten below against
+# what the script actually does.
 gh() {
   case "$1 $2" in
     "repo view")   printf '%s' "${STUB_ISPRIVATE:-}" ;;
     "api --method")
-      echo "PUT $4 $6" >> "$CALL_LOG"
-      [ "${STUB_PUT_RC:-0}" = "0" ]
+      echo "$3 $4" >> "$CALL_LOG"
+      [ "${STUB_DELETE_RC:-0}" = "0" ]
       ;;
-    *) [ "$1" = "api" ] && printf '%s' "${STUB_CUR_VIS:-unknown}" ;;
+    *)
+      [ "$1" = "api" ] || return 0
+      [ "${STUB_CUR_VIS:-unknown}" = "absent" ] && return 1
+      printf '%s' "${STUB_CUR_VIS:-unknown}"
+      ;;
   esac
 }
 
-# repo mode
+echo "── verify_or_delete_repo_pkg (POST-push backstop: delete, never expose) ──"
 : > "$CALL_LOG"; STUB_ISPRIVATE=true  STUB_CUR_VIS=public
-out=$(visibility_repo cgc-db-cloud-infra cloud-infra 2>&1)
-{ echo "$out" | grep -q "::error::" && grep -q "visibility=private" "$CALL_LOG"; } \
-  && ok "repo: private+public -> forced private with ::error::" || bad "case A: out=[$out] log=[$(cat "$CALL_LOG")]"
+out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "::error::" && echo "$out" | grep -q "DELETED" \
+  && grep -q "DELETE /user/packages/container/cgc-db-cloud-infra" "$CALL_LOG"; } \
+  && ok "backstop: private repo + public pkg -> DELETED, ::error::, non-zero" || bad "case A: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 : > "$CALL_LOG"; STUB_ISPRIVATE=true  STUB_CUR_VIS=private
-out=$(visibility_repo cgc-db-cloud-infra cloud-infra 2>&1)
-{ ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
-  && ok "repo: private+private -> no-op, no error" || bad "case B: out=[$out] log=[$(cat "$CALL_LOG")]"
-
-: > "$CALL_LOG"; STUB_ISPRIVATE=false STUB_CUR_VIS=private
-out=$(visibility_repo cgc-db-front front 2>&1)
-{ ! echo "$out" | grep -q "::error::" && grep -q "visibility=public" "$CALL_LOG"; } \
-  && ok "repo: public+private -> corrected to public, no error" || bad "case C: out=[$out] log=[$(cat "$CALL_LOG")]"
+out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
+  && ok "backstop: private repo + private pkg -> no-op, nothing deleted" || bad "case B: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 : > "$CALL_LOG"; STUB_ISPRIVATE=false STUB_CUR_VIS=public
-out=$(visibility_repo cgc-db-front front 2>&1)
-{ ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
-  && ok "repo: public+public -> no-op" || bad "case D: out=[$out] log=[$(cat "$CALL_LOG")]"
+out=$(verify_or_delete_repo_pkg cgc-db-front front 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
+  && ok "backstop: public repo -> check skipped entirely" || bad "case C: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 : > "$CALL_LOG"; STUB_ISPRIVATE=false STUB_CUR_VIS=public
-out=$(visibility_repo cgc-db-unmapped unmapped 2>&1)
-{ echo "$out" | grep -q "::error::" && echo "$out" | grep -q "not found in repo_map" && grep -q "visibility=private" "$CALL_LOG"; } \
-  && ok "repo: local_name absent from repo_map -> fail-safe private" || bad "case E: out=[$out] log=[$(cat "$CALL_LOG")]"
+out=$(verify_or_delete_repo_pkg cgc-db-unmapped unmapped 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "not found in repo_map" && grep -q "^DELETE " "$CALL_LOG"; } \
+  && ok "backstop: local_name absent from repo_map -> fail-safe private, deleted" || bad "case D: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 : > "$CALL_LOG"; STUB_ISPRIVATE="weird-garbage" STUB_CUR_VIS=public
-out=$(visibility_repo cgc-db-cloud-infra cloud-infra 2>&1)
-{ echo "$out" | grep -q "::error::" && echo "$out" | grep -q "could not determine visibility" && grep -q "visibility=private" "$CALL_LOG"; } \
-  && ok "repo: gh repo view undetermined -> fail-safe private" || bad "case F: out=[$out] log=[$(cat "$CALL_LOG")]"
+out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "could not determine visibility" && grep -q "^DELETE " "$CALL_LOG"; } \
+  && ok "backstop: gh repo view undetermined -> fail-safe private, deleted" || bad "case E: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
-: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=public STUB_PUT_RC=1
-out=$(visibility_repo cgc-db-cloud-infra cloud-infra 2>&1)
-echo "$out" | grep -q "could NOT set" && ok "repo: PUT failure surfaced" || bad "case G: out=[$out]"
-unset STUB_PUT_RC
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=public STUB_DELETE_RC=1
+out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "could NOT delete"; } \
+  && ok "backstop: delete failure surfaced as ::error::" || bad "case F: rc=$rc out=[$out]"
+unset STUB_DELETE_RC
+
+echo "── gate_repo_push (PRE-push gate: never create a public pkg from a private repo) ──"
+: > "$CALL_LOG"; STUB_ISPRIVATE=false STUB_CUR_VIS=absent
+out=$(gate_repo_push cgc-db-front front 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && [ -z "$out" ] && [ ! -s "$CALL_LOG" ]; } \
+  && ok "gate: public repo -> push allowed, package not even queried" || bad "case G: rc=$rc out=[$out]"
+
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=private
+out=$(gate_repo_push cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "pushing" && ! echo "$out" | grep -qE "::error::|::warning::"; } \
+  && ok "gate: private repo + existing PRIVATE pkg -> push allowed" || bad "case H: rc=$rc out=[$out]"
+
+# The case that matters: cloud-data / my-ai_memory with no package yet. Whether
+# a push is safe here depends ENTIRELY on which token pushes.
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent; unset CGC_GHCR_PAT
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "::warning::" && echo "$out" | grep -q "NOT PUBLISHED" \
+  && ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
+  && ok "gate: private + no pkg + NO pat -> skipped (GITHUB_TOKEN would create it public)" || bad "case I: rc=$rc out=[$out]"
+
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent; export CGC_GHCR_PAT=nonempty
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "GHCR creates it PRIVATE" \
+  && ! echo "$out" | grep -qE "::error::|::warning::"; } \
+  && ok "gate: private + no pkg + PAT -> push allowed (born private via LABEL)" || bad "case I2: rc=$rc out=[$out]"
+
+# Fail-safe "private" (repo could not be resolved) must NOT push even WITH a PAT:
+# a token that cannot see the repo cannot auto-link it either, so the package
+# would be created public.
+: > "$CALL_LOG"; STUB_ISPRIVATE="weird-garbage" STUB_CUR_VIS=absent; export CGC_GHCR_PAT=nonempty
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "::warning::" && echo "$out" | grep -q "NOT PUBLISHED"; } \
+  && ok "gate: undetermined visibility + PAT -> still skipped (fail-safe is not proof)" || bad "case I3: rc=$rc out=[$out]"
+unset CGC_GHCR_PAT
+
+# And the gate must REFUSE, not delete — deleting is the backstop's job, and
+# doing it here would race a package a human may have just fixed by hand.
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=public
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "::error::" && echo "$out" | grep -q "refusing to push" \
+  && [ ! -s "$CALL_LOG" ]; } \
+  && ok "gate: private repo + PUBLIC pkg -> refused, nothing deleted here" || bad "case J: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 # monolith mode (refactor-equivalence smoke test — behaviour is unchanged,
 # only moved into a function)
@@ -183,8 +233,8 @@ out=$(visibility_monolith cloud-cgc-pub-mcp-octocode-db 2>&1)
 
 : > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=public
 out=$(visibility_monolith cloud-cgc-pub-mcp-octocode-db 2>&1)
-{ echo "$out" | grep -q "::error::" && grep -q "visibility=private" "$CALL_LOG"; } \
-  && ok "monolith: private repo_map entries -> forced private" || bad "case I: out=[$out] log=[$(cat "$CALL_LOG")]"
+{ echo "$out" | grep -q "::error::" && echo "$out" | grep -q "DELETE OR PRIVATE IT" && [ ! -s "$CALL_LOG" ]; } \
+  && ok "monolith: private repo_map entries -> reported, never auto-touched" || bad "case K: out=[$out] log=[$(cat "$CALL_LOG")]"
 
 # base mode — no associated repo; always public (model caches only, no
 # project content to leak), so a PUT failure is a warning, never ::error::.
@@ -195,14 +245,8 @@ out=$(visibility_base cgc-db-base 2>&1)
 
 : > "$CALL_LOG"; STUB_CUR_VIS=private
 out=$(visibility_base cgc-db-base 2>&1)
-{ grep -q "visibility=public" "$CALL_LOG" && ! echo "$out" | grep -q "::error::"; } \
-  && ok "base: private -> corrected to public, no ::error::" || bad "base private->public: out=[$out] log=[$(cat "$CALL_LOG")]"
-
-: > "$CALL_LOG"; STUB_CUR_VIS=private STUB_PUT_RC=1
-out=$(visibility_base cgc-db-base 2>&1)
-{ echo "$out" | grep -q "::warning::" && ! echo "$out" | grep -q "::error::"; } \
-  && ok "base: PUT failure -> ::warning:: (never ::error:: — nothing to leak)" || bad "base PUT-failure severity: out=[$out]"
-unset STUB_PUT_RC
+{ echo "$out" | grep -q "::warning::" && ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
+  && ok "base: private -> ::warning:: only (nothing to leak, no endpoint to fix it)" || bad "base private: out=[$out] log=[$(cat "$CALL_LOG")]"
 
 echo ""
 echo "═══════════════════════════════════════"

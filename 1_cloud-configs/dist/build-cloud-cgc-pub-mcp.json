@@ -855,7 +855,8 @@
     "cloud-cgc-pub-mcp": {
       "ip": "10.0.0.6",
       "ports": {
-        "app": 3105
+        "app": 3105,
+        "pvt": 3107
       },
       "vm": "oci-apps",
       "healthcheck": "/mcp",
@@ -866,6 +867,7 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": [
+          "/mcp",
           "/mcp"
         ]
       },
@@ -1672,6 +1674,8 @@
         ]
       },
       "db_volume": "octocode_db",
+      "_pvt_db_volume_comment": "Volume cloud-cgc-pvt-mcp serves. Separate from db_volume ON PURPOSE: the public/private split is the VOLUME, not a tool subset -- octocode can only answer about the LanceDB tree it is pointed at, so a private repo's DB simply is not in db_volume. Populated by the same restore with CGC_INCLUDE_PRIVATE=1.",
+      "pvt_db_volume": "octocode_db_pvt",
       "db_path": "/home/appuser/.local/share/octocode",
       "_db_upstream_comment": "GHCR is the SINGLE upstream for both octocode DBs (semantic FastEmbed vectors + GraphRAG graph). The producer (GHA x86, ship-cgc-db.yml) pulls db_publish.image, runs an INCREMENTAL octocode index on top, and pushes it back. oci-apps (arm) + local both CONSUME by pulling the same image — never build. Pinned octocode version keeps the on-disk DB schema compatible across x86/arm/local.",
       "version": "0.12.2",
