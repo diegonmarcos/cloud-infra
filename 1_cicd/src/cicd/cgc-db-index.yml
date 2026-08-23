@@ -240,43 +240,44 @@ jobs:
           # PAT when available so the push can auto-link the package to a PRIVATE source
           # repo and inherit its visibility; GITHUB_TOKEN otherwise (public repos only).
           echo "${CGC_GHCR_PAT:-$GITHUB_TOKEN}" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-      - name: Assemble full octocode home locally (base + every per-repo image)
-        id: assemble
-        run: |
-          set -eu
-          HOME_DIR="$RUNNER_TEMP/octocode-home-full"
-          mkdir -p "$HOME_DIR"
-          sh 1_cicd/src/ops/cloud-cgc-db-restore-all.sh "$HOME_DIR"
-          echo "home=$HOME_DIR" >> "$GITHUB_OUTPUT"
-          # CGC_BOOTSTRAP_TOLERANT (above) makes a missing base exit 0 with NOTHING
-          # staged into HOME_DIR — it never reaches the swap step in restore-all.sh.
-          # Detect that here and skip the rsync below: rsync --delete from an EMPTY
-          # source would otherwise wipe the live octocode DB volume on oci-apps.
-          if [ -z "$(ls -A "$HOME_DIR" 2>/dev/null)" ]; then
-            echo "[cgc-db] restore-all: bootstrap — nothing assembled, skipping propagate"
-            echo "assembled=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "assembled=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: rsync assembled home → oci-apps octocode_db volume
-        if: steps.assemble.outputs.assembled == 'true'
+      # PROPAGATION: the BOX PULLS, the runner does not push.
+      #
+      # This step used to assemble the whole octocode home on the runner and rsync
+      # it into oci-apps' volume. That transfer never once succeeded. The last
+      # failure is the clearest: ssh connected fine, then died 53s into the data
+      # with "client_loop: send disconnect: Broken pipe" -- ServerAliveInterval=15
+      # times the default ServerAliveCountMax of 3 is exactly 45s of silence, and a
+      # loaded ARM VM at 80%+ disk stalls longer than that while writing hundreds of
+      # MB into a docker volume. Raising the keepalive would only move the cliff.
+      #
+      # The transfer itself is the defect. Every per-repo image is already sitting
+      # on GHCR, and oci-apps can fetch them directly at registry speed, so nothing
+      # bulk needs to cross WireGuard at all -- only a short ssh control channel.
+      # That is the path cloud-cgc-db-restore-all.sh was written for, and it is the
+      # one proven to work end to end on this box (rc=0, 6 repos + base).
+      #
+      # Run DETACHED and poll: the restore takes ~50 min on this hardware, and
+      # holding one ssh session open that long invites exactly the broken pipe this
+      # step exists to avoid. Each poll is its own short-lived connection, so a
+      # dropped link costs one poll instead of the whole restore.
+      - name: restore-all on oci-apps (box pulls per-repo images from GHCR)
         env:
-          # Absolute path, NOT $HOME — this value is only ever consumed unquoted as
-          # `ssh $CGC_SSH_OPTS` / `-e "ssh $CGC_SSH_OPTS"`, and the shell expands a
-          # variable's VALUE once; a `$HOME` sitting inside that value is never
-          # re-expanded. ssh therefore received a literal "$HOME/.ssh/cgc_deploy",
-          # ignored it ("Identity file ... not accessible"), fell back to no key and
-          # died with "ubuntu@10.0.0.6: Permission denied (publickey)" — so every
-          # index run published its images fine and then failed to propagate any of
-          # them to oci-apps. ship-cgc-db-seed.yml already had this right.
           CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
-          ASSEMBLED_HOME: ${{ steps.assemble.outputs.home }}
         run: |
           set -eu
           BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
           VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
           CTR=$(jq -r '.containers.app.container_name' "$BJ")
           HOST=$(jq -r '.db_publish.host' "$BJ")
+          PREFIX=$(jq -r '.per_repo_publish.image_prefix' "$BJ")
+          BASE=$(jq -r '.per_repo_publish.base_image' "$BJ")
+          TAG=$(jq -r '.per_repo_publish.tag' "$BJ")
+          # The box has no repo checkout, so every value the script would otherwise
+          # read from build.json is passed in explicitly -- including the private
+          # list, without which the restore's public/private filter has nothing to
+          # filter on and a private repo could land in the PUBLIC MCP's volume.
+          REPOS=$(jq -r '.runtime.octocode.index_repos | join(" ")' "$BJ")
+          PRIV=$(jq -r '.runtime.octocode.private_repos // [] | join(" ")' "$BJ")
           # Same SSH-target resolution as cloud-cgc-db-update.sh's propagate_to_host()
           # and cloud-cgc-db-seed.sh: user@wg_ip from build-gha.json in CI, ssh alias locally.
           GHA="1_cloud-configs/dist/build-gha.json"
@@ -286,13 +287,57 @@ jobs:
             SUSER=$(jq -r --arg h "$HOST" '.vms[$h].user // "ubuntu"' "$GHA" 2>/dev/null)
             [ -n "$WGIP" ] && TARGET="$SUSER@$WGIP"
           fi
-          command -v rsync >/dev/null 2>&1 || sudo apt-get install -y -qq rsync
-          echo "[cgc-db] restore-all → $TARGET (rsync $ASSEMBLED_HOME → volume $VOL)"
+          echo "[cgc-db] restore-all → $TARGET (box pulls ${PREFIX}<repo>:${TAG} from GHCR)"
+          # shellcheck disable=SC2086
+          scp $CGC_SSH_OPTS 1_cicd/dist/scripts/cloud-cgc-db-restore-all.sh "$TARGET:/tmp/cgc-restore-all.sh"
+          # Stop the MCP first: the volume-swap branch does rm -rf then cp -a, which
+          # is not safe under a live process holding LanceDB files open.
           # shellcheck disable=SC2086
           ssh $CGC_SSH_OPTS "$TARGET" "sudo docker stop $CTR" || true
+          # Built as a heredoc and piped to `sh -s` rather than crammed into one
+          # ssh argument: the launch needs nested quoting three levels deep
+          # (ssh -> sh -c -> nohup sh -c) and inlining it is how quoting bugs get
+          # shipped. Unquoted heredoc so the runner expands the values below,
+          # with \$? escaped so the REMOTE shell is the one that evaluates it.
+          cat > /tmp/remote-restore.sh <<EOF
+          rm -f /tmp/cgc-restore.log /tmp/cgc-restore.rc
+          setsid nohup env \
+            CGC_DB_IMAGE_PREFIX='$PREFIX' \
+            CGC_DB_BASE_IMAGE='$BASE' \
+            CGC_DB_TAG='$TAG' \
+            CGC_DB_TARGET_VOLUME='$VOL' \
+            CGC_DB_OWNER='10001:999' \
+            CGC_INDEX_REPOS='$REPOS' \
+            CGC_PRIVATE_REPOS='$PRIV' \
+            sh -c 'sh /tmp/cgc-restore-all.sh > /tmp/cgc-restore.log 2>&1; echo \$? > /tmp/cgc-restore.rc' \
+            >/dev/null 2>&1 </dev/null &
+          sleep 2
+          echo launched
+          EOF
           # shellcheck disable=SC2086
-          rsync -az --delete --rsync-path="sudo rsync" -e "ssh $CGC_SSH_OPTS" \
-            "$ASSEMBLED_HOME/" "$TARGET:/var/lib/docker/volumes/$VOL/_data/"
+          ssh $CGC_SSH_OPTS "$TARGET" 'sh -s' < /tmp/remote-restore.sh
+          # Poll with short-lived connections. 120 x 30s = 60 min ceiling, against a
+          # restore observed at ~50 min on this box.
+          RC=""
+          i=0
+          while [ $i -lt 120 ]; do
+            sleep 30
+            i=$((i + 1))
+            # shellcheck disable=SC2086
+            RC=$(ssh $CGC_SSH_OPTS "$TARGET" "cat /tmp/cgc-restore.rc 2>/dev/null" 2>/dev/null || echo "")
+            [ -n "$RC" ] && break
+            [ $((i % 10)) -eq 0 ] && echo "[cgc-db] still restoring (${i}0s elapsed)..."
+          done
+          # shellcheck disable=SC2086
+          ssh $CGC_SSH_OPTS "$TARGET" "tail -25 /tmp/cgc-restore.log" || true
           # shellcheck disable=SC2086
           ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR"
-          echo "[cgc-db] restore-all OK — $HOST now serving the freshly assembled multi-image DB"
+          if [ -z "$RC" ]; then
+            echo "::error::[cgc-db] restore-all did not finish within 60 min on $HOST"
+            exit 1
+          fi
+          if [ "$RC" != "0" ]; then
+            echo "::error::[cgc-db] restore-all failed on $HOST (rc=$RC)"
+            exit "$RC"
+          fi
+          echo "[cgc-db] restore-all OK — $HOST now serving the freshly pulled multi-image DB"
