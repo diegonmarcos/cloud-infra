@@ -365,17 +365,46 @@ jobs:
             # shellcheck disable=SC2086
             ssh $CGC_SSH_OPTS "$TARGET" 'docker logout ghcr.io' >/dev/null 2>&1 || true
           }
+          # oci-apps is a 4-core box that keeps serving the live MCP throughout a
+          # restore; its load average sits above 6 for the duration and a single ssh
+          # can simply time out. On 2026-08-23 one such timeout on the launch below
+          # took the whole step down with exit 255 *after* all 8 repos had indexed
+          # successfully. Transient unreachability is the normal case here, so the
+          # one-shot ssh calls retry. The poll loop already tolerates failure by
+          # construction ("|| echo ''"), so it is left alone.
+          #   $1 = file to feed on stdin (/dev/null when there is nothing to send)
+          ssh_retry() {
+            _sr_f=$1; shift
+            _sr_n=0
+            while :; do
+              _sr_n=$((_sr_n + 1))
+              # shellcheck disable=SC2086
+              ssh $CGC_SSH_OPTS "$@" < "$_sr_f" && return 0
+              [ "$_sr_n" -ge 3 ] && return 1
+              echo "[cgc-db] ssh to $HOST failed (attempt $_sr_n/3) — retrying in 20s"
+              sleep 20
+            done
+          }
+          BOX_GHCR_OK=0
           if [ -n "${CGC_GHCR_PAT:-}" ]; then
             trap cleanup_box_ghcr EXIT INT TERM
-            # shellcheck disable=SC2086
-            if printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
-                 "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" >/dev/null 2>&1; then
-              echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
-            else
-              echo "::warning::[cgc-db] box GHCR login failed — the private repos' images will not be pullable and the pvt restore will report them missing"
-            fi
-          else
-            echo "::warning::[cgc-db] no CGC_GHCR_PAT — the box cannot pull the private repos' packages; the pvt surface will be missing them"
+            _li=0
+            while :; do
+              _li=$((_li + 1))
+              # shellcheck disable=SC2086
+              if printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
+                   "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" >/dev/null 2>&1; then
+                echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
+                BOX_GHCR_OK=1
+                break
+              fi
+              [ "$_li" -ge 3 ] && break
+              echo "[cgc-db] box GHCR login failed (attempt $_li/3) — retrying in 20s"
+              sleep 20
+            done
+          fi
+          if [ "$BOX_GHCR_OK" != "1" ]; then
+            echo "::warning::[cgc-db] box is NOT authenticated to GHCR — the private repos' packages cannot be pulled"
           fi
 
           for SURFACE in pub pvt; do
@@ -394,6 +423,15 @@ jobs:
                 if [ -z "$VOL" ] || [ -z "$CTR" ]; then
                   echo "[cgc-db] no private surface declared in build.json — skipping pvt restore"
                   continue
+                fi
+                # Without GHCR auth the box can pull only the PUBLIC packages, so an
+                # include_private=1 restore would quietly produce a private volume
+                # holding exactly the public repos -- a pvt surface indistinguishable
+                # from the pub one, and nothing in the logs saying so. Refuse instead.
+                # The pub surface above has already propagated by this point.
+                if [ "$BOX_GHCR_OK" != "1" ]; then
+                  echo "::error::[cgc-db] refusing the pvt restore: box has no GHCR auth, so the private repos' images are unpullable and $VOL would silently end up with public data only"
+                  exit 1
                 fi
                 ;;
             esac
@@ -428,8 +466,7 @@ jobs:
           sleep 2
           echo launched
           EOF
-          # shellcheck disable=SC2086
-          ssh $CGC_SSH_OPTS "$TARGET" 'sh -s' < /tmp/remote-restore.sh
+          ssh_retry /tmp/remote-restore.sh "$TARGET" 'sh -s'
           # Poll with short-lived connections. 120 x 30s = 60 min ceiling, against a
           # restore observed at ~50 min on this box.
             RC=""
