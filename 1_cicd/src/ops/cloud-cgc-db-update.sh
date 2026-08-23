@@ -854,6 +854,15 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   # from success in the exit code, so the run "passed" and shipped a DB with no
   # semantic relationships at all. If the graphrag phase was explicitly asked
   # for, an LLM it cannot reach is a hard error.
+  # The model string is no longer a literal in this script -- it comes from
+  # build.json, and its prefix is what selects the provider. A missing key would
+  # write `model = "null"`, octocode would fail to resolve a provider, and we
+  # would be right back at a silent structural-only graph.
+  case "$LLM" in
+    ""|null)
+      echo "::error::[cgc-db] .runtime.octocode.update.llm_model is unset in $BJ — the provider prefix is what octocode resolves its LLM from"
+      exit 1 ;;
+  esac
   if [ -z "$OPENAI_API_URL" ]; then
     echo "::error::[cgc-db] graphrag phase requested but .runtime.octocode.llm.openai_api_url is unset in $BJ — octocode would silently produce structural-only edges"
     exit 1
