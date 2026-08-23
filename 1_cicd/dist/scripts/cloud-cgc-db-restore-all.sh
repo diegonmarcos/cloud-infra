@@ -197,8 +197,25 @@ if [ "${CGC_INCLUDE_PRIVATE:-0}" = "1" ]; then
   echo "[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 — private repos NOT filtered (target ${CGC_DB_TARGET_VOLUME:-$TARGET})"
 else
   PRIVATE_REPOS="${CGC_PRIVATE_REPOS:-}"
-  if [ -z "$PRIVATE_REPOS" ] && [ -n "${BJ:-}" ] && [ -f "${BJ:-}" ]; then
-    PRIVATE_REPOS=$(jq -r '.runtime.octocode.private_repos[]?' "$BJ" 2>/dev/null)
+  # Resolved independently of need_bj: that one only runs when the caller left
+  # REPOS unset, so relying on it would silently disable this filter on exactly
+  # the callers that pass an explicit repo list. A security control must not
+  # fail open because of an unrelated lazy-load path.
+  if [ -z "$PRIVATE_REPOS" ]; then
+    _pbj="${BJ:-}"
+    if [ -z "$_pbj" ] || [ ! -f "$_pbj" ]; then
+      _proot="${CLOUD_ROOT:-$(cd "$HERE/../../.." 2>/dev/null && pwd)}"
+      _pbj="${_proot:+$_proot/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
+    fi
+    [ -n "$_pbj" ] && [ -f "$_pbj" ] \
+      && PRIVATE_REPOS=$(jq -r '.runtime.octocode.private_repos[]?' "$_pbj" 2>/dev/null)
+  fi
+  # Fail LOUD, not silent. A deployed context legitimately has no build.json
+  # (that is why compose passes CGC_PRIVATE_REPOS), so this cannot hard-error
+  # without breaking the box — but an unfiltered restore into a public volume
+  # must never pass unremarked.
+  if [ -z "$PRIVATE_REPOS" ]; then
+    echo "::warning::[cgc-db-restore-all] no private-repo list available (CGC_PRIVATE_REPOS unset and build.json unreadable) — restoring UNFILTERED; if this volume is served by the public MCP, confirm no private repo landed in it"
   fi
   if [ -n "$PRIVATE_REPOS" ]; then
     _kept=""
