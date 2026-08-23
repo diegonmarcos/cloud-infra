@@ -70,6 +70,11 @@ on:
         required: false
         default: true
         type: boolean
+      surfaces:
+        description: "Which DB surfaces the restore propagates to: both (default), pub, or pvt."
+        required: false
+        default: both
+        type: string
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -305,6 +310,7 @@ jobs:
       # dropped link costs one poll instead of the whole restore.
       - name: restore-all on oci-apps (box pulls per-repo images from GHCR)
         env:
+          CGC_SURFACES: ${{ inputs.surfaces }}
           CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
         run: |
           set -eu
@@ -413,7 +419,18 @@ jobs:
             done
           }
 
-          for SURFACE in pub pvt; do
+          # Surface selection exists because the two restores are independent -- the
+          # pvt pass reads the public volume's NAME only, as the "target is not the
+          # public volume" safety check, never its contents. So repairing the private
+          # surface does not require re-running the ~50 min public one, and a failed
+          # pvt half no longer costs a full cycle to retry.
+          case "${CGC_SURFACES:-both}" in
+            pub) SURFACE_LIST="pub" ;;
+            pvt) SURFACE_LIST="pvt" ;;
+            *)   SURFACE_LIST="pub pvt" ;;
+          esac
+          echo "[cgc-db] restoring surface(s): $SURFACE_LIST"
+          for SURFACE in $SURFACE_LIST; do
             case "$SURFACE" in
               pub)
                 VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
@@ -525,4 +542,4 @@ jobs:
             fi
             echo "[cgc-db] $SURFACE restore-all OK — $CTR now serving volume $VOL"
           done
-          echo "[cgc-db] restore-all OK — $HOST serving both surfaces from the freshly pulled multi-image DB"
+          echo "[cgc-db] restore-all OK — $HOST serving surface(s) $SURFACE_LIST from the freshly pulled multi-image DB"
