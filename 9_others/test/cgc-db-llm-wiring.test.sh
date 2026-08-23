@@ -61,5 +61,26 @@ ck "index workflow maps force -> CGC_FORCE" \
 ck "script honours CGC_FORCE at the change gate" \
    "$(grepq 'CGC_FORCE:-0' "$SCRIPT" && echo yes || echo no)" "yes"
 
+# 7) octocode picks its PROVIDER from the model-string prefix, and it reads the
+#    key/url env pair that prefix names. A hardcoded `openrouter:` in the emitted
+#    config sends it hunting for OPENROUTER_API_KEY, which nothing sets -- it
+#    then logs "LLM client not initialized" and quietly falls back to a
+#    structural-only graph. That degraded a whole run undetected. Comment lines
+#    are excluded: the fix is documented in prose right where it was made.
+ck "no hardcoded provider survives in the emitted config" \
+   "$(python3 -c "
+import sys
+print(sum('openrouter:' in l for l in open(sys.argv[1],encoding='utf8')
+          if not l.lstrip().startswith('#')))" "$SCRIPT")" "0"
+
+# [llm] model is the field the architectural-analysis pass reads. The graphrag
+# rewrite only ever touched description_model/relationship_model, so a config
+# inherited from an existing image kept its stale provider there forever.
+ck "config rewrite corrects [llm] model too" \
+   "$(python3 -c "
+import sys
+s=open(sys.argv[1],encoding='utf8').read()
+print('yes' if 'in_llm && /^[[:space:]]*model[[:space:]]*=/' in s else 'no')" "$SCRIPT")" "yes"
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
