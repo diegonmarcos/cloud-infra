@@ -74,6 +74,15 @@ BLOCKED=""
 # --no-index forces evaluation of gitignore rules as if unindexed
 # (git check-ignore otherwise silently skips files in the index).
 # Only fire for files NOT in HEAD (tracked-path edits are fine).
+# Run TWICE: once here over what the user staged, and again at the very end
+# over what THIS HOOK auto-staged. The hook regenerates .gitignore and then
+# `git add`s whole directories (1_cloud-configs/dist/, a_solutions/) -- a
+# regeneration that leaves .gitignore momentarily absent turns those adds into
+# a bulk sweep of every decrypted dist/.secrets* file. Checking only the user's
+# staging trusts the hook's own `git add`, which is exactly the hole that put
+# 131 sops-decrypted files into a commit on 2026-08-23 (caught by GitHub push
+# protection, not by us). Hence: recompute the staged set inside the function.
+assert_no_forced_gitignored() {
 FORCED=""
 while IFS= read -r f; do
   [ -n "$f" ] || continue
@@ -82,7 +91,7 @@ while IFS= read -r f; do
      && ! git cat-file -e "HEAD:$f" 2>/dev/null; then
     FORCED="${FORCED}${f}"$'\n'
   fi
-done <<< "$STAGED"
+done <<< "$(git diff --cached --name-only)"
 
 if [ -n "$FORCED" ]; then
   echo "══════════════════════════════════════════════════" >&2
@@ -96,6 +105,8 @@ if [ -n "$FORCED" ]; then
   echo "NEVER use 'git add -f' / '--force' to override gitignore." >&2
   exit 1
 fi
+}
+assert_no_forced_gitignored
 
 # ── SUBMODULES ARE READ-ONLY FROM PARENT REPO — SILENT IGNORE ──
 # Policy: any attempt to add/commit anything related to submodules is
@@ -454,3 +465,12 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
     fi
   fi
 fi
+
+# ══════════════════════════════════════════════════════════
+# FINAL GATE — validate what THIS HOOK staged
+# ══════════════════════════════════════════════════════════
+# Everything above this line auto-stages regenerated directories on the user's
+# behalf. Those adds get the same scrutiny as the user's own: if a regeneration
+# raced .gitignore and swept in ignored paths, refuse the commit here rather
+# than let GitHub's secret scanner be the first thing that notices.
+assert_no_forced_gitignored
