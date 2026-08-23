@@ -133,7 +133,17 @@ jobs:
           set -eu
           # Stage every path the engine writes to. Globs that match no files
           # are silently ignored (|| true on the whole add invocation).
+          # 1_cloud-configs/dist/ is the consolidator's SOLE write target
+          # (cloud-data-config-consolidated.ts:48 CLOUD_DATA_DIR). It was
+          # missing here, so every run regenerated the master
+          # _cloud-data-consolidated.json + build-*.json and then threw them
+          # away — ship-home-manager checks out the committed tree and read a
+          # stale master, so a newly declared client (wireguard vault-backup,
+          # 2026-08-23) never reached the hub's peer list. Same failure mode
+          # the block above describes; the materialized a_solutions copies
+          # were staged but the file they are copies OF was not.
           git add 0_git/dist/ 0_apps/dist/ 1_cicd/dist/ 9_others/dist/ \
+                  1_cloud-configs/dist/ \
                   b_infra/_shared/vm-pilot/dist/ \
                   b_infra/nixhm-sudo-*/dist/ \
                   a_solutions/*/src/_cloud-data-consolidated.json \
