@@ -210,16 +210,28 @@ jobs:
       packages: write
     strategy:
       fail-fast: false
+      # ONE PEER SLOT, N JOBS. Every matrix job authenticates as the same
+      # gha-runner WireGuard peer, and a peer has exactly one endpoint: each
+      # handshake steals the slot from whoever held it, so only the most recent
+      # job gets return traffic. That used to be harmless here because nothing
+      # in this job crossed the mesh. The graphrag phase does: it preflights the
+      # LLM endpoint and then streams every relationship call over that tunnel
+      # for the whole index. Sharing the slot makes jobs fail their preflight at
+      # random (4 of 8 one run, 1 of 8 the next, a different victim each time)
+      # and -- far worse -- lets a job LOSE the slot mid-index, where octocode
+      # treats the dead LLM as a warning and finishes with a structural-only
+      # graph while still exiting 0. So the phase that needs the mesh holds it
+      # alone; the semantic phase touches no LLM and still fans out.
+      # Same reason ship.yml pins max-parallel:1.
+      max-parallel: ${{ inputs.phase == 'graphrag' && 1 || 8 }}
       matrix:
         repo: ${{ fromJson(needs.repos.outputs.repos) }}
     steps:
       - uses: actions/checkout@v4
-      # Kept "as today" per the matrix design even though propagation (the
-      # only thing that needs a live WG tunnel) is off in this job — a WG
-      # handshake race between N parallel matrix jobs sharing one gha-runner
-      # peer slot (see ship.yml's max-parallel:1 note) is therefore harmless
-      # here: continue-on-error swallows it, and nothing downstream in THIS
-      # job depends on WG being up (restore-all, not this job, propagates).
+      # continue-on-error stays: a failed bring-up is genuinely harmless in the
+      # semantic phase, and the graphrag phase does not trust this step anyway --
+      # the preflight in cloud-cgc-db-update.sh is what hard-fails on an
+      # unreachable endpoint, with triage output.
       - name: WireGuard up
         continue-on-error: true
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
