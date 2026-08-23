@@ -305,7 +305,11 @@ jobs:
           # Stop the MCP first: the volume-swap branch does rm -rf then cp -a, which
           # is not safe under a live process holding LanceDB files open.
           # shellcheck disable=SC2086
-          ssh $CGC_SSH_OPTS "$TARGET" "sudo docker stop $CTR" || true
+          # Deliberately NOT stopping the container here. The restore stays up through
+          # the pull/stage phases (~50 min) and takes itself down only across the volume
+          # swap, via MCP_CONTAINER below. Bracketing the whole restore from out here --
+          # which is what this step used to do -- made every scheduled refresh a
+          # 50-minute MCP outage in order to protect a swap that lasts seconds.
           # Built as a heredoc and piped to `sh -s` rather than crammed into one
           # ssh argument: the launch needs nested quoting three levels deep
           # (ssh -> sh -c -> nohup sh -c) and inlining it is how quoting bugs get
@@ -321,6 +325,7 @@ jobs:
             CGC_DB_OWNER='10001:999' \
             CGC_INDEX_REPOS='$REPOS' \
             CGC_PRIVATE_REPOS='$PRIV' \
+            MCP_CONTAINER='$CTR' \
             sh -c 'sh /tmp/cgc-restore-all.sh > /tmp/cgc-restore.log 2>&1; echo \$? > /tmp/cgc-restore.rc' \
             >/dev/null 2>&1 </dev/null &
           sleep 2
@@ -343,7 +348,10 @@ jobs:
           # shellcheck disable=SC2086
           ssh $CGC_SSH_OPTS "$TARGET" "tail -25 /tmp/cgc-restore.log" || true
           # shellcheck disable=SC2086
-          ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR"
+          # Safety net only: the script restarts the container itself on success, but a
+          # failure between its stop and its restart would otherwise leave the MCP down.
+          # Starting an already-running container is a no-op error here, hence || true.
+          ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR" >/dev/null 2>&1 || true
           if [ -z "$RC" ]; then
             echo "::error::[cgc-db] restore-all did not finish within 60 min on $HOST"
             exit 1

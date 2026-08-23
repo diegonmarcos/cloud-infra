@@ -129,9 +129,12 @@
 #  is nothing to clobber there) — so this script deliberately DROPS them
 #  after staging each repo rather than leave one arbitrary repo's stale
 #  bookkeeping sitting in a home it does not describe.
-#    MCP_CONTAINER, NTFY_URL   optional — restart + notify after a
-#                         successful restore, same optional/no-op-if-unset
-#                         contract as cloud-cgc-db-restore.sh. Kept HERE
+#    MCP_CONTAINER, NTFY_URL   optional — stop-for-the-swap, then restart +
+#                         notify after a successful restore, same
+#                         optional/no-op-if-unset contract as
+#                         cloud-cgc-db-restore.sh. The container stays UP for
+#                         the pull/stage phases (the slow ones) and is down
+#                         only across the volume swap. Kept HERE
 #                         rather than in the DAG/compose caller, because
 #                         both of those carry zero logic of their own.
 #
@@ -357,6 +360,23 @@ if [ -n "$MISSING" ]; then
   echo "[cgc-db-restore-all] verified: $FOUND/$TOTAL repos staged (missing:$MISSING)"
 else
   echo "[cgc-db-restore-all] verified: $FOUND/$TOTAL repos staged"
+fi
+
+# Down ONLY for the swap. Sections 1-3 pull every image and assemble the whole
+# tree in $STAGING with the consumer still serving from the old volume, and that
+# is the part that takes ~50 min. Stopping the container for the entire restore
+# (which the GHA propagation step used to do, from the outside) turns a scheduled
+# refresh into a 50-minute outage to save a swap that takes seconds.
+#
+# The restart is NOT done here: the MCP_CONTAINER block at the end of this file
+# already runs `docker restart`, which starts a stopped container. Restarting
+# rather than starting is also what the consumer needs — octocode caches open
+# LanceDB handles, so a container that merely kept running through the swap
+# would serve from unlinked inodes.
+if [ -n "${MCP_CONTAINER:-}" ]; then
+  docker stop "$MCP_CONTAINER" >/dev/null 2>&1 \
+    && echo "[cgc-db-restore-all] stopped $MCP_CONTAINER for the swap" \
+    || echo "[cgc-db-restore-all] WARN stop $MCP_CONTAINER failed (continuing)"
 fi
 
 # ── 4) swap: everything fallible already happened in STAGING ───────────────
