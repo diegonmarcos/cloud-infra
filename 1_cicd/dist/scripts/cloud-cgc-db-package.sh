@@ -287,7 +287,25 @@ gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHO
   if [ "$_rdv_desired" = "public" ]; then
     return 0
   fi
-  _gp_vis=$(gh api "/user/packages/container/${_gp_pkg}" --jq '.visibility' 2>/dev/null || echo absent)
+  # `gh api ... || echo absent` does NOT work here, and that is not a nitpick: gh
+  # prints the error BODY on stdout for a 404 and still exits non-zero, so the
+  # substitution came back as the literal
+  #   {"message":"Package not found.",...}\nabsent
+  # which matched no arm below and took the refuse-loudly default. Result: both
+  # private repos went red on every run with "already exists as {...404...}" — a
+  # package that did not exist at all. Classify explicitly instead.
+  _gp_err=$(mktemp)
+  if _gp_body=$(gh api "/user/packages/container/${_gp_pkg}" 2>"$_gp_err"); then
+    _gp_vis=$(printf '%s' "$_gp_body" | jq -r '.visibility // empty' 2>/dev/null)
+    [ -n "$_gp_vis" ] || _gp_vis=unknown
+  elif grep -qi 'HTTP 404\|not found' "$_gp_err" 2>/dev/null; then
+    _gp_vis=absent
+  else
+    # Rate limit, network, bad token: NOT absent. Treating an unreachable API as
+    # "no package here" would push private data at a package we never looked at.
+    _gp_vis=unknown
+  fi
+  rm -f "$_gp_err"
   case "$_gp_vis" in
     private)
       echo "[cgc-db] $_gp_pkg: repo diegonmarcos/${_rdv_remote:-?} is private and the package already exists private — pushing (visibility is preserved across pushes)"
@@ -323,6 +341,10 @@ gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHO
       fi
       echo "::warning::[cgc-db] $_gp_pkg NOT PUBLISHED — repo diegonmarcos/${_rdv_remote:-unresolved} is private and no package exists, but the push is not PAT-authenticated (or the repo could not be positively resolved), so GHCR would create it PUBLIC with private source inside. Skipping the push entirely — nothing is exposed. Fix by setting the CGC_GHCR_PAT secret (repo + read:packages + delete:packages)."
       exit 0
+      ;;
+    unknown)
+      echo "::error::[cgc-db] $_gp_pkg: could not determine whether the package exists (GHCR API unreachable or the token cannot read packages) and repo diegonmarcos/${_rdv_remote:-unresolved} is private. Refusing to push blind."
+      exit 1
       ;;
     *)
       echo "::error::[cgc-db] $_gp_pkg already exists as $_gp_vis but repo diegonmarcos/${_rdv_remote:-unresolved} is private — refusing to push fresher private data into an exposed package. DELETE OR PRIVATE IT IN THE GITHUB UI NOW"

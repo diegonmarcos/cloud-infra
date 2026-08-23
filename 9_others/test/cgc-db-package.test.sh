@@ -130,8 +130,30 @@ gh() {
       ;;
     *)
       [ "$1" = "api" ] || return 0
-      [ "${STUB_CUR_VIS:-unknown}" = "absent" ] && return 1
-      printf '%s' "${STUB_CUR_VIS:-unknown}"
+      if [ "${STUB_CUR_VIS:-unknown}" = "apierror" ]; then
+        # Rate limit / network / bad token: an error that is NOT a 404. This must
+        # never be read as "no package here".
+        printf '{"message":"API rate limit exceeded","status":"403"}'
+        echo "gh: API rate limit exceeded (HTTP 403)" >&2
+        return 1
+      fi
+      if [ "${STUB_CUR_VIS:-unknown}" = "absent" ]; then
+        # FAITHFUL 404, and the fidelity matters: the old stub returned rc 1 with
+        # NO output, so `x=$(gh api ... || echo absent)` looked fine here and blew
+        # up in production, where real gh prints the error BODY on stdout as well
+        # and the caller got "{...404...}\nabsent". Both private repos went red on
+        # every run behind that gap. Reproduce gh exactly -- body on stdout,
+        # message on stderr, non-zero rc -- so it cannot come back.
+        printf '{"message":"Package not found.","documentation_url":"https://docs.github.com/rest","status":"404"}'
+        echo "gh: Package not found. (HTTP 404)" >&2
+        return 1
+      fi
+      # gh applies --jq only on success; the gate calls it without --jq and reads
+      # .visibility itself, so return the object either way and let jq do the rest.
+      case " $* " in
+        *" --jq "*) printf '%s' "${STUB_CUR_VIS:-unknown}" ;;
+        *)          printf '{"visibility":"%s"}' "${STUB_CUR_VIS:-unknown}" ;;
+      esac
       ;;
   esac
 }
@@ -201,6 +223,13 @@ out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
 out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
 { [ "$rc" -eq 0 ] && echo "$out" | grep -q "::warning::" && echo "$out" | grep -q "NOT PUBLISHED"; } \
   && ok "gate: undetermined visibility + PAT -> still skipped (fail-safe is not proof)" || bad "case I3: rc=$rc out=[$out]"
+# An unreachable GHCR API is not evidence of absence. Treating it as "absent"
+# would push private data at a package nobody looked at.
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=apierror; export CGC_GHCR_PAT=nonempty
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "::error::" && echo "$out" | grep -q "Refusing to push blind" \
+  && [ ! -s "$CALL_LOG" ]; } \
+  && ok "gate: GHCR API unreachable -> refuse (unknown is not absent)" || bad "case I4: rc=$rc out=[$out]"
 unset CGC_GHCR_PAT
 
 # And the gate must REFUSE, not delete — deleting is the backstop's job, and
