@@ -262,6 +262,28 @@ jobs:
           [ "$COUNT" -gt 0 ] && echo "has_vms=true" >> "$GITHUB_OUTPUT" || echo "has_vms=false" >> "$GITHUB_OUTPUT"
           echo "VMs: $COUNT — $(printf '%s' "$MATRIX_JSON" | jq -r '.[].vm' | tr '\n' ' ')"
 
+          # ── Guard: an explicit dispatch that matches nothing is a typo, not a no-op ──
+          # `services` takes the a_solutions DIRECTORY name. An unknown name used to
+          # yield an empty matrix -> has_vms=false -> ship job skipped -> run reports
+          # SUCCESS while deploying nothing. Fail loudly instead, naming the misses.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "$CHANGED_DIRS" ]; then
+            KNOWN=$(jq -r '.services | to_entries[] | .value.dir' "$GHA_CONFIG" | sort -u)
+            UNKNOWN=""
+            for d in $CHANGED_DIRS; do
+              printf '%s\n' "$KNOWN" | grep -qxF "$d" || UNKNOWN="$UNKNOWN $d"
+            done
+            if [ -n "$UNKNOWN" ]; then
+              echo "::error::Unknown service dir(s):$UNKNOWN"
+              echo "::error::'services' expects the a_solutions directory name (e.g. infra-api_google-workspace-mcp)."
+              printf '%s\n' "$KNOWN" | sed 's/^/  known: /'
+              exit 1
+            fi
+            if [ "$COUNT" -eq 0 ]; then
+              echo "::error::Requested [$CHANGED_DIRS] resolved to 0 VMs — nothing would deploy."
+              exit 1
+            fi
+          fi
+
   # ── Ship: one matrix job per VM, calls ship.sh per-VM path ──
   ship:
     name: "Ship → ${{ matrix.vm }}"
