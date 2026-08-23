@@ -27,7 +27,7 @@
 #       root (never the dev tree) — this is what guarantees "freshest HEAD"
 #    3. pull the last DB from GHCR (incremental base; bootstraps if absent)
 #    4. octocode index each repo — git-aware, CHANGED FILES ONLY
-#       GraphRAG LLM phase → OpenRouter ($OPENROUTER_API_KEY); FastEmbed local
+#       GraphRAG LLM phase → my-ai-api (.runtime.octocode.llm); FastEmbed local
 #    5. push the updated DB back to GHCR (single upstream for all consumers)
 #  The DB (Lance + FastEmbed vectors) is arch-portable; octocode version is
 #  pinned in build.json so the schema stays compatible across x86/arm/local.
@@ -36,7 +36,9 @@
 #  cloud-cgc-db-package.sh of an already-built DB, or a prod-volume snapshot).
 #  It refuses a from-scratch full build (octocode's GraphRAG full build is ~12h).
 #  Runtime the caller (YAML/DAG/shell) must provide: docker, git, jq + env:
-#    GITHUB_TOKEN (+ GITHUB_ACTOR) for GHCR/clone auth, OPENROUTER_API_KEY (opt).
+#    GITHUB_TOKEN (+ GITHUB_ACTOR) for GHCR/clone auth. No LLM key: the endpoint
+#    declared in .runtime.octocode.llm injects its own, so callers send a
+#    placeholder and nothing here ever holds a provider credential.
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -640,7 +642,7 @@ bootstrap_config_toml() {
 version = 1
 
 [llm]
-model = "openrouter:openai/gpt-4o-mini"
+model = "$LLM"
 timeout = 120
 temperature = 0.7
 max_tokens = 4000
@@ -685,8 +687,8 @@ enabled = false
 use_llm = false
 
 [graphrag.llm]
-description_model = "openrouter:openai/gpt-4o-mini"
-relationship_model = "openrouter:openai/gpt-4o-mini"
+description_model = "$LLM"
+relationship_model = "$LLM"
 ai_batch_size = 8
 max_batch_tokens = 16384
 batch_timeout_seconds = 60
@@ -843,6 +845,15 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   awk -v m="$LLM" '
     /^\[graphrag\]/                                { in_gr=1 }
     /^\[/ && !/^\[graphrag\]/                      { in_gr=0 }
+    # [llm] model is what the architectural-analysis pass uses, and the old
+    # bootstrap hardcoded `openrouter:` there. octocode picks its provider from
+    # that prefix, so it looked for OPENROUTER_API_KEY, found none, and reported
+    # "LLM client not initialized" — no matter what OPENAI_API_* said. Every DB
+    # pulled from an existing image still carries that line, so rewriting it
+    # here is what actually repairs the inherited configs.
+    /^\[llm\]/                                     { in_llm=1 }
+    /^\[/ && !/^\[llm\]/                          { in_llm=0 }
+    in_llm && /^[[:space:]]*model[[:space:]]*=/    { print "model = \"" m "\""; next }
     in_gr && /^[[:space:]]*enabled[[:space:]]*=/   { print "enabled = true"; next }
     /^[[:space:]]*use_llm[[:space:]]*=/            { print "use_llm = true"; next }
     /^[[:space:]]*description_model[[:space:]]*=/  { print "description_model = \"" m "\""; next }
