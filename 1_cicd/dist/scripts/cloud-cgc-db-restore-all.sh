@@ -236,6 +236,29 @@ stage_image "$BASE_IMAGE"
 docker rmi "$BASE_IMAGE" >/dev/null 2>&1 || true
 echo "[cgc-db-restore-all] base staged"
 
+# The base image's config.toml is whatever the phase that seeded it happened to
+# have, and the SEMANTIC phase writes `[graphrag] enabled = false` (it skips
+# graph building on purpose). That flag then rides into every consumer volume,
+# which is why the box carried 45MB of graphrag_nodes.lance +
+# graphrag_relationships.lance and still answered every graphrag call with
+# "GraphRAG is not enabled in your configuration".
+#
+# A consumer is a READ-ONLY query surface: it never builds a graph, it only
+# reads tables that already shipped, so `enabled` here means nothing more than
+# "may I read what is present" and must be true. `use_llm` is deliberately NOT
+# touched — that controls query-time LLM calls and would need a key on the box.
+# Scoped by section so the identical `enabled = false` lines under
+# [search.reranker] / [search.hybrid] / [graphrag.llm] are left alone.
+if [ -f "$STAGING/config.toml" ]; then
+  awk '
+    /^\[/ { sec = $0 }
+    sec == "[graphrag]" && /^enabled[[:space:]]*=[[:space:]]*false/ { print "enabled = true"; next }
+    { print }
+  ' "$STAGING/config.toml" > "$STAGING/config.toml.new" \
+    && mv "$STAGING/config.toml.new" "$STAGING/config.toml" \
+    && echo "[cgc-db-restore-all] graphrag reads enabled in consumer config.toml"
+fi
+
 # ── 2) each repo image — bootstrap tolerance: missing = warn + continue ────
 FOUND=0
 MISSING=""
