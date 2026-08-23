@@ -125,7 +125,14 @@ env:
   # degrades to public-repos-only exactly as before instead of breaking the run.
   GHCR_TOKEN: ${{ secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN }}
   GITHUB_ACTOR: ${{ github.actor }}
-  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+  # NO OPENROUTER_API_KEY here — deliberately. octocode's LLM is my-ai-api on the
+  # mesh (.runtime.octocode.llm), which injects its own OpenRouter key inside the
+  # container (passthrough_auth=false); the caller sends the `sk-dummy` placeholder.
+  # A `secrets.OPENROUTER_API_KEY` used to be passed here, but no such repo secret
+  # exists, so it expanded to "" and the graphrag phase logged "LLM client not
+  # initialized" and shipped structural-only graphs. cloud-cgc-db-update.sh now
+  # exports OPENAI_API_URL/OPENAI_API_KEY from build.json and preflights the
+  # endpoint, so this path needs no GHA secret at all.
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
   WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
