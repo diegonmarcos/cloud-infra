@@ -46,6 +46,16 @@ on:
           - both
           - semantic
           - graphrag
+      repos:
+        description: "Optional space/comma-separated subset of index_repos to run (default: all). Use to re-run one repo without paying for a full 8-repo cycle."
+        required: false
+        default: ""
+        type: string
+      restore:
+        description: "Propagate the result to the box afterwards (default true). Set false when the run only publishes repos the target volume filters out anyway, so the ~50min restore-all buys nothing."
+        required: false
+        default: true
+        type: boolean
   # Schedule is data-driven from build.json runtime.octocode.update.schedule.
   # Twice daily (4:00 and 16:00 UTC): keeps the graph current with minimal runner
   # load. Each phase is change-gated per repo (skips repos whose HEAD is already
@@ -70,6 +80,11 @@ jobs:
     uses: ./.github/workflows/cgc-db-index.yml
     with:
       phase: semantic
+      # Empty on schedule (github.event.inputs is null there) = all repos.
+      repos: ${{ github.event.inputs.repos || '' }}
+      # Scheduled runs have no inputs and must always propagate, hence the
+      # "not explicitly false" form rather than a plain truthy check.
+      restore: ${{ github.event.inputs.restore != 'false' }}
     secrets: inherit
 
   # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
@@ -96,4 +111,9 @@ jobs:
     uses: ./.github/workflows/cgc-db-index.yml
     with:
       phase: graphrag
+      # Empty on schedule (github.event.inputs is null there) = all repos.
+      repos: ${{ github.event.inputs.repos || '' }}
+      # Scheduled runs have no inputs and must always propagate, hence the
+      # "not explicitly false" form rather than a plain truthy check.
+      restore: ${{ github.event.inputs.restore != 'false' }}
     secrets: inherit
