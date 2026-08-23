@@ -56,6 +56,15 @@ on:
         required: false
         default: true
         type: boolean
+      surfaces:
+        description: "Which DB surfaces the restore propagates to. 'pvt' repairs the private volume without re-paying the ~50 min public restore, which is the whole reason this input exists."
+        required: false
+        default: both
+        type: choice
+        options:
+          - both
+          - pub
+          - pvt
   # Schedule is data-driven from build.json runtime.octocode.update.schedule.
   # Twice daily (4:00 and 16:00 UTC): keeps the graph current with minimal runner
   # load. Each phase is change-gated per repo (skips repos whose HEAD is already
@@ -85,6 +94,8 @@ jobs:
       # Scheduled runs have no inputs and must always propagate, hence the
       # "not explicitly false" form rather than a plain truthy check.
       restore: ${{ github.event.inputs.restore != 'false' }}
+      # Null on schedule (github.event.inputs is null there) = both surfaces.
+      surfaces: ${{ github.event.inputs.surfaces || 'both' }}
     secrets: inherit
 
   # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
@@ -116,4 +127,6 @@ jobs:
       # Scheduled runs have no inputs and must always propagate, hence the
       # "not explicitly false" form rather than a plain truthy check.
       restore: ${{ github.event.inputs.restore != 'false' }}
+      # Null on schedule (github.event.inputs is null there) = both surfaces.
+      surfaces: ${{ github.event.inputs.surfaces || 'both' }}
     secrets: inherit
