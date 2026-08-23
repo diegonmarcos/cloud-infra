@@ -895,6 +895,36 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
       exit 1
     fi
   fi
+
+  # FORCE INVALIDATES THE GRAPH, NOT THE EMBEDDINGS.
+  # octocode gates its two passes separately: it skips the chunk reindex when the
+  # commit is unchanged ("No commit changes since last index, skipping reindex"),
+  # and it builds the graph only when it finds none ("No GraphRAG nodes found in
+  # database"). So once a degraded run has written a structural-only graph at this
+  # HEAD, every later run finds a graph present and leaves it alone -- the repair
+  # would silently never happen, which is the same silent-degradation shape this
+  # phase already guards against elsewhere.
+  #
+  # CGC_FORCE means "the INDEXER changed, so this DB is stale at an unchanged
+  # HEAD". What a changed indexer invalidates is exactly the graph, so drop only
+  # the graphrag_* tables and leave code_blocks.lance -- the expensive embeddings
+  # (a from-scratch rebuild is ~12h) are untouched and the next pass rebuilds the
+  # graph on top of them.
+  #
+  # Deliberately placed AFTER the preflight: the graph is only ever destroyed once
+  # the LLM endpoint has answered, so we cannot delete a graph we then cannot
+  # rebuild. A failure after this point aborts before package/push anyway, so the
+  # DB on GHCR is never the damaged one.
+  if [ "${CGC_FORCE:-0}" = "1" ]; then
+    _purged=0
+    for _t in "$OCTO_HOME"/*/storage/graphrag_nodes.lance \
+              "$OCTO_HOME"/*/storage/graphrag_relationships.lance \
+              "$OCTO_HOME"/*/storage/graphrag_git_metadata.lance; do
+      [ -e "$_t" ] || continue
+      rm -rf "$_t" && _purged=$((_purged + 1))
+    done
+    echo "[cgc-db] CGC_FORCE=1 — dropped $_purged graphrag table(s); embeddings kept, graph will rebuild"
+  fi
 else
   # Force structural-only to MATCH build.json (use_llm=false). The base config.toml
   # may carry a STALE `use_llm = true` + an unreachable LLM model (e.g. ollama:*),
