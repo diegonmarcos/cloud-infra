@@ -254,7 +254,15 @@ jobs:
       - name: rsync assembled home → oci-apps octocode_db volume
         if: steps.assemble.outputs.assembled == 'true'
         env:
-          CGC_SSH_OPTS: "-i $HOME/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
+          # Absolute path, NOT $HOME — this value is only ever consumed unquoted as
+          # `ssh $CGC_SSH_OPTS` / `-e "ssh $CGC_SSH_OPTS"`, and the shell expands a
+          # variable's VALUE once; a `$HOME` sitting inside that value is never
+          # re-expanded. ssh therefore received a literal "$HOME/.ssh/cgc_deploy",
+          # ignored it ("Identity file ... not accessible"), fell back to no key and
+          # died with "ubuntu@10.0.0.6: Permission denied (publickey)" — so every
+          # index run published its images fine and then failed to propagate any of
+          # them to oci-apps. ship-cgc-db-seed.yml already had this right.
+          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
           ASSEMBLED_HOME: ${{ steps.assemble.outputs.home }}
         run: |
           set -eu
