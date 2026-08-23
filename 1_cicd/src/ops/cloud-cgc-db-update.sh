@@ -134,10 +134,13 @@ USE_LLM="${USE_LLM:-$(jq -r '.runtime.octocode.update.use_llm' "$BJ")}"
 # The endpoint is my-ai-api on the mesh, which injects the real OpenRouter key
 # itself (passthrough_auth=false), so api_key here is the declared `sk-dummy`
 # placeholder — there is NO credential in this path and none is needed.
-OPENAI_API_URL=$(jq -r  '.runtime.octocode.llm.openai_api_url  // empty' "$BJ")
-OLLAMA_API_URL=$(jq -r  '.runtime.octocode.llm.ollama_api_url  // empty' "$BJ")
-OPENAI_API_KEY=$(jq -r  '.runtime.octocode.llm.api_key         // empty' "$BJ")
-LLM_HEALTH_URL=$(jq -r  '.runtime.octocode.llm.health_url      // empty' "$BJ")
+# ENVIRONMENT WINS, build.json is the default — the same precedence USE_LLM uses.
+# A caller that reaches the endpoint by another route (an SSH forward from a
+# runner that cannot route to the mesh IP) sets these and is obeyed.
+OPENAI_API_URL="${OPENAI_API_URL:-$(jq -r '.runtime.octocode.llm.openai_api_url // empty' "$BJ")}"
+OLLAMA_API_URL="${OLLAMA_API_URL:-$(jq -r '.runtime.octocode.llm.ollama_api_url // empty' "$BJ")}"
+OPENAI_API_KEY="${OPENAI_API_KEY:-$(jq -r '.runtime.octocode.llm.api_key        // empty' "$BJ")}"
+LLM_HEALTH_URL="${LLM_HEALTH_URL:-$(jq -r '.runtime.octocode.llm.health_url     // empty' "$BJ")}"
 export OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
@@ -845,10 +848,30 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
     exit 1
   fi
   if [ -n "$LLM_HEALTH_URL" ]; then
-    if curl -fsS -m 20 -o /dev/null "$LLM_HEALTH_URL" 2>/dev/null; then
-      echo "[cgc-db] LLM endpoint healthy: $LLM_HEALTH_URL"
+    # Retry: a WireGuard tunnel brought up seconds ago has not necessarily
+    # completed a handshake with the far peer yet, and a first-packet timeout
+    # there is normal rather than a fault.
+    _lh=0; _llm_ok=0; _lerr=""
+    while [ "$_lh" -lt 6 ]; do
+      _lh=$((_lh + 1))
+      _lerr=$(curl -fsS -m 15 -o /dev/null "$LLM_HEALTH_URL" 2>&1) && { _llm_ok=1; break; }
+      [ "$_lh" -lt 6 ] && sleep 10
+    done
+    if [ "$_llm_ok" = "1" ]; then
+      echo "[cgc-db] LLM endpoint healthy: $LLM_HEALTH_URL (attempt $_lh)"
     else
-      echo "::error::[cgc-db] graphrag phase requested but the LLM endpoint is unreachable ($LLM_HEALTH_URL). It is mesh-only, so the runner needs WireGuard up. Refusing to ship a structural-only graph."
+      # Say WHICH layer failed. "unreachable" alone sent the last investigation
+      # after a missing credential that never existed; the mesh was the problem.
+      _lhost=$(printf '%s' "$LLM_HEALTH_URL" | sed -e 's|^[a-z]*://||' -e 's|[:/].*$||')
+      echo "::error::[cgc-db] graphrag phase requested but the LLM endpoint failed its health check: $LLM_HEALTH_URL"
+      echo "[cgc-db] curl said: ${_lerr:-<no output>}"
+      echo "[cgc-db] mesh triage for $_lhost (the endpoint is mesh-only, so this distinguishes 'no route' from 'port filtered'):"
+      ping -c 2 -W 3 10.0.0.1 >/dev/null 2>&1 && echo "[cgc-db]   hub 10.0.0.1: reachable" || echo "[cgc-db]   hub 10.0.0.1: NO — WireGuard is not carrying traffic at all"
+      ping -c 2 -W 3 "$_lhost" >/dev/null 2>&1 && echo "[cgc-db]   $_lhost icmp: reachable" || echo "[cgc-db]   $_lhost icmp: no reply"
+      if command -v nc >/dev/null 2>&1; then
+        nc -z -w 5 "$_lhost" 22 >/dev/null 2>&1 && echo "[cgc-db]   $_lhost:22 open — the host IS routable, so the LLM port specifically is blocked" || echo "[cgc-db]   $_lhost:22 closed too — this is routing, not a port filter"
+      fi
+      echo "[cgc-db] refusing to ship a structural-only graph."
       exit 1
     fi
   fi

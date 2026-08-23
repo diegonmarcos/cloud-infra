@@ -53,7 +53,7 @@ ck "llm_model '$M' maps to an exported var" \
 # 4) graphrag must PREFLIGHT and hard-fail, not warn. Without this the next
 #    endpoint outage silently reproduces structural-only graphs.
 ck "graphrag preflights the LLM endpoint" \
-   "$(grepq 'LLM endpoint is unreachable' "$SCRIPT" && echo yes || echo no)" "yes"
+   "$(grepq 'refusing to ship a structural-only graph' "$SCRIPT" && echo yes || echo no)" "yes"
 
 # 5) no repo secret may gate this path — my-ai-api injects its own upstream key.
 ck "no secrets.OPENROUTER_API_KEY gates the index job" \
