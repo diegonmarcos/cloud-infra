@@ -513,17 +513,48 @@ jobs:
           echo launched
           EOF
           ssh_retry /tmp/remote-restore.sh "$TARGET" 'sh -s'
-          # Poll with short-lived connections. 120 x 30s = 60 min ceiling, against a
-          # restore observed at ~50 min on this box.
+          # Poll with short-lived connections. The termination condition is the real
+          # one -- the restore either writes its rc file or its process disappears --
+          # not a stopwatch. The old 60-minute ceiling encoded "a restore takes ~50
+          # min on this box", which stopped being true the moment graphrag enrichment
+          # grew the per-repo images: on 2026-08-23 the box was pulling at ~25 min per
+          # repo, so the step would have declared a perfectly healthy restore dead at
+          # 2 repos of 6, killed the job, and left the detached script still running on
+          # the box for another two hours with nobody reading its result.
+          #
+          # A wall-clock guess cannot tell "slow" from "stuck"; process liveness can.
+          # The 4h counter below is a backstop against a poll loop that somehow never
+          # terminates, not the thing that is supposed to fire.
             RC=""
             i=0
-            while [ $i -lt 120 ]; do
+            GONE=0
+            while [ $i -lt 480 ]; do
               sleep 30
               i=$((i + 1))
+              # One round trip for both facts. `[c]gc` so the poll's own remote command
+              # line -- which contains this very pattern -- does not count itself.
+              # The parent `sh -c` holds the same string in its argv and outlives the
+              # script until `echo $? > $RCF` has run, so "alive" cannot go 0 before
+              # the rc file exists.
               # shellcheck disable=SC2086
-              RC=$(ssh $CGC_SSH_OPTS "$TARGET" "cat $RCF 2>/dev/null" 2>/dev/null || echo "")
+              OUT=$(ssh $CGC_SSH_OPTS "$TARGET" \
+                "cat $RCF 2>/dev/null; echo '@'; ps -o args 2>/dev/null | grep -c '[c]gc-restore-all.sh'" \
+                2>/dev/null || echo "@?")
+              RC=$(printf '%s' "${OUT%%@*}" | tr -d ' \n')
+              ALIVE=$(printf '%s' "${OUT##*@}" | tr -d ' \n')
               [ -n "$RC" ] && break
-              [ $((i % 10)) -eq 0 ] && echo "[cgc-db] $SURFACE still restoring (${i}0s elapsed)..."
+              # A failed poll reports "?" — unknown, not dead. Never let a flaky ssh
+              # over a loaded WireGuard link be read as a crashed restore.
+              if [ "$ALIVE" = "0" ]; then
+                GONE=$((GONE + 1))
+              else
+                GONE=0
+              fi
+              if [ "$GONE" -ge 3 ]; then
+                echo "::error::[cgc-db] $SURFACE restore process is gone from $HOST and never wrote $RCF — it died mid-restore"
+                break
+              fi
+              [ $((i % 10)) -eq 0 ] && echo "[cgc-db] $SURFACE still restoring ($((i / 2)) min elapsed, process alive)..."
             done
             # shellcheck disable=SC2086
             ssh $CGC_SSH_OPTS "$TARGET" "tail -25 $LOG" || true
@@ -533,7 +564,7 @@ jobs:
             # Starting an already-running container is a no-op error here, hence || true.
             ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR" >/dev/null 2>&1 || true
             if [ -z "$RC" ]; then
-              echo "::error::[cgc-db] $SURFACE restore-all did not finish within 60 min on $HOST"
+              echo "::error::[cgc-db] $SURFACE restore-all produced no result on $HOST (process gone, or the 4h backstop fired)"
               exit 1
             fi
             if [ "$RC" != "0" ]; then
