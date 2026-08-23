@@ -125,6 +125,20 @@ LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 # authoritative; build.json runtime.octocode.update.use_llm is only the fallback
 # default when the caller does not set USE_LLM (e.g. a bare local invocation).
 USE_LLM="${USE_LLM:-$(jq -r '.runtime.octocode.update.use_llm' "$BJ")}"
+# GraphRAG LLM ENDPOINT (data-driven, .runtime.octocode.llm). octocode's provider
+# prefixes read these from the ENVIRONMENT: `openai:*` -> $OPENAI_API_URL +
+# $OPENAI_API_KEY, `ollama:*` -> $OLLAMA_API_URL. Nothing else sets them, so
+# without this block the graphrag phase rewrote the config models correctly and
+# then died at the first call with "LLM client not initialized" -> a whole DB of
+# structural-only `sibling_module` edges with only a Warning in the log.
+# The endpoint is my-ai-api on the mesh, which injects the real OpenRouter key
+# itself (passthrough_auth=false), so api_key here is the declared `sk-dummy`
+# placeholder — there is NO credential in this path and none is needed.
+OPENAI_API_URL=$(jq -r  '.runtime.octocode.llm.openai_api_url  // empty' "$BJ")
+OLLAMA_API_URL=$(jq -r  '.runtime.octocode.llm.ollama_api_url  // empty' "$BJ")
+OPENAI_API_KEY=$(jq -r  '.runtime.octocode.llm.api_key         // empty' "$BJ")
+LLM_HEALTH_URL=$(jq -r  '.runtime.octocode.llm.health_url      // empty' "$BJ")
+export OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
@@ -820,6 +834,24 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
     { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
   grep -q "use_llm = true" "$CFG" 2>/dev/null || printf '\n[graphrag]\nenabled = true\nuse_llm = true\n' >> "$CFG"
   echo "[cgc-db] GraphRAG LLM = $LLM (enabled=true use_llm=true)"
+  # PREFLIGHT — fail loudly, never degrade silently. octocode treats an
+  # unreachable/unauthenticated LLM as a WARNING and keeps going, emitting a
+  # graph of structural `sibling_module` edges only. That is indistinguishable
+  # from success in the exit code, so the run "passed" and shipped a DB with no
+  # semantic relationships at all. If the graphrag phase was explicitly asked
+  # for, an LLM it cannot reach is a hard error.
+  if [ -z "$OPENAI_API_URL" ]; then
+    echo "::error::[cgc-db] graphrag phase requested but .runtime.octocode.llm.openai_api_url is unset in $BJ — octocode would silently produce structural-only edges"
+    exit 1
+  fi
+  if [ -n "$LLM_HEALTH_URL" ]; then
+    if curl -fsS -m 20 -o /dev/null "$LLM_HEALTH_URL" 2>/dev/null; then
+      echo "[cgc-db] LLM endpoint healthy: $LLM_HEALTH_URL"
+    else
+      echo "::error::[cgc-db] graphrag phase requested but the LLM endpoint is unreachable ($LLM_HEALTH_URL). It is mesh-only, so the runner needs WireGuard up. Refusing to ship a structural-only graph."
+      exit 1
+    fi
+  fi
 else
   # Force structural-only to MATCH build.json (use_llm=false). The base config.toml
   # may carry a STALE `use_llm = true` + an unreachable LLM model (e.g. ollama:*),
