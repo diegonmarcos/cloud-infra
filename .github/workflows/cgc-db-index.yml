@@ -450,8 +450,14 @@ jobs:
               # Keep the error text. Discarding it bought five identical retries and
               # a restore that aborted with no cause recorded anywhere. The token
               # goes in on stdin and docker never echoes it, so this is safe to log.
+              # ConnectTimeout is overridden UP for this one call. The login lands
+              # immediately after the pub restore, i.e. at the box's busiest moment
+              # of the whole job -- on 2026-08-23 ssh carried a full pub restore at
+              # 18:32 and then every login attempt died in ~15s at 18:33, which is
+              # the inherited ConnectTimeout=15 expiring against a saturated box,
+              # not GHCR turning the credential down. A later -o wins in ssh.
               # shellcheck disable=SC2086
-              _lo=$(printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
+              _lo=$(printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS -o ConnectTimeout=60 "$TARGET" \
                    "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" 2>&1) && {
                 echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
                 return 0
@@ -465,12 +471,15 @@ jobs:
                   echo "::error::[cgc-db] not retried — a rejected credential is not transient. ghcr.io accepts CLASSIC PATs with read:packages; a fine-grained PAT is refused here no matter which repositories or permissions it grants. Verified the same day: a classic token with read:packages reads these exact manifests, so the package side is fine and the token is not."
                   return 1 ;;
               esac
-              if [ "$_li" -ge 5 ]; then
-                echo "::error::[cgc-db] box GHCR login failed 5x, last error: $_lo"
+              # 5x20s gave a 3-minute window to outlast congestion on a box that
+              # needs ~60 minutes just to complete one restore. Widened to ~12min,
+              # which is proportionate to how long the box actually stays busy.
+              if [ "$_li" -ge 8 ]; then
+                echo "::error::[cgc-db] box GHCR login failed 8x over ~12min, last error: $_lo"
                 return 1
               fi
-              echo "[cgc-db] box GHCR login failed (attempt $_li/5): $_lo — retrying in 20s"
-              sleep 20
+              echo "[cgc-db] box GHCR login failed (attempt $_li/8): $_lo — retrying in 30s"
+              sleep 30
             done
           }
 
