@@ -64,6 +64,14 @@
 #                         this — compose mounts the volume INTO the container
 #                         at oct.db_path, so from inside there it already IS
 #                         a plain, directly-writable directory.
+#    CGC_PRIVATE_REPOS    space-separated repos to EXCLUDE, because their GitHub
+#                         source is private and their DB must never reach the
+#                         volume the public MCP serves. Defaults to
+#                         .runtime.octocode.private_repos from build.json;
+#                         set explicitly where build.json is absent (the box).
+#    CGC_INCLUDE_PRIVATE  set to 1 to disable that filter entirely. Only
+#                         cloud-cgc-pvt-mcp may do this, and only together with
+#                         its OWN CGC_DB_TARGET_VOLUME — never the public one.
 #    CGC_DB_OWNER         optional "uid:gid" to chown -R the restored tree to.
 #                         REQUIRED whenever the consumer runs as a different uid
 #                         than whoever runs this script, which is the normal
@@ -156,6 +164,47 @@ else
   REPOS=$(jq -r '.runtime.octocode.index_repos[]' "$BJ")
 fi
 [ -n "$REPOS" ] || { echo "::error::no repos to restore — empty .runtime.octocode.index_repos and CGC_INDEX_REPOS unset"; exit 1; }
+# PUBLIC/PRIVATE SPLIT — a private repo's DB must never land in the volume the
+# PUBLIC MCP mounts. Two guards exist and only one of them is visible:
+#
+#   1. Structural: oci-apps carries NO ghcr.io credentials ("auths": {} in its
+#      ~/.docker/config.json) and pulls anonymously, so a package that really is
+#      private cannot be fetched there at all. Genuine, but implicit — a single
+#      `docker login` on that box silently retires it with nothing to notice.
+#   2. This filter: declared in build.json, greppable, credential-independent.
+#
+# Deliberately applied to CGC_INDEX_REPOS as well as the build.json list. The
+# manual/DAG path passes an explicit repo list, and that is precisely the path
+# most likely to be handed "all 8" by a human who has lost track of which are
+# private — this run of the restore was handed exactly that.
+#
+# cloud-cgc-pvt-mcp opts in with CGC_INCLUDE_PRIVATE=1, which MUST be paired
+# with its own CGC_DB_TARGET_VOLUME — never the public one.
+if [ "${CGC_INCLUDE_PRIVATE:-0}" = "1" ]; then
+  echo "[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 — private repos NOT filtered (target ${CGC_DB_TARGET_VOLUME:-$TARGET})"
+else
+  PRIVATE_REPOS="${CGC_PRIVATE_REPOS:-}"
+  if [ -z "$PRIVATE_REPOS" ] && [ -n "${BJ:-}" ] && [ -f "${BJ:-}" ]; then
+    PRIVATE_REPOS=$(jq -r '.runtime.octocode.private_repos[]?' "$BJ" 2>/dev/null)
+  fi
+  if [ -n "$PRIVATE_REPOS" ]; then
+    _kept=""
+    for _r in $REPOS; do
+      _skip=0
+      for _p in $PRIVATE_REPOS; do
+        [ "$_r" = "$_p" ] && { _skip=1; break; }
+      done
+      if [ "$_skip" = 1 ]; then
+        echo "[cgc-db-restore-all] skipping PRIVATE repo $_r — not for the public volume"
+      else
+        _kept="$_kept $_r"
+      fi
+    done
+    REPOS="${_kept# }"
+    [ -n "$REPOS" ] || { echo "::error::[cgc-db-restore-all] every requested repo is private and CGC_INCLUDE_PRIVATE is not set — nothing to restore"; exit 1; }
+  fi
+fi
+
 set -- $REPOS
 TOTAL=$#
 
