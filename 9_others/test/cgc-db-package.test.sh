@@ -180,13 +180,28 @@ out=$(gate_repo_push cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
 { [ "$rc" -eq 0 ] && echo "$out" | grep -q "pushing" && ! echo "$out" | grep -qE "::error::|::warning::"; } \
   && ok "gate: private repo + existing PRIVATE pkg -> push allowed" || bad "case H: rc=$rc out=[$out]"
 
-# The case that matters: this is the state cloud-data and my-ai_memory are in.
-# A push here would CREATE the package public with private source inside it.
-: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent
+# The case that matters: cloud-data / my-ai_memory with no package yet. Whether
+# a push is safe here depends ENTIRELY on which token pushes.
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent; unset CGC_GHCR_PAT
 out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
 { [ "$rc" -eq 0 ] && echo "$out" | grep -q "::warning::" && echo "$out" | grep -q "NOT PUBLISHED" \
   && ! echo "$out" | grep -q "::error::" && [ ! -s "$CALL_LOG" ]; } \
-  && ok "gate: private repo + NO pkg -> skipped, ::warning::, run stays green" || bad "case I: rc=$rc out=[$out]"
+  && ok "gate: private + no pkg + NO pat -> skipped (GITHUB_TOKEN would create it public)" || bad "case I: rc=$rc out=[$out]"
+
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent; export CGC_GHCR_PAT=nonempty
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "GHCR creates it PRIVATE" \
+  && ! echo "$out" | grep -qE "::error::|::warning::"; } \
+  && ok "gate: private + no pkg + PAT -> push allowed (born private via LABEL)" || bad "case I2: rc=$rc out=[$out]"
+
+# Fail-safe "private" (repo could not be resolved) must NOT push even WITH a PAT:
+# a token that cannot see the repo cannot auto-link it either, so the package
+# would be created public.
+: > "$CALL_LOG"; STUB_ISPRIVATE="weird-garbage" STUB_CUR_VIS=absent; export CGC_GHCR_PAT=nonempty
+out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q "::warning::" && echo "$out" | grep -q "NOT PUBLISHED"; } \
+  && ok "gate: undetermined visibility + PAT -> still skipped (fail-safe is not proof)" || bad "case I3: rc=$rc out=[$out]"
+unset CGC_GHCR_PAT
 
 # And the gate must REFUSE, not delete — deleting is the backstop's job, and
 # doing it here would race a package a human may have just fixed by hand.

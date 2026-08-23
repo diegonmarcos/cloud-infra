@@ -281,7 +281,34 @@ gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHO
       return 0
       ;;
     absent)
-      echo "::warning::[cgc-db] $_gp_pkg NOT PUBLISHED — repo diegonmarcos/${_rdv_remote:-unresolved} is private and no package exists yet; GHCR would create it PUBLIC with private source inside. Skipping the push entirely (nothing is exposed). To enable: create ghcr.io/*/${_gp_pkg} once as PRIVATE in the GitHub UI from a content-free placeholder, then re-run."
+      # A fresh package is born with the visibility of whatever the PUSH token
+      # links it to, so whether this is safe depends entirely on that token:
+      #
+      #   PAT that can see the private repo -> org.opencontainers.image.source
+      #     auto-links to that repo and the package is created PRIVATE. Verified
+      #     with content-free probes 2026-08-23: private at t+0s, linked
+      #     diegonmarcos/cloud-data, no propagation race.
+      #   GITHUB_TOKEN -> GHCR associates the push with the WORKFLOW's repo
+      #     (cloud-infra, public) and the package is created PUBLIC with private
+      #     source inside it, regardless of the LABEL.
+      #
+      # CGC_GHCR_PAT is only ever tested for emptiness here, never printed or
+      # passed on. It reaches this script from the workflow env alongside
+      # GHCR_TOKEN, which is the variable cloud-cgc-db-update.sh actually logs
+      # in with -- they come from the same secret, so non-empty here means the
+      # push is PAT-authenticated.
+      #
+      # _rdv_ispriv = "true" is required as well, and is the stricter half: it
+      # means `gh repo view` POSITIVELY resolved the repo as private. The
+      # resolver also reports "private" as a fail-safe when it could not tell
+      # (unreadable repo_map, no API reach), and that case must NOT push -- a
+      # token that cannot see the repo is exactly the token that cannot
+      # auto-link it either.
+      if [ -n "${CGC_GHCR_PAT:-}" ] && [ "${_rdv_ispriv:-}" = "true" ]; then
+        echo "[cgc-db] $_gp_pkg: repo diegonmarcos/${_rdv_remote:-?} is private, no package yet — pushing PAT-authenticated so GHCR creates it PRIVATE via the source LABEL"
+        return 0
+      fi
+      echo "::warning::[cgc-db] $_gp_pkg NOT PUBLISHED — repo diegonmarcos/${_rdv_remote:-unresolved} is private and no package exists, but the push is not PAT-authenticated (or the repo could not be positively resolved), so GHCR would create it PUBLIC with private source inside. Skipping the push entirely — nothing is exposed. Fix by setting the CGC_GHCR_PAT secret (repo + read:packages + delete:packages)."
       exit 0
       ;;
     *)

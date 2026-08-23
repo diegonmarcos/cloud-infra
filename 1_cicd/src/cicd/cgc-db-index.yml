@@ -79,6 +79,24 @@ env:
   # gh(1) reads GH_TOKEN first. This is what gives the package script's visibility probe
   # its reach; it falls back to GITHUB_TOKEN when no PAT is configured.
   GH_TOKEN: ${{ secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN }}
+  # THE ONE THAT ACTUALLY MATTERS. cloud-cgc-db-update.sh:143 reads
+  #   TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
+  # and that login is what pushes every per-repo package. Setting CGC_GHCR_PAT and
+  # GH_TOKEN alone (67f7c12e1) fixed the `gh repo view` probe and the restore-all
+  # login -- neither of which pushes anything -- and left the push itself on
+  # GITHUB_TOKEN. GHCR associates a GITHUB_TOKEN push with the WORKFLOW'S repo
+  # (cloud-infra, public), so the package was created PUBLIC no matter what
+  # org.opencontainers.image.source said, and the backstop deleted it. Every run.
+  #
+  # Verified empirically 2026-08-23 with content-free busybox probes:
+  #   no label, PAT           -> private   (this account defaults new pkgs private)
+  #   label -> cloud-data, PAT -> private, linked diegonmarcos/cloud-data
+  # i.e. with a PAT that can see the private repo, the auto-link resolves and the
+  # package is born private with no UI step and no race (private at t+0s).
+  #
+  # Falls back to GITHUB_TOKEN when no PAT is configured, so a missing secret
+  # degrades to public-repos-only exactly as before instead of breaking the run.
+  GHCR_TOKEN: ${{ secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN }}
   GITHUB_ACTOR: ${{ github.actor }}
   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
