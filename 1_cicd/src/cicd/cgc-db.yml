@@ -44,6 +44,11 @@ on:
         required: false
         default: true
         type: boolean
+      force:
+        description: "Reindex even when HEAD matches the phase manifest. Use after an INDEXER change (fixed LLM endpoint, new embedding model) — the manifest keys on HEAD alone, so an unchanged repo indexed badly would otherwise never be reindexed."
+        required: false
+        default: false
+        type: boolean
       surfaces:
         description: "Which DB surfaces the restore propagates to. 'pvt' repairs the private volume without re-paying the ~50 min public restore, which is the whole reason this input exists."
         required: false
@@ -84,6 +89,8 @@ jobs:
       restore: ${{ github.event.inputs.restore != 'false' }}
       # Null on schedule (github.event.inputs is null there) = both surfaces.
       surfaces: ${{ github.event.inputs.surfaces || 'both' }}
+      # Null on schedule = 'false' = honour the manifest (the daily run must stay incremental).
+      force: ${{ github.event.inputs.force || 'false' }}
     secrets: inherit
 
   # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
@@ -117,4 +124,6 @@ jobs:
       restore: ${{ github.event.inputs.restore != 'false' }}
       # Null on schedule (github.event.inputs is null there) = both surfaces.
       surfaces: ${{ github.event.inputs.surfaces || 'both' }}
+      # Null on schedule = 'false' = honour the manifest (the daily run must stay incremental).
+      force: ${{ github.event.inputs.force || 'false' }}
     secrets: inherit

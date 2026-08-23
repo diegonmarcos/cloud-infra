@@ -50,5 +50,16 @@ p=sys.argv[1]
 live=[l for l in open(p,encoding='utf8') if 'OPENROUTER' in l and not l.lstrip().startswith('#')]
 print('no' if live else 'yes')" "$ROOT/1_cicd/src/cicd/cgc-db-index.yml")" "yes"
 
+# 6) the force path must be wired end to end, or a fixed indexer silently
+#    re-skips every repo whose HEAD did not move. Three links, all breakable
+#    independently: dispatch input -> reusable-workflow input -> script env.
+ck "orchestrator passes force through to both phases" \
+   "$(python3 -c "
+print(open('$ROOT/.github/workflows/cgc-db.yml',encoding='utf8').read().count('github.event.inputs.force'))")" "2"
+ck "index workflow maps force -> CGC_FORCE" \
+   "$(grepq 'CGC_FORCE:' "$ROOT/.github/workflows/cgc-db-index.yml" && echo yes || echo no)" "yes"
+ck "script honours CGC_FORCE at the change gate" \
+   "$(grepq 'CGC_FORCE:-0' "$SCRIPT" && echo yes || echo no)" "yes"
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

@@ -980,9 +980,18 @@ for r in $REPOS; do
   fi
 
   # CHANGE GATE: HEAD unchanged since last index into this DB → nothing to do.
+  # CGC_FORCE=1 bypasses it. The manifest is keyed on repo HEAD alone, but the
+  # DB's freshness also depends on HOW it was indexed — when the INDEXER changes
+  # (embedding model, graphrag settings, a fixed LLM endpoint), every entry is
+  # stale at an unchanged HEAD and the gate would skip all of them forever. That
+  # is not hypothetical: the graphrag manifest was advanced by runs that silently
+  # produced structural-only graphs, so re-running after fixing the LLM wiring is
+  # a no-op without this. Reindexing on a config change is the whole point.
   cur=$(git -C "$d" rev-parse HEAD 2>/dev/null || echo "")
   last=$(jq -r --arg r "$r" '.[$r] // ""' "$MANIFEST")
-  if [ -n "$cur" ] && [ "$cur" = "$last" ]; then
+  if [ "${CGC_FORCE:-0}" = "1" ] && [ -n "$last" ]; then
+    echo "[cgc-db] === force $r — ignoring manifest entry @ $last (CGC_FORCE=1) ==="
+  elif [ -n "$cur" ] && [ "$cur" = "$last" ]; then
     echo "[cgc-db] === skip $r — unchanged @ $cur ==="
     N_SKIP=$(( N_SKIP + 1 ))
     continue
