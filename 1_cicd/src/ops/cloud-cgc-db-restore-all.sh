@@ -184,7 +184,44 @@ fi
 # cloud-cgc-pvt-mcp opts in with CGC_INCLUDE_PRIVATE=1, which MUST be paired
 # with its own CGC_DB_TARGET_VOLUME — never the public one.
 if [ "${CGC_INCLUDE_PRIVATE:-0}" = "1" ]; then
-  echo "[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 — private repos NOT filtered (target ${CGC_DB_TARGET_VOLUME:-$TARGET})"
+  # Enforced, not merely documented. Until now the "never the public one" pairing
+  # above was a comment, and a comment does not stop `CGC_INCLUDE_PRIVATE=1` from
+  # being set on the PUBLIC restore service — one copy-paste and every private
+  # repo's DB lands in the volume the internet-facing MCP reads. The whole
+  # public/private split is "the private DBs are not in that volume", so this is
+  # the one invariant the split rests on; it gets a check, not a comment.
+  #
+  # Resolved from build.json when the caller did not name it, because the
+  # container that runs this has no checkout and the env is all it has. If we
+  # cannot determine the public volume name we refuse as well: an unverifiable
+  # target is exactly the case where failing open loses the private repos.
+  _pub_vol="${CGC_PUBLIC_DB_VOLUME:-}"
+  if [ -z "$_pub_vol" ]; then
+    # Same resolution the rest of the script uses (need_bj), but deliberately
+    # non-fatal: when build.json is unreachable we refuse with the specific
+    # message below rather than need_bj's generic "build.json not found".
+    _ibj="${BJ:-}"
+    if [ -z "$_ibj" ] || [ ! -f "$_ibj" ]; then
+      _iroot="${CLOUD_ROOT:-$(cd "$HERE/../../.." 2>/dev/null && pwd || echo "")}"
+      _ibj="${_iroot:+$_iroot/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
+    fi
+    [ -n "$_ibj" ] && [ -f "$_ibj" ] \
+      && _pub_vol=$(jq -r '.runtime.octocode.db_volume // empty' "$_ibj" 2>/dev/null)
+  fi
+  _eff_target="${CGC_DB_TARGET_VOLUME:-}"
+  if [ -z "$_eff_target" ]; then
+    echo "::error::[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 requires an explicit CGC_DB_TARGET_VOLUME (the private volume). Refusing to write private repo DBs to the default target '$TARGET'."
+    exit 1
+  fi
+  if [ -z "$_pub_vol" ]; then
+    echo "::error::[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 but the PUBLIC volume name is unknown (set CGC_PUBLIC_DB_VOLUME or make build.json readable) — cannot prove '$_eff_target' is not the public volume. Refusing."
+    exit 1
+  fi
+  if [ "$_eff_target" = "$_pub_vol" ]; then
+    echo "::error::[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 with CGC_DB_TARGET_VOLUME='$_eff_target', which IS the public volume. That would put every private repo's DB in the volume the public MCP serves. Refusing."
+    exit 1
+  fi
+  echo "[cgc-db-restore-all] CGC_INCLUDE_PRIVATE=1 — private repos NOT filtered (target $_eff_target, public volume $_pub_vol untouched)"
 else
   PRIVATE_REPOS="${CGC_PRIVATE_REPOS:-}"
   # Resolved independently of need_bj: that one only runs when the caller left
