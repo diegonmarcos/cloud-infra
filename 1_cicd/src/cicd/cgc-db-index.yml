@@ -427,19 +427,37 @@ jobs:
           # to authenticate. Retrying after the pub pass instead means retrying against a
           # box that has just gone quiet.
           box_ghcr_login() {
-            [ -n "${CGC_GHCR_PAT:-}" ] || return 1
+            [ -n "${CGC_GHCR_PAT:-}" ] || {
+              echo "::error::[cgc-db] CGC_GHCR_PAT is empty in this job. The per-repo images are private by design and are linked to their OWN source repos, not to this one, so this job's GITHUB_TOKEN cannot read them either — a cross-repo classic PAT with read:packages is the only credential that works here."
+              return 1
+            }
             trap cleanup_box_ghcr EXIT INT TERM
             _li=0
             while :; do
               _li=$((_li + 1))
+              # Keep the error text. Discarding it bought five identical retries and
+              # a restore that aborted with no cause recorded anywhere. The token
+              # goes in on stdin and docker never echoes it, so this is safe to log.
               # shellcheck disable=SC2086
-              if printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
-                   "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" >/dev/null 2>&1; then
+              _lo=$(printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
+                   "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" 2>&1) && {
                 echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
                 return 0
+              }
+              # A rejected credential is not a transient fault. Retrying one costs
+              # 100s and cannot ever succeed, so separate the two cases: back off
+              # only for things that might clear on their own.
+              case "$_lo" in
+                *denied*|*unauthorized*|*"incorrect username or password"*)
+                  echo "::error::[cgc-db] GHCR rejected CGC_GHCR_PAT as '$GITHUB_ACTOR': $_lo"
+                  echo "::error::[cgc-db] not retried — a rejected credential is not transient. ghcr.io accepts CLASSIC PATs with read:packages; a fine-grained PAT is refused here no matter which repositories or permissions it grants. Verified the same day: a classic token with read:packages reads these exact manifests, so the package side is fine and the token is not."
+                  return 1 ;;
+              esac
+              if [ "$_li" -ge 5 ]; then
+                echo "::error::[cgc-db] box GHCR login failed 5x, last error: $_lo"
+                return 1
               fi
-              [ "$_li" -ge 5 ] && return 1
-              echo "[cgc-db] box GHCR login failed (attempt $_li/5) — retrying in 20s"
+              echo "[cgc-db] box GHCR login failed (attempt $_li/5): $_lo — retrying in 20s"
               sleep 20
             done
           }
