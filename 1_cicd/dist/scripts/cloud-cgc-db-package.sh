@@ -245,6 +245,65 @@ resolve_repo_desired_visibility() { # $1=PKG (for error msg) $2=LOCAL_NAME
 # 1 — the artifact must not survive being public. This is the backstop for
 # resolve_repo_source_label() above: normally the LABEL fix alone means this
 # function finds everything already correct and returns 0 immediately.
+# PRE-PUSH GATE — the only place a private repo's leak can actually be PREVENTED
+# rather than cleaned up after.
+#
+# verify_or_delete_repo_pkg() below runs AFTER `docker push`. By the time it
+# fires, a package that GHCR created public has already existed, publicly, with
+# a private repo's embedded source inside it, for as long as the push + the API
+# round-trip took. Deleting it afterwards limits the damage; it does not prevent
+# it. That window has opened on every single run for cloud-data and
+# my-ai_memory, because GHCR creates a NEW package with the visibility of the
+# pushing context (cloud-infra, public) -- the org.opencontainers.image.source
+# LABEL auto-link does not reliably win the race at creation time, which is what
+# the PAT was expected to fix and did not.
+#
+# GitHub has no create-package and no set-visibility API, so a package cannot be
+# born private from here. But an EXISTING private package keeps its visibility
+# across pushes. That gives an exact, checkable precondition:
+#
+#   repo public                    -> push (nothing to protect)
+#   repo private, pkg private      -> push (visibility is preserved, not set)
+#   repo private, pkg public       -> refuse, ::error:: (already leaking; do not
+#                                     feed it fresher private data)
+#   repo private, pkg absent       -> refuse, ::warning:: (a push would CREATE it
+#                                     public -- this is today's state, and it is
+#                                     unblocked by one manual UI step, below)
+#
+# Absent is a WARNING and rc 0, not an error, on purpose: it is the correct,
+# expected state until cloud-cgc-pvt-mcp exists to consume these images, and
+# there is nothing broken to fix -- the DB simply is not published yet. Failing
+# the run would paint red a pipeline whose public half is entirely healthy. It
+# is loud (a GHA annotation on every run) so it cannot rot silently.
+#
+# To unblock, once there is a private consumer: create the package once in the
+# GitHub UI as PRIVATE (push any placeholder to ghcr.io/<owner>/<pkg>, then
+# Package settings -> Change visibility -> Private), and every subsequent push
+# from here inherits it. Seed it with a CONTENT-FREE placeholder, never with a
+# real DB, so nothing private is ever exposed even briefly.
+gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHOLE SCRIPT otherwise
+  _gp_pkg="$1"; _gp_local="$2"
+  resolve_repo_desired_visibility "$_gp_pkg" "$_gp_local"
+  if [ "$_rdv_desired" = "public" ]; then
+    return 0
+  fi
+  _gp_vis=$(gh api "/user/packages/container/${_gp_pkg}" --jq '.visibility' 2>/dev/null || echo absent)
+  case "$_gp_vis" in
+    private)
+      echo "[cgc-db] $_gp_pkg: repo diegonmarcos/${_rdv_remote:-?} is private and the package already exists private — pushing (visibility is preserved across pushes)"
+      return 0
+      ;;
+    absent)
+      echo "::warning::[cgc-db] $_gp_pkg NOT PUBLISHED — repo diegonmarcos/${_rdv_remote:-unresolved} is private and no package exists yet; GHCR would create it PUBLIC with private source inside. Skipping the push entirely (nothing is exposed). To enable: create ghcr.io/*/${_gp_pkg} once as PRIVATE in the GitHub UI from a content-free placeholder, then re-run."
+      exit 0
+      ;;
+    *)
+      echo "::error::[cgc-db] $_gp_pkg already exists as $_gp_vis but repo diegonmarcos/${_rdv_remote:-unresolved} is private — refusing to push fresher private data into an exposed package. DELETE OR PRIVATE IT IN THE GITHUB UI NOW"
+      exit 1
+      ;;
+  esac
+}
+
 verify_or_delete_repo_pkg() { # $1=PKG $2=LOCAL_NAME → rc 0 ok/skip; exits the WHOLE SCRIPT (not just this fn) on a caught leak
   _vd_pkg="$1"; _vd_local="$2"
   resolve_repo_desired_visibility "$_vd_pkg" "$_vd_local"
@@ -413,6 +472,10 @@ case "$MODE" in
     SRC_URL="https://github.com/diegonmarcos/cloud-infra"
     ;;
   repo)
+    # BEFORE the tar+build, not just before the push: if this repo may not be
+    # published, there is no reason to spend ~15 min tarring and building a
+    # multi-GB image that gets thrown away.
+    gate_repo_push "$PKG" "$LOCAL_NAME"
     PROJ=$(resolve_repo_project_dir "$SRC") || exit 1
     build_repo_tar "$SRC" "$WORK/ctx/octocode-db.tar" "$PROJ"
     DESC="cloud-cgc-pub-mcp octocode DB for $LOCAL_NAME (single <project_id>/ dir: semantic FastEmbed vectors + GraphRAG graph). Visibility matches the $LOCAL_NAME repo. Restore into an octocode home ROOTED by cgc-db-base:latest via cp -a."
