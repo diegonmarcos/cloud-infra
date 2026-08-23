@@ -77,6 +77,11 @@ on:
         required: false
         default: ""
         type: string
+      force:
+        description: "Reindex even when the repo HEAD matches the phase manifest. Needed whenever the INDEXER changed rather than the code — a fixed LLM endpoint, a new embedding model — since the manifest is keyed on HEAD alone and would otherwise skip every repo forever."
+        required: false
+        default: "false"
+        type: string
       restore:
         description: "Run the restore-all propagation job after indexing. Empty/true = yes."
         required: false
@@ -133,6 +138,7 @@ env:
   # initialized" and shipped structural-only graphs. cloud-cgc-db-update.sh now
   # exports OPENAI_API_URL/OPENAI_API_KEY from build.json and preflights the
   # endpoint, so this path needs no GHA secret at all.
+  CGC_FORCE: ${{ inputs.force == 'true' && '1' || '0' }}
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
   WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
