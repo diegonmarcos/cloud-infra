@@ -60,6 +60,16 @@ on:
         description: "Index phase: semantic (structural, no LLM) or graphrag (LLM relationship enrichment)."
         required: true
         type: string
+      repos:
+        description: "Optional subset of .runtime.octocode.index_repos to build the matrix from. Empty = all."
+        required: false
+        default: ""
+        type: string
+      restore:
+        description: "Run the restore-all propagation job after indexing. Empty/true = yes."
+        required: false
+        default: true
+        type: boolean
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -135,6 +145,18 @@ jobs:
           BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
           [ -f "$BJ" ] || { echo "::error::$BJ not found"; exit 1; }
           REPOS_JSON=$(jq -c '[.runtime.octocode.index_repos[]]' "$BJ")
+          # Optional subset. index_repos stays the single source of truth: the input
+          # can only NARROW it, never introduce a repo, and an unknown name is a hard
+          # error rather than a silently-empty matrix that looks like a clean run.
+          FILTER='${{ inputs.repos }}'
+          if [ -n "$FILTER" ]; then
+            SEL=$(printf '%s' "$FILTER" | tr ' ,' '\n\n' | jq -Rc . | jq -sc 'map(select(length > 0))')
+            UNKNOWN=$(jq -nc --argjson all "$REPOS_JSON" --argjson sel "$SEL" '$sel - $all')
+            [ "$UNKNOWN" = "[]" ] || { echo "::error::repos input names repo(s) not in .runtime.octocode.index_repos: $(printf '%s' "$UNKNOWN" | jq -r 'join(" ")')"; exit 1; }
+            # Intersection that preserves index_repos order, so matrix order is stable.
+            REPOS_JSON=$(jq -nc --argjson all "$REPOS_JSON" --argjson sel "$SEL" '$all - ($all - $sel)')
+            echo "[cgc-db] repos input active — matrix narrowed to: $(printf '%s' "$REPOS_JSON" | jq -r 'join(" ")')"
+          fi
           COUNT=$(printf '%s' "$REPOS_JSON" | jq 'length')
           [ "$COUNT" -gt 0 ] || { echo "::error::.runtime.octocode.index_repos is empty — nothing to index"; exit 1; }
           echo "repos=$REPOS_JSON" >> "$GITHUB_OUTPUT"
@@ -225,7 +247,10 @@ jobs:
   restore-all:
     name: "cgc-db · ${{ inputs.phase }} · restore-all → oci-apps"
     needs: index
-    if: always()
+    # always() so a single repo's failure still propagates the ones that DID
+    # succeed; inputs.restore lets a caller skip propagation entirely when the
+    # run only touched repos this volume filters out anyway.
+    if: always() && inputs.restore
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
