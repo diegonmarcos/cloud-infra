@@ -385,8 +385,18 @@ jobs:
               sleep 20
             done
           }
-          BOX_GHCR_OK=0
-          if [ -n "${CGC_GHCR_PAT:-}" ]; then
+          # Called LAZILY, immediately before the pvt restore, never up front. Only the
+          # private surface's packages need auth -- the public ones pull anonymously --
+          # so an eager login buys nothing and costs two things: the token sits at rest
+          # on the box for the whole ~2h step instead of the pvt window, and the attempt
+          # lands exactly when the box is busiest, at the start of the pub pass. On
+          # 2026-08-23 that eager login lost all three of its attempts to box saturation
+          # inside its first minute; an hour later the pvt half was refused purely on the
+          # stale flag it left behind, while the box itself was idle and perfectly able
+          # to authenticate. Retrying after the pub pass instead means retrying against a
+          # box that has just gone quiet.
+          box_ghcr_login() {
+            [ -n "${CGC_GHCR_PAT:-}" ] || return 1
             trap cleanup_box_ghcr EXIT INT TERM
             _li=0
             while :; do
@@ -395,17 +405,13 @@ jobs:
               if printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS "$TARGET" \
                    "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" >/dev/null 2>&1; then
                 echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
-                BOX_GHCR_OK=1
-                break
+                return 0
               fi
-              [ "$_li" -ge 3 ] && break
-              echo "[cgc-db] box GHCR login failed (attempt $_li/3) — retrying in 20s"
+              [ "$_li" -ge 5 ] && return 1
+              echo "[cgc-db] box GHCR login failed (attempt $_li/5) — retrying in 20s"
               sleep 20
             done
-          fi
-          if [ "$BOX_GHCR_OK" != "1" ]; then
-            echo "::warning::[cgc-db] box is NOT authenticated to GHCR — the private repos' packages cannot be pulled"
-          fi
+          }
 
           for SURFACE in pub pvt; do
             case "$SURFACE" in
@@ -429,8 +435,31 @@ jobs:
                 # holding exactly the public repos -- a pvt surface indistinguishable
                 # from the pub one, and nothing in the logs saying so. Refuse instead.
                 # The pub surface above has already propagated by this point.
+                #
+                # Gate on the CAPABILITY, not on bookkeeping. A recorded "login ok" flag
+                # can be true while the pull still fails (token scope, package renamed,
+                # tag never pushed) and -- the case that actually bit -- false while the
+                # box is perfectly able to pull, refusing a restore that would have
+                # worked. So: log in, then ask the box to resolve one private package's
+                # manifest for real. Manifest only, no layers, so the probe is cheap.
+                box_ghcr_login || true
+                _probe_repo=$(printf '%s\n' "$PRIV" | awk '{print $1}')
+                if [ -n "$_probe_repo" ]; then
+                  _probe_img="${PREFIX}${_probe_repo}:${TAG}"
+                  # shellcheck disable=SC2086
+                  if ssh $CGC_SSH_OPTS "$TARGET" "docker manifest inspect $_probe_img" >/dev/null 2>&1; then
+                    echo "[cgc-db] box can resolve $_probe_img — private packages are pullable"
+                    BOX_GHCR_OK=1
+                  else
+                    BOX_GHCR_OK=0
+                  fi
+                else
+                  # Nothing declared private: the pvt volume is the pub set by definition
+                  # and no auth is required to build it.
+                  BOX_GHCR_OK=1
+                fi
                 if [ "$BOX_GHCR_OK" != "1" ]; then
-                  echo "::error::[cgc-db] refusing the pvt restore: box has no GHCR auth, so the private repos' images are unpullable and $VOL would silently end up with public data only"
+                  echo "::error::[cgc-db] refusing the pvt restore: box cannot resolve $_probe_img, so the private repos' images are unpullable and $VOL would silently end up with public data only"
                   exit 1
                 fi
                 ;;
