@@ -64,13 +64,33 @@ ck "$field is the full completions path" \
 ck "graphrag preflights the LLM endpoint" \
    "$(grepq 'refusing to ship a structural-only graph' "$SCRIPT" && echo yes || echo no)" "yes"
 
-# 5) no repo secret may gate this path — my-ai-api injects its own upstream key.
-ck "no secrets.OPENROUTER_API_KEY gates the index job" \
+# 5) CI goes DIRECT to openrouter.ai with the real repo secret (user decision
+#    2026-08-23) — that is what freed the matrix from the single WireGuard peer
+#    slot and let graphrag fan out 8-wide. An earlier version of this test
+#    asserted the OPPOSITE (no repo secret, relay injects the key); the relay
+#    remains the declared build.json fallback for local/dagu runs only.
+_yml="$ROOT/1_cicd/src/cicd/cgc-db-index.yml"
+ck "index job passes secrets.OPENROUTER_API_KEY to the env" \
    "$(python3 -c "
 import sys
-p=sys.argv[1]
-live=[l for l in open(p,encoding='utf8') if 'OPENROUTER' in l and not l.lstrip().startswith('#')]
-print('no' if live else 'yes')" "$ROOT/1_cicd/src/cicd/cgc-db-index.yml")" "yes"
+live=[l for l in open(sys.argv[1],encoding='utf8')
+      if 'secrets.OPENROUTER_API_KEY' in l and not l.lstrip().startswith('#')]
+print('yes' if live else 'no')" "$_yml")" "yes"
+ck "index job env URL is the full completions path" \
+   "$(python3 -c "
+import sys
+live=[l for l in open(sys.argv[1],encoding='utf8')
+      if l.lstrip().startswith('OPENROUTER_API_URL:') and '/chat/completions' in l]
+print('yes' if live else 'no')" "$_yml")" "yes"
+# restore-all legitimately keeps its WireGuard step (one job, ssh propagation
+# to the box, no slot contention) — only the fan-out MATRIX must be mesh-free,
+# so the assertion is scoped to the region before restore-all.
+ck "index matrix no longer crosses the mesh (no WireGuard step)" \
+   "$(python3 -c "
+import sys
+s=open(sys.argv[1],encoding='utf8').read()
+matrix=s[:s.index('restore-all:')]
+print('no' if 'cloud-ship-ci-setup-wireguard' in matrix else 'yes')" "$_yml")" "yes"
 
 # 6) the force path must be wired end to end, or a fixed indexer silently
 #    re-skips every repo whose HEAD did not move. Three links, all breakable

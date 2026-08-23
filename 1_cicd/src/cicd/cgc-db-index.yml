@@ -198,31 +198,20 @@ jobs:
       packages: write
     strategy:
       fail-fast: false
-      # ONE PEER SLOT, N JOBS. Every matrix job authenticates as the same
-      # gha-runner WireGuard peer, and a peer has exactly one endpoint: each
-      # handshake steals the slot from whoever held it, so only the most recent
-      # job gets return traffic. That used to be harmless here because nothing
-      # in this job crossed the mesh. The graphrag phase does: it preflights the
-      # LLM endpoint and then streams every relationship call over that tunnel
-      # for the whole index. Sharing the slot makes jobs fail their preflight at
-      # random (4 of 8 one run, 1 of 8 the next, a different victim each time)
-      # and -- far worse -- lets a job LOSE the slot mid-index, where octocode
-      # treats the dead LLM as a warning and finishes with a structural-only
-      # graph while still exiting 0. So the phase that needs the mesh holds it
-      # alone; the semantic phase touches no LLM and still fans out.
-      # Same reason ship.yml pins max-parallel:1.
-      max-parallel: ${{ inputs.phase == 'graphrag' && 1 || 8 }}
+      # Full fan-out for BOTH phases. The graphrag phase used to be pinned to
+      # max-parallel:1 because its LLM calls crossed the WireGuard mesh to
+      # my-ai-api, and N matrix jobs sharing the single gha-runner peer slot
+      # stole each other's endpoint (random preflight failures — and worse, a
+      # job losing the slot MID-index, where octocode logs the dead LLM as a
+      # warning and ships a structural-only graph with exit 0). The LLM now
+      # goes straight to openrouter.ai over the public internet (env on the
+      # update step below), so no job in this matrix touches the mesh at all:
+      # nothing left to contend for, and the WireGuard step is gone with it.
+      max-parallel: 8
       matrix:
         repo: ${{ fromJson(needs.repos.outputs.repos) }}
     steps:
       - uses: actions/checkout@v4
-      # continue-on-error stays: a failed bring-up is genuinely harmless in the
-      # semantic phase, and the graphrag phase does not trust this step anyway --
-      # the preflight in cloud-cgc-db-update.sh is what hard-fails on an
-      # unreachable endpoint, with triage output.
-      - name: WireGuard up
-        continue-on-error: true
-        run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
       - name: Fresh per-repo octocode home
         # Must end in /octocode: cloud-cgc-db-update.sh's per-repo mode exports
         # XDG_DATA_HOME as this path's PARENT so octocode 0.12.2's own
@@ -245,6 +234,17 @@ jobs:
           # phase → USE_LLM (environment is authoritative over build.json).
           # semantic = structural only (no LLM); graphrag = LLM relationship pass.
           USE_LLM: ${{ inputs.phase == 'graphrag' && 'true' || 'false' }}
+          # DIRECT OpenRouter, not the mesh-only my-ai-api relay that build.json
+          # declares. Environment is authoritative over build.json in
+          # cloud-cgc-db-update.sh, so these three override the declared mesh
+          # URL / placeholder key / health triple for CI only; local and dagu
+          # runs keep the relay, which injects this same key server-side.
+          # Going direct is what freed this matrix from WireGuard (see
+          # max-parallel above). /models answers 200 unauthenticated, which
+          # makes it a valid keyless preflight target.
+          OPENROUTER_API_URL: https://openrouter.ai/api/v1/chat/completions
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          LLM_HEALTH_URL: https://openrouter.ai/api/v1/models
           # phase → PER-PHASE manifest so each phase change-gates independently and
           # graphrag is not skipped just because semantic already advanced HEAD.
           CGC_MANIFEST_PHASE: ${{ inputs.phase }}
