@@ -16,26 +16,48 @@ ck() { if [ "$2" = "$3" ]; then pass=$((pass+1)); echo "  ok   $1"; \
 
 # 1) build.json must declare every field the script jq-reads. A rename on either
 #    side silently yields "" and re-arms the exact silent degradation above.
-for k in openai_api_url ollama_api_url api_key health_url models; do
+for k in openrouter_api_url openai_api_url ollama_api_url api_key health_url models; do
   v=$(jq -r ".runtime.octocode.llm.$k // empty" "$BJ")
   ck "build.json declares .runtime.octocode.llm.$k" "$([ -n "$v" ] && echo yes || echo no)" "yes"
 done
 
 # 2) the script must EXPORT them — a bare assignment is invisible to octocode.
 grepq() { python3 -c "import sys;sys.exit(0 if sys.argv[1] in open(sys.argv[2],encoding='utf8').read() else 1)" "$1" "$2"; }
-ck "script exports OPENAI_API_URL" \
-   "$(grepq 'export OPENAI_API_URL' "$SCRIPT" && echo yes || echo no)" "yes"
+ck "script exports OPENROUTER_API_URL" \
+   "$(grepq 'export OPENROUTER_API_URL' "$SCRIPT" && echo yes || echo no)" "yes"
 
 # 3) the declared model prefix must match the env var the script exports:
 #    octocode picks the provider from the model prefix (openai: -> OPENAI_API_URL).
 M=$(jq -r '.runtime.octocode.update.llm_model' "$BJ")
 case "$M" in
-  openai:*) need=OPENAI_API_URL ;;
-  ollama:*) need=OLLAMA_API_URL ;;
-  *)        need=UNKNOWN ;;
+  openrouter:*) need=OPENROUTER_API_URL; field=openrouter_api_url ;;
+  openai:*)     need=OPENAI_API_URL;     field=openai_api_url ;;
+  ollama:*)     need=OLLAMA_API_URL;     field=ollama_api_url ;;
+  *)            need=UNKNOWN;            field=UNKNOWN ;;
 esac
 ck "llm_model '$M' maps to an exported var" \
-   "$(grepq "export OPENAI_API_URL OLLAMA_API_URL" "$SCRIPT" && [ "$need" != UNKNOWN ] && echo yes || echo no)" "yes"
+   "$(python3 -c "
+import sys
+need = sys.argv[1]
+if need == 'UNKNOWN':
+    print('no'); sys.exit()
+# a bare assignment is invisible to octocode, and the var has to be a WORD on the
+# export line -- a substring match would pass on OPENROUTER_API_URL for OPENAI_API_URL.
+print('yes' if any(l.startswith('export ') and need in l.split()
+                   for l in open(sys.argv[2], encoding='utf8')) else 'no')" "$need" "$SCRIPT")" "yes"
+
+# the preflight has to test the url THAT prefix resolves to. Checking a fixed var
+# green-lights a model routed elsewhere -- the one config it exists to reject.
+ck "preflight resolves $field for '$M'" \
+   "$(grepq "_llm_field=\"$field\"" "$SCRIPT" && echo yes || echo no)" "yes"
+
+# octocode POSTs to this url verbatim. Against the bare /v1 base it builds a
+# client and then gets an empty body back ("Failed to parse JSON from response"),
+# which degrades to a structural-only graph exactly like having no client --
+# both forms verified live. The full completions path is not cosmetic.
+U=$(jq -r ".runtime.octocode.llm.$field // empty" "$BJ")
+ck "$field is the full completions path" \
+   "$(case "$U" in */chat/completions) echo yes ;; *) echo no ;; esac)" "yes"
 
 # 4) graphrag must PREFLIGHT and hard-fail, not warn. Without this the next
 #    endpoint outage silently reproduces structural-only graphs.
@@ -67,10 +89,11 @@ ck "script honours CGC_FORCE at the change gate" \
 #    then logs "LLM client not initialized" and quietly falls back to a
 #    structural-only graph. That degraded a whole run undetected. Comment lines
 #    are excluded: the fix is documented in prose right where it was made.
-ck "no hardcoded provider survives in the emitted config" \
+ck "no hardcoded model literal survives in the emitted config" \
    "$(python3 -c "
-import sys
-print(sum('openrouter:' in l for l in open(sys.argv[1],encoding='utf8')
+import re, sys
+pat = re.compile(r'[\"\']((openai|ollama|openrouter):[\\w.-]+/[\\w.-]+)[\"\']')
+print(sum(bool(pat.search(l)) for l in open(sys.argv[1],encoding='utf8')
           if not l.lstrip().startswith('#')))" "$SCRIPT")" "0"
 
 # [llm] model is the field the architectural-analysis pass reads. The graphrag

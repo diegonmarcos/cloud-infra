@@ -31,7 +31,12 @@ PVT_CTR=$(jq -r '.containers.pvt.container_name' "$BJ")
 PRIV_REPOS=$(jq -r '.runtime.octocode.private_repos[]' "$BJ")
 # First repo that is indexed but NOT private: the control case that must be
 # present on BOTH surfaces. Derived, so adding repos never dates this script.
-PUB_REPO=$(jq -r '
+# CGC_PUB_REPO overrides the derived choice. The derived one is right for a
+# routine check, but when a single repo's index job fails, the control repo can
+# BE that repo -- and then the graphrag assertion reports a stale DB rather than
+# whatever the run just produced, which reads as a fix that did not work.
+PUB_REPO="${CGC_PUB_REPO:-}"
+[ -n "$PUB_REPO" ] || PUB_REPO=$(jq -r '
   .runtime.octocode as $o
   | ($o.private_repos // []) as $p
   | ($o.index_repos // []) | map(select(. as $r | $p | index($r) | not)) | .[0]

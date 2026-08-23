@@ -140,9 +140,15 @@ LLM=$(jq -r     '.runtime.octocode.update.llm_model' "$BJ")
 # authoritative; build.json runtime.octocode.update.use_llm is only the fallback
 # default when the caller does not set USE_LLM (e.g. a bare local invocation).
 USE_LLM="${USE_LLM:-$(jq -r '.runtime.octocode.update.use_llm' "$BJ")}"
-# GraphRAG LLM ENDPOINT (data-driven, .runtime.octocode.llm). octocode's provider
-# prefixes read these from the ENVIRONMENT: `openai:*` -> $OPENAI_API_URL +
-# $OPENAI_API_KEY, `ollama:*` -> $OLLAMA_API_URL. Nothing else sets them, so
+# GraphRAG LLM ENDPOINT (data-driven, .runtime.octocode.llm). octocode picks its
+# provider from the model-string PREFIX and then reads that provider's OWN env
+# pair: `openrouter:*` -> $OPENROUTER_API_URL + $OPENROUTER_API_KEY, `openai:*`
+# -> $OPENAI_API_URL + $OPENAI_API_KEY, `ollama:*` -> $OLLAMA_API_URL. All three
+# are exported so the declared prefix is the only thing that has to change to
+# switch faces. openrouter: is the one in use: the openai provider validates the
+# model against a slug allowlist and rejects `qwen/*` outright, and ollama: is
+# the mimic port rather than the API this account actually pays for. Nothing
+# else sets any of these, so
 # without this block the graphrag phase rewrote the config models correctly and
 # then died at the first call with "LLM client not initialized" -> a whole DB of
 # structural-only `sibling_module` edges with only a Warning in the log.
@@ -152,11 +158,15 @@ USE_LLM="${USE_LLM:-$(jq -r '.runtime.octocode.update.use_llm' "$BJ")}"
 # ENVIRONMENT WINS, build.json is the default — the same precedence USE_LLM uses.
 # A caller that reaches the endpoint by another route (an SSH forward from a
 # runner that cannot route to the mesh IP) sets these and is obeyed.
-OPENAI_API_URL="${OPENAI_API_URL:-$(jq -r '.runtime.octocode.llm.openai_api_url // empty' "$BJ")}"
-OLLAMA_API_URL="${OLLAMA_API_URL:-$(jq -r '.runtime.octocode.llm.ollama_api_url // empty' "$BJ")}"
-OPENAI_API_KEY="${OPENAI_API_KEY:-$(jq -r '.runtime.octocode.llm.api_key        // empty' "$BJ")}"
-LLM_HEALTH_URL="${LLM_HEALTH_URL:-$(jq -r '.runtime.octocode.llm.health_url     // empty' "$BJ")}"
-export OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY
+OPENROUTER_API_URL="${OPENROUTER_API_URL:-$(jq -r '.runtime.octocode.llm.openrouter_api_url // empty' "$BJ")}"
+OPENAI_API_URL="${OPENAI_API_URL:-$(jq -r '.runtime.octocode.llm.openai_api_url     // empty' "$BJ")}"
+OLLAMA_API_URL="${OLLAMA_API_URL:-$(jq -r '.runtime.octocode.llm.ollama_api_url     // empty' "$BJ")}"
+OPENAI_API_KEY="${OPENAI_API_KEY:-$(jq -r '.runtime.octocode.llm.api_key            // empty' "$BJ")}"
+LLM_HEALTH_URL="${LLM_HEALTH_URL:-$(jq -r '.runtime.octocode.llm.health_url         // empty' "$BJ")}"
+# One declared placeholder feeds every provider's key var: my-ai-api ignores what
+# the caller sends, but octocode refuses to build a client when the var is empty.
+OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$OPENAI_API_KEY}"
+export OPENROUTER_API_URL OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY OPENROUTER_API_KEY
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
@@ -846,9 +856,10 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
     /^\[graphrag\]/                                { in_gr=1 }
     /^\[/ && !/^\[graphrag\]/                      { in_gr=0 }
     # [llm] model is what the architectural-analysis pass uses, and the old
-    # bootstrap hardcoded `openrouter:` there. octocode picks its provider from
-    # that prefix, so it looked for OPENROUTER_API_KEY, found none, and reported
-    # "LLM client not initialized" — no matter what OPENAI_API_* said. Every DB
+    # bootstrap hardcoded a fixed `openrouter:openai/gpt-4o-mini` there,
+    # ignoring the declared model entirely. octocode picks its provider from that
+    # prefix and reads the env pair that provider names, which nothing exported,
+    # so it reported "LLM client not initialized" regardless. Every DB
     # pulled from an existing image still carries that line, so rewriting it
     # here is what actually repairs the inherited configs.
     /^\[llm\]/                                     { in_llm=1 }
@@ -876,8 +887,24 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
       echo "::error::[cgc-db] .runtime.octocode.update.llm_model is unset in $BJ — the provider prefix is what octocode resolves its LLM from"
       exit 1 ;;
   esac
-  if [ -z "$OPENAI_API_URL" ]; then
-    echo "::error::[cgc-db] graphrag phase requested but .runtime.octocode.llm.openai_api_url is unset in $BJ — octocode would silently produce structural-only edges"
+  # WHICH url matters is decided by the model prefix, so check the one this
+  # model actually resolves. Hardcoding the openai var passed a model routed
+  # through ollama even with no ollama url declared -- a preflight that green-lights
+  # the exact config it exists to reject.
+  case "$LLM" in
+    openrouter:*) _llm_url="$OPENROUTER_API_URL"; _llm_field="openrouter_api_url" ;;
+    ollama:*)     _llm_url="$OLLAMA_API_URL";     _llm_field="ollama_api_url" ;;
+    *)            _llm_url="$OPENAI_API_URL";     _llm_field="openai_api_url" ;;
+  esac
+  # The url has to be the full completions path, not the /v1 base: with the base,
+  # octocode builds a client fine and every call then comes back empty ("Failed to
+  # parse JSON from response"), which degrades exactly like no client at all.
+  case "$_llm_url" in
+    ""|*/chat/completions) ;;
+    *) echo "::warning::[cgc-db] .runtime.octocode.llm.$_llm_field is '$_llm_url' — octocode posts to it verbatim and a bare /v1 base returns an empty body" ;;
+  esac
+  if [ -z "$_llm_url" ]; then
+    echo "::error::[cgc-db] graphrag phase requested but .runtime.octocode.llm.$_llm_field is unset in $BJ — $LLM resolves to it, and octocode would silently produce structural-only edges"
     exit 1
   fi
   if [ -n "$LLM_HEALTH_URL" ]; then
