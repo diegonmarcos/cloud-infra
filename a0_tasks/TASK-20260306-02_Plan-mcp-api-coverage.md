@@ -34,7 +34,7 @@
 | grist | sheets.diegonmarcos.com | oci-apps | yes | no | `/api/docs` | Spreadsheet REST API |
 | hedgedoc | app.diegonmarcos.com/hedgedoc | oci-apps | yes | no | `/apidoc` | Note collaboration API |
 | mailu | mail.diegonmarcos.com | oci-mail | yes | partial (mailu-mcp) | `/api/v1/` | Full admin REST API |
-| mattermost | chat.diegonmarcos.com | oci-apps | yes | partial (mattermost-mcp) | `/api/v4/` | Full REST + WebSocket API |
+| mattermost | chat.diegonmarcos.com | oci-apps | yes | partial (cloud-mattermost-mcp) | `/api/v4/` | Full REST + WebSocket API |
 | photoprism | photos.diegonmarcos.com | oci-apps | yes | no | `/api/v1/` | Photo management REST API |
 | radicale | cal.diegonmarcos.com | oci-apps | yes | no | CalDAV/CardDAV | No REST, only CalDAV protocol |
 | revealmd | app.diegonmarcos.com/revealmd | oci-apps | no | no | — | Static presenter, no API |
@@ -110,7 +110,7 @@
 | Status | Count | Services |
 |--------|-------|----------|
 | Has API + MCP tool | 2 | c3-api, crawlee-cloud |
-| Has API, partial MCP | 3 | rust-api, mailu (mailu-mcp), mattermost (mattermost-mcp) |
+| Has API, partial MCP | 3 | rust-api, mailu (mailu-mcp), mattermost (cloud-mattermost-mcp) |
 | Has API, no MCP tool | 19 | affine, etherpad, filebrowser, grist, hedgedoc, photoprism, syncthing, authelia, vaultwarden, matomo, nocodb, ntfy, dagu, gitea, ollama, ollama-arm, postlite, lgtm, rig-agentic |
 | No REST API | 8 | radicale, revealmd, caddy (internal), redis, dozzle, hickory-dns, backup-borg, db-agent |
 

@@ -101,7 +101,7 @@ for rf in $ROOT_FILES; do
     # into 1_cloud-configs/dist/. Nothing connected that to src/apps/root/, so
     # the file every repo ships was a hand-made copy, and "regenerate the
     # derive" did not change what got deployed. That is how .mcp.json in vault
-    # ended up without the c3-infra-mcp headersHelper while cloud's had it —
+    # ended up without the cloud-infra-mcp headersHelper while cloud's had it —
     # both claiming, in their own _doc, to be the same file.
     #
     # No-op in the other repos: they have no 1_cloud-configs/, so the guard

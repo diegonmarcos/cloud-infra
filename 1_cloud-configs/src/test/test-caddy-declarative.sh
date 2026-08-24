@@ -37,7 +37,7 @@ ok "all 9 required keys present in $CLOUD_JSON"
 # derive keeps updating dist/build-caddy.json. Nothing looks wrong — the build
 # succeeds and gen-configs correctly reports "dist/ unchanged, nothing to
 # commit" — but the deployed Caddyfile silently drifts from source. That is
-# exactly how the c3-infra-mcp bearer gate was authored, committed, and never
+# exactly how the cloud-infra-mcp bearer gate was authored, committed, and never
 # reached Caddy (4a8b1703d → 2c56195c4).
 #
 # The committed mode is what matters: a symlink in the worktree that is a

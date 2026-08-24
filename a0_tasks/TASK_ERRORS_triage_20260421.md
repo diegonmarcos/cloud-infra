@@ -22,7 +22,7 @@
 ### A1. Container crashes
 | # | Container | VM | Status | Root cause |
 |---|---|---|---|---|
-| A1.1 | `c3-services-mcp` | oci-apps | Exited (134) 3d ago | SIGABRT — assertion failure |
+| A1.1 | `cloud-services-mcp` | oci-apps | Exited (134) 3d ago | SIGABRT — assertion failure |
 | A1.2 | `photos-db` | oci-apps | Exited (255) 6h ago | Postgres boot crash — corrupt WAL (consequence of A1.3 failing to checkpoint) |
 | A1.3 | `photos-webhook` | oci-apps | Created, never Running | Python dep missing at init |
 | A1.4 | `fluent-bit` | oci-analytics | Created, never Running | Classifier config crash on boot |

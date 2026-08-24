@@ -502,12 +502,12 @@ Engine source: `I_cloud-data/1_workflows/src/scripts/` (cloud-data-config.ts + p
 
 | Server | Type | Tools | Purpose |
 |--------|------|-------|---------|
-| `c3-infra-mcp` | HTTP (remote) | 70+ | Infrastructure management (SSH, Docker, health, build, deploy, cloud ops) |
-| `c3-services-mcp` | HTTP (remote) | 20+ | Service API proxy (Matomo, Radicale, PhotoPrism, etc.) |
+| `cloud-infra-mcp` | HTTP (remote) | 70+ | Infrastructure management (SSH, Docker, health, build, deploy, cloud ops) |
+| `cloud-services-mcp` | HTTP (remote) | 20+ | Service API proxy (Matomo, Radicale, PhotoPrism, etc.) |
 | `cloud-cgc-pub-mcp` | HTTP (remote) + stdio (local) | 50+ | Knowledge graph, specs, docs, skills, Octocode semantic search |
 | `diego-personal-data` | stdio (local) | 16 | READ-ONLY personal data access (vault, identity, comms, media) |
 | `google-workspace-mcp` | HTTP (remote) | — | Gmail, Calendar, Drive, Docs, Sheets |
-| `mattermost-mcp` | HTTP (remote) | — | Mattermost chat tools |
+| `cloud-mattermost-mcp` | HTTP (remote) | — | Mattermost chat tools |
 | `cloud-mail-mcp` | HTTP (remote) | — | IMAP/SMTP/Admin via Stalwart REST API |
 
 ### B.12 DTK (DevOps Toolkit)

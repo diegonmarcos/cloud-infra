@@ -464,19 +464,6 @@
         "path": "/c3-infra-api/health"
       }
     },
-    "c3-infra-mcp": {
-      "name": "c3-infra-mcp",
-      "vm": "oci-A1-f_0",
-      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
-      "enabled": true,
-      "category": "sec",
-      "ports": {
-        "app": 3100
-      },
-      "health": {
-        "path": "/mcp"
-      }
-    },
     "c3-public-api": {
       "name": "c3-public-api",
       "vm": "oci-E2-f_1",
@@ -503,14 +490,14 @@
         "path": "/c3-services-api/health"
       }
     },
-    "c3-services-mcp": {
-      "name": "c3-services-mcp",
+    "cloud-infra-mcp": {
+      "name": "cloud-infra-mcp",
       "vm": "oci-A1-f_0",
-      "domain": null,
+      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
       "enabled": true,
-      "category": "obs",
+      "category": "sec",
       "ports": {
-        "app": 3101
+        "app": 3100
       },
       "health": {
         "path": "/mcp"
@@ -526,6 +513,30 @@
         "app": 3103
       },
       "health": null
+    },
+    "cloud-mattermost-mcp": {
+      "name": "cloud-mattermost-mcp",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 3102
+      },
+      "health": null
+    },
+    "cloud-services-mcp": {
+      "name": "cloud-services-mcp",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "obs",
+      "ports": {
+        "app": 3101
+      },
+      "health": {
+        "path": "/mcp"
+      }
     },
     "cloud-vault-mcp": {
       "name": "cloud-vault-mcp",
@@ -561,17 +572,6 @@
       "health": {
         "path": "/health"
       }
-    },
-    "mattermost-mcp": {
-      "name": "mattermost-mcp",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "app": 3102
-      },
-      "health": null
     },
     "http-to-smtp-proxy-api": {
       "name": "http-to-smtp-proxy-api",
@@ -1350,15 +1350,6 @@
       "dns": "c3-infra-api.app"
     },
     {
-      "service": "c3-infra-mcp",
-      "dns": "c3-infra-mcp.app"
-    },
-    {
-      "service": "c3-infra-mcp",
-      "container": "app",
-      "dns": "c3-infra-mcp.app"
-    },
-    {
       "service": "c3-public-api",
       "dns": "c3-public-api.app"
     },
@@ -1377,13 +1368,13 @@
       "dns": "c3-services-api.app"
     },
     {
-      "service": "c3-services-mcp",
-      "dns": "c3-services-mcp.app"
+      "service": "cloud-infra-mcp",
+      "dns": "c3-infra-mcp.app"
     },
     {
-      "service": "c3-services-mcp",
+      "service": "cloud-infra-mcp",
       "container": "app",
-      "dns": "c3-services-mcp.app"
+      "dns": "c3-infra-mcp.app"
     },
     {
       "service": "cloud-mail-mcp",
@@ -1393,6 +1384,24 @@
       "service": "cloud-mail-mcp",
       "container": "app",
       "dns": "mail-mcp.app"
+    },
+    {
+      "service": "cloud-mattermost-mcp",
+      "dns": "mattermost-mcp.app"
+    },
+    {
+      "service": "cloud-mattermost-mcp",
+      "container": "app",
+      "dns": "mattermost-mcp.app"
+    },
+    {
+      "service": "cloud-services-mcp",
+      "dns": "c3-services-mcp.app"
+    },
+    {
+      "service": "cloud-services-mcp",
+      "container": "app",
+      "dns": "c3-services-mcp.app"
     },
     {
       "service": "google-personal-mcp",
@@ -1411,15 +1420,6 @@
       "service": "google-workspace-mcp",
       "container": "app",
       "dns": "g-workspace-mcp.app"
-    },
-    {
-      "service": "mattermost-mcp",
-      "dns": "mattermost-mcp.app"
-    },
-    {
-      "service": "mattermost-mcp",
-      "container": "app",
-      "dns": "mattermost-mcp.app"
     },
     {
       "service": "http-to-smtp-proxy-api",
@@ -2017,13 +2017,13 @@
         "services": [
           "languagetool",
           "c3-infra-api",
-          "c3-infra-mcp",
           "c3-services-api",
-          "c3-services-mcp",
+          "cloud-infra-mcp",
           "cloud-mail-mcp",
+          "cloud-mattermost-mcp",
+          "cloud-services-mcp",
           "google-personal-mcp",
           "google-workspace-mcp",
-          "mattermost-mcp",
           "gha-runner",
           "backup-borg",
           "backup-bup",
@@ -2127,19 +2127,6 @@
           "path": "/c3-infra-api/health"
         }
       },
-      "c3-infra-mcp": {
-        "name": "c3-infra-mcp",
-        "vm": "oci-A1-f_0",
-        "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
-        "enabled": true,
-        "category": "sec",
-        "ports": {
-          "app": 3100
-        },
-        "health": {
-          "path": "/mcp"
-        }
-      },
       "c3-public-api": {
         "name": "c3-public-api",
         "vm": "oci-E2-f_1",
@@ -2166,14 +2153,14 @@
           "path": "/c3-services-api/health"
         }
       },
-      "c3-services-mcp": {
-        "name": "c3-services-mcp",
+      "cloud-infra-mcp": {
+        "name": "cloud-infra-mcp",
         "vm": "oci-A1-f_0",
-        "domain": null,
+        "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
         "enabled": true,
-        "category": "obs",
+        "category": "sec",
         "ports": {
-          "app": 3101
+          "app": 3100
         },
         "health": {
           "path": "/mcp"
@@ -2189,6 +2176,30 @@
           "app": 3103
         },
         "health": null
+      },
+      "cloud-mattermost-mcp": {
+        "name": "cloud-mattermost-mcp",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 3102
+        },
+        "health": null
+      },
+      "cloud-services-mcp": {
+        "name": "cloud-services-mcp",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "obs",
+        "ports": {
+          "app": 3101
+        },
+        "health": {
+          "path": "/mcp"
+        }
       },
       "cloud-vault-mcp": {
         "name": "cloud-vault-mcp",
@@ -2224,17 +2235,6 @@
         "health": {
           "path": "/health"
         }
-      },
-      "mattermost-mcp": {
-        "name": "mattermost-mcp",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "app": 3102
-        },
-        "health": null
       },
       "http-to-smtp-proxy-api": {
         "name": "http-to-smtp-proxy-api",

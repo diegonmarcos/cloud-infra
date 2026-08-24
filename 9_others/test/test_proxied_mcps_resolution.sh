@@ -47,7 +47,7 @@ for hub_json in "${HUBS[@]}"; do
 
   # All buckets that hold child arrays — current schemes use either
   # .proxied_mcps.children[]  (cloud-mail-mcp v1.5+)
-  # .proxied_mcps.{infra,user}[]  (c3-services-mcp)
+  # .proxied_mcps.{infra,user}[]  (cloud-services-mcp)
   child_specs=$(jq -c '
     .proxied_mcps as $p
     | ([

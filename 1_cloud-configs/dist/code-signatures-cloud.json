@@ -5966,1619 +5966,6 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-infra-mcp/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/http.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "startMcpHttpServer"
-      ],
-      "imports": [
-        "node:http",
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/streamableHttp.js",
-        "../shared/libs/binds.js",
-        "./tools/health_cloud.js",
-        "./tools/health_mail.js",
-        "./tools/observability-read.js",
-        "./tools/finops.js",
-        "./tools/finops-cloud.js",
-        "./tools/observability.js",
-        "./tools/workflows.js",
-        "./tools/vps-ops.js",
-        "./tools/delivery.js",
-        "./tools/operations.js",
-        "./tools/mail-ops.js",
-        "./tools/frontend.js",
-        "./tools/telegram.js",
-        "./tools/security.js",
-        "./resources/index.js"
-      ],
-      "symbols": [
-        "createMcpServer()",
-        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
-        "initSession(port: number)",
-        "startMcpHttpServer(port: number = 3100)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/index.ts",
-      "lang": "ts",
-      "role": "entrypoint",
-      "exports": [],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/stdio.js",
-        "./tools/meta.js",
-        "./resources/index.js"
-      ],
-      "symbols": [
-        "main()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/resources/index.ts",
-      "lang": "ts",
-      "role": "entrypoint",
-      "exports": [
-        "registerResources"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "fs",
-        "path",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "../../shared/libs/discovery.js"
-      ],
-      "symbols": [
-        "registerResources(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/delivery.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerDeliveryTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/ssh.js",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "../../shared/libs/audit.js"
-      ],
-      "symbols": [
-        "validatePath(path: string)",
-        "registerDeliveryTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/finops-cloud.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerFinOpsCloudTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/cloud/oci.js",
-        "../../shared/libs/cloud/gcp.js",
-        "../../shared/libs/cloud/aws.js"
-      ],
-      "symbols": [
-        "jsonText(label: string, data: unknown)",
-        "registerFinOpsCloudTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/finops.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerFinOpsTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/ssh.js",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "fs",
-        "path"
-      ],
-      "symbols": [
-        "loadTopology()",
-        "loadServicePorts()",
-        "formatTable(headers: string[], rows: string[][])",
-        "collectVmResources(vmId: string)",
-        "countDockerContainers(vmId: string)",
-        "finOpsVps()",
-        "finOpsServices()",
-        "finOpsAssets()",
-        "safeRun(fn: ()",
-        "registerFinOpsTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/frontend.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerFrontendExecTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/paths.js"
-      ],
-      "symbols": [
-        "findProjects()",
-        "registerFrontendExecTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/health_cloud.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerHealthCloudTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/ssh.js"
-      ],
-      "symbols": [
-        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
-        "readCachedFile(outFile: string)",
-        "safeRun(fn: ()",
-        "extractSection(md: string, startMarker: string, endMarker?: string)",
-        "registerHealthCloudTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/health_mail.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerHealthMailTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/ssh.js"
-      ],
-      "symbols": [
-        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
-        "readCachedFile(outFile: string)",
-        "safeRun(fn: ()",
-        "extractSection(md: string, heading: string)",
-        "registerHealthMailTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/mail-ops.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerMailOpsTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/docker.js",
-        "../../shared/libs/ssh.js"
-      ],
-      "symbols": [
-        "registerMailOpsTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/meta.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerMetaDevops",
-        "registerMetaObs",
-        "registerMetaFinops",
-        "registerMetaSec"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "path",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/ssh.js",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "../../shared/libs/audit.js",
-        "../../shared/libs/docker.js",
-        "../../shared/libs/control.js",
-        "../../shared/libs/ops.js",
-        "../../shared/libs/health.js",
-        "../../shared/libs/diagnostics.js",
-        "../../shared/libs/tests.js",
-        "../../shared/libs/files.js",
-        "../../shared/libs/db.js",
-        "../../shared/libs/cloud/oci.js",
-        "../../shared/libs/cloud/gcp.js",
-        "../../shared/libs/cloud/aws.js",
-        "../../shared/libs/notify.js",
-        "../../shared/libs/security.js",
-        "os"
-      ],
-      "symbols": [
-        "validateContainerName(name: string)",
-        "validateSince(since: string)",
-        "validatePath(path: string)",
-        "text(t: string)",
-        "errText(t: string)",
-        "jsonText(label: string, data: unknown)",
-        "formatControl(result: { ok: boolean; message: string })",
-        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
-        "readCachedFile(outFile: string)",
-        "extractCloudSection(md: string, startMarker: string, endMarker?: string)",
-        "extractMailSection(md: string, heading: string)",
-        "safeAsync(fn: ()",
-        "resolveGhRepo()",
-        "gh(args: string[], timeout = 15_000)",
-        "daguFetch(path: string, method = \"GET\", body?: string)",
-        "formatTable(headers: string[], rows: string[][])",
-        "timeAgo(isoDate: string)",
-        "mapV2Entry(d: any)",
-        "mapV1Entry(d: any)",
-        "ghaRuns24h(filter?: string)",
-        "ghaWorkflows()",
-        "daguList()",
-        "runCli(cmd: string, args: string[], timeout = 30_000)",
-        "runCloudflareApi(path: string, jqFilter?: string)",
-        "runTerraform(provider: string, tfArgs: string[])",
-        "runGhcr(action: string)",
-        "handleVpsCommand(provider: string, command: string)",
-        "loadTopology()",
-        "loadServicePorts()",
-        "collectVmResources(vmId: string)",
-        "countDockerContainers(vmId: string)",
-        "finOpsVps()",
-        "finOpsServices()",
-        "finOpsAssets()",
-        "findProjects()",
-        "workflowsGha()",
-        "workflowsGhaErrors()",
-        "workflowsGhaTrigger(workflowName?: string)",
-        "workflowsDagu()",
-        "workflowsDaguErrors()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/observability-read.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerObservabilityReadTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/health.js",
-        "../../shared/libs/diagnostics.js",
-        "../../shared/libs/tests.js",
-        "../../shared/libs/files.js",
-        "../../shared/libs/db.js",
-        "../../shared/libs/config.js"
-      ],
-      "symbols": [
-        "jsonText(label: string, data: unknown)",
-        "plainText(text: string)",
-        "registerObservabilityReadTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/observability.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerObservabilityExecTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/notify.js",
-        "../../shared/libs/db.js"
-      ],
-      "symbols": [
-        "jsonText(label: string, data: unknown)",
-        "registerObservabilityExecTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/operations.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerOperationsTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/ssh.js",
-        "../../shared/libs/config.js",
-        "../../shared/libs/audit.js",
-        "../../shared/libs/docker.js",
-        "../../shared/libs/control.js"
-      ],
-      "symbols": [
-        "validateContainerName(name: string)",
-        "validateSince(since: string)",
-        "validatePath(path: string)",
-        "formatControl(result: { ok: boolean; message: string })",
-        "registerOperationsTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/security.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerSecurityExecTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "fs",
-        "../../shared/libs/security.js",
-        "../../shared/libs/config.js",
-        "../../shared/libs/paths.js",
-        "../../shared/libs/files.js"
-      ],
-      "symbols": [
-        "jsonText(label: string, data: unknown)",
-        "plainText(text: string)",
-        "registerSecurityExecTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/telegram.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerTelegramTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod"
-      ],
-      "symbols": [
-        "chatId()",
-        "botToken()",
-        "apiUrl(method: string)",
-        "allowedFromIds()",
-        "sleep(milliseconds: number)",
-        "tgPost(method: string, body: Record<string, unknown>)",
-        "sendChunkedMessage(\n  targetChatId: string,\n  text: string,\n  threadId?: number\n)",
-        "appendInbox(entry: InboxEntry)",
-        "resolveThreadId(message: TelegramMessage, isGroup: boolean)",
-        "processUpdate(update: TelegramUpdate)",
-        "pollLoop()",
-        "ensurePollerStarted()",
-        "textResult(text: string, isError = false)",
-        "missingTokenResult()",
-        "registerTelegramTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/vps-ops.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerVpsOpsTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/exec.js",
-        "os"
-      ],
-      "symbols": [
-        "safeRun(fn: ()",
-        "runCli(cmd: string, args: string[], timeout = 30_000)",
-        "runCloudflareApi(path: string, jqFilter?: string)",
-        "handleVpsCommand(provider: string, command: string)",
-        "runTerraform(provider: string, tfArgs: string[])",
-        "runGhcr(action: string, _command: string)",
-        "registerVpsOpsTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/workflows.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerWorkflowTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/libs/exec.js",
-        "../../shared/libs/ops.js",
-        "../../shared/libs/config.js"
-      ],
-      "symbols": [
-        "resolveGhRepo()",
-        "safeRun(fn: ()",
-        "gh(args: string[], timeout = 15_000)",
-        "daguFetch(path: string, method = \"GET\", body?: string)",
-        "formatTable(headers: string[], rows: string[][])",
-        "timeAgo(isoDate: string)",
-        "ghaRuns24h(filter?: string)",
-        "ghaWorkflows(repo: string = GH_REPO)",
-        "mapV2Entry(d: any)",
-        "mapV1Entry(d: any)",
-        "daguList()",
-        "daguHistory(dagName: string)",
-        "workflowsGha()",
-        "workflowsGhaErrors()",
-        "workflowsGhaTrigger(\n  workflowName?: string,\n  inputs?: Record<string, string>,\n  repo: string = GH_REPO,\n  ref: string = \"main\",\n)",
-        "workflowsDagu()",
-        "workflowsDaguErrors()",
-        "workflowsDaguTrigger(dagName?: string)",
-        "registerWorkflowTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/__selfcheck__.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [],
-      "imports": [
-        "node:assert"
-      ],
-      "symbols": [
-        "compareOp(value: number, op: string, threshold: number)",
-        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
-        "foldBucket(values: number[])",
-        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
-        "bucket5m(ts: Date)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/async-exec.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "execAsync",
-        "shellAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
-        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/async-ssh.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sshExecAsync",
-        "tcpProbeAsync",
-        "pingAsync",
-        "curlStatusAsync",
-        "curlAsync"
-      ],
-      "imports": [
-        "./async-exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
-        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
-        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
-        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
-        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/audit.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "audit"
-      ],
-      "imports": [
-        "./db.js"
-      ],
-      "symbols": [
-        "audit(tool: string, target: string, result: string, source = \"mcp\")"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/binds.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "bindHost"
-      ],
-      "imports": [
-        "../shared/libs/binds.js"
-      ],
-      "symbols": [
-        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/cache.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "cacheWrite",
-        "cacheRead",
-        "cacheList",
-        "cachePrune",
-        "startCacheCleanup"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
-        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
-        "cacheList()",
-        "cachePrune()",
-        "pruneDir(dir: string)",
-        "sanitize(s: string)",
-        "startCacheCleanup()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/cloud/aws.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "listResources",
-        "getCosts"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "awsCli(args: string[], timeout = 30_000)",
-        "getRegion()",
-        "listInstances()",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/cloud/gcp.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory",
-        "getCostsByVm"
-      ],
-      "imports": [
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "gcloudCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceName: string, zone: string)",
-        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "getCosts()",
-        "bqQuery(sql: string, timeout = 60_000)",
-        "getCostsHistory(months: number = 6)",
-        "getCostsByVm(months: number = 6)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/cloud/oci.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listInstances",
-        "getInstanceState",
-        "instanceAction",
-        "listResources",
-        "getCosts",
-        "getCostsHistory"
-      ],
-      "imports": [
-        "node:fs",
-        "node:path",
-        "../exec.js",
-        "zod",
-        "../schemas.js"
-      ],
-      "symbols": [
-        "getCompartmentId()",
-        "ociCli(args: string[], timeout = 30_000)",
-        "listInstances()",
-        "getInstanceState(instanceId: string)",
-        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
-        "listResources()",
-        "monthLabel(d: Date)",
-        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
-        "getCosts()",
-        "getCostsHistory(months: number = 3)",
-        "getInstanceBasedCosts(compartmentId: string, period: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/config.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getConfig",
-        "reloadConfig",
-        "getDriftReport",
-        "getServiceFolder",
-        "composeCd",
-        "getServiceDir",
-        "getVmSshAlias",
-        "resolveVmId",
-        "getServicesForVm"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./types.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "getConfig()",
-        "reloadConfig()",
-        "getDriftReport()",
-        "discoverServicesFromDisk(fileConfig: InfraConfig)",
-        "getServiceFolder(name: string)",
-        "composeCd(remotePath: string)",
-        "getServiceDir(name: string)",
-        "buildAliasMap()",
-        "getVmSshAlias(vmId: string)",
-        "resolveVmId(nameOrAlias: string)",
-        "getServicesForVm(vmId: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/control.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "vmSerialConsole",
-        "vmStart",
-        "vmStop",
-        "vmReset",
-        "containerStart",
-        "containerStop",
-        "containerRestart",
-        "serviceStart",
-        "serviceStop",
-        "serviceRestart",
-        "vmDrain",
-        "ControlResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./audit.js",
-        "./docker.js",
-        "./cloud/oci.js",
-        "./validators.js"
-      ],
-      "symbols": [
-        "ensureVmReachable(vmId: string)",
-        "resolveOciInstanceId(vmId: string, alias: string)",
-        "ociInstanceAction(\n  vmId: string,\n  alias: string,\n  action: \"START\" | \"RESET\" | \"STOP\",\n  auditKey: string,\n)",
-        "vmSerialConsole(vmNameOrAlias: string, lines = 200)",
-        "vmStart(vmNameOrAlias: string)",
-        "vmStop(vmNameOrAlias: string)",
-        "vmReset(vmNameOrAlias: string)",
-        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
-        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "vmDrain(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/db.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getDb",
-        "recordHealthCheck",
-        "getHealthHistory",
-        "getUptimeReport",
-        "recordAudit",
-        "getAuditLog",
-        "recordDeploy",
-        "getDeployHistory",
-        "getAlertState",
-        "updateAlertState",
-        "pruneOldRecords",
-        "recordMetricSample",
-        "queryMetricSeries",
-        "getLatestMetric",
-        "getTopByMetric",
-        "rollupMetrics",
-        "pruneMetrics",
-        "listAlertRules",
-        "getAlertRule",
-        "createAlertRule",
-        "updateAlertRule",
-        "deleteAlertRule",
-        "getOpenAlertForRule",
-        "recordAlertFired",
-        "recordAlertResolved",
-        "ackAlert",
-        "getActiveAlerts",
-        "getAlertHistory",
-        "insertLogLines",
-        "searchLogLines"
-      ],
-      "imports": [
-        "better-sqlite3",
-        "fs",
-        "path",
-        "os"
-      ],
-      "symbols": [
-        "ensureDir(dir: string)",
-        "getDb()",
-        "initSchema(db: Database.Database)",
-        "recordHealthCheck(record: HealthRecord)",
-        "getHealthHistory(query: HealthHistoryQuery = {})",
-        "getUptimeReport(vm?: string, hours = 24)",
-        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
-        "getAuditLog(query: AuditQuery = {})",
-        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
-        "getDeployHistory(query: DeployQuery = {})",
-        "getAlertState(vm: string)",
-        "updateAlertState(vm: string, status: string, notified: boolean)",
-        "pruneOldRecords(daysToKeep = 30)",
-        "bucket5m(ts: Date)",
-        "recordMetricSample(target: string, metric: MetricName, value: number)",
-        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
-        "getLatestMetric(target: string, metric: MetricName)",
-        "getTopByMetric(metric: MetricName, limit = 10)",
-        "rollupMetrics(rawRetentionHours = 6)",
-        "pruneMetrics(daysToKeep = 30)",
-        "rowToRule(r: Record<string, unknown>)",
-        "listAlertRules()",
-        "getAlertRule(id: number)",
-        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
-        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
-        "deleteAlertRule(id: number)",
-        "rowToHistory(r: Record<string, unknown>)",
-        "getOpenAlertForRule(ruleId: number)",
-        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
-        "recordAlertResolved(id: number)",
-        "ackAlert(id: number)",
-        "getActiveAlerts()",
-        "getAlertHistory(limit = 100)",
-        "insertLogLines(lines: LogLine[])",
-        "searchLogLines(query: LogSearchQuery)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/diagnostics.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "profileContainer",
-        "profileVm",
-        "profileService",
-        "vmNetwork",
-        "vmTop",
-        "vmDiskUsage",
-        "vmJournal"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "timedCheck(name: string, fn: ()",
-        "findContainerVm(containerName: string)",
-        "profileContainer(containerName: string)",
-        "profileVm(vmNameOrAlias: string)",
-        "profileService(serviceName: string)",
-        "vmNetwork(vmNameOrAlias: string)",
-        "vmTop(vmNameOrAlias: string)",
-        "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/discovery.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listServices",
-        "getService",
-        "probeSpec",
-        "getAllSpecs",
-        "serviceVersion",
-        "allServiceVersions",
-        "ServiceVersion",
-        "getServiceDomains",
-        "SERVICE_BASE_PATHS"
-      ],
-      "imports": [
-        "./config.js",
-        "./http.js"
-      ],
-      "symbols": [
-        "getServiceDomains()",
-        "listServices()",
-        "getService(serviceName: string)",
-        "probeSpec(serviceName: string)",
-        "getAllSpecs()",
-        "serviceVersion(serviceName: string)",
-        "allServiceVersions()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/docker.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "listContainers",
-        "controlContainer",
-        "getContainerLogs",
-        "composeUp",
-        "batchContainerStatuses",
-        "computeServiceStatus",
-        "containerTop",
-        "containerDiff",
-        "containerInspectFull",
-        "containerEvents",
-        "containerPause",
-        "containerUnpause",
-        "containerExecCmd",
-        "logsSearch",
-        "logsMulti",
-        "composeUpAll",
-        "pullUpContainer",
-        "pullUpVmFleet",
-        "pullUpCloudFleet",
-        "dockerSystemDf",
-        "updateContainer",
-        "containerStatsOne",
-        "inspectContainerDetails",
-        "checkImageUpdate",
-        "runAllowlistedExecCommand",
-        "ContainerStats",
-        "ContainerDetails",
-        "ImageUpdateStatus",
-        "EXEC_COMMAND_ALLOWLIST"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./audit.js",
-        "./validators.js",
-        "zod",
-        "./schemas.js"
-      ],
-      "symbols": [
-        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
-        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
-        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "composeUp(\n  service: string,\n)",
-        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
-        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
-        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
-        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
-        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
-        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
-        "composeUpAll(\n  vmNameOrAlias: string,\n)",
-        "runPullUp(\n  vmNameOrAlias: string,\n  filter?: string,\n)",
-        "pullUpContainer(\n  service: string,\n)",
-        "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
-        "pullUpCloudFleet()",
-        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
-        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
-        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/exec.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "exec",
-        "execAsync",
-        "ExecResult"
-      ],
-      "imports": [
-        "child_process",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveExecEnv(command: string)",
-        "exec(\n  command: string,\n  args: string[],\n  // `input` feeds the child's stdin. Use it for anything secret — an argv\n  // element is readable by any process that can stat /proc/<pid>/cmdline.\n  options?: { timeout?: number; cwd?: string; input?: string }\n)",
-        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/files.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getConfigFile",
-        "getContainerLog",
-        "getVmStatus",
-        "getReport",
-        "getSecretsStatus"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./config.js",
-        "./paths.js",
-        "./ssh.js",
-        "./health.js",
-        "./discovery.js",
-        "./security.js"
-      ],
-      "symbols": [
-        "redactSensitiveLines(content: string)",
-        "redactWireGuardKeys(content: string)",
-        "getConfigFile(service: string, filename = \"build.json\")",
-        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
-        "getVmStatus(vmId: string)",
-        "getReport(reportType: string)",
-        "getSecretsStatus(service?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/health.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "healthAlive",
-        "healthDeclared",
-        "healthDeployed",
-        "healthDrift",
-        "healthStatus",
-        "checkTier1All",
-        "checkTier2All",
-        "checkTier3All",
-        "gatherVmResources",
-        "probeVm",
-        "healthEndpoints",
-        "checkUp",
-        "checkHealth",
-        "checkReach",
-        "metricsSnapshot",
-        "Tier1Result",
-        "Tier2Result",
-        "VmResources",
-        "ContainerInfo",
-        "Tier3Result",
-        "DeployedVm",
-        "DriftEntry",
-        "HealthDeclaredResult",
-        "HealthStatusResult",
-        "EndpointHealthResult",
-        "UpResult",
-        "HealthResult",
-        "ReachResult",
-        "ContainerMetrics",
-        "VmMetricsSnapshot"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./docker.js",
-        "./exec.js",
-        "./paths.js",
-        "./types.js"
-      ],
-      "symbols": [
-        "getVmIds(vmId?: string)",
-        "parseResources(output: string)",
-        "healthAlive()",
-        "healthDeclared()",
-        "healthDeployed(vmId?: string)",
-        "healthDrift()",
-        "healthStatus(vmId?: string)",
-        "checkTier1All(vmId?: string)",
-        "checkTier2All(vmId?: string)",
-        "checkTier3All(vmId?: string)",
-        "gatherVmResources(vmId: string)",
-        "probeVm(vmId: string)",
-        "getHealthDomains()",
-        "healthEndpoints()",
-        "resolveTarget(target: string)",
-        "buildAliasMapPublic()",
-        "findContainerVm(containerName: string)",
-        "checkUp(target: string)",
-        "findContainerOnVm(vmId: string, containerName: string)",
-        "checkHealth(target: string)",
-        "resolveServiceDomain(target: string)",
-        "checkReach(target: string)",
-        "metricsSnapshot(vmFilter?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/http.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getBearerToken",
-        "c3ApiGet",
-        "c3ApiPost",
-        "httpGet",
-        "rawHttpRequest",
-        "HttpResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./paths.js",
-        "fs"
-      ],
-      "symbols": [
-        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
-        "fetchOidcToken()",
-        "getBearerToken()",
-        "c3ApiGet(endpoint: string, timeout?: number)",
-        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
-        "httpGet(url: string, timeout?: number)",
-        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/notify.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sendNotification",
-        "alertHealthDown",
-        "alertHealthRecovered",
-        "alertCertExpiring",
-        "alertDiskFull",
-        "Priority",
-        "NotifyOptions",
-        "NotifyResult"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js"
-      ],
-      "symbols": [
-        "resolveNtfyUrl()",
-        "sendNotification(opts: NotifyOptions)",
-        "alertHealthDown(vm: string, details: string)",
-        "alertHealthRecovered(vm: string)",
-        "alertCertExpiring(domain: string, daysLeft: number)",
-        "alertDiskFull(vm: string, percent: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/obs.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "resolve",
-        "up",
-        "upAll",
-        "upAllContainers",
-        "health",
-        "healthAll",
-        "profile",
-        "profileAllServices",
-        "profileAllContainers",
-        "Resolved",
-        "UpProbe",
-        "PerfTiming",
-        "UpResult",
-        "UpAllResult",
-        "HealthCheck",
-        "HealthResult",
-        "ProfilingStep",
-        "ProfilingEngine",
-        "ProfilingResult"
-      ],
-      "imports": [
-        "./config.js",
-        "./pool.js",
-        "./async-ssh.js",
-        "./cache.js",
-        "./async-exec.js"
-      ],
-      "symbols": [
-        "resolve(target: string)",
-        "up(target: string)",
-        "upAll()",
-        "upAllContainers()",
-        "probeUrl(resolved: Resolved)",
-        "probeVm(resolved: Resolved)",
-        "probeContainer(resolved: Resolved)",
-        "health(target: string)",
-        "healthAll()",
-        "healthCheckUrl(resolved: Resolved)",
-        "healthCheckVm(resolved: Resolved)",
-        "healthCheckContainer(\n  resolved: Resolved,\n)",
-        "profile(target: string)",
-        "profileAllServices()",
-        "profileAllContainers()",
-        "engineUrl(resolved: Resolved)",
-        "engineContainer(\n  resolved: Resolved,\n)",
-        "engineNetwork(\n  resolved: Resolved,\n)",
-        "engineVmContext(\n  resolved: Resolved,\n)",
-        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
-        "extractAssetUrls(html: string, baseUrl: string)",
-        "resolveUrl(href: string, base: string)",
-        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/ops.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "handlePushEvent",
-        "daguHeaders",
-        "PushEvent",
-        "PushEventResult",
-        "DAGU_API",
-        "DAGU_API_PATH"
-      ],
-      "imports": [
-        "fs",
-        "path",
-        "./audit.js",
-        "./paths.js"
-      ],
-      "symbols": [
-        "resolveDaguApi()",
-        "resolveDaguApiPath()",
-        "handlePushEvent(event: PushEvent)",
-        "extractModifiedFiles(event: PushEvent)",
-        "daguHeaders()",
-        "triggerDag(name: string)",
-        "triggerDagViaSsh(name: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/paths.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getOctocodeRepoConfig",
-        "getOctocodeRepos",
-        "syncRepos",
-        "HOME",
-        "GIT_BASE",
-        "IS_ANDROID",
-        "IS_SERVER",
-        "IS_CLIENT",
-        "SSH_IDENTITY",
-        "SOLUTIONS_DIR",
-        "CLOUD_DATA_DIR",
-        "CLOUD_DATA_REPO",
-        "getConsolidatedPath",
-        "getConfigsPath",
-        "getDepsPath",
-        "getOwnBuildPath",
-        "CONFIGS_PATH",
-        "DEPS_PATH",
-        "getTopologySlice",
-        "getConfigsSlice",
-        "getDepsSlice",
-        "FRONT_DEPS_PATH",
-        "FRONT_TOPOLOGY_PATH",
-        "BUILD_SCRIPT",
-        "SSH_CONFIG_PATH",
-        "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR"
-      ],
-      "imports": [
-        "fs",
-        "child_process",
-        "os",
-        "path"
-      ],
-      "symbols": [
-        "resolveCloudDataPath(filename: string)",
-        "resolveConfigPath()",
-        "readConsolidated()",
-        "resolveC3Api()",
-        "resolveOwnBuildJsonPath()",
-        "getOctocodeRepoConfig()",
-        "getOctocodeRepos()",
-        "syncRepos(force = false)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/poller.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "getLastFleetHealthSnapshot",
-        "evaluateAlertRules",
-        "startPoller",
-        "stopPoller",
-        "TICK_INTERVAL_MS",
-        "pollerEvents",
-        "FleetHealthSnapshot"
-      ],
-      "imports": [
-        "events",
-        "./config.js",
-        "./async-ssh.js",
-        "./db.js",
-        "./notify.js"
-      ],
-      "symbols": [
-        "getLastFleetHealthSnapshot()",
-        "sampleAllTargets()",
-        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
-        "parsePercent(s?: string)",
-        "parseNetBytes(s?: string)",
-        "parseSize(s: string)",
-        "compareOp(value: number, op: string, threshold: number)",
-        "evaluateAlertRules()",
-        "runTick()",
-        "startPoller()",
-        "stopPoller()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/pool.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "runAsBulk",
-        "Pool",
-        "sshPool",
-        "httpPool"
-      ],
-      "imports": [
-        "node:async_hooks"
-      ],
-      "symbols": [
-        "class Pool"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/schemas.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "VmConfigSchema",
-        "ServiceCategorySchema",
-        "ServiceConfigSchema",
-        "InfraConfigSchema",
-        "Tier1ResultSchema",
-        "Tier2ResultSchema",
-        "VmResourcesSchema",
-        "ContainerStatusSchema",
-        "Tier3ResultSchema",
-        "HealthDeclaredSchema",
-        "DeployedContainerSchema",
-        "DriftEntrySchema",
-        "DiagnosticCheckSchema",
-        "ProfilingResponseSchema",
-        "CloudInstanceSchema",
-        "CloudResourceSchema",
-        "CloudCostSchema",
-        "TopologyVmSchema",
-        "TopologyNetworkSchema",
-        "TopologySchema",
-        "TestResultSchema",
-        "TestSuiteResultSchema",
-        "TestSuiteNameSchema",
-        "FileRetrievalSchema",
-        "ReportTypeSchema",
-        "ServiceInfoSchema",
-        "SecurityFindingSchema",
-        "SecurityScanResultSchema",
-        "NotifyOptionsSchema",
-        "NotifyResultSchema"
-      ],
-      "imports": [
-        "zod"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/security.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "securityScan",
-        "securityDocker",
-        "securitySshKeys",
-        "securityTokens",
-        "SecurityFinding",
-        "SecurityScanResult",
-        "DockerSecurityInfo",
-        "SshKeysAudit",
-        "TokenStatus"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "fs",
-        "./paths.js"
-      ],
-      "symbols": [
-        "summarize(findings: SecurityFinding[])",
-        "securityScan(vmFilter?: string)",
-        "securityDocker(vmNameOrAlias: string)",
-        "securitySshKeys(vmNameOrAlias: string)",
-        "securityTokens()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/ssh.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "sshExec",
-        "sshExecAsync",
-        "checkVmReachable"
-      ],
-      "imports": [
-        "./exec.js",
-        "./config.js",
-        "./audit.js"
-      ],
-      "symbols": [
-        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
-        "checkVmReachable(vmNameOrAlias: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/tests.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "testWgPing",
-        "testSshSession",
-        "testDnsResolve",
-        "testTlsCert",
-        "testHttpRoute",
-        "testContainerHealth",
-        "testPortOpen",
-        "runTestSuite",
-        "TestResult",
-        "TestSuiteResult"
-      ],
-      "imports": [
-        "./ssh.js",
-        "./config.js",
-        "./exec.js",
-        "./docker.js",
-        "./discovery.js",
-        "./paths.js",
-        "fs",
-        "path"
-      ],
-      "symbols": [
-        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
-        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
-        "getVmIds(target?: string)",
-        "getServicesWithDomains()",
-        "testWgPing(vmId: string)",
-        "testSshSession(vmId: string)",
-        "testDnsResolve(domain: string)",
-        "testTlsCert(domain: string)",
-        "testHttpRoute(domain: string)",
-        "testContainerHealth(vmId: string, containerName: string)",
-        "testPortOpen(ip: string, port: number)",
-        "runConnectivitySuite(target?: string)",
-        "runDnsSuite()",
-        "runTlsSuite()",
-        "runRoutesSuite()",
-        "runContainersSuite(target?: string)",
-        "runWireguardSuite()",
-        "runAuthSuite()",
-        "runSecretsSuite()",
-        "runComposeSuite()",
-        "runVolumesSuite(target?: string)",
-        "runResourcesSuite(target?: string)",
-        "runLatencySuite()",
-        "runImagesSuite(target?: string)",
-        "runCrossVmSuite()",
-        "runTestSuite(suite: SuiteName, target?: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/types.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "VmConfig",
-        "ServiceConfig",
-        "InfraConfig"
-      ],
-      "imports": [],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/code/shared/libs/validators.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "validateContainerName",
-        "validateSince",
-        "validatePathComponent"
-      ],
-      "imports": [],
-      "symbols": [
-        "validateContainerName(name: string)",
-        "validateSince(since: string)",
-        "validatePathComponent(path: string)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container"
-      ],
-      "imports": [],
-      "symbols": [
-        "svc",
-        "app",
-        "image",
-        "port",
-        "healthPath",
-        "mattermostUrl",
-        "daguUrl",
-        "vmIp",
-        "services",
-        "c3-infra-mcp",
-        "container_name",
-        "network_mode",
-        "init",
-        "env_file",
-        "environment",
-        "NODE_ENV",
-        "GIT_BASE",
-        "MM_URL",
-        "DAGU_API",
-        "MCP_HTTP_PORT",
-        "C3_TELEGRAM_CHAT_ID",
-        "MCP_HTTP_HOST",
-        "PATH",
-        "CLOUDSDK_CONFIG",
-        "volumes",
-        "healthcheck",
-        "test",
-        "interval",
-        "timeout",
-        "retries",
-        "start_period",
-        "octocode_repos",
-        "name"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-infra-mcp/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
-        "own",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "nb",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "nativeBuild",
-        "cmd",
-        "binary",
-        "baseImage",
-        "apt",
-        "title"
-      ]
-    },
-    {
       "path": "a_solutions/infra-api_c3-public-api/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -8256,7 +6643,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/build.sh",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/build.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
@@ -8286,7 +6673,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/http.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/http.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -8297,40 +6684,31 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "@modelcontextprotocol/sdk/server/streamableHttp.js",
         "../shared/libs/binds.js",
-        "./tools/registry.js",
-        "./tools/proxy.js",
-        "./tools/discovery.js",
-        "./tools/matomo.js",
-        "./tools/umami.js",
-        "./tools/ntfy.js",
-        "./tools/syncthing.js",
-        "./tools/ollama.js",
-        "./tools/dagu.js",
-        "./tools/scrappers.js",
-        "./tools/authelia.js",
-        "./tools/nocodb.js",
-        "./tools/rig.js",
-        "./tools/photoprism.js",
-        "./tools/filebrowser.js",
-        "./tools/gitea.js",
-        "./tools/grist.js",
-        "./tools/hedgedoc.js",
-        "./tools/etherpad.js",
-        "./tools/snappymail.js",
-        "./tools/radicale.js",
-        "./tools/vaultwarden.js",
-        "./tools/proxy-mcp.js"
+        "./tools/health_cloud.js",
+        "./tools/health_mail.js",
+        "./tools/observability-read.js",
+        "./tools/finops.js",
+        "./tools/finops-cloud.js",
+        "./tools/observability.js",
+        "./tools/workflows.js",
+        "./tools/vps-ops.js",
+        "./tools/delivery.js",
+        "./tools/operations.js",
+        "./tools/mail-ops.js",
+        "./tools/frontend.js",
+        "./tools/telegram.js",
+        "./tools/security.js",
+        "./resources/index.js"
       ],
       "symbols": [
-        "createNativeServer()",
-        "connectProxiesInBackground(server: McpServer)",
+        "createMcpServer()",
         "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
         "initSession(port: number)",
-        "startMcpHttpServer(port: number = 3101)"
+        "startMcpHttpServer(port: number = 3100)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/index.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/index.ts",
       "lang": "ts",
       "role": "entrypoint",
       "exports": [],
@@ -8338,570 +6716,507 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "@modelcontextprotocol/sdk/server/stdio.js",
         "./tools/meta.js",
-        "./tools/ollama.js",
-        "./tools/proxy-mcp.js"
+        "./resources/index.js"
       ],
       "symbols": [
         "main()"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/authelia.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/resources/index.ts",
       "lang": "ts",
-      "role": "mcp-tool",
+      "role": "entrypoint",
       "exports": [
-        "registerAutheliaTools"
+        "registerResources"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
+        "fs",
+        "path",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "../../shared/libs/discovery.js"
       ],
       "symbols": [
-        "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
-        "registerAutheliaTools(server: McpServer)"
+        "registerResources(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/dagu.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/delivery.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerDaguTools"
+        "registerDeliveryTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "fs",
         "path",
-        "os",
-        "../../shared/http.js"
+        "../../shared/libs/exec.js",
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "../../shared/libs/audit.js"
       ],
       "symbols": [
-        "resolveDagu()",
-        "daguHeaders()",
-        "registerDaguTools(server: McpServer)"
+        "validatePath(path: string)",
+        "registerDeliveryTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/discovery.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/finops-cloud.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerDiscoveryTools"
+        "registerFinOpsCloudTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/cloud/oci.js",
+        "../../shared/libs/cloud/gcp.js",
+        "../../shared/libs/cloud/aws.js"
+      ],
+      "symbols": [
+        "jsonText(label: string, data: unknown)",
+        "registerFinOpsCloudTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/finops.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerFinOpsTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/exec.js",
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "loadTopology()",
+        "loadServicePorts()",
+        "formatTable(headers: string[], rows: string[][])",
+        "collectVmResources(vmId: string)",
+        "countDockerContainers(vmId: string)",
+        "finOpsVps()",
+        "finOpsServices()",
+        "finOpsAssets()",
+        "safeRun(fn: ()",
+        "registerFinOpsTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/frontend.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerFrontendExecTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
         "fs",
         "path",
+        "../../shared/libs/exec.js",
+        "../../shared/libs/paths.js"
+      ],
+      "symbols": [
+        "findProjects()",
+        "registerFrontendExecTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/health_cloud.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerHealthCloudTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/ssh.js"
+      ],
+      "symbols": [
+        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
+        "readCachedFile(outFile: string)",
+        "safeRun(fn: ()",
+        "extractSection(md: string, startMarker: string, endMarker?: string)",
+        "registerHealthCloudTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/health_mail.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerHealthMailTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/ssh.js"
+      ],
+      "symbols": [
+        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
+        "readCachedFile(outFile: string)",
+        "safeRun(fn: ()",
+        "extractSection(md: string, heading: string)",
+        "registerHealthMailTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/mail-ops.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerMailOpsTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/docker.js",
+        "../../shared/libs/ssh.js"
+      ],
+      "symbols": [
+        "registerMailOpsTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/meta.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerMetaDevops",
+        "registerMetaObs",
+        "registerMetaFinops",
+        "registerMetaSec"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "fs",
+        "path",
+        "../../shared/libs/exec.js",
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "../../shared/libs/audit.js",
+        "../../shared/libs/docker.js",
+        "../../shared/libs/control.js",
+        "../../shared/libs/ops.js",
+        "../../shared/libs/health.js",
+        "../../shared/libs/diagnostics.js",
+        "../../shared/libs/tests.js",
+        "../../shared/libs/files.js",
+        "../../shared/libs/db.js",
+        "../../shared/libs/cloud/oci.js",
+        "../../shared/libs/cloud/gcp.js",
+        "../../shared/libs/cloud/aws.js",
+        "../../shared/libs/notify.js",
+        "../../shared/libs/security.js",
         "os"
       ],
       "symbols": [
+        "validateContainerName(name: string)",
+        "validateSince(since: string)",
+        "validatePath(path: string)",
+        "text(t: string)",
+        "errText(t: string)",
+        "jsonText(label: string, data: unknown)",
+        "formatControl(result: { ok: boolean; message: string })",
+        "triggerAndReadFile(target: string, outFile: string, timeoutMs: number)",
+        "readCachedFile(outFile: string)",
+        "extractCloudSection(md: string, startMarker: string, endMarker?: string)",
+        "extractMailSection(md: string, heading: string)",
+        "safeAsync(fn: ()",
+        "resolveGhRepo()",
+        "gh(args: string[], timeout = 15_000)",
+        "daguFetch(path: string, method = \"GET\", body?: string)",
+        "formatTable(headers: string[], rows: string[][])",
+        "timeAgo(isoDate: string)",
+        "mapV2Entry(d: any)",
+        "mapV1Entry(d: any)",
+        "ghaRuns24h(filter?: string)",
+        "ghaWorkflows()",
+        "daguList()",
+        "runCli(cmd: string, args: string[], timeout = 30_000)",
+        "runCloudflareApi(path: string, jqFilter?: string)",
+        "runTerraform(provider: string, tfArgs: string[])",
+        "runGhcr(action: string)",
+        "handleVpsCommand(provider: string, command: string)",
         "loadTopology()",
-        "registerDiscoveryTools(server: McpServer)"
+        "loadServicePorts()",
+        "collectVmResources(vmId: string)",
+        "countDockerContainers(vmId: string)",
+        "finOpsVps()",
+        "finOpsServices()",
+        "finOpsAssets()",
+        "findProjects()",
+        "workflowsGha()",
+        "workflowsGhaErrors()",
+        "workflowsGhaTrigger(workflowName?: string)",
+        "workflowsDagu()",
+        "workflowsDaguErrors()"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/etherpad.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/observability-read.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerEtherpadTools"
+        "registerObservabilityReadTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../shared/http.js"
+        "../../shared/libs/health.js",
+        "../../shared/libs/diagnostics.js",
+        "../../shared/libs/tests.js",
+        "../../shared/libs/files.js",
+        "../../shared/libs/db.js",
+        "../../shared/libs/config.js"
       ],
       "symbols": [
-        "epApi(method: string, params: Record<string, string> = {})",
-        "registerEtherpadTools(server: McpServer)"
+        "jsonText(label: string, data: unknown)",
+        "plainText(text: string)",
+        "registerObservabilityReadTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/filebrowser.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/observability.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerFilebrowserTools"
+        "registerObservabilityExecTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../shared/http.js"
+        "../../shared/libs/notify.js",
+        "../../shared/libs/db.js"
       ],
       "symbols": [
-        "fbApi(method: string, path: string, body?: string)",
-        "registerFilebrowserTools(server: McpServer)"
+        "jsonText(label: string, data: unknown)",
+        "registerObservabilityExecTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/gitea.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/operations.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerGiteaTools"
+        "registerOperationsTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../shared/http.js"
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/audit.js",
+        "../../shared/libs/docker.js",
+        "../../shared/libs/control.js"
       ],
       "symbols": [
-        "giteaApi(method: string, path: string, body?: string)",
-        "registerGiteaTools(server: McpServer)"
+        "validateContainerName(name: string)",
+        "validateSince(since: string)",
+        "validatePath(path: string)",
+        "formatControl(result: { ok: boolean; message: string })",
+        "registerOperationsTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/grist.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/security.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerGristTools"
+        "registerSecurityExecTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "gristApi(method: string, path: string, body?: string)",
-        "registerGristTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/hedgedoc.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerHedgedocTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "hdApi(method: string, path: string, body?: string)",
-        "registerHedgedocTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/matomo.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerMatomoTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "matomoApiCall(method: string, params: Record<string, string> = {})",
-        "registerMatomoTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/meta.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerMetaTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js",
         "fs",
-        "path",
-        "os",
-        "fast-xml-parser",
-        "../../registry/index.js",
-        "../../registry/public-registry.js"
+        "../../shared/libs/security.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/paths.js",
+        "../../shared/libs/files.js"
       ],
       "symbols": [
-        "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
-        "resolveDagu()",
-        "daguHeaders()",
-        "matomoApiCall(method: string, params: Record<string, string> = {})",
-        "nocoApi(method: string, path: string, body?: string)",
-        "ntfyHeaders()",
-        "ntfyGet(path: string)",
-        "syncthingGet(path: string)",
-        "epApi(method: string, params: Record<string, string> = {})",
-        "fbApi(method: string, path: string, body?: string)",
-        "giteaApi(method: string, path: string, body?: string)",
-        "gristApi(method: string, path: string, body?: string)",
-        "hdApi(method: string, path: string, body?: string)",
-        "ppApi(method: string, path: string, body?: string)",
-        "radicaleRequest(method: string, path: string, body?: string)",
-        "vwApi(path: string)",
-        "umamiApi(method: string, path: string, body?: string)",
-        "rigApi(method: string, base: string, path: string, body?: string)",
-        "scrappersApi(method: string, path: string, body?: string)",
-        "loadTopology()",
-        "registerMetaTools(server: McpServer)"
+        "jsonText(label: string, data: unknown)",
+        "plainText(text: string)",
+        "registerSecurityExecTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/nocodb.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/telegram.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerNocodbTools"
+        "registerTelegramTools"
       ],
       "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "nocoApi(method: string, path: string, body?: string)",
-        "registerNocodbTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/ntfy.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerNtfyTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "ntfyHeaders()",
-        "ntfyGet(path: string)",
-        "registerNtfyTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/ollama.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerOllamaTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "registerInstance(server: McpServer, inst: OllamaInstance)",
-        "registerOllamaTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/photoprism.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerPhotoprismTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "ppApi(method: string, path: string, body?: string)",
-        "registerPhotoprismTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/proxy-mcp.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerProxiedInfraTools",
-        "registerProxiedUserTools",
-        "registerProxiedTools",
-        "startProxyRetryLoop",
-        "connectedChildren"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/client/index.js",
-        "@modelcontextprotocol/sdk/client/streamableHttp.js",
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod"
       ],
       "symbols": [
-        "loadConfig()",
-        "touchRetryEntry(name: string, entry: RetryEntry)",
-        "registerProxiedInfraTools(server: McpServer)",
-        "registerProxiedUserTools(server: McpServer)",
-        "registerProxiedTools(server: McpServer)",
-        "startProxyRetryLoop(server: McpServer)",
-        "connectChildren(server: McpServer, children: ChildMcp[])",
-        "connectChild(server: McpServer, child: ChildMcp)",
-        "jsonSchemaToZod(inputSchema?: { properties?: Record<string, any>; required?: string[] })"
+        "chatId()",
+        "botToken()",
+        "apiUrl(method: string)",
+        "allowedFromIds()",
+        "sleep(milliseconds: number)",
+        "tgPost(method: string, body: Record<string, unknown>)",
+        "sendChunkedMessage(\n  targetChatId: string,\n  text: string,\n  threadId?: number\n)",
+        "appendInbox(entry: InboxEntry)",
+        "resolveThreadId(message: TelegramMessage, isGroup: boolean)",
+        "processUpdate(update: TelegramUpdate)",
+        "pollLoop()",
+        "ensurePollerStarted()",
+        "textResult(text: string, isError = false)",
+        "missingTokenResult()",
+        "registerTelegramTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/proxy.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/vps-ops.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerProxyTools"
+        "registerVpsOpsTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../registry/index.js",
-        "../../shared/http.js"
+        "../../shared/libs/exec.js",
+        "os"
       ],
       "symbols": [
-        "registerProxyTools(server: McpServer)"
+        "safeRun(fn: ()",
+        "runCli(cmd: string, args: string[], timeout = 30_000)",
+        "runCloudflareApi(path: string, jqFilter?: string)",
+        "handleVpsCommand(provider: string, command: string)",
+        "runTerraform(provider: string, tfArgs: string[])",
+        "runGhcr(action: string, _command: string)",
+        "registerVpsOpsTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/radicale.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/mcp/tools/workflows.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "registerRadicaleTools"
+        "registerWorkflowTools"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
-        "../../shared/http.js",
-        "fast-xml-parser"
+        "../../shared/libs/exec.js",
+        "../../shared/libs/ops.js",
+        "../../shared/libs/config.js"
       ],
       "symbols": [
-        "radicaleRequest(method: string, path: string, body?: string)",
-        "registerRadicaleTools(server: McpServer)"
+        "resolveGhRepo()",
+        "safeRun(fn: ()",
+        "gh(args: string[], timeout = 15_000)",
+        "daguFetch(path: string, method = \"GET\", body?: string)",
+        "formatTable(headers: string[], rows: string[][])",
+        "timeAgo(isoDate: string)",
+        "ghaRuns24h(filter?: string)",
+        "ghaWorkflows(repo: string = GH_REPO)",
+        "mapV2Entry(d: any)",
+        "mapV1Entry(d: any)",
+        "daguList()",
+        "daguHistory(dagName: string)",
+        "workflowsGha()",
+        "workflowsGhaErrors()",
+        "workflowsGhaTrigger(\n  workflowName?: string,\n  inputs?: Record<string, string>,\n  repo: string = GH_REPO,\n  ref: string = \"main\",\n)",
+        "workflowsDagu()",
+        "workflowsDaguErrors()",
+        "workflowsDaguTrigger(dagName?: string)",
+        "registerWorkflowTools(server: McpServer)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/registry.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/__selfcheck__.ts",
       "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerRegistryTools"
-      ],
+      "role": "module",
+      "exports": [],
       "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../registry/index.js",
-        "../../registry/public-registry.js"
+        "node:assert"
       ],
       "symbols": [
-        "registerRegistryTools(server: McpServer)"
+        "compareOp(value: number, op: string, threshold: number)",
+        "nextAlertState(breached: boolean, alreadyOpen: boolean)",
+        "foldBucket(values: number[])",
+        "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
+        "bucket5m(ts: Date)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/rig.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerRigTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "rigApi(method: string, base: string, path: string, body?: string)",
-        "registerRigTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/scrappers.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerScrappersTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "scrappersApi(method: string, path: string, body?: string)",
-        "registerScrappersTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/snappymail.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerSnappymailTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "snappyGet(path: string)",
-        "registerSnappymailTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/syncthing.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerSyncthingTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "syncthingGet(path: string)",
-        "registerSyncthingTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/umami.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerUmamiTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "umamiApi(method: string, path: string, body?: string)",
-        "registerUmamiTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/mcp/tools/vaultwarden.ts",
-      "lang": "ts",
-      "role": "mcp-tool",
-      "exports": [
-        "registerVaultwardenTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "../../shared/http.js"
-      ],
-      "symbols": [
-        "vwApi(path: string)",
-        "registerVaultwardenTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/definitions.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/async-exec.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "SERVICE_DEFINITIONS"
+        "execAsync",
+        "shellAsync",
+        "ExecResult"
       ],
       "imports": [
-        "fs",
-        "path",
-        "./types.js"
+        "child_process",
+        "./paths.js"
       ],
       "symbols": [
-        "pickPort(ports: Record<string, number> | undefined)",
-        "loadRegistry()"
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string },\n)",
+        "shellAsync(\n  script: string,\n  timeout?: number,\n)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/index.ts",
-      "lang": "ts",
-      "role": "entrypoint",
-      "exports": [
-        "ServiceRegistry",
-        "registry"
-      ],
-      "imports": [
-        "./definitions.js",
-        "./types.js",
-        "../shared/http.js"
-      ],
-      "symbols": [
-        "class ServiceRegistry"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/public-registry.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/async-ssh.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "searchPublicRegistry",
-        "getPublicServer",
-        "PublicMcpServer",
-        "PublicSearchResult"
+        "sshExecAsync",
+        "tcpProbeAsync",
+        "pingAsync",
+        "curlStatusAsync",
+        "curlAsync"
       ],
       "imports": [
-        "../shared/http.js"
+        "./async-exec.js",
+        "./config.js"
       ],
       "symbols": [
-        "searchPublicRegistry(query: string, limit = 10)",
-        "getPublicServer(serverName: string, version = \"latest\")"
+        "errorResult(\n  error: string,\n  context: string,\n  startMs: number,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n)",
+        "tcpProbeAsync(\n  host: string,\n  timeout = 5_000,\n)",
+        "pingAsync(\n  host: string,\n  timeout = 3_000,\n)",
+        "curlStatusAsync(\n  url: string,\n  timeout = 5_000,\n)",
+        "curlAsync(\n  url: string,\n  timeout = 10_000,\n)"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/reach.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/audit.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "getReachUrl",
-        "reachServiceNames"
+        "audit"
       ],
       "imports": [
-        "node:fs",
-        "node:path"
+        "./db.js"
       ],
       "symbols": [
-        "pickAppPort(ports: Record<string, number> | undefined)",
-        "loadReachMap()",
-        "getReachUrl(name: string)",
-        "reachServiceNames()"
+        "audit(tool: string, target: string, result: string, source = \"mcp\")"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/registry/types.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "ApiType",
-        "McpTransport",
-        "ApiCapability",
-        "McpCapability",
-        "ServiceDefinition"
-      ],
-      "imports": [],
-      "symbols": []
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/shared/http.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "rawHttpRequest",
-        "getBearerToken",
-        "serviceRequest",
-        "HttpResult"
-      ],
-      "imports": [
-        "child_process"
-      ],
-      "symbols": [
-        "exec(cmd: string, args: string[], opts?: { timeout?: number })",
-        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
-        "fetchOidcToken()",
-        "getBearerToken()",
-        "serviceRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/code/shared/libs/binds.ts",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/binds.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -8915,62 +7230,1001 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/compose.nix",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/cache.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "cacheWrite",
+        "cacheRead",
+        "cacheList",
+        "cachePrune",
+        "startCacheCleanup"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "cacheWrite(\n  endpoint: string,\n  target: string,\n  data: unknown,\n)",
+        "cacheRead(\n  endpoint: string,\n  target: string,\n  limit = 10,\n)",
+        "cacheList()",
+        "cachePrune()",
+        "pruneDir(dir: string)",
+        "sanitize(s: string)",
+        "startCacheCleanup()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/cloud/aws.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "listResources",
+        "getCosts"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "awsCli(args: string[], timeout = 30_000)",
+        "getRegion()",
+        "listInstances()",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/cloud/gcp.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory",
+        "getCostsByVm"
+      ],
+      "imports": [
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "gcloudCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceName: string, zone: string)",
+        "instanceAction(\n  instanceName: string,\n  zone: string,\n  action: \"start\" | \"stop\" | \"reset\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "getCosts()",
+        "bqQuery(sql: string, timeout = 60_000)",
+        "getCostsHistory(months: number = 6)",
+        "getCostsByVm(months: number = 6)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/cloud/oci.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listInstances",
+        "getInstanceState",
+        "instanceAction",
+        "listResources",
+        "getCosts",
+        "getCostsHistory"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "../exec.js",
+        "zod",
+        "../schemas.js"
+      ],
+      "symbols": [
+        "getCompartmentId()",
+        "ociCli(args: string[], timeout = 30_000)",
+        "listInstances()",
+        "getInstanceState(instanceId: string)",
+        "instanceAction(\n  instanceId: string,\n  action: \"START\" | \"STOP\" | \"RESET\",\n)",
+        "listResources()",
+        "monthLabel(d: Date)",
+        "queryMonthCosts(\n  tenantId: string,\n  start: Date,\n  end: Date,\n  period: string,\n)",
+        "getCosts()",
+        "getCostsHistory(months: number = 3)",
+        "getInstanceBasedCosts(compartmentId: string, period: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/config.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getConfig",
+        "reloadConfig",
+        "getDriftReport",
+        "getServiceFolder",
+        "composeCd",
+        "getServiceDir",
+        "getVmSshAlias",
+        "resolveVmId",
+        "getServicesForVm"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./types.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "getConfig()",
+        "reloadConfig()",
+        "getDriftReport()",
+        "discoverServicesFromDisk(fileConfig: InfraConfig)",
+        "getServiceFolder(name: string)",
+        "composeCd(remotePath: string)",
+        "getServiceDir(name: string)",
+        "buildAliasMap()",
+        "getVmSshAlias(vmId: string)",
+        "resolveVmId(nameOrAlias: string)",
+        "getServicesForVm(vmId: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/control.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "vmSerialConsole",
+        "vmStart",
+        "vmStop",
+        "vmReset",
+        "containerStart",
+        "containerStop",
+        "containerRestart",
+        "serviceStart",
+        "serviceStop",
+        "serviceRestart",
+        "vmDrain",
+        "ControlResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./audit.js",
+        "./docker.js",
+        "./cloud/oci.js",
+        "./validators.js"
+      ],
+      "symbols": [
+        "ensureVmReachable(vmId: string)",
+        "resolveOciInstanceId(vmId: string, alias: string)",
+        "ociInstanceAction(\n  vmId: string,\n  alias: string,\n  action: \"START\" | \"RESET\" | \"STOP\",\n  auditKey: string,\n)",
+        "vmSerialConsole(vmNameOrAlias: string, lines = 200)",
+        "vmStart(vmNameOrAlias: string)",
+        "vmStop(vmNameOrAlias: string)",
+        "vmReset(vmNameOrAlias: string)",
+        "containerStart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerStop(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "containerRestart(\n  vmNameOrAlias: string,\n  containerName: string,\n)",
+        "serviceStart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceStop(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "serviceRestart(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "vmDrain(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/db.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getDb",
+        "recordHealthCheck",
+        "getHealthHistory",
+        "getUptimeReport",
+        "recordAudit",
+        "getAuditLog",
+        "recordDeploy",
+        "getDeployHistory",
+        "getAlertState",
+        "updateAlertState",
+        "pruneOldRecords",
+        "recordMetricSample",
+        "queryMetricSeries",
+        "getLatestMetric",
+        "getTopByMetric",
+        "rollupMetrics",
+        "pruneMetrics",
+        "listAlertRules",
+        "getAlertRule",
+        "createAlertRule",
+        "updateAlertRule",
+        "deleteAlertRule",
+        "getOpenAlertForRule",
+        "recordAlertFired",
+        "recordAlertResolved",
+        "ackAlert",
+        "getActiveAlerts",
+        "getAlertHistory",
+        "insertLogLines",
+        "searchLogLines"
+      ],
+      "imports": [
+        "better-sqlite3",
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "ensureDir(dir: string)",
+        "getDb()",
+        "initSchema(db: Database.Database)",
+        "recordHealthCheck(record: HealthRecord)",
+        "getHealthHistory(query: HealthHistoryQuery = {})",
+        "getUptimeReport(vm?: string, hours = 24)",
+        "recordAudit(tool: string, target: string, result: string, source = \"mcp\")",
+        "getAuditLog(query: AuditQuery = {})",
+        "recordDeploy(\n  service: string,\n  step: string,\n  success: boolean,\n  durationMs?: number,\n  output?: string,\n)",
+        "getDeployHistory(query: DeployQuery = {})",
+        "getAlertState(vm: string)",
+        "updateAlertState(vm: string, status: string, notified: boolean)",
+        "pruneOldRecords(daysToKeep = 30)",
+        "bucket5m(ts: Date)",
+        "recordMetricSample(target: string, metric: MetricName, value: number)",
+        "queryMetricSeries(\n  target: string,\n  metric: MetricName,\n  from?: string,\n  to?: string,\n)",
+        "getLatestMetric(target: string, metric: MetricName)",
+        "getTopByMetric(metric: MetricName, limit = 10)",
+        "rollupMetrics(rawRetentionHours = 6)",
+        "pruneMetrics(daysToKeep = 30)",
+        "rowToRule(r: Record<string, unknown>)",
+        "listAlertRules()",
+        "getAlertRule(id: number)",
+        "createAlertRule(rule: Omit<AlertRule, \"id\" | \"createdTs\">)",
+        "updateAlertRule(id: number, patch: Partial<Omit<AlertRule, \"id\" | \"createdTs\">>)",
+        "deleteAlertRule(id: number)",
+        "rowToHistory(r: Record<string, unknown>)",
+        "getOpenAlertForRule(ruleId: number)",
+        "recordAlertFired(ruleId: number, target: string, metric: string, value: number)",
+        "recordAlertResolved(id: number)",
+        "ackAlert(id: number)",
+        "getActiveAlerts()",
+        "getAlertHistory(limit = 100)",
+        "insertLogLines(lines: LogLine[])",
+        "searchLogLines(query: LogSearchQuery)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/diagnostics.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "profileContainer",
+        "profileVm",
+        "profileService",
+        "vmNetwork",
+        "vmTop",
+        "vmDiskUsage",
+        "vmJournal"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "timedCheck(name: string, fn: ()",
+        "findContainerVm(containerName: string)",
+        "profileContainer(containerName: string)",
+        "profileVm(vmNameOrAlias: string)",
+        "profileService(serviceName: string)",
+        "vmNetwork(vmNameOrAlias: string)",
+        "vmTop(vmNameOrAlias: string)",
+        "vmDiskUsage(vmNameOrAlias: string)",
+        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/discovery.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listServices",
+        "getService",
+        "probeSpec",
+        "getAllSpecs",
+        "serviceVersion",
+        "allServiceVersions",
+        "ServiceVersion",
+        "getServiceDomains",
+        "SERVICE_BASE_PATHS"
+      ],
+      "imports": [
+        "./config.js",
+        "./http.js"
+      ],
+      "symbols": [
+        "getServiceDomains()",
+        "listServices()",
+        "getService(serviceName: string)",
+        "probeSpec(serviceName: string)",
+        "getAllSpecs()",
+        "serviceVersion(serviceName: string)",
+        "allServiceVersions()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/docker.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "listContainers",
+        "controlContainer",
+        "getContainerLogs",
+        "composeUp",
+        "batchContainerStatuses",
+        "computeServiceStatus",
+        "containerTop",
+        "containerDiff",
+        "containerInspectFull",
+        "containerEvents",
+        "containerPause",
+        "containerUnpause",
+        "containerExecCmd",
+        "logsSearch",
+        "logsMulti",
+        "composeUpAll",
+        "pullUpContainer",
+        "pullUpVmFleet",
+        "pullUpCloudFleet",
+        "dockerSystemDf",
+        "updateContainer",
+        "containerStatsOne",
+        "inspectContainerDetails",
+        "checkImageUpdate",
+        "runAllowlistedExecCommand",
+        "ContainerStats",
+        "ContainerDetails",
+        "ImageUpdateStatus",
+        "EXEC_COMMAND_ALLOWLIST"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./audit.js",
+        "./validators.js",
+        "zod",
+        "./schemas.js"
+      ],
+      "symbols": [
+        "listContainers(\n  vmNameOrAlias: string,\n  includeAll = false,\n)",
+        "controlContainer(\n  vmNameOrAlias: string,\n  container: string,\n  action: \"start\" | \"stop\" | \"restart\",\n)",
+        "getContainerLogs(\n  vmNameOrAlias: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "composeUp(\n  service: string,\n)",
+        "batchContainerStatuses(\n  vmNameOrAlias: string,\n)",
+        "computeServiceStatus(\n  vmNameOrAlias: string,\n  serviceName: string,\n)",
+        "containerTop(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerDiff(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerInspectFull(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerEvents(\n  vmNameOrAlias: string,\n  container: string,\n  since = \"1h\",\n)",
+        "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
+        "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
+        "composeUpAll(\n  vmNameOrAlias: string,\n)",
+        "runPullUp(\n  vmNameOrAlias: string,\n  filter?: string,\n)",
+        "pullUpContainer(\n  service: string,\n)",
+        "pullUpVmFleet(\n  vmNameOrAlias: string,\n)",
+        "pullUpCloudFleet()",
+        "dockerSystemDf(\n  vmNameOrAlias: string,\n)",
+        "updateContainer(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "containerStatsOne(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "inspectContainerDetails(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "checkImageUpdate(\n  vmNameOrAlias: string,\n  container: string,\n)",
+        "runAllowlistedExecCommand(\n  vmNameOrAlias: string,\n  container: string,\n  commandName: string,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/exec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "exec",
+        "execAsync",
+        "ExecResult"
+      ],
+      "imports": [
+        "child_process",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveExecEnv(command: string)",
+        "exec(\n  command: string,\n  args: string[],\n  // `input` feeds the child's stdin. Use it for anything secret — an argv\n  // element is readable by any process that can stat /proc/<pid>/cmdline.\n  options?: { timeout?: number; cwd?: string; input?: string }\n)",
+        "execAsync(\n  command: string,\n  args: string[],\n  options?: { timeout?: number; cwd?: string }\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/files.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getConfigFile",
+        "getContainerLog",
+        "getVmStatus",
+        "getReport",
+        "getSecretsStatus"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./config.js",
+        "./paths.js",
+        "./ssh.js",
+        "./health.js",
+        "./discovery.js",
+        "./security.js"
+      ],
+      "symbols": [
+        "redactSensitiveLines(content: string)",
+        "redactWireGuardKeys(content: string)",
+        "getConfigFile(service: string, filename = \"build.json\")",
+        "getContainerLog(\n  vmId: string,\n  container: string,\n  lines = 100,\n  since?: string,\n)",
+        "getVmStatus(vmId: string)",
+        "getReport(reportType: string)",
+        "getSecretsStatus(service?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/health.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "healthAlive",
+        "healthDeclared",
+        "healthDeployed",
+        "healthDrift",
+        "healthStatus",
+        "checkTier1All",
+        "checkTier2All",
+        "checkTier3All",
+        "gatherVmResources",
+        "probeVm",
+        "healthEndpoints",
+        "checkUp",
+        "checkHealth",
+        "checkReach",
+        "metricsSnapshot",
+        "Tier1Result",
+        "Tier2Result",
+        "VmResources",
+        "ContainerInfo",
+        "Tier3Result",
+        "DeployedVm",
+        "DriftEntry",
+        "HealthDeclaredResult",
+        "HealthStatusResult",
+        "EndpointHealthResult",
+        "UpResult",
+        "HealthResult",
+        "ReachResult",
+        "ContainerMetrics",
+        "VmMetricsSnapshot"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./docker.js",
+        "./exec.js",
+        "./paths.js",
+        "./types.js"
+      ],
+      "symbols": [
+        "getVmIds(vmId?: string)",
+        "parseResources(output: string)",
+        "healthAlive()",
+        "healthDeclared()",
+        "healthDeployed(vmId?: string)",
+        "healthDrift()",
+        "healthStatus(vmId?: string)",
+        "checkTier1All(vmId?: string)",
+        "checkTier2All(vmId?: string)",
+        "checkTier3All(vmId?: string)",
+        "gatherVmResources(vmId: string)",
+        "probeVm(vmId: string)",
+        "getHealthDomains()",
+        "healthEndpoints()",
+        "resolveTarget(target: string)",
+        "buildAliasMapPublic()",
+        "findContainerVm(containerName: string)",
+        "checkUp(target: string)",
+        "findContainerOnVm(vmId: string, containerName: string)",
+        "checkHealth(target: string)",
+        "resolveServiceDomain(target: string)",
+        "checkReach(target: string)",
+        "metricsSnapshot(vmFilter?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getBearerToken",
+        "c3ApiGet",
+        "c3ApiPost",
+        "httpGet",
+        "rawHttpRequest",
+        "HttpResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./paths.js",
+        "fs"
+      ],
+      "symbols": [
+        "httpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
+        "fetchOidcToken()",
+        "getBearerToken()",
+        "c3ApiGet(endpoint: string, timeout?: number)",
+        "c3ApiPost(endpoint: string, body?: string, timeout?: number)",
+        "httpGet(url: string, timeout?: number)",
+        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/notify.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sendNotification",
+        "alertHealthDown",
+        "alertHealthRecovered",
+        "alertCertExpiring",
+        "alertDiskFull",
+        "Priority",
+        "NotifyOptions",
+        "NotifyResult"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js"
+      ],
+      "symbols": [
+        "resolveNtfyUrl()",
+        "sendNotification(opts: NotifyOptions)",
+        "alertHealthDown(vm: string, details: string)",
+        "alertHealthRecovered(vm: string)",
+        "alertCertExpiring(domain: string, daysLeft: number)",
+        "alertDiskFull(vm: string, percent: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/obs.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "resolve",
+        "up",
+        "upAll",
+        "upAllContainers",
+        "health",
+        "healthAll",
+        "profile",
+        "profileAllServices",
+        "profileAllContainers",
+        "Resolved",
+        "UpProbe",
+        "PerfTiming",
+        "UpResult",
+        "UpAllResult",
+        "HealthCheck",
+        "HealthResult",
+        "ProfilingStep",
+        "ProfilingEngine",
+        "ProfilingResult"
+      ],
+      "imports": [
+        "./config.js",
+        "./pool.js",
+        "./async-ssh.js",
+        "./cache.js",
+        "./async-exec.js"
+      ],
+      "symbols": [
+        "resolve(target: string)",
+        "up(target: string)",
+        "upAll()",
+        "upAllContainers()",
+        "probeUrl(resolved: Resolved)",
+        "probeVm(resolved: Resolved)",
+        "probeContainer(resolved: Resolved)",
+        "health(target: string)",
+        "healthAll()",
+        "healthCheckUrl(resolved: Resolved)",
+        "healthCheckVm(resolved: Resolved)",
+        "healthCheckContainer(\n  resolved: Resolved,\n)",
+        "profile(target: string)",
+        "profileAllServices()",
+        "profileAllContainers()",
+        "engineUrl(resolved: Resolved)",
+        "engineContainer(\n  resolved: Resolved,\n)",
+        "engineNetwork(\n  resolved: Resolved,\n)",
+        "engineVmContext(\n  resolved: Resolved,\n)",
+        "extractBlock(\n  output: string,\n  startMarker: string,\n  endMarker: string | null,\n)",
+        "extractAssetUrls(html: string, baseUrl: string)",
+        "resolveUrl(href: string, base: string)",
+        "generateDiagnosis(\n  a: ProfilingEngine | null,\n  b: ProfilingEngine | null,\n  c: ProfilingEngine | null,\n  d: ProfilingEngine | null,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/ops.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "handlePushEvent",
+        "daguHeaders",
+        "PushEvent",
+        "PushEventResult",
+        "DAGU_API",
+        "DAGU_API_PATH"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./audit.js",
+        "./paths.js"
+      ],
+      "symbols": [
+        "resolveDaguApi()",
+        "resolveDaguApiPath()",
+        "handlePushEvent(event: PushEvent)",
+        "extractModifiedFiles(event: PushEvent)",
+        "daguHeaders()",
+        "triggerDag(name: string)",
+        "triggerDagViaSsh(name: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/paths.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getOctocodeRepoConfig",
+        "getOctocodeRepos",
+        "syncRepos",
+        "HOME",
+        "GIT_BASE",
+        "IS_ANDROID",
+        "IS_SERVER",
+        "IS_CLIENT",
+        "SSH_IDENTITY",
+        "SOLUTIONS_DIR",
+        "CLOUD_DATA_DIR",
+        "CLOUD_DATA_REPO",
+        "getConsolidatedPath",
+        "getConfigsPath",
+        "getDepsPath",
+        "getOwnBuildPath",
+        "CONFIGS_PATH",
+        "DEPS_PATH",
+        "getTopologySlice",
+        "getConfigsSlice",
+        "getDepsSlice",
+        "FRONT_DEPS_PATH",
+        "FRONT_TOPOLOGY_PATH",
+        "BUILD_SCRIPT",
+        "SSH_CONFIG_PATH",
+        "SOPS_AGE_KEY_FILE",
+        "AUTHELIA_TOKEN_PATH",
+        "C3_API_MESH",
+        "C3_API_PUBLIC",
+        "FRONT_DIR"
+      ],
+      "imports": [
+        "fs",
+        "child_process",
+        "os",
+        "path"
+      ],
+      "symbols": [
+        "resolveCloudDataPath(filename: string)",
+        "resolveConfigPath()",
+        "readConsolidated()",
+        "resolveC3Api()",
+        "resolveOwnBuildJsonPath()",
+        "getOctocodeRepoConfig()",
+        "getOctocodeRepos()",
+        "syncRepos(force = false)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/poller.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getLastFleetHealthSnapshot",
+        "evaluateAlertRules",
+        "startPoller",
+        "stopPoller",
+        "TICK_INTERVAL_MS",
+        "pollerEvents",
+        "FleetHealthSnapshot"
+      ],
+      "imports": [
+        "events",
+        "./config.js",
+        "./async-ssh.js",
+        "./db.js",
+        "./notify.js"
+      ],
+      "symbols": [
+        "getLastFleetHealthSnapshot()",
+        "sampleAllTargets()",
+        "extractBlock(output: string, startMarker: string, endMarker: string | null)",
+        "parsePercent(s?: string)",
+        "parseNetBytes(s?: string)",
+        "parseSize(s: string)",
+        "compareOp(value: number, op: string, threshold: number)",
+        "evaluateAlertRules()",
+        "runTick()",
+        "startPoller()",
+        "stopPoller()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/pool.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "runAsBulk",
+        "Pool",
+        "sshPool",
+        "httpPool"
+      ],
+      "imports": [
+        "node:async_hooks"
+      ],
+      "symbols": [
+        "class Pool"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/schemas.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "VmConfigSchema",
+        "ServiceCategorySchema",
+        "ServiceConfigSchema",
+        "InfraConfigSchema",
+        "Tier1ResultSchema",
+        "Tier2ResultSchema",
+        "VmResourcesSchema",
+        "ContainerStatusSchema",
+        "Tier3ResultSchema",
+        "HealthDeclaredSchema",
+        "DeployedContainerSchema",
+        "DriftEntrySchema",
+        "DiagnosticCheckSchema",
+        "ProfilingResponseSchema",
+        "CloudInstanceSchema",
+        "CloudResourceSchema",
+        "CloudCostSchema",
+        "TopologyVmSchema",
+        "TopologyNetworkSchema",
+        "TopologySchema",
+        "TestResultSchema",
+        "TestSuiteResultSchema",
+        "TestSuiteNameSchema",
+        "FileRetrievalSchema",
+        "ReportTypeSchema",
+        "ServiceInfoSchema",
+        "SecurityFindingSchema",
+        "SecurityScanResultSchema",
+        "NotifyOptionsSchema",
+        "NotifyResultSchema"
+      ],
+      "imports": [
+        "zod"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/security.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "securityScan",
+        "securityDocker",
+        "securitySshKeys",
+        "securityTokens",
+        "SecurityFinding",
+        "SecurityScanResult",
+        "DockerSecurityInfo",
+        "SshKeysAudit",
+        "TokenStatus"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "fs",
+        "./paths.js"
+      ],
+      "symbols": [
+        "summarize(findings: SecurityFinding[])",
+        "securityScan(vmFilter?: string)",
+        "securityDocker(vmNameOrAlias: string)",
+        "securitySshKeys(vmNameOrAlias: string)",
+        "securityTokens()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/ssh.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshExec",
+        "sshExecAsync",
+        "checkVmReachable"
+      ],
+      "imports": [
+        "./exec.js",
+        "./config.js",
+        "./audit.js"
+      ],
+      "symbols": [
+        "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
+        "checkVmReachable(vmNameOrAlias: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/tests.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "testWgPing",
+        "testSshSession",
+        "testDnsResolve",
+        "testTlsCert",
+        "testHttpRoute",
+        "testContainerHealth",
+        "testPortOpen",
+        "runTestSuite",
+        "TestResult",
+        "TestSuiteResult"
+      ],
+      "imports": [
+        "./ssh.js",
+        "./config.js",
+        "./exec.js",
+        "./docker.js",
+        "./discovery.js",
+        "./paths.js",
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "runTest(\n  name: string,\n  target: string,\n  fn: ()",
+        "buildSuiteResult(suite: string, tests: TestResult[], suiteStart: number)",
+        "getVmIds(target?: string)",
+        "getServicesWithDomains()",
+        "testWgPing(vmId: string)",
+        "testSshSession(vmId: string)",
+        "testDnsResolve(domain: string)",
+        "testTlsCert(domain: string)",
+        "testHttpRoute(domain: string)",
+        "testContainerHealth(vmId: string, containerName: string)",
+        "testPortOpen(ip: string, port: number)",
+        "runConnectivitySuite(target?: string)",
+        "runDnsSuite()",
+        "runTlsSuite()",
+        "runRoutesSuite()",
+        "runContainersSuite(target?: string)",
+        "runWireguardSuite()",
+        "runAuthSuite()",
+        "runSecretsSuite()",
+        "runComposeSuite()",
+        "runVolumesSuite(target?: string)",
+        "runResourcesSuite(target?: string)",
+        "runLatencySuite()",
+        "runImagesSuite(target?: string)",
+        "runCrossVmSuite()",
+        "runTestSuite(suite: SuiteName, target?: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/types.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "VmConfig",
+        "ServiceConfig",
+        "InfraConfig"
+      ],
+      "imports": [],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/code/shared/libs/validators.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validateContainerName",
+        "validateSince",
+        "validatePathComponent"
+      ],
+      "imports": [],
+      "symbols": [
+        "validateContainerName(name: string)",
+        "validateSince(since: string)",
+        "validatePathComponent(path: string)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/compose.nix",
       "lang": "nix",
       "role": "compose",
       "exports": [
         "buildJson",
-        "container",
-        "services"
+        "container"
       ],
       "imports": [],
       "symbols": [
         "svc",
         "app",
-        "binariesImage",
-        "vmIp",
-        "port",
-        "proxyCfg",
-        "resolveChild",
-        "url",
-        "proxiedMcps",
-        "infra",
-        "user",
-        "retry",
-        "initial_ms",
-        "max_ms",
-        "max_retry_state_entries",
-        "proxiedMcpsJson",
-        "services",
-        "c3-services-mcp",
         "image",
+        "port",
+        "healthPath",
+        "mattermostUrl",
+        "daguUrl",
+        "vmIp",
+        "services",
+        "cloud-infra-mcp",
         "container_name",
-        "ports",
+        "network_mode",
+        "init",
         "env_file",
         "environment",
         "NODE_ENV",
+        "GIT_BASE",
+        "MM_URL",
+        "DAGU_API",
         "MCP_HTTP_PORT",
+        "C3_TELEGRAM_CHAT_ID",
         "MCP_HTTP_HOST",
-        "NODE_OPTIONS",
-        "PROXIED_MCPS",
-        "init",
-        "limits",
-        "reservations",
+        "PATH",
+        "CLOUDSDK_CONFIG",
+        "volumes",
         "healthcheck",
         "test",
         "interval",
         "timeout",
         "retries",
-        "start_period"
+        "start_period",
+        "octocode_repos",
+        "name"
       ]
     },
     {
-      "path": "a_solutions/infra-api_c3-services-mcp/src/flake.nix",
+      "path": "a_solutions/infra-api_cloud-infra-mcp/src/flake.nix",
       "lang": "nix",
       "role": "flake",
       "exports": [
         "description",
-        "Type",
+        "own",
         "nixpkgs"
       ],
       "imports": [
@@ -9551,6 +8805,940 @@
       "imports": [],
       "symbols": [
         "check_key()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/code/client.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "api",
+        "ensureAuth",
+        "resolveChannel",
+        "getUsername",
+        "searchUsers",
+        "createGroupDm",
+        "userId",
+        "MM_TEAM_ID"
+      ],
+      "imports": [],
+      "symbols": [
+        "getUsername()",
+        "login()",
+        "ensureAuth()",
+        "api(method: string, path: string, body?: unknown)",
+        "getDiegoUserId()",
+        "getDefaultDm()",
+        "resolveChannel(nameOrId?: string)",
+        "searchUsers(term: string)",
+        "createGroupDm(userIds: string[])"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/code/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "./meta.js"
+      ],
+      "symbols": [
+        "createMcpServer()",
+        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
+        "initSession(port: number)",
+        "startMcpHttpServer(port: number = 3102)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/code/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
+      "exports": [],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/stdio.js",
+        "./meta.js"
+      ],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/code/meta.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerMetaTool"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "./client.js"
+      ],
+      "symbols": [
+        "getUserId()",
+        "registerMetaTool(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/code/tools.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "./client.js"
+      ],
+      "symbols": [
+        "registerTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "app",
+        "binariesImage",
+        "vmIp",
+        "port",
+        "services",
+        "cloud-mattermost-mcp",
+        "image",
+        "container_name",
+        "restart",
+        "ports",
+        "env_file",
+        "environment",
+        "MCP_HTTP_PORT"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-mattermost-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "Type",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "../shared/libs/binds.js",
+        "./tools/registry.js",
+        "./tools/proxy.js",
+        "./tools/discovery.js",
+        "./tools/matomo.js",
+        "./tools/umami.js",
+        "./tools/ntfy.js",
+        "./tools/syncthing.js",
+        "./tools/ollama.js",
+        "./tools/dagu.js",
+        "./tools/scrappers.js",
+        "./tools/authelia.js",
+        "./tools/nocodb.js",
+        "./tools/rig.js",
+        "./tools/photoprism.js",
+        "./tools/filebrowser.js",
+        "./tools/gitea.js",
+        "./tools/grist.js",
+        "./tools/hedgedoc.js",
+        "./tools/etherpad.js",
+        "./tools/snappymail.js",
+        "./tools/radicale.js",
+        "./tools/vaultwarden.js",
+        "./tools/proxy-mcp.js"
+      ],
+      "symbols": [
+        "createNativeServer()",
+        "connectProxiesInBackground(server: McpServer)",
+        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
+        "initSession(port: number)",
+        "startMcpHttpServer(port: number = 3101)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
+      "exports": [],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/stdio.js",
+        "./tools/meta.js",
+        "./tools/ollama.js",
+        "./tools/proxy-mcp.js"
+      ],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/authelia.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerAutheliaTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
+        "registerAutheliaTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/dagu.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerDaguTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "fs",
+        "path",
+        "os",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "resolveDagu()",
+        "daguHeaders()",
+        "registerDaguTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/discovery.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerDiscoveryTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": [
+        "loadTopology()",
+        "registerDiscoveryTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/etherpad.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerEtherpadTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "epApi(method: string, params: Record<string, string> = {})",
+        "registerEtherpadTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/filebrowser.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerFilebrowserTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "fbApi(method: string, path: string, body?: string)",
+        "registerFilebrowserTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/gitea.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerGiteaTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "giteaApi(method: string, path: string, body?: string)",
+        "registerGiteaTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/grist.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerGristTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "gristApi(method: string, path: string, body?: string)",
+        "registerGristTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/hedgedoc.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerHedgedocTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "hdApi(method: string, path: string, body?: string)",
+        "registerHedgedocTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/matomo.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerMatomoTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "matomoApiCall(method: string, params: Record<string, string> = {})",
+        "registerMatomoTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/meta.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerMetaTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js",
+        "fs",
+        "path",
+        "os",
+        "fast-xml-parser",
+        "../../registry/index.js",
+        "../../registry/public-registry.js"
+      ],
+      "symbols": [
+        "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
+        "resolveDagu()",
+        "daguHeaders()",
+        "matomoApiCall(method: string, params: Record<string, string> = {})",
+        "nocoApi(method: string, path: string, body?: string)",
+        "ntfyHeaders()",
+        "ntfyGet(path: string)",
+        "syncthingGet(path: string)",
+        "epApi(method: string, params: Record<string, string> = {})",
+        "fbApi(method: string, path: string, body?: string)",
+        "giteaApi(method: string, path: string, body?: string)",
+        "gristApi(method: string, path: string, body?: string)",
+        "hdApi(method: string, path: string, body?: string)",
+        "ppApi(method: string, path: string, body?: string)",
+        "radicaleRequest(method: string, path: string, body?: string)",
+        "vwApi(path: string)",
+        "umamiApi(method: string, path: string, body?: string)",
+        "rigApi(method: string, base: string, path: string, body?: string)",
+        "scrappersApi(method: string, path: string, body?: string)",
+        "loadTopology()",
+        "registerMetaTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/nocodb.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerNocodbTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "nocoApi(method: string, path: string, body?: string)",
+        "registerNocodbTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/ntfy.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerNtfyTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "ntfyHeaders()",
+        "ntfyGet(path: string)",
+        "registerNtfyTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/ollama.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerOllamaTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "registerInstance(server: McpServer, inst: OllamaInstance)",
+        "registerOllamaTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/photoprism.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerPhotoprismTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "ppApi(method: string, path: string, body?: string)",
+        "registerPhotoprismTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/proxy-mcp.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerProxiedInfraTools",
+        "registerProxiedUserTools",
+        "registerProxiedTools",
+        "startProxyRetryLoop",
+        "connectedChildren"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/client/index.js",
+        "@modelcontextprotocol/sdk/client/streamableHttp.js",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod"
+      ],
+      "symbols": [
+        "loadConfig()",
+        "touchRetryEntry(name: string, entry: RetryEntry)",
+        "registerProxiedInfraTools(server: McpServer)",
+        "registerProxiedUserTools(server: McpServer)",
+        "registerProxiedTools(server: McpServer)",
+        "startProxyRetryLoop(server: McpServer)",
+        "connectChildren(server: McpServer, children: ChildMcp[])",
+        "connectChild(server: McpServer, child: ChildMcp)",
+        "jsonSchemaToZod(inputSchema?: { properties?: Record<string, any>; required?: string[] })"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/proxy.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerProxyTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../registry/index.js",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "registerProxyTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/radicale.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerRadicaleTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js",
+        "fast-xml-parser"
+      ],
+      "symbols": [
+        "radicaleRequest(method: string, path: string, body?: string)",
+        "registerRadicaleTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/registry.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerRegistryTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../registry/index.js",
+        "../../registry/public-registry.js"
+      ],
+      "symbols": [
+        "registerRegistryTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/rig.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerRigTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "rigApi(method: string, base: string, path: string, body?: string)",
+        "registerRigTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/scrappers.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerScrappersTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "scrappersApi(method: string, path: string, body?: string)",
+        "registerScrappersTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/snappymail.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerSnappymailTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "snappyGet(path: string)",
+        "registerSnappymailTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/syncthing.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerSyncthingTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "syncthingGet(path: string)",
+        "registerSyncthingTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/umami.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerUmamiTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "umamiApi(method: string, path: string, body?: string)",
+        "registerUmamiTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools/vaultwarden.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerVaultwardenTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "../../shared/http.js"
+      ],
+      "symbols": [
+        "vwApi(path: string)",
+        "registerVaultwardenTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/registry/definitions.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "SERVICE_DEFINITIONS"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "./types.js"
+      ],
+      "symbols": [
+        "pickPort(ports: Record<string, number> | undefined)",
+        "loadRegistry()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/registry/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
+      "exports": [
+        "ServiceRegistry",
+        "registry"
+      ],
+      "imports": [
+        "./definitions.js",
+        "./types.js",
+        "../shared/http.js"
+      ],
+      "symbols": [
+        "class ServiceRegistry"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/registry/public-registry.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "searchPublicRegistry",
+        "getPublicServer",
+        "PublicMcpServer",
+        "PublicSearchResult"
+      ],
+      "imports": [
+        "../shared/http.js"
+      ],
+      "symbols": [
+        "searchPublicRegistry(query: string, limit = 10)",
+        "getPublicServer(serverName: string, version = \"latest\")"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/registry/reach.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getReachUrl",
+        "reachServiceNames"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "pickAppPort(ports: Record<string, number> | undefined)",
+        "loadReachMap()",
+        "getReachUrl(name: string)",
+        "reachServiceNames()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/registry/types.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "ApiType",
+        "McpTransport",
+        "ApiCapability",
+        "McpCapability",
+        "ServiceDefinition"
+      ],
+      "imports": [],
+      "symbols": []
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/shared/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "rawHttpRequest",
+        "getBearerToken",
+        "serviceRequest",
+        "HttpResult"
+      ],
+      "imports": [
+        "child_process"
+      ],
+      "symbols": [
+        "exec(cmd: string, args: string[], opts?: { timeout?: number })",
+        "rawHttpRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)",
+        "fetchOidcToken()",
+        "getBearerToken()",
+        "serviceRequest(\n  method: string,\n  url: string,\n  body?: string,\n  timeout?: number,\n  extraHeaders?: Record<string, string>\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/code/shared/libs/binds.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "bindHost"
+      ],
+      "imports": [
+        "../shared/libs/binds.js"
+      ],
+      "symbols": [
+        "bindHost(envName: string = \"MCP_HTTP_HOST\")"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "app",
+        "binariesImage",
+        "vmIp",
+        "port",
+        "proxyCfg",
+        "resolveChild",
+        "url",
+        "proxiedMcps",
+        "infra",
+        "user",
+        "retry",
+        "initial_ms",
+        "max_ms",
+        "max_retry_state_entries",
+        "proxiedMcpsJson",
+        "services",
+        "cloud-services-mcp",
+        "image",
+        "container_name",
+        "ports",
+        "env_file",
+        "environment",
+        "NODE_ENV",
+        "MCP_HTTP_PORT",
+        "MCP_HTTP_HOST",
+        "NODE_OPTIONS",
+        "PROXIED_MCPS",
+        "init",
+        "limits",
+        "reservations",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-services-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "Type",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
       ]
     },
     {
@@ -165909,194 +166097,6 @@
         "Drive",
         "Docs",
         "Sheets",
-        "Type",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "nb",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "nativeBuild",
-        "cmd",
-        "binary",
-        "baseImage",
-        "apt",
-        "title"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/code/client.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "api",
-        "ensureAuth",
-        "resolveChannel",
-        "getUsername",
-        "searchUsers",
-        "createGroupDm",
-        "userId",
-        "MM_TEAM_ID"
-      ],
-      "imports": [],
-      "symbols": [
-        "getUsername()",
-        "login()",
-        "ensureAuth()",
-        "api(method: string, path: string, body?: unknown)",
-        "getDiegoUserId()",
-        "getDefaultDm()",
-        "resolveChannel(nameOrId?: string)",
-        "searchUsers(term: string)",
-        "createGroupDm(userIds: string[])"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/code/http.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "startMcpHttpServer"
-      ],
-      "imports": [
-        "node:http",
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/streamableHttp.js",
-        "./meta.js"
-      ],
-      "symbols": [
-        "createMcpServer()",
-        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
-        "initSession(port: number)",
-        "startMcpHttpServer(port: number = 3102)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/code/index.ts",
-      "lang": "ts",
-      "role": "entrypoint",
-      "exports": [],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/stdio.js",
-        "./meta.js"
-      ],
-      "symbols": [
-        "main()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/code/meta.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "registerMetaTool"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "./client.js"
-      ],
-      "symbols": [
-        "getUserId()",
-        "registerMetaTool(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/code/tools.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "registerTools"
-      ],
-      "imports": [
-        "@modelcontextprotocol/sdk/server/mcp.js",
-        "zod",
-        "./client.js"
-      ],
-      "symbols": [
-        "registerTools(server: McpServer)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container",
-        "services"
-      ],
-      "imports": [],
-      "symbols": [
-        "svc",
-        "app",
-        "binariesImage",
-        "vmIp",
-        "port",
-        "services",
-        "mattermost-mcp",
-        "image",
-        "container_name",
-        "restart",
-        "ports",
-        "env_file",
-        "environment",
-        "MCP_HTTP_PORT"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_mattermost-mcp/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
         "Type",
         "nixpkgs"
       ],

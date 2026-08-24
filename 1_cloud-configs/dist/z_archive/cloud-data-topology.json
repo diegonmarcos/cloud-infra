@@ -79,13 +79,13 @@
       "containers": [
         "languagetool",
         "c3-infra-api",
-        "c3-infra-mcp",
         "c3-services-api",
-        "c3-services-mcp",
+        "cloud-infra-mcp",
         "cloud-mail-mcp",
+        "cloud-mattermost-mcp",
+        "cloud-services-mcp",
         "google-personal-mcp",
         "google-workspace-mcp",
-        "mattermost-mcp",
         "gha-runner",
         "borg-server",
         "bup-server",
@@ -578,12 +578,6 @@
         "service": "c3-infra-api"
       },
       {
-        "name": "c3-infra-mcp.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "c3-infra-mcp"
-      },
-      {
         "name": "c3-public-api.app",
         "type": "A",
         "value": "10.0.0.4",
@@ -596,16 +590,28 @@
         "service": "c3-services-api"
       },
       {
-        "name": "c3-services-mcp.app",
+        "name": "c3-infra-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
-        "service": "c3-services-mcp"
+        "service": "cloud-infra-mcp"
       },
       {
         "name": "mail-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
         "service": "cloud-mail-mcp"
+      },
+      {
+        "name": "mattermost-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-mattermost-mcp"
+      },
+      {
+        "name": "c3-services-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-services-mcp"
       },
       {
         "name": "g-personal-mcp.app",
@@ -618,12 +624,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "google-workspace-mcp"
-      },
-      {
-        "name": "mattermost-mcp.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "mattermost-mcp"
       },
       {
         "name": "http-to-smtp-proxy-api.app",
@@ -1152,79 +1152,6 @@
       },
       "flake": "infra-api_c3-infra-api"
     },
-    "c3-infra-mcp": {
-      "category": "sec",
-      "vm": "oci-A1-f_0",
-      "folder": "infra-api_c3-infra-mcp",
-      "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
-      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
-      "port": 3100,
-      "dns": "c3-infra-mcp.app",
-      "upstream": "10.0.0.6:3100",
-      "containers": {
-        "app": {
-          "container_name": "c3-infra-mcp",
-          "image": "ghcr.io/diegonmarcos/c3-infra-mcp:latest",
-          "port": 3100,
-          "port_env": "MCP_HTTP_PORT",
-          "dns": "c3-infra-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/c3-infra-mcp"
-          },
-          "healthcheck": "/mcp",
-          "monitoring": null,
-          "volumes": [
-            "/opt/ssh-keys/c3-infra-mcp:/root/.ssh:ro",
-            "/nix/store:/nix/store:ro",
-            "/home/ubuntu/.nix-profile/bin:/usr/local/nix-bin:ro",
-            "~/.config/gcloud:/root/.config/gcloud",
-            "octocode_repos:/root/git"
-          ],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "c3-infra-mcp"
-      ],
-      "all_ports": [
-        "3100"
-      ],
-      "all_dns": [
-        "c3-infra-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "auth": "two_factor",
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/c3-infra-mcp",
-          "wg_only": true,
-          "bearer_auth": true
-        }
-      },
-      "declared_ports": {
-        "app": 3100
-      },
-      "health": {
-        "path": "/mcp"
-      },
-      "flake": "infra-api_c3-infra-mcp"
-    },
     "c3-public-api": {
       "category": "obs",
       "vm": "oci-E2-f_1",
@@ -1386,51 +1313,53 @@
       },
       "flake": "infra-api_c3-services-api"
     },
-    "c3-services-mcp": {
-      "category": "obs",
+    "cloud-infra-mcp": {
+      "category": "sec",
       "vm": "oci-A1-f_0",
-      "folder": "infra-api_c3-services-mcp",
-      "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
-      "port": 3101,
-      "dns": "c3-services-mcp.app",
-      "upstream": "10.0.0.6:3101",
+      "folder": "infra-api_cloud-infra-mcp",
+      "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
+      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+      "port": 3100,
+      "dns": "c3-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
       "containers": {
         "app": {
-          "container_name": "c3-services-mcp",
-          "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
-          "port": 3101,
+          "container_name": "cloud-infra-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-infra-mcp:latest",
+          "port": 3100,
           "port_env": "MCP_HTTP_PORT",
-          "dns": "c3-services-mcp.app",
+          "dns": "c3-infra-mcp.app",
           "public": true,
           "proxy": {
             "streaming": true,
             "type": "path",
             "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/c3-services-mcp"
+            "base_path": "/c3-infra-mcp"
           },
           "healthcheck": "/mcp",
           "monitoring": null,
-          "volumes": [],
+          "volumes": [
+            "/opt/ssh-keys/cloud-infra-mcp:/root/.ssh:ro",
+            "/nix/store:/nix/store:ro",
+            "/home/ubuntu/.nix-profile/bin:/usr/local/nix-bin:ro",
+            "~/.config/gcloud:/root/.config/gcloud",
+            "octocode_repos:/root/git"
+          ],
           "env_file": true,
           "depends_on": [],
-          "resources": {
-            "mem_limit": "2G",
-            "mem_reservation": "256M",
-            "pids_limit": 256
-          },
-          "restart_policy": "unless-stopped",
+          "resources": null,
           "read_only": false,
           "protocol": "http"
         }
       },
       "container_names": [
-        "c3-services-mcp"
+        "cloud-infra-mcp"
       ],
       "all_ports": [
-        "3101"
+        "3100"
       ],
       "all_dns": [
-        "c3-services-mcp.app"
+        "c3-infra-mcp.app"
       ],
       "compose": {
         "containers": [],
@@ -1441,19 +1370,21 @@
         "app_hub": false,
         "primary": {
           "streaming": true,
+          "auth": "two_factor",
           "type": "path",
           "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/c3-services-mcp",
-          "wg_only": true
+          "base_path": "/c3-infra-mcp",
+          "wg_only": true,
+          "bearer_auth": true
         }
       },
       "declared_ports": {
-        "app": 3101
+        "app": 3100
       },
       "health": {
         "path": "/mcp"
       },
-      "flake": "infra-api_c3-services-mcp"
+      "flake": "infra-api_cloud-infra-mcp"
     },
     "cloud-mail-mcp": {
       "category": "app",
@@ -1516,6 +1447,136 @@
         "app": 3103
       },
       "flake": "infra-api_cloud-mail-mcp"
+    },
+    "cloud-mattermost-mcp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-api_cloud-mattermost-mcp",
+      "description": "Mattermost MCP server — chat tools via HTTP transport",
+      "port": 3102,
+      "dns": "mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "containers": {
+        "app": {
+          "container_name": "cloud-mattermost-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-mattermost-mcp:latest",
+          "port": 3102,
+          "port_env": "MCP_HTTP_PORT",
+          "dns": "mattermost-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/mattermost-mcp"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-mattermost-mcp"
+      ],
+      "all_ports": [
+        "3102"
+      ],
+      "all_dns": [
+        "mattermost-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/mattermost-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3102
+      },
+      "flake": "infra-api_cloud-mattermost-mcp"
+    },
+    "cloud-services-mcp": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-api_cloud-services-mcp",
+      "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+      "port": 3101,
+      "dns": "c3-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "containers": {
+        "app": {
+          "container_name": "cloud-services-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-services-mcp:latest",
+          "port": 3101,
+          "port_env": "MCP_HTTP_PORT",
+          "dns": "c3-services-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/c3-services-mcp"
+          },
+          "healthcheck": "/mcp",
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": {
+            "mem_limit": "2G",
+            "mem_reservation": "256M",
+            "pids_limit": 256
+          },
+          "restart_policy": "unless-stopped",
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-services-mcp"
+      ],
+      "all_ports": [
+        "3101"
+      ],
+      "all_dns": [
+        "c3-services-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/c3-services-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3101
+      },
+      "health": {
+        "path": "/mcp"
+      },
+      "flake": "infra-api_cloud-services-mcp"
     },
     "cloud-vault-mcp": {
       "category": "data",
@@ -1672,67 +1733,6 @@
         "path": "/health"
       },
       "flake": "infra-api_google-workspace-mcp"
-    },
-    "mattermost-mcp": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "infra-api_mattermost-mcp",
-      "description": "Mattermost MCP server — chat tools via HTTP transport",
-      "port": 3102,
-      "dns": "mattermost-mcp.app",
-      "upstream": "10.0.0.6:3102",
-      "containers": {
-        "app": {
-          "container_name": "mattermost-mcp",
-          "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
-          "port": 3102,
-          "port_env": "MCP_HTTP_PORT",
-          "dns": "mattermost-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/mattermost-mcp"
-          },
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "mattermost-mcp"
-      ],
-      "all_ports": [
-        "3102"
-      ],
-      "all_dns": [
-        "mattermost-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/mattermost-mcp",
-          "wg_only": true
-        }
-      },
-      "declared_ports": {
-        "app": 3102
-      },
-      "flake": "infra-api_mattermost-mcp"
     },
     "http-to-smtp-proxy-api": {
       "category": "app",
