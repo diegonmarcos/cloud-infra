@@ -3223,7 +3223,7 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "db-agent":               { group: "infra-apps", subgroup: "Data" },
   "kg-store":               { group: "infra-apps", subgroup: "Data" },
   "scrappers-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
-  "c3-diego-personal-data-mcp": { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-vault-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-infra-api":           { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-infra-mcp":           { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-public-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
