@@ -23,18 +23,36 @@ step_deploy() {
     CONFIGS_IMAGE="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}/${SERVICE_NAME}-configs:latest"
 
     log "Deploying via configs image: $CONFIGS_IMAGE"
+    # The configs image extracts with `cp -r /configs/. /out/` running as root
+    # inside the container, so every file it lands in the bind mount is
+    # root-owned. The chown that repairs that used to be the last link of an
+    # &&-chain, which meant it only ran when the whole chain succeeded — and
+    # the interesting case is precisely when it didn't. A pull or a half-done
+    # extract left root-owned files behind, then the rsync fallback (which
+    # runs as the ssh user, not root) hit them:
+    #   rsync: failed to set times on ".../.src-hash": Operation not permitted
+    #   rsync error: some files/attrs were not transferred (code 23)
+    # and the service failed to deploy. Normalising ownership unconditionally
+    # afterwards makes the fallback able to do its job, which is the entire
+    # reason a fallback exists.
     ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH && \
         docker pull $CONFIGS_IMAGE && \
-        docker run --rm -v $DEPLOY_PATH:/out $CONFIGS_IMAGE && \
-        sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH" && {
-        log "Deployed configs to $DEPLOY_HOST:$DEPLOY_PATH (via configs image)"
+        docker run --rm -v $DEPLOY_PATH:/out $CONFIGS_IMAGE" && {
+        _configs_ok=1
     } || {
+        _configs_ok=0
+    }
+    ssh_with_retry "$DEPLOY_HOST" "sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH" >/dev/null 2>&1 \
+        || log_warn "could not normalise ownership of $DEPLOY_PATH — a root-owned leftover will fail rsync"
+
+    if [ "$_configs_ok" = "1" ]; then
+        log "Deployed configs to $DEPLOY_HOST:$DEPLOY_PATH (via configs image)"
+    else
         log_warn "Configs image deploy failed — falling back to rsync"
         # Rsync fallback (only if configs image unavailable, e.g. first-ever ship)
         log "Deploying dist/ -> $DEPLOY_HOST:$DEPLOY_PATH (rsync fallback)"
-        ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH"
         rsync_with_retry -az --compress-level=9 --checksum "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/" 2>/dev/null || true
-    }
+    fi
 
     # Secrets: ALWAYS via scp (never in GHCR image)
     if [ -f "$DIST_DIR/.secrets" ]; then

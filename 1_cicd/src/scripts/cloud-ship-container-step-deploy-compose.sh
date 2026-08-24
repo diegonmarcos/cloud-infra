@@ -168,6 +168,29 @@ step_compose() {
     _cnames="$(jq -r '.containers[]?.container_name // empty' "$SERVICE_DIR/build.json" 2>/dev/null | tr '\n' ' ')"
     [ -n "$_cnames" ] && EVICT_NAMED="for c in $_cnames; do docker rm -f \"\$c\" 2>/dev/null || true; done"
 
+    # EVICT_NAMED only knows the names we declare NOW, so it cannot see the one
+    # container that matters after a rename: the predecessor, still running
+    # under the OLD name, still holding the host port. `down` misses it too —
+    # different project, different name — and `up` then dies with
+    #   driver failed programming external connectivity on endpoint
+    #   cloud-services-mcp: Bind for 10.0.0.6:3101 failed: port is already
+    #   allocated
+    # which is what happened to c3-services-mcp → cloud-services-mcp (and
+    # mail-mcp, mattermost-mcp) on oci-apps. Renaming a service is supposed to
+    # be an identity-only change, so it must not require hand-reaping the old
+    # container on the box.
+    #
+    # A host ip:port in our compose file is OUR declaration of that binding —
+    # the fleet gives each service a unique one. Anything else holding it is by
+    # definition a stale predecessor, so evict on the binding, not on the name.
+    # Scoped tightly: only exact host bindings this compose declares, and never
+    # a container we ourselves named. `docker rm -f` drops the container only;
+    # named volumes persist.
+    EVICT_PORTS=""
+    _hostbinds="$(grep -oE '"[0-9][0-9.]*:[0-9]+:[0-9]+"' "$COMPOSE_FILE" 2>/dev/null \
+        | tr -d '"' | sed 's/:[0-9]*$//' | sort -u | tr '\n' ' ')"
+    [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
+
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
         # Generated in a tmpdir (ship transient — never pollutes dist/ or git working tree).
@@ -224,6 +247,7 @@ PULL_GATE
             fi
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             [ -n "$EVICT_NAMED" ] && echo "$EVICT_NAMED"
+            [ -n "$EVICT_PORTS" ] && echo "$EVICT_PORTS"
             # Gate already pulled → up must not re-pull (would re-hit the failure
             # on the cache-fallback path). Swap always→missing for the up line.
             _CUSTOM_UP_FLAGS="$COMPOSE_UP_FLAGS"
@@ -268,9 +292,9 @@ PULL_GATE
             # doesn't re-hit the failing pull.
             _STD_UP_FLAGS="${COMPOSE_UP_FLAGS/--pull always/--pull missing}"
             PULL_GATE="docker compose $CF \$ENV_FILE_FLAG pull || { for _img in \$(docker compose $CF \$ENV_FILE_FLAG config --images 2>/dev/null); do docker image inspect \"\$_img\" >/dev/null 2>&1 || { echo \"ERROR: \$_img neither pullable nor cached — refusing teardown\" >&2; exit 1; }; done; }"
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
         else
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
         # Detached + poll, NOT one long-held ssh: the pull/extract can run for
         # minutes with an almost-idle ssh channel, which is exactly when the

@@ -130,6 +130,7 @@ derive() {
     fi
     prune_orphans
     link_container_builds
+    link_ship_entrypoints
     cache_download_generator
 }
 
@@ -219,6 +220,36 @@ link_container_builds() {
                 ln -s "../../../1_cloud-configs/dist/$ref" "$srcdir/$ref"
                 log "  linked $(basename "$(dirname "$srcdir")")/src/$ref"
             done
+    done
+    return 0
+}
+
+# ══════════════════════════════════════════════════════════════════════
+# link_ship_entrypoints — materialise each solution's build.sh
+# ══════════════════════════════════════════════════════════════════════
+# The ship orchestrator dispatches a service by running <solution>/build.sh,
+# and skips the service outright when that file is absent:
+#   [cloud-drive-mcp] SKIP cloud-drive-mcp (no build.sh)
+# A skip is logged, not failed, so the run stays green while the service is
+# never built or deployed — the failure mode is total silence.
+#
+# All 67 of those build.sh files are the same symlink to the shared engine;
+# nothing created them, so every new solution had to remember by hand, and
+# forgetting looked exactly like success. src/flake.nix is the declaration
+# that a solution builds as a container image, so it is also the condition
+# for needing the entrypoint — the same reasoning link_container_builds
+# uses when it reads the flake to guarantee the build inputs.
+link_ship_entrypoints() {
+    ENGINE_REL="../../1_cicd/src/scripts/cloud-ship-container-engine.sh"
+    for flake in "$SOLUTIONS_DIR"/*/src/flake.nix; do
+        [ -f "$flake" ] || continue
+        case "$flake" in */z_archive/*) continue ;; esac
+        soldir=$(dirname "$(dirname "$flake")")
+        [ -f "$soldir/build.json" ] || continue
+        [ -e "$soldir/build.sh" ] && continue
+        rm -f "$soldir/build.sh"   # clear a dangling link before replacing it
+        ln -s "$ENGINE_REL" "$soldir/build.sh"
+        log "  linked $(basename "$soldir")/build.sh (was silently skipped by ship)"
     done
     return 0
 }
