@@ -813,6 +813,23 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
   REPO_TAG=$(jq -r '.per_repo_publish.tag // "latest"' "$BJ")
   sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "$BASE_IMAGE" || true
   for _r in $REPOS; do
+    # FORCED graphrag = FULL re-index: do not layer this repo's prior checkpoint.
+    # octocode 0.12.2 feeds its graph builder only the files the current update
+    # actually processes, and TWO metadata tables in the prior image gate that
+    # set down to "changed since last run" (git_metadata.lance by commit,
+    # file_metadata.lance by content hash) — so force-dropping graphrag_* on
+    # top of a restored checkpoint rebuilt the graph from a 29-file sliver of a
+    # 1000-file corpus (run 32664198030, measured). Starting from the shared
+    # base instead (config + embedder caches, no blocks, no metadata) makes the
+    # update process EVERY file, which is the only full-graph path this octocode
+    # has. Embeddings recompute — that cost is the per-repo semantic pass, not
+    # the ~12h monolith figure, and the 8-wide matrix absorbs it. Safety is
+    # unchanged: preflight failure aborts before package/push, so the prior
+    # image on GHCR survives until a full replacement is actually built.
+    if [ "${CGC_FORCE:-0}" = "1" ] && [ "$USE_LLM" = "true" ]; then
+      echo "[cgc-db] CGC_FORCE + LLM — skipping prior checkpoint of $_r: full re-index from base"
+      continue
+    fi
     CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${_r}:${REPO_TAG}" || true
   done
 else
@@ -933,10 +950,12 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   # phase already guards against elsewhere.
   #
   # CGC_FORCE means "the INDEXER changed, so this DB is stale at an unchanged
-  # HEAD". What a changed indexer invalidates is exactly the graph, so drop only
-  # the graphrag_* tables and leave code_blocks.lance -- the expensive embeddings
-  # (a from-scratch rebuild is ~12h) are untouched and the next pass rebuilds the
-  # graph on top of them.
+  # HEAD". In per-repo mode the real force mechanism now lives at the restore
+  # step above: the prior checkpoint is never layered in, so this home holds no
+  # graph (or metadata) to begin with and the drop below finds nothing — kept
+  # anyway as the monolith-mode fallback, where a restored home DOES carry the
+  # stale graph and dropping graphrag_* while keeping code_blocks.lance is
+  # still the right (and only affordable) repair for a 15G monolith.
   #
   # Deliberately placed AFTER the preflight: the graph is only ever destroyed once
   # the LLM endpoint has answered, so we cannot delete a graph we then cannot
