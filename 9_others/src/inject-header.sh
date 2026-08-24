@@ -115,7 +115,19 @@ _ih_build_header() {
     done
 }
 
-# JSON injection: prepend `_generated` meta-key to root object.
+# Is this JSON basename opted out of stamping? (schema-strict formats, or
+# files whose `description` is semantically consumed downstream — npm's
+# package.json publishes it, tsc rejects unknown root keys.)
+_ih_json_skipped() {
+    local base="${1##*/}"
+    jq -er --arg b "$base" '(.json_skip_basenames // [])[] | select(. == $b)' \
+        "$(_ih_tpl_file)" >/dev/null 2>&1
+}
+
+# JSON injection: hoist a `_generated` meta-key to the top of the root object
+# AND fold a human-readable notice into `description`. JSON carries no
+# comments, so these two together are the only way a generated JSON can say
+# what it is, where its source of truth lives, and which engine rebuilds it.
 # Fails loudly if root is not an object — that schema is not supported.
 _ih_inject_json() {
     local src="$1"
@@ -124,8 +136,11 @@ _ih_inject_json() {
     local engine="$4"
     local tpl
     tpl="$(_ih_tpl_file)"
-    local rebuild
+    local rebuild notice want_desc
     rebuild=$(jq -r '.rebuild_cmd' "$tpl")
+    want_desc=$(jq -r '.json_description_notice // true' "$tpl")
+    notice=$(jq -r '.json_notice_template // "GENERATED — DO NOT EDIT · SoT: {{SOURCE}} · Engine: {{ENGINE}} · Rebuild: {{REBUILD_CMD}}"' "$tpl" \
+        | sed -e "s|{{SOURCE}}|$rel_src|g" -e "s|{{ENGINE}}|$engine|g" -e "s|{{REBUILD_CMD}}|$rebuild|g")
 
     if ! jq -e 'type == "object"' "$src" >/dev/null 2>&1; then
         echo "ERROR: inject_header: JSON root must be an object (got array/scalar): $src" >&2
@@ -133,18 +148,28 @@ _ih_inject_json() {
     fi
 
     mkdir -p "$(dirname "$dest")"
+    # `description` is PREPENDED to, never replaced — a generated file may
+    # still carry a real description that downstream registries render.
     jq \
         --arg src "$rel_src" \
         --arg engine "$engine" \
         --arg rebuild "$rebuild" \
+        --arg notice "$notice" \
+        --argjson want_desc "$([ "$want_desc" = "false" ] && echo false || echo true)" \
         '. = ({
             _generated: {
-                warning: "DO NOT EDIT — generated file",
+                warning: "DO NOT EDIT — generated file, not a source of truth",
                 source:  $src,
                 engine:  $engine,
                 rebuild: $rebuild
             }
-        } + .)' \
+        } + .)
+        | if $want_desc then
+              .description =
+                  (if (.description // "") == "" then $notice
+                   elif (.description | tostring | startswith("⚠ GENERATED")) then (.description | tostring)
+                   else $notice + " — " + (.description | tostring) end)
+          else . end' \
         "$src" > "$dest"
 }
 
@@ -165,17 +190,24 @@ inject_header() {
         return 0
     fi
 
-    # 2. JSON → plain copy by default (many parsers reject unknown keys at
-    #    root — npm lockfiles, wrangler.toml sidecars, schema-validated
-    #    configs). Meta-key injection available via INJECT_JSON=1 env var.
+    # 2. JSON → stamped BY DEFAULT (`_generated` meta-key + `description`
+    #    notice). An unstamped generated file gets hand-edited and silently
+    #    reverted on the next build — the exact failure this engine prevents.
+    #    Opt out per-file via `json_skip_basenames` in generated-header.json
+    #    (schema-strict formats), or per-run via INJECT_JSON=0.
     if _ih_is_json "$src"; then
-        if [ "${INJECT_JSON:-0}" = "1" ]; then
-            _ih_inject_json "$src" "$dest" "$rel_src" "$engine"
-            return $?
-        else
+        if [ "${INJECT_JSON:-1}" = "0" ] || _ih_json_skipped "$src"; then
             cp "$src" "$dest"
             return 0
         fi
+        # Non-object roots (arrays) can't hold a meta-key — copy, don't fail
+        # the whole build over a shape the stamp doesn't fit.
+        if ! jq -e 'type == "object"' "$src" >/dev/null 2>&1; then
+            cp "$src" "$dest"
+            return 0
+        fi
+        _ih_inject_json "$src" "$dest" "$rel_src" "$engine"
+        return $?
     fi
 
     # 3. Text with known comment prefix → banner injection.

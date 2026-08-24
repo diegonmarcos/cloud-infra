@@ -94,6 +94,20 @@
     "jsonc": { "mode": "line_comment", "prefix": "//" }
   },
   "shebang_aware": true,
+
+  "_json_policy_doc": "JSON cannot carry comments, so generated JSON is stamped two ways instead: a `_generated` meta-object hoisted to the top of the root object, AND a human-readable notice folded into `description` (the field a person or an LLM actually reads first). Stamping is ON BY DEFAULT — a generated file that does not say it is generated gets hand-edited and silently reverted on the next build, which is the exact failure this engine exists to prevent. Opt out per-file via `json_skip_basenames` (schema-strict formats, or files whose `description` is semantically consumed downstream), or per-run via INJECT_JSON=0.",
+  "json_description_notice": true,
+  "json_notice_template": "⚠ GENERATED — DO NOT EDIT · SoT: {{SOURCE}} · Engine: {{ENGINE}} · Rebuild: {{REBUILD_CMD}}",
+  "json_skip_basenames": [
+    "package.json",
+    "composer.json",
+    "tsconfig.json",
+    "wrangler.json",
+    "wrangler.jsonc",
+    "devcontainer.json",
+    ".eslintrc.json"
+  ],
+
   "skip_extensions": ["png", "jpg", "jpeg", "gif", "webp", "ico", "pdf", "tar", "gz", "zip", "nar", "min.js"],
   "skip_basenames": [
     ".terraform.lock.hcl",

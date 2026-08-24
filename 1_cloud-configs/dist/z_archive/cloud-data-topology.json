@@ -1071,30 +1071,6 @@
       },
       "flake": "infra-ai_languagetool"
     },
-    "c3-diego-personal-data-mcp": {
-      "category": "data",
-      "vm": "local",
-      "folder": "infra-api_c3-diego-personal-data-mcp",
-      "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
-      "containers": {
-        "app": {
-          "container_name": "c3-diego-personal-data-mcp",
-          "image": "",
-          "public": false
-        }
-      },
-      "container_names": [
-        "c3-diego-personal-data-mcp"
-      ],
-      "all_ports": [],
-      "all_dns": [],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "flake": "infra-api_c3-diego-personal-data-mcp"
-    },
     "c3-infra-api": {
       "category": "sec",
       "vm": "oci-A1-f_0",
@@ -1478,6 +1454,30 @@
         "path": "/mcp"
       },
       "flake": "infra-api_c3-services-mcp"
+    },
+    "cloud-vault-mcp": {
+      "category": "data",
+      "vm": "local",
+      "folder": "infra-api_cloud-vault-mcp",
+      "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
+      "containers": {
+        "app": {
+          "container_name": "cloud-vault-mcp",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "cloud-vault-mcp"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-api_cloud-vault-mcp"
     },
     "google-personal-mcp": {
       "category": "app",
@@ -6623,8 +6623,8 @@
       },
       "per_service": [
         {
-          "service": "c3-diego-personal-data-mcp",
-          "folder": "infra-api_c3-diego-personal-data-mcp",
+          "service": "cloud-vault-mcp",
+          "folder": "infra-api_cloud-vault-mcp",
           "category": "data",
           "dependencies": {
             "@modelcontextprotocol/sdk": "^1.12.0",

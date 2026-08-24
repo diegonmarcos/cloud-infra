@@ -172,32 +172,6 @@
     },
     {
       "table": "service",
-      "id": "c3_diego_personal_data_mcp",
-      "key": "service:c3_diego_personal_data_mcp",
-      "properties": {
-        "name": "c3-diego-personal-data-mcp",
-        "category": "data",
-        "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
-        "domain": null,
-        "port": null,
-        "vm": "local",
-        "folder": "infra-api_c3-diego-personal-data-mcp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "c3_diego_personal_data_mcp",
-      "key": "container:c3_diego_personal_data_mcp",
-      "properties": {
-        "name": "c3-diego-personal-data-mcp",
-        "image": "",
-        "role": "app",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "c3_infra_api",
       "key": "service:c3_infra_api",
       "properties": {
@@ -324,6 +298,32 @@
         "role": "app",
         "port": 3101,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_vault_mcp",
+      "key": "service:cloud_vault_mcp",
+      "properties": {
+        "name": "cloud-vault-mcp",
+        "category": "data",
+        "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "infra-api_cloud-vault-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_vault_mcp",
+      "key": "container:cloud_vault_mcp",
+      "properties": {
+        "name": "cloud-vault-mcp",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
       }
     },
     {
@@ -2455,17 +2455,6 @@
     },
     {
       "table": "module",
-      "id": "infra_api_c3_diego_personal_data_mcp",
-      "key": "module:infra_api_c3_diego_personal_data_mcp",
-      "properties": {
-        "name": "infra-api_c3-diego-personal-data-mcp",
-        "repo": "cloud",
-        "category": "data",
-        "service": "c3-diego-personal-data-mcp"
-      }
-    },
-    {
-      "table": "module",
       "id": "infra_api_c3_infra_api",
       "key": "module:infra_api_c3_infra_api",
       "properties": {
@@ -2517,6 +2506,17 @@
         "repo": "cloud",
         "category": "obs",
         "service": "c3-services-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_cloud_vault_mcp",
+      "key": "module:infra_api_cloud_vault_mcp",
+      "properties": {
+        "name": "infra-api_cloud-vault-mcp",
+        "repo": "cloud",
+        "category": "data",
+        "service": "cloud-vault-mcp"
       }
     },
     {
@@ -3544,15 +3544,6 @@
       }
     },
     {
-      "table": "runs_container",
-      "from": "service:c3_diego_personal_data_mcp",
-      "to": "container:c3_diego_personal_data_mcp",
-      "key": "service:c3_diego_personal_data_mcp->runs_container->container:c3_diego_personal_data_mcp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
       "table": "hosted_on",
       "from": "service:c3_infra_api",
       "to": "vm:oci_apps",
@@ -3628,6 +3619,15 @@
       "from": "service:c3_services_mcp",
       "to": "container:c3_services_mcp",
       "key": "service:c3_services_mcp->runs_container->container:c3_services_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_vault_mcp",
+      "to": "container:cloud_vault_mcp",
+      "key": "service:cloud_vault_mcp->runs_container->container:cloud_vault_mcp",
       "properties": {
         "role": "app"
       }
@@ -5452,20 +5452,6 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:infra_api_c3_diego_personal_data_mcp",
-      "to": "repo:cloud",
-      "key": "module:infra_api_c3_diego_personal_data_mcp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:infra_api_c3_diego_personal_data_mcp",
-      "to": "service:c3_diego_personal_data_mcp",
-      "key": "module:infra_api_c3_diego_personal_data_mcp->implements->service:c3_diego_personal_data_mcp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
       "from": "module:infra_api_c3_infra_api",
       "to": "repo:cloud",
       "key": "module:infra_api_c3_infra_api->belongs_to_repo->repo:cloud",
@@ -5532,6 +5518,20 @@
       "from": "module:infra_api_c3_services_mcp",
       "to": "service:c3_services_mcp",
       "key": "module:infra_api_c3_services_mcp->implements->service:c3_services_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_cloud_vault_mcp",
+      "to": "repo:cloud",
+      "key": "module:infra_api_cloud_vault_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_cloud_vault_mcp",
+      "to": "service:cloud_vault_mcp",
+      "key": "module:infra_api_cloud_vault_mcp->implements->service:cloud_vault_mcp",
       "properties": {}
     },
     {
