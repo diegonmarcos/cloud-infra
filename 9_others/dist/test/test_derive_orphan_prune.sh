@@ -90,5 +90,47 @@ prune_orphans
 check "keeper survives bad manifest" "yes" "$([ -e "$DIST/build-keeper.json" ] && echo yes || echo no)"
 check "ghost survives bad manifest"  "yes" "$([ -e "$DIST/build-ghost.json" ] && echo yes || echo no)"
 
+
+# ── link_container_builds: the counterpart — creates what the flake declares ──
+sed -n '/^link_container_builds() {/,/^}/p' "$BUILD_SH" > "$TMP/fn2.sh"
+[ -s "$TMP/fn2.sh" ] || { echo "FAIL: could not extract link_container_builds"; exit 1; }
+
+echo "test: flake.nix container refs are materialised as relative symlinks"
+setup '[{"file":"dist/build-keeper.json","name":"keeper"}]'
+mkdir -p "$CLOUD_ROOT/a_solutions/infra-api_keeper/src" \
+         "$CLOUD_ROOT/a_solutions/z_archive/old-thing/src"
+echo 'container = builtins.fromJSON (builtins.readFile ./build-keeper.json);' \
+    > "$CLOUD_ROOT/a_solutions/infra-api_keeper/src/flake.nix"
+# Declares a build file that dist/ does not have — must warn, not crash.
+echo 'container = builtins.fromJSON (builtins.readFile ./build-nosuch.json);' \
+    >> "$CLOUD_ROOT/a_solutions/infra-api_keeper/src/flake.nix"
+# Archived solutions are frozen — no links created there either.
+echo 'container = builtins.fromJSON (builtins.readFile ./build-keeper.json);' \
+    > "$CLOUD_ROOT/a_solutions/z_archive/old-thing/src/flake.nix"
+SOLUTIONS_DIR="$CLOUD_ROOT/a_solutions"
+L="$CLOUD_ROOT/a_solutions/infra-api_keeper/src/build-keeper.json"
+# setup's own link is absolute; drop it so the engine is what creates this one.
+rm -f "$L"
+# shellcheck disable=SC1090
+. "$TMP/fn2.sh"
+link_container_builds
+
+check "declared ref linked"        "yes" "$([ -L "$L" ] && echo yes || echo no)"
+check "link resolves"              "yes" "$([ -e "$L" ] && echo yes || echo no)"
+# Note: a `case` pattern's ')' closes the enclosing $( ) early — compare with
+# parameter expansion instead. An absolute link would break in the container,
+# where the repo is mounted at a different prefix.
+tgt="$(readlink "$L")"
+check "link is relative"           "yes" "$([ "${tgt#/}" = "$tgt" ] && echo yes || echo no)"
+check "ref absent from dist skipped" "yes" \
+    "$([ -e "$CLOUD_ROOT/a_solutions/infra-api_keeper/src/build-nosuch.json" ] && echo no || echo yes)"
+check "z_archive not linked"       "yes" \
+    "$([ -e "$CLOUD_ROOT/a_solutions/z_archive/old-thing/src/build-keeper.json" ] && echo no || echo yes)"
+
+# A dangling link left by a rename must be replaced, not skipped as "exists".
+rm -f "$L"; ln -s "../../../1_cloud-configs/dist/build-gone.json" "$L"
+link_container_builds
+check "dangling ref repointed"     "yes" "$([ -e "$L" ] && echo yes || echo no)"
+
 [ "$fail" -eq 0 ] && echo "PASS" || echo "FAILED"
 exit "$fail"

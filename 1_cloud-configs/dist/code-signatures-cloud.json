@@ -6,26 +6,26 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 9045,
+    "files": 9055,
     "by_lang": {
-      "nix": 440,
-      "sh": 352,
-      "ts": 317,
+      "nix": 442,
+      "sh": 353,
+      "ts": 324,
       "py": 7387,
       "js": 25,
       "rust": 524
     },
     "by_role": {
-      "flake": 72,
+      "flake": 73,
       "script": 111,
-      "shell": 234,
-      "module": 212,
+      "shell": 235,
+      "module": 217,
       "engine": 1,
       "nix-module": 304,
       "python": 7340,
-      "compose": 64,
-      "entrypoint": 65,
-      "mcp-tool": 100,
+      "compose": 65,
+      "entrypoint": 66,
+      "mcp-tool": 101,
       "file": 14,
       "workflow-dag": 2,
       "rust-module": 519,
@@ -3345,6 +3345,22 @@
       ]
     },
     {
+      "path": "9_others/test/test_drive_routing.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "nope()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "nope()",
+        "check()"
+      ]
+    },
+    {
       "path": "9_others/test/test_engine_step_sourcing_tolerant.sh",
       "lang": "sh",
       "role": "shell",
@@ -6615,6 +6631,208 @@
       "exports": [
         "description",
         "Type",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/backends/convert.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "toolFor",
+        "convertCall"
+      ],
+      "imports": [
+        "node:child_process",
+        "node:fs/promises",
+        "node:os",
+        "node:path"
+      ],
+      "symbols": [
+        "toolFor(from: string, to: string)",
+        "run(cmd: string, args: string[])",
+        "convertCall(op: string, params: Json)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/backends/s3.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "s3Config",
+        "s3Call",
+        "S3Config"
+      ],
+      "imports": [
+        "node:crypto",
+        "../request.js"
+      ],
+      "symbols": [
+        "signingKey(secret: string, date: string, region: string)",
+        "uriEscape(s: string)",
+        "encodeKeyPath(key: string)",
+        "s3Config(backend: Json)",
+        "signedRequest(\n  cfg: S3Config,\n  method: string,\n  keyPath: string,\n  query: Record<string, string>,\n  body: Buffer,\n)",
+        "s3Call(backend: Json, op: string, params: Json)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "./tools/drive.js"
+      ],
+      "symbols": [
+        "createMcpServer()",
+        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
+        "initSession(port: number)",
+        "startMcpHttpServer(port: number = 3109)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
+      "exports": [],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/stdio.js",
+        "./tools/drive.js"
+      ],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/request.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "fillPath",
+        "send",
+        "Reply"
+      ],
+      "imports": [
+        "node:http",
+        "node:https"
+      ],
+      "symbols": [
+        "fillPath(\n  template: string,\n  params: Record<string, any>,\n)",
+        "send(\n  method: string,\n  url: string,\n  body?: string | Buffer,\n  headers: Record<string, string> = {},\n  timeoutMs = 20_000,\n)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/resolve.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "resolveService",
+        "driveConfig",
+        "Resolved"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:os"
+      ],
+      "symbols": [
+        "cloudData()",
+        "resolveService(\n  name: string,\n  opts: { urlEnv?: string; basePath?: string } = {},\n)",
+        "driveConfig()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/code/mcp/tools/drive.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerDriveTool"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../resolve.js",
+        "../request.js",
+        "../backends/s3.js",
+        "../backends/convert.js"
+      ],
+      "symbols": [
+        "authHeaders(backend: Json, resolvedAuth: string)",
+        "callHttp(spec: Json, backend: Json, params: Json)",
+        "registerDriveTool(server: McpServer)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "binariesImage",
+        "vmIp",
+        "port",
+        "services",
+        "cloud-drive-mcp",
+        "image",
+        "container_name",
+        "ports",
+        "env_file",
+        "environment",
+        "PORT"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-drive-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "files",
+        "photos",
+        "sync",
+        "scrapes",
+        "S3",
         "nixpkgs"
       ],
       "imports": [
