@@ -82,9 +82,9 @@
         "c3-infra-mcp",
         "c3-services-api",
         "c3-services-mcp",
+        "cloud-mail-mcp",
         "google-personal-mcp",
         "google-workspace-mcp",
-        "mail-mcp",
         "mattermost-mcp",
         "gha-runner",
         "borg-server",
@@ -602,6 +602,12 @@
         "service": "c3-services-mcp"
       },
       {
+        "name": "mail-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-mail-mcp"
+      },
+      {
         "name": "g-personal-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -612,12 +618,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "google-workspace-mcp"
-      },
-      {
-        "name": "mail-mcp.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "mail-mcp"
       },
       {
         "name": "mattermost-mcp.app",
@@ -1455,6 +1455,68 @@
       },
       "flake": "infra-api_c3-services-mcp"
     },
+    "cloud-mail-mcp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-api_cloud-mail-mcp",
+      "description": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
+      "domain": "mcp.diegonmarcos.com",
+      "port": 3103,
+      "dns": "mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "containers": {
+        "app": {
+          "container_name": "cloud-mail-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-mail-mcp:latest",
+          "port": 3103,
+          "port_env": "PORT",
+          "dns": "mail-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/mail-mcp"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-mail-mcp"
+      ],
+      "all_ports": [
+        "3103"
+      ],
+      "all_dns": [
+        "mail-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/mail-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3103
+      },
+      "flake": "infra-api_cloud-mail-mcp"
+    },
     "cloud-vault-mcp": {
       "category": "data",
       "vm": "local",
@@ -1610,68 +1672,6 @@
         "path": "/health"
       },
       "flake": "infra-api_google-workspace-mcp"
-    },
-    "mail-mcp": {
-      "category": "app",
-      "vm": "oci-A1-f_0",
-      "folder": "infra-api_mail-mcp",
-      "description": "Mail MCP server — IMAP/SMTP/Admin via Stalwart REST API",
-      "domain": "mcp.diegonmarcos.com",
-      "port": 3103,
-      "dns": "mail-mcp.app",
-      "upstream": "10.0.0.6:3103",
-      "containers": {
-        "app": {
-          "container_name": "mail-mcp",
-          "image": "ghcr.io/diegonmarcos/mail-mcp:latest",
-          "port": 3103,
-          "port_env": "PORT",
-          "dns": "mail-mcp.app",
-          "public": true,
-          "proxy": {
-            "streaming": true,
-            "type": "path",
-            "parent_domain": "mcp.diegonmarcos.com",
-            "base_path": "/mail-mcp"
-          },
-          "healthcheck": null,
-          "monitoring": null,
-          "volumes": [],
-          "env_file": true,
-          "depends_on": [],
-          "resources": null,
-          "read_only": false,
-          "protocol": "http"
-        }
-      },
-      "container_names": [
-        "mail-mcp"
-      ],
-      "all_ports": [
-        "3103"
-      ],
-      "all_dns": [
-        "mail-mcp.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "app_hub": false,
-        "primary": {
-          "streaming": true,
-          "type": "path",
-          "parent_domain": "mcp.diegonmarcos.com",
-          "base_path": "/mail-mcp",
-          "wg_only": true
-        }
-      },
-      "declared_ports": {
-        "app": 3103
-      },
-      "flake": "infra-api_mail-mcp"
     },
     "mattermost-mcp": {
       "category": "app",
