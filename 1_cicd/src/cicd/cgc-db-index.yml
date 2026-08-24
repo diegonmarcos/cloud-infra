@@ -373,8 +373,12 @@ jobs:
             [ -n "$WGIP" ] && TARGET="$SUSER@$WGIP"
           fi
           echo "[cgc-db] restore-all → $TARGET (box pulls ${PREFIX}<repo>:${TAG} from GHCR)"
-          # shellcheck disable=SC2086
-          scp $CGC_SSH_OPTS 1_cicd/dist/scripts/cloud-cgc-db-restore-all.sh "$TARGET:/tmp/cgc-restore-all.sh"
+          # Script transfer happens further down through ssh_retry (feeding the
+          # file on stdin into `cat >`), NOT scp: a raw scp here was the step's
+          # first network call and the whole job died on its exit 255 within 91
+          # seconds when a concurrent Ship deploy held the WireGuard peer slot
+          # (2026-08-24, run 32721840450). Nothing between here and there needs
+          # the file on the box yet.
 
           # TWO SURFACES, one script. cloud-cgc-pub-mcp serves a volume the private
           # repos are filtered OUT of; cloud-cgc-pvt-mcp serves its own volume with
@@ -412,18 +416,34 @@ jobs:
           # one-shot ssh calls retry. The poll loop already tolerates failure by
           # construction ("|| echo ''"), so it is left alone.
           #   $1 = file to feed on stdin (/dev/null when there is nothing to send)
+          # Retries ONLY on rc=255 — ssh's own "connection failed" code. Any other
+          # rc means the REMOTE command ran and failed, and re-running it would
+          # mask a real error (or double-execute a non-idempotent one). Twenty
+          # attempts x 30s ≈ 10 min of tolerance, sized for the second killer
+          # found here: a concurrent Ship deploy authenticates as the SAME
+          # gha-runner WireGuard peer and steals the slot for its whole run
+          # (2026-08-24, run 32721840450: two Ships at 15:18–15:31Z, restore's
+          # first network call dead 91s in). Box load spikes (the 2026-08-23
+          # timeout) are covered by the same loop.
           ssh_retry() {
             _sr_f=$1; shift
             _sr_n=0
             while :; do
               _sr_n=$((_sr_n + 1))
               # shellcheck disable=SC2086
-              ssh $CGC_SSH_OPTS "$@" < "$_sr_f" && return 0
-              [ "$_sr_n" -ge 3 ] && return 1
-              echo "[cgc-db] ssh to $HOST failed (attempt $_sr_n/3) — retrying in 20s"
-              sleep 20
+              ssh $CGC_SSH_OPTS "$@" < "$_sr_f"
+              _sr_rc=$?
+              [ "$_sr_rc" -eq 0 ] && return 0
+              [ "$_sr_rc" -ne 255 ] && return "$_sr_rc"
+              [ "$_sr_n" -ge 20 ] && return "$_sr_rc"
+              echo "[cgc-db] ssh to $HOST unreachable (attempt $_sr_n/20) — mesh slot likely held by a concurrent deploy; retrying in 30s"
+              sleep 30
             done
           }
+          # The transfer scp used to do at the top of the step — same stdin-feed
+          # contract as every other ssh_retry call, and `cat >` re-runs clean on
+          # a retry.
+          ssh_retry 1_cicd/dist/scripts/cloud-cgc-db-restore-all.sh "$TARGET" 'cat > /tmp/cgc-restore-all.sh'
           # Called LAZILY, immediately before the pvt restore, never up front. Only the
           # private surface's packages need auth -- the public ones pull anonymously --
           # so an eager login buys nothing and costs two things: the token sits at rest
@@ -523,8 +543,13 @@ jobs:
                 _probe_repo=$(printf '%s\n' "$PRIV" | awk '{print $1}')
                 if [ -n "$_probe_repo" ]; then
                   _probe_img="${PREFIX}${_probe_repo}:${TAG}"
-                  # shellcheck disable=SC2086
-                  if ssh $CGC_SSH_OPTS "$TARGET" "docker manifest inspect $_probe_img" >/dev/null 2>&1; then
+                  # ssh_retry so a mesh-slot steal (rc=255) retries instead of
+                  # reading as "box cannot pull" — this condition hard-refuses
+                  # the pvt restore, so a connection blip here must not be
+                  # mistaken for a capability verdict. A real remote docker
+                  # failure returns 1-254 and still lands in the else, which is
+                  # the verdict this gate exists to give.
+                  if ssh_retry /dev/null "$TARGET" "docker manifest inspect $_probe_img" >/dev/null 2>&1; then
                     echo "[cgc-db] box can resolve $_probe_img — private packages are pullable"
                     BOX_GHCR_OK=1
                   else
