@@ -123,8 +123,68 @@ derive() {
         # derivers.json, not here.
         log "WARN: derivers.json or jq unavailable — running only the canonical cloud-data-config-derive.ts"
         tsx "$ENGINES/cloud-data-config-derive.ts"
+        # dist/ is knowingly incomplete here, so live files would look
+        # orphaned. Skip the prune rather than delete them.
+        cache_download_generator
+        return 0
     fi
+    prune_orphans
     cache_download_generator
+}
+
+# ══════════════════════════════════════════════════════════════════════
+# prune_orphans — drop dist/build-*.json that no longer has a producer
+# ══════════════════════════════════════════════════════════════════════
+# Renaming or deleting a solution leaves its old build-<name>.json behind,
+# and a stale file reads as live config: it stays in dist/, keeps getting
+# linked into every solution's src/, and gets committed. manifest.json is
+# the set of files the pipeline just produced, so a build-*.json missing
+# from it has no producer and is dead.
+#
+# Only reached after the full deriver set ran. Refuses to act on an empty
+# or unreadable manifest — that means the run failed, not that every build
+# file is an orphan.
+prune_orphans() {
+    MANIFEST="$SCRIPT_DIR/manifest.json"
+    [ -f "$MANIFEST" ] || return 0
+    command -v jq >/dev/null 2>&1 || return 0
+
+    keep=$(jq -r '.[]?.file | select(type == "string") | select(startswith("dist/build-"))' \
+        "$MANIFEST" 2>/dev/null | sed 's|^dist/||')
+    if [ -z "$keep" ]; then
+        log "WARN: manifest declares no build-* outputs — skipping orphan prune"
+        return 0
+    fi
+
+    pruned=0
+    for f in "$DIST"/build-*.json; do
+        [ -e "$f" ] || continue
+        base=$(basename "$f")
+        printf '%s\n' "$keep" | grep -qxF "$base" && continue
+        rm -f "$f"
+        log "  pruned orphan: $base"
+        pruned=$((pruned + 1))
+    done
+    [ "$pruned" -gt 0 ] && log "Pruned $pruned orphaned build file(s)"
+
+    # link-builds fans a symlink for every dist file into every solution's
+    # src/, so a removed build file leaves a trail of dangling links — from
+    # this run and from every hand-deletion before it. A link into dist/
+    # that no longer resolves is dead whenever it died, so sweep on that
+    # rather than on the names pruned above.
+    # Here-doc, not a pipe: `while read` in a pipeline runs in a subshell
+    # and the counter would not survive it.
+    swept=0
+    while IFS= read -r link; do
+        [ -n "$link" ] || continue
+        case "$(readlink "$link")" in
+            *1_cloud-configs/dist/*) rm -f "$link" && swept=$((swept + 1)) ;;
+        esac
+    done <<EOF
+$(find "$CLOUD_ROOT/a_solutions" -path '*/z_archive/*' -prune -o -type l ! -exec test -e {} \; -print 2>/dev/null)
+EOF
+    [ "$swept" -gt 0 ] && log "Swept $swept dangling build symlink(s)"
+    return 0
 }
 
 # ══════════════════════════════════════════════════════════════════════
