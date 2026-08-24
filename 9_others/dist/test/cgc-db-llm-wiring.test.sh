@@ -138,10 +138,21 @@ import sys
 s=open(sys.argv[1],encoding='utf8').read()
 print('yes' if 'in_llm && /^[[:space:]]*model[[:space:]]*=/' in s else 'no')" "$SCRIPT")" "yes"
 
+# 8b) in per-repo mode, a forced graphrag run must SKIP restoring the repo's
+#     prior checkpoint image. octocode 0.12.2 feeds its graph builder only the
+#     files the current update processes, and the prior image's git_metadata/
+#     file_metadata tables gate that down to "changed since last run" — run
+#     32664198030 measured the result: a 29-file graph for a 1000-file corpus.
+#     Only a from-base full re-index yields a full enriched graph.
+ck "forced graphrag skips the prior per-repo checkpoint" \
+   "$(grepq 'skipping prior checkpoint' "$SCRIPT" && echo yes || echo no)" "yes"
+
 # 8) force must invalidate the GRAPH without touching the EMBEDDINGS. octocode
 #    rebuilds the graph only when it finds none, so a structural-only graph left
 #    in place makes the repair a no-op; dropping code_blocks instead would turn a
-#    ~2h repair into a ~12h from-scratch rebuild.
+#    ~2h repair into a ~12h from-scratch rebuild. (Monolith-mode fallback — the
+#    per-repo path now forces via the skip above, where embeddings DO recompute
+#    at per-repo scale by design.)
 ck "force drops the graphrag tables" \
    "$(python3 -c "
 import sys

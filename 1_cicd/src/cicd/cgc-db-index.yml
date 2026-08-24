@@ -282,7 +282,15 @@ jobs:
     # run only touched repos this volume filters out anyway.
     if: always() && inputs.restore
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    # 180, not 90: two consecutive runs (32664198030 at 01:15Z and the 04:37Z
+    # cron of 2026-08-24) hit the 90-minute ceiling mid-rsync — GitHub reports
+    # that as "cancelled", and the kill landed between stop-container and
+    # start-container, leaving the live volumes half-written (empty graphs
+    # measured on the pvt surface). The known debt that makes restore this
+    # slow (amd64 images emulated on the arm64 box, docker rmi between
+    # surfaces forcing full re-pulls) is tracked separately; until that lands,
+    # the ceiling has to clear the measured worst case, not race it.
+    timeout-minutes: 180
     permissions:
       contents: read
       packages: read
