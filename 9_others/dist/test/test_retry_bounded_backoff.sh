@@ -13,7 +13,7 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ Phase 9 tester — c3-services-mcp retry loop is bounded           ║
+# ║ Phase 9 tester — cloud-services-mcp retry loop is bounded           ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   proxy-mcp.ts uses per-child exponential backoff + cleans up    ║

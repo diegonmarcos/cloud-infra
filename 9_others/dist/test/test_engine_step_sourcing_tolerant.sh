@@ -20,7 +20,7 @@
 # /root/git/cloud-infra lacked cloud-ship-container-step-verify-secret-consumption.sh
 # because the entrypoint's repo sync silently failed. Engine source line
 # aborted with "No such file or directory" before printing the service
-# header — c3-services-mcp + cloud-mail-mcp ship attempts both failed at line 188
+# header — cloud-services-mcp + cloud-mail-mcp ship attempts both failed at line 188
 # before any step (build/docker/secrets/deploy/compose) executed.
 #
 # This tester locks in the defensive pattern so any future regression that
