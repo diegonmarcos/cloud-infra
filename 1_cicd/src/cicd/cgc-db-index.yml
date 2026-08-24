@@ -425,17 +425,22 @@ jobs:
           # (2026-08-24, run 32721840450: two Ships at 15:18–15:31Z, restore's
           # first network call dead 91s in). Box load spikes (the 2026-08-23
           # timeout) are covered by the same loop.
+          # set -e trap, learned the hard way (run 32746314822): a BARE ssh that
+          # fails kills the whole step before `$?` can be read — the retry loop
+          # never loops. The `|| _sr_rc=$?` capture keeps the failure "tested",
+          # which is the set -e exemption, and every branch below is an explicit
+          # `if` for the same reason.
           ssh_retry() {
             _sr_f=$1; shift
             _sr_n=0
             while :; do
               _sr_n=$((_sr_n + 1))
+              _sr_rc=0
               # shellcheck disable=SC2086
-              ssh $CGC_SSH_OPTS "$@" < "$_sr_f"
-              _sr_rc=$?
-              [ "$_sr_rc" -eq 0 ] && return 0
-              [ "$_sr_rc" -ne 255 ] && return "$_sr_rc"
-              [ "$_sr_n" -ge 20 ] && return "$_sr_rc"
+              ssh $CGC_SSH_OPTS "$@" < "$_sr_f" || _sr_rc=$?
+              if [ "$_sr_rc" -eq 0 ]; then return 0; fi
+              if [ "$_sr_rc" -ne 255 ]; then return "$_sr_rc"; fi
+              if [ "$_sr_n" -ge 20 ]; then return "$_sr_rc"; fi
               echo "[cgc-db] ssh to $HOST unreachable (attempt $_sr_n/20) — mesh slot likely held by a concurrent deploy; retrying in 30s"
               sleep 30
             done
