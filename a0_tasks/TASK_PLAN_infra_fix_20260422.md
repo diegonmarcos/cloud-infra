@@ -39,7 +39,7 @@ Every fix MUST be declarative + data-driven + testable (fire rules 0-4).
 
 ### A1. Container crashes (6 services)
 
-#### A1.1 · `c3-services-mcp` exit 134 — JS heap OOM
+#### A1.1 · `cloud-services-mcp` exit 134 — JS heap OOM
 
 **Evidence**: `FATAL ERROR: Ineffective mark-compacts near heap limit`
 after thousands of retry lines against 4 unreachable sub-MCPs.
@@ -53,7 +53,7 @@ after thousands of retry lines against 4 unreachable sub-MCPs.
 3. Investigate WHY sub-MCPs are unreachable (likely the same root cause as H8 — gcp-proxy docker-real wrapper missing), not just mask the symptom.
 
 **Tester**:
-- Run `c3-services-mcp` for 1h with sub-MCPs down → `docker stats` RSS stable ≤ 300 MB, no exit 134.
+- Run `cloud-services-mcp` for 1h with sub-MCPs down → `docker stats` RSS stable ≤ 300 MB, no exit 134.
 
 **Order**: after A3.X (docker-real wrapper fixed) — sub-MCPs may come back naturally.
 
@@ -231,7 +231,7 @@ No independent fix. Recovers when A1.3 lands.
 
 **Declarative fix**:
 1. Inspect which cgroup: `journalctl -k | grep 'oom_reaper'` → look at `comm=`.
-2. Likely candidates: photos-db (A1.3 — crashes often), ollama-hai, c3-services-mcp (A1.1).
+2. Likely candidates: photos-db (A1.3 — crashes often), ollama-hai, cloud-services-mcp (A1.1).
 3. After A1.X fixes, should reduce organically.
 4. If continues: tighten `MemoryMax` per offending container in its `build.json`.
 
@@ -360,7 +360,7 @@ Fix while touching each respective report. Each is a one-file change.
 │  3a. A1.3 photos-db multi-arch rebuild + ship               │
 │  3b. A1.2 fluent-bit parsers.conf deploy fix                │
 │  3c. A1.5/A1.6 revealmd / kg-graph evidence-based fixes     │
-│  3d. A1.1 c3-services-mcp (may self-heal after STEP 1)      │
+│  3d. A1.1 cloud-services-mcp (may self-heal after STEP 1)      │
 └─────────────────────────────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────┐

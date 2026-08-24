@@ -86,7 +86,7 @@ returns valid JSON for a known target; LinkedIn output byte-identical to current
 **Phase 3 — Dagu schedule.** Add DAG that calls `/scrape/*` on cron, writes JSON to the data store.
 **Tester:** manual DAG run green; output file present + valid.
 
-**Phase 4 — Repoint consumers.** Rewrite `c3-services-mcp` crawlee tools → `scrappers` tools (new
+**Phase 4 — Repoint consumers.** Rewrite `cloud-services-mcp` crawlee tools → `scrappers` tools (new
 endpoints); update `discovery.ts` registry, `c3-infra-api` dashboard, `front c-Cloud/api`, and the
 drift test. **Tester:** MCP tool call hits scrappers-api; drift test passes; dashboards resolve.
 

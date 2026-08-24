@@ -8,7 +8,7 @@
 # fails with "rename: device or resource busy" because the target is a
 # directory.
 #
-# Surfaced 2026-05-07 (ship run 25490646324: c3-services-mcp build to
+# Surfaced 2026-05-07 (ship run 25490646324: cloud-services-mcp build to
 # oci-apps).
 #
 # Fix landed in cloud-ship-container-step-build-docker.sh:

@@ -71,7 +71,7 @@ This test plan covers verification and validation of the Cloud IaC platform: bui
 - [ ] Watchdog + health agent are operational
 
 ### 4.7 MCP Servers
-- [ ] `c3-infra-mcp` responds to all 70+ tools
+- [ ] `cloud-infra-mcp` responds to all 70+ tools
 - [ ] `cloud-cgc-mcp` knowledge queries return accurate data
 - [ ] Health tier1/tier2/tier3 checks pass
 - [ ] Topology drift detection works

@@ -120,38 +120,6 @@
         "auth": "bearer"
       }
     },
-    "c3-infra-mcp": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 3100
-      },
-      "vm": "oci-apps",
-      "healthcheck": "/mcp",
-      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
-      "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/mcp"
-        ]
-      },
-      "mcp": {
-        "has_mcp": true,
-        "mcp_url": "https://mcp.diegonmarcos.com/c3-infra-mcp/mcp",
-        "transport": "streamable-http",
-        "endpoint_path": "/mcp",
-        "tools_count": 109,
-        "resources_count": 0,
-        "prompts_count": 0,
-        "display_name": "C3 Infra MCP",
-        "description": "Cloud health, DevOps operations, workflows, cost tracking, security scanning, observability, front-end deployment.",
-        "auth": "none",
-        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
-      }
-    },
     "c3-public-api": {
       "ip": "10.0.0.4",
       "ports": {
@@ -203,14 +171,15 @@
         "auth": "bearer"
       }
     },
-    "c3-services-mcp": {
+    "cloud-infra-mcp": {
       "ip": "10.0.0.6",
       "ports": {
-        "app": 3101
+        "app": 3100
       },
       "vm": "oci-apps",
       "healthcheck": "/mcp",
-      "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+      "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+      "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -222,14 +191,14 @@
       },
       "mcp": {
         "has_mcp": true,
-        "mcp_url": null,
+        "mcp_url": "https://mcp.diegonmarcos.com/c3-infra-mcp/mcp",
         "transport": "streamable-http",
         "endpoint_path": "/mcp",
-        "tools_count": 127,
+        "tools_count": 109,
         "resources_count": 0,
         "prompts_count": 0,
-        "display_name": "C3 Services MCP",
-        "description": "Unified service API gateway: Grafana, Matomo, Umami, Ntfy, Syncthing, Crawlee, Authelia, NocoDB, PhotoPrism, Gitea, Grist, HedgeDoc, Etherpad, Vaultwarden; proxies infra and user MCPs.",
+        "display_name": "C3 Infra MCP",
+        "description": "Cloud health, DevOps operations, workflows, cost tracking, security scanning, observability, front-end deployment.",
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
@@ -259,6 +228,65 @@
         "prompts_count": 0,
         "display_name": "Mail MCP",
         "description": "IMAP/SMTP/Admin via Stalwart REST API; proxies google-personal-mcp tools.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
+    "cloud-mattermost-mcp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3102
+      },
+      "vm": "oci-apps",
+      "description": "Mattermost MCP server — chat tools via HTTP transport",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 10,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Mattermost MCP",
+        "description": "Mattermost chat read, post, react, channel management via Mattermost API.",
+        "auth": "bearer",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
+    "cloud-services-mcp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3101
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/mcp",
+      "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/mcp"
+        ]
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": null,
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 127,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "C3 Services MCP",
+        "description": "Unified service API gateway: Grafana, Matomo, Umami, Ntfy, Syncthing, Crawlee, Authelia, NocoDB, PhotoPrism, Gitea, Grist, HedgeDoc, Etherpad, Vaultwarden; proxies infra and user MCPs.",
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
@@ -325,34 +353,6 @@
         "description": "Gmail, Calendar, Drive, Docs, Sheets, Forms, Slides, Chat, Tasks, Contacts, Search, Apps Script via OAuth 2.0/2.1.",
         "auth": "oidc",
         "sdk": "fastmcp@3.1.1"
-      }
-    },
-    "mattermost-mcp": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "app": 3102
-      },
-      "vm": "oci-apps",
-      "description": "Mattermost MCP server — chat tools via HTTP transport",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": []
-      },
-      "mcp": {
-        "has_mcp": true,
-        "mcp_url": null,
-        "transport": "streamable-http",
-        "endpoint_path": "/mcp",
-        "tools_count": 10,
-        "resources_count": 0,
-        "prompts_count": 0,
-        "display_name": "Mattermost MCP",
-        "description": "Mattermost chat read, post, react, channel management via Mattermost API.",
-        "auth": "bearer",
-        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
     },
     "http-to-smtp-proxy-api": {

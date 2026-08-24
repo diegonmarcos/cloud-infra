@@ -198,32 +198,6 @@
     },
     {
       "table": "service",
-      "id": "c3_infra_mcp",
-      "key": "service:c3_infra_mcp",
-      "properties": {
-        "name": "c3-infra-mcp",
-        "category": "sec",
-        "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
-        "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
-        "port": 3100,
-        "vm": "oci-apps",
-        "folder": "infra-api_c3-infra-mcp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "c3_infra_mcp",
-      "key": "container:c3_infra_mcp",
-      "properties": {
-        "name": "c3-infra-mcp",
-        "image": "ghcr.io/diegonmarcos/c3-infra-mcp:latest",
-        "role": "app",
-        "port": 3100,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
       "id": "c3_public_api",
       "key": "service:c3_public_api",
       "properties": {
@@ -276,27 +250,27 @@
     },
     {
       "table": "service",
-      "id": "c3_services_mcp",
-      "key": "service:c3_services_mcp",
+      "id": "cloud_infra_mcp",
+      "key": "service:cloud_infra_mcp",
       "properties": {
-        "name": "c3-services-mcp",
-        "category": "obs",
-        "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
-        "domain": null,
-        "port": 3101,
+        "name": "cloud-infra-mcp",
+        "category": "sec",
+        "description": "C3 MCP Server — Cloud Control Center MCP transport (stdio + HTTP)",
+        "domain": "mcp.diegonmarcos.com/c3-infra-mcp",
+        "port": 3100,
         "vm": "oci-apps",
-        "folder": "infra-api_c3-services-mcp"
+        "folder": "infra-api_cloud-infra-mcp"
       }
     },
     {
       "table": "container",
-      "id": "c3_services_mcp",
-      "key": "container:c3_services_mcp",
+      "id": "cloud_infra_mcp",
+      "key": "container:cloud_infra_mcp",
       "properties": {
-        "name": "c3-services-mcp",
-        "image": "ghcr.io/diegonmarcos/c3-services-mcp:latest",
+        "name": "cloud-infra-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-infra-mcp:latest",
         "role": "app",
-        "port": 3101,
+        "port": 3100,
         "public": true
       }
     },
@@ -323,6 +297,58 @@
         "image": "ghcr.io/diegonmarcos/cloud-mail-mcp:latest",
         "role": "app",
         "port": 3103,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_mattermost_mcp",
+      "key": "service:cloud_mattermost_mcp",
+      "properties": {
+        "name": "cloud-mattermost-mcp",
+        "category": "app",
+        "description": "Mattermost MCP server — chat tools via HTTP transport",
+        "domain": null,
+        "port": 3102,
+        "vm": "oci-apps",
+        "folder": "infra-api_cloud-mattermost-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_mattermost_mcp",
+      "key": "container:cloud_mattermost_mcp",
+      "properties": {
+        "name": "cloud-mattermost-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-mattermost-mcp:latest",
+        "role": "app",
+        "port": 3102,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_services_mcp",
+      "key": "service:cloud_services_mcp",
+      "properties": {
+        "name": "cloud-services-mcp",
+        "category": "obs",
+        "description": "C3 Services MCP Server — service API gateway MCP transport (stdio + HTTP)",
+        "domain": null,
+        "port": 3101,
+        "vm": "oci-apps",
+        "folder": "infra-api_cloud-services-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_services_mcp",
+      "key": "container:cloud_services_mcp",
+      "properties": {
+        "name": "cloud-services-mcp",
+        "image": "ghcr.io/diegonmarcos/cloud-services-mcp:latest",
+        "role": "app",
+        "port": 3101,
         "public": true
       }
     },
@@ -401,32 +427,6 @@
         "image": "ghcr.io/diegonmarcos/google-workspace-mcp:latest",
         "role": "app",
         "port": 3104,
-        "public": true
-      }
-    },
-    {
-      "table": "service",
-      "id": "mattermost_mcp",
-      "key": "service:mattermost_mcp",
-      "properties": {
-        "name": "mattermost-mcp",
-        "category": "app",
-        "description": "Mattermost MCP server — chat tools via HTTP transport",
-        "domain": null,
-        "port": 3102,
-        "vm": "oci-apps",
-        "folder": "infra-api_mattermost-mcp"
-      }
-    },
-    {
-      "table": "container",
-      "id": "mattermost_mcp",
-      "key": "container:mattermost_mcp",
-      "properties": {
-        "name": "mattermost-mcp",
-        "image": "ghcr.io/diegonmarcos/mattermost-mcp:latest",
-        "role": "app",
-        "port": 3102,
         "public": true
       }
     },
@@ -2104,14 +2104,6 @@
     },
     {
       "table": "domain",
-      "id": "mcp_diegonmarcos_com/c3_infra_mcp",
-      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
-      "properties": {
-        "fqdn": "mcp.diegonmarcos.com/c3-infra-mcp"
-      }
-    },
-    {
-      "table": "domain",
       "id": "api_diegonmarcos_com/pub",
       "key": "domain:api_diegonmarcos_com/pub",
       "properties": {
@@ -2124,6 +2116,14 @@
       "key": "domain:api_diegonmarcos_com/c3_services_api",
       "properties": {
         "fqdn": "api.diegonmarcos.com/c3-services-api"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "mcp_diegonmarcos_com/c3_infra_mcp",
+      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
+      "properties": {
+        "fqdn": "mcp.diegonmarcos.com/c3-infra-mcp"
       }
     },
     {
@@ -2466,17 +2466,6 @@
     },
     {
       "table": "module",
-      "id": "infra_api_c3_infra_mcp",
-      "key": "module:infra_api_c3_infra_mcp",
-      "properties": {
-        "name": "infra-api_c3-infra-mcp",
-        "repo": "cloud",
-        "category": "sec",
-        "service": "c3-infra-mcp"
-      }
-    },
-    {
-      "table": "module",
       "id": "infra_api_c3_public_api",
       "key": "module:infra_api_c3_public_api",
       "properties": {
@@ -2499,13 +2488,13 @@
     },
     {
       "table": "module",
-      "id": "infra_api_c3_services_mcp",
-      "key": "module:infra_api_c3_services_mcp",
+      "id": "infra_api_cloud_infra_mcp",
+      "key": "module:infra_api_cloud_infra_mcp",
       "properties": {
-        "name": "infra-api_c3-services-mcp",
+        "name": "infra-api_cloud-infra-mcp",
         "repo": "cloud",
-        "category": "obs",
-        "service": "c3-services-mcp"
+        "category": "sec",
+        "service": "cloud-infra-mcp"
       }
     },
     {
@@ -2517,6 +2506,28 @@
         "repo": "cloud",
         "category": "app",
         "service": "cloud-mail-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_cloud_mattermost_mcp",
+      "key": "module:infra_api_cloud_mattermost_mcp",
+      "properties": {
+        "name": "infra-api_cloud-mattermost-mcp",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-mattermost-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_cloud_services_mcp",
+      "key": "module:infra_api_cloud_services_mcp",
+      "properties": {
+        "name": "infra-api_cloud-services-mcp",
+        "repo": "cloud",
+        "category": "obs",
+        "service": "cloud-services-mcp"
       }
     },
     {
@@ -2550,17 +2561,6 @@
         "repo": "cloud",
         "category": "app",
         "service": "google-workspace-mcp"
-      }
-    },
-    {
-      "table": "module",
-      "id": "infra_api_mattermost_mcp",
-      "key": "module:infra_api_mattermost_mcp",
-      "properties": {
-        "name": "infra-api_mattermost-mcp",
-        "repo": "cloud",
-        "category": "app",
-        "service": "mattermost-mcp"
       }
     },
     {
@@ -3561,22 +3561,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:c3_infra_mcp",
-      "to": "vm:oci_apps",
-      "key": "service:c3_infra_mcp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:c3_infra_mcp",
-      "to": "container:c3_infra_mcp",
-      "key": "service:c3_infra_mcp->runs_container->container:c3_infra_mcp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:c3_public_api",
       "to": "vm:oci_analytics",
       "key": "service:c3_public_api->hosted_on->vm:oci_analytics",
@@ -3609,16 +3593,16 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:c3_services_mcp",
+      "from": "service:cloud_infra_mcp",
       "to": "vm:oci_apps",
-      "key": "service:c3_services_mcp->hosted_on->vm:oci_apps",
+      "key": "service:cloud_infra_mcp->hosted_on->vm:oci_apps",
       "properties": {}
     },
     {
       "table": "runs_container",
-      "from": "service:c3_services_mcp",
-      "to": "container:c3_services_mcp",
-      "key": "service:c3_services_mcp->runs_container->container:c3_services_mcp",
+      "from": "service:cloud_infra_mcp",
+      "to": "container:cloud_infra_mcp",
+      "key": "service:cloud_infra_mcp->runs_container->container:cloud_infra_mcp",
       "properties": {
         "role": "app"
       }
@@ -3635,6 +3619,38 @@
       "from": "service:cloud_mail_mcp",
       "to": "container:cloud_mail_mcp",
       "key": "service:cloud_mail_mcp->runs_container->container:cloud_mail_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_mattermost_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_mattermost_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_mattermost_mcp",
+      "to": "container:cloud_mattermost_mcp",
+      "key": "service:cloud_mattermost_mcp->runs_container->container:cloud_mattermost_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_services_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_services_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_services_mcp",
+      "to": "container:cloud_services_mcp",
+      "key": "service:cloud_services_mcp->runs_container->container:cloud_services_mcp",
       "properties": {
         "role": "app"
       }
@@ -3676,22 +3692,6 @@
       "from": "service:google_workspace_mcp",
       "to": "container:google_workspace_mcp",
       "key": "service:google_workspace_mcp->runs_container->container:google_workspace_mcp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:mattermost_mcp",
-      "to": "vm:oci_apps",
-      "key": "service:mattermost_mcp->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:mattermost_mcp",
-      "to": "container:mattermost_mcp",
-      "key": "service:mattermost_mcp->runs_container->container:mattermost_mcp",
       "properties": {
         "role": "app"
       }
@@ -4747,15 +4747,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:c3_infra_mcp",
-      "to": "service:caddy",
-      "key": "service:c3_infra_mcp->proxied_by->service:caddy",
-      "properties": {
-        "domain": "mcp.diegonmarcos.com/c3-infra-mcp"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:c3_public_api",
       "to": "service:caddy",
       "key": "service:c3_public_api->proxied_by->service:caddy",
@@ -4770,6 +4761,15 @@
       "key": "service:c3_services_api->proxied_by->service:caddy",
       "properties": {
         "domain": "api.diegonmarcos.com/c3-services-api"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:cloud_infra_mcp",
+      "to": "service:caddy",
+      "key": "service:cloud_infra_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com/c3-infra-mcp"
       }
     },
     {
@@ -5130,13 +5130,6 @@
     },
     {
       "table": "routes_to",
-      "from": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
-      "to": "service:c3_infra_mcp",
-      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp->routes_to->service:c3_infra_mcp",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
       "from": "domain:api_diegonmarcos_com/pub",
       "to": "service:c3_public_api",
       "key": "domain:api_diegonmarcos_com/pub->routes_to->service:c3_public_api",
@@ -5147,6 +5140,13 @@
       "from": "domain:api_diegonmarcos_com/c3_services_api",
       "to": "service:c3_services_api",
       "key": "domain:api_diegonmarcos_com/c3_services_api->routes_to->service:c3_services_api",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com/c3_infra_mcp",
+      "to": "service:cloud_infra_mcp",
+      "key": "domain:mcp_diegonmarcos_com/c3_infra_mcp->routes_to->service:cloud_infra_mcp",
       "properties": {}
     },
     {
@@ -5466,20 +5466,6 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:infra_api_c3_infra_mcp",
-      "to": "repo:cloud",
-      "key": "module:infra_api_c3_infra_mcp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:infra_api_c3_infra_mcp",
-      "to": "service:c3_infra_mcp",
-      "key": "module:infra_api_c3_infra_mcp->implements->service:c3_infra_mcp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
       "from": "module:infra_api_c3_public_api",
       "to": "repo:cloud",
       "key": "module:infra_api_c3_public_api->belongs_to_repo->repo:cloud",
@@ -5508,16 +5494,16 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:infra_api_c3_services_mcp",
+      "from": "module:infra_api_cloud_infra_mcp",
       "to": "repo:cloud",
-      "key": "module:infra_api_c3_services_mcp->belongs_to_repo->repo:cloud",
+      "key": "module:infra_api_cloud_infra_mcp->belongs_to_repo->repo:cloud",
       "properties": {}
     },
     {
       "table": "implements",
-      "from": "module:infra_api_c3_services_mcp",
-      "to": "service:c3_services_mcp",
-      "key": "module:infra_api_c3_services_mcp->implements->service:c3_services_mcp",
+      "from": "module:infra_api_cloud_infra_mcp",
+      "to": "service:cloud_infra_mcp",
+      "key": "module:infra_api_cloud_infra_mcp->implements->service:cloud_infra_mcp",
       "properties": {}
     },
     {
@@ -5532,6 +5518,34 @@
       "from": "module:infra_api_cloud_mail_mcp",
       "to": "service:cloud_mail_mcp",
       "key": "module:infra_api_cloud_mail_mcp->implements->service:cloud_mail_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_cloud_mattermost_mcp",
+      "to": "repo:cloud",
+      "key": "module:infra_api_cloud_mattermost_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_cloud_mattermost_mcp",
+      "to": "service:cloud_mattermost_mcp",
+      "key": "module:infra_api_cloud_mattermost_mcp->implements->service:cloud_mattermost_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_cloud_services_mcp",
+      "to": "repo:cloud",
+      "key": "module:infra_api_cloud_services_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_cloud_services_mcp",
+      "to": "service:cloud_services_mcp",
+      "key": "module:infra_api_cloud_services_mcp->implements->service:cloud_services_mcp",
       "properties": {}
     },
     {
@@ -5574,20 +5588,6 @@
       "from": "module:infra_api_google_workspace_mcp",
       "to": "service:google_workspace_mcp",
       "key": "module:infra_api_google_workspace_mcp->implements->service:google_workspace_mcp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:infra_api_mattermost_mcp",
-      "to": "repo:cloud",
-      "key": "module:infra_api_mattermost_mcp->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:infra_api_mattermost_mcp",
-      "to": "service:mattermost_mcp",
-      "key": "module:infra_api_mattermost_mcp->implements->service:mattermost_mcp",
       "properties": {}
     },
     {

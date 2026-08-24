@@ -546,13 +546,18 @@
           "bearer_auth": true
         },
         {
-          "base_path": "/c3-services-mcp",
-          "upstream": "10.0.0.6:3101",
+          "base_path": "/mail-mcp",
+          "upstream": "10.0.0.6:3103",
           "wg_only": true
         },
         {
-          "base_path": "/mail-mcp",
-          "upstream": "10.0.0.6:3103",
+          "base_path": "/mattermost-mcp",
+          "upstream": "10.0.0.6:3102",
+          "wg_only": true
+        },
+        {
+          "base_path": "/c3-services-mcp",
+          "upstream": "10.0.0.6:3101",
           "wg_only": true
         },
         {
@@ -566,18 +571,13 @@
           "wg_only": true
         },
         {
-          "base_path": "/mattermost-mcp",
-          "upstream": "10.0.0.6:3102",
-          "wg_only": true
-        },
-        {
           "base_path": "/cloud-cgc-pub-mcp",
           "upstream": "10.0.0.6:3105",
           "wg_only": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /mail-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mattermost-mcp/mcp, /cloud-cgc-pub-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /cloud-cgc-pub-mcp/mcp"
     }
   ],
   "special": {
@@ -621,10 +621,6 @@
       "upstream": "10.0.0.6:8081"
     },
     {
-      "service": "c3-infra-mcp.app",
-      "upstream": "10.0.0.6:3100"
-    },
-    {
       "service": "c3-public-api.app",
       "upstream": "10.0.0.4:8087"
     },
@@ -633,12 +629,20 @@
       "upstream": "10.0.0.6:8082"
     },
     {
-      "service": "c3-services-mcp.app",
-      "upstream": "10.0.0.6:3101"
+      "service": "c3-infra-mcp.app",
+      "upstream": "10.0.0.6:3100"
     },
     {
       "service": "mail-mcp.app",
       "upstream": "10.0.0.6:3103"
+    },
+    {
+      "service": "mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102"
+    },
+    {
+      "service": "c3-services-mcp.app",
+      "upstream": "10.0.0.6:3101"
     },
     {
       "service": "g-personal-mcp.app",
@@ -647,10 +651,6 @@
     {
       "service": "g-workspace-mcp.app",
       "upstream": "10.0.0.6:3104"
-    },
-    {
-      "service": "mattermost-mcp.app",
-      "upstream": "10.0.0.6:3102"
     },
     {
       "service": "gitea.app",
@@ -853,27 +853,6 @@
     },
     {
       "kind": "redirect",
-      "service": "c3-infra-mcp.app",
-      "redirect_to": "https://c3-infra-mcp-http-3100.app",
-      "container": "c3-infra-mcp",
-      "container_key": "app",
-      "svc": "c3-infra-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "c3-infra-mcp-http-3100.app",
-      "container": "c3-infra-mcp",
-      "container_key": "app",
-      "svc": "c3-infra-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3100,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3100",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "c3-public-api.app",
       "redirect_to": "https://c3-public-api-http-8087.app",
       "container": "c3-public-api",
@@ -916,23 +895,23 @@
     },
     {
       "kind": "redirect",
-      "service": "c3-services-mcp.app",
-      "redirect_to": "https://c3-services-mcp-http-3101.app",
-      "container": "c3-services-mcp",
+      "service": "cloud-infra-mcp.app",
+      "redirect_to": "https://cloud-infra-mcp-http-3100.app",
+      "container": "cloud-infra-mcp",
       "container_key": "app",
-      "svc": "c3-services-mcp",
+      "svc": "cloud-infra-mcp",
       "vm": "oci-A1-f_0"
     },
     {
       "kind": "canonical",
-      "service": "c3-services-mcp-http-3101.app",
-      "container": "c3-services-mcp",
+      "service": "cloud-infra-mcp-http-3100.app",
+      "container": "cloud-infra-mcp",
       "container_key": "app",
-      "svc": "c3-services-mcp",
+      "svc": "cloud-infra-mcp",
       "vm": "oci-A1-f_0",
-      "port": 3101,
+      "port": 3100,
       "protocol": "http",
-      "upstream": "10.0.0.6:3101",
+      "upstream": "10.0.0.6:3100",
       "source": "containers.app.port"
     },
     {
@@ -954,6 +933,48 @@
       "port": 3103,
       "protocol": "http",
       "upstream": "10.0.0.6:3103",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-mattermost-mcp.app",
+      "redirect_to": "https://cloud-mattermost-mcp-http-3102.app",
+      "container": "cloud-mattermost-mcp",
+      "container_key": "app",
+      "svc": "cloud-mattermost-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-mattermost-mcp-http-3102.app",
+      "container": "cloud-mattermost-mcp",
+      "container_key": "app",
+      "svc": "cloud-mattermost-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3102,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3102",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-services-mcp.app",
+      "redirect_to": "https://cloud-services-mcp-http-3101.app",
+      "container": "cloud-services-mcp",
+      "container_key": "app",
+      "svc": "cloud-services-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-services-mcp-http-3101.app",
+      "container": "cloud-services-mcp",
+      "container_key": "app",
+      "svc": "cloud-services-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3101,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3101",
       "source": "containers.app.port"
     },
     {
@@ -996,27 +1017,6 @@
       "port": 3104,
       "protocol": "http",
       "upstream": "10.0.0.6:3104",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mattermost-mcp.app",
-      "redirect_to": "https://mattermost-mcp-http-3102.app",
-      "container": "mattermost-mcp",
-      "container_key": "app",
-      "svc": "mattermost-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mattermost-mcp-http-3102.app",
-      "container": "mattermost-mcp",
-      "container_key": "app",
-      "svc": "mattermost-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3102,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3102",
       "source": "containers.app.port"
     },
     {
@@ -1968,8 +1968,8 @@
     },
     {
       "host": "mcp.diegonmarcos.com",
-      "path": "/c3-services-mcp",
-      "upstream": "10.0.0.6:3101",
+      "path": "/mail-mcp",
+      "upstream": "10.0.0.6:3103",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -1978,8 +1978,18 @@
     },
     {
       "host": "mcp.diegonmarcos.com",
-      "path": "/mail-mcp",
-      "upstream": "10.0.0.6:3103",
+      "path": "/mattermost-mcp",
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
+      "path": "/c3-services-mcp",
+      "upstream": "10.0.0.6:3101",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2000,16 +2010,6 @@
       "host": "mcp.diegonmarcos.com",
       "path": "/g-workspace",
       "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mcp.diegonmarcos.com",
-      "path": "/mattermost-mcp",
-      "upstream": "10.0.0.6:3102",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2455,16 +2455,6 @@
       "notes": null
     },
     {
-      "host": "c3-infra-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3100",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "c3-public-api.app",
       "path": null,
       "upstream": "10.0.0.4:8087",
@@ -2485,9 +2475,9 @@
       "notes": null
     },
     {
-      "host": "c3-services-mcp.app",
+      "host": "c3-infra-mcp.app",
       "path": null,
-      "upstream": "10.0.0.6:3101",
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2498,6 +2488,26 @@
       "host": "mail-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mattermost-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "c3-services-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3101",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2518,16 +2528,6 @@
       "host": "g-workspace-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mattermost-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3102",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2897,16 +2897,6 @@
       "notes": null
     },
     {
-      "host": "c3-infra-mcp-http-3100.app",
-      "path": null,
-      "upstream": "10.0.0.6:3100",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "c3-infra-mcp",
-      "notes": null
-    },
-    {
       "host": "c3-public-api-http-8087.app",
       "path": null,
       "upstream": "10.0.0.4:8087",
@@ -2927,13 +2917,13 @@
       "notes": null
     },
     {
-      "host": "c3-services-mcp-http-3101.app",
+      "host": "cloud-infra-mcp-http-3100.app",
       "path": null,
-      "upstream": "10.0.0.6:3101",
+      "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
-      "service": "c3-services-mcp",
+      "service": "cloud-infra-mcp",
       "notes": null
     },
     {
@@ -2944,6 +2934,26 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-mail-mcp",
+      "notes": null
+    },
+    {
+      "host": "cloud-mattermost-mcp-http-3102.app",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-mattermost-mcp",
+      "notes": null
+    },
+    {
+      "host": "cloud-services-mcp-http-3101.app",
+      "path": null,
+      "upstream": "10.0.0.6:3101",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-services-mcp",
       "notes": null
     },
     {
@@ -2964,16 +2974,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "google-workspace-mcp",
-      "notes": null
-    },
-    {
-      "host": "mattermost-mcp-http-3102.app",
-      "path": null,
-      "upstream": "10.0.0.6:3102",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mattermost-mcp",
       "notes": null
     },
     {

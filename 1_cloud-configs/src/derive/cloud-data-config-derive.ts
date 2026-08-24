@@ -652,7 +652,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       // Deliberately opt-in per endpoint, and deliberately rare: it is the only
       // way an MCP endpoint is reachable from off-mesh, so every service that
       // sets it widens the public surface by exactly one path. Today only
-      // c3-infra-mcp has it, so an agent that cannot join WireGuard (a
+      // cloud-infra-mcp has it, so an agent that cannot join WireGuard (a
       // container, CI, Claude Code on the web) has exactly one door.
       ...(proxy?.bearer_auth === true ? { bearer_auth: true } : {}),
     });
@@ -3225,10 +3225,10 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "scrappers-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
   "cloud-vault-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-infra-api":           { group: "infra-apps", subgroup: "APIs-MCPs" },
-  "c3-infra-mcp":           { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-infra-mcp":           { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-public-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-services-api":        { group: "infra-apps", subgroup: "APIs-MCPs" },
-  "c3-services-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
+  "cloud-services-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
   "cloud-cgc-pub-mcp":      { group: "infra-apps", subgroup: "APIs-MCPs" },
   // app → subgroup by domain/function
   "chat-mattermost":        { group: "user-apps",  subgroup: "Communications" },
@@ -3243,7 +3243,7 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "google-personal-mcp":    { group: "user-apps",  subgroup: "AI-Agents" },
   "google-workspace-mcp":   { group: "user-apps",  subgroup: "AI-Agents" },
   "cloud-mail-mcp":               { group: "user-apps",  subgroup: "AI-Agents" },
-  "mattermost-mcp":         { group: "user-apps",  subgroup: "AI-Agents" },
+  "cloud-mattermost-mcp":         { group: "user-apps",  subgroup: "AI-Agents" },
   "claude-superset-api":    { group: "user-apps",  subgroup: "AI-Agents" },
   "hermes-agent":           { group: "user-apps",  subgroup: "AI-Agents" },
   "my-ai-api":              { group: "user-apps",  subgroup: "AI-Agents" },
