@@ -80,18 +80,45 @@ DEOF
     fi
 
     log "Building configs image: $CONFIGS_IMAGE${DOCKER_ARCH:+ (arch=$DOCKER_ARCH)}"
+    # Restore dist/ to how we found it. Every exit path from here on must go
+    # through this, including the failure paths: the generated .dockerignore is
+    # itself part of the CONFIGS_HASH input, and bailing out without restoring
+    # left the real .dockerignore in .bak — which the next run overwrites at the
+    # top of this block, losing the original permanently.
+    _restore_dist() {
+        rm -f "$DIST_DIR/Dockerfile.configs"
+        if [ -f "$DIST_DIR/.dockerignore.bak" ]; then
+            mv "$DIST_DIR/.dockerignore.bak" "$DIST_DIR/.dockerignore"
+        else
+            rm -f "$DIST_DIR/.dockerignore"
+        fi
+    }
+
     docker build $CONFIGS_PLATFORM_FLAG -q -t "$CONFIGS_IMAGE" -f "$DIST_DIR/Dockerfile.configs" "$DIST_DIR" || {
+        _restore_dist
         log_warn "Configs image build failed (non-fatal)"
         return 0
     }
-    docker push "$CONFIGS_IMAGE" 2>&1 | tail -3
-    # Restore original .dockerignore
-    rm -f "$DIST_DIR/Dockerfile.configs"
-    if [ -f "$DIST_DIR/.dockerignore.bak" ]; then
-        mv "$DIST_DIR/.dockerignore.bak" "$DIST_DIR/.dockerignore"
-    else
-        rm -f "$DIST_DIR/.dockerignore"
+    # Capture the push status BEFORE any pipe — `docker push ... | tail` reports
+    # tail's exit code, so a `denied: permission_denied: write_package` used to
+    # sail through as success. That mattered more than it looks: the hash below
+    # is what the next run compares against to decide whether to rebuild, so
+    # recording it after a failed push made the failure permanently sticky —
+    # every later run saw an unchanged hash, skipped the push, and kept
+    # deploying stale configs while logging "Pushed".
+    push_out=$(docker push "$CONFIGS_IMAGE" 2>&1)
+    push_rc=$?
+    echo "$push_out" | tail -3
+
+    _restore_dist
+
+    if [ "$push_rc" -ne 0 ]; then
+        # Still non-fatal, matching the build-failure path above — but the hash
+        # is NOT recorded, so the next run retries instead of skipping.
+        log_warn "Configs image push FAILED (rc=$push_rc): $CONFIGS_IMAGE — deploy continues with the previously published configs; hash not recorded so the next run retries"
+        return 0
     fi
+
     echo "$CONFIGS_HASH" > "$SERVICE_DIR/.configs-hash"
     log "Pushed configs image: $CONFIGS_IMAGE ($CONFIGS_HASH) — secrets EXCLUDED"
 }
