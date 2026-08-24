@@ -516,6 +516,17 @@
         "path": "/mcp"
       }
     },
+    "cloud-mail-mcp": {
+      "name": "cloud-mail-mcp",
+      "vm": "oci-A1-f_0",
+      "domain": "mcp.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 3103
+      },
+      "health": null
+    },
     "cloud-vault-mcp": {
       "name": "cloud-vault-mcp",
       "vm": "local",
@@ -550,17 +561,6 @@
       "health": {
         "path": "/health"
       }
-    },
-    "mail-mcp": {
-      "name": "mail-mcp",
-      "vm": "oci-A1-f_0",
-      "domain": "mcp.diegonmarcos.com",
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "app": 3103
-      },
-      "health": null
     },
     "mattermost-mcp": {
       "name": "mattermost-mcp",
@@ -1386,6 +1386,15 @@
       "dns": "c3-services-mcp.app"
     },
     {
+      "service": "cloud-mail-mcp",
+      "dns": "mail-mcp.app"
+    },
+    {
+      "service": "cloud-mail-mcp",
+      "container": "app",
+      "dns": "mail-mcp.app"
+    },
+    {
       "service": "google-personal-mcp",
       "dns": "g-personal-mcp.app"
     },
@@ -1402,15 +1411,6 @@
       "service": "google-workspace-mcp",
       "container": "app",
       "dns": "g-workspace-mcp.app"
-    },
-    {
-      "service": "mail-mcp",
-      "dns": "mail-mcp.app"
-    },
-    {
-      "service": "mail-mcp",
-      "container": "app",
-      "dns": "mail-mcp.app"
     },
     {
       "service": "mattermost-mcp",
@@ -2020,9 +2020,9 @@
           "c3-infra-mcp",
           "c3-services-api",
           "c3-services-mcp",
+          "cloud-mail-mcp",
           "google-personal-mcp",
           "google-workspace-mcp",
-          "mail-mcp",
           "mattermost-mcp",
           "gha-runner",
           "backup-borg",
@@ -2179,6 +2179,17 @@
           "path": "/mcp"
         }
       },
+      "cloud-mail-mcp": {
+        "name": "cloud-mail-mcp",
+        "vm": "oci-A1-f_0",
+        "domain": "mcp.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 3103
+        },
+        "health": null
+      },
       "cloud-vault-mcp": {
         "name": "cloud-vault-mcp",
         "vm": "local",
@@ -2213,17 +2224,6 @@
         "health": {
           "path": "/health"
         }
-      },
-      "mail-mcp": {
-        "name": "mail-mcp",
-        "vm": "oci-A1-f_0",
-        "domain": "mcp.diegonmarcos.com",
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "app": 3103
-        },
-        "health": null
       },
       "mattermost-mcp": {
         "name": "mattermost-mcp",

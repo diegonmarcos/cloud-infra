@@ -551,6 +551,11 @@
           "wg_only": true
         },
         {
+          "base_path": "/mail-mcp",
+          "upstream": "10.0.0.6:3103",
+          "wg_only": true
+        },
+        {
           "base_path": "/g-personal",
           "upstream": "10.0.0.6:3106",
           "wg_only": true
@@ -558,11 +563,6 @@
         {
           "base_path": "/g-workspace",
           "upstream": "10.0.0.6:3104",
-          "wg_only": true
-        },
-        {
-          "base_path": "/mail-mcp",
-          "upstream": "10.0.0.6:3103",
           "wg_only": true
         },
         {
@@ -577,7 +577,7 @@
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /cloud-cgc-pub-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /mail-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /mattermost-mcp/mcp, /cloud-cgc-pub-mcp/mcp"
     }
   ],
   "special": {
@@ -637,16 +637,16 @@
       "upstream": "10.0.0.6:3101"
     },
     {
+      "service": "mail-mcp.app",
+      "upstream": "10.0.0.6:3103"
+    },
+    {
       "service": "g-personal-mcp.app",
       "upstream": "10.0.0.6:3106"
     },
     {
       "service": "g-workspace-mcp.app",
       "upstream": "10.0.0.6:3104"
-    },
-    {
-      "service": "mail-mcp.app",
-      "upstream": "10.0.0.6:3103"
     },
     {
       "service": "mattermost-mcp.app",
@@ -937,6 +937,27 @@
     },
     {
       "kind": "redirect",
+      "service": "cloud-mail-mcp.app",
+      "redirect_to": "https://cloud-mail-mcp-http-3103.app",
+      "container": "cloud-mail-mcp",
+      "container_key": "app",
+      "svc": "cloud-mail-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-mail-mcp-http-3103.app",
+      "container": "cloud-mail-mcp",
+      "container_key": "app",
+      "svc": "cloud-mail-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3103,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3103",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "google-personal-mcp.app",
       "redirect_to": "https://google-personal-mcp-http-3106.app",
       "container": "google-personal-mcp",
@@ -975,27 +996,6 @@
       "port": 3104,
       "protocol": "http",
       "upstream": "10.0.0.6:3104",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "mail-mcp.app",
-      "redirect_to": "https://mail-mcp-http-3103.app",
-      "container": "mail-mcp",
-      "container_key": "app",
-      "svc": "mail-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "mail-mcp-http-3103.app",
-      "container": "mail-mcp",
-      "container_key": "app",
-      "svc": "mail-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3103,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3103",
       "source": "containers.app.port"
     },
     {
@@ -1978,6 +1978,16 @@
     },
     {
       "host": "mcp.diegonmarcos.com",
+      "path": "/mail-mcp",
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
       "path": "/g-personal",
       "upstream": "10.0.0.6:3106",
       "kind": "reverse_proxy",
@@ -1990,16 +2000,6 @@
       "host": "mcp.diegonmarcos.com",
       "path": "/g-workspace",
       "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mcp.diegonmarcos.com",
-      "path": "/mail-mcp",
-      "upstream": "10.0.0.6:3103",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2495,6 +2495,16 @@
       "notes": null
     },
     {
+      "host": "mail-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "g-personal-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3106",
@@ -2508,16 +2518,6 @@
       "host": "g-workspace-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3104",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
-      "host": "mail-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3103",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2937,6 +2937,16 @@
       "notes": null
     },
     {
+      "host": "cloud-mail-mcp-http-3103.app",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-mail-mcp",
+      "notes": null
+    },
+    {
       "host": "google-personal-mcp-http-3106.app",
       "path": null,
       "upstream": "10.0.0.6:3106",
@@ -2954,16 +2964,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "google-workspace-mcp",
-      "notes": null
-    },
-    {
-      "host": "mail-mcp-http-3103.app",
-      "path": null,
-      "upstream": "10.0.0.6:3103",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "mail-mcp",
       "notes": null
     },
     {

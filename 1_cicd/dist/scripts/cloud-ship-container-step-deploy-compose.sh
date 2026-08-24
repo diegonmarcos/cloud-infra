@@ -156,7 +156,7 @@ step_compose() {
     # compose up`, e.g. the cloud-infra-local MCP tool) start a SECOND compose
     # project that grabs the same explicit `container_name`. The canonical
     # `down --remove-orphans` only evicts its own project, so that foreign
-    # container then blocks `up` with "container name already in use" (mail-mcp,
+    # container then blocks `up` with "container name already in use" (cloud-mail-mcp,
     # 2026-06-16). When canonical compose lives in a subdir, tear down + delete
     # any stale root file first so deploys stay idempotent. Runs on the VM; no
     # single quotes (embedded into a single-quote-wrapped bash -c PAYLOAD).
