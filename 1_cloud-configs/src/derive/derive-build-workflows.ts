@@ -83,6 +83,25 @@ function main(): void {
   mkdirSync(dirname(OUT_FILE), { recursive: true });
   writeFileSync(OUT_FILE, JSON.stringify(out, null, 2) + "\n", "utf8");
   console.log(`derive-build-workflows: wrote ${OUT_FILE}`);
+
+  registerInManifest();
+}
+
+// This deriver runs after cloud-data-config-derive has already written the
+// manifest, so it appends itself rather than being declared there — the
+// manifest is what the orphan prune treats as the full set of pipeline
+// outputs, and an unregistered file would be swept as stale.
+function registerInManifest(): void {
+  const manifestFile = join(CONFIGS_DIR, "manifest.json");
+  if (!existsSync(manifestFile)) return;
+
+  const entry = { file: "dist/build-workflows.json", name: "build workflows" };
+  const manifest = JSON.parse(readFileSync(manifestFile, "utf8"));
+  if (!Array.isArray(manifest)) return;
+  if (manifest.some((e: any) => e?.file === entry.file)) return;
+
+  manifest.push(entry);
+  writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n", "utf8");
 }
 
 main();
