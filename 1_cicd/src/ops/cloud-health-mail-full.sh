@@ -20,7 +20,7 @@
 #     from Gmail's beyond tolerance. Reuses existing scripts, no new
 #     clients/credentials:
 #       - a_solutions/infra-api_mail-mcp/src/code/mcp/tools/others/count-since.ts
-#         (maddy IMAP + Stalwart JMAP, run via `docker exec mail-mcp`)
+#         (maddy IMAP + Stalwart JMAP, run via `docker exec cloud-mail-mcp`)
 #       - a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py
 #         (Gmail REST API via the container's service account, run via
 #         `docker exec google-workspace-mcp`)
@@ -143,13 +143,13 @@ fi
 MADDY_COUNT=-1
 STALWART_COUNT=-1
 # count-since.ts imports ../../shared/{imap,config}.js by relative path — those
-# already exist in the deployed image at /app/mcp/shared/*.ts (mail-mcp's own
+# already exist in the deployed image at /app/mcp/shared/*.ts (cloud-mail-mcp's own
 # tools import them the same way), so only the new file itself needs copying
 # in, placed at the matching path under /app so the relative import — and
 # node's node_modules walk-up to /app/node_modules for `imapflow` — resolve.
 MAIL_SCRIPT="$REPO_ROOT/a_solutions/infra-api_mail-mcp/src/code/mcp/tools/others/count-since.ts"
 if [ -f "$MAIL_SCRIPT" ]; then
-  MAIL_RAW=$(ssh oci-apps "cat > /tmp/count-since.ts && docker exec mail-mcp mkdir -p /app/mcp/tools/others && docker cp /tmp/count-since.ts mail-mcp:/app/mcp/tools/others/count-since.ts && docker exec mail-mcp node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/count-since.ts --since '$SINCE'" < "$MAIL_SCRIPT" 2>&1)
+  MAIL_RAW=$(ssh oci-apps "cat > /tmp/count-since.ts && docker exec cloud-mail-mcp mkdir -p /app/mcp/tools/others && docker cp /tmp/count-since.ts cloud-mail-mcp:/app/mcp/tools/others/count-since.ts && docker exec cloud-mail-mcp node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/count-since.ts --since '$SINCE'" < "$MAIL_SCRIPT" 2>&1)
   MAIL_STATUS=$?
   MAIL_JSON=$(echo "$MAIL_RAW" | tail -1)
   if [ "$MAIL_STATUS" -eq 0 ] && echo "$MAIL_JSON" | jq -e . >/dev/null 2>&1; then

@@ -109,7 +109,7 @@ step_docker() {
     # any non-zero command outside `||`/`&&` chains aborts the function with
     # zero output, leaving the parent's `wait $PID_DOCKER` to log only
     # "docker build failed" with no clue WHERE. Surfaced 2026-04-27 (ship
-    # run 24995653483): both c3-services-mcp + mail-mcp died ~0.5s after
+    # run 24995653483): both c3-services-mcp + cloud-mail-mcp died ~0.5s after
     # `Native app packaged` with no log between that and the parent's error.
     #
     # ERR trap fires on every set -e exit; prints line + command + exit
@@ -383,7 +383,7 @@ NEOF
             # app_dir = subdirectory inside src/ that holds package.json /
             # package-lock.json / source files (default: "." — src/ itself).
             # Without this, services that nest their code under src/code/
-            # (mail-mcp, mattermost-mcp, google-personal-mcp, …) hit
+            # (cloud-mail-mcp, mattermost-mcp, google-personal-mcp, …) hit
             # `npm ci: no package-lock.json` because cwd defaults to $SRC_DIR.
             APP_DIR_REL="${NATIVE_APP_DIR:-.}"
             BUILD_CWD="$SRC_DIR"

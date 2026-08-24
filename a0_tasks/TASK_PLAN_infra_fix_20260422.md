@@ -177,9 +177,9 @@ No independent fix. Recovers when A1.3 lands.
 
 ---
 
-#### A2.4 · mail-mcp `SMTP_NO_AUTH`
+#### A2.4 · cloud-mail-mcp `SMTP_NO_AUTH`
 
-**Evidence**: mail-full-2 reports mail-mcp attempting submission without auth.
+**Evidence**: mail-full-2 reports cloud-mail-mcp attempting submission without auth.
 
 **Declarative fix**:
 1. `a_solutions/aa-sui_mail-mcp/src/secrets.yaml` → add `SMTP_USERNAME: me@diegonmarcos.com`, `SMTP_PASSWORD: ENC[...]` (sops-encrypted).
@@ -187,8 +187,8 @@ No independent fix. Recovers when A1.3 lands.
 3. `build.sh ship`.
 
 **Tester**:
-- mail-mcp logs: no more `SMTP_NO_AUTH` errors.
-- `reports-logs/build.sh mail` → mail-mcp outgoing probe succeeds.
+- cloud-mail-mcp logs: no more `SMTP_NO_AUTH` errors.
+- `reports-logs/build.sh mail` → cloud-mail-mcp outgoing probe succeeds.
 
 ---
 
@@ -367,7 +367,7 @@ Fix while touching each respective report. Each is a one-file change.
 │  STEP 4 · Mail stack                                         │
 ├─────────────────────────────────────────────────────────────┤
 │  4a. A2.2 Maddy TLS cipher/sig-alg + WG bind addresses       │
-│  4b. A2.4 mail-mcp SMTP auth                                 │
+│  4b. A2.4 cloud-mail-mcp SMTP auth                                 │
 └─────────────────────────────────────────────────────────────┘
                            ▼
 ┌─────────────────────────────────────────────────────────────┐

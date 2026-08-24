@@ -138,7 +138,7 @@ Steps:
 **Tests — Phase 1**:
 - **T1.1**: `jq -e '.ai_pipeline.provider.upstream' dist/build.json | grep -q 11434` (config wired).
 - **T1.2**: `curl -sS http://ollama.app:11434/v1/models` from oci-mail via MCP exec → list contains the pinned model. Fails fast if WG routing to gcp-t4 broken.
-- **T1.3**: Inject a synthetic email via `mail-mcp`'s `mail_send` tool. Within 10s the Stalwart log must show `[sieve] llm classification: {…valid JSON…}` and the schema validates against the schema file.
+- **T1.3**: Inject a synthetic email via `cloud-mail-mcp`'s `mail_send` tool. Within 10s the Stalwart log must show `[sieve] llm classification: {…valid JSON…}` and the schema validates against the schema file.
 - **T1.4**: Timeout path: stop gcp-t4's Ollama (via MCP `devops_service_stop`); send another test email; log must show `llm timeout, fallback=no-op` and delivery must **not** block (mail still lands in inbox).
 
 ### PHASE 2 — Sidecar writer + shared corpus
@@ -194,10 +194,10 @@ Steps:
 
 ### PHASE 4 — Agent-facing "Smart Folders"
 
-**Scope**: virtual mailbox views powered by queries, exposed through `mail-mcp` or a new MCP tool.
+**Scope**: virtual mailbox views powered by queries, exposed through `cloud-mail-mcp` or a new MCP tool.
 
 Steps:
-1. Add `mail-mcp` tool `mail_smart_folder_query` that takes a natural-language query, routes it to `cgc_octocode_graphrag`, returns JMAP mailbox-shaped results (list of msg IDs with metadata).
+1. Add `cloud-mail-mcp` tool `mail_smart_folder_query` that takes a natural-language query, routes it to `cgc_octocode_graphrag`, returns JMAP mailbox-shaped results (list of msg IDs with metadata).
 2. Optional: Stalwart-side virtual mailbox — use Stalwart search-based mailbox feature (verify availability) that exposes a static filter like `@ai.keyword("ProjectX")`. Purely a client-convenience layer; independent of the graph.
 3. Document three example queries in `docs/mail-smart-folders.md`:
    - "Unreplied threads from the last 7 days"
@@ -221,7 +221,7 @@ Steps:
 
 ## 7. Non-goals
 
-- This task does not replace `mail-mcp` or change JMAP behavior.
+- This task does not replace `cloud-mail-mcp` or change JMAP behavior.
 - No new public endpoints.
 - No change to outbound mail.
 - No change to the WG topology (Phase B of the mail-wg-only task is orthogonal).

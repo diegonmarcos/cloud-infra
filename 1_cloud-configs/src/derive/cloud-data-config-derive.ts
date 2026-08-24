@@ -3242,7 +3242,7 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "http-to-smtp-proxy-api": { group: "user-apps",  subgroup: "Communications" },
   "google-personal-mcp":    { group: "user-apps",  subgroup: "AI-Agents" },
   "google-workspace-mcp":   { group: "user-apps",  subgroup: "AI-Agents" },
-  "mail-mcp":               { group: "user-apps",  subgroup: "AI-Agents" },
+  "cloud-mail-mcp":               { group: "user-apps",  subgroup: "AI-Agents" },
   "mattermost-mcp":         { group: "user-apps",  subgroup: "AI-Agents" },
   "claude-superset-api":    { group: "user-apps",  subgroup: "AI-Agents" },
   "hermes-agent":           { group: "user-apps",  subgroup: "AI-Agents" },

@@ -8,8 +8,8 @@
 #
 # History:
 # - 2026-04-27 morning: thought v2 layout needed compose/.secrets — was wrong.
-#   That fix (commit b97a9a459) caused mail-mcp to fail compose with:
-#     env file /opt/containers/mail-mcp/.secrets not found
+#   That fix (commit b97a9a459) caused cloud-mail-mcp to fail compose with:
+#     env file /opt/containers/cloud-mail-mcp/.secrets not found
 # - 2026-04-27 afternoon: reverted to $DIST_DIR/.secrets after surfacing
 #   the --project-directory . pin in deploy-compose.sh:89 (ship run 24998852451).
 set -eu
