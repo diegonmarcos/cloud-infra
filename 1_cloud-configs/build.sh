@@ -129,6 +129,7 @@ derive() {
         return 0
     fi
     prune_orphans
+    link_container_builds
     cache_download_generator
 }
 
@@ -184,6 +185,41 @@ prune_orphans() {
 $(find "$CLOUD_ROOT/a_solutions" -path '*/z_archive/*' -prune -o -type l ! -exec test -e {} \; -print 2>/dev/null)
 EOF
     [ "$swept" -gt 0 ] && log "Swept $swept dangling build symlink(s)"
+    return 0
+}
+
+# ══════════════════════════════════════════════════════════════════════
+# link_container_builds — materialise the per-container build inputs
+# ══════════════════════════════════════════════════════════════════════
+# Every solution's flake.nix pins its container config with
+# `builtins.readFile ./build-<container>.json`, which resolves through a
+# relative symlink into 1_cloud-configs/dist/. Nothing used to create those
+# links — they were hand-made, so renaming a service left the flake pointing
+# at a name the prune had just removed. Nix only fails on it at eval time,
+# which means the breakage surfaces as a red GHA build rather than here.
+#
+# The flake is the declaration of what the container needs, so read it back
+# and guarantee the link. Counterpart to prune_orphans: that removes links
+# whose target died, this creates links the build declares but lacks.
+link_container_builds() {
+    for flake in "$SOLUTIONS_DIR"/*/src/flake.nix; do
+        [ -f "$flake" ] || continue
+        case "$flake" in */z_archive/*) continue ;; esac
+        srcdir=$(dirname "$flake")
+        grep -oE 'readFile \./build-[A-Za-z0-9_.-]+\.json' "$flake" 2>/dev/null \
+            | sed 's|readFile \./||' \
+            | while IFS= read -r ref; do
+                [ -n "$ref" ] || continue
+                [ -e "$srcdir/$ref" ] && continue
+                if [ ! -f "$DIST/$ref" ]; then
+                    log "  WARN: $(basename "$(dirname "$srcdir")")/src/flake.nix wants $ref, absent from dist/"
+                    continue
+                fi
+                rm -f "$srcdir/$ref"   # clear a dangling link before replacing it
+                ln -s "../../../1_cloud-configs/dist/$ref" "$srcdir/$ref"
+                log "  linked $(basename "$(dirname "$srcdir")")/src/$ref"
+            done
+    done
     return 0
 }
 
