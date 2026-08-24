@@ -59,7 +59,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          # 0, not 2: detect diffs across the whole push and needs its base commit.
+          fetch-depth: 0
           submodules: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
@@ -153,7 +154,28 @@ jobs:
             # emitted empty, Ship → ${{ matrix.vm }} reported "skipped" even
             # though the source changed and warranted a rebuild). The fix is to
             # use a recursive glob: `**` matches at any depth under src/.
-            CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' \
+            # Diff across the WHOLE push, not just its tip.
+            #
+            # This was `HEAD~1 HEAD`, which only ever examined the last commit.
+            # Push two commits at once and every service touched by the earlier
+            # one was silently dropped — the run still went green, having
+            # deployed a strict subset of what changed. That is how the
+            # c3-public-api fix that stops inbound mail being rate-limited sat
+            # committed-but-undeployed on 2026-08-24 behind a successful Ship.
+            #
+            # github.event.before is the push's base. It is absent on non-push
+            # events, all-zeros on a branch's first push, and may name a
+            # discarded commit after a force-push — fall back to HEAD~1 in all
+            # three cases rather than diffing against nothing.
+            BASE="${{ github.event.before }}"
+            if [ "$GITHUB_EVENT_NAME" != "push" ] \
+               || [ -z "$BASE" ] \
+               || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+               || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+              BASE="HEAD~1"
+            fi
+            echo "detect: diffing $BASE..HEAD"
+            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' \
               | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 
             # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json
@@ -161,7 +183,7 @@ jobs:
             # any changed dist file, and append the owning service dir to
             # CHANGED_DIRS. Without this, edits to 9_others/src/ regenerate
             # the dist but no Ship runs for the symlinked consumers.
-            DIST_CHANGED=$(git diff --name-only HEAD~1 HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
+            DIST_CHANGED=$(git diff --name-only "$BASE" HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
             if [ -n "$DIST_CHANGED" ]; then
               DIST_CONSUMERS=""
               for _df in $DIST_CHANGED; do
