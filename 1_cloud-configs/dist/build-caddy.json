@@ -540,6 +540,11 @@
       "parent_domain": "mcp.diegonmarcos.com",
       "endpoints": [
         {
+          "base_path": "/cloud-drive-mcp",
+          "upstream": "10.0.0.6:3109",
+          "wg_only": true
+        },
+        {
           "base_path": "/c3-infra-mcp",
           "upstream": "10.0.0.6:3100",
           "wg_only": true,
@@ -577,7 +582,7 @@
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /cloud-cgc-pub-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /cloud-drive-mcp/mcp, /c3-infra-mcp/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /cloud-cgc-pub-mcp/mcp"
     }
   ],
   "special": {
@@ -627,6 +632,10 @@
     {
       "service": "c3-services-api.app",
       "upstream": "10.0.0.6:8082"
+    },
+    {
+      "service": "drive-mcp.app",
+      "upstream": "10.0.0.6:3109"
     },
     {
       "service": "c3-infra-mcp.app",
@@ -891,6 +900,27 @@
       "port": 8082,
       "protocol": "http",
       "upstream": "10.0.0.6:8082",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-drive-mcp.app",
+      "redirect_to": "https://cloud-drive-mcp-http-3109.app",
+      "container": "cloud-drive-mcp",
+      "container_key": "app",
+      "svc": "cloud-drive-mcp",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-drive-mcp-http-3109.app",
+      "container": "cloud-drive-mcp",
+      "container_key": "app",
+      "svc": "cloud-drive-mcp",
+      "vm": "oci-A1-f_0",
+      "port": 3109,
+      "protocol": "http",
+      "upstream": "10.0.0.6:3109",
       "source": "containers.app.port"
     },
     {
@@ -1958,6 +1988,16 @@
   "public_A_mcp": [
     {
       "host": "mcp.diegonmarcos.com",
+      "path": "/cloud-drive-mcp",
+      "upstream": "10.0.0.6:3109",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "mcp.diegonmarcos.com",
       "path": "/c3-infra-mcp",
       "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
@@ -2475,6 +2515,16 @@
       "notes": null
     },
     {
+      "host": "drive-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3109",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "c3-infra-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3100",
@@ -2914,6 +2964,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "c3-services-api",
+      "notes": null
+    },
+    {
+      "host": "cloud-drive-mcp-http-3109.app",
+      "path": null,
+      "upstream": "10.0.0.6:3109",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-drive-mcp",
       "notes": null
     },
     {

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Emit MCP connection headers as JSON, for .mcp.json `headersHelper`.
 #
-# c3-infra-mcp is the one MCP endpoint reachable from off the WireGuard mesh,
+# cloud-infra-mcp is the one MCP endpoint reachable from off the WireGuard mesh,
 # and Caddy gates it on an Authelia-issued bearer token (@wg → @bearer → 403).
 # Claude Code therefore needs to present that token, and .mcp.json is committed
 # verbatim into every repo under cloud — so the token cannot live in it.
@@ -67,7 +67,7 @@ if [ -z "${TOKEN_FILE:-}" ] || [ ! -r "$TOKEN_FILE" ]; then
     # an OAuth problem and is not one. Two separate sessions had to reason this
     # out from first principles before the reason was written down anywhere.
     {
-        echo "mcp-auth-headers: no token found — c3-infra-mcp will get 403."
+        echo "mcp-auth-headers: no token found — cloud-infra-mcp will get 403."
         echo "  tried \$AUTHELIA_BEARER_TOKEN         : ${AUTHELIA_BEARER_TOKEN:+set}${AUTHELIA_BEARER_TOKEN:-unset}"
         echo "  tried \$AUTHELIA_OIDC_TOKENS_DIR      : ${AUTHELIA_OIDC_TOKENS_DIR:-unset}"
         echo "  tried \$REPO_ROOT/IV_vault             : $REPO_ROOT/IV_vault/$REL"

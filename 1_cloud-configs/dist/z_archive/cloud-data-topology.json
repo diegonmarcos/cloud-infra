@@ -80,6 +80,7 @@
         "languagetool",
         "c3-infra-api",
         "c3-services-api",
+        "cloud-drive-mcp",
         "cloud-infra-mcp",
         "cloud-mail-mcp",
         "cloud-mattermost-mcp",
@@ -588,6 +589,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "c3-services-api"
+      },
+      {
+        "name": "drive-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-drive-mcp"
       },
       {
         "name": "c3-infra-mcp.app",
@@ -1312,6 +1319,68 @@
         "endpoint_check": true
       },
       "flake": "infra-api_c3-services-api"
+    },
+    "cloud-drive-mcp": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-api_cloud-drive-mcp",
+      "description": "Drive MCP server — one facade over every storage unit: repos, files, photos, sync, scrapes, S3 and conversion",
+      "domain": "mcp.diegonmarcos.com",
+      "port": 3109,
+      "dns": "drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "containers": {
+        "app": {
+          "container_name": "cloud-drive-mcp",
+          "image": "ghcr.io/diegonmarcos/cloud-drive-mcp:latest",
+          "port": 3109,
+          "port_env": "PORT",
+          "dns": "drive-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/cloud-drive-mcp"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-drive-mcp"
+      ],
+      "all_ports": [
+        "3109"
+      ],
+      "all_dns": [
+        "drive-mcp.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/cloud-drive-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3109
+      },
+      "flake": "infra-api_cloud-drive-mcp"
     },
     "cloud-infra-mcp": {
       "category": "sec",

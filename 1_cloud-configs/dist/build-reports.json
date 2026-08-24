@@ -490,6 +490,17 @@
         "path": "/c3-services-api/health"
       }
     },
+    "cloud-drive-mcp": {
+      "name": "cloud-drive-mcp",
+      "vm": "oci-A1-f_0",
+      "domain": "mcp.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 3109
+      },
+      "health": null
+    },
     "cloud-infra-mcp": {
       "name": "cloud-infra-mcp",
       "vm": "oci-A1-f_0",
@@ -1368,6 +1379,15 @@
       "dns": "c3-services-api.app"
     },
     {
+      "service": "cloud-drive-mcp",
+      "dns": "drive-mcp.app"
+    },
+    {
+      "service": "cloud-drive-mcp",
+      "container": "app",
+      "dns": "drive-mcp.app"
+    },
+    {
       "service": "cloud-infra-mcp",
       "dns": "c3-infra-mcp.app"
     },
@@ -2018,6 +2038,7 @@
           "languagetool",
           "c3-infra-api",
           "c3-services-api",
+          "cloud-drive-mcp",
           "cloud-infra-mcp",
           "cloud-mail-mcp",
           "cloud-mattermost-mcp",
@@ -2152,6 +2173,17 @@
         "health": {
           "path": "/c3-services-api/health"
         }
+      },
+      "cloud-drive-mcp": {
+        "name": "cloud-drive-mcp",
+        "vm": "oci-A1-f_0",
+        "domain": "mcp.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 3109
+        },
+        "health": null
       },
       "cloud-infra-mcp": {
         "name": "cloud-infra-mcp",
