@@ -94,18 +94,18 @@ else
 fi
 
 echo "── 5: stdio-only MCPs are PRESENT in services map but flagged has_mcp=false ──"
-# c3-diego-personal-data-mcp is the canonical stdio-only MCP. It SHOULD be in the
+# cloud-vault-mcp is the canonical stdio-only MCP. It SHOULD be in the
 # services map (so peers can see it exists) but mcp.has_mcp must be false so the
 # consumer filters it out at read time.
-diego_present=$(jq -r '.services | has("c3-diego-personal-data-mcp")' "$BUILD_FILE")
-diego_has_mcp=$(jq -r '.services."c3-diego-personal-data-mcp".mcp.has_mcp // false' "$BUILD_FILE")
+diego_present=$(jq -r '.services | has("cloud-vault-mcp")' "$BUILD_FILE")
+diego_has_mcp=$(jq -r '.services."cloud-vault-mcp".mcp.has_mcp // false' "$BUILD_FILE")
 if [ "$diego_present" = "true" ] && [ "$diego_has_mcp" = "false" ]; then
-  pass "stdio-only MCP c3-diego-personal-data-mcp present + correctly filtered (has_mcp=false)"
+  pass "stdio-only MCP cloud-vault-mcp present + correctly filtered (has_mcp=false)"
 elif [ "$diego_present" = "false" ]; then
   # Acceptable variant — service has no VM/wg_ip resolution
-  pass "stdio-only MCP c3-diego-personal-data-mcp absent from services map (no VM resolution)"
+  pass "stdio-only MCP cloud-vault-mcp absent from services map (no VM resolution)"
 else
-  fail "stdio-only MCP c3-diego-personal-data-mcp present but has_mcp=$diego_has_mcp (expected false)"
+  fail "stdio-only MCP cloud-vault-mcp present but has_mcp=$diego_has_mcp (expected false)"
 fi
 
 echo "── 6: schema-gate (api/mcp blocks valid in every build.json) ──"

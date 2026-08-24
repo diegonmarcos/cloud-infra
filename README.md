@@ -499,7 +499,7 @@ Engine source: `I_cloud-data/1_workflows/src/scripts/` (cloud-data-config.ts + p
 | `cloud-vault-mcp` | stdio (local) | 16 | READ-ONLY personal data access (vault, identity, comms, media) |
 | `google-workspace-mcp` | HTTP (remote) | — | Gmail, Calendar, Drive, Docs, Sheets |
 | `mattermost-mcp` | HTTP (remote) | — | Mattermost chat tools |
-| `mail-mcp` | HTTP (remote) | — | IMAP/SMTP/Admin via Stalwart REST API |
+| `cloud-mail-mcp` | HTTP (remote) | — | IMAP/SMTP/Admin via Stalwart REST API |
 
 ### B.12 DTK (DevOps Toolkit)
 
