@@ -73,6 +73,14 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
   XDG_DATA_HOME="${OCTO_HOME%/octocode}"
   export XDG_DATA_HOME
 fi
+# Embedding-model cache. Since 0.22 octocode keeps its fastembed models under
+# $XDG_CACHE_HOME/octolib/fastembed, no longer inside the octocode home. Point the
+# cache INSIDE the home, at fastembed/, so the base image keeps carrying the model
+# cache exactly as before (cloud-cgc-db-package.sh's root-state allowlist and
+# cloud-cgc-db-restore-all.sh's project-dir exclusion both already name that
+# directory) and the consumers find the models restored instead of downloading
+# them at first query. compose.nix sets the same variable on the consumer side.
+XDG_CACHE_HOME="$OCTO_HOME/fastembed"; export XDG_CACHE_HOME
 # FIXED clone root, identical everywhere. octocode keys each project by its
 # git-root path STRING, so to do incremental ON TOP of the existing GHCR/prod
 # DB (which was built in the octocode container at /repos), the producer MUST
@@ -156,18 +164,26 @@ OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$OPENAI_API_KEY}"
 export OPENROUTER_API_URL OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY OPENROUTER_API_KEY
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
-OCTO_X86=$(jq -r '.runtime.octocode.octocode_images.x86' "$BJ")
-OCTO_ARM=$(jq -r '.runtime.octocode.octocode_images.arm' "$BJ")
+# Pinned UPSTREAM octocode release (see ensure_octocode): version + per-arch sha256
+# of the static musl tarball — the one pin the consumer image shares.
+OCTO_VERSION=$(jq -r '.runtime.octocode.version // empty' "$BJ")
+OCTO_REPO=$(jq -r '.runtime.octocode.release.repo // empty' "$BJ")
+OCTO_ASSET=$(jq -r '.runtime.octocode.release.asset // empty' "$BJ")
 # Data-driven exclude globs. octocode honours a gitignore-syntax `.noindex` file
 # (in addition to `.gitignore`). dist/, vendor/, z_archive/ are git-COMMITTED here
 # so `.gitignore` misses them — without this octocode embeds ~73% generated/vendored/
 # archived junk, bloating the graph and tripling every index. One `.noindex` per repo.
 NOINDEX_PATTERNS=$(jq -r '.runtime.octocode.noindex_patterns // [] | .[]' "$BJ" 2>/dev/null)
-# Arch-aware binary: ARM runner (oci-apps aarch64) uses the arm image; x86 GHA uses x86.
+# Arch-aware binary: the arm runners (oci-apps aarch64) and x86 GHA fetch the same
+# release, each its own arch asset verified against its own sha256.
 case "$(uname -m)" in
-  aarch64|arm64) OCTO_IMAGE="$OCTO_ARM" ;;
-  *)             OCTO_IMAGE="$OCTO_X86" ;;
+  aarch64|arm64) OCTO_ARCH=aarch64 ;;
+  *)             OCTO_ARCH=x86_64 ;;
 esac
+OCTO_SHA=$(jq -r --arg a "$OCTO_ARCH" '.runtime.octocode.release.sha256[$a] // empty' "$BJ")
+if [ -z "$OCTO_VERSION" ] || [ -z "$OCTO_REPO" ] || [ -z "$OCTO_ASSET" ] || [ -z "$OCTO_SHA" ]; then
+  echo "::error::[cgc-db] build.json .runtime.octocode.version / .release.{repo,asset,sha256.$OCTO_ARCH} incomplete — cannot pin the indexer binary"; exit 1
+fi
 CFG="$OCTO_HOME/config.toml"
 TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
 ACTOR="${GITHUB_ACTOR:-diegonmarcos}"
@@ -245,49 +261,52 @@ trap 'rm -rf "$CGC_SCRATCH"' EXIT
 #     base = a silent no-op "update". So we VERIFY capability and, if the on-PATH
 #     octocode lacks it, extract the pinned image binary (the *-fastembed-* images
 #     are built with it). Pinned version keeps the DB schema compatible.
-# AUDITED (STRAY-PREVENT): this IS an `octocode index` call, but it already runs cd'd
-# into its own fresh mktemp -d ($_t, unique per call) — never the ambient cwd
-# / cloud-infra checkout — so it cannot be the stable-per-job stray described
-# above. It DOES `git init` that dir first: octocode's config default is
-# require_git=true (see bootstrap_config_toml() below), so an ungit'd dir
-# risks failing on "not a git repository" before ever reaching the FastEmbed
-# capability check this probe exists to observe — leave it as is. $_t has no
-# origin remote, so even if it stamps a project entry, that entry's key is not
-# derived from a stable origin URL the way cloud-infra's is; harmless
-# left-over strays from this call (if any) are still handled generically by
-# STRAY-SELECT's before/after diff in the per-repo loop, which excludes anything
-# already present before the target repo's own index runs.
+# FastEmbed probe. `models list` is the one read-only octocode command that names
+# the compiled-in embedding providers. It still stamps a default config.toml into
+# whatever home it resolves (0.22 does that on nearly every command), so it runs
+# against a THROWAWAY XDG home, never $OCTO_HOME — a default config landing there
+# (octocode's own jina code model, not build.json's) would make
+# bootstrap_config_toml below keep it as if it were ours. The 0.12-era probe ran
+# `octocode index` in an empty git repo for the same purpose; on 0.22 that also
+# creates a stray project dir and starts a model download. Retired.
 octocode_has_fastembed() {  # $1 = octocode binary path/name
-  _t="$(mktemp -d)"; ( cd "$_t" && git init -q . >/dev/null 2>&1 ) || true
-  _o="$( ( cd "$_t" && "$1" index ) 2>&1 || true )"; rm -rf "$_t"
-  case "$_o" in *"FastEmbed support is not compiled in"*) return 1 ;; *) return 0 ;; esac
+  _t="$(mktemp -d)"
+  _o="$( cd "$_t" && XDG_DATA_HOME="$_t" XDG_CONFIG_HOME="$_t" XDG_CACHE_HOME="$_t" "$1" models list 2>&1 || true )"
+  rm -rf "$_t"
+  case "$_o" in *"FastEmbed Provider"*) return 0 ;; *) return 1 ;; esac
 }
+# The octocode binary is the UPSTREAM static musl release, pinned by version +
+# sha256 in build.json (.runtime.octocode.version / .release) — one pin shared with
+# the consumer image (docker.native_build.cmd), asserted equal by
+# 9_others/test/cgc-db-octocode-pin.test.sh. The DB schema follows the binary, so an
+# on-PATH octocode is only accepted at exactly the pinned version. The 0.12.2-era
+# per-arch GHCR images were hand-built once (2026-03-26) with no builder in this
+# repo; upstream now ships static builds for both x86_64 and aarch64, so there is
+# nothing left to build, mirror or docker-pull here.
 ensure_octocode() {
-  if command -v octocode >/dev/null 2>&1 && octocode_has_fastembed octocode; then
-    echo "[cgc-db] octocode: $(cd "$CGC_SCRATCH" && octocode --version 2>/dev/null) (FastEmbed ok)"; return 0
+  if command -v octocode >/dev/null 2>&1 \
+     && [ "$(octocode --version 2>/dev/null | awk '{print $2}')" = "$OCTO_VERSION" ] \
+     && octocode_has_fastembed octocode; then
+    echo "[cgc-db] octocode: $OCTO_VERSION on PATH (FastEmbed ok)"; return 0
   fi
-  command -v docker >/dev/null 2>&1 || { echo "::error::need a FastEmbed-capable octocode or docker to obtain it"; exit 1; }
   bindir="${CGC_BIN:-$HOME/.local/bin}"; mkdir -p "$bindir"
-  echo "[cgc-db] on-PATH octocode missing/no-FastEmbed — extracting pinned $OCTO_IMAGE (arch: $(uname -m))"
-  docker pull -q "$OCTO_IMAGE" >/dev/null
-  docker run --rm --entrypoint sh "$OCTO_IMAGE" -c 'cat "$(command -v octocode)"' > "$bindir/octocode"
-  chmod +x "$bindir/octocode"
-  # The arm image's octocode is DYNAMICALLY linked (unlike the x86 -static build):
-  # it needs libssl.so.3 + libcrypto.so.3 at runtime. A host usually has them, but a
-  # minimal runner (the gha-runner container) does NOT → "libssl.so.3: cannot open
-  # shared object file" (rc 127). Stream the libs from the SAME image (stdout, not a
-  # -v mount — under the docker-socket sibling setup a mount resolves to the HOST
-  # path) and point LD_LIBRARY_PATH at them → self-contained, runs anywhere.
-  for _l in libssl.so.3 libcrypto.so.3; do
-    docker run --rm --entrypoint sh "$OCTO_IMAGE" \
-      -c "_s=\$(find / -name '$_l' 2>/dev/null | head -1); [ -n \"\$_s\" ] && cat \"\$_s\"" \
-      > "$bindir/$_l" 2>/dev/null || true
-    [ -s "$bindir/$_l" ] || rm -f "$bindir/$_l"
-  done
+  _asset=$(printf '%s' "$OCTO_ASSET" | sed "s/{version}/$OCTO_VERSION/g; s/{arch}/$OCTO_ARCH/g")
+  _url="https://github.com/$OCTO_REPO/releases/download/$OCTO_VERSION/$_asset"
+  echo "[cgc-db] fetching pinned octocode $OCTO_VERSION for $OCTO_ARCH — $_url"
+  _tmp=$(mktemp -d)
+  curl -fsSL --retry 5 --retry-delay 10 -o "$_tmp/$_asset" "$_url" \
+    || { echo "::error::[cgc-db] octocode download failed: $_url"; exit 1; }
+  _got=$(sha256sum "$_tmp/$_asset" | cut -c1-64)
+  [ "$_got" = "$OCTO_SHA" ] \
+    || { echo "::error::[cgc-db] octocode sha256 mismatch for $_asset — build.json .runtime.octocode.release.sha256.$OCTO_ARCH says $OCTO_SHA, download is $_got. Refusing an unverified indexer binary."; exit 1; }
+  tar -xzf "$_tmp/$_asset" -C "$_tmp" octocode \
+    && install -m 0755 "$_tmp/octocode" "$bindir/octocode" \
+    || { echo "::error::[cgc-db] octocode tarball did not contain ./octocode"; exit 1; }
+  rm -rf "$_tmp"
   PATH="$bindir:$PATH"; export PATH
-  LD_LIBRARY_PATH="$bindir:${LD_LIBRARY_PATH:-}"; export LD_LIBRARY_PATH
-  octocode_has_fastembed "$bindir/octocode" || { echo "::error::pinned image octocode ALSO lacks FastEmbed: $OCTO_IMAGE"; exit 1; }
-  echo "[cgc-db] octocode: $(cd "$CGC_SCRATCH" && octocode --version 2>/dev/null) (FastEmbed ok, from image)"
+  octocode_has_fastembed "$bindir/octocode" \
+    || { echo "::error::[cgc-db] pinned octocode $OCTO_VERSION ($OCTO_ARCH) lacks FastEmbed"; exit 1; }
+  echo "[cgc-db] octocode: $(octocode --version 2>/dev/null) (FastEmbed ok, upstream release, sha256 verified)"
 }
 
 # 1) ensure GHCR auth — only if a token is provided (local is usually pre-authed).
@@ -601,133 +620,34 @@ checkpoint_publish() {  # $1 = repo local name
   fi
 }
 
-# BOOTSTRAP config.toml (per-repo mode only). Production incident 2026-08-21 (run
-# 32502667627, all 7 matrix jobs, identical): before cgc-db-base:latest ever exists
-# on GHCR (the very first cycle), the base/self restore above is a no-op —
-# cloud-cgc-db-pull.sh warns-and-continues on a missing image (see its own header)
-# — so OCTO_HOME has NO config.toml at this point. octocode 0.12.2 (verified
-# against the exact pinned binary: a bare `octocode config` with no flags prints
-# usage and creates NOTHING, but `octocode index`/`octocode config --show` in a
-# config-less home silently AUTO-GENERATE one using octocode's OWN compiled-in
-# embedding defaults — voyage:voyage-code-3 / voyage:voyage-3.5-lite, CLOUD models
-# needing VOYAGE_API_KEY) — so `octocode index` then dies at the very first
-# embedding call with "VOYAGE_API_KEY environment variable not set", before a
-# single file is indexed. The OLD fallback here (`octocode config`, no flags) was
-# a silent no-op, which is why this was never caught: it looks like it handles
-# the missing-file case but does not.
-#
-# Our models are LOCAL fastembed — build.json .runtime.octocode.update.
-# code_embedding_model / text_embedding_model, already parsed into $CODE_EMBED /
-# $TEXT_EMBED above — ONE source of truth; a wrong/missing model here silently
-# drop_tables data on a later restore (see cloud-cgc-db-package.sh's base-image
-# DESC). We do NOT shell out to `octocode config --code-embedding-model ...` to
-# generate this file, even though that CLI flow does exist and IS used below
-# (4a/4b) against a config.toml that already exists: that command writes to
-# octocode's OWN resolved home directory (derived from $HOME, NOT from
-# $OCTOCODE_HOME/$OCTO_HOME — verified against the pinned 0.12.2 binary, which has
-# no env var or CLI flag to relocate its data dir at all), so it cannot be trusted
-# to land the file at $CFG. Writing the file directly guarantees it lands exactly
-# where the rest of this script (and every later restore) expects it. Schema below
-# is octocode 0.12.2's OWN generated default (verified byte-for-byte against a
-# fresh `octocode config --show` in an empty home on the pinned version) with only
-# the two [embedding] lines swapped for build.json's models — every other default
-# is left exactly as octocode itself would generate it.
+# BOOTSTRAP config.toml (per-repo mode only). Before the versioned base image
+# exists on GHCR (the first cycle after every octocode bump) the base restore is a
+# no-op and OCTO_HOME has no config.toml; an `octocode index` in that state would
+# write octocode's OWN defaults (production incident 2026-08-21, run 32502667627:
+# cloud models needing VOYAGE_API_KEY, zero files indexed). The file is generated
+# by the pinned octocode itself — a hand-written template cannot track the schema
+# (0.22 refuses the 0.12-era v1 file outright: "missing field `quantization`" —
+# measured), while `octocode config --<flag>` always writes the loader's own
+# current version. XDG_DATA_HOME is aligned to $OCTO_HOME's parent above, so the
+# write lands exactly at $CFG; that is verified, never assumed. build.json's
+# embedding models go in on the same call — a wrong/missing model here silently
+# drop_tables data on a later restore (see cloud-cgc-db-package.sh's base DESC).
 bootstrap_config_toml() {
   [ -f "$CFG" ] && return 0
   mkdir -p "$(dirname "$CFG")"
-  cat > "$CFG" <<CFGEOF
-version = 1
-
-[llm]
-model = "$LLM"
-timeout = 120
-temperature = 0.7
-max_tokens = 4000
-
-[index]
-chunk_size = 2000
-chunk_overlap = 100
-embeddings_batch_size = 16
-embeddings_max_tokens_per_batch = 100000
-flush_frequency = 2
-require_git = true
-
-[search]
-max_results = 20
-similarity_threshold = 0.65
-output_format = "markdown"
-max_files = 10
-context_lines = 3
-search_block_max_characters = 400
-
-[search.reranker]
-enabled = false
-model = "voyage:rerank-2.5"
-top_k_candidates = 50
-final_top_k = 10
-
-[search.hybrid]
-enabled = false
-default_vector_weight = 0.7
-default_keyword_weight = 0.3
-keyword_path_weight = 2.0
-keyword_content_weight = 1.0
-keyword_symbols_weight = 2.5
-keyword_title_weight = 3.0
-
-[embedding]
-code_model = "$CODE_EMBED"
-text_model = "$TEXT_EMBED"
-
-[graphrag]
-enabled = false
-use_llm = false
-
-[graphrag.llm]
-description_model = "$LLM"
-relationship_model = "$LLM"
-ai_batch_size = 8
-max_batch_tokens = 16384
-batch_timeout_seconds = 60
-fallback_to_individual = true
-max_sample_tokens = 1500
-confidence_threshold = 0.6
-architectural_weight = 0.9
-relationship_system_prompt = """
-You are an expert software architect specializing in code analysis. Analyze the provided code files and identify meaningful ARCHITECTURAL relationships that go beyond simple imports.
-
-Focus on these relationship types:
-- 'imports': Module/package imports and dependencies
-- 'implements': Interface implementation, trait implementation
-- 'extends': Class inheritance, module extension
-- 'calls': Function/method calls between modules
-- 'uses': Utility usage, service consumption
-- 'configures': Configuration setup, dependency injection
-- 'factory_creates': Factory pattern instantiation
-- 'observer_pattern': Event listening, callback registration
-- 'strategy_pattern': Algorithm selection, behavior delegation
-- 'adapter_pattern': Interface adaptation, wrapper usage
-- 'architectural_dependency': High-level system dependencies
-
-Respond with a JSON array of relationships. Each relationship must include:
-- source_path: relative path of source file
-- target_path: relative path of target file
-- relation_type: one of the types listed above
-- description: specific explanation of HOW the relationship works
-- confidence: 0.0-1.0 confidence score (use 0.8+ for clear relationships)
-
-Only include relationships with clear architectural significance. Avoid trivial imports."""
-description_system_prompt = """
-You are a senior software engineer analyzing code architecture. Provide a concise 2-3 sentence description of the file's ROLE and PURPOSE in the system.
-
-Focus on:
-- What architectural layer this file belongs to (API, business logic, data access, utilities, etc.)
-- Its primary responsibility and how it contributes to the system
-- Key patterns or architectural decisions it implements
-
-Avoid listing specific functions/classes. Instead, describe the file's architectural significance and how it fits into the larger system design."""
-CFGEOF
-  echo "[cgc-db] bootstrap: wrote config.toml (models: code=$CODE_EMBED text=$TEXT_EMBED)"
+  ( cd "$CGC_SCRATCH" && octocode config --model "$LLM" \
+      --code-embedding-model "$CODE_EMBED" --text-embedding-model "$TEXT_EMBED" ) >/dev/null 2>&1 || true
+  [ -f "$CFG" ] || { echo "::error::[cgc-db] octocode config did not create $CFG (XDG_DATA_HOME=${XDG_DATA_HOME:-unset}) — nothing to index with"; exit 1; }
+  # Parity with what every consumer was validated against: reranker + hybrid OFF
+  # (0.22 turns both on by default; the reranker pulls a ~1GB jina model at query
+  # time) and graphrag OFF/no-LLM until 4a/4b decide per phase. Section-scoped so
+  # the same key names under [graphrag.llm] / [search.reasoning] are untouched.
+  awk '
+    /^\[/ { sec = $0 }
+    (sec == "[search.reranker]" || sec == "[search.hybrid]" || sec == "[graphrag]") && /^enabled[[:space:]]*=/ { print "enabled = false"; next }
+    sec == "[graphrag]" && /^use_llm[[:space:]]*=/ { print "use_llm = false"; next }
+    { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
+  echo "[cgc-db] bootstrapped config.toml with octocode $OCTO_VERSION (embedding $CODE_EMBED / $TEXT_EMBED, llm $LLM, reranker/hybrid off)"
 }
 
 # AUTO-SEED the shared base image (per-repo mode only) — the other half of the
@@ -769,9 +689,9 @@ seed_base_if_missing() {
 }
 
 # ── run ───────────────────────────────────────────────────────────────────
-# GHCR auth FIRST — ensure_octocode pulls the (private) pinned octocode image, so
-# docker must be logged in before it runs. On a host with cached creds this order
-# was masked; a fresh runner container has none → "denied" on the image manifest.
+# GHCR auth FIRST — the base / per-repo checkpoint images below are GHCR pulls, so
+# docker must be logged in before any of them. (ensure_octocode itself no longer
+# needs docker: the indexer binary comes straight from the upstream release.)
 ensure_ghcr_auth
 ensure_octocode
 ensure_repos
@@ -826,8 +746,13 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
     # the ~12h monolith figure, and the 8-wide matrix absorbs it. Safety is
     # unchanged: preflight failure aborts before package/push, so the prior
     # image on GHCR survives until a full replacement is actually built.
-    if [ "${CGC_FORCE:-0}" = "1" ] && [ "$USE_LLM" = "true" ]; then
-      echo "[cgc-db] CGC_FORCE + LLM — skipping prior checkpoint of $_r: full re-index from base"
+    # ...and a forced SEMANTIC run just the same: `force` is the documented lever
+    # "after an INDEXER change" (cgc-db.yml), and an octocode bump is exactly that —
+    # layering a checkpoint written by another octocode version under the new
+    # binary is the one thing that must never happen (the DB schema follows the
+    # binary). Forced means from base, in both phases.
+    if [ "${CGC_FORCE:-0}" = "1" ]; then
+      echo "[cgc-db] CGC_FORCE — skipping prior checkpoint of $_r: full re-index from base (USE_LLM=$USE_LLM)"
       continue
     fi
     CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${_r}:${REPO_TAG}" || true
@@ -1069,6 +994,36 @@ octo_log_digest() { # $1 = octocode log file, $2 = max lines to print
     END { s = k - n + 1; if (s < 1) s = 1; for (i = s; i <= k; i++) print l[i] }'
 }
 
+# After a graphrag-phase index, prove the LLM pass contributed. Structural extraction
+# yields imports / calls / references / sibling_module / parent_module / child_module
+# / contains; only the LLM prompt emits configures / factory_creates /
+# observer_pattern / strategy_pattern / adapter_pattern / architectural_dependency
+# (octocode src/indexer/graphrag/ai.rs — the vocabulary the prompt hands the model,
+# kept as distinct RelationType variants). A graphrag checkpoint carrying none of
+# them is the 2026-08-24 failure again — every LLM reply discarded, exit 0 — and
+# must not be published as enriched. The text overview is asserted on purpose: it
+# is the exact output the MCP surfaces hand to users.
+# ponytail: repos under the node floor are exempt — a 17-node corpus can honestly
+# hold no architectural pattern; switch to a description-shape check if a mid-size
+# repo ever trips this falsely.
+assert_llm_graph() { # $1 = repo dir, $2 = repo name → rc 1 when no LLM-derived type exists
+  _alg_ov=$( cd "$1" && octocode graphrag overview --format text 2>&1 )
+  _alg_nodes=$(printf '%s\n' "$_alg_ov" | awk '/contains [0-9]+ nodes and [0-9]+ relationships/ { for (i = 1; i <= NF; i++) if ($i == "contains") { print $(i + 1); exit } }')
+  _alg_types=$(printf '%s\n' "$_alg_ov" | awk '/^[[:space:]]*- [a-z_]+: [0-9]+ relationship/ { t = $2; sub(/:$/, "", t); printf "%s ", t }')
+  for _alg_t in $_alg_types; do
+    case "$_alg_t" in
+      configures|factory_creates|observer_pattern|strategy_pattern|adapter_pattern|architectural_dependency) return 0 ;;
+    esac
+  done
+  if [ "${_alg_nodes:-0}" -lt 30 ] 2>/dev/null; then
+    echo "[cgc-db] $2 · graphrag guard: ${_alg_nodes:-0} nodes (< 30) and no LLM-derived type — small corpus, accepted"
+    return 0
+  fi
+  echo "::error::[cgc-db] $2 · graphrag phase produced NO LLM-derived relationship across ${_alg_nodes:-?} nodes (types present: ${_alg_types:-none}) — every LLM reply was discarded (empty or unparseable), the silent failure of 2026-08-24; refusing to publish a structural-only graph as a graphrag checkpoint"
+  printf '%s\n' "$_alg_ov" | tail -20
+  return 1
+}
+
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
@@ -1209,6 +1164,8 @@ for r in $REPOS; do
   rm -f "$_idx_marker" 2>/dev/null || true
   if [ "$_rc" = "0" ]; then
     octo_log_digest "$_log" 40; rm -f "$_log"
+    # graphrag phase only: no LLM-derived edges = no checkpoint (see assert_llm_graph).
+    if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi
   elif [ "$_rc" = "124" ]; then
     echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_EFF}m slice — publishing PARTIAL progress, will resume next run"
     octo_log_digest "$_log" 40; rm -f "$_log"
