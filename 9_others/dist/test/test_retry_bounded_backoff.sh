@@ -13,7 +13,7 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ Phase 9 tester — cloud-services-mcp retry loop is bounded           ║
+# ║ Phase 9 tester — every proxy-mcp retry loop is bounded           ║
 # ║                                                                  ║
 # ║ Proves:                                                          ║
 # ║   proxy-mcp.ts uses per-child exponential backoff + cleans up    ║
@@ -22,8 +22,16 @@
 # ║   past the container's 512 MiB cgroup and OOM-killed the service ║
 # ║   every ~75 min (H1 in the 2026-04-21 triage).                   ║
 # ║                                                                  ║
-# ║   Also asserts build.json declares resources.mem_limit and       ║
+# ║   Also asserts build.json declares a memory RESERVATION and a    ║
 # ║   restart_policy — otherwise a crash leaves the container dead.  ║
+# ║                                                                  ║
+# ║   Services are DISCOVERED (any build.json with                   ║
+# ║   .proxied_mcps.retry), not hardcoded: this test used to name    ║
+# ║   infra-api_c3-services-mcp, which was renamed to                ║
+# ║   cloud-services-mcp, so it failed on a missing path instead of  ║
+# ║   on anything it asserts — and never covered cloud-mail-mcp's    ║
+# ║   proxy at all. Discovery fixes both and survives the next       ║
+# ║   rename.                                                        ║
 # ║                                                                  ║
 # ║ Usage: bash 9_others/test/test_retry_bounded_backoff.sh   ║
 # ╚══════════════════════════════════════════════════════════════════╝
@@ -33,21 +41,34 @@ set -eo pipefail
 # 9_others/test/ and 1_cicd/dist/test/ (generated), which sit at
 # different depths, so one literal count is wrong for one of the two copies.
 REPO_ROOT="$(_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
-SVC_DIR="$REPO_ROOT/a_solutions/infra-api_c3-services-mcp"
-# v2 engine cutover (2026-04-22) moved code under src/code/. Keep backward-
-# compatible resolution so the tester still works if either layout is used.
-PROXY_TS=""
-for _p in \
-    "$SVC_DIR/src/code/mcp/tools/proxy-mcp.ts" \
-    "$SVC_DIR/src/mcp/tools/proxy-mcp.ts"; do
-    [ -f "$_p" ] && { PROXY_TS="$_p"; break; }
-done
-[ -z "$PROXY_TS" ] && { echo "  ✗ proxy-mcp.ts not found under src/code/ or src/" >&2; exit 1; }
-BUILD_JSON="$SVC_DIR/build.json"
-
 FAIL=0
 pass() { printf "  ✓ %s\n" "$1"; }
 fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
+
+# Discover every service that declares proxied_mcps.retry.
+SERVICES=""
+for _bj in "$REPO_ROOT"/a_solutions/*/build.json; do
+    jq -e '.proxied_mcps.retry' "$_bj" >/dev/null 2>&1 || continue
+    SERVICES="$SERVICES $(dirname "$_bj")"
+done
+[ -n "${SERVICES// /}" ] || { echo "  ✗ no service declares .proxied_mcps.retry — discovery broken" >&2; exit 1; }
+
+check_service() {
+  SVC_DIR="$1"
+  SVC_NAME="$(basename "$SVC_DIR")"
+  echo ""
+  echo "════ $SVC_NAME ════"
+  # v2 engine cutover (2026-04-22) moved code under src/code/. Both the
+  # tools/ and shared/ sub-paths are in use across services.
+  PROXY_TS=""
+  for _p in \
+      "$SVC_DIR/src/code/mcp/tools/proxy-mcp.ts" \
+      "$SVC_DIR/src/code/mcp/shared/proxy-mcp.ts" \
+      "$SVC_DIR/src/mcp/tools/proxy-mcp.ts"; do
+      [ -f "$_p" ] && { PROXY_TS="$_p"; break; }
+  done
+  [ -z "$PROXY_TS" ] && { fail "$SVC_NAME: proxy-mcp.ts not found under src/code/ or src/"; return 0; }
+  BUILD_JSON="$SVC_DIR/build.json"
 
 echo "── 1: exponential backoff driven by build.json (data-driven) ──"
 
@@ -98,7 +119,11 @@ fi
 echo ""
 echo "── 4: transport/client cleanup on connect failure ──"
 
-if grep -A6 'await client.connect' "$PROXY_TS" \
+# Match on `client.connect` alone, not `await client.connect`: the call may
+# legitimately be wrapped (cloud-mail-mcp wraps it in a withTimeout() race),
+# which moves the `await` off the front and made this assert a false failure
+# while the cleanup it checks for was present all along.
+if grep -A8 'client\.connect' "$PROXY_TS" \
    | grep -qE 'transport\.close|client\.close'; then
     pass "failure path closes transport / client"
 else
@@ -108,11 +133,15 @@ fi
 echo ""
 echo "── 5: build.json declares resources + restart_policy ──"
 
-mem=$(jq -r '.containers.app.resources.mem_limit // empty' "$BUILD_JSON")
+# A memory RESERVATION (floor), not a limit (ceiling): 9ad4168d2 removed
+# limits.memory fleet-wide because cgroup memory.max force-reclaims
+# per-container regardless of host free RAM. Asserting mem_limit here
+# would demand exactly what that policy deleted.
+mem=$(jq -r '.containers.app.resources.mem_reservation // empty' "$BUILD_JSON")
 if [ -n "$mem" ]; then
-    pass "containers.app.resources.mem_limit = $mem"
+    pass "containers.app.resources.mem_reservation = $mem"
 else
-    fail "containers.app.resources.mem_limit not declared"
+    fail "containers.app.resources.mem_reservation not declared"
 fi
 
 policy=$(jq -r '.containers.app.restart_policy // empty' "$BUILD_JSON")
@@ -121,6 +150,10 @@ if [ -n "$policy" ] && [ "$policy" != "no" ]; then
 else
     fail "containers.app.restart_policy absent or 'no' — crashed service stays dead"
 fi
+
+}
+
+for _svc in $SERVICES; do check_service "$_svc"; done
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then
