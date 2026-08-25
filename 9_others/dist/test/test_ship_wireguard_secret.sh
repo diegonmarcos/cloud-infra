@@ -81,12 +81,21 @@ else
     pass "VMs requiring WG: $(echo $_wg_vms | tr '\n' ' ')"
 fi
 
-# Workflows that matrix over those VMs must pass WG_PRIVATE_KEY.
+# Workflows that matrix over those VMs must pass WG_PRIVATE_KEY somewhere in
+# the value — not necessarily as the WHOLE value. PLAN-ghcr-artifacts.md item
+# 4 made ship.yml's deploy job conditional
+# (${{ matrix.runner_label == '' && secrets.WG_PRIVATE_KEY || '' }}): a VM
+# with a runner_label runs the job directly on that VM's own self-hosted
+# runner, which reaches its own wg_ip via normal local routing — no tunnel
+# needed, so WG_PRIVATE_KEY is deliberately withheld THERE. Every VM without
+# a runner_label still gets the real secret (the `== ''` branch), which is
+# the property this test actually guards: the secret must still be
+# reachable from that env: line for the mesh path, not stripped outright.
 for wf in "$REPO_ROOT"/1_cicd/src/cicd/ship.yml \
           "$REPO_ROOT"/1_cicd/src/cicd/ship-home-manager.yml; do
     [ -f "$wf" ] || continue
     name=$(basename "$wf")
-    if grep -qE '^\s*WG_PRIVATE_KEY:\s*\$\{\{\s*secrets\.WG_PRIVATE_KEY\s*\}\}' "$wf"; then
+    if grep -qE '^\s*WG_PRIVATE_KEY:\s*\$\{\{.*secrets\.WG_PRIVATE_KEY.*\}\}' "$wf"; then
         pass "$name passes WG_PRIVATE_KEY"
     else
         fail "$name does NOT pass WG_PRIVATE_KEY (WG-only VMs will time out)"
