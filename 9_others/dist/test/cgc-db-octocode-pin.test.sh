@@ -67,6 +67,13 @@ ck "consumers point XDG_CACHE_HOME at the restored cache (both env blocks)" "$(g
 ck "graphrag phase runs the LLM-edge guard before checkpointing" \
    "$(grepq 'if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi' "$SCRIPT" && echo yes || echo no)" "yes"
 
+# ── 2b) the consumer image pins the SAME release ────────────────────────────
+CMD=$(jq -r '.docker.native_build.cmd' "$BJ")
+ck "consumer cmd fetches the pinned aarch64 asset"  "$(printf '%s' "$CMD" | grep -qF "releases/download/$V/octocode-$V-aarch64-unknown-linux-musl.tar.gz" && echo yes || echo no)" "yes"
+ck "consumer cmd verifies build.json's aarch64 sha" "$(printf '%s' "$CMD" | grep -qF "$(jq -r '.runtime.octocode.release.sha256.aarch64' "$BJ")  /tmp/octocode.tgz" && echo yes || echo no)" "yes"
+ck "consumer base image is no longer the dead indexed-arm image" "$(jq -r '.docker.native_build.base_image' "$BJ" | grep -c 'indexed-arm' || true)" "0"
+ck "consumer apt list carries git for octocode's require_git" "$(jq -r '.docker.native_build.apt' "$BJ" | grep -qw git && echo yes || echo no)" "yes"
+
 # ── 3) assert_llm_graph, executed with a stubbed octocode ────────────────────
 awk '/^assert_llm_graph\(\) \{/ { f=1 } f { print } f && /^\}$/ { exit }' "$SCRIPT" > "$T/fn.sh"
 ck "guard function extracted"  "$(grep -c 'assert_llm_graph() {' "$T/fn.sh")" "1"
