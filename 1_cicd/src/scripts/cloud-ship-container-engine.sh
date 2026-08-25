@@ -532,6 +532,63 @@ for _step in \
 done
 unset _step
 
+# ── Build phase (PLAN-ghcr-artifacts.md item 2) ────────────────────────
+# Extracted verbatim from the `ship` verb's Phase 1+2+2.5 so `ship` (build
+# AND deploy, today's single-job path) and the new `ship-build` verb
+# (build+push only, no deploy — for the split ship.yml build job) run the
+# EXACT SAME code. Never duplicate this logic at a call site.
+_ship_build_phase() {
+    # ── Phase 1: BUILD (sequential — nix build produces dist/) ──
+    rm -f "$SERVICE_DIR/.image-changed"
+    step_build
+
+    # ── Phase 2: 4 PARALLEL JOBS (docker + configs + compose-build + secrets) ──
+    log "═══ Parallel: docker + configs-push + compose-build + secrets ═══"
+
+    step_docker &
+    PID_DOCKER=$!
+
+    step_configs_push &
+    PID_CONFIGS=$!
+
+    step_compose_build &
+    PID_IMAGE=$!
+
+    step_secrets &
+    PID_SECRETS=$!
+
+    # Wait for all 4
+    FAIL=0
+    wait $PID_DOCKER   || { log_error "docker build failed"; exit 1; }
+    wait $PID_CONFIGS  || { log_warn "configs-push failed"; FAIL=$((FAIL+1)); }
+    wait $PID_IMAGE    || { log_warn "compose-build failed"; FAIL=$((FAIL+1)); }
+    wait $PID_SECRETS  || { log_error "secrets failed"; FAIL=$((FAIL+1)); }
+    [ $FAIL -gt 1 ] && { log_error "Too many parallel jobs failed ($FAIL/3)"; exit 1; }
+
+    log "═══ Parallel jobs done ═══"
+
+    # Read image-changed signal from background step_docker
+    if [ -f "$SERVICE_DIR/.image-changed" ]; then
+        DOCKER_IMAGE_CHANGED=true
+        rm -f "$SERVICE_DIR/.image-changed"
+    fi
+
+    # $COMPOSE_FILE (rendered in Phase 1) and any digest/sha (pushed by
+    # step_docker in Phase 2, just joined above) are both available now —
+    # this is the earliest point both exist. See the function's own
+    # comment for the fallback tiers; dormant unless a caller exports
+    # DEPLOY_IMAGE_DIGEST or DEPLOY_IMAGE_SHA12 (nothing does yet in the
+    # `ship` — single-job — path; the split build job doesn't deploy at
+    # all, so this is a harmless no-op there too).
+    rewrite_compose_image_refs
+
+    # ── Phase 2.5: VERIFY secret consumption (warn-mode in Phase 0) ──
+    # Runs after both step_build (dist/configs/, dist/docker-compose.yml) AND
+    # step_secrets (dist/.secrets*) have produced the artifacts the gate scans.
+    # Mode is warn until repo-wide cleanup completes (Phase 8 flips to fail).
+    step_verify_secrets || log_warn "verify-secrets reported offenders (warn mode)"
+}
+
 # ── Main ─────────────────────────────────────────────────────────────
 echo "========================================"
 echo "  Build: $SERVICE_NAME"
@@ -581,53 +638,10 @@ case "${1:-all}" in
             step_build; step_secrets; step_terraform; exit 0
         fi
 
-        # ── Phase 1: BUILD (sequential — nix build produces dist/) ──
-        rm -f "$SERVICE_DIR/.image-changed"
-        step_build
-
-        # ── Phase 2: 4 PARALLEL JOBS (docker + configs + compose-build + secrets) ──
-        log "═══ Parallel: docker + configs-push + compose-build + secrets ═══"
-
-        step_docker &
-        PID_DOCKER=$!
-
-        step_configs_push &
-        PID_CONFIGS=$!
-
-        step_compose_build &
-        PID_IMAGE=$!
-
-        step_secrets &
-        PID_SECRETS=$!
-
-        # Wait for all 4
-        FAIL=0
-        wait $PID_DOCKER   || { log_error "docker build failed"; exit 1; }
-        wait $PID_CONFIGS  || { log_warn "configs-push failed"; FAIL=$((FAIL+1)); }
-        wait $PID_IMAGE    || { log_warn "compose-build failed"; FAIL=$((FAIL+1)); }
-        wait $PID_SECRETS  || { log_error "secrets failed"; FAIL=$((FAIL+1)); }
-        [ $FAIL -gt 1 ] && { log_error "Too many parallel jobs failed ($FAIL/3)"; exit 1; }
-
-        log "═══ Parallel jobs done ═══"
-
-        # Read image-changed signal from background step_docker
-        if [ -f "$SERVICE_DIR/.image-changed" ]; then
-            DOCKER_IMAGE_CHANGED=true
-            rm -f "$SERVICE_DIR/.image-changed"
-        fi
-
-        # $COMPOSE_FILE (rendered in Phase 1) and any digest/sha (pushed by
-        # step_docker in Phase 2, just joined above) are both available now —
-        # this is the earliest point both exist. See the function's own
-        # comment for the fallback tiers; dormant unless a caller exports
-        # DEPLOY_IMAGE_DIGEST or DEPLOY_IMAGE_SHA12 (nothing does yet).
-        rewrite_compose_image_refs
-
-        # ── Phase 2.5: VERIFY secret consumption (warn-mode in Phase 0) ──
-        # Runs after both step_build (dist/configs/, dist/docker-compose.yml) AND
-        # step_secrets (dist/.secrets*) have produced the artifacts the gate scans.
-        # Mode is warn until repo-wide cleanup completes (Phase 8 flips to fail).
-        step_verify_secrets || log_warn "verify-secrets reported offenders (warn mode)"
+        # ── Phase 1+2+2.5: build + push images, render configs/secrets ──
+        # Shared with the `ship-build` verb (PLAN-ghcr-artifacts.md item 2) —
+        # see _ship_build_phase's own definition, never duplicate this here.
+        _ship_build_phase
 
         # ── Phase 3: DEPLOY TO VM (skip if unchanged) ──
         NEW_HASH=$(find "$DIST_DIR" -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
@@ -722,11 +736,33 @@ case "${1:-all}" in
         # no deploy target (local services).
         step_health
         ;;
+    ship-build)
+        # Build + push images, render configs/secrets — NO deploy.
+        # PLAN-ghcr-artifacts.md item 2: the split ship.yml `build` job calls
+        # this (via cloud-ship-ci-builder-dispatch.sh SHIP_MODE=build) instead
+        # of `ship`, so it never touches the VM/mesh at all. Wrangler/terraform
+        # services have no separate image to build ahead of deploy — build.sh
+        # ship already special-cases them before Phase 1; nothing to do here.
+        if [ "$WRANGLER_DEPLOY" = "true" ] || [ "$TERRAFORM_DEPLOY" = "true" ]; then
+            log "ship-build: no-op for wrangler/terraform services (ship handles their whole flow)"
+            exit 0
+        fi
+        _ship_build_phase
+        ;;
     wrangler) step_wrangler ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;
-    redeploy) step_build; step_secrets; step_deploy; step_compose; step_health ;;
+    redeploy)
+        # Render configs/secrets + deploy to VM — NO image rebuild. Existing
+        # verb; PLAN-ghcr-artifacts.md item 2 reuses it unchanged for the
+        # split ship.yml `deploy` job (via SHIP_MODE=deploy). Added
+        # rewrite_compose_image_refs so a caller that exports
+        # DEPLOY_IMAGE_DIGEST/DEPLOY_IMAGE_SHA12 gets a pinned pull here too —
+        # dormant (same as the `ship`/`rollout` call sites) until item 4 wires
+        # a real caller.
+        step_build; step_secrets; rewrite_compose_image_refs; step_deploy; step_compose; step_health
+        ;;
     rollout)  step_pull; rewrite_compose_image_refs; step_compose; step_health ;;   # image-only reconcile, no rebuild
     clean)    rm -rf "$DIST_DIR" "$SERVICE_DIR/.result" "$SERVICE_DIR/.result-docs" "$SERVICE_DIR/.dist-hash"; log "Cleaned" ;;
     clean-remote) step_clean_remote "${2:-}" ;;
@@ -735,7 +771,7 @@ case "${1:-all}" in
         if [ -f "$CONFIG" ] && get_lifecycle "$1" | grep -q .; then
             run_lifecycle "$1"
         else
-            echo "Usage: $0 [build|push|pull|up|down|restart|retire|deploy|compose|secrets|docs|health|status|logs|wrangler|all|ship|rollout|redeploy|clean|clean-remote|<lifecycle>]"
+            echo "Usage: $0 [build|push|pull|up|down|restart|retire|deploy|compose|secrets|docs|health|status|logs|wrangler|all|ship|ship-build|rollout|redeploy|clean|clean-remote|<lifecycle>]"
             echo "  docker       Build + push Docker image"
             echo "  build        Build nix flake -> dist/"
             echo "  docs         Build documentation -> dist/docs/"
@@ -758,6 +794,7 @@ case "${1:-all}" in
             echo "  tf-import    build + secrets + terraform import (from src/import.sh)"
             echo "  all          build + docs + secrets (default)"
             echo "  ship         build + docker + secrets + deploy + compose + health (skips if unchanged)"
+            echo "  ship-build   build + docker + configs-push + compose-build + secrets — NO deploy"
             echo "  redeploy     build + secrets + deploy + compose + health (skip docker)"
             echo "  clean        Remove dist/ and build artifacts"
             echo "  clean-remote List non-manifest files on VM (--force to delete)"
