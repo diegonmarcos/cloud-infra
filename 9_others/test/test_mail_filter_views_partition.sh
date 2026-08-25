@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
 # ╔══════════════════════════════════════════════════════════════════╗
-# ║ mail filter-views tester — the partition invariant the sorter    ║
-# ║ builds its sentinel on                                           ║
+# ║ mail filter-views tester — the size-axis partition invariant     ║
 # ║                                                                  ║
-# ║ jmap-sorter maintains cross-cutting A*/B*/C*/D* view mailboxes.  ║
-# ║ To avoid recomputing STATIC views (size, attachments) for every  ║
-# ║ message on every poll, it uses membership in the partition axis  ║
-# ║ as a sentinel: "this message already has its static views".      ║
-# ║                                                                  ║
-# ║ That is only sound if the partition axis really PARTITIONS —     ║
+# ║ jmap-sorter maintains cross-cutting A*-F* view mailboxes. The    ║
+# ║ axis named by filters.partition_axis must really PARTITION —     ║
 # ║ its buckets half-open [lo,hi), tiling the whole range, so every  ║
 # ║ message lands in exactly ONE. Edit a boundary by one byte and    ║
-# ║ the invariant breaks silently: an overlap double-files, a gap    ║
-# ║ leaves messages with no sentinel and they are recomputed         ║
-# ║ forever (the poll never converges, which is load on a small VM). ║
+# ║ the invariant breaks silently: an overlap double-files a message ║
+# ║ into two size folders, a gap drops it from all of them.          ║
+# ║                                                                  ║
+# ║ NOTE: the sorter used to ALSO use membership in this axis as a   ║
+# ║ "static views already computed" sentinel, to skip re-evaluating  ║
+# ║ non-volatile views. That was removed (2026-08-25) — it recorded  ║
+# ║ THAT static views ran, not WHICH, so any newly-added static      ║
+# ║ view stayed permanently empty for pre-existing mail. The         ║
+# ║ partition invariant is still worth asserting on its own merit.   ║
 # ║                                                                  ║
 # ║ Ported from src/code/test_filter_views.py, which never ran in    ║
 # ║ CI. Runs against the SOURCE rules, not dist/ (generated).        ║
@@ -63,20 +64,21 @@ else:
 
 # ── partition_axis must exist and be entirely STATIC ───────────────
 if not axis:
-    bad.append("filters.partition_axis is unset — sorter has no sentinel, "
-               "static views are recomputed for every message every poll")
+    bad.append("filters.partition_axis is unset — no axis declares itself "
+               "the one that tiles its range exactly once")
 else:
     part = [v for v in views if v.get("axis") == axis]
     if not part:
         bad.append("partition_axis=%r names no view — data shape changed" % axis)
     elif any(v.get("volatile") for v in part):
         vol = [v["folder"] for v in part if v.get("volatile")]
-        bad.append("partition axis %r has volatile view(s) %s — a sentinel that "
-                   "changes over time is not a sentinel" % (axis, vol))
+        bad.append("partition axis %r has volatile view(s) %s — a partition "
+                   "over a property that changes over time cannot tile "
+                   "stably" % (axis, vol))
     else:
         nvol = sum(1 for v in views if v.get("volatile"))
-        print("OK|partition_axis=%r is static and usable as sentinel "
-              "(%d volatile view(s) recomputed per poll)" % (axis, nvol))
+        print("OK|partition_axis=%r is static (%d volatile view(s) "
+              "elsewhere)" % (axis, nvol))
 
 # ── the partition must tile: exactly one bucket per probe ──────────
 def hit(p, size):
