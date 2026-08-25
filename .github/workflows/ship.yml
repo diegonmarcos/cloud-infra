@@ -300,10 +300,20 @@ jobs:
             RUNNER_MAP='{}'
           fi
 
+          # ── Per-VM self-hosted runner label (PLAN-ghcr-artifacts.md item 4) ──
+          # Optional vms.<host>.runner_label in config.json, propagated through
+          # to $GHA_CONFIG's .vms[alias].runner_label by the consolidator.
+          # Attached to every matrix entry as `runner_label` (empty string when
+          # absent) — the SAME $GHA_CONFIG this step already loaded, no new
+          # file to fail-open on. deploy.runs-on falls back to ubuntu-latest +
+          # the mesh/WireGuard path whenever it's empty; that fallback (not a
+          # value written here) is what keeps "no label set" behaviour-neutral.
+          RUNNER_LABEL_MAP=$(jq -c '.vms | with_entries(.value = (.value.runner_label // ""))' "$GHA_CONFIG")
+
           # ── Build matrix JSON ──
           MATRIX_JSON=$(jq -c \
             --arg changed "$CHANGED_DIRS" --arg vm_filter "$VM_FILTER" \
-            --argjson runner_map "$RUNNER_MAP" '
+            --argjson runner_map "$RUNNER_MAP" --argjson runner_label_map "$RUNNER_LABEL_MAP" '
             ($changed | split(" ") | map(select(. != ""))) as $cl |
             .services | to_entries | group_by(.value.vm)
             | map({
@@ -312,7 +322,7 @@ jobs:
                   if ($cl | length) == 0 then "" else [$cl[] | select(. as $d | $a | any(. == $d))] | join(" ") end)
               })
             | map(select(($vm_filter == "" or .vm == $vm_filter) and (($cl | length) == 0 or (.changed | length) > 0)))
-            | map({vm: .vm, changed_dirs: .changed, runner: ($runner_map[.vm] // "ubuntu-latest")})
+            | map({vm: .vm, changed_dirs: .changed, runner: ($runner_map[.vm] // "ubuntu-latest"), runner_label: ($runner_label_map[.vm] // "")})
           ' "$GHA_CONFIG")
 
           echo "matrix={\"include\":$MATRIX_JSON}" >> "$GITHUB_OUTPUT"
@@ -643,7 +653,15 @@ jobs:
     # runner's own CPU architecture the way an image build does. Flat
     # ubuntu-latest here (cheaper than the arm64 hosted runner) is safe in a
     # way the same flattening would NOT be for `build`.
-    runs-on: ubuntu-latest
+    #
+    # PLAN-ghcr-artifacts.md item 4: when config.json declares
+    # vms.<host>.runner_label, this runs DIRECTLY on that self-hosted label
+    # instead — the runner IS the VM (docker socket local), so ssh/rsync/WG
+    # become unnecessary rather than merely skipped. matrix.runner_label is
+    # empty string when unset (see detect's RUNNER_LABEL_MAP), and GHA's
+    # `||` treats empty string as falsy, so this is byte-for-byte
+    # ubuntu-latest until a host actually sets one.
+    runs-on: ${{ matrix.runner_label || 'ubuntu-latest' }}
     timeout-minutes: 90
     permissions:
       contents: read
@@ -766,7 +784,14 @@ jobs:
           # 10.0.0.6, etc.). Without it the entrypoint's wg-quick block skips
           # and every ssh to a WG-only VM times out. Deploy is the ONLY split
           # job that still needs this — build never passes it (see above).
-          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          #
+          # PLAN-ghcr-artifacts.md item 4: empty when this VM has a
+          # runner_label — the runner already sits on that VM's own network
+          # (its wg0, if any, is host infrastructure managed by home-manager,
+          # not something this GHA job needs to join), and bringing up a
+          # SECOND wg-quick identity inside a container that may already
+          # share the host's network namespace risks conflicting with it.
+          WG_PRIVATE_KEY: ${{ matrix.runner_label == '' && secrets.WG_PRIVATE_KEY || '' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_ACTIONS: true
