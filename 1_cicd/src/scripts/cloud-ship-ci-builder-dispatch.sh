@@ -239,6 +239,31 @@ echo "════════════════════════�
 echo "Ship → $VM ($TOTAL services, max $MAX_PARALLEL parallel)"
 echo "═══════════════════════════════════════════════"
 
+# ── Ship-phase verb (PLAN-ghcr-artifacts.md item 2) ───────────────
+# SHIP_MODE selects which per-service build.sh verb ship_one() invokes:
+#   unset / "ship" (default) -> ship        (build+push+deploy, TODAY's
+#                                             single-job behaviour, unchanged)
+#   "build"                  -> ship-build  (build+push images only, no VM
+#                                             touched at all — the split
+#                                             ship.yml `build` job)
+#   "deploy"                 -> redeploy    (render configs/secrets + rsync +
+#                                             compose pull/up + health, NO
+#                                             image rebuild — the split
+#                                             ship.yml `deploy` job; needs:
+#                                             build guarantees the image this
+#                                             pulls was just pushed)
+# Digest-pinning the deploy pull (DEPLOY_IMAGE_DIGEST, consumed by
+# rewrite_compose_image_refs in the engine) is NOT wired through here yet —
+# deferred follow-up, same as item 4's "land with no runner_label first"
+# staging. `redeploy` still correctly deploys the image `ship-build` just
+# pushed as :latest, ordered by the job-level `needs: build`.
+case "${SHIP_MODE:-ship}" in
+  build)  SHIP_VERB="ship-build" ;;
+  deploy) SHIP_VERB="redeploy" ;;
+  *)      SHIP_VERB="ship" ;;
+esac
+echo "SHIP_MODE=${SHIP_MODE:-ship} -> per-service verb: $SHIP_VERB"
+
 # ── Per-service worker (runs in background) ──────────────────────
 RESULTS_DIR=$(mktemp -d)
 
@@ -249,7 +274,7 @@ ship_one() {
   svc_start=$(date +%s)
 
   {
-    echo "── Ship: $name ($dir) ──"
+    echo "── Ship: $name ($dir) [$SHIP_VERB] ──"
 
     BUILD_SH="a_solutions/${dir}/build.sh"
     if [ ! -f "$BUILD_SH" ]; then
@@ -259,7 +284,7 @@ ship_one() {
       return 0
     fi
 
-    if bash "$BUILD_SH" ship; then
+    if bash "$BUILD_SH" "$SHIP_VERB"; then
       echo "OK $name"
       echo "ok" > "$RESULTS_DIR/${name}.status"
     else
