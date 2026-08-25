@@ -330,6 +330,13 @@ function main() {
       ...(vm.gcloud_zone ? { gcloud_zone: vm.gcloud_zone } : {}),
       ...(vm.idle_shutdown ? { idle_shutdown: vm.idle_shutdown } : {}),
       ...(vm.notes ? { notes: vm.notes } : {}),
+      // PLAN-ghcr-artifacts.md item 4: optional self-hosted GHA runner label
+      // for this VM (config.json vms.<host>.runner_label). Root-caused
+      // 2026-08-25: the ghaVms block below reads vm.runner_label off THIS
+      // projected object, not off raw config.json directly — without this
+      // line the field was silently dropped here and every deploy fell back
+      // to ubuntu-latest+mesh regardless of what config.json declared.
+      ...(vm.runner_label ? { runner_label: vm.runner_label } : {}),
       // Cloud provider instance ID (from terraform.json) — used by devops.vm.reset etc.
       ...(mergedSpecs.instance_id ? { instance_id: mergedSpecs.instance_id } : {}),
       // Derived (populated below)
