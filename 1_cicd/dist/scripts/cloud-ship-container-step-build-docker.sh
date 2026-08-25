@@ -175,6 +175,16 @@ step_docker() {
     export DOCKER_CONFIG
     _DOCKER_CONFIG_OWNED="$DOCKER_CONFIG"
 
+    # BuildKit for the classic (non-buildx-subcommand) `docker build` path
+    # too — not just the new `docker buildx build` branch below. Modern
+    # Docker CLIs mostly default to this already, but making it explicit
+    # guarantees --progress=plain (a BuildKit-specific flag the classic
+    # invocations already pass) is actually honoured rather than silently
+    # ignored by the legacy builder, and gets --cache-from a better cache
+    # matcher. Harmless when the daemon doesn't support BuildKit at all —
+    # the CLI falls back cleanly.
+    export DOCKER_BUILDKIT=1
+
     CURRENT_STEP="docker"
     FULL_IMAGE="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
     DOCKERFILE="${DOCKER_FILE:-Dockerfile}"
@@ -675,6 +685,37 @@ NEOF
     # per-arch helper AND the multi-arch manifest stitch below.
     BINARIES_IMAGE="${FULL_IMAGE}-binaries"
 
+    # ── Reproducible tag: git-sha12, pushed alongside :latest ─────────────
+    # GHCR-as-artifact-store (PLAN-ghcr-artifacts.md item 1): every build also
+    # pushes <image>:<git-sha12> so a deploy can pin an exact, non-moving
+    # artifact instead of racing whatever :latest resolves to at pull time.
+    # GITHUB_SHA (set by GHA on every job) is authoritative; `git rev-parse`
+    # covers local/dagu runs. Empty when neither is available (e.g. a
+    # stripped checkout with no .git) — sha-tagging + digest capture then
+    # just don't fire. Nothing today CONSUMES this tag yet (item 3/4 do,
+    # later) — this is purely additive and behaviour-neutral.
+    GIT_SHA12=""
+    case "${GITHUB_SHA:-}" in
+        [0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]*)
+            GIT_SHA12="${GITHUB_SHA:0:12}" ;;
+    esac
+    if [ -z "$GIT_SHA12" ]; then
+        GIT_SHA12="$(git -C "${SERVICE_DIR:-.}" rev-parse --short=12 HEAD 2>/dev/null || true)"
+    fi
+    log "Reproducible tag: ${GIT_SHA12:-<none — sha-tagging disabled>}"
+
+    # ── BuildKit availability (registry cache needs the buildx plugin) ────
+    # Neither builder image has shipped `docker buildx` historically (see the
+    # `local)` case below — 2026-07-29 regression, google-workspace-mcp) so
+    # this is expected to evaluate false today on both paths; the classic
+    # `docker build` + `docker tag` + `docker push` flow (unchanged) is what
+    # actually runs. Runtime-checked, not hardcoded, so the engine picks up
+    # registry caching automatically the day either image gains the plugin —
+    # "fix the engine", not a one-off flag.
+    _docker_buildx_ok() {
+        command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1
+    }
+
     # ── Per-arch build+push (runner resolve + local/ssh + push) ───────────
     # Args: <arch> <primary-tag> <binaries-tag>. Single-arch callers pass
     # (arch, latest, latest); multi-arch callers pass per-arch tags
@@ -753,16 +794,6 @@ NEOF
     case "$RUNNER_TYPE" in
         local)
             log "Local build: $FULL_IMAGE"
-            # Layer-cache strategy: pull the previous published image and pass
-            # it as --cache-from. Docker compares each instruction's layer hash
-            # against the pulled image; identical layers are reused without
-            # rebuild. `|| true` tolerates the first-ever build (no cached
-            # image yet) — self-bootstraps from the second build onwards.
-            # Single-stage Dockerfiles get ~90% cache hit; multi-stage (Rust)
-            # only caches the final stage (cargo intermediate stage isn't in
-            # the published image — accepted trade-off, no extra cache infra).
-            docker pull "$FULL_IMAGE:latest" 2>/dev/null || true
-            docker pull "$BINARIES_IMAGE:latest" 2>/dev/null || true
             # ── Materialize symlinks in BUILD_CONTEXT (buildkit + EMLINK guard) ──
             # When src/ contains symlinks pointing OUTSIDE the build context
             # (e.g. src/build.json -> ../build.json, or src/code/shared -> a
@@ -774,28 +805,89 @@ NEOF
             if [ -d "$BUILD_CONTEXT" ]; then
                 materialize_out_of_context_symlinks "$BUILD_CONTEXT"
             fi
-            # Classic `docker build` (NOT buildx): the arm64 cloud-builder image
-            # ships plain docker without the buildx plugin, so `docker buildx
-            # build` exits 127 ("requires exactly 1 argument" / plugin absent) —
-            # regression 2026-07-29 (google-workspace-mcp). Mirror the ssh)
-            # branch: build the primary tag only, then materialise the -binaries
-            # alias with `docker tag` before pushing both. This avoids the
-            # first-build "does not exist locally" failure (the pre-pull 404s
-            # left -binaries out of the store) WITHOUT depending on buildx.
-            docker build \
-                --network host \
-                --platform "$PLATFORM" \
-                --pull \
-                --cache-from "$FULL_IMAGE:latest" \
-                --cache-from "$BINARIES_IMAGE:latest" \
-                --progress=plain \
-                --tag "$FULL_IMAGE:$_ptag" \
-                --file "$DOCKERFILE_PATH" \
-                "${BUILD_ARGS_ARR[@]}" \
-                "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker tag "$FULL_IMAGE:$_ptag" "$BINARIES_IMAGE:$_btag"
-            docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
-            docker push "$BINARIES_IMAGE:$_btag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+
+            # extra tags: sha12 alongside the primary tag, both image + binaries
+            _EXTRA_TAGS=()
+            [ -n "$GIT_SHA12" ] && _EXTRA_TAGS=(--tag "$FULL_IMAGE:$GIT_SHA12" --tag "$BINARIES_IMAGE:$GIT_SHA12")
+
+            _PUSHED_DIGEST=""
+            _local_buildx_ok=0
+            _docker_buildx_ok && _local_buildx_ok=1
+
+            if [ "$_local_buildx_ok" = 1 ]; then
+                # ── BuildKit registry cache (PLAN-ghcr-artifacts.md item 1) ──
+                # --cache-to type=registry,mode=max pushes ALL intermediate
+                # layers (not just the final image) to :buildcache, so a fleet
+                # of stateless GHA runners with no shared local cache still get
+                # cross-run cache hits. --push publishes every --tag directly
+                # (buildx multi-tags in one invocation; no separate `docker
+                # tag`/`docker push` needed). --metadata-file is the
+                # documented way to recover the pushed digest without a
+                # second registry round-trip.
+                _META="$(mktemp)"
+                if docker buildx build \
+                    --platform "$PLATFORM" \
+                    --pull \
+                    --cache-from "type=registry,ref=$FULL_IMAGE:buildcache" \
+                    --cache-to "type=registry,ref=$FULL_IMAGE:buildcache,mode=max" \
+                    --progress=plain \
+                    --tag "$FULL_IMAGE:$_ptag" \
+                    --tag "$BINARIES_IMAGE:$_btag" \
+                    "${_EXTRA_TAGS[@]}" \
+                    --file "$DOCKERFILE_PATH" \
+                    "${BUILD_ARGS_ARR[@]}" \
+                    --push \
+                    --metadata-file "$_META" \
+                    "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker-buildx] %s\n" "$line"; done
+                then
+                    _PUSHED_DIGEST="$(jq -r '."containerimage.digest" // empty' "$_META" 2>/dev/null || true)"
+                    log "buildx registry-cache build+push OK${_PUSHED_DIGEST:+ (digest: $_PUSHED_DIGEST)}"
+                else
+                    log_warn "buildx build failed — degrading to classic docker build (no registry cache)"
+                    _local_buildx_ok=0
+                fi
+                rm -f "$_META"
+            fi
+
+            if [ "$_local_buildx_ok" != 1 ]; then
+                # Classic `docker build` (NOT buildx): the historical default —
+                # neither builder image has shipped the buildx plugin
+                # (`docker buildx build` exits 127, "requires exactly 1
+                # argument" / plugin absent — regression 2026-07-29,
+                # google-workspace-mcp). Layer-cache strategy: pull the
+                # previous published image and pass it as --cache-from. `||
+                # true` tolerates the first-ever build (no cached image yet).
+                docker pull "$FULL_IMAGE:latest" 2>/dev/null || true
+                docker pull "$BINARIES_IMAGE:latest" 2>/dev/null || true
+                # Build the primary tag only, then materialise the -binaries
+                # (and sha12) aliases with `docker tag` before pushing. This
+                # avoids the first-build "does not exist locally" failure (the
+                # pre-pull 404s left -binaries out of the store).
+                docker build \
+                    --network host \
+                    --platform "$PLATFORM" \
+                    --pull \
+                    --cache-from "$FULL_IMAGE:latest" \
+                    --cache-from "$BINARIES_IMAGE:latest" \
+                    --progress=plain \
+                    --tag "$FULL_IMAGE:$_ptag" \
+                    --file "$DOCKERFILE_PATH" \
+                    "${BUILD_ARGS_ARR[@]}" \
+                    "$BUILD_CONTEXT/" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+                _build_rc=${PIPESTATUS[0]}
+                [ "$_build_rc" -ne 0 ] && return 1
+                docker tag "$FULL_IMAGE:$_ptag" "$BINARIES_IMAGE:$_btag"
+                [ -n "$GIT_SHA12" ] && { docker tag "$FULL_IMAGE:$_ptag" "$FULL_IMAGE:$GIT_SHA12"; docker tag "$FULL_IMAGE:$_ptag" "$BINARIES_IMAGE:$GIT_SHA12"; }
+                _PUSHLOG="$(mktemp)"
+                docker push "$FULL_IMAGE:$_ptag" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+                docker push "$BINARIES_IMAGE:$_btag" 2>&1 | tee "$_PUSHLOG" | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+                if [ -n "$GIT_SHA12" ]; then
+                    docker push "$FULL_IMAGE:$GIT_SHA12" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+                    docker push "$BINARIES_IMAGE:$GIT_SHA12" 2>&1 | while IFS= read -r line; do printf "[docker] %s\n" "$line"; done
+                fi
+                _PUSHED_DIGEST="$(grep -oE 'sha256:[0-9a-f]{64}' "$_PUSHLOG" 2>/dev/null | tail -1)"
+                rm -f "$_PUSHLOG"
+            fi
             ;;
 
         ssh)
@@ -1009,6 +1101,22 @@ REMOTE_REPAIR
             JOB_LOG="$REMOTE_JOB_DIR/$JOB_ID.log"
             JOB_STATUS="$REMOTE_JOB_DIR/$JOB_ID.status"
 
+            # sha12 tag+push fragments, spliced into the remote `&&` chain
+            # below (PLAN-ghcr-artifacts.md item 1). `true && \` is the
+            # empty-GIT_SHA12 default so the chain stays syntactically valid
+            # either way — the heredoc is unquoted, so leaving this literally
+            # blank would splice in an empty line and break the `&&`
+            # continuation on the surrounding lines. No buildx attempt on this
+            # path: the arm64 runner image is confirmed not to ship the
+            # plugin (see the `local)` branch's comment); registry caching
+            # here is future work, not this pass.
+            _REMOTE_SHA_TAG_CMD="true && \\"
+            _REMOTE_SHA_PUSH_CMD="true && \\"
+            if [ -n "$GIT_SHA12" ]; then
+                _REMOTE_SHA_TAG_CMD="docker tag $FULL_IMAGE:$_ptag $FULL_IMAGE:$GIT_SHA12 && docker tag $FULL_IMAGE:$_ptag $BINARIES_IMAGE:$GIT_SHA12 && \\"
+                _REMOTE_SHA_PUSH_CMD="docker push $FULL_IMAGE:$GIT_SHA12 && docker push $BINARIES_IMAGE:$GIT_SHA12 && \\"
+            fi
+
             # Write the build command to a remote script via heredoc — no
             # quoting nightmare with the giant docker-run inline string.
             #
@@ -1049,10 +1157,14 @@ docker run --rm \
         echo "[ghcr] login ok (cwd=\$(pwd))" && \
         (docker pull $FULL_IMAGE:latest 2>/dev/null || true) && \
         (docker pull $BINARIES_IMAGE:latest 2>/dev/null || true) && \
-        docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -f $DOCKERFILE $BUILD_ARGS_STR . && \
+        DOCKER_BUILDKIT=1 docker build --platform $PLATFORM --pull --cache-from $FULL_IMAGE:latest --cache-from $BINARIES_IMAGE:latest --progress=plain -t $FULL_IMAGE:$_ptag -f $DOCKERFILE $BUILD_ARGS_STR . && \
         docker tag $FULL_IMAGE:$_ptag $BINARIES_IMAGE:$_btag && \
+        $_REMOTE_SHA_TAG_CMD
         docker push $FULL_IMAGE:$_ptag && \
-        docker push $BINARIES_IMAGE:$_btag; \
+        docker push $BINARIES_IMAGE:$_btag > /tmp/ghcr-push-bin.log 2>&1 && \
+        cat /tmp/ghcr-push-bin.log && \
+        $_REMOTE_SHA_PUSH_CMD
+        echo PUSHED_DIGEST=\$(grep -oE "sha256:[0-9a-f]{64}" /tmp/ghcr-push-bin.log | tail -1); \
         rc=\$?; docker logout ghcr.io >/dev/null 2>&1 || true; exit \$rc' 2>&1
 EOF
             # binaries-tag fix (2026-07-29): classic docker build with BuildKit enabled
@@ -1119,11 +1231,15 @@ DISPATCH_EOF
                 log "  ↳ build still running (${_elapsed}s/${_poll_max}s)"
             done
 
-            # Retrieve full tail + parse exit code
-            ssh $SSH_OPTS "$RUNNER_HOST" "tail -n $_poll_tail $JOB_LOG 2>/dev/null" 2>/dev/null \
-                | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done || true
+            # Retrieve full tail + parse exit code. Captured into a variable
+            # (not piped straight to the printer) so the PUSHED_DIGEST marker
+            # line the remote script echoes (see the heredoc above) can also
+            # be parsed out of it — same content, read once, used twice.
+            _job_tail="$(ssh $SSH_OPTS "$RUNNER_HOST" "tail -n $_poll_tail $JOB_LOG 2>/dev/null" 2>/dev/null || true)"
+            printf '%s\n' "$_job_tail" | while IFS= read -r line; do printf "[builder-x-$RUNNER_HOST] %s\n" "$line"; done
 
             _job_exit=$(echo "$_job_status" | sed -n 's/^exit=//p')
+            _PUSHED_DIGEST="$(printf '%s\n' "$_job_tail" | sed -n 's/^PUSHED_DIGEST=//p' | tail -1)"
             # Cleanup remote artefacts before deciding pass/fail
             ssh_with_retry "$RUNNER_HOST" "rm -f $JOB_CMD $JOB_LOG $JOB_STATUS; rm -f $REMOTE_TOKEN_FILE; chmod -R u+w $REMOTE_BUILD_DIR 2>/dev/null; rm -rf $REMOTE_BUILD_DIR" 2>/dev/null || true
 
@@ -1181,7 +1297,25 @@ DISPATCH_EOF
         docker manifest push "$FULL_IMAGE:latest"
         docker manifest rm "$BINARIES_IMAGE:latest" >/dev/null 2>&1 || true
         docker manifest create --amend "$BINARIES_IMAGE:latest" $_bin_tags
-        docker manifest push "$BINARIES_IMAGE:latest"
+        _MANIFEST_PUSH_LOG="$(mktemp)"
+        docker manifest push "$BINARIES_IMAGE:latest" | tee "$_MANIFEST_PUSH_LOG"
+        # `docker manifest push` prints the resulting manifest-list digest
+        # (bare `sha256:...`, no extra "digest:" prefix like `docker push`) —
+        # this is what compose's binariesImage:latest actually resolves to.
+        # Overwrites any per-arch _PUSHED_DIGEST left by the loop above: for
+        # multi-arch, only the STITCHED list's digest is meaningful to a
+        # deploy (item 3 rewrites the compose file to reference this).
+        _PUSHED_DIGEST="$(grep -oE 'sha256:[0-9a-f]{64}' "$_MANIFEST_PUSH_LOG" 2>/dev/null | tail -1)"
+        rm -f "$_MANIFEST_PUSH_LOG"
+        # sha12 manifest lists too — same per-arch images, additional pointer.
+        if [ -n "$GIT_SHA12" ]; then
+            docker manifest rm "$FULL_IMAGE:$GIT_SHA12"     >/dev/null 2>&1 || true
+            docker manifest create --amend "$FULL_IMAGE:$GIT_SHA12" $_img_tags
+            docker manifest push "$FULL_IMAGE:$GIT_SHA12"
+            docker manifest rm "$BINARIES_IMAGE:$GIT_SHA12" >/dev/null 2>&1 || true
+            docker manifest create --amend "$BINARIES_IMAGE:$GIT_SHA12" $_bin_tags
+            docker manifest push "$BINARIES_IMAGE:$GIT_SHA12"
+        fi
     fi
 
     log "Pushed $FULL_IMAGE:latest"
@@ -1201,6 +1335,33 @@ DISPATCH_EOF
     if ! _ensure_image_public "$_REG_OWNER" "$BINARIES_PKG_NAME"; then
         log_error "step_docker: $BINARIES_IMAGE could not be made public — failing so the deploy aborts before teardown"
         return 1
+    fi
+
+    # ── Digest output (PLAN-ghcr-artifacts.md item 1) ──────────────────────
+    # Best-effort only — nothing consumes either output yet (items 2-4 will),
+    # so a failure here must never fail an otherwise-successful push.
+    if [ -n "${_PUSHED_DIGEST:-}" ]; then
+        log "Pushed digest: $BINARIES_IMAGE@${_PUSHED_DIGEST}"
+        # $GITHUB_OUTPUT is only real when this function runs directly on a
+        # GHA runner (e.g. a future runner_label deploy, item 4) — today's
+        # single ship job runs step_docker inside the cloud-builder container,
+        # which does not share the runner's $GITHUB_OUTPUT file. Harmless
+        # no-op there; the JSON artifact below is what ship.yml actually
+        # reads today (mounted via $TRACE_DIR, already collected by the
+        # existing "Upload trace" step).
+        if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            { echo "digest_${SERVICE_NAME}=${_PUSHED_DIGEST}"; echo "sha12_${SERVICE_NAME}=${GIT_SHA12}"; } >> "$GITHUB_OUTPUT" 2>/dev/null || true
+        fi
+        if [ -n "${TRACE_DIR:-}" ] && [ -d "${TRACE_DIR:-}" ]; then
+            mkdir -p "$TRACE_DIR/digests" 2>/dev/null || true
+            jq -n --arg service "$SERVICE_NAME" --arg image "$FULL_IMAGE" \
+                  --arg binaries_image "$BINARIES_IMAGE" --arg digest "$_PUSHED_DIGEST" \
+                  --arg sha12 "${GIT_SHA12:-}" \
+                  '{service:$service, image:$image, binaries_image:$binaries_image, digest:$digest, sha12:$sha12}' \
+                  > "$TRACE_DIR/digests/${SERVICE_NAME}.json" 2>/dev/null || true
+        fi
+    else
+        log "No digest captured (buildx unavailable and classic push-log parse found none — non-fatal)"
     fi
 
     mkdir -p "$DIST_DIR"

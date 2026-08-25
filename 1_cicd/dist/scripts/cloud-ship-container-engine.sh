@@ -205,6 +205,53 @@ detect_layout() {
 
 detect_layout
 
+# ── Compose image-ref rewrite (PLAN-ghcr-artifacts.md item 3) ─────────────
+# compose.nix bakes each service's image ref as a literal Nix-interpolated
+# string AT BUILD TIME (`binariesImage = ".../${name}-binaries:latest"`,
+# `image = binariesImage;`) — there is no runtime templating, so a
+# reproducible deploy pointer (digest or git-sha12, known only AFTER
+# step_docker pushes) has to be a post-render text rewrite of the already-
+# generated $COMPOSE_FILE, not a Nix change.
+#
+# Three-tier fallback, exactly per the plan:
+#   1. DEPLOY_IMAGE_DIGEST (sha256:<hex>) set  -> image@sha256:<hex>
+#   2. else DEPLOY_IMAGE_SHA12 set              -> image:<sha12>
+#   3. else                                     -> unchanged (:latest)
+#
+# Dormant today: nothing in the current single-job `ship` pipeline sets
+# either env var, so this is a no-op and deploys stay on :latest exactly as
+# before (behaviour-neutral canary, per the plan's rollout section). Items
+# 2/4 are what will start exporting DEPLOY_IMAGE_DIGEST for the new split
+# deploy job. Recomputes the image name the same way step_docker does
+# (DOCKER_REGISTRY/DOCKER_IMAGE are loaded once at engine startup above) —
+# step_docker's own FULL_IMAGE/BINARIES_IMAGE are local to its subshell and
+# don't survive into the parent engine process.
+rewrite_compose_image_refs() {
+    [ -f "$COMPOSE_FILE" ] || return 0
+    _RCI_FULL="${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}$DOCKER_IMAGE"
+    case "${_RCI_FULL:-}" in ""|null) return 0 ;; esac
+    _RCI_BIN="${_RCI_FULL}-binaries"
+
+    if [ -n "${DEPLOY_IMAGE_DIGEST:-}" ]; then
+        case "$DEPLOY_IMAGE_DIGEST" in
+            sha256:*) ;;
+            *) log_warn "DEPLOY_IMAGE_DIGEST='$DEPLOY_IMAGE_DIGEST' doesn't look like sha256:<hex> — leaving $COMPOSE_FILE unchanged"; return 0 ;;
+        esac
+        log "Rewriting compose image refs -> @${DEPLOY_IMAGE_DIGEST} ($COMPOSE_FILE)"
+        sed -i \
+            -e "s#${_RCI_BIN}:latest#${_RCI_BIN}@${DEPLOY_IMAGE_DIGEST}#g" \
+            -e "s#${_RCI_FULL}:latest#${_RCI_FULL}@${DEPLOY_IMAGE_DIGEST}#g" \
+            "$COMPOSE_FILE"
+    elif [ -n "${DEPLOY_IMAGE_SHA12:-}" ]; then
+        log "Rewriting compose image refs -> :${DEPLOY_IMAGE_SHA12} ($COMPOSE_FILE)"
+        sed -i \
+            -e "s#${_RCI_BIN}:latest#${_RCI_BIN}:${DEPLOY_IMAGE_SHA12}#g" \
+            -e "s#${_RCI_FULL}:latest#${_RCI_FULL}:${DEPLOY_IMAGE_SHA12}#g" \
+            "$COMPOSE_FILE"
+    fi
+    # else: no-op — :latest unchanged, identical to today.
+}
+
 # SSH multiplexing: one connection reused across all steps, kept alive 120s
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
 
@@ -582,6 +629,13 @@ case "${1:-all}" in
             rm -f "$SERVICE_DIR/.image-changed"
         fi
 
+        # $COMPOSE_FILE (rendered in Phase 1) and any digest/sha (pushed by
+        # step_docker in Phase 2, just joined above) are both available now —
+        # this is the earliest point both exist. See the function's own
+        # comment for the fallback tiers; dormant unless a caller exports
+        # DEPLOY_IMAGE_DIGEST or DEPLOY_IMAGE_SHA12 (nothing does yet).
+        rewrite_compose_image_refs
+
         # ── Phase 2.5: VERIFY secret consumption (warn-mode in Phase 0) ──
         # Runs after both step_build (dist/configs/, dist/docker-compose.yml) AND
         # step_secrets (dist/.secrets*) have produced the artifacts the gate scans.
@@ -686,7 +740,7 @@ case "${1:-all}" in
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;
     redeploy) step_build; step_secrets; step_deploy; step_compose; step_health ;;
-    rollout)  step_pull; step_compose; step_health ;;   # image-only reconcile, no rebuild
+    rollout)  step_pull; rewrite_compose_image_refs; step_compose; step_health ;;   # image-only reconcile, no rebuild
     clean)    rm -rf "$DIST_DIR" "$SERVICE_DIR/.result" "$SERVICE_DIR/.result-docs" "$SERVICE_DIR/.dist-hash"; log "Cleaned" ;;
     clean-remote) step_clean_remote "${2:-}" ;;
     *)

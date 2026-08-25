@@ -10,9 +10,16 @@
 #   - multi  arch  → per-arch :<arch>, -binaries:<arch>
 #                    + `docker manifest create --amend` for :latest (img+bin)
 #
-# NO commit-SHA tags anywhere (removed 2026-07-15): the SHA manifest stitch
-# was the sole failure point and nothing pulls by hash — VMs + cache-from
-# reference :latest only.
+# This mirror covers the base :latest / -binaries:latest pair only — the
+# original 2026-07-15 contract, from before a commit-sha tag existed at all.
+# PLAN-ghcr-artifacts.md item 1 (2026-08-25) reintroduced a reproducible
+# <image>:<git-sha12> tag on EVERY path (pushed alongside :latest, gated on
+# GIT_SHA12 being resolvable — never forced), because a deploy now needs a
+# non-moving pointer to pull by; VMs still default to :latest until items
+# 2-4 wire a caller that supplies one. That tagging (+ digest capture +
+# buildx-vs-classic degrade) is covered by
+# ghcr-artifacts-step-docker-sha-digest.test.sh, executed against the REAL
+# script rather than this hand-mirrored one.
 set -euo pipefail
 
 # ── Pure logic mirrored from _docker_build_push_arch + the DISPATCH block ──
