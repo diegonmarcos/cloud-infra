@@ -330,9 +330,17 @@ jobs:
             fi
           fi
 
-  # ── Ship: one matrix job per VM, calls ship.sh per-VM path ──
-  ship:
-    name: "Ship → ${{ matrix.vm }}"
+  # ── Build: one matrix job per VM, build+push images only ─────
+  # PLAN-ghcr-artifacts.md item 2: split off deploy so a build's mesh-free
+  # docker/GHCR work never contends with deploy's single WG peer slot (the
+  # cause of concurrent-run mesh steals — see plan "Why"), and so a bad
+  # config/secrets/compose-up on ONE host can't be blamed on the build that
+  # produced a perfectly good image. Same per-service engine, different verb
+  # (see cloud-ship-container-engine.sh's `ship-build` and
+  # cloud-ship-ci-builder-dispatch.sh's SHIP_MODE=build) — never touches
+  # deploy.host/DEPLOY_PATH/the VM/the mesh at all.
+  build:
+    name: "Build → ${{ matrix.vm }}"
     needs: detect
     if: needs.detect.outputs.has_vms == 'true'
     # Per-VM native runner: aarch64 VMs (oci-apps) → ubuntu-24.04-arm so their
@@ -340,17 +348,13 @@ jobs:
     # QEMU, no SSH dispatch to oci-apps); x86_64 VMs → ubuntu-latest. The
     # `runner` field is set per matrix entry in the detect job from the VM's
     # specs.arch. Defaults to ubuntu-latest if a VM is missing from the map.
+    # KEPT (not flattened to ubuntu-latest) — arm64 image builds depend on
+    # this native match; step_docker's alternate "ssh"-dispatch runner type
+    # exists but 1_cloud-configs/src/inputs/cloud-builders-runner.json still
+    # declares arm64 as type=local, so flattening here would silently cross-
+    # arch build on an amd64 host with no QEMU (this repo's doctrine is FAIL
+    # LOUD on that, not paper over it with emulation).
     runs-on: ${{ matrix.runner }}
-    # Ceiling on a per-VM ship pass. Without this, an SSH session that
-    # stalls (NAT timeout, WG tunnel hiccup, oci-builder hang) holds the
-    # `ship-<vm>` concurrency group open until GHA's default 6h timeout,
-    # blocking every subsequent push for hours. Surfaced 2026-06-05 on
-    # run 27027587805 — Ship → oci-analytics hung from 16:41 and was
-    # still in_progress 1h+ later, queueing every follow-up ship.
-    # 45 min covers cold image builds (~10 min each) + 3-retry SSH
-    # deploys + compose recreate with a healthy buffer. If a real build
-    # takes longer than 45 min, that's its own bug to surface, not
-    # something to silently absorb at the workflow level.
     timeout-minutes: 90
     permissions:
       contents: read
@@ -358,22 +362,20 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
       fail-fast: false
-      # Serialized: all parallel ship jobs use the same gha-runner WG key
-      # (vault/A0_keys/providers/wireguard/gha-runner/, pubkey
-      # QEPkGSsJXX...). Parallel jobs race for the single registered peer
-      # slot on the gcp-proxy hub — whichever wg-quick handshake lands
-      # last "wins" the endpoint, the others silently lose reply packets
-      # and every subsequent SSH to a wg_ip target fails with exit 255.
-      # max-parallel:1 serializes matrix jobs so only one job at a time
-      # holds the wg slot. Trade-off: total ship time scales linearly with
-      # VM count instead of in parallel. Proper fix (per-job WG identity
-      # pool) tracked separately — needs new keys + hub peer entries +
-      # entrypoint refactor + image rebuild.
-      max-parallel: 1
-    concurrency:
-      group: ship-${{ matrix.vm }}
-      cancel-in-progress: false
+      # No max-parallel here (unlike deploy, below): the WG-peer-slot
+      # contention that forced serialization never applies to build — no
+      # WG_PRIVATE_KEY is passed into this job at all (see the Ship step),
+      # so builds for every host can run fully in parallel.
     env:
+      # Still passed: the ONE existing multi-arch service (claude-superset-api)
+      # needs an SSH-reachable cross-arch builder even in build-only mode
+      # (cloud-ship-ci-builder-dispatch.sh's runner-warmup section), and
+      # "Resolve SSH credentials" below writes ~/.ssh/config unconditionally.
+      # No WG_PRIVATE_KEY — that is what makes this job mesh-free: the
+      # cloud-builder entrypoint gates its entire wg-quick block on that var
+      # being set, so omitting it here (rather than in a workflow `if:`)
+      # keeps the "no WireGuard" behaviour enforced by the same engine every
+      # other caller (Dagu, CLI) already trusts, not a GHA-only special case.
       OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
       GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
       GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
@@ -416,7 +418,7 @@ jobs:
           platforms: amd64
 
       # Always regenerate dist/build-{name}.json + cloud-data-*.json from
-      # build.json sources. Each ship job runs against fresh data —
+      # build.json sources. Each build job runs against fresh data —
       # the bundled dist/ files in the image come from THIS step, not
       # from the cloud repo's HEAD checkout.
       # 9_others/build.sh self-bootstraps tsx + yaml + nunjucks if missing
@@ -518,13 +520,13 @@ jobs:
           echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
 
       - name: Ship via cloud-builder
-        # Fail fast instead of burning the full 45m job ceiling: a single
-        # stuck build/push/ssh inside this step (WG hiccup, cold docker
-        # cache, oci-builder hang) should surface as its own timeout well
-        # before the job-level timeout-minutes:90 above force-kills the
-        # whole job (misreported as "cancelled"). 80 min leaves headroom
-        # for the earlier setup steps (checkout, vault, cache restore,
-        # image pull) within the 90 min job budget.
+        # Fail fast instead of burning the full job ceiling: a single
+        # stuck build/push inside this step (cold docker cache, oci-builder
+        # hang) should surface as its own timeout well before the job-level
+        # timeout-minutes:90 above force-kills the whole job (misreported
+        # as "cancelled"). 80 min leaves headroom for the earlier setup
+        # steps (checkout, vault, cache restore, image pull) within the
+        # 90 min job budget.
         #
         # A static inner budget is not enough on its own: pre-dispatch work
         # took 17 min in run 30751065637, so any constant that outlives the
@@ -534,16 +536,12 @@ jobs:
         timeout-minutes: 80
         env:
           CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          SHIP_MODE: build
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
           SSH_HOST: ${{ steps.ssh.outputs.ssh_host }}
           SSH_USER: ${{ steps.ssh.outputs.ssh_user }}
           SSH_ALIAS: ${{ matrix.vm }}
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
-          # WG is required for *.wg_ip targets (oci-mail 10.0.0.3, oci-apps
-          # 10.0.0.2, etc.). Without it the entrypoint's wg-quick block skips
-          # and every ssh to a WG-only VM times out. ship-home-manager.yml has
-          # passed this secret since day 1 — ship.yml was missing it.
-          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_ACTIONS: true
@@ -574,11 +572,6 @@ jobs:
             User $SSH_USER
             IdentityFile ~/.ssh/id_deploy
             StrictHostKeyChecking no
-            # Tighter keepalive (was 30s) — GHA cloud-builder → VM SSH was
-            # dropping during long-running compose+post_hook steps (~40s),
-            # presumably from intermediate WG/NAT idle timeouts. 10s ping
-            # x 10 max-missed = 100s grace; well within typical NAT TCP
-            # idle window (60-180s) and keeps the path "warm".
             ServerAliveInterval 10
             ServerAliveCountMax 10
             TCPKeepAlive yes
@@ -588,10 +581,8 @@ jobs:
           echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
           # Run cloud-builder via compose (image has compose.yaml with writable SSH mount)
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
-          # --cap-add NET_ADMIN — required for wg-quick up wg0 inside the
-          # container. Currently published images don't yet have cap_add in
-          # their baked compose.yaml; this CLI flag is the bootstrap path
-          # until the next cloud-builder image ships with it declared.
+          # No --cap-add NET_ADMIN here (unlike deploy) — this job never runs
+          # wg-quick (no WG_PRIVATE_KEY passed), so the capability buys nothing.
           # Forward GITHUB_TOKEN + GITHUB_ACTOR INTO the container so the engine
           # can push GHCR with the repo's Actions token. This is load-bearing
           # for PUBLIC images: a package first pushed by GITHUB_TOKEN is
@@ -600,7 +591,6 @@ jobs:
           # this forward, the engine's GITHUB_TOKEN branch is dead (docker compose
           # run does NOT inherit host env) and every new image lands private.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
-            --cap-add NET_ADMIN \
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
@@ -610,6 +600,7 @@ jobs:
             -e CARGO_TARGET_DIR=/cargo-target \
             -e GITHUB_TOKEN \
             -e GITHUB_ACTOR \
+            -e SHIP_MODE \
             -e SHIP_DEADLINE_EPOCH \
             cloud-builder ship ${{ matrix.vm }}
 
@@ -617,7 +608,202 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trace-${{ matrix.vm }}
+          name: trace-build-${{ matrix.vm }}
+          path: ${{ runner.temp }}/traces/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ── Deploy: one matrix job per VM, config+secrets render + pull/up ──
+  # PLAN-ghcr-artifacts.md item 2. needs: build guarantees every image this
+  # pulls was freshly pushed moments ago — the same ordering the single-job
+  # `ship` verb gave for free, now explicit via GHA `needs:`. Digest-pinning
+  # the pull (rewrite_compose_image_refs / DEPLOY_IMAGE_DIGEST) is NOT wired
+  # through yet — deferred, same staged-rollout spirit as item 4 landing
+  # with no runner_label first. Deploy still pulls :latest, which `build`
+  # just refreshed, so this is a real (not cosmetic) build-then-deploy
+  # ordering today, with digest-pinning as the next increment.
+  deploy:
+    name: "Deploy → ${{ matrix.vm }}"
+    needs: [detect, build]
+    if: needs.detect.outputs.has_vms == 'true'
+    # Arch-agnostic on the RUNNER side — redeploy re-renders compose/config
+    # text (nix), rsyncs, and ssh's into the VM; none of that depends on the
+    # runner's own CPU architecture the way an image build does. Flat
+    # ubuntu-latest here (cheaper than the arm64 hosted runner) is safe in a
+    # way the same flattening would NOT be for `build`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+      fail-fast: false
+      # Serialized: all parallel deploy jobs use the same gha-runner WG key
+      # (vault/A0_keys/providers/wireguard/gha-runner/, pubkey
+      # QEPkGSsJXX...). Parallel jobs race for the single registered peer
+      # slot on the gcp-proxy hub — whichever wg-quick handshake lands
+      # last "wins" the endpoint, the others silently lose reply packets
+      # and every subsequent SSH to a wg_ip target fails with exit 255.
+      # max-parallel:1 serializes matrix jobs so only one job at a time
+      # holds the wg slot. Trade-off: total deploy time scales linearly with
+      # VM count instead of in parallel. Proper fix (per-job WG identity
+      # pool) tracked separately — needs new keys + hub peer entries +
+      # entrypoint refactor + image rebuild. `build` (above) no longer
+      # shares this constraint at all — only deploy still touches the mesh.
+      max-parallel: 1
+    concurrency:
+      group: ship-${{ matrix.vm }}
+      cancel-in-progress: false
+    env:
+      OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+      GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+      GCP_PROXY_HOST: ${{ secrets.GCP_PROXY_HOST }}
+      GCP_PROXY_USER: ${{ secrets.GCP_PROXY_USER }}
+      GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
+      GCP_T4_HOST: ${{ secrets.GCP_T4_HOST }}
+      GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          submodules: false
+
+      - name: Init submodules (cloud-data + unix)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: cloud
+          recursive: "true"
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
+      # Always regenerate dist/build-{name}.json + cloud-data-*.json from
+      # build.json sources — `redeploy` re-renders compose/configs from
+      # these via step_build, same as the build job did (cheap, deterministic
+      # nix evaluation; no docker/network involved).
+      - name: Regenerate dist/ from build.json sources
+        run: |
+          bash 1_cloud-configs/build.sh all
+
+      # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that
+      # cloud-builder's compose.yaml references via env_file:. Without it,
+      # `docker compose run cloud-builder` aborts: "env file ... not found".
+      - name: Fetch vault
+        uses: ./.github/actions/fetch-vault
+        with:
+          vault_deploy_key: ${{ secrets.VAULT_DEPLOY_KEY }}
+
+      - name: Resolve builder image
+        uses: ./.github/actions/resolve-builder-image
+
+      - name: Resolve SSH credentials
+        id: ssh
+        run: |
+          GHA_CONFIG=""
+          for _p in \
+              "/app/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/cloud-data/build-gha.json" \
+              "${CLOUD_ROOT:-$PWD}/build-gha.json"; do
+              [ -f "$_p" ] && { GHA_CONFIG="$_p"; break; }
+          done
+          if [ -z "$GHA_CONFIG" ]; then
+              _CONS=""
+              for _p in \
+                  "/app/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/1_cloud-configs/dist/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/cloud-data/_cloud-data-consolidated.json" \
+                  "${CLOUD_ROOT:-$PWD}/_cloud-data-consolidated.json"; do
+                  [ -f "$_p" ] && { _CONS="$_p"; break; }
+              done
+              if [ -n "$_CONS" ]; then
+                  echo "::warning::build-gha.json not found; deriving from $_CONS — run 9_others/build.sh to materialise the canonical file."
+                  GHA_CONFIG="${RUNNER_TEMP:-/tmp}/gha-config.json"
+                  jq '
+                    ._gha as $g
+                    | (.vms | to_entries | map({key: .value.ssh_alias, value: .value.wg_ip}) | from_entries) as $alias_to_wg
+                    | $g
+                    | .vms |= with_entries(.value += {wg_ip: ($alias_to_wg[.key] // null)})
+                  ' "$_CONS" > "$GHA_CONFIG"
+              fi
+          fi
+          [ -n "$GHA_CONFIG" ] || { echo "::error::build-gha.json not found and no consolidated fallback available — run 9_others/build.sh" >&2; exit 1; }
+          VM="${{ matrix.vm }}"
+          case "$VM" in
+            *)         KEY="$OCI_SSH_KEY"
+                       HOST=$(jq -r --arg vm "$VM" '.vms[$vm].wg_ip // .vms[$vm].host' "$GHA_CONFIG")
+                       USER=$(jq -r --arg vm "$VM" '.vms[$vm].user' "$GHA_CONFIG") ;;
+          esac
+          echo "ssh_key<<EOFKEY" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$KEY"  >> "$GITHUB_OUTPUT"
+          echo "EOFKEY"         >> "$GITHUB_OUTPUT"
+          echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
+          echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
+
+      - name: Ship via cloud-builder
+        timeout-minutes: 80
+        env:
+          CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          SHIP_MODE: deploy
+          SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
+          SSH_HOST: ${{ steps.ssh.outputs.ssh_host }}
+          SSH_USER: ${{ steps.ssh.outputs.ssh_user }}
+          SSH_ALIAS: ${{ matrix.vm }}
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+          # WG is required for *.wg_ip targets (oci-mail 10.0.0.3, oci-apps
+          # 10.0.0.6, etc.). Without it the entrypoint's wg-quick block skips
+          # and every ssh to a WG-only VM times out. Deploy is the ONLY split
+          # job that still needs this — build never passes it (see above).
+          WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ACTIONS: true
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REPOSITORY: diegonmarcos/cloud-infra
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_SHA: ${{ github.sha }}
+          TRACE_DIR: ${{ runner.temp }}/traces
+        run: |
+          export SHIP_DEADLINE_EPOCH=$(( $(date +%s) + 4620 ))
+          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          IMAGE="$BUILDER_IMAGE"
+          docker pull "$IMAGE"
+          mkdir -p "$TRACE_DIR"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          cat > ~/.ssh/config <<SSHEOF
+          Host $SSH_ALIAS
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking no
+            ServerAliveInterval 10
+            ServerAliveCountMax 10
+            TCPKeepAlive yes
+          SSHEOF
+          chmod 600 ~/.ssh/config
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
+          # --cap-add NET_ADMIN — required for wg-quick up wg0 inside the
+          # container (this job DOES pass WG_PRIVATE_KEY, unlike build).
+          docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
+            --cap-add NET_ADMIN \
+            -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
+            -e TRACE_DIR=/traces \
+            -v "$TRACE_DIR:/traces" \
+            -e GITHUB_TOKEN \
+            -e GITHUB_ACTOR \
+            -e SHIP_MODE \
+            -e SHIP_DEADLINE_EPOCH \
+            cloud-builder ship ${{ matrix.vm }}
+
+      - name: Upload trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trace-deploy-${{ matrix.vm }}
           path: ${{ runner.temp }}/traces/
           retention-days: 7
           if-no-files-found: ignore
@@ -625,7 +811,7 @@ jobs:
   # ── Collect traces: single push to cloud-data ───────────────
   collect-traces:
     name: Collect traces
-    needs: ship
+    needs: [build, deploy]
     if: always() && needs.detect.outputs.has_vms == 'true'
     runs-on: ubuntu-latest
     steps:
