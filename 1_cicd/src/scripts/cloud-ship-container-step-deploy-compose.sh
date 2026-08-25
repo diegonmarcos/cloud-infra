@@ -186,9 +186,23 @@ step_compose() {
     # Scoped tightly: only exact host bindings this compose declares, and never
     # a container we ourselves named. `docker rm -f` drops the container only;
     # named volumes persist.
+    # `|| true` is load-bearing, not defensive noise. A service with NO host
+    # port bindings is normal (network_mode:host publishes nothing — maddy,
+    # google-workspace-mcp, google-personal-mcp, ...), and then `grep` matches
+    # nothing and exits 1. Under `set -o pipefail` that makes the whole
+    # pipeline — and therefore this assignment — return 1, which `set -e`
+    # turns into an immediate abort of the entire compose step.
+    #
+    # It only reproduces in CI: build.sh sets `-e` but not `pipefail`, while
+    # GitHub Actions runs steps under `bash -eo pipefail` and exports
+    # SHELLOPTS into child shells. So `build.sh compose` run by hand
+    # succeeded while the identical code failed in every Ship run — which is
+    # exactly how this hid since 1d43ef313. The symptom gave nothing away:
+    # "Step 'compose' failed (exit 1)" logged ~9ms after the previous line,
+    # no command having run, nothing reaching the VM.
     EVICT_PORTS=""
     _hostbinds="$(grep -oE '"[0-9][0-9.]*:[0-9]+:[0-9]+"' "$COMPOSE_FILE" 2>/dev/null \
-        | tr -d '"' | sed 's/:[0-9]*$//' | sort -u | tr '\n' ' ')"
+        | tr -d '"' | sed 's/:[0-9]*$//' | sort -u | tr '\n' ' ' || true)"
     [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
 
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
