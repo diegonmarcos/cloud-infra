@@ -20,7 +20,13 @@
 
 set -euo pipefail
 
-REPO="${GIT_BASE:-$HOME/git}/cloud"
+# Repo root by upward search, not a fixed $HOME/git/cloud. The repo was
+# renamed cloud -> cloud-infra; this hardcode kept pointing at a path that
+# no longer exists, so the test failed on a missing file rather than on
+# anything it actually asserts. Same upward-.git pattern the other tests use.
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+while [ "$_d" != "/" ] && [ ! -d "$_d/.git" ]; do _d="$(dirname "$_d")"; done
+REPO="$_d"
 ACTION="$REPO/1_cicd/src/actions/fetch-vault/action.yml"
 CICD_DIR="$REPO/1_cicd/src/cicd"
 FAILS=0
