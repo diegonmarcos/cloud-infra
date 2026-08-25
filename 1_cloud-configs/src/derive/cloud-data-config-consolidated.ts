@@ -815,6 +815,16 @@ function main() {
       user: vm.user,
       ...(vm.gha.host_literal ? { host: vm.ip } : {}),
       ...(vm.gha.host_secret ? { host_secret: vm.gha.host_secret, user_secret: vm.gha.user_secret } : {}),
+      // PLAN-ghcr-artifacts.md item 4: optional self-hosted runner label for
+      // this VM's deploy job (vms.<host>.runner_label in config.json — a
+      // top-level field on the vm, NOT under .gha, since it names a GHA
+      // runner that happens to live on the VM, not a GHA-credential
+      // concern). Present -> ship.yml's deploy job runs directly on that
+      // label (docker socket, no ssh/rsync/WG — the runner IS the VM).
+      // Absent -> omitted entirely, same as today; ship.yml's own fallback
+      // (`matrix.runner_label || 'ubuntu-latest'`) is what makes "no label
+      // set" behaviour-neutral, not a value written here.
+      ...(vm.runner_label ? { runner_label: vm.runner_label } : {}),
     };
   }
 
