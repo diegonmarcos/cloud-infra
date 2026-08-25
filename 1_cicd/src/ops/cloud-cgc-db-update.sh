@@ -1042,6 +1042,33 @@ BASE_SEEDED=0
 # every terminal state per repo so the summary can never claim currency it has not earned.
 N_INDEX=0; N_SKIP=0; N_TIMEOUT=0; N_DEFER=0
 
+# What to show of octocode's own output once an index run ends. octocode drives
+# a progress spinner: thousands of \r-separated frames that together form ONE
+# \n-terminated line, and every eprintln it emits lands glued onto whichever
+# frame is current. The branches below used to `tail -N` that file, which shows
+# the spinner and drops everything printed before its last line — and that is
+# precisely where octocode reports LLM trouble ("Warning: AI architectural
+# analysis failed", "⚠️  Batch AI description failed", "🔄 Falling back to
+# individual AI calls"). Runs 32721840450 / 32746314822 shipped graphs with
+# ZERO LLM relationships as green jobs this way: every batch had failed and the
+# replayed log showed a healthy spinner. This drops the frames (all of them,
+# they are noise), recovers any message glued onto one, strips the ANSI erase
+# sequences, and prints the last $2 real lines. awk only, so the dagu/box path
+# (busybox) and the GHA path (mawk/gawk) behave the same.
+octo_log_digest() { # $1 = octocode log file, $2 = max lines to print
+  tr '\r' '\n' < "$1" | awk -v n="$2" -v esc="$(printf '\033')" '
+    { gsub(esc "\\[[0-9;]*[A-Za-z]", "") }
+    /Indexing: [0-9]+\/[0-9]+ files|Counting files/ {
+      i = 0
+      if (match($0, /(Info|Warning|Error|Debug): /)) i = RSTART
+      else if (match($0, /⚠️|🔄|✓|📋|📊/)) i = RSTART
+      if (!i) next
+      $0 = substr($0, i)
+    }
+    NF { l[++k] = $0 }
+    END { s = k - n + 1; if (s < 1) s = 1; for (i = s; i <= k; i++) print l[i] }'
+}
+
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
@@ -1181,10 +1208,10 @@ for r in $REPOS; do
   fi
   rm -f "$_idx_marker" 2>/dev/null || true
   if [ "$_rc" = "0" ]; then
-    tail -4 "$_log"; rm -f "$_log"
+    octo_log_digest "$_log" 40; rm -f "$_log"
   elif [ "$_rc" = "124" ]; then
     echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_EFF}m slice — publishing PARTIAL progress, will resume next run"
-    tail -10 "$_log"; rm -f "$_log"
+    octo_log_digest "$_log" 40; rm -f "$_log"
     N_TIMEOUT=$(( N_TIMEOUT + 1 ))
     # PUBLISH the partial index, but do NOT advance the manifest. Those two are separate
     # decisions and conflating them is what made the outage permanent: on timeout the
@@ -1202,7 +1229,7 @@ for r in $REPOS; do
     continue
   else
     echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
-    tail -30 "$_log"; rm -f "$_log"; exit 1
+    octo_log_digest "$_log" 60; rm -f "$_log"; exit 1
   fi
 
   # Record the indexed commit in the DB home (travels via package/pull), THEN
