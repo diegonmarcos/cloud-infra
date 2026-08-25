@@ -262,6 +262,7 @@ step_docker() {
     NATIVE_BINARY="$(get_config docker.native_build.binary)"
     NATIVE_BASE="$(get_config docker.native_build.base_image)"
     NATIVE_APT="$(get_config docker.native_build.apt)"
+    NATIVE_APK="$(get_config docker.native_build.apk)"
     NATIVE_ENTRYPOINT="$(get_config docker.native_build.entrypoint)"
     NATIVE_APP_DIR="$(get_config docker.native_build.app_dir)"
     NATIVE_ENV="$(get_config docker.native_build.env)"
@@ -298,6 +299,13 @@ step_docker() {
         mkdir -p "$DIST_DIR"
         APT_LINE=""
         [ -n "$NATIVE_APT" ] && APT_LINE="RUN apt-get update && apt-get install -y --no-install-recommends $NATIVE_APT && rm -rf /var/lib/apt/lists/*"
+        # Alpine counterpart to APT_LINE, for native_build.base_image values
+        # that are Alpine-based (e.g. foxcpp/maddy, itself alpine). Only the
+        # "binary" type templates use this today (that's the only type this
+        # was needed for so far) -- image-wrapper/app stay apt-only until a
+        # real use case needs otherwise.
+        APK_LINE=""
+        [ -n "$NATIVE_APK" ] && APK_LINE="RUN apk add --no-cache $NATIVE_APK"
         ENV_LINE=""
         [ -n "$NATIVE_ENV" ] && ENV_LINE="ENV $NATIVE_ENV"
 
@@ -451,6 +459,7 @@ COPY . /build
 RUN ${NATIVE_CMD}
 FROM ${NATIVE_BASE:-debian:bookworm-slim}
 ${APT_LINE}
+${APK_LINE}
 COPY --from=native-build /build/${NATIVE_BINARY} /usr/local/bin/${BINARY_NAME}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 CMD ["${BINARY_NAME}"]
@@ -519,6 +528,7 @@ NEOF
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-debian:bookworm-slim}
 ${APT_LINE}
+${APK_LINE}
 COPY ${BINARY_NAME} /usr/local/bin/${BINARY_NAME}
 LABEL org.opencontainers.image.source="https://github.com/diegonmarcos/cloud-infra"
 CMD ["${BINARY_NAME}"]
