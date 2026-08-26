@@ -207,7 +207,19 @@ step_docker() {
     # compose-only change (e.g. a BRIDGE_BIND env tweak) churn LOCAL_HASH → force a full image
     # rebuild (for my-ai-api: an ~80-min arm64 rust/pyo3 build on the oci-apps cloud-builder that
     # timed out). Runtime-only files must not invalidate the image-rebuild cache key.
-    LOCAL_HASH=$(find "$SRC_DIR" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' -not -name 'secrets.yaml' -not -name 'compose.nix' -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)
+    # The image is defined by src/ AND by build.json's `docker` block: for
+    # image-wrapper services docker.native_build.{base_image,apt,cmd,...} IS the
+    # Dockerfile (Dockerfile.native is rendered from it). 2026-08-26, a57935adb
+    # changed only docker.native_build (new base image + pinned octocode fetch):
+    # src/ untouched → hash unchanged → rebuild skipped → deploy shipped the stale
+    # image as a green run (32952457089). The docker block is part of the key now;
+    # build.json's other blocks (deploy, runtime, comments) are not, so a
+    # runtime-only edit still does not churn an ~80-min arm64 rebuild. Canonical
+    # JSON (sorted keys, no whitespace, raw unicode) so node and the python
+    # fallback hash identically.
+    _docker_block=$( { command -v node >/dev/null 2>&1 && node -e "const s=v=>Array.isArray(v)?'['+v.map(s).join(',')+']':(v&&typeof v==='object')?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+s(v[k])).join(',')+'}':JSON.stringify(v);const c=require('$CONFIG');process.stdout.write(s(c.docker||{}))"; } 2>/dev/null \
+        || python3 -c "import json; print(json.dumps(json.load(open('$CONFIG')).get('docker',{}),sort_keys=True,separators=(',',':'),ensure_ascii=False),end='')" 2>/dev/null || true )
+    LOCAL_HASH=$( { find "$SRC_DIR" -type f -not -path '*/node_modules/*' -not -path '*/.git/*' -not -name 'secrets.yaml' -not -name 'compose.nix' -exec sha256sum {} \; 2>/dev/null | sort; printf 'build.json:docker %s\n' "$_docker_block" | sha256sum; } | sha256sum | cut -c1-16)
     LOCAL_HASH="${LOCAL_HASH}-${ARCH}"
     if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
         REMOTE_HASH=$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat $DEPLOY_PATH/.docker-src-hash 2>/dev/null" 2>/dev/null || true)
