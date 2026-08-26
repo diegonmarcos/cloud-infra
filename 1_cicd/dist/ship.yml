@@ -32,6 +32,8 @@ on:
   push:
     paths:
       - "a_solutions/*/src/**"
+      # the service's own build.json (image/base/compose declaration) lives above src/
+      - "a_solutions/*/build.json"
       # 1_cloud-configs/dist/build-*.json are the regenerated config files that
       # services in a_solutions/*/src/ symlink to (e.g.
       # bb-sec_caddy/src/build-caddy.json → ../../../1_cloud-configs/dist/build-caddy.json).
@@ -187,7 +189,12 @@ jobs:
               BASE="HEAD~1"
             fi
             echo "detect: diffing $BASE..HEAD"
-            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' \
+            # A service's own build.json drives its image (docker.native_build →
+            # Dockerfile.native) and compose, yet it sits ABOVE src/. On 2026-08-26
+            # a57935adb changed only cloud-cgc-pub-mcp/build.json (new base image +
+            # octocode fetch) and this step mapped it to no service: Build/Deploy
+            # skipped, run green, consumer never rebuilt.
+            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' 'a_solutions/*/build.json' \
               | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
 
             # A service can consume ANOTHER service's src file through a symlink:
