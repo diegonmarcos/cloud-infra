@@ -316,6 +316,14 @@ done <<< "$SERVICES"
 
 export -f ship_one
 export RESULTS_DIR
+# SHIP_VERB is read INSIDE ship_one, which runs in the xargs-spawned `bash -c`
+# subshells below — those inherit only EXPORTED vars. Without this the workers
+# saw an empty SHIP_VERB and ran `bash build.sh ""` → the engine's ${1:-all}
+# default (`all` = build dist + secrets, NO step_docker, NO deploy). Measured
+# 2026-08-26 (runs 32952457089/32953636810): the split's build job never
+# rebuilt the image and the deploy job never deployed, both green — the
+# per-service header even printed the tell, `[]` where `[$SHIP_VERB]` should be.
+export SHIP_VERB
 
 cat "$SHIP_CMDS" | xargs -P "$MAX_PARALLEL" -I{} bash -c '
   IFS="|" read -r dir name <<< "{}"
