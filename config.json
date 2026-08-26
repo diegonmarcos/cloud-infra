@@ -71,8 +71,8 @@
       "method": "key",
       "ssh_alias": "oci-apps",
       "rescue_port": 2200,
-      "runner_label": "oci-apps",
-      "_runner_label_doc": "PLAN-ghcr-artifacts.md item 4: a LABEL (not a runner name — runs-on matches labels only) carried by a self-hosted GHA runner that lives on this VM. The runner named oci-apps-arm64 carries labels self-hosted,Linux,ARM64,oci-apps (gh api repos/diegonmarcos/cloud-infra/actions/runners); 2026-08-26 the NAME was put here and every Deploy → oci-apps job queued forever (runs 32901095005, 32923957432). ship.yml's deploy job runs directly on it instead of ubuntu-latest+mesh — see cloud-data-config-consolidated.ts (.vms[].runner_label passthrough) and 1_cicd/src/cicd/ship.yml (deploy job's runs-on + WG_PRIVATE_KEY gate).",
+      "runner_label": "",
+      "_runner_label_doc": "PLAN-ghcr-artifacts.md item 4: a LABEL (not a runner name — runs-on matches labels only) carried by a self-hosted GHA runner that lives on this VM; empty = deploy from ubuntu-latest over the mesh, exactly the pre-split path. The runner named oci-apps-arm64 carries labels self-hosted,Linux,ARM64,oci-apps (gh api repos/diegonmarcos/cloud-infra/actions/runners). 2026-08-26: the NAME was put here first and every Deploy → oci-apps job queued forever (runs 32901095005, 32923957432); with the label fixed, the first local deploy (32951493592) failed at `ensure_node_deps: npm not found — node 18+ required on host`: the myoung34/github-runner image carries none of the ship engine's toolchain (node, sops/age, jq, rsync, zstd). Set this to `oci-apps` again ONLY once the runner runs the toolchain image from plan item 4 (cgc-runtime / gha-runner with those baked in). See cloud-data-config-consolidated.ts (.vms[].runner_label passthrough) and 1_cicd/src/cicd/ship.yml (deploy job's runs-on + WG_PRIVATE_KEY gate).",
       "description": "Oracle Free - A1 Flex 0 (4 OCPUs / 24GB / 100GB) — Consolidated",
       "specs": {
         "cpu": 4,
