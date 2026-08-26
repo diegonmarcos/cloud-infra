@@ -761,6 +761,22 @@ case "${1:-all}" in
         # DEPLOY_IMAGE_DIGEST/DEPLOY_IMAGE_SHA12 gets a pinned pull here too —
         # dormant (same as the `ship`/`rollout` call sites) until item 4 wires
         # a real caller.
+        #
+        # FORCE PULL: redeploy is exactly "deploy whatever image is on GHCR now,
+        # without rebuilding" — as the deploy half of the build/deploy split it
+        # always follows a fresh push. But it never runs step_docker, so
+        # DOCKER_IMAGE_CHANGED is unset; step_compose's gate then falls to
+        # `--pull missing`, and a stale local :latest shadows the just-pushed
+        # image forever. Measured 2026-08-26, run 32954725752: the build job
+        # pushed cloud-cgc-pub-mcp-binaries@sha256:7d54a686 (octocode 0.22) yet
+        # the deploy recreated the container from the box's cached :latest
+        # (sha256:77b67615, octocode 0.12.2) — green run, wrong binary, needed a
+        # manual `docker compose pull` to fix. Setting DOCKER_IMAGE_CHANGED here
+        # makes the gate use `--pull always` + `--force-recreate`, the same
+        # refresh the standalone `build.sh compose` path already forces. Until
+        # item 3 pins by digest (DEPLOY_IMAGE_DIGEST) this is what makes the
+        # split deploy actually deploy what build just built.
+        DOCKER_IMAGE_CHANGED=1; export DOCKER_IMAGE_CHANGED
         step_build; step_secrets; rewrite_compose_image_refs; step_deploy; step_compose; step_health
         ;;
     rollout)  step_pull; rewrite_compose_image_refs; step_compose; step_health ;;   # image-only reconcile, no rebuild
