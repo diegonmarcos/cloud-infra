@@ -149,8 +149,8 @@
   "mail_l4_routes": [
     {
       "port": 443,
-      "upstream": "10.0.0.3:2993",
-      "comment": "IMAPS via SNI on :443 → Stalwart :2993 (Maddy's :993 is legacy)",
+      "upstream": "10.0.0.3:993",
+      "comment": "IMAPS via SNI on :443 -> MADDY :993, NOT Stalwart. IMAP and JMAP are deliberately SEPARATE stores: Maddy serves IMAP as INBOX + the 12 F* sender folders, Stalwart serves JMAP with the full 1*-9* + A*-F* structure. Pointing this at Stalwart :2993 collapsed that split -- IMAP clients got Stalwart's entire folder set, and it could not be hidden because Stalwart serves JMAP and IMAP from ONE mailbox store. Maddy presents the *.diegonmarcos.com wildcard cert on :993, so TLS passthrough verifies.",
       "sni": "imap.diegonmarcos.com"
     },
     {
