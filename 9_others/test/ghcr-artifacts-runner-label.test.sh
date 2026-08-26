@@ -57,5 +57,25 @@ ck "matrix field resolves to empty for an unmapped vm" "$(run_matrix_runner_labe
 ck "matrix field resolves to the mapped label" \
    "$(run_matrix_runner_label '{"oci-apps":"oci-apps-arm64"}' 'oci-apps')" "oci-apps-arm64"
 
+# ── 7) EXECUTED against GitHub: every configured runner_label must be a LABEL an
+#      online self-hosted runner carries. runs-on matches labels, never names —
+#      on 2026-08-26 the runner NAME (oci-apps-arm64) was configured and every
+#      Deploy → oci-apps job queued forever (runs 32901095005, 32923957432).
+#      Skips (does not fail) when gh is unavailable/unauthenticated so the suite
+#      stays runnable offline; CI has gh.
+CONFIG="$ROOT/config.json"
+LABELS_CONFIGURED=$(jq -r '.vms | to_entries[] | select(.value.runner_label != null and .value.runner_label != "") | "\(.key)=\(.value.runner_label)"' "$CONFIG" 2>/dev/null)
+if [ -n "$LABELS_CONFIGURED" ]; then
+  if RUNNERS=$(gh api repos/diegonmarcos/cloud-infra/actions/runners --jq '.runners[] | select(.status=="online") | .labels[].name' 2>/dev/null) && [ -n "$RUNNERS" ]; then
+    for _kv in $LABELS_CONFIGURED; do
+      _lbl=${_kv#*=}
+      ck "runner_label '$_lbl' (${_kv%%=*}) is a label of an online runner" \
+         "$(printf '%s\n' "$RUNNERS" | grep -qx "$_lbl" && echo yes || echo no)" "yes"
+    done
+  else
+    echo "  skip runner_label existence check (gh unavailable or unauthenticated)"
+  fi
+fi
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
