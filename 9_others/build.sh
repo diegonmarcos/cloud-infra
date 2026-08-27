@@ -287,6 +287,25 @@ do_deploy() {
             git -C "$REPO_ROOT" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | while read -r _key _path; do
                 [ -n "$_path" ] || continue
                 [ -d "$REPO_ROOT/$_path/.git" ] || [ -f "$REPO_ROOT/$_path/.git" ] || continue
+                # A submodule may opt out of the read-only contract by declaring
+                # `writable = true`. Index submodules (cloud) are consumed here and
+                # never authored, so they stay read-only; authored trees such as
+                # a_solutions are edited in place and pushed from their own repo.
+                # Keep in sync with 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh —
+                # this bootstrap must stand alone, so the logic is duplicated.
+                _sm_name="${_key#submodule.}"; _sm_name="${_sm_name%.path}"
+                if [ "$(git -C "$REPO_ROOT" config --file .gitmodules --get "submodule.${_sm_name}.writable" 2>/dev/null)" = "true" ]; then
+                    # Converge to the declaration: remove a hook left over from an
+                    # earlier run, don't merely skip installing one.
+                    _w_hooks=$(git -C "$REPO_ROOT/$_path" rev-parse --git-path hooks 2>/dev/null)
+                    case "$_w_hooks" in
+                        /*) ;;
+                        *)  _w_hooks="$REPO_ROOT/$_path/$_w_hooks" ;;
+                    esac
+                    rm -f "$_w_hooks/pre-commit"
+                    ok "submodule '$_path' → writable, read-only hook removed"
+                    continue
+                fi
                 _sm_hooks=$(git -C "$REPO_ROOT/$_path" rev-parse --git-path hooks 2>/dev/null)
                 [ -n "$_sm_hooks" ] || continue
                 # rev-parse may return relative path (relative to the submodule

@@ -32,11 +32,16 @@ STAGED=$(git diff --cached --name-only)
 # Files inside submodules belong to a different repo; edits there must
 # happen in that repo (e.g. ~/git/cloud-data for cloud/I_cloud-data).
 SUBMODULE_PATHS=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}')
-if [ -n "$SUBMODULE_PATHS" ]; then
+# Deletions are excluded: staging the removal of a path under a mount is how a
+# tracked directory becomes a submodule (and how one is unmounted). It removes
+# content from the parent rather than leaking content into it, so it is never
+# the leak this guard exists to catch.
+STAGED_NONDEL=$(git diff --cached --name-only --diff-filter=d)
+if [ -n "$SUBMODULE_PATHS" ] && [ -n "$STAGED_NONDEL" ]; then
   SM_LEAK=""
   while IFS= read -r _sm; do
     [ -n "$_sm" ] || continue
-    _hits=$(echo "$STAGED" | grep -E "^${_sm}/" || true)
+    _hits=$(echo "$STAGED_NONDEL" | grep -E "^${_sm}/" || true)
     [ -n "$_hits" ] && SM_LEAK="${SM_LEAK}${_hits}"$'\n'
   done <<< "$SUBMODULE_PATHS"
   if [ -n "$SM_LEAK" ]; then

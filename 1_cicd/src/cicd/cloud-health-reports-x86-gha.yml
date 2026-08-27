@@ -24,6 +24,10 @@ jobs:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Init submodules (a_solutions)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
