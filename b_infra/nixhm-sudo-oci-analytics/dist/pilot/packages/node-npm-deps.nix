@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/packages/node-npm-deps.nix
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-analytics/src/pilot/packages/node-npm-deps.nix
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
@@ -114,7 +114,7 @@ in {
     SHARED="$HOME/.node_modules/node_modules"
     MCP_DIRS="
       $HOME/git/cloud-infra/a_solutions/infra-api_c3-specs-docs-mcp/src
-      $HOME/git/cloud-infra/a_solutions/infra-api_c3-diego-personal-data-mcp/src
+      $HOME/git/cloud-infra/a_solutions/infra-api_cloud-vault-mcp/src
     "
     for dir in $MCP_DIRS; do
       [ -d "$dir" ] || continue

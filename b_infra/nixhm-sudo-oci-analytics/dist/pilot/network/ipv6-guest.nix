@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/network/ipv6-guest.nix
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-analytics/src/pilot/network/ipv6-guest.nix
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
@@ -32,6 +32,27 @@
 # The same missing guest-side IPv6 is why nat64-tayga.nix does not translate:
 # its prefix 2603:c026:c104:8f00:ff9b::/96 is carved from a /64 the OS has never
 # brought up, so nothing routes to it either. One fix, both features.
+#
+# CONFIRMED ON THE INSTANCE 2026-08-12 — both halves of this module's premise
+# were checked directly on oci-analytics rather than inferred from a failing
+# handshake:
+#   ip -6 addr show dev ens3 scope global
+#     -> fd0c:1d00::4/64, fd0c:1d01::1/64        (the two ULA mesh addresses)
+#     -> NO 2603:… address. The OCI-assigned IPv6 was genuinely absent.
+#   ip -6 route show default
+#     -> default via fe80::200:17ff:fe89:a0df dev ens3 proto ra
+# So the ROUTE was already there and correct, arriving by Router Advertisement,
+# while the ADDRESS was the only missing piece. That is exactly the split this
+# module assumes, and it settles the open question below: OCI *does* send RAs on
+# this subnet, so accept-ra genuinely supplies the default route and the gateway
+# never has to be hardcoded.
+#
+# Adding the address by hand (ip -6 addr add …/128 dev ens3) and repointing the
+# laptop's wg-public peer at [2603:…:6eee]:51821 made the tunnel work on the
+# first attempt: handshake 22s and refreshing, `received` moving for the first
+# time ever on IPv6 (6.74 -> 6.83 KiB), and 3/3 ping replies to 10.1.0.1 through
+# the tunnel. That hand-added address is session-only and disappears on reboot —
+# this module is what makes it survive.
 #
 # WHY RA/DHCPv6 AND NOT A STATIC ADDRESS
 # ──────────────────────────────────────
@@ -137,9 +158,29 @@ lib.mkIf enabled {
       # netplan refuses world-readable configs (warns and may ignore them).
       $SUDO chmod 600 "$DST"
       # `netplan apply` re-applies ALL configs including OCI's cloud-init one,
-      # so a broken drop-in takes IPv4 with it. --no-block so a hung apply can
-      # never wedge the deploy; the address also comes up on next boot anyway.
-      $SUDO netplan apply 2>&1 | ${pkgs.gnugrep}/bin/grep -v '^$' || true
+      # so a broken drop-in takes IPv4 with it.
+      #
+      # RUN IT DETACHED — DO NOT run it in the foreground of this activation.
+      # netplan apply restarts networking on a host that is reachable ONLY over
+      # the network being restarted, so it can hang the very SSH session this
+      # deploy is running through. An earlier revision of this file carried a
+      # comment claiming "--no-block so a hung apply can never wedge the deploy"
+      # while the command had no such flag — and netplan apply has no
+      # --no-block option at all; that is a systemctl flag. The protection was
+      # described but never implemented. On 2026-08-12 the oci-analytics deploy
+      # hung for exactly its 45-minute timeout and was cancelled; that
+      # particular hang happened earlier in the Ship step (the drop-in was never
+      # written, so this line was not the cause), but it is precisely the
+      # failure this line would produce once activation does reach it, on the
+      # one VM that hosts the wg-public hub.
+      #
+      # systemd-run detaches it from this session so activation returns
+      # immediately, and RuntimeMaxSec bounds it so a wedged apply cannot linger.
+      # The address also comes up on next boot from the file alone, so a killed
+      # apply costs nothing permanent.
+      $SUDO systemd-run --unit=ipv6-guest-netplan --collect \
+        --property=RuntimeMaxSec=120 \
+        netplan apply 2>&1 | ${pkgs.gnugrep}/bin/grep -v '^$' || true
       echo "[ipv6-guest] applied netplan drop-in for $IFACE"
     fi
 

@@ -1,0 +1,231 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-apps/src/pilot/agents/my-stack.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# vm-pilot as the HUB for the two products that used to live inside it.
+#
+# WHAT CHANGED AND WHY
+# vm-pilot implemented "a web server and a watchdog" itself: busybox httpd on
+# 7680 serving symlinked directories, and a data-publisher timer writing
+# containers.json every five minutes. Both jobs now belong to products of their
+# own in cloud-u-linux — my-webserver and my-watchdog — for the same reason the
+# sampler left my-konsole: the coupling was never more than a file path, and
+# owning a second implementation of somebody else's job is how the two drift.
+#
+# So this module deploys them and gets out of the way. vm-pilot keeps what is
+# genuinely its own — the protection layers, the alerting, the identity and
+# rescue paths — and stops carrying a metrics stack alongside them.
+#
+# WHAT THIS GIVES THE FLEET
+#   * my-watchdog samples this machine every 2s and publishes one snapshot,
+#     the same shape the desktop publishes, so the hub's panel describes a VM
+#     exactly as it describes the laptop.
+#   * my-webserver answers /__api__/watchdog with that file, so the hub reads
+#     it over HTTP instead of opening an ssh session and running a collector
+#     script on the far end — which is both slower and a portability problem
+#     on every box with BusyBox df or mawk.
+#
+# NO BUILDING HERE. Both are fetched as prebuilt binaries, statically linked
+# against musl so one artifact per architecture runs on the Ubuntu, Fedora and
+# NixOS boxes alike. Compiling Rust on these VMs is what no-build-guard.nix
+# exists to prevent.
+{ vmName }:
+{ config, pkgs, lib, ... }:
+
+let
+  # 2026-08-27: my-webserver and my-watchdog moved to cloud-u-linux in the d*
+  # split, so their rolling releases are published there now.
+  repo = "diegonmarcos/cloud-u-linux";
+  webPort = 8000;
+
+  # Bind to the MESH address only, resolved at start.
+  #
+  # Not 0.0.0.0. Several of these VMs have public addresses, and this serves a
+  # file listing of $HOME — on 0.0.0.0 that is a directory browser on the
+  # internet, firewalled or not, and "there is a firewall" is not a reason to
+  # open a socket that has no business being open. The hub reaches these over
+  # WireGuard and nothing else needs to.
+  #
+  # No wg0, no server: refusing to start is the correct outcome when the only
+  # address it is allowed to bind does not exist.
+  serveScript = pkgs.writeShellScript "my-webserver-mesh.sh" ''
+    set -euo pipefail
+    ip=""
+    for dev in wg0 wg-public; do
+      ip="$(ip -o -4 addr show "$dev" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)"
+      [ -n "$ip" ] && break
+    done
+    if [ -z "$ip" ]; then
+      echo "[my-webserver] no mesh address on wg0/wg-public — refusing to bind anywhere else" >&2
+      exit 1
+    fi
+    exec "$HOME/.local/bin/my-webserver" --port ${toString webPort} --host "$ip" --root "$HOME"
+  '';
+
+  # The hub can also push these over scp (`da_watchdog/build.sh deploy`), and
+  # on a VM without a working `gh` credential that is the path that works. This
+  # script is the pull half: it makes a VM able to update itself, and it is
+  # deliberately quiet about failing, because a metrics binary that could not
+  # be refreshed must never take a deploy down with it.
+  fetchScript = pkgs.writeShellScript "my-stack-fetch.sh" ''
+    set -uo pipefail
+    BIN="$HOME/.local/bin"
+    mkdir -p "$BIN"
+
+    arch="$(uname -m)"
+    case "$arch" in
+      aarch64|arm64) suffix=aarch64 ;;
+      x86_64)        suffix=x86_64 ;;
+      *) echo "[my-stack] no build for $arch — nothing to fetch"; exit 0 ;;
+    esac
+
+    have_gh=0
+    command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1 && have_gh=1
+    if [ "$have_gh" -eq 0 ]; then
+      echo "[my-stack] gh not authenticated here — the hub pushes these instead (build.sh deploy)"
+      exit 0
+    fi
+
+    get() { # tag asset dest
+      tmp="$(mktemp "$BIN/.fetch.XXXXXX")" || return 0
+      if gh release download "$1" --repo "${repo}" --pattern "$2" --output "$tmp" --clobber 2>/dev/null; then
+        chmod +x "$tmp"
+        # rename(2), never write-in-place: overwriting a running binary is
+        # ETXTBSY, and this runs on a timer while both are running.
+        mv -f "$tmp" "$BIN/$3"
+        echo "[my-stack] $3 updated"
+      else
+        rm -f "$tmp"
+        echo "[my-stack] $2 not available — keeping the copy already here"
+      fi
+    }
+
+    get my-watchdog-latest  "my-watchdog-$suffix"  my-watchdog
+    get my-webserver-latest "my-webserver-$suffix" my-webserver
+  '';
+in
+{
+  # ── my-watchdog ────────────────────────────────────────────────────
+  # Headless: there is no tray on a VM and the fleet build has none compiled
+  # in, so --no-tray is belt and braces for a desktop artifact deployed here
+  # by hand.
+  home.file.".local/share/vm-pilot/my-watchdog.service".text = ''
+    [Unit]
+    Description=my-watchdog — machine sampler (${vmName})
+    After=network.target
+
+    [Service]
+    Type=simple
+    ExecStart=%h/.local/bin/my-watchdog --no-tray
+    Restart=always
+    RestartSec=5
+    # A monitor that competes with what it is monitoring is the problem it
+    # exists to report, and this fleet has already had one freeze caused by a
+    # watchdog that computed before its early exit and became the load.
+    Nice=10
+    IOSchedulingClass=idle
+    MemoryMax=96M
+
+    [Install]
+    WantedBy=default.target
+  '';
+
+  # ── my-webserver ───────────────────────────────────────────────────
+  # Bound to the mesh address, not 0.0.0.0: this serves a file listing and a
+  # metrics route, and neither belongs on a public interface. The mesh is the
+  # only network the hub reaches it on anyway.
+  home.file.".local/share/vm-pilot/my-webserver.service".text = ''
+    [Unit]
+    Description=my-webserver — file server and /__api__/watchdog (${vmName})
+    After=network.target
+
+    [Service]
+    Type=simple
+    ExecStart=${serveScript}
+    Restart=always
+    RestartSec=5
+    Nice=10
+    MemoryMax=192M
+
+    [Install]
+    WantedBy=default.target
+  '';
+
+  # Refresh on a slow timer. Daily, because these change when something is
+  # pushed to main and never on their own — a tighter loop is a GitHub API
+  # call per VM per interval for no benefit.
+  home.file.".local/share/vm-pilot/my-stack-update.service".text = ''
+    [Unit]
+    Description=my-stack — refresh my-watchdog and my-webserver
+
+    [Service]
+    Type=oneshot
+    ExecStart=${fetchScript}
+  '';
+
+  home.file.".local/share/vm-pilot/my-stack-update.timer".text = ''
+    [Unit]
+    Description=my-stack — daily refresh
+
+    [Timer]
+    OnBootSec=10min
+    OnUnitActiveSec=1d
+    Persistent=true
+
+    [Install]
+    WantedBy=timers.target
+  '';
+
+  home.activation.installMyStack = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    (
+    trap 'echo "[my-stack] FAILED at line $LINENO: $BASH_COMMAND" >&2' ERR
+
+    SRC="$HOME/.local/share/vm-pilot"
+    UNITS="$HOME/.config/systemd/user"
+    mkdir -p "$UNITS" "$HOME/.local/bin"
+
+    for u in my-watchdog.service my-webserver.service my-stack-update.service my-stack-update.timer; do
+      install -m644 "$SRC/$u" "$UNITS/$u"
+    done
+
+    # A VM with no user D-Bus session has no `systemctl --user` to talk to, and
+    # that is a normal state on a box nobody has logged into. Installing the
+    # units and stopping there is the right outcome: they start on the next
+    # login, or when lingering is enabled.
+    if ! systemctl --user show-environment >/dev/null 2>&1; then
+      echo "[my-stack] units installed; no user session to start them in yet"
+      exit 0
+    fi
+
+    systemctl --user daemon-reload
+
+    # Try to fetch before enabling, so the first start has something to run.
+    # If the hub pushed the binaries already this is a no-op.
+    ${fetchScript} || true
+
+    for u in my-watchdog.service my-webserver.service; do
+      bin="$HOME/.local/bin/''${u%.service}"
+      if [ -x "$bin" ]; then
+        systemctl --user enable --now "$u" 2>/dev/null || \
+          echo "[my-stack] could not start $u"
+      else
+        # Enabled but not started: the unit is in place for whenever the
+        # binary arrives, and saying so beats a start that fails every boot.
+        systemctl --user enable "$u" 2>/dev/null || true
+        echo "[my-stack] $bin not present yet — unit enabled, not started"
+      fi
+    done
+    systemctl --user enable --now my-stack-update.timer 2>/dev/null || true
+
+    echo "[my-stack] my-watchdog + my-webserver deployed (port ${toString webPort})"
+    )
+  '';
+}

@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-mail/src/pilot/packages/node-npm-deps-cloud.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-mail/src/pilot/packages/node-npm-deps-cloud.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -30,7 +30,7 @@ in {
     for _p in \
       /app/_cloud-data-consolidated.json \
       /opt/containers/cloud-data/_cloud-data-consolidated.json \
-      "$HOME/git/cloud-infra/2_configs/dist/_cloud-data-consolidated.json" \
+      "$HOME/git/cloud-infra/1_cloud-configs/dist/_cloud-data-consolidated.json" \
       "$HOME/git/cloud-infra/cloud-data/_cloud-data-consolidated.json"; do
       [ -f "$_p" ] && CLOUD_DEPS="$_p" && break
     done

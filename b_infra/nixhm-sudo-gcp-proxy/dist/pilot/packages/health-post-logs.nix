@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-gcp-proxy/src/pilot/packages/health-post-logs.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/packages/health-post-logs.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -77,8 +77,8 @@ let
     ip link show wg0 >/dev/null 2>&1 && WG_UP="true"
 
     # Local port checks — probe per-VM manifest.
-    # Probe order (cloud-data emits NOTHING; new canonical lives in 2_configs/dist):
-    #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 2_configs/dist/build-vm-{vm}.json)
+    # Probe order (cloud-data emits NOTHING; new canonical lives in 1_cicd/dist):
+    #   1. /opt/scripts/build-vm.json  ← NEW (home-manager-deployed from 1_cloud-configs/dist/build-vm-{vm}.json)
     #   2. $REPO_DIR/cloud-data-containers-$VM.json  ← LEGACY fallback (cloud-data clone)
     MANIFEST=""
     for _p in "/opt/scripts/build-vm.json" "$REPO_DIR/cloud-data-containers-$VM.json"; do

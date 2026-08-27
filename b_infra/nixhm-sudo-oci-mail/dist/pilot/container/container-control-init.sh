@@ -4,9 +4,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-mail/src/pilot/container/container-control-init.sh
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-mail/src/pilot/container/container-control-init.sh
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -144,13 +144,13 @@ cmd_cloud_data_sync() {
 # Resolve declared services from per-VM manifest.
 # Probe order:
 #   1. /opt/scripts/build-vm.json — NEW canonical, deployed by home-manager
-#      from 2_configs/dist/build-vm-{vm}.json. cloud-data emits NOTHING; this
+#      from 1_cloud-configs/dist/build-vm-{vm}.json. cloud-data emits NOTHING; this
 #      is the only declarative source going forward.
 #   2. $CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json — LEGACY fallback
 #      for VMs not yet re-shipped under the new pattern. Remove once all VMs
 #      have been redeployed and verified.
 # Both files have the same `.services[].compose_path` shape (verified against
-# 2_configs/dist/build-vm-oci-mail.json).
+# 1_cloud-configs/dist/build-vm-oci-mail.json).
 _get_services() {
   _json=""
   for _p in "/opt/scripts/build-vm.json" "$CLOUD_DATA_DIR/cloud-data-containers-${VM_ALIAS}.json"; do
