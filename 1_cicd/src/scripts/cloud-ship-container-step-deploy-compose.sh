@@ -231,6 +231,29 @@ step_compose() {
     fi
     [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
 
+    # EVICT_PORTS reads `docker ps --format '{{.Ports}}'`, which is EMPTY for a
+    # container on network_mode:host — it publishes nothing. So it catches a
+    # BRIDGED predecessor (c3-services-mcp published 10.0.0.6:3101->3101, and
+    # that is the one it was written for) but is blind to a host-networked one.
+    # c3-infra-mcp -> cloud-infra-mcp is exactly that second shape: both sides
+    # host-networked, the old container holding 10.0.0.6:3100 while showing no
+    # ports at all. Same 46h outage, invisible to every docker-level check.
+    #
+    # When docker cannot say who holds the port, ask the kernel: ss gives the
+    # listening pid, /proc/<pid>/cgroup names the owning container. That works
+    # regardless of the predecessor's network mode.
+    #
+    # sudo is required (the listener belongs to root inside the container) and
+    # is already assumed by the rsync step's `sudo mkdir -p $DEPLOY_PATH`.
+    EVICT_SOCKET=""
+    if grep -q '"network_mode":"host"' "$COMPOSE_FILE" 2>/dev/null; then
+        _appport="$(jq -r '.ports.app // empty' "$SERVICE_DIR/build.json" 2>/dev/null)"
+        case "$_appport" in
+            ''|*[!0-9]*) ;;
+            *) EVICT_SOCKET="for p in \$(sudo ss -lntpH \"sport = :$_appport\" 2>/dev/null | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do cid=\$(sudo sed -nE 's#.*[-/]([0-9a-f]{64})(\\.scope)?\$#\\1#p' /proc/\$p/cgroup 2>/dev/null | head -1); [ -n \"\$cid\" ] || continue; cn=\$(docker inspect --format '{{.Name}}' \"\$cid\" 2>/dev/null | sed 's#^/##'); [ -n \"\$cn\" ] || continue; case \" $_cnames \" in *\" \$cn \"*) ;; *) echo \"[compose] evicting \$cn — it holds :$_appport, which this service binds\"; docker rm -f \"\$cid\" >/dev/null 2>&1 || true ;; esac; done" ;;
+        esac
+    fi
+
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
         # ── Custom compose script: self-contained, used by both ship + container-init ──
         # Generated in a tmpdir (ship transient — never pollutes dist/ or git working tree).
@@ -288,6 +311,7 @@ PULL_GATE
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             [ -n "$EVICT_NAMED" ] && echo "$EVICT_NAMED"
             [ -n "$EVICT_PORTS" ] && echo "$EVICT_PORTS"
+            [ -n "$EVICT_SOCKET" ] && echo "$EVICT_SOCKET"
             # Gate already pulled → up must not re-pull (would re-hit the failure
             # on the cache-fallback path). Swap always→missing for the up line.
             _CUSTOM_UP_FLAGS="$COMPOSE_UP_FLAGS"
@@ -332,9 +356,9 @@ PULL_GATE
             # doesn't re-hit the failing pull.
             _STD_UP_FLAGS="${COMPOSE_UP_FLAGS/--pull always/--pull missing}"
             PULL_GATE="docker compose $CF \$ENV_FILE_FLAG pull || { for _img in \$(docker compose $CF \$ENV_FILE_FLAG config --images 2>/dev/null); do docker image inspect \"\$_img\" >/dev/null 2>&1 || { echo \"ERROR: \$_img neither pullable nor cached — refusing teardown\" >&2; exit 1; }; done; }"
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
         else
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
         # Detached + poll, NOT one long-held ssh: the pull/extract can run for
         # minutes with an almost-idle ssh channel, which is exactly when the
