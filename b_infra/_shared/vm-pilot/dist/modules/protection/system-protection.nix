@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/protection/system-protection.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -43,6 +43,9 @@ in {
     (import ./tier1-apps.nix { inherit config pkgs lib vmName; })
     (import ../dashboard/dashboard.nix { inherit vmName; })
     (import ../agents/health-agent.nix { inherit config pkgs lib vmName; })
+    # my-webserver + my-watchdog: the two jobs vm-pilot used to implement
+    # itself, now their own products in cloud-u-linux. vm-pilot deploys them.
+    (import ../agents/my-stack.nix { inherit vmName; })
     # guardrails.nix disabled (POSIX sh bug)
     # no-build-guard.nix imported by default.nix directly
   ];

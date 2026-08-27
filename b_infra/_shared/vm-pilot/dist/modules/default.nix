@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/default.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -68,6 +68,9 @@ in {
     # wg0 — private internal mesh (always present on every VM)
     (import ./network/wireguard.nix { inherit vmName; interfaceName = "wg0"; meshKey = "wireguard"; secretEnvName = "WG_PRIVATE_KEY"; })
     (import ./network/firewall.nix { inherit vmName; inherit publicPorts; })
+    # MUST come before nat64-tayga: tayga's prefix is carved from the /64 that
+    # this module brings up in the guest. Without it tayga has nothing to route.
+    (import ./network/ipv6-guest.nix { inherit vmName; })
     (import ./network/nat64-tayga.nix { inherit vmName; })
     ./network/dns-hickory.nix
     ./network/etc-hosts-clean.nix    # strips *.diegonmarcos.com hijacks (Caddy = sole route owner)

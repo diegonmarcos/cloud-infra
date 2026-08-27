@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/network/firewall.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -189,7 +189,7 @@ ${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
     for _p in \
       /app/_cloud-data-consolidated.json \
       /opt/containers/cloud-data/_cloud-data-consolidated.json \
-      "$HOME/git/cloud-infra/2_configs/dist/_cloud-data-consolidated.json" \
+      "$HOME/git/cloud-infra/1_cloud-configs/dist/_cloud-data-consolidated.json" \
       "$HOME/git/cloud-infra/cloud-data/_cloud-data-consolidated.json"; do
       [ -f "$_p" ] && FW_JSON="$_p" && break
     done
@@ -235,15 +235,30 @@ ${lib.optionalString isWgPublicPeer ''
     # No DNAT needed. No docker-proxy. No port mapping.
     # Only MASQUERADE for outbound from Docker bridges and WG.
 
+    # Egress NIC, resolved at RUNTIME from the default route. It is NOT eth0:
+    # GCP names it ens4, OCI names it ens3. The old code tried
+    # `-o eth0 … || -o ens4 … || <fallback>`, but iptables does NOT validate
+    # interface names at insert time — it accepts `-o eth0` on a host with no
+    # eth0, returns 0, and the `||` fallbacks never run. Result: a MASQUERADE
+    # rule that is present in the chain, looks correct in `iptables -S`, and
+    # matches zero packets. Every hub has been silently unable to NAT mesh
+    # traffic to the internet (found 2026-08-11 while checking whether a
+    # full-tunnel client would actually get egress — it would not have).
+    EGRESS_IF=$(ip route show default 2>/dev/null | awk '{print $5; exit}')
+
     iptables -t nat -A POSTROUTING -s ${dockerSubnet} ! -d ${dockerSubnet} -j MASQUERADE
-    iptables -t nat -A POSTROUTING -s ${wgSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
-    iptables -t nat -A POSTROUTING -s ${wgSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
-    iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+    if [ -n "''${EGRESS_IF:-}" ]; then
+      iptables -t nat -A POSTROUTING -s ${wgSubnet} -o "$EGRESS_IF" -j MASQUERADE
+    else
+      iptables -t nat -A POSTROUTING -s ${wgSubnet} ! -d ${wgSubnet} -j MASQUERADE
+    fi
 ${lib.optionalString (isWgPublicPeer && wgPublicSubnet != null) ''
     # wg-public subnet MASQUERADE (Phase 6) — outbound from wg-public peers
-    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} -o eth0 -j MASQUERADE 2>/dev/null || \
-    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} -o ens4 -j MASQUERADE 2>/dev/null || \
-    iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} ! -d ${wgPublicSubnet} -j MASQUERADE
+    if [ -n "''${EGRESS_IF:-}" ]; then
+      iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} -o "$EGRESS_IF" -j MASQUERADE
+    else
+      iptables -t nat -A POSTROUTING -s ${wgPublicSubnet} ! -d ${wgPublicSubnet} -j MASQUERADE
+    fi
 ''}
 
     # ══════════════════════════════════════════════════════════════
@@ -307,9 +322,14 @@ ${lib.optionalString isWgPublicPeer ''      ip6tables -A FORWARD -i wg-public -j
       ip6tables -A FORWARD -o wg-public -j ACCEPT
 ''}      ip6tables -P FORWARD DROP 2>/dev/null || true
       # ── NAT: MASQUERADE v6 egress to the internet (mirror of the v4 rules) ──
-${lib.optionalString (wgSubnetV6 != null) ''      ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} -o eth0 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} -o ens4 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} ! -d ${wgSubnetV6} -j MASQUERADE 2>/dev/null || true
-''}${lib.optionalString (isWgPublicPeer && wgPublicSubnetV6 != null) ''      ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} -o eth0 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} -o ens4 -j MASQUERADE 2>/dev/null || ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} ! -d ${wgPublicSubnetV6} -j MASQUERADE 2>/dev/null || true
-''}      echo "[firewall] IPv6 mirror applied: INPUT/FORWARD DROP + wg trust + v6 MASQUERADE"
+      # Same runtime-resolved egress NIC as the v4 block — see the long comment
+      # there for why `-o eth0 || -o ens4` was dead code.
+      # NOTE: this only produces working v6 egress on a host that HAS a global
+      # IPv6 address. gcp-proxy currently has none (ens4 is v4-only, no v6
+      # default route), so v6 NAT66 there is a no-op by physics, not by config.
+${lib.optionalString (wgSubnetV6 != null) ''      if [ -n "''${EGRESS_IF:-}" ]; then ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} -o "$EGRESS_IF" -j MASQUERADE 2>/dev/null || true; else ip6tables -t nat -A POSTROUTING -s ${wgSubnetV6} ! -d ${wgSubnetV6} -j MASQUERADE 2>/dev/null || true; fi
+''}${lib.optionalString (isWgPublicPeer && wgPublicSubnetV6 != null) ''      if [ -n "''${EGRESS_IF:-}" ]; then ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} -o "$EGRESS_IF" -j MASQUERADE 2>/dev/null || true; else ip6tables -t nat -A POSTROUTING -s ${wgPublicSubnetV6} ! -d ${wgPublicSubnetV6} -j MASQUERADE 2>/dev/null || true; fi
+''}      echo "[firewall] IPv6 mirror applied: INPUT/FORWARD DROP + wg trust + v6 MASQUERADE (egress=''${EGRESS_IF:-none})"
     else
       echo "[firewall] ip6tables unavailable — IPv6 mirror skipped"
     fi
