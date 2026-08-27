@@ -163,7 +163,6 @@ GHA workflow YAML definitions. Deployed to `.github/workflows/`.
 | `ship-home-manager.yml` | Push to `b_infra/` | Deploy HM to VMs |
 | `ship-terraform.yml` | Push to terraform sources | Terraform apply |
 | `health.yml` | Cron + manual | Consolidated health check |
-| `sync-submodules.yml` | Push | Sync cloud-data + tools submodules |
 
 ---
 
