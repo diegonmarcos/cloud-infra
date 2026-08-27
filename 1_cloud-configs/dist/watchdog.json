@@ -33,15 +33,22 @@
       "actions": {
         "ssh": {
           "stop": "ssh oci-mail sudo systemctl poweroff",
-          "restart": "ssh oci-mail sudo systemctl reboot"
+          "restart": "ssh oci-mail sudo systemctl reboot",
+          "reboot-forced": "ssh oci-mail sudo systemctl reboot --force --force"
         },
         "console": {
           "start": "oci compute instance action --action START --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
           "stop": "oci compute instance action --action STOP --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
           "restart": "oci compute instance action --action SOFTRESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
-          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
+          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq",
+          "reboot-forced": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacbwylmkqr253ay7binepapgsyopllfayovkzaky6oigbq"
         }
-      }
+      },
+      "daemons": [
+        "docker.service",
+        "sshd.service",
+        "wg-quick@wg0.service"
+      ]
     },
     {
       "name": "oci-E2-f_1",
@@ -83,15 +90,22 @@
       "actions": {
         "ssh": {
           "stop": "ssh oci-analytics sudo systemctl poweroff",
-          "restart": "ssh oci-analytics sudo systemctl reboot"
+          "restart": "ssh oci-analytics sudo systemctl reboot",
+          "reboot-forced": "ssh oci-analytics sudo systemctl reboot --force --force"
         },
         "console": {
           "start": "oci compute instance action --action START --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
           "stop": "oci compute instance action --action STOP --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
           "restart": "oci compute instance action --action SOFTRESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
-          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
+          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq",
+          "reboot-forced": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacgwg5rkrjyomuxvjtvtuk5xrbmy7hmslwn4pse4kw5jkq"
         }
-      }
+      },
+      "daemons": [
+        "docker.service",
+        "sshd.service",
+        "wg-quick@wg0.service"
+      ]
     },
     {
       "name": "oci-A1-f_0",
@@ -154,15 +168,22 @@
       "actions": {
         "ssh": {
           "stop": "ssh oci-apps sudo systemctl poweroff",
-          "restart": "ssh oci-apps sudo systemctl reboot"
+          "restart": "ssh oci-apps sudo systemctl reboot",
+          "reboot-forced": "ssh oci-apps sudo systemctl reboot --force --force"
         },
         "console": {
           "start": "oci compute instance action --action START --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
           "stop": "oci compute instance action --action STOP --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
           "restart": "oci compute instance action --action SOFTRESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
-          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
+          "reset": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva",
+          "reboot-forced": "oci compute instance action --action RESET --instance-id ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
         }
-      }
+      },
+      "daemons": [
+        "docker.service",
+        "sshd.service",
+        "wg-quick@wg0.service"
+      ]
     },
     {
       "name": "gcp-E2-f_0",
@@ -235,15 +256,22 @@
       "actions": {
         "ssh": {
           "stop": "ssh gcp-proxy sudo systemctl poweroff",
-          "restart": "ssh gcp-proxy sudo systemctl reboot"
+          "restart": "ssh gcp-proxy sudo systemctl reboot",
+          "reboot-forced": "ssh gcp-proxy sudo systemctl reboot --force --force"
         },
         "console": {
           "start": "gcloud compute instances start projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a",
           "stop": "gcloud compute instances stop projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a",
           "restart": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a",
-          "reset": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a"
+          "reset": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a",
+          "reboot-forced": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-proxy --zone us-central1-a"
         }
-      }
+      },
+      "daemons": [
+        "docker.service",
+        "sshd.service",
+        "wg-quick@wg0.service"
+      ]
     },
     {
       "name": "vast-RTX-p_0",
@@ -266,10 +294,15 @@
       "actions": {
         "ssh": {
           "stop": "ssh vast-ollama sudo systemctl poweroff",
-          "restart": "ssh vast-ollama sudo systemctl reboot"
+          "restart": "ssh vast-ollama sudo systemctl reboot",
+          "reboot-forced": "ssh vast-ollama sudo systemctl reboot --force --force"
         },
         "console": {}
-      }
+      },
+      "daemons": [
+        "sshd.service",
+        "wg-quick@wg0.service"
+      ]
     }
   ],
   "firewall": {

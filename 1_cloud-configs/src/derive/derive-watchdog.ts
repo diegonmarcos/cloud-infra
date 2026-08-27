@@ -62,6 +62,11 @@ function actions(name: string, vm: any) {
   const ssh: Record<string, string> = {
     stop:    `ssh ${alias} sudo systemctl poweroff`,
     restart: `ssh ${alias} sudo systemctl reboot`,
+    // --force --force is systemd's "do not unmount, do not sync, go now".
+    // It exists here because the machine you need to reboot is usually the
+    // one where a clean reboot is what hung. Named the same as the console
+    // verb below so the UI never has to translate.
+    'reboot-forced': `ssh ${alias} sudo systemctl reboot --force --force`,
   };
 
   const console_: Record<string, string> = {};
@@ -75,7 +80,22 @@ function actions(name: string, vm: any) {
     console_.restart = `gcloud compute instances reset ${id} --zone ${zone}`;
     console_.reset   = console_.restart;
   }
+  // The console's hard reset under the name the ssh side uses, so a UI can
+  // offer one vocabulary for both paths instead of two.
+  if (console_.reset) console_['reboot-forced'] = console_.reset;
   return { ssh, console: console_ };
+}
+
+/// The daemons worth being able to stop and start from a dashboard.
+///
+/// Declared here rather than hardcoded in the panel for the usual reason: the
+/// day a machine stops running docker, the list that says so is the one the
+/// deployment already maintains, not one compiled into a TUI.
+function daemons(declared: string[]): string[] {
+  const out = ['sshd.service', 'wg-quick@wg0.service'];
+  // Every machine that hosts a declared service hosts it in a container.
+  if (declared.length) out.unshift('docker.service');
+  return out;
 }
 
 // ── declared containers, per machine ──────────────────────────────────────
@@ -128,6 +148,7 @@ const machines = Object.entries(j.vms ?? {}).map(([name, vm]: [string, any]) => 
   description: vm.description ?? '',
   declared: declaredFor(name, cats),
   actions: actions(name, vm),
+  daemons: daemons(declaredFor(name, cats)),
 }));
 
 // ── firewall ──────────────────────────────────────────────────────────────
