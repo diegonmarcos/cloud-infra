@@ -162,6 +162,10 @@ jobs:
       repos: ${{ steps.repos.outputs.repos }}
     steps:
       - uses: actions/checkout@v4
+      - name: Init submodules (a_solutions)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
       - name: Validate phase input
         run: |
           case "${{ inputs.phase }}" in
@@ -224,6 +228,10 @@ jobs:
         repo: ${{ fromJson(needs.repos.outputs.repos) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Init submodules (a_solutions)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
       - name: Fresh per-repo octocode home
         # Must end in /octocode: cloud-cgc-db-update.sh's per-repo mode exports
         # XDG_DATA_HOME as this path's PARENT so octocode 0.12.2's own
@@ -322,6 +330,10 @@ jobs:
       CGC_BOOTSTRAP_TOLERANT: "1"
     steps:
       - uses: actions/checkout@v4
+      - name: Init submodules (a_solutions)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
       - name: WireGuard up
         continue-on-error: true
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
