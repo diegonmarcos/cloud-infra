@@ -306,8 +306,7 @@ cloud/
 │   ├── ship-gen-configs.yml      Regenerate cloud-data configs
 │   ├── ship-home-manager.yml     Deploy home-manager to all VMs
 │   ├── ship-terraform.yml        Apply Terraform changes
-│   ├── health.yml                Health check workflow
-│   └── sync-submodules.yml       Auto-sync submodules
+│   └── health.yml                Health check workflow
 │
 ├── config.json                   Master config (topology + service registry)
 ├── build.sh                      Repo-level build entry point
@@ -410,7 +409,6 @@ Unified ship workflow (`ship.yml`) replaces per-VM workflows:
 | `ship-home-manager.yml` | `b_infra/` | all VMs |
 | `ship-terraform.yml` | `c_vps/ba-clo_cloudflare/` | Cloudflare DNS |
 | `health.yml` | scheduled / manual | Health checks |
-| `sync-submodules.yml` | scheduled / manual | Submodule sync |
 
 All workflows: `cachix/install-nix-action` + SSH key + SOPS age key → `build.sh ship`.
 Services with Docker images use `REMOTE_BUILD=true` (builds on target VM, avoids cross-compilation).
