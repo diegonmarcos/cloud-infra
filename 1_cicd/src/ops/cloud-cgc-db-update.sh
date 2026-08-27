@@ -1053,7 +1053,7 @@ for r in $REPOS; do
   # front is what actually makes the "never killed mid-repo" invariant above true.
   # A repo_timeout_min of 0 (no per-repo timeout) reserves nothing and keeps the old gate.
   # ADAPTIVE RESERVE. A FIXED reserve deadlocks: it must be large enough for the slowest
-  # repo to finish (cloud-unix needs ~200m+ at measured throughput) yet small enough that a
+  # repo to finish (cloud-infra-desktop needs ~200m+ at measured throughput) yet small enough that a
   # repo is still admitted late in the run — and those cannot both hold, because admission
   # requires elapsed + reserve <= max_minutes. With reserve=180 nothing is admitted after
   # 120m; raise it so the giants fit and they are never admitted at all, since the small

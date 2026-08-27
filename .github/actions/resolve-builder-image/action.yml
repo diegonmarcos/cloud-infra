@@ -33,14 +33,14 @@ description: "Read the canonical cloud-builder-x image ref from the unix repo's 
 #       absent on a runner no matter what checkout does. Renaming the path in
 #       here would have fixed nothing.
 #     - The only submodule left is `cloud`, a read-only fleet INDEX that carries
-#       relative symlinks (cloud-unix -> ../cloud-unix). Those dangle by design
-#       inside a submodule checkout, so `cloud/cloud-unix/...` is empty in CI.
+#       relative symlinks (cloud-infra-desktop -> ../cloud-infra-desktop). Those dangle by design
+#       inside a submodule checkout, so `cloud/cloud-infra-desktop/...` is empty in CI.
 #
 #   So there was no on-runner path to the master at all, and every workflow
 #   died here at "Resolve builder image".
 #
-#   Fix: keep the file canonical in cloud-unix (do NOT copy it here — that is
-#   exactly the drift this action exists to prevent) and FETCH it. cloud-unix is
+#   Fix: keep the file canonical in cloud-infra-desktop (do NOT copy it here — that is
+#   exactly the drift this action exists to prevent) and FETCH it. cloud-infra-desktop is
 #   PUBLIC, so this needs no credential, no submodule and no extra checkout step
 #   in the eight workflows that call this. A local checkout, when one happens to
 #   exist, still wins so local/act runs stay offline-capable.
@@ -57,7 +57,7 @@ inputs:
   source_repo:
     description: "owner/repo holding the canonical builder build.json. Public, so no token is used."
     required: false
-    default: "diegonmarcos/cloud-unix"
+    default: "diegonmarcos/cloud-infra-desktop"
   source_ref:
     description: "Git ref to read the master from."
     required: false
@@ -94,8 +94,8 @@ runs:
         master=""
         for c in \
           "$GITHUB_WORKSPACE/III_unix/$SOURCE_PATH" \
-          "$GITHUB_WORKSPACE/cloud/cloud-unix/$SOURCE_PATH" \
-          "$GITHUB_WORKSPACE/../cloud-unix/$SOURCE_PATH"
+          "$GITHUB_WORKSPACE/cloud/cloud-infra-desktop/$SOURCE_PATH" \
+          "$GITHUB_WORKSPACE/../cloud-infra-desktop/$SOURCE_PATH"
         do
           if [ -f "$c" ]; then master="$c"; break; fi
         done

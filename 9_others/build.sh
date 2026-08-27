@@ -272,8 +272,31 @@ do_deploy() {
             fi
         done
         git -C "$REPO_ROOT" submodule sync 2>/dev/null || true
-        git -C "$REPO_ROOT" submodule update --init 2>&1 | while IFS= read -r line; do
-            log "  submodule: $line"
+        # `submodule update` force-checks-out EVERY submodule to the gitlink the
+        # parent recorded. On a read-only submodule that is the whole point. On an
+        # authored one (`writable = true`) it is silent data loss: a commit made
+        # inside the submodule is yanked back to whatever SHA the parent last
+        # recorded, leaving a detached HEAD on a stale commit. Hit for real on
+        # a_solutions 2026-08-27 — build.sh reset it from 9f431b0a to 3bd6b3fd in
+        # the same breath as printing "writable, read-only hook removed", because
+        # `writable` governed the hook but not the checkout.
+        #
+        # So writable submodules are INITIALISED but never re-checked-out: an
+        # empty worktree still gets cloned, so a cold clone.sh works exactly as
+        # before, and an existing one keeps whatever HEAD its author left it on.
+        # Keep in sync with 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh —
+        # this bootstrap must stand alone, so the logic is duplicated.
+        git -C "$REPO_ROOT" config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | while read -r _key _path; do
+            [ -n "$_path" ] || continue
+            _sm_name="${_key#submodule.}"; _sm_name="${_sm_name%.path}"
+            if [ "$(git -C "$REPO_ROOT" config --file .gitmodules --get "submodule.${_sm_name}.writable" 2>/dev/null)" = "true" ] \
+               && { [ -d "$REPO_ROOT/$_path/.git" ] || [ -f "$REPO_ROOT/$_path/.git" ]; }; then
+                ok "submodule '$_sm_name' → writable and already checked out; leaving its HEAD where its author left it"
+                continue
+            fi
+            git -C "$REPO_ROOT" submodule update --init -- "$_path" 2>&1 | while IFS= read -r line; do
+                log "  submodule: $line"
+            done
         done
         ok "submodules synced"
 
