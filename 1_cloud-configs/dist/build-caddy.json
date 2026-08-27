@@ -433,7 +433,7 @@
       "paths": [
         {
           "base_path": "/matomo",
-          "upstream": "10.0.0.6:8084",
+          "upstream": "10.0.0.6:8080",
           "comment": "Matomo hybrid analytics (oci-apps)"
         },
         {
@@ -597,7 +597,7 @@
     "analytics": {
       "domain": "analytics.diegonmarcos.com/matomo",
       "comment": "Matomo (public tracking + protected admin) + Umami (path-based)",
-      "matomo_upstream": "10.0.0.6:8084",
+      "matomo_upstream": "10.0.0.6:8080",
       "umami_upstream": "10.0.0.4:3006",
       "public_tracking_paths": [
         "/matomo/matomo.js",
@@ -687,7 +687,7 @@
     },
     {
       "service": "matomo.app",
-      "upstream": "10.0.0.6:8084"
+      "upstream": "10.0.0.6:8080"
     },
     {
       "service": "ntfy.app",
@@ -1178,7 +1178,7 @@
     {
       "kind": "redirect",
       "service": "matomo-hybrid.app",
-      "redirect_to": "https://matomo-hybrid-http-8084.app",
+      "redirect_to": "https://matomo-hybrid-http-8080.app",
       "container": "matomo-hybrid",
       "container_key": "app",
       "svc": "matomo",
@@ -1186,14 +1186,14 @@
     },
     {
       "kind": "canonical",
-      "service": "matomo-hybrid-http-8084.app",
+      "service": "matomo-hybrid-http-8080.app",
       "container": "matomo-hybrid",
       "container_key": "app",
       "svc": "matomo",
       "vm": "oci-A1-f_0",
-      "port": 8084,
+      "port": 8080,
       "protocol": "http",
-      "upstream": "10.0.0.6:8084",
+      "upstream": "10.0.0.6:8080",
       "source": "containers.app.port"
     },
     {
@@ -2395,7 +2395,7 @@
     {
       "host": "analytics.diegonmarcos.com",
       "path": "/matomo",
-      "upstream": "10.0.0.6:8084",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2647,7 +2647,7 @@
     {
       "host": "matomo.app",
       "path": null,
-      "upstream": "10.0.0.6:8084",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3097,9 +3097,9 @@
       "notes": null
     },
     {
-      "host": "matomo-hybrid-http-8084.app",
+      "host": "matomo-hybrid-http-8080.app",
       "path": null,
-      "upstream": "10.0.0.6:8084",
+      "upstream": "10.0.0.6:8080",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
