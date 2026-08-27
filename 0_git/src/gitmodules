@@ -14,6 +14,19 @@
 
 [submodule "I_cloud"]
 	path = I_cloud
-	url = https://github.com/diegonmarcos/cloud.git
+	url = git@github.com:diegonmarcos/cloud.git
 	shallow = true
 	ignore = all
+
+# 2026-08-27: a_solutions split out to cloud-u-containers and mounted back at
+# its original path, so the ~400 in-repo references and the ten workflows that
+# read a_solutions/*/build.json keep resolving unchanged.
+#
+# `writable = true` opts this one out of the read-only pre-commit hook: unlike
+# the fleet index, this tree is authored in place. Full clone (no shallow) —
+# the ship engine walks history for per-service change detection.
+
+[submodule "a_solutions"]
+	path = a_solutions
+	url = git@github.com:diegonmarcos/cloud-u-containers.git
+	writable = true
