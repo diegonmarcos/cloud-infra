@@ -4,7 +4,7 @@
 # vm-pilot implemented "a web server and a watchdog" itself: busybox httpd on
 # 7680 serving symlinked directories, and a data-publisher timer writing
 # containers.json every five minutes. Both jobs now belong to products of their
-# own in cloud-unix — my-webserver and my-watchdog — for the same reason the
+# own in cloud-u-linux — my-webserver and my-watchdog — for the same reason the
 # sampler left my-konsole: the coupling was never more than a file path, and
 # owning a second implementation of somebody else's job is how the two drift.
 #
@@ -29,7 +29,9 @@
 { config, pkgs, lib, ... }:
 
 let
-  repo = "diegonmarcos/cloud-unix";
+  # 2026-08-27: my-webserver and my-watchdog moved to cloud-u-linux in the d*
+  # split, so their rolling releases are published there now.
+  repo = "diegonmarcos/cloud-u-linux";
   webPort = 8000;
 
   # Bind to the MESH address only, resolved at start.

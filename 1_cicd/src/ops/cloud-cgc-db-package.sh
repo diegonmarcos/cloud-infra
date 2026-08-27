@@ -439,7 +439,7 @@ visibility_monolith() { # $1=PKG
   fi
 }
 
-# PUSH RETRY (ITEM 4). cloud-android died on run 32574580997 mid-run: a
+# PUSH RETRY (ITEM 4). cloud-u-android died on run 32574580997 mid-run: a
 # transient `docker push` failure AFTER a perfect index+package, no retry, so
 # a checkpoint that had done all the real (expensive) work was thrown away
 # over a flaky network blip. 3 attempts, short linear backoff (5s, 10s)
