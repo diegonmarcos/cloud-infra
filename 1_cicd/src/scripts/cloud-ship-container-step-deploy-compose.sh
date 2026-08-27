@@ -203,6 +203,32 @@ step_compose() {
     EVICT_PORTS=""
     _hostbinds="$(grep -oE '"[0-9][0-9.]*:[0-9]+:[0-9]+"' "$COMPOSE_FILE" 2>/dev/null \
         | tr -d '"' | sed 's/:[0-9]*$//' | sort -u | tr '\n' ' ' || true)"
+
+    # ...and the blind spot in the above: it reads bindings off the RENDERED
+    # compose, so a service on network_mode:host declares none and _hostbinds
+    # comes back empty — even though the app still binds its port on the VM.
+    # That is precisely the case this eviction exists for, and precisely the
+    # case it missed. c3-services-mcp -> cloud-services-mcp switched to
+    # network_mode:host in the same change as the rename, so the predecessor
+    # kept 10.0.0.6:3101, the new container died on bind, and health saw an
+    # empty `docker compose ps` for 46h. The fix already in the tree could not
+    # have fired: there was nothing in the compose file to grep.
+    #
+    # So for host-network composes, take the port from build.json instead and
+    # match it port-only (":3101->" against docker's HOSTIP:HOSTPORT->CPORT).
+    # ONLY .ports.app, deliberately: the other keys are container-internal
+    # (chat-mattermost declares db:5432, api:8080) and a port-only match on
+    # those would reap an unrelated service that legitimately publishes them.
+    # .ports.app is the one the fleet allocates uniquely per service, so
+    # anything else holding it is by definition a stale predecessor.
+    if grep -q '"network_mode":"host"' "$COMPOSE_FILE" 2>/dev/null; then
+        _appport="$(jq -r '.ports.app // empty' "$SERVICE_DIR/build.json" 2>/dev/null)"
+        case "$_appport" in
+            ''|*[!0-9]*) ;;
+            *) _hostbinds="$(printf '%s :%s' "$_hostbinds" "$_appport" | tr ' ' '\n' \
+                   | grep -v '^$' | sort -u | tr '\n' ' ')" ;;
+        esac
+    fi
     [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
 
     if [ "$COMPOSE_CUSTOM" = "true" ]; then
