@@ -167,9 +167,9 @@
       "container_key": "db",
       "type": "postgres",
       "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
+      "vm": "oci-E2-f_1",
+      "vm_alias": "oci-analytics",
+      "wg_ip": "10.0.0.4",
       "image": "postgres:16-alpine",
       "port": 5442,
       "dns": "umami-db.app",
@@ -188,7 +188,7 @@
         }
       },
       "backup": true,
-      "connection": "postgresql://umami@10.0.0.6:5442/umami"
+      "connection": "postgresql://umami@10.0.0.4:5442/umami"
     },
     {
       "service": "authelia",
@@ -909,9 +909,9 @@
         "container_key": "db",
         "type": "postgres",
         "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
+        "vm": "oci-E2-f_1",
+        "vm_alias": "oci-analytics",
+        "wg_ip": "10.0.0.4",
         "image": "postgres:16-alpine",
         "port": 5442,
         "dns": "umami-db.app",
@@ -930,7 +930,7 @@
           }
         },
         "backup": true,
-        "connection": "postgresql://umami@10.0.0.6:5442/umami"
+        "connection": "postgresql://umami@10.0.0.4:5442/umami"
       },
       {
         "service": "chat-mattermost",
@@ -1256,35 +1256,6 @@
           "backup": false
         },
         {
-          "service": "umami",
-          "container": "umami-db",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5442,
-          "dns": "umami-db.app",
-          "user": "umami",
-          "db": "umami",
-          "healthcheck": "pg_isready -U umami",
-          "volumes": [
-            "umami_db_data:/var/lib/postgresql/data"
-          ],
-          "resources": {
-            "limits": {
-              "memory": "512M"
-            },
-            "reservations": {
-              "memory": "128M"
-            }
-          },
-          "backup": true,
-          "connection": "postgresql://umami@10.0.0.6:5442/umami"
-        },
-        {
           "service": "kg-store",
           "container": "kg-store",
           "container_key": "app",
@@ -1594,6 +1565,41 @@
           "resources": null,
           "backup": true,
           "connection": "redis://10.0.0.1:6380"
+        }
+      ]
+    },
+    "oci-analytics": {
+      "wg_ip": "10.0.0.4",
+      "user": "ubuntu",
+      "databases": [
+        {
+          "service": "umami",
+          "container": "umami-db",
+          "container_key": "db",
+          "type": "postgres",
+          "enabled": true,
+          "vm": "oci-E2-f_1",
+          "vm_alias": "oci-analytics",
+          "wg_ip": "10.0.0.4",
+          "image": "postgres:16-alpine",
+          "port": 5442,
+          "dns": "umami-db.app",
+          "user": "umami",
+          "db": "umami",
+          "healthcheck": "pg_isready -U umami",
+          "volumes": [
+            "umami_db_data:/var/lib/postgresql/data"
+          ],
+          "resources": {
+            "limits": {
+              "memory": "512M"
+            },
+            "reservations": {
+              "memory": "128M"
+            }
+          },
+          "backup": true,
+          "connection": "postgresql://umami@10.0.0.4:5442/umami"
         }
       ]
     },

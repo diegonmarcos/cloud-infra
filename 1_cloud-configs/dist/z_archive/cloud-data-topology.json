@@ -53,6 +53,9 @@
         "alerts-api",
         "c3-public-api",
         "unbound-dns64",
+        "umami",
+        "umami-db",
+        "umami-setup",
         "caddy-public"
       ],
       "ports": [],
@@ -101,9 +104,6 @@
         "rss-gateway",
         "github-rss",
         "openobserve",
-        "umami",
-        "umami-db",
-        "umami-setup",
         "crowdsec",
         "claude-superset-api",
         "cloud-cgc-pub-mcp",
@@ -701,19 +701,19 @@
       {
         "name": "umami.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.4",
         "service": "umami"
       },
       {
         "name": "umami-db.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.4",
         "service": "umami"
       },
       {
         "name": "umami-setup.app",
         "type": "A",
-        "value": "10.0.0.6",
+        "value": "10.0.0.4",
         "service": "umami"
       },
       {
@@ -3152,13 +3152,13 @@
     },
     "umami": {
       "category": "tools",
-      "vm": "oci-A1-f_0",
+      "vm": "oci-E2-f_1",
       "folder": "infra-obs_umami",
       "description": "Umami Analytics - lightweight privacy-focused web analytics",
       "domain": "analytics.diegonmarcos.com",
       "port": 3006,
       "dns": "umami.app",
-      "upstream": "10.0.0.6:3006",
+      "upstream": "10.0.0.4:3006",
       "containers": {
         "app": {
           "container_name": "umami",
@@ -3172,7 +3172,7 @@
             "base_path": "/umami",
             "auth": "two_factor"
           },
-          "healthcheck": "curl -sf http://localhost:3000/api/heartbeat || exit 1",
+          "healthcheck": "curl -sf http://localhost:3006/api/heartbeat || exit 1",
           "monitoring": {
             "tls_check": true
           },
