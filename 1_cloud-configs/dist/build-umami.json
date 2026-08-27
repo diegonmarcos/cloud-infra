@@ -39,7 +39,7 @@
       "base_path": "/umami",
       "auth": "two_factor"
     },
-    "healthcheck": "curl -sf http://localhost:3000/api/heartbeat || exit 1",
+    "healthcheck": "curl -sf http://localhost:3006/api/heartbeat || exit 1",
     "monitoring": {
       "tls_check": true
     },
@@ -61,7 +61,7 @@
   },
   "service": "umami",
   "role": "app",
-  "vm": "oci-apps",
+  "vm": "oci-analytics",
   "services": {
     "alerts-api": {
       "ip": "10.0.0.4",
@@ -719,13 +719,13 @@
       }
     },
     "umami": {
-      "ip": "10.0.0.6",
+      "ip": "10.0.0.4",
       "ports": {
         "app": 3006,
         "db": 5442
       },
-      "vm": "oci-apps",
-      "healthcheck": "curl -sf http://localhost:3000/api/heartbeat || exit 1",
+      "vm": "oci-analytics",
+      "healthcheck": "curl -sf http://localhost:3006/api/heartbeat || exit 1",
       "domain": "analytics.diegonmarcos.com",
       "description": "Umami Analytics - lightweight privacy-focused web analytics",
       "api": {
