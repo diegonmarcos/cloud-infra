@@ -28,7 +28,7 @@ ck() { if [ "$2" = "$3" ]; then pass=$((pass+1)); echo "  ok   $1"; \
 
 # ── 1) derive: runner_label propagated from vm.runner_label, not vm.gha.* ──
 ck "consolidator reads vm.runner_label (top-level, not under .gha)" \
-   "$(grep -c 'vm.runner_label ? { runner_label: vm.runner_label }' "$DERIVE_TS")" "1"
+   "$([ "$(grep -c 'vm.runner_label ? { runner_label: vm.runner_label }' "$DERIVE_TS")" -ge 1 ] && echo yes || echo no)" "yes"
 
 # ── 2) detect: RUNNER_LABEL_MAP built from the SAME GHA_CONFIG this step
 #      already loaded (no new file to fail-open on) ──

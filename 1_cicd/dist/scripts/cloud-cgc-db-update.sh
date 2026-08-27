@@ -1042,7 +1042,7 @@ for r in $REPOS; do
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
 
   # GRAPHRAG SKIP (data-driven, .runtime.octocode.graphrag_skip — no hardcoded names
-  # here). Pure prose/text corpora (e.g. cloud-my-ai_memory) have no code semantics to
+  # here). Pure prose/text corpora (e.g. cloud-data-my-ai-memory) have no code semantics to
   # relate, so the GraphRAG LLM relationship pass is real per-node LLM cost for zero
   # graph nodes. Only the graphrag phase (USE_LLM=true) skips these repos — structural/
   # FastEmbed indexing (the semantic phase, USE_LLM=false) still runs normally for them,
@@ -1120,7 +1120,7 @@ for r in $REPOS; do
   fi
   # PER-REPO noindex extension (data-driven, .runtime.octocode.noindex_extra keyed by
   # local repo name — no hardcoded paths here). Layered on top of the global base above,
-  # for content only ONE repo needs excluded (e.g. cloud-my-ai_memory's a_sessions/ and
+  # for content only ONE repo needs excluded (e.g. cloud-data-my-ai-memory's a_sessions/ and
   # a_commits/ — see build.json's _noindex_extra_comment for why).
   NOINDEX_EXTRA=$(jq -r --arg r "$r" '((.runtime.octocode.noindex_extra // {})[$r] // []) | .[]' "$BJ" 2>/dev/null)
   if [ -n "$NOINDEX_EXTRA" ]; then

@@ -30,7 +30,7 @@
     {
       "name": "repo-map",
       "script": "src/derive/derive-repo-map.ts",
-      "doc": "ONE source of truth for local_dir -> github_repo: cloud/repos.json. Stamps cloud-cgc-pub-mcp build.json .runtime.octocode.repo_map (scoped to index_repos) and the ops_git-sync.yaml REPO_MAP that mirrors it. That DAG is the single writer of the octocode_repos volume; its hand-copied map went stale across the cloud-* rename (cloud:cloud cloned the symlink index repo, not cloud-infra; front-data was missing). Fails the build on an index_repos entry that is undeclared in the registry, or on one excluded from the shared volume (cloud-vault)."
+      "doc": "ONE source of truth for local_dir -> github_repo: I_cloud/repos.json. Stamps cloud-cgc-pub-mcp build.json .runtime.octocode.repo_map (scoped to index_repos) and the ops_git-sync.yaml REPO_MAP that mirrors it. That DAG is the single writer of the octocode_repos volume; its hand-copied map went stale across the cloud-* rename (cloud:cloud cloned the symlink index repo, not cloud-infra; front-data was missing). Fails the build on an index_repos entry that is undeclared in the registry, or on one excluded from the shared volume (cloud-vault)."
     }
   ]
 }

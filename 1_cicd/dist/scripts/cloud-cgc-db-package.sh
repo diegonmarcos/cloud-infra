@@ -253,7 +253,7 @@ resolve_repo_desired_visibility() { # $1=PKG (for error msg) $2=LOCAL_NAME
 # a private repo's embedded source inside it, for as long as the push + the API
 # round-trip took. Deleting it afterwards limits the damage; it does not prevent
 # it. That window has opened on every single run for cloud-data and
-# my-ai_memory, because GHCR creates a NEW package with the visibility of the
+# cloud-data-my-ai-memory, because GHCR creates a NEW package with the visibility of the
 # pushing context (cloud-infra, public) -- the org.opencontainers.image.source
 # LABEL auto-link does not reliably win the race at creation time, which is what
 # the PAT was expected to fix and did not.
