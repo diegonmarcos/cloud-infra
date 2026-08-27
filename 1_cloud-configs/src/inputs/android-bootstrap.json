@@ -1,0 +1,110 @@
+{
+  "_doc": "Android bootstrap manifest. Solves the chicken-and-egg in the Constellation store: the fleet list is baked into the APK at build time (BuildConfig.CONSTELLATION_FLEET_B64), so a newly added app only becomes visible AFTER SuperApp itself has been updated. A phone with no SuperApp, or an old one, has no way to discover the current build. This file is the entry point that does not require an app to already be installed.\n\nHOW TO UPDATE: bump superapp.version when a new SuperApp ships. Nothing else needs editing — every URL is built as release_base + '/' + asset, so the repo name lives in exactly ONE place and cannot drift per-app the way the 1484 hardcoded cloud-unix links in front/cloud-mobile did.\n\napps[] is generated from cloud-android's constellation-fleet.json (top-level apps only, kind != lib; the 33 library APKs are pulled by the updater over GHCR and are not user-installable entry points).",
+  "_source": "cloud-android/aa_cloud-superapp/data/constellation-fleet.json",
+  "release_base": "https://github.com/diegonmarcos/cloud-android/releases/latest/download",
+  "registry": {
+    "_doc": "Updates themselves resolve over GHCR, not these URLs. GHCR packages are owner-scoped so they were unaffected by the cloud-unix -> cloud-android move; these links are the INSTALL path only.",
+    "host": "ghcr.io",
+    "namespace": "diegonmarcos"
+  },
+  "superapp": {
+    "id": "superapp",
+    "asset": "Cloud-SuperApp.apk",
+    "package": "com.diegonmarcos.superapp",
+    "image": "cloud-superapp",
+    "version": "0.1.1-dev",
+    "_doc": "The one entry a fresh device needs. Install this, and the baked fleet takes over."
+  },
+  "apps": [
+    {
+      "id": "browser",
+      "asset": "Cloud-Browser.apk",
+      "package": "com.diegonmarcos.cloudbrowser",
+      "image": "cloud-browser"
+    },
+    {
+      "id": "calendar",
+      "asset": "Cloud-Calendar.apk",
+      "package": "com.diegonmarcos.cloudcalendar",
+      "image": "cloud-calendar"
+    },
+    {
+      "id": "chat",
+      "asset": "cloud-comms-chat.apk",
+      "package": "com.diegonmarcos.comms.chat",
+      "image": "cloud-comms-chat"
+    },
+    {
+      "id": "contacts",
+      "asset": "Cloud-Contacts.apk",
+      "package": "com.diegonmarcos.cloudcontacts",
+      "image": "cloud-contacts"
+    },
+    {
+      "id": "dialer",
+      "asset": "cloud-comms-dialer.apk",
+      "package": "com.diegonmarcos.comms.dialer",
+      "image": "cloud-comms-dialer"
+    },
+    {
+      "id": "ide",
+      "asset": "Cloud-IDE-Hub.apk",
+      "package": "com.diegonmarcos.ide",
+      "image": "cloud-ide-hub"
+    },
+    {
+      "id": "keyboard",
+      "asset": "Cloud-Keyboard.apk",
+      "package": "com.diegonmarcos.cloudkeyboard",
+      "image": "cloud-keyboard"
+    },
+    {
+      "id": "mail",
+      "asset": "cloud-comms-mail.apk",
+      "package": "com.diegonmarcos.comms.mail",
+      "image": "cloud-comms-mail"
+    },
+    {
+      "id": "matrix",
+      "asset": "cloud-comms-matrix.apk",
+      "package": "com.diegonmarcos.comms.matrix",
+      "image": "cloud-comms-matrix"
+    },
+    {
+      "id": "media-center",
+      "asset": "cloud-media-center.apk",
+      "package": "com.diegonmarcos.mediacenter",
+      "image": "cloud-media-center"
+    },
+    {
+      "id": "nav",
+      "asset": "Cloud-Nav.apk",
+      "package": "com.diegonmarcos.cloudnav",
+      "image": "cloud-nav"
+    },
+    {
+      "id": "news",
+      "asset": "Cloud-News.apk",
+      "package": "com.diegonmarcos.cloudnews",
+      "image": "cloud-news"
+    },
+    {
+      "id": "superapp",
+      "asset": "Cloud-SuperApp.apk",
+      "package": "com.diegonmarcos.superapp",
+      "image": "cloud-superapp"
+    },
+    {
+      "id": "vault",
+      "asset": "Cloud-Vault.apk",
+      "package": "com.diegonmarcos.cloudvault",
+      "image": "cloud-vault"
+    },
+    {
+      "id": "wallet",
+      "asset": "Cloud-Wallet.apk",
+      "package": "com.diegonmarcos.cloudwallet",
+      "image": "cloud-wallet"
+    }
+  ]
+}

@@ -202,7 +202,7 @@ out=$(gate_repo_push cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
 { [ "$rc" -eq 0 ] && echo "$out" | grep -q "pushing" && ! echo "$out" | grep -qE "::error::|::warning::"; } \
   && ok "gate: private repo + existing PRIVATE pkg -> push allowed" || bad "case H: rc=$rc out=[$out]"
 
-# The case that matters: cloud-data / my-ai_memory with no package yet. Whether
+# The case that matters: cloud-data / cloud-data-my-ai-memory with no package yet. Whether
 # a push is safe here depends ENTIRELY on which token pushes.
 : > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=absent; unset CGC_GHCR_PAT
 out=$(gate_repo_push cgc-db-cloud-data cloud-infra 2>&1); rc=$?
