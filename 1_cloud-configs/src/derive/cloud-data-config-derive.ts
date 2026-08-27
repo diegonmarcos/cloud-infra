@@ -696,6 +696,12 @@ function deriveCaddy(c: any): DerivedFile[] {
   // analytics (matomo + umami)
   const matomoSvc = services["matomo"];
   const umamiSvc = services["umami"];
+  // A service's public (unauthenticated) paths, as IT declares them.
+  const publicPathsOf = (svc: any): string[] =>
+    Object.entries(svc?.proxy?.primary?.paths ?? {})
+      .filter(([, v]: [string, any]) => v?.auth === "public")
+      .map(([k]) => k);
+
   if (matomoSvc) {
     const matomoUp = rewriteUpstreamForCaddy(matomoSvc.vm, matomoSvc.upstream);
     const umamiUp = umamiSvc ? rewriteUpstreamForCaddy(umamiSvc.vm, umamiSvc.upstream) : undefined;
@@ -704,8 +710,14 @@ function deriveCaddy(c: any): DerivedFile[] {
       comment: "Matomo (public tracking + protected admin) + Umami (path-based)",
       matomo_upstream: matomoUp,
       ...(umamiUp ? { umami_upstream: umamiUp } : {}),
-      public_tracking_paths: ["/matomo.js", "/matomo.php", "/piwik.js", "/piwik.php", "/collect.php", "/api.php", "/track.php", "/js/*"],
-      ...(umamiSvc ? { umami_public_paths: ["/umami/script.js", "/umami/api/send"] } : {}),
+      // Read from each service's own declared paths (auth: "public") rather than
+      // a list hardcoded here. These MUST carry the service's base_path: the
+      // generator emits them as `handle <path>` verbatim under the parent
+      // domain, so a bare "/matomo.php" produced a ROOT handle that never
+      // matched analytics.diegonmarcos.com/matomo/matomo.php — the real URL
+      // fell through to forward_auth and matomo tracking was silently dead.
+      public_tracking_paths: publicPathsOf(matomoSvc),
+      ...(umamiSvc ? { umami_public_paths: publicPathsOf(umamiSvc) } : {}),
     };
   }
 
