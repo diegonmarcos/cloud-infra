@@ -131,10 +131,22 @@ assert_no_forced_gitignored
 if [ -f .gitmodules ]; then
   SUBMODULE_PATHS=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null | awk '{print $2}')
 
+  # A submodule declared `writable = true` in .gitmodules is authored in place,
+  # not merely consumed. Its gitlink has to be bumpable from the parent and its
+  # worktree holds real work, so both enforcements below skip it. Read-only
+  # submodules keep the silent-unstage / auto-nuke contract unchanged.
+  _sm_is_writable() {
+    _w_nm=$(git config --file .gitmodules --get-regexp 'submodule\..*\.path' 2>/dev/null \
+      | awk -v p="$1" '$2==p{sub(/^submodule\./,"",$1); sub(/\.path$/,"",$1); print $1; exit}')
+    [ -n "$_w_nm" ] || return 1
+    [ "$(git config --file .gitmodules --get "submodule.${_w_nm}.writable" 2>/dev/null)" = "true" ]
+  }
+
   # (a) Silently auto-unstage submodule paths
   if [ -n "$SUBMODULE_PATHS" ]; then
     while IFS= read -r _sm_path; do
       [ -n "$_sm_path" ] || continue
+      _sm_is_writable "$_sm_path" && continue
       while IFS= read -r f; do
         [ -n "$f" ] || continue
         case "$f" in
@@ -155,6 +167,7 @@ if [ -f .gitmodules ]; then
     NUKE="$(git rev-parse --show-toplevel 2>/dev/null)/1_cicd/dist/scripts/cloud-git-nuke.sh"
     while IFS= read -r _sm_path; do
       [ -n "$_sm_path" ] || continue
+      _sm_is_writable "$_sm_path" && continue
       [ -d "$_sm_path/.git" ] || [ -f "$_sm_path/.git" ] || continue
       # sm_git unsets GIT_INDEX_FILE etc — see helper at top of hook.
       _dirty=$(sm_git -C "$_sm_path" status --porcelain 2>/dev/null | head -1)
