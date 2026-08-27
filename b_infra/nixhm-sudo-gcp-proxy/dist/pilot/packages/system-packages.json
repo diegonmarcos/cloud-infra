@@ -1,13 +1,33 @@
 {
+  "_generated": {
+    "warning": "DO NOT EDIT — generated file, not a source of truth",
+    "source": "cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/packages/system-packages.json",
+    "engine": "1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh",
+    "rebuild": "./9_others/build.sh"
+  },
   "_doc": "Single source of truth: every package has a group, every group has a slice. No orphans.",
   "slices": {
     "kernel": {
       "description": "Bare minimum for Linux to function — never touch",
       "service_patterns": [
-        "systemd-", "dbus", "dbus-broker", "init.scope",
-        "mount", "swap", "fsck", "lvm2", "dm-event", "blk-availability",
-        "getty@", "serial-getty@", "user@", "user-runtime-dir@",
-        "NetworkManager", "dhclient", "chrony", "ntp"
+        "systemd-",
+        "dbus",
+        "dbus-broker",
+        "init.scope",
+        "mount",
+        "swap",
+        "fsck",
+        "lvm2",
+        "dm-event",
+        "blk-availability",
+        "getty@",
+        "serial-getty@",
+        "user@",
+        "user-runtime-dir@",
+        "NetworkManager",
+        "dhclient",
+        "chrony",
+        "ntp"
       ]
     },
     "os-essentials": {
@@ -22,42 +42,82 @@
   "groups": {
     "connectivity": {
       "slice": "os-essentials",
-      "scheduling": { "policy": "fifo", "priority": 1 },
+      "scheduling": {
+        "policy": "fifo",
+        "priority": 1
+      },
       "nice": -10,
       "oom_score": -900,
-      "packages": ["wireguard-tools"],
-      "services": ["sshd", "ssh", "wg-quick@", "rescue-ssh"]
+      "packages": [
+        "wireguard-tools"
+      ],
+      "services": [
+        "sshd",
+        "ssh",
+        "wg-quick@",
+        "rescue-ssh"
+      ]
     },
     "protection": {
       "slice": "os-essentials",
-      "scheduling": { "policy": "rr", "priority": 1 },
+      "scheduling": {
+        "policy": "rr",
+        "priority": 1
+      },
       "nice": -5,
       "oom_score": -800,
       "packages": [],
-      "services": ["earlyoom", "watchdog-petter", "zram-setup"]
+      "services": [
+        "earlyoom",
+        "watchdog-petter",
+        "zram-setup"
+      ]
     },
     "monitoring": {
       "slice": "os-essentials",
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["htop", "btop", "ttyd", "ncdu", "lsof", "iftop", "iotop", "sysstat"],
-      "services": ["dashboard-ttyd"]
+      "packages": [
+        "htop",
+        "btop",
+        "ttyd",
+        "ncdu",
+        "lsof",
+        "iftop",
+        "iotop",
+        "sysstat"
+      ],
+      "services": [
+        "dashboard-ttyd"
+      ]
     },
     "container-runtime": {
       "slice": "workload",
       "scheduling": null,
       "nice": 5,
       "oom_score": 500,
-      "packages": ["docker", "docker-compose", "docker-buildx", "youki", "podman"],
-      "services": ["docker", "container-init"]
+      "packages": [
+        "docker",
+        "docker-compose",
+        "docker-buildx",
+        "youki",
+        "podman"
+      ],
+      "services": [
+        "docker",
+        "container-init"
+      ]
     },
     "secrets": {
       "slice": "workload",
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["sops", "age"],
+      "packages": [
+        "sops",
+        "age"
+      ],
       "services": []
     },
     "json-yaml": {
@@ -65,7 +125,10 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["jq", "yq-go"],
+      "packages": [
+        "jq",
+        "yq-go"
+      ],
       "services": []
     },
     "file-transfer": {
@@ -73,7 +136,10 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["rsync", "rclone"],
+      "packages": [
+        "rsync",
+        "rclone"
+      ],
       "services": []
     },
     "network-tools": {
@@ -81,7 +147,15 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["curl", "wget", "netcat", "iputils", "openssl", "bind", "socat"],
+      "packages": [
+        "curl",
+        "wget",
+        "netcat",
+        "iputils",
+        "openssl",
+        "bind",
+        "socat"
+      ],
       "services": []
     },
     "vcs": {
@@ -89,7 +163,11 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["git", "gh", "cacert"],
+      "packages": [
+        "git",
+        "gh",
+        "cacert"
+      ],
       "services": []
     },
     "text-search": {
@@ -97,7 +175,11 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["ripgrep", "fd", "bat"],
+      "packages": [
+        "ripgrep",
+        "fd",
+        "bat"
+      ],
       "services": []
     },
     "compression": {
@@ -105,7 +187,11 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["gzip", "unzip", "zip"],
+      "packages": [
+        "gzip",
+        "unzip",
+        "zip"
+      ],
       "services": []
     },
     "runtimes": {
@@ -113,7 +199,9 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["nodejs_22"],
+      "packages": [
+        "nodejs_22"
+      ],
       "services": []
     },
     "db-clients": {
@@ -121,7 +209,11 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["sqlite", "postgresql_16", "mariadb"],
+      "packages": [
+        "sqlite",
+        "postgresql_16",
+        "mariadb"
+      ],
       "services": []
     },
     "backup": {
@@ -129,7 +221,9 @@
       "scheduling": null,
       "nice": 10,
       "oom_score": 200,
-      "packages": ["rustic-rs"],
+      "packages": [
+        "rustic-rs"
+      ],
       "services": []
     },
     "security-scanning": {
@@ -137,7 +231,9 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["yara"],
+      "packages": [
+        "yara"
+      ],
       "services": []
     },
     "system-utils": {
@@ -145,7 +241,12 @@
       "scheduling": null,
       "nice": 0,
       "oom_score": 0,
-      "packages": ["tmux", "tree", "bc", "inotify-tools"],
+      "packages": [
+        "tmux",
+        "tree",
+        "bc",
+        "inotify-tools"
+      ],
       "services": []
     },
     "code-analysis": {
@@ -161,12 +262,25 @@
     "cloud": {
       "description": "All cloud VMs — shared tools",
       "groups": [
-        "connectivity", "protection", "monitoring", "container-runtime",
-        "secrets", "json-yaml", "file-transfer", "network-tools",
-        "vcs", "text-search", "compression", "runtimes",
-        "db-clients", "backup", "security-scanning", "system-utils",
+        "connectivity",
+        "protection",
+        "monitoring",
+        "container-runtime",
+        "secrets",
+        "json-yaml",
+        "file-transfer",
+        "network-tools",
+        "vcs",
+        "text-search",
+        "compression",
+        "runtimes",
+        "db-clients",
+        "backup",
+        "security-scanning",
+        "system-utils",
         "code-analysis"
       ]
     }
-  }
+  },
+  "description": "⚠ GENERATED — DO NOT EDIT · SoT: cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/packages/system-packages.json · Engine: 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh · Rebuild: ./9_others/build.sh"
 }

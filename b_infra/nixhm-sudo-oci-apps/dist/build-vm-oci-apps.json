@@ -1,17 +1,14 @@
 {
-  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 2_configs/build.sh all`.",
+  "_generated": {
+    "warning": "DO NOT EDIT — generated file, not a source of truth",
+    "source": "cloud-infra/b_infra/nixhm-sudo-oci-apps/src/build-vm-oci-apps.json",
+    "engine": "1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh",
+    "rebuild": "./9_others/build.sh"
+  },
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "vm": "oci-apps",
   "vm_id": "oci-A1-f_0",
   "services": [
-    {
-      "name": "matrix-continuwuity",
-      "dir": "user-comm_matrix-continuwuity",
-      "compose_path": "/opt/containers/matrix-continuwuity",
-      "images": [
-        "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest"
-      ],
-      "has_docker_build": true
-    },
     {
       "name": "languagetool",
       "dir": "infra-ai_languagetool",
@@ -31,15 +28,6 @@
       "has_docker_build": true
     },
     {
-      "name": "c3-infra-mcp",
-      "dir": "infra-api_c3-infra-mcp",
-      "compose_path": "/opt/containers/c3-infra-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/c3-infra-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "c3-services-api",
       "dir": "infra-api_c3-services-api",
       "compose_path": "/opt/containers/c3-services-api",
@@ -49,11 +37,47 @@
       "has_docker_build": true
     },
     {
-      "name": "c3-services-mcp",
-      "dir": "infra-api_c3-services-mcp",
-      "compose_path": "/opt/containers/c3-services-mcp",
+      "name": "cloud-drive-mcp",
+      "dir": "infra-api_cloud-drive-mcp",
+      "compose_path": "/opt/containers/cloud-drive-mcp",
       "images": [
-        "ghcr.io/diegonmarcos/c3-services-mcp:latest"
+        "ghcr.io/diegonmarcos/cloud-drive-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-infra-mcp",
+      "dir": "infra-api_cloud-infra-mcp",
+      "compose_path": "/opt/containers/cloud-infra-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/cloud-infra-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-mail-mcp",
+      "dir": "infra-api_cloud-mail-mcp",
+      "compose_path": "/opt/containers/cloud-mail-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/cloud-mail-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-mattermost-mcp",
+      "dir": "infra-api_cloud-mattermost-mcp",
+      "compose_path": "/opt/containers/cloud-mattermost-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/cloud-mattermost-mcp:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "cloud-services-mcp",
+      "dir": "infra-api_cloud-services-mcp",
+      "compose_path": "/opt/containers/cloud-services-mcp",
+      "images": [
+        "ghcr.io/diegonmarcos/cloud-services-mcp:latest"
       ],
       "has_docker_build": true
     },
@@ -73,31 +97,6 @@
       "images": [
         "ghcr.io/diegonmarcos/google-workspace-mcp:latest"
       ],
-      "has_docker_build": true
-    },
-    {
-      "name": "mail-mcp",
-      "dir": "infra-api_mail-mcp",
-      "compose_path": "/opt/containers/mail-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/mail-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "mattermost-mcp",
-      "dir": "infra-api_mattermost-mcp",
-      "compose_path": "/opt/containers/mattermost-mcp",
-      "images": [
-        "ghcr.io/diegonmarcos/mattermost-mcp:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
-      "name": "cloud-builder-x",
-      "dir": "infra-bld_cloud-builder-x",
-      "compose_path": "/opt/containers/cloud-builder-x",
-      "images": [],
       "has_docker_build": true
     },
     {
@@ -195,17 +194,6 @@
       "has_docker_build": true
     },
     {
-      "name": "umami",
-      "dir": "infra-obs_umami",
-      "compose_path": "/opt/containers/umami",
-      "images": [
-        "ghcr.io/umami-software/umami:latest",
-        "postgres:16-alpine",
-        "curlimages/curl:latest"
-      ],
-      "has_docker_build": true
-    },
-    {
       "name": "crowdsec",
       "dir": "infra-sec_crowdsec",
       "compose_path": "/opt/containers/crowdsec",
@@ -224,11 +212,12 @@
       "has_docker_build": true
     },
     {
-      "name": "cloud-cgc-mcp",
-      "dir": "user-ai_cloud-cgc-mcp",
-      "compose_path": "/opt/containers/cloud-cgc-mcp",
+      "name": "cloud-cgc-pub-mcp",
+      "dir": "user-ai_cloud-cgc-pub-mcp",
+      "compose_path": "/opt/containers/cloud-cgc-pub-mcp",
       "images": [
-        "ghcr.io/diegonmarcos/cloud-cgc-mcp:latest"
+        "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest",
+        "ghcr.io/diegonmarcos/cloud-cgc-pub-mcp:latest"
       ],
       "has_docker_build": true
     },
@@ -251,26 +240,12 @@
       "has_docker_build": true
     },
     {
-      "name": "ollama-hai",
-      "dir": "user-ai_ollama-hai",
-      "compose_path": "/opt/containers/ollama-hai",
+      "name": "my-ai-api",
+      "dir": "user-ai_my-ai-api",
+      "compose_path": "/opt/containers/my-ai-api",
       "images": [
-        "ollama/ollama:latest"
+        "ghcr.io/diegonmarcos/my-ai-api:latest"
       ],
-      "has_docker_build": true
-    },
-    {
-      "name": "rig-agentic-hai-1.5bq4",
-      "dir": "user-ai_rig-agentic-hai-1.5bq4",
-      "compose_path": "/opt/containers/rig-agentic-hai-1.5bq4",
-      "images": [],
-      "has_docker_build": true
-    },
-    {
-      "name": "rig-agentic-sonn-14bq8",
-      "dir": "user-ai_rig-agentic-sonn-14bq8",
-      "compose_path": "/opt/containers/rig-agentic-sonn-14bq8",
-      "images": [],
       "has_docker_build": true
     },
     {
@@ -290,6 +265,15 @@
         "ghcr.io/diegonmarcos/chat-mattermost-binaries:latest",
         "postgres:16-alpine",
         "python:3.12-slim"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "matrix-continuwuity",
+      "dir": "user-comm_matrix-continuwuity",
+      "compose_path": "/opt/containers/matrix-continuwuity",
+      "images": [
+        "ghcr.io/diegonmarcos/matrix-continuwuity-binaries:latest"
       ],
       "has_docker_build": true
     },
@@ -337,6 +321,15 @@
         "photoprism/photoprism:latest",
         "mariadb:11",
         "rclone/rclone:latest"
+      ],
+      "has_docker_build": true
+    },
+    {
+      "name": "playlist-syncer",
+      "dir": "user-media_playlist-syncer",
+      "compose_path": "/opt/containers/playlist-syncer",
+      "images": [
+        "ghcr.io/diegonmarcos/playlist-syncer-binaries:latest"
       ],
       "has_docker_build": true
     },
@@ -470,7 +463,7 @@
       ]
     },
     {
-      "name": "c3-infra-mcp",
+      "name": "cloud-infra-mcp",
       "uid": 0,
       "ssh_dir": "/root/.ssh",
       "keys": [
@@ -494,7 +487,7 @@
   ],
   "_meta": {
     "generated_at": "",
-    "generated_by": "2_configs/src/engines/cloud-data-config-derive.ts",
+    "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
     "pipeline": {
       "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
       "source_inputs": [
@@ -504,15 +497,16 @@
         "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
       ],
       "engines": {
-        "consolidator": "2_configs/src/engines/cloud-data-config-consolidated.ts",
-        "derive": "2_configs/src/engines/cloud-data-config-derive.ts (THIS engine)"
+        "consolidator": "1_cloud-configs/src/derive/cloud-data-config-consolidated.ts",
+        "derive": "1_cloud-configs/src/derive/cloud-data-config-derive.ts (THIS engine)"
       },
       "outputs": {
-        "master": "2_configs/dist/_cloud-data-consolidated.json (consolidator output)",
-        "per_container": "2_configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
-        "archived": "2_configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+        "master": "1_cloud-configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
       },
-      "rebuild_command": "bash 2_configs/build.sh all"
+      "rebuild_command": "bash 9_others/build.sh all"
     }
-  }
+  },
+  "description": "⚠ GENERATED — DO NOT EDIT · SoT: cloud-infra/b_infra/nixhm-sudo-oci-apps/src/build-vm-oci-apps.json · Engine: 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh · Rebuild: ./9_others/build.sh"
 }

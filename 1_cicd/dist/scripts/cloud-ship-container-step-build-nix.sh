@@ -51,18 +51,29 @@ step_build() {
     CLOUD_DATA_STAGED=""
     CLOUD_DATA_DIR="$SERVICE_DIR/../../1_cicd/dist"
     HAS_EXTERNAL_SYMLINKS=false
+    HAS_ESCAPING_SYMLINKS=false
+
+    # The git repo nix will intern for this flake. Everything outside it is
+    # UNREACHABLE from the store, symlink or not: nix resolves a flake in a work
+    # tree as `git+file://<toplevel>?dir=<rel>` and interns that repo alone.
+    FLAKE_GIT_ROOT=$(git -C "$SRC_DIR" rev-parse --show-toplevel 2>/dev/null || true)
 
     # Detect any *.json symlink in src/ whose target is outside the service dir
     for f in "$SRC_DIR"/*.json; do
         [ -L "$f" ] || continue
         target=$(readlink -f "$f" 2>/dev/null || true)
         case "$target" in
-            "$SERVICE_DIR"/*) ;;  # within service (e.g. build.json -> ../build.json) — nix can follow
-            *)
-                HAS_EXTERNAL_SYMLINKS=true
-                break
-                ;;
+            "$SERVICE_DIR"/*) continue ;;  # within service (e.g. build.json -> ../build.json) — nix can follow
         esac
+        HAS_EXTERNAL_SYMLINKS=true
+        # Outside the interned repo too? Then no amount of git-intern cleverness
+        # reaches it and the link MUST be materialised before nix build.
+        if [ -n "$FLAKE_GIT_ROOT" ]; then
+            case "$target" in
+                "$FLAKE_GIT_ROOT"/*) ;;
+                *) HAS_ESCAPING_SYMLINKS=true ;;
+            esac
+        fi
     done
 
     # Update cloud-data submodule to latest if anything depends on it.
@@ -109,7 +120,19 @@ step_build() {
     # nix interns that single path verbatim → dangling in the store. That case
     # is declared, not inferred: build.json build.dereference_symlinks=true.
     DEREF_SYMLINKS=$(jq -r '.build.dereference_symlinks // false' "$CONFIG" 2>/dev/null)
-    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$DEREF_SYMLINKS" != "true" ]; then
+    #
+    # ...and that short-circuit only holds while the registry lives INSIDE the
+    # interned repo. It stopped holding on 2026-08-27, when a_solutions became
+    # its own repo (cloud-u-containers) mounted back as a submodule: the flake
+    # root moved from cloud-infra to a_solutions, so every
+    # `../../../1_cloud-configs/dist/build-*.json` link — 512 of them across 63
+    # services — now points outside the tree nix interns. gitea died on it first
+    # ("access to absolute path '/nix/store/1_cloud-configs' is forbidden in
+    # pure evaluation mode"), and every other v2 service was one rebuild away
+    # from the same error. HAS_ESCAPING_SYMLINKS re-enables dereferencing for
+    # exactly that case, and leaves the v2 short-circuit intact everywhere the
+    # git intern really does resolve the links.
+    if [ "$IS_V2_ENGINE_PRE" = "true" ] && [ "$DEREF_SYMLINKS" != "true" ] && [ "$HAS_ESCAPING_SYMLINKS" != "true" ]; then
         log "v2 engine flake — cloud-data accessed via 1_cicd/dist, no src/ resolve needed"
     elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; } && [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         # Resolve every external *.json symlink to a real file
@@ -122,7 +145,8 @@ step_build() {
             [ -f "$target" ] || continue
             rm "$f"
             cp "$target" "$f"
-            git -C "$SERVICE_DIR/../.." add "$(realpath --relative-to="$SERVICE_DIR/../.." "$f")" 2>/dev/null || true
+            git -C "${FLAKE_GIT_ROOT:-$SERVICE_DIR/../..}" add \
+                "$(realpath --relative-to="${FLAKE_GIT_ROOT:-$SERVICE_DIR/../..}" "$f")" 2>/dev/null || true
             CLOUD_DATA_STAGED="$CLOUD_DATA_STAGED $f"
         done
         # include_cloud_data=true: also copy every 1_cicd/dist/*.json into src/ (for services
@@ -146,6 +170,25 @@ step_build() {
     elif { [ "$INCLUDE_CLOUD_DATA" = "true" ] || [ "$HAS_EXTERNAL_SYMLINKS" = "true" ]; }; then
         log "cloud-data already pre-staged by CI — skipping"
     fi
+
+    # Restore a staged file to its committed state.
+    #
+    # `git checkout HEAD -- <path>` only works from the repo that TRACKS the
+    # path. The engine used $SERVICE_DIR/../.. for this — correct while every
+    # service lived directly in cloud-infra, wrong since a_solutions became its
+    # own repo (cloud-u-containers) mounted back as a submodule: from cloud-infra
+    # the path is inside a gitlink, the checkout fails, and the `|| rm -f`
+    # fallback then DELETES the symlink it was supposed to put back (observed on
+    # infra-dat_gitea/src/build-gitea.json). Ask the file's own repo instead.
+    restore_staged() {
+        _rs_f="$1"
+        _rs_root=$(git -C "$(dirname "$_rs_f")" rev-parse --show-toplevel 2>/dev/null || true)
+        if [ -n "$_rs_root" ]; then
+            _rs_rel="$(realpath --relative-to="$_rs_root" "$_rs_f")"
+            git -C "$_rs_root" checkout HEAD -- "$_rs_rel" 2>/dev/null && return 0
+        fi
+        rm -f "$_rs_f"
+    }
 
     # build.json: src/build.json is a symlink to ../build.json (root is source of truth)
     if [ -f "$SERVICE_DIR/build.json" ] && [ ! -L "$SRC_DIR/build.json" ]; then
@@ -171,8 +214,7 @@ step_build() {
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
         for f in $CLOUD_DATA_STAGED; do
-            REL_PATH="$(realpath --relative-to="$REPO_ROOT" "$f")"
-            git -C "$REPO_ROOT" checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
+            restore_staged "$f"
         done
         return 1
     }
@@ -207,9 +249,7 @@ step_build() {
     # In CI, cleanup is handled by cloud-builder-ship.sh after all parallel jobs finish
     if [ -z "${CLOUD_DATA_PRESTAGED_BY_CI:-}" ]; then
         for f in $CLOUD_DATA_STAGED; do
-            REL_PATH="$(realpath --relative-to="$SERVICE_DIR/../.." "$f")"
-            # Restore to committed version (if tracked), otherwise remove
-            git -C "$SERVICE_DIR/../.." checkout HEAD -- "$REL_PATH" 2>/dev/null || rm -f "$f"
+            restore_staged "$f"
         done
     fi
 

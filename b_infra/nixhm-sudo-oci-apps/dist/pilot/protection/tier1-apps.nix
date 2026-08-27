@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-oci-apps/src/pilot/protection/tier1-apps.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-apps/src/pilot/protection/tier1-apps.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -32,12 +32,12 @@
 #
 # Data source (P4, single SoT): config.json native.protection (defaults) +
 # b_infra/nixhm-sudo-<alias>/build.json .protection (per-VM overrides), emitted
-# by 2_configs into consolidated native.protection + _home_manager.vms.<vmName>.protection.
+# by 9_others into consolidated native.protection + _home_manager.vms.<vmName>.protection.
 { config, pkgs, lib, vmName, ... }:
 
 let
   # Data-driven (P4): SoT = config.json native.protection (defaults) + per-VM
-  # b_infra/nixhm-sudo-<alias>/build.json .protection, emitted by 2_configs into
+  # b_infra/nixhm-sudo-<alias>/build.json .protection, emitted by 9_others into
   # native.protection and _home_manager.vms.<vmName>.protection.
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
   protDefaults = consolidated.native.protection or {};

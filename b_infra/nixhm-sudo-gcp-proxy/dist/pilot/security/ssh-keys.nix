@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-gcp-proxy/src/pilot/security/ssh-keys.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/security/ssh-keys.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -19,7 +19,7 @@
 # Container SSH targets are derived from each per-service a_solutions/*/build.json
 # top-level `ssh` field, aggregated by cloud-data-config-consolidated.ts into
 # _cloud-data-consolidated.json[._home_manager.vms.<alias>.ssh_containers].
-# Per-VM slice also lives in 2_configs/dist/build-vm-<alias>.json.ssh_containers.
+# Per-VM slice also lives in 1_cloud-configs/dist/build-vm-<alias>.json.ssh_containers.
 # This module reads from the consolidated JSON (no standalone duplicate file).
 { vmName }:
 { lib, ... }:

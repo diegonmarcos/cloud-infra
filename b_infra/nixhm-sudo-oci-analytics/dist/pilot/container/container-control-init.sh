@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud/b_infra/nixhm-sudo-oci-analytics/src/pilot/container/container-control-init.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-analytics/src/pilot/container/container-control-init.sh
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║

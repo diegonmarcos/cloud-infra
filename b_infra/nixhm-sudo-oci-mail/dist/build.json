@@ -1,6 +1,12 @@
 {
+  "_generated": {
+    "warning": "DO NOT EDIT — generated file, not a source of truth",
+    "source": "cloud-infra/b_infra/nixhm-sudo-oci-mail/src/build.json",
+    "engine": "1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh",
+    "rebuild": "./9_others/build.sh"
+  },
   "name": "nixhm-sudo-oci-mail",
-  "description": "Home Manager system image for oci-mail (Stalwart, SnappyMail, Maddy, Dagu)",
+  "description": "⚠ GENERATED — DO NOT EDIT · SoT: cloud-infra/b_infra/nixhm-sudo-oci-mail/src/build.json · Engine: 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh · Rebuild: ./9_others/build.sh — Home Manager system image for oci-mail (Stalwart, SnappyMail, Maddy, Dagu)",
   "vm": {
     "id": "oci-E2-f_0",
     "alias": "oci-mail",
@@ -36,7 +42,12 @@
   },
   "protection": {
     "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). Mail stack: maddy+stalwart are tier-1 (survive graduated shed until last resort).",
-    "tier1_services": ["maddy", "stalwart", "mail-puller"],
+    "tier1_services": [
+      "maddy",
+      "stalwart",
+      "stalwart-sorter",
+      "mail-puller"
+    ],
     "mem_psi_warn": 30,
     "mem_psi_crit": 50,
     "mem_psi_page": 65

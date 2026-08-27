@@ -2,9 +2,9 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : b_infra/nixhm-sudo-gcp-proxy/src/pilot/protection/watchdog.nix
-# ║   Engine : 1_workflows/src/scripts/cloud-ship-nix-homemanager-engine.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Source : cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/protection/watchdog.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -30,7 +30,7 @@ let
   # P4: data-driven watchdog-petter thresholds (disk tiers, docker-fail, low-mem
   # prune) + ntfy base/topic. Single SoT: config.json native.protection (defaults)
   # + b_infra/nixhm-sudo-<alias>/build.json .protection (per-VM overrides), emitted
-  # by 2_configs into native.protection and _home_manager.vms.<vmName>.protection.
+  # by 9_others into native.protection and _home_manager.vms.<vmName>.protection.
   consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
   protDefaults = consolidated.native.protection or {};
   protVm       = (consolidated._home_manager.vms.${vmName} or {}).protection or {};
@@ -156,14 +156,26 @@ in {
       if [ -f /swapfile ]; then
         SWAP_SIZE_MB=$(($(stat -c%s /swapfile 2>/dev/null || echo 0) / 1024 / 1024))
       fi
-      DOCKER_SIZE="N/A"
-      if command -v docker >/dev/null 2>&1 && docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
-        DOCKER_SIZE=$(docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
+      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
+
+      # `docker system df` walks every image layer, container and volume. On an
+      # IO-starved box that is minutes of disk work, and it was being paid on
+      # EVERY 5-min tick only to be discarded by the healthy-disk exit below.
+      # MEASURED 2026-08-24 on oci-mail (swap-thrashing, load 11): a single
+      # invocation was still running after 9 minutes, so with OnUnitActiveSec=5min
+      # the watchdog was doing that walk essentially continuously — the disk
+      # watchdog had become a top consumer of the disk. Only price it once we
+      # actually know the disk is in trouble, and never let it hang unbounded.
+      if [ "$USAGE" -lt "$WARN" ]; then
+        echo "[disk-watchdog] Root: ''${USAGE}% | swap=''${SWAP_SIZE_MB}MB"
+        exit 0
       fi
 
-      USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
+      DOCKER_SIZE="N/A"
+      if command -v docker >/dev/null 2>&1 && timeout 15 docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
+        DOCKER_SIZE=$(timeout 60 docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || timeout 60 docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
+      fi
       echo "[disk-watchdog] Root: ''${USAGE}% | swap=''${SWAP_SIZE_MB}MB | docker=$DOCKER_SIZE"
-      [ "$USAGE" -lt "$WARN" ] && exit 0
 
       # ── WARN (85%) — gentle cleanup ──────────────────────────────────
       echo "[disk-watchdog] WARNING (''${USAGE}%) — cleaning"
