@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/container/tools.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -120,7 +120,7 @@
   # Auto-update git submodules in all repos on activation.
   # Ensures cloud-data submodule is always fresh.
   home.activation.gitSubmoduleUpdate = lib.hm.dag.entryAfter ["linkGeneration"] ''
-    for repo in "$HOME/git/cloud-infra" "$HOME/git/front" "$HOME/git/cloud-unix"; do
+    for repo in "$HOME/git/cloud-infra" "$HOME/git/front" "$HOME/git/cloud-infra-desktop"; do
       [ -d "$repo/.git" ] || continue
       [ -f "$repo/.gitmodules" ] || continue
       printf "[git-submodules] Updating submodules in %s\n" "$repo"

@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/security/ssh-keys.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -19,7 +19,7 @@
 # Container SSH targets are derived from each per-service a_solutions/*/build.json
 # top-level `ssh` field, aggregated by cloud-data-config-consolidated.ts into
 # _cloud-data-consolidated.json[._home_manager.vms.<alias>.ssh_containers].
-# Per-VM slice also lives in 2_configs/dist/build-vm-<alias>.json.ssh_containers.
+# Per-VM slice also lives in 1_cloud-configs/dist/build-vm-<alias>.json.ssh_containers.
 # This module reads from the consolidated JSON (no standalone duplicate file).
 { vmName }:
 { lib, ... }:

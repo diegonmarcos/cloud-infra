@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   Source : src/modules/packages/node-npm-deps.nix
 # ║   Engine : b_infra/_shared/vm-pilot/build.sh
-# ║   Rebuild: ./1_workflows/build.sh
+# ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
@@ -114,7 +114,7 @@ in {
     SHARED="$HOME/.node_modules/node_modules"
     MCP_DIRS="
       $HOME/git/cloud-infra/a_solutions/infra-api_c3-specs-docs-mcp/src
-      $HOME/git/cloud-infra/a_solutions/infra-api_c3-diego-personal-data-mcp/src
+      $HOME/git/cloud-infra/a_solutions/infra-api_cloud-vault-mcp/src
     "
     for dir in $MCP_DIRS; do
       [ -d "$dir" ] || continue
