@@ -78,6 +78,37 @@ function actions(name: string, vm: any) {
   return { ssh, console: console_ };
 }
 
+// ── declared containers, per machine ──────────────────────────────────────
+// What SHOULD be running there, so the panel can show declared-against-actual.
+//
+// Only the categories that are containers. db-embedded, db-s3, db-hd, the
+// volume categories and the git ones are declarations of other things
+// entirely, and counting them would make every machine look under-deployed.
+//
+// The service id is the stable identity; `container` is compose's local role
+// name ("app", "db"), which is not unique across stacks and must never be the
+// thing a drift check keys on.
+const CTR_CATEGORIES = ['runners', 'apis', 'mcps', 'db-dockers'];
+function declaredFor(vm: string, cats: Record<string, any[]>): string[] {
+  const out = new Set<string>();
+  for (const k of CTR_CATEGORIES) {
+    for (const e of cats[k] ?? []) {
+      if (e?.vm !== vm) continue;
+      const id = e.service ?? e.name ?? e.id;
+      if (id) out.add(String(id).split('/')[0]);
+    }
+  }
+  return [...out].sort();
+}
+
+// The declared-container lists live in a sibling derived file rather than in
+// consolidated directly; read it when present so this deriver does not have
+// to re-implement the categorisation that one already does.
+const DECLARED = path.join(DIST_DIR, 'cloud-fleet-containers-declared.json');
+const cats: Record<string, any[]> = fs.existsSync(DECLARED)
+  ? (JSON.parse(fs.readFileSync(DECLARED, 'utf8')).categories ?? {})
+  : {};
+
 const machines = Object.entries(j.vms ?? {}).map(([name, vm]: [string, any]) => ({
   name,
   provider: providerOf(vm),
@@ -95,6 +126,7 @@ const machines = Object.entries(j.vms ?? {}).map(([name, vm]: [string, any]) => 
   rescue_port: vm.rescue_port ?? null,
   public_ports: vm.public_ports ?? [],
   description: vm.description ?? '',
+  declared: declaredFor(name, cats),
   actions: actions(name, vm),
 }));
 
@@ -119,5 +151,6 @@ const out = {
 
 fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n');
 const noConsole = machines.filter((m) => !Object.keys(m.actions.console).length).map((m) => m.name);
-console.log(`[derive-watchdog] ${machines.length} machines, ${Object.keys(out.firewall.hosts).length} firewall hosts → dist/watchdog.json`);
+const dec = machines.reduce((n, m) => n + m.declared.length, 0);
+console.log(`[derive-watchdog] ${machines.length} machines, ${dec} declared containers, ${Object.keys(out.firewall.hosts).length} firewall hosts → dist/watchdog.json`);
 if (noConsole.length) console.log(`[derive-watchdog] ssh-only (no console actions): ${noConsole.join(', ')}`);
