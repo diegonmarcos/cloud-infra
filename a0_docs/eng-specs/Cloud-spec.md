@@ -2263,12 +2263,22 @@ vmstat 1 5
 # View swappiness
 cat /proc/sys/vm/swappiness
 
-# Manually adjust swappiness (temporary)
+# Manually adjust swappiness (temporary — reverted by the next deploy)
 sudo sysctl vm.swappiness=10
-
-# Make permanent
-echo "vm.swappiness=10" | sudo tee -a /etc/sysctl.conf
 ```
+
+Do NOT append to `/etc/sysctl.conf`. `sysctl --system` reads that file *last*,
+after every `/etc/sysctl.d/*.conf`, so a key written there outranks the managed
+`99-system-protection.conf` no matter what it is named — silently, with the
+declared value still sitting on disk looking applied. oci-analytics ran
+`vm.swappiness=10` for ten weeks from exactly this instruction while the module
+declared 150, which is why it held page cache and spilled to the disk swapfile
+with zram 95% full.
+
+The permanent value is declared in
+`b_infra/_shared/vm-pilot/src/modules/protection/resource-bouncer.nix`. Change
+it there. Activation now comments managed keys out of `/etc/sysctl.conf` and
+warns on any key whose live value does not match what was declared.
 
 **If swap needs recreation (disaster recovery):**
 ```bash
@@ -2277,7 +2287,8 @@ sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-sudo sysctl vm.swappiness=10
+# swappiness comes back from resource-bouncer.nix on the next deploy — do not
+# persist it by hand here.
 ```
 
 ### 12.3 Weekly Operations
