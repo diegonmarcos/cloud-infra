@@ -75,6 +75,20 @@ step_retire() {
         fi
     fi
 
+    # 2b) Mark the deploy dir retired. The dir itself must stay — it holds the
+    #     volume backup written above — but vm-images-pull-up.sh discovers
+    #     services by listing /opt/containers/*/, so a leftover dir is silently
+    #     re-declared on every deploy and the service resurrects. This marker is
+    #     the host-side half of the retirement; deploy-rsync clears it if the
+    #     service is ever un-retired.
+    if [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_PATH" ]; then
+        if ssh_with_retry "$DEPLOY_HOST" "bash -c 'test -d \"$DEPLOY_PATH\" && date -Is > \"$DEPLOY_PATH/.retired\"'" 2>/dev/null; then
+            log "Marked $DEPLOY_HOST:$DEPLOY_PATH/.retired — discovery will skip it"
+        else
+            log_warn "Could not write .retired marker on $DEPLOY_HOST — service may be re-declared on next deploy"
+        fi
+    fi
+
     # 3) Archive the folder. cd to the PARENT first so the git-mv doesn't delete
     #    our CWD (moving a child dir is safe; moving CWD kills the shell).
     _sol_root="$(dirname "$SERVICE_DIR")"

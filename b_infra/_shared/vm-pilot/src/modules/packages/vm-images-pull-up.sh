@@ -159,6 +159,15 @@ else
   for dir in "$CONTAINERS_DIR"/*/; do
     [ -d "$dir" ] || continue
     [ -n "$(find_compose_dir "$dir")" ] || continue
+    # A retired service keeps its directory (it holds the volume backup written
+    # by `build.sh retire`), so presence on disk is not a declaration. Without
+    # this the dir is re-discovered every run and the service resurrects long
+    # after it was archived in the repo — how bc-obs_fluent-bit stayed deployed
+    # on oci-analytics with no reference left in cloud-fleet-declared.json.
+    if [ -f "$dir/.retired" ]; then
+      log "SKIP: $(basename "$dir") — retired $(cat "$dir/.retired" 2>/dev/null)"
+      continue
+    fi
     name=$(basename "$dir")
     [ -n "$FILTER" ] && [ "$name" != "$FILTER" ] && continue
     SERVICES="$SERVICES $name"
