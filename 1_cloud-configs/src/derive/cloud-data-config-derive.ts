@@ -1186,10 +1186,21 @@ function deriveCaddy(c: any): DerivedFile[] {
       // Only hosts caddy-public SERVES at L7 (gh-pages + auth=none subdomains).
       // Authed-public subdomains are NOT here — they passthrough to gcp-proxy where
       // their auth lives. Anything not in this list is L4-passthrough'd to the hub.
-      public_sni_hosts: [
+      // Public-ness is declared per-PATH but was decided per-HOST: only auth=none
+      // subdomains were served here, so a host with ANY auth was passed through
+      // wholesale to the hub - taking its declared-public paths down with it.
+      // analytics.diegonmarcos.com is exactly that shape (Authelia-protected admin
+      // UI + must-be-public tracking endpoints), so every external phone, app and
+      // browser got 502 on /umami/* and /matomo/* while mesh clients saw 200.
+      // Any host owning a declared-public path must TERMINATE here so the
+      // path-level split can happen.
+      public_sni_hosts: [...new Set([
         ...githubPagesProxies.flatMap((g: any) => String(g.domain).split(",").map((s: string) => s.trim())),
         ...publicSubdomainRoutes.filter((r: any) => (r.auth ?? null) === "none").map((r: any) => r.domain),
-      ],
+        ...[...publicAMcp, ...publicBApis, ...publicCAppPaths, ...publicDOthers]
+             .map((r: any) => String(r.host ?? r.domain ?? "").split("/")[0])
+             .filter(Boolean),
+      ])],
       public_routes:        publicSubdomainRoutes,
       public_path_routes:   publicPathRoutes,
       public_mcp_routes:    publicMcpRoutes,
