@@ -50,6 +50,17 @@ in {
     # Managed by home-manager (system-protection-resource-bouncer.nix)
     vm.min_free_kbytes = ${toString minFreeKB}
     vm.swappiness = 150
+    # Reclaim before swapping, in that order. swappiness=150 is not "swap
+    # eagerly" on a zram box — zram IS reclaim (the desktop compresses 6.5GB
+    # into 1.4GB, 4.5:1), so anon->zram costs less than re-reading a dropped
+    # file page off disk. What the ladder needs is for the CHEAP evictions to
+    # happen first: vfs_cache_pressure=200 makes the kernel give up
+    # dentry/inode slab twice as readily as default instead of holding it while
+    # anon pages go out, and page-cluster=0 stops swap readahead pulling 8
+    # pages per fault, which is pure waste when each page is decompressed
+    # individually anyway. Disk swap stays last by priority (zram 100, file 10).
+    vm.vfs_cache_pressure = 200
+    vm.page-cluster = 0
     vm.dirty_ratio = 10
     vm.dirty_background_ratio = 5
     vm.watermark_scale_factor = 500
@@ -142,7 +153,29 @@ in {
     $SUDO mkdir -p /etc/sysctl.d
     $SUDO cp -f "$SRC/sysctl.conf" /etc/sysctl.d/99-system-protection.conf
     $SUDO chmod 644 /etc/sysctl.d/99-system-protection.conf
+
+    # `sysctl --system` reads /etc/sysctl.conf LAST — after every
+    # /etc/sysctl.d/*.conf, whatever they are named — so one stray key there
+    # beats this module and nothing says so. oci-analytics ran vm.swappiness=10
+    # that way for ten weeks (hand-added from a runbook line since corrected),
+    # which is exactly why it sat on 326MB of page cache and pushed 71MB out to
+    # the DISK swapfile while its zram was 95% full. Comment the keys we manage
+    # out of there so the declared value is the one that lands.
+    if [ -f /etc/sysctl.conf ]; then
+      sed -n "s/^ *\([a-z0-9._-]*\) *=.*/\1/p" "$SRC/sysctl.conf" | while read -r k; do
+        $SUDO sed -i "s|^ *$k *=|# superseded by 99-system-protection.conf: &|" /etc/sysctl.conf
+      done
+    fi
+
     $SUDO sysctl --system > /dev/null 2>&1 || true
+
+    # Read back rather than assume. A single bad key aborts the whole file, and
+    # a swappiness that never took is invisible until the box is already
+    # swapping to disk — which is the failure this whole module exists to stop.
+    sed -n "s/^ *\([a-z0-9._-]*\) *= *\([^ ].*\)/\1 \2/p" "$SRC/sysctl.conf" | while read -r k v; do
+      live=$(cat "/proc/sys/$(echo "$k" | tr . /)" 2>/dev/null || echo "?")
+      [ "$live" = "$v" ] || echo "[resource-bouncer] WARN $k is $live, declared $v"
+    done
 
     # Ext4 reserved blocks: REMOVED 2026-05-06 — disk-ballast.nix is the
     # single source of truth for disk reservation now (universal across
