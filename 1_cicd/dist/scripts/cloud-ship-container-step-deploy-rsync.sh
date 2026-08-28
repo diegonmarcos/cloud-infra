@@ -35,6 +35,11 @@ step_deploy() {
     # and the service failed to deploy. Normalising ownership unconditionally
     # afterwards makes the fallback able to do its job, which is the entire
     # reason a fallback exists.
+    # Deploying is the inverse of retiring: clear the marker `build.sh retire`
+    # left behind, or vm-images-pull-up.sh keeps skipping this service and the
+    # deploy silently does nothing on the host.
+    ssh_with_retry "$DEPLOY_HOST" "rm -f $DEPLOY_PATH/.retired" >/dev/null 2>&1 || true
+
     ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH && \
         docker pull $CONFIGS_IMAGE && \
         docker run --rm -v $DEPLOY_PATH:/out $CONFIGS_IMAGE" && {
