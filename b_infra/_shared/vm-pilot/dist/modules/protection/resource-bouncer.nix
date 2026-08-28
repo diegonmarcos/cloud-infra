@@ -26,6 +26,17 @@ let
   # Sane RAM range: 1GB–36GB (cloud-data may return 0 if terraform parsing fails)
   safeRamMB = clamp 1024 36864 (if ramMB > 0 then ramMB else 1024);
 
+  # Above 100 says "swap is cheaper than the filesystem, prefer it". That is
+  # only true while zram still has room to compress into; once zram is full the
+  # marginal anon page goes to the DISK swapfile, and preferring it over
+  # dropping a clean file page is strictly backwards. Measured 2026-08-28:
+  # oci-analytics sat with its 512MB zram 94% full, 105MB already spilled to
+  # the disk swapfile, and 309MB of file cache held with Dirty=0 - i.e. free to
+  # drop. A 1GB box lives in that state permanently, so it gets the balanced
+  # kernel default; bigger boxes keep real zram headroom and get the neutral
+  # in-memory-swap value. Neither is above 100.
+  swappiness = if safeRamMB <= 2048 then 60 else 100;
+
   minFreeKB = if safeRamMB <= 1024 then 65536
               else if safeRamMB <= 8192 then 131072
               else 262144;
@@ -49,7 +60,22 @@ in {
   home.file.".local/share/system-protection/sysctl.conf".text = ''
     # Managed by home-manager (system-protection-resource-bouncer.nix)
     vm.min_free_kbytes = ${toString minFreeKB}
-    vm.swappiness = 150
+    vm.swappiness = ${toString swappiness}
+    # Reclaim before swapping, in that order, and note this used to declare 150
+    # on the argument that zram compresses 4.5:1 so anon->zram is cheaper than
+    # re-reading a dropped file page. The counters say otherwise once zram is
+    # full, which is the steady state on the small boxes, so the value is now
+    # tiered and never exceeds 100 (see the `swappiness` let above).
+    #
+    # The other two knobs are unambiguous. vfs_cache_pressure=200 makes the
+    # kernel give up dentry/inode slab twice as readily as default instead of
+    # holding it while anon pages go out. page-cluster=0 stops swap readahead
+    # pulling 8 pages per fault, which is pure waste when each page is
+    # decompressed individually anyway - and those 7 extra pages are part of
+    # what fills zram in the first place. Disk swap stays last by priority
+    # (zram 100, file 10).
+    vm.vfs_cache_pressure = 200
+    vm.page-cluster = 0
     vm.dirty_ratio = 10
     vm.dirty_background_ratio = 5
     vm.watermark_scale_factor = 500
@@ -142,7 +168,29 @@ in {
     $SUDO mkdir -p /etc/sysctl.d
     $SUDO cp -f "$SRC/sysctl.conf" /etc/sysctl.d/99-system-protection.conf
     $SUDO chmod 644 /etc/sysctl.d/99-system-protection.conf
+
+    # `sysctl --system` reads /etc/sysctl.conf LAST — after every
+    # /etc/sysctl.d/*.conf, whatever they are named — so one stray key there
+    # beats this module and nothing says so. oci-analytics ran vm.swappiness=10
+    # that way for ten weeks (hand-added from a runbook line since corrected),
+    # which is exactly why it sat on 326MB of page cache and pushed 71MB out to
+    # the DISK swapfile while its zram was 95% full. Comment the keys we manage
+    # out of there so the declared value is the one that lands.
+    if [ -f /etc/sysctl.conf ]; then
+      sed -n "s/^ *\([a-z0-9._-]*\) *=.*/\1/p" "$SRC/sysctl.conf" | while read -r k; do
+        $SUDO sed -i "s|^ *$k *=|# superseded by 99-system-protection.conf: &|" /etc/sysctl.conf
+      done
+    fi
+
     $SUDO sysctl --system > /dev/null 2>&1 || true
+
+    # Read back rather than assume. A single bad key aborts the whole file, and
+    # a swappiness that never took is invisible until the box is already
+    # swapping to disk — which is the failure this whole module exists to stop.
+    sed -n "s/^ *\([a-z0-9._-]*\) *= *\([^ ].*\)/\1 \2/p" "$SRC/sysctl.conf" | while read -r k v; do
+      live=$(cat "/proc/sys/$(echo "$k" | tr . /)" 2>/dev/null || echo "?")
+      [ "$live" = "$v" ] || echo "[resource-bouncer] WARN $k is $live, declared $v"
+    done
 
     # Ext4 reserved blocks: REMOVED 2026-05-06 — disk-ballast.nix is the
     # single source of truth for disk reservation now (universal across
