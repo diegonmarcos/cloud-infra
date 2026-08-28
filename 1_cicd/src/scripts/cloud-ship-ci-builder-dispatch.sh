@@ -155,6 +155,38 @@ if [ -n "$RUNNERS_JSON" ]; then
     done
 fi
 
+# ── Init a_solutions submodule ONCE (locked, before parallel workers) ──
+# a_solutions was carved into the cloud-u-containers submodule (2026-08-27).
+# The cloud-builder re-clones only the superproject, so without this its
+# working tree is empty, every service's build.sh is missing, and ship_one()
+# SKIPs each as "(no build.sh)" — a silent hollow-green (0 ok, N skipped).
+# The runner's init-submodules action already proves CLOUD_DATA_DEPLOY_KEY
+# clones cloud-u-containers; that same key is mounted read-only at
+# /mnt/host-ssh. Pinned checkout (no --remote) builds exactly the gitlink;
+# top-level only (no --recursive) to avoid aborting on nested SSH submodules.
+if [ -f "$REPO_ROOT/.gitmodules" ] \
+   && git config -f "$REPO_ROOT/.gitmodules" --get submodule.a_solutions.url >/dev/null 2>&1; then
+  _AS_LOCK=/tmp/a_solutions-submodule.lock
+  (
+    flock -w 60 9 || { log_error "Could not acquire a_solutions submodule lock after 60s"; exit 1; }
+    _AS_KEY=/mnt/host-ssh/cloud_data_key
+    if [ ! -f "$_AS_KEY" ]; then
+      log_error "a_solutions deploy key not mounted at $_AS_KEY — cannot clone cloud-u-containers in the builder"
+      exit 1
+    fi
+    log "Initialising a_solutions submodule (cloud-u-containers, pinned commit)"
+    if ! GIT_SSH_COMMAND="ssh -i $_AS_KEY -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/mnt/host-ssh/known_hosts" \
+         git -C "$REPO_ROOT" submodule update --init a_solutions >&2; then
+      log_error "a_solutions submodule clone FAILED — cloud-u-containers unreachable with the mounted deploy key"
+      exit 1
+    fi
+    if [ ! -d "$REPO_ROOT/a_solutions/_shared" ]; then
+      log_error "a_solutions initialised but working tree empty — aborting before services SKIP as 'no build.sh'"
+      exit 1
+    fi
+  ) 9>"$_AS_LOCK" || exit 1
+fi
+
 # ── Update cloud-data submodule ONCE (locked, before parallel workers) ──
 # Per-service parallel updates race on .git/modules/cloud-data/config lock
 # and each one prints every unstaged file — huge log spam + "File exists"
