@@ -76,6 +76,20 @@ runs:
             "https://github.com/diegonmarcos/cloud-data.git"
         fi
 
+        # Public submodules cloud (I_cloud) and cloud-u-containers (a_solutions)
+        # are registered in .gitmodules with git@github.com: SSH URLs, which CI
+        # cannot clone — no SSH key, so `git submodule update` dies with
+        # "git@github.com: Permission denied (publickey)" and takes the whole
+        # step (and every downstream job) with it. Both repos are PUBLIC, so
+        # route just those two exact URLs over anonymous HTTPS via a global
+        # insteadOf. Scoped to the exact URLs so the cloud-data HTTPS→SSH
+        # key rewrite above is left intact, and no private submodule is touched.
+        for pub in cloud cloud-u-containers; do
+          git config --global \
+            url."https://github.com/diegonmarcos/$pub.git".insteadOf \
+            "git@github.com:diegonmarcos/$pub.git"
+        done
+
         git submodule sync --recursive >/dev/null
 
         # name → path, restricted to the allowlist AND to names that actually
