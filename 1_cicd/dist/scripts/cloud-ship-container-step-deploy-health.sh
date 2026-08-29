@@ -13,6 +13,48 @@
 # Step: Post-deploy health check — waits for all containers to be healthy
 # Sourced by cloud-ship-container-engine.sh
 
+# Assert every PUBLISHED port actually accepts a connection on the host.
+#
+# Container health is not service health: on 2026-08-29 a stalwart deploy
+# recreated stalwart_default, the container moved to a new bridge IP, and
+# docker left 10 DNAT rules pointing at the OLD address on a bridge that no
+# longer existed. Zero rules pointed at the live container. Every published
+# port — JMAP, IMAP, SMTP, ManageSieve — refused connections while the
+# container reported `healthy`, because its healthcheck curls 127.0.0.1 from
+# *inside* the netns and never crosses the NAT that was broken. The deploy
+# went green and the mail server was dark.
+#
+# ponytail: a TCP connect, not a protocol probe. Anything deeper needs
+# per-service knowledge the engine does not have, and a refused connect is
+# the failure mode NAT breakage actually produces.
+_assert_published_ports() {
+    local cf="$1"
+    local probe
+    probe='for c in $(docker compose '"$cf"' ps --format "{{.Name}}" 2>/dev/null); do
+        docker port "$c" 2>/dev/null | while read -r line; do
+            hp=${line##*-> }
+            [ "$hp" = "$line" ] && continue
+            port=${hp##*:}
+            ip=${hp%:*}
+            case "$ip" in 0.0.0.0|::|"[::]") ip=127.0.0.1 ;; esac
+            ip=${ip#[}; ip=${ip%]}
+            if ! timeout 5 bash -c "exec 3<>/dev/tcp/$ip/$port" 2>/dev/null; then
+                echo "DEAD $c $ip:$port"
+            fi
+        done
+    done'
+
+    local dead
+    dead=$(ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && $probe'" 2>/dev/null || true)
+    [ -z "$dead" ] && return 0
+
+    log "FAIL: containers are healthy but published ports refuse connections:"
+    echo "$dead" | while read -r l; do log "  $l"; done
+    log "  (typically orphaned docker DNAT rules after a network recreate --"
+    log "   compare 'iptables -t nat -S DOCKER' against the live container IP)"
+    return 1
+}
+
 step_health() {
     CURRENT_STEP="health"
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host -- skipping health"; return 0; }
@@ -84,6 +126,8 @@ EOF
 
         if [ "$all_ok" = "true" ]; then
             log "All containers healthy (${elapsed}s)"
+            _assert_published_ports "$cf" || return 1
+            log "Published ports answering"
             return 0
         fi
 
