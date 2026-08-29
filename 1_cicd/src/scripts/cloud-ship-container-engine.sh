@@ -241,6 +241,15 @@ rewrite_compose_image_refs() {
 
 # SSH multiplexing: one connection reused across all steps, kept alive 120s
 SSH_OPTS="-o ControlMaster=auto -o ControlPath=/tmp/ssh-mux-%r@%h:%p -o ControlPersist=120 -o ServerAliveInterval=15 -o ServerAliveCountMax=8"
+# ponytail: ConnectTimeout+BatchMode were missing here while the home-manager
+# engine has had both since day one. Without ConnectTimeout an unreachable VM
+# blocks in the TCP connect, so ssh_with_retry's attempt 2 never returns:
+# stalwart -> oci-mail on 2026-08-28 logged one "ssh exit 255 attempt 1/3" at
+# 19:17:25 and then NOTHING until the 80-minute GHA action cap killed the job.
+# SSH_DETACH_MAX (7200s) can't bound it either — it is longer than the job cap.
+# 15s matches cloud-ship-nix-homemanager-engine.sh; BatchMode stops a password
+# prompt hanging a non-interactive runner for the same reason.
+SSH_OPTS="$SSH_OPTS -o ConnectTimeout=15 -o BatchMode=yes"
 
 # SSH override hooks (used during VM cutover before DNS/alias points to new IP)
 # SSH_HOST_OVERRIDE=<ip>          → -o HostName=<ip>
