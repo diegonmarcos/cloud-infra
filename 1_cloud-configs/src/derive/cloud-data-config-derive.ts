@@ -1165,6 +1165,21 @@ function deriveCaddy(c: any): DerivedFile[] {
     .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isEdgeMcp) }))
     .filter((g: any) => (g.endpoints ?? []).length > 0);
 
+  // ── OIDC public machine endpoints (edge) ──
+  // The bearer tier above is only mintable if the token endpoint is reachable
+  // off-mesh, and the hub 403s auth.diegonmarcos.com for non-WG clients by
+  // design. Exposing the whole portal would change that posture; exposing the
+  // machine endpoints does not — a public token endpoint yields nothing
+  // without a client secret, which is how every public IdP works. Opt-in via
+  // authelia's build.json proxy.primary.oidc_public_paths; an absent
+  // declaration emits nothing and the edge keeps failing closed on the host.
+  // authSvc already bound above (authelia ACL derivation) — reuse it.
+  const oidcPublicPaths: string[] = (authSvc as any)?.proxy?.primary?.oidc_public_paths ?? [];
+  const oidcPublic = oidcPublicPaths.length > 0 ? {
+    domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
+    paths: oidcPublicPaths,
+  } : null;
+
   // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
   // per-container manifest deriveContainerConfigs emits for the `caddy-public` service.
   const publicFile: DerivedFile = {
@@ -1224,6 +1239,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       public_routes:        publicSubdomainRoutes,
       public_path_routes:   publicPathRoutes,
       public_mcp_routes:    publicMcpRoutes,
+      ...(oidcPublic ? { oidc_public: oidcPublic } : {}),
       github_pages_proxies: githubPagesProxies,
       well_known_routes:    wellKnownRoutes,
     },
