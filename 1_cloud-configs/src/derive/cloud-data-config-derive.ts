@@ -1151,8 +1151,18 @@ function deriveCaddy(c: any): DerivedFile[] {
       paths: (g.paths ?? []).filter((p: any) => isPublic(p) || ((p.public_paths ?? []).length > 0)),
     }))
     .filter((g: any) => (g.paths ?? []).length > 0);
+  // MCP endpoints reach the edge in TWO tiers, not one: fully-public
+  // (wg_only:false — today cloud-cgc-pub-mcp) AND bearer-gated
+  // (bearer_auth:true — today cloud-infra-mcp). Filtering on isPublic alone
+  // dropped the bearer tier, which contradicted bearer_auth's own contract
+  // ("the ONLY way an MCP endpoint is reachable off-mesh"): the token door
+  // was rendered on gcp-proxy, where a public client can never present it,
+  // and the edge — the only place a public client terminates — never heard
+  // of the endpoint. The wg_only/bearer_auth flags ride along untouched so
+  // caddyfile-public.nix renders the right gate per endpoint.
+  const isEdgeMcp = (e: any) => isPublic(e) || e?.bearer_auth === true;
   const publicMcpRoutes = mcpRoutes
-    .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isPublic) }))
+    .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isEdgeMcp) }))
     .filter((g: any) => (g.endpoints ?? []).length > 0);
 
   // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
