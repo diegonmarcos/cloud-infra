@@ -15,6 +15,27 @@
 # ponytail: a TCP connect, not a protocol probe. Anything deeper needs
 # per-service knowledge the engine does not have, and a refused connect is
 # the failure mode NAT breakage actually produces.
+# Re-point published-port DNAT at the containers' current addresses, by piping
+# cloud-ship-container-sync-dnat.sh to the host. See that script for why.
+# Non-fatal: it is a repair, and _assert_published_ports is the actual verdict.
+_sync_published_port_dnat() {
+    local cf="$1"
+    # STEPS_DIR is where the engine sourced this file from (it resolves the
+    # build.sh symlink first), so the helper sits beside us.
+    local helper="${STEPS_DIR:-$(dirname "$0")}/cloud-ship-container-sync-dnat.sh"
+    [ -f "$helper" ] || { log "  dnat: helper missing, skipping repair"; return 0; }
+
+    local out
+    out=$(ssh -o ConnectTimeout=15 -o BatchMode=yes "$DEPLOY_HOST" \
+              "cd '$DEPLOY_PATH' && sudo bash -s -- '$cf'" < "$helper" 2>/dev/null || true)
+    [ -z "$out" ] && return 0
+    # Only surface real changes; a fully correct fleet prints "ok ..." per port.
+    echo "$out" | grep -v '^ok ' | while read -r l; do
+        [ -n "$l" ] && log "  dnat: $l"
+    done
+    return 0
+}
+
 _assert_published_ports() {
     local cf="$1"
     local probe
@@ -114,6 +135,10 @@ EOF
 
         if [ "$all_ok" = "true" ]; then
             log "All containers healthy (${elapsed}s)"
+            # Repair before asserting: on "iptables": false hosts the compose up
+            # that just ran is itself what broke the published-port mapping, so
+            # asserting first would only report a breakage we can fix here.
+            _sync_published_port_dnat "$cf"
             _assert_published_ports "$cf" || return 1
             log "Published ports answering"
             return 0

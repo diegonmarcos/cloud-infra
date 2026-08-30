@@ -459,11 +459,13 @@
       "lang": "sh",
       "role": "script",
       "exports": [
+        "_sync_published_port_dnat()",
         "_assert_published_ports()",
         "step_health()"
       ],
       "imports": [],
       "symbols": [
+        "_sync_published_port_dnat()",
         "_assert_published_ports()",
         "step_health()"
       ]
@@ -1504,11 +1506,13 @@
       "lang": "sh",
       "role": "script",
       "exports": [
+        "_sync_published_port_dnat()",
         "_assert_published_ports()",
         "step_health()"
       ],
       "imports": [],
       "symbols": [
+        "_sync_published_port_dnat()",
         "_assert_published_ports()",
         "step_health()"
       ]
@@ -35688,6 +35692,10 @@
       "exports": [],
       "imports": [
         "node:http",
+        "node:fs",
+        "node:path",
+        "node:child_process",
+        "node:util",
         "@modelcontextprotocol/sdk/server/mcp.js",
         "@modelcontextprotocol/sdk/server/stdio.js",
         "@modelcontextprotocol/sdk/server/streamableHttp.js",
@@ -35704,6 +35712,10 @@
       ],
       "symbols": [
         "createMcpServer()",
+        "checkKgStore()",
+        "checkCodegraphBundle()",
+        "checkOctocode()",
+        "buildHealthBody(toolCount: number, resourceCount: number)",
         "startStdio()",
         "startHttp()",
         "main()"
@@ -36909,7 +36921,7 @@
         "loadExplicit(g: Graph, path: string, layer: string)",
         "loadSignatures(g: Graph, path: string)",
         "loadGraph()",
-        "resolveTarget(g: Graph, t: string)",
+        "resolveTarget(g: Graph, t: string, limit: number = SUBSTRING_MATCH_CEILING)",
         "registerCodegraphTools(server: McpServer)"
       ]
     },
@@ -36926,6 +36938,7 @@
       ],
       "symbols": [
         "surql(q: string)",
+        "isReadOnly(q: string)",
         "registerKgStoreTools(server: McpServer)"
       ]
     },
@@ -37997,6 +38010,7 @@
         "perRepoImagePrefix",
         "perRepoTag",
         "perRepoBaseImage",
+        "ntfyUrl",
         "escapeDollars",
         "oct",
         "pvtName",
@@ -38026,8 +38040,7 @@
         "KG_STORE_NS",
         "KG_STORE_DB",
         "KG_STORE_USER",
-        "KG_DELTA",
-        "KG_GRAPHS_DIR"
+        "KG_DELTA"
       ]
     },
     {
