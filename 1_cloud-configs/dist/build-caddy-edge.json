@@ -273,7 +273,25 @@
       "comment": ""
     }
   ],
-  "public_mcp_routes": [],
+  "public_mcp_routes": [
+    {
+      "parent_domain": "mcp.diegonmarcos.com",
+      "endpoints": [
+        {
+          "base_path": "/c3-infra-mcp",
+          "upstream": "10.0.0.6:3100",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/cloud-cgc-pub-mcp",
+          "upstream": "10.0.0.6:3105"
+        }
+      ],
+      "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
+      "fallback_message": "MCP Hub -- use /cloud-drive-mcp/mcp, /c3-infra-mcp/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-services-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /cloud-cgc-pub-mcp/mcp"
+    }
+  ],
   "github_pages_proxies": [
     {
       "domain": "diegonmarcos.com, www.diegonmarcos.com",
