@@ -815,6 +815,22 @@ function deriveCaddy(c: any): DerivedFile[] {
   const introspectUp = introspectSvc ? rewriteUpstreamForCaddy(introspectSvc.vm, introspectSvc.upstream) : undefined;
   if (introspectUp) authUpstreams.introspect_proxy = introspectUp;
 
+  // ── OIDC public machine endpoints — computed here (before mainFile) so BOTH
+  // artifacts carry it: the hub owns the @not_wg bypass for these paths, the
+  // edge owns the L7 site that fronts them, and each host's build file should
+  // declare the surface it serves rather than only the other one's.
+  const oidcPublicPathsEarly: string[] = (authSvc as any)?.proxy?.primary?.oidc_public_paths ?? [];
+  const oidcPublic = oidcPublicPathsEarly.length > 0 ? {
+    domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
+    paths: oidcPublicPathsEarly,
+    // Edge reaches these over the SAME wg-public path it uses for L4
+    // fall-through (see the long rationale where this used to live, kept in
+    // git history): authelia:9091 docker-proxy hangs, hub caddy-l4 silent on
+    // 10.0.0.1, :8443 blocks on missing PROXY header. Literal matches
+    // private_forward_upstream below.
+    upstream: "https://10.1.0.2:443",
+  } : null;
+
   // ── all_app_urls: canonical per-container, per-port .app URL synthesis ──
   // Naming rules (zero heuristics — all declared):
   //   {container}.app                          → HTTPS redirect to first canonical URL
@@ -1116,6 +1132,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       well_known_routes: wellKnownRoutes,
       github_pages_proxies: githubPagesProxies,
       mcp_routes:       mcpRoutes,
+      ...(oidcPublic ? { oidc_public: oidcPublic } : {}),
       special,
       internal_routes:  internalRoutes,
       s3_routes:        s3Routes,
@@ -1165,34 +1182,8 @@ function deriveCaddy(c: any): DerivedFile[] {
     .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isEdgeMcp) }))
     .filter((g: any) => (g.endpoints ?? []).length > 0);
 
-  // ── OIDC public machine endpoints (edge) ──
-  // The bearer tier above is only mintable if the token endpoint is reachable
-  // off-mesh, and the hub 403s auth.diegonmarcos.com for non-WG clients by
-  // design. Exposing the whole portal would change that posture; exposing the
-  // machine endpoints does not — a public token endpoint yields nothing
-  // without a client secret, which is how every public IdP works. Opt-in via
-  // authelia's build.json proxy.primary.oidc_public_paths; an absent
-  // declaration emits nothing and the edge keeps failing closed on the host.
-  // authSvc already bound above (authelia ACL derivation) — reuse it.
-  const oidcPublicPaths: string[] = (authSvc as any)?.proxy?.primary?.oidc_public_paths ?? [];
-  const oidcPublic = oidcPublicPaths.length > 0 ? {
-    domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
-    paths: oidcPublicPaths,
-    // Reach the hub over the SAME wg-public path the edge already uses for its
-    // L4 fall-through (private_forward_upstream, 10.1.0.2:443) — the one hub
-    // address proven reachable from oci-analytics. The mesh routes were dead
-    // ends: authelia:9091's docker-proxy hangs, and the hub's caddy-l4 does
-    // not answer on the 10.0.0.1 mesh IP (only 4182, host-networked, does).
-    // Via 10.1.0.2 the hub's caddy-l4 @notmail prepends proxy_protocol v2 to
-    // :8443, so the auth vhost sees source 10.1.0.1 (wg-public, non-mesh) —
-    // which its @not_wg gate would 403, EXCEPT the 3 OIDC machine paths are
-    // now carved out of that gate via authelia's proxy.primary.bypass_paths.
-    // So this L7-terminates auth at the edge and re-originates to the hub,
-    // which serves exactly those 3 public paths and 403s everything else.
-    // Emitted as data so the edit lands in the ship-watched dist file.
-    // Literal matches private_forward_upstream below (the edge's L4 fall-through).
-    upstream: "https://10.1.0.2:443",
-  } : null;
+  // (oidc_public is computed earlier, next to authUpstreams, so the main
+  // build-caddy.json can carry it too — see that block for the rationale.)
 
   // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
   // per-container manifest deriveContainerConfigs emits for the `caddy-public` service.
