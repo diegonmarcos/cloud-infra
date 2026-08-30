@@ -1178,15 +1178,18 @@ function deriveCaddy(c: any): DerivedFile[] {
   const oidcPublic = oidcPublicPaths.length > 0 ? {
     domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
     paths: oidcPublicPaths,
-    // The edge reaches these endpoints through the HUB's auth vhost over wg0,
-    // NOT the raw authelia upstream: gcp-proxy firewalls 9091 to itself, so a
-    // direct proxy from the edge times out. Going via the hub's :8443 with the
-    // auth SNI means the edge's mesh source passes the hub @wg gate and the hub
-    // fronts authelia locally. Must be the 10.0.0.1 mesh IP — via wg-public
-    // (10.1.0.2) the hub sees 10.1.0.1, outside wgCidrs, and 403s. Emitted as
-    // data (not hardcoded in the renderer) so this edit lands in the dist file
-    // ship's push trigger watches; a renderer-only change never ships itself.
-    upstream: `https://${(caddyCfg.global?.hub_mesh_ip ?? "10.0.0.1")}:8443`,
+    // The edge reaches these endpoints exactly as a mesh browser does: proxy
+    // to the HUB's caddy-l4 :443 over wg0 with the auth SNI. NOT authelia:9091
+    // (gcp-proxy firewalls it to itself → timeout) and NOT the hub's :8443
+    // (behind a proxy_protocol listener that blocks waiting for a PROXY header
+    // only the local l4 hop sends → also a timeout). caddy-l4 :443 @notmail
+    // prepends proxy_protocol v2 and forwards to local :8443, so the auth
+    // vhost sees the edge's real wg IP (in wgCidrs → not 403) and fronts
+    // authelia. Must be the 10.0.0.1 mesh IP — via wg-public (10.1.0.2) the
+    // hub sees 10.1.0.1, outside wgCidrs, and 403s. Emitted as data (not
+    // hardcoded in the renderer) so this edit lands in the dist file ship's
+    // push trigger watches; a renderer-only change never ships itself.
+    upstream: `https://${(caddyCfg.global?.hub_mesh_ip ?? "10.0.0.1")}:443`,
   } : null;
 
   // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
