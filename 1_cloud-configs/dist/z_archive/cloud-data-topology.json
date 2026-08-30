@@ -110,6 +110,7 @@
         "cloud-cgc-pvt-mcp",
         "hermes-agent",
         "kg-store",
+        "kg-store-pub",
         "my-ai-api",
         "session-memory",
         "mattermost",
@@ -4007,6 +4008,43 @@
         "enabled": true
       },
       "flake": "user-ai_kg-store"
+    },
+    "kg-store-pub": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_kg-store-pub",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "port": 8002,
+      "dns": "kg-store-pub.app",
+      "upstream": "10.0.0.6:8002",
+      "containers": {
+        "app": {
+          "container_name": "kg-store-pub",
+          "port": 8002,
+          "protocol": "http",
+          "db_engine": "surrealdb",
+          "image": "ghcr.io/diegonmarcos/kg-store-pub:latest"
+        }
+      },
+      "container_names": [
+        "kg-store-pub"
+      ],
+      "all_ports": [
+        "8002"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 8002
+      },
+      "backup": {
+        "enabled": true
+      },
+      "flake": "user-ai_kg-store-pub"
     },
     "my-ai-api": {
       "category": "agi",

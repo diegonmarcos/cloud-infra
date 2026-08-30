@@ -188,6 +188,20 @@ resolve_remote_name() { # $1=LOCAL_NAME → stdout: remote name; rc!=0 if unreso
   printf '%s\n' "$_rrn_remote"
 }
 
+# PRIVATE-SET MEMBERSHIP (.runtime.octocode.private_repos — same build.json,
+# same file/mechanism as repo_map above). rc 0 (and prints "true") iff
+# LOCAL_NAME is one of the repos whose GitHub source is private; rc 1
+# ("false") otherwise, INCLUDING an unreadable build.json — fail-safe here
+# means "not private" for LABEL-TARGET purposes only, because
+# resolve_repo_desired_visibility()'s own independent `gh repo view` check
+# (and verify_or_delete_repo_pkg()'s backstop) still catch a real private repo
+# regardless of what this function returns.
+is_private_repo() { # $1=LOCAL_NAME → rc 0 if private_repos, else 1
+  _ipr_bj=$(resolve_bj) || return 1
+  _ipr_hit=$(jq -r --arg l "$1" '(.runtime.octocode.private_repos // []) | index($l) // empty' "$_ipr_bj" 2>/dev/null)
+  [ -n "$_ipr_hit" ]
+}
+
 # LABEL PER TARGET — repo mode (ITEM 1, the actual fix; see file header for the
 # incident). GHCR auto-links a NEW package to whatever repo
 # org.opencontainers.image.source names, and the CREATED visibility inherits
@@ -199,7 +213,21 @@ resolve_remote_name() { # $1=LOCAL_NAME → stdout: remote name; rc!=0 if unreso
 # package is not known to inherit PUBLIC from anywhere, and the post-push
 # verify_or_delete_repo_pkg() backstop still catches it if it somehow comes up
 # public anyway.
+#
+# CONSOLIDATION (private repos only): a PRIVATE repo's package does NOT link
+# to that repo's own (private) GitHub project — it links to cloud-vault (also
+# private) instead. Two reasons this is worth the indirection: (a) every
+# private cgc-db-* package is still born private via label inheritance, same
+# as before, just from a different private repo; (b) it puts every private DB
+# package under ONE repo, so a single cloud-vault-scoped classic PAT can pull
+# all of them, instead of needing a separate classic PAT per private source
+# repo (GHCR package-pull PATs are scoped to the linked repo, not to GHCR as a
+# whole). Public repos are unaffected — they keep linking to their own repo.
 resolve_repo_source_label() { # $1=PKG (for error msg) $2=LOCAL_NAME → stdout: LABEL value; rc 1 (empty stdout) if unresolved
+  if is_private_repo "$2"; then
+    printf 'https://github.com/diegonmarcos/cloud-vault\n'
+    return 0
+  fi
   _rsl_remote=$(resolve_remote_name "$2") || {
     echo "::error::[cgc-db] $1: cannot resolve GitHub URL for local_name '$2' (repo_map lookup failed) — omitting org.opencontainers.image.source LABEL; the post-push visibility backstop will delete the package if it ends up public"
     return 1

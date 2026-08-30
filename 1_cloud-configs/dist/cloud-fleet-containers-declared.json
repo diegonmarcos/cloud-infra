@@ -386,6 +386,17 @@
           "public_url": null
         },
         {
+          "id": "kg-store-pub",
+          "name": "kg-store-pub",
+          "vm": "oci-A1-f_0",
+          "category": "data",
+          "subgroup": "Data",
+          "port": 8002,
+          "private_ip": "10.0.0.6",
+          "private_url": "https://kg-store-pub.app",
+          "public_url": null
+        },
+        {
           "id": "scrappers-api",
           "name": "scrappers-api",
           "vm": "oci-A1-f_0",
@@ -836,6 +847,24 @@
             "mount": null
           },
           "port": 8001,
+          "vm": "oci-A1-f_0",
+          "backup": {
+            "enabled": true,
+            "strategy": null
+          }
+        },
+        {
+          "id": "kg-store-pub/app",
+          "service": "kg-store-pub",
+          "container": "app",
+          "engine": "surrealdb",
+          "kind": "container",
+          "persistence": {
+            "type": "unknown",
+            "ref": null,
+            "mount": null
+          },
+          "port": 8002,
           "vm": "oci-A1-f_0",
           "backup": {
             "enabled": true,
@@ -4154,6 +4183,24 @@
           "mount": null
         },
         "port": 8001,
+        "vm": "oci-A1-f_0",
+        "backup": {
+          "enabled": true,
+          "strategy": null
+        }
+      },
+      {
+        "id": "kg-store-pub/app",
+        "service": "kg-store-pub",
+        "container": "app",
+        "engine": "surrealdb",
+        "kind": "container",
+        "persistence": {
+          "type": "unknown",
+          "ref": null,
+          "mount": null
+        },
+        "port": 8002,
         "vm": "oci-A1-f_0",
         "backup": {
           "enabled": true,

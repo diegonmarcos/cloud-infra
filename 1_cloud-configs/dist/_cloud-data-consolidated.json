@@ -187,6 +187,7 @@
         "cloud-cgc-pub-mcp",
         "hermes-agent",
         "kg-store",
+        "kg-store-pub",
         "my-ai-api",
         "session-memory",
         "chat-mattermost",
@@ -210,7 +211,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 60
+      "container_count": 61
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -5711,9 +5712,16 @@
             "cloud-data-my-ai-memory"
           ],
           "home": "/home/appuser",
-          "kg_store": {
-            "_comment": "reindex.sh ingests the infra graph delta into kg-store (SurrealDB) after building the code graph — unified 'build all graphs' job. Localhost host-network; ns/db/user data-driven; delta from the cgc bundle. KG_STORE_PASS (SurrealDB root) is wired as a shared secret later; until then the ingest gracefully no-ops.",
+          "_kg_store_comment": "TWO physically separate SurrealDB instances, one per MCP container — the public MCP must never be able to query private-repo data. kg_store_pub (127.0.0.1:8002, public repos only) feeds cloud-cgc-pub-mcp; kg_store_pvt (127.0.0.1:8001, full store) feeds cloud-cgc-pvt-mcp. reindex.sh ingests the infra graph delta into kg-store (SurrealDB) after building the code graph — unified 'build all graphs' job. Localhost host-network; ns/db/user data-driven; delta from the cgc bundle. KG_STORE_PASS / KG_STORE_PASS_PUB (SurrealDB root, one per instance) are wired as shared secrets; until then the ingest gracefully no-ops.",
+          "kg_store_pvt": {
             "url": "http://127.0.0.1:8001",
+            "ns": "infra",
+            "db": "production",
+            "user": "root",
+            "delta": "/app/graphs/build-kg-graph_delta.json"
+          },
+          "kg_store_pub": {
+            "url": "http://127.0.0.1:8002",
             "ns": "infra",
             "db": "production",
             "user": "root",
@@ -5753,7 +5761,8 @@
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       },
       "secret_env_vars": [
-        "KG_STORE_PASS"
+        "KG_STORE_PASS",
+        "KG_STORE_PASS_PUB"
       ]
     },
     "db-agent": {
@@ -5904,6 +5913,187 @@
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb",
+      "kg": {
+        "namespace": "infra",
+        "database": "production",
+        "embedder": {
+          "enabled": false,
+          "model": "nomic-embed-text",
+          "dim": 768,
+          "index_type": "MTREE",
+          "vector_dtype": "F32"
+        },
+        "ingest": {
+          "endpoint": "/import",
+          "idempotent": true,
+          "stale_strategy": "mark"
+        },
+        "node_tables": [
+          {
+            "table": "vm",
+            "key_source": "ssh_alias"
+          },
+          {
+            "table": "service",
+            "key_source": "name"
+          },
+          {
+            "table": "container",
+            "key_source": "container_name"
+          },
+          {
+            "table": "domain",
+            "key_source": "fqdn"
+          },
+          {
+            "table": "log",
+            "key_source": "auto"
+          },
+          {
+            "table": "documentation",
+            "key_source": "path"
+          },
+          {
+            "table": "audit_log",
+            "key_source": "auto"
+          },
+          {
+            "table": "repo",
+            "key_source": "name"
+          },
+          {
+            "table": "module",
+            "key_source": "name"
+          },
+          {
+            "table": "package",
+            "key_source": "name"
+          },
+          {
+            "_comment": "octocode code-graph file nodes (full file-level mirror). One table; node_type property = file|source_file|test_file|config_file. Populated by a_solutions/user-ai_cloud-cgc-pub-mcp/src/code/octocode-export.py reading octocode's Lance graphrag_nodes per repo. key = <repo>:<path>.",
+            "table": "file",
+            "key_source": "path"
+          }
+        ],
+        "edge_tables": [
+          {
+            "table": "hosted_on",
+            "in": "service",
+            "out": "vm"
+          },
+          {
+            "table": "runs_container",
+            "in": "service",
+            "out": "container"
+          },
+          {
+            "table": "depends_on",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "proxied_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "authenticated_by",
+            "in": "service",
+            "out": "service"
+          },
+          {
+            "table": "connected_to",
+            "in": "vm",
+            "out": "vm"
+          },
+          {
+            "table": "routes_to",
+            "in": "domain",
+            "out": "service"
+          },
+          {
+            "table": "caused_by",
+            "in": "log",
+            "out": "any"
+          },
+          {
+            "table": "belongs_to_repo",
+            "in": "module",
+            "out": "repo"
+          },
+          {
+            "table": "implements",
+            "in": "module",
+            "out": "service"
+          },
+          {
+            "table": "declares_tool",
+            "in": "repo",
+            "out": "package"
+          },
+          {
+            "table": "consumes",
+            "in": "repo",
+            "out": "repo"
+          },
+          {
+            "_comment": "octocode code-graph relationships (file→file), e.g. sibling_module. The exporter emits whatever relationship types octocode produced; SurrealDB RELATE auto-creates any not pre-defined here.",
+            "table": "sibling_module",
+            "in": "file",
+            "out": "file"
+          }
+        ]
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "secret_env_vars": [
+        "SURREAL_ROOT_PASSWORD"
+      ]
+    },
+    "kg-store-pub": {
+      "category": "data",
+      "vm": "oci-A1-f_0",
+      "folder": "user-ai_kg-store-pub",
+      "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+      "enabled": true,
+      "flake": "user-ai_kg-store-pub",
+      "port": 8002,
+      "dns": "kg-store-pub.app",
+      "upstream": "10.0.0.6:8002",
+      "containers": {
+        "app": {
+          "container_name": "kg-store-pub",
+          "port": 8002,
+          "protocol": "http",
+          "db_engine": "surrealdb",
+          "image": "ghcr.io/diegonmarcos/kg-store-pub:latest"
+        }
+      },
+      "container_names": [
+        "kg-store-pub"
+      ],
+      "all_ports": [
+        "8002"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "declared_ports": {
+        "app": 8002
+      },
+      "backup": {
+        "enabled": true
+      },
+      "upstream_image": "surrealdb/surrealdb:v2",
+      "data_path": "/opt/data/surrealdb-pub",
       "kg": {
         "namespace": "infra",
         "database": "production",
@@ -9175,17 +9365,17 @@
   "databases": {
     "_doc": "Canonical registry of every datastore. `kind` is what it is; `persistence.type` is where it survives. Fleet groups project one axis — never hand-maintain a parallel list. Git existence comes from the fetched GitHub inventory (src/inputs/github-repos.json); mirrored/indexed are declaration-driven flags on top.",
     "_counts": {
-      "total": 85,
+      "total": 86,
       "by_kind": {
         "embedded": 14,
-        "container": 9,
+        "container": 10,
         "object-store": 5,
         "git-remote": 57
       },
       "by_persistence": {
         "docker-volume": 21,
         "docker-bind": 1,
-        "unknown": 1,
+        "unknown": 2,
         "s3": 5,
         "git": 57
       },
@@ -9375,6 +9565,24 @@
           "mount": null
         },
         "port": 8001,
+        "vm": "oci-A1-f_0",
+        "backup": {
+          "enabled": true,
+          "strategy": null
+        }
+      },
+      {
+        "id": "kg-store-pub/app",
+        "service": "kg-store-pub",
+        "container": "app",
+        "engine": "surrealdb",
+        "kind": "container",
+        "persistence": {
+          "type": "unknown",
+          "ref": null,
+          "mount": null
+        },
+        "port": 8002,
         "vm": "oci-A1-f_0",
         "backup": {
           "enabled": true,
@@ -11983,6 +12191,7 @@
           "cloud-cgc-pub-mcp",
           "hermes-agent",
           "kg-store",
+          "kg-store-pub",
           "my-ai-api",
           "session-memory",
           "chat-mattermost",
@@ -12462,6 +12671,11 @@
       },
       "kg-store": {
         "dir": "user-ai_kg-store",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "kg-store-pub": {
+        "dir": "user-ai_kg-store-pub",
         "vm": "oci-apps",
         "has_docker": true
       },

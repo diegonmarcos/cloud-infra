@@ -6,24 +6,24 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2552,
+    "files": 2556,
     "by_lang": {
-      "nix": 447,
-      "sh": 375,
+      "nix": 449,
+      "sh": 377,
       "ts": 325,
       "py": 848,
       "js": 23,
       "rust": 534
     },
     "by_role": {
-      "flake": 73,
-      "script": 111,
-      "shell": 259,
+      "flake": 74,
+      "script": 112,
+      "shell": 260,
       "module": 216,
       "engine": 1,
       "nix-module": 309,
       "python": 843,
-      "compose": 65,
+      "compose": 66,
       "entrypoint": 24,
       "mcp-tool": 101,
       "workflow-dag": 2,
@@ -91,6 +91,7 @@
         "build_base_tar()",
         "build_repo_tar()",
         "resolve_remote_name()",
+        "is_private_repo()",
         "resolve_repo_source_label()",
         "resolve_repo_desired_visibility()",
         "gate_repo_push()",
@@ -109,6 +110,7 @@
         "build_base_tar()",
         "build_repo_tar()",
         "resolve_remote_name()",
+        "is_private_repo()",
         "resolve_repo_source_label()",
         "resolve_repo_desired_visibility()",
         "gate_repo_push()",
@@ -1138,6 +1140,7 @@
         "build_base_tar()",
         "build_repo_tar()",
         "resolve_remote_name()",
+        "is_private_repo()",
         "resolve_repo_source_label()",
         "resolve_repo_desired_visibility()",
         "gate_repo_push()",
@@ -1156,6 +1159,7 @@
         "build_base_tar()",
         "build_repo_tar()",
         "resolve_remote_name()",
+        "is_private_repo()",
         "resolve_repo_source_label()",
         "resolve_repo_desired_visibility()",
         "gate_repo_push()",
@@ -38311,6 +38315,127 @@
         "default",
         "srcDir",
         "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_kg-store-pub/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_kg-store-pub/scripts/seed_from_config.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "_resolve_topology()",
+        "log()",
+        "surreal_query()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_resolve_topology()",
+        "log()",
+        "surreal_query()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_kg-store-pub/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "port",
+        "binariesImage",
+        "services",
+        "surrealdb",
+        "image",
+        "container_name",
+        "network_mode",
+        "user",
+        "env_file",
+        "command",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "a_solutions/user-ai_kg-store-pub/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "wrap",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "kgSchema",
+        "embedder",
+        "vectorIndexesDdl",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "name",
+        "vars",
+        "EMBEDDER_MODEL",
+        "EMBEDDER_DIM",
+        "EMBEDDER_ENABLED",
+        "VECTOR_INDEXES_DDL",
         "composeSpec",
         "title"
       ]

@@ -980,6 +980,17 @@
       },
       "health": null
     },
+    "kg-store-pub": {
+      "name": "kg-store-pub",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "data",
+      "ports": {
+        "app": 8002
+      },
+      "health": null
+    },
     "my-ai-api": {
       "name": "my-ai-api",
       "vm": "oci-A1-f_0",
@@ -1659,6 +1670,10 @@
       "dns": "kg-store.app"
     },
     {
+      "service": "kg-store-pub",
+      "dns": "kg-store-pub.app"
+    },
+    {
       "service": "my-ai-api",
       "dns": "my-ai-api.app"
     },
@@ -1962,6 +1977,14 @@
       "db_user": null
     },
     {
+      "service": "kg-store-pub",
+      "container": "app",
+      "engine": "surrealdb",
+      "port": 8002,
+      "db_name": null,
+      "db_user": null
+    },
+    {
       "service": "chat-mattermost",
       "container": "db",
       "engine": "postgres",
@@ -2064,6 +2087,7 @@
           "cloud-cgc-pub-mcp",
           "hermes-agent",
           "kg-store",
+          "kg-store-pub",
           "my-ai-api",
           "session-memory",
           "chat-mattermost",
@@ -2663,6 +2687,17 @@
         "category": "data",
         "ports": {
           "app": 8001
+        },
+        "health": null
+      },
+      "kg-store-pub": {
+        "name": "kg-store-pub",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "data",
+        "ports": {
+          "app": 8002
         },
         "health": null
       },

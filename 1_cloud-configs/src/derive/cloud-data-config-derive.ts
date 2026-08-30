@@ -1194,13 +1194,23 @@ function deriveCaddy(c: any): DerivedFile[] {
       // browser got 502 on /umami/* and /matomo/* while mesh clients saw 200.
       // Any host owning a declared-public path must TERMINATE here so the
       // path-level split can happen.
-      public_sni_hosts: [...new Set([
-        ...githubPagesProxies.flatMap((g: any) => String(g.domain).split(",").map((s: string) => s.trim())),
-        ...publicSubdomainRoutes.filter((r: any) => (r.auth ?? null) === "none").map((r: any) => r.domain),
-        ...[...publicAMcp, ...publicBApis, ...publicCAppPaths, ...publicDOthers]
-             .map((r: any) => String(r.host ?? r.domain ?? "").split("/")[0])
-             .filter(Boolean),
-      ])],
+      // Every source is normalised the SAME way. A `domain` may carry several
+      // comma-joined names ("diegonmarcos.com, www.diegonmarcos.com") and a
+      // route key may carry a path suffix. Splitting only the gh-pages source
+      // (as this did) leaks a literal "a.com, b.com" into the Caddyfile, where
+      // `@public tls sni` reads it as the bogus token "a.com," and the real
+      // host never matches — the failure is silent, the SNI simply never hits.
+      public_sni_hosts: [...new Set(
+        [
+          ...githubPagesProxies.map((g: any) => g.domain),
+          ...publicSubdomainRoutes.filter((r: any) => (r.auth ?? null) === "none").map((r: any) => r.domain),
+          ...[...publicAMcp, ...publicBApis, ...publicCAppPaths, ...publicDOthers]
+               .map((r: any) => r.host ?? r.domain),
+        ]
+          .flatMap((d: any) => String(d ?? "").split(","))
+          .map((s: string) => s.trim().split("/")[0])
+          .filter(Boolean),
+      )],
       public_routes:        publicSubdomainRoutes,
       public_path_routes:   publicPathRoutes,
       public_mcp_routes:    publicMcpRoutes,
@@ -1557,6 +1567,16 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
       safeEngineAliases.add(eng);
     }
   }
+  // When an engine becomes ambiguous (2nd container declares the same
+  // db_engine, e.g. kg-store-pub also declaring "surrealdb"), the n===1
+  // check above drops the alias for EVERYONE — which would silently break
+  // the original consumer's build-{engine}.json symlink (kg-store's
+  // src/build-surrealdb.json). Pin the alias to its original owner so that
+  // stays bound; the newer, ambiguous container relies solely on its own
+  // build-{container_name}.json (never on the shared engine-named file).
+  const ENGINE_ALIAS_PIN: Record<string, string> = {
+    surrealdb: "kg-store",
+  };
 
   for (const [svcName, svc] of Object.entries(services)) {
     const containers = (svc as any).containers ?? {};
@@ -1637,7 +1657,10 @@ function deriveContainerConfigs(c: any): DerivedFile[] {
       // safeEngineAliases above). Identical spec, named by engine, so a
       // wrapper flake can consume the slice by engine name
       // (kg-store/src/build-surrealdb.json symlink).
-      if (ct.db_engine && safeEngineAliases.has(ct.db_engine)) {
+      if (ct.db_engine && (
+        safeEngineAliases.has(ct.db_engine) ||
+        ((engineCounts.get(ct.db_engine) ?? 0) > 1 && ENGINE_ALIAS_PIN[ct.db_engine] === containerName)
+      )) {
         files.push({ name: `build-${ct.db_engine}.json`, data: containerData });
       }
     }
@@ -3245,6 +3268,7 @@ const SERVICE_SUBGROUP_OVERRIDE: Record<string, { group: "infra-apps" | "user-ap
   "backup-bup":             { group: "infra-apps", subgroup: "Data" },
   "db-agent":               { group: "infra-apps", subgroup: "Data" },
   "kg-store":               { group: "infra-apps", subgroup: "Data" },
+  "kg-store-pub":           { group: "infra-apps", subgroup: "Data" },
   "scrappers-api":          { group: "infra-apps", subgroup: "APIs-MCPs" },
   "cloud-vault-mcp":        { group: "infra-apps", subgroup: "APIs-MCPs" },
   "c3-infra-api":           { group: "infra-apps", subgroup: "APIs-MCPs" },
