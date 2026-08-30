@@ -294,6 +294,18 @@ jobs:
   # rsync-into-the-live-volume mechanism cloud-cgc-db-update.sh's
   # propagate_to_host() already uses for the monolith path (stop container,
   # rsync --delete, start container) — proven, not reinvented.
+  #
+  # THIS JOB IS ALSO WHAT KEEPS kg-store (SurrealDB) OUT OF SYNC NO LONGER:
+  # this job never touched SurrealDB before — only octocode's LanceDB — so
+  # cgc.kgstore.* went stale by construction, refreshed solely by a manual
+  # `docker compose --profile reindex` CI never runs. cloud-cgc-db-restore-
+  # all.sh now closes that gap itself: once it swaps in the fresh LanceDB
+  # volume and restarts the MCP container below, it `docker exec`s into that
+  # SAME container (already carrying python3/node/octocode-export.py/kg-
+  # ingest.mjs + KG_STORE_PASS) with OCTOCODE_SKIP_INDEX=1, running ONLY the
+  # cheap export→ingest mirror (no LLM) for the repos this run staged.
+  # Indexing/LLM stays GHA-x86-only and freeze-guarded off oci-apps; nothing
+  # in this workflow needed to change to get that — see reindex.sh.
   restore-all:
     name: "cgc-db · ${{ inputs.phase }} · restore-all → oci-apps"
     needs: index
