@@ -53,11 +53,24 @@ _assert_published_ports() {
         done
     done'
 
-    local dead
-    dead=$(ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && $probe'" 2>/dev/null || true)
-    [ -z "$dead" ] && return 0
+    # Retry: "healthy" is the container's own healthcheck, which can pass
+    # before the service has finished binding its listeners. The 2026-08-30
+    # 08:30 stalwart deploy failed here 6s after `All containers healthy (0s)`
+    # while every port was in fact fine minutes later -- a false negative that
+    # failed a deploy whose activate step had already succeeded. Only a probe
+    # that stays dead for the whole window is a real failure.
+    local dead=""
+    local waited=0
+    local grace="${PORT_ASSERT_GRACE:-45}"
+    while :; do
+        dead=$(ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && $probe'" 2>/dev/null || true)
+        [ -z "$dead" ] && return 0
+        [ "$waited" -ge "$grace" ] && break
+        sleep 5
+        waited=$((waited + 5))
+    done
 
-    log "FAIL: containers are healthy but published ports refuse connections:"
+    log "FAIL: ports still refusing after ${grace}s of healthy containers:"
     echo "$dead" | while read -r l; do log "  $l"; done
     log "  (typically orphaned docker DNAT rules after a network recreate --"
     log "   compare 'iptables -t nat -S DOCKER' against the live container IP)"
