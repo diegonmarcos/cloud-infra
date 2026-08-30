@@ -1178,18 +1178,20 @@ function deriveCaddy(c: any): DerivedFile[] {
   const oidcPublic = oidcPublicPaths.length > 0 ? {
     domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
     paths: oidcPublicPaths,
-    // The edge reaches these endpoints exactly as a mesh browser does: proxy
-    // to the HUB's caddy-l4 :443 over wg0 with the auth SNI. NOT authelia:9091
-    // (gcp-proxy firewalls it to itself → timeout) and NOT the hub's :8443
-    // (behind a proxy_protocol listener that blocks waiting for a PROXY header
-    // only the local l4 hop sends → also a timeout). caddy-l4 :443 @notmail
-    // prepends proxy_protocol v2 and forwards to local :8443, so the auth
-    // vhost sees the edge's real wg IP (in wgCidrs → not 403) and fronts
-    // authelia. Must be the 10.0.0.1 mesh IP — via wg-public (10.1.0.2) the
-    // hub sees 10.1.0.1, outside wgCidrs, and 403s. Emitted as data (not
-    // hardcoded in the renderer) so this edit lands in the dist file ship's
-    // push trigger watches; a renderer-only change never ships itself.
-    upstream: `https://${(caddyCfg.global?.hub_mesh_ip ?? "10.0.0.1")}:443`,
+    // Reach the hub over the SAME wg-public path the edge already uses for its
+    // L4 fall-through (private_forward_upstream, 10.1.0.2:443) — the one hub
+    // address proven reachable from oci-analytics. The mesh routes were dead
+    // ends: authelia:9091's docker-proxy hangs, and the hub's caddy-l4 does
+    // not answer on the 10.0.0.1 mesh IP (only 4182, host-networked, does).
+    // Via 10.1.0.2 the hub's caddy-l4 @notmail prepends proxy_protocol v2 to
+    // :8443, so the auth vhost sees source 10.1.0.1 (wg-public, non-mesh) —
+    // which its @not_wg gate would 403, EXCEPT the 3 OIDC machine paths are
+    // now carved out of that gate via authelia's proxy.primary.bypass_paths.
+    // So this L7-terminates auth at the edge and re-originates to the hub,
+    // which serves exactly those 3 public paths and 403s everything else.
+    // Emitted as data so the edit lands in the ship-watched dist file.
+    // Literal matches private_forward_upstream below (the edge's L4 fall-through).
+    upstream: "https://10.1.0.2:443",
   } : null;
 
   // NOTE: named build-caddy-EDGE.json (not build-caddy-public.json) to avoid colliding with the
