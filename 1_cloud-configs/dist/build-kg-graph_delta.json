@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 299,
-    "edges": 405,
+    "nodes": 302,
+    "edges": 409,
     "by_table": {
       "vm": 4,
-      "service": 67,
-      "container": 88,
+      "service": 68,
+      "container": 89,
       "domain": 42,
       "repo": 3,
-      "module": 67,
+      "module": 68,
       "package": 28
     }
   },
@@ -1277,6 +1277,32 @@
         "image": "ghcr.io/diegonmarcos/hermes-agent:latest",
         "role": "app",
         "port": 8642,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "kg_store_pub",
+      "key": "service:kg_store_pub",
+      "properties": {
+        "name": "kg-store-pub",
+        "category": "data",
+        "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+        "domain": null,
+        "port": 8002,
+        "vm": "oci-apps",
+        "folder": "user-ai_kg-store-pub"
+      }
+    },
+    {
+      "table": "container",
+      "id": "kg_store_pub",
+      "key": "container:kg_store_pub",
+      "properties": {
+        "name": "kg-store-pub",
+        "image": "ghcr.io/diegonmarcos/kg-store-pub:latest",
+        "role": "app",
+        "port": 8002,
         "public": false
       }
     },
@@ -2910,6 +2936,17 @@
     },
     {
       "table": "module",
+      "id": "user_ai_kg_store_pub",
+      "key": "module:user_ai_kg_store_pub",
+      "properties": {
+        "name": "user-ai_kg-store-pub",
+        "repo": "cloud",
+        "category": "data",
+        "service": "kg-store-pub"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_ai_my_ai_api",
       "key": "module:user_ai_my_ai_api",
       "properties": {
@@ -4241,6 +4278,22 @@
       "from": "service:hermes_agent",
       "to": "container:hermes_agent",
       "key": "service:hermes_agent->runs_container->container:hermes_agent",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:kg_store_pub",
+      "to": "vm:oci_apps",
+      "key": "service:kg_store_pub->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:kg_store_pub",
+      "to": "container:kg_store_pub",
+      "key": "service:kg_store_pub->runs_container->container:kg_store_pub",
       "properties": {
         "role": "app"
       }
@@ -6063,6 +6116,20 @@
       "from": "module:user_ai_hermes_agent",
       "to": "service:hermes_agent",
       "key": "module:user_ai_hermes_agent->implements->service:hermes_agent",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_ai_kg_store_pub",
+      "to": "repo:cloud",
+      "key": "module:user_ai_kg_store_pub->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_kg_store_pub",
+      "to": "service:kg_store_pub",
+      "key": "module:user_ai_kg_store_pub->implements->service:kg_store_pub",
       "properties": {}
     },
     {
