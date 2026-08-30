@@ -6,19 +6,19 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2547,
+    "files": 2552,
     "by_lang": {
       "nix": 447,
-      "sh": 371,
+      "sh": 375,
       "ts": 325,
       "py": 848,
       "js": 23,
-      "rust": 533
+      "rust": 534
     },
     "by_role": {
       "flake": 73,
       "script": 111,
-      "shell": 255,
+      "shell": 259,
       "module": 216,
       "engine": 1,
       "nix-module": 309,
@@ -27,7 +27,7 @@
       "entrypoint": 24,
       "mcp-tool": 101,
       "workflow-dag": 2,
-      "rust-module": 528,
+      "rust-module": 529,
       "hook": 7,
       "file": 12
     }
@@ -14990,6 +14990,7 @@
         "svc",
         "app",
         "binariesImage",
+        "arch",
         "services",
         "matomo-hybrid",
         "image",
@@ -15660,6 +15661,58 @@
         "generate_manifest()",
         "test_dists()",
         "cmd_android()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-obs_reports/src/src/cloud-analytics-daily/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "gen()"
+      ],
+      "imports": [],
+      "symbols": [
+        "gen()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-obs_reports/src/src/cloud-analytics-daily/src/matomo-query.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "q()"
+      ],
+      "imports": [],
+      "symbols": [
+        "q()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-obs_reports/src/src/cloud-analytics-daily/src/render.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "hdr_for()",
+        "title_for()",
+        "esc()"
+      ],
+      "imports": [],
+      "symbols": [
+        "hdr_for()",
+        "title_for()",
+        "esc()"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-obs_reports/src/src/cloud-analytics-daily/src/umami-query.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "remote()"
+      ],
+      "imports": [],
+      "symbols": [
+        "remote()"
       ]
     },
     {
@@ -56002,6 +56055,7 @@
         "JMAP_URL",
         "RULES_PATH",
         "STARTUP_DELAY",
+        "POLL_INTERVAL",
         "stalwart_data"
       ]
     },
@@ -56010,6 +56064,7 @@
       "lang": "rust",
       "role": "rust-module",
       "exports": [
+        "headers_referenced",
         "email_matches",
         "maintain_filters"
       ],
@@ -56027,7 +56082,6 @@
       "symbols": [
         "from_email(em: &Email)",
         "from_domain(em: &Email)",
-        "headers_referenced(views: &[View])",
         "walk(node: &PredicateNode, out: &mut HashSet<String>)",
         "has_attachment(em: &Email)",
         "attachment_types(em: &Email)",
@@ -56066,6 +56120,7 @@
         "mailbox_get",
         "mailbox_set",
         "email_get",
+        "email_set_chunked",
         "email_set",
         "email_query_in",
         "Mailbox",
@@ -56093,6 +56148,7 @@
         "mailbox_get(&self)",
         "mailbox_set(\n        &self,\n        create: Option<Map<String, Value>>,\n        update: Option<Map<String, Value>>,\n        destroy: Option<Vec<String>>,\n        on_destroy_remove_emails: bool,\n    )",
         "email_get(&self, ids: &[String], properties: &[&str])",
+        "email_set_chunked(&self, updates: Map<String, Value>)",
         "email_set(&self, updates: Map<String, Value>)",
         "email_query_in(&self, mailbox_ids: &[String], limit: Option<usize>)"
       ]
@@ -56134,14 +56190,42 @@
       "imports": [
         "anyhow::",
         "std::time::",
-        "rules::Rules"
+        "rules::Rules",
+        "JMAP"
       ],
       "symbols": [
         "now_epoch()",
         "is_transport_error(err: &anyhow::Error)",
+        "take_reapply_request(client: &jmap::Client)",
         "one_poll(client: &jmap::Client, rules: &Rules)",
         "apply_renames_step(client: &jmap::Client, rules: &Rules)",
         "main()"
+      ]
+    },
+    {
+      "path": "a_solutions/user-comm_tools-stalwart/src/crate/src/routing.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "maintain_routing"
+      ],
+      "imports": [
+        "routing",
+        "anyhow::Result",
+        "serde_json::",
+        "std::collections::",
+        "crate::filters::",
+        "crate::jmap",
+        "crate::rules::Rules",
+        "super::"
+      ],
+      "symbols": [
+        "maintain_routing(\n    client: &jmap::Client,\n    rules: &Rules,\n    name_to_id: &HashMap<String, String>,\n    mailboxes: &[jmap::Mailbox],\n)",
+        "rules_with(routing: &str)",
+        "email(from: &str)",
+        "first_match_wins_in_list_order()",
+        "unmatched_yields_none()",
+        "outside_source_scope_is_never_routed()"
       ]
     },
     {
@@ -56158,14 +56242,15 @@
         "FolderGroup",
         "FolderRenames",
         "Filters",
+        "Route",
         "View",
         "Predicate",
         "PredicateNode"
       ],
       "imports": [
-        "routing",
         "serde::Deserialize",
         "std::collections::BTreeMap",
+        "this",
         "it",
         "pub"
       ],
