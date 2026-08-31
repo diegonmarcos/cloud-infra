@@ -815,6 +815,20 @@ function deriveCaddy(c: any): DerivedFile[] {
   const introspectUp = introspectSvc ? rewriteUpstreamForCaddy(introspectSvc.vm, introspectSvc.upstream) : undefined;
   if (introspectUp) authUpstreams.introspect_proxy = introspectUp;
 
+  // ── The edge reaches the hub over wg-public, never over the hub's docker
+  // bridge. Same literal as oidc_public.upstream / private_forward_upstream.
+  const EDGE_TO_HUB = "https://10.1.0.2:443";
+
+  // authUpstreams.authelia is authelia's bind_host (172.18.0.3:9091) — correct
+  // ONLY for the hub's own caddy, which shares the docker bridge. 172.18.0.0/16
+  // is bridge-private to gcp-proxy, so handing that literal to the edge
+  // (oci-analytics) yields an unreachable forward_auth target. The edge must
+  // cross the mesh to the hub and let the hub's caddy dial the container.
+  const edgeAuthUpstreams: Record<string, string> = {
+    ...authUpstreams,
+    ...(authUp ? { authelia: EDGE_TO_HUB } : {}),
+  };
+
   // ── OIDC public machine endpoints — computed here (before mainFile) so BOTH
   // artifacts carry it: the hub owns the @not_wg bypass for these paths, the
   // edge owns the L7 site that fronts them, and each host's build file should
@@ -828,7 +842,7 @@ function deriveCaddy(c: any): DerivedFile[] {
     // git history): authelia:9091 docker-proxy hangs, hub caddy-l4 silent on
     // 10.0.0.1, :8443 blocks on missing PROXY header. Literal matches
     // private_forward_upstream below.
-    upstream: "https://10.1.0.2:443",
+    upstream: EDGE_TO_HUB,
   } : null;
 
   // ── all_app_urls: canonical per-container, per-port .app URL synthesis ──
@@ -1200,7 +1214,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       on_demand_tls:     caddyCfg.on_demand_tls     ?? {},
       security_snippets: caddyCfg.security_snippets ?? {},
       auth:              caddyCfg.auth              ?? {},
-      auth_upstreams:    authUpstreams,
+      auth_upstreams:    edgeAuthUpstreams,
       error_handler:     caddyCfg.error_handler     ?? {},
       catch_all:         caddyCfg.catch_all         ?? {},
       messages:          caddyCfg.messages          ?? {},
