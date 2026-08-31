@@ -82,6 +82,10 @@ FAIL_REASONS=()
 
 echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-analytics) ═══"
 
+# $BEARER is forwarded into the container below as BEARER_TOKEN. Without it the
+# reports entrypoint aborts with "FATAL: BEARER_TOKEN unset and no vault JWT
+# found" — deliberately, so auth-gated probes never false-fail — and this whole
+# layer reports "no valid cloud_mail_full.json produced".
 RESULT_JSON=$(ssh -n oci-analytics "
   set -e
   docker run --pull always --rm --network host \
@@ -89,6 +93,7 @@ RESULT_JSON=$(ssh -n oci-analytics "
     -v /opt/ssh-keys/dagu:/root/.ssh:ro \
     -e CLOUD_DATA_DIR=/var/lib/dagu/data/cloud-source/1_cloud-configs/dist \
     -e REPORTS_DIR=/var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src \
+    -e BEARER_TOKEN='$BEARER' \
     '$REPORT_IMAGE' mail >&2
   docker run --rm --entrypoint sh \
     -v dagu_dagu_data:/var/lib/dagu/data \
