@@ -11,14 +11,13 @@
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
-
 # ── Full mail health diagnostic + cross-store reconciliation ──
 # Usage: cloud-health-mail-full.sh
 #
 # Two layers, both must pass:
 #
 #  1. LIVENESS/E2E — triggers the Rust cloud-mail-health-full derive on
-#     oci-analytics (identical docker invocation to obs.health.mail —
+#     oci-apps (identical docker invocation to obs.health.mail —
 #     a_solutions/infra-api_c3-infra-mcp/src/code/mcp/tools/health_mail.ts —
 #     and to the working dagu DAG a_solutions/infra-obs_dagu/src/dags/
 #     health_mail-full.yaml). 7-phase path/container/network/DNS/e2e probe.
@@ -32,7 +31,7 @@
 #     primary), maddy, and Stalwart, and fails if any store's count diverges
 #     from Gmail's beyond tolerance. Reuses existing scripts, no new
 #     clients/credentials:
-#       - a_solutions/infra-api_mail-mcp/src/code/mcp/tools/others/count-since.ts
+#       - a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/count-since.ts
 #         (maddy IMAP + Stalwart JMAP, run via `docker exec cloud-mail-mcp`)
 #       - a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py
 #         (Gmail REST API via the container's service account, run via
@@ -42,7 +41,7 @@
 #     workflow) already set up for the liveness check.
 #
 # Requires (set up by the caller — see 1_cicd/src/cicd/health_mail_full.yml):
-#   - SSH config aliases `oci-analytics` and `oci-apps` (same pattern as
+#   - SSH config alias `oci-apps` (same pattern as
 #     1_cicd/src/cicd/cloud-health-reports.yml's "Setup SSH config" step)
 #   - jq on PATH (ubuntu-latest ships it)
 # Optional (ntfy alert on failure — same topic/headers/tags the working
@@ -61,6 +60,11 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 REPORT_IMAGE="ghcr.io/diegonmarcos/cloud-data-reports:latest"
 NTFY_URL="${NTFY_URL:-http://10.0.0.6:8090}"
 NTFY_TOPIC="infra_mail-health"
+# The ntfy alert is best-effort: it must never hold the job. Without these the
+# SSH sat ~10min on a half-open mesh connection before dying on a broken pipe.
+# ConnectTimeout caps the handshake; ServerAlive* kills a silently-dropped
+# session after ~30s; the `timeout 60` wrapper on each call is the hard bound.
+NTFY_SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
 
 # Mint a fresh client_credentials token where possible (same reasoning as
 # a_solutions/infra-obs_dagu/src/dags/health_mail-full.yaml: a long-lived
@@ -93,13 +97,25 @@ tolerance_ok() {
 
 FAIL_REASONS=()
 
-echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-analytics) ═══"
+echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-apps) ═══"
 
+# HOST MUST BE oci-apps, not oci-analytics. This layer reads the report engine
+# out of the cloud-source mirror inside the dagu_dagu_data volume, and there is
+# exactly ONE writer that keeps that mirror current: the ensure-cloud-source
+# step of a_solutions/infra-obs_dagu/src/dags/sync_secrets.yaml, which runs in
+# the dagu container — and dagu is deployed on oci-apps
+# (a_solutions/infra-obs_dagu/src/build.json .deploy.host). oci-analytics still
+# carries a same-named dagu_dagu_data volume left over from before dagu moved,
+# but no container mounts it and nothing syncs it, so its cloud-source is
+# frozen at a pre-reorganisation commit where
+# a_solutions/infra-obs_reports/src/build.sh does not exist. Pointing this
+# layer at oci-apps makes it read the mirror that self-heals hourly.
+#
 # $BEARER is forwarded into the container below as BEARER_TOKEN. Without it the
 # reports entrypoint aborts with "FATAL: BEARER_TOKEN unset and no vault JWT
 # found" — deliberately, so auth-gated probes never false-fail — and this whole
 # layer reports "no valid cloud_mail_full.json produced".
-RESULT_JSON=$(ssh -n oci-analytics "
+RESULT_JSON=$(ssh -n oci-apps "
   set -e
   docker run --pull always --rm --network host \
     -v dagu_dagu_data:/var/lib/dagu/data \
@@ -165,7 +181,7 @@ STALWART_COUNT=-1
 # tools import them the same way), so only the new file itself needs copying
 # in, placed at the matching path under /app so the relative import — and
 # node's node_modules walk-up to /app/node_modules for `imapflow` — resolve.
-MAIL_SCRIPT="$REPO_ROOT/a_solutions/infra-api_mail-mcp/src/code/mcp/tools/others/count-since.ts"
+MAIL_SCRIPT="$REPO_ROOT/a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/count-since.ts"
 if [ -f "$MAIL_SCRIPT" ]; then
   MAIL_RAW=$(ssh oci-apps "cat > /tmp/count-since.ts && docker exec cloud-mail-mcp mkdir -p /app/mcp/tools/others && docker cp /tmp/count-since.ts cloud-mail-mcp:/app/mcp/tools/others/count-since.ts && docker exec cloud-mail-mcp node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/count-since.ts --since '$SINCE'" < "$MAIL_SCRIPT" 2>&1)
   MAIL_STATUS=$?
@@ -201,12 +217,12 @@ echo "═══ Result ═══"
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
   echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; stores reconciled)"
   if [ -n "$BEARER" ]; then
-    ssh -n oci-apps "curl -s -X POST '$NTFY_URL/$NTFY_TOPIC' \
+    timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
       -H 'Authorization: Bearer $BEARER' \
       -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
       -H 'Priority: 2' \
       -H 'Tags: white_check_mark,email' \
-      -d 'All mail checks passed (liveness + cross-store reconciliation)'" || true
+      -d 'All mail checks passed (liveness + cross-store reconciliation)'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
   fi
   exit 0
 fi
@@ -216,12 +232,12 @@ for r in "${FAIL_REASONS[@]}"; do echo "  - $r"; done
 
 if [ -n "$BEARER" ]; then
   DETAIL=$(printf '%s\n' "${FAIL_REASONS[@]}")
-  ssh -n oci-apps "curl -s -X POST '$NTFY_URL/$NTFY_TOPIC' \
+  timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
     -H 'Authorization: Bearer $BEARER' \
     -H 'Title: Mail Health FAILED' \
     -H 'Priority: 5' \
     -H 'Tags: rotating_light,email' \
-    -d '$(printf '%s' "$DETAIL" | sed "s/'/'\\\\''/g")'" || true
+    -d '$(printf '%s' "$DETAIL" | sed "s/'/'\\\\''/g")'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
 else
   echo "::warning::no Authelia bearer token available — skipping ntfy alert (GitHub's own scheduled-workflow-failure email still fires)"
 fi
