@@ -66,6 +66,10 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GITHUB_ACTOR: ${{ github.actor }}
+      # Job-level so the composite fetch-vault action inherits it and can
+      # materialise the age key. Without this the run aborts "No SOPS age key
+      # available" — same fix as ship-gen-configs.yml / ship-home-manager.yml.
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
       # arm64 leg: the builder entrypoint brings wg0 up (WG_PRIVATE_KEY) and
       # writes ~/.ssh/id_deploy (SSH_KEY) BEFORE dispatching ship-reports.
       # The script then builds natively on the declared arm64 runner
