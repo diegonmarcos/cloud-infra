@@ -25,6 +25,12 @@ jobs:
       WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+      # The cross-store reconciliation layer reads count_recent.py and
+      # count-since.ts out of a_solutions; a bare checkout leaves the submodule
+      # empty and both counts silently skip.
+      - uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
 
       # SSH below targets WireGuard mesh IPs (10.0.0.4 / 10.0.0.6) — port 22 is
       # firewalled to the mesh, so without wg0 every connection times out.
@@ -55,7 +61,11 @@ jobs:
       - name: Run mail health check
         env:
           NTFY_URL: ${{ secrets.NTFY_URL }}
-          AUTHELIA_BEARER_TOKEN: ${{ secrets.AUTHELIA_BEARER_TOKEN }}
+          # AUTHELIA_BEARER_TOKEN is not a secret in this repo — the one that
+          # actually exists is AUTHELIA_OIDC_BEARER_TOKEN. Referencing the
+          # non-existent name resolved to "", which both skipped the ntfy alert
+          # and left the reports container without BEARER_TOKEN.
+          AUTHELIA_BEARER_TOKEN: ${{ secrets.AUTHELIA_OIDC_BEARER_TOKEN }}
           AUTHELIA_TOKEN_URL: ${{ secrets.AUTHELIA_TOKEN_URL }}
           AUTHELIA_OIDC_CLIENT_ID: ${{ secrets.AUTHELIA_OIDC_CLIENT_ID }}
           AUTHELIA_OIDC_CLIENT_SECRET: ${{ secrets.AUTHELIA_OIDC_CLIENT_SECRET }}
