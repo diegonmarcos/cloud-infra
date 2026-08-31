@@ -17,12 +17,13 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
-# Shares the gha-runner WireGuard identity (10.0.0.200) with ship.yml and the
-# cgc-db jobs — two concurrent wg-quick handshakes with the same key evict each
-# other from the gcp-proxy hub and every 10.0.0.x SSH then times out. Serialise
-# on the same group they use.
+# Deliberately NOT the shared `ship-wg-runner` group, even though this job now
+# uses the same gha-runner WireGuard identity (10.0.0.200) that group exists to
+# serialise. cgc-db.yml parks long-lived *pending* runs in ship-wg-runner, and a
+# newer entrant cancels the queued one — joining it got this workflow cancelled
+# before it started a single job. A rare hub-eviction flake beats never running.
 concurrency:
-  group: ship-wg-runner
+  group: health-mail-full
   cancel-in-progress: false
 
 permissions:
