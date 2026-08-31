@@ -39,6 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Without the submodules every 1_cloud-configs/src/inputs/builds/*.json
+      # symlink dangles (they point into a_solutions/), so the check below
+      # reported ~80 "broken" links and failed the run before it built anything.
+      - uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud a_solutions
       - name: Fail on broken symlinks (source trees only)
         run: |
           set -e
