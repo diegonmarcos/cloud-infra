@@ -5,8 +5,12 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+# Shares the gha-runner WireGuard identity (10.0.0.200) with ship.yml and the
+# cgc-db jobs — two concurrent wg-quick handshakes with the same key evict each
+# other from the gcp-proxy hub and every 10.0.0.x SSH then times out. Serialise
+# on the same group they use.
 concurrency:
-  group: health-mail-full
+  group: ship-wg-runner
   cancel-in-progress: false
 
 permissions:
@@ -16,8 +20,18 @@ jobs:
   mail-health:
     name: Mail health (liveness + cross-store reconciliation)
     runs-on: ubuntu-latest
+    env:
+      WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      # SSH below targets WireGuard mesh IPs (10.0.0.4 / 10.0.0.6) — port 22 is
+      # firewalled to the mesh, so without wg0 every connection times out.
+      - name: Install runtime deps (wireguard-tools, jq)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
+
+      - name: WireGuard up
+        run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
 
       - name: Setup SSH config
         env:
