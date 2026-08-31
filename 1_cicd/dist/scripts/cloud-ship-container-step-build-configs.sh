@@ -40,18 +40,34 @@ step_configs_push() {
     fi
     log "configs-push start (hash=$CONFIGS_HASH, arch=${DOCKER_ARCH:-amd64})"
 
-    # GHCR login — INLINE fall-through (vault PAT → GITHUB_TOKEN → gh). Inlined,
+    # GHCR login — INLINE fall-through (GITHUB_TOKEN → vault PAT → gh). Inlined,
     # not a shared helper: the lib's ghcr_login was not in scope here at runtime
     # ("ghcr_login: command not found" broke configs-push, 2026-06-23). Falls
-    # through on FAILURE (not just a missing file) so an expired vault PAT still
-    # reaches GITHUB_TOKEN; skip the push if every method fails.
+    # through on FAILURE (not just a missing/unset credential), so an expired
+    # token still reaches the next method; skip the push if every method fails.
+    #
+    # ORDER IS LOAD-BEARING — GITHUB_TOKEN MUST be tried first, exactly as
+    # step_docker does. A GHCR package's visibility is fixed at CREATION and
+    # there is NO API to change it later (PATCH/PUT/POST on
+    # /user/packages/container/{pkg}[/visibility] all 404, verified 2026-08-31).
+    # A package first pushed by a GHA job using GITHUB_TOKEN is repo-scoped and
+    # inherits the public source repo's visibility; one first pushed with the
+    # vault PAT is user-scoped and PRIVATE FOREVER, fixable only by deleting it
+    # and re-pushing from GHA.
+    #
+    # This block used to try the vault PAT FIRST. ship.yml mounts cloud-vault
+    # into the builder container, so in GHA the PAT was present and won, and
+    # every configs image was born private+unlinked. That is precisely why
+    # openobserve-configs, wireguard-mesh-configs, wireguard-mesh-ws-tunnel-configs
+    # and tools-http-to-smtp-proxy-api-configs all show repository=NONE, while the
+    # -binaries packages built by step_docker (GITHUB_TOKEN-first) are repo-linked.
     _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
     _ghcr_user="${GHCR_USER:-diegonmarcos}"
-    if [ -f "$_vault_tok" ] && docker login ghcr.io -u "$_ghcr_user" --password-stdin < "$_vault_tok" >/dev/null 2>&1; then
-        log "GHCR login OK (vault)"
-    elif [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ] && \
+    if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ] && \
          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1; then
-        log "GHCR login OK (env GITHUB_TOKEN)"
+        log "GHCR login OK (env GITHUB_TOKEN — package will be repo-scoped/public)"
+    elif [ -f "$_vault_tok" ] && docker login ghcr.io -u "$_ghcr_user" --password-stdin < "$_vault_tok" >/dev/null 2>&1; then
+        log "GHCR login OK (vault)"
     elif command -v gh >/dev/null 2>&1 && \
          gh auth token 2>/dev/null | docker login ghcr.io -u "$(gh api user --jq .login 2>/dev/null || echo "$_ghcr_user")" --password-stdin >/dev/null 2>&1; then
         log "GHCR login OK (gh)"
