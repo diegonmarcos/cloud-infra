@@ -25,7 +25,7 @@
       "rebuild_command": "bash 9_others/build.sh all"
     }
   },
-  "_generated": "redeploy-retry-2 2026-08-31T08:22:00Z (Caddyfile already on disk from #1960; compose step died on ssh reset — restart caddy)",
+  "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/caddy-routes",
   "global": {
     "debug": true,
@@ -253,7 +253,7 @@
     },
     {
       "domain": "auth.diegonmarcos.com",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "wg_only": true,
       "bypass_paths": [
         "/.well-known/openid-configuration",
@@ -716,7 +716,7 @@
     },
     {
       "service": "authelia.app",
-      "upstream": "10.0.0.1:9091"
+      "upstream": "172.18.0.3:9091"
     },
     {
       "service": "caddy.app",
@@ -733,6 +733,10 @@
     {
       "service": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105"
+    },
+    {
+      "service": "kg-store.app",
+      "upstream": "10.0.0.6:8001"
     },
     {
       "service": "kg-store-pub.app",
@@ -852,7 +856,7 @@
     }
   ],
   "auth_upstreams": {
-    "authelia": "10.0.0.1:9091",
+    "authelia": "172.18.0.3:9091",
     "introspect_proxy": "10.0.0.1:4182"
   },
   "all_app_urls": [
@@ -1294,7 +1298,7 @@
       "vm": "gcp-E2-f_0",
       "port": 9091,
       "protocol": "http",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "source": "containers.app.port"
     },
     {
@@ -1379,6 +1383,27 @@
       "port": 3105,
       "protocol": "http",
       "upstream": "10.0.0.6:3105",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "kg-store.app",
+      "redirect_to": "https://kg-store-http-8001.app",
+      "container": "kg-store",
+      "container_key": "app",
+      "svc": "kg-store",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "kg-store-http-8001.app",
+      "container": "kg-store",
+      "container_key": "app",
+      "svc": "kg-store",
+      "vm": "oci-A1-f_0",
+      "port": 8001,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8001",
       "source": "containers.app.port"
     },
     {
@@ -1958,6 +1983,17 @@
     },
     {
       "kind": "container",
+      "service": "kg-store-surrealdb-8001.db",
+      "container": "kg-store",
+      "container_key": "app",
+      "svc": "kg-store",
+      "vm": "oci-A1-f_0",
+      "engine": "surrealdb",
+      "port": 8001,
+      "upstream": "10.0.0.6:8001"
+    },
+    {
+      "kind": "container",
       "service": "kg-store-pub-surrealdb-8002.db",
       "container": "kg-store-pub",
       "container_key": "app",
@@ -2264,7 +2300,7 @@
     {
       "host": "auth.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2736,7 +2772,7 @@
     {
       "host": "authelia.app",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -2777,6 +2813,16 @@
       "host": "cloud-cgc-pub-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "kg-store.app",
+      "path": null,
+      "upstream": "10.0.0.6:8001",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3198,7 +3244,7 @@
     {
       "host": "authelia-http-9091.app",
       "path": null,
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
@@ -3243,6 +3289,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-cgc-pub-mcp",
+      "notes": null
+    },
+    {
+      "host": "kg-store-http-8001.app",
+      "path": null,
+      "upstream": "10.0.0.6:8001",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "kg-store",
       "notes": null
     },
     {
@@ -3568,6 +3624,16 @@
       "zone": "db",
       "service": "authelia",
       "notes": "engine=sqlite vm=gcp-E2-f_0"
+    },
+    {
+      "host": "kg-store-surrealdb-8001.db",
+      "path": null,
+      "upstream": "10.0.0.6:8001",
+      "kind": "catalog",
+      "tls": "on_demand",
+      "zone": "db",
+      "service": "kg-store",
+      "notes": "engine=surrealdb vm=oci-A1-f_0"
     },
     {
       "host": "kg-store-pub-surrealdb-8002.db",

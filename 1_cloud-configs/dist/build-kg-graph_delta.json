@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 302,
-    "edges": 409,
+    "nodes": 305,
+    "edges": 413,
     "by_table": {
       "vm": 4,
-      "service": 68,
-      "container": 89,
+      "service": 69,
+      "container": 90,
       "domain": 42,
       "repo": 3,
-      "module": 68,
+      "module": 69,
       "package": 28
     }
   },
@@ -1277,6 +1277,32 @@
         "image": "ghcr.io/diegonmarcos/hermes-agent:latest",
         "role": "app",
         "port": 8642,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "kg_store",
+      "key": "service:kg_store",
+      "properties": {
+        "name": "kg-store",
+        "category": "data",
+        "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
+        "domain": null,
+        "port": 8001,
+        "vm": "oci-apps",
+        "folder": "user-ai_kg-store"
+      }
+    },
+    {
+      "table": "container",
+      "id": "kg_store",
+      "key": "container:kg_store",
+      "properties": {
+        "name": "kg-store",
+        "image": "ghcr.io/diegonmarcos/kg-store:latest",
+        "role": "app",
+        "port": 8001,
         "public": false
       }
     },
@@ -2936,6 +2962,17 @@
     },
     {
       "table": "module",
+      "id": "user_ai_kg_store",
+      "key": "module:user_ai_kg_store",
+      "properties": {
+        "name": "user-ai_kg-store",
+        "repo": "cloud",
+        "category": "data",
+        "service": "kg-store"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_ai_kg_store_pub",
       "key": "module:user_ai_kg_store_pub",
       "properties": {
@@ -4278,6 +4315,22 @@
       "from": "service:hermes_agent",
       "to": "container:hermes_agent",
       "key": "service:hermes_agent->runs_container->container:hermes_agent",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:kg_store",
+      "to": "vm:oci_apps",
+      "key": "service:kg_store->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:kg_store",
+      "to": "container:kg_store",
+      "key": "service:kg_store->runs_container->container:kg_store",
       "properties": {
         "role": "app"
       }
@@ -6116,6 +6169,20 @@
       "from": "module:user_ai_hermes_agent",
       "to": "service:hermes_agent",
       "key": "module:user_ai_hermes_agent->implements->service:hermes_agent",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_ai_kg_store",
+      "to": "repo:cloud",
+      "key": "module:user_ai_kg_store->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_kg_store",
+      "to": "service:kg_store",
+      "key": "module:user_ai_kg_store->implements->service:kg_store",
       "properties": {}
     },
     {
