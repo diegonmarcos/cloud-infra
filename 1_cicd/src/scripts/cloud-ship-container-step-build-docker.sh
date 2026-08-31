@@ -281,6 +281,9 @@ step_docker() {
     # ── Native build: build inside cloud-builder, package into minimal image ──
     NATIVE_CMD="$(get_config docker.native_build.cmd)"
     NATIVE_TYPE="$(get_config docker.native_build.type)"  # binary (default) or app
+    # Explicit declaration only — NATIVE_TYPE gets defaulted to "binary" below,
+    # so it can never be used to test "did build.json declare a native_build?".
+    NATIVE_TYPE_DECL="$NATIVE_TYPE"
     NATIVE_BINARY="$(get_config docker.native_build.binary)"
     NATIVE_BASE="$(get_config docker.native_build.base_image)"
     NATIVE_APT="$(get_config docker.native_build.apt)"
@@ -592,7 +595,7 @@ NEOF
     # already own BUILD_CONTEXT and DOCKERFILE; reading the nix-generated stub
     # Dockerfile would clobber UPSTREAM_DECL and poison the docker build call).
     if [ -z "$UPSTREAM_DECL" ] \
-       && [ -z "${NATIVE_TYPE:-}" ] \
+       && [ -z "${NATIVE_TYPE_DECL:-}" ] \
        && [ -f "$DIST_DIR/code/$ARCH/Dockerfile" ] \
        && grep -q '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" 2>/dev/null; then
         UPSTREAM_DECL="$(grep -m1 '^FROM ' "$DIST_DIR/code/$ARCH/Dockerfile" | awk '{print $2}')"
