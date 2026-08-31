@@ -1,0 +1,1493 @@
+{
+  "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
+  "_meta": {
+    "description": "Full SuperApp configuration for user 'diego'. Served bearer-gated at https://api.diegonmarcos.com/pub/superapp/config/diego. Each top-level section maps 1:1 onto an app prefs store.",
+    "format_version": 1,
+    "user": "diego",
+    "secrets_included": false,
+    "private_key_source": "file_import — the WireGuard PrivateKey is the device's own identity and is never served",
+    "generated_at": "",
+    "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
+    "pipeline": {
+      "description": "Two-stage build: consolidator merges all build.json + config.json sources into the master file; derive emits per-container + archived split files from the master.",
+      "source_inputs": [
+        "a_solutions/*/build.json (per-service declarations)",
+        "config.json (global topology + vms + dns + wireguard)",
+        "b_infra/*/build.json (per-VM HM config)",
+        "vault/secrets.yaml (sops-encrypted secrets per service, key names extracted)"
+      ],
+      "engines": {
+        "consolidator": "1_cloud-configs/src/derive/cloud-data-config-consolidated.ts",
+        "derive": "1_cloud-configs/src/derive/cloud-data-config-derive.ts (THIS engine)"
+      },
+      "outputs": {
+        "master": "1_cloud-configs/dist/_cloud-data-consolidated.json (consolidator output)",
+        "per_container": "1_cloud-configs/dist/build-{container_or_service_name}.json (one per container, plus one per container-less service — derive output)",
+        "archived": "1_cloud-configs/dist/z_archive/cloud-data-{slice}.json (deprecated split files — kept for soft-transition fallbacks; consumers should read consolidated instead)"
+      },
+      "rebuild_command": "bash 9_others/build.sh all"
+    }
+  },
+  "_generated": "",
+  "_source": "1_cloud-configs/src/inputs/superapp-users.json + superapp-wireguard-profiles.json + _cloud-data-consolidated.json + derive-mesh-snapshot.build() via cloud-data-config-derive.ts/superapp-config",
+  "profile": {
+    "name": "Diego Coelho Marcos",
+    "email": "me@diegonmarcos.com",
+    "initials": "DCM",
+    "company": "LEAFY",
+    "location": "Berlin/DE",
+    "website": "linktree.diegonmarcos.com",
+    "titles_v2": "| Product Engineering  💾 | Venture Capital n' Portfolio Management 🎩 | Civil Structural Engineer B.Sc. 🏗️ | Brazilian/Spanish @BERlin.de 🏛️ |",
+    "picture_uri": "",
+    "banner_uri": ""
+  },
+  "wireguard": {
+    "v4-full": {
+      "name": "wg-v4-full",
+      "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — termux's allowed source there is fd0c:1d01::9, not fd0c:1d00::9).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/0, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
+      "parsed": {
+        "interface": {
+          "address": [
+            "10.0.0.9/24",
+            "10.1.0.9/24",
+            "fd0c:1d00::9/64",
+            "fd0c:1d01::9/64"
+          ],
+          "dns": [
+            "10.0.0.1",
+            "10.1.0.1"
+          ],
+          "mtu": 1380,
+          "private_key": null
+        },
+        "peers": [
+          {
+            "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
+            "endpoint": "35.226.147.64:443",
+            "allowed_ips": [
+              "0.0.0.0/0",
+              "fd0c:1d00::/64"
+            ],
+            "persistent_keepalive": 25
+          },
+          {
+            "public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=",
+            "endpoint": "129.151.228.66:51821",
+            "allowed_ips": [
+              "10.1.0.0/24",
+              "fd0c:1d01::/64",
+              "::/0"
+            ],
+            "persistent_keepalive": 25
+          }
+        ]
+      }
+    },
+    "v4-split": {
+      "name": "wg-v4-split",
+      "config_text": "# wg-v4-split — IPv4 wifi, SPLIT tunnel (mesh subnets only)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — wg0 hub (udp/443 REDIRECT->51820 survives port filtering)\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 10.0.0.0/24, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public hub (+NAT64 prefix so DNS64 answers route in-mesh)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, 2603:c026:c104:8f00:ff9b::/96\nPersistentKeepalive = 25\n",
+      "parsed": {
+        "interface": {
+          "address": [
+            "10.0.0.9/24",
+            "10.1.0.9/24",
+            "fd0c:1d00::9/64",
+            "fd0c:1d01::9/64"
+          ],
+          "dns": [
+            "10.0.0.1",
+            "10.1.0.1"
+          ],
+          "mtu": 1380,
+          "private_key": null
+        },
+        "peers": [
+          {
+            "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
+            "endpoint": "35.226.147.64:443",
+            "allowed_ips": [
+              "10.0.0.0/24",
+              "fd0c:1d00::/64"
+            ],
+            "persistent_keepalive": 25
+          },
+          {
+            "public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=",
+            "endpoint": "129.151.228.66:51821",
+            "allowed_ips": [
+              "10.1.0.0/24",
+              "fd0c:1d01::/64",
+              "2603:c026:c104:8f00:ff9b::/96"
+            ],
+            "persistent_keepalive": 25
+          }
+        ]
+      }
+    },
+    "v6-full": {
+      "name": "wg-v6-full",
+      "config_text": "# wg-v6-full — IPv6-only wifi, FULL tunnel (everything via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = fd0c:1d01::1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — mesh reach when dual-stack; dead on v6-only wifi (harmless)\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 10.0.0.0/24, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — ALL traffic; DNS64/NAT64 reaches IPv4-only sites over v6\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = [2603:c026:c104:8f00:0:c704:63b:6eee]:51821\nAllowedIPs = 0.0.0.0/0, ::/0\nPersistentKeepalive = 25\n",
+      "parsed": {
+        "interface": {
+          "address": [
+            "10.0.0.9/24",
+            "10.1.0.9/24",
+            "fd0c:1d00::9/64",
+            "fd0c:1d01::9/64"
+          ],
+          "dns": [
+            "fd0c:1d01::1",
+            "10.1.0.1"
+          ],
+          "mtu": 1380,
+          "private_key": null
+        },
+        "peers": [
+          {
+            "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
+            "endpoint": "35.226.147.64:443",
+            "allowed_ips": [
+              "10.0.0.0/24",
+              "fd0c:1d00::/64"
+            ],
+            "persistent_keepalive": 25
+          },
+          {
+            "public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=",
+            "endpoint": "[2603:c026:c104:8f00:0:c704:63b:6eee]:51821",
+            "allowed_ips": [
+              "0.0.0.0/0",
+              "::/0"
+            ],
+            "persistent_keepalive": 25
+          }
+        ]
+      }
+    },
+    "v6-split": {
+      "name": "wg-v6-split",
+      "config_text": "# wg-v6-split — IPv6-only wifi, SPLIT tunnel (mesh subnets only)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = fd0c:1d01::1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — v4 endpoint: dead on v6-only wifi (harmless), works on dual-stack\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 10.0.0.0/24, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics over its Oracle v6 literal (+NAT64 prefix for DNS64 answers)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = [2603:c026:c104:8f00:0:c704:63b:6eee]:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, 2603:c026:c104:8f00:ff9b::/96\nPersistentKeepalive = 25\n",
+      "parsed": {
+        "interface": {
+          "address": [
+            "10.0.0.9/24",
+            "10.1.0.9/24",
+            "fd0c:1d00::9/64",
+            "fd0c:1d01::9/64"
+          ],
+          "dns": [
+            "fd0c:1d01::1",
+            "10.1.0.1"
+          ],
+          "mtu": 1380,
+          "private_key": null
+        },
+        "peers": [
+          {
+            "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
+            "endpoint": "35.226.147.64:443",
+            "allowed_ips": [
+              "10.0.0.0/24",
+              "fd0c:1d00::/64"
+            ],
+            "persistent_keepalive": 25
+          },
+          {
+            "public_key": "Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=",
+            "endpoint": "[2603:c026:c104:8f00:0:c704:63b:6eee]:51821",
+            "allowed_ips": [
+              "10.1.0.0/24",
+              "fd0c:1d01::/64",
+              "2603:c026:c104:8f00:ff9b::/96"
+            ],
+            "persistent_keepalive": 25
+          }
+        ]
+      }
+    }
+  },
+  "mesh": {
+    "_meta": {
+      "generated_at": "",
+      "generated_by": "1_cloud-configs/src/derive/derive-mesh-snapshot.ts",
+      "schema": "wg-mesh/v1",
+      "sources": {
+        "consolidated": "1_cloud-configs/dist/_cloud-data-consolidated.json",
+        "ws_tunnel": "a_solutions/infra-net_wireguard-mesh-ws-tunnel/build.json"
+      }
+    },
+    "nodes": [
+      {
+        "name": "oci-E2-f_0",
+        "role": "spoke",
+        "alias": "oci-mail",
+        "public_ip": "130.110.251.193",
+        "wg_ip": "10.0.0.3",
+        "region": "eu-marseille-1",
+        "provider": "oci",
+        "os": "NixOS",
+        "public_key_fp": "8Fqo4…kQs=",
+        "ports_public": [],
+        "wstunnel_server": false,
+        "wstunnel_client": false
+      },
+      {
+        "name": "oci-E2-f_1",
+        "role": "spoke",
+        "alias": "oci-analytics",
+        "public_ip": "129.151.228.66",
+        "wg_ip": "10.0.0.4",
+        "region": "eu-marseille-1",
+        "provider": "oci",
+        "os": "NixOS",
+        "public_key_fp": "ugc3Y…kC0=",
+        "ports_public": [
+          {
+            "port": 443,
+            "proto": "tcp",
+            "desc": "HTTPS (public ingress — caddy-public layer4 SNI mux: mail→maddy, public→L7, rest→gcp-proxy)",
+            "source": "0.0.0.0/0",
+            "owned_by": "caddy-public"
+          },
+          {
+            "port": 51821,
+            "proto": "udp",
+            "desc": "WireGuard wg-public hub — handshake ingress (open enrollment mesh)",
+            "source": "0.0.0.0/0",
+            "owned_by": "wireguard-public",
+            "_doc": "Should be auto-derived by engine from wireguard_public.hub == this VM's alias AND wireguard_public.port. Until that engine refactor, declared explicitly here so the hub actually receives WG handshakes."
+          }
+        ],
+        "wstunnel_server": false,
+        "wstunnel_client": false
+      },
+      {
+        "name": "oci-A1-f_0",
+        "role": "spoke",
+        "alias": "oci-apps",
+        "public_ip": "82.70.229.129",
+        "wg_ip": "10.0.0.6",
+        "region": "eu-marseille-1",
+        "provider": "oci",
+        "os": "NixOS",
+        "public_key_fp": "+LHoO…xHQ=",
+        "ports_public": [],
+        "wstunnel_server": false,
+        "wstunnel_client": false
+      },
+      {
+        "name": "gcp-E2-f_0",
+        "role": "hub",
+        "alias": "gcp-proxy",
+        "public_ip": "35.226.147.64",
+        "wg_ip": "10.0.0.1",
+        "region": "us-central1-a",
+        "provider": "gcloud",
+        "os": "NixOS",
+        "public_key_fp": "vV/ph…mDc=",
+        "ports_public": [
+          {
+            "port": 25,
+            "proto": "tcp",
+            "desc": "SMTP MX (Caddy L4 → maddy:25 via WG) — wg0 mesh source",
+            "source": "10.0.0.0/24",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 25,
+            "proto": "tcp",
+            "desc": "SMTP MX — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+            "source": "10.1.0.0/24",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 443,
+            "proto": "tcp",
+            "desc": "HTTPS (Caddy + caddy-l4 SNI mux for IMAPS/SMTPS) — wg0 mesh source",
+            "source": "10.0.0.0/24",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 443,
+            "proto": "tcp",
+            "desc": "HTTPS — wg-public mesh source (oci-analytics → gcp-proxy via wg-public)",
+            "source": "10.1.0.0/24",
+            "owned_by": "caddy"
+          },
+          {
+            "port": 443,
+            "proto": "udp",
+            "desc": "WG fallback (NAT redirect → 51820/udp on hub) — wg0 mesh source. Operator decision 2026-05-22: WG handshake (51820/udp) is the ONLY public port; 443/udp fallback is no longer needed since the only external entry points are oci-analytics. Peers behind networks blocking 51820/udp lose the fallback path — accepted tradeoff.",
+            "source": "10.0.0.0/24",
+            "owned_by": "wireguard"
+          },
+          {
+            "port": 443,
+            "proto": "udp",
+            "desc": "WG fallback — wg-public mesh source",
+            "source": "10.1.0.0/24",
+            "owned_by": "wireguard"
+          }
+        ],
+        "wstunnel_server": true,
+        "wstunnel_client": false
+      },
+      {
+        "name": "vast-RTX-p_0",
+        "role": "spoke",
+        "alias": "vast-ollama",
+        "public_ip": "TBD",
+        "wg_ip": "",
+        "region": "?",
+        "provider": "vast",
+        "os": "NixOS",
+        "ports_public": [],
+        "wstunnel_server": false,
+        "wstunnel_client": false
+      }
+    ],
+    "peers": [
+      {
+        "from": "gcp-E2-f_0",
+        "to": "oci-E2-f_0",
+        "allowed_ips": [
+          "10.0.0.3/32"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "oci-E2-f_0",
+        "to": "gcp-E2-f_0",
+        "allowed_ips": [
+          "10.0.0.0/24"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "gcp-E2-f_0",
+        "to": "oci-E2-f_1",
+        "allowed_ips": [
+          "10.0.0.4/32"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "oci-E2-f_1",
+        "to": "gcp-E2-f_0",
+        "allowed_ips": [
+          "10.0.0.0/24"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "gcp-E2-f_0",
+        "to": "oci-A1-f_0",
+        "allowed_ips": [
+          "10.0.0.6/32"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "oci-A1-f_0",
+        "to": "gcp-E2-f_0",
+        "allowed_ips": [
+          "10.0.0.0/24"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "gcp-E2-f_0",
+        "to": "vast-RTX-p_0",
+        "allowed_ips": [
+          "/32"
+        ],
+        "persistent_keepalive": 25
+      },
+      {
+        "from": "vast-RTX-p_0",
+        "to": "gcp-E2-f_0",
+        "allowed_ips": [
+          "10.0.0.0/24"
+        ],
+        "persistent_keepalive": 25
+      }
+    ],
+    "transports": [
+      {
+        "name": "wg0",
+        "label": "WireGuard direct (UDP)",
+        "protocol": "udp",
+        "port": 51820,
+        "endpoint": "35.226.147.64:51820",
+        "primary": true,
+        "fallback": false,
+        "active_peers": 4,
+        "use_case": "Default high-speed path. UDP-friendly networks."
+      },
+      {
+        "name": "wg0-tcp",
+        "label": "WireGuard via wstunnel (TCP/443)",
+        "protocol": "tcp",
+        "port": 443,
+        "endpoint": "",
+        "primary": false,
+        "fallback": true,
+        "active_peers": 0,
+        "use_case": "Hostile networks (airport, hotel) where UDP/51820 is blocked."
+      }
+    ],
+    "routes": [
+      {
+        "src_node": "oci-E2-f_0",
+        "dst_subnet": "10.0.0.0/24",
+        "via_transport": "wg0"
+      },
+      {
+        "src_node": "oci-E2-f_1",
+        "dst_subnet": "10.0.0.0/24",
+        "via_transport": "wg0"
+      },
+      {
+        "src_node": "oci-A1-f_0",
+        "dst_subnet": "10.0.0.0/24",
+        "via_transport": "wg0"
+      },
+      {
+        "src_node": "vast-RTX-p_0",
+        "dst_subnet": "10.0.0.0/24",
+        "via_transport": "wg0"
+      }
+    ],
+    "health": {
+      "tls_expiries": [],
+      "last_snapshot_at": "",
+      "status": "healthy"
+    }
+  },
+  "services": {
+    "public": [
+      {
+        "name": "languagetool",
+        "service": "languagetool",
+        "vm": "oci-A1-f_0",
+        "public_url": "languagetool.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "languagetool.app:8010",
+        "port": 8010,
+        "category": "tools"
+      },
+      {
+        "name": "c3-infra-api",
+        "service": "c3-infra-api",
+        "vm": "oci-A1-f_0",
+        "public_url": "api.diegonmarcos.com/c3-infra-api",
+        "auth": "two_factor",
+        "private_dns": "c3-infra-api.app:8081",
+        "port": 8081,
+        "category": "sec"
+      },
+      {
+        "name": "c3-public-api",
+        "service": "c3-public-api",
+        "vm": "oci-E2-f_1",
+        "public_url": "api.diegonmarcos.com/pub",
+        "auth": "two_factor",
+        "private_dns": "c3-public-api.app:8087",
+        "port": 8087,
+        "category": "obs"
+      },
+      {
+        "name": "c3-services-api",
+        "service": "c3-services-api",
+        "vm": "oci-A1-f_0",
+        "public_url": "api.diegonmarcos.com/c3-services-api",
+        "auth": "two_factor",
+        "private_dns": "c3-services-api.app:8082",
+        "port": 8082,
+        "category": "obs"
+      },
+      {
+        "name": "cloud-drive-mcp",
+        "service": "cloud-drive-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/cloud-drive-mcp",
+        "auth": "none",
+        "private_dns": "drive-mcp.app:3109",
+        "port": 3109,
+        "category": "app"
+      },
+      {
+        "name": "cloud-infra-mcp",
+        "service": "cloud-infra-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/c3-infra-mcp",
+        "auth": "none",
+        "private_dns": "c3-infra-mcp.app:3100",
+        "port": 3100,
+        "category": "sec"
+      },
+      {
+        "name": "cloud-mail-mcp",
+        "service": "cloud-mail-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/mail-mcp",
+        "auth": "none",
+        "private_dns": "mail-mcp.app:3103",
+        "port": 3103,
+        "category": "app"
+      },
+      {
+        "name": "cloud-mattermost-mcp",
+        "service": "cloud-mattermost-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/mattermost-mcp",
+        "auth": "none",
+        "private_dns": "mattermost-mcp.app:3102",
+        "port": 3102,
+        "category": "app"
+      },
+      {
+        "name": "cloud-services-mcp",
+        "service": "cloud-services-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/c3-services-mcp",
+        "auth": "none",
+        "private_dns": "c3-services-mcp.app:3101",
+        "port": 3101,
+        "category": "obs"
+      },
+      {
+        "name": "google-personal-mcp",
+        "service": "google-personal-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/g-personal",
+        "auth": "none",
+        "private_dns": "g-personal-mcp.app:3106",
+        "port": 3106,
+        "category": "app"
+      },
+      {
+        "name": "google-workspace-mcp",
+        "service": "google-workspace-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/g-workspace",
+        "auth": "none",
+        "private_dns": "g-workspace-mcp.app:3104",
+        "port": 3104,
+        "category": "app"
+      },
+      {
+        "name": "http-to-smtp-proxy-api",
+        "service": "http-to-smtp-proxy-api",
+        "vm": "gcp-E2-f_0",
+        "public_url": "api.diegonmarcos.com/http-to-smtp-proxy-api",
+        "auth": "bearer",
+        "private_dns": "http-to-smtp-proxy-api.app:8090",
+        "port": 8090,
+        "category": "app"
+      },
+      {
+        "name": "gitea",
+        "service": "gitea",
+        "vm": "oci-A1-f_0",
+        "public_url": "git.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "gitea.app:3002",
+        "port": 3002,
+        "category": "data"
+      },
+      {
+        "name": "cloud-spec",
+        "service": "cloud-spec",
+        "vm": "oci-A1-f_0",
+        "public_url": "cloud.diegonmarcos.com/spec",
+        "auth": "two_factor",
+        "private_dns": "c3-spec.app:3080",
+        "port": 3080,
+        "category": "tools"
+      },
+      {
+        "name": "dagu",
+        "service": "dagu",
+        "vm": "oci-A1-f_0",
+        "public_url": "workflows.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "dagu.app:8070",
+        "port": 8070,
+        "category": "tools"
+      },
+      {
+        "name": "dbgate",
+        "service": "dbgate",
+        "vm": "oci-A1-f_0",
+        "public_url": "db.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "dbgate.app:8086",
+        "port": 8086,
+        "category": "tools"
+      },
+      {
+        "name": "matomo-hybrid",
+        "service": "matomo",
+        "vm": "oci-A1-f_0",
+        "public_url": "analytics.diegonmarcos.com/matomo",
+        "auth": "two_factor",
+        "private_dns": "matomo.app:8080",
+        "port": 8080,
+        "category": "tools"
+      },
+      {
+        "name": "ntfy",
+        "service": "ntfy",
+        "vm": "oci-A1-f_0",
+        "public_url": "rss.diegonmarcos.com",
+        "auth": "ntfy-3tier",
+        "private_dns": "ntfy.app:8090",
+        "port": 8090,
+        "category": "tools"
+      },
+      {
+        "name": "openobserve",
+        "service": "openobserve",
+        "vm": "oci-A1-f_0",
+        "public_url": "analytics.diegonmarcos.com/openobserve",
+        "auth": "two_factor",
+        "private_dns": "openobserve.app:5080",
+        "port": 5080,
+        "category": "tools"
+      },
+      {
+        "name": "umami",
+        "service": "umami",
+        "vm": "oci-E2-f_1",
+        "public_url": "analytics.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "umami.app:3006",
+        "port": 3006,
+        "category": "tools"
+      },
+      {
+        "name": "authelia",
+        "service": "authelia",
+        "vm": "gcp-E2-f_0",
+        "public_url": "auth.diegonmarcos.com",
+        "auth": "bypass",
+        "private_dns": "authelia.app:9091",
+        "port": 9091,
+        "category": "sec"
+      },
+      {
+        "name": "crowdsec",
+        "service": "crowdsec",
+        "vm": "oci-A1-f_0",
+        "public_url": "crowdsec.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "crowdsec.app:8088",
+        "port": 8088,
+        "category": "sec"
+      },
+      {
+        "name": "cloud-cgc-pub-mcp",
+        "service": "cloud-cgc-pub-mcp",
+        "vm": "oci-A1-f_0",
+        "public_url": "mcp.diegonmarcos.com/cloud-cgc-pub-mcp",
+        "auth": "none",
+        "private_dns": "cloud-cgc-pub-mcp.app:3105",
+        "port": 3105,
+        "category": "obs"
+      },
+      {
+        "name": "mattermost",
+        "service": "chat-mattermost",
+        "vm": "oci-A1-f_0",
+        "public_url": "chat.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "mattermost.app:8065",
+        "port": 8065,
+        "category": "app"
+      },
+      {
+        "name": "continuwuity",
+        "service": "matrix-continuwuity",
+        "vm": "oci-A1-f_0",
+        "public_url": "matrix.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "matrix-continuwuity.app:8008",
+        "port": 8008,
+        "category": "app"
+      },
+      {
+        "name": "matrix-element",
+        "service": "matrix-element",
+        "vm": "oci-A1-f_0",
+        "public_url": "messenger.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "matrix-element.app:8083",
+        "port": 8083,
+        "category": "app"
+      },
+      {
+        "name": "stalwart",
+        "service": "stalwart",
+        "vm": "oci-E2-f_0",
+        "public_url": "jmap.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "stalwart.app:2443",
+        "port": 2443,
+        "category": "app"
+      },
+      {
+        "name": "scrappers-api",
+        "service": "scrappers-api",
+        "vm": "oci-A1-f_0",
+        "public_url": "api.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "scrappers-api.app:3020",
+        "port": 3020,
+        "category": "data"
+      },
+      {
+        "name": "fin-api",
+        "service": "fin-api",
+        "vm": "oci-A1-f_0",
+        "public_url": "api.diegonmarcos.com/fin-api",
+        "auth": "two_factor",
+        "private_dns": "fin-api.app:8340",
+        "port": 8340,
+        "category": "fin"
+      },
+      {
+        "name": "photoprism_app",
+        "service": "photoprism",
+        "vm": "oci-A1-f_0",
+        "public_url": "photos.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "photoprism.app:3013",
+        "port": 3013,
+        "category": "app"
+      },
+      {
+        "name": "playlist-syncer",
+        "service": "playlist-syncer",
+        "vm": "oci-A1-f_0",
+        "public_url": "playlist.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "playlist-syncer.app:8090",
+        "port": 8090,
+        "category": "app"
+      },
+      {
+        "name": "calendar-radicale",
+        "service": "calendar-radicale",
+        "vm": "oci-A1-f_0",
+        "public_url": "cal.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "calendar.app:5232",
+        "port": 5232,
+        "category": "app"
+      },
+      {
+        "name": "code-server",
+        "service": "code-server",
+        "vm": "oci-A1-f_0",
+        "public_url": "ide.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "code-server.app:8443",
+        "port": 8443,
+        "category": "app"
+      },
+      {
+        "name": "contacts-radicale",
+        "service": "contacts-radicale",
+        "vm": "oci-A1-f_0",
+        "public_url": "contacts.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "contacts.app:5233",
+        "port": 5233,
+        "category": "app"
+      },
+      {
+        "name": "etherpad_app",
+        "service": "etherpad",
+        "vm": "oci-A1-f_0",
+        "public_url": "app.diegonmarcos.com/etherpad",
+        "auth": "two_factor",
+        "private_dns": "etherpad.app:3012",
+        "port": 3012,
+        "category": "app"
+      },
+      {
+        "name": "filebrowser_app",
+        "service": "filebrowser",
+        "vm": "oci-A1-f_0",
+        "public_url": "app.diegonmarcos.com/filebrowser",
+        "auth": "two_factor",
+        "private_dns": "filebrowser.app:3015",
+        "port": 3015,
+        "category": "app"
+      },
+      {
+        "name": "grist_app",
+        "service": "grist",
+        "vm": "oci-A1-f_0",
+        "public_url": "sheets.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "grist.app:3011",
+        "port": 3011,
+        "category": "app"
+      },
+      {
+        "name": "hedgedoc_app",
+        "service": "hedgedoc",
+        "vm": "oci-A1-f_0",
+        "public_url": "app.diegonmarcos.com/hedgedoc",
+        "auth": "two_factor",
+        "private_dns": "hedgedoc.app:3018",
+        "port": 3018,
+        "category": "app"
+      },
+      {
+        "name": "paca-gateway",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "public_url": "paca.diegonmarcos.com",
+        "auth": "two_factor",
+        "private_dns": "paca.app:8095",
+        "port": 8095,
+        "category": "app"
+      },
+      {
+        "name": "send_app",
+        "service": "send",
+        "vm": "oci-A1-f_0",
+        "public_url": "send.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "send.app:3016",
+        "port": 3016,
+        "category": "app"
+      },
+      {
+        "name": "vaultwarden",
+        "service": "vaultwarden",
+        "vm": "oci-A1-f_0",
+        "public_url": "vault.diegonmarcos.com",
+        "auth": "none",
+        "private_dns": "vaultwarden.app:8880",
+        "port": 8880,
+        "category": "mic"
+      }
+    ],
+    "private": [
+      {
+        "name": "alerts-api",
+        "service": "alerts-api",
+        "vm": "oci-E2-f_1",
+        "private_dns": "alerts-api.app:5050",
+        "port": 5050,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "cloud-vault-mcp",
+        "service": "cloud-vault-mcp",
+        "vm": "local",
+        "private_dns": "cloud-vault-mcp",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "cloud-builder-x",
+        "service": "cloud-builder-x",
+        "vm": "local",
+        "private_dns": "cloud-builder-x",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "gha-runner",
+        "service": "gha-runner",
+        "vm": "oci-A1-f_0",
+        "private_dns": "gha-runner",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "cloudflare-worker",
+        "service": "cloudflare-worker",
+        "vm": "local",
+        "private_dns": "cloudflare-worker",
+        "port": null,
+        "protocol": "tcp",
+        "category": "cloud",
+        "db_engine": null
+      },
+      {
+        "name": "gcloud",
+        "service": "gcloud",
+        "vm": "local",
+        "private_dns": "gcloud",
+        "port": null,
+        "protocol": "tcp",
+        "category": "cloud",
+        "db_engine": null
+      },
+      {
+        "name": "borg-server",
+        "service": "backup-borg",
+        "vm": "oci-A1-f_0",
+        "private_dns": "borg-server:2224",
+        "port": 2224,
+        "protocol": "http",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "bup-server",
+        "service": "backup-bup",
+        "vm": "oci-A1-f_0",
+        "private_dns": "bup-server:2223",
+        "port": 2223,
+        "protocol": "http",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "postlite-npm",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "postlite-npm",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "postlite-vaultwarden",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "postlite-vaultwarden",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "postlite-ntfy",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "postlite-ntfy",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "sqlite-npm",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "sqlite-npm",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "sqlite-vaultwarden",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "sqlite-vaultwarden",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "sqlite-ntfy",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "sqlite-ntfy",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "sqlite-authelia",
+        "service": "postlite",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "sqlite-authelia",
+        "port": null,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "redis",
+        "service": "redis",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "redis.app:6379",
+        "port": 6379,
+        "protocol": "tcp",
+        "category": "data",
+        "db_engine": "redis"
+      },
+      {
+        "name": "hickory-dns",
+        "service": "hickory-dns",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "hickory-dns.app:53",
+        "port": 53,
+        "protocol": "udp",
+        "category": "cloud",
+        "db_engine": null
+      },
+      {
+        "name": "unbound-dns64",
+        "service": "unbound-dns64",
+        "vm": "oci-E2-f_1",
+        "private_dns": "unbound-dns64.app:53",
+        "port": 53,
+        "protocol": "udp",
+        "category": "infra-net",
+        "db_engine": null
+      },
+      {
+        "name": "wireguard-mesh",
+        "service": "wireguard-mesh",
+        "vm": "oci-A1-f_0",
+        "private_dns": "wireguard-mesh:8080",
+        "port": 8080,
+        "protocol": "http",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "wireguard-mesh-ws-tunnel",
+        "service": "wireguard-mesh-ws-tunnel",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "wireguard-mesh-ws-tunnel:8080",
+        "port": 8080,
+        "protocol": "http",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "wireguard-public",
+        "service": "wireguard-public",
+        "vm": "local",
+        "private_dns": "wireguard-public",
+        "port": null,
+        "protocol": "tcp",
+        "category": "net",
+        "db_engine": null
+      },
+      {
+        "name": "syslog-bridge",
+        "service": "ntfy",
+        "vm": "oci-A1-f_0",
+        "private_dns": "syslog-bridge",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "rss-gateway",
+        "service": "ntfy",
+        "vm": "oci-A1-f_0",
+        "private_dns": "rss-gateway:8091",
+        "port": 8091,
+        "protocol": "http",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "github-rss",
+        "service": "ntfy",
+        "vm": "oci-A1-f_0",
+        "private_dns": "github-rss",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "reports",
+        "service": "reports",
+        "vm": "local",
+        "private_dns": "reports",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "umami-db",
+        "service": "umami",
+        "vm": "oci-E2-f_1",
+        "private_dns": "umami-db.app:5442",
+        "port": 5442,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": "postgres"
+      },
+      {
+        "name": "umami-setup",
+        "service": "umami",
+        "vm": "oci-E2-f_1",
+        "private_dns": "umami-setup.app",
+        "port": null,
+        "protocol": "tcp",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "authelia-redis",
+        "service": "authelia",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "authelia-redis.app:6380",
+        "port": 6380,
+        "protocol": "tcp",
+        "category": "sec",
+        "db_engine": "redis"
+      },
+      {
+        "name": "postlite-authelia",
+        "service": "authelia",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "postlite-authelia",
+        "port": null,
+        "protocol": "tcp",
+        "category": "sec",
+        "db_engine": null
+      },
+      {
+        "name": "caddy",
+        "service": "caddy",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "caddy.app:443",
+        "port": 443,
+        "protocol": "https",
+        "category": "sec",
+        "db_engine": null
+      },
+      {
+        "name": "caddy-l4-image",
+        "service": "caddy-l4-image",
+        "vm": "local",
+        "private_dns": "caddy-l4-image",
+        "port": null,
+        "protocol": "tcp",
+        "category": "sec",
+        "db_engine": null
+      },
+      {
+        "name": "caddy-public",
+        "service": "caddy-public",
+        "vm": "oci-E2-f_1",
+        "private_dns": "caddy-public.app:443",
+        "port": 443,
+        "protocol": "https",
+        "category": "sec",
+        "db_engine": null
+      },
+      {
+        "name": "introspect-proxy",
+        "service": "introspect-proxy",
+        "vm": "gcp-E2-f_0",
+        "private_dns": "introspect-proxy.app:4182",
+        "port": 4182,
+        "protocol": "http",
+        "category": "sec",
+        "db_engine": null
+      },
+      {
+        "name": "claude-superset-api",
+        "service": "claude-superset-api",
+        "vm": "oci-A1-f_0",
+        "private_dns": "claude-superset-api.app:3117",
+        "port": 3117,
+        "protocol": "http",
+        "category": "agi",
+        "db_engine": null
+      },
+      {
+        "name": "cloud-cgc-pvt-mcp",
+        "service": "cloud-cgc-pub-mcp",
+        "vm": "oci-A1-f_0",
+        "private_dns": "cloud-cgc-pvt-mcp:3107",
+        "port": 3107,
+        "protocol": "http",
+        "category": "obs",
+        "db_engine": null
+      },
+      {
+        "name": "db-agent",
+        "service": "db-agent",
+        "vm": "all",
+        "private_dns": "db-agent",
+        "port": null,
+        "protocol": "none",
+        "category": "data",
+        "db_engine": null
+      },
+      {
+        "name": "hermes-agent",
+        "service": "hermes-agent",
+        "vm": "oci-A1-f_0",
+        "private_dns": "hermes-agent.app:8642",
+        "port": 8642,
+        "protocol": "http",
+        "category": "agi",
+        "db_engine": null
+      },
+      {
+        "name": "kg-store",
+        "service": "kg-store",
+        "vm": "oci-A1-f_0",
+        "private_dns": "kg-store:8001",
+        "port": 8001,
+        "protocol": "http",
+        "category": "data",
+        "db_engine": "surrealdb"
+      },
+      {
+        "name": "kg-store-pub",
+        "service": "kg-store-pub",
+        "vm": "oci-A1-f_0",
+        "private_dns": "kg-store-pub:8002",
+        "port": 8002,
+        "protocol": "http",
+        "category": "data",
+        "db_engine": "surrealdb"
+      },
+      {
+        "name": "my-ai-api",
+        "service": "my-ai-api",
+        "vm": "oci-A1-f_0",
+        "private_dns": "my-ai-api.app:3217",
+        "port": 3217,
+        "protocol": "http",
+        "category": "agi",
+        "db_engine": null
+      },
+      {
+        "name": "session-memory",
+        "service": "session-memory",
+        "vm": "oci-A1-f_0",
+        "private_dns": "session-memory.app:3108",
+        "port": 3108,
+        "protocol": "http",
+        "category": "agi",
+        "db_engine": null
+      },
+      {
+        "name": "mattermost-postgres",
+        "service": "chat-mattermost",
+        "vm": "oci-A1-f_0",
+        "private_dns": "mattermost-postgres.app:5435",
+        "port": 5435,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": "postgres"
+      },
+      {
+        "name": "mattermost-bots",
+        "service": "chat-mattermost",
+        "vm": "oci-A1-f_0",
+        "private_dns": "mattermost-bots.app",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "mail-puller",
+        "service": "mail-puller",
+        "vm": "oci-E2-f_0",
+        "private_dns": "mail-puller",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "mautrix-whatsapp",
+        "service": "matrix-mautrix-whatsapp",
+        "vm": "oci-A1-f_0",
+        "private_dns": "matrix-mautrix-whatsapp.app:29318",
+        "port": 29318,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "snappymail",
+        "service": "snappymail",
+        "vm": "oci-E2-f_0",
+        "private_dns": "snappymail.app:8888",
+        "port": 8888,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "maddy",
+        "service": "maddy",
+        "vm": "oci-E2-f_0",
+        "private_dns": "maddy.app",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "stalwart-sorter",
+        "service": "stalwart",
+        "vm": "oci-E2-f_0",
+        "private_dns": "stalwart-sorter",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "photoprism_mariadb",
+        "service": "photoprism",
+        "vm": "oci-A1-f_0",
+        "private_dns": "photoprism_mariadb",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": "mariadb"
+      },
+      {
+        "name": "photoprism_rclone",
+        "service": "photoprism",
+        "vm": "oci-A1-f_0",
+        "private_dns": "photoprism_rclone",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "news-gdelt",
+        "service": "news-gdelt",
+        "vm": "oci-A1-f_0",
+        "private_dns": "news-gdelt:3019",
+        "port": 3019,
+        "protocol": "http",
+        "category": "tools",
+        "db_engine": null
+      },
+      {
+        "name": "etherpad_postgres",
+        "service": "etherpad",
+        "vm": "oci-A1-f_0",
+        "private_dns": "etherpad-db.app:5436",
+        "port": 5436,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": "postgres"
+      },
+      {
+        "name": "hedgedoc_postgres",
+        "service": "hedgedoc",
+        "vm": "oci-A1-f_0",
+        "private_dns": "hedgedoc-db.app:5439",
+        "port": 5439,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": "postgres"
+      },
+      {
+        "name": "paca-api",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "private_dns": "paca-api.app:8080",
+        "port": 8080,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "paca-web",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "private_dns": "paca-web.app",
+        "port": null,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "paca-realtime",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "private_dns": "paca-realtime.app:3001",
+        "port": 3001,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "paca-valkey",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "private_dns": "paca-valkey.app:6379",
+        "port": 6379,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "paca-postgres",
+        "service": "paca",
+        "vm": "oci-A1-f_0",
+        "private_dns": "paca-postgres.app:5432",
+        "port": 5432,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": "postgres"
+      },
+      {
+        "name": "revealmd_app",
+        "service": "revealmd",
+        "vm": "oci-A1-f_0",
+        "private_dns": "revealmd.app:3014",
+        "port": 3014,
+        "protocol": "http",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "send_redis",
+        "service": "send",
+        "vm": "oci-A1-f_0",
+        "private_dns": "send_redis",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      },
+      {
+        "name": "front-end",
+        "service": "front-end",
+        "vm": "local",
+        "private_dns": "front-end",
+        "port": null,
+        "protocol": "tcp",
+        "category": "app",
+        "db_engine": null
+      }
+    ]
+  }
+}
