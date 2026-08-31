@@ -31,7 +31,12 @@ jobs:
       - name: Install runtime deps (wireguard-tools, jq)
         run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
 
+      # Point at the GENERATED consolidated topology, not the hand-written
+      # config.json: only the former carries vms[*].wg_public_key, without which
+      # the script exits "hub public key not in config.json".
       - name: WireGuard up
+        env:
+          CLOUD_CONFIG_JSON: ${{ github.workspace }}/1_cloud-configs/dist/_cloud-data-consolidated.json
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
 
       - name: Setup SSH config

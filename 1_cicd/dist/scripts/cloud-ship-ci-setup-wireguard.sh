@@ -50,7 +50,13 @@ fi
 echo "[wireguard] Reading topology from $CONFIG_JSON"
 
 WG=$(jq -c '.native.wireguard' "$CONFIG_JSON")
-HUB_VM=$(echo "$WG" | jq -r '.wg_hub')
+# Two schemas answer to CLOUD_CONFIG_JSON. The hand-written config.json calls
+# the hub `wg_hub` but carries no vms[*].wg_public_key, so resolving the peer
+# key from it always fails (which is why every caller wrapped this script in
+# continue-on-error and silently ran mesh-less). The generated
+# 1_cloud-configs/dist/_cloud-data-consolidated.json has the keys, endpoints and
+# ports — it just spells the field `hub`. Accept both.
+HUB_VM=$(echo "$WG" | jq -r '.wg_hub // .hub')
 HUB_IP=$(jq -r --arg h "$HUB_VM" '.vms[$h].ip' "$CONFIG_JSON")
 HUB_PUBKEY=$(jq -r --arg h "$HUB_VM" '.vms[$h].wg_public_key' "$CONFIG_JSON")
 if [ -z "$HUB_PUBKEY" ] || [ "$HUB_PUBKEY" = "null" ]; then
