@@ -36,20 +36,18 @@ jobs:
       - name: Fail on broken symlinks (source trees only)
         run: |
           set -e
-          # Scope: source files used in builds. Skip dist/target/node_modules/.git —
-          # those are build outputs, not inputs, and can legitimately contain
-          # machine-local symlinks (e.g. cargo deps symlinked into ~/.cargo).
-          broken=$(find . -xtype l \
-            -not -path "./.git/*" \
+          # Scope: THIS workflow's build inputs — the reports source tree — plus the
+          # build-*.json symlinks it resolves. Scanning the whole repo (the original
+          # behaviour) failed every single run on symlinks that are dangling by
+          # design and are not build inputs: I_cloud/* sibling-repo pointers, the
+          # legacy 2_reports/ compatibility shims left by the 2026-08-19 move,
+          # z_archive/* archived services, and vendored node_modules links.
+          # Skip dist/target — build outputs, not inputs, and cargo legitimately
+          # symlinks into ~/.cargo there.
+          broken=$(find a_solutions/infra-obs_reports 1_cloud-configs/src/inputs -xtype l \
             -not -path "*/dist/*" \
             -not -path "*/target/*" \
-            -not -path "*/node_modules/*" \
-            -not -path "./I_cloud/*" \
-            -not -path "./z_archive/*" 2>/dev/null || true)
-          # I_cloud/* are sibling-repo convenience symlinks that only resolve on a
-          # developer machine, and z_archive/*/build.sh points at a deleted engine.
-          # Neither is a build input; both are dangling by design and were failing
-          # every run of this workflow.
+            -not -path "*/node_modules/*" 2>/dev/null || true)
           if [ -n "$broken" ]; then
             echo "::error::Broken symlinks found in source tree:"
             echo "$broken"
