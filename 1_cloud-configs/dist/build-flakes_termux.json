@@ -514,7 +514,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 61
+      "container_count": 62
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -4358,13 +4358,15 @@
       "flake": "infra-sec_authelia",
       "port": 9091,
       "dns": "authelia.app",
-      "upstream": "10.0.0.1:9091",
+      "upstream": "172.18.0.3:9091",
       "containers": {
         "app": {
           "container_name": "authelia",
           "image": "authelia/authelia:4.39.15",
           "port": 9091,
           "port_env": null,
+          "_doc_bind_host": "Caddy (host network, same VM) must dial the container directly on auth-net, NOT the host-published 10.0.0.1:9091 the deriver would otherwise compute from the VM's wg0 IP. Publishing to a WireGuard address makes the host-side hop go through docker-proxy, and that hairpin hangs: every auth.diegonmarcos.com request stalled ~15s and /api/health never answered. The address is pinned in src/compose.nix (auth-net ipv4_address, explicit 172.18.0.0/16 subnet) so it survives recreate. Only the derived Caddy/probe upstream reads this — the published port mapping comes from svc.authelia.ip in compose.nix and is unaffected.",
+          "bind_host": "172.18.0.3",
           "dns": "authelia.app",
           "public": true,
           "proxy": {
@@ -5527,6 +5529,7 @@
             "front",
             "cloud-data",
             "front-data",
+            "cloud-u-android",
             "cloud-data-my-ai-memory",
             "cloud-u-containers"
           ],
@@ -5542,6 +5545,7 @@
             "front": "diegonmarcos.github.io",
             "cloud-data": "cloud-data",
             "front-data": "front-data",
+            "cloud-u-android": "cloud-u-android",
             "cloud-data-my-ai-memory": "cloud-data-my-ai-memory",
             "cloud-u-containers": "cloud-u-containers"
           },
@@ -5717,7 +5721,7 @@
       "vm": "oci-A1-f_0",
       "folder": "user-ai_kg-store",
       "description": "SurrealDB Hybrid Knowledge Graph - Infrastructure topology + vector search",
-      "enabled": false,
+      "enabled": true,
       "flake": "user-ai_kg-store",
       "port": 8001,
       "dns": "kg-store.app",

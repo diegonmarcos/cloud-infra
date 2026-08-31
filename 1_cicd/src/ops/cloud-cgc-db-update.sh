@@ -409,14 +409,34 @@ ensure_repos() {
       # --filter=blob:none, NOT --depth: the comment above is right that shallow history
       # breaks incremental detection, but that argument is about COMMITS. A blobless clone
       # keeps the entire commit graph (so octocode's stored last-indexed commit still
-      # resolves) and omits only historical file contents, fetching blobs on demand for the
-      # checkout it actually walks. Runner disk is the binding constraint here — the DB
-      # alone restores to 16G on a ~14G runner — so not downloading every blob of every
-      # past commit for seven repos is free headroom. Falls back to a full clone if the
-      # remote refuses partial clone, so this can never be the thing that fails a run.
-      git clone -q --filter=blob:none "$url" "$d" 2>/dev/null \
-        || git clone -q "$url" "$d" 2>/dev/null \
-        || { echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"; }
+      # resolves) and omits only historical file contents. --no-checkout defers populating
+      # the working tree to an explicit step below — a plain `clone --filter=blob:none`
+      # checks out immediately and pulls every blob the checkout touches in one big
+      # up-front fetch anyway; splitting it out doesn't change what's fetched, but keeps
+      # the two failure modes (fetch vs. checkout) distinguishable for the fallback below.
+      # Runner disk is the binding constraint here — the DB alone restores to 16G on a
+      # ~14G runner — so not downloading every blob of every past commit for seven repos
+      # is free headroom. Falls back to a full clone if the remote refuses partial clone,
+      # so this can never be the thing that fails a run.
+      #
+      # actions/checkout stamps a global `http.extraheader` (an Authorization token scoped
+      # to THIS job's own repo, cloud-infra) into the runner's git config, and that header
+      # inherits into every subsequent git command in the job — including this clone of a
+      # DIFFERENT, unrelated repo. GitHub's remote rejects a foreign-repo token on an
+      # otherwise-anonymous public clone, which is the actual cause of cloud-u-android's
+      # ~50s clone failure (public repo, no CGC_DEPLOY_KEY, no per-repo TOKEN scope for it).
+      # `-c http.extraheader=` clears the header for just this command. Only the anonymous
+      # path needs it — the SSH deploy-key and same-repo-TOKEN paths never carry it.
+      _gitc="git"
+      if [ -z "$_key" ] && [ -z "$TOKEN" ]; then _gitc="git -c http.extraheader="; fi
+      if $_gitc clone -q --filter=blob:none --no-checkout "$url" "$d" 2>/dev/null \
+        && $_gitc -C "$d" checkout -q 2>/dev/null; then
+        :
+      elif rm -rf "$d" 2>/dev/null; $_gitc clone -q "$url" "$d" 2>/dev/null; then
+        :
+      else
+        echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"
+      fi
       # Same reason as the refresh path: strip any credential back out of origin so
       # the project_id octocode derives is the canonical, consumer-matching one.
       git -C "$d" remote set-url origin "$canon" 2>/dev/null || true
