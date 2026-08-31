@@ -62,21 +62,36 @@ _ensure_image_public() {
     # (deploy-compose.sh pushes credentials before docker compose pull).
     # Private is only fatal when running locally without vault credentials.
     if [ -n "${GITHUB_TOKEN:-}" ]; then
-        log_warn "Package ${_eip_pkg}: PRIVATE (not anonymously pullable) — VM will pull via GITHUB_TOKEN. No action needed in GHA."
+        log_warn "Package ${_eip_pkg}: PRIVATE (not anonymously pullable). This deploy will"
+        log_warn "  still work (the VM pulls via GITHUB_TOKEN), but for a PUBLIC source repo a"
+        log_warn "  private package is a LEGACY artifact: it was first created before ship.yml"
+        log_warn "  forwarded GITHUB_TOKEN into cloud-builder (fixed 2026-07-11), so it was born"
+        log_warn "  from a PAT push — user-scoped and private forever. Remediation below."
+        log_warn "  Fix once: delete the package, then re-ship this service so GHA recreates it:"
+        log_warn "    gh api -X DELETE /user/packages/container/${_eip_pkg}"
+        log_warn "    gh workflow run ship.yml -f services=<dir> -f vm=<vm>"
         return 0
     fi
-    # Genuinely private — the VM cannot pull it and we cannot fix it via API.
-    # GitHub has NO API to change package visibility, AND a fresh push does NOT
-    # make it public — newly-created GHCR packages on this account default to
-    # PRIVATE (proven 2026-07-11: deleting dagu-binaries and re-pushing produced
-    # a private package again, while the pre-existing dagu base image stayed
-    # public in the same run). The fleet's public images are public only because
-    # each was flipped ONCE in the web UI. So the one real remediation is a
-    # one-time UI flip; deleting/re-pushing will NOT help.
+    # Genuinely private, and we are NOT in GHA — the VM cannot pull this image.
+    # GitHub has NO API to change package visibility (verified 2026-08-31: PATCH
+    # and PUT on /user/packages/container/{pkg}[/visibility] all 404). Visibility
+    # is fixed at CREATION: a package first pushed by a GHA job authenticating
+    # with GITHUB_TOKEN is repo-scoped and INHERITS the source repo's visibility
+    # (public repo → public package); one first pushed with a PAT is user-scoped
+    # and private permanently.
+    #
+    # An older note here claimed delete+re-push "will NOT help" and that a manual
+    # UI flip was the only fix. That was a misreading of 2026-07-11: the re-push
+    # that "proved" it came from the cloud-builder VM using the vault PAT, because
+    # ship.yml did not yet forward GITHUB_TOKEN into the container. Once it did
+    # (5fd72dd02, same day), GHA-created packages have been born public — e.g.
+    # postlite-binaries/alerts-api-binaries (2026-08-28) and kg-store-pub*
+    # (2026-08-30), all public with no UI interaction. Delete + re-ship IS the fix.
     log_error "Package ${_eip_pkg}: PRIVATE / not anonymously pullable — the VM cannot pull this image."
-    log_error "  Make it public ONCE in the GitHub UI (no API exists; a fresh push stays private):"
-    log_error "    https://github.com/users/${_eip_owner}/packages/container/${_eip_pkg}/settings"
-    log_error "    → Danger Zone → Change visibility → Public,  then re-run this ship."
+    log_error "  There is no visibility API. Recreate it from GHA so it is born public:"
+    log_error "    gh api -X DELETE /user/packages/container/${_eip_pkg}"
+    log_error "    gh workflow run ship.yml -f services=<dir> -f vm=<vm>   # pushes with GITHUB_TOKEN"
+    log_error "  (Deleting is safe only if that re-ship really rebuilds and re-pushes this image.)"
     return 1
 }
 
