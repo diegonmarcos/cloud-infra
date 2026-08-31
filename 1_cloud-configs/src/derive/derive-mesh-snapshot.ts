@@ -73,7 +73,7 @@ function providerOf(vmId: string): string {
 }
 
 // ── Build the snapshot ────────────────────────────────────────────────────
-function build(): Snapshot {
+export function build(): Snapshot {
   const consolidatedRel = '1_cloud-configs/dist/_cloud-data-consolidated.json';
   const wsTunnelRel     = 'a_solutions/infra-net_wireguard-mesh-ws-tunnel/build.json';
 
@@ -227,4 +227,10 @@ function main(): void {
               `· ${out.nodes.length} nodes · ${out.peers.length} peers · ${out.transports.length} transports`);
 }
 
-main();
+// Only emit when run as a deriver. cloud-data-config-derive.ts imports `build()`
+// to embed the same wg-mesh/v1 snapshot in the SuperApp artifact, and an
+// unguarded main() would fire on that import — writing the file (and logging)
+// out of turn, before this deriver's slot in derivers.json.
+if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+  main();
+}

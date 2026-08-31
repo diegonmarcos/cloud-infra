@@ -7,6 +7,9 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { resolve, join } from "path";
+// Reused (not re-read from dist/) so the SuperApp artifact embeds the SAME
+// wg-mesh/v1 snapshot the mesh deriver emits, computed from the same SoT.
+import { build as buildMeshSnapshot } from "./derive-mesh-snapshot.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Paths
@@ -1977,6 +1980,174 @@ function deriveWireguardPeers(c: any): DerivedFile {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SuperApp full-config artifact — one file per user
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Emits dist/build-cloud-superapp-<slug>.json, served bearer-gated at
+// https://api.diegonmarcos.com/pub/superapp/config/<slug> (c3-public-api).
+// The app maps each top-level section 1:1 onto a prefs store.
+//
+// SECURITY — the artifact carries NO WireGuard private key, and must not.
+// This repo is PUBLIC and dist/ is committed to it, so a key here would be a
+// permanent public leak. `secrets_included: false` states that in-band. The
+// key never needs to travel anyway: it is the DEVICE's own identity, so the
+// phone already holds it and imports it from file. The redaction happens at
+// the source boundary in src/inputs/regen-superapp-wireguard-profiles.js,
+// which refuses to run if a PresharedKey ever appears upstream.
+//
+// WHY THIS ENDPOINT MUST BE PUBLIC+BEARER, NOT WG-ONLY: the artifact CONTAINS
+// the WireGuard config, so the phone has to fetch it BEFORE it can join the
+// mesh. A wg-only route is unreachable by definition at that moment.
+//
+// Adding a user is a DATA addition (a key in src/inputs/superapp-users.json),
+// never a code change.
+function deriveSuperappConfig(c: any): DerivedFile[] {
+  const INPUTS_DIR = resolve(ENGINE_DIR, "../inputs");
+  const readInput = (file: string): any | undefined => {
+    const path = join(INPUTS_DIR, file);
+    if (!existsSync(path)) return undefined;
+    return JSON.parse(readFileSync(path, "utf-8"));
+  };
+
+  const usersInput = readInput("superapp-users.json");
+  const wgInput = readInput("superapp-wireguard-profiles.json");
+  if (!usersInput?.users) return [];
+
+  // Same wg-mesh/v1 snapshot the mesh deriver emits, computed from the same
+  // consolidated SoT rather than read back from dist/ — reading the sibling
+  // deriver's output would embed the PREVIOUS run's bytes, since it runs after
+  // this one (see src/derivers.json ordering).
+  let mesh: any = null;
+  try {
+    mesh = buildMeshSnapshot();
+  } catch {
+    mesh = null;
+  }
+
+  // services_public / services_private — the exact derivation the SuperApp's
+  // data/regen.sh performs, reimplemented here so the app can stop shelling out
+  // to jq against gitignored upstream files.
+  //
+  // NOTE the parenthesisation: regen.sh wrote
+  //   select(.proxy.domain or .proxy.parent_domain | not)
+  // which jq parses as `.proxy.domain or (.proxy.parent_domain | not)`, so a
+  // container with ONLY proxy.domain landed in BOTH lists. Grouping the
+  // disjunction before negating is the fix.
+  const servicesPublic: any[] = [];
+  const servicesPrivate: any[] = [];
+  for (const [svcName, svc] of Object.entries((c.services ?? {}) as Record<string, any>)) {
+    // `containers` is an OBJECT keyed by container id here, not an array.
+    // regen.sh's `(.containers // []) | .[]` hid the difference because jq's
+    // `.[]` iterates object VALUES too; Object.values keeps the same semantics.
+    for (const ct of Object.values((svc.containers ?? {}) as Record<string, any>)) {
+      const dns = (ct.dns ?? ct.container_name) + (ct.port ? `:${ct.port}` : "");
+      const isPublic = Boolean(ct.proxy?.domain || ct.proxy?.parent_domain);
+      if (isPublic) {
+        servicesPublic.push({
+          name: ct.container_name,
+          service: svcName,
+          vm: svc.vm ?? "—",
+          public_url: ct.proxy.domain
+            ? ct.proxy.domain
+            : ct.proxy.parent_domain + (ct.proxy.base_path ?? ""),
+          auth: ct.proxy.auth ?? "none",
+          private_dns: dns,
+          port: ct.port ?? null,
+          category: svc.category ?? null,
+        });
+      } else if (ct.container_name) {
+        servicesPrivate.push({
+          name: ct.container_name,
+          service: svcName,
+          vm: svc.vm ?? "—",
+          private_dns: dns,
+          port: ct.port ?? null,
+          protocol: ct.protocol ?? "tcp",
+          category: svc.category ?? null,
+          db_engine: ct.db_engine ?? null,
+        });
+      }
+    }
+  }
+
+  // Parse the redacted wg-quick text into the structured form the app binds to.
+  // Interface keys collapse to one entry; [Peer] blocks accumulate.
+  const parseWgQuick = (text: string) => {
+    const iface: Record<string, string> = {};
+    const peers: Record<string, string>[] = [];
+    let cur: Record<string, string> | null = null;
+    for (const rawLine of text.split("\n")) {
+      const line = rawLine.replace(/#.*$/, "").trim();
+      if (!line) continue;
+      if (/^\[Interface\]$/i.test(line)) { cur = iface; continue; }
+      if (/^\[Peer\]$/i.test(line)) { cur = {}; peers.push(cur); continue; }
+      const eq = line.indexOf("=");
+      if (eq < 0 || cur === null) continue;
+      cur[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
+    }
+    const split = (v?: string) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : []);
+    return {
+      interface: {
+        address: split(iface.Address),
+        dns: split(iface.DNS),
+        mtu: iface.MTU ? Number(iface.MTU) : null,
+        private_key: null, // never carried — see the security note above
+      },
+      peers: peers.map((p) => ({
+        public_key: p.PublicKey ?? null,
+        endpoint: p.Endpoint ?? null,
+        allowed_ips: split(p.AllowedIPs),
+        persistent_keepalive: p.PersistentKeepalive ? Number(p.PersistentKeepalive) : null,
+      })),
+    };
+  };
+
+  const files: DerivedFile[] = [];
+  for (const [slug, user] of Object.entries(usersInput.users as Record<string, any>)) {
+    const wireguard: Record<string, any> = {};
+    for (const profName of (user.wireguard_profiles ?? [])) {
+      const prof = wgInput?.profiles?.[profName];
+      if (!prof) continue;
+      wireguard[profName] = {
+        name: prof.name,
+        config_text: prof.config_text,
+        parsed: parseWgQuick(prof.config_text),
+      };
+    }
+
+    files.push({
+      name: `build-cloud-superapp-${slug}.json`,
+      data: {
+        _meta: {
+          description:
+            `Full SuperApp configuration for user '${slug}'. Served bearer-gated at ` +
+            `https://api.diegonmarcos.com/pub/superapp/config/${slug}. Each top-level ` +
+            `section maps 1:1 onto an app prefs store.`,
+          format_version: 1,
+          user: slug,
+          secrets_included: false,
+          private_key_source:
+            "file_import — the WireGuard PrivateKey is the device's own identity and is never served",
+        },
+        _generated: now(),
+        _source:
+          "1_cloud-configs/src/inputs/superapp-users.json + superapp-wireguard-profiles.json " +
+          "+ _cloud-data-consolidated.json + derive-mesh-snapshot.build() " +
+          "via cloud-data-config-derive.ts/superapp-config",
+        profile: user.profile ?? {},
+        wireguard,
+        mesh,
+        services: {
+          public: servicesPublic,
+          private: servicesPrivate,
+        },
+      },
+    });
+  }
+  return files;
+}
+
 function deriveFirewallRules(c: any): DerivedFile {
   const vms = c.vms as Record<string, any>;
   const vmIdToAlias = buildVmIdToAlias(vms);
@@ -3565,6 +3736,7 @@ function main() {
     deriveHomeManager(consolidated),
     deriveGhaConfig(consolidated),
     deriveWireguardPeers(consolidated),
+    ...deriveSuperappConfig(consolidated),  // dist/build-cloud-superapp-{user}.json
     deriveFirewallRules(consolidated),
     deriveMonitoringTargets(consolidated),  // legacy → z_archive
     deriveBuildReports(consolidated),       // new pattern → dist/build-reports.json
