@@ -43,7 +43,13 @@ jobs:
             -not -path "./.git/*" \
             -not -path "*/dist/*" \
             -not -path "*/target/*" \
-            -not -path "*/node_modules/*" 2>/dev/null || true)
+            -not -path "*/node_modules/*" \
+            -not -path "./I_cloud/*" \
+            -not -path "./z_archive/*" 2>/dev/null || true)
+          # I_cloud/* are sibling-repo convenience symlinks that only resolve on a
+          # developer machine, and z_archive/*/build.sh points at a deleted engine.
+          # Neither is a build input; both are dangling by design and were failing
+          # every run of this workflow.
           if [ -n "$broken" ]; then
             echo "::error::Broken symlinks found in source tree:"
             echo "$broken"
