@@ -1104,6 +1104,14 @@ function deriveCaddy(c: any): DerivedFile[] {
         target_domain: wk.target_domain,
         upstream,
         ...(wk.tls_skip_verify ? { tls_skip_verify: true } : {}),
+        // INTERNAL rewrite before proxying (caddyfile.nix mkWellKnownBlock).
+        // Serves the upstream's real resource AT the discovery path so no
+        // client has to follow a redirect — JMAP needs it because Stalwart
+        // answers /.well-known/jmap with a RELATIVE 307 (Location:
+        // /jmap/session) that some clients cannot resolve. This builder copies
+        // fields explicitly, so an undeclared key is silently dropped: any new
+        // well_known option must be added here or it never reaches dist.
+        ...(wk.rewrite_to ? { rewrite_to: wk.rewrite_to } : {}),
         comment: wk.comment ?? `${wk.path} → ${svcName}`,
       });
     }
