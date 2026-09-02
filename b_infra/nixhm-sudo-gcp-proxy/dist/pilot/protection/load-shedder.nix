@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/protection/load-shedder.nix
-# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Source : nixhm-sudo-gcp-proxy/src/pilot/protection/load-shedder.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -157,7 +157,15 @@ in {
         # ── Warn level (no action, just notify) ───────────────────────────
         if [ "$MEM_I" -ge "$MEM_PSI_WARN" ] && [ "$MEM_I" -lt "$MEM_PSI_CRIT" ] && [ "$shed_level" -eq 0 ]; then
           logger -t load-shedder "WARN: memPSI=''${MEM} (threshold=$MEM_PSI_WARN)"
-          ntfy_send 3 "warn" "Memory pressure WARN" "memPSI=''${MEM}%% cpuPSI=''${CPU}%% ioPSI=''${IO}%%"
+          # Notify on the TRANSITION into warn only. Without this latch a box
+          # that sits in the warn band re-notifies every loop tick: gcp-proxy
+          # at 42% memPSI for a day produced 2699 ntfy->email messages in
+          # Cloud-Infra/Health/Checks/health_resources (2026-09-02), which
+          # then made the phone mail client crawl. Re-arms on recovery below.
+          if [ "''${warned:-0}" -eq 0 ]; then
+            warned=1
+            ntfy_send 3 "warn" "Memory pressure WARN" "memPSI=''${MEM}%% cpuPSI=''${CPU}%% ioPSI=''${IO}%%"
+          fi
         fi
 
         # ── Crit level: track breaches ────────────────────────────────────
@@ -176,7 +184,7 @@ in {
             ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). Manual docker restart required for non-tier1."
             shed_level=0
           fi
-          breaches_crit=0; breaches_page=0
+          breaches_crit=0; breaches_page=0; warned=0
         fi
 
         # ── Page-level shed: stop everything ─────────────────────────────
