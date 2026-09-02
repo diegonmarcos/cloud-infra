@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-analytics/src/pilot/protection/resource-bouncer.nix
-# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Source : nixhm-sudo-oci-analytics/src/pilot/protection/resource-bouncer.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -36,6 +36,19 @@ let
   # kernel default; bigger boxes keep real zram headroom and get the neutral
   # in-memory-swap value. Neither is above 100.
   swappiness = if safeRamMB <= 2048 then 60 else 100;
+
+  # vfs_cache_pressure was a flat 200 ("drop dentry/inode slab twice as
+  # readily") on the theory that a clean file page is free to drop. That
+  # theory holds only when re-reading it is cheap. On these free-tier VMs the
+  # boot disk is slow NETWORK storage (GCP PD-standard is HDD-backed: measured
+  # r_await 262ms/op on gcp-proxy 2026-09-02, %util 96% at just 81 reads/s), so
+  # a dropped CODE page refaults at a quarter-second and io-PSI pins at 92%
+  # "full" — the whole box stalls on the disk. On a small box that behaviour is
+  # a death spiral (caddy took 1412 major-faults/s re-reading its own binary).
+  # So small boxes now RETAIN cache (50); big boxes with faster/ample setups
+  # keep the aggressive reclaim. This is the surgical knob for file-refault
+  # thrash and does not touch the swappiness/zram tiering above.
+  vfsCachePressure = if safeRamMB <= 2048 then 50 else 200;
 
   minFreeKB = if safeRamMB <= 1024 then 65536
               else if safeRamMB <= 8192 then 131072
@@ -74,7 +87,7 @@ in {
     # decompressed individually anyway - and those 7 extra pages are part of
     # what fills zram in the first place. Disk swap stays last by priority
     # (zram 100, file 10).
-    vm.vfs_cache_pressure = 200
+    vm.vfs_cache_pressure = ${toString vfsCachePressure}
     vm.page-cluster = 0
     vm.dirty_ratio = 10
     vm.dirty_background_ratio = 5
@@ -96,6 +109,25 @@ in {
     fs.inotify.max_user_watches = 524288
     fs.inotify.max_user_instances = 1024
     kernel.pid_max = 262144
+  '';
+
+  # ── Journald → volatile (RAM) ─────────────────────────────────────────
+  # journald's persistent store lives on the same slow network disk. Worse,
+  # the my-watchdog dashboard runs `journalctl` continuously to render itself,
+  # so the panel's own reads re-fetch+decompress archived journals off the HDD
+  # (measured ~2MB/s READ from journald on gcp-proxy 2026-09-02) — pure disk
+  # churn that competes with everything else at 262ms/op. Storage=volatile
+  # keeps the journal in /run (tmpfs/RAM): writes and the panel's reads never
+  # touch the disk. RuntimeMaxUse bounds the RAM it may take on these small
+  # boxes; Compress=no because compressing an in-RAM ring only burns CPU. The
+  # trade is logs do not survive reboot — acceptable on a box whose failure
+  # mode is disk-IO starvation, and recent logs stay in RAM for the panel.
+  home.file.".local/share/system-protection/journald-volatile.conf".text = ''
+    [Journal]
+    Storage=volatile
+    RuntimeMaxUse=${if safeRamMB <= 2048 then "40M" else "128M"}
+    Compress=no
+    ForwardToSyslog=no
   '';
 
   # ── Zram ──────────────────────────────────────────────────────────────
@@ -183,6 +215,17 @@ in {
     fi
 
     $SUDO sysctl --system > /dev/null 2>&1 || true
+
+    # Journald → volatile (RAM). Only restart journald if the drop-in actually
+    # changed, so re-activation is not a per-generation journal bounce.
+    $SUDO mkdir -p /etc/systemd/journald.conf.d
+    if ! $SUDO cmp -s "$SRC/journald-volatile.conf" /etc/systemd/journald.conf.d/99-volatile.conf 2>/dev/null; then
+      $SUDO cp -f "$SRC/journald-volatile.conf" /etc/systemd/journald.conf.d/99-volatile.conf
+      $SUDO chmod 644 /etc/systemd/journald.conf.d/99-volatile.conf
+      $SUDO systemctl restart systemd-journald 2>/dev/null || true
+      # Reclaim the on-disk journal once it is RAM-backed (idempotent).
+      $SUDO rm -rf /var/log/journal 2>/dev/null || true
+    fi
 
     # Read back rather than assume. A single bad key aborts the whole file, and
     # a swappiness that never took is invisible until the box is already

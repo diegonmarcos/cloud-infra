@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-infra/b_infra/nixhm-sudo-oci-analytics/src/pilot/scripts/log-shipper.conf.tpl
-# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Source : nixhm-sudo-oci-analytics/src/pilot/scripts/log-shipper.conf.tpl
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -32,6 +32,9 @@
 
 [INPUT]
     Name             systemd
+    # journald input had NO cap while tail did. Unbounded here is the leak path
+    # measured 2026-09-02 (450 MB swapped). Pause instead of eating the host.
+    Mem_Buf_Limit    8MB
     Tag              host.{HOSTNAME}
     DB               /var/lib/fluent-bit/journald.db
     Read_From_Tail   On

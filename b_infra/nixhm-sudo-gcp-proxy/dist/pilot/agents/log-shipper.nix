@@ -2,8 +2,8 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-infra/b_infra/nixhm-sudo-gcp-proxy/src/pilot/agents/log-shipper.nix
-# ║   Engine : 1_cicd/src/scripts/cloud-ship-nix-homemanager-engine.sh
+# ║   Source : nixhm-sudo-gcp-proxy/src/pilot/agents/log-shipper.nix
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
 # ║   Manual edits will be overwritten on next build.                ║
@@ -42,6 +42,15 @@
     Restart=always
     RestartSec=15
     MemoryMax=64M
+    # MemoryMax alone is a trap on a box with swap: when the cgroup hits the
+    # cap the kernel SWAPS the process out instead of killing it, so a leak
+    # grows unbounded in zram while RSS reads a tidy 12M. Measured 2026-09-02
+    # on gcp-proxy: fluent-bit RSS 11M, VmSwap 450M — half the host's RAM
+    # gone into its compressed swap, every other daemon refaulting its code
+    # pages off a 262ms/op disk (authelia alone: 118 GB of reads). Deny swap
+    # so the cap means what it says: leak -> OOM-kill -> Restart=always brings
+    # it back clean. Same self-healing blip pattern as the fd cap below.
+    MemorySwapMax=0
     CPUQuota=10%
     # ── fd / task self-limit (2026-06-19 fd-leak incident) ───────────────
     # The `tail` input opens one fd + inotify watch per matched container log
