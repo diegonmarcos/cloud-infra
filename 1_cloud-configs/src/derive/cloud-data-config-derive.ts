@@ -522,6 +522,12 @@ function deriveCaddy(c: any): DerivedFile[] {
       // for mobile-app login endpoints (e.g. Mattermost's /api/v4/*) where
       // the app posts JSON credentials and can't follow a 302 redirect.
       ...(proxy.bypass_paths ? { bypass_paths: proxy.bypass_paths } : {}),
+      // security_import / max_upload: per-vhost security-bundle override and
+      // request-body cap, passed through verbatim for caddyfile.nix
+      // mkSubdomainRoute (declared in the service build.json; first user is
+      // jmap.diegonmarcos.com's dedicated rate-limit zone + 50MB upload cap).
+      ...(proxy.security_import ? { security_import: proxy.security_import } : {}),
+      ...(proxy.max_upload ? { max_upload: proxy.max_upload } : {}),
       comment: svc.description,
     };
     routes.push(route);
@@ -1127,6 +1133,14 @@ function deriveCaddy(c: any): DerivedFile[] {
         target_domain: wk.target_domain,
         upstream,
         ...(wk.tls_skip_verify ? { tls_skip_verify: true } : {}),
+        // INTERNAL rewrite before proxying (caddyfile.nix mkWellKnownBlock).
+        // Serves the upstream's real resource AT the discovery path so no
+        // client has to follow a redirect — JMAP needs it because Stalwart
+        // answers /.well-known/jmap with a RELATIVE 307 (Location:
+        // /jmap/session) that some clients cannot resolve. This builder copies
+        // fields explicitly, so an undeclared key is silently dropped: any new
+        // well_known option must be added here or it never reaches dist.
+        ...(wk.rewrite_to ? { rewrite_to: wk.rewrite_to } : {}),
         comment: wk.comment ?? `${wk.path} → ${svcName}`,
       });
     }

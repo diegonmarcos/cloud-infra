@@ -6,22 +6,22 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 2556,
+    "files": 2557,
     "by_lang": {
-      "nix": 449,
+      "nix": 447,
       "sh": 377,
-      "ts": 325,
+      "ts": 327,
+      "js": 24,
       "py": 848,
-      "js": 23,
       "rust": 534
     },
     "by_role": {
       "flake": 74,
       "script": 112,
       "shell": 260,
-      "module": 216,
+      "module": 219,
       "engine": 1,
-      "nix-module": 309,
+      "nix-module": 307,
       "python": 843,
       "compose": 66,
       "entrypoint": 24,
@@ -2257,7 +2257,8 @@
       "exports": [],
       "imports": [
         "fs",
-        "path"
+        "path",
+        "./derive-mesh-snapshot.js"
       ],
       "symbols": [
         "targetDirFor(fileName: string)",
@@ -2281,6 +2282,7 @@
         "deriveHomeManager(c: any)",
         "deriveGhaConfig(c: any)",
         "deriveWireguardPeers(c: any)",
+        "deriveSuperappConfig(c: any)",
         "deriveFirewallRules(c: any)",
         "deriveMonitoringTargets(c: any)",
         "deriveBuildReports(c: any)",
@@ -2298,8 +2300,7 @@
         "deriveConfigs(c: any)",
         "deriveDeps(c: any)",
         "deriveServiceConnections(c: any)",
-        "deriveKgSchema(c: any)",
-        "deriveKgDelta(c: any)"
+        "deriveKgSchema(c: any)"
       ]
     },
     {
@@ -2369,7 +2370,9 @@
       "path": "1_cloud-configs/src/derive/derive-mesh-snapshot.ts",
       "lang": "ts",
       "role": "module",
-      "exports": [],
+      "exports": [
+        "build"
+      ],
       "imports": [
         "node:fs",
         "node:path"
@@ -2700,6 +2703,17 @@
         "path",
         "ajv",
         "ajv-formats"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "1_cloud-configs/src/inputs/regen-superapp-wireguard-profiles.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path"
       ],
       "symbols": []
     },
@@ -4344,78 +4358,46 @@
       ]
     },
     {
-      "path": "a_solutions/_shared/lib/mail-rules.nix",
-      "lang": "nix",
-      "role": "nix-module",
+      "path": "a_solutions/_shared/lib/derive-mail-rules.ts",
+      "lang": "ts",
+      "role": "module",
       "exports": [
-        "lib"
-      ],
-      "imports": [
-        "../../_shared/lib/mail-rules.nix",
-        "../_shared/lib/mail-rules.nix"
-      ],
-      "symbols": [
-        "loadJson",
         "merge",
-        "schema_version",
-        "account",
-        "sieve_require",
-        "folders",
-        "folder_groups",
-        "folders_ui",
-        "routing_default",
-        "inbox_copy",
-        "cleanup",
-        "filters",
-        "folder_renames",
-        "folder_options",
-        "predicates",
-        "rules",
         "loadAndMerge",
-        "general",
-        "profile",
         "resolvePredicate",
-        "sieveList",
         "sieveAtom",
         "sieveTest",
         "sortByPriority",
-        "sorted",
-        "allFolderTargets",
-        "effectiveFlags",
-        "effectiveFolder",
-        "sieveTagBlock",
-        "flags",
-        "cond",
-        "lines",
-        "sieveRouteBlock",
-        "folder",
-        "tagLines",
-        "fileintoLine",
-        "seenLine",
-        "stopLine",
-        "body",
-        "isTagKind"
-      ]
-    },
-    {
-      "path": "a_solutions/_shared/lib/mail-rules.tests/generate-golden.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "generalPath",
-        "profilePath"
+        "toSieve",
+        "toMaddyJson",
+        "toLegacyJson"
       ],
       "imports": [
-        "../mail-rules.nix",
-        "mail-rules.nix"
+        "fs",
+        "path"
       ],
       "symbols": [
-        "pkgs",
-        "lib",
-        "mr",
-        "merged",
-        "sieve",
-        "maddy"
+        "stableStringify(value: Json)",
+        "prettyStringify(value: Json, indent = 0)",
+        "loadJson(p: string)",
+        "merge(general: Json, profile: Json | null)",
+        "loadAndMerge(generalPath: string, profilePath: string | null)",
+        "resolvePredicate(predicates: Record<string, Json>, pred: Json)",
+        "sieveList(vs: string[])",
+        "sieveAtom(account: string, p: Json)",
+        "sieveTest(account: string, p: Json)",
+        "sortByPriority(rules: Json[])",
+        "allFolderTargets(merged: Merged)",
+        "effectiveFlags(rule: Json)",
+        "effectiveFolder(folders: Record<string, string>, rule: Json)",
+        "sieveTagBlock(predicates: Record<string, Json>, account: string, rule: Json)",
+        "sieveRouteBlock(\n  predicates: Record<string, Json>, account: string,\n  folders: Record<string, string>, inboxSeen: boolean, rule: Json,\n)",
+        "toSieve(merged: Merged)",
+        "toMaddyJson(merged: Merged)",
+        "toLegacyJson(merged: Merged)",
+        "artifacts()",
+        "emitForTests(dir: string)",
+        "main()"
       ]
     },
     {
@@ -4424,12 +4406,14 @@
       "role": "shell",
       "exports": [
         "diff_file()",
-        "assert()"
+        "assert()",
+        "artifacts_current()"
       ],
       "imports": [],
       "symbols": [
         "diff_file()",
-        "assert()"
+        "assert()",
+        "artifacts_current()"
       ]
     },
     {
@@ -5097,9 +5081,13 @@
       "imports": [
         "fastify",
         "node:fs/promises",
-        "node:path"
+        "node:path",
+        "../../shared/libs/exec.js"
       ],
       "symbols": [
+        "withinRateLimit(app: string)",
+        "sanitiseIdent(raw: string)",
+        "notifyNtfy(app: string, kind: string, title?: string, message?: string)",
         "registerPublicLogsRoutes(app: FastifyInstance)"
       ]
     },
@@ -5563,7 +5551,7 @@
         "vmNetwork(vmNameOrAlias: string)",
         "vmTop(vmNameOrAlias: string)",
         "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+        "vmJournal(\n  vmNameOrAlias: string,\n  lines = 100,\n  unit?: string,\n)"
       ]
     },
     {
@@ -6356,7 +6344,8 @@
         "./plugins/error-handler.js",
         "./routes/health.js",
         "./routes/analytics.js",
-        "./routes/mail.js"
+        "./routes/mail.js",
+        "./routes/superapp.js"
       ],
       "symbols": [
         "buildApp()"
@@ -6455,6 +6444,22 @@
         "extractAddress(body: Buffer, name: string)",
         "decodeBody(req: FastifyRequest)",
         "registerMail(app: FastifyInstance, cfg: AppConfig)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-public-api/src/code/api/routes/superapp.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerSuperapp"
+      ],
+      "imports": [
+        "fs",
+        "path",
+        "fastify"
+      ],
+      "symbols": [
+        "registerSuperapp(app: FastifyInstance)"
       ]
     },
     {
@@ -8121,7 +8126,7 @@
         "vmNetwork(vmNameOrAlias: string)",
         "vmTop(vmNameOrAlias: string)",
         "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+        "vmJournal(\n  vmNameOrAlias: string,\n  lines = 100,\n  unit?: string,\n)"
       ]
     },
     {
@@ -18956,7 +18961,10 @@
         "wgCidrs",
         "ss",
         "securityHeaders",
+        "mkRateLimiting",
         "rateLimiting",
+        "rateLimitingMcp",
+        "rateLimitingJmap",
         "blockBots",
         "blockScanners",
         "requestLimits",
@@ -18965,8 +18973,11 @@
         "body",
         "accessLog",
         "securitySnippet",
+        "securityMcpSnippet",
+        "securityJmapSnippet",
         "sec",
         "secNoLimit",
+        "secMcp",
         "auth",
         "autheliaUpstream",
         "introspectUpstream",
@@ -18981,13 +18992,7 @@
         "emptyGuard",
         "mkProtected",
         "mkProtectedCustom",
-        "wgGateBody",
-        "wgSiteLine",
-        "mkGithubProxy",
-        "routeListenSpec",
-        "sniSlug",
-        "l4PlainTpl",
-        "l4SniTpl"
+        "wgGateBody"
       ]
     },
     {
@@ -35737,7 +35742,8 @@
       "role": "file",
       "exports": [],
       "imports": [
-        "node:fs"
+        "node:fs",
+        "node:crypto"
       ],
       "symbols": []
     },
@@ -36166,7 +36172,7 @@
         "vmNetwork(vmNameOrAlias: string)",
         "vmTop(vmNameOrAlias: string)",
         "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+        "vmJournal(\n  vmNameOrAlias: string,\n  lines = 100,\n  unit?: string,\n)"
       ]
     },
     {
@@ -37359,7 +37365,7 @@
         "vmNetwork(vmNameOrAlias: string)",
         "vmTop(vmNameOrAlias: string)",
         "vmDiskUsage(vmNameOrAlias: string)",
-        "vmJournal(\n  vmNameOrAlias: string,\n  since = \"1h\",\n  lines = 100,\n)"
+        "vmJournal(\n  vmNameOrAlias: string,\n  lines = 100,\n  unit?: string,\n)"
       ]
     },
     {
@@ -56016,10 +56022,8 @@
       ],
       "imports": [
         "../../_shared/engine.nix",
-        "../../_shared/lib/mail-rules.nix",
         "./compose.nix",
         "../_shared/engine.nix",
-        "../_shared/lib/mail-rules.nix",
         "compose.nix"
       ],
       "symbols": [
@@ -56029,13 +56033,8 @@
         "buildJson",
         "container",
         "engine",
-        "mailRulesLib",
         "lib",
-        "mailRules",
-        "merged",
-        "generalPath",
-        "profilePath",
-        "maddyRulesJson",
+        "maddyRules",
         "senderFolders",
         "base_domain",
         "schemeFor",
@@ -56062,7 +56061,12 @@
         "FOLDER_CREATION_BLOCK",
         "packages",
         "pkgs",
-        "mailRulesDerived"
+        "default",
+        "srcDir",
+        "templates",
+        "extraAssets",
+        "composeSpec",
+        "title"
       ]
     },
     {
@@ -56418,10 +56422,8 @@
       ],
       "imports": [
         "../../_shared/engine.nix",
-        "../../_shared/lib/mail-rules.nix",
         "./compose.nix",
         "../_shared/engine.nix",
-        "../_shared/lib/mail-rules.nix",
         "compose.nix"
       ],
       "symbols": [
@@ -56431,14 +56433,7 @@
         "buildJson",
         "container",
         "engine",
-        "mailRulesLib",
         "lib",
-        "mailRules",
-        "merged",
-        "generalPath",
-        "profilePath",
-        "sieveScript",
-        "legacyJson",
         "base_domain",
         "adminHash",
         "appPort",
@@ -56464,7 +56459,14 @@
         "leafFolders",
         "findParent",
         "leafPrefix",
-        "match"
+        "match",
+        "leafLines",
+        "parentLines",
+        "foldersLines",
+        "usersList",
+        "adminUser",
+        "adminEmail",
+        "adminPassEnv"
       ]
     },
     {
