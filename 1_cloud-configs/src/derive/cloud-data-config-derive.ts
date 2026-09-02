@@ -522,6 +522,12 @@ function deriveCaddy(c: any): DerivedFile[] {
       // for mobile-app login endpoints (e.g. Mattermost's /api/v4/*) where
       // the app posts JSON credentials and can't follow a 302 redirect.
       ...(proxy.bypass_paths ? { bypass_paths: proxy.bypass_paths } : {}),
+      // security_import / max_upload: per-vhost security-bundle override and
+      // request-body cap, passed through verbatim for caddyfile.nix
+      // mkSubdomainRoute (declared in the service build.json; first user is
+      // jmap.diegonmarcos.com's dedicated rate-limit zone + 50MB upload cap).
+      ...(proxy.security_import ? { security_import: proxy.security_import } : {}),
+      ...(proxy.max_upload ? { max_upload: proxy.max_upload } : {}),
       comment: svc.description,
     };
     routes.push(route);
