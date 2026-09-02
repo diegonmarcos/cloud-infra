@@ -184,21 +184,17 @@ in
       install -m644 "$SRC/$u" "$UNITS/$u"
     done
 
-    # A VM with no user D-Bus session has no `systemctl --user` to talk to, and
-    # that is a normal state on a box nobody has logged into. Installing the
-    # units and stopping there is the right outcome: they start on the next
-    # login, or when lingering is enabled.
-    if ! systemctl --user show-environment >/dev/null 2>&1; then
-      echo "[my-stack] units installed; no user session to start them in yet"
-      exit 0
-    fi
-
-    systemctl --user daemon-reload
-
-    # Try to fetch before enabling, so the first start has something to run.
-    # If the hub pushed the binaries already this is a no-op.
+    # THE BINARIES COME DOWN FIRST, for the same reason.
+    #
+    # The fetch also sat after that `exit 0`, so a server with no user session
+    # never pulled a new build: gcp-proxy was still running an 08-29 sampler
+    # today. It is idempotent and a no-op when the hub already pushed them.
     ${fetchScript} || true
 
+    # THE ROOT SAMPLER GOES IN FIRST — it is a SYSTEM unit and needs no
+    # user session. It used to sit after the `exit 0` below, which every
+    # server with no user D-Bus session takes, so the deploy went green on
+    # four VMs and installed nothing at all.
     # ── my-watchdog AS ROOT ────────────────────────────────────────────
     # /proc/<pid>/io is readable only for your own processes, so a sampler
     # running as the user shows a dash in every per-process IO column for
@@ -261,6 +257,17 @@ WATCHDOG_UNIT
         echo "[my-stack] my-watchdog binary not present yet — system unit enabled, not started"
       fi
     fi
+
+    # A VM with no user D-Bus session has no `systemctl --user` to talk to, and
+    # that is a normal state on a box nobody has logged into. Installing the
+    # units and stopping there is the right outcome: they start on the next
+    # login, or when lingering is enabled.
+    if ! systemctl --user show-environment >/dev/null 2>&1; then
+      echo "[my-stack] units installed; no user session to start them in yet"
+      exit 0
+    fi
+
+    systemctl --user daemon-reload
 
     for u in my-watchdog.service my-webserver.service; do
       # The sampler is a system unit now where sudo allows; skip the user copy there.
