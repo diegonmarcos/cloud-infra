@@ -20,6 +20,9 @@
 
 [INPUT]
     Name             systemd
+    # journald input had NO cap while tail did. Unbounded here is the leak path
+    # measured 2026-09-02 (450 MB swapped). Pause instead of eating the host.
+    Mem_Buf_Limit    8MB
     Tag              host.{HOSTNAME}
     DB               /var/lib/fluent-bit/journald.db
     Read_From_Tail   On
