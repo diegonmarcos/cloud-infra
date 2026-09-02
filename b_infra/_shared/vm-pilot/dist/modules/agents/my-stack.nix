@@ -211,7 +211,61 @@ in
     # If the hub pushed the binaries already this is a no-op.
     ${fetchScript} || true
 
+    # ── my-watchdog AS ROOT ────────────────────────────────────────────
+    # /proc/<pid>/io is readable only for your own processes, so a sampler
+    # running as the user shows a dash in every per-process IO column for
+    # root's daemons and the kernel's threads — which, on a box whose disk
+    # is pinned at 100%, is exactly the set doing the IO. Root reads all of
+    # it. The unit is a SYSTEM unit written here with sudo; it publishes
+    # under /run/my-watchdog (RuntimeDirectory), which my-watchdog-tui and
+    # my-webserver look at first, and the directory is root:<user's group>
+    # 0770 with UMask=0007 so the user can still append kill requests to the
+    # mailbox while nobody else on the box can. The user unit is retired.
+    SUDO=""
+    for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
+      [ -x "$p" ] && SUDO="$p" && break
+    done
+    if [ -n "$SUDO" ] && $SUDO -n true 2>/dev/null; then
+      cat > "$SRC/my-watchdog-root.service" <<UNIT
+    [Unit]
+    Description=my-watchdog — machine sampler as root (${vmName})
+    After=network.target
+
+    [Service]
+    Type=simple
+    User=root
+    Group=$(id -gn)
+    ExecStart=$HOME/.local/bin/my-watchdog --no-tray
+    Environment=XDG_RUNTIME_DIR=/run/my-watchdog
+    RuntimeDirectory=my-watchdog
+    RuntimeDirectoryMode=0770
+    RuntimeDirectoryPreserve=yes
+    UMask=0007
+    Restart=always
+    RestartSec=5
+    Nice=10
+    IOSchedulingClass=idle
+    MemoryMax=96M
+
+    [Install]
+    WantedBy=multi-user.target
+    UNIT
+      sed -i 's/^    //' "$SRC/my-watchdog-root.service"
+      $SUDO install -m644 "$SRC/my-watchdog-root.service" /etc/systemd/system/my-watchdog.service
+      $SUDO systemctl daemon-reload
+      systemctl --user disable --now my-watchdog.service 2>/dev/null || true
+      if [ -x "$HOME/.local/bin/my-watchdog" ]; then
+        $SUDO systemctl enable --now my-watchdog.service 2>/dev/null && echo "[my-stack] my-watchdog running as root" \
+          || echo "[my-stack] could not start system my-watchdog"
+      else
+        $SUDO systemctl enable my-watchdog.service 2>/dev/null || true
+        echo "[my-stack] my-watchdog binary not present yet — system unit enabled, not started"
+      fi
+    fi
+
     for u in my-watchdog.service my-webserver.service; do
+      # The sampler is a system unit now where sudo allows; skip the user copy there.
+      [ "$u" = my-watchdog.service ] && [ -f /etc/systemd/system/my-watchdog.service ] && continue
       bin="$HOME/.local/bin/''${u%.service}"
       if [ -x "$bin" ]; then
         systemctl --user enable --now "$u" 2>/dev/null || \
