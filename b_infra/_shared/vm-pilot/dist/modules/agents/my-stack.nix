@@ -216,47 +216,58 @@ in
     # running as the user shows a dash in every per-process IO column for
     # root's daemons and the kernel's threads — which, on a box whose disk
     # is pinned at 100%, is exactly the set doing the IO. Root reads all of
-    # it. The unit is a SYSTEM unit written here with sudo; it publishes
-    # under /run/my-watchdog (RuntimeDirectory), which my-watchdog-tui and
+    # it. The unit is a SYSTEM unit installed with sudo; it publishes under
+    # /run/my-watchdog (RuntimeDirectory), which my-watchdog-tui and
     # my-webserver look at first, and the directory is root:<user's group>
     # 0770 with UMask=0007 so the user can still append kill requests to the
     # mailbox while nobody else on the box can. The user unit is retired.
+    #
+    # The unit text is written to a TEMP file, not into $SRC: that directory
+    # is home-manager's own symlink tree. And the heredoc ends at column
+    # zero — an indented terminator does not close it, which silently ate
+    # the rest of this block on the first attempt and installed nothing.
     SUDO=""
     for p in /usr/bin/sudo /run/wrappers/bin/sudo /usr/local/bin/sudo; do
       [ -x "$p" ] && SUDO="$p" && break
     done
     if [ -n "$SUDO" ] && $SUDO -n true 2>/dev/null; then
-      cat > "$SRC/my-watchdog-root.service" <<UNIT
-    [Unit]
-    Description=my-watchdog — machine sampler as root (${vmName})
-    After=network.target
+      UNIT_TMP="$(mktemp)"
+      cat > "$UNIT_TMP" <<'WATCHDOG_UNIT'
+[Unit]
+Description=my-watchdog — machine sampler as root
+After=network.target
 
-    [Service]
-    Type=simple
-    User=root
-    Group=$(id -gn)
-    ExecStart=$HOME/.local/bin/my-watchdog --no-tray
-    Environment=XDG_RUNTIME_DIR=/run/my-watchdog
-    RuntimeDirectory=my-watchdog
-    RuntimeDirectoryMode=0770
-    RuntimeDirectoryPreserve=yes
-    UMask=0007
-    Restart=always
-    RestartSec=5
-    Nice=10
-    IOSchedulingClass=idle
-    MemoryMax=96M
+[Service]
+Type=simple
+User=root
+ExecStart=@HOME@/.local/bin/my-watchdog --no-tray
+Environment=XDG_RUNTIME_DIR=/run/my-watchdog
+RuntimeDirectory=my-watchdog
+RuntimeDirectoryMode=0770
+RuntimeDirectoryPreserve=yes
+UMask=0007
+Restart=always
+RestartSec=5
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=96M
 
-    [Install]
-    WantedBy=multi-user.target
-    UNIT
-      sed -i 's/^    //' "$SRC/my-watchdog-root.service"
-      $SUDO install -m644 "$SRC/my-watchdog-root.service" /etc/systemd/system/my-watchdog.service
+[Install]
+WantedBy=multi-user.target
+WATCHDOG_UNIT
+      # Group and path are this user's, so the panel and my-webserver — which
+      # run as the user — can read what root publishes.
+      sed -i "s|@HOME@|$HOME|; s|^User=root$|User=root\nGroup=$(id -gn)|" "$UNIT_TMP"
+      $SUDO install -m644 "$UNIT_TMP" /etc/systemd/system/my-watchdog.service
+      rm -f "$UNIT_TMP"
       $SUDO systemctl daemon-reload
       systemctl --user disable --now my-watchdog.service 2>/dev/null || true
       if [ -x "$HOME/.local/bin/my-watchdog" ]; then
-        $SUDO systemctl enable --now my-watchdog.service 2>/dev/null && echo "[my-stack] my-watchdog running as root" \
-          || echo "[my-stack] could not start system my-watchdog"
+        if $SUDO systemctl enable --now my-watchdog.service 2>/dev/null; then
+          echo "[my-stack] my-watchdog running as root"
+        else
+          echo "[my-stack] could not start system my-watchdog"
+        fi
       else
         $SUDO systemctl enable my-watchdog.service 2>/dev/null || true
         echo "[my-stack] my-watchdog binary not present yet — system unit enabled, not started"
