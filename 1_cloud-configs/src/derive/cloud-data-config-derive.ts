@@ -666,6 +666,29 @@ function deriveCaddy(c: any): DerivedFile[] {
       ...(proxy?.bearer_auth === true ? { bearer_auth: true } : {}),
     });
   }
+  // Container-level MCP endpoints: a service may run SIBLING MCP containers
+  // (cloud-cgc-pub-mcp also runs cloud-cgc-pvt-mcp on its own port) whose
+  // proxy lives on the CONTAINER, not proxy.primary — the loop above never
+  // saw them, which is why /cloud-cgc-pvt-mcp was in every ~/.mcp.json but
+  // never routed at the hub (sessions got the fallback banner instead of the
+  // private store). Same wg_only fail-closed default as the primary path.
+  for (const [, svc] of Object.entries(services)) {
+    const primaryBase = svc.proxy?.primary?.base_path;
+    for (const [, c] of Object.entries((svc.containers ?? {}) as Record<string, any>)) {
+      const cp = c?.proxy;
+      if (!cp?.streaming || cp.parent_domain !== "mcp.diegonmarcos.com") continue;
+      if (cp.base_path === primaryBase) continue; // the app container IS proxy.primary
+      const wgIp = vms[svc.vm]?.wg_ip;
+      const upstreamRaw = wgIp && c.port ? `${wgIp}:${c.port}` : undefined;
+      const upstreamForCaddy = upstreamRaw ? rewriteUpstreamForCaddy(svc.vm, upstreamRaw) : undefined;
+      mcpEndpoints.push({
+        base_path: cp.base_path,
+        ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
+        ...(wgOnly(cp) ? { wg_only: true } : {}),
+        ...(cp?.bearer_auth === true ? { bearer_auth: true } : {}),
+      });
+    }
+  }
   const mcpRoutes = mcpEndpoints.length > 0 ? [{
     parent_domain: "mcp.diegonmarcos.com",
     endpoints: mcpEndpoints,
