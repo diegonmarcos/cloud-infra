@@ -104,6 +104,12 @@
       "format": "json",
       "roll_size": "10mb",
       "roll_keep": 5
+    },
+    "mcp_rate_limit": {
+      "events": 600,
+      "window": "1m",
+      "key": "{remote_host}",
+      "zone": "mcp"
     }
   },
   "auth": {
@@ -331,6 +337,7 @@
       "target_domain": "jmap.diegonmarcos.com",
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
+      "rewrite_to": "/jmap/session",
       "comment": "JMAP discovery on jmap vhost (public per RFC 8620)"
     },
     {
@@ -345,6 +352,7 @@
       "target_domain": "diegonmarcos.com",
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
+      "rewrite_to": "/jmap/session",
       "comment": "JMAP autoconfig — proxies to Stalwart (preserves per-user session)"
     },
     {
