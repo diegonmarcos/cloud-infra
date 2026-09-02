@@ -296,12 +296,32 @@ resolve_repo_desired_visibility() { # $1=PKG (for error msg) $2=LOCAL_NAME
 # Package settings -> Change visibility -> Private), and every subsequent push
 # from here inherits it. Seed it with a CONTENT-FREE placeholder, never with a
 # real DB, so nothing private is ever exposed even briefly.
+# BORN-PUBLIC pushes. A package pushed with the PAT is CREATED PRIVATE no matter
+# what the source LABEL says (verified 2026-08-23 and re-proven 2026-09-02: the
+# recreated cgc-db-cloud-u-containers/-cloud-infra-desktop/-cloud-u-android all
+# came up private again); only a GITHUB_TOKEN push creates PUBLIC (associated
+# with the public workflow repo). And GitHub has NO set-visibility API. So the
+# CREATION push of a public repo's package must be GITHUB_TOKEN-authenticated:
+# this logs GITHUB_TOKEN into a throwaway DOCKER_CONFIG and exports it so
+# push_with_retry uses it for exactly this push. Later pushes to the existing
+# package preserve visibility whatever the credential, so only creation needs it.
+use_github_token_push() { # $1=PKG (for messages) → rc 0 + PUSH_DOCKER_CONFIG set; rc 1 = cannot
+  if [ -z "${GITHUB_TOKEN:-}" ]; then
+    echo "::error::[cgc-db] $1: first publish of a PUBLIC repo's package needs GITHUB_TOKEN in env (a PAT push would create it PRIVATE and starve the anonymous pub restore) — GITHUB_TOKEN is empty here"
+    return 1
+  fi
+  _ugt_cfg=$(mktemp -d)
+  if ! printf '%s' "$GITHUB_TOKEN" | DOCKER_CONFIG="$_ugt_cfg" docker login ghcr.io -u "${GITHUB_ACTOR:-diegonmarcos}" --password-stdin >/dev/null 2>&1; then
+    echo "::error::[cgc-db] $1: docker login with GITHUB_TOKEN failed — cannot born-public push"
+    rm -rf "$_ugt_cfg"; return 1
+  fi
+  PUSH_DOCKER_CONFIG="$_ugt_cfg"
+  echo "[cgc-db] $1: push will be GITHUB_TOKEN-authenticated (throwaway DOCKER_CONFIG) so the package is created PUBLIC"
+}
+
 gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHOLE SCRIPT otherwise
   _gp_pkg="$1"; _gp_local="$2"
   resolve_repo_desired_visibility "$_gp_pkg" "$_gp_local"
-  if [ "$_rdv_desired" = "public" ]; then
-    return 0
-  fi
   # `gh api ... || echo absent` does NOT work here, and that is not a nitpick: gh
   # prints the error BODY on stdout for a 404 and still exits non-zero, so the
   # substitution came back as the literal
@@ -321,6 +341,32 @@ gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHO
     _gp_vis=unknown
   fi
   rm -f "$_gp_err"
+  if [ "$_rdv_desired" = "public" ]; then
+    case "$_gp_vis" in
+      public)
+        return 0 ;;
+      absent)
+        # First publish: creation credential decides born-visibility (see
+        # use_github_token_push). PAT would create it PRIVATE.
+        use_github_token_push "$_gp_pkg" || exit 1
+        return 0 ;;
+      private)
+        # Self-heal born-private drift. Safe to delete at push time: this run
+        # already PULLED the old checkpoint at start, and the image being pushed
+        # here contains the full fresh checkpoint — nothing is lost. Recreate
+        # born-public via a GITHUB_TOKEN push.
+        echo "[cgc-db] $_gp_pkg exists PRIVATE but repo diegonmarcos/${_rdv_remote:-?} is PUBLIC — self-healing: delete + recreate born-public"
+        if ! gh api --method DELETE "/user/packages/container/${_gp_pkg}" >/dev/null 2>&1; then
+          echo "::error::[cgc-db] $_gp_pkg: could not DELETE the wrongly-private package (token needs delete:packages) — cannot self-heal born-private drift"
+          exit 1
+        fi
+        use_github_token_push "$_gp_pkg" || exit 1
+        return 0 ;;
+      *)
+        echo "::error::[cgc-db] $_gp_pkg: cannot determine package state ($_gp_vis) for a PUBLIC repo — a blind PAT push could CREATE it private (starving the anonymous pub restore). Refusing to push."
+        exit 1 ;;
+    esac
+  fi
   case "$_gp_vis" in
     private)
       echo "[cgc-db] $_gp_pkg: repo diegonmarcos/${_rdv_remote:-?} is private and the package already exists private — pushing (visibility is preserved across pushes)"
@@ -634,7 +680,15 @@ DOCKER_CONFIG="$WORK/dcfg" docker build -t "$IMAGE:$TAG" "$WORK/ctx"
 # that made checkpoint #3 fail with "no space left on device" on 2026-08-21.
 rm -f "$WORK/ctx/octocode-db.tar" 2>/dev/null || true
 echo "[cgc-db] pushing $IMAGE:$TAG ..."
-push_with_retry "$IMAGE:$TAG" || exit $?
+# PUSH_DOCKER_CONFIG (set by gate_repo_push via use_github_token_push) redirects
+# JUST this push to the GITHUB_TOKEN login so a NEW public-repo package is
+# created PUBLIC. Unset = normal ambient (PAT) auth.
+if [ -n "${PUSH_DOCKER_CONFIG:-}" ]; then
+  DOCKER_CONFIG="$PUSH_DOCKER_CONFIG" push_with_retry "$IMAGE:$TAG" || exit $?
+  rm -rf "$PUSH_DOCKER_CONFIG"; PUSH_DOCKER_CONFIG=""
+else
+  push_with_retry "$IMAGE:$TAG" || exit $?
+fi
 # Drop the local tagged copy after a successful push — GHCR is the single store, and
 # keeping it locally just re-fills the data-root every run. Next run rebuilds trivially.
 docker rmi "$IMAGE:$TAG" >/dev/null 2>&1 || true
