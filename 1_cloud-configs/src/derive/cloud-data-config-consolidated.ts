@@ -255,6 +255,41 @@ function main() {
     }
   }
 
+  // THE PREVIOUS OUTPUT IS NOT ALWAYS A GOOD SOURCE.
+  //
+  // Carry-forward above reads the last derived file — which is exactly the
+  // file a bad derive already filled with nulls. Once nulls land there they
+  // are self-sustaining: every later derive carries nothing, re-emits null,
+  // and every home-manager deploy dies on `null wg_public_key` (2026-09-02,
+  // all 4 VMs, twice). So the SHIPPED per-VM copies are read too. They are
+  // committed alongside each VM's pilot bundle, they are what actually
+  // deployed the last time the mesh worked, and a public key is not a secret.
+  {
+    let carried = 0;
+    const harvest = (name?: string | null, key?: string | null) => {
+      if (!name || !key || vaultWgKeys[name]) return;
+      vaultWgKeys[name] = key;
+      carried++;
+    };
+    const pilots = join(CLOUD_ROOT, "b_infra");
+    for (const dir of existsSync(pilots) ? readdirSync(pilots) : []) {
+      const f = join(pilots, dir, "dist", "pilot", "_cloud-data-consolidated.json");
+      if (!existsSync(f)) continue;
+      try {
+        const prev = JSON.parse(readFileSync(f, "utf8"));
+        for (const p of prev?.native?.wireguard?.peers ?? []) harvest(p?.name, p?.wg_public_key);
+        for (const p of prev?.native?.wireguard_public?.peers ?? []) {
+          harvest(p?.name ? `${p.name}-public` : null, p?.wg_public_key);
+        }
+        for (const [name, vm] of Object.entries<any>(prev?.vms ?? {})) harvest(name, vm?.wg_public_key);
+        for (const [name, c] of Object.entries<any>(prev?.native?.wireguard?.clients ?? {})) {
+          harvest(name, c?.wg_public_key ?? c?.public_key);
+        }
+      } catch { /* a bundle that will not parse is simply not a source */ }
+    }
+    if (carried > 0) console.log(`  carried forward ${carried} WG public keys from shipped pilot bundles`);
+  }
+
   // ── 2. Parse Terraform for VM specs, storage, firewalls ────────────────
   const tfData = parseTerraform(INFRA_DIR);
   const totalFwRules = tfData.firewalls.reduce((sum, fw) => sum + fw.rules.length, 0);
@@ -995,6 +1030,29 @@ function main() {
   }
 
   const jsonStr = JSON.stringify(consolidated, null, 2) + "\n";
+  // NO NULL KEYS LEAVE THIS FUNCTION.
+  //
+  // wireguard.nix throws on a null VM key and — worse — SILENTLY DROPS a
+  // client with one, so a bad derive either breaks every deploy or removes a
+  // peer from the hub with a green build. Both have happened. Failing here
+  // costs one derive; the alternative costs the fleet.
+  {
+    const parsed = JSON.parse(jsonStr);
+    const missing = [
+      ...(parsed?.native?.wireguard?.peers ?? []).filter((p: any) => !p?.wg_public_key).map((p: any) => `peer ${p?.name}`),
+      ...Object.entries<any>(parsed?.native?.wireguard?.clients ?? {})
+        .filter(([, c]) => !(c?.wg_public_key ?? c?.public_key)).map(([n]) => `client ${n}`),
+    ];
+    if (missing.length) {
+      throw new Error(
+        `refusing to write ${OUTPUT_JSON} with null wg_public_key: ${missing.join(", ")}.\n` +
+        `  The vault (~/git/cloud-vault) was absent AND no previous output or shipped pilot\n` +
+        `  bundle carried these keys. Derive on a machine with the vault, or restore the\n` +
+        `  last good dist — do not commit nulls: wireguard.nix throws on a null VM key and\n` +
+        `  silently drops a client with one.`,
+      );
+    }
+  }
   writeFileSync(OUTPUT_JSON, jsonStr);
 
   // Refresh MATERIALIZED service copies. Most consumers symlink
