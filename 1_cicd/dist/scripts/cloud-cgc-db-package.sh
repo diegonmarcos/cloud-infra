@@ -385,7 +385,19 @@ verify_or_delete_repo_pkg() { # $1=PKG $2=LOCAL_NAME → rc 0 ok/skip; exits the
   _vd_pkg="$1"; _vd_local="$2"
   resolve_repo_desired_visibility "$_vd_pkg" "$_vd_local"
   if [ "$_rdv_desired" = "public" ]; then
-    echo "[cgc-db] $_vd_pkg: repo diegonmarcos/${_rdv_remote:-?} is public — skipping post-push visibility check"
+    # The REVERSE drift (public repo, PRIVATE package) is not a leak but it
+    # silently breaks the public restore: restore-all pulls the pub volume
+    # ANONYMOUSLY by design, so a wrongly-private package's pull fails and the
+    # repo just vanishes from the pub octocode volume every run (this is how
+    # cgc-db-cloud-u-containers + -cloud-infra-desktop starved octocode_db for
+    # weeks). No API can SET visibility (PUT/PATCH 404) — fail LOUDLY with the
+    # two manual fixes instead of skipping the check.
+    _vd_vis=$(gh api "/user/packages/container/${_vd_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
+    if [ "$_vd_vis" = "private" ]; then
+      echo "::error::[cgc-db] $_vd_pkg is PRIVATE but repo diegonmarcos/${_rdv_remote:-?} is PUBLIC — the anonymous pub restore cannot pull it, so this repo will be MISSING from the public octocode volume. Fix: flip the package public in the GitHub UI (packages → $_vd_pkg → settings → change visibility), or delete it and re-run packaging (recreated born-public via the source label)."
+      exit 1
+    fi
+    echo "[cgc-db] $_vd_pkg: repo diegonmarcos/${_rdv_remote:-?} is public, package $_vd_vis — ok"
     return 0
   fi
   _vd_vis=$(gh api "/user/packages/container/${_vd_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
