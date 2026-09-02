@@ -419,24 +419,31 @@ ensure_repos() {
       # is free headroom. Falls back to a full clone if the remote refuses partial clone,
       # so this can never be the thing that fails a run.
       #
-      # actions/checkout stamps a global `http.extraheader` (an Authorization token scoped
-      # to THIS job's own repo, cloud-infra) into the runner's git config, and that header
-      # inherits into every subsequent git command in the job — including this clone of a
-      # DIFFERENT, unrelated repo. GitHub's remote rejects a foreign-repo token on an
-      # otherwise-anonymous public clone, which is the actual cause of cloud-u-android's
-      # ~50s clone failure (public repo, no CGC_DEPLOY_KEY, no per-repo TOKEN scope for it).
-      # `-c http.extraheader=` clears the header for just this command. Only the anonymous
-      # path needs it — the SSH deploy-key and same-repo-TOKEN paths never carry it.
-      _gitc="git"
-      if [ -z "$_key" ] && [ -z "$TOKEN" ]; then _gitc="git -c http.extraheader="; fi
-      if $_gitc clone -q --filter=blob:none --no-checkout "$url" "$d" 2>/dev/null \
-        && $_gitc -C "$d" checkout -q 2>/dev/null; then
+      # actions/checkout stamps a global `http.extraheader` (an Authorization token
+      # scoped to THIS job's own repo, cloud-infra) into the runner's git config, and
+      # that header inherits into every git command in the job — including clones of
+      # DIFFERENT repos. Every ensure_repos clone is a foreign repo, so strip it
+      # unconditionally: `-c http.extraheader=`. Credentials, when needed, travel in
+      # $url (token-embedded https) or over SSH (deploy key), never via that header.
+      # (The earlier guard `[ -z "$_key" ] && [ -z "$TOKEN" ]` was dead code — TOKEN
+      # is always set at line ~188, so the strip never actually applied.)
+      #
+      # Clone stderr is CAPTURED and printed on failure. It used to be discarded
+      # (2>/dev/null), which left cloud-u-android failing for days with zero signal
+      # while three wrong theories (extraheader, auth, blobless) were chased. The
+      # sed redacts any token embedded in the reported remote URL.
+      _gitc="git -c http.extraheader="
+      _cerr="$CGC_SCRATCH/clone-err.$$"
+      if $_gitc clone -q --filter=blob:none --no-checkout "$url" "$d" 2>"$_cerr" \
+        && $_gitc -C "$d" checkout -q 2>>"$_cerr"; then
         :
-      elif rm -rf "$d" 2>/dev/null; $_gitc clone -q "$url" "$d" 2>/dev/null; then
+      elif rm -rf "$d" 2>/dev/null; $_gitc clone -q "$url" "$d" 2>>"$_cerr"; then
         :
       else
-        echo "::error::[cgc-db] clone $lname ← $remote failed (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"
+        sed 's/x-access-token:[^@]*@/x-access-token:***@/g' "$_cerr" | tail -8 >&2
+        echo "::error::[cgc-db] clone $lname ← $remote failed — git stderr above (private repo without a CGC_DEPLOY_KEY_* secret?)"; : > "$_clonefail"
       fi
+      rm -f "$_cerr"
       # Same reason as the refresh path: strip any credential back out of origin so
       # the project_id octocode derives is the canonical, consumer-matching one.
       git -C "$d" remote set-url origin "$canon" 2>/dev/null || true
