@@ -255,6 +255,15 @@ fi
 CGC_SCRATCH="$(mktemp -d)"
 trap 'rm -rf "$CGC_SCRATCH"' EXIT
 
+# Never materialize Git-LFS content: cloud-u-android's element-x fork tracks
+# images via LFS, and the runner's smudge filter fails ('git-lfs filter-process
+# failed' on ac_cloud-matrix/docs/images-lfs/*.png) — which failed the WHOLE
+# clone, and (because every matrix job clones every repo) every job with it.
+# This was android's actual multi-day clone failure, invisible while clone
+# stderr went to /dev/null. Indexing never needs LFS payloads (binaries are
+# noindex'd anyway); pointer files are correct here.
+export GIT_LFS_SKIP_SMUDGE=1
+
 # 0b) ensure a FastEmbed-CAPABLE octocode on PATH. A binary built WITHOUT FastEmbed
 #     (e.g. some nix/static builds — oci-apps' nix-profile octocode is one) fails
 #     `octocode index` at runtime; the producer would then package the UNCHANGED
