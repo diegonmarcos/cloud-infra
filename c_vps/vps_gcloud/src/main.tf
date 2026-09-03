@@ -107,7 +107,12 @@ resource "google_compute_instance" "vms" {
 
   name         = each.value.name
   machine_type = each.value.machine_type
-  zone         = local.config.provider.zone
+  # Per-instance zone override (terraform.json instances[*].zone), falling back
+  # to the provider default. Needed for GPU instances: T4 capacity is a per-ZONE
+  # stockout ("does not have enough resources available", us-central1-a,
+  # 2026-09-03 apply) while the NVIDIA_T4_GPUS quota is REGIONAL, so moving the
+  # GPU VM to a sibling zone is the fix and the rest of the fleet stays put.
+  zone         = try(each.value.zone, local.config.provider.zone)
   tags         = each.value.tags
 
   boot_disk {
