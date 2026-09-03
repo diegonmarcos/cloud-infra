@@ -179,9 +179,9 @@ CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 # GPU EMBEDDING (octocode `local:` provider — OpenAI-shaped POST /v1/embeddings,
 # see octolib/src/embedding/provider/local.rs). RUNNER-ONLY override of the two
-# lines above, for the cloud-u-android semantic phase on the GCP T4 (owner
+# lines above, for the cloud-u-android semantic phase on the GCP GPU VM (owner
 # decision 2026-09-03; declared in c_vps/vps_gcloud/src/terraform.json as
-# gcp-t4-embed, started/stopped around that one job by cgc-db-index.yml).
+# gcp-gpu-embed, started/stopped around that one job by cgc-db-index.yml).
 # CGC_LOCAL_EMBED_MODEL is the activation switch and is DELIBERATELY env-only —
 # no build.json fallback: unlike USE_LLM/CODE_EMBED above, there is no safe
 # default for an endpoint that is a VM stopped unless the caller just started
@@ -1021,7 +1021,7 @@ else
     else
       echo "::error::[cgc-db] semantic phase requested CGC_LOCAL_EMBED_MODEL=$CGC_LOCAL_EMBED_MODEL but the endpoint failed preflight: $LOCAL_EMBED_API_URL"
       echo "[cgc-db] curl said: ${_ge_err:-<no output>}"
-      echo "[cgc-db] is the gcp-t4-embed VM started? (devops_vm_start gcp-t4-embed / the workflow's start step before this job)"
+      echo "[cgc-db] is the gcp-gpu-embed VM started? (devops_vm_start gcp-gpu-embed / the workflow's start step before this job)"
       exit 1
     fi
   fi

@@ -610,22 +610,22 @@
       ],
       "container_count": 8
     },
-    "gcp-T4-e_0": {
+    "gcp-L4-e_0": {
       "ip": "TBD",
       "specs": {
         "cpu": 4,
-        "ram_gb": 15,
+        "ram_gb": 16,
         "disk_gb": 100,
         "arch": "x86_64",
-        "shape": "n1-standard-4",
-        "gpu": "NVIDIA T4",
-        "vram_gb": 16,
-        "machine_type": "n1-standard-4",
-        "cloud_name": "gcp-t4-embed",
-        "cloud_zone": "us-central1-b",
-        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-b/instances/gcp-t4-embed"
+        "shape": "g2-standard-4",
+        "gpu": "NVIDIA L4",
+        "vram_gb": 24,
+        "machine_type": "g2-standard-4",
+        "cloud_name": "gcp-gpu-embed",
+        "cloud_zone": "us-central1-a",
+        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed"
       },
-      "description": "GCloud On-Demand - N1 Standard 4 + NVIDIA T4 GPU - cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443; see c_vps/vps_gcloud/src/startup-gpu-embed.sh). NOT a home-manager fleet member (no HM, no WireGuard mesh join) — started/stopped around cgc-db-index.yml's semantic-phase android job via devops_vm_start/devops_vm_stop. STOPPED by default between runs.",
+      "description": "GCloud On-Demand - g2-standard-4 + NVIDIA L4 24GB (T4 stocked out in all us-central1 zones 2026-09-03) - cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443; see c_vps/vps_gcloud/src/startup-gpu-embed.sh). NOT a home-manager fleet member (no HM, no WireGuard mesh join) — started/stopped around cgc-db-index.yml's semantic-phase android job via devops_vm_start/devops_vm_stop. STOPPED by default between runs.",
       "wg_ip": null,
       "wg_ipv6": null,
       "wg_public_key": null,
@@ -634,17 +634,17 @@
       "user": "diego",
       "home": "/home/diego",
       "method": "gcloud",
-      "ssh_alias": "gcp-t4-embed",
+      "ssh_alias": "gcp-gpu-embed",
       "rescue_port": 2200,
       "public_ports": [],
       "is_public_ingress": false,
       "gha": null,
       "provider": "gcp",
       "provisioning": "on-demand",
-      "gcloud_instance": "gcp-t4-embed",
-      "gcloud_zone": "us-central1-b",
-      "notes": "ip is a reserved static address (terraform.json static_ips.gcp-t4-embed-ip) so it survives repeated stop/start for cost control -- update this field once, after the first terraform apply, from `gcloud compute addresses describe gcp-t4-embed-ip --region us-central1`. Query auth is a bearer token (repo secret GPU_EMBED_BEARER_TOKEN / TF_VAR_gpu_embed_bearer_token), not WireGuard -- the box (cloud-cgc-pub-mcp/cloud-cgc-pvt-mcp) never talks to this VM and stays on fastembed; see cloud-cgc-db-update.sh CGC_LOCAL_EMBED_MODEL for the runner-only override and its seed_base_if_missing guard.",
-      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-b/instances/gcp-t4-embed",
+      "gcloud_instance": "gcp-gpu-embed",
+      "gcloud_zone": "us-central1-a",
+      "notes": "ip is a reserved static address (terraform.json static_ips.gcp-gpu-embed-ip) so it survives repeated stop/start for cost control -- update this field once, after the first terraform apply, from `gcloud compute addresses describe gcp-gpu-embed-ip --region us-central1`. Query auth is a bearer token (repo secret GPU_EMBED_BEARER_TOKEN / TF_VAR_gpu_embed_bearer_token), not WireGuard -- the box (cloud-cgc-pub-mcp/cloud-cgc-pvt-mcp) never talks to this VM and stays on fastembed; see cloud-cgc-db-update.sh CGC_LOCAL_EMBED_MODEL for the runner-only override and its seed_base_if_missing guard.",
+      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed",
       "services": [],
       "container_count": 0
     },
@@ -5630,15 +5630,15 @@
             "code_embedding_model": "fastembed:nomic-ai/nomic-embed-text-v1.5",
             "text_embedding_model": "fastembed:nomic-ai/nomic-embed-text-v1.5",
             "gpu_embed": {
-              "_comment": "GPU embedding path for the cloud-u-android semantic phase (owner decision 2026-09-03: run on the T4 -- see project_gpu-embed memory). RUNNER-ONLY -- these values are DEFAULTS for cloud-cgc-db-update.sh's LOCAL_EMBED_API_URL / embeddings_batch_size, consulted only when the caller (cgc-db-index.yml's semantic-phase android job) sets CGC_LOCAL_EMBED_MODEL in the environment. CGC_LOCAL_EMBED_MODEL has NO fallback here on purpose: unlike code_embedding_model/text_embedding_model above (which this block never touches), there is no safe default for an endpoint that is a VM STOPPED unless the caller just started it -- a bare local/dagu run of update.sh stays on fastembed with zero exposure to this block. octocode's local: provider (LOCAL_EMBED_API_URL, OpenAI-shaped POST /v1/embeddings) applies the SAME nomic task prefixes fastembed does, so ollama's nomic-embed-text (= nomic-embed-text-v1.5, 768-d) is vector-compatible with the existing DB -- no reindex of the other 7 repos. code_embedding_model/text_embedding_model above (and therefore cgc-db-base:latest + this box's own cloud-cgc-pub-mcp/cloud-cgc-pvt-mcp query-time config) MUST stay fastembed -- see cloud-cgc-db-update.sh seed_base_if_missing()'s CGC_LOCAL_EMBED_MODEL guard, which refuses to auto-seed the shared base image while this override is active.",
+              "_comment": "GPU embedding path for the cloud-u-android semantic phase (owner decision 2026-09-03: run on a GPU -- landed on an L4 (g2-standard-4) because the T4 was stocked out in every us-central1 zone that day; see project_cgc-gpu-embed-t4 memory). RUNNER-ONLY -- these values are DEFAULTS for cloud-cgc-db-update.sh's LOCAL_EMBED_API_URL / embeddings_batch_size, consulted only when the caller (cgc-db-index.yml's semantic-phase android job) sets CGC_LOCAL_EMBED_MODEL in the environment. CGC_LOCAL_EMBED_MODEL has NO fallback here on purpose: unlike code_embedding_model/text_embedding_model above (which this block never touches), there is no safe default for an endpoint that is a VM STOPPED unless the caller just started it -- a bare local/dagu run of update.sh stays on fastembed with zero exposure to this block. octocode's local: provider (LOCAL_EMBED_API_URL, OpenAI-shaped POST /v1/embeddings) applies the SAME nomic task prefixes fastembed does, so ollama's nomic-embed-text (= nomic-embed-text-v1.5, 768-d) is vector-compatible with the existing DB -- no reindex of the other 7 repos. code_embedding_model/text_embedding_model above (and therefore cgc-db-base:latest + this box's own cloud-cgc-pub-mcp/cloud-cgc-pvt-mcp query-time config) MUST stay fastembed -- see cloud-cgc-db-update.sh seed_base_if_missing()'s CGC_LOCAL_EMBED_MODEL guard, which refuses to auto-seed the shared base image while this override is active.",
               "model": "local:nomic-embed-text",
               "repos": [
                 "cloud-u-android"
               ],
-              "embed_endpoint": "TBD -- set after the first c_vps/vps_gcloud terraform apply reserves gcp-t4-embed-ip",
+              "embed_endpoint": "TBD -- set after the first c_vps/vps_gcloud terraform apply reserves gcp-gpu-embed-ip",
               "health_url": "TBD -- same address, path /",
               "embeddings_batch_size": 128,
-              "_endpoint_doc": "embed_endpoint/health_url stay TBD placeholders here deliberately -- cgc-db-index.yml sources the real value from a GH Actions repo VARIABLE (vars.GPU_EMBED_API_URL) rather than depending on a build.json edit reaching this repo promptly after every terraform apply, so a stale value here is documentation lag, not a broken pipeline. Update both once the static IP is known (`gcloud compute addresses describe gcp-t4-embed-ip --region us-central1`) and keep cloud-infra/config.json's gcp-T4-e_0.ip in sync. LOCAL_EMBED_API_KEY (the Caddy bearer token) is never declared here -- it is a GH secret (GPU_EMBED_BEARER_TOKEN) end to end, never build.json."
+              "_endpoint_doc": "embed_endpoint/health_url stay TBD placeholders here deliberately -- cgc-db-index.yml sources the real value from a GH Actions repo VARIABLE (vars.GPU_EMBED_API_URL) rather than depending on a build.json edit reaching this repo promptly after every terraform apply, so a stale value here is documentation lag, not a broken pipeline. Update both once the static IP is known (`gcloud compute addresses describe gcp-gpu-embed-ip --region us-central1`) and keep cloud-infra/config.json's gcp-L4-e_0.ip in sync. LOCAL_EMBED_API_KEY (the Caddy bearer token) is never declared here -- it is a GH secret (GPU_EMBED_BEARER_TOKEN) end to end, never build.json."
             }
           },
           "llm": {

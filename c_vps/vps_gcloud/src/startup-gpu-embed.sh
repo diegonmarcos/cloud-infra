@@ -6,8 +6,8 @@
 # ║         (selected instead of bootstrap.sh whenever an instance    ║
 # ║         declares a `gpu` block in terraform.json)                 ║
 # ║                                                                    ║
-# ║ Brings a bare Ubuntu 22.04 + NVIDIA T4 instance up to serving      ║
-# ║ OpenAI-shaped POST /v1/embeddings (ollama + nomic-embed-text)      ║
+# ║ Brings a bare Ubuntu 22.04 + NVIDIA GPU (L4/T4) instance up to     ║
+# ║ serving OpenAI-shaped POST /v1/embeddings (ollama + nomic-embed-text)║
 # ║ behind a bearer-token Caddy reverse proxy on :443, PLAIN HTTP      ║
 # ║ (no TLS — the bearer token is the security boundary here, not     ║
 # ║ transport encryption; see project_gpu-embed-t4 memory for why:    ║
@@ -37,7 +37,7 @@ MARKER_ALL=/var/lib/gpu-embed-bootstrap.done
 
 # ── 1. NVIDIA driver ──────────────────────────────────────────────────
 # Ubuntu's own ubuntu-drivers-common picks the right proprietary driver for
-# the attached GPU (T4) — this is Google's documented apt install path
+# the attached GPU (L4 or T4) — this is Google's documented apt install path
 # (cloud.google.com/compute/docs/gpus/install-drivers-gpu, Ubuntu section).
 # A driver install needs a reboot before nvidia-smi works; MARKER_DRIVER
 # records that the apt step ran so a post-reboot re-invocation of this same
