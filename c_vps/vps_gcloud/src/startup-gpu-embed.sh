@@ -131,7 +131,15 @@ cat > /etc/caddy/Caddyfile <<CADDYEOF
 :443 {
 	@authed header Authorization "Bearer ${TOKEN}"
 	handle @authed {
-		reverse_proxy 127.0.0.1:11434
+		# ollama rejects any request whose Host header isn't localhost/127.0.0.1
+		# (its own CSRF-style guard, 403 Forbidden + empty body, "Via: 1.1
+		# Caddy" is the only clue it ever passed through the proxy at all) —
+		# found live, 2026-09-03, after fixing the Caddyfile scheme error:
+		# a valid bearer token got PAST caddy fine and still 403'd. Rewrite
+		# the upstream Host so ollama sees what it expects.
+		reverse_proxy 127.0.0.1:11434 {
+			header_up Host localhost
+		}
 	}
 	handle {
 		respond "unauthorized" 401
