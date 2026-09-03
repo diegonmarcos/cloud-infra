@@ -114,6 +114,32 @@
         "user_secret": "GCP_PROXY_USER"
       }
     },
+    "gcp-T4-e_0": {
+      "ip": "TBD",
+      "wg_ip": null,
+      "wg_port": null,
+      "wg_role": null,
+      "user": "diego",
+      "home": "/home/diego",
+      "method": "gcloud",
+      "ssh_alias": "gcp-t4-embed",
+      "rescue_port": null,
+      "gcloud_instance": "gcp-t4-embed",
+      "gcloud_zone": "us-central1-a",
+      "description": "GCloud On-Demand - N1 Standard 4 + NVIDIA T4 GPU - cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443; see c_vps/vps_gcloud/src/startup-gpu-embed.sh). NOT a home-manager fleet member (no HM, no WireGuard mesh join) — started/stopped around cgc-db-index.yml's semantic-phase android job via devops_vm_start/devops_vm_stop. STOPPED by default between runs.",
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 15,
+        "disk_gb": 100,
+        "arch": "x86_64",
+        "shape": "n1-standard-4",
+        "gpu": "NVIDIA T4",
+        "vram_gb": 16
+      },
+      "provider": "gcp",
+      "provisioning": "on-demand",
+      "notes": "ip is a reserved static address (terraform.json static_ips.gcp-t4-embed-ip) so it survives repeated stop/start for cost control -- update this field once, after the first terraform apply, from `gcloud compute addresses describe gcp-t4-embed-ip --region us-central1`. Query auth is a bearer token (repo secret GPU_EMBED_BEARER_TOKEN / TF_VAR_gpu_embed_bearer_token), not WireGuard -- the box (cloud-cgc-pub-mcp/cloud-cgc-pvt-mcp) never talks to this VM and stays on fastembed; see cloud-cgc-db-update.sh CGC_LOCAL_EMBED_MODEL for the runner-only override and its seed_base_if_missing guard."
+    },
     "vast-RTX-p_0": {
       "ip": "TBD",
       "wg_ip": null,

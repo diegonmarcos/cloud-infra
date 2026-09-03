@@ -44,6 +44,13 @@ variable "ssh_public_key" {
   # Or via build.sh which reads from vault automatically
 }
 
+variable "gpu_embed_bearer_token" {
+  description = "Bearer token the GPU-embed VM's Caddy proxy requires on /v1/embeddings (see startup-gpu-embed.sh). Only reaches instances with a `gpu` block in terraform.json. Set via ship-terraform.yml TF_VAR_gpu_embed_bearer_token <- secrets.GPU_EMBED_BEARER_TOKEN; empty default keeps non-GPU applies working with no secret configured."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # =============================================================================
 # VPC Network
 # =============================================================================
@@ -127,10 +134,18 @@ resource "google_compute_instance" "vms" {
     }
   }
 
-  metadata = {
-    ssh-keys       = "diego:${var.ssh_public_key}"
-    startup-script = file("${path.module}/bootstrap.sh")
-  }
+  # GPU instances (declared via terraform.json instances[*].gpu) run a
+  # dedicated startup script — ollama + Caddy bearer-auth proxy, no HM/mesh —
+  # instead of bootstrap.sh's home-manager-fleet prep. See startup-gpu-embed.sh
+  # header. The bearer token is metadata-only on GPU instances so a non-GPU
+  # apply with the var unset never writes a stray key onto e.g. gcp-proxy.
+  metadata = merge(
+    {
+      ssh-keys       = "diego:${var.ssh_public_key}"
+      startup-script = each.value.gpu != null ? file("${path.module}/startup-gpu-embed.sh") : file("${path.module}/bootstrap.sh")
+    },
+    each.value.gpu != null ? { embed-bearer-token = var.gpu_embed_bearer_token } : {}
+  )
 
   scheduling {
     preemptible                 = each.value.preemptible

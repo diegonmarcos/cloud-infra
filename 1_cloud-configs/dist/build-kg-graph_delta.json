@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 305,
-    "edges": 413,
+    "nodes": 308,
+    "edges": 416,
     "by_table": {
       "vm": 4,
-      "service": 69,
-      "container": 90,
+      "service": 70,
+      "container": 91,
       "domain": 42,
       "repo": 3,
-      "module": 69,
+      "module": 70,
       "package": 28
     }
   },
@@ -376,6 +376,32 @@
         "role": "app",
         "port": 3101,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_superapp_mcp",
+      "key": "service:cloud_superapp_mcp",
+      "properties": {
+        "name": "cloud-superapp-mcp",
+        "category": "app",
+        "description": "MCP + HTTP faces over the Android constellation's on-device debug API (libs:devtools AppDebugServer), reached over ssh. lib-api/lib-mcp shared, one module per app under mcps-apps/, one server process.",
+        "domain": null,
+        "port": null,
+        "vm": "local",
+        "folder": "infra-api_cloud-superapp-mcp"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_superapp_mcp",
+      "key": "container:cloud_superapp_mcp",
+      "properties": {
+        "name": "cloud-superapp-mcp",
+        "image": "",
+        "role": "app",
+        "port": null,
+        "public": false
       }
     },
     {
@@ -1436,6 +1462,32 @@
     },
     {
       "table": "service",
+      "id": "cloud_webmail",
+      "key": "service:cloud_webmail",
+      "properties": {
+        "name": "cloud-webmail",
+        "category": "app",
+        "description": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail.",
+        "domain": "webmail.diegonmarcos.com",
+        "port": 3000,
+        "vm": "oci-apps",
+        "folder": "user-comm_cloud-webmail"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_webmail",
+      "key": "container:cloud_webmail",
+      "properties": {
+        "name": "cloud-webmail",
+        "image": "ghcr.io/diegonmarcos/cloud-webmail-binaries:latest",
+        "role": "app",
+        "port": 3000,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "mail_puller",
       "key": "service:mail_puller",
       "properties": {
@@ -1536,32 +1588,6 @@
         "role": "app",
         "port": 29318,
         "public": false
-      }
-    },
-    {
-      "table": "service",
-      "id": "snappymail",
-      "key": "service:snappymail",
-      "properties": {
-        "name": "snappymail",
-        "category": "app",
-        "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-        "domain": "webmail.diegonmarcos.com",
-        "port": 8888,
-        "vm": "oci-mail",
-        "folder": "user-comm_snappymail"
-      }
-    },
-    {
-      "table": "container",
-      "id": "snappymail",
-      "key": "container:snappymail",
-      "properties": {
-        "name": "snappymail",
-        "image": "djmaze/snappymail:latest",
-        "role": "app",
-        "port": 8888,
-        "public": true
       }
     },
     {
@@ -2342,6 +2368,14 @@
     },
     {
       "table": "domain",
+      "id": "webmail_diegonmarcos_com",
+      "key": "domain:webmail_diegonmarcos_com",
+      "properties": {
+        "fqdn": "webmail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
       "id": "mail_puller_diegonmarcos_com",
       "key": "domain:mail_puller_diegonmarcos_com",
       "properties": {
@@ -2362,14 +2396,6 @@
       "key": "domain:messenger_diegonmarcos_com",
       "properties": {
         "fqdn": "messenger.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "webmail_diegonmarcos_com",
-      "key": "domain:webmail_diegonmarcos_com",
-      "properties": {
-        "fqdn": "webmail.diegonmarcos.com"
       }
     },
     {
@@ -2617,6 +2643,17 @@
         "repo": "cloud",
         "category": "obs",
         "service": "cloud-services-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_cloud_superapp_mcp",
+      "key": "module:infra_api_cloud_superapp_mcp",
+      "properties": {
+        "name": "infra-api_cloud-superapp-mcp",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-superapp-mcp"
       }
     },
     {
@@ -3017,6 +3054,17 @@
     },
     {
       "table": "module",
+      "id": "user_comm_cloud_webmail",
+      "key": "module:user_comm_cloud_webmail",
+      "properties": {
+        "name": "user-comm_cloud-webmail",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-webmail"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_comm_mail_puller",
       "key": "module:user_comm_mail_puller",
       "properties": {
@@ -3057,17 +3105,6 @@
         "repo": "cloud",
         "category": "app",
         "service": "matrix-mautrix-whatsapp"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_comm_snappymail",
-      "key": "module:user_comm_snappymail",
-      "properties": {
-        "name": "user-comm_snappymail",
-        "repo": "cloud",
-        "category": "app",
-        "service": "snappymail"
       }
     },
     {
@@ -3784,6 +3821,15 @@
     },
     {
       "table": "runs_container",
+      "from": "service:cloud_superapp_mcp",
+      "to": "container:cloud_superapp_mcp",
+      "key": "service:cloud_superapp_mcp->runs_container->container:cloud_superapp_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "runs_container",
       "from": "service:cloud_vault_mcp",
       "to": "container:cloud_vault_mcp",
       "key": "service:cloud_vault_mcp->runs_container->container:cloud_vault_mcp",
@@ -4419,6 +4465,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:cloud_webmail",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_webmail->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_webmail",
+      "to": "container:cloud_webmail",
+      "key": "service:cloud_webmail->runs_container->container:cloud_webmail",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:mail_puller",
       "to": "vm:oci_mail",
       "key": "service:mail_puller->hosted_on->vm:oci_mail",
@@ -4477,22 +4539,6 @@
       "from": "service:matrix_mautrix_whatsapp",
       "to": "container:mautrix_whatsapp",
       "key": "service:matrix_mautrix_whatsapp->runs_container->container:mautrix_whatsapp",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
-      "from": "service:snappymail",
-      "to": "vm:oci_mail",
-      "key": "service:snappymail->hosted_on->vm:oci_mail",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:snappymail",
-      "to": "container:snappymail",
-      "key": "service:snappymail->runs_container->container:snappymail",
       "properties": {
         "role": "app"
       }
@@ -5104,6 +5150,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:cloud_webmail",
+      "to": "service:caddy",
+      "key": "service:cloud_webmail->proxied_by->service:caddy",
+      "properties": {
+        "domain": "webmail.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:mail_puller",
       "to": "service:caddy",
       "key": "service:mail_puller->proxied_by->service:caddy",
@@ -5127,15 +5182,6 @@
       "key": "service:matrix_element->proxied_by->service:caddy",
       "properties": {
         "domain": "messenger.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
-      "from": "service:snappymail",
-      "to": "service:caddy",
-      "key": "service:snappymail->proxied_by->service:caddy",
-      "properties": {
-        "domain": "webmail.diegonmarcos.com"
       }
     },
     {
@@ -5459,6 +5505,13 @@
     },
     {
       "table": "routes_to",
+      "from": "domain:webmail_diegonmarcos_com",
+      "to": "service:cloud_webmail",
+      "key": "domain:webmail_diegonmarcos_com->routes_to->service:cloud_webmail",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
       "from": "domain:mail_puller_diegonmarcos_com",
       "to": "service:mail_puller",
       "key": "domain:mail_puller_diegonmarcos_com->routes_to->service:mail_puller",
@@ -5476,13 +5529,6 @@
       "from": "domain:messenger_diegonmarcos_com",
       "to": "service:matrix_element",
       "key": "domain:messenger_diegonmarcos_com->routes_to->service:matrix_element",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:webmail_diegonmarcos_com",
-      "to": "service:snappymail",
-      "key": "domain:webmail_diegonmarcos_com->routes_to->service:snappymail",
       "properties": {}
     },
     {
@@ -5735,6 +5781,20 @@
       "from": "module:infra_api_cloud_services_mcp",
       "to": "service:cloud_services_mcp",
       "key": "module:infra_api_cloud_services_mcp->implements->service:cloud_services_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_cloud_superapp_mcp",
+      "to": "repo:cloud",
+      "key": "module:infra_api_cloud_superapp_mcp->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_cloud_superapp_mcp",
+      "to": "service:cloud_superapp_mcp",
+      "key": "module:infra_api_cloud_superapp_mcp->implements->service:cloud_superapp_mcp",
       "properties": {}
     },
     {
@@ -6243,6 +6303,20 @@
     },
     {
       "table": "belongs_to_repo",
+      "from": "module:user_comm_cloud_webmail",
+      "to": "repo:cloud",
+      "key": "module:user_comm_cloud_webmail->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_comm_cloud_webmail",
+      "to": "service:cloud_webmail",
+      "key": "module:user_comm_cloud_webmail->implements->service:cloud_webmail",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
       "from": "module:user_comm_mail_puller",
       "to": "repo:cloud",
       "key": "module:user_comm_mail_puller->belongs_to_repo->repo:cloud",
@@ -6295,20 +6369,6 @@
       "from": "module:user_comm_matrix_mautrix_whatsapp",
       "to": "service:matrix_mautrix_whatsapp",
       "key": "module:user_comm_matrix_mautrix_whatsapp->implements->service:matrix_mautrix_whatsapp",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_comm_snappymail",
-      "to": "repo:cloud",
-      "key": "module:user_comm_snappymail->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_comm_snappymail",
-      "to": "service:snappymail",
-      "key": "module:user_comm_snappymail->implements->service:snappymail",
       "properties": {}
     },
     {

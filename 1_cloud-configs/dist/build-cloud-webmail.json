@@ -1034,7 +1034,7 @@
       "vm": "oci-apps",
       "healthcheck": "/api/health",
       "domain": "webmail.diegonmarcos.com",
-      "description": "Cloud Webmail — native-JMAP webmail client for Stalwart (webmail.diegonmarcos.com); OUR rebrand+build of root-fr/jmap-webmail v1.7.1. Replaces SnappyMail.",
+      "description": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail.",
       "api": {
         "has_api": false,
         "has_web_ui": true,
@@ -1117,24 +1117,6 @@
         "api_url": null,
         "healthcheck_paths": [],
         "type": "no-api"
-      }
-    },
-    "snappymail": {
-      "ip": "10.0.0.3",
-      "ports": {
-        "app": 8888
-      },
-      "vm": "oci-mail",
-      "healthcheck": "/",
-      "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-      "api": {
-        "has_api": false,
-        "has_web_ui": false,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/"
-        ]
       }
     },
     "maddy": {
@@ -1674,5 +1656,8 @@
   "upstream_image": "node:24-alpine",
   "resources": {
     "mem_reservation": "256M"
-  }
+  },
+  "secret_env_vars": [
+    "SESSION_SECRET"
+  ]
 }

@@ -16,7 +16,7 @@
       "vm_id": "oci-E2-f_0",
       "ip": "130.110.251.193",
       "wg_ip": "10.0.0.3",
-      "wg_public_key": null,
+      "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
       "wg_port": 51820,
       "wg_role": "spoke",
       "user": "ubuntu",
@@ -37,7 +37,6 @@
       "idle_shutdown": null,
       "containers": [
         "mail-puller",
-        "snappymail",
         "maddy",
         "stalwart"
       ],
@@ -63,7 +62,7 @@
       "vm_id": "oci-E2-f_1",
       "ip": "129.151.228.66",
       "wg_ip": "10.0.0.4",
-      "wg_public_key": null,
+      "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
       "wg_port": 51820,
       "wg_role": "spoke",
       "user": "ubuntu",
@@ -116,7 +115,7 @@
       "vm_id": "oci-A1-f_0",
       "ip": "82.70.229.129",
       "wg_ip": "10.0.0.6",
-      "wg_public_key": null,
+      "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
       "wg_port": 51820,
       "wg_role": "spoke",
       "user": "ubuntu",
@@ -166,6 +165,7 @@
         "my-ai-api",
         "session-memory",
         "chat-mattermost",
+        "cloud-webmail",
         "matrix-continuwuity",
         "matrix-element",
         "matrix-mautrix-whatsapp",
@@ -232,7 +232,7 @@
       "vm_id": "gcp-E2-f_0",
       "ip": "35.226.147.64",
       "wg_ip": "10.0.0.1",
-      "wg_public_key": null,
+      "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
       "wg_port": 51820,
       "wg_role": "hub",
       "user": "diego",
@@ -325,6 +325,37 @@
         "mem_psi_page": 70
       }
     },
+    "gcp-t4-embed": {
+      "vm_id": "gcp-T4-e_0",
+      "ip": "TBD",
+      "wg_ip": null,
+      "wg_public_key": null,
+      "wg_port": 51820,
+      "wg_role": "spoke",
+      "user": "diego",
+      "home": "/home/diego",
+      "rescue_port": 2200,
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 15,
+        "disk_gb": 100,
+        "arch": "x86_64",
+        "shape": "n1-standard-4",
+        "gpu": "NVIDIA T4",
+        "vram_gb": 16,
+        "machine_type": "n1-standard-4",
+        "cloud_name": "gcp-t4-embed",
+        "cloud_zone": "us-central1-a",
+        "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-t4-embed"
+      },
+      "public_ports": [],
+      "is_public_ingress": false,
+      "idle_shutdown": null,
+      "containers": [],
+      "method": "gcloud",
+      "gha": null,
+      "protection": {}
+    },
     "vast-ollama": {
       "vm_id": "vast-RTX-p_0",
       "ip": "TBD",
@@ -363,7 +394,7 @@
       {
         "name": "oci-mail",
         "wg_ip": "10.0.0.3",
-        "wg_public_key": null,
+        "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
         "endpoint": "130.110.251.193:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::3",
@@ -373,7 +404,7 @@
       {
         "name": "oci-analytics",
         "wg_ip": "10.0.0.4",
-        "wg_public_key": null,
+        "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
         "endpoint": "129.151.228.66:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::4",
@@ -383,7 +414,7 @@
       {
         "name": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "wg_public_key": null,
+        "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
         "endpoint": "82.70.229.129:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::6",
@@ -393,7 +424,7 @@
       {
         "name": "gcp-proxy",
         "wg_ip": "10.0.0.1",
-        "wg_public_key": null,
+        "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
         "endpoint": "35.226.147.64:51820",
         "role": "hub",
         "wg_ipv6": "fd0c:1d00::1",
@@ -406,32 +437,37 @@
         "wg_ip": "10.0.0.5",
         "wg_ipv6": "fd0c:1d00::5",
         "role": "client",
-        "wg_public_key": null
+        "name": "desktop-nixos",
+        "wg_public_key": "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY="
       },
       "termux": {
         "wg_ip": "10.0.0.9",
         "wg_ipv6": "fd0c:1d00::9",
         "role": "client",
-        "wg_public_key": null
+        "name": "termux-galaxy",
+        "wg_public_key": "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA="
       },
       "gha-runner": {
         "wg_ip": "10.0.0.200",
         "wg_ipv6": "fd0c:1d00::200",
         "role": "client",
-        "wg_public_key": null
+        "name": "gha-runner",
+        "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
       },
       "health-runner": {
         "wg_ip": "10.0.0.201",
         "wg_ipv6": "fd0c:1d00::201",
         "role": "client",
-        "wg_public_key": null
+        "name": "health-runner",
+        "wg_public_key": "VeUK6t5/oXQiACcqXgCGkzLZlP2iBTgPghhhwFADViQ="
       },
       "vault-backup": {
         "wg_ip": "10.0.0.202",
         "wg_ipv6": "fd0c:1d00::202",
         "role": "client",
         "_doc": "Dedicated peer slot for the cloud-vault vault-db-backup workflow. Kept separate from gha-runner so a nightly backup never contends with a ship run for a peer slot. Private key lives in cloud-vault A0_keys/providers/wireguard/vault-backup/ and as the WG_PRIVATE_KEY secret on diegonmarcos/cloud-vault.",
-        "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0="
+        "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0=",
+        "name": "vault-backup"
       }
     }
   },
@@ -502,6 +538,20 @@
     {
       "host": "gcp-proxy-dropbear",
       "hostname": "10.0.0.1",
+      "user": "diego",
+      "identity_file": "~/.ssh/google_compute_engine",
+      "port": 2200
+    },
+    {
+      "host": "gcp-t4-embed",
+      "hostname": "TBD",
+      "user": "diego",
+      "identity_file": "~/.ssh/google_compute_engine",
+      "port": 22
+    },
+    {
+      "host": "gcp-t4-embed-dropbear",
+      "hostname": "TBD",
       "user": "diego",
       "identity_file": "~/.ssh/google_compute_engine",
       "port": 2200

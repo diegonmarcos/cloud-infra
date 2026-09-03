@@ -293,7 +293,7 @@
       "domain": "webmail.diegonmarcos.com",
       "upstream": "10.0.0.6:3000",
       "wg_only": true,
-      "comment": "Cloud Webmail — native-JMAP webmail client for Stalwart (webmail.diegonmarcos.com); OUR rebrand+build of root-fr/jmap-webmail v1.7.1. Replaces SnappyMail."
+      "comment": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail."
     },
     {
       "domain": "matrix.diegonmarcos.com",
@@ -780,10 +780,6 @@
     {
       "service": "matrix-element.app",
       "upstream": "10.0.0.6:8083"
-    },
-    {
-      "service": "snappymail.app",
-      "upstream": "10.0.0.3:8888"
     },
     {
       "service": "stalwart.app",
@@ -1540,27 +1536,6 @@
     },
     {
       "kind": "redirect",
-      "service": "snappymail.app",
-      "redirect_to": "https://snappymail-http-8888.app",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "snappymail-http-8888.app",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0",
-      "port": 8888,
-      "protocol": "http",
-      "upstream": "10.0.0.3:8888",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "stalwart.app",
       "redirect_to": "https://stalwart-https-2443.app",
       "container": "stalwart",
@@ -2053,17 +2028,6 @@
     },
     {
       "kind": "embedded",
-      "service": "snappymail-files-null.db",
-      "container": "snappymail",
-      "container_key": "app",
-      "svc": "snappymail",
-      "vm": "oci-E2-f_0",
-      "engine": "files",
-      "port": null,
-      "path": "/var/lib/snappymail"
-    },
-    {
-      "kind": "embedded",
       "service": "stalwart-rocksdb-null.db",
       "container": "stalwart",
       "container_key": "app",
@@ -2393,7 +2357,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "Cloud Webmail — native-JMAP webmail client for Stalwart (webmail.diegonmarcos.com); OUR rebrand+build of root-fr/jmap-webmail v1.7.1. Replaces SnappyMail."
+      "notes": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail."
     },
     {
       "host": "matrix.diegonmarcos.com",
@@ -2938,16 +2902,6 @@
       "notes": null
     },
     {
-      "host": "snappymail.app",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "stalwart.app",
       "path": null,
       "upstream": "10.0.0.3:2443",
@@ -3420,16 +3374,6 @@
       "notes": null
     },
     {
-      "host": "snappymail-http-8888.app",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "snappymail",
-      "notes": null
-    },
-    {
       "host": "stalwart-https-2443.app",
       "path": null,
       "upstream": "10.0.0.3:2443",
@@ -3722,16 +3666,6 @@
       "zone": "db",
       "service": "kg-store-pub",
       "notes": "engine=surrealdb vm=oci-A1-f_0"
-    },
-    {
-      "host": "snappymail-files-null.db",
-      "path": "/var/lib/snappymail",
-      "upstream": "embedded",
-      "kind": "catalog",
-      "tls": "on_demand",
-      "zone": "db",
-      "service": "snappymail",
-      "notes": "engine=files vm=oci-E2-f_0"
     },
     {
       "host": "stalwart-rocksdb-null.db",

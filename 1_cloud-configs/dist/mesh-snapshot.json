@@ -18,6 +18,7 @@
       "region": "eu-marseille-1",
       "provider": "oci",
       "os": "NixOS",
+      "public_key_fp": "8Fqo4…kQs=",
       "ports_public": [],
       "wstunnel_server": false,
       "wstunnel_client": false
@@ -31,6 +32,7 @@
       "region": "eu-marseille-1",
       "provider": "oci",
       "os": "NixOS",
+      "public_key_fp": "ugc3Y…kC0=",
       "ports_public": [
         {
           "port": 443,
@@ -60,6 +62,7 @@
       "region": "eu-marseille-1",
       "provider": "oci",
       "os": "NixOS",
+      "public_key_fp": "+LHoO…xHQ=",
       "ports_public": [],
       "wstunnel_server": false,
       "wstunnel_client": false
@@ -73,6 +76,7 @@
       "region": "us-central1-a",
       "provider": "gcloud",
       "os": "NixOS",
+      "public_key_fp": "vV/ph…mDc=",
       "ports_public": [
         {
           "port": 25,
@@ -118,6 +122,19 @@
         }
       ],
       "wstunnel_server": true,
+      "wstunnel_client": false
+    },
+    {
+      "name": "gcp-T4-e_0",
+      "role": "spoke",
+      "alias": "gcp-t4-embed",
+      "public_ip": "TBD",
+      "wg_ip": "",
+      "region": "us-central1-a",
+      "provider": "gcloud",
+      "os": "NixOS",
+      "ports_public": [],
+      "wstunnel_server": false,
       "wstunnel_client": false
     },
     {
@@ -185,6 +202,22 @@
     },
     {
       "from": "gcp-E2-f_0",
+      "to": "gcp-T4-e_0",
+      "allowed_ips": [
+        "/32"
+      ],
+      "persistent_keepalive": 25
+    },
+    {
+      "from": "gcp-T4-e_0",
+      "to": "gcp-E2-f_0",
+      "allowed_ips": [
+        "10.0.0.0/24"
+      ],
+      "persistent_keepalive": 25
+    },
+    {
+      "from": "gcp-E2-f_0",
       "to": "vast-RTX-p_0",
       "allowed_ips": [
         "/32"
@@ -209,7 +242,7 @@
       "endpoint": "35.226.147.64:51820",
       "primary": true,
       "fallback": false,
-      "active_peers": 4,
+      "active_peers": 5,
       "use_case": "Default high-speed path. UDP-friendly networks."
     },
     {
@@ -237,6 +270,11 @@
     },
     {
       "src_node": "oci-A1-f_0",
+      "dst_subnet": "10.0.0.0/24",
+      "via_transport": "wg0"
+    },
+    {
+      "src_node": "gcp-T4-e_0",
       "dst_subnet": "10.0.0.0/24",
       "via_transport": "wg0"
     },

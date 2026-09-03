@@ -11,6 +11,7 @@
 # ║   Manual edits will be overwritten on next build.                ║
 # ║                                                                  ║
 # ╚══════════════════════════════════════════════════════════════════╝
+
 # ── Full mail health diagnostic + cross-store reconciliation ──
 # Usage: cloud-health-mail-full.sh
 #
