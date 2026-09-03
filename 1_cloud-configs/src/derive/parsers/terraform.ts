@@ -235,6 +235,7 @@ const GCP_SPECS: Record<string, { cpu: number; ram_gb: number }> = {
   "n1-standard-8":  { cpu: 8, ram_gb: 30 },
   "n2-standard-2":  { cpu: 2, ram_gb: 8 },
   "n2-standard-4":  { cpu: 4, ram_gb: 16 },
+  "g2-standard-4":  { cpu: 4, ram_gb: 16 },   // 1x NVIDIA L4 built in (gcp-gpu-embed)
 };
 
 function parseGCPFirewalls(hcl: string): FirewallData[] {

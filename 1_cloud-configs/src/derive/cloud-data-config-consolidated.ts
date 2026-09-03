@@ -326,6 +326,7 @@ function main() {
         "n1-standard-2":  { cpu: 2, ram_gb: 7.5 },
         "n1-standard-4":  { cpu: 4, ram_gb: 15 },
         "n1-standard-8":  { cpu: 8, ram_gb: 30 },
+        "g2-standard-4":  { cpu: 4, ram_gb: 16 },   // 1x NVIDIA L4 built in (gcp-gpu-embed)
         // OCI
         "VM.Standard.E2.1.Micro": { cpu: 1, ram_gb: 1 },
         "VM.Standard.A1.Flex":    { cpu: 4, ram_gb: 24 },
