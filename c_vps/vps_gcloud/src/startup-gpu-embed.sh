@@ -129,10 +129,17 @@ http://:443 {
 }
 CADDYEOF
 docker rm -f caddy-embed >/dev/null 2>&1 || true
+# ENTRYPOINT of the official caddy:2 image is already ["caddy"] — passing
+# "caddy run ..." as the trailing args here would duplicate it into
+# `caddy caddy run ...`, which caddy rejects as an unknown subcommand and
+# exits 1 immediately (2026-09-03: this, not --network, was the real crash-
+# loop cause — dockerd "restarting container ... exitCode=1" every ~2-7s,
+# confirmed via serial console after --network host alone did not fix it).
+# Only the CMD portion (run --config ... --adapter caddyfile) belongs here.
 docker run -d --name caddy-embed --restart unless-stopped \
   --network host \
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
-  caddy:2 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+  caddy:2 run --config /etc/caddy/Caddyfile --adapter caddyfile
 
 # ── 5. Done ──────────────────────────────────────────────────────────────
 log "5/5 done — POST http://<external-ip>:443/v1/embeddings with 'Authorization: Bearer <token>'"
