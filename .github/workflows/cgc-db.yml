@@ -70,6 +70,11 @@ on:
           - both
           - pub
           - pvt
+      gpu_keep:
+        description: "Keep gcp-gpu-embed running after the semantic phase (skip its stop step) instead of stopping it as soon as this run succeeds. Set true for a multi-dispatch android semantic campaign, where every stop/start cycle re-enters the GPU zonal-capacity lottery (2026-09-03: one stop cost an already-claimed slot outright)."
+        required: false
+        default: false
+        type: boolean
   # Schedule is data-driven from build.json runtime.octocode.update.schedule.
   # Twice daily (4:00 and 16:00 UTC): keeps the graph current with minimal runner
   # load. Each phase is change-gated per repo (skips repos whose HEAD is already
@@ -103,6 +108,10 @@ jobs:
       surfaces: ${{ github.event.inputs.surfaces || 'both' }}
       # Null on schedule = 'false' = honour the manifest (the daily run must stay incremental).
       force: ${{ github.event.inputs.force || 'false' }}
+      # Null on schedule = 'false' = stop gcp-gpu-embed as soon as this succeeds
+      # (the default, cost-conscious behaviour) — see cgc-db-index.yml's own
+      # gpu_keep input doc for why this exists at all.
+      gpu_keep: ${{ github.event.inputs.gpu_keep == 'true' && 'true' || 'false' }}
     secrets: inherit
 
   # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
