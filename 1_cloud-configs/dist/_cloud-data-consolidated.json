@@ -303,7 +303,7 @@
       "container_count": 8
     },
     "gcp-L4-e_0": {
-      "ip": "TBD",
+      "ip": "34.66.107.117",
       "specs": {
         "cpu": 4,
         "ram_gb": 16,
@@ -5806,8 +5806,8 @@
               "repos": [
                 "cloud-u-android"
               ],
-              "embed_endpoint": "TBD -- set after the first c_vps/vps_gcloud terraform apply reserves gcp-gpu-embed-ip",
-              "health_url": "TBD -- same address, path /",
+              "embed_endpoint": "https://34.66.107.117/v1/embeddings",
+              "health_url": "https://34.66.107.117/",
               "embeddings_batch_size": 128,
               "_endpoint_doc": "embed_endpoint/health_url stay TBD placeholders here deliberately -- cgc-db-index.yml sources the real value from a GH Actions repo VARIABLE (vars.GPU_EMBED_API_URL) rather than depending on a build.json edit reaching this repo promptly after every terraform apply, so a stale value here is documentation lag, not a broken pipeline. Update both once the static IP is known (`gcloud compute addresses describe gcp-gpu-embed-ip --region us-central1`) and keep cloud-infra/config.json's gcp-L4-e_0.ip in sync. LOCAL_EMBED_API_KEY (the Caddy bearer token) is never declared here -- it is a GH secret (GPU_EMBED_BEARER_TOKEN) end to end, never build.json."
             }
@@ -12512,7 +12512,7 @@
       },
       "gcp-gpu-embed": {
         "vm_id": "gcp-L4-e_0",
-        "ip": "TBD",
+        "ip": "34.66.107.117",
         "wg_ip": null,
         "wg_public_key": null,
         "wg_port": 51820,
@@ -12627,14 +12627,14 @@
       },
       {
         "host": "gcp-gpu-embed",
-        "hostname": "TBD",
+        "hostname": "34.66.107.117",
         "user": "diego",
         "identity_file": "~/.ssh/google_compute_engine",
         "port": 22
       },
       {
         "host": "gcp-gpu-embed-dropbear",
-        "hostname": "TBD",
+        "hostname": "34.66.107.117",
         "user": "diego",
         "identity_file": "~/.ssh/google_compute_engine",
         "port": 2200
