@@ -25,7 +25,8 @@
 # scheduled, low-priority, conservative defaults.
 #
 # WHAT IT RUNS (all safe — no data-loss ops)
-#   docker container prune -f                       drop stopped containers
+#   docker container prune -f --filter              drop stopped containers that
+#     'label!=com.docker.compose.project'           are NOT a declared service
 #   docker image prune -f --filter until=72h        drop dangling images >72h
 #   docker builder prune -f --keep-storage=1G       cap build cache at 1G
 #   journalctl --vacuum-time=14d --vacuum-size=200M cap journals
@@ -71,7 +72,21 @@
           | awk '{print $0}' | tr '\n' '|' || echo "?")
         echo "$LOG_PREFIX Docker before: $DOCKER_BEFORE"
 
-        docker container prune -f 2>&1 | sed "s/^/$LOG_PREFIX docker-container: /"
+        # label!=com.docker.compose.project — NEVER prune a declared service.
+        # An unfiltered `container prune` deletes every stopped container, and
+        # after a reboot that is the entire fleet: restart is "no" by policy
+        # (container-init owns lifecycle), so the 03:30 run would delete the
+        # containers the boot sequence had not yet recreated. That is exactly
+        # how vaultwarden vanished — rebooted 2026-08-30 22:11, pruned 03:30,
+        # gone for 4 days with vault.diegonmarcos.com serving 502, because
+        # nothing re-shipped it. Every declared service is deployed through
+        # docker compose and therefore carries this label; what is left to
+        # collect is stray `docker run` debris, which is all this should ever
+        # have been reclaiming.
+        # NOT `--filter until=<age>`: that matches on CREATION time, so it
+        # protects only containers created in the last N hours — precisely
+        # backwards, since the long-lived ones are the ones worth keeping.
+        docker container prune -f --filter "label!=com.docker.compose.project" 2>&1 | sed "s/^/$LOG_PREFIX docker-container: /"
         docker image prune -f --filter "until=72h" 2>&1 | sed "s/^/$LOG_PREFIX docker-image: /"
         docker builder prune -f --keep-storage=1G 2>&1 | sed "s/^/$LOG_PREFIX docker-builder: /"
 
