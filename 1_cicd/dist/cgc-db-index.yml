@@ -92,6 +92,11 @@ on:
         required: false
         default: both
         type: string
+      gpu_keep:
+        description: "Keep gcp-gpu-embed running after this job (skip the stop step) — for an active multi-slice android semantic campaign where a stop/start cycle re-enters the GPU zonal-capacity lottery (2026-09-03: every stop cost the -b slot). 'true' = leave it running; default 'false' = stop as soon as this job succeeds (never on failure — a failed job's VM stays up for retry/debugging)."
+        required: false
+        default: "false"
+        type: string
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -335,8 +340,18 @@ jobs:
           LOCAL_EMBED_API_URL: ${{ (inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android') && vars.GPU_EMBED_API_URL || '' }}
           LOCAL_EMBED_API_KEY: ${{ (inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android') && secrets.GPU_EMBED_BEARER_TOKEN || '' }}
         run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
+      # success()-gated, NOT always(): every stop/start cycle re-enters the GPU
+      # zonal-capacity lottery (2026-09-03: T4/L4 stockouts across every
+      # us-central1 zone all evening — one stop cost the just-claimed -b
+      # slot outright, and the replacement had to be recreated in -a). A
+      # FAILED job leaves the VM running on purpose (worth ~$0.60/h against
+      # losing the slot entirely — retry/debug against a warm instance, and
+      # the next job's start step is a no-op if it is already RUNNING). Also
+      # skippable outright via gpu_keep=true for a deliberate multi-slice
+      # campaign (android's semantic phase needs many — see build.json
+      # runtime.octocode.update.repo_timeout_min comments on why).
       - name: "Stop gcp-gpu-embed"
-        if: always() && inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android'
+        if: success() && inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android' && inputs.gpu_keep != 'true'
         run: |
           gcloud compute instances stop gcp-gpu-embed --zone us-central1-a --format=json >/dev/null 2>&1 || \
             echo "::warning::stop gcp-gpu-embed failed — it will keep billing on-demand until stopped by hand or the next run's start/stop cycle; check with devops_vm_stop / obs_debug_vps_gcloud"
