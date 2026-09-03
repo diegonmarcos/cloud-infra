@@ -97,9 +97,17 @@ systemctl enable --now docker
 # 127.0.0.1:11434 upstream are the SAME address for real.
 log "3/5 ollama container"
 docker rm -f ollama >/dev/null 2>&1 || true
+# OLLAMA_ORIGINS=* — ollama's own DNS-rebinding guard rejects any request
+# whose Host header it does not recognize (403, empty body, "Via: 1.1
+# Caddy" the only clue caddy even forwarded it — found live 2026-09-03
+# AFTER fixing the Caddyfile scheme error and adding header_up Host
+# localhost, which did not clear it). The Caddy bearer token in front of
+# this is the actual auth boundary already; this documented ollama env
+# var is the sanctioned way to stop it from also gatekeeping on Host.
 docker run -d --name ollama --restart unless-stopped --gpus all \
   --network host \
   -e OLLAMA_HOST=127.0.0.1:11434 \
+  -e OLLAMA_ORIGINS=* \
   -v ollama_data:/root/.ollama \
   ollama/ollama:latest
 for _i in 1 2 3 4 5 6 7 8 9 10; do
@@ -138,7 +146,7 @@ cat > /etc/caddy/Caddyfile <<CADDYEOF
 		# a valid bearer token got PAST caddy fine and still 403'd. Rewrite
 		# the upstream Host so ollama sees what it expects.
 		reverse_proxy 127.0.0.1:11434 {
-			header_up Host localhost
+			header_up Host 127.0.0.1:11434
 		}
 	}
 	handle {
