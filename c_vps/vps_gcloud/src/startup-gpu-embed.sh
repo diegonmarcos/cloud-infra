@@ -22,7 +22,13 @@
 # ║                                                                    ║
 # ║ Idempotent + resumable across the one reboot the NVIDIA driver     ║
 # ║ install requires: GCE re-invokes this script on EVERY boot, and    ║
-# ║ each step is marker-gated so a resumed run only does what is left. ║
+# ║ each step is marker-gated (driver) or self-reconciling (docker     ║
+# ║ containers, Caddyfile — rm+recreate every boot, cheap once images  ║
+# ║ are cached) so a resumed OR repeated run only does what is left,   ║
+# ║ and a config fix (this file changing under an unchanged instance)  ║
+# ║ actually takes effect on the next `gcloud compute instances reset` ║
+# ║ instead of being silently skipped by a blanket "already done"      ║
+# ║ marker — see 2026-09-03 cross-container-loopback incident below.   ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -eu
 
@@ -32,8 +38,6 @@ MDATA() { curl -sf -H "Metadata-Flavor: Google" "http://metadata.google.internal
 
 MARKER_DRIVER=/var/lib/gpu-embed-driver.done
 MARKER_ALL=/var/lib/gpu-embed-bootstrap.done
-
-[ -f "$MARKER_ALL" ] && { log "already done — skipping (ollama/caddy stay running via --restart unless-stopped)"; exit 0; }
 
 # ── 1. NVIDIA driver ──────────────────────────────────────────────────
 # Ubuntu's own ubuntu-drivers-common picks the right proprietary driver for
@@ -80,10 +84,22 @@ fi
 systemctl enable --now docker
 
 # ── 3. ollama (GPU) — bound to loopback only, Caddy is the only ingress ──
+# --network host (not the default bridge + `-p 127.0.0.1:11434:11434`):
+# a `-p 127.0.0.1:...` publish binds the HOST's loopback only, which is
+# reachable from processes ON the host but NOT from another container on
+# the docker bridge network (its "127.0.0.1" is its own netns loopback, a
+# different address entirely) — caddy (below) crash-looped trying to
+# reverse_proxy there, connection refused every time (2026-09-03, found via
+# serial console: dockerd "restarting container ... exitCode=1 ... restart
+# Count=8"). --network host makes both containers share the HOST's network
+# namespace directly, so ollama's own bind (OLLAMA_HOST, forced to
+# 127.0.0.1 here to keep it off the public interface) and caddy's
+# 127.0.0.1:11434 upstream are the SAME address for real.
 log "3/5 ollama container"
 docker rm -f ollama >/dev/null 2>&1 || true
 docker run -d --name ollama --restart unless-stopped --gpus all \
-  -p 127.0.0.1:11434:11434 \
+  --network host \
+  -e OLLAMA_HOST=127.0.0.1:11434 \
   -v ollama_data:/root/.ollama \
   ollama/ollama:latest
 for _i in 1 2 3 4 5 6 7 8 9 10; do
@@ -114,7 +130,7 @@ http://:443 {
 CADDYEOF
 docker rm -f caddy-embed >/dev/null 2>&1 || true
 docker run -d --name caddy-embed --restart unless-stopped \
-  -p 443:443 \
+  --network host \
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
   caddy:2 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
 
