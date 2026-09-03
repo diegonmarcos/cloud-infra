@@ -30,8 +30,8 @@
     {
       "name": "gcp-gpu-embed",
       "alias": "gcp-gpu-embed",
-      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed",
-      "zone": "us-central1-a",
+      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-b/instances/gcp-gpu-embed",
+      "zone": "us-central1-b",
       "_zone_doc": "L4, not T4: on 2026-09-03 n1-standard-4 + nvidia-tesla-t4 was ZONE_RESOURCE_POOL_EXHAUSTED in ALL four us-central1 zones (a/b via terraform applies, c/f via direct gcloud create probes; n1-standard-2 too), while g2-standard-4 (1x L4 24GB built in, NVIDIA_L4_GPUS quota 1) landed instantly in -a (probe created RUNNING, then deleted). Same intent as the owner's T4 decision (GPU embed instead of runner CPU); ~$0.7/h on-demand vs ~$0.54/h for the T4 pair, faster per chunk. To go back to T4 when stock returns: machine_type n1-standard-4 + gpu nvidia-tesla-t4, nothing else changes (startup-gpu-embed.sh is driver-agnostic). Zone is per-instance (main.tf try(each.value.zone, provider.zone)); keep config.json gcp-L4-e_0.gcloud_zone + cgc-db-index.yml --zone in sync.",
       "description": "On-demand g2-standard-4 (1x NVIDIA L4 24GB built in; T4 stocked out in all us-central1 zones 2026-09-03) — cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443, see startup-gpu-embed.sh). STOPPED between cgc-db-index.yml semantic-phase runs (devops_vm_start/stop around the android job). preemptible=false: project quota is PREEMPTIBLE_CPUS=0 in us-central1 (verified 2026-09-03) so Spot is unavailable — on-demand only.",
       "machine_type": "g2-standard-4",

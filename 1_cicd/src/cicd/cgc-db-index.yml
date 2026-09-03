@@ -261,10 +261,10 @@ jobs:
           GPU_EMBED_BEARER_TOKEN: ${{ secrets.GPU_EMBED_BEARER_TOKEN }}
         run: |
           set -eu
-          gcloud compute instances start gcp-gpu-embed --zone us-central1-a --format=json >/dev/null
+          gcloud compute instances start gcp-gpu-embed --zone us-central1-b --format=json >/dev/null
           echo "[gpu-embed] start issued — waiting for RUNNING"
           for _i in $(seq 1 30); do
-            STATE=$(gcloud compute instances describe gcp-gpu-embed --zone us-central1-a --format='value(status)')
+            STATE=$(gcloud compute instances describe gcp-gpu-embed --zone us-central1-b --format='value(status)')
             [ "$STATE" = "RUNNING" ] && break
             sleep 10
           done
@@ -326,7 +326,7 @@ jobs:
       - name: "Stop gcp-gpu-embed"
         if: always() && inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android'
         run: |
-          gcloud compute instances stop gcp-gpu-embed --zone us-central1-a --format=json >/dev/null 2>&1 || \
+          gcloud compute instances stop gcp-gpu-embed --zone us-central1-b --format=json >/dev/null 2>&1 || \
             echo "::warning::stop gcp-gpu-embed failed — it will keep billing on-demand until stopped by hand or the next run's start/stop cycle; check with devops_vm_stop / obs_debug_vps_gcloud"
 
   # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
