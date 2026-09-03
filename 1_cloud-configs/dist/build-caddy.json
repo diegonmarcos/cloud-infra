@@ -290,6 +290,12 @@
       "comment": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
     },
     {
+      "domain": "webmail.diegonmarcos.com",
+      "upstream": "10.0.0.3:3000",
+      "wg_only": true,
+      "comment": "Cloud Webmail — native-JMAP webmail client for Stalwart (webmail.diegonmarcos.com); OUR rebrand+build of root-fr/jmap-webmail v1.7.1. Replaces SnappyMail."
+    },
+    {
       "domain": "matrix.diegonmarcos.com",
       "upstream": "10.0.0.6:8008",
       "auth": "none",
@@ -300,12 +306,6 @@
       "upstream": "10.0.0.6:8083",
       "wg_only": true,
       "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
-    },
-    {
-      "domain": "webmail.diegonmarcos.com",
-      "upstream": "10.0.0.3:8888",
-      "wg_only": true,
-      "comment": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
     },
     {
       "domain": "jmap.diegonmarcos.com",
@@ -768,6 +768,10 @@
     {
       "service": "mattermost.app",
       "upstream": "10.0.0.6:8065"
+    },
+    {
+      "service": "webmail.diegonmarcos.com",
+      "upstream": "10.0.0.3:3000"
     },
     {
       "service": "matrix-continuwuity.app",
@@ -1469,6 +1473,27 @@
       "port": 8065,
       "protocol": "http",
       "upstream": "10.0.0.6:8065",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-webmail.app",
+      "redirect_to": "https://cloud-webmail-http-3000.app",
+      "container": "cloud-webmail",
+      "container_key": "app",
+      "svc": "cloud-webmail",
+      "vm": "oci-E2-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-webmail-http-3000.app",
+      "container": "cloud-webmail",
+      "container_key": "app",
+      "svc": "cloud-webmail",
+      "vm": "oci-E2-f_0",
+      "port": 3000,
+      "protocol": "http",
+      "upstream": "10.0.0.3:3000",
       "source": "containers.app.port"
     },
     {
@@ -2361,6 +2386,16 @@
       "notes": "Mattermost team chat (TE 11.x ESR) with ntfy bridge and C3 command bot"
     },
     {
+      "host": "webmail.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.3:3000",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Cloud Webmail — native-JMAP webmail client for Stalwart (webmail.diegonmarcos.com); OUR rebrand+build of root-fr/jmap-webmail v1.7.1. Replaces SnappyMail."
+    },
+    {
       "host": "matrix.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8008",
@@ -2379,16 +2414,6 @@
       "zone": "com",
       "service": null,
       "notes": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
-    },
-    {
-      "host": "webmail.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.3:8888",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)"
     },
     {
       "host": "jmap.diegonmarcos.com",
@@ -2883,6 +2908,16 @@
       "notes": null
     },
     {
+      "host": "webmail.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.3:3000",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "matrix-continuwuity.app",
       "path": null,
       "upstream": "10.0.0.6:8008",
@@ -3352,6 +3387,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "chat-mattermost",
+      "notes": null
+    },
+    {
+      "host": "cloud-webmail-http-3000.app",
+      "path": null,
+      "upstream": "10.0.0.3:3000",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-webmail",
       "notes": null
     },
     {
