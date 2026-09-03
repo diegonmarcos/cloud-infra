@@ -53,5 +53,42 @@ for name in $(jq -r '.firewall_rules[]?.name // empty' terraform.json 2>/dev/nul
     "projects/${PROJECT}/global/firewalls/${name}"
 done
 
+# Static IPs + instances — added 2026-09-03 after gcp-gpu-embed hit the exact
+# 409-alreadyExists this script exists to prevent: the create SUCCEEDED in
+# GCP after terraform's own wait-for-create had already given up (a GPU
+# zonal-stockout retry that resolved itself moments too late) and the state-
+# persistence fix (fb8fc6e51) committed whatever local tfstate existed AT
+# THAT MOMENT — before the operation had actually finished, so the resource
+# was never recorded. Next apply then tried to create it again -> 409.
+# Un-importable resources (declared but genuinely not created yet, e.g. the
+# very first apply of a brand new instance) just fail this one `terraform
+# import` call and the loop continues — same tolerance the firewall loop
+# above already relies on (no `set -e`; the caller ignores this script's own
+# exit code). Region for addresses: static_ips[].region field. Zone for
+# instances: per-instance terraform.json .zone, falling back to
+# .provider.zone — same resolution main.tf's `zone = try(...)` uses.
+PROVIDER_ZONE="$(jq -r '.provider.zone // empty' terraform.json 2>/dev/null)"
+
+echo ""
+echo "=== Static IPs (data-driven from terraform.json) ==="
+for name in $(jq -r '.static_ips[]?.name // empty' terraform.json 2>/dev/null); do
+  [ -n "$name" ] || continue
+  region="$(jq -r --arg n "$name" '.static_ips[] | select(.name==$n) | .region // empty' terraform.json 2>/dev/null)"
+  [ -n "$region" ] || continue
+  tf_adopt "google_compute_address.ips[\"$name\"]" \
+    "projects/${PROJECT}/regions/${region}/addresses/${name}"
+done
+
+echo ""
+echo "=== Compute instances (data-driven from terraform.json) ==="
+for name in $(jq -r '.instances[]?.name // empty' terraform.json 2>/dev/null); do
+  [ -n "$name" ] || continue
+  zone="$(jq -r --arg n "$name" '.instances[] | select(.name==$n) | .zone // empty' terraform.json 2>/dev/null)"
+  [ -n "$zone" ] || zone="$PROVIDER_ZONE"
+  [ -n "$zone" ] || continue
+  tf_adopt "google_compute_instance.vms[\"$name\"]" \
+    "projects/${PROJECT}/zones/${zone}/instances/${name}"
+done
+
 echo ""
 echo "=== Done. Pipeline will now run terraform plan + apply ==="
