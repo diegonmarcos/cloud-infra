@@ -12,7 +12,7 @@
 # on a synthetic log shaped exactly like octocode's output, and also proves
 # that the old `tail -4` idiom loses the warning on that same input.
 set -eu
-ROOT=$(cd "$(dirname "$0")/../.." && pwd)
+ROOT=$(cd "$(dirname "$0")/../../.." && pwd)   # 9_others/{test,dist/test}/ → repo root
 SCRIPT="$ROOT/1_cicd/src/ops/cloud-cgc-db-update.sh"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT INT TERM
 pass=0; fail=0
@@ -48,9 +48,10 @@ ck "digest keeps the glued Warning line"      "$(grep -c 'Warning: AI architectu
 ck "digest keeps the glued Info line"         "$(grep -c 'Info: AI analyzing 34 files' "$T/digest")" "1"
 ck "digest keeps the glued emoji lines"       "$(grep -c 'Batch AI description failed\|Falling back to individual\|Missing descriptions' "$T/digest")" "3"
 ck "digest keeps the completion line"         "$(grep -c 'Indexing complete! 6 of 85' "$T/digest")" "1"
-ck "digest drops every spinner frame"         "$(grep -c 'Indexing: [0-9]' "$T/digest")" "0"
+ck "digest drops every spinner frame"         "$(grep -v 'last octocode progress' "$T/digest" | grep -c 'Indexing: [0-9]')" "0"
+ck "digest keeps the LAST progress state"     "$(grep -c 'last octocode progress: Indexing: [0-9]' "$T/digest")" "1"
 ck "digest strips ANSI erase sequences"       "$(grep -c "$esc" "$T/digest")" "0"
-ck "digest honours the line cap"              "$(octo_log_digest "$T/octo.log" 2 | wc -l | tr -d ' ')" "2"
+ck "digest honours the line cap"              "$(octo_log_digest "$T/octo.log" 2 | grep -vc 'last octocode progress' | tr -d ' ')" "2"
 # The idiom being replaced loses the warning on this very input -- that is the bug.
 ck "old tail -4 idiom hides the Warning"      "$(tail -4 "$T/octo.log" | grep -c 'Warning: AI architectural' || true)" "0"
 

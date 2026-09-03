@@ -457,34 +457,13 @@ ensure_repos() {
       # the project_id octocode derives is the canonical, consumer-matching one.
       git -C "$d" remote set-url origin "$canon" 2>/dev/null || true
     fi
-    # SUB-REPO SLICING: if build.json gives this lname a repo_subpaths spec, narrow
-    # the working tree to just its subpaths via sparse-checkout, so an over-large repo
-    # (cloud-u-android ≈ 27k files, ~12-15h graphrag, can never finish under GitHub's
-    # 6h runner kill) indexes as several independent slices that each fit the per-repo
-    # ceiling. Each slice lives in its OWN /repos/<lname> dir and is indexed --no-git
-    # (see the index call), so the shared origin does not collapse them into one
-    # octocode project; the blobless clone fetches each slice's blobs on checkout.
-    if [ -d "$d/.git" ]; then
-      _inc=$(jq -r --arg l "$lname" '.runtime.octocode.repo_subpaths[$l].include[]? // empty' "$BJ" 2>/dev/null)
-      _exc=$(jq -r --arg l "$lname" '.runtime.octocode.repo_subpaths[$l].exclude[]? // empty' "$BJ" 2>/dev/null)
-      if [ -n "$_inc" ] || [ -n "$_exc" ]; then
-        git -C "$d" sparse-checkout init --no-cone >/dev/null 2>&1
-        if [ -n "$_inc" ]; then
-          # shellcheck disable=SC2086
-          git -C "$d" sparse-checkout set --no-cone $_inc >/dev/null 2>&1
-        else
-          # catch-all slice: everything EXCEPT the subpaths claimed by other slices,
-          # so a NEW top-level dir lands here automatically rather than going unindexed.
-          # Positional patterns (not --stdin) for portability across git versions.
-          _pats="/*"
-          for _p in $_exc; do _pats="$_pats !/$_p/"; done
-          # shellcheck disable=SC2086
-          git -C "$d" sparse-checkout set --no-cone $_pats >/dev/null 2>&1
-        fi
-        $_gitc -C "$d" checkout -q 2>/dev/null || git -C "$d" checkout -q 2>/dev/null || true
-        echo "[cgc-db] $lname · sparse slice → $(git -C "$d" ls-files 2>/dev/null | wc -l | tr -d ' ') files"
-      fi
-    fi
+    # NO sub-repo slicing (removed 2026-09-03). A sparse-checkout slice indexed with
+    # --no-git does NOT get its own octocode project: 0.22 keys the project on
+    # sha256(origin URL) whenever .git+origin exist (octolib path_to_id; --no-git only
+    # skips the git-root check), so every slice of one origin lands in ONE project dir
+    # and slices 2..n hit the "no commit changes, skipping" gate. Over-large repos
+    # ratchet across runs instead: the timeout branch below publishes the partial DB
+    # and octocode skips already-embedded files (file_metadata mtime + chunk hash).
     # After BOTH paths: a refresh (reset --hard) rewrites mtimes on every touched file just
     # as a clone does, so neither path can be trusted to carry stable mtimes on its own.
     _mt0=$(date +%s)
@@ -1047,7 +1026,10 @@ N_INDEX=0; N_SKIP=0; N_TIMEOUT=0; N_DEFER=0
 octo_log_digest() { # $1 = octocode log file, $2 = max lines to print
   tr '\r' '\n' < "$1" | awk -v n="$2" -v esc="$(printf '\033')" '
     { gsub(esc "\\[[0-9;]*[A-Za-z]", "") }
-    /Indexing: [0-9]+\/[0-9]+ files|Counting files/ {
+    /Indexing: [0-9]+(\/[0-9]+)? files|Counting files/ {
+      # Spinner frames are dropped from the digest, but the LAST one is the only
+      # progress signal a timed-out run leaves behind — keep it for the END line.
+      if (match($0, /Indexing: [0-9]+(\/[0-9]+)? files( \([0-9]+%\))?/)) prog = substr($0, RSTART, RLENGTH)
       i = 0
       if (match($0, /(Info|Warning|Error|Debug): /)) i = RSTART
       else if (match($0, /⚠️|🔄|✓|📋|📊/)) i = RSTART
@@ -1055,7 +1037,7 @@ octo_log_digest() { # $1 = octocode log file, $2 = max lines to print
       $0 = substr($0, i)
     }
     NF { l[++k] = $0 }
-    END { s = k - n + 1; if (s < 1) s = 1; for (i = s; i <= k; i++) print l[i] }'
+    END { s = k - n + 1; if (s < 1) s = 1; for (i = s; i <= k; i++) print l[i]; if (prog) print "[cgc-db] last octocode progress: " prog }'
 }
 
 # After a graphrag-phase index, prove the LLM pass contributed. Structural extraction
@@ -1204,23 +1186,23 @@ for r in $REPOS; do
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
   _rc=0
-  # A repo_subpaths slice is a sparse checkout of ONE parent repo cloned into several
-  # /repos/<slice> dirs that all share the parent's origin URL. octocode keys a project
-  # by sha256(origin) when git-aware, so those slices would collapse into ONE project and
-  # clobber each other — --no-git makes octocode key by path instead (distinct per slice)
-  # and fall back to mtime-based incremental (mtimes are restored deterministically above).
-  _nogit=""
-  jq -e --arg l "$r" '.runtime.octocode.repo_subpaths[$l]' "$BJ" >/dev/null 2>&1 && _nogit="--no-git"
   if [ -n "$REPO_TIMEOUT_EFF" ] && [ "$REPO_TIMEOUT_EFF" != "0" ]; then
-    echo "[cgc-db] $r · slice ${REPO_TIMEOUT_EFF}m (ceiling ${REPO_TIMEOUT_MIN:-none}m, budget left ${_remain:-?}m)${_nogit:+ [--no-git subpath slice]}"
-    ( cd "$d" && timeout "${REPO_TIMEOUT_EFF}m" octocode index $_nogit ) >"$_log" 2>&1 || _rc=$?
+    echo "[cgc-db] $r · slice ${REPO_TIMEOUT_EFF}m (ceiling ${REPO_TIMEOUT_MIN:-none}m, budget left ${_remain:-?}m)"
+    ( cd "$d" && timeout "${REPO_TIMEOUT_EFF}m" octocode index ) >"$_log" 2>&1 || _rc=$?
   else
-    ( cd "$d" && octocode index $_nogit ) >"$_log" 2>&1 || _rc=$?
+    ( cd "$d" && octocode index ) >"$_log" 2>&1 || _rc=$?
   fi
-  # s/file is exact on success and a lower bound on timeout (denominator is the full file
-  # count, but only part of it got indexed) — either way it is the number to watch.
   _dt=$(( $(date +%s) - _t0 ))
-  echo "[cgc-db] $r · index took ${_dt}s for ${_files} files ($(awk -v d="$_dt" -v f="$_files" 'BEGIN{printf (f>0? "%.2f":"n/a"), d/(f>0?f:1)}')s/file, rc=$_rc)"
+  if [ "$_rc" = "124" ]; then
+    # On timeout the denominator is unknown: dividing the slice by the FULL file count
+    # (2026-09-03: "0.53s/file" for android, real rate ~670 files per 240m slice) reads
+    # as a throughput number and misled the sizing. The digest below prints octocode's
+    # own "Loaded metadata for N files" (files already in the DB when this run began) and
+    # its last progress state; the delta between consecutive runs is the real rate.
+    echo "[cgc-db] $r · index took ${_dt}s of ${_files} files (TIMEOUT — partial, s/file not meaningful, rc=124)"
+  else
+    echo "[cgc-db] $r · index took ${_dt}s for ${_files} files ($(awk -v d="$_dt" -v f="$_files" 'BEGIN{printf (f>0? "%.2f":"n/a"), d/(f>0?f:1)}')s/file, rc=$_rc)"
+  fi
   # STRAY-SELECT resolution — only for runs that actually reached/touched a project
   # dir (rc=0 success or rc=124 partial, both checkpoint below); a hard failure
   # (the else branch) exits before ever reaching checkpoint_publish, so it needs no
