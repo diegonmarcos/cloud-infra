@@ -159,9 +159,26 @@ for name in cloudflare gcloud oci hetzner; do
     ./import.sh || echo "  import.sh exited non-zero (expected if resources already adopted)"
   fi
   terraform plan -input=false -out=tfplan || { echo "FAIL $name (plan)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
-  terraform apply -input=false -auto-approve tfplan || { echo "FAIL $name (apply)"; FAIL=$((FAIL + 1)); tf_cleanup; cd "$REPO_ROOT"; continue; }
 
-  # Re-encrypt updated tfstate
+  # apply's exit code is captured, NOT branched on immediately: terraform
+  # writes terraform.tfstate incrementally as each resource in the graph
+  # finishes, so a PARTIAL apply (one resource created, a later one failing
+  # on e.g. a zonal stock-out) leaves local state ahead of the committed
+  # terraform.tfstate.enc. The old code branched straight into tf_cleanup on
+  # a non-zero exit, which rm -f'd that local state before it was ever
+  # re-encrypted — silently orphaning whatever DID get created: it exists in
+  # the cloud, terraform has no record of it, and the next apply dies on
+  # "already exists" (or, worse, quietly recreates a duplicate for a
+  # resource type that allows it). 2026-09-03: exactly this, gcp-t4-embed-ip
+  # created + gcp-t4-embed instance failed (GPU zonal stock-out) in the same
+  # apply. Fix: re-encrypt+commit local state UNCONDITIONALLY (below) before
+  # ever touching FAIL/tf_cleanup, so a partial apply's real-world result is
+  # always reflected in the state the NEXT run reads.
+  APPLY_RC=0
+  terraform apply -input=false -auto-approve tfplan || APPLY_RC=$?
+
+  # Re-encrypt updated tfstate — see APPLY_RC comment above: unconditional,
+  # runs even when the apply failed.
   if [ -f terraform.tfstate ] && [ -f terraform.tfstate.enc ]; then
     cp terraform.tfstate terraform.tfstate.enc
     sops -e -i --input-type json --output-type json terraform.tfstate.enc
@@ -170,6 +187,13 @@ for name in cloudflare gcloud oci hetzner; do
   fi
 
   tf_cleanup
+
+  if [ "$APPLY_RC" -ne 0 ]; then
+    echo "FAIL $name (apply)"
+    FAIL=$((FAIL + 1))
+    cd "$REPO_ROOT"
+    continue
+  fi
 
   echo "OK $name"
   OK=$((OK + 1))
