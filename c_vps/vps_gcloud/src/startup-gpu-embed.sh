@@ -129,17 +129,23 @@ http://:443 {
 }
 CADDYEOF
 docker rm -f caddy-embed >/dev/null 2>&1 || true
-# ENTRYPOINT of the official caddy:2 image is already ["caddy"] — passing
-# "caddy run ..." as the trailing args here would duplicate it into
-# `caddy caddy run ...`, which caddy rejects as an unknown subcommand and
-# exits 1 immediately (2026-09-03: this, not --network, was the real crash-
-# loop cause — dockerd "restarting container ... exitCode=1" every ~2-7s,
-# confirmed via serial console after --network host alone did not fix it).
-# Only the CMD portion (run --config ... --adapter caddyfile) belongs here.
+# NOTE 2026-09-03: dropping the leading "caddy" here (theorizing the image's
+# ENTRYPOINT already supplies it, duplicate-argv style) was WRONG and broke
+# it worse — confirmed via serial console: "exec: \"run\": executable file
+# not found in $PATH", proving caddy:2 has NO entrypoint of its own and the
+# full argv (binary name included) must be supplied as CMD. Restored. The
+# --network host crash-loop (exitCode=1, no useful message on the serial
+# console — container stdout does not reach it) is diagnosed below instead
+# of guessed at again.
 docker run -d --name caddy-embed --restart unless-stopped \
   --network host \
   -v /etc/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
-  caddy:2 run --config /etc/caddy/Caddyfile --adapter caddyfile
+  caddy:2 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+sleep 3
+if ! docker ps --filter name=^caddy-embed$ --filter status=running -q | grep -q .; then
+  log "caddy-embed is NOT running — its own log (docker logs), captured here because it never reaches the serial console otherwise:"
+  docker logs --tail 40 caddy-embed 2>&1 | while IFS= read -r _l; do log "  caddy-embed| $_l"; done
+fi
 
 # ── 5. Done ──────────────────────────────────────────────────────────────
 log "5/5 done — POST http://<external-ip>:443/v1/embeddings with 'Authorization: Bearer <token>'"
