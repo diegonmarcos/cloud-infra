@@ -117,8 +117,18 @@ if [ -z "$TOKEN" ]; then
   TOKEN="unset-$(date +%s)"
 fi
 mkdir -p /etc/caddy
+# `http://:443` (scheme + the TLS-default port together) is REJECTED by
+# Caddy at config-adapt time: "scheme and port violate convention" — this
+# was the actual crash (found via the docker-logs capture below, added
+# specifically because this error only ever showed up in `docker logs`,
+# never on the serial console on its own). Caddy's documented way to serve
+# plain HTTP on a normally-HTTPS port is `auto_https off` globally, then a
+# bare `:443` site address (no scheme prefix).
 cat > /etc/caddy/Caddyfile <<CADDYEOF
-http://:443 {
+{
+	auto_https off
+}
+:443 {
 	@authed header Authorization "Bearer ${TOKEN}"
 	handle @authed {
 		reverse_proxy 127.0.0.1:11434
