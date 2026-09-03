@@ -26,7 +26,14 @@
 
 set -euo pipefail
 
-REPO="${GIT_BASE:-$HOME/git}/cloud"
+# DERIVED FROM THIS FILE, not from a repo name. It was hardcoded to
+# "$HOME/git/cloud" — the name this repo had before the 2026-08 rename to
+# cloud-infra — so the first check failed on a missing registry and the script
+# exited before reaching anything it actually guards. It has been red for a
+# stale reason ever since, which is indistinguishable from red for a real one:
+# the gen-claude-md.sh checks below never ran, and the directory they point at
+# has since disappeared entirely without anyone hearing about it.
+REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || echo "${GIT_BASE:-$HOME/git}/cloud-infra")"
 DIST="$REPO/1_cloud-configs/dist"
 REGISTRY="$REPO/1_cloud-configs/src/inputs/external-consumers.json"
 CONSOLIDATED="$DIST/_cloud-data-consolidated.json"
@@ -186,20 +193,20 @@ for who in desktop termux; do
     fi
 done
 
-# 5b. gen-claude-md.sh — must reference build-flakes_{desktop,termux}.json
-# and the file must have .vms + .services with at least one entry.
+# 5b. build-flakes_{desktop,termux}.json must carry a usable fleet picture.
+#
+# This used to check gen-claude-md.sh, which generated ~/.claude/CLAUDE.md from
+# these files. That generator is GONE, and deliberately: CLAUDE.md is a one-char
+# stub now and the principles/reference content it used to hold is injected by
+# the cloud-marketplace plugins (SessionStart / UserPromptSubmit hooks) that live
+# in da_my-ai's claude SoT. Nobody removed this check when that happened, and
+# nobody saw it fail either — the script was hardcoded to $HOME/git/cloud, the
+# name this repo had before the rename, so it exited at check 0 for months.
+#
+# What survives is the half that still means something: the consumed DATA must
+# be shaped like a fleet. A generator can be replaced; a build-flakes file with
+# no vms is broken for whatever reads it next.
 for who in desktop termux; do
-    GEN="$HOME/git/cloud-infra-desktop/ba_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
-    [ "$who" = "termux" ] && GEN="$HOME/git/cloud-infra-desktop/bb_flakes_${who}/src/modules/dotfiles/claude/gen-claude-md.sh"
-    if [ ! -f "$GEN" ]; then
-        fail "$GEN missing"
-        continue
-    fi
-    if grep -q "build-flakes_${who}.json" "$GEN"; then
-        pass "gen-claude-md.sh (${who}) references build-flakes_${who}.json"
-    else
-        fail "gen-claude-md.sh (${who}) missing build-flakes_${who}.json reference"
-    fi
     BUILD="$DIST/build-flakes_${who}.json"
     if jq -e '(.vms | length > 0) and (.services | length > 0)' "$BUILD" >/dev/null 2>&1; then
         v=$(jq '.vms | length' "$BUILD")
