@@ -1009,6 +1009,25 @@
         "auth": "bearer"
       }
     },
+    "cloud-webmail": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3000
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/api/health",
+      "domain": "webmail.diegonmarcos.com",
+      "description": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/api/health"
+        ]
+      }
+    },
     "mail-puller": {
       "ip": "10.0.0.3",
       "ports": {},
@@ -1081,25 +1100,6 @@
         "api_url": null,
         "healthcheck_paths": [],
         "type": "no-api"
-      }
-    },
-    "snappymail": {
-      "ip": "10.0.0.3",
-      "ports": {
-        "app": 8888
-      },
-      "vm": "oci-mail",
-      "healthcheck": "/",
-      "domain": "webmail.diegonmarcos.com",
-      "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-      "api": {
-        "has_api": false,
-        "has_web_ui": true,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/"
-        ]
       }
     },
     "maddy": {
@@ -1651,6 +1651,18 @@
       "auth_username_env": "OCI_RELAYUSER",
       "auth_secret_env": "OCI_RELAYPASSWORD",
       "default_outbound": true
+    },
+    {
+      "name": "maddy-relay",
+      "description": "Maddy submission co-located on oci-mail. Selected when the envelope MAIL FROM is me+maddy@diegonmarcos.com (the cloud-webmail 'me@ (via Maddy)' identity's return-path). Maddy strips the +tag, DKIM-signs (selector default), then relays to OCI — giving an independent send leg that still shows From: me@. Auth reuses the me@ account: username is the plain mailbox address, password is the shared ME_PASSWORD (identical on both servers). allow_invalid_certs because we reach Maddy by its WG IP, whose cert CN is mail.diegonmarcos.com (WG-internal, so skipping name-verify is safe).",
+      "address": "10.0.0.3",
+      "port": 465,
+      "protocol": "smtp",
+      "implicit_tls": true,
+      "allow_invalid_certs": true,
+      "auth_username": "me@diegonmarcos.com",
+      "auth_secret_env": "ME_PASSWORD",
+      "sender_match": "me+maddy@diegonmarcos.com"
     }
   ],
   "allowed_ips": [

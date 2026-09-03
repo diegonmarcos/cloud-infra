@@ -232,6 +232,55 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/octocode-home/octocode"
           echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home/octocode" >> "$GITHUB_ENV"
+      # ── GPU embedding VM (gcp-t4-embed) — semantic phase, cloud-u-android only ──
+      # Owner decision 2026-09-03: run the embedding pass on a T4 instead of the
+      # runner's own CPU (see c_vps/vps_gcloud/src/terraform.json + startup-gpu-
+      # embed.sh). The VM is STOPPED between runs for cost, so it is started here
+      # and stopped again below (always(), so a failed/timed-out index job never
+      # leaves it billing idle). google-github-actions/auth + gcloud directly —
+      # NOT cloud-infra-mcp/C3 API: that tool exists but its HTTP path is
+      # `auth: two_factor` + `wg_only: true` behind Authelia OIDC
+      # client_credentials, and the secrets that grant (AUTHELIA_TOKEN_URL /
+      # AUTHELIA_OIDC_CLIENT_ID / AUTHELIA_OIDC_CLIENT_SECRET) are not configured
+      # as repo secrets today (verified via `gh secret list` 2026-09-03 — only
+      # AUTHELIA_OIDC_BEARER_TOKEN exists, and health_mail_full.yml's own
+      # reference to the other three is correspondingly unverified/likely dead).
+      # ship-terraform.yml already proves google-github-actions/auth@v2 +
+      # secrets.GCP_SA_KEY working from this exact repo, so that is what starts
+      # and stops gcp-t4-embed rather than standing up a new, untested auth path.
+      - name: "Authenticate GCP (gpu-embed VM control)"
+        if: inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: "Start gcp-t4-embed + wait for /v1/embeddings"
+        if: inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android'
+        env:
+          GPU_EMBED_API_URL: ${{ vars.GPU_EMBED_API_URL }}
+          GPU_EMBED_BEARER_TOKEN: ${{ secrets.GPU_EMBED_BEARER_TOKEN }}
+        run: |
+          set -eu
+          gcloud compute instances start gcp-t4-embed --zone us-central1-a --format=json >/dev/null
+          echo "[gpu-embed] start issued — waiting for RUNNING"
+          for _i in $(seq 1 30); do
+            STATE=$(gcloud compute instances describe gcp-t4-embed --zone us-central1-a --format='value(status)')
+            [ "$STATE" = "RUNNING" ] && break
+            sleep 10
+          done
+          echo "[gpu-embed] instance state: ${STATE:-unknown}"
+          if [ -z "$GPU_EMBED_API_URL" ]; then
+            echo "::warning::vars.GPU_EMBED_API_URL is unset — cloud-cgc-db-update.sh will fall back to build.json's gpu_embed.embed_endpoint (still a TBD placeholder until set — see build.json _endpoint_doc). Set the repo variable once gcp-t4-embed-ip is known."
+            exit 0
+          fi
+          echo "[gpu-embed] polling $GPU_EMBED_API_URL for readiness (startup-gpu-embed.sh: driver+docker+ollama pull+caddy)"
+          for _i in $(seq 1 40); do
+            curl -fsS -m 10 -H "Authorization: Bearer $GPU_EMBED_BEARER_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"model":"nomic-embed-text","input":["readiness"]}' \
+              "$GPU_EMBED_API_URL" >/dev/null 2>&1 && { echo "[gpu-embed] endpoint answering"; exit 0; }
+            sleep 15
+          done
+          echo "::warning::gpu-embed endpoint did not answer within 10 minutes of instance start — cloud-cgc-db-update.sh's own preflight will fail loudly if it is genuinely still down"
       - name: "cgc-db incremental update — ${{ matrix.repo }} only (checkpoint push, no propagate)"
         # No SSH key / CGC_SSH_OPTS here (unlike the pre-matrix single job): with
         # CGC_SKIP_PROPAGATE=1 + CGC_PACKAGE_MODE=per-repo, update.sh's
@@ -265,7 +314,19 @@ jobs:
           # Propagation is centralised in the restore-all job below, which runs ONCE
           # per phase after every matrix job settles, not once per repo per job.
           CGC_SKIP_PROPAGATE: "1"
+          # GPU embedding — see "Start gcp-t4-embed" step above. Empty string on
+          # every repo but cloud-u-android (and on the graphrag phase) evaluates
+          # to unset in cloud-cgc-db-update.sh's `${VAR:-...}` checks, so every
+          # other job in this matrix is completely untouched by this block.
+          CGC_LOCAL_EMBED_MODEL: ${{ (inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android') && 'local:nomic-embed-text' || '' }}
+          LOCAL_EMBED_API_URL: ${{ (inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android') && vars.GPU_EMBED_API_URL || '' }}
+          LOCAL_EMBED_API_KEY: ${{ (inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android') && secrets.GPU_EMBED_BEARER_TOKEN || '' }}
         run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
+      - name: "Stop gcp-t4-embed"
+        if: always() && inputs.phase == 'semantic' && matrix.repo == 'cloud-u-android'
+        run: |
+          gcloud compute instances stop gcp-t4-embed --zone us-central1-a --format=json >/dev/null 2>&1 || \
+            echo "::warning::stop gcp-t4-embed failed — it will keep billing on-demand until stopped by hand or the next run's start/stop cycle; check with devops_vm_stop / obs_debug_vps_gcloud"
 
   # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
   # per phase. if: always() so a partial/failed matrix still propagates

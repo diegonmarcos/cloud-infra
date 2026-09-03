@@ -2,7 +2,7 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 26,
+  "total": 25,
   "summary": {
     "postgres": 5,
     "mariadb": 2,
@@ -17,8 +17,8 @@
     "tempo": 0,
     "grafana": 0,
     "parquet": 1,
-    "files": 3,
-    "rocksdb": 1
+    "rocksdb": 1,
+    "files": 2
   },
   "databases": [
     {
@@ -315,27 +315,6 @@
       ],
       "resources": null,
       "backup": true
-    },
-    {
-      "service": "snappymail",
-      "container": "snappymail",
-      "container_key": "app",
-      "type": "files",
-      "enabled": true,
-      "vm": "oci-E2-f_0",
-      "vm_alias": "oci-mail",
-      "wg_ip": "10.0.0.3",
-      "image": "djmaze/snappymail:latest",
-      "port": 8888,
-      "dns": "snappymail.app",
-      "healthcheck": "/",
-      "volumes": [
-        "./data:/var/lib/snappymail"
-      ],
-      "resources": {
-        "mem_reservation": "16M"
-      },
-      "backup": false
     },
     {
       "service": "maddy",
@@ -1053,28 +1032,34 @@
         "backup": true
       }
     ],
-    "files": [
+    "rocksdb": [
       {
-        "service": "snappymail",
-        "container": "snappymail",
+        "service": "stalwart",
+        "container": "stalwart",
         "container_key": "app",
-        "type": "files",
+        "type": "rocksdb",
         "enabled": true,
         "vm": "oci-E2-f_0",
         "vm_alias": "oci-mail",
         "wg_ip": "10.0.0.3",
-        "image": "djmaze/snappymail:latest",
-        "port": 8888,
-        "dns": "snappymail.app",
+        "image": "stalwartlabs/stalwart:v0.16.5",
+        "port": 2443,
+        "dns": "stalwart.app",
+        "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'",
         "healthcheck": "/",
         "volumes": [
-          "./data:/var/lib/snappymail"
+          "stalwart_data:/opt/stalwart-mail/data",
+          "./tls:/opt/stalwart-mail/tls:ro"
         ],
         "resources": {
-          "mem_reservation": "16M"
+          "reservations": {
+            "memory": "32M"
+          }
         },
-        "backup": false
-      },
+        "backup": true
+      }
+    ],
+    "files": [
       {
         "service": "calendar-radicale",
         "container": "calendar-radicale",
@@ -1114,33 +1099,6 @@
         ],
         "resources": null,
         "backup": false
-      }
-    ],
-    "rocksdb": [
-      {
-        "service": "stalwart",
-        "container": "stalwart",
-        "container_key": "app",
-        "type": "rocksdb",
-        "enabled": true,
-        "vm": "oci-E2-f_0",
-        "vm_alias": "oci-mail",
-        "wg_ip": "10.0.0.3",
-        "image": "stalwartlabs/stalwart:v0.16.5",
-        "port": 2443,
-        "dns": "stalwart.app",
-        "dump_cmd": "sh -c 'stalwart-mail --export /tmp/stalwart-export && tar cf - -C /tmp stalwart-export && rm -rf /tmp/stalwart-export'",
-        "healthcheck": "/",
-        "volumes": [
-          "stalwart_data:/opt/stalwart-mail/data",
-          "./tls:/opt/stalwart-mail/tls:ro"
-        ],
-        "resources": {
-          "reservations": {
-            "memory": "32M"
-          }
-        },
-        "backup": true
       }
     ]
   },
@@ -1651,27 +1609,6 @@
           "backup": true
         },
         {
-          "service": "snappymail",
-          "container": "snappymail",
-          "container_key": "app",
-          "type": "files",
-          "enabled": true,
-          "vm": "oci-E2-f_0",
-          "vm_alias": "oci-mail",
-          "wg_ip": "10.0.0.3",
-          "image": "djmaze/snappymail:latest",
-          "port": 8888,
-          "dns": "snappymail.app",
-          "healthcheck": "/",
-          "volumes": [
-            "./data:/var/lib/snappymail"
-          ],
-          "resources": {
-            "mem_reservation": "16M"
-          },
-          "backup": false
-        },
-        {
           "service": "maddy",
           "container": "maddy",
           "container_key": "app",
@@ -1789,6 +1726,27 @@
     "gcp-proxy": {
       "vm_id": "gcp-E2-f_0",
       "wg_ip": "10.0.0.1",
+      "system_dbs": [
+        {
+          "name": "journald",
+          "type": "binary",
+          "path": "/var/log/journal/",
+          "description": "systemd journal logs (binary)",
+          "queryable": true,
+          "tool": "journalctl"
+        },
+        {
+          "name": "systemd-state",
+          "type": "binary",
+          "path": "/var/lib/systemd/",
+          "description": "systemd persistent state (timers, random-seed)",
+          "queryable": false
+        }
+      ]
+    },
+    "gcp-t4-embed": {
+      "vm_id": "gcp-T4-e_0",
+      "wg_ip": null,
       "system_dbs": [
         {
           "name": "journald",

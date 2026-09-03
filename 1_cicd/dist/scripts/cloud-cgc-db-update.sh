@@ -177,6 +177,32 @@ OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$OPENAI_API_KEY}"
 export OPENROUTER_API_URL OPENAI_API_URL OLLAMA_API_URL OPENAI_API_KEY OPENROUTER_API_KEY
 CODE_EMBED=$(jq -r '.runtime.octocode.update.code_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
 TEXT_EMBED=$(jq -r '.runtime.octocode.update.text_embedding_model // "fastembed:all-MiniLM-L6-v2"' "$BJ")
+# GPU EMBEDDING (octocode `local:` provider — OpenAI-shaped POST /v1/embeddings,
+# see octolib/src/embedding/provider/local.rs). RUNNER-ONLY override of the two
+# lines above, for the cloud-u-android semantic phase on the GCP T4 (owner
+# decision 2026-09-03; declared in c_vps/vps_gcloud/src/terraform.json as
+# gcp-t4-embed, started/stopped around that one job by cgc-db-index.yml).
+# CGC_LOCAL_EMBED_MODEL is the activation switch and is DELIBERATELY env-only —
+# no build.json fallback: unlike USE_LLM/CODE_EMBED above, there is no safe
+# default for an endpoint that is a VM stopped unless the caller just started
+# it, so a bare local/dagu run of this script never reaches for the GPU. When
+# it IS set, LOCAL_EMBED_API_URL / the batch size fall back to build.json's
+# .runtime.octocode.update.gpu_embed (env still wins — same precedence as the
+# LLM block above) so the workflow only has to carry the secret bearer token
+# and (once known) the GH Actions repo variable for the URL.
+GPU_EMBED_URL_DEFAULT=$(jq -r '.runtime.octocode.update.gpu_embed.embed_endpoint // empty' "$BJ")
+GPU_EMBED_HEALTH_DEFAULT=$(jq -r '.runtime.octocode.update.gpu_embed.health_url // empty' "$BJ")
+GPU_EMBED_BATCH_DEFAULT=$(jq -r '.runtime.octocode.update.gpu_embed.embeddings_batch_size // empty' "$BJ")
+LOCAL_EMBED_API_URL="${LOCAL_EMBED_API_URL:-$GPU_EMBED_URL_DEFAULT}"
+LOCAL_EMBED_API_KEY="${LOCAL_EMBED_API_KEY:-}"
+LOCAL_EMBED_HEALTH_URL="${LOCAL_EMBED_HEALTH_URL:-$GPU_EMBED_HEALTH_DEFAULT}"
+LOCAL_EMBED_BATCH_SIZE="${CGC_LOCAL_EMBED_BATCH_SIZE:-$GPU_EMBED_BATCH_DEFAULT}"
+export LOCAL_EMBED_API_URL LOCAL_EMBED_API_KEY
+if [ -n "${CGC_LOCAL_EMBED_MODEL:-}" ]; then
+  CODE_EMBED="$CGC_LOCAL_EMBED_MODEL"
+  TEXT_EMBED="$CGC_LOCAL_EMBED_MODEL"
+  echo "[cgc-db] GPU embedding override active: CODE_EMBED=TEXT_EMBED=$CGC_LOCAL_EMBED_MODEL via ${LOCAL_EMBED_API_URL:-<unset>} (batch=${LOCAL_EMBED_BATCH_SIZE:-default}) — cgc-db-base:latest / the box stay on fastembed, see seed_base_if_missing()"
+fi
 # Pinned UPSTREAM octocode release (see ensure_octocode): version + per-arch sha256
 # of the static musl tarball — the one pin the consumer image shares.
 OCTO_VERSION=$(jq -r '.runtime.octocode.version // empty' "$BJ")
@@ -730,6 +756,20 @@ bootstrap_config_toml() {
 seed_base_if_missing() {
   [ "$BASE_SEEDED" = "1" ] && return 0
   BASE_SEEDED=1
+  # GPU-EMBED GUARD — see CGC_LOCAL_EMBED_MODEL above. This job's OCTO_HOME
+  # config.toml carries local:nomic-embed-text while the override is active;
+  # seeding $BASE_IMAGE from it would publish that model into the shared base
+  # that every consumer restores — including this box's own cloud-cgc-pub-mcp/
+  # cloud-cgc-pvt-mcp, which embed search QUERIES and must stay on fastembed.
+  # Refuse instead: the base stays whatever it already was (present, per the
+  # docker manifest check below, in every run that matters — this only bites
+  # the astronomically rare case of a GPU-embed run landing on the very first
+  # cycle after an octocode version bump, before any fastembed job has re-
+  # seeded the base) and a later non-GPU job seeds it for real if ever needed.
+  if [ -n "${CGC_LOCAL_EMBED_MODEL:-}" ]; then
+    echo "::warning::[cgc-db] CGC_LOCAL_EMBED_MODEL is set — refusing to auto-seed $BASE_IMAGE from this job's config.toml (would leak '$CGC_LOCAL_EMBED_MODEL' into the shared base/box, which must stay fastembed). Skipping; a fastembed job will seed it if it is genuinely still missing."
+    return 0
+  fi
   if docker manifest inspect "$BASE_IMAGE" >/dev/null 2>&1; then
     echo "[cgc-db] base image $BASE_IMAGE already on GHCR — skip auto-seed"
     return 0
@@ -953,6 +993,39 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
     echo "[cgc-db] CGC_FORCE=1 — dropped $_purged graphrag table(s); embeddings kept, graph will rebuild"
   fi
 else
+  # GPU EMBEDDING PREFLIGHT — same posture as the LLM preflight above: fail
+  # loudly before doing anything expensive rather than let octocode degrade
+  # silently. octocode's local: provider probes the embedding dimension from
+  # a live response at first use (LocalEmbeddingProvider::new), so a dead/mis-
+  # authed endpoint would otherwise surface as a cryptic mid-index failure (or
+  # worse, a partially-written project if it dies after some chunks embedded).
+  # POST a real one-text embedding request — this also verifies the bearer
+  # token and that the model is pulled, not just that the port answers.
+  if [ -n "${CGC_LOCAL_EMBED_MODEL:-}" ]; then
+    if [ -z "$LOCAL_EMBED_API_URL" ]; then
+      echo "::error::[cgc-db] CGC_LOCAL_EMBED_MODEL=$CGC_LOCAL_EMBED_MODEL but LOCAL_EMBED_API_URL is unset (neither env nor build.json .runtime.octocode.update.gpu_embed.embed_endpoint) — octocode's local: provider has nowhere to POST"
+      exit 1
+    fi
+    _ge=0; _ge_ok=0; _ge_err=""
+    while [ "$_ge" -lt 6 ]; do
+      _ge=$((_ge + 1))
+      _ge_err=$(curl -fsS -m 30 -o /dev/null \
+        -H "Content-Type: application/json" \
+        ${LOCAL_EMBED_API_KEY:+-H "Authorization: Bearer $LOCAL_EMBED_API_KEY"} \
+        -d "{\"model\":\"${CGC_LOCAL_EMBED_MODEL#local:}\",\"input\":[\"preflight\"]}" \
+        "$LOCAL_EMBED_API_URL" 2>&1) && { _ge_ok=1; break; }
+      [ "$_ge" -lt 6 ] && sleep 10
+    done
+    if [ "$_ge_ok" = "1" ]; then
+      echo "[cgc-db] GPU embedding endpoint healthy: $LOCAL_EMBED_API_URL (attempt $_ge, model ${CGC_LOCAL_EMBED_MODEL#local:})"
+    else
+      echo "::error::[cgc-db] semantic phase requested CGC_LOCAL_EMBED_MODEL=$CGC_LOCAL_EMBED_MODEL but the endpoint failed preflight: $LOCAL_EMBED_API_URL"
+      echo "[cgc-db] curl said: ${_ge_err:-<no output>}"
+      echo "[cgc-db] is the gcp-t4-embed VM started? (devops_vm_start gcp-t4-embed / the workflow's start step before this job)"
+      exit 1
+    fi
+  fi
+
   # Force structural-only to MATCH build.json (use_llm=false). The base config.toml
   # may carry a STALE `use_llm = true` + an unreachable LLM model (e.g. ollama:*),
   # which makes octocode block on per-batch LLM timeouts → glacial. Previously this
@@ -966,6 +1039,18 @@ else
       /^[[:space:]]*use_llm[[:space:]]*=/          { print "use_llm = false"; next }
       { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
     grep -q "use_llm = false" "$CFG" 2>/dev/null || printf '\n[graphrag]\nenabled = false\nuse_llm = false\n' >> "$CFG"
+    # embeddings_batch_size — no CLI flag (verified against octocode's config
+    # command source), config.toml [index] only. GPU-embed only: raising this
+    # for the fastembed/CPU repos is untested and out of scope here. awk, never
+    # sed (see reference_awk-not-sed-secrets.md).
+    if [ -n "${CGC_LOCAL_EMBED_MODEL:-}" ] && [ -n "$LOCAL_EMBED_BATCH_SIZE" ]; then
+      awk -v n="$LOCAL_EMBED_BATCH_SIZE" '
+        /^\[index\]/                                        { in_idx=1 }
+        /^\[/ && !/^\[index\]/                              { in_idx=0 }
+        in_idx && /^[[:space:]]*embeddings_batch_size[[:space:]]*=/ { print "embeddings_batch_size = " n; next }
+        { print }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
+      echo "[cgc-db] GPU embedding: embeddings_batch_size=$LOCAL_EMBED_BATCH_SIZE"
+    fi
   fi
   echo "[cgc-db] GraphRAG structural-only (enabled=false use_llm=false forced — no LLM calls)"
 fi

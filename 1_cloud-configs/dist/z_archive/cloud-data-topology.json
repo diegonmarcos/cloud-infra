@@ -23,7 +23,6 @@
       },
       "containers": [
         "mail-puller",
-        "snappymail",
         "maddy",
         "stalwart",
         "stalwart-sorter"
@@ -116,6 +115,7 @@
         "mattermost",
         "mattermost-postgres",
         "mattermost-bots",
+        "cloud-webmail",
         "continuwuity",
         "matrix-element",
         "mautrix-whatsapp",
@@ -197,6 +197,30 @@
         "disk_gb": 30,
         "shape": "e2-micro",
         "machine_type": "e2-micro"
+      }
+    },
+    "gcp-T4-e_0": {
+      "ip": "TBD",
+      "wg_ip": null,
+      "user": "diego",
+      "method": "gcloud",
+      "ssh_alias": "gcp-t4-embed",
+      "gcloud_instance": "gcp-t4-embed",
+      "gcloud_zone": "us-central1-a",
+      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-t4-embed",
+      "description": "GCloud On-Demand - N1 Standard 4 + NVIDIA T4 GPU - cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443; see c_vps/vps_gcloud/src/startup-gpu-embed.sh). NOT a home-manager fleet member (no HM, no WireGuard mesh join) — started/stopped around cgc-db-index.yml's semantic-phase android job via devops_vm_start/devops_vm_stop. STOPPED by default between runs.",
+      "provider": "gcp",
+      "gpu": "NVIDIA T4",
+      "gha": null,
+      "containers": [],
+      "ports": [],
+      "networks": [],
+      "specs": {
+        "cpu": 4,
+        "ram_gb": 15,
+        "disk_gb": 100,
+        "shape": "n1-standard-4",
+        "machine_type": "n1-standard-4"
       }
     },
     "vast-RTX-p_0": {
@@ -494,7 +518,7 @@
       {
         "name": "oci-mail",
         "wg_ip": "10.0.0.3",
-        "wg_public_key": null,
+        "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
         "endpoint": "130.110.251.193:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::3"
@@ -502,7 +526,7 @@
       {
         "name": "oci-analytics",
         "wg_ip": "10.0.0.4",
-        "wg_public_key": null,
+        "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
         "endpoint": "129.151.228.66:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::4"
@@ -510,7 +534,7 @@
       {
         "name": "oci-apps",
         "wg_ip": "10.0.0.6",
-        "wg_public_key": null,
+        "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
         "endpoint": "82.70.229.129:51820",
         "role": "spoke",
         "wg_ipv6": "fd0c:1d00::6"
@@ -518,7 +542,7 @@
       {
         "name": "gcp-proxy",
         "wg_ip": "10.0.0.1",
-        "wg_public_key": null,
+        "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
         "endpoint": "35.226.147.64:51820",
         "role": "hub",
         "wg_ipv6": "fd0c:1d00::1"
@@ -529,32 +553,37 @@
         "wg_ip": "10.0.0.5",
         "wg_ipv6": "fd0c:1d00::5",
         "role": "client",
-        "wg_public_key": null
+        "name": "desktop-nixos",
+        "wg_public_key": "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY="
       },
       "termux": {
         "wg_ip": "10.0.0.9",
         "wg_ipv6": "fd0c:1d00::9",
         "role": "client",
-        "wg_public_key": null
+        "name": "termux-galaxy",
+        "wg_public_key": "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA="
       },
       "gha-runner": {
         "wg_ip": "10.0.0.200",
         "wg_ipv6": "fd0c:1d00::200",
         "role": "client",
-        "wg_public_key": null
+        "name": "gha-runner",
+        "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
       },
       "health-runner": {
         "wg_ip": "10.0.0.201",
         "wg_ipv6": "fd0c:1d00::201",
         "role": "client",
-        "wg_public_key": null
+        "name": "health-runner",
+        "wg_public_key": "VeUK6t5/oXQiACcqXgCGkzLZlP2iBTgPghhhwFADViQ="
       },
       "vault-backup": {
         "wg_ip": "10.0.0.202",
         "wg_ipv6": "fd0c:1d00::202",
         "role": "client",
         "_doc": "Dedicated peer slot for the cloud-vault vault-db-backup workflow. Kept separate from gha-runner so a nightly backup never contends with a ship run for a peer slot. Private key lives in cloud-vault A0_keys/providers/wireguard/vault-backup/ and as the WG_PRIVATE_KEY secret on diegonmarcos/cloud-vault.",
-        "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0="
+        "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0=",
+        "name": "vault-backup"
       }
     }
   },
@@ -802,6 +831,12 @@
         "service": "chat-mattermost"
       },
       {
+        "name": "webmail.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-webmail"
+      },
+      {
         "name": "matrix-continuwuity.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -818,12 +853,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "matrix-mautrix-whatsapp"
-      },
-      {
-        "name": "snappymail.app",
-        "type": "A",
-        "value": "10.0.0.3",
-        "service": "snappymail"
       },
       {
         "name": "maddy.app",
@@ -1651,6 +1680,30 @@
         "path": "/mcp"
       },
       "flake": "infra-api_cloud-services-mcp"
+    },
+    "cloud-superapp-mcp": {
+      "category": "app",
+      "vm": "local",
+      "folder": "infra-api_cloud-superapp-mcp",
+      "description": "MCP + HTTP faces over the Android constellation's on-device debug API (libs:devtools AppDebugServer), reached over ssh. lib-api/lib-mcp shared, one module per app under mcps-apps/, one server process.",
+      "containers": {
+        "app": {
+          "container_name": "cloud-superapp-mcp",
+          "image": "",
+          "public": false
+        }
+      },
+      "container_names": [
+        "cloud-superapp-mcp"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-api_cloud-superapp-mcp"
     },
     "cloud-vault-mcp": {
       "category": "data",
@@ -4299,6 +4352,74 @@
       },
       "flake": "user-comm_chat-mattermost"
     },
+    "cloud-webmail": {
+      "category": "app",
+      "vm": "oci-A1-f_0",
+      "folder": "user-comm_cloud-webmail",
+      "description": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail.",
+      "domain": "webmail.diegonmarcos.com",
+      "port": 3000,
+      "dns": "webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "containers": {
+        "app": {
+          "container_name": "cloud-webmail",
+          "image": "ghcr.io/diegonmarcos/cloud-webmail-binaries:latest",
+          "port": 3000,
+          "port_env": "PORT",
+          "dns": "webmail.app",
+          "public": true,
+          "proxy": {
+            "primary": {
+              "domain": "webmail.diegonmarcos.com",
+              "auth": "two_factor"
+            }
+          },
+          "healthcheck": "/api/health",
+          "monitoring": null,
+          "volumes": [],
+          "env_file": false,
+          "depends_on": [],
+          "resources": {
+            "mem_reservation": "256M"
+          },
+          "read_only": false,
+          "protocol": "http",
+          "embedded_dbs": []
+        }
+      },
+      "container_names": [
+        "cloud-webmail"
+      ],
+      "all_ports": [
+        "3000"
+      ],
+      "all_dns": [
+        "webmail.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "webmail.diegonmarcos.com",
+          "auth": "two_factor",
+          "primary": {
+            "domain": "webmail.diegonmarcos.com",
+            "auth": "two_factor"
+          }
+        }
+      },
+      "declared_ports": {
+        "app": 3000
+      },
+      "health": {
+        "path": "/api/health"
+      },
+      "flake": "user-comm_cloud-webmail"
+    },
     "mail-puller": {
       "category": "app",
       "vm": "oci-E2-f_0",
@@ -4570,73 +4691,6 @@
         ]
       },
       "flake": "user-comm_matrix-mautrix-whatsapp"
-    },
-    "snappymail": {
-      "category": "app",
-      "vm": "oci-E2-f_0",
-      "folder": "user-comm_snappymail",
-      "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-      "domain": "webmail.diegonmarcos.com",
-      "port": 8888,
-      "dns": "snappymail.app",
-      "upstream": "10.0.0.3:8888",
-      "containers": {
-        "app": {
-          "container_name": "snappymail",
-          "image": "djmaze/snappymail:latest",
-          "port": 8888,
-          "port_env": null,
-          "dns": "snappymail.app",
-          "public": true,
-          "proxy": null,
-          "healthcheck": "/",
-          "monitoring": null,
-          "volumes": [
-            "./data:/var/lib/snappymail"
-          ],
-          "env_file": false,
-          "depends_on": [],
-          "resources": {
-            "mem_reservation": "16M"
-          },
-          "read_only": false,
-          "protocol": "http",
-          "embedded_dbs": [
-            {
-              "engine": "files",
-              "path": "/var/lib/snappymail"
-            }
-          ]
-        }
-      },
-      "container_names": [
-        "snappymail"
-      ],
-      "all_ports": [
-        "8888"
-      ],
-      "all_dns": [
-        "snappymail.app"
-      ],
-      "compose": {
-        "containers": [],
-        "ports": [],
-        "networks": []
-      },
-      "proxy": {
-        "_repromoted_2026-07-09": "webmail.diegonmarcos.com re-promoted to SnappyMail. It was demoted 2026-04-27 for a handoff to a successor webmail service that was never finished (no build.json/src), so no route was ever emitted and the domain orphaned to the Caddy catch-all (200 wormhole). SnappyMail is healthy on oci-mail; restored primary per the demote note.",
-        "primary": {
-          "domain": "webmail.diegonmarcos.com",
-          "auth": "two_factor"
-        }
-      },
-      "declared_ports": {
-        "app": 8888
-      },
-      "health": {
-        "path": "/"
-      },
-      "flake": "user-comm_snappymail"
     },
     "maddy": {
       "category": "app",
@@ -6478,7 +6532,7 @@
         {
           "name": "oci-mail",
           "wg_ip": "10.0.0.3",
-          "wg_public_key": null,
+          "wg_public_key": "8Fqo4ct/jR2D3ZJ4AT8AVxiemuRSFk9LriBJhK7ukQs=",
           "endpoint": "130.110.251.193:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::3"
@@ -6486,7 +6540,7 @@
         {
           "name": "oci-analytics",
           "wg_ip": "10.0.0.4",
-          "wg_public_key": null,
+          "wg_public_key": "ugc3YpOgw9DokiM8yqT0uADF8UUkSTGad9WSODX1kC0=",
           "endpoint": "129.151.228.66:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::4"
@@ -6494,7 +6548,7 @@
         {
           "name": "oci-apps",
           "wg_ip": "10.0.0.6",
-          "wg_public_key": null,
+          "wg_public_key": "+LHoOzNYA92eJalYEQDzbEDDEi0FfT2jYhBUpz7RxHQ=",
           "endpoint": "82.70.229.129:51820",
           "role": "spoke",
           "wg_ipv6": "fd0c:1d00::6"
@@ -6502,7 +6556,7 @@
         {
           "name": "gcp-proxy",
           "wg_ip": "10.0.0.1",
-          "wg_public_key": null,
+          "wg_public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
           "endpoint": "35.226.147.64:51820",
           "role": "hub",
           "wg_ipv6": "fd0c:1d00::1"
@@ -6513,32 +6567,37 @@
           "wg_ip": "10.0.0.5",
           "wg_ipv6": "fd0c:1d00::5",
           "role": "client",
-          "wg_public_key": null
+          "name": "desktop-nixos",
+          "wg_public_key": "ii4FHxUbHiW9TOcNNlgiqHJXt3NMhe10W3dCdD6SRCY="
         },
         "termux": {
           "wg_ip": "10.0.0.9",
           "wg_ipv6": "fd0c:1d00::9",
           "role": "client",
-          "wg_public_key": null
+          "name": "termux-galaxy",
+          "wg_public_key": "Ke/zvGRI4Y5qUwnIyEfzog/UAw1olBUHRtvXZztztVA="
         },
         "gha-runner": {
           "wg_ip": "10.0.0.200",
           "wg_ipv6": "fd0c:1d00::200",
           "role": "client",
-          "wg_public_key": null
+          "name": "gha-runner",
+          "wg_public_key": "QEPkGSsJXX39plcG+DwJwkSYgmEn+aMlaOF7gDPPpl8="
         },
         "health-runner": {
           "wg_ip": "10.0.0.201",
           "wg_ipv6": "fd0c:1d00::201",
           "role": "client",
-          "wg_public_key": null
+          "name": "health-runner",
+          "wg_public_key": "VeUK6t5/oXQiACcqXgCGkzLZlP2iBTgPghhhwFADViQ="
         },
         "vault-backup": {
           "wg_ip": "10.0.0.202",
           "wg_ipv6": "fd0c:1d00::202",
           "role": "client",
           "_doc": "Dedicated peer slot for the cloud-vault vault-db-backup workflow. Kept separate from gha-runner so a nightly backup never contends with a ship run for a peer slot. Private key lives in cloud-vault A0_keys/providers/wireguard/vault-backup/ and as the WG_PRIVATE_KEY secret on diegonmarcos/cloud-vault.",
-          "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0="
+          "wg_public_key": "fHazadZ/yx10SiXGM258eBUssabuIz7hwXwBpv+FDE0=",
+          "name": "vault-backup"
         }
       }
     },

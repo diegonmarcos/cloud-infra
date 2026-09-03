@@ -22,10 +22,33 @@
   ],
 
   "static_ips": [
-    { "name": "arch-1-ip", "region": "us-central1" }
+    { "name": "arch-1-ip", "region": "us-central1" },
+    { "name": "gcp-t4-embed-ip", "region": "us-central1" }
   ],
 
   "instances": [
+    {
+      "name": "gcp-t4-embed",
+      "alias": "gcp-t4-embed",
+      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-t4-embed",
+      "description": "On-demand N1-Standard-4 + NVIDIA T4 GPU — cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443, see startup-gpu-embed.sh). STOPPED between cgc-db-index.yml semantic-phase runs (devops_vm_start/stop around the android job). preemptible=false: project quota is PREEMPTIBLE_CPUS=0 in us-central1 (verified 2026-09-03) so Spot is unavailable — on-demand only.",
+      "machine_type": "n1-standard-4",
+      "image": "projects/ubuntu-os-cloud/global/images/family/ubuntu-2204-lts",
+      "disk_size_gb": 100,
+      "disk_type": "pd-ssd",
+      "tags": ["https-server", "gpu-embed"],
+      "static_ip_name": "gcp-t4-embed-ip",
+      "preemptible": false,
+      "automatic_restart": true,
+      "on_host_maintenance": "TERMINATE",
+      "gpu": { "type": "nvidia-tesla-t4", "count": 1 },
+      "scopes": [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring.write"
+      ],
+      "ignore_changes": ["boot_disk"]
+    },
     {
       "name": "gcp-proxy",
       "alias": "gcp-proxy",

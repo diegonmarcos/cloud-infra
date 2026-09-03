@@ -1025,6 +1025,25 @@
         "auth": "bearer"
       }
     },
+    "cloud-webmail": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3000
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/api/health",
+      "domain": "webmail.diegonmarcos.com",
+      "description": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/api/health"
+        ]
+      }
+    },
     "mail-puller": {
       "ip": "10.0.0.3",
       "ports": {},
@@ -1097,25 +1116,6 @@
         "api_url": null,
         "healthcheck_paths": [],
         "type": "no-api"
-      }
-    },
-    "snappymail": {
-      "ip": "10.0.0.3",
-      "ports": {
-        "app": 8888
-      },
-      "vm": "oci-mail",
-      "healthcheck": "/",
-      "domain": "webmail.diegonmarcos.com",
-      "description": "SnappyMail webmail client (mail.diegonmarcos.com/webmail)",
-      "api": {
-        "has_api": false,
-        "has_web_ui": true,
-        "api_path": null,
-        "api_url": null,
-        "healthcheck_paths": [
-          "/"
-        ]
       }
     },
     "maddy": {

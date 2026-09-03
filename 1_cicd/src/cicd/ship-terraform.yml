@@ -138,6 +138,10 @@ jobs:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
           OCI_REGION: ${{ secrets.OCI_REGION }}
           TF_VAR_hcloud_token: ${{ secrets.HETZNER_API_TOKEN }}
+          # gcp-t4-embed's Caddy bearer token (c_vps/vps_gcloud/src/startup-gpu-embed.sh).
+          # Same value must be set as the cloud-infra repo secret GPU_EMBED_BEARER_TOKEN
+          # so cgc-db-index.yml's runner presents it as LOCAL_EMBED_API_KEY.
+          TF_VAR_gpu_embed_bearer_token: ${{ secrets.GPU_EMBED_BEARER_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
         run: |
@@ -165,5 +169,6 @@ jobs:
             -e TF_VAR_tenancy_ocid -e TF_VAR_compartment_ocid -e TF_VAR_region \
             -e OCI_TENANCY_OCID -e OCI_USER_OCID -e OCI_FINGERPRINT -e OCI_PRIVATE_KEY -e OCI_REGION \
             -e TF_VAR_hcloud_token \
+            -e TF_VAR_gpu_embed_bearer_token \
             cloud-builder \
             sh -c "cd /root/git/cloud-gha && bash 1_cicd/dist/scripts/cloud-ship-terraform-deploy-apply.sh"
