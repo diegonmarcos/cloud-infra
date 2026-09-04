@@ -556,6 +556,17 @@
             "public_url": "https://chat.diegonmarcos.com"
           },
           {
+            "id": "cloud-webmail",
+            "name": "cloud-webmail",
+            "vm": "oci-A1-f_0",
+            "category": "app",
+            "subgroup": "Productivity",
+            "port": 3000,
+            "private_ip": "10.0.0.6",
+            "private_url": "https://cloud-webmail.app",
+            "public_url": "https://webmail.diegonmarcos.com"
+          },
+          {
             "id": "mail-puller",
             "name": "mail-puller",
             "vm": "oci-E2-f_0",
@@ -598,17 +609,6 @@
             "private_ip": "10.0.0.6",
             "private_url": "https://matrix-mautrix-whatsapp.app",
             "public_url": null
-          },
-          {
-            "id": "snappymail",
-            "name": "snappymail",
-            "vm": "oci-E2-f_0",
-            "category": "app",
-            "subgroup": "Communications",
-            "port": 8888,
-            "private_ip": "10.0.0.3",
-            "private_url": "https://snappymail.app",
-            "public_url": "https://webmail.diegonmarcos.com"
           },
           {
             "id": "maddy",
@@ -1106,25 +1106,6 @@
             }
           },
           {
-            "id": "snappymail/app#files",
-            "service": "snappymail",
-            "container": "app",
-            "engine": "files",
-            "kind": "embedded",
-            "path": "/var/lib/snappymail",
-            "persistence": {
-              "type": "docker-volume",
-              "ref": "./data",
-              "mount": "/var/lib/snappymail"
-            },
-            "port": null,
-            "vm": "oci-E2-f_0",
-            "backup": {
-              "enabled": false,
-              "strategy": null
-            }
-          },
-          {
             "id": "maddy/app#sqlite",
             "service": "maddy",
             "container": "app",
@@ -1540,25 +1521,6 @@
             }
           },
           {
-            "id": "snappymail/app#files",
-            "service": "snappymail",
-            "container": "app",
-            "engine": "files",
-            "kind": "embedded",
-            "path": "/var/lib/snappymail",
-            "persistence": {
-              "type": "docker-volume",
-              "ref": "./data",
-              "mount": "/var/lib/snappymail"
-            },
-            "port": null,
-            "vm": "oci-E2-f_0",
-            "backup": {
-              "enabled": false,
-              "strategy": null
-            }
-          },
-          {
             "id": "maddy/app#sqlite",
             "service": "maddy",
             "container": "app",
@@ -1952,25 +1914,6 @@
             }
           },
           {
-            "id": "snappymail/app#files",
-            "service": "snappymail",
-            "container": "app",
-            "engine": "files",
-            "kind": "embedded",
-            "path": "/var/lib/snappymail",
-            "persistence": {
-              "type": "docker-volume",
-              "ref": "./data",
-              "mount": "/var/lib/snappymail"
-            },
-            "port": null,
-            "vm": "oci-E2-f_0",
-            "backup": {
-              "enabled": false,
-              "strategy": null
-            }
-          },
-          {
             "id": "maddy/app#sqlite",
             "service": "maddy",
             "container": "app",
@@ -2180,7 +2123,7 @@
         "git#gh": [
           {
             "id": "git#gh/cloud-u-android",
-            "service": "gitea",
+            "service": "cloud-cgc-pub-mcp",
             "container": null,
             "engine": "git",
             "kind": "git-remote",
@@ -2189,8 +2132,8 @@
             "visibility": "public",
             "fork": false,
             "pushed_at": "2026-08-31T12:30:38Z",
-            "indexed": false,
-            "local_dir": null,
+            "indexed": true,
+            "local_dir": "cloud-u-android",
             "mirrored": true,
             "persistence": {
               "type": "git",
@@ -3491,6 +3434,13 @@
             "provider": "e2-micro"
           },
           {
+            "id": "gcp-L4-e_0",
+            "alias": "gcp-gpu-embed",
+            "arch": "x86_64",
+            "wg_ip": null,
+            "provider": "g2-standard-4"
+          },
+          {
             "id": "vast-RTX-p_0",
             "alias": "vast-ollama",
             "arch": "x86_64",
@@ -3818,6 +3768,17 @@
           "public_url": "https://chat.diegonmarcos.com"
         },
         {
+          "id": "cloud-webmail",
+          "name": "cloud-webmail",
+          "vm": "oci-A1-f_0",
+          "category": "app",
+          "subgroup": "Productivity",
+          "port": 3000,
+          "private_ip": "10.0.0.6",
+          "private_url": "https://cloud-webmail.app",
+          "public_url": "https://webmail.diegonmarcos.com"
+        },
+        {
           "id": "mail-puller",
           "name": "mail-puller",
           "vm": "oci-E2-f_0",
@@ -3849,17 +3810,6 @@
           "private_ip": "10.0.0.6",
           "private_url": "https://matrix-element.app",
           "public_url": "https://messenger.diegonmarcos.com"
-        },
-        {
-          "id": "snappymail",
-          "name": "snappymail",
-          "vm": "oci-E2-f_0",
-          "category": "app",
-          "subgroup": "Communications",
-          "port": 8888,
-          "private_ip": "10.0.0.3",
-          "private_url": "https://snappymail.app",
-          "public_url": "https://webmail.diegonmarcos.com"
         },
         {
           "id": "maddy",
@@ -4442,25 +4392,6 @@
           }
         },
         {
-          "id": "snappymail/app#files",
-          "service": "snappymail",
-          "container": "app",
-          "engine": "files",
-          "kind": "embedded",
-          "path": "/var/lib/snappymail",
-          "persistence": {
-            "type": "docker-volume",
-            "ref": "./data",
-            "mount": "/var/lib/snappymail"
-          },
-          "port": null,
-          "vm": "oci-E2-f_0",
-          "backup": {
-            "enabled": false,
-            "strategy": null
-          }
-        },
-        {
           "id": "maddy/app#sqlite",
           "service": "maddy",
           "container": "app",
@@ -4876,25 +4807,6 @@
           }
         },
         {
-          "id": "snappymail/app#files",
-          "service": "snappymail",
-          "container": "app",
-          "engine": "files",
-          "kind": "embedded",
-          "path": "/var/lib/snappymail",
-          "persistence": {
-            "type": "docker-volume",
-            "ref": "./data",
-            "mount": "/var/lib/snappymail"
-          },
-          "port": null,
-          "vm": "oci-E2-f_0",
-          "backup": {
-            "enabled": false,
-            "strategy": null
-          }
-        },
-        {
           "id": "maddy/app#sqlite",
           "service": "maddy",
           "container": "app",
@@ -5288,25 +5200,6 @@
           }
         },
         {
-          "id": "snappymail/app#files",
-          "service": "snappymail",
-          "container": "app",
-          "engine": "files",
-          "kind": "embedded",
-          "path": "/var/lib/snappymail",
-          "persistence": {
-            "type": "docker-volume",
-            "ref": "./data",
-            "mount": "/var/lib/snappymail"
-          },
-          "port": null,
-          "vm": "oci-E2-f_0",
-          "backup": {
-            "enabled": false,
-            "strategy": null
-          }
-        },
-        {
           "id": "maddy/app#sqlite",
           "service": "maddy",
           "container": "app",
@@ -5516,7 +5409,7 @@
       "git#gh": [
         {
           "id": "git#gh/cloud-u-android",
-          "service": "gitea",
+          "service": "cloud-cgc-pub-mcp",
           "container": null,
           "engine": "git",
           "kind": "git-remote",
@@ -5525,8 +5418,8 @@
           "visibility": "public",
           "fork": false,
           "pushed_at": "2026-08-31T12:30:38Z",
-          "indexed": false,
-          "local_dir": null,
+          "indexed": true,
+          "local_dir": "cloud-u-android",
           "mirrored": true,
           "persistence": {
             "type": "git",
@@ -6823,6 +6716,13 @@
           "arch": "x86_64",
           "wg_ip": null,
           "provider": "e2-micro"
+        },
+        {
+          "id": "gcp-L4-e_0",
+          "alias": "gcp-gpu-embed",
+          "arch": "x86_64",
+          "wg_ip": null,
+          "provider": "g2-standard-4"
         },
         {
           "id": "vast-RTX-p_0",
