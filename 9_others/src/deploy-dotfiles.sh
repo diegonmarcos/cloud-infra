@@ -52,7 +52,6 @@ json_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.a
 json_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String(m.targets[process.argv[2]]))' "$1" "$2"; }
 json_root_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(Object.keys(m.root_targets||{}).join(" "))' "$1"; }
 json_root_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String(m.root_targets[process.argv[2]]))' "$1" "$2"; }
-json_sot_source()  { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String((m.sot_sources||{})[process.argv[2]]||""))' "$1" "$2"; }
 
 # ── refresh src/claude/ from the ONE claude SoT ─────────────────────────────
 # Same pattern as the mcp.json refresh below, one tier up: src/ is a GENERATED
@@ -125,38 +124,6 @@ for tool in $TOOLS; do
         continue
     fi
     mkdir -p "$DF_DIST/$tool" "$REPO_ROOT/$target"
-
-    # Refresh src/<tool>/ from its declared source of truth when one is
-    # reachable. This is the root_targets refresh below, one level up, for the
-    # same reason: a committed copy that nothing regenerates drifts, and drift
-    # is invisible here because every copy's own _doc claims to be the shared
-    # file. mcp-auth-headers.sh is the proof — the three copies in this repo
-    # still named cloud-infra-mcp months after the rename to c3-infra-mcp,
-    # while the copy actually deployed into the repos had the new name.
-    #
-    # BY NAME, and only names present on both sides. That is what keeps
-    # settings.json out of it: a deliberate subset mirror of the
-    # machine-independent half of settings.base.json, not a copy of any single
-    # SoT file, and nothing in the SoT is named settings.json. Excluded by
-    # construction rather than by a special case someone must remember to keep.
-    #
-    # No-op when the SoT is not checked out — the portable case. A repo with no
-    # my-ai sibling keeps shipping its committed src/ copy unchanged.
-    _sot_rel=$(json_sot_source "$MANIFEST" "$tool")
-    if [ -n "$_sot_rel" ]; then
-        for _sot_dir in "${CLAUDE_SOT_DIR:-}" "$REPO_ROOT/../cloud-u-linux/$_sot_rel"; do
-            [ -n "$_sot_dir" ] && [ -d "$_sot_dir" ] || continue
-            for _sf in "$_sot_dir"/*; do
-                [ -f "$_sf" ] || continue
-                _name=$(basename "$_sf")
-                [ -f "$DF_SRC/$tool/$_name" ] || continue
-                cmp -s "$_sf" "$DF_SRC/$tool/$_name" && continue
-                cp -f "$_sf" "$DF_SRC/$tool/$_name"
-                log "dotfiles: $tool/$_name refreshed from the SoT ($_sot_dir)"
-            done
-            break
-        done
-    fi
     # -r, so subdirectories come along. Without it `cp -f src/*` silently drops
     # every directory (the error is swallowed by `2>/dev/null || true`), which
     # is how .claude/agents/ deployed as nothing while the log still said
