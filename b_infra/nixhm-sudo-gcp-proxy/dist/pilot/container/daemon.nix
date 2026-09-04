@@ -79,19 +79,57 @@
         $SUDO mv -f "$DAEMON_DEST.tmp" "$DAEMON_DEST"
         echo "[docker-daemon] daemon.json deployed"
 
-        # A changed daemon.json is INERT until dockerd re-reads it — nothing
-        # here reloaded docker, so the youki→runc default-runtime fix silently
-        # did NOT apply on oci-mail until a reboot (2026-07-03). Reload (SIGHUP)
-        # applies the live-reloadable subset without dropping containers; but
-        # runtime-level keys (default-runtime/runtimes) are NOT reloadable — a
-        # full docker restart (reboot / container-init) is required, so say so
-        # loudly instead of leaving the new config silently ineffective.
+        # A changed daemon.json is INERT until dockerd re-reads it, and SIGHUP
+        # (systemctl reload) re-reads only the SHORT documented subset below —
+        # dockerd "Configuration reload behavior". Every other key (userland-proxy,
+        # bridge/MTU/DNS, iptables, storage-driver, default-address-pools,
+        # log-driver…) keeps the value the daemon BOOTED with, indefinitely.
+        # That is how 33d5abccc (userland-proxy: true) was silently ineffective
+        # fleet-wide: the file was right, drift checks passed, and oci-apps was
+        # still broken on all 10 published ports while oci-analytics ran an
+        # 11-day-old daemon against a daemon.json rewritten 2026-09-05 20:42.
+        # So diff the KEYS and pick reload vs restart accordingly.
+        #
+        # default-runtime/runtimes appear in Docker's documented reload list but
+        # are deliberately EXCLUDED here: the 2026-07-03 oci-mail youki incident
+        # showed a SIGHUP does not actually change the runtime in use. Anything
+        # not proven reloadable belongs on the restart side.
+        RELOADABLE='["allow-nondistributable-artifacts","authorization-plugins","debug","features","insecure-registries","labels","live-restore","max-concurrent-downloads","max-concurrent-uploads","max-download-attempts","registry-mirrors","shutdown-timeout"]'
+        if printf '%s' "$DJOLD" | ${pkgs.jq}/bin/jq -e . >/dev/null 2>&1; then
+          DIRTY=$(printf '%s\n%s\n' "$DJOLD" "$DJNEW" | ${pkgs.jq}/bin/jq -s -r --argjson ok "$RELOADABLE" '
+            .[0] as $o | .[1] as $n
+            | [ (($o|keys) + ($n|keys) | unique)[]
+                | select(($o[.] // null) != ($n[.] // null))
+                | select(([.] - $ok) | length > 0) ]
+            | join(" ")')
+        else
+          # No parseable previous config = assume the daemon is running something
+          # else entirely.
+          DIRTY="(no parseable previous daemon.json)"
+        fi
+
         if $SUDO systemctl is-active --quiet docker; then
-          $SUDO systemctl reload docker 2>/dev/null \
-            && echo "[docker-daemon] docker reloaded (live-reloadable settings applied)" \
-            || echo "[docker-daemon] docker reload failed"
-          echo "[docker-daemon] ⚠ default-runtime/runtimes changes need a docker RESTART (reboot / container-init) to take effect — verify 'docker info | grep Default Runtime'" >&2
-          logger -p daemon.warning -t docker-daemon "daemon.json changed — reloaded; runtime-level keys need a docker restart to apply" 2>/dev/null || true
+          if [ -z "$DIRTY" ]; then
+            $SUDO systemctl reload docker 2>/dev/null \
+              && echo "[docker-daemon] docker reloaded (only live-reloadable keys changed)" \
+              || echo "[docker-daemon] docker reload failed"
+          else
+            # live-restore is the ONLY reason a restart is non-disruptive:
+            # containerd-shims survive and containers keep running (proven
+            # 2026-09-05). Query the RUNNING daemon — the file on disk is
+            # precisely the thing that has not been applied yet.
+            LIVE_RESTORE=$($SUDO timeout 15 ${pkgs.docker}/bin/docker info --format '{{.LiveRestoreEnabled}}' 2>/dev/null || echo unknown)
+            if [ "$LIVE_RESTORE" = "true" ]; then
+              echo "[docker-daemon] non-reloadable keys changed ($DIRTY) — restarting docker (live-restore on, containers survive)"
+              $SUDO systemctl restart docker \
+                && echo "[docker-daemon] docker restarted — daemon.json fully applied" \
+                || { echo "[docker-daemon] ✗ docker restart FAILED ($DIRTY still not applied) — journalctl -u docker" >&2
+                     logger -p daemon.err -t docker-daemon "docker restart failed; daemon.json not applied" 2>/dev/null || true; }
+            else
+              echo "[docker-daemon] ✗ REFUSING docker restart: live-restore is '$LIVE_RESTORE' on the running daemon — a restart would KILL every container. NOT applied: $DIRTY" >&2
+              logger -p daemon.err -t docker-daemon "daemon.json changed ($DIRTY) but live-restore is not enabled — restart refused, config NOT applied" 2>/dev/null || true
+            fi
+          fi
         fi
       fi
       ) || echo "[docker-daemon] FAILED — see errors above, activation continues"

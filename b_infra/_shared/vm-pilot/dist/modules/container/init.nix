@@ -133,6 +133,12 @@ in {
     ExecReload=/bin/kill -s HUP $MAINPID
     Restart=always
     RestartSec=5
+    # systemd's 45s default is TOO SHORT on the 944MB E2 Micros: containerd alone
+    # needs ~16s there, and every timed-out attempt ORPHANS a containerd that
+    # slows the next one — gcp-proxy hit an 11-restart loop on 2026-09-05 and was
+    # only rescued by a hand-written /run/systemd/system/docker.service.d/ drop-in,
+    # which lives in tmpfs and dies at reboot. Declared here so it is durable.
+    TimeoutStartSec=600
     # Bounded (was infinity) — 2026-06-19 fd-leak incident hardening. infinity
     # lets dockerd + every container consume up to fs.nr_open, i.e. the whole
     # system fd table; a single container fd leak could then freeze the host the
@@ -182,6 +188,10 @@ in {
     DOLD=$($SUDO cat "$DOCKER_DEST" 2>/dev/null || true)
     if [ "$DNEW" != "$DOLD" ]; then
       echo "$DNEW" | $SUDO tee "$DOCKER_DEST" > /dev/null
+      # Reload HERE, not only at the end of this block: daemon.nix may restart
+      # docker during the same activation, and it must get the new
+      # TimeoutStartSec rather than systemd's 45s default.
+      $SUDO systemctl daemon-reload
       echo "[container-init] docker.service deployed"
     fi
 

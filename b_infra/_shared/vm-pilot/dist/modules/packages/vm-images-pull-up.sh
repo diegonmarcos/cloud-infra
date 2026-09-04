@@ -49,13 +49,32 @@ log() {
 
 die() { log "FATAL: $1"; exit 1; }
 
-# Resolve the directory that contains docker-compose.yml.
-# Accepts the service root; returns root or root/compose/, empty if neither.
-find_compose_dir() {
-  if [ -f "$1/docker-compose.yml" ]; then
-    printf '%s' "$1"
-  elif [ -f "$1/compose/docker-compose.yml" ]; then
-    printf '%s' "$1/compose"
+# Resolve the SERVICE ROOT of a service directory (empty if it has no compose
+# file in either layout).
+#
+# It must stay at the ROOT and drive compose with
+# `-f compose/docker-compose.yml --project-directory .`, never `cd .../compose`:
+# cd'ing INTO compose/ makes compose/ the compose project directory, so compose
+# resolves `env_file: [".secrets"]` and the ./.secrets.d + ./.secrets.json bind
+# mounts against compose/ — while the ship engine scp's all three to the service
+# ROOT (cloud-ship-container-step-deploy-rsync.sh) and itself runs compose with
+# `--project-directory .` there. So EVERY v2-layout service died with
+# "env file /opt/containers/<svc>/compose/.secrets not found"
+# (gha-runner on oci-apps, 2026-09-05), making single-service recreation
+# unusable. Same bug, same fix as c3-infra-api's composeCd (1a87a55d).
+find_service_root() {
+  if [ -f "$1/docker-compose.yml" ] || [ -f "$1/compose/docker-compose.yml" ]; then
+    printf '%s' "${1%/}"
+  fi
+}
+
+# Global compose flags for a service ROOT: v2 layout (compose/) needs the -f +
+# --project-directory pair, v1 layout needs nothing. `if`/`fi` rather than a
+# bare test-and-print so the function exits 0 on BOTH branches — a v1 service
+# must not poison the `&&` chains of its callers.
+compose_flags() {
+  if [ -f "$1/compose/docker-compose.yml" ]; then
+    printf '%s' "-f compose/docker-compose.yml --project-directory ."
   fi
 }
 
@@ -111,14 +130,15 @@ if [ -n "$MANIFEST" ]; then
           PULL_FAIL=$((PULL_FAIL + 1))
         fi
       done
-    elif [ -d "$COMPOSE_PATH" ] && [ -n "$(find_compose_dir "$COMPOSE_PATH")" ]; then
+    elif [ -d "$COMPOSE_PATH" ] && [ -n "$(find_service_root "$COMPOSE_PATH")" ]; then
       # Fallback: extract images from compose and pull individually
       # (docker compose pull spawns heavy Go binary — kills E2 micros)
-      EFF_COMPOSE=$(find_compose_dir "$COMPOSE_PATH")
+      EFF_ROOT=$(find_service_root "$COMPOSE_PATH")
+      C_FLAGS=$(compose_flags "$EFF_ROOT")
       ENV_FLAG=""
-      [ -f "$EFF_COMPOSE/.secrets" ] && ENV_FLAG="--env-file $EFF_COMPOSE/.secrets"
+      [ -f "$EFF_ROOT/.secrets" ] && ENV_FLAG="--env-file $EFF_ROOT/.secrets"
       log "[$IDX] PULL IMAGES: $NAME"
-      if (cd "$EFF_COMPOSE" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
+      if (cd "$EFF_ROOT" && docker compose $C_FLAGS $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
         PULL_OK=$((PULL_OK + 1))
       else
         PULL_FAIL=$((PULL_FAIL + 1))
@@ -142,15 +162,16 @@ if [ -n "$MANIFEST" ]; then
 
     [ -n "$FILTER" ] && [ "$NAME" != "$FILTER" ] && continue
     [ -d "$COMPOSE_PATH" ] || { log "SKIP: $NAME ($COMPOSE_PATH not found)"; continue; }
-    EFF_COMPOSE=$(find_compose_dir "$COMPOSE_PATH")
-    [ -n "$EFF_COMPOSE" ] || { log "SKIP: $NAME (no docker-compose.yml)"; continue; }
+    EFF_ROOT=$(find_service_root "$COMPOSE_PATH")
+    [ -n "$EFF_ROOT" ] || { log "SKIP: $NAME (no docker-compose.yml)"; continue; }
+    C_FLAGS=$(compose_flags "$EFF_ROOT")
     IDX=$((IDX + 1))
 
     ENV_FLAG=""
-    [ -f "$EFF_COMPOSE/.secrets" ] && ENV_FLAG="--env-file $EFF_COMPOSE/.secrets"
+    [ -f "$EFF_ROOT/.secrets" ] && ENV_FLAG="--env-file $EFF_ROOT/.secrets"
 
     log "[$IDX] UP: $NAME"
-    if (cd "$EFF_COMPOSE" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
+    if (cd "$EFF_ROOT" && docker compose $C_FLAGS $ENV_FLAG pull --quiet 2>/dev/null; docker compose $C_FLAGS $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       log "[$IDX] UP OK: $NAME"
       UP_OK=$((UP_OK + 1))
     else
@@ -171,7 +192,7 @@ else
   TOTAL=0
   for dir in "$CONTAINERS_DIR"/*/; do
     [ -d "$dir" ] || continue
-    [ -n "$(find_compose_dir "$dir")" ] || continue
+    [ -n "$(find_service_root "$dir")" ] || continue
     # A retired service keeps its directory (it holds the volume backup written
     # by `build.sh retire`), so presence on disk is not a declaration. Without
     # this the dir is re-discovered every run and the service resurrects long
@@ -196,11 +217,12 @@ else
   for name in $SERVICES; do
     IDX=$((IDX + 1))
     dir="$CONTAINERS_DIR/$name"
-    eff_dir=$(find_compose_dir "$dir")
+    eff_root=$(find_service_root "$dir")
+    c_flags=$(compose_flags "$eff_root")
     ENV_FLAG=""
-    [ -f "$eff_dir/.secrets" ] && ENV_FLAG="--env-file $eff_dir/.secrets"
+    [ -f "$eff_root/.secrets" ] && ENV_FLAG="--env-file $eff_root/.secrets"
     log "[$IDX/$TOTAL] PULL: $name"
-    if (cd "$eff_dir" && docker compose $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
+    if (cd "$eff_root" && docker compose $c_flags $ENV_FLAG config --images 2>/dev/null | sort -u | while read img; do docker pull "$img" 2>/dev/null || true; done); then
       PULL_OK=$((PULL_OK + 1))
     else
       PULL_FAIL=$((PULL_FAIL + 1))
@@ -216,11 +238,12 @@ else
   for name in $SERVICES; do
     IDX=$((IDX + 1))
     dir="$CONTAINERS_DIR/$name"
-    eff_dir=$(find_compose_dir "$dir")
+    eff_root=$(find_service_root "$dir")
+    c_flags=$(compose_flags "$eff_root")
     ENV_FLAG=""
-    [ -f "$eff_dir/.secrets" ] && ENV_FLAG="--env-file $eff_dir/.secrets"
+    [ -f "$eff_root/.secrets" ] && ENV_FLAG="--env-file $eff_root/.secrets"
     log "[$IDX/$TOTAL] UP: $name"
-    if (cd "$eff_dir" && docker compose $ENV_FLAG pull --quiet 2>/dev/null; docker compose $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
+    if (cd "$eff_root" && docker compose $c_flags $ENV_FLAG pull --quiet 2>/dev/null; docker compose $c_flags $ENV_FLAG up -d --no-build --force-recreate 2>&1); then
       UP_OK=$((UP_OK + 1))
     else
       UP_FAIL=$((UP_FAIL + 1))
