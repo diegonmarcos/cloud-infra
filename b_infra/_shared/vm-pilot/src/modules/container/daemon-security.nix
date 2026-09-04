@@ -2,8 +2,11 @@
 #
 # Rules:
 #   no-new-privileges  Containers cannot gain additional privileges via setuid/setgid
-#   userland-proxy     Disabled — forces kernel-level port forwarding only,
-#                      no userland TCP proxy that could bypass firewall rules
+#   userland-proxy     Enabled — daemon-firewall.nix sets iptables = false, so Docker
+#                      never programs DNAT rules for published ports. The userland
+#                      proxy is then the only path from a published port to its
+#                      container. With both disabled dockerd still binds the port,
+#                      but nothing ever accepts: connections hang until they time out.
 #   live-restore       Containers survive daemon restarts (upgrades, crashes)
 #   log caps           10MB × 3 files per container — prevents disk exhaustion
 #   ulimits            File descriptor cap at 65536 (soft + hard)
@@ -12,7 +15,7 @@
 {
   docker.daemon.settings = {
     no-new-privileges = true;
-    userland-proxy = false;
+    userland-proxy = true;
     live-restore = true;
 
     log-driver = "json-file";
