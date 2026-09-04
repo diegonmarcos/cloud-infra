@@ -14,6 +14,13 @@
   ],
   "_never_manage_doc": "Per-machine state, NOT configuration. .obsidian/workspace*.json holds pane ids and layout for one device; .claude/settings.local.json is the documented place for local overrides. Deploy copies file-by-file and never purges the target directory, so these survive untouched — overwriting them would clobber another device's layout on every build.",
   "_deploy_semantics": "Additive per file. dist/dotfiles/<tool>/* is copied over <repo>/<target>/, creating the directory if needed. The target is NEVER emptied first (unlike 9_others' dist purge) precisely because these directories mix managed config with unmanaged machine state.",
+  "sot_sources": {
+    "claude": "da_my-ai/data/claude"
+  },
+  "_sot_sources_doc": "Where src/<tool>/ is REFRESHED FROM before deploy, so what every repo ships is generated rather than hand-kept. Same shape and same reason as the root_targets refresh from 1_cloud-configs/dist/: a copy nothing regenerates drifts, and drift is invisible here because each copy's own _doc claims to be the shared file. mcp-auth-headers.sh proved it — cloud-infra's three copies still said cloud-infra-mcp months after the rename to c3-infra-mcp, while the copy actually deployed into the repos said the new name. Cosmetic that time; the next one would not have been.",
+  "_sot_sources_resolution": "Resolved against $CLAUDE_SOT_DIR first (the override the flakes already use), then <repo>/../cloud-u-linux/<path> for the sibling checkout layout. Both missing = no-op, and the committed src/ copy is used unchanged, so the module stays portable into repos with no my-ai checkout (see _portability).",
+  "_sot_sources_scope": "BY NAME, and only names present in BOTH sides. settings.json is deliberately not refreshed: it is a subset mirror of the machine-independent half of settings.base.json, not a copy of any one SoT file, and nothing in the SoT is named settings.json — so name-matching excludes it by construction rather than by a special case someone has to remember to keep.",
+
   "root_targets": {
     "mcp.json": ".mcp.json",
     "sops.yaml": ".sops.yaml"
