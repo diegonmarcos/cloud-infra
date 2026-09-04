@@ -401,12 +401,30 @@ ENV HOME=/home/${NATIVE_USER}"
             # reads accounts[] from build.json. Without this, the COPY
             # ${COPY_SRC} only copies app_dir contents and build.json is
             # missing at /app/build.json.
+            #
+            # 2026-09-04: the SAME gap applied to cloud-data. Services with
+            # build.include_cloud_data get the JSON pre-staged into src/ by
+            # cloud-ship-ci-builder-dispatch.sh, but nothing ever copied it
+            # INTO the image — COPY ${COPY_SRC} only takes app_dir (src/code)
+            # and the JSON sits one level up in src/. Every consumer resolves
+            # it at /app/<filename> (shared/libs/paths.ts resolveCloudDataPath),
+            # so it was ALWAYS absent at runtime: cloud-cgc-pub-mcp's entire
+            # knowledge_* tool family returned
+            # "ENOENT /app/_cloud-data-consolidated.json", and cloud-infra-mcp's
+            # finops tools rendered an empty topology (0 VMs, $0/mo).
+            # Build context is $SRC_DIR, so the staged files are in reach.
+            INCLUDE_CLOUD_DATA="$(get_config build.include_cloud_data)"
+            CLOUD_DATA_COPY=""
+            if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
+                CLOUD_DATA_COPY="COPY *.json ${WORKDIR_PATH}/"
+            fi
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
 ${APT_LINE}
 WORKDIR ${WORKDIR_PATH}
 COPY ${COPY_SRC} ${WORKDIR_PATH}
 COPY build.json ${WORKDIR_PATH}/build.json
+${CLOUD_DATA_COPY}
 RUN ${NATIVE_CMD}
 ${USER_LINE}
 ${USER_SWITCH}
