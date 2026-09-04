@@ -50,10 +50,21 @@ function main(): void {
     const mcp = d?.mcp;
     if (!mcp) continue;
 
-    // stdio servers run as a local command, not a URL. They cannot be
-    // expressed as a shared project-scoped entry (the binary path is
-    // machine-specific), so they stay out rather than being emitted broken.
-    if (mcp.transport === 'stdio') { skipped.push(`${dir} (stdio)`); continue; }
+    const name = dir.includes('_') ? dir.slice(dir.indexOf('_') + 1) : dir;
+
+    // stdio servers run as a local command, not a URL. A raw binary path would
+    // be machine-specific and this file is committed verbatim into every repo,
+    // so emit one only when build.json declares an mcp.stdio block — those use
+    // ${VAR:-default} indirection and stay portable. Undeclared ones stay out
+    // rather than being emitted broken.
+    if (mcp.transport === 'stdio') {
+      if (mcp.stdio?.command) {
+        servers[name] = { command: mcp.stdio.command, args: mcp.stdio.args ?? [] };
+      } else {
+        skipped.push(`${dir} (stdio, no mcp.stdio block)`);
+      }
+      continue;
+    }
 
     const app   = d?.containers?.app ?? {};
     const proxy = app.proxy ?? {};
@@ -63,7 +74,6 @@ function main(): void {
     }
 
     const endpoint = mcp.endpoint_path ?? '/mcp';
-    const name = dir.includes('_') ? dir.slice(dir.indexOf('_') + 1) : dir;
 
     servers[name] = {
       type: 'http',
