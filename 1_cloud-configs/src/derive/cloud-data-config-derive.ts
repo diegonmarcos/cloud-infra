@@ -599,11 +599,8 @@ function deriveCaddy(c: any): DerivedFile[] {
   }
 
   // Set group metadata
-  const groupMeta: Record<string, { comment: string; fallback?: string; landing_page?: string }> = {
-    "app.diegonmarcos.com": { comment: "App hub -- path-based routing", fallback: 'respond "Not Found" 404' },
-    "api.diegonmarcos.com": { comment: "API hub -- path-based routing to backend APIs", landing_page: "api" },
-    "cloud.diegonmarcos.com": { comment: "Cloud dashboard + spec viewer", landing_page: "cloud" },
-  };
+  const groupMeta: Record<string, { comment: string; landing_page?: string; fallback?: string }> =
+    caddySvcForVm?.proxy?.parent_domain_meta ?? {};
   for (const [pd, meta] of Object.entries(groupMeta)) {
     if (pathGroups[pd]) {
       pathGroups[pd].comment = meta.comment;
