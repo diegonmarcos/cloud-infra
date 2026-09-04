@@ -144,8 +144,8 @@ locals {
       ],
       [
         {
-          key     = r.name
-          name    = r.name
+          key  = r.name
+          name = r.name
           # Per-record `ip` override → default global `proxy_ip`. Lets a
           # single record point somewhere other than the canonical public
           # edge (e.g. `api` → oci-analytics 129.151.228.66 while the
@@ -340,6 +340,21 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnels" {
 resource "cloudflare_email_routing_address" "backup" {
   account_id = local.config.account_id
   email      = local.config.email_routing.backup_email
+}
+
+resource "cloudflare_email_routing_catch_all" "all" {
+  zone_id = var.cloudflare_zone_id
+  name    = local.config.email_routing.catch_all.name
+  enabled = local.config.email_routing.catch_all.enabled
+
+  matcher {
+    type = "all"
+  }
+
+  action {
+    type  = local.config.email_routing.catch_all.action_type
+    value = local.config.email_routing.catch_all.action_value
+  }
 }
 
 resource "cloudflare_email_routing_rule" "rules" {
