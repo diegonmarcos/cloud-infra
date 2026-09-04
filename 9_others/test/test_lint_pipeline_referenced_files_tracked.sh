@@ -42,10 +42,19 @@ while IFS= read -r path; do
         continue
     fi
     printf "  OK  %s\n" "$path"
-done < <(grep -oE 'bash 9_others/(src|dist)/test/[a-z_-]+\.sh' "$LINT" | awk '{print $2}' | sort -u)
+# `9_others/test/`, with src/ and dist/ optional: the pipeline invokes the
+# testers straight out of 9_others/test/, and the older `(src|dist)` group made
+# that middle segment MANDATORY. The pattern matched nothing, EXAMINED stayed 0,
+# and the test reported success while checking not one file. `[a-z_-]` also
+# dropped every name carrying a digit (test_secrets_v2_layout_path.sh).
+done < <(grep -oE 'bash 9_others/(src/|dist/)?test/[a-z0-9_-]+\.sh' "$LINT" | awk '{print $2}' | sort -u)
 
+# Zero references is not "nothing to check" — lint-pipeline.yml runs dozens of
+# these, so an empty set means the pattern above has stopped matching the
+# pipeline, exactly as it had. Fail, rather than pass on an empty set.
 if [ "$EXAMINED" -eq 0 ]; then
-    echo "  (no tester references found in lint-pipeline.yml — nothing to check)"
+    echo "::error::no tester references found in lint-pipeline.yml — the extraction pattern no longer matches the pipeline, so this test verified nothing"
+    exit 1
 fi
 
 if [ "$FAIL" -eq 1 ]; then
