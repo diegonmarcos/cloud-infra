@@ -34,7 +34,7 @@ const DIST_DIR    = path.join(CONFIGS_DIR, 'dist');
 const SOLUTIONS   = path.join(CLOUD_ROOT, 'a_solutions');
 const OUT_FILE    = path.join(DIST_DIR, 'mcp.json');
 
-type Server = { type: string; url: string };
+type Server = { type: string; url: string; headers?: Record<string, string>; headersHelper?: string };
 
 function main(): void {
   const servers: Record<string, Server> = {};
@@ -86,8 +86,42 @@ function main(): void {
       // Mattermost token while sitting behind a plain wg_only gate. Keying on it
       // would attach the Authelia token to a server that neither needs nor
       // accepts it.
+      //
+      // BOTH a static header and the helper, deliberately. Claude Code merges
+      // them as { ...headers, ...headersHelper } — the helper WINS when it
+      // runs — so this is purely additive layering, not a fallback chain:
+      //
+      //   vault host (trusted)   helper runs  → fresh token, overrides below
+      //   container / web / CI   helper SKIPPED → static header is what ships
+      //
+      // The helper alone is not enough, and this is the whole reason
+      // c3-infra-mcp never autoloaded on the web. headersHelper is a COMMAND,
+      // and Claude Code refuses to execute a project-scoped one until the
+      // workspace is trusted ("Security: headersHelper for MCP server '<n>'
+      // executed before trust is confirmed" — cli.js, gated on
+      // scope==='project'||scope==='local'). A web/remote container never
+      // persists trust: hasTrustDialogAccepted stays false for the cloned
+      // path, so the helper is never invoked, the request goes out bare, and
+      // Caddy's @bearer branch 403s. Claude Code then caches the server in
+      // mcp-needs-auth-cache.json and reports "needs authorization" — which
+      // reads like a broken OAuth flow and is not one. The token, the helper
+      // and the gate were all working the entire time.
+      //
+      // Static headers are NOT trust-gated (no command executes), and .mcp.json
+      // IS parsed with expandVars, which expands ${VAR} in `url` and `headers`
+      // for http/sse/ws servers. So the secret still never lands in this file —
+      // only the variable name does.
+      //
+      // The :- default is load-bearing. Without a default an unset variable is
+      // recorded as a MISSING VAR and the literal '${...}' is left in the
+      // header; with it, a machine that has no token sends an empty bearer and
+      // gets the same honest 403 the helper's {} produced, instead of a config
+      // error that hides the server entirely.
       ...(d?.proxy?.primary?.bearer_auth === true
-        ? { headersHelper: 'sh "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-auth-headers.sh"' }
+        ? {
+            headers: { Authorization: 'Bearer ${AUTHELIA_BEARER_TOKEN:-}' },
+            headersHelper: 'sh "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-auth-headers.sh"',
+          }
         : {}),
     };
   }
