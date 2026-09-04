@@ -186,11 +186,20 @@ else
 fi
 
 if [ "$GMAIL_COUNT" -ge 0 ]; then
-  if ! tolerance_ok "$GMAIL_COUNT" "$MADDY_COUNT"; then
+  # A store count of -1 means the count never ran (SSH/docker failure above), not
+  # that the store is empty. Reporting it as a divergence turns a transport blip
+  # into a phantom "behind Gmail by $((GMAIL_COUNT + 1))" data-loss alarm.
+  if [ "$MADDY_COUNT" -lt 0 ]; then
+    echo "::error::maddy count unavailable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("maddy count unavailable (SSH/docker error) — reconciliation inconclusive")
+  elif ! tolerance_ok "$GMAIL_COUNT" "$MADDY_COUNT"; then
     echo "::error::maddy diverges from Gmail: gmail=$GMAIL_COUNT maddy=$MADDY_COUNT"
     FAIL_REASONS+=("maddy behind Gmail by $((GMAIL_COUNT > MADDY_COUNT ? GMAIL_COUNT - MADDY_COUNT : MADDY_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT maddy=$MADDY_COUNT)")
   fi
-  if ! tolerance_ok "$GMAIL_COUNT" "$STALWART_COUNT"; then
+  if [ "$STALWART_COUNT" -lt 0 ]; then
+    echo "::error::stalwart count unavailable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("stalwart count unavailable (SSH/docker error) — reconciliation inconclusive")
+  elif ! tolerance_ok "$GMAIL_COUNT" "$STALWART_COUNT"; then
     echo "::error::stalwart diverges from Gmail: gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT"
     FAIL_REASONS+=("stalwart behind Gmail by $((GMAIL_COUNT > STALWART_COUNT ? GMAIL_COUNT - STALWART_COUNT : STALWART_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT)")
   fi
