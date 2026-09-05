@@ -535,6 +535,17 @@ function deriveCaddy(c: any): DerivedFile[] {
   // introspect-proxy is caddy-internal (no external route — consumed by Caddy's forward_auth)
 
   // ── Path routes: group by parent_domain ──
+  // A proxy block's unauthenticated paths, in either declaration shape:
+  // the `public_paths` array, or the `paths` map's auth:"public" keys.
+  // Union, deduplicated — a service may legitimately use both.
+  const publicPathsOfProxy = (proxy: any): string[] => {
+    const fromArray: string[] = Array.isArray(proxy?.public_paths) ? proxy.public_paths : [];
+    const fromMap: string[] = Object.entries(proxy?.paths ?? {})
+      .filter(([, v]: [string, any]) => v?.auth === "public")
+      .map(([k]) => k);
+    return [...new Set([...fromArray, ...fromMap])];
+  };
+
   const pathGroups: Record<string, { paths: any[]; comment: string; fallback?: string; landing_page?: string }> = {};
 
   for (const [, svc] of Object.entries(services)) {
@@ -551,7 +562,19 @@ function deriveCaddy(c: any): DerivedFile[] {
     pathGroups[pd].paths.push({
       base_path: proxy.base_path,
       ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
-      ...(proxy.public_paths ? { public_paths: proxy.public_paths } : {}),
+      // Two declaration shapes mean the same thing, and BOTH must reach
+      // mkPathRouteGroup or the paths silently end up Authelia-gated:
+      //   public_paths: ["/x/script.js"]            (array)
+      //   paths: { "/x/script.js": { auth: "public" } }   (map)
+      // umami and matomo use the map. It was only ever read by
+      // special.analytics/mkAnalyticsBlock, whose site address carries a
+      // path (`analytics.diegonmarcos.com/matomo`) and so never wins against
+      // the plain-host site block emitted from these path_routes — leaving
+      // the whole block dead and every "public" analytics path answering 302
+      // to auth.diegonmarcos.com, tracking beacons included.
+      ...(publicPathsOfProxy(proxy).length > 0
+        ? { public_paths: publicPathsOfProxy(proxy) }
+        : {}),
       // Fail-closed default (wgOnly): WG-only unless build.json sets wg_only:false.
       // caddyfile.nix mkPathEntry wraps the per-path handle (incl. public_paths)
       // in a `remote_ip 10.0.0.0/24` gate → 403 off-mesh.
