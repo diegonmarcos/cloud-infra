@@ -1,6 +1,48 @@
 # Step: Deploy dist/ to VM via configs image (GHCR) + rsync fallback + manifest cleanup
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
+# ── Transport-error CLASSIFICATION for the secrets scp path ───────────
+# ssh_run_detached and rsync_with_retry already know that exit 255 (ssh) and
+# 12/30 (rsync) mean the LINK dropped rather than the payload being wrong, and
+# they say so out loud ("upload dropped (255) — retry N/5"). The scp calls in
+# step_deploy below did not: they printed a bare ".secrets.d scp failed" and
+# let the ship die with an anonymous `exit 255`, indistinguishable from a real
+# failure of the shipped code. Run 33969346081 went red for exactly that
+# reason, on code that was correct.
+#
+# The fix is NAMING, not retrying. A dropped WireGuard link is a fact to
+# report; stacking another retry layer under the one ssh_with_retry already
+# provides would only make a red ship arrive later, not more correct. So a
+# transport-class failure gets its own log prefix (TRANSPORT:) and its own
+# exit code, and everything else keeps exit 1.
+SHIP_EXIT_TRANSPORT=75   # EX_TEMPFAIL — "the link faulted, re-run the ship"
+
+# scp one secrets artifact, classifying the failure. Both outcomes are FATAL:
+# a warning here was itself a silent skip of the same family this engine was
+# audited for — without .secrets the container comes up with no credentials,
+# and that is not a green deploy.
+#   $1 = human label, rest = scp arguments
+scp_secret() {
+    _ss_label="$1"; shift
+    if _ss_err=$(scp $SSH_OPTS "$@" 2>&1); then
+        log "Deployed $_ss_label via scp"
+        return 0
+    else
+        _ss_ec=$?
+    fi
+    # Stderr used to go to /dev/null, which is why a failed upload left nothing
+    # to read but the word "failed".
+    [ -n "$_ss_err" ] && printf '%s\n' "$_ss_err" | sed 's|^|    scp: |'
+    case "$_ss_ec" in
+        255|12|30)
+            log_error "TRANSPORT: $_ss_label scp dropped (exit $_ss_ec) — ssh link fault to $DEPLOY_HOST, NOT a fault in the shipped code; re-run the ship"
+            return "$SHIP_EXIT_TRANSPORT"
+            ;;
+    esac
+    log_error "$_ss_label scp failed (exit $_ss_ec) — secrets are NOT on $DEPLOY_HOST"
+    return 1
+}
+
 step_deploy() {
     CURRENT_STEP="deploy"
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host -- skipping deploy"; return 0; }
@@ -47,14 +89,13 @@ step_deploy() {
         rsync_with_retry -az --compress-level=9 --checksum "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/" 2>/dev/null || true
     fi
 
-    # Secrets: ALWAYS via scp (never in GHCR image)
+    # Secrets: ALWAYS via scp (never in GHCR image).
+    # See scp_secret above for why these are classified and fatal.
     if [ -f "$DIST_DIR/.secrets" ]; then
-        scp $SSH_OPTS "$DIST_DIR/.secrets" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets" 2>/dev/null && \
-            log "Deployed .secrets via scp" || log_warn ".secrets scp failed"
+        scp_secret ".secrets" "$DIST_DIR/.secrets" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets" || return $?
     fi
     if [ -d "$DIST_DIR/.secrets.d" ]; then
-        scp $SSH_OPTS -r "$DIST_DIR/.secrets.d" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets.d" 2>/dev/null && \
-            log "Deployed .secrets.d via scp" || log_warn ".secrets.d scp failed"
+        scp_secret ".secrets.d" -r "$DIST_DIR/.secrets.d" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets.d" || return $?
     fi
 
     log "Deployed to $DEPLOY_HOST:$DEPLOY_PATH"
