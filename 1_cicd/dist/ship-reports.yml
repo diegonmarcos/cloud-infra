@@ -23,11 +23,11 @@ on:
       # shape and never fired either — 2026-07-03).
       #
       # a_solutions is a SUBMODULE: a source change lands here only as a
-      # pointer bump, and GitHub does match the gitlink path against these
-      # globs. Pointer-only pushes still need a workflow_dispatch when the
-      # bump is pushed without touching anything else.
+      # pointer bump — a gitlink at the single path "a_solutions". Watch that
+      # bare path. An "a_solutions/<anything>/**" entry is DEAD and can never
+      # match a bump; the one that used to sit here was removed rather than
+      # left to be cargo-culted into the next workflow.
       - "a_solutions"
-      - "a_solutions/infra-obs_reports/**"
     branches: [main]
   workflow_dispatch:
 

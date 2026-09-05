@@ -31,9 +31,12 @@ name: Ship
 on:
   push:
     paths:
-      - "a_solutions/*/src/**"
-      # the service's own build.json (image/base/compose declaration) lives above src/
-      - "a_solutions/*/build.json"
+      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside
+      # it reaches this repo as a POINTER BUMP — a gitlink at the single path
+      # "a_solutions" — so no a_solutions/<anything> filter (the old
+      # "a_solutions/*/src/**" and "a_solutions/*/build.json" pair) can ever
+      # match again. Watch the gitlink itself instead.
+      - "a_solutions"
       # 1_cloud-configs/dist/build-*.json are the regenerated config files that
       # services in a_solutions/*/src/ symlink to (e.g.
       # bb-sec_caddy/src/build-caddy.json → ../../../1_cloud-configs/dist/build-caddy.json).
@@ -97,8 +100,12 @@ jobs:
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
+          # 'a_solutions/' with a trailing slash cannot match a submodule
+          # POINTER BUMP, which git reports as the bare path "a_solutions".
+          # Anchor on a boundary instead, or this gate sets skip=true and the
+          # whole detect job exits before it ever looks at the submodule.
           CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
-              | grep -E '^(a_solutions/|1_cloud-configs/dist/build-)' | head -1 || true)
+              | grep -E '^(a_solutions($|/)|1_cloud-configs/dist/build-)' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::skip — no a_solutions/ or 1_cloud-configs/dist/build-* changes in upstream commit"
@@ -189,13 +196,44 @@ jobs:
               BASE="HEAD~1"
             fi
             echo "detect: diffing $BASE..HEAD"
+            # a_solutions is a SUBMODULE (since 2026-08-27). A change inside it
+            # reaches this repo as a GITLINK bump: git reports the single path
+            # "a_solutions", never "a_solutions/<svc>/...". The old pathspecs
+            # ('a_solutions/*/src/**' + 'a_solutions/*/build.json') therefore
+            # matched NOTHING on a pointer bump — CHANGED_DIRS came back empty,
+            # the push branch took its empty-matrix early exit, and the run went
+            # green having shipped nothing. This is the SAME dead-pathspec rule
+            # that killed the on.push.paths filters: it applies to
+            # `git diff -- <pathspec>` exactly as it does to a workflow trigger.
+            # Resolve the two gitlink SHAs and diff INSIDE the submodule.
+            SUB_CHANGED=""
+            if [ -n "$(git diff --name-only "$BASE" HEAD -- a_solutions)" ]; then
+              OLD_SUB=$(git rev-parse "$BASE:a_solutions" 2>/dev/null || true)
+              NEW_SUB=$(git rev-parse "HEAD:a_solutions" 2>/dev/null || true)
+              # An unresolvable SHA must NEVER degrade to an empty diff — that
+              # silent-nothing is the exact failure this block exists to kill.
+              if [ -z "$OLD_SUB" ] || [ -z "$NEW_SUB" ]; then
+                echo "::error::a_solutions gitlink changed but its SHAs are unresolvable (old='$OLD_SUB' new='$NEW_SUB') — refusing to ship a silent subset"
+                exit 1
+              fi
+              for _sub in "$OLD_SUB" "$NEW_SUB"; do
+                git -C a_solutions cat-file -e "${_sub}^{commit}" 2>/dev/null && continue
+                echo "::error::a_solutions commit ${_sub} is absent from the submodule clone (history too shallow) — refusing to ship a silent subset"
+                exit 1
+              done
+              SUB_CHANGED=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
+              echo "detect: a_solutions ${OLD_SUB}..${NEW_SUB}"
+            fi
+
             # A service's own build.json drives its image (docker.native_build →
             # Dockerfile.native) and compose, yet it sits ABOVE src/. On 2026-08-26
             # a57935adb changed only cloud-cgc-pub-mcp/build.json (new base image +
             # octocode fetch) and this step mapped it to no service: Build/Deploy
             # skipped, run green, consumer never rebuilt.
-            CHANGED_DIRS=$(git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' 'a_solutions/*/build.json' \
-              | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+            # Paths here are submodule-relative ("<svc>/src/...") so the service
+            # name is field 1, not field 2 as it was superproject-relative.
+            CHANGED_DIRS=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|build\.json$)' \
+              | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' || true)
 
             # A service can consume ANOTHER service's src file through a symlink:
             # user-comm_tools-maddy/src/mail-rules-general.json is a symlink to
@@ -205,7 +243,11 @@ jobs:
             # left tools-maddy — where the mail actually lives — serving the old
             # rules, while the run reported success. Same reverse-walk as the
             # dist-consumer case below, but over changed a_solutions src files.
-            SRC_CHANGED=$(git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' 2>/dev/null)
+            # Same gitlink rule as above: derive from the in-submodule diff, then
+            # re-prefix to superproject-relative paths because the symlink walk
+            # below compares these against readlink targets under $PWD.
+            SRC_CHANGED=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/src/' \
+              | sed 's|^|a_solutions/|' || true)
             SRC_CONSUMERS=""
             for _sf in $SRC_CHANGED; do
               _sf_abs="$PWD/$_sf"

@@ -248,15 +248,48 @@ hickory-dns would have fail-greened in exactly the same way.
 Fix: watch `1_cloud-configs/src/**`, and replace all four with the gitlink path
 `a_solutions` (the idiom `ship-reports.yml` already uses).
 
-### STILL OPEN — same dead filters elsewhere
+### CLOSED (2026-09-06) — ship.yml, and the rule was bigger than the trigger
 
-`1_cicd/src/cicd/ship.yml` still carries `a_solutions/...` path filters (lines
-~22 and ~24). They are dead for the same gitlink reason and should be collapsed
-to `a_solutions`. Not changed here to keep this fix scoped.
+`1_cicd/src/cicd/ship.yml`'s dead `on.push.paths` filters are collapsed to the
+bare `a_solutions` gitlink. But fixing the trigger ALONE would have been worse
+than leaving it broken, and that is the lesson worth keeping:
+
+`ship.yml`'s own detect step filtered with the same dead pathspecs —
+`git diff --name-only "$BASE" HEAD -- 'a_solutions/*/src/**' 'a_solutions/*/build.json'`.
+Proven against the real pointer bump `e4f7ee3a2`: the raw diff is the single
+path `a_solutions`, and with those pathspecs it is EMPTY. So a trigger-only fix
+would have made Ship fire, compute `CHANGED_DIRS=""`, take the push branch's
+empty-matrix early exit, and go **green having shipped nothing** — trading a
+visible absence (no run at all) for an invisible falsehood (a green Ship sitting
+next to every pointer bump, looking shipped). Three sites were fixed together:
+
+1. `on.push.paths` — collapsed to `a_solutions`.
+2. detect `CHANGED_DIRS`/`SRC_CHANGED` — now resolve the OLD and NEW gitlink
+   SHAs (`git rev-parse <base>:a_solutions`) and diff INSIDE the submodule.
+   Paths there are submodule-relative, so the service name is field 1, not 2.
+   If either SHA is unresolvable or absent from the submodule clone (shallow
+   history), the step **fails loudly** rather than emitting an empty
+   `CHANGED_DIRS` — an unresolvable SHA must never degrade into the same
+   silent-nothing this fix exists to kill.
+3. the `workflow_run` path-relevance gate — `grep -E '^a_solutions/'` could not
+   match the bare gitlink either (trailing slash); now `^a_solutions($|/)`.
+
+Blast radius, checked before landing: a bare pointer bump can NOT cause a
+fleet-wide deploy. The `services=all`/`vm=all` "ship everything" sentinel
+(`CHANGED_DIRS=""` + `VM_FILTER=""`) exists only in the `workflow_dispatch`
+branch; the push branch treats empty `CHANGED_DIRS` as an early exit. A bump
+that touches nothing service-shaped still ships nothing, correctly.
 
 ### Rule for the next person
 
-Any `on.push.paths` entry of the form `a_solutions/<something>` is DEAD. Watch
-`a_solutions` itself. And never put more than one pathspec in a `git add` whose
-failure you intend to tolerate — `|| true` tolerates the exit code, not the
-abort.
+Any pathspec of the form `a_solutions/<something>` is DEAD — **in
+`on.push.paths` AND in `git diff -- ...`**. A submodule change arrives as a
+gitlink at the single path `a_solutions`; watch that bare path, and to learn
+*what* changed inside, resolve the two gitlink SHAs and diff within the
+submodule. Beware `^a_solutions/` in a grep for the same reason — the bare path
+has no trailing slash.
+
+And never put more than one pathspec in a `git add` whose failure you intend to
+tolerate — `|| true` tolerates the exit code, not the abort. `git add` is
+atomic: one rejected pathspec stages NOTHING. That clause has now cost this
+project twice.
