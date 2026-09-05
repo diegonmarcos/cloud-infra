@@ -717,10 +717,6 @@
       "upstream": "10.0.0.6:3110"
     },
     {
-      "service": "vault-mcp.app",
-      "upstream": "10.0.0.6:3111"
-    },
-    {
       "service": "g-personal-mcp.app",
       "upstream": "10.0.0.6:3106"
     },
@@ -1101,27 +1097,6 @@
       "port": 3110,
       "protocol": "http",
       "upstream": "10.0.0.6:3110",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
-      "service": "cloud-vault-mcp.app",
-      "redirect_to": "https://cloud-vault-mcp-http-3111.app",
-      "container": "cloud-vault-mcp",
-      "container_key": "app",
-      "svc": "cloud-vault-mcp",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "cloud-vault-mcp-http-3111.app",
-      "container": "cloud-vault-mcp",
-      "container_key": "app",
-      "svc": "cloud-vault-mcp",
-      "vm": "oci-A1-f_0",
-      "port": 3111,
-      "protocol": "http",
-      "upstream": "10.0.0.6:3111",
       "source": "containers.app.port"
     },
     {
@@ -2775,16 +2750,6 @@
       "notes": null
     },
     {
-      "host": "vault-mcp.app",
-      "path": null,
-      "upstream": "10.0.0.6:3111",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "g-personal-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3106",
@@ -3264,16 +3229,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-superapp-mcp",
-      "notes": null
-    },
-    {
-      "host": "cloud-vault-mcp-http-3111.app",
-      "path": null,
-      "upstream": "10.0.0.6:3111",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "cloud-vault-mcp",
       "notes": null
     },
     {
