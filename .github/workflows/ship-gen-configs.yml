@@ -16,14 +16,19 @@ on:
   push:
     branches: [main]
     paths:
-      - "a_solutions/*/build.json"
+      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside it
+      # reaches this repo as a POINTER BUMP — a gitlink at the single path
+      # "a_solutions" — so no a_solutions/<anything> filter can ever match again.
+      # The four per-service filters that used to live here
+      # (a_solutions/*/build.json, and infra-sec_caddy / infra-sec_authelia /
+      # infra-net_hickory-dns .../src/**) were dead from that day: renaming or
+      # editing any of those services regenerated nothing and the next Ship went
+      # green having deployed nothing. Watch the gitlink itself instead.
+      - "a_solutions"
       - "config.json"
       - "c_vps/ba-clo_cloudflare/src/main.tf"
       - "c_vps/vps_*/src/main.tf"
       - "b_infra/**/src/*.nix"
-      - "a_solutions/infra-sec_caddy/src/**"
-      - "a_solutions/infra-sec_authelia/src/**"
-      - "a_solutions/infra-net_hickory-dns/src/**"
       # The config tiers, promoted out of the old single 9_others/ directory.
       # (The second entry used to read 1_cicd/dist/1_cicd/src/scripts/**
       # — a doubled path that matched nothing, so script edits never triggered
@@ -31,6 +36,9 @@ on:
       - "0_git/src/**"
       - "0_apps/src/**"
       - "1_cicd/src/**"
+      # The emitter's OWN source tree. Editing the thing that generates every
+      # config used to trigger no regeneration at all.
+      - "1_cloud-configs/src/**"
       - "2_sops/**"
       - "9_others/src/**"
   workflow_dispatch:
@@ -143,8 +151,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eu
-          # Stage every path the engine writes to. Globs that match no files
-          # are silently ignored (|| true on the whole add invocation).
+          # Stage every path the engine writes to.
+          #
+          # `git add` is ATOMIC: if ONE pathspec is rejected, the whole
+          # invocation aborts and stages NOTHING. The `|| true` below used to
+          # sit on a single add that included a_solutions/*/... — and since
+          # a_solutions became a submodule on 2026-08-27 git answered
+          #   fatal: Pathspec 'a_solutions/...' is in submodule 'a_solutions'
+          # so 1_cloud-configs/dist/ was never staged either. `2>/dev/null ||
+          # true` swallowed it and the next line reported the reassuring
+          # "dist/ unchanged — nothing to commit" on EVERY run: a green
+          # pipeline that emitted nothing for weeks.
+          # The a_solutions copies are gone from this list on purpose — they
+          # live in the submodule (cloud-u-containers) and are symlinks into
+          # 1_cloud-configs/dist/ anyway. Add one path at a time so a single
+          # empty glob can never silence the rest.
           # 1_cloud-configs/dist/ is the consolidator's SOLE write target
           # (cloud-data-config-consolidated.ts:48 CLOUD_DATA_DIR). It was
           # missing here, so every run regenerated the master
@@ -154,12 +175,12 @@ jobs:
           # 2026-08-23) never reached the hub's peer list. Same failure mode
           # the block above describes; the materialized a_solutions copies
           # were staged but the file they are copies OF was not.
-          git add 0_git/dist/ 0_apps/dist/ 1_cicd/dist/ 9_others/dist/ \
-                  1_cloud-configs/dist/ \
-                  b_infra/_shared/vm-pilot/dist/ \
-                  b_infra/nixhm-sudo-*/dist/ \
-                  a_solutions/*/src/_cloud-data-consolidated.json \
-                  a_solutions/*/src/build-*.json 2>/dev/null || true
+          for p in 0_git/dist/ 0_apps/dist/ 1_cicd/dist/ 9_others/dist/ \
+                   1_cloud-configs/dist/ \
+                   b_infra/_shared/vm-pilot/dist/ \
+                   b_infra/nixhm-sudo-*/dist/; do
+            git add -- "$p" || echo "::warning::could not stage $p"
+          done
           if git diff --cached --quiet; then
             echo "::notice::dist/ unchanged — nothing to commit"
             exit 0

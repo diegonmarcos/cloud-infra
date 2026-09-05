@@ -202,3 +202,61 @@ from the canonical and commit it. Confirm by inspecting the file the HM `nix bui
 **Engine fixes shipped this investigation:**
 - `dc5cb8c5` — retry HM activation on transient SSH tunnel drop (exit 255).
 - `2c6dce0c` — mount runner workspace so gen-configs commits the regenerated dist (canonical fix).
+
+---
+
+## Round 2 (2026-09-05): the same pipeline fail-greened again, for two new reasons
+
+Symptom: service renamed at source (`user-ai_claude-superset-api` →
+`user-ai_my-ai_claude-api`), a MANUAL gen-configs dispatch (run `33980142706`)
+succeeded and reported `dist/ unchanged — nothing to commit`,
+`1_cloud-configs/dist/build-my-ai_claude-api.json` was never created, and Ship
+run `33980298673` then went GREEN having deployed nothing.
+
+### Cause A — `git add` is ATOMIC, and the commit step staged into a submodule
+
+The commit step ran ONE `git add` over many pathspecs, two of which were
+`a_solutions/*/src/_cloud-data-consolidated.json` and
+`a_solutions/*/src/build-*.json`, ending in `2>/dev/null || true`. Its comment
+claimed "globs that match no files are silently ignored".
+
+That is false. `git add` stages nothing at all if any single pathspec is
+rejected. `a_solutions` became a SUBMODULE on 2026-08-27, so from that day git
+answered `fatal: Pathspec 'a_solutions/...' is in submodule 'a_solutions'` and
+**`1_cloud-configs/dist/` was never staged either**. `2>/dev/null || true` hid
+the fatal, `git diff --cached --quiet` was then trivially true, and every run
+since printed the reassuring `dist/ unchanged — nothing to commit`.
+
+Fix: stage one path per `git add`, and drop the `a_solutions` pathspecs (they
+belong to the cloud-u-containers submodule and are symlinks into
+`1_cloud-configs/dist/` anyway).
+
+### Cause B — the trigger could not see the emitter, or any submodule change
+
+`on.push.paths` did not include `1_cloud-configs/src/**`: editing the emitter's
+own source regenerated nothing.
+
+Worse, it carried FOUR hardcoded `a_solutions/...` filters —
+`a_solutions/*/build.json`, plus per-service
+`a_solutions/infra-sec_caddy/src/**`, `a_solutions/infra-sec_authelia/src/**`,
+`a_solutions/infra-net_hickory-dns/src/**`. **A change inside a submodule
+reaches this repo as a pointer bump: a gitlink at the single path
+`a_solutions`.** No `a_solutions/<anything>` filter can ever match it. All four
+were dead from 2026-08-27, so renaming or editing caddy / authelia /
+hickory-dns would have fail-greened in exactly the same way.
+
+Fix: watch `1_cloud-configs/src/**`, and replace all four with the gitlink path
+`a_solutions` (the idiom `ship-reports.yml` already uses).
+
+### STILL OPEN — same dead filters elsewhere
+
+`1_cicd/src/cicd/ship.yml` still carries `a_solutions/...` path filters (lines
+~22 and ~24). They are dead for the same gitlink reason and should be collapsed
+to `a_solutions`. Not changed here to keep this fix scoped.
+
+### Rule for the next person
+
+Any `on.push.paths` entry of the form `a_solutions/<something>` is DEAD. Watch
+`a_solutions` itself. And never put more than one pathspec in a `git add` whose
+failure you intend to tolerate — `|| true` tolerates the exit code, not the
+abort.
