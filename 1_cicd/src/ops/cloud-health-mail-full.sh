@@ -175,8 +175,15 @@ if [ -f "$MAIL_SCRIPT" ]; then
   MAIL_STATUS=$?
   MAIL_JSON=$(echo "$MAIL_RAW" | tail -1)
   if [ "$MAIL_STATUS" -eq 0 ] && echo "$MAIL_JSON" | jq -e . >/dev/null 2>&1; then
-    MADDY_COUNT=$(echo "$MAIL_JSON" | jq -r '.maddy')
-    STALWART_COUNT=$(echo "$MAIL_JSON" | jq -r '.stalwart')
+    # `jq -r` on a missing key prints the STRING "null", which makes the
+    # `[ "$MADDY_COUNT" -lt 0 ]` guard below a bash arithmetic error rather
+    # than a clean "unavailable". Default and then assert an integer, so an
+    # unparseable count lands on the -1 sentinel instead of leaking through
+    # as something the tolerance check will treat as 0.
+    MADDY_COUNT=$(echo "$MAIL_JSON" | jq -r '.maddy // -1')
+    STALWART_COUNT=$(echo "$MAIL_JSON" | jq -r '.stalwart // -1')
+    [[ "$MADDY_COUNT"    =~ ^-?[0-9]+$ ]] || MADDY_COUNT=-1
+    [[ "$STALWART_COUNT" =~ ^-?[0-9]+$ ]] || STALWART_COUNT=-1
     echo "maddy: $MADDY_COUNT messages · stalwart: $STALWART_COUNT messages"
   else
     echo "::warning::maddy/stalwart count failed: $MAIL_RAW"
