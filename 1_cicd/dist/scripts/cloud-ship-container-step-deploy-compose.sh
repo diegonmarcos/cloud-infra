@@ -379,12 +379,46 @@ PULL_GATE
         ssh_run_detached "$DEPLOY_HOST" "$PAYLOAD" "compose-$(basename "$DEPLOY_PATH")"
     fi
 
-    # Post-hook
+    # ── Post-hook, with a REVISION-SCOPED run receipt ──────────────────
+    # The hook is the only thing that turns freshly-synced config into live
+    # state (stalwart's activate.sh creates the mail accounts). Before this
+    # receipt existed there was NO durable evidence on the VM that it ever
+    # ran for the revision just synced: ssh_run_detached DELETES its remote
+    # /tmp log on success, so a green ship left nothing behind, and the only
+    # log an operator could find was a LEFTOVER one from an earlier run that
+    # never finished. On 2026-09-04 the fixed activate.sh sat on oci-mail
+    # with mtime 23:11 while the newest post-hook log was 19:33 — four hours
+    # stale — and four declared mail accounts did not exist for a day, with
+    # the MX happily accepting their mail.
+    #
+    # Existence is NOT the check. A stale artifact satisfies "a log exists",
+    # which is exactly the trap. The receipt is a token unique to THIS ship
+    # (revision + epoch + pid), written by the remote payload only after the
+    # hook exits 0, into a path the payload wipes first. So the file can only
+    # hold this token if this run's hook actually ran to completion, and any
+    # older receipt is a hard mismatch rather than a pass.
+    #
+    # The revision is the deployed service tree's own sha (a_solutions is a
+    # submodule — that is the sha which defines the hook's contents), with
+    # GITHUB_SHA as the fallback for a stripped checkout.
     if [ -n "$COMPOSE_POST_HOOK" ]; then
-        log "Running post-hook: $COMPOSE_POST_HOOK"
+        _ph_rev="$(git -C "${SERVICE_DIR:-.}" rev-parse --short=12 HEAD 2>/dev/null || true)"
+        [ -n "$_ph_rev" ] || _ph_rev="${GITHUB_SHA:-norev}"
+        _ph_token="${_ph_rev}.$(date +%s).$$"
+        _ph_receipt="$DEPLOY_PATH/.posthook-receipt"
+        log "Running post-hook: $COMPOSE_POST_HOOK (receipt $_ph_token)"
         ssh_run_detached "$DEPLOY_HOST" \
-            "cd $DEPLOY_PATH && chmod +x $COMPOSE_POST_HOOK && ./$COMPOSE_POST_HOOK" \
+            "cd $DEPLOY_PATH && rm -f '$_ph_receipt' && chmod +x $COMPOSE_POST_HOOK && SHIP_REVISION='$_ph_rev' ./$COMPOSE_POST_HOOK && printf '%s\n' '$_ph_token' > '$_ph_receipt'" \
             "posthook-$(basename "$DEPLOY_PATH")"
+        _ph_seen="$(ssh $SSH_OPTS "$DEPLOY_HOST" "cat '$_ph_receipt' 2>/dev/null" 2>/dev/null | tr -d ' \r\n' || true)"
+        if [ "$_ph_seen" != "$_ph_token" ]; then
+            log_error "post-hook receipt MISMATCH on $DEPLOY_HOST:$_ph_receipt"
+            log_error "  expected: $_ph_token"
+            log_error "  found:    ${_ph_seen:-<absent>}"
+            log_error "  → $COMPOSE_POST_HOOK did not run to completion for revision $_ph_rev; the synced config is NOT active."
+            return 1
+        fi
+        log "Post-hook receipt verified for revision $_ph_rev"
     fi
 
     # Verify
