@@ -540,9 +540,18 @@ function deriveCaddy(c: any): DerivedFile[] {
   // Union, deduplicated — a service may legitimately use both.
   const publicPathsOfProxy = (proxy: any): string[] => {
     const fromArray: string[] = Array.isArray(proxy?.public_paths) ? proxy.public_paths : [];
+    const base: string = proxy?.base_path ?? "";
     const fromMap: string[] = Object.entries(proxy?.paths ?? {})
       .filter(([, v]: [string, any]) => v?.auth === "public")
-      .map(([k]) => k);
+      .map(([k]) => k)
+      // Map keys MUST already carry the service's base_path. mkPathEntry emits
+      // each one as a bare `handle <path>` under the PARENT domain, so a key
+      // like c3-services-api's "/docs/json" or fin-api's "/health" would
+      // become a ROOT-level public handle on api.diegonmarcos.com rather than
+      // /c3-services-api/docs/json — the same malformed-declaration trap that
+      // once left matomo's tracking dead. Those two are inert today; keep them
+      // that way rather than promoting a typo into a live root route.
+      .filter((k) => !base || k.startsWith(base + "/") || k === base);
     return [...new Set([...fromArray, ...fromMap])];
   };
 
