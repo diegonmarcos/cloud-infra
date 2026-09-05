@@ -57,10 +57,10 @@ Covers all subsystems: build engine, service deployment pipeline, home-manager V
 │  └──────────┘  │    └──────────┘  │    └──────────────────┘   │
 │       ▲        │                   │           ▲               │
 │       │        │    ┌──────────┐   │           │               │
-│       │        └───►│oci-analy │◄──┘    ┌──────────┐          │
-│       │             │ Matomo   │        │ gcp-t4   │          │
-│       │             │ Dagu     │        │ Ollama   │          │
-│  Cloudflare         └──────────┘        └──────────┘          │
+│       │        └───►│oci-analy │◄──┘  ┌───────────────┐       │
+│       │             │ Matomo   │      │ gcp-gpu-embed │       │
+│       │             │ Dagu     │      │ Ollama        │       │
+│  Cloudflare         └──────────┘      └───────────────┘       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 

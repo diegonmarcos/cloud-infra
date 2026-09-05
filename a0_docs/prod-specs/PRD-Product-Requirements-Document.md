@@ -132,7 +132,7 @@ Commercial cloud services (Google Workspace, iCloud, Notion, etc.) create vendor
 
 | Category | Requirement |
 |----------|------------|
-| **Cost** | $0/month for always-on services. GPU (gcp-t4) is on-demand spot only. |
+| **Cost** | $0/month for always-on services. GPU (gcp-gpu-embed) is on-demand only (not spot). |
 | **Security** | 2FA on all public endpoints. Secrets encrypted at rest (SOPS). Zero trust networking. |
 | **Privacy** | No third-party analytics. Self-hosted alternatives for all services. |
 | **Availability** | Critical services (P0) must survive VM restarts automatically. |

@@ -341,8 +341,6 @@ systemd.services.rpcbind.enable = false;
 | oci-apps | 172.21.0.0/16 | 172.21.0.0/27 | .32, .48, .64, .80, .96, .112 |
 | oci-mail | 172.22.0.0/16 | 172.22.0.0/27 | 172.22.0.32/28 |
 | oci-analytics | 172.23.0.0/16 | 172.23.0.0/27 | .32, .48 |
-| oci-apps-2 | 172.24.0.0/16 | 172.24.0.0/27 | — |
-| gcp-t4 | 172.25.0.0/16 | 172.25.0.0/27 | — |
 
 **Rule**: Services with own DB get isolated /28 network. App container bridges to `apps` via `also = ["apps"]`. DB containers stay on private network ONLY.
 
