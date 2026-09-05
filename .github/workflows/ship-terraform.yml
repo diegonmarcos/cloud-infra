@@ -23,7 +23,11 @@ on:
       - "c_vps/vps_gcloud/src/**"
       - "c_vps/vps_oci/src/**"
       - "c_vps/vps_hetzner/src/**"
-      - "a_solutions/infra-cloud_cloudflare-worker/src/**"
+      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside
+      # it reaches this repo as a POINTER BUMP — a gitlink at the single path
+      # "a_solutions" — so "a_solutions/infra-cloud_cloudflare-worker/src/**"
+      # can never match again. Watch the gitlink itself instead.
+      - "a_solutions"
       - "1_cicd/src/cicd/ship-terraform.yml"
     branches: [main]
   workflow_run:
@@ -72,7 +76,11 @@ jobs:
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
-          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^(c_vps/|a_solutions/infra-cloud_cloudflare-worker/)' | head -1 || true)
+          # 'a_solutions/<svc>/' cannot match a submodule POINTER BUMP, which
+          # git reports as the bare path "a_solutions" — no trailing slash.
+          # Anchor on a boundary instead, or this gate sets skip=true and every
+          # later step is skipped before the submodule is ever inspected.
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^(c_vps/|a_solutions($|/))' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "::notice::skip — no c_vps/ or cloudflare-worker changes in upstream commit"
@@ -100,7 +108,37 @@ jobs:
           set_out gcloud     "$(match '^c_vps/vps_gcloud/src/')"
           set_out oci        "$(match '^c_vps/vps_oci/src/')"
           set_out hetzner    "$(match '^c_vps/vps_hetzner/src/')"
-          set_out cf-worker  "$(match '^a_solutions/infra-cloud_cloudflare-worker/src/')"
+
+          # a_solutions is a SUBMODULE (since 2026-08-27). A change inside it
+          # reaches this repo as a GITLINK bump: git reports the single path
+          # "a_solutions", never "a_solutions/<svc>/...", so the old
+          # '^a_solutions/infra-cloud_cloudflare-worker/src/' match could never
+          # fire on a pointer bump. Fixing only on.push.paths would be WORSE
+          # than the bug — terraform would run with cf-worker=false and go green
+          # having applied nothing. Resolve the two gitlink SHAs and diff INSIDE
+          # the submodule.
+          SUB_DIFF=""
+          if [ -n "$(git diff --name-only HEAD^ HEAD -- a_solutions)" ]; then
+            OLD_SUB=$(git rev-parse --verify --quiet 'HEAD^:a_solutions' || true)
+            NEW_SUB=$(git rev-parse --verify --quiet 'HEAD:a_solutions' || true)
+            # An unresolvable SHA must NEVER degrade to an empty diff — that
+            # silent-nothing is the exact failure this block exists to kill.
+            if [ -z "$OLD_SUB" ] || [ -z "$NEW_SUB" ]; then
+              echo "::error::a_solutions gitlink changed but its SHAs are unresolvable (old='$OLD_SUB' new='$NEW_SUB') — refusing to apply a silent subset"
+              exit 1
+            fi
+            for _sub in "$OLD_SUB" "$NEW_SUB"; do
+              git -C a_solutions cat-file -e "${_sub}^{commit}" 2>/dev/null && continue
+              echo "::error::a_solutions commit ${_sub} is absent from the submodule clone (history too shallow) — refusing to apply a silent subset"
+              exit 1
+            done
+            SUB_DIFF=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
+            echo "detect: a_solutions ${OLD_SUB}..${NEW_SUB}"
+          fi
+          # Paths here are submodule-relative ("<svc>/src/..."), so there is no
+          # "a_solutions/" prefix left to anchor on.
+          match_sub() { echo "$SUB_DIFF" | grep -qE "$1" && echo true || echo false; }
+          set_out cf-worker  "$(match_sub '^infra-cloud_cloudflare-worker/src/')"
 
       # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that
       # cloud-builder's compose.yaml references via env_file:. Without it,
