@@ -931,22 +931,6 @@
         "path": "/health"
       }
     },
-    "claude-superset-api": {
-      "name": "claude-superset-api",
-      "vm": "oci-A1-f_0",
-      "domain": null,
-      "enabled": true,
-      "category": "agi",
-      "ports": {
-        "app": 3117,
-        "ollama": 11436,
-        "headroom": 8788,
-        "proxy": 8789
-      },
-      "health": {
-        "path": "/health"
-      }
-    },
     "cloud-cgc-pub-mcp": {
       "name": "cloud-cgc-pub-mcp",
       "vm": "oci-A1-f_0",
@@ -1016,6 +1000,22 @@
         "headroom": 8890,
         "goosed": 3227,
         "_goosed_doc": "goosed = goose agent ACP/REST+SSE server (goose serve, X-Secret-Key auth, WireGuard-only)"
+      },
+      "health": {
+        "path": "/health"
+      }
+    },
+    "my-ai_claude-api": {
+      "name": "my-ai_claude-api",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "agi",
+      "ports": {
+        "app": 3117,
+        "ollama": 11436,
+        "headroom": 8788,
+        "proxy": 8789
       },
       "health": {
         "path": "/health"
@@ -1670,15 +1670,6 @@
       "dns": "introspect-proxy.app"
     },
     {
-      "service": "claude-superset-api",
-      "dns": "claude-superset-api.app"
-    },
-    {
-      "service": "claude-superset-api",
-      "container": "app",
-      "dns": "claude-superset-api.app"
-    },
-    {
       "service": "cloud-cgc-pub-mcp",
       "dns": "cloud-cgc-pub-mcp.app"
     },
@@ -1712,6 +1703,15 @@
       "service": "my-ai-api",
       "container": "app",
       "dns": "my-ai-api.app"
+    },
+    {
+      "service": "my-ai_claude-api",
+      "dns": "my-ai-claude-api.app"
+    },
+    {
+      "service": "my-ai_claude-api",
+      "container": "app",
+      "dns": "my-ai-claude-api.app"
     },
     {
       "service": "session-memory",
@@ -2115,12 +2115,12 @@
           "ntfy",
           "openobserve",
           "crowdsec",
-          "claude-superset-api",
           "cloud-cgc-pub-mcp",
           "hermes-agent",
           "kg-store",
           "kg-store-pub",
           "my-ai-api",
+          "my-ai_claude-api",
           "session-memory",
           "chat-mattermost",
           "cloud-webmail",
@@ -2682,22 +2682,6 @@
           "path": "/health"
         }
       },
-      "claude-superset-api": {
-        "name": "claude-superset-api",
-        "vm": "oci-A1-f_0",
-        "domain": null,
-        "enabled": true,
-        "category": "agi",
-        "ports": {
-          "app": 3117,
-          "ollama": 11436,
-          "headroom": 8788,
-          "proxy": 8789
-        },
-        "health": {
-          "path": "/health"
-        }
-      },
       "cloud-cgc-pub-mcp": {
         "name": "cloud-cgc-pub-mcp",
         "vm": "oci-A1-f_0",
@@ -2767,6 +2751,22 @@
           "headroom": 8890,
           "goosed": 3227,
           "_goosed_doc": "goosed = goose agent ACP/REST+SSE server (goose serve, X-Secret-Key auth, WireGuard-only)"
+        },
+        "health": {
+          "path": "/health"
+        }
+      },
+      "my-ai_claude-api": {
+        "name": "my-ai_claude-api",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "agi",
+        "ports": {
+          "app": 3117,
+          "ollama": 11436,
+          "headroom": 8788,
+          "proxy": 8789
         },
         "health": {
           "path": "/health"

@@ -1192,32 +1192,6 @@
     },
     {
       "table": "service",
-      "id": "claude_superset_api",
-      "key": "service:claude_superset_api",
-      "properties": {
-        "name": "claude-superset-api",
-        "category": "agi",
-        "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
-        "domain": null,
-        "port": 3117,
-        "vm": "oci-apps",
-        "folder": "user-ai_claude-superset-api"
-      }
-    },
-    {
-      "table": "container",
-      "id": "claude_superset_api",
-      "key": "container:claude_superset_api",
-      "properties": {
-        "name": "claude-superset-api",
-        "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
-        "role": "app",
-        "port": 3117,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "cloud_cgc_pub_mcp",
       "key": "service:cloud_cgc_pub_mcp",
       "properties": {
@@ -1381,6 +1355,32 @@
         "image": "ghcr.io/diegonmarcos/my-ai-api:latest",
         "role": "app",
         "port": 3217,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "my_ai_claude_api",
+      "key": "service:my_ai_claude_api",
+      "properties": {
+        "name": "my-ai_claude-api",
+        "category": "agi",
+        "description": "Claude superset API on oci-apps — one polyglot container: OpenAI /v1 + Ollama /api + Anthropic /v1/messages mimic backed by the subscription `claude` CLI (no metered key), with a vendored Headroom (Apache-2.0) compression hop and a savings dashboard. Successor to kg-bridge; usable as a local/remote fallback. Internal WG-only sidecar, never public.",
+        "domain": null,
+        "port": 3117,
+        "vm": "oci-apps",
+        "folder": "user-ai_my-ai_claude-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "my_ai_claude_api",
+      "key": "container:my_ai_claude_api",
+      "properties": {
+        "name": "my-ai_claude-api",
+        "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
+        "role": "app",
+        "port": 3117,
         "public": false
       }
     },
@@ -2955,17 +2955,6 @@
     },
     {
       "table": "module",
-      "id": "user_ai_claude_superset_api",
-      "key": "module:user_ai_claude_superset_api",
-      "properties": {
-        "name": "user-ai_claude-superset-api",
-        "repo": "cloud",
-        "category": "agi",
-        "service": "claude-superset-api"
-      }
-    },
-    {
-      "table": "module",
       "id": "user_ai_cloud_cgc_pub_mcp",
       "key": "module:user_ai_cloud_cgc_pub_mcp",
       "properties": {
@@ -3028,6 +3017,17 @@
         "repo": "cloud",
         "category": "agi",
         "service": "my-ai-api"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_ai_my_ai_claude_api",
+      "key": "module:user_ai_my_ai_claude_api",
+      "properties": {
+        "name": "user-ai_my-ai_claude-api",
+        "repo": "cloud",
+        "category": "agi",
+        "service": "my-ai_claude-api"
       }
     },
     {
@@ -4315,22 +4315,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:claude_superset_api",
-      "to": "vm:oci_apps",
-      "key": "service:claude_superset_api->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:claude_superset_api",
-      "to": "container:claude_superset_api",
-      "key": "service:claude_superset_api->runs_container->container:claude_superset_api",
-      "properties": {
-        "role": "app"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:cloud_cgc_pub_mcp",
       "to": "vm:oci_apps",
       "key": "service:cloud_cgc_pub_mcp->hosted_on->vm:oci_apps",
@@ -4423,6 +4407,22 @@
       "from": "service:my_ai_api",
       "to": "container:my_ai_api",
       "key": "service:my_ai_api->runs_container->container:my_ai_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:my_ai_claude_api",
+      "to": "vm:oci_apps",
+      "key": "service:my_ai_claude_api->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:my_ai_claude_api",
+      "to": "container:my_ai_claude_api",
+      "key": "service:my_ai_claude_api->runs_container->container:my_ai_claude_api",
       "properties": {
         "role": "app"
       }
@@ -6223,20 +6223,6 @@
     },
     {
       "table": "belongs_to_repo",
-      "from": "module:user_ai_claude_superset_api",
-      "to": "repo:cloud",
-      "key": "module:user_ai_claude_superset_api->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_ai_claude_superset_api",
-      "to": "service:claude_superset_api",
-      "key": "module:user_ai_claude_superset_api->implements->service:claude_superset_api",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
       "from": "module:user_ai_cloud_cgc_pub_mcp",
       "to": "repo:cloud",
       "key": "module:user_ai_cloud_cgc_pub_mcp->belongs_to_repo->repo:cloud",
@@ -6317,6 +6303,20 @@
       "from": "module:user_ai_my_ai_api",
       "to": "service:my_ai_api",
       "key": "module:user_ai_my_ai_api->implements->service:my_ai_api",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_ai_my_ai_claude_api",
+      "to": "repo:cloud",
+      "key": "module:user_ai_my_ai_claude_api->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_my_ai_claude_api",
+      "to": "service:my_ai_claude_api",
+      "key": "module:user_ai_my_ai_claude_api->implements->service:my_ai_claude_api",
       "properties": {}
     },
     {
