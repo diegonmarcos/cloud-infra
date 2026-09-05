@@ -55,7 +55,14 @@ step_compose() {
             fi
             sudo mkdir -p /root/.docker
         '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
-        # Login as root so `sudo docker compose pull` can fetch private GHCR images.
+        # Login as root AND as the deploy user. Docker reads registry auth from
+        # the CALLING user's ~/.docker/config.json, not the daemon's — and
+        # step_compose runs `docker compose pull` WITHOUT sudo. So a root-only
+        # login left compose pulling anonymously: public images worked, every
+        # private one failed `unauthorized` (session-memory,
+        # matrix-mautrix-whatsapp, kg-store, gha-runner). The deploy-user login
+        # also refreshes the stale credential the old unconditional
+        # `docker logout` was there to clear.
         #
         # Detached, not ssh_with_retry: `docker login` does a network round-trip
         # to ghcr.io from the VM and takes ~60s on a loaded/distant host. Held
@@ -71,17 +78,21 @@ step_compose() {
         printf '%s\n' "$GHCR_TOKEN_VAL" \
             | ssh $SSH_OPTS "$DEPLOY_HOST" "umask 077; cat > $_ghcr_tok" || true
         if ssh_run_detached "$DEPLOY_HOST" \
-               "sudo docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1; _rc=\$?; rm -f $_ghcr_tok; exit \$_rc" \
+               "sudo docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1; _rc=\$?; docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1 || _rc=1; rm -f $_ghcr_tok; exit \$_rc" \
                "ghcr-login-$(basename "$DEPLOY_PATH")"; then
             log "GHCR login OK on $DEPLOY_HOST"
         else
             log_warn "GHCR login on $DEPLOY_HOST failed — pulls of PRIVATE ghcr.io images will fail with 'denied' below; public images still work"
             ssh $SSH_OPTS "$DEPLOY_HOST" "rm -f $_ghcr_tok" >/dev/null 2>&1 || true
         fi
+    else
+        # No token available at all — clear stale non-root credentials so public
+        # GHCR images still pull anonymously instead of failing on an expired
+        # ubuntu-user token. Only safe in this branch: when a token IS available
+        # the block above logs the deploy user back in, and logging out here
+        # would re-break every private image pull.
+        ssh_with_retry "$DEPLOY_HOST" "docker logout ghcr.io >/dev/null 2>&1 || true"
     fi
-    # Clear stale non-root docker credentials so public GHCR images pull
-    # anonymously without an expired ubuntu-user token causing "denied".
-    ssh_with_retry "$DEPLOY_HOST" "docker logout ghcr.io >/dev/null 2>&1 || true"
 
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then
