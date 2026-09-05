@@ -1136,6 +1136,10 @@
         "healthcheck_paths": []
       },
       "users": {
+        "42": {
+          "name": "42",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
+        },
         "admin": {
           "name": "me",
           "pass_env": "ME_PASSWORD"
@@ -1150,6 +1154,10 @@
         "mailadmin": {
           "name": "admin",
           "pass_env": "ADMIN_PASSWORD"
+        },
+        "yo": {
+          "name": "yo",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
         }
       },
       "extra_ports": {
@@ -1214,6 +1222,10 @@
         ]
       },
       "users": {
+        "42": {
+          "name": "42",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
+        },
         "admin": {
           "name": "me",
           "pass_env": "ME_PASSWORD"
@@ -1228,6 +1240,10 @@
         "mailadmin": {
           "name": "admin",
           "pass_env": "ADMIN_PASSWORD"
+        },
+        "yo": {
+          "name": "yo",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
         }
       },
       "extra_ports": {
@@ -1756,8 +1772,8 @@
           "repos": [
             "cloud-u-android"
           ],
-          "embed_endpoint": "TBD -- set after the first c_vps/vps_gcloud terraform apply reserves gcp-gpu-embed-ip",
-          "health_url": "TBD -- same address, path /",
+          "embed_endpoint": "http://34.66.107.117:443/v1/embeddings",
+          "health_url": "http://34.66.107.117:443/",
           "embeddings_batch_size": 128,
           "_endpoint_doc": "embed_endpoint/health_url stay TBD placeholders here deliberately -- cgc-db-index.yml sources the real value from a GH Actions repo VARIABLE (vars.GPU_EMBED_API_URL) rather than depending on a build.json edit reaching this repo promptly after every terraform apply, so a stale value here is documentation lag, not a broken pipeline. Update both once the static IP is known (`gcloud compute addresses describe gcp-gpu-embed-ip --region us-central1`) and keep cloud-infra/config.json's gcp-L4-e_0.ip in sync. LOCAL_EMBED_API_KEY (the Caddy bearer token) is never declared here -- it is a GH secret (GPU_EMBED_BEARER_TOKEN) end to end, never build.json."
         }

@@ -60,7 +60,7 @@ set -uo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 REPORT_IMAGE="ghcr.io/diegonmarcos/cloud-data-reports:latest"
 NTFY_URL="${NTFY_URL:-http://10.0.0.6:8090}"
-NTFY_TOPIC="infra_mail-health"
+NTFY_TOPIC="health_report_cloud-mail-health-full"
 # The ntfy alert is best-effort: it must never hold the job. Without these the
 # SSH sat ~10min on a half-open mesh connection before dying on a broken pipe.
 # ConnectTimeout caps the handshake; ServerAlive* kills a silently-dropped
@@ -199,11 +199,20 @@ else
 fi
 
 if [ "$GMAIL_COUNT" -ge 0 ]; then
-  if ! tolerance_ok "$GMAIL_COUNT" "$MADDY_COUNT"; then
+  # A store count of -1 means the count never ran (SSH/docker failure above), not
+  # that the store is empty. Reporting it as a divergence turns a transport blip
+  # into a phantom "behind Gmail by $((GMAIL_COUNT + 1))" data-loss alarm.
+  if [ "$MADDY_COUNT" -lt 0 ]; then
+    echo "::error::maddy count unavailable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("maddy count unavailable (SSH/docker error) — reconciliation inconclusive")
+  elif ! tolerance_ok "$GMAIL_COUNT" "$MADDY_COUNT"; then
     echo "::error::maddy diverges from Gmail: gmail=$GMAIL_COUNT maddy=$MADDY_COUNT"
     FAIL_REASONS+=("maddy behind Gmail by $((GMAIL_COUNT > MADDY_COUNT ? GMAIL_COUNT - MADDY_COUNT : MADDY_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT maddy=$MADDY_COUNT)")
   fi
-  if ! tolerance_ok "$GMAIL_COUNT" "$STALWART_COUNT"; then
+  if [ "$STALWART_COUNT" -lt 0 ]; then
+    echo "::error::stalwart count unavailable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("stalwart count unavailable (SSH/docker error) — reconciliation inconclusive")
+  elif ! tolerance_ok "$GMAIL_COUNT" "$STALWART_COUNT"; then
     echo "::error::stalwart diverges from Gmail: gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT"
     FAIL_REASONS+=("stalwart behind Gmail by $((GMAIL_COUNT > STALWART_COUNT ? GMAIL_COUNT - STALWART_COUNT : STALWART_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT)")
   fi

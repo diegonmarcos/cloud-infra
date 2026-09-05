@@ -611,7 +611,7 @@
       "container_count": 8
     },
     "gcp-L4-e_0": {
-      "ip": "TBD",
+      "ip": "34.66.107.117",
       "specs": {
         "cpu": 4,
         "ram_gb": 16,
@@ -1551,7 +1551,8 @@
         "AWS_ACCESS_KEY_ID",
         "AWS_SECRET_ACCESS_KEY",
         "AWS_DEFAULT_REGION",
-        "C3_TELEGRAM_BOT_TOKEN"
+        "C3_TELEGRAM_BOT_TOKEN",
+        "GITHUB_TOKEN"
       ]
     },
     "cloud-mail-mcp": {
@@ -1619,6 +1620,14 @@
       },
       "declared_ports": {
         "app": 3103
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub"
+        ]
       },
       "proxied_mcps": {
         "_note": "URLs resolved at flake build time from cloud-data services{}. Bridge mode → WG IPs only. Same retry/LRU pattern as cloud-services-mcp.",
@@ -4751,12 +4760,10 @@
             "landing_page": "cloud"
           },
           "mcp.diegonmarcos.com": {
-            "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-            "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /mattermost-mcp/mcp, /mail-mcp/mcp, /g-workspace/mcp"
+            "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients"
           },
           "mail.diegonmarcos.com": {
-            "landing_page": "mymail",
-            "comment": "Mail hub -- landing + /snappy + /maddy + /stalwart"
+            "comment": "Redirect to webmail.diegonmarcos.com"
           }
         },
         "primary": {
@@ -4936,7 +4943,6 @@
         "messages": {
           "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
           "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
-          "mcp_hub_fallback": "MCP Hub — use /g-workspace/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-infra-mcp/mcp, /c3-services-mcp/mcp, /cloud-cgc-pub-mcp/mcp",
           "app_hub_fallback": "Not Found"
         }
       },
@@ -5635,8 +5641,8 @@
               "repos": [
                 "cloud-u-android"
               ],
-              "embed_endpoint": "TBD -- set after the first c_vps/vps_gcloud terraform apply reserves gcp-gpu-embed-ip",
-              "health_url": "TBD -- same address, path /",
+              "embed_endpoint": "http://34.66.107.117:443/v1/embeddings",
+              "health_url": "http://34.66.107.117:443/",
               "embeddings_batch_size": 128,
               "_endpoint_doc": "embed_endpoint/health_url stay TBD placeholders here deliberately -- cgc-db-index.yml sources the real value from a GH Actions repo VARIABLE (vars.GPU_EMBED_API_URL) rather than depending on a build.json edit reaching this repo promptly after every terraform apply, so a stale value here is documentation lag, not a broken pipeline. Update both once the static IP is known (`gcloud compute addresses describe gcp-gpu-embed-ip --region us-central1`) and keep cloud-infra/config.json's gcp-L4-e_0.ip in sync. LOCAL_EMBED_API_KEY (the Caddy bearer token) is never declared here -- it is a GH secret (GPU_EMBED_BEARER_TOKEN) end to end, never build.json."
             }
@@ -7134,6 +7140,10 @@
         ]
       },
       "users": {
+        "42": {
+          "name": "42",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
+        },
         "admin": {
           "name": "me",
           "pass_env": "ME_PASSWORD"
@@ -7148,6 +7158,10 @@
         "mailadmin": {
           "name": "admin",
           "pass_env": "ADMIN_PASSWORD"
+        },
+        "yo": {
+          "name": "yo",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
         }
       },
       "upstream_image": "foxcpp/maddy:0.9",
@@ -7170,7 +7184,8 @@
         "AWS_RELAYUSER",
         "AWS_RELAYPASSWORD",
         "DKIM_PRIVATE_KEY_B64",
-        "ADMIN_PASSWORD"
+        "ADMIN_PASSWORD",
+        "MAIL_DEFAULT_PASSWORD"
       ]
     },
     "stalwart": {
@@ -7384,7 +7399,12 @@
       "recovery_mode": false,
       "upstream_image": "stalwartlabs/stalwart:v0.16.5",
       "timezone": "Europe/Madrid",
+      "_doc_users": "The `admin` entry is the ADMIN PRINCIPAL: src/flake.nix derives adminEmail/adminPassEnv from it and configs/activate.sh authenticates every registry upsert (allowed-ip, MTA routes, throttles) as that account. In v0.16.5 admin-ness is a field on the account object itself — `roles: {\"@type\": \"Admin\"}` — not a separate principal record; an account with roles=User authenticates fine but gets no `urn:stalwart:jmap` entry in its JMAP session's primaryAccounts and can read nothing from the registry. Verified live 2026-09-04: only `me` (roles Admin) and `no-reply` (roles User) existed in Stalwart's store — `mailadmin`/`yo`/`42` were declared here but had NEVER been created, because account creation was not part of the deploy, so those three existed in maddy alone and could not log into cloud-webmail (which authenticates against Stalwart JMAP, not maddy). That is why cloud-mail-mcp's STALWART_ADMIN_USER pointed at admin@diegonmarcos.com and 401'd; it now points at me@diegonmarcos.com. Since 2026-09-05 this list is the single source of truth for BOTH stores: activate.sh Step A creates any missing account via x:Account/set. It is CREATE-ONLY — an existing account is never updated, because secrets are stored hashed (so every ship would blind-reset the password) and because writing roles could demote the only Admin and lock the hook out of the registry. Rotating a password or changing a role on an EXISTING account therefore still needs a deliberate manual x:Account/set update.",
       "users": {
+        "42": {
+          "name": "42",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
+        },
         "admin": {
           "name": "me",
           "pass_env": "ME_PASSWORD"
@@ -7399,6 +7419,10 @@
         "mailadmin": {
           "name": "admin",
           "pass_env": "ADMIN_PASSWORD"
+        },
+        "yo": {
+          "name": "yo",
+          "pass_env": "MAIL_DEFAULT_PASSWORD"
         }
       },
       "_doc_mta_routes": "Outbound SMTP routes for Stalwart's MTA. OCI Free Tier blocks outbound :25/:465/:587 from VMs, so direct MX delivery fails — every route must be a Relay to a paid SMTP service (OCI Email Delivery, AWS SES, etc.). activate.sh maps these into JMAP MtaRoute objects via /jmap/ + the urn:stalwart:jmap capability. Credentials are referenced by env-var NAME only (auth_username_env / auth_secret_env); actual values live in secrets.yaml.",
@@ -7448,7 +7472,8 @@
         "NOREPLY_PASSWORD",
         "OCI_RELAYUSER",
         "OCI_RELAYPASSWORD",
-        "DKIM_PRIVATE_KEY_B64"
+        "DKIM_PRIVATE_KEY_B64",
+        "MAIL_DEFAULT_PASSWORD"
       ]
     },
     "scrappers-api": {
@@ -8883,7 +8908,8 @@
         "ENCRYPTION_KEY",
         "STORAGE_ENDPOINT",
         "STORAGE_ACCESS_KEY_ID",
-        "STORAGE_SECRET_ACCESS_KEY"
+        "STORAGE_SECRET_ACCESS_KEY",
+        "AI_AGENT_INTERNAL_KEY"
       ]
     },
     "revealmd": {
