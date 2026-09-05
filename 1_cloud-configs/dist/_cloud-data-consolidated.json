@@ -168,6 +168,8 @@
         "cloud-mail-mcp",
         "cloud-mattermost-mcp",
         "cloud-services-mcp",
+        "cloud-superapp-mcp",
+        "cloud-vault-mcp",
         "google-personal-mcp",
         "google-workspace-mcp",
         "gha-runner",
@@ -211,7 +213,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 63
+      "container_count": 65
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -812,35 +814,15 @@
       ],
       "merged": {
         "dependencies": {
-          "@modelcontextprotocol/sdk": "^1.12.0",
           "ajv": "latest",
           "ajv-formats": "latest",
           "nunjucks": "latest",
-          "yaml": "latest",
-          "zod": "^3.25.0"
+          "tsx": "latest",
+          "yaml": "latest"
         },
-        "devDependencies": {
-          "@types/node": "^22.0.0",
-          "tsx": "^4.19.0",
-          "typescript": "^5.7.0"
-        }
+        "devDependencies": {}
       },
-      "per_service": [
-        {
-          "service": "cloud-vault-mcp",
-          "folder": "infra-api_cloud-vault-mcp",
-          "category": "data",
-          "dependencies": {
-            "@modelcontextprotocol/sdk": "^1.12.0",
-            "zod": "^3.25.0"
-          },
-          "devDependencies": {
-            "@types/node": "^22.0.0",
-            "tsx": "^4.19.0",
-            "typescript": "^5.7.0"
-          }
-        }
-      ]
+      "per_service": []
     },
     "install": {
       "nix_method": "shell",
@@ -2091,27 +2073,73 @@
     },
     "cloud-superapp-mcp": {
       "category": "app",
-      "vm": "local",
+      "vm": "oci-A1-f_0",
       "folder": "infra-api_cloud-superapp-mcp",
       "description": "MCP + HTTP faces over the Android constellation's on-device debug API (libs:devtools AppDebugServer), reached over ssh. lib-api/lib-mcp shared, one module per app under mcps-apps/, one server process.",
       "enabled": true,
+      "domain": "mcp.diegonmarcos.com",
       "flake": "infra-api_cloud-superapp-mcp",
+      "port": 3110,
+      "dns": "superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
       "containers": {
         "app": {
           "container_name": "cloud-superapp-mcp",
-          "image": "",
-          "public": false
+          "image": "ghcr.io/diegonmarcos/cloud-superapp-mcp:latest",
+          "port": 3110,
+          "port_env": "PORT",
+          "dns": "superapp-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/cloud-superapp-mcp"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
         }
       },
       "container_names": [
         "cloud-superapp-mcp"
       ],
-      "all_ports": [],
-      "all_dns": [],
+      "all_ports": [
+        "3110"
+      ],
+      "all_dns": [
+        "superapp-mcp.app"
+      ],
       "compose": {
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/cloud-superapp-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3110
+      },
+      "ssh": {
+        "uid": 0,
+        "ssh_dir": "/root/.ssh",
+        "keys": [
+          "vault_id_rsa",
+          "vault_id_rsa.pub"
+        ]
       },
       "api": {
         "has_api": false,
@@ -2121,9 +2149,10 @@
         "healthcheck_paths": []
       },
       "mcp": {
-        "has_mcp": false,
-        "mcp_url": null,
-        "transport": "stdio",
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
         "tools_count": 6,
         "resources_count": 0,
         "prompts_count": 0,
@@ -2136,34 +2165,72 @@
           "command": "sh",
           "args": [
             "-c",
-            "\"${MCP_LOCAL_LAUNCH:-$HOME/.claude/mcp-local-launch.sh}\" \"${CLOUD_INFRA_DIR:-$HOME/git/cloud-infra}/a_solutions/infra-api_cloud-superapp-mcp/cloud-superapp-mcp/src/index.ts\""
+            "\"${MCP_LOCAL_LAUNCH:-$HOME/.claude/mcp-local-launch.sh}\" \"${CLOUD_INFRA_DIR:-$HOME/git/cloud-infra}/a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/index.ts\""
           ]
         }
       }
     },
     "cloud-vault-mcp": {
       "category": "data",
-      "vm": "local",
+      "vm": "oci-A1-f_0",
       "folder": "infra-api_cloud-vault-mcp",
       "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
       "enabled": true,
+      "domain": "mcp.diegonmarcos.com",
       "flake": "infra-api_cloud-vault-mcp",
+      "port": 3111,
+      "dns": "vault-mcp.app",
+      "upstream": "10.0.0.6:3111",
       "containers": {
         "app": {
           "container_name": "cloud-vault-mcp",
-          "image": "",
-          "public": false
+          "image": "ghcr.io/diegonmarcos/cloud-vault-mcp:latest",
+          "port": 3111,
+          "port_env": "PORT",
+          "dns": "vault-mcp.app",
+          "public": true,
+          "proxy": {
+            "streaming": true,
+            "type": "path",
+            "parent_domain": "mcp.diegonmarcos.com",
+            "base_path": "/cloud-vault-mcp"
+          },
+          "healthcheck": null,
+          "monitoring": null,
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
         }
       },
       "container_names": [
         "cloud-vault-mcp"
       ],
-      "all_ports": [],
-      "all_dns": [],
+      "all_ports": [
+        "3111"
+      ],
+      "all_dns": [
+        "vault-mcp.app"
+      ],
       "compose": {
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "proxy": {
+        "app_hub": false,
+        "primary": {
+          "streaming": true,
+          "type": "path",
+          "parent_domain": "mcp.diegonmarcos.com",
+          "base_path": "/cloud-vault-mcp",
+          "wg_only": true
+        }
+      },
+      "declared_ports": {
+        "app": 3111
       },
       "api": {
         "has_api": false,
@@ -2173,9 +2240,10 @@
         "healthcheck_paths": []
       },
       "mcp": {
-        "has_mcp": false,
-        "mcp_url": null,
-        "transport": "stdio",
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
         "tools_count": 17,
         "resources_count": 0,
         "prompts_count": 0,
@@ -4585,6 +4653,10 @@
           "parent_domain": "analytics.diegonmarcos.com",
           "base_path": "/umami",
           "auth": "two_factor",
+          "public_paths": [
+            "/umami/script.js",
+            "/umami/api/send"
+          ],
           "paths": {
             "/umami/script.js": {
               "auth": "public"
@@ -11474,6 +11546,18 @@
         "service": "cloud-services-mcp"
       },
       {
+        "name": "superapp-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-superapp-mcp"
+      },
+      {
+        "name": "vault-mcp.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "cloud-vault-mcp"
+      },
+      {
         "name": "g-personal-mcp.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -12354,6 +12438,8 @@
           "cloud-mail-mcp",
           "cloud-mattermost-mcp",
           "cloud-services-mcp",
+          "cloud-superapp-mcp",
+          "cloud-vault-mcp",
           "google-personal-mcp",
           "google-workspace-mcp",
           "gha-runner",
@@ -12428,6 +12514,15 @@
           },
           {
             "name": "cloud-mail-mcp",
+            "uid": 0,
+            "ssh_dir": "/root/.ssh",
+            "keys": [
+              "vault_id_rsa",
+              "vault_id_rsa.pub"
+            ]
+          },
+          {
+            "name": "cloud-superapp-mcp",
             "uid": 0,
             "ssh_dir": "/root/.ssh",
             "keys": [
@@ -12762,6 +12857,16 @@
       },
       "cloud-services-mcp": {
         "dir": "infra-api_cloud-services-mcp",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "cloud-superapp-mcp": {
+        "dir": "infra-api_cloud-superapp-mcp",
+        "vm": "oci-apps",
+        "has_docker": true
+      },
+      "cloud-vault-mcp": {
+        "dir": "infra-api_cloud-vault-mcp",
         "vm": "oci-apps",
         "has_docker": true
       },

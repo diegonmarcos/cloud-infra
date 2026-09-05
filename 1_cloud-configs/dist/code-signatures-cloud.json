@@ -6,25 +6,25 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 3355,
+    "files": 3362,
     "by_lang": {
-      "nix": 447,
+      "nix": 451,
       "sh": 379,
-      "ts": 1120,
+      "ts": 1123,
       "js": 27,
       "py": 848,
       "rust": 534
     },
     "by_role": {
-      "flake": 74,
+      "flake": 76,
       "script": 112,
       "shell": 262,
-      "module": 710,
+      "module": 692,
       "engine": 1,
       "nix-module": 307,
       "python": 843,
-      "compose": 66,
-      "entrypoint": 27,
+      "compose": 68,
+      "entrypoint": 48,
       "mcp-tool": 101,
       "workflow-dag": 2,
       "rust-module": 529,
@@ -481,10 +481,12 @@
       "lang": "sh",
       "role": "script",
       "exports": [
+        "scp_secret()",
         "step_deploy()"
       ],
       "imports": [],
       "symbols": [
+        "scp_secret()",
         "step_deploy()"
       ]
     },
@@ -1534,10 +1536,12 @@
       "lang": "sh",
       "role": "script",
       "exports": [
+        "scp_secret()",
         "step_deploy()"
       ],
       "imports": [],
       "symbols": [
+        "scp_secret()",
         "step_deploy()"
       ]
     },
@@ -4863,6 +4867,7 @@
         "./routes/security.js",
         "./routes/finops.js",
         "./routes/publicLogs.js",
+        "./routes/fleetProfile.js",
         "./routes/metrics.js",
         "./routes/logs.js",
         "./routes/alerts.js",
@@ -4968,6 +4973,35 @@
       ],
       "symbols": [
         "registerFinOpsRoutes(app: FastifyInstance)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_c3-infra-api/src/code/api/routes/fleetProfile.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerFleetProfileRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "node:fs/promises",
+        "node:path",
+        "node:crypto"
+      ],
+      "symbols": [
+        "withinRateLimit(installId: string)",
+        "hashSecret(secret: string, salt: Buffer)",
+        "secretMatches(expectedHex: string, actual: Buffer)",
+        "recordPath(installId: string)",
+        "readRecord(installId: string)",
+        "ensureDir()",
+        "writeRecord(installId: string, record: StoredRecord)",
+        "readIdentity(req: FastifyRequest)",
+        "verify(record: StoredRecord, secret: string)",
+        "isNonBlankString(v: unknown)",
+        "validateDocument(body: unknown)",
+        "registerFleetProfileRoutes(app: FastifyInstance)",
+        "begin(req: FastifyRequest, reply: FastifyReply)"
       ]
     },
     {
@@ -6246,7 +6280,8 @@
         "retries",
         "start_period",
         "octocode_repos",
-        "c3_public_logs"
+        "c3_public_logs",
+        "c3_fleet_profiles"
       ]
     },
     {
@@ -10406,9 +10441,9 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/cloud-superapp-api/src/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-api/src/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [],
       "imports": [
         "node:http",
@@ -10423,9 +10458,30 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/cloud-superapp-mcp/src/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/http.ts",
       "lang": "ts",
       "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "../../lib-mcp/src/tools.js",
+        "../../lib-mcp/src/registry.js"
+      ],
+      "symbols": [
+        "createMcpServer()",
+        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
+        "initSession(port: number)",
+        "startMcpHttpServer(port: number = 3110)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
       "exports": [],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -10439,7 +10495,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/cloud-superapp-mcp/src/test-superapp-mcp.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/test-superapp-mcp.ts",
       "lang": "ts",
       "role": "module",
       "exports": [],
@@ -10452,7 +10508,7 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/lib-api/src/contract.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/lib-api/src/contract.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10465,7 +10521,7 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/lib-mcp/src/device.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/lib-mcp/src/device.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10492,7 +10548,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/lib-mcp/src/registry.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/lib-mcp/src/registry.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10509,7 +10565,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/lib-mcp/src/tools.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/lib-mcp/src/tools.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10536,9 +10592,9 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-browser/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-browser/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10548,9 +10604,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-calendar/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-calendar/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10560,9 +10616,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-chat/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-chat/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10572,9 +10628,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-contacts/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-contacts/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10584,9 +10640,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-dialer/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-dialer/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10596,9 +10652,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-ide/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-ide/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10608,9 +10664,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-keyboard/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-keyboard/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10620,9 +10676,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-mail/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-mail/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10632,9 +10688,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-matrix/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-matrix/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10644,9 +10700,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-me/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-me/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10656,9 +10712,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-media-center/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-media-center/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10668,9 +10724,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-nav/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-nav/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10680,9 +10736,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-news/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-news/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10692,9 +10748,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-sheets/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-sheets/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10704,9 +10760,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-superapp/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-superapp/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10716,9 +10772,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-vault/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-vault/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10728,9 +10784,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-wallet/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-wallet/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10740,9 +10796,9 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/infra-api_cloud-superapp-mcp/mcps-apps/cloud-watchdog/index.ts",
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/code/mcps-apps/cloud-watchdog/index.ts",
       "lang": "ts",
-      "role": "module",
+      "role": "entrypoint",
       "exports": [
         "default"
       ],
@@ -10750,6 +10806,71 @@
         "../../lib-mcp/src/registry.js"
       ],
       "symbols": []
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "binariesImage",
+        "vmIp",
+        "port",
+        "services",
+        "cloud-superapp-mcp",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "volumes",
+        "environment",
+        "PORT",
+        "MCP_HTTP_HOST",
+        "SUPERAPP_HOSTS"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-superapp-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "reached",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
     },
     {
       "path": "a_solutions/infra-api_cloud-vault-mcp/build.sh",
@@ -10786,7 +10907,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/config.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/config.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10804,9 +10925,29 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/index.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/http.ts",
       "lang": "ts",
       "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "./tools/meta.js"
+      ],
+      "symbols": [
+        "createMcpServer()",
+        "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
+        "initSession(port: number)",
+        "startMcpHttpServer(port: number = 3111)"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/index.ts",
+      "lang": "ts",
+      "role": "entrypoint",
       "exports": [],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
@@ -10818,7 +10959,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/comms.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/comms.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10833,7 +10974,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/finance.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/finance.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10851,7 +10992,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/health.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/health.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10866,7 +11007,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/identity.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/identity.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10884,7 +11025,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/media.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/media.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10902,7 +11043,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/meta.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/meta.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10923,7 +11064,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/tools/vault.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/tools/vault.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
@@ -10944,7 +11085,7 @@
       ]
     },
     {
-      "path": "a_solutions/infra-api_cloud-vault-mcp/src/vaultwarden.ts",
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/code/vaultwarden.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
@@ -10983,6 +11124,76 @@
         "computeTotp(p: TotpParams, epochSeconds: number)",
         "getTotpCode(service: string)",
         "class VaultwardenNotConfiguredError"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "binariesImage",
+        "vmIp",
+        "port",
+        "services",
+        "cloud-vault-mcp",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "volumes",
+        "environment",
+        "PORT",
+        "MCP_HTTP_HOST",
+        "VAULT_PATH",
+        "CONFIG_PATH"
+      ]
+    },
+    {
+      "path": "a_solutions/infra-api_cloud-vault-mcp/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "identity",
+        "comms",
+        "media",
+        "finance",
+        "health)",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
       ]
     },
     {
@@ -38777,13 +38988,15 @@
       "exports": [
         "_resolve_topology()",
         "log()",
-        "surreal_query()"
+        "surreal_query()",
+        "_field()"
       ],
       "imports": [],
       "symbols": [
         "_resolve_topology()",
         "log()",
-        "surreal_query()"
+        "surreal_query()",
+        "_field()"
       ]
     },
     {
@@ -38899,13 +39112,15 @@
       "exports": [
         "_resolve_topology()",
         "log()",
-        "surreal_query()"
+        "surreal_query()",
+        "_field()"
       ],
       "imports": [],
       "symbols": [
         "_resolve_topology()",
         "log()",
-        "surreal_query()"
+        "surreal_query()",
+        "_field()"
       ]
     },
     {
@@ -72437,14 +72652,14 @@
         "BASE_DOMAIN",
         "USER_CREATION_BLOCK",
         "FOLDER_CREATION_BLOCK",
+        "assertShVars",
+        "CONTAINER_NAME",
         "packages",
         "pkgs",
         "default",
         "srcDir",
         "templates",
-        "extraAssets",
-        "composeSpec",
-        "title"
+        "extraAssets"
       ]
     },
     {

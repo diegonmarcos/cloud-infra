@@ -34,7 +34,7 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
     "nodes": 308,
-    "edges": 416,
+    "edges": 422,
     "by_table": {
       "vm": 4,
       "service": 70,
@@ -386,9 +386,9 @@
         "name": "cloud-superapp-mcp",
         "category": "app",
         "description": "MCP + HTTP faces over the Android constellation's on-device debug API (libs:devtools AppDebugServer), reached over ssh. lib-api/lib-mcp shared, one module per app under mcps-apps/, one server process.",
-        "domain": null,
-        "port": null,
-        "vm": "local",
+        "domain": "mcp.diegonmarcos.com",
+        "port": 3110,
+        "vm": "oci-apps",
         "folder": "infra-api_cloud-superapp-mcp"
       }
     },
@@ -398,10 +398,10 @@
       "key": "container:cloud_superapp_mcp",
       "properties": {
         "name": "cloud-superapp-mcp",
-        "image": "",
+        "image": "ghcr.io/diegonmarcos/cloud-superapp-mcp:latest",
         "role": "app",
-        "port": null,
-        "public": false
+        "port": 3110,
+        "public": true
       }
     },
     {
@@ -412,9 +412,9 @@
         "name": "cloud-vault-mcp",
         "category": "data",
         "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
-        "domain": null,
-        "port": null,
-        "vm": "local",
+        "domain": "mcp.diegonmarcos.com",
+        "port": 3111,
+        "vm": "oci-apps",
         "folder": "infra-api_cloud-vault-mcp"
       }
     },
@@ -424,10 +424,10 @@
       "key": "container:cloud_vault_mcp",
       "properties": {
         "name": "cloud-vault-mcp",
-        "image": "",
+        "image": "ghcr.io/diegonmarcos/cloud-vault-mcp:latest",
         "role": "app",
-        "port": null,
-        "public": false
+        "port": 3111,
+        "public": true
       }
     },
     {
@@ -3820,6 +3820,13 @@
       }
     },
     {
+      "table": "hosted_on",
+      "from": "service:cloud_superapp_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_superapp_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
       "table": "runs_container",
       "from": "service:cloud_superapp_mcp",
       "to": "container:cloud_superapp_mcp",
@@ -3827,6 +3834,13 @@
       "properties": {
         "role": "app"
       }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_vault_mcp",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_vault_mcp->hosted_on->vm:oci_apps",
+      "properties": {}
     },
     {
       "table": "runs_container",
@@ -4997,6 +5011,24 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:cloud_superapp_mcp",
+      "to": "service:caddy",
+      "key": "service:cloud_superapp_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:cloud_vault_mcp",
+      "to": "service:caddy",
+      "key": "service:cloud_vault_mcp->proxied_by->service:caddy",
+      "properties": {
+        "domain": "mcp.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:google_personal_mcp",
       "to": "service:caddy",
       "key": "service:google_personal_mcp->proxied_by->service:caddy",
@@ -5375,6 +5407,20 @@
       "from": "domain:mcp_diegonmarcos_com",
       "to": "service:cloud_mail_mcp",
       "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_mail_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com",
+      "to": "service:cloud_superapp_mcp",
+      "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_superapp_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:mcp_diegonmarcos_com",
+      "to": "service:cloud_vault_mcp",
+      "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_vault_mcp",
       "properties": {}
     },
     {

@@ -324,6 +324,72 @@
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
     },
+    "cloud-superapp-mcp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3110
+      },
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com",
+      "description": "MCP + HTTP faces over the Android constellation's on-device debug API (libs:devtools AppDebugServer), reached over ssh. lib-api/lib-mcp shared, one module per app under mcps-apps/, one server process.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 6,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Cloud SuperApp MCP",
+        "description": "Discovers every constellation app serving AppDebugServer on the phone (127.0.0.1:38080,38090-38139) and proxies its routes: logcat, crashes, docs, fleet wake, and any app-registered route via superapp_call. App aliases come from mcps-apps/<id>/, so cloud-mail resolves without asking the device.",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0",
+        "_doc_stdio": "How .mcp.json should launch this. Through mcp-local-launch.sh, not `npm start`: the entry is cloud-superapp-mcp/src/index.ts but it imports ../../lib-mcp/src/, and Node walks up from the IMPORTING file — so a node_modules beside the entry alone leaves lib-mcp and every mcps-apps module unresolved (ERR_MODULE_NOT_FOUND on the SDK). The launcher links the solution root, which the walk reaches from all of them, and self-heals if it is missing or dangling. Run through `sh -c` so ${VAR:-default} is expanded by a shell we know does it — the same trick headersHelper already uses in that file. MCP_LOCAL_LAUNCH and CLOUD_INFRA_DIR override the two paths.",
+        "stdio": {
+          "command": "sh",
+          "args": [
+            "-c",
+            "\"${MCP_LOCAL_LAUNCH:-$HOME/.claude/mcp-local-launch.sh}\" \"${CLOUD_INFRA_DIR:-$HOME/git/cloud-infra}/a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/index.ts\""
+          ]
+        }
+      }
+    },
+    "cloud-vault-mcp": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 3111
+      },
+      "vm": "oci-apps",
+      "domain": "mcp.diegonmarcos.com",
+      "description": "MCP server — READ-ONLY personal data access (vault metadata, identity, comms, media, finance, health)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      },
+      "mcp": {
+        "has_mcp": true,
+        "mcp_url": "https://mcp.diegonmarcos.com/mcp",
+        "transport": "streamable-http",
+        "endpoint_path": "/mcp",
+        "tools_count": 17,
+        "resources_count": 0,
+        "prompts_count": 0,
+        "display_name": "Cloud Vault MCP",
+        "description": "READ-ONLY personal data access: vault metadata, identity docs, communications, media, finance, health (redacted).",
+        "auth": "none",
+        "sdk": "@modelcontextprotocol/sdk@^1.12.0"
+      }
+    },
     "google-personal-mcp": {
       "ip": "10.0.0.6",
       "ports": {
