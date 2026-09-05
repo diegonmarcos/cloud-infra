@@ -47,7 +47,7 @@ set -uo pipefail
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 REPORT_IMAGE="ghcr.io/diegonmarcos/cloud-data-reports:latest"
 NTFY_URL="${NTFY_URL:-http://10.0.0.6:8090}"
-NTFY_TOPIC="infra_mail-health"
+NTFY_TOPIC="health_report_cloud-mail-health-full"
 # The ntfy alert is best-effort: it must never hold the job. Without these the
 # SSH sat ~10min on a half-open mesh connection before dying on a broken pipe.
 # ConnectTimeout caps the handshake; ServerAlive* kills a silently-dropped

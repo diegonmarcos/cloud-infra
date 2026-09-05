@@ -5376,6 +5376,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
         "getServicesForVm"
@@ -5394,6 +5395,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
@@ -5906,7 +5908,8 @@
         "fs",
         "path",
         "./audit.js",
-        "./paths.js"
+        "./paths.js",
+        "./async-exec.js"
       ],
       "symbols": [
         "resolveDaguApi()",
@@ -7699,6 +7702,8 @@
         "safeRun(fn: ()",
         "runCli(cmd: string, args: string[], timeout = 30_000)",
         "runCloudflareApi(path: string, jqFilter?: string)",
+        "tokenizeShellLike(command: string)",
+        "gpuQuotaReport()",
         "handleVpsCommand(provider: string, command: string)",
         "runTerraform(provider: string, tfArgs: string[])",
         "runGhcr(action: string, _command: string)",
@@ -7723,11 +7728,16 @@
         "resolveGhRepo()",
         "safeRun(fn: ()",
         "gh(args: string[], timeout = 15_000)",
+        "ghError(stderr: string)",
         "daguFetch(path: string, method = \"GET\", body?: string)",
         "formatTable(headers: string[], rows: string[][])",
         "timeAgo(isoDate: string)",
         "ghaRuns24h(filter?: string)",
         "ghaWorkflows(repo: string = GH_REPO)",
+        "normalizeName(s: string)",
+        "fileName(path: string)",
+        "matchWorkflow(workflows: GhaWorkflow[], wanted: string)",
+        "listWorkflows(workflows: GhaWorkflow[])",
         "mapV2Entry(d: any)",
         "mapV1Entry(d: any)",
         "daguList()",
@@ -7951,6 +7961,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
         "getServicesForVm"
@@ -7969,6 +7980,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
@@ -8481,7 +8493,8 @@
         "fs",
         "path",
         "./audit.js",
-        "./paths.js"
+        "./paths.js",
+        "./async-exec.js"
       ],
       "symbols": [
         "resolveDaguApi()",
@@ -8928,18 +8941,19 @@
       "lang": "ts",
       "role": "module",
       "exports": [
-        "stalwartAdminFetch",
+        "stalwartRegistryGet",
         "listAccounts",
         "listDomains"
       ],
       "imports": [
         "child_process",
         "util",
-        "./config.js"
+        "./config.js",
+        "./jmap.js"
       ],
       "symbols": [
         "sshDockerExec(sshAlias: string, container: string, cmd: string)",
-        "stalwartAdminFetch(path: string, opts: RequestInit = {})",
+        "stalwartRegistryGet(type: string)",
         "listAccounts(server: string)",
         "listDomains(server: string)"
       ]
@@ -8987,6 +9001,7 @@
       "lang": "ts",
       "role": "module",
       "exports": [
+        "doFetch",
         "sendViaJmap",
         "JmapSendMsg"
       ],
@@ -9167,7 +9182,7 @@
         "handle_mail_list_folders({ server: srv, account }: { server: any; account: any })",
         "handle_mail_list_messages({ server: srv, account, folder, limit, page }: { server: any; account: any; folder: any; limit: any; page: any })",
         "handle_mail_read({ server: srv, account, folder, uid }: { server: any; account: any; folder: any; uid: any })",
-        "handle_mail_search({ server: srv, account, folder, from, subject, since, unseen, limit }: { server: any; account: any; folder: any; from: any; subject: any; since: any; unseen: any; limit: any })",
+        "handle_mail_search({ server: srv, account, folder, query, from, subject, since, unseen, limit }: { server: any; account: any; folder: any; query: any; from: any; subject: any; since: any; unseen: any; limit: any })",
         "handle_mail_flag({ server: srv, account, folder, uid, flag, set }: { server: any; account: any; folder: any; uid: any; flag: any; set: any })",
         "handle_mail_move({ server: srv, account, folder, uid, destination }: { server: any; account: any; folder: any; uid: any; destination: any })",
         "handle_mail_delete({ server: srv, account, folder, uid }: { server: any; account: any; folder: any; uid: any })",
@@ -36378,6 +36393,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
         "getServicesForVm"
@@ -36396,6 +36412,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
@@ -36908,7 +36925,8 @@
         "fs",
         "path",
         "./audit.js",
-        "./paths.js"
+        "./paths.js",
+        "./async-exec.js"
       ],
       "symbols": [
         "resolveDaguApi()",
@@ -37571,6 +37589,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
         "getServicesForVm"
@@ -37589,6 +37608,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
@@ -38101,7 +38121,8 @@
         "fs",
         "path",
         "./audit.js",
-        "./paths.js"
+        "./paths.js",
+        "./async-exec.js"
       ],
       "symbols": [
         "resolveDaguApi()",
@@ -72821,9 +72842,9 @@
         "parentLines",
         "foldersLines",
         "usersList",
+        "usersAccounts",
         "adminUser",
-        "adminEmail",
-        "adminPassEnv"
+        "adminEmail"
       ]
     },
     {
@@ -77431,7 +77452,10 @@
         "DAEMON_SRC",
         "DAEMON_DEST",
         "DJNEW",
-        "DJOLD"
+        "DJOLD",
+        "RELOADABLE",
+        "DIRTY",
+        "LIVE_RESTORE"
       ]
     },
     {
@@ -78240,13 +78264,15 @@
       "exports": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ],
       "imports": [],
       "symbols": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ]
     },
     {
@@ -79740,7 +79766,10 @@
         "DAEMON_SRC",
         "DAEMON_DEST",
         "DJNEW",
-        "DJOLD"
+        "DJOLD",
+        "RELOADABLE",
+        "DIRTY",
+        "LIVE_RESTORE"
       ]
     },
     {
@@ -80549,13 +80578,15 @@
       "exports": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ],
       "imports": [],
       "symbols": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ]
     },
     {
@@ -81964,7 +81995,10 @@
         "DAEMON_SRC",
         "DAEMON_DEST",
         "DJNEW",
-        "DJOLD"
+        "DJOLD",
+        "RELOADABLE",
+        "DIRTY",
+        "LIVE_RESTORE"
       ]
     },
     {
@@ -82773,13 +82807,15 @@
       "exports": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ],
       "imports": [],
       "symbols": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ]
     },
     {
@@ -84192,7 +84228,10 @@
         "DAEMON_SRC",
         "DAEMON_DEST",
         "DJNEW",
-        "DJOLD"
+        "DJOLD",
+        "RELOADABLE",
+        "DIRTY",
+        "LIVE_RESTORE"
       ]
     },
     {
@@ -85001,13 +85040,15 @@
       "exports": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ],
       "imports": [],
       "symbols": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ]
     },
     {
@@ -86419,7 +86460,10 @@
         "DAEMON_SRC",
         "DAEMON_DEST",
         "DJNEW",
-        "DJOLD"
+        "DJOLD",
+        "RELOADABLE",
+        "DIRTY",
+        "LIVE_RESTORE"
       ]
     },
     {
@@ -87228,13 +87272,15 @@
       "exports": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ],
       "imports": [],
       "symbols": [
         "log()",
         "die()",
-        "find_compose_dir()"
+        "find_service_root()",
+        "compose_flags()"
       ]
     },
     {
