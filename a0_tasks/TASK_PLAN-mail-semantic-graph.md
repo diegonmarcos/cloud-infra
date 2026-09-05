@@ -23,8 +23,8 @@ Mechanism: mail lands → Stalwart Sieve pipes it to Ollama → LLM returns stru
 | Mail MTA | `aa-sui_tools-stalwart` | oci-mail | Stalwart v0.13, config rendered from `src/templates/config.toml.tpl` |
 | Mail MTA (primary) | `aa-sui_tools-maddy` | oci-mail | Maddy is the inbound truth today; Stalwart runs in shadow mode |
 | Mail MCP (JMAP client for agents) | `aa-sui_mail-mcp` | oci-apps | Multi-account (Maddy + Stalwart + Resend) per MEMORY.md |
-| LLM inference | `ad-agi_ollama` | gcp-t4 (GPU) | primary |
-| LLM inference (fallback) | `ad-agi_ollama-arm` | oci-apps-2 | ARM fallback |
+| LLM inference | `ad-agi_ollama` | gcp-gpu-embed (on-demand L4, bearer-auth HTTPS :443) | primary |
+| LLM inference (fallback) | `ad-agi_ollama-arm` | — | **ON HOLD** — the ARM fallback ran on oci-apps-2, which is decommissioned; no successor host |
 | Code-graph / Octocode MCP | `bc-obs_cloud-cgc-mcp` | oci-apps | Tools: `cgc_octocode_search`, `cgc_octocode_graphrag`, `cgc_octocode_index` |
 | Octocode vector DB | — | oci-apps (named volume) | per MEMORY.md "Octocode vector DB migration" |
 | Stalwart scripts dir | `aa-sui_tools-stalwart/src/code/` *(if present, else create)* | — | |
@@ -46,7 +46,7 @@ Mechanism: mail lands → Stalwart Sieve pipes it to Ollama → LLM returns stru
                                                                         │ HTTP
                                                           ┌─────────────▼──────────────┐
                                                           │  Ollama /v1/chat           │
-                                                          │  (gcp-t4 or oci-apps-2)    │
+                                                          │  (gcp-gpu-embed)           │
                                                           └─────────────┬──────────────┘
                                                  JSON {entities,category,urgency,project}
                                                                         │
@@ -131,15 +131,15 @@ Steps:
 3. Create `src/templates/prompts/email-classifier.md` (system prompt) and `.schema.json` (expected JSON shape).
 4. Extend `src/templates/config.toml.tpl` with the verified Stalwart AI config keys, using `@AI_*@` substitutions.
 5. Extend the Sieve script (`src/code/filter.sieve` or wherever currently lives — verify) to call the classifier and log the result via `setflag` or `vnd.stalwart.log`.
-6. Ensure Ollama is reachable from oci-mail — add a `wg0` route to gcp-t4:11434 if not already (MCP `obs_debug_docker_exec` on oci-mail to curl the endpoint).
+6. Ensure Ollama is reachable from oci-mail — gcp-gpu-embed is not a wg0 peer, so reach it over its bearer-auth HTTPS endpoint on :443 (MCP `obs_debug_docker_exec` on oci-mail to curl the endpoint).
 7. Ship stalwart: `cd aa-sui_tools-tools-stalwart && ./build.sh ship`.
 8. Send a test email to a Stalwart-routed address. Confirm via Stalwart logs the LLM was called and returned valid JSON.
 
 **Tests — Phase 1**:
 - **T1.1**: `jq -e '.ai_pipeline.provider.upstream' dist/build.json | grep -q 11434` (config wired).
-- **T1.2**: `curl -sS http://ollama.app:11434/v1/models` from oci-mail via MCP exec → list contains the pinned model. Fails fast if WG routing to gcp-t4 broken.
+- **T1.2**: `curl -sS http://ollama.app:11434/v1/models` from oci-mail via MCP exec → list contains the pinned model. Fails fast if the route to gcp-gpu-embed is broken.
 - **T1.3**: Inject a synthetic email via `cloud-mail-mcp`'s `mail_send` tool. Within 10s the Stalwart log must show `[sieve] llm classification: {…valid JSON…}` and the schema validates against the schema file.
-- **T1.4**: Timeout path: stop gcp-t4's Ollama (via MCP `devops_service_stop`); send another test email; log must show `llm timeout, fallback=no-op` and delivery must **not** block (mail still lands in inbox).
+- **T1.4**: Timeout path: stop gcp-gpu-embed's Ollama (via MCP `devops_service_stop`); send another test email; log must show `llm timeout, fallback=no-op` and delivery must **not** block (mail still lands in inbox).
 
 ### PHASE 2 — Sidecar writer + shared corpus
 

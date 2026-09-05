@@ -70,24 +70,24 @@ A fully declarative, self-hosted cloud platform running on free-tier VMs (Oracle
 ### 3.2 Technical Context
 
 ```
-                    ┌───────────────────────────────────────┐
-                    │           CLOUD PLATFORM              │
-                    │                                       │
-  Cloudflare ──────►│  gcp-proxy (x86, 1GB)                │
-  (443/TCP)        │  ├── Caddy (reverse proxy)            │
-                    │  ├── Authelia (2FA)                   │
-                    │  ├── Hickory DNS                      │
-                    │  ├── Redis                            │
-                    │  └── Introspect Proxy                 │
-                    │           │ WireGuard                  │
-                    │  ┌───────┼───────┬───────────┐       │
-                    │  ▼       ▼       ▼           ▼       │
-                    │  oci-    oci-    oci-apps    gcp-t4  │
-                    │  mail    analy   (ARM,16GB)  (GPU)   │
-                    │  (1GB)   (1GB)   35 svcs     Ollama  │
-                    │  Mail    Matomo  Apps+API             │
-                    │  SMTP    Dagu    MCP+AI              │
-                    └───────────────────────────────────────┘
+                    ┌────────────────────────────────────────────┐
+                    │           CLOUD PLATFORM                   │
+                    │                                            │
+  Cloudflare ──────►│  gcp-proxy (x86, 1GB)                      │
+  (443/TCP)         │  ├── Caddy (reverse proxy)                 │
+                    │  ├── Authelia (2FA)                        │
+                    │  ├── Hickory DNS                           │
+                    │  ├── Redis                                 │
+                    │  └── Introspect Proxy                      │
+                    │           │ WireGuard                      │
+                    │  ┌───────┼───────┬───────────┐             │
+                    │  ▼       ▼       ▼           ▼             │
+                    │  oci-    oci-    oci-apps    gcp-gpu-embed │
+                    │  mail    analy   (ARM,16GB)  (GPU)         │
+                    │  (1GB)   (1GB)   35 svcs     Ollama        │
+                    │  Mail    Matomo  Apps+API                  │
+                    │  SMTP    Dagu    MCP+AI                    │
+                    └────────────────────────────────────────────┘
 ```
 
 ---
@@ -214,7 +214,7 @@ git push → pre-push hook (git.yaml)
          ▲                               ▲
          │              ┌────────────────┘
   ┌──────────────┐  ┌──────────────┐
-  │oci-analytics │  │   gcp-t4     │
+  │oci-analytics │  │gcp-gpu-embed │
   │  x86 / 1GB   │  │  x86 / 16GB  │
   │  6 services  │  │  1 service   │
   └──────────────┘  └──────────────┘

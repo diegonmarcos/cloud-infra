@@ -236,7 +236,7 @@ openssl s_client -connect 10.0.0.3:993 -servername mail.diegonmarcos.com -brief 
 
 ### A.9.5 Regression
 - Non-mail traffic untouched: `curl -sI https://diegonmarcos.com` → HTTP/2.
-- Other VMs' firewalls unchanged: diff `dist/.local/share/firewall/firewall.sh` before/after for oci-apps / oci-analytics / gcp-t4 → unchanged.
+- Other VMs' firewalls unchanged: diff `dist/.local/share/firewall/firewall.sh` before/after for oci-apps / oci-analytics → unchanged.
 
 ## A.10 Rollback (Phase A)
 
@@ -260,10 +260,10 @@ Revert the merge commit. GHA re-runs — config.json re-opens ports, build.json 
 
 ## B.1 Goal
 
-After Phase A, **one set of WG keys** (wg0) protects every peer on the infrastructure mesh. A leak of oci-mail's wg0 key lets an attacker reach oci-apps, oci-analytics, gcp-t4. A leak of oci-apps' wg0 key lets the attacker reach oci-mail.
+After Phase A, **one set of WG keys** (wg0) protects every peer on the infrastructure mesh. A leak of oci-mail's wg0 key lets an attacker reach oci-apps, oci-analytics. A leak of oci-apps' wg0 key lets the attacker reach oci-mail.
 
 Phase B splits:
-- `wg0` = infrastructure mesh. Peers: gcp-proxy, oci-mail, oci-apps, oci-analytics, gcp-t4. No human devices.
+- `wg0` = infrastructure mesh. Peers: gcp-proxy, oci-mail, oci-apps, oci-analytics. No human devices.
 - `wg-mail` = mail access mesh. Peers: gcp-proxy, oci-mail, human devices. Nothing else reachable from wg-mail.
 
 Leak impact after Phase B:
@@ -284,9 +284,8 @@ New schema in `_cloud-data-consolidated.native.wireguard`:
       "peers": [
         { "name": "gcp-proxy",     "wg_ip": "10.0.0.1", "role": "hub"   },
         { "name": "oci-mail",      "wg_ip": "10.0.0.3", "role": "spoke" },
-        { "name": "oci-apps",      "wg_ip": "10.0.0.4", "role": "spoke" },
-        { "name": "oci-analytics", "wg_ip": "10.0.0.5", "role": "spoke" },
-        { "name": "gcp-t4",        "wg_ip": "10.0.0.6", "role": "spoke" }
+        { "name": "oci-analytics", "wg_ip": "10.0.0.4", "role": "spoke" },
+        { "name": "oci-apps",      "wg_ip": "10.0.0.6", "role": "spoke" }
       ]
     },
     {

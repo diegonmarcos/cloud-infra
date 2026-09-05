@@ -89,8 +89,8 @@
 
 | Service | Domain | VM | Has API | MCP Tool | Spec URL | Notes |
 |---------|--------|-----|---------|----------|----------|-------|
-| ollama | — | gcp-t4 | yes | no | `/api/` | OpenAI-compatible REST API |
-| ollama-arm | — | oci-apps-2 | yes | no | `/api/` | Same |
+| ollama | — | gcp-gpu-embed | yes | no | `/api/` | OpenAI-compatible REST API |
+| ollama-arm | — | — | n/a | no | `/api/` | ON HOLD — ran on oci-apps-2, which is decommissioned; no successor host |
 | rig-agentic | — | oci-apps | yes | no | — | Agentic pipeline API |
 
 ---

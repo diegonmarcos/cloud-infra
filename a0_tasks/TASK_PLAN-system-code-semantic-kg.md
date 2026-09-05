@@ -24,7 +24,7 @@ The agent must traverse **≥5 typed hops** (`LogEntry → EMITTED_BY → Functi
 | **Staleness policy** | same schema file | 48h → stale, 30d → purge |
 | **Octocode MCP (code side)** | `bc-obs_cloud-cgc-mcp` on oci-apps | Tools: `cgc_octocode_{search,graphrag,index}` |
 | **Graph-shaped MCP stubs (future)** | same | `cgc_codegraph_{trace_call_path,impact_analysis,dependencies}` — **this plan implements them** |
-| **Local LLM** | `ad-agi_ollama` (gcp-t4 GPU), `ad-agi_ollama-arm` (oci-apps-2 ARM fallback) | |
+| **Local LLM** | `ad-agi_ollama` (gcp-gpu-embed, on-demand L4 GPU) | `ad-agi_ollama-arm` ARM fallback is ON HOLD — oci-apps-2 is decommissioned, no successor host |
 | **Agentic wrappers** | `ad-agi_rig-agentic-hai-1.5bq4`, `ad-agi_rig-agentic-sonn-14bq8` | |
 | **Infra data sources** | `c3_topology`, `c3_configs`, `c3_deps`, `cloud-data-*.json` | Already normalized; feed the graph |
 | **Reports / logs JSON** | `cloud-data-reports-logs.json`, `cloud-data-sec-scan.json`, `cloud-data-url-health.json` | Already structured; feed the graph |

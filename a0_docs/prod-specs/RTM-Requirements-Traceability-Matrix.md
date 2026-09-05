@@ -26,7 +26,7 @@
 | Security | — | SOPS, secrets.yaml | all services | No plaintext in git |
 | Security | — | WireGuard | all VMs | Mesh connectivity |
 | Security | — | Sauron Lite | all VMs | File integrity check |
-| AI Automation | AI-01 | Ollama, Rig Agentic | oci-apps, gcp-t4 | Model inference |
+| AI Automation | AI-01 | Ollama, Rig Agentic | oci-apps, gcp-gpu-embed | Model inference |
 | AI Automation | AI-02 | C3 MCP, Cloud CGC MCP | oci-apps | MCP tool response |
 | AI Automation | AI-03 | KG Graph | oci-apps | Graph query |
 | AI Automation | AI-04 | Google Workspace MCP | oci-apps | Gmail/Calendar access |

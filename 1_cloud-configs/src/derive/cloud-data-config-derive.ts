@@ -350,7 +350,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // deploy host is itself a wg-public peer, reverse-proxy upstreams to OTHER
   // wg-public peers travel via the public-trust mesh (10.1.0.x) instead of
   // the internal wg0 (10.0.0.x) — keeps blast-radius bounded if the public
-  // edge is compromised. VMs not in wg-public (e.g. gcp-t4) silently fall
+  // edge is compromised. VMs not in wg-public silently fall
   // back to wg0. Zero hardcoded IPs — everything reads cloud-data peers list.
   const wgPublicPeers: Array<{ name: string; wg_ip: string }> = c.wireguard_public?.peers ?? [];
   const aliasToWgPublicIp: Record<string, string> = {};
@@ -777,7 +777,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // ── Internal routes: all services with upstream + dns → Caddy HTTP:80 listener ──
   // Each upstream is rewritten through resolveVmIpForCaddy so that Caddy on
   // a wg-public host (Phase 4: oci-analytics) prefers wg-public IPs for peer
-  // VMs; non-peer VMs (e.g. gcp-t4) keep their wg0 IPs unchanged.
+  // VMs; non-peer VMs keep their wg0 IPs unchanged.
   const internalRoutes: any[] = [];
   for (const [, svc] of Object.entries(services)) {
     if (svc.enabled === false) continue;
@@ -1834,7 +1834,7 @@ function deriveHomeManager(c: any): DerivedFile {
   // Read wg_public_key from each VM's HM build.json (authoritative source for per-VM keys)
   const hmKeysByAlias = new Map<string, string>();
   const HM_DIR = join(CLOUD_ROOT, "b_infra", "home-manager");
-  for (const vmAlias of ["gcp-proxy", "oci-mail", "oci-analytics", "oci-apps", "gcp-t4"]) {
+  for (const vmAlias of ["gcp-proxy", "oci-mail", "oci-analytics", "oci-apps"]) {
     try {
       const buildJsonPath = join(HM_DIR, vmAlias, "build.json");
       if (existsSync(buildJsonPath)) {
