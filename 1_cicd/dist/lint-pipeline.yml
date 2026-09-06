@@ -29,12 +29,25 @@ jobs:
         with:
           submodules: false
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       # Allowlist: `submodules: true` aborts checkout on the first submodule
       # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
       # cloud-master's own .gitmodules is SSH-only). Init just what is used.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - name: Fail on broken symlinks in build contexts

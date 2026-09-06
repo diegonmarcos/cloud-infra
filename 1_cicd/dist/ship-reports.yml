@@ -22,13 +22,17 @@ on:
       # that, "reports/*/src/**" matched a nonexistent reports/<crate>/src/**
       # shape and never fired either — 2026-07-03).
       #
-      # a_solutions is a SUBMODULE: a source change lands here only as a
-      # pointer bump — a gitlink at the single path "a_solutions". Watch that
-      # bare path. An "a_solutions/<anything>/**" entry is DEAD and can never
-      # match a bump; the one that used to sit here was removed rather than
-      # left to be cargo-culted into the next workflow.
-      - "a_solutions"
+      # 2026-09-06: a_solutions stopped being a submodule and became a plain
+      # sibling repository (cloud-u-containers). There is no longer a file OR a
+      # gitlink in this repo for a reports-source change to touch, so every
+      # possible "a_solutions..." entry here is dead — the bare path included.
+      # The reports source is watched from its own repo now, via the
+      # repository_dispatch below. Do not re-add a path filter for it.
+      - "1_cicd/src/cicd/ship-reports.yml"
     branches: [main]
+  # infra-obs_reports/src lives in cloud-u-containers; its pushes arrive here.
+  repository_dispatch:
+    types: [containers-push]
   workflow_dispatch:
 
 permissions:
@@ -40,12 +44,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
+
       # Without the submodules every 1_cloud-configs/src/inputs/builds/*.json
       # symlink dangles (they point into a_solutions/), so the check below
       # reported ~80 "broken" links and failed the run before it built anything.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
       - name: Fail on broken symlinks (source trees only)
         run: |
           set -e
@@ -102,13 +123,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The build context lives in the a_solutions submodule
-      # (cloud-u-containers). A bare checkout leaves it empty and the build
-      # fails "Dockerfile not found". This action routes the SSH-spelled
-      # public submodule URLs over anonymous HTTPS, so no credential needed.
-      - uses: ./.github/actions/init-submodules
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
         with:
-          include: a_solutions
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
 
       - name: Resolve image ref from build.json
         id: meta
@@ -179,9 +209,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/init-submodules
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
         with:
-          include: a_solutions
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
 
       - name: Resolve image ref from build.json
         id: meta

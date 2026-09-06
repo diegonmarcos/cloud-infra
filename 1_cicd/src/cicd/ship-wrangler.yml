@@ -11,13 +11,16 @@ name: "Ship → wrangler"
 on:
   push:
     paths:
-      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside
-      # it reaches this repo as a POINTER BUMP — a gitlink at the single path
-      # "a_solutions" — so "a_solutions/infra-cloud_cloudflare-worker/src/**"
-      # can never match again. Watch the gitlink itself instead.
-      - "a_solutions"
+      # a_solutions is DELIBERATELY ABSENT here. Since 2026-09-06 it is a
+      # separate repository (diegonmarcos/cloud-u-containers), not a submodule,
+      # so a wrangler-service change touches no path in THIS repo and no
+      # `paths:` entry can match it. It arrives on repository_dispatch below.
       - "1_cicd/src/cicd/ship-wrangler.yml"
     branches: [main]
+  # Container-repo pushes. client_payload.{before,after} is the range the
+  # service discovery below diffs inside the a_solutions checkout.
+  repository_dispatch:
+    types: [containers-push]
   workflow_dispatch:
     inputs:
       services:
@@ -46,12 +49,29 @@ jobs:
           submodules: false
           fetch-depth: 0
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
+
       # Allowlist: `submodules: true` aborts checkout on the first submodule
       # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
       # cloud-master's own .gitmodules is SSH-only). Init just what is used.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       # Discover targets from build.json directly (deploy.wrangler == "true",
@@ -74,38 +94,39 @@ jobs:
           INPUT_SERVICES="${{ inputs.services }}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "$INPUT_SERVICES" ] && [ "$INPUT_SERVICES" != "all" ]; then
             SELECTED="$(echo "$INPUT_SERVICES" | tr ',' ' ')"
-          elif [ "${{ github.event_name }}" = "push" ]; then
-            # a_solutions is a SUBMODULE (since 2026-08-27). A change inside it
-            # reaches this repo as a GITLINK bump: git reports the single path
-            # "a_solutions", never "a_solutions/<svc>/...", so the old
-            # "^a_solutions/$svc/src/" grep matched nothing and SELECTED came
-            # back empty. Fixing only on.push.paths would be WORSE than the bug
-            # — the workflow would fire, select no service and go green having
-            # deployed nothing. Resolve the two gitlink SHAs and diff INSIDE it.
-            SUB_DIFF=""
-            if [ -n "$(git diff --name-only HEAD^ HEAD -- a_solutions)" ]; then
-              OLD_SUB=$(git rev-parse --verify --quiet 'HEAD^:a_solutions' || true)
-              NEW_SUB=$(git rev-parse --verify --quiet 'HEAD:a_solutions' || true)
-              # An unresolvable SHA must NEVER degrade to an empty diff — that
-              # silent-nothing is the exact failure this block exists to kill.
-              if [ -z "$OLD_SUB" ] || [ -z "$NEW_SUB" ]; then
-                echo "::error::a_solutions gitlink changed but its SHAs are unresolvable (old='$OLD_SUB' new='$NEW_SUB') — refusing to deploy a silent subset"
-                exit 1
-              fi
-              for _sub in "$OLD_SUB" "$NEW_SUB"; do
-                git -C a_solutions cat-file -e "${_sub}^{commit}" 2>/dev/null && continue
-                echo "::error::a_solutions commit ${_sub} is absent from the submodule clone (history too shallow) — refusing to deploy a silent subset"
-                exit 1
-              done
-              SUB_DIFF=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
-              echo "discover: a_solutions ${OLD_SUB}..${NEW_SUB}"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            # a_solutions is a SEPARATE REPOSITORY (since 2026-09-06). There is
+            # no gitlink here to diff, so the range comes from the dispatch
+            # payload and is diffed inside the a_solutions checkout against its
+            # own history. Degrading an unresolvable SHA to an empty diff would
+            # select no service and go green having deployed nothing.
+            NEW_SUB="${{ github.event.client_payload.after }}"
+            OLD_SUB="${{ github.event.client_payload.before }}"
+            if [ -z "$NEW_SUB" ] || ! git -C a_solutions cat-file -e "${NEW_SUB}^{commit}" 2>/dev/null; then
+              echo "::error::repository_dispatch client_payload.after is missing or absent from the cloud-u-containers checkout (after='$NEW_SUB') — refusing to deploy a silent subset"
+              exit 1
             fi
+            if [ -z "$OLD_SUB" ] \
+               || [ "$OLD_SUB" = "0000000000000000000000000000000000000000" ] \
+               || ! git -C a_solutions cat-file -e "${OLD_SUB}^{commit}" 2>/dev/null; then
+              echo "::warning::client_payload.before unusable (before='$OLD_SUB') — falling back to ${NEW_SUB}^"
+              OLD_SUB=$(git -C a_solutions rev-parse --verify --quiet "${NEW_SUB}^" || true)
+              [ -n "$OLD_SUB" ] || { echo "::error::cannot resolve a base commit for a_solutions — refusing to deploy a silent subset"; exit 1; }
+            fi
+            SUB_DIFF=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
+            echo "discover: a_solutions ${OLD_SUB}..${NEW_SUB}"
             SELECTED=""
-            # Paths are submodule-relative ("<svc>/src/..."), no a_solutions/ prefix.
+            # Paths are a_solutions-repo-relative ("<svc>/src/..."), no prefix.
             for svc in $ALL; do
               echo "$SUB_DIFF" | grep -q "^$svc/src/" && SELECTED="$SELECTED $svc" || true
             done
           else
+            # Reached by a push to THIS repo and by dispatch-with-'all'. The
+            # only surviving push path filter is this workflow's own source, so
+            # "the deploy definition changed → redeploy every wrangler service"
+            # is the intended reading. It used to be a diff-select branch; that
+            # became meaningless once a_solutions left this repo, because a push
+            # here can no longer contain a container change to select from.
             SELECTED="$ALL"
           fi
           SELECTED="$(echo "$SELECTED" | xargs -n1 | sort -u | xargs)"

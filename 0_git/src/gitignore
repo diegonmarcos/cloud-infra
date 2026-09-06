@@ -114,3 +114,16 @@ build.log
 .claude.json.tmp.*
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
+
+# ── Sibling repositories checked out inside this tree ────────────────────────
+## a_solutions is diegonmarcos/cloud-u-containers — a SEPARATE repository, not
+## a submodule (see 0_git/src/gitmodules for the full rationale). CI checks it
+## out at this path with actions/checkout; locally it is a standalone clone.
+##
+## It MUST be ignored. Without this rule the ~85 service directories sit in the
+## working tree as plain untracked files, and any bulk `git add -A` — including
+## the ones the pre-commit hook performs on its own behalf when it regenerates
+## configs — would sweep the entire container fleet back into cloud-infra, which
+## is exactly the coupling the split removed. Untracked is not enough on its
+## own; ignored is.
+/a_solutions/

@@ -37,12 +37,25 @@ jobs:
       WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       # The cross-store reconciliation layer reads count_recent.py and
       # count-since.ts out of a_solutions; a bare checkout leaves the submodule
       # empty and both counts silently skip.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
 
       # SSH below targets WireGuard mesh IPs (10.0.0.4 / 10.0.0.6) — port 22 is
       # firewalled to the mesh, so without wg0 every connection times out.

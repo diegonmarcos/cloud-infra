@@ -19,12 +19,13 @@ name: Ship
 on:
   push:
     paths:
-      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside
-      # it reaches this repo as a POINTER BUMP — a gitlink at the single path
-      # "a_solutions" — so no a_solutions/<anything> filter (the old
-      # "a_solutions/*/src/**" and "a_solutions/*/build.json" pair) can ever
-      # match again. Watch the gitlink itself instead.
-      - "a_solutions"
+      # a_solutions is DELIBERATELY ABSENT from this list and must stay that
+      # way. On 2026-09-06 it stopped being a submodule and became a plain
+      # sibling repository (diegonmarcos/cloud-u-containers) that this repo
+      # merely checks out. Nothing about a container change touches THIS
+      # repository any more — not a file, not a gitlink — so no `paths:`
+      # entry here, bare or globbed, can ever match one. Container changes
+      # arrive on the `repository_dispatch` trigger below instead.
       # 1_cloud-configs/dist/build-*.json are the regenerated config files that
       # services in a_solutions/*/src/ symlink to (e.g.
       # bb-sec_caddy/src/build-caddy.json → ../../../1_cloud-configs/dist/build-caddy.json).
@@ -40,6 +41,15 @@ on:
     workflows: ["Ship → gen-configs (cloud-data)"]
     types: [completed]
     branches: [main]
+  # THE trigger for container changes, replacing the dead "a_solutions"
+  # gitlink path filter. cloud-u-containers'
+  # .github/workflows/dispatch-cloud-infra.yml fires this on every push to its
+  # main and carries the pushed range in client_payload.{before,after}. Those
+  # two SHAs are what per-service change detection diffs — see "Build VM
+  # matrix" below. Without the payload the detect step has no honest base to
+  # diff against and would either ship everything or ship nothing.
+  repository_dispatch:
+    types: [containers-push]
   workflow_dispatch:
     inputs:
       services:
@@ -69,6 +79,26 @@ jobs:
           submodules: false
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin EVERY job to the exact commit the dispatch announced, so the
+          # tree that detect diffed is the tree that build and deploy ship.
+          # Left unpinned, a container push landing mid-run would have detect
+          # decide from commit X while the build job checked out a newer Y —
+          # a silent mismatch between what was detected and what was shipped.
+          # Empty on all other events, which checks out the default branch.
+          ref: ${{ github.event.client_payload.after }}
+
       # Allowlist-based: `--init --recursive` aborts on the first submodule CI
       # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
       # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
@@ -77,26 +107,28 @@ jobs:
       - name: Init submodules (cloud-data + unix)
         uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           recursive: "true"
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
-      # Path-relevance: skip if upstream commit didn't touch a_solutions/
-      # OR 1_cloud-configs/dist/build-*.json (whose changes propagate to symlinked
+      # Path-relevance: skip if the upstream gen-configs commit didn't touch
+      # 1_cloud-configs/dist/build-*.json (whose changes propagate to symlinked
       # consumers in a_solutions/*/src/).
       - name: Path relevance gate
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
-          # 'a_solutions/' with a trailing slash cannot match a submodule
-          # POINTER BUMP, which git reports as the bare path "a_solutions".
-          # Anchor on a boundary instead, or this gate sets skip=true and the
-          # whole detect job exits before it ever looks at the submodule.
+          # The a_solutions alternative that used to sit in this pattern is
+          # gone: a_solutions is a separate repository now, so a workflow_run
+          # commit in THIS repo can never contain an a_solutions path of any
+          # shape. Only the regenerated dist files can appear here. Container
+          # changes reach this workflow on repository_dispatch, which this
+          # gate does not run for at all.
           CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
-              | grep -E '^(a_solutions($|/)|1_cloud-configs/dist/build-)' | head -1 || true)
+              | grep -E '^1_cloud-configs/dist/build-' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::skip — no a_solutions/ or 1_cloud-configs/dist/build-* changes in upstream commit"
+            echo "::notice::skip — no 1_cloud-configs/dist/build-* changes in upstream commit"
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -184,33 +216,51 @@ jobs:
               BASE="HEAD~1"
             fi
             echo "detect: diffing $BASE..HEAD"
-            # a_solutions is a SUBMODULE (since 2026-08-27). A change inside it
-            # reaches this repo as a GITLINK bump: git reports the single path
-            # "a_solutions", never "a_solutions/<svc>/...". The old pathspecs
-            # ('a_solutions/*/src/**' + 'a_solutions/*/build.json') therefore
-            # matched NOTHING on a pointer bump — CHANGED_DIRS came back empty,
-            # the push branch took its empty-matrix early exit, and the run went
-            # green having shipped nothing. This is the SAME dead-pathspec rule
-            # that killed the on.push.paths filters: it applies to
-            # `git diff -- <pathspec>` exactly as it does to a workflow trigger.
-            # Resolve the two gitlink SHAs and diff INSIDE the submodule.
+            # a_solutions is a SEPARATE REPOSITORY (since 2026-09-06), not a
+            # submodule. There is no gitlink in this repo to diff any more, so
+            # the superproject diff above can NEVER report a container change:
+            # `git diff -- a_solutions` matches nothing because the path is not
+            # tracked here at all. The base/head pair now comes from the
+            # repository_dispatch payload that cloud-u-containers sends on
+            # every push, and the diff is taken INSIDE the a_solutions checkout
+            # against its own history (fetch-depth: 0 above guarantees both
+            # commits are present).
+            #
+            # The failure this guards against is unchanged and is the whole
+            # reason the payload carries `before` rather than assuming HEAD^:
+            # a push of two commits diffed as HEAD^..HEAD silently drops every
+            # service touched by the earlier one, and the run still goes green
+            # having deployed a strict subset. Same bug that left the
+            # c3-public-api mail fix committed-but-undeployed on 2026-08-24.
             SUB_CHANGED=""
-            if [ -n "$(git diff --name-only "$BASE" HEAD -- a_solutions)" ]; then
-              OLD_SUB=$(git rev-parse "$BASE:a_solutions" 2>/dev/null || true)
-              NEW_SUB=$(git rev-parse "HEAD:a_solutions" 2>/dev/null || true)
-              # An unresolvable SHA must NEVER degrade to an empty diff — that
-              # silent-nothing is the exact failure this block exists to kill.
-              if [ -z "$OLD_SUB" ] || [ -z "$NEW_SUB" ]; then
-                echo "::error::a_solutions gitlink changed but its SHAs are unresolvable (old='$OLD_SUB' new='$NEW_SUB') — refusing to ship a silent subset"
+            if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
+              NEW_SUB="${{ github.event.client_payload.after }}"
+              OLD_SUB="${{ github.event.client_payload.before }}"
+              # No head SHA means the dispatch itself is malformed. Shipping
+              # "whatever main happens to be" from here would decouple what was
+              # detected from what was announced — fail loudly instead.
+              if [ -z "$NEW_SUB" ] || ! git -C a_solutions cat-file -e "${NEW_SUB}^{commit}" 2>/dev/null; then
+                echo "::error::repository_dispatch client_payload.after is missing or not present in the cloud-u-containers checkout (after='$NEW_SUB') — refusing to ship a silent subset"
                 exit 1
               fi
-              for _sub in "$OLD_SUB" "$NEW_SUB"; do
-                git -C a_solutions cat-file -e "${_sub}^{commit}" 2>/dev/null && continue
-                echo "::error::a_solutions commit ${_sub} is absent from the submodule clone (history too shallow) — refusing to ship a silent subset"
-                exit 1
-              done
+              # `before` is all-zeros on a branch's first push and may name a
+              # discarded commit after a force-push. Fall back to the parent
+              # of `after` in those cases — the same fallback the superproject
+              # BASE resolution above applies to github.event.before.
+              if [ -z "$OLD_SUB" ] \
+                 || [ "$OLD_SUB" = "0000000000000000000000000000000000000000" ] \
+                 || ! git -C a_solutions cat-file -e "${OLD_SUB}^{commit}" 2>/dev/null; then
+                echo "::warning::client_payload.before unusable (before='$OLD_SUB') — falling back to ${NEW_SUB}^"
+                OLD_SUB=$(git -C a_solutions rev-parse --verify --quiet "${NEW_SUB}^" || true)
+                [ -n "$OLD_SUB" ] || { echo "::error::cannot resolve a base commit for a_solutions — refusing to ship a silent subset"; exit 1; }
+              fi
               SUB_CHANGED=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
               echo "detect: a_solutions ${OLD_SUB}..${NEW_SUB}"
+              # An announced container push that resolves to zero changed files
+              # is a contradiction, and the empty-matrix early exit below would
+              # turn it into a green run that shipped nothing — precisely the
+              # false-green this block exists to prevent. Say so out loud.
+              [ -n "$SUB_CHANGED" ] || echo "::warning::containers-push dispatch ${OLD_SUB}..${NEW_SUB} produced an EMPTY diff — nothing will ship"
             fi
 
             # A service's own build.json drives its image (docker.native_build →
@@ -256,7 +306,15 @@ jobs:
             # any changed dist file, and append the owning service dir to
             # CHANGED_DIRS. Without this, edits to 9_others/src/ regenerate
             # the dist but no Ship runs for the symlinked consumers.
-            DIST_CHANGED=$(git diff --name-only "$BASE" HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
+            # Not on repository_dispatch: that event says "a container repo
+            # was pushed" and carries no claim about THIS repo, whose
+            # $BASE..HEAD is then just whatever unrelated commit happens to be
+            # on main. Diffing it would attribute someone else's dist edit to
+            # a container push and ship services that did not change.
+            DIST_CHANGED=""
+            if [ "$GITHUB_EVENT_NAME" != "repository_dispatch" ]; then
+              DIST_CHANGED=$(git diff --name-only "$BASE" HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
+            fi
             if [ -n "$DIST_CHANGED" ]; then
               DIST_CONSUMERS=""
               for _df in $DIST_CHANGED; do
@@ -449,6 +507,26 @@ jobs:
           fetch-depth: 2
           submodules: false
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin EVERY job to the exact commit the dispatch announced, so the
+          # tree that detect diffed is the tree that build and deploy ship.
+          # Left unpinned, a container push landing mid-run would have detect
+          # decide from commit X while the build job checked out a newer Y —
+          # a silent mismatch between what was detected and what was shipped.
+          # Empty on all other events, which checks out the default branch.
+          ref: ${{ github.event.client_payload.after }}
+
       # Allowlist-based: `--init --recursive` aborts on the first submodule CI
       # cannot clone (vault/notes/cloud-data-lfs are private; cloud-master's
       # own .gitmodules is SSH-only). Ship needs cloud-data (configs) and unix
@@ -457,7 +535,7 @@ jobs:
       - name: Init submodules (cloud-data + unix)
         uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           recursive: "true"
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
@@ -737,10 +815,30 @@ jobs:
           fetch-depth: 2
           submodules: false
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin EVERY job to the exact commit the dispatch announced, so the
+          # tree that detect diffed is the tree that build and deploy ship.
+          # Left unpinned, a container push landing mid-run would have detect
+          # decide from commit X while the build job checked out a newer Y —
+          # a silent mismatch between what was detected and what was shipped.
+          # Empty on all other events, which checks out the default branch.
+          ref: ${{ github.event.client_payload.after }}
+
       - name: Init submodules (cloud-data + unix)
         uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           recursive: "true"
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
