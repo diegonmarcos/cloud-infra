@@ -192,7 +192,18 @@ step_build() {
     REPO_ROOT="$SERVICE_DIR/../.."
 
     # nix build — runs directly (in GHA this is already inside cloud-builder container)
-    git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
+    # 2026-09-06: a_solutions is the RUNNER's checkout bind-mounted into this
+    # root-owned container (ship.yml, since it stopped being a submodule), so
+    # git rejects it as "dubious ownership" and nix's fetchGit then sees no
+    # tracked file at all — "Path '_shared/engine.nix' does not exist in Git
+    # repository .../a_solutions" on run 34032593774, for a file committed two
+    # days earlier. safe.directory matches the CANONICAL path only, and
+    # "$REPO_ROOT" is a_solutions/<svc>/../.. — never normalised — so the
+    # entry above matched nothing. Register the resolved path (a_solutions),
+    # the raw form, and the superproject that contains it.
+    for _sd in "$(realpath "$REPO_ROOT" 2>/dev/null || true)" "$REPO_ROOT" "$(realpath "$REPO_ROOT/.." 2>/dev/null || true)"; do
+        [ -n "$_sd" ] && git config --global --add safe.directory "$_sd" 2>/dev/null || true
+    done
     nix build --option eval-cache false --out-link "$SERVICE_DIR/.result" 2>"$BUILD_LOG" || {
         log_error "nix build failed:"
         # BOTH streams (2026-07-03): the engine self-tees stdout into
