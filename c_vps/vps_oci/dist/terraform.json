@@ -1,10 +1,15 @@
 {
+  "_generated": {
+    "warning": "DO NOT EDIT — generated file, not a source of truth",
+    "source": "cloud-infra/c_vps/vps_oci/src/terraform.json",
+    "engine": "1_cicd/src/scripts/cloud-ship-terraform-engine.sh",
+    "rebuild": "./9_others/build.sh"
+  },
   "provider": {
     "name": "oci",
     "version": "~> 5.0",
     "region": "eu-marseille-1"
   },
-
   "network": {
     "vcn_name": "web-server-vcn",
     "vcn_cidr": "10.0.0.0/16",
@@ -13,36 +18,79 @@
     "subnet_cidr": "10.0.1.0/24",
     "availability_domain": "bRpM:EU-MARSEILLE-1-AD-1"
   },
-
   "gcp_proxy_ip": "35.226.147.64",
   "os_namespace": "axpmn3qtq4ig",
-
   "security_rules": {
     "egress": [
-      { "destination": "0.0.0.0/0", "protocol": "all", "stateless": false }
+      {
+        "destination": "0.0.0.0/0",
+        "protocol": "all",
+        "stateless": false
+      },
+      {
+        "destination": "::/0",
+        "protocol": "all",
+        "stateless": false,
+        "description": "IPv6 egress. Its absence was a silent, total IPv6 outage. OCI security lists are STATEFUL, so the ::/0 ingress rules below (udp/51821, udp+tcp/53, udp/443) admit a WireGuard handshake and let its reply back out — IPv6 therefore LOOKS alive. But anything the instance ORIGINATES over IPv6 was dropped at the VNIC, including neighbour solicitation to the gateway: ping -6 <gw> was 100% loss and the RA default route looked dead. So oci-analytics had no IPv6 internet, and a phone routing ::/0 through the wg-public hub had its native-IPv6 SYNs blackholed while NAT64 traffic worked — NAT64 converts to IPv4, and IPv4 egress was already allowed. Mirrors the 0.0.0.0/0 rule above; the route table already sends ::/0 to the internet gateway (main.tf:87)."
+      }
     ],
     "ingress": [
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 22,    "description": "SSH" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 2200,  "description": "Rescue SSH (Dropbear) — untouchable OOM-immune supervisor" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 80,    "description": "HTTP" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 443,   "description": "HTTPS" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8080,  "description": "HTTP alt" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8081,  "description": "Matomo Analytics" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 81,    "description": "HTTP alt" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 5678,  "description": "n8n" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8384,  "description": "Syncthing" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 22000, "description": "Syncthing TCP" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 5000,  "description": "Flask API" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8888,  "description": "Snappymail Webmail" },
-      { "source": "0.0.0.0/0",          "protocol": "6",  "port": 8088,  "description": "SMTP Proxy for Cloudflare Worker" },
-      { "source": "0.0.0.0/0",          "protocol": "17", "port": 51820, "description": "WireGuard VPN" },
-      { "source": "gcp_proxy",          "protocol": "6",  "port": 5232,  "description": "Radicale" },
-      { "source": "gcp_proxy",          "protocol": "6",  "port": 3010,  "description": "AFFiNE from NPM" },
-      { "source": "gcp_proxy",          "protocol": "6",  "port": 8443,  "description": "Code-Server from NPM" },
-      { "source": "gcp_proxy",          "protocol": "6",  "port": 8085,  "description": "NocoDB from NPM" }
+      {
+        "source": "0.0.0.0/0",
+        "protocol": "17",
+        "port": 51820,
+        "description": "WireGuard wg0 — admin mesh bootstrap"
+      },
+      {
+        "source": "0.0.0.0/0",
+        "protocol": "17",
+        "port": 51821,
+        "description": "WireGuard wg-public — open-enrollment mesh hub (oci-analytics)"
+      },
+      {
+        "source": "0.0.0.0/0",
+        "protocol": "17",
+        "port": 443,
+        "description": "WireGuard wg-public — UDP/443 fallback (PREROUTING REDIRECT → 51821 on oci-analytics; matches wg0's hotel-WiFi-resistance hack)"
+      },
+      {
+        "source": "0.0.0.0/0",
+        "protocol": "6",
+        "port": 443,
+        "description": "HTTPS — Caddy public edge (wg-public hub on oci-analytics)"
+      },
+      {
+        "source": "0.0.0.0/0",
+        "protocol": "6",
+        "port": 25,
+        "description": "SMTP MX — inbound mail relay (wg-public hub on oci-analytics)"
+      },
+      {
+        "source": "::/0",
+        "protocol": "17",
+        "port": 51821,
+        "description": "WireGuard wg-public — open-enrollment mesh hub (oci-analytics) IPv6"
+      },
+      {
+        "source": "::/0",
+        "protocol": "17",
+        "port": 443,
+        "description": "WireGuard wg-public — UDP/443 fallback IPv6"
+      },
+      {
+        "source": "::/0",
+        "protocol": "17",
+        "port": 53,
+        "description": "DNS64 resolver — UDP/53 IPv6"
+      },
+      {
+        "source": "::/0",
+        "protocol": "6",
+        "port": 53,
+        "description": "DNS64 resolver — TCP/53 IPv6"
+      }
     ]
   },
-
   "instances": [
     {
       "key": "mail_server",
@@ -84,35 +132,68 @@
       "memory_in_gbs": 24,
       "fault_domain": "FAULT-DOMAIN-2",
       "image_id": "ocid1.image.oc1.eu-marseille-1.aaaaaaaar3pm2xlih5tqkjwr7ykfgzixjytjivkacgmqrlxi66vzlf5a2wlq",
-      "boot_volume_size_gb": 100,
+      "_boot_volume_size_doc": "2026-09-06: 100 -> 150 (oci-apps sat at 90% with cgc-db restore-all needing ~20 GB of staging). NOTE main.tf ignores source_details on the instance (so a size change never replaces the VM), which means terraform does NOT apply this number to an existing boot volume: apply it with `oci bv boot-volume update --size-in-gbs`, then grow the partition + fs on the box (c3-infra-mcp devops.vm.grow_root). This field stays the declaration a rebuilt instance is created with.",
+      "boot_volume_size_gb": 150,
       "vnic_display_name": "arm-server-1",
       "ip": "82.70.229.129",
       "ocid": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
     }
   ],
-
   "buckets": [
-    { "name": "cloud-backups-binaries-medias", "dns": "s3-backups-binaries.app", "access_type": "NoPublicAccess", "storage_tier": "Standard" },
-    { "name": "cloud-backups-db",              "dns": "s3-backups-db.app",       "access_type": "NoPublicAccess", "storage_tier": "Standard" },
-    { "name": "cloud-backups-media",           "dns": "s3-backups-media.app",    "access_type": "NoPublicAccess", "storage_tier": "Archive" },
-    { "name": "cloud-backups-non-binaries",    "dns": "s3-backups-nonbin.app",   "access_type": "NoPublicAccess", "storage_tier": "Standard" },
-    { "name": "my-photos",                     "dns": "s3-photos.app",           "access_type": "NoPublicAccess", "storage_tier": "Standard" }
+    {
+      "name": "cloud-backups-binaries-medias",
+      "dns": "s3-backups-binaries.app",
+      "access_type": "NoPublicAccess",
+      "storage_tier": "Standard"
+    },
+    {
+      "name": "cloud-backups-db",
+      "dns": "s3-backups-db.app",
+      "access_type": "NoPublicAccess",
+      "storage_tier": "Standard"
+    },
+    {
+      "name": "cloud-backups-media",
+      "dns": "s3-backups-media.app",
+      "access_type": "NoPublicAccess",
+      "storage_tier": "Archive"
+    },
+    {
+      "name": "cloud-backups-non-binaries",
+      "dns": "s3-backups-nonbin.app",
+      "access_type": "NoPublicAccess",
+      "storage_tier": "Standard"
+    },
+    {
+      "name": "my-photos",
+      "dns": "s3-photos.app",
+      "access_type": "NoPublicAccess",
+      "storage_tier": "Standard"
+    }
   ],
-
   "email_senders": [
     "me@diegonmarcos.com",
     "no-reply@diegonmarcos.com"
   ],
-
   "budget": {
     "amount": 30,
     "reset_period": "MONTHLY",
     "display_name": "OCI-Free-Tier-30EUR",
     "description": "Alert if OCI spend exceeds free tier expectations",
     "alert_thresholds": [
-      { "name": "50pct-spend-alert",  "threshold": 50 },
-      { "name": "90pct-spend-alert",  "threshold": 90 },
-      { "name": "100pct-spend-alert", "threshold": 100 }
+      {
+        "name": "50pct-spend-alert",
+        "threshold": 50
+      },
+      {
+        "name": "90pct-spend-alert",
+        "threshold": 90
+      },
+      {
+        "name": "100pct-spend-alert",
+        "threshold": 100
+      }
     ]
-  }
+  },
+  "description": "⚠ GENERATED — DO NOT EDIT · SoT: cloud-infra/c_vps/vps_oci/src/terraform.json · Engine: 1_cicd/src/scripts/cloud-ship-terraform-engine.sh · Rebuild: ./9_others/build.sh"
 }
