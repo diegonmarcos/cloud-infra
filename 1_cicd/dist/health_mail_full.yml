@@ -22,8 +22,11 @@ on:
 # serialise. cgc-db.yml parks long-lived *pending* runs in ship-wg-runner, and a
 # newer entrant cancels the queued one — joining it got this workflow cancelled
 # before it started a single job. A rare hub-eviction flake beats never running.
+# 2026-09-06: back in the fleet-wide WG group by the owner's decision — every
+# WG-holding job serialises through ship-wg-runner now (see ship.yml
+# deploy.concurrency). The pending-cancel cost described above is accepted.
 concurrency:
-  group: health-mail-full
+  group: ship-wg-runner
   cancel-in-progress: false
 
 permissions:

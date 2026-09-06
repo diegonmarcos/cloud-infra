@@ -27,6 +27,12 @@ name: "cgc-db propagate-only (stream GHCR layer -> oci-apps)"
 on:
   workflow_dispatch: {}
 
+# 2026-09-06: this job brings the WG slot up too — same fleet-wide group as
+# every other WG holder (see ship.yml deploy.concurrency).
+concurrency:
+  group: ship-wg-runner
+  cancel-in-progress: false
+
 env:
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
   WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
