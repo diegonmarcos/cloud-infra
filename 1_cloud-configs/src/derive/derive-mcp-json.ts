@@ -16,6 +16,21 @@
 //                                          display_name, description)
 //                                        .containers.app.proxy (parent_domain,
 //                                          base_path, public)
+//   - cloud-u-linux da_my-ai/data/claude/mcp-policy.json ← .direct_http, the
+//                                          endpoints reached directly at a mesh
+//                                          IP (cloud-vault-mcp, cloud-cgc-pvt-mcp)
+//                                          rather than through the public proxy.
+//                                          No build.json field can express this
+//                                          (there is no parent_domain/base_path
+//                                          to derive a URL from), so it has to
+//                                          come from the policy file instead of
+//                                          being silently dropped. gen-mcp-tpl.sh
+//                                          (cloud-u-linux) already merges this
+//                                          block into mcp.{termux,desktop}.json.tpl;
+//                                          this deriver did not, which is why
+//                                          dist/mcp.json — and every .mcp.json it
+//                                          feeds via deploy-dotfiles.sh — shipped
+//                                          two servers short of the tpls.
 //
 // Output:
 //   - 1_cloud-configs/dist/mcp.json     (schema: mcp-servers/v1)
@@ -25,6 +40,7 @@
 // the next build.
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 const ENGINE_DIR  = import.meta.dirname!;
@@ -33,6 +49,13 @@ const CLOUD_ROOT  = process.env.CLOUD_ROOT ?? path.resolve(CONFIGS_DIR, '..');
 const DIST_DIR    = path.join(CONFIGS_DIR, 'dist');
 const SOLUTIONS   = path.join(CLOUD_ROOT, 'a_solutions');
 const OUT_FILE    = path.join(DIST_DIR, 'mcp.json');
+
+// Same override deploy-dotfiles.sh uses for this exact SoT directory — one
+// variable relocates every consumer. Defaults to the sibling-checkout layout
+// a dev machine's ~/git/ and CI's cloned-next-to-$GITHUB_WORKSPACE both use.
+const CLAUDE_SOT   = process.env.CLAUDE_SOT_DIR
+  ?? path.join(os.homedir(), 'git', 'cloud-u-linux', 'da_my-ai', 'data', 'claude');
+const POLICY_FILE  = path.join(CLAUDE_SOT, 'mcp-policy.json');
 
 type Server = { type: string; url: string; headers?: Record<string, string>; headersHelper?: string };
 
@@ -124,6 +147,19 @@ function main(): void {
           }
         : {}),
     };
+  }
+
+  // direct_http entries are already shaped as { type, url } — no proxy, no
+  // auth block to attach (they are reached inside the mesh, not through the
+  // Authelia-gated public vhost), so they merge in verbatim.
+  if (fs.existsSync(POLICY_FILE)) {
+    let policy: any;
+    try { policy = JSON.parse(fs.readFileSync(POLICY_FILE, 'utf8')); } catch { policy = null; }
+    for (const [name, entry] of Object.entries<Server>(policy?.direct_http ?? {})) {
+      servers[name] = entry;
+    }
+  } else {
+    skipped.push(`direct_http (policy not found at ${POLICY_FILE} — cloud-u-linux not checked out)`);
   }
 
   const names = Object.keys(servers).sort();
