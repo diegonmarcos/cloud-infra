@@ -31,38 +31,38 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 cd "$REPO_ROOT"
 export GIT_BASE="${GIT_BASE:-$(dirname "$REPO_ROOT")}"
 
-# ── Re-pin a_solutions to the recorded gitlink (undo `git nuke --remote` drift) ──
+# ── Assert the a_solutions worktree is populated before deriving ──
 #
-# ROOT CAUSE of the silent-stale-config bug (2026-09-03): the cloud-builder
-# entrypoint (cb_containers-builders/src/docker/entrypoint.sh §7) re-syncs THIS
-# mounted workspace with `git nuke`, whose final step is
-#   git submodule update --init --recursive --remote --rebase --force
-# The `--remote` flag checks each submodule out to its REMOTE BRANCH TIP, NOT to
-# the gitlink SHA the superproject pins. For a_solutions (cloud-u-containers, an
-# SSH-url submodule this job has no deploy key for) that silently reverts the
-# runner's correctly-checked-out pin to a stale commit (or a stale cached tip
-# when the SSH fetch fails). consolidate/derive then reads OLD
-# a_solutions/<svc>/build.json (CLOUD_ROOT/a_solutions is the worktree), so the
-# regenerated dist matches the already-stale origin and the commit step reports
-# "dist/ unchanged — nothing to commit". Net: config changes never deploy.
+# This block used to re-pin a_solutions to the superproject gitlink. That was
+# the 2026-09-03 fix for a silent-stale-config bug: the cloud-builder
+# entrypoint re-syncs this mounted workspace with `git nuke`, whose final step
+# ran `git submodule update --init --recursive --remote --rebase --force`, and
+# `--remote` checks a submodule out to its REMOTE BRANCH TIP rather than the
+# pinned SHA — so derive read OLD build.json files and the commit step then
+# reported "dist/ unchanged — nothing to commit".
 #
-# Fix: force a_solutions back to the exact gitlink HEAD records, then ASSERT it.
-# Failing loud here is strictly better than deriving stale config in silence.
-_expected_sol="$(git -C "$REPO_ROOT" rev-parse HEAD:a_solutions 2>/dev/null || true)"
-if [ -z "$_expected_sol" ]; then
-  echo "::error::gen-configs: cannot read the a_solutions gitlink from HEAD — aborting" >&2
+# a_solutions stopped being a submodule on 2026-09-06. There is no gitlink to
+# pin to and `git submodule update` can no longer move it, because the
+# workflow's actions/checkout already put the exact commit the containers-push
+# dispatch announced on disk. The old guard did not merely become redundant,
+# it became FATAL: `git rev-parse HEAD:a_solutions` does not fail on an
+# unresolvable rev, it ECHOES THE ARGUMENT BACK on stdout, so `_expected_sol`
+# was set to the literal string "HEAD:a_solutions", passed the non-empty
+# check, and then mismatched every real SHA — aborting every gen-configs run.
+#
+# One hazard survives in a new shape, so the assertion stays: a_solutions is
+# untracked AND gitignored in this repo now, which means any `git clean -fdx`
+# over this workspace would erase it outright. derive would then read ZERO
+# build.json files and happily emit a config with every service missing —
+# worse than stale. Assert the tree is populated and fail loud.
+_sol_dir="$REPO_ROOT/a_solutions"
+_sol_count=$(find "$_sol_dir" -mindepth 2 -maxdepth 2 -name build.json 2>/dev/null | wc -l | tr -d ' ')
+if [ ! -d "$_sol_dir" ] || [ "${_sol_count:-0}" -eq 0 ]; then
+  echo "::error::gen-configs: ${_sol_dir} contains no <service>/build.json (found ${_sol_count:-0})." >&2
+  echo "::error::  Refusing to derive a config with every service missing. a_solutions is a SEPARATE repository (cloud-u-containers) that the workflow checks out; if it is absent here something erased it — a \`git clean -fdx\` will, because the path is gitignored in this repo." >&2
   exit 1
 fi
-git -C "$REPO_ROOT/a_solutions" checkout -q "$_expected_sol" 2>/dev/null \
-  || git -C "$REPO_ROOT" -c protocol.file.allow=always submodule update --init --force -- a_solutions 2>/dev/null \
-  || true
-_actual_sol="$(git -C "$REPO_ROOT/a_solutions" rev-parse HEAD 2>/dev/null || true)"
-if [ "$_actual_sol" != "$_expected_sol" ]; then
-  echo "::error::gen-configs: a_solutions is at ${_actual_sol:-<none>} but the pin (HEAD:a_solutions) requires ${_expected_sol}." >&2
-  echo "::error::  Refusing to derive STALE config. The builder's \`git nuke --remote\` re-checkout could not be corrected — the pinned commit is not present in the a_solutions object store (SSH fetch unavailable in this job)." >&2
-  exit 1
-fi
-echo "── a_solutions pinned at ${_expected_sol} (matches gitlink; --remote drift corrected) ──"
+echo "── a_solutions present at $(git -C "$_sol_dir" rev-parse --short HEAD 2>/dev/null || echo '<not a git checkout>') with ${_sol_count} service build.json file(s) ──"
 
 echo "── Generating cloud-data + build-{name}.json ──"
 bash build.sh config
