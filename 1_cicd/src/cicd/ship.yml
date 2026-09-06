@@ -287,13 +287,29 @@ jobs:
             SRC_CHANGED=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/src/' \
               | sed 's|^|a_solutions/|' || true)
             SRC_CONSUMERS=""
+            # 2026-09-06: walk every symlink under src/ (any depth, not just
+            # src/*), and match a changed file that IS the target or lives
+            # INSIDE a symlinked directory's target. cloud-infra-mcp consumes
+            # c3-infra-api's shared libs through
+            # src/code/shared -> ../../../infra-api_c3-infra-api/src/code/shared;
+            # the one-level exact-match walk never saw that, so every shared-lib
+            # fix shipped c3-infra-api (no build.sh: SKIP) and left the MCP on
+            # old code behind a green run (34037092235). Link list resolved
+            # once, matched per changed file.
+            _LINKS_TSV="$RUNNER_TEMP/src-symlinks.tsv"
+            find a_solutions/*/src -maxdepth 4 -type l \
+              -not -path '*/node_modules/*' -not -path '*/dist/*' 2>/dev/null \
+              | while IFS= read -r _link; do
+                  _t="$(readlink -f "$_link" 2>/dev/null || true)"
+                  [ -n "$_t" ] && printf '%s\t%s\n' "$_t" "$(echo "$_link" | awk -F/ '{print $2}')"
+                done > "$_LINKS_TSV" || true
             for _sf in $SRC_CHANGED; do
               _sf_abs="$PWD/$_sf"
-              for _link in a_solutions/*/src/*; do
-                [ -L "$_link" ] || continue
-                [ "$(readlink -f "$_link" 2>/dev/null || true)" = "$_sf_abs" ] || continue
-                SRC_CONSUMERS="$SRC_CONSUMERS $(echo "$_link" | awk -F/ '{print $2}')"
-              done
+              while IFS=$'\t' read -r _t _svc; do
+                case "$_sf_abs" in
+                  "$_t"|"$_t"/*) SRC_CONSUMERS="$SRC_CONSUMERS $_svc" ;;
+                esac
+              done < "$_LINKS_TSV"
             done
             if [ -n "$SRC_CONSUMERS" ]; then
               CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$SRC_CONSUMERS" \
