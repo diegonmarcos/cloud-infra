@@ -97,6 +97,19 @@ jobs:
           include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
+      # derive-mcp-json.ts reads mcp-policy.json's direct_http block (endpoints
+      # reached at a mesh IP, e.g. cloud-vault-mcp — no build.json field can
+      # express that) from cloud-u-linux. Without this checkout the deriver ran
+      # with no policy input and silently emitted two servers short of
+      # mcp.desktop.json.tpl, which gen-mcp-tpl.sh (cloud-u-linux) already
+      # merges the same block into. Same pattern as lint-pipeline.yml's Phase
+      # 44-45: git clone, not actions/checkout (path: cannot land outside
+      # $GITHUB_WORKSPACE), sibling of the workspace so it lines up with the
+      # ~/git/cloud-u-linux layout derive-mcp-json.ts defaults to. Public repo,
+      # no token needed.
+      - name: Checkout cloud-u-linux (mcp-policy.json)
+        run: git clone --depth 1 https://github.com/diegonmarcos/cloud-u-linux.git "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux"
+
       # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that
       # cloud-builder's compose.yaml references via env_file:. Without it,
       # `docker compose run cloud-builder` aborts: "env file ... not found".
@@ -138,9 +151,13 @@ jobs:
           # → the commit step saw "nothing to commit", so newly-declared
           # cloud-data (e.g. wg-public clients + vault keys) never reached origin.
           # See a0_tasks/PLAN_gen-configs-dist-propagation-fix.md.
+          # cloud-u-linux mounted at the same path derive-mcp-json.ts's
+          # CLAUDE_SOT_DIR default resolves to inside the container (HOME=/root
+          # there): /root/git/cloud-u-linux/da_my-ai/data/claude/mcp-policy.json.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             --cap-add NET_ADMIN \
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
+            -v "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux:/root/git/cloud-u-linux:ro" \
             -v "$GITHUB_WORKSPACE:/root/git/cloud-infra" \
             -e CLOUD_DATA_DEPLOY_KEY \
             cloud-builder gen-configs
