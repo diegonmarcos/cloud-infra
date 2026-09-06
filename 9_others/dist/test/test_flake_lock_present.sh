@@ -50,7 +50,11 @@ while IFS= read -r flake; do
   rel=${flake#"$REPO_ROOT/"}
   lock="$dir/flake.lock"
   rel_lock=${lock#"$REPO_ROOT/"}
-  if git ls-files --error-unmatch "$rel_lock" >/dev/null 2>&1; then
+  # 2026-09-06: `git -C "$dir"` — a_solutions is its own checkout now (not a
+  # submodule), so a plain ls-files from REPO_ROOT sees NOTHING under it and
+  # reported every lock as UNTRACKED. Asking the repo that owns the file works
+  # for a nested checkout, a submodule and an in-tree directory alike.
+  if git -C "$dir" ls-files --error-unmatch flake.lock >/dev/null 2>&1; then
     pass "$rel"
     CHECKED=$((CHECKED + 1))
   elif [ -f "$lock" ]; then
