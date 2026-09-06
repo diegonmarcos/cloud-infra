@@ -85,7 +85,12 @@ for compose in "$REPO_ROOT"/a_solutions/*/dist/docker-compose.yml; do
     while read -r cname; do
         [ -n "$cname" ] || continue
         # Assert build.json containers[*].container_name contains it
-        if jq -e --arg n "$cname" '.containers // {} | to_entries[] | select(.value.container_name == $n)' "$bj" >/dev/null 2>&1; then
+        # `.value | select(type == "object")`: a build.json may carry a
+        # "_doc_<name>" STRING inside .containers (infra-db_postlite does);
+        # `.container_name` on a string makes jq abort, which read as "no
+        # match" and failed postlite for sqlite-ntfy / sqlite-vaultwarden
+        # that ARE declared. Skip non-object entries instead.
+        if jq -e --arg n "$cname" '.containers // {} | to_entries[] | .value | select(type == "object" and .container_name == $n)' "$bj" >/dev/null 2>&1; then
             : # match — silent
         else
             # Relax: also allow top-level .name match (single-container services)
