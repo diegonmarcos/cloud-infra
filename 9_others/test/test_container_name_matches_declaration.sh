@@ -83,8 +83,16 @@ for compose in "$REPO_ROOT"/a_solutions/*/dist/docker-compose.yml; do
             # Relax: also allow top-level .name match (single-container services)
             if [ "$(jq -r '.name' "$bj")" = "$cname" ]; then
                 : # ok
+            # Relax 2: the OWNER may be another service. infra-db_postlite's
+            # compose carries postlite-authelia, which infra-sec_authelia
+            # declares and deploys as its sidecar ("the owner declares, the
+            # catalogue only points" — postlite's build.json says so). Any
+            # build.json in the fleet declaring the name satisfies the test.
+            elif jq -e --arg n "$cname" '.containers // {} | to_entries[] | .value | select(type == "object" and .container_name == $n)' \
+                    "$REPO_ROOT"/a_solutions/*/build.json >/dev/null 2>&1; then
+                : # declared by its owner elsewhere
             else
-                fail "$svc_dir: compose.yml declares container_name=$cname but build.json has no matching containers.*.container_name"
+                fail "$svc_dir: compose.yml declares container_name=$cname but no build.json declares containers.*.container_name=$cname"
             fi
         fi
     done < <(grep -E '^\s+container_name:\s+' "$compose" | awk '{print $2}' | sort -u)
