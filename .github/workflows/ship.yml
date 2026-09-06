@@ -739,8 +739,23 @@ jobs:
           # pushed by the vault PAT it is user-scoped and private forever. Without
           # this forward, the engine's GITHUB_TOKEN branch is dead (docker compose
           # run does NOT inherit host env) and every new image lands private.
+          # The a_solutions bind-mount below is load-bearing. Unlike
+          # gen-configs and ship-home-manager, this job does NOT mount
+          # $GITHUB_WORKSPACE — the builder git-clones cloud-infra itself.
+          # While a_solutions was a submodule, the engine cloned it inside the
+          # container using the mounted deploy key; it is a separate
+          # repository now, so the builder's clone of cloud-infra simply does
+          # not contain it, and every service SKIPs as "(no build.sh)" for a
+          # hollow green. Mounting the runner's checkout beats re-cloning: no
+          # credential, and the tree that gets BUILT is byte-for-byte the tree
+          # `detect` diffed, both coming from the checkout pinned to
+          # client_payload.after. Read-write on purpose — step_build writes
+          # <svc>/dist/ in place.
+          # NB: keep comments OUT of the backslash-continued block below; a
+          # `#` line inside it comments out the remainder of the command.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
+            -v "$GITHUB_WORKSPACE/a_solutions:/root/git/cloud-infra/a_solutions" \
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
             -v "$HOME/.cargo:/root/.cargo" \
@@ -972,9 +987,15 @@ jobs:
           docker run --rm "$IMAGE" cat /opt/cloud-builder/compose.yaml > /tmp/cloud-builder-compose.yaml
           # --cap-add NET_ADMIN — required for wg-quick up wg0 inside the
           # container (this job DOES pass WG_PRIVATE_KEY, unlike build).
+          # Same a_solutions bind-mount as the build job, for the same reason:
+          # this job does not mount $GITHUB_WORKSPACE, the builder clones
+          # cloud-infra itself, and a_solutions is no longer part of that
+          # clone. Deploy renders each service's config and compose from
+          # <svc>/src, so an absent tree here silently deploys nothing.
           docker compose -f /tmp/cloud-builder-compose.yaml run --rm \
             --cap-add NET_ADMIN \
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
+            -v "$GITHUB_WORKSPACE/a_solutions:/root/git/cloud-infra/a_solutions" \
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
             -e GITHUB_TOKEN \
