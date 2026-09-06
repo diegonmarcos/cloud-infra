@@ -13,16 +13,25 @@ name: Unjam Ship
 # GITHUB_TOKEN can be granted it — which is the whole reason this exists as
 # a workflow rather than a direct API call.
 #
-# Deliberately conservative: only Ship runs, only in_progress ones, and only
-# those already older than the threshold, so a healthy long build (cold
-# multi-GB image pulls legitimately run 20+ minutes) is never cancelled by
-# accident. Raise stale_minutes if you are pruning during a known-slow ship.
+# Deliberately conservative: only in_progress runs, and only those already
+# older than the threshold, so a healthy long build (cold multi-GB image pulls
+# legitimately run 20+ minutes) is never cancelled by accident. Raise
+# stale_minutes if you are pruning during a known-slow ship.
+#
+# 2026-09-06: widened from ship.yml alone to EVERY workflow that holds the
+# ship-wg-runner concurrency group. Since all WG-holding jobs share that one
+# group (they share one gha-runner WG identity, 10.0.0.200), a wedge in ANY of
+# them blocks every deploy fleet-wide — a scheduled cgc-db run hung at 17:54Z
+# held the group for three hours and left a Deploy pending with nothing
+# running. Unjamming only ship.yml could not clear it. WG_WORKFLOWS below MUST
+# list exactly the workflows declaring `group: ship-wg-runner`; the Phase 46
+# lint test fails the build if it drifts.
 
 on:
   workflow_dispatch:
     inputs:
       stale_minutes:
-        description: "Cancel in-progress Ship runs older than this many minutes"
+        description: "Cancel in-progress WG-holding runs older than this many minutes"
         required: false
         default: "25"
   push:
@@ -39,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Cancel wedged Ship runs
+      - name: Cancel wedged WG-holding runs
         env:
           GH_TOKEN: ${{ github.token }}
           STALE_MINUTES: ${{ github.event.inputs.stale_minutes || '25' }}
@@ -48,31 +57,42 @@ jobs:
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
           now=$(date -u +%s)
 
-          runs=$(curl -sS \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "$api/actions/workflows/ship.yml/runs?status=in_progress&per_page=50")
+          # Every workflow declaring `group: ship-wg-runner`. Kept in sync by
+          # 9_others/test/test_unjam_covers_wg_group.sh (Phase 46).
+          WG_WORKFLOWS="ship.yml cgc-db.yml cgc-db-propagate.yml ship-cgc-db-seed.yml ship-home-manager.yml cloud-health-reports.yml cloud-health-reports-x86-gha.yml health_mail_full.yml"
 
-          count=$(echo "$runs" | jq '.workflow_runs | length')
-          echo "in-progress Ship runs: $count  (threshold ${STALE_MINUTES}m)"
-          [ "$count" -gt 0 ] || { echo "nothing to unjam"; exit 0; }
-
+          total=0
           cancelled=0
-          # run_started_at is when the run actually began, not when it queued.
-          while read -r id started; do
-            [ -n "$id" ] || continue
-            age=$(( (now - $(date -u -d "$started" +%s)) / 60 ))
-            if [ "$age" -ge "$STALE_MINUTES" ]; then
-              echo "cancelling run $id (in_progress ${age}m)"
-              curl -sS -X POST \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                "$api/actions/runs/$id/cancel" \
-                -o /dev/null -w '  -> HTTP %{http_code}\n'
-              cancelled=$(( cancelled + 1 ))
-            else
-              echo "leaving run $id (in_progress ${age}m < ${STALE_MINUTES}m)"
-            fi
-          done < <(echo "$runs" | jq -r '.workflow_runs[] | "\(.id) \(.run_started_at)"')
+          for wf in $WG_WORKFLOWS; do
+            runs=$(curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$api/actions/workflows/$wf/runs?status=in_progress&per_page=50")
 
-          echo "cancelled $cancelled run(s)"
+            # A workflow that does not exist (renamed, retired) returns a
+            # message object, not workflow_runs — skip it loudly rather than
+            # letting jq abort the whole unjam.
+            count=$(echo "$runs" | jq '(.workflow_runs // []) | length')
+            [ "$count" -gt 0 ] || { echo "$wf: nothing in progress"; continue; }
+            echo "$wf: $count in-progress run(s)  (threshold ${STALE_MINUTES}m)"
+            total=$(( total + count ))
+
+            # run_started_at is when the run actually began, not when it queued.
+            while read -r id started; do
+              [ -n "$id" ] || continue
+              age=$(( (now - $(date -u -d "$started" +%s)) / 60 ))
+              if [ "$age" -ge "$STALE_MINUTES" ]; then
+                echo "  cancelling run $id (in_progress ${age}m)"
+                curl -sS -X POST \
+                  -H "Authorization: Bearer $GH_TOKEN" \
+                  -H "Accept: application/vnd.github+json" \
+                  "$api/actions/runs/$id/cancel" \
+                  -o /dev/null -w '    -> HTTP %{http_code}\n'
+                cancelled=$(( cancelled + 1 ))
+              else
+                echo "  leaving run $id (in_progress ${age}m < ${STALE_MINUTES}m)"
+              fi
+            done < <(echo "$runs" | jq -r '(.workflow_runs // [])[] | "\(.id) \(.run_started_at)"')
+          done
+
+          echo "examined $total in-progress run(s) across $(echo $WG_WORKFLOWS | wc -w) WG workflow(s); cancelled $cancelled"
