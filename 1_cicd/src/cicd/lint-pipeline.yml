@@ -200,16 +200,23 @@ jobs:
       # Both repos are public, so no token is involved.
       - name: Phase 44-45 — fetch the claude config SoT (cloud-u-linux)
         run: git clone --depth 1 https://github.com/diegonmarcos/cloud-u-linux.git "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux"
-      - name: Phase 44 — claude SoT: one source of truth, no second copy
+      # 2026-09-06: quoted — the bare ": " inside this name made the whole file
+      # invalid YAML ("mapping values are not allowed here"), so GitHub failed
+      # every lint-pipeline run at startup with zero jobs from 33d5abc onward.
+      - name: "Phase 44 — claude SoT: one source of truth, no second copy"
         # Asserts no flake/repo vendors its own settings or mcp template, that
         # cloud-infra's GENERATED 0_apps/src/claude/ is byte-identical to the
         # SoT, that every MCP cloud-infra declares reaches the client list, and
         # that retired MCPs stay retired.
-        run: "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux/da_my-ai/data/claude/test-claude-sot.sh"
+        # Block scalar: a double-quoted YAML string cannot contain the inner
+        # "$GITHUB_WORKSPACE" quotes (same startup failure as the name above).
+        run: |
+          "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux/da_my-ai/data/claude/test-claude-sot.sh"
       - name: Phase 45 — MCP client lists match the derived server set
         # mcp.{termux,desktop}.json.tpl are generated from THIS repo's
         # 1_cloud-configs/dist/mcp.json + the SoT's mcp-policy.json. Hand-editing
         # either tpl, or declaring a new MCP here without regenerating, fails.
         env:
           CLOUD_INFRA_DIR: ${{ github.workspace }}
-        run: "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux/da_my-ai/data/claude/gen-mcp-tpl.sh --check"
+        run: |
+          "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux/da_my-ai/data/claude/gen-mcp-tpl.sh" --check
