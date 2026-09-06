@@ -245,6 +245,16 @@ if [ -d "$CLOUD_DATA_DIR" ]; then
         rm "$f"
         cp "$REAL_TARGET" "$f"
         CLOUD_DATA_PRESTAGED="$CLOUD_DATA_PRESTAGED $f"
+      elif [ ! -e "$f" ]; then
+        # 2026-09-06: a DANGLING external symlink (build-<svc>.json pointing
+        # at a 1_cloud-configs/dist file that no longer exists because the
+        # service was renamed/removed) used to be left in place — and a
+        # dangling link in the build context is fatal to `COPY` (BuildKit:
+        # "failed to calculate checksum ... not found") and to nix. Drop it
+        # from the staging tree; it cannot contribute anything. The source
+        # repo still needs the link removed (say so), this only unblocks CI.
+        echo "WARN: $dir/src/$(basename "$f") dangles -> $(readlink "$f") — removed from staging tree; delete it in cloud-u-containers" >&2
+        rm -f "$f"
       fi
     done
   done <<< "$SERVICES"

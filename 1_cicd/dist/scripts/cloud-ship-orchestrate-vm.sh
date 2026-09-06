@@ -15,7 +15,7 @@
 # ── Ship all services for a VM ──
 # Portable: works in GHA, Dagu, CLI
 # Usage: ship-vm.sh <vm-alias> [service-filter]
-#   vm-alias: gcp-proxy, oci-apps, oci-mail, oci-analytics
+#   vm-alias: gcp-proxy, oci-apps, oci-mail, oci-analytics, gcp-t4
 #   service-filter: optional, only ship this service dir (e.g. bc-obs_dagu)
 set -uo pipefail  # no -e: build failures are caught by if/else in the loop
 
