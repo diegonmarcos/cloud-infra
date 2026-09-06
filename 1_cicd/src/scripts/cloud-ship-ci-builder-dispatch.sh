@@ -155,25 +155,61 @@ if [ -n "$RUNNERS_JSON" ]; then
     done
 fi
 
-# ── Assert a_solutions is populated (before parallel workers start) ──
-# This used to CLONE a_solutions: between 2026-08-27 and 2026-09-06 it was the
-# cloud-u-containers submodule, the cloud-builder re-cloned only the
-# superproject, and the tree therefore arrived empty — so every service's
-# build.sh was missing and ship_one() SKIPped each as "(no build.sh)", a
-# silent hollow-green (0 ok, N skipped).
+# ── Materialise a_solutions, then assert it (before parallel workers) ──
 #
-# a_solutions is a separate repository now, checked out by the workflow at
-# this path and mounted into the builder with the rest of the workspace, so
-# there is nothing left to clone and no deploy key to need. The block is not
-# deleted, because the hollow-green it caught is still exactly what happens if
-# the tree turns up empty for ANY reason — an erased mount, or a `git clean
-# -fdx` reaching a path this repo now gitignores. Keep the assertion, drop the
-# submodule machinery and the lock (nothing is being mutated any more).
-if [ ! -d "$REPO_ROOT/a_solutions/_shared" ]; then
-  log_error "a_solutions worktree is empty or missing at $REPO_ROOT/a_solutions — aborting before every service SKIPs as 'no build.sh'"
-  log_error "  a_solutions is a SEPARATE repository (cloud-u-containers); the workflow checks it out to this path. If it is absent here, the checkout step did not run or something erased the directory."
+# a_solutions is a separate repository (cloud-u-containers) since 2026-09-06.
+# When it was a submodule this block cloned it with a mounted deploy key; the
+# reason a clone is STILL needed is that the cloud-builder git-clones
+# cloud-infra itself and its entrypoint re-syncs that clone with a `git nuke`
+# ending in `git clean -fdx`. a_solutions is untracked AND gitignored in
+# cloud-infra now, so that clean reaches straight into this path.
+#
+# Bind-mounting the runner's checkout here was tried first and is NOT safe:
+# the clean cannot unlink the mountpoint but happily deletes the files inside
+# it, leaving a half-erased tree. That produced two different symptoms from
+# the same cause — run 34031253391 reported a HOLLOW GREEN
+# ("SKIP <svc> (no build.sh)" ... "0 ok, 0 failed, 52 skipped of 52") because
+# the service dirs were gone, and run 34034637814 failed a nix build with
+# "Path '_shared/engine.nix' does not exist in Git repository" because nix
+# flakes only see git-tracked files and the tracked ones had been deleted.
+#
+# Cloning HERE — after the entrypoint has finished nuking — is deterministic:
+# nothing runs afterwards to erase it, and it yields a clean, root-owned,
+# fully-tracked git repo, which is what nix flake evaluation requires.
+# cloud-u-containers is PUBLIC, so this needs no credential at all.
+#
+# A_SOLUTIONS_SHA pins the commit the ship workflow detected, so the tree that
+# gets BUILT is the tree that was DIFFED. Unset (e.g. ship-hm, which mounts
+# the whole workspace and already has a good tree) means: use what is here,
+# and only clone if there is nothing.
+_AS_DIR="$REPO_ROOT/a_solutions"
+_as_svc_count() { find "$_AS_DIR" -mindepth 2 -maxdepth 2 -name build.sh 2>/dev/null | wc -l | tr -d ' '; }
+_as_head() { git -C "$_AS_DIR" rev-parse HEAD 2>/dev/null || true; }
+
+if [ "$(_as_svc_count)" -eq 0 ] \
+   || { [ -n "${A_SOLUTIONS_SHA:-}" ] && [ "$(_as_head)" != "$A_SOLUTIONS_SHA" ]; }; then
+  log "Materialising a_solutions from cloud-u-containers${A_SOLUTIONS_SHA:+ @ $A_SOLUTIONS_SHA} (have: $(_as_svc_count) build.sh, head: $(_as_head))"
+  rm -rf "$_AS_DIR"
+  if ! git clone --quiet https://github.com/diegonmarcos/cloud-u-containers.git "$_AS_DIR" >&2; then
+    log_error "a_solutions clone FAILED — cloud-u-containers unreachable over public HTTPS"
+    exit 1
+  fi
+  if [ -n "${A_SOLUTIONS_SHA:-}" ] \
+     && ! git -C "$_AS_DIR" checkout --quiet --detach "$A_SOLUTIONS_SHA" 2>/dev/null; then
+    log_error "a_solutions: commit $A_SOLUTIONS_SHA not found after clone — refusing to build a different tree than the one detect diffed"
+    exit 1
+  fi
+fi
+
+# Assert. A hollow green — every service SKIPped as "(no build.sh)" while the
+# run reports success — is the exact failure this exists to make impossible.
+_as_n="$(_as_svc_count)"
+if [ "$_as_n" -eq 0 ] || [ ! -f "$_AS_DIR/_shared/engine.nix" ]; then
+  log_error "a_solutions is not usable at $_AS_DIR (${_as_n} service build.sh, _shared/engine.nix $([ -f "$_AS_DIR/_shared/engine.nix" ] && echo present || echo MISSING))"
+  log_error "  Aborting before every service SKIPs as 'no build.sh' and the run reports a green that shipped nothing."
   exit 1
 fi
+log "a_solutions ready: ${_as_n} service build.sh @ $(git -C "$_AS_DIR" rev-parse --short HEAD 2>/dev/null || echo '?')"
 
 # ── Update cloud-data submodule ONCE (locked, before parallel workers) ──
 # Per-service parallel updates race on .git/modules/cloud-data/config lock
