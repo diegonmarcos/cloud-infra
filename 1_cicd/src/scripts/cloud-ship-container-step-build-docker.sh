@@ -413,10 +413,32 @@ ENV HOME=/home/${NATIVE_USER}"
             # "ENOENT /app/_cloud-data-consolidated.json", and cloud-infra-mcp's
             # finops tools rendered an empty topology (0 VMs, $0/mo).
             # Build context is $SRC_DIR, so the staged files are in reach.
+            #
+            # 2026-09-06: NOT `COPY *.json`. A Dockerfile glob that matches a
+            # dangling symlink makes BuildKit fail the whole build ("failed to
+            # calculate checksum ... not found") — and src/ DOES carry them:
+            # build-<svc>.json links to services since renamed or removed from
+            # 1_cloud-configs/dist (build-claude-superset-api.json took down
+            # the cloud-cgc-pub-mcp ship, run 34028120628). Emit an explicit
+            # list of the JSON files that actually resolve; skip dangling links
+            # loudly. The dispatch pre-stage also removes them (belt), this is
+            # the braces for any other path into this generator.
             INCLUDE_CLOUD_DATA="$(get_config build.include_cloud_data)"
             CLOUD_DATA_COPY=""
             if [ "$INCLUDE_CLOUD_DATA" = "true" ]; then
-                CLOUD_DATA_COPY="COPY *.json ${WORKDIR_PATH}/"
+                _CD_FILES=""
+                for _cd in "$SRC_DIR"/*.json; do
+                    if [ -e "$_cd" ]; then
+                        _CD_FILES="$_CD_FILES $(basename "$_cd")"
+                    elif [ -L "$_cd" ]; then
+                        log_warn "cloud-data: skipping dangling symlink $(basename "$_cd") -> $(readlink "$_cd")"
+                    fi
+                done
+                if [ -n "$_CD_FILES" ]; then
+                    CLOUD_DATA_COPY="COPY${_CD_FILES} ${WORKDIR_PATH}/"
+                else
+                    log_warn "cloud-data: include_cloud_data=true but no *.json resolves in $SRC_DIR — nothing copied"
+                fi
             fi
             cat > "$DIST_DIR/Dockerfile.native" <<NEOF
 FROM ${NATIVE_BASE:-node:22-slim}
