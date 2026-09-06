@@ -11,8 +11,13 @@
 #   PSI ≥ crit × N: stop NON-tier-1 containers + notify health_resources:crit
 #   PSI ≥ page × N: stop ALL (systemctl stop docker) + notify page-level
 #
-# It does NOT reboot (watchdog-petter's reboot-loop bug) and does NOT
-# auto-restart docker — recovery is `build.sh ship` (no-auto-restart doctrine).
+# It does NOT reboot (watchdog-petter's reboot-loop bug).
+#
+# On the RECOVERY edge (pressure demonstrably cleared) it makes ONE attempt to
+# start docker.service if a full shed had stopped it, notifies loudly either
+# way, and never retries — see the block itself for the authorization and the
+# two oci-analytics outages that motivated it. Restoring shed CONTAINERS is
+# still `build.sh ship`; this only undoes the shedder's own `systemctl stop`.
 # Tier-1 services configured per VM in the consolidated protection block.
 #
 # P4: thresholds are data-driven from the consolidated cloud-data
@@ -169,7 +174,42 @@ in {
           # Pressure subsided — reset + notify recovery if we had shed
           if [ "$shed_level" -gt 0 ]; then
             logger -t load-shedder "RECOVERY: memPSI=''${MEM} — pressure resolved (shed_level was $shed_level)"
-            ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). Manual docker restart required for non-tier1."
+            # ── Recovery-after-clear: SINGLE-SHOT docker restart ──────────
+            # AUTHORIZED DEVIATION from the fleet no-autorestart doctrine.
+            # This is not a restart policy and not a supervisor: it is this
+            # state machine COMPLETING its own transition. A full shed stops
+            # docker; without this the box stays amputated until a human runs
+            # one command. oci-analytics (the only public edge) died twice in
+            # 24h that way: 2026-09-05 stop 19:50 → ~70min down, and
+            # 2026-09-06 stop 05:34 after a FOUR-MINUTE pressure event that
+            # had cleared by 05:36 (memPSI=0.02) → SEVEN HOURS down. Both
+            # recoveries were literally `systemctl start docker.service`.
+            # Rules that keep this honest:
+            #   • fires ONLY here, on the demonstrated pressure-cleared edge
+            #   • ONE attempt, ever — `recovery_failed` latches it off, so a
+            #     broken docker escalates to PAGE instead of flapping. We
+            #     latch rather than exit because the unit is Restart=always;
+            #     exiting would recreate the very retry loop this forbids.
+            #   • LOUD either way — started or failed, ntfy hears about it
+            if systemctl is-active --quiet docker.service; then
+              # shed_level=1 (non-tier1 only) — docker never stopped.
+              ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). docker up; shed non-tier1 containers need a ship to return."
+            elif [ "''${recovery_failed:-0}" -ne 0 ]; then
+              logger -p daemon.err -t load-shedder "RECOVERY: docker still down but restart already attempted and failed — not retrying (manual action required)"
+            else
+              logger -t load-shedder "RECOVERY: single-shot start of docker.service"
+              timeout 120 systemctl start docker.service 2>/dev/null || true
+              sleep 5
+              if systemctl is-active --quiet docker.service; then
+                rm -f /run/load-shedder.fired 2>/dev/null || true
+                logger -t load-shedder "RECOVERY: docker.service started (live-restore reattaches containers)"
+                ntfy_send 4 "warn" "RECOVERY — docker restarted" "memPSI cleared to ''${MEM}%% (was shed_level=$shed_level). Single-shot auto-start of docker.service SUCCEEDED. Verify containers, then ship if any are missing."
+              else
+                recovery_failed=1
+                logger -p daemon.err -t load-shedder "RECOVERY FAILED: docker.service did not start — NOT retrying; manual intervention required"
+                ntfy_send 5 "page" "RECOVERY FAILED — docker did NOT start" "memPSI cleared to ''${MEM}%% but the single-shot start of docker.service FAILED. NOT retrying. VM IS DOWN — manual action required: systemctl status docker.service."
+              fi
+            fi
             shed_level=0
           fi
           breaches_crit=0; breaches_page=0; warned=0
@@ -178,7 +218,7 @@ in {
         # ── Page-level shed: stop everything ─────────────────────────────
         if [ "$breaches_page" -ge "$NEED" ] && [ "$shed_level" -lt 2 ]; then
           logger -t load-shedder "SHED-PAGE: memPSI=''${MEM} — stopping ALL docker (last resort)"
-          ntfy_send 5 "page" "LOAD SHED — ALL DOCKER STOPPED" "LAST RESORT: memPSI=''${MEM}%% ≥ $MEM_PSI_PAGE%% × $NEED checks. ALL containers stopped. Recover: build.sh ship."
+          ntfy_send 5 "page" "LOAD SHED — ALL DOCKER STOPPED" "LAST RESORT: memPSI=''${MEM}%% ≥ $MEM_PSI_PAGE%% × $NEED checks. ALL containers stopped. docker auto-starts once pressure clears (single-shot); if that fails you get a PAGE."
           : > /run/load-shedder.fired 2>/dev/null || true
           systemctl stop docker.socket 2>/dev/null || true
           systemctl stop docker.service 2>/dev/null || true
@@ -195,7 +235,7 @@ in {
           else
             # No non-tier1 to stop — escalate immediately to full shed
             logger -t load-shedder "SHED-PAGE (escalated): no non-tier1 containers to shed"
-            ntfy_send 5 "page" "LOAD SHED — ALL DOCKER (escalated)" "All running containers are tier-1; stopping everything. memPSI=''${MEM}%%."
+            ntfy_send 5 "page" "LOAD SHED — ALL DOCKER (escalated)" "No sheddable containers (tier1 list is [${tier1List}]); stopping everything. memPSI=''${MEM}%%. An EMPTY tier1 list here means this VM has no graduated shed — populate .protection.tier1_services in b_infra/nixhm-sudo-<alias>/build.json."
             : > /run/load-shedder.fired 2>/dev/null || true
             systemctl stop docker.socket 2>/dev/null || true
             systemctl stop docker.service 2>/dev/null || true
