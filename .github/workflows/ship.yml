@@ -849,8 +849,21 @@ jobs:
       # entrypoint refactor + image rebuild. `build` (above) no longer
       # shares this constraint at all — only deploy still touches the mesh.
       max-parallel: 1
+    # 2026-09-06: ONE group for every job that holds the WG slot, fleet-wide
+    # (ship deploy, ship-home-manager, cgc-db*, health reports, mail health).
+    # The per-VM group only serialised deploys to the SAME VM; a deploy to
+    # oci-apps still ran beside a home-manager ship to oci-mail, both as
+    # 10.0.0.200, and sshd on oci-apps logged "Connection reset by
+    # authenticating user ubuntu 10.0.0.200 [preauth]" the second the
+    # endpoint flipped — runs 34035919341 and 34036748541 died on the
+    # .secrets scp that way. Owner's call: correctness over parallelism.
+    # Known cost of a shared group: GitHub keeps ONE pending run per group,
+    # so a newer entrant cancels an older still-pending one (that is why
+    # health_mail_full had left this group before). A cancelled deploy is
+    # visible in the run list; a WG collision was a green build with a red
+    # deploy that read like a network flake.
     concurrency:
-      group: ship-${{ matrix.vm }}
+      group: ship-wg-runner
       cancel-in-progress: false
     env:
       OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
