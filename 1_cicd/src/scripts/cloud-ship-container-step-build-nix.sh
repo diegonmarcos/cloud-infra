@@ -204,6 +204,14 @@ step_build() {
     for _sd in "$(realpath "$REPO_ROOT" 2>/dev/null || true)" "$REPO_ROOT" "$(realpath "$REPO_ROOT/.." 2>/dev/null || true)"; do
         [ -n "$_sd" ] && git config --global --add safe.directory "$_sd" 2>/dev/null || true
     done
+    # Belt AND braces (the per-path entries above did not clear run
+    # 34034838546): the system file is read by the git CLI and by libgit2
+    # alike (nix >= 2.19 fetches git trees through libgit2, which never sees
+    # GIT_CONFIG_* env), and the env form covers a git CLI whose $HOME is not
+    # where --global wrote. We are root inside a throwaway builder; a
+    # wildcard here widens nothing that matters.
+    git config --system --add safe.directory '*' 2>/dev/null || true
+    export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*'
     nix build --option eval-cache false --out-link "$SERVICE_DIR/.result" 2>"$BUILD_LOG" || {
         log_error "nix build failed:"
         # BOTH streams (2026-07-03): the engine self-tees stdout into
@@ -212,6 +220,19 @@ step_build() {
         cat "$BUILD_LOG"
         cat "$BUILD_LOG" >&2
         rm -f "$BUILD_LOG"
+        # 2026-09-06: "Path '_shared/engine.nix' does not exist in Git
+        # repository" is nix's rendering of git NOT LISTING the file — it
+        # says nothing about why (ownership, stale index, wrong HEAD, a
+        # sparse checkout). Print git's own view of the tree the flake was
+        # evaluated in so the next failure carries its cause.
+        {
+            echo "── git view of $REPO_ROOT (nix flake root) ──"
+            echo "nix: $(nix --version 2>&1 | head -1)   git: $(git --version 2>&1)"
+            echo "uid=$(id -u) .git owner uid=$(stat -c %u "$REPO_ROOT/.git" 2>&1) type=$([ -d "$REPO_ROOT/.git" ] && echo dir || echo file)"
+            echo "HEAD: $(git -C "$REPO_ROOT" rev-parse --short HEAD 2>&1)   tracked: $(git -C "$REPO_ROOT" ls-files 2>/dev/null | wc -l)   in-tree _shared/engine.nix: $(git -C "$REPO_ROOT" ls-files --error-unmatch _shared/engine.nix >/dev/null 2>&1 && echo yes || echo NO)"
+            echo "status (first 8):"; git -C "$REPO_ROOT" status --short 2>&1 | head -8
+            echo "safe.directory: $(git config --show-origin --get-all safe.directory 2>&1 | tr '\n' ' ')"
+        } 2>&1 | sed 's/^/[nix-diag] /'
         for f in $CLOUD_DATA_STAGED; do
             restore_staged "$f"
         done
