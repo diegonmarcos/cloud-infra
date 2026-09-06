@@ -32,16 +32,23 @@
 #   - SSH config alias `oci-apps` (same pattern as
 #     1_cicd/src/cicd/cloud-health-reports.yml's "Setup SSH config" step)
 #   - jq on PATH (ubuntu-latest ships it)
-# Optional (ntfy alert on failure — same topic/headers/tags the working
-# dagu DAG health_mail-full.yaml already uses, so the existing ntfy→
-# Mattermost bridge — health_ntfy-mattermost-sync.yaml — picks it up):
-#   NTFY_URL, AUTHELIA_BEARER_TOKEN, AUTHELIA_TOKEN_URL,
-#   AUTHELIA_OIDC_CLIENT_ID, AUTHELIA_OIDC_CLIENT_SECRET
-#   (same env var NAMES as a_solutions/infra-obs_dagu/src/secrets.yaml /
-#   compose.nix — NOT currently populated as GitHub Actions secrets; if
-#   unset, the alert step is skipped with a warning but the check itself
-#   still passes/fails and exits non-zero on failure, which GitHub's own
-#   default scheduled-workflow-failure email will surface either way).
+# Optional:
+#   - NTFY_URL — ntfy alert on pass/fail, same topic/headers/tags the working
+#     dagu DAG health_mail-full.yaml already uses (unauthenticated: ntfy's
+#     server.yml.tpl sets auth-default-access: read-write, and the dagu DAG's
+#     own ntfy calls carry no Authorization header — see
+#     a_solutions/infra-obs_dagu/src/dags/health_mail-full.yaml). Sending a
+#     Bearer header here instead gets ntfy's OWN auth.db involved, which does
+#     not recognise an Authelia-issued token and 401s ({"code":40101}) —
+#     learned the hard way, do not re-add it. If NTFY_URL is unreachable the
+#     alert is skipped with a warning but the check itself still exits
+#     non-zero on failure, which GitHub's own scheduled-workflow-failure
+#     email will surface either way.
+#   - AUTHELIA_BEARER_TOKEN / AUTHELIA_TOKEN_URL / AUTHELIA_OIDC_CLIENT_ID /
+#     AUTHELIA_OIDC_CLIENT_SECRET — feed BEARER_TOKEN into the liveness
+#     report container (layer 1's own Authelia-gated internal checks), NOT
+#     the ntfy alert. If unset, that report step fails its own auth-gated
+#     probes rather than skipping anything ntfy-related.
 set -uo pipefail
 
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
@@ -56,9 +63,10 @@ NTFY_SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCoun
 
 # Mint a fresh client_credentials token where possible (same reasoning as
 # a_solutions/infra-obs_dagu/src/dags/health_mail-full.yaml: a long-lived
-# AUTHELIA_BEARER_TOKEN secret goes stale ~1h after mint, so every alert
-# would silently 401 by the time this runs on a schedule). Falls back to a
-# static AUTHELIA_BEARER_TOKEN if client-credentials env vars aren't set.
+# AUTHELIA_BEARER_TOKEN secret goes stale ~1h after mint). This BEARER feeds
+# BEARER_TOKEN into the liveness report container below (layer 1) ONLY — it
+# is deliberately never sent to ntfy (see the header comment). Falls back to
+# a static AUTHELIA_BEARER_TOKEN if client-credentials env vars aren't set.
 BEARER="${AUTHELIA_BEARER_TOKEN:-}"
 if [ -n "${AUTHELIA_TOKEN_URL:-}" ] && [ -n "${AUTHELIA_OIDC_CLIENT_ID:-}" ] && [ -n "${AUTHELIA_OIDC_CLIENT_SECRET:-}" ]; then
   FRESH_TOKEN=$(curl -s --max-time 10 -X POST "$AUTHELIA_TOKEN_URL" \
@@ -220,30 +228,22 @@ echo "═══ Result ═══"
 
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
   echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; stores reconciled)"
-  if [ -n "$BEARER" ]; then
-    timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
-      -H 'Authorization: Bearer $BEARER' \
-      -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
-      -H 'Priority: 2' \
-      -H 'Tags: white_check_mark,email' \
-      -d 'All mail checks passed (liveness + cross-store reconciliation)'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
-  fi
+  timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
+    -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
+    -H 'Priority: 2' \
+    -H 'Tags: white_check_mark,email' \
+    -d 'All mail checks passed (liveness + cross-store reconciliation)'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
   exit 0
 fi
 
 echo "Mail Health FAILED:"
 for r in "${FAIL_REASONS[@]}"; do echo "  - $r"; done
 
-if [ -n "$BEARER" ]; then
-  DETAIL=$(printf '%s\n' "${FAIL_REASONS[@]}")
-  timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
-    -H 'Authorization: Bearer $BEARER' \
-    -H 'Title: Mail Health FAILED' \
-    -H 'Priority: 5' \
-    -H 'Tags: rotating_light,email' \
-    -d '$(printf '%s' "$DETAIL" | sed "s/'/'\\\\''/g")'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
-else
-  echo "::warning::no Authelia bearer token available — skipping ntfy alert (GitHub's own scheduled-workflow-failure email still fires)"
-fi
+DETAIL=$(printf '%s\n' "${FAIL_REASONS[@]}")
+timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
+  -H 'Title: Mail Health FAILED' \
+  -H 'Priority: 5' \
+  -H 'Tags: rotating_light,email' \
+  -d '$(printf '%s' "$DETAIL" | sed "s/'/'\\\\''/g")'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
 
 exit 1
