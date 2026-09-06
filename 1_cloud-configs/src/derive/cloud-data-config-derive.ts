@@ -1299,14 +1299,23 @@ function deriveCaddy(c: any): DerivedFile[] {
       // Only hosts caddy-public SERVES at L7 (gh-pages + auth=none subdomains).
       // Authed-public subdomains are NOT here — they passthrough to gcp-proxy where
       // their auth lives. Anything not in this list is L4-passthrough'd to the hub.
-      // Public-ness is declared per-PATH but was decided per-HOST: only auth=none
-      // subdomains were served here, so a host with ANY auth was passed through
-      // wholesale to the hub - taking its declared-public paths down with it.
-      // analytics.diegonmarcos.com is exactly that shape (Authelia-protected admin
-      // UI + must-be-public tracking endpoints), so every external phone, app and
-      // browser got 502 on /umami/* and /matomo/* while mesh clients saw 200.
-      // Any host owning a declared-public path must TERMINATE here so the
-      // path-level split can happen.
+      // INVARIANT: this list must hold EXACTLY the hosts the renderer emits a site
+      // block for (caddyfile-public.nix: gh-pages + auth=none subdomains +
+      // public_mcp_routes + oidc_public). A host listed here WITHOUT a site block
+      // terminates TLS on :8443 holding no certificate for that name, so the
+      // handshake dies and the client sees a bare connection failure that no
+      // health check records as a fault.
+      // That is the 2026-09-05 outage: the A/B/C/D taxonomy buckets are human/debug
+      // views of every declared-public route, NOT a routing input, and spreading
+      // them here added 24 blockless hosts (chat, photos, vault, git, mail,
+      // analytics, ...). All 24 were down and unreported.
+      // The intent had been to let a host owning a declared-public path TERMINATE
+      // here so the path-level split could happen (analytics.diegonmarcos.com's
+      // /umami/* and /matomo/* behind an Authelia-protected admin UI). That half
+      // was never built: the renderer's mkPathRouteGroup is defined but never
+      // referenced, so public_path_routes emits no site blocks at all. Until it is
+      // wired up, path hosts must stay on the L4 passthrough to gcp-proxy, which
+      // serves them today under its wildcard.
       // Every source is normalised the SAME way. A `domain` may carry several
       // comma-joined names ("diegonmarcos.com, www.diegonmarcos.com") and a
       // route key may carry a path suffix. Splitting only the gh-pages source
@@ -1317,8 +1326,8 @@ function deriveCaddy(c: any): DerivedFile[] {
         [
           ...githubPagesProxies.map((g: any) => g.domain),
           ...publicSubdomainRoutes.filter((r: any) => (r.auth ?? null) === "none").map((r: any) => r.domain),
-          ...[...publicAMcp, ...publicBApis, ...publicCAppPaths, ...publicDOthers]
-               .map((r: any) => r.host ?? r.domain),
+          ...publicMcpRoutes.map((g: any) => g.parent_domain),
+          ...(oidcPublic ? [oidcPublic.domain] : []),
         ]
           .flatMap((d: any) => String(d ?? "").split(","))
           .map((s: string) => s.trim().split("/")[0])
