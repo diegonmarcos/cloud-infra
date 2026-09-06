@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud/c_vps/vps_oci/src/main.tf
+# ║   Source : cloud-infra/c_vps/vps_oci/src/main.tf
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-terraform-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
