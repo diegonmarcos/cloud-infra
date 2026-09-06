@@ -12400,7 +12400,15 @@
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
         },
-        "protection": {}
+        "protection": {
+          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). THE FLEET'S ONLY PUBLIC EDGE — tier-1 is the edge data path itself: caddy-public terminates TLS, unbound-dns64 resolves for it, cf-worker-http-to-wg-public-bridge carries inbound off-mesh traffic, c3-public-api is the public API. Analytics (umami, umami-db) is the sheddable demand. Empty tier1 here made shed_non_tier1() return 1 and escalate straight to `systemctl stop docker` — that amputated the public edge twice in 24h (2026-09-05 ~70min, 2026-09-06 seven hours).",
+          "tier1_services": [
+            "caddy-public",
+            "unbound-dns64",
+            "cf-worker-http-to-wg-public-bridge",
+            "c3-public-api"
+          ]
+        }
       },
       "oci-apps": {
         "vm_id": "oci-A1-f_0",
@@ -12484,7 +12492,15 @@
           "ssh_secret": "OCI_SSH_KEY",
           "host_literal": true
         },
-        "protection": {},
+        "protection": {
+          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). 62 containers on one box, and the load-shedder is the DESIGNED enforcement mechanism for agent-runner concurrency (agents are sheddable demand: culled under pressure, resumed later), so graduated shedding must actually work here — an empty tier1_services made shed_non_tier1() return 1 and escalate to a full `systemctl stop docker`. Tier-1 is deliberately TIGHT: only what must survive for the box to stay observable and recoverable while everything else is culled. ntfy is first because it is the fleet's alert bus AND the load-shedder's own primary notify endpoint (10.0.0.6:8090) — shedding it makes every VM's shedder go silent. NOT tier-1 by design: my-ai-api and the agent-runner containers.",
+          "tier1_services": [
+            "ntfy",
+            "syslog-bridge",
+            "c3-infra-api",
+            "crowdsec"
+          ]
+        },
         "ssh_containers": [
           {
             "name": "c3-infra-api",
