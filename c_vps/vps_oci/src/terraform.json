@@ -76,7 +76,8 @@
       "memory_in_gbs": 24,
       "fault_domain": "FAULT-DOMAIN-2",
       "image_id": "ocid1.image.oc1.eu-marseille-1.aaaaaaaar3pm2xlih5tqkjwr7ykfgzixjytjivkacgmqrlxi66vzlf5a2wlq",
-      "boot_volume_size_gb": 100,
+      "_boot_volume_size_doc": "2026-09-06: 100 -> 150 (oci-apps sat at 90% with cgc-db restore-all needing ~20 GB of staging). NOTE main.tf ignores source_details on the instance (so a size change never replaces the VM), which means terraform does NOT apply this number to an existing boot volume: apply it with `oci bv boot-volume update --size-in-gbs`, then grow the partition + fs on the box (c3-infra-mcp devops.vm.grow_root). This field stays the declaration a rebuilt instance is created with.",
+      "boot_volume_size_gb": 150,
       "vnic_display_name": "arm-server-1",
       "ip": "82.70.229.129",
       "ocid": "ocid1.instance.oc1.eu-marseille-1.anwxeljruadvczacj7dfxl7uifar574je7fzlvtdjp4ghljdwuwdemsdbiva"
