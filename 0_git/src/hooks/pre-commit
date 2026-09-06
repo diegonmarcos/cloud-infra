@@ -379,7 +379,13 @@ fi
 # gate and for the "actually run the deriver" gate further down — so the
 # two can never drift apart again. They already had: see the 2026-08-22
 # note further down for what that cost.
-DERIVE_TRIGGER_RE='^(1_cicd/src/|1_cloud-configs/src/derive/|a_solutions/[^/]+/build\.json$|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'
+# The a_solutions/*/build.json alternative was REMOVED on 2026-09-06: those
+# files live in cloud-u-containers now and can never appear in this repo's
+# staged set, so keeping the pattern would be exactly the kind of dead matcher
+# that has repeatedly gone green here while matching nothing. A service
+# build.json edit re-derives via CI instead — cloud-u-containers dispatches
+# `containers-push`, which triggers ship-gen-configs.
+DERIVE_TRIGGER_RE='^(1_cicd/src/|1_cloud-configs/src/derive/|b_infra/nixhm-sudo-[^/]+/build\.json$|config\.json$)'
 if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
    && echo "$STAGED" | grep -qE "$DERIVE_TRIGGER_RE"; then
   REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -458,9 +464,16 @@ if [ -z "${SKIP_CONFIGS_REGEN:-}" ] \
           tail -20 /tmp/derive-regen.log >&2
           exit 1
         fi
-        # The consolidated JSON is propagated into a_solutions/*/src/ copies, so
-        # stage those too or the service images ship stale fleet data.
-        for _derived in 1_cloud-configs/dist/ a_solutions/; do
+        # a_solutions/ is NOT in this list any more, and must not be re-added.
+        # Since 2026-09-06 it is a separate repository (cloud-u-containers)
+        # that is gitignored here, so `git add a_solutions/` would either be
+        # refused as an ignored path or — worse, if the ignore rule were ever
+        # lost — sweep the whole container fleet into a cloud-infra commit.
+        # The propagated _cloud-data-consolidated.json copies under
+        # a_solutions/*/src/ are now committed from that repo instead, and CI
+        # regenerates them via the containers-push repository_dispatch into
+        # ship-gen-configs.
+        for _derived in 1_cloud-configs/dist/; do
           if ! git diff --quiet -- "$_derived"; then
             git add "$_derived"
             echo "[pre-commit] $_derived updated + staged (derive)."

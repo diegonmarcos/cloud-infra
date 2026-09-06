@@ -4,15 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside it
-      # reaches this repo as a POINTER BUMP — a gitlink at the single path
-      # "a_solutions" — so no a_solutions/<anything> filter can ever match again.
-      # The four per-service filters that used to live here
-      # (a_solutions/*/build.json, and infra-sec_caddy / infra-sec_authelia /
-      # infra-net_hickory-dns .../src/**) were dead from that day: renaming or
-      # editing any of those services regenerated nothing and the next Ship went
-      # green having deployed nothing. Watch the gitlink itself instead.
-      - "a_solutions"
+      # a_solutions is DELIBERATELY ABSENT here. Since 2026-09-06 it is a
+      # separate repository (diegonmarcos/cloud-u-containers), so nothing about
+      # a service change touches THIS repo — not a file, not a gitlink — and no
+      # `paths:` entry, bare or globbed, can match one. The deriver reads
+      # a_solutions/*/build.json out of the CHECKOUT, so the regeneration still
+      # sees every service; only the trigger moved, to repository_dispatch.
       - "config.json"
       - "c_vps/ba-clo_cloudflare/src/main.tf"
       - "c_vps/vps_*/src/main.tf"
@@ -29,6 +26,12 @@ on:
       - "1_cloud-configs/src/**"
       - "2_sops/**"
       - "9_others/src/**"
+  # A service's build.json is a deriver INPUT (repo-map reads .index_repos out
+  # of it), and those files now live in cloud-u-containers. Without this the
+  # config regeneration would never see a service being added, renamed or
+  # re-declared, and the stale build-gha.json would then make Ship skip it.
+  repository_dispatch:
+    types: [containers-push]
   workflow_dispatch:
 
 permissions:
@@ -57,12 +60,29 @@ jobs:
         with:
           submodules: false
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
+
       # Allowlist: `submodules: true` aborts checkout on the first submodule
       # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
       # cloud-master's own .gitmodules is SSH-only). Init just what is used.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that

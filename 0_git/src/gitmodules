@@ -18,15 +18,24 @@
 	shallow = true
 	ignore = all
 
-# 2026-08-27: a_solutions split out to cloud-u-containers and mounted back at
-# its original path, so the ~400 in-repo references and the ten workflows that
-# read a_solutions/*/build.json keep resolving unchanged.
+# 2026-09-06: a_solutions is NOT a submodule and must not be re-added as one.
 #
-# `writable = true` opts this one out of the read-only pre-commit hook: unlike
-# the fleet index, this tree is authored in place. Full clone (no shallow) —
-# the ship engine walks history for per-service change detection.
-
-[submodule "a_solutions"]
-	path = a_solutions
-	url = git@github.com:diegonmarcos/cloud-u-containers.git
-	writable = true
+# It was split out to diegonmarcos/cloud-u-containers on 2026-08-27 and then
+# immediately mounted back here as a submodule, which kept every path
+# resolving but left the tree inside cloud-infra in every way that mattered:
+# a container change still had to land here as a gitlink bump, so this repo
+# still gated, versioned and triggered on it. It is now a plain sibling
+# repository, checked out by CI at the path `a_solutions` with
+# actions/checkout (see 1_cicd/src/cicd/*.yml) and cloned standalone into
+# ~/git/cloud-u-containers for local work. The ~400 in-repo references still
+# resolve because the checkout PATH is unchanged — only the ownership moved.
+#
+# Consequences, so nobody "fixes" this by re-adding the section:
+#   • No `paths: a_solutions` filter can ever fire again — no file and no
+#     gitlink for it exists here. Container pushes arrive as a
+#     `repository_dispatch` of type `containers-push` sent by
+#     cloud-u-containers/.github/workflows/dispatch-cloud-infra.yml.
+#   • Per-service change detection diffs client_payload.{before,after}
+#     INSIDE the a_solutions checkout, not a gitlink in this repo.
+#   • a_solutions/ is gitignored here so the untracked checkout cannot be
+#     swept into a commit by a bulk `git add`.

@@ -11,17 +11,20 @@ on:
       - "c_vps/vps_gcloud/src/**"
       - "c_vps/vps_oci/src/**"
       - "c_vps/vps_hetzner/src/**"
-      # a_solutions became a SUBMODULE on 2026-08-27. A change landing inside
-      # it reaches this repo as a POINTER BUMP — a gitlink at the single path
-      # "a_solutions" — so "a_solutions/infra-cloud_cloudflare-worker/src/**"
-      # can never match again. Watch the gitlink itself instead.
-      - "a_solutions"
+      # a_solutions is DELIBERATELY ABSENT here. Since 2026-09-06 it is a
+      # separate repository (diegonmarcos/cloud-u-containers), not a submodule,
+      # so a cloudflare-worker change touches no path in THIS repo and no
+      # `paths:` entry can match it. It arrives on repository_dispatch below.
       - "1_cicd/src/cicd/ship-terraform.yml"
     branches: [main]
   workflow_run:
     workflows: ["Ship → gen-configs (cloud-data)"]
     types: [completed]
     branches: [main]
+  # Container-repo pushes. client_payload.{before,after} is the range the
+  # cf-worker detection below diffs inside the a_solutions checkout.
+  repository_dispatch:
+    types: [containers-push]
   workflow_dispatch:
     inputs:
       project:
@@ -52,26 +55,43 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Pin to the exact commit the dispatch announced, so the tree that
+          # was detected is the tree that gets shipped. Empty on every other
+          # event, which checks out the default branch as before.
+          ref: ${{ github.event.client_payload.after }}
+
       # Allowlist: `submodules: true` aborts checkout on the first submodule
       # CI cannot reach (vault / notes / cloud-data-lfs are private siblings;
       # cloud-master's own .gitmodules is SSH-only). Init just what is used.
       - uses: ./.github/actions/init-submodules
         with:
-          include: I_cloud a_solutions
+          include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
       - name: Path relevance gate
         id: paths
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
-          # 'a_solutions/<svc>/' cannot match a submodule POINTER BUMP, which
-          # git reports as the bare path "a_solutions" — no trailing slash.
-          # Anchor on a boundary instead, or this gate sets skip=true and every
-          # later step is skipped before the submodule is ever inspected.
-          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^(c_vps/|a_solutions($|/))' | head -1 || true)
+          # The a_solutions alternative is gone from this pattern: a_solutions
+          # is a separate repository now, so a workflow_run commit in THIS repo
+          # can never carry an a_solutions path of any shape. cf-worker changes
+          # arrive on repository_dispatch, which this gate does not run for.
+          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '^c_vps/' | head -1 || true)
           if [ -z "$CHANGED" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::skip — no c_vps/ or cloudflare-worker changes in upstream commit"
+            echo "::notice::skip — no c_vps/ changes in upstream commit"
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -86,10 +106,18 @@ jobs:
       # git diff is the same logic without the remote-fetch bug.
       - name: Detect changes
         id: changes
-        if: ${{ steps.paths.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_run') }}
+        if: ${{ steps.paths.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_run' || github.event_name == 'repository_dispatch') }}
         run: |
           set -eu
-          DIFF=$(git diff --name-only HEAD^ HEAD)
+          # On repository_dispatch the event describes a push to the CONTAINER
+          # repo and makes no claim about this one, so this repo's HEAD^..HEAD
+          # is an unrelated commit. Diffing it would apply terraform for a
+          # c_vps edit that this event knows nothing about.
+          if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
+            DIFF=""
+          else
+            DIFF=$(git diff --name-only HEAD^ HEAD)
+          fi
           set_out() { echo "$1=$2" >> "$GITHUB_OUTPUT"; }
           match() { echo "$DIFF" | grep -qE "$1" && echo true || echo false; }
           set_out cloudflare "$(match '^c_vps/ba-clo_cloudflare/src/')"
@@ -97,34 +125,32 @@ jobs:
           set_out oci        "$(match '^c_vps/vps_oci/src/')"
           set_out hetzner    "$(match '^c_vps/vps_hetzner/src/')"
 
-          # a_solutions is a SUBMODULE (since 2026-08-27). A change inside it
-          # reaches this repo as a GITLINK bump: git reports the single path
-          # "a_solutions", never "a_solutions/<svc>/...", so the old
-          # '^a_solutions/infra-cloud_cloudflare-worker/src/' match could never
-          # fire on a pointer bump. Fixing only on.push.paths would be WORSE
-          # than the bug — terraform would run with cf-worker=false and go green
-          # having applied nothing. Resolve the two gitlink SHAs and diff INSIDE
-          # the submodule.
+          # a_solutions is a SEPARATE REPOSITORY (since 2026-09-06). There is no
+          # gitlink here to diff, so the cf-worker range comes from the
+          # repository_dispatch payload and is diffed inside the a_solutions
+          # checkout against its own history. Degrading an unresolvable SHA to
+          # an empty diff would make terraform run with cf-worker=false and go
+          # green having applied nothing — the exact false-green this guards.
           SUB_DIFF=""
-          if [ -n "$(git diff --name-only HEAD^ HEAD -- a_solutions)" ]; then
-            OLD_SUB=$(git rev-parse --verify --quiet 'HEAD^:a_solutions' || true)
-            NEW_SUB=$(git rev-parse --verify --quiet 'HEAD:a_solutions' || true)
-            # An unresolvable SHA must NEVER degrade to an empty diff — that
-            # silent-nothing is the exact failure this block exists to kill.
-            if [ -z "$OLD_SUB" ] || [ -z "$NEW_SUB" ]; then
-              echo "::error::a_solutions gitlink changed but its SHAs are unresolvable (old='$OLD_SUB' new='$NEW_SUB') — refusing to apply a silent subset"
+          if [ "$GITHUB_EVENT_NAME" = "repository_dispatch" ]; then
+            NEW_SUB="${{ github.event.client_payload.after }}"
+            OLD_SUB="${{ github.event.client_payload.before }}"
+            if [ -z "$NEW_SUB" ] || ! git -C a_solutions cat-file -e "${NEW_SUB}^{commit}" 2>/dev/null; then
+              echo "::error::repository_dispatch client_payload.after is missing or absent from the cloud-u-containers checkout (after='$NEW_SUB') — refusing to apply a silent subset"
               exit 1
             fi
-            for _sub in "$OLD_SUB" "$NEW_SUB"; do
-              git -C a_solutions cat-file -e "${_sub}^{commit}" 2>/dev/null && continue
-              echo "::error::a_solutions commit ${_sub} is absent from the submodule clone (history too shallow) — refusing to apply a silent subset"
-              exit 1
-            done
+            if [ -z "$OLD_SUB" ] \
+               || [ "$OLD_SUB" = "0000000000000000000000000000000000000000" ] \
+               || ! git -C a_solutions cat-file -e "${OLD_SUB}^{commit}" 2>/dev/null; then
+              echo "::warning::client_payload.before unusable (before='$OLD_SUB') — falling back to ${NEW_SUB}^"
+              OLD_SUB=$(git -C a_solutions rev-parse --verify --quiet "${NEW_SUB}^" || true)
+              [ -n "$OLD_SUB" ] || { echo "::error::cannot resolve a base commit for a_solutions — refusing to apply a silent subset"; exit 1; }
+            fi
             SUB_DIFF=$(git -C a_solutions diff --name-only "$OLD_SUB" "$NEW_SUB")
             echo "detect: a_solutions ${OLD_SUB}..${NEW_SUB}"
           fi
-          # Paths here are submodule-relative ("<svc>/src/..."), so there is no
-          # "a_solutions/" prefix left to anchor on.
+          # Paths here are a_solutions-repo-relative ("<svc>/src/..."), so there
+          # is no "a_solutions/" prefix to anchor on.
           match_sub() { echo "$SUB_DIFF" | grep -qE "$1" && echo true || echo false; }
           set_out cf-worker  "$(match_sub '^infra-cloud_cloudflare-worker/src/')"
 
