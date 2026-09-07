@@ -288,8 +288,8 @@
       "cpu": 4,
       "ram_gb": 16,
       "shape": "g2-standard-4",
-      "zone": "us-central1-a",
-      "instance_id": "projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed",
+      "zone": null,
+      "instance_id": null,
       "rescue_port": 2200,
       "public_ports": [],
       "description": "GCloud On-Demand - g2-standard-4 + NVIDIA L4 24GB (T4 stocked out in all us-central1 zones 2026-09-03) - cgc octocode GPU embedding runner (ollama nomic-embed-text behind Caddy bearer-auth on :443; see c_vps/vps_gcloud/src/startup-gpu-embed.sh). NOT a home-manager fleet member (no HM, no WireGuard mesh join) — started/stopped around cgc-db-index.yml's semantic-phase android job via devops_vm_start/devops_vm_stop. STOPPED by default between runs.",
@@ -300,13 +300,7 @@
           "restart": "ssh gcp-gpu-embed sudo systemctl reboot",
           "reboot-forced": "ssh gcp-gpu-embed sudo systemctl reboot --force --force"
         },
-        "console": {
-          "start": "gcloud compute instances start projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed --zone us-central1-a",
-          "stop": "gcloud compute instances stop projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed --zone us-central1-a",
-          "restart": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed --zone us-central1-a",
-          "reset": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed --zone us-central1-a",
-          "reboot-forced": "gcloud compute instances reset projects/diegonmarcos-infra-prod/zones/us-central1-a/instances/gcp-gpu-embed --zone us-central1-a"
-        }
+        "console": {}
       },
       "daemons": [
         "sshd.service",
