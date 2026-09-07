@@ -480,8 +480,59 @@ if [ -n "$CONTAINER" ]; then
   # data while the run went green and the MCP stayed DOWN). So: restart, else
   # start, then gate the refresh on the container being RUNNING — not on which
   # command brought it up.
-  docker restart "$CONTAINER" >/dev/null 2>&1 || docker start "$CONTAINER" >/dev/null 2>&1 || true
-  if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER" 2>/dev/null)" = "true" ]; then
+  #
+  # 2026-09-07: one shot at restart/start, with BOTH stderrs sent to /dev/null,
+  # was not enough and left nothing to diagnose. Run 34093679038 (graphrag/pub)
+  # staged all 6 repos, swapped the volume, then failed here — and the only
+  # thing the log could say was "likely removed by a concurrent op", which was
+  # wrong: Ship's Deploy job waited correctly on the ship-wg-runner group and
+  # did not start until 09:57:09, two seconds AFTER this job had already given
+  # up. The container was not removed; it just would not come back on the first
+  # try (a stop→start inside a few seconds races the port release, which
+  # userland-proxy made likelier), and the swallowed stderr is why that took a
+  # log dive to establish rather than being on the line above.
+  #
+  # So: keep the real error, retry over ~40 s, and if it still will not come up,
+  # do the compose recovery this script's own failure message tells a human to
+  # run instead of just printing it. A restore that has already staged and
+  # swapped everything correctly should not end with the MCP down and the
+  # kg-store stale because docker needed one more second.
+  mcp_up() { [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = "true" ]; }
+  bring_up() {
+    _c="$1"; _err=""
+    _i=0
+    while [ "$_i" -lt 8 ]; do
+      _i=$((_i + 1))
+      _err=$(docker restart "$_c" 2>&1 >/dev/null) || \
+        _err="$_err; $(docker start "$_c" 2>&1 >/dev/null)"
+      # Explicit if, not `mcp_up && { ...; return 0; }`: in that form a false
+      # inner test makes the group's status false and the `return 0` never
+      # runs. That short-circuit is exactly the bug this script's exit status
+      # had at the bottom of the file; not repeating it here.
+      if mcp_up "$_c"; then
+        if [ "$_i" -gt 1 ]; then
+          echo "[cgc-db-restore-all] $_c came up on attempt $_i"
+        fi
+        return 0
+      fi
+      echo "[cgc-db-restore-all] WARN $_c not up (attempt $_i/8): ${_err:-no error text}"
+      sleep 5
+    done
+    # Last resort: the container may genuinely be gone (removed by a concurrent
+    # op — the 2026-09-03 case). compose recreates it; `|| true` because a
+    # missing compose dir must not mask the real report below.
+    _dir="${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose}"
+    if [ -f "$_dir/docker-compose.yml" ] || [ -f "$_dir/compose.yml" ]; then
+      echo "[cgc-db-restore-all] $_c still down — recreating via compose in $_dir"
+      (cd "$_dir" && docker compose --env-file .secrets up -d cloud-cgc-pub-mcp cloud-cgc-pvt-mcp 2>&1) || true
+      sleep 5
+    else
+      echo "[cgc-db-restore-all] WARN no compose file under $_dir — cannot recreate $_c"
+    fi
+    mcp_up "$_c"
+  }
+  bring_up "$CONTAINER" || true
+  if mcp_up "$CONTAINER"; then
     echo "[cgc-db-restore-all] restarted $CONTAINER"
     # ── kg-store (SurrealDB) refresh — closes the split-pipeline gap ─────────
     # Both MCP containers run the SAME binaries image (python3 + node +
@@ -575,7 +626,7 @@ if [ -n "$CONTAINER" ]; then
       echo "[cgc-db-restore-all] kg-store refresh skipped — no repos staged this run"
     fi
   else
-    echo "::error::[cgc-db-restore-all] $CONTAINER is DOWN after the swap (restart AND start both failed — likely removed by a concurrent op). The kg-store SurrealDB was NOT refreshed, so 8001/8002 hold STALE data. Recover: from /opt/containers/cloud-cgc-pub-mcp/compose run 'docker compose --env-file .secrets up -d cloud-cgc-pub-mcp cloud-cgc-pvt-mcp', then re-run the per-container OCTOCODE_SKIP_INDEX=1 reindex.sh tail."
+    echo "::error::[cgc-db-restore-all] $CONTAINER is DOWN after the swap — 8 restart/start attempts over ~40s AND the compose recreate all failed (per-attempt docker errors are in the WARN lines above). The kg-store SurrealDB was NOT refreshed, so 8001/8002 hold STALE data. Recover: from ${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose} run 'docker compose --env-file .secrets up -d cloud-cgc-pub-mcp cloud-cgc-pvt-mcp', then re-run the per-container OCTOCODE_SKIP_INDEX=1 reindex.sh tail."
     RESTORE_MCP_FAILED=1
   fi
 fi
