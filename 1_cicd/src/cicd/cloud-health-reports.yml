@@ -1,5 +1,9 @@
 name: Cloud Health Reports
 
+# This is the ONE scheduled health report. The (x86 GHA) and (ARM GHA)
+# variants publish to the same cloud-data/y_old/reports/dist/ and used to
+# share this exact cron, so the three raced every morning and the last one
+# home overwrote the other two. They are now workflow_dispatch only.
 on:
   schedule:
     - cron: '17 6 * * *'

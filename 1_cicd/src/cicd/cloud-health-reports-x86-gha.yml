@@ -1,8 +1,9 @@
 name: Cloud Health Reports (x86 GHA)
 
+# Deliberately NOT scheduled. Identical to Cloud Health Reports apart from
+# pinning the :amd64 image tag instead of :latest; kept for manual runs.
+# cloud-health-reports.yml owns the daily cron — see the note there.
 on:
-  schedule:
-    - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
       report:

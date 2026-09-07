@@ -12,9 +12,13 @@
 
 name: Cloud Health Reports (ARM GHA)
 
+# Deliberately NOT scheduled. This is the arm64 variant of the same report,
+# kept for manual runs when an arch-specific check is needed. Cloud Health
+# Reports (cloud-health-reports.yml) owns the daily cron. All three variants
+# publish to the same cloud-data/y_old/reports/dist/, so running them on one
+# shared cron made them race: whichever finished last silently overwrote the
+# others, and on 2026-09-07 the x86 variant was simply cancelled.
 on:
-  schedule:
-    - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
       report:
