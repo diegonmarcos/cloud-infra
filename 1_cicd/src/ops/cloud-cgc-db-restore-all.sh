@@ -578,4 +578,18 @@ fi
 echo "[cgc-db-restore-all] RESTORE COMPLETE"
 # A down MCP + un-refreshed store is a FAILED restore, not a warning — exit
 # non-zero so the pipeline goes RED instead of reporting success over stale data.
-[ "${RESTORE_MCP_FAILED:-0}" = 1 ] && { echo "::error::[cgc-db-restore-all] restore FAILED — MCP down and kg-store not refreshed (see recovery above)"; exit 1; }
+#
+# 2026-09-07: this was written as `[ cond ] && { ...; exit 1; }` on the LAST
+# line of the script. When cond is FALSE — i.e. on SUCCESS — the && chain
+# short-circuits and the compound command's status is 1, which becomes the
+# script's exit status. So every successful restore-all exited 1 and the
+# caller reported "restore-all failed on oci-apps (rc=1)" immediately after
+# its own log said RESTORE COMPLETE (run 34093679038: 2376 nodes + 502758
+# edges ingested, 0 failed, then rc=1). The disk exhaustion that used to
+# kill this step hid the bug; once there was room to finish, it surfaced.
+# An explicit if + explicit exit 0 — never rely on a trailing test's status.
+if [ "${RESTORE_MCP_FAILED:-0}" = 1 ]; then
+  echo "::error::[cgc-db-restore-all] restore FAILED — MCP down and kg-store not refreshed (see recovery above)"
+  exit 1
+fi
+exit 0
