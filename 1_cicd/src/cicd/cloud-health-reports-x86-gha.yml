@@ -108,15 +108,11 @@ jobs:
             git@github.com:diegonmarcos/cloud-data.git /tmp/cd
           mkdir -p /tmp/cd/y_old/reports/dist
           cp -r "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/." /tmp/cd/y_old/reports/dist/
+          # Publish the manifest the engine writes — see the same block in
+          # cloud-health-reports.yml for why it was being left behind.
+          mkdir -p /tmp/cd/reports
+          cp "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/manifest.json" /tmp/cd/reports/manifest.json
           cd /tmp/cd
-          # Keep reports/manifest.json in step with what was published — see
-          # the same block in cloud-health-reports.yml for why.
-          mkdir -p reports
-          find y_old/reports/dist -maxdepth 1 -name '*.md' | sort | jq -R -s '
-            split("\n") | map(select(length > 0)) | map({
-              file: .,
-              name: (split("/") | last | rtrimstr(".md") | gsub("_"; " "))
-            })' > reports/manifest.json
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
           git add y_old/reports/dist/ reports/manifest.json

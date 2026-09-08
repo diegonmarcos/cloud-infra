@@ -111,18 +111,14 @@ jobs:
             git@github.com:diegonmarcos/cloud-data.git /tmp/cd
           mkdir -p /tmp/cd/y_old/reports/dist
           cp -r "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/." /tmp/cd/y_old/reports/dist/
-          cd /tmp/cd
           # The Pages site (index.html) lists the reports from
-          # reports/manifest.json. That file was a hand-written list and was
-          # lost when the reports moved under y_old/, so the site has listed
-          # nothing since. Derive it from what was just published instead, so
-          # adding a report can never again leave the site out of date.
-          mkdir -p reports
-          find y_old/reports/dist -maxdepth 1 -name '*.md' | sort | jq -R -s '
-            split("\n") | map(select(length > 0)) | map({
-              file: .,
-              name: (split("/") | last | rtrimstr(".md") | gsub("_"; " "))
-            })' > reports/manifest.json
+          # reports/manifest.json. The engine has always written that file, but
+          # one level above dist/ - and only dist/ was ever copied here. So the
+          # site has listed nothing since the manifest it used to have went
+          # away with the y_old/ move.
+          mkdir -p /tmp/cd/reports
+          cp "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/manifest.json" /tmp/cd/reports/manifest.json
+          cd /tmp/cd
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
           git add y_old/reports/dist/ reports/manifest.json
