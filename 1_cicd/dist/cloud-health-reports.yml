@@ -124,9 +124,20 @@ jobs:
           mkdir -p /tmp/cd/y_old/reports/dist
           cp -r "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/." /tmp/cd/y_old/reports/dist/
           cd /tmp/cd
+          # The Pages site (index.html) lists the reports from
+          # reports/manifest.json. That file was a hand-written list and was
+          # lost when the reports moved under y_old/, so the site has listed
+          # nothing since. Derive it from what was just published instead, so
+          # adding a report can never again leave the site out of date.
+          mkdir -p reports
+          find y_old/reports/dist -maxdepth 1 -name '*.md' | sort | jq -R -s '
+            split("\n") | map(select(length > 0)) | map({
+              file: .,
+              name: (split("/") | last | rtrimstr(".md") | gsub("_"; " "))
+            })' > reports/manifest.json
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
-          git add y_old/reports/dist/
+          git add y_old/reports/dist/ reports/manifest.json
           git diff --cached --quiet && echo "No changes to commit" || \
             git commit -m "chore: update health reports $(date -u +%Y-%m-%dT%H:%M:%SZ)" && \
             git push

@@ -109,9 +109,17 @@ jobs:
           mkdir -p /tmp/cd/y_old/reports/dist
           cp -r "$GITHUB_WORKSPACE/a_solutions/infra-obs_reports/src/dist/." /tmp/cd/y_old/reports/dist/
           cd /tmp/cd
+          # Keep reports/manifest.json in step with what was published — see
+          # the same block in cloud-health-reports.yml for why.
+          mkdir -p reports
+          find y_old/reports/dist -maxdepth 1 -name '*.md' | sort | jq -R -s '
+            split("\n") | map(select(length > 0)) | map({
+              file: .,
+              name: (split("/") | last | rtrimstr(".md") | gsub("_"; " "))
+            })' > reports/manifest.json
           git config user.name  "Claude"
           git config user.email "noreply@anthropic.com"
-          git add y_old/reports/dist/
+          git add y_old/reports/dist/ reports/manifest.json
           git diff --cached --quiet && echo "No changes to commit" || \
             git commit -m "chore: update health reports $(date -u +%Y-%m-%dT%H:%M:%SZ)" && \
             git push
