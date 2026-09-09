@@ -24,8 +24,12 @@ name: Unjam Ship
 # them blocks every deploy fleet-wide — a scheduled cgc-db run hung at 17:54Z
 # held the group for three hours and left a Deploy pending with nothing
 # running. Unjamming only ship.yml could not clear it. WG_WORKFLOWS below MUST
-# list exactly the workflows declaring `group: ship-wg-runner`; the Phase 46
-# lint test fails the build if it drifts.
+# list exactly the workflows whose RUNS can hold the group; the Phase 46 lint
+# test fails the build if it drifts. For a normal workflow that is the workflow
+# declaring `group: ship-wg-runner` itself. For a REUSABLE one it is that
+# workflow's CALLERS — a workflow_call workflow has no runs of its own, its jobs
+# execute under the caller's run id, and the caller's id is the only thing the
+# cancel endpoints accept. Phase 46 resolves that mapping from the YAML.
 
 on:
   workflow_dispatch:
@@ -46,28 +50,61 @@ permissions:
 jobs:
   unjam:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 10, not 5: the escalation below spends a bounded 60s grace period plus up
+    # to 90s of post-cancel verification on top of the API calls themselves.
+    timeout-minutes: 10
     steps:
-      - name: Cancel wedged WG-holding runs
+      - name: Cancel wedged WG-holding runs (graceful, then force, then verify)
         env:
           GH_TOKEN: ${{ github.token }}
           STALE_MINUTES: ${{ github.event.inputs.stale_minutes || '25' }}
+          # A graceful cancel is a REQUEST the runner may ignore, and a wedged
+          # runner is precisely the case where it does. 2026-09-09: this
+          # workflow logged `cancelling run 34329534560 (in_progress 91m) ->
+          # HTTP 202`, reported SUCCESS, and the run stayed in_progress for at
+          # least five more minutes still holding ship-wg-runner; what actually
+          # cleared it was force-cancel.
+          #
+          # 60s is the grace before escalating. A runner that is alive acks a
+          # cancel in seconds, so 60s is already generous for the healthy case
+          # it exists to protect (letting cleanup/post steps finish rather than
+          # bypassing them). Longer buys nothing: today's run was still alive at
+          # 5 minutes, so every extra second past the first minute is pure added
+          # lock-hold on a job we have ALREADY judged wedged by the
+          # stale_minutes threshold. GitHub documents no minimum wait between
+          # cancel and force-cancel, so this is an operational choice, not an
+          # API constraint — force-cancel may answer 409, which is handled.
+          GRACE_SECONDS: "60"
         run: |
           set -euo pipefail
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
           now=$(date -u +%s)
 
-          # Every workflow declaring `group: ship-wg-runner`. Kept in sync by
-          # 9_others/test/test_unjam_covers_wg_group.sh (Phase 46).
+          gh_api() {
+            curl -sS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" "$@"
+          }
+          # Status of one run, or "gone" if the API will not tell us. "gone" is
+          # NOT treated as dead — an unreadable status must never be reported as
+          # a successful unjam.
+          run_status() {
+            gh_api "$api/actions/runs/$1" | jq -r '.status // "gone"'
+          }
+
+          # Every workflow whose RUNS can hold ship-wg-runner. Kept in sync by
+          # 9_others/test/test_unjam_covers_wg_group.sh (Phase 46). Note this is
+          # the set of CALLER workflows: a reusable workflow declaring the group
+          # in one of its jobs (cgc-db-index.yml's restore-all) has no runs of
+          # its own — its jobs run under the caller's run id, which is the id
+          # that has to be cancelled.
           WG_WORKFLOWS="ship.yml cgc-db.yml cgc-db-propagate.yml ship-cgc-db-seed.yml ship-home-manager.yml cloud-health-reports.yml cloud-health-reports-x86-gha.yml health_mail_full.yml"
 
+          # ── Pass 1: graceful cancel every stale run, remembering the ids ──
           total=0
-          cancelled=0
+          targets=""
           for wf in $WG_WORKFLOWS; do
-            runs=$(curl -sS \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "$api/actions/workflows/$wf/runs?status=in_progress&per_page=50")
+            runs=$(gh_api "$api/actions/workflows/$wf/runs?status=in_progress&per_page=50")
 
             # A workflow that does not exist (renamed, retired) returns a
             # message object, not workflow_runs — skip it loudly rather than
@@ -83,16 +120,59 @@ jobs:
               age=$(( (now - $(date -u -d "$started" +%s)) / 60 ))
               if [ "$age" -ge "$STALE_MINUTES" ]; then
                 echo "  cancelling run $id (in_progress ${age}m)"
-                curl -sS -X POST \
-                  -H "Authorization: Bearer $GH_TOKEN" \
-                  -H "Accept: application/vnd.github+json" \
-                  "$api/actions/runs/$id/cancel" \
-                  -o /dev/null -w '    -> HTTP %{http_code}\n'
-                cancelled=$(( cancelled + 1 ))
+                gh_api -X POST "$api/actions/runs/$id/cancel" \
+                  -o /dev/null -w '    -> cancel HTTP %{http_code}\n'
+                targets="$targets $id"
               else
                 echo "  leaving run $id (in_progress ${age}m < ${STALE_MINUTES}m)"
               fi
             done < <(echo "$runs" | jq -r '(.workflow_runs // [])[] | "\(.id) \(.run_started_at)"')
           done
 
-          echo "examined $total in-progress run(s) across $(echo $WG_WORKFLOWS | wc -w) WG workflow(s); cancelled $cancelled"
+          echo "examined $total in-progress run(s) across $(echo $WG_WORKFLOWS | wc -w) WG workflow(s)"
+          if [ -z "$targets" ]; then
+            echo "nothing wedged; ship-wg-runner is not being held by a stale run"
+            exit 0
+          fi
+
+          # ── Pass 2: escalate. One shared grace period, not one per run, so N
+          # wedged runs cost 60s total rather than 60s each. ──
+          echo "waiting ${GRACE_SECONDS}s for the graceful cancels to take effect"
+          sleep "$GRACE_SECONDS"
+
+          for id in $targets; do
+            st=$(run_status "$id")
+            if [ "$st" = "in_progress" ]; then
+              echo "run $id ignored the graceful cancel; force-cancelling"
+              # 409 here means GitHub declined (typically the run settled between
+              # the status read and this call). Not fatal on its own — the
+              # verification below is what decides, so record and move on.
+              gh_api -X POST "$api/actions/runs/$id/force-cancel" \
+                -o /dev/null -w "    -> force-cancel HTTP %{http_code}\n"
+            else
+              echo "run $id left in_progress on the graceful cancel (status=$st)"
+            fi
+          done
+
+          # ── Pass 3: VERIFY. A watchdog that reports green while the thing it
+          # watches is still wedged converts an outage into a silent one, which
+          # is the whole defect this escalation exists to close. Nothing below
+          # may exit 0 unless every targeted run actually left in_progress. ──
+          alive=""
+          for attempt in 1 2 3 4 5 6; do
+            alive=""
+            for id in $targets; do
+              st=$(run_status "$id")
+              [ "$st" = "in_progress" ] && alive="$alive $id"
+            done
+            [ -n "$alive" ] || break
+            echo "still in_progress:$alive (check $attempt/6)"
+            sleep 15
+          done
+
+          if [ -n "$alive" ]; then
+            echo "::error::force-cancel did not clear run(s)$alive — they are STILL in_progress and ship-wg-runner is still held. Every deploy behind them is being evicted as a grey 'cancelled'. Escalate by hand: gh api -X POST repos/${GITHUB_REPOSITORY}/actions/runs/<id>/force-cancel"
+            exit 1
+          fi
+
+          echo "verified: every cancelled run left in_progress; ship-wg-runner is released"
