@@ -67,11 +67,17 @@ for d in 1_cicd/src/cicd .github/workflows; do
   [ -z "$OVER" ] || echo "$OVER" | sed 's/^/       over ceiling: /'
   # Guard the guard: if the resolver finds no jobs at all the assertion above
   # is vacuously true, which is how this kind of test rots into decoration.
+  #
+  # Asserted as found-vs-none rather than as a count, because an earlier version
+  # passed the SAME expression as both actual and expected. Comparing a value to
+  # itself can never fail, so it printed a green "ok resolver actually found
+  # jobs" on the very zero-job run it exists to catch -- the failure was carried
+  # entirely by a separate bare test below it that reported no ok on success and
+  # was never counted as a pass. That is the decoration this file warns about,
+  # reproduced inside the guard against decoration.
   ck "$d: resolver actually found $GROUP jobs" \
-     "$(echo "$OUT" | grep -c . || true)" \
-     "$(echo "$OUT" | grep -c . || true)"
-  [ "$(echo "$OUT" | grep -c . || true)" -gt 0 ] || \
-    { fail=$((fail+1)); echo "  FAIL $d: resolver found ZERO jobs in $GROUP — assertion was vacuous"; }
+     "$(if [ "$(echo "$OUT" | grep -c . || true)" -gt 0 ]; then echo found; else echo none; fi)" \
+     "found"
 done
 
 # ── Assertion 2: the unjammer escalates and verifies ──
