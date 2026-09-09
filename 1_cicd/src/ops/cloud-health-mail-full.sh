@@ -93,6 +93,14 @@ tolerance_ok() {
 
 FAIL_REASONS=()
 
+# What layer 2 actually established this run. The pass path used to announce
+# "stores reconciled" unconditionally, including on the branch where the Gmail
+# count was unavailable and the whole comparison was skipped with a warning —
+# so a run that verified nothing about cross-store consistency told the owner,
+# by name, that it had. That is the exact shape of false green this layer was
+# added to prevent, so the alert now reports the reconciliation that ran.
+RECON_STATUS="cross-store reconciliation SKIPPED (Gmail reference unavailable)"
+
 echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-apps) ═══"
 
 # HOST MUST BE oci-apps, not oci-analytics. This layer reads the report engine
@@ -218,7 +226,10 @@ if [ "$GMAIL_COUNT" -ge 0 ]; then
     echo "::error::stalwart diverges from Gmail: gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT"
     FAIL_REASONS+=("stalwart behind Gmail by $((GMAIL_COUNT > STALWART_COUNT ? GMAIL_COUNT - STALWART_COUNT : STALWART_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT)")
   fi
-  [ "$MADDY_COUNT" -ge 0 ] && [ "$STALWART_COUNT" -ge 0 ] && [ ${#FAIL_REASONS[@]} -eq 0 ] && echo "OK: all stores within tolerance of Gmail"
+  if [ "$MADDY_COUNT" -ge 0 ] && [ "$STALWART_COUNT" -ge 0 ] && [ ${#FAIL_REASONS[@]} -eq 0 ]; then
+    echo "OK: all stores within tolerance of Gmail"
+    RECON_STATUS="stores reconciled against Gmail (gmail=$GMAIL_COUNT maddy=$MADDY_COUNT stalwart=$STALWART_COUNT)"
+  fi
 else
   echo "::warning::Gmail count unavailable — reconciliation skipped this run (liveness result still gates)"
 fi
@@ -227,12 +238,12 @@ echo ""
 echo "═══ Result ═══"
 
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
-  echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; stores reconciled)"
+  echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; $RECON_STATUS)"
   timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
     -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
     -H 'Priority: 2' \
     -H 'Tags: white_check_mark,email' \
-    -d 'All mail checks passed (liveness + cross-store reconciliation)'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
+    -d 'Liveness OK; $RECON_STATUS'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
   exit 0
 fi
 
