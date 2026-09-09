@@ -25,6 +25,14 @@ jobs:
   run-reports:
     name: Run reports
     runs-on: ubuntu-latest
+    # Bounded because this job holds ship-wg-runner, the fleet's single deploy
+    # lock, so its ceiling is an outage budget rather than a private detail.
+    # Undeclared meant GitHub's 360-minute default: the last 18 job runs have a
+    # 4.7min median and never exceed 41min when healthy, yet one hung run
+    # occupied 238 minutes and every deploy queued behind it was evicted as a
+    # grey "cancelled". 90 is ~2x the healthy worst case and kills a hang in
+    # well under two hours instead of four.
+    timeout-minutes: 90
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
     steps:

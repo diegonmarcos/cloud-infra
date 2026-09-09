@@ -65,12 +65,27 @@ on:
   schedule:
     - cron: "0 4,16 * * *"
 
-# Serialise so concurrent Ship workflows don't race on shared resources. The
-# orchestrator does no work itself; the reusable jobs it calls share the
-# ship-wg-runner group. cancel-in-progress is false so a running semantic→graphrag
-# chain is NEVER cancelled mid-flight — the sequential chain always completes.
+# Serialise cgc-db against ITSELF, not against the deploy fleet.
+#
+# This used to be `group: ship-wg-runner`. Workflow-level concurrency holds the
+# group for the WHOLE run, so the 8-way index matrix — which touches no mesh at
+# all (it pushes to GHCR and calls openrouter.ai over the public internet, and
+# carries neither a `WireGuard up` step nor an SSH key) — sat on the fleet's
+# single deploy lock for as long as it ran. On 2026-09-09 run 34329534560
+# (`phase · semantic / cgc-db · semantic · cloud-u-android`, an INDEX matrix job)
+# was still going 91 minutes after its eight siblings finished, holding the group
+# with a Deploy pending behind it and nothing running. GitHub keeps exactly one
+# pending entry per group, so the next deploy to queue evicted that pending one as
+# a grey "cancelled" — a whole day of container deploys silently did not happen.
+#
+# Only `restore-all` in cgc-db-index.yml needs the mesh identity, so only
+# restore-all declares ship-wg-runner now, at job level. What stays here is the
+# narrower guarantee this workflow actually needs: two cgc-db runs must not
+# overlap, because they write the same per-phase manifest and the same per-repo
+# GHCR tags. cancel-in-progress is false so a running semantic→graphrag chain is
+# NEVER cancelled mid-flight — the sequential chain always completes.
 concurrency:
-  group: ship-wg-runner
+  group: cgc-db
   cancel-in-progress: false
 
 jobs:
