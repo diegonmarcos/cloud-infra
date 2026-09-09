@@ -209,6 +209,13 @@ jobs:
       #
       - name: Phase 46 — unjam covers every ship-wg-runner workflow
         run: bash 9_others/test/test_unjam_covers_wg_group.sh
+      # Phase 47 — the other half of Phase 46. Phase 46 proves the unjammer can
+      # REACH every workflow holding the fleet's deploy lock; this proves the
+      # lock is bounded in the first place (no job in the group may outlive the
+      # ceiling) and that the unjammer actually clears a wedge rather than
+      # reporting success at one. Both halves failed on 2026-09-09.
+      - name: Phase 47 — ship-wg-runner lock is bounded and the unjammer escalates
+        run: bash 9_others/test/test_wg_group_lock_bounded.sh
 
       # git clone, not actions/checkout: checkout refuses a `path:` outside
       # $GITHUB_WORKSPACE, and both scripts locate each other as SIBLINGS
