@@ -457,8 +457,12 @@ jobs:
           # `services` takes the a_solutions DIRECTORY name. An unknown name used to
           # yield an empty matrix -> has_vms=false -> ship job skipped -> run reports
           # SUCCESS while deploying nothing. Fail loudly instead, naming the misses.
+          # The service→dir registry both zero-VM guards below judge
+          # CHANGED_DIRS against. Resolved once, from $GHA_CONFIG, because
+          # two copies of this lookup would be two things to keep in step.
+          KNOWN=$(jq -r '.services | to_entries[] | .value.dir' "$GHA_CONFIG" | sort -u)
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "$CHANGED_DIRS" ]; then
-            KNOWN=$(jq -r '.services | to_entries[] | .value.dir' "$GHA_CONFIG" | sort -u)
             UNKNOWN=""
             for d in $CHANGED_DIRS; do
               printf '%s\n' "$KNOWN" | grep -qxF "$d" || UNKNOWN="$UNKNOWN $d"
@@ -471,6 +475,42 @@ jobs:
             fi
             if [ "$COUNT" -eq 0 ]; then
               echo "::error::Requested [$CHANGED_DIRS] resolved to 0 VMs — nothing would deploy."
+              exit 1
+            fi
+          fi
+
+          # ── Guard: distinguish "nothing to do" from "could not tell what to do" ──
+          # On every event OTHER than workflow_dispatch, CHANGED_DIRS comes
+          # from a real diff, so a dir missing from the registry is NOT a typo
+          # — it is a directory that is not a deployable container service.
+          # infra-obs_reports ships via ship-reports.yml and user-web_front-end
+          # via ship-wrangler.yml; a containers-push touching only those is an
+          # honest no-op and must stay green (run 34335628332 was exactly that:
+          # "detect: a_solutions 902bbba9..83c4a1fb", CHANGED_DIRS
+          # "infra-obs_reports", VMs: 0). What that run could not say is WHY it
+          # shipped nothing, and an unexplained "VMs: 0 —" is indistinguishable
+          # from a broken mapping. Name the reason so it never is again.
+          #
+          # A dir that IS registered and still resolves to zero VMs is the
+          # other case entirely: the service→vm mapping is broken and the run
+          # is about to report success for a deploy that ships nothing. That is
+          # the failure mode that hid a57935adb (cloud-cgc-pub-mcp/build.json,
+          # 2026-08-26) behind a green run. Fail instead.
+          if [ "${{ github.event_name }}" != "workflow_dispatch" ] \
+             && [ "$COUNT" -eq 0 ] && [ -n "$CHANGED_DIRS" ]; then
+            UNREGISTERED=""; REGISTERED=""
+            for d in $CHANGED_DIRS; do
+              if printf '%s\n' "$KNOWN" | grep -qxF "$d"; then
+                REGISTERED="$REGISTERED $d"
+              else
+                UNREGISTERED="$UNREGISTERED $d"
+              fi
+            done
+            if [ -n "$UNREGISTERED" ]; then
+              echo "::notice::changed but not a deployable container service (shipped by another workflow, nothing to do here):$UNREGISTERED"
+            fi
+            if [ -n "$REGISTERED" ]; then
+              echo "::error::registered service(s)$REGISTERED changed but resolved to 0 VMs — the service→vm mapping in build-gha.json is broken. Refusing to report success for a deploy that would ship nothing."
               exit 1
             fi
           fi
@@ -1101,3 +1141,52 @@ jobs:
           git commit -m "auto: traces [skip ci]"
           i=0; while [ $i -lt 3 ]; do i=$((i+1)); git push origin main && break
             echo "Retry $i..."; git pull --rebase origin main 2>/dev/null || true; done
+
+  # ── Gate: a detected deploy set that did not deploy is a FAILURE ─
+  # detect naming services and the run still ending green or grey is the most
+  # expensive outcome this pipeline can produce: the commit is in git, the
+  # image is in GHCR, the fleet is on the old code, and nothing anywhere is
+  # red. A red run gets fixed in minutes; a silent one cost a full day on
+  # 2026-09-09, when my-ai_claude-api ran three hours behind 902bbba9 while
+  # the Ship page looked idle.
+  #
+  # The loss this catches is NOT a bad diff — detect was right. In run
+  # 34334421319 it logged "detect: a_solutions af913083..902bbba9" and
+  # "VMs: 1 — oci-apps", and Build → oci-apps pushed the image successfully.
+  # Deploy → oci-apps then ran ZERO steps: it sat pending on the fleet-wide
+  # `ship-wg-runner` group behind a wedged cgc-db run, and GitHub keeps only
+  # ONE pending entry per concurrency group, so the next containers-push
+  # evicted it. An evicted job is "cancelled" — grey in the UI, no
+  # notification, and indistinguishable from a human pressing cancel.
+  #
+  # `if: always()` is what makes this observable at all: a job cancelled by
+  # concurrency does not cancel the RUN, so this gate still executes. Proven
+  # in that same run, where Collect traces succeeded beside the cancelled
+  # deploy.
+  deploy-gate:
+    name: Deploy gate
+    needs: [detect, build, deploy]
+    # detect is listed explicitly rather than relied on transitively: the
+    # needs context is only guaranteed to carry direct dependencies' outputs.
+    if: always() && needs.detect.outputs.has_vms == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert the detected deploy set reached the fleet
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          MATRIX: ${{ needs.detect.outputs.matrix }}
+        run: |
+          set -eu
+          if [ "$DEPLOY_RESULT" = "success" ]; then
+            echo "deploy ok — every detected VM shipped"
+            exit 0
+          fi
+          echo "::error::detect selected services to ship but the deploy leg ended '$DEPLOY_RESULT' (build was '$BUILD_RESULT'). These services are committed, built, and NOT on the fleet:"
+          printf '%s' "$MATRIX" \
+            | jq -r '.include[] | "  \(.vm): \(.changed_dirs)"'
+          if [ "$DEPLOY_RESULT" = "cancelled" ]; then
+            echo "::error::'cancelled' with no steps run means the deploy was evicted from the ship-wg-runner concurrency queue. Clear the wedge with the unjam-ship workflow, then re-ship."
+          fi
+          echo "::error::re-ship with: workflow_dispatch on ship.yml, services=<dirs above>, vm=<vm above>."
+          exit 1
