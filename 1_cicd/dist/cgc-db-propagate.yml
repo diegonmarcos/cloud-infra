@@ -41,6 +41,13 @@ env:
 jobs:
   propagate:
     runs-on: ubuntu-latest
+    # Bounded because this job holds ship-wg-runner — see the same reasoning in
+    # cloud-health-reports.yml. Undeclared meant GitHub's 360-minute default.
+    # This one has NO completed runs to measure, so rather than invent a number
+    # it takes the ceiling the fleet already uses for a WireGuard job that
+    # streams to a box (ship.yml's deploy, 90). It streams a single DB layer
+    # over the mesh, strictly less work than ship-cgc-db-seed's 45.
+    timeout-minutes: 90
     permissions:
       contents: read
       packages: read

@@ -36,6 +36,12 @@ jobs:
   mail-health:
     name: Mail health (liveness + cross-store reconciliation)
     runs-on: ubuntu-latest
+    # Bounded because this job holds ship-wg-runner — see the same reasoning in
+    # cloud-health-reports.yml. Undeclared meant GitHub's 360-minute default:
+    # the last 15 job runs have a 2.0min median and never exceed 32min when
+    # healthy, yet one hung run occupied 127 minutes holding the deploy lock.
+    # 60 is ~2x the healthy worst case.
+    timeout-minutes: 60
     env:
       WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
     steps:

@@ -221,6 +221,12 @@ jobs:
     # worst case per repo now that repo_timeout_min is a clamp, not a
     # reservation, so 330 leaves slack for clone + packaging + push. Per-job
     # now, not per-cycle — a slow repo no longer eats every other repo's turn.
+    #
+    # This ceiling may stay long because this job holds NO concurrency group:
+    # it reaches GHCR and openrouter.ai over the public internet and never
+    # brings WireGuard up, so a slow repo costs runner minutes and nothing
+    # else. Only restore-all below is in ship-wg-runner, and its ceiling is
+    # bounded accordingly.
     timeout-minutes: 330
     permissions:
       contents: read
@@ -339,16 +345,29 @@ jobs:
     # run only touched repos this volume filters out anyway.
     if: always() && inputs.restore
     runs-on: ubuntu-latest
-    # 340, not 180: run 32754160748 measured pub alone at ~108min (with the
-    # set-e-safe retry working correctly, no stalls, no errors — just slow),
-    # then pvt was still alive at 65min when the 180-min ceiling killed it.
-    # pub+pvt run sequentially in one job, so the ceiling must clear roughly
-    # 2x the single-surface worst case. 340 is the highest safe value under
-    # GitHub's 360-min hard cap for hosted runners. The known debt that makes
-    # restore this slow (amd64 images emulated on the arm64 box, docker rmi
-    # between surfaces forcing full re-pulls) is tracked separately; until
-    # that lands, the ceiling has to clear the measured worst case, not race it.
-    timeout-minutes: 340
+    # THE ONLY JOB IN THIS FILE THAT NEEDS THE MESH, so the only one that may
+    # hold the fleet's deploy lock. It brings WireGuard up and ssh's to
+    # oci-apps at its wg_ip (see the steps below); `repos` and `index` do
+    # neither — index reaches GHCR and openrouter.ai over the public internet
+    # only. The group used to be declared workflow-level in cgc-db.yml, which
+    # meant the 5.5-hour index matrix held the lock too; see the concurrency
+    # comment there for the outage that caused.
+    concurrency:
+      group: ship-wg-runner
+      cancel-in-progress: false
+    # 240, not 340: this ceiling is now a bound on how long ONE job may hold
+    # the fleet-wide deploy lock, not just on its own runtime, so "the highest
+    # safe value under GitHub's 360-min cap" is the wrong thing to optimise
+    # for. The measured worst case is run 32754160748: pub alone ~108min, and
+    # pvt still alive at 65min when a 180-min ceiling killed it — the two
+    # surfaces run sequentially in this one job, so ~220min is the real
+    # ceiling-setting number. 240 clears that with ~10% headroom and cuts 100
+    # minutes off the maximum time a deploy can sit pending behind a wedged
+    # restore. It is deliberately NOT lower: the debt that makes restore this
+    # slow (amd64 images emulated on the arm64 box, docker rmi between
+    # surfaces forcing full re-pulls) is tracked separately, and until it
+    # lands a tighter ceiling would kill restores that were going to succeed.
+    timeout-minutes: 240
     permissions:
       contents: read
       packages: read

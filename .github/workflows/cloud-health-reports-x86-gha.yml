@@ -34,6 +34,12 @@ jobs:
   run-reports:
     name: Run reports
     runs-on: ubuntu-latest
+    # Bounded because this job holds ship-wg-runner — see the same reasoning in
+    # cloud-health-reports.yml. Undeclared meant GitHub's 360-minute default:
+    # the last 19 job runs have a 6.2min median and never exceed 19min when
+    # healthy, yet one hung run occupied 240 minutes holding the deploy lock.
+    # 60 is ~3x the healthy worst case.
+    timeout-minutes: 60
     env:
       REPORT_TARGET: ${{ inputs.report || 'all' }}
     steps:

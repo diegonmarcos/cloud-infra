@@ -43,12 +43,32 @@ echo "── Phase 46: unjam-ship.yml covers every ship-wg-runner workflow ─�
 
 [ -f "$UNJAM" ] || { fail "missing $UNJAM"; exit 1; }
 
-# 1. Workflows that actually DECLARE the group. Anchored to a real YAML
-#    mapping line: a prose mention inside a `#` comment (unjam-ship.yml's own
-#    header explains the group, and matched a loose grep on the first run of
-#    this test) is not a declaration.
-DECLARED=$(grep -lE '^[[:space:]]*group:[[:space:]]*ship-wg-runner[[:space:]]*$' \
-  "$CICD_SRC"/*.yml 2>/dev/null | xargs -r -n1 basename | sort -u)
+# 1. Workflows whose RUNS can hold the group. Anchored to a real YAML mapping
+#    line: a prose mention inside a `#` comment (unjam-ship.yml's own header
+#    explains the group, and matched a loose grep on the first run of this
+#    test) is not a declaration.
+#
+#    A declaration in a REUSABLE workflow resolves to that workflow's CALLERS,
+#    not to itself. cgc-db-index.yml declares the group on its restore-all job,
+#    but it is workflow_call-only: it has no runs of its own, its jobs execute
+#    under the caller's run id, and /actions/workflows/cgc-db-index.yml/runs is
+#    empty forever. Listing it in WG_WORKFLOWS would be a dead entry AND would
+#    displace cgc-db.yml, which is the id that actually has to be cancelled —
+#    the precise invisible hole this test exists to prevent.
+resolve_holders() {
+  _f="$1"; _b=$(basename "$_f")
+  if grep -qE '^[[:space:]]*workflow_call:[[:space:]]*$' "$_f"; then
+    # Reusable: emit every workflow that calls it. If nothing calls it, emit
+    # nothing — an uncallable workflow cannot hold the group.
+    grep -lE "uses:[[:space:]]*\./\.github/workflows/$_b[[:space:]]*$" \
+      "$CICD_SRC"/*.yml 2>/dev/null | xargs -r -n1 basename
+  else
+    printf '%s\n' "$_b"
+  fi
+}
+
+DECLARED=$(for f in $(grep -lE '^[[:space:]]*group:[[:space:]]*ship-wg-runner[[:space:]]*$' \
+  "$CICD_SRC"/*.yml 2>/dev/null); do resolve_holders "$f"; done | sort -u)
 
 # 2. The list the unjammer iterates. Take the WG_WORKFLOWS assignment only.
 LISTED=$(sed -n 's/^ *WG_WORKFLOWS="\(.*\)"$/\1/p' "$UNJAM" \
