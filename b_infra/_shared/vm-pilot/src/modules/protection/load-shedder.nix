@@ -43,6 +43,10 @@ let
   interval     = cfg "interval_secs" 15;
   backoff      = cfg "backoff_secs"  120;
   needBreaches = cfg "need_breaches" 3;
+  # Pause between each `docker start` when un-shedding. Restoring forty
+  # containers at once is itself a load spike, and re-entering pressure
+  # immediately after recovering from it is the flap this avoids.
+  unshedDelaySecs = cfg "unshed_delay_secs" 5;
 
   # Tier-1 services that survive graduated shed (stopped only on page-level).
   tier1Services = cfg "tier1_services" [];
@@ -128,6 +132,15 @@ in {
         done
         if [ -n "$_to_stop" ]; then
           logger -t load-shedder "SHED-CRIT: stopping non-tier1 (biggest-first):$_to_stop (keeping: $TIER1_SERVICES)"
+          # Persist WHAT was shed. Without this the list dies with the
+          # function and the crit-level shed has no inverse: on 2026-09-09
+          # about forty containers were stopped at 02:37 and the box then sat
+          # at load 0.04 with 16GB free until a human noticed, because the
+          # pressure-cleared branch could only ever restart docker itself.
+          # Appended, not overwritten — a second shed before recovery must
+          # not orphan the first one's containers.
+          # shellcheck disable=SC2086
+          printf '%s\n' $_to_stop >> /run/load-shedder.shed-list 2>/dev/null || true
           # shellcheck disable=SC2086
           docker stop $_to_stop 2>/dev/null || true
           return 0
@@ -192,8 +205,45 @@ in {
             #     exiting would recreate the very retry loop this forbids.
             #   • LOUD either way — started or failed, ntfy hears about it
             if systemctl is-active --quiet docker.service; then
-              # shed_level=1 (non-tier1 only) — docker never stopped.
-              ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). docker up; shed non-tier1 containers need a ship to return."
+              # shed_level=1 (non-tier1 only) — docker never stopped, so the
+              # thing to undo is the container shed, not the daemon. This
+              # branch used to only send a notification saying a ship was
+              # needed, which is how forty containers stayed down on an idle
+              # box for hours. Same single-shot doctrine as the docker
+              # recovery below: one attempt, latched off on failure, loud
+              # either way.
+              #
+              # `docker start`, deliberately not container-init containers-up:
+              # the containers still exist, so this needs no image pull and no
+              # --force-recreate, and re-running a full bring-up is exactly
+              # the load that caused the shed. The cost is that a shed
+              # spanning a deploy leaves stale containers until the next ship.
+              _shed_list=/run/load-shedder.shed-list
+              if [ ! -s "$_shed_list" ]; then
+                ntfy_send 4 "warn" "Memory pressure RESOLVED" "memPSI now ''${MEM}%% (was shed_level=$shed_level). docker up; nothing recorded as shed."
+              elif [ "''${unshed_failed:-0}" -ne 0 ]; then
+                logger -p daemon.err -t load-shedder "UNSHED: already attempted and failed — not retrying (manual action required)"
+              else
+                _want=$(tr '\n' ' ' < "$_shed_list")
+                logger -t load-shedder "UNSHED: single-shot start of shed containers:$_want"
+                for _c in $_want; do
+                  docker start "$_c" >/dev/null 2>&1 || true
+                  sleep ${toString unshedDelaySecs}
+                done
+                _still=""
+                for _c in $_want; do
+                  docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$_c" || _still="$_still $_c"
+                done
+                if [ -z "$_still" ]; then
+                  rm -f "$_shed_list" /run/load-shedder.fired 2>/dev/null || true
+                  logger -t load-shedder "UNSHED: all shed containers restarted"
+                  ntfy_send 4 "warn" "RECOVERY — shed containers restarted" "memPSI cleared to ''${MEM}%% (was shed_level=$shed_level). Single-shot restart of the shed list SUCCEEDED."
+                else
+                  unshed_failed=1
+                  logger -p daemon.err -t load-shedder "UNSHED FAILED: still down:$_still — NOT retrying"
+                  ntfy_send 5 "page" "UNSHED FAILED — containers still down" "memPSI cleared to ''${MEM}%% but these did not restart:$_still. NOT retrying. Ship the VM or start them by hand."
+                fi
+              fi
             elif [ "''${recovery_failed:-0}" -ne 0 ]; then
               logger -p daemon.err -t load-shedder "RECOVERY: docker still down but restart already attempted and failed — not retrying (manual action required)"
             else
