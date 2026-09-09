@@ -1076,12 +1076,63 @@ command -v git >/dev/null 2>&1 && git config --global --add safe.directory '*' >
 # invocation), preserving the pre-two-phase behaviour.
 MANIFEST_PHASE="${CGC_MANIFEST_PHASE:-}"
 if [ -n "$MANIFEST_PHASE" ]; then
-  MANIFEST="$OCTO_HOME/.cgc-manifest-${MANIFEST_PHASE}.json"
+  MANIFEST_NAME=".cgc-manifest-${MANIFEST_PHASE}.json"
 else
-  MANIFEST="$OCTO_HOME/.cgc-index-manifest.json"
+  MANIFEST_NAME=".cgc-index-manifest.json"
 fi
-echo "[cgc-db] phase=${MANIFEST_PHASE:-default} USE_LLM=$USE_LLM manifest=$(basename "$MANIFEST")"
+# Home-ROOT copy. Correct for monolith mode (packaging tars the whole home) and the
+# fallback for per-repo mode whenever this job's project dir cannot be named.
+MANIFEST="$OCTO_HOME/$MANIFEST_NAME"
+echo "[cgc-db] phase=${MANIFEST_PHASE:-default} USE_LLM=$USE_LLM manifest=$MANIFEST_NAME"
 [ -s "$MANIFEST" ] || echo '{}' > "$MANIFEST"
+
+# THE MANIFEST HAS TO LIVE INSIDE THE PROJECT DIR, NOT AT THE HOME ROOT.
+#
+# The comment above used to promise that a home-root manifest "is packaged into and
+# pulled from the GHCR DB snapshot". That is true in monolith mode and FALSE in
+# per-repo mode, which is the only mode CI has run since the matrix landed:
+# cloud-cgc-db-package.sh's build_repo_tar tars ONLY "$PROJECT_DIR", and
+# build_base_tar tars ONLY config.toml + fastembed/ + sentencetransformer/. A file at
+# the home root is in neither allowlist, so every run wrote the manifest, packaged an
+# image without it, and the next run started from an empty {} again.
+#
+# Measured, not inferred: run 34267362724 (2026-09-08) and run 34392223176
+# (2026-09-09) both logged "was=none" for EVERY repo, including cloud-infra at a
+# commit the previous run had indexed hours earlier.
+#
+# What that cost is not wasted CPU -- octocode still de-duplicates by file mtime, so
+# the re-index is mostly a no-op -- it is that the pipeline had NO RECORD of which
+# commit the served index corresponds to. The change gate never skipped, the
+# "publish the partial but do NOT advance the manifest" ratchet had nothing to
+# advance or resume from, and a repo that never converged was indistinguishable in
+# the logs from one that was perfectly current. That is why cloud-u-android served a
+# deleted FairEmail tree for a full day with every run reporting green.
+#
+# Fix: put the manifest where the packaging already looks. Each repo's project dir is
+# tarred whole into that repo's own GHCR image, so a manifest inside it travels with
+# the DB it describes -- and because every repo carries only its OWN entry, the
+# per-repo images can never clobber each other's when restore-all layers them with
+# cp -a into one home. Reading it back needs no new bookkeeping: a per-repo job starts
+# from a FRESH home holding base root-state plus exactly the one restored project dir.
+manifest_path() {  # $1 = project dir name ("" = discover the only one) → stdout: manifest file path
+  _mp_dir="${1:-}"
+  [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] || { printf '%s\n' "$MANIFEST"; return 0; }
+  if [ -z "$_mp_dir" ]; then
+    _mp_n=0
+    for _mp_d in $(project_dirs_snapshot "$OCTO_HOME"); do _mp_dir="$_mp_d"; _mp_n=$((_mp_n + 1)); done
+    # 0 dirs = this repo has no checkpoint on GHCR yet; 2+ = not a per-repo home.
+    # Either way fall back to the root copy, which reads as "never indexed" rather
+    # than as some other repo's commit.
+    [ "$_mp_n" -eq 1 ] || { printf '%s\n' "$MANIFEST"; return 0; }
+  fi
+  [ -d "$OCTO_HOME/$_mp_dir" ] || { printf '%s\n' "$MANIFEST"; return 0; }
+  printf '%s\n' "$OCTO_HOME/$_mp_dir/$MANIFEST_NAME"
+}
+
+manifest_read() {  # $1 = manifest file, $2 = repo local name → stdout: recorded commit, empty if none
+  [ -s "$1" ] || return 0
+  jq -r --arg r "$2" '.[$r] // ""' "$1" 2>/dev/null || true
+}
 BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
 REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
 START_TS=$(date +%s)
@@ -1094,6 +1145,11 @@ BASE_SEEDED=0
 # repos had TIMED OUT and five were deferred: a green log during a six-day outage. Count
 # every terminal state per repo so the summary can never claim currency it has not earned.
 N_INDEX=0; N_SKIP=0; N_TIMEOUT=0; N_DEFER=0
+# Repos this run did NOT bring level with their own HEAD, named rather than merely
+# counted. A count tells you something is behind; only the name tells you WHICH
+# served answers are lies, and that is the whole difference between the twice-daily
+# run being a drift detector and being a green tick nobody reads.
+STALE_REPOS=""
 
 # What to show of octocode's own output once an index run ends. octocode drives
 # a progress spinner: thousands of \r-separated frames that together form ONE
@@ -1206,7 +1262,8 @@ for r in $REPOS; do
     if [ "$_remain" -lt "${CGC_MIN_SLICE_MIN:-20}" ]; then
       _n_left=0; for _q in $REPOS; do _n_left=$(( _n_left + 1 )); done
       N_DEFER=$(( _n_left - N_INDEX - N_SKIP - N_TIMEOUT ))
-      echo "[cgc-db] only ${_remain}m of the ${BUDGET_MIN}m budget left (<${CGC_MIN_SLICE_MIN:-20}m floor) — deferring $r (+${N_DEFER} total) to next run"
+      echo "::warning::[cgc-db] only ${_remain}m of the ${BUDGET_MIN}m budget left (<${CGC_MIN_SLICE_MIN:-20}m floor) — deferring $r (+${N_DEFER} total) to next run; its ${MANIFEST_PHASE:-default} index stays STALE until then"
+      STALE_REPOS="$STALE_REPOS $r"
       break
     fi
   fi
@@ -1220,7 +1277,7 @@ for r in $REPOS; do
   # produced structural-only graphs, so re-running after fixing the LLM wiring is
   # a no-op without this. Reindexing on a config change is the whole point.
   cur=$(git -C "$d" rev-parse HEAD 2>/dev/null || echo "")
-  last=$(jq -r --arg r "$r" '.[$r] // ""' "$MANIFEST")
+  last=$(manifest_read "$(manifest_path '')" "$r")
   if [ "${CGC_FORCE:-0}" = "1" ] && [ -n "$last" ]; then
     echo "[cgc-db] === force $r — ignoring manifest entry @ $last (CGC_FORCE=1) ==="
   elif [ -n "$cur" ] && [ "$cur" = "$last" ]; then
@@ -1305,7 +1362,8 @@ for r in $REPOS; do
     # graphrag phase only: no LLM-derived edges = no checkpoint (see assert_llm_graph).
     if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi
   elif [ "$_rc" = "124" ]; then
-    echo "[cgc-db] WARN $r timed out after ${REPO_TIMEOUT_EFF}m slice — publishing PARTIAL progress, will resume next run"
+    echo "::warning::[cgc-db] $r is STALE in the ${MANIFEST_PHASE:-default} index: the slice of ${REPO_TIMEOUT_EFF}m expired mid-index, so the DB stays at ${last:-no indexed commit} while origin/main is at $cur. Partial progress is published and the next run resumes; every run until it converges repeats this warning."
+    STALE_REPOS="$STALE_REPOS $r"
     octo_log_digest "$_log" 40; rm -f "$_log"
     N_TIMEOUT=$(( N_TIMEOUT + 1 ))
     # PUBLISH the partial index, but do NOT advance the manifest. Those two are separate
@@ -1329,7 +1387,9 @@ for r in $REPOS; do
 
   # Record the indexed commit in the DB home (travels via package/pull), THEN
   # checkpoint-push so this repo's progress is durable before we touch the next.
-  _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$MANIFEST" > "$_tmp" && mv "$_tmp" "$MANIFEST"
+  _mf=$(manifest_path "${_proj_resolved:-}")
+  [ -s "$_mf" ] || echo '{}' > "$_mf"
+  _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$_mf" > "$_tmp" && mv "$_tmp" "$_mf"
   echo "[cgc-db] checkpoint publish after $r"
   checkpoint_publish "$r"
   # FIX 2 — see seed_base_if_missing() above. Only after a genuinely SUCCESSFUL
@@ -1341,6 +1401,9 @@ for r in $REPOS; do
 done
 
 echo "[cgc-db] SUMMARY phase=${MANIFEST_PHASE:-default}: ${N_INDEX} indexed, ${N_SKIP} unchanged, ${N_TIMEOUT} timed out, ${N_DEFER} deferred"
+if [ -n "$STALE_REPOS" ]; then
+  echo "::warning::[cgc-db] ${MANIFEST_PHASE:-default} index NOT current for:${STALE_REPOS} — the cgc surfaces are serving an older tree for these repos. A run whose matrix job is green but whose repo appears here has published progress, not currency."
+fi
 
 # 5/6) Propagate to the deployed consumer (oci-apps) so it serves the new DB now.
 #      Only when something actually changed this cycle (checkpoints already pushed

@@ -12,7 +12,11 @@
 # on a synthetic log shaped exactly like octocode's output, and also proves
 # that the old `tail -4` idiom loses the warning on that same input.
 set -eu
-ROOT=$(cd "$(dirname "$0")/../../.." && pwd)   # 9_others/{test,dist/test}/ → repo root
+# Repo root by upward search. The fixed ../../.. this used to be is right for the
+# GENERATED copy at 9_others/dist/test/ and one level too high for the source at
+# 9_others/test/, so the source copy resolved to ~/git and died on a missing
+# update.sh -- a tester for silent degradation that was itself silently dead.
+ROOT=$(_d=$(cd "$(dirname "$0")" && pwd); while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d=$(dirname "$_d"); done; printf '%s' "$_d")
 SCRIPT="$ROOT/1_cicd/src/ops/cloud-cgc-db-update.sh"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT INT TERM
 pass=0; fail=0
