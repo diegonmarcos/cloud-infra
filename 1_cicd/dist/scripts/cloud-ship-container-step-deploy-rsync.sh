@@ -55,6 +55,27 @@ scp_secret() {
     return 1
 }
 
+# Filter protected paths out of a deploy-manifest stream (stdin -> stdout).
+#
+# The manifest reconciler in step_deploy deletes everything the previous deploy
+# left on the VM that this deploy does not re-ship. That rule is correct for
+# stale code and catastrophic for the files that are NOT build output:
+# .secrets / .secrets.json / .secrets.d are scp'd by a separate step and are
+# absent from dist/ whenever the secrets step failed, and .dist-hash /
+# .deploy-manifest are the deploy's own bookkeeping. One failed decrypt was
+# therefore enough to strip a running container of its credentials on the very
+# next ship — the reconciler saw them "missing from dist/" and rm -f'd them.
+#
+# Protection is declared per top-level dist entry, so ".secrets.d" covers
+# "./.secrets.d/<KEY>" without any globbing or regex escaping of the paths.
+drop_protected() {
+    [ -z "$PROTECT_PATHS" ] && { cat; return 0; }
+    awk -v protect="$PROTECT_PATHS" '
+        BEGIN { n = split(protect, list, "\n"); for (i = 1; i <= n; i++) protected[list[i]] = 1 }
+        { top = $0; sub(/^\.\//, "", top); sub(/\/.*$/, "", top); if (!(top in protected)) print }
+    '
+}
+
 step_deploy() {
     CURRENT_STEP="deploy"
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host -- skipping deploy"; return 0; }
@@ -128,8 +149,21 @@ step_deploy() {
 
     MANIFEST_FILE=".deploy-manifest"
 
-    # 1. Build list of files we're about to deploy (relative paths)
-    NEW_MANIFEST=$(cd "$DIST_DIR" && find . -type f | sort)
+    # 0. Paths the reconciler must never delete. build.json deploy.manifest_protect
+    #    wins; the fleet default lives in a_solutions/_shared/compose-defaults.json
+    #    under the same deploy.manifest_protect key, so the identical reader works
+    #    on either file. Read in a command substitution so the CONFIG override
+    #    stays inside that subshell.
+    PROTECT_PATHS="$(get_config_array deploy.manifest_protect)"
+    if [ -z "$PROTECT_PATHS" ]; then
+        PROTECT_PATHS="$(CONFIG="$SERVICE_DIR/../_shared/compose-defaults.json"; get_config_array deploy.manifest_protect)"
+    fi
+    [ -n "$PROTECT_PATHS" ] && log "  manifest protect: $(echo "$PROTECT_PATHS" | tr '\n' ' ')"
+
+    # 1. Build list of files we're about to deploy (relative paths).
+    #    Protected paths are excluded here and from the stale list below, so the
+    #    two sides of the comparison agree and neither can resurrect a delete.
+    NEW_MANIFEST=$(cd "$DIST_DIR" && find . -type f | sort | drop_protected)
 
     # 2. Read old manifest from remote (may be empty on first deploy)
     OLD_MANIFEST=$(ssh_with_retry "$DEPLOY_HOST" "cat '$DEPLOY_PATH/$MANIFEST_FILE' 2>/dev/null" || true)
@@ -141,16 +175,6 @@ step_deploy() {
         RSYNC_EXCLUDES=$(echo "$EXCLUDES" | while IFS= read -r ex; do
             [ -n "$ex" ] && printf " --exclude '%s'" "$ex"
         done)
-    fi
-
-    # 3b. Clean specified subdirectories (deploy.clean_dirs) — ensures exact mirror
-    CLEAN_DIRS="$(get_config_array deploy.clean_dirs)"
-    if [ -n "$CLEAN_DIRS" ]; then
-        echo "$CLEAN_DIRS" | while IFS= read -r d; do
-            [ -z "$d" ] && continue
-            log "  clean: $DEPLOY_PATH/$d/"
-            ssh_with_retry "$DEPLOY_HOST" "rm -rf '$DEPLOY_PATH/$d/'"
-        done
     fi
 
     # 4. Additive rsync (NO --delete) — adds/updates files, never removes
@@ -176,7 +200,7 @@ step_deploy() {
         echo "$OLD_MANIFEST" | sort > "$OLD_TMP"
         echo "$NEW_MANIFEST" | sort > "$NEW_TMP"
         # comm -23: lines only in old (stale files)
-        STALE_FILES=$(comm -23 "$OLD_TMP" "$NEW_TMP")
+        STALE_FILES=$(comm -23 "$OLD_TMP" "$NEW_TMP" | drop_protected)
         rm -f "$OLD_TMP" "$NEW_TMP"
         if [ -n "$STALE_FILES" ]; then
             echo "$STALE_FILES" | while IFS= read -r f; do
