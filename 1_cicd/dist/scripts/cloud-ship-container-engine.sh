@@ -584,8 +584,19 @@ _ship_build_phase() {
     wait $PID_DOCKER   || { log_error "docker build failed"; exit 1; }
     wait $PID_CONFIGS  || { log_warn "configs-push failed"; FAIL=$((FAIL+1)); }
     wait $PID_IMAGE    || { log_warn "compose-build failed"; FAIL=$((FAIL+1)); }
-    wait $PID_SECRETS  || { log_error "secrets failed"; FAIL=$((FAIL+1)); }
-    [ $FAIL -gt 1 ] && { log_error "Too many parallel jobs failed ($FAIL/3)"; exit 1; }
+    # Secrets is NOT a best-effort artifact and must never share the tolerance
+    # budget below with configs-push and compose-build. step_build_nix wipes
+    # $DIST_DIR at its start, so a failed decrypt leaves NO dist/.secrets at
+    # all — and the rest of the ship then actively destroys the working copy on
+    # the VM: step_deploy finds nothing to scp, its manifest reconciler sees
+    # .secrets present in the old manifest but absent from the new one and
+    # `rm -f`s it on the host, and step_compose (which runs unconditionally,
+    # by design, so a shed stack always gets `up`'d again) restarts every
+    # service against a now-missing env_file. A ship that logged one tolerated
+    # warning took services down. Exit here — before Phase 3 deploy and before
+    # any compose step can run.
+    wait $PID_SECRETS  || { log_error "secrets failed — aborting ship before deploy/compose (secrets are not best-effort)"; exit 1; }
+    [ $FAIL -gt 1 ] && { log_error "Too many parallel jobs failed ($FAIL/2)"; exit 1; }
 
     log "═══ Parallel jobs done ═══"
 
