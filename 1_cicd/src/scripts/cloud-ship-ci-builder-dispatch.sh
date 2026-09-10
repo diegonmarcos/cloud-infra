@@ -370,7 +370,18 @@ while IFS='|' read -r dir name; do
     continue
   fi
 
-  if [ -n "$CHANGED_DIRS" ] && ! echo "$CHANGED_DIRS" | grep -q "$dir"; then
+  # Exact token match against the space-delimited list, NOT a substring grep.
+  # `grep -q "$dir"` matched any dir whose name is a prefix of a changed one, and
+  # build-gha.json has three such pairs today: infra-net_wireguard-mesh inside
+  # infra-net_wireguard-mesh-ws-tunnel, infra-sec_caddy inside
+  # infra-sec_caddy-public, user-ai_kg-store inside user-ai_kg-store-pub. Shipping
+  # caddy every time caddy-public changed is a deploy — a container teardown and
+  # recreate — of a service nobody touched. cloud-ship-orchestrate-vm.sh has always
+  # used the token form and documents the same reasoning; this path, the one GHA
+  # actually runs, did not.
+  _changed=0
+  case " $CHANGED_DIRS " in *" $dir "*) _changed=1 ;; esac
+  if [ -n "$CHANGED_DIRS" ] && [ "$_changed" -eq 0 ]; then
     echo "SKIP $name (unchanged)"
     echo "skip" > "$RESULTS_DIR/${name}.status"
     echo "0" > "$RESULTS_DIR/${name}.dur"

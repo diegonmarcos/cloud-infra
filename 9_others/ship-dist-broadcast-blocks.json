@@ -1,0 +1,23 @@
+{
+  "_comment": [
+    "Which top-level keys of a derived 1_cloud-configs/dist/build-<service>.json are FLEET-WIDE",
+    "broadcast, i.e. not owned by the service that consumes the file.",
+    "",
+    "cloud-data-config-derive.ts documents its own emission contract for the generic",
+    "per-service emitter: each build-<name>.json carries 'container', 'service', 'role', 'vm'",
+    "-- all owned by that one service -- plus 'services', described there as the",
+    "'cross-service registry map (every peer's ip/ports/vm/api/mcp)'. That last block is",
+    "identical broadcast traffic: it changes whenever ANY peer anywhere in the fleet changes",
+    "its address, port, domain or MCP metadata.",
+    "",
+    "Consequence when change detection ignores the distinction: registering two unrelated MCP",
+    "endpoints (commit 96e362760, 2026-09-05) rewrote 115 build-*.json files, of which 104",
+    "differed in NOTHING but this registry. The detect step read 'the file changed' as 'the",
+    "service changed' and redeployed 43 services on oci-apps -- including cloud-ide",
+    "(user-prod_code-server), whose compose.nix never reads the registry.",
+    "",
+    "This list lives in data because the derive step is free to add another fleet-wide block;",
+    "when it does, the only edit needed is here, not in the ship engine."
+  ],
+  "broadcast_blocks": ["services"]
+}

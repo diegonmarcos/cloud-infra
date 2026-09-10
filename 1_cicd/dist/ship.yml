@@ -284,6 +284,12 @@ jobs:
             # name is field 1, not field 2 as it was superproject-relative.
             CHANGED_DIRS=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|build\.json$)' \
               | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' || true)
+            # Name the file behind each of these too. Every other reason this
+            # step has for shipping a service now prints the file that caused
+            # it; leaving the most common reason implicit would still make a
+            # reader reconstruct it from the diff by hand.
+            printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|build\.json$)' \
+              | awk -F/ '{print "detect: SHIP " $1 " <- a_solutions/" $0 " (own source changed)"}' || true
 
             # A service can consume ANOTHER service's src file through a symlink:
             # user-comm_tools-maddy/src/mail-rules-general.json is a symlink to
@@ -344,23 +350,50 @@ jobs:
               DIST_CHANGED=$(git diff --name-only "$BASE" HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
             fi
             if [ -n "$DIST_CHANGED" ]; then
-              DIST_CONSUMERS=""
-              for _df in $DIST_CHANGED; do
-                _df_abs="$PWD/$_df"
-                for _svc_dir in a_solutions/*/src; do
-                  for _link in "$_svc_dir"/*.json; do
-                    [ -L "$_link" ] || continue
-                    _target=$(readlink -f "$_link" 2>/dev/null || true)
-                    if [ "$_target" = "$_df_abs" ]; then
-                      _svc=$(echo "$_svc_dir" | awk -F/ '{print $2}')
-                      DIST_CONSUMERS="$DIST_CONSUMERS $_svc"
-                    fi
-                  done
-                done
-              done
+              # The reverse-walk that used to live inline here now lives in
+              # cloud-ship-detect-dist-consumers.sh, for two reasons.
+              #
+              # It was file-granular, and the derived dist files are not. The
+              # derive step stamps a fleet-wide cross-service registry (the
+              # `services` block) into EVERY build-*.json, so 96e362760
+              # (2026-09-05, registering two unrelated MCP endpoints) rewrote
+              # 115 of them — 104 differing in nothing else — and this walk read
+              # "the file changed" as "the service changed". 43 services
+              # redeployed on oci-apps, cloud-ide (user-prod_code-server) among
+              # them, whose compose.nix never reads the registry. Same shape as
+              # the Collabora/Office-Sheets rebuild before it, which was treated
+              # as one service's problem rather than the walk's.
+              #
+              # And it was unassertable while inline: no way to feed it a
+              # synthetic commit, so neither "a real change still deploys" nor
+              # "a false one does not" was ever proven. Extracted, it is driven
+              # by 9_others/test/test_detect_dist_consumers.sh in both
+              # directions. The script SHIPs on every path but one and prints
+              # its reason for every decision — which is what turns the next
+              # occurrence of this from an investigation into one glance at the
+              # log.
+              DIST_DECISIONS="$RUNNER_TEMP/dist-consumer-decisions.tsv"
+              bash 1_cicd/src/scripts/cloud-ship-detect-dist-consumers.sh \
+                "$BASE" HEAD > "$DIST_DECISIONS" || true
+              while IFS=$'\t' read -r _verdict _svc _file _why; do
+                [ -n "$_verdict" ] || continue
+                echo "detect: $_verdict $_svc <- $_file ($_why)"
+              done < "$DIST_DECISIONS"
+              DIST_CONSUMERS=$(awk -F'\t' '$1=="SHIP"{print $2}' "$DIST_DECISIONS" \
+                | sort -u | tr '\n' ' ')
+              DIST_SUPPRESSED=$(awk -F'\t' '$1=="SHIP"{s[$2]=1} $1=="SKIP"{k[$2]=1}
+                END{for (x in s) delete k[x]; for (x in k) print x}' "$DIST_DECISIONS" \
+                | sort -u | tr '\n' ' ')
               CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$DIST_CONSUMERS" \
                 | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
               echo "::notice::dist-consumer ship: $DIST_CONSUMERS"
+              # `[ -n ... ] && echo` would be a FAILING last command when the
+              # list is empty, and GHA runs this step under `bash -e`: the step
+              # would abort mid-detect on the ordinary "nothing was suppressed"
+              # case. An if is the only form that is safe here.
+              if [ -n "$DIST_SUPPRESSED" ]; then
+                echo "::notice::dist-consumer NOT shipped (only the fleet-wide registry changed and they never read it): $DIST_SUPPRESSED"
+              fi
 
               # Also deploy newly-registered services: present in HEAD's
               # build-gha.json but absent in HEAD~1's. This fires when a new
