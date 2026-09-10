@@ -60,8 +60,16 @@ NIX
 }
 
 # Run the detector over the last commit and return the decision line for one service.
+# Decisions go to stderr by contract (stdout carries only the services to ship, so
+# the workflow's call site stays a single assignment), hence 2>&1 >/dev/null.
 decision_for() {  # $1 = service dir
-  ( cd "$FIXTURE" && bash "$DETECT" HEAD~1 HEAD 2>/dev/null ) | awk -F'\t' -v s="$1" '$2==s {print; exit}'
+  ( cd "$FIXTURE" && bash "$DETECT" HEAD~1 HEAD 2>&1 >/dev/null ) \
+    | awk -F'\t' -v s="$1" '$2==s {print; exit}'
+}
+
+# The one line the caller actually consumes.
+ship_list() {
+  ( cd "$FIXTURE" && bash "$DETECT" HEAD~1 HEAD 2>/dev/null )
 }
 
 check() {  # $1 = label   $2 = expected decision   $3 = actual line
@@ -106,6 +114,22 @@ check "broadcast-only, consumer binds registry" SHIP "$LINE"
 cd "$FIXTURE"; rm -f 9_others/ship-dist-broadcast-blocks.json; cd - >/dev/null
 LINE=$(decision_for svc_quiet)
 check "broadcast declaration missing (fail open)" SHIP "$LINE"
+
+# ── 5. stdout is the caller's contract: exactly the services to ship ────────────
+# ship.yml assigns this verbatim into CHANGED_DIRS. If a reason line ever leaked
+# onto stdout, the matrix would carry a sentence where a service dir belongs.
+build_fixture
+cd "$FIXTURE"
+jq '.container.image = "base:3"' 1_cloud-configs/dist/build-reader.json > t && mv t 1_cloud-configs/dist/build-reader.json
+git commit -qam "bump svc_reader's own image"
+cd - >/dev/null
+OUT=$(ship_list)
+if [ "$OUT" = "svc_reader " ] || [ "$OUT" = "svc_reader" ]; then
+  echo "  ok   stdout carries only the ship list → '$OUT'"
+else
+  echo "::error::stdout contract — expected just 'svc_reader', got '$OUT'"
+  FAILED=1
+fi
 
 [ "$FAILED" -eq 0 ] || exit 1
 echo "PASS: dist-consumer detection ships what changed and only what changed"

@@ -45,10 +45,20 @@
 #
 # Usage: cloud-ship-detect-dist-consumers.sh <base-rev> <head-rev>
 #   cwd (or any parent) must be the cloud-infra checkout, with a_solutions/ populated.
-#   stdout, one tab-separated line per consumer per changed file:
+#   stdout: ONE line, the space-separated service dirs to ship (possibly empty).
+#   stderr: one tab-separated decision per consumer per changed file, plus the
+#           ::notice:: summaries —
 #     SHIP<TAB><service-dir><TAB><dist-file><TAB><reason>
 #     SKIP<TAB><service-dir><TAB><dist-file><TAB><reason>
-#   Callers take the SHIP dirs and log every line verbatim.
+#
+# The split is deliberate. Everything the caller must PARSE is one stdout line it
+# can assign directly; everything a human must READ goes to stderr, which GHA
+# interleaves into the step log. Keeping the loop, the awk and the reason
+# formatting on this side of the boundary means ship.yml's detect step gains one
+# assignment rather than thirty more lines of shell embedded in YAML — and the
+# first attempt at this change did embed them, which left ship.yml unparseable by
+# GHA (run 34445801635: zero jobs, the workflow's registered name reverting from
+# 'Ship' to its own path) while every local YAML and `bash -n` check passed.
 
 set -uo pipefail
 
@@ -60,7 +70,7 @@ cd "$REPO_ROOT" || exit 1
 
 BROADCAST_JSON="9_others/ship-dist-broadcast-blocks.json"
 
-emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4"; }
+emit() { printf '%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4" >&2; }
 
 # ── The declared broadcast blocks ────────────────────────────────────────────────
 # An unreadable or absent declaration leaves this EMPTY, which makes every changed key
@@ -140,6 +150,10 @@ _binds_block() {
       "a_solutions/$1/src" 2>/dev/null
 }
 
+DECISIONS="$(mktemp)"
+trap 'rm -f "$LINKS_TSV" "${TMP_OLD:-}" "${TMP_NEW:-}" "${DECISIONS:-}"' EXIT
+
+{
 git diff --name-only "$BASE" "$HEAD_REV" -- '1_cloud-configs/dist/build-*.json' 2>/dev/null \
 | while IFS= read -r _df; do
   [ -n "$_df" ] || continue
@@ -184,3 +198,21 @@ git diff --name-only "$BASE" "$HEAD_REV" -- '1_cloud-configs/dist/build-*.json' 
     fi
   done < "$LINKS_TSV"
 done
+} 2> "$DECISIONS"
+
+# Replay every decision into the caller's log, then summarise. SHIP wins over
+# SKIP for a service that consumes several dist files: one genuinely-changed
+# declaration obliges the deploy no matter how many other files only carried
+# broadcast churn.
+cat "$DECISIONS" >&2
+
+SHIP_DIRS=$(awk -F'\t' '$1=="SHIP"{print $2}' "$DECISIONS" | sort -u | tr '\n' ' ')
+SUPPRESSED=$(awk -F'\t' '$1=="SHIP"{s[$2]=1} $1=="SKIP"{k[$2]=1}
+  END{for (x in s) delete k[x]; for (x in k) print x}' "$DECISIONS" | sort -u | tr '\n' ' ')
+
+echo "::notice::dist-consumer ship: ${SHIP_DIRS:-<none>}" >&2
+if [ -n "$SUPPRESSED" ]; then
+  echo "::notice::dist-consumer NOT shipped (only the fleet-wide registry changed and they never read it): $SUPPRESSED" >&2
+fi
+
+printf '%s' "$SHIP_DIRS"
