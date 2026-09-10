@@ -84,14 +84,37 @@ if [ -z "$SERVICES" ]; then
   exit 0
 fi
 
-# Detect changed dirs (GHA provides HEAD~1, CLI/Dagu ships all)
-CHANGED_DIRS=""
-if [ -n "${GITHUB_ACTIONS:-}" ] && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ]; then
-  # `a_solutions/*/src/` (trailing slash) is a directory pathspec that, combined with
-  # the `*`, MISSES files directly under src/ (e.g. src/compose.nix) — proven: it
-  # skipped a real cloud-cgc-pub-mcp change. `**` recurses at any depth (matches the
-  # detect step in ship.yml). Without this, changed services are wrongly "unchanged".
-  CHANGED_DIRS=$(git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**' 2>/dev/null | awk -F/ '{print $2}' | sort -u | tr '\n' ' ')
+# ── Which service dirs changed (empty = ship every service on this VM) ──
+# An inherited CHANGED_DIRS wins. The caller — ship.yml's detect job, or
+# cloud-ship-ci-builder-dispatch.sh — has already diffed the a_solutions
+# checkout against the base the push announced, resolved symlink and
+# dist-registry consumers, and printed why each service is in the list. This
+# script cannot reproduce any of that and must not try.
+#
+# It used to try, and unconditionally clobbered the caller's value first:
+#
+#   CHANGED_DIRS=""
+#   ... git diff --name-only HEAD~1 HEAD -- 'a_solutions/*/src/**'
+#
+# That pathspec has matched NOTHING since 2026-09-06, when a_solutions stopped
+# being a submodule of this repo and became a separate checkout (gitignored,
+# untracked here). A pathspec matching nothing yields an empty CHANGED_DIRS,
+# and empty means "no filter" — so the guard below fell through and shipped
+# every service on the VM. The dead pathspec failed OPEN, and did it silently,
+# because an empty diff is indistinguishable from an honest "nothing changed".
+#
+# Self-derivation now happens only when no caller supplied a list, and it runs
+# INSIDE the a_solutions checkout where the paths actually live. `**` (not a
+# trailing `/`) is still required: a directory pathspec misses files sitting
+# directly under src/, e.g. src/compose.nix — proven by a real cloud-cgc-pub-mcp
+# change that this step reported as unchanged.
+CHANGED_DIRS="${CHANGED_DIRS:-}"
+if [ -z "$CHANGED_DIRS" ] \
+   && [ -n "${GITHUB_ACTIONS:-}" ] \
+   && [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] \
+   && [ -d a_solutions/.git ]; then
+  CHANGED_DIRS=$(git -C a_solutions diff --name-only HEAD~1 HEAD -- '*/src/**' 2>/dev/null \
+    | awk -F/ '{print $1}' | sort -u | tr '\n' ' ')
 fi
 
 OK=0
