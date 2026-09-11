@@ -114,6 +114,81 @@ case "$(lance_dangling_tables "$H4")" in
   *)  bad "flagged a dir with no _versions/" ;;
 esac
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. THE SECOND COPY. cloud-cgc-db-restore-all.sh is `cat`-ed whole onto the box
+#    and run standalone, so it cannot source this function -- it carries its own
+#    verbatim copy. A copy that drifts is how cgc-db-gate.test.sh passed while the
+#    path it mirrored was wrong, so pin the two as byte-identical and drive the
+#    restore-all copy through the SAME cases rather than trusting the read-through.
+RA_SH="$REPO_ROOT/1_cicd/src/ops/cloud-cgc-db-restore-all.sh"
+[ -f "$RA_SH" ] || { echo "::error::cloud-cgc-db-restore-all.sh not found at $RA_SH"; exit 1; }
+
+FN_RA="$(awk '/^lance_dangling_tables\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$RA_SH")"
+case "$FN_RA" in
+  *"lance_dangling_tables()"*) ok "restore-all.sh carries a lance_dangling_tables()" ;;
+  *) bad "restore-all.sh has NO lance_dangling_tables() -- the staged tree is ungated and a torn GHCR image can wipe a live volume"; FN_RA="" ;;
+esac
+
+if [ "$FN_RA" = "$FN" ]; then
+  ok "the two copies are byte-identical"
+else
+  bad "restore-all.sh's copy has DRIFTED from cloud-cgc-db-update.sh's -- one of the two gates is now testing something else"
+fi
+
+# Drive the restore-all copy itself, under its own name, through the production
+# shape + the healthy control. Identity above makes this redundant ONLY while it
+# holds; when it breaks, this is what says which copy went wrong.
+if [ -n "$FN_RA" ]; then
+  ( eval "$(printf '%s' "$FN_RA" | sed 's/^lance_dangling_tables()/ra_ldt()/')"
+    rc=0
+    case "$(ra_ldt "$H")" in
+      *"repo1/storage/document_blocks.lance"*) ;;
+      *) echo "  FAIL: restore-all copy did NOT flag the production shape"; rc=1 ;;
+    esac
+    case "$(ra_ldt "$H")" in
+      *"code_blocks"*) echo "  FAIL: restore-all copy flagged a HEALTHY table"; rc=1 ;;
+    esac
+    exit $rc
+  ) && ok "restore-all copy behaves identically on the production shape" \
+    || bad "restore-all copy misbehaved (see FAIL lines above)"
+fi
+
+# 8. THE GATE IS WIRED. A function nobody calls is a no-op, and "guards that name
+#    their own target" is a repeat failure here -- so assert the CALL SITE exists,
+#    that it runs against $STAGING (the tree pulled from GHCR, not the live volume),
+#    and that a positive result EXITS NON-ZERO instead of merely warning.
+# 8. THE GATE IS WIRED. A function nobody calls is a no-op, and a grep-based check
+#    matches its OWN prose once the explanation is committed alongside it -- the
+#    comment above the gate quotes `rm -rf /dst/*` verbatim, which is exactly how
+#    this assertion first "found" the swap 49 lines ABOVE the swap. So every
+#    structural check here searches CODE only, never comment lines.
+code_line() { # $1=file $2=literal substring -> line number of first NON-COMMENT match
+  awk -v pat="$2" '{ s=$0; sub(/^[[:space:]]+/,"",s); if (s ~ /^#/) next; if (index($0,pat)) { print NR; exit } }' "$1"
+}
+
+GATE_LN=$(code_line "$RA_SH" 'lance_dangling_tables "$STAGING"')
+SWAP_LN=$(code_line "$RA_SH" 'rm -rf /dst/*')
+
+if [ -n "$GATE_LN" ]; then
+  ok "the staged tree is actually gated (call site is real code, line $GATE_LN)"
+else
+  bad "restore-all.sh never CALLS lance_dangling_tables on \$STAGING outside a comment -- the gate is dead code"
+fi
+
+# The refusal must abort, not warn: awk the block from the call to its closing fi.
+GATE_BLOCK="$(awk '/_staging_torn=\$\(lance_dangling_tables/{f=1} f{print} f&&/^fi$/{exit}' "$RA_SH")"
+case "$GATE_BLOCK" in
+  *"exit 1"*) ok "a torn staged tree ABORTS the restore (exit 1), leaving the live volume untouched" ;;
+  *) bad "the torn-staging branch does not exit non-zero -- it would log an error and wipe the volume anyway" ;;
+esac
+
+# 9. And the gate must sit BEFORE the destructive swap, or it gates nothing.
+if [ -n "$GATE_LN" ] && [ -n "$SWAP_LN" ] && [ "$GATE_LN" -lt "$SWAP_LN" ]; then
+  ok "the gate runs BEFORE the rm -rf swap (gate@$GATE_LN < swap@$SWAP_LN)"
+else
+  bad "gate/swap ordering wrong or unlocatable (gate@${GATE_LN:-none} swap@${SWAP_LN:-none}) -- a check after the wipe cannot save the volume"
+fi
+
 echo
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ] || exit 1
