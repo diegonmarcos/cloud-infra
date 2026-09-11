@@ -4578,6 +4578,8 @@
         "sieveAtom",
         "sieveTest",
         "sortByPriority",
+        "folderParents",
+        "folderPath",
         "toSieve",
         "toMaddyJson",
         "toLegacyJson"
@@ -4597,7 +4599,10 @@
         "sieveAtom(account: string, p: Json)",
         "sieveTest(account: string, p: Json)",
         "sortByPriority(rules: Json[])",
+        "folderParents(merged: Merged)",
+        "folderPath(parents: Record<string, string>, name: string)",
         "allFolderTargets(merged: Merged)",
+        "allFolderLeaves(merged: Merged)",
         "effectiveFlags(rule: Json)",
         "effectiveFolder(folders: Record<string, string>, rule: Json)",
         "sieveTagBlock(predicates: Record<string, Json>, account: string, rule: Json)",
@@ -4607,7 +4612,10 @@
         "toLegacyJson(merged: Merged)",
         "artifacts()",
         "emitForTests(dir: string)",
-        "main()"
+        "main()",
+        "class has",
+        "class char",
+        "class is"
       ]
     },
     {
@@ -73292,16 +73300,24 @@
         "serde_json::",
         "std::collections::",
         "crate::jmap::",
-        "crate::rules::"
+        "crate::rules::",
+        "super::"
       ],
       "symbols": [
         "find_inbox_id(mailboxes: &[Mailbox])",
         "new(existing: &'a [Mailbox], opts: &'a FolderOptions)",
         "pick_or_create(\n        &mut self,\n        name: &str,\n        parent: Option<&str>,\n        ref_prefix: &str,\n        sort_order: u32,\n    )",
+        "parent_depth(parents: &BTreeMap<String, String>, name: &str)",
         "ensure_mailboxes(\n    client: &Client,\n    rules: &Rules,\n)",
         "apply_renames(client: &Client, rules: &Rules, mailboxes: &[Mailbox])",
         "valid_names(rules: &Rules)",
-        "cleanup_stale(\n    client: &Client,\n    rules: &Rules,\n    name_to_id: &HashMap<String, String>,\n    mailboxes: &[Mailbox],\n)"
+        "cleanup_stale(\n    client: &Client,\n    rules: &Rules,\n    name_to_id: &HashMap<String, String>,\n    mailboxes: &[Mailbox],\n)",
+        "parents(pairs: &[(&str, &str)",
+        "depth_counts_hops_to_root()",
+        "unparented_folder_is_root()",
+        "cyclic_parents_terminate()",
+        "depth_sort_puts_every_parent_before_its_children()",
+        "depth_sort_is_stable_within_a_level()"
       ]
     },
     {
