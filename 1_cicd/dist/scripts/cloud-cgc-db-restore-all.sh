@@ -407,6 +407,66 @@ for r in "$@"; do
   echo "[cgc-db-restore-all] staged $r ($FOUND/$TOTAL)"
 done
 
+# INTEGRITY GATE ON THE STAGED TREE (fail closed) -- see cgc-db-lance-integrity.test.sh.
+#
+# The swap below is `rm -rf /dst/*` followed by `cp -a`: it DESTROYS the volume the
+# consumer is serving before it writes the replacement. Counting project dirs proves
+# the right NUMBER of repos arrived; it says nothing about whether they are READABLE.
+# On 2026-09-11 that gap was load-bearing: every per-repo image on GHCR carried a
+# code_blocks.lance with 11515 manifests over a data/ holding ONE fragment that no
+# manifest named, and this script faithfully wiped a volume and copied that in --
+# then reported success, restarted the MCP, and every octocode query died with
+# `lance error: Not found` while the run stayed green.
+#
+# So: a torn STAGING must never be allowed to overwrite a live volume. The prior
+# volume is the better artifact and is left exactly where it is. This mirrors the
+# publish gate in cloud-cgc-db-update.sh's checkpoint_publish() -- torn is refused at
+# BOTH ends of the pipe, so a bad image can neither reach GHCR nor leave it.
+#
+# The function below is a VERBATIM copy of cloud-cgc-db-update.sh's. It cannot be
+# sourced: this file is `cat`-ed whole onto the box and run standalone, so it has to
+# be self-contained. cgc-db-lance-integrity.test.sh extracts BOTH copies and asserts
+# they are byte-identical, because a re-implementation that drifts is precisely how
+# cgc-db-gate.test.sh passed while the path it mirrored was wrong.
+lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
+  _ldt_home="$1"
+  for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
+    [ -d "$_ldt_t/_versions" ] || continue
+    _ldt_m=$(ls "$_ldt_t/_versions" 2>/dev/null | sort | head -1)
+    [ -n "$_ldt_m" ] || continue
+    # Pull every hex-run ending in .lance out of the binary manifest. `tr`, not
+    # `strings`: strings is binutils and may simply be absent on a runner, and a
+    # missing tool must never read as "clean" -- fail closed, not open.
+    # The charset must include l,n -- the literal letters of the ".lance" suffix.
+    # With a bare hex set, tr shreds ".lance" into ".", "a", "ce" and the grep below
+    # matches nothing, so EVERY table reads as clean: the check silently inverts
+    # into a no-op. cgc-db-lance-integrity.test.sh pins this.
+    for _ldt_ref in $(tr -c '0-9a-f.ln' '\n' < "$_ldt_t/_versions/$_ldt_m" 2>/dev/null \
+                      | grep -E '[0-9a-f]{32,}\.lance$' || true); do
+      _ldt_hit=0
+      for _ldt_f in "$_ldt_t"/data/*.lance; do
+        [ -e "$_ldt_f" ] || continue   # empty data/ leaves the glob unexpanded
+        # Compare by TAIL, never by equality: the protobuf length byte in front
+        # of the name is itself a hex character, so $_ldt_ref carries one junk
+        # leading char. A suffix test is also length-agnostic, so a future lance
+        # fragment-id width cannot silently turn this check into a no-op.
+        case "$_ldt_ref" in *"${_ldt_f##*/}") _ldt_hit=1; break ;; esac
+      done
+      [ "$_ldt_hit" = 1 ] || { printf '%s\n' "$_ldt_t"; break; }
+    done
+  done
+  :
+}
+
+_staging_torn=$(lance_dangling_tables "$STAGING")
+if [ -n "$_staging_torn" ]; then
+  echo "::error::[cgc-db-restore-all] refusing to swap into $TARGET -- dangling lance manifest(s) in the STAGED tree:"
+  printf '%s\n' "$_staging_torn" | sed 's|^|::error::[cgc-db-restore-all]   |'
+  echo "::error::[cgc-db-restore-all] a manifest naming an absent fragment is unreadable forever. The volume currently being served is left untouched; fix the GHCR image (cgc-db-update.sh self-heals a torn checkpoint by re-indexing that repo from base) and re-run."
+  exit 1
+fi
+echo "[cgc-db-restore-all] lance integrity OK -- no dangling manifests in the staged tree"
+
 # ── 3) verify before TARGET is touched at all ───────────────────────────────
 STAGED=$(count_project_dirs)
 if [ "$STAGED" -ne "$FOUND" ]; then

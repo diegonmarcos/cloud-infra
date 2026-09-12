@@ -72,12 +72,36 @@ step_secrets() {
     if [ "$_cr" = "true" ]; then _dmode=0755; _fmode=0644; else _dmode=0700; _fmode=0600; fi
     mkdir -p "$SECRETS_DIR/.secrets.d"
     chmod "$_dmode" "$SECRETS_DIR/.secrets.d"
+    # container_readable is declared per SERVICE, but a service holds a MIX of
+    # material: a certificate its non-root user must read, and next to it a
+    # private key that ssh(1) will refuse outright if it is group- or
+    # other-readable. The paragraph above asked the author not to combine the two
+    # ("Do NOT set this for services that mount an SSH private key") and nothing
+    # enforced it, so one `container_readable = true` was enough to write a
+    # private key 0644 on the VM. A comment is not an enforcement.
+    #
+    # So the mode is decided per KEY, from the material itself: anything carrying
+    # a PEM/OpenSSH private-key armour or an age identity stays 0600 whatever
+    # build.json asked for, and the relaxation applies only to the rest. grep -q
+    # is used deliberately — it answers the question without putting a byte of
+    # the value anywhere a log could pick it up.
+    _strict_keys=""
     for key in $(echo "$_secrets_json" | jq -r 'keys[] | select(startswith("_") | not)'); do
         echo "$_secrets_json" | jq -r --arg k "$key" '.[$k] | tostring' > "$SECRETS_DIR/.secrets.d/$key"
-        chmod "$_fmode" "$SECRETS_DIR/.secrets.d/$key"
+        _kmode=$_fmode
+        if [ "$_kmode" != "0600" ] && grep -qE 'PRIVATE KEY-----|AGE-SECRET-KEY-1|PuTTY-User-Key-File' \
+                "$SECRETS_DIR/.secrets.d/$key" 2>/dev/null; then
+            _kmode=0600
+            _strict_keys="$_strict_keys $key"
+        fi
+        chmod "$_kmode" "$SECRETS_DIR/.secrets.d/$key"
     done
     unset _secrets_json
     log "Secrets split -> .secrets.d/ ($(ls "$SECRETS_DIR/.secrets.d" | wc -l) files, dir $_dmode / files $_fmode)"
+    # Names only, never values: knowing WHICH key was kept strict is what makes a
+    # container that cannot read its secret diagnosable without a second ship.
+    [ -n "$_strict_keys" ] && log "Kept 0600 despite container_readable (private key material):$_strict_keys"
+    unset _strict_keys _kmode
 
     # Extract JWKS key as PEM file (multi-line value can't go in env_file)
     if [ -n "${JWKS_FILE:-}" ] && [ -f "$SRC_DIR/$JWKS_FILE" ]; then

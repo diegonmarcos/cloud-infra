@@ -6,22 +6,22 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 3384,
+    "files": 3377,
     "by_lang": {
       "nix": 451,
-      "sh": 394,
-      "ts": 1126,
+      "sh": 392,
+      "ts": 1124,
       "js": 27,
-      "py": 852,
+      "py": 849,
       "rust": 534
     },
     "by_role": {
       "flake": 76,
       "script": 114,
-      "shell": 275,
-      "module": 695,
+      "shell": 273,
+      "module": 693,
       "engine": 1,
-      "python": 847,
+      "python": 844,
       "nix-module": 307,
       "compose": 68,
       "entrypoint": 48,
@@ -133,16 +133,20 @@
         "cleanup()",
         "stage_image()",
         "count_project_dirs()",
+        "lance_dangling_tables()",
         "mcp_up()",
         "bring_up()",
         "kg_refresh()"
       ],
-      "imports": [],
+      "imports": [
+        "cgc-db-lance-integrity.test.sh"
+      ],
       "symbols": [
         "need_bj()",
         "cleanup()",
         "stage_image()",
         "count_project_dirs()",
+        "lance_dangling_tables()",
         "mcp_up()",
         "bring_up()",
         "kg_refresh()"
@@ -175,6 +179,7 @@
         "propagate_to_host()",
         "project_dirs_snapshot()",
         "resolve_project_dir()",
+        "lance_dangling_tables()",
         "checkpoint_publish()",
         "bootstrap_config_toml()",
         "seed_base_if_missing()",
@@ -184,7 +189,9 @@
         "octo_log_digest()",
         "assert_llm_graph()"
       ],
-      "imports": [],
+      "imports": [
+        "cgc-db-lance-integrity.test.sh"
+      ],
       "symbols": [
         "octocode_has_fastembed()",
         "ensure_octocode()",
@@ -196,6 +203,7 @@
         "propagate_to_host()",
         "project_dirs_snapshot()",
         "resolve_project_dir()",
+        "lance_dangling_tables()",
         "checkpoint_publish()",
         "bootstrap_config_toml()",
         "seed_base_if_missing()",
@@ -4408,12 +4416,16 @@
       "role": "shell",
       "exports": [
         "select_modes()",
-        "check()"
+        "check()",
+        "strict_for_value()",
+        "strip_sh_comments()"
       ],
       "imports": [],
       "symbols": [
         "select_modes()",
-        "check()"
+        "check()",
+        "strict_for_value()",
+        "strip_sh_comments()"
       ]
     },
     {
@@ -4574,13 +4586,10 @@
       "exports": [
         "merge",
         "loadAndMerge",
-        "resolveViews",
         "resolvePredicate",
         "sieveAtom",
         "sieveTest",
         "sortByPriority",
-        "folderParents",
-        "folderPath",
         "toSieve",
         "toMaddyJson",
         "toLegacyJson"
@@ -4595,16 +4604,12 @@
         "loadJson(p: string)",
         "merge(general: Json, profile: Json | null)",
         "loadAndMerge(generalPath: string, profilePath: string | null)",
-        "resolveViews(predicates: Record<string, Json>, filters: Json)",
         "resolvePredicate(predicates: Record<string, Json>, pred: Json)",
         "sieveList(vs: string[])",
         "sieveAtom(account: string, p: Json)",
         "sieveTest(account: string, p: Json)",
         "sortByPriority(rules: Json[])",
-        "folderParents(merged: Merged)",
-        "folderPath(parents: Record<string, string>, name: string)",
         "allFolderTargets(merged: Merged)",
-        "allFolderLeaves(merged: Merged)",
         "effectiveFlags(rule: Json)",
         "effectiveFolder(folders: Record<string, string>, rule: Json)",
         "sieveTagBlock(predicates: Record<string, Json>, account: string, rule: Json)",
@@ -4614,10 +4619,7 @@
         "toLegacyJson(merged: Merged)",
         "artifacts()",
         "emitForTests(dir: string)",
-        "main()",
-        "class has",
-        "class char",
-        "class is"
+        "main()"
       ]
     },
     {
@@ -12200,7 +12202,6 @@
         "_extract_oauth21_user_email(\n    authenticated_user: Optional[str], func_name: str\n)",
         "_extract_oauth20_user_email(\n    args: tuple, kwargs: dict, wrapper_sig: inspect.Signature\n)",
         "_remove_user_email_arg_from_docstring(docstring: str)",
-        "_resolve_one_scope(scope: str)",
         "_resolve_scopes(scopes: Union[str, List[str]])",
         "_handle_token_refresh_error(\n    error: RefreshError, user_email: str, service_name: str\n)",
         "require_google_service(\n    service_type: str,\n    scopes: Union[str, List[str]],\n    version: Optional[str] = None,\n)",
@@ -13632,33 +13633,6 @@
       ],
       "symbols": [
         "create_mock_service()"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-api_google-workspace-mcp/src/code/tests/test_drive_write_scopes.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "test_drive_tools_are_discovered()",
-        "test_mutating_drive_tools_do_not_use_drive_file(module, func, scopes)",
-        "test_drive_write_group_is_full_drive()",
-        "test_unknown_scope_group_is_rejected()"
-      ],
-      "imports": [
-        "ast",
-        "pathlib",
-        "pytest"
-      ],
-      "symbols": [
-        "_tool_modules()",
-        "_decorator_scopes(node)",
-        "_scope_names(node)",
-        "_mutates(node, module_functions, seen=None)",
-        "_drive_tools()",
-        "test_drive_tools_are_discovered()",
-        "test_mutating_drive_tools_do_not_use_drive_file(module, func, scopes)",
-        "test_drive_write_group_is_full_drive()",
-        "test_unknown_scope_group_is_rejected()"
       ]
     },
     {
@@ -16205,31 +16179,6 @@
       ]
     },
     {
-      "path": "a_solutions/infra-obs_ntfy/src/code/test_read_path.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "check(name, cond, detail=\"\")",
-        "get(url)",
-        "test_anonymous_read_is_authorized()",
-        "test_since_unit_is_hours_not_days()",
-        "test_public_edge_still_demands_a_credential()"
-      ],
-      "imports": [
-        "json",
-        "sys",
-        "urllib.error",
-        "urllib.request"
-      ],
-      "symbols": [
-        "check(name, cond, detail=\"\")",
-        "get(url)",
-        "test_anonymous_read_is_authorized()",
-        "test_since_unit_is_hours_not_days()",
-        "test_public_edge_still_demands_a_credential()"
-      ]
-    },
-    {
       "path": "a_solutions/infra-obs_ntfy/src/code/topic-scanner.py",
       "lang": "py",
       "role": "python",
@@ -17534,7 +17483,7 @@
         "check_stalwart()",
         "check_jmap_wellknown()",
         "check_jmap_webadmin()",
-        "openssl_check(\n    name: &str,\n    connect_host: &str,\n    sni: &str,\n    port: u16,\n    starttls: bool,\n)",
+        "openssl_check(name: &str, domain: &str, port: u16, starttls: bool)",
         "public_resolver()",
         "recompute_summary(health: &mut MailHealthData)"
       ]
@@ -17796,8 +17745,7 @@
       "role": "rust-module",
       "exports": [],
       "imports": [
-        "the",
-        "that"
+        "the"
       ],
       "symbols": []
     },
@@ -17866,7 +17814,6 @@
         "tokio::time::timeout",
         "reports_common::fleet::VmState",
         "oci",
-        "maddy",
         "dist",
         "std::io::Read"
       ],
@@ -17905,7 +17852,6 @@
         "std::time::Duration",
         "tokio::time::timeout",
         "ssh_batch_mail",
-        "SPF",
         "it",
         "was",
         "the"
@@ -17960,24 +17906,6 @@
       ],
       "symbols": [
         "fmt(&self, f: &mut std::fmt::Formatter<'_>)"
-      ]
-    },
-    {
-      "path": "a_solutions/infra-obs_reports/src/src/cloud-mail-health-full/test-probe-targets.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "pass()",
-        "fail()",
-        "remote_batch()",
-        "section()"
-      ],
-      "imports": [],
-      "symbols": [
-        "pass()",
-        "fail()",
-        "remote_batch()",
-        "section()"
       ]
     },
     {
@@ -23406,24 +23334,6 @@
         "metrics()",
         "dashboard()",
         "class CompressIn"
-      ]
-    },
-    {
-      "path": "a_solutions/user-ai_my-ai_claude-api/src/code/py/test_compress_ledger.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "main()"
-      ],
-      "imports": [
-        "json",
-        "os",
-        "sys",
-        "tempfile"
-      ],
-      "symbols": [
-        "_load(tmpdir: str, contents=None)",
-        "main()"
       ]
     },
     {
@@ -39534,20 +39444,6 @@
         "baseImage",
         "apt",
         "title"
-      ]
-    },
-    {
-      "path": "a_solutions/user-ai_my-ai_claude-api/src/test-mcp-contract.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "bad()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "bad()"
       ]
     },
     {
@@ -67984,24 +67880,6 @@
       "symbols": []
     },
     {
-      "path": "a_solutions/user-comm_cloud-webmail/src/code/arm64/webapp/lib/jmap/__tests__/query-anchor.test.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [],
-      "imports": [
-        "vitest",
-        "../client",
-        "../page-anchors"
-      ],
-      "symbols": [
-        "makeSession()",
-        "jsonResponse(body: unknown)",
-        "page(ids: string[], position: number, total: number)",
-        "connectedClient()",
-        "replyWith(...responses: unknown[])"
-      ]
-    },
-    {
       "path": "a_solutions/user-comm_cloud-webmail/src/code/arm64/webapp/lib/jmap/client-interface.ts",
       "lang": "ts",
       "role": "module",
@@ -68039,7 +67917,6 @@
         "./request-limits",
         "./patch-pointer",
         "./first-touch-gate",
-        "./page-anchors",
         "@/lib/debug",
         "@/lib/calendar-event-normalization",
         "@/lib/calendar-component-detection",
@@ -68059,7 +67936,6 @@
         "namespaceMailboxIds(emails: Email[], accountId: string)",
         "isConcurrentRequestRefusal(status: number, body: string)",
         "computeHasMore(position: number, emailCount: number, total: number, limit: number)",
-        "queryErrorType(response: JMAPResponse)",
         "hasSubmissionMethod(methodCalls: JMAPMethodCall[])",
         "isSmimeEmail(email: Email)",
         "foldIcsLine(line: string)",
@@ -68102,22 +67978,6 @@
         "collectionOf(method: string)",
         "gateKeysFor(methodCalls: ReadonlyArray<MethodCall>)",
         "class FirstTouchGate"
-      ]
-    },
-    {
-      "path": "a_solutions/user-comm_cloud-webmail/src/code/arm64/webapp/lib/jmap/page-anchors.ts",
-      "lang": "ts",
-      "role": "module",
-      "exports": [
-        "emailQueryViewKey",
-        "QueryPage",
-        "QueryPageResult",
-        "PageAnchors"
-      ],
-      "imports": [],
-      "symbols": [
-        "emailQueryViewKey(accountId: string, filter: unknown, sort: unknown, limit: number)",
-        "class PageAnchors"
       ]
     },
     {
@@ -73234,8 +73094,6 @@
         "no_attachment_is_exact_complement_of_has_attachment()",
         "header_contains_atom()",
         "has_flag_atom()",
-        "star_is_the_lowercase_dollar_flagged_keyword()",
-        "starring_moves_a_message_from_normal_to_important()",
         "from_domain_atoms()",
         "combinators_recurse()",
         "empty_any_of_is_always_false_placeholder()",
@@ -73304,24 +73162,16 @@
         "serde_json::",
         "std::collections::",
         "crate::jmap::",
-        "crate::rules::",
-        "super::"
+        "crate::rules::"
       ],
       "symbols": [
         "find_inbox_id(mailboxes: &[Mailbox])",
         "new(existing: &'a [Mailbox], opts: &'a FolderOptions)",
         "pick_or_create(\n        &mut self,\n        name: &str,\n        parent: Option<&str>,\n        ref_prefix: &str,\n        sort_order: u32,\n    )",
-        "parent_depth(parents: &BTreeMap<String, String>, name: &str)",
         "ensure_mailboxes(\n    client: &Client,\n    rules: &Rules,\n)",
         "apply_renames(client: &Client, rules: &Rules, mailboxes: &[Mailbox])",
         "valid_names(rules: &Rules)",
-        "cleanup_stale(\n    client: &Client,\n    rules: &Rules,\n    name_to_id: &HashMap<String, String>,\n    mailboxes: &[Mailbox],\n)",
-        "parents(pairs: &[(&str, &str)",
-        "depth_counts_hops_to_root()",
-        "unparented_folder_is_root()",
-        "cyclic_parents_terminate()",
-        "depth_sort_puts_every_parent_before_its_children()",
-        "depth_sort_is_stable_within_a_level()"
+        "cleanup_stale(\n    client: &Client,\n    rules: &Rules,\n    name_to_id: &HashMap<String, String>,\n    mailboxes: &[Mailbox],\n)"
       ]
     },
     {
