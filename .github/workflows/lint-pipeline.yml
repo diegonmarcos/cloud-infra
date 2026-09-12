@@ -112,6 +112,8 @@ jobs:
         run: bash 9_others/test/test_proxied_mcps_resolution.sh
       - name: Phase 15 — engine layout detection works pre-build
         run: bash 9_others/test/test_layout_detection_pre_build.sh
+      - name: Phase 15b — a lance manifest never names an absent fragment
+        run: bash 9_others/test/cgc-db-lance-integrity.test.sh
       - name: Phase 16 — every published image also has -binaries tag (report-only)
         # 2026-05-05: scope-fixed to skip compose-build services (those use
         # dockerfile_inline so the image is built on the VM, never shipped to

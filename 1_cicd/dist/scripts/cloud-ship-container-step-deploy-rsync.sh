@@ -128,7 +128,24 @@ step_deploy() {
         scp_secret ".secrets" "$DIST_DIR/.secrets" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets" || return $?
     fi
     if [ -d "$DIST_DIR/.secrets.d" ]; then
-        scp_secret ".secrets.d" -r "$DIST_DIR/.secrets.d" "$DEPLOY_HOST:$DEPLOY_PATH/.secrets.d" || return $?
+        # `scp -r src dest` names the destination DIRECTORY, and when that
+        # directory already exists scp copies the source INSIDE it. So the first
+        # deploy created $DEPLOY_PATH/.secrets.d correctly and every deploy after
+        # it wrote $DEPLOY_PATH/.secrets.d/.secrets.d/<KEY> — a second, older copy
+        # of every credential one level down, named after the material it holds,
+        # which no later deploy ever rewrote and the manifest reconciler is
+        # explicitly forbidden to touch (drop_protected above).
+        #
+        # Removing the remote directory first and naming its PARENT as the
+        # destination fixes both halves at once: the tree lands at exactly one
+        # depth, and a key dropped from sops stops surviving on the VM forever
+        # because scp merges but never deletes. Recreating the directory from the
+        # source also restores the mode the decrypt step chose for it, instead of
+        # inheriting whatever the remote umask had left in place.
+        [ -z "$DEPLOY_PATH" ] && { log_error ".secrets.d: refusing to clean an empty DEPLOY_PATH"; return 1; }
+        ssh_with_retry "$DEPLOY_HOST" "rm -rf '$DEPLOY_PATH/.secrets.d'" >/dev/null 2>&1 \
+            || log_warn "could not clear $DEPLOY_HOST:$DEPLOY_PATH/.secrets.d — stale keys may survive this deploy"
+        scp_secret ".secrets.d" -r "$DIST_DIR/.secrets.d" "$DEPLOY_HOST:$DEPLOY_PATH/" || return $?
     fi
 
     log "Deployed to $DEPLOY_HOST:$DEPLOY_PATH"

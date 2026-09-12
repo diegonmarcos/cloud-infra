@@ -677,6 +677,52 @@ resolve_project_dir() {  # $1=OCTO_HOME $2=BEFORE(newline list) $3=MARKER(mtime 
   return 1
 }
 
+# ── LANCE REFERENTIAL INTEGRITY ─────────────────────────────────────────────
+# A lance table is a directory of immutable data fragments plus a chain of
+# manifests; each manifest names the fragments that version needs. If a fragment
+# named by the CURRENT manifest is absent, every read of that table dies with
+#   lance error: Not found: .../<table>.lance/data/<id>.lance
+# and because octocode opens its tables together, that kills the WHOLE query --
+# a repo whose document_blocks is torn cannot answer a code question either.
+#
+# This is the shape that blinded the fleet from 2026-09-07 to 2026-09-10:
+# cloud-u-android's document_blocks.lance had 7352 manifests and an EMPTY data/,
+# every one of them naming the same absent fragment. Nothing in the pipeline
+# looked, so a torn table survived re-index after re-index (see the repair at the
+# per-repo restore, and the publish gate in checkpoint_publish below).
+#
+# lance names _versions files u64::MAX-version, so the lexicographically FIRST
+# entry is the NEWEST version -- that is the one a reader opens.
+lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
+  _ldt_home="$1"
+  for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
+    [ -d "$_ldt_t/_versions" ] || continue
+    _ldt_m=$(ls "$_ldt_t/_versions" 2>/dev/null | sort | head -1)
+    [ -n "$_ldt_m" ] || continue
+    # Pull every hex-run ending in .lance out of the binary manifest. `tr`, not
+    # `strings`: strings is binutils and may simply be absent on a runner, and a
+    # missing tool must never read as "clean" -- fail closed, not open.
+    # The charset must include l,n -- the literal letters of the ".lance" suffix.
+    # With a bare hex set, tr shreds ".lance" into ".", "a", "ce" and the grep below
+    # matches nothing, so EVERY table reads as clean: the check silently inverts
+    # into a no-op. cgc-db-lance-integrity.test.sh pins this.
+    for _ldt_ref in $(tr -c '0-9a-f.ln' '\n' < "$_ldt_t/_versions/$_ldt_m" 2>/dev/null \
+                      | grep -E '[0-9a-f]{32,}\.lance$' || true); do
+      _ldt_hit=0
+      for _ldt_f in "$_ldt_t"/data/*.lance; do
+        [ -e "$_ldt_f" ] || continue   # empty data/ leaves the glob unexpanded
+        # Compare by TAIL, never by equality: the protobuf length byte in front
+        # of the name is itself a hex character, so $_ldt_ref carries one junk
+        # leading char. A suffix test is also length-agnostic, so a future lance
+        # fragment-id width cannot silently turn this check into a no-op.
+        case "$_ldt_ref" in *"${_ldt_f##*/}") _ldt_hit=1; break ;; esac
+      done
+      [ "$_ldt_hit" = 1 ] || { printf '%s\n' "$_ldt_t"; break; }
+    done
+  done
+  :
+}
+
 # Checkpoint-push after one repo. CGC_PACKAGE_MODE=per-repo (matrix CI) packages
 # ONLY that repo's own project dir into its OWN GHCR image; the default
 # "monolith" mode keeps packaging the WHOLE octocode home into the single
@@ -696,6 +742,18 @@ resolve_project_dir() {  # $1=OCTO_HOME $2=BEFORE(newline list) $3=MARKER(mtime 
 # caller that does not set it.
 checkpoint_publish() {  # $1 = repo local name
   if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+    # PUBLISH GATE (fail closed). Pushing a torn table to GHCR is what makes the
+    # damage permanent: the next run layers this very image back in as its
+    # incremental base, octocode's change-gate sees the table present and never
+    # rewrites it, and the run goes green while every consumer query dies. Refuse.
+    # set -eu + a bare call site means this return FAILS the job, which is the point.
+    _cp_torn=$(lance_dangling_tables "$OCTO_HOME")
+    if [ -n "$_cp_torn" ]; then
+      echo "::error::[cgc-db] refusing to publish $1 — dangling lance manifest(s) in this home:"
+      printf '%s\n' "$_cp_torn" | sed 's|^|::error::[cgc-db]   |'
+      echo "::error::[cgc-db] a manifest naming an absent fragment is unreadable forever; the prior image on GHCR is the better artifact and is left in place."
+      return 1
+    fi
     CGC_BUILD_JSON="$BJ" CGC_PROJECT_DIR="${_proj_resolved:-}" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "${REPO_PREFIX}${1}" "$REPO_TAG"
   else
     CGC_BUILD_JSON="$BJ" sh "$HERE/cloud-cgc-db-package.sh" "$OCTO_HOME" "$IMAGE" "$TAG"
@@ -853,6 +911,26 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
     fi
     CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${_r}:${REPO_TAG}" || true
   done
+  # SELF-HEAL a torn checkpoint. Dropping only the broken TABLE would not work and
+  # would be worse than not trying: file_metadata.lance (content hash) and
+  # git_metadata.lance (commit) still say those files are unchanged, so octocode
+  # would skip them and rebuild the table EMPTY -- which answers "no results"
+  # instead of erroring, i.e. looks repaired while being exactly as blind. Same
+  # reasoning as the CGC_FORCE note above: the metadata tables gate the changed-file
+  # set, so the only full-corpus path this octocode has is starting from the shared
+  # base. Treat a torn checkpoint as NO checkpoint.
+  _torn=$(lance_dangling_tables "$OCTO_HOME")
+  if [ -n "$_torn" ]; then
+    echo "::warning::[cgc-db] torn checkpoint restored from GHCR — dangling lance manifest(s):"
+    printf '%s\n' "$_torn" | sed 's|^|[cgc-db]   |'
+    for _p in "$OCTO_HOME"/*/; do
+      # Same exclusion set as package.sh's find_project_dir() -- root state, never
+      # project data. Dropping fastembed/ here would re-download the embedder.
+      case "${_p%/}" in */fastembed | */sentencetransformer) continue ;; esac
+      rm -rf "$_p"
+    done
+    echo "[cgc-db] dropped the restored project dir(s) — re-indexing this repo from base"
+  fi
 else
   sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" || true
   if [ -z "$(ls -A "$OCTO_HOME" 2>/dev/null | grep -v '^config\.toml$')" ]; then
