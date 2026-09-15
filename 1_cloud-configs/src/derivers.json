@@ -20,7 +20,17 @@
     {
       "name": "code-signatures",
       "script": "src/derive/derive-code-signatures.ts",
-      "description": "Per-file code signatures (exports/imports/symbols, no bodies) for the cloud repo → dist/code-signatures-cloud.json. Deterministic structure layer feeding the kg-graph code nodes/edges AND the Opus semantic GraphRAG pass (~244k tokens vs 5.6M full source)."
+      "description": "Per-file code signatures (exports/imports/symbols, no bodies) for every repo in `repos` → dist/code-signatures-<name>.json. Deterministic structure layer feeding the kg-graph code nodes/edges AND the Opus semantic GraphRAG pass. `repos[].root` is relative to the cloud-infra root; a root that is not checked out is skipped with a warning (derive-code-signatures.test.ts goes red on it). `languages` is the extension → extractor map; it is also the set derive-code-signatures.test.ts requires the octocode indexer to accept.",
+      "repos": [
+        { "name": "cloud", "root": ".", "skip_dirs": ["a_solutions"], "_comment": "a_solutions is the separate cloud-u-containers repository, emitted under its own name below" },
+        { "name": "cloud-u-containers", "root": "a_solutions" },
+        { "name": "cloud-u-android", "root": "../cloud-u-android", "skip_dirs": ["build", ".gradle"] }
+      ],
+      "languages": {
+        ".ts": "ts", ".tsx": "ts", ".mts": "ts", ".js": "js", ".mjs": "js", ".cjs": "js",
+        ".nix": "nix", ".sh": "sh", ".bash": "sh", ".rs": "rust", ".py": "py",
+        ".kt": "kotlin", ".kts": "kotlin", ".java": "java"
+      }
     },
     {
       "name": "watchdog",
