@@ -2,7 +2,7 @@
 # ── Full mail health diagnostic + cross-store reconciliation ──
 # Usage: cloud-health-mail-full.sh
 #
-# Two layers, both must pass:
+# Three layers, all must pass:
 #
 #  1. LIVENESS/E2E — triggers the Rust cloud-mail-health-full derive on
 #     oci-apps (identical docker invocation to obs.health.mail —
@@ -31,6 +31,13 @@
 #     Both containers run on oci-apps (see each service's build.json
 #     deploy.host). The Message-IDs are piped from one container into the other
 #     ON oci-apps and never reach this job's log — only the counts come back.
+#
+#  3. SEND/RECEIVE ROUND-TRIP — nothing above proves a message submitted now
+#     is delivered. a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/round-trip.ts
+#     (run via `docker exec cloud-mail-mcp`, credentials from that container's
+#     sops-deployed env) submits one message with a random Message-ID, asserts
+#     it reaches maddy (IMAP) and Stalwart (JMAP) within 180s, and removes it.
+#     Gate: sent and received by both stores.
 #
 # Requires (set up by the caller — see 1_cicd/src/cicd/health_mail_full.yml):
 #   - SSH config alias `oci-apps` (same pattern as
@@ -264,15 +271,49 @@ else
 fi
 
 echo ""
+echo "═══ 3. Send/receive round-trip (submission -> maddy and Stalwart, by Message-ID) ═══"
+
+# Layers 1 and 2 prove the services answer and the stores agree with Gmail;
+# neither proves a message submitted now is delivered. round-trip.ts sends one,
+# asserts that exact Message-ID reaches both stores and removes it (details in
+# the script). The script travels on SSH stdin into ONE `docker exec ... sh -c`
+# so the fish login shell on oci-apps never has to parse `&&`. Only the JSON
+# fields are printed: the script's stderr can carry SMTP replies with
+# addresses in them, and this log carries pass/fail, seconds and counts only.
+ROUND_TRIP_SCRIPT="$REPO_ROOT/a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/round-trip.ts"
+if [ -f "$ROUND_TRIP_SCRIPT" ]; then
+  ROUND_TRIP_RESULT=$(ssh $SSH_OPTS oci-apps "docker exec -i cloud-mail-mcp sh -c 'mkdir -p /app/mcp/tools/others && cat > /app/mcp/tools/others/round-trip.ts && exec node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/round-trip.ts'" \
+    < "$ROUND_TRIP_SCRIPT" 2>/dev/null | tail -1)
+  if echo "$ROUND_TRIP_RESULT" | jq -e 'has("sent") and has("maddy") and has("stalwart")' >/dev/null 2>&1; then
+    echo "$ROUND_TRIP_RESULT" | jq -r '"sent=\(.sent) · maddy received=\(.maddy.received) in \(.maddy.seconds)s removed=\(.maddy.removed) · stalwart received=\(.stalwart.received) in \(.stalwart.seconds)s removed=\(.stalwart.removed)"'
+    if [ "$(echo "$ROUND_TRIP_RESULT" | jq -r '.sent == true and .maddy.received == true and .stalwart.received == true')" = "true" ]; then
+      echo "OK: the test message reached both stores"
+    else
+      ROUND_TRIP_MISSED=$(echo "$ROUND_TRIP_RESULT" | jq -r 'if .sent != true then "submission failed" else ([if .maddy.received != true then "maddy" else empty end, if .stalwart.received != true then "stalwart" else empty end] | "not received by " + join(" and ")) end')
+      echo "::error::round-trip: $ROUND_TRIP_MISSED"
+      FAIL_REASONS+=("round-trip: $ROUND_TRIP_MISSED")
+    fi
+  else
+    # No result line means the test never reached a verdict (SSH/docker error
+    # or the script crashed) — delivery is unverified, not proven.
+    echo "::error::round-trip produced no result — delivery unverified"
+    FAIL_REASONS+=("round-trip did not run (SSH/docker error) — delivery unverified")
+  fi
+else
+  echo "::error::round-trip.ts not found under $REPO_ROOT/a_solutions — delivery cannot be tested"
+  FAIL_REASONS+=("round-trip script missing from the checkout — delivery untested")
+fi
+
+echo ""
 echo "═══ Result ═══"
 
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
-  echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; $RECON_STATUS)"
+  echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; $RECON_STATUS; round-trip delivered to both stores)"
   timeout 60 ssh -n $SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
     -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
     -H 'Priority: 2' \
     -H 'Tags: white_check_mark,email' \
-    -d 'Liveness OK; $RECON_STATUS'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
+    -d 'Liveness OK; $RECON_STATUS; round-trip delivered to both stores'" || echo "::warning::ntfy notification failed or timed out (best-effort — result above stands)"
   exit 0
 fi
 
