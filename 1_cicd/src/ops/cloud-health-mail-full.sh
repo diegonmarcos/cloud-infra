@@ -206,7 +206,11 @@ EOF
   RECONCILE_STATUS=$?
   RECONCILE_RESULT=$(printf '%s\n' "$RECONCILE_OUTPUT" | tail -1)
   if [ "$RECONCILE_STATUS" -eq 0 ] && [ "$RECONCILE_RESULT" = "GMAIL_UNAVAILABLE" ]; then
-    echo "::warning::Gmail Message-ID read failed: $(printf '%s\n' "$RECONCILE_OUTPUT" | head -5)"
+    # Not a skip: without the reference nothing about cross-store consistency
+    # was verified. Passing here let a Gmail key the reader could not open turn
+    # every run green while reconciling nothing.
+    echo "::error::Gmail Message-ID read failed: $(printf '%s\n' "$RECONCILE_OUTPUT" | head -5)"
+    FAIL_REASONS+=("Gmail reference unreadable — reconciliation did not run")
   elif [ "$RECONCILE_STATUS" -eq 0 ] && echo "$RECONCILE_RESULT" | jq -e . >/dev/null 2>&1; then
     # `jq -r` on a missing key prints the STRING "null", which makes the
     # `-lt 0` guards below a bash arithmetic error rather than a clean
@@ -228,7 +232,8 @@ EOF
     FAIL_REASONS+=("reconciliation did not run (SSH/docker error) — inconclusive")
   fi
 else
-  echo "::warning::count_recent.py or count-since.ts not found under $REPO_ROOT/a_solutions — skipping reconciliation"
+  echo "::error::count_recent.py or count-since.ts not found under $REPO_ROOT/a_solutions — reconciliation cannot run"
+  FAIL_REASONS+=("reconciliation scripts missing from the checkout — reconciliation did not run")
 fi
 
 if [ "$GMAIL_COUNT" -ge 0 ]; then
@@ -255,7 +260,7 @@ if [ "$GMAIL_COUNT" -ge 0 ]; then
     RECON_STATUS="stores reconciled against Gmail (gmail=$GMAIL_COUNT missing: maddy=$MADDY_MISSING stalwart=$STALWART_MISSING)"
   fi
 else
-  echo "::warning::Gmail reference unavailable — reconciliation skipped this run (liveness result still gates)"
+  echo "::error::Gmail reference unavailable — reconciliation did not run this run"
 fi
 
 echo ""
