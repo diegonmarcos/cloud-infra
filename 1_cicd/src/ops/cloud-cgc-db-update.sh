@@ -777,6 +777,79 @@ bootstrap_config_toml() {
   echo "[cgc-db] bootstrapped config.toml with octocode $OCTO_VERSION (embedding $CODE_EMBED / $TEXT_EMBED, llm $LLM, reranker/hybrid off)"
 }
 
+# APPLY build.json's declared file associations to config.toml — ON EVERY RUN.
+#
+# WHY IT CANNOT LIVE IN bootstrap_config_toml(): that function returns early the
+# moment a config.toml already exists, and after the very first cycle one ALWAYS
+# exists (it is restored from the GHCR base/checkpoint image). A declaration added
+# to build.json would therefore be applied on exactly zero of the boxes that
+# matter — declared forever, never in force. Every other config.toml mutation in
+# this script (graphrag, embedding models, batch size) already runs unconditionally
+# for exactly that reason; this one now does too.
+#
+# WHAT IT BUYS: octocode 0.22.0 keeps a file only if detect_language() or
+# ALLOWED_TEXT_EXTENSIONS knows its extension (src/indexer/mod.rs:401/422), and
+# neither knows `kt`/`kts` — so cloud-u-android's ~9,900 Kotlin files were dropped
+# at the file walk, before chunking and embedding, and the index was blind to the
+# repo's primary language. `[index.file_associations]` (src/language.rs:25,
+# config.rs:143/376) maps an extension onto an EXISTING grammar and is the only
+# declarable lever 0.22 has for this. The pairs themselves are NOT in this script:
+# they come from .runtime.octocode.file_associations, so adding a language is a
+# build.json edit, never a script edit.
+#
+# IDEMPOTENT + NON-CLOBBERING: rewrites only assignments for extensions we declare,
+# inside the [index.file_associations] section alone, leaving every other section
+# (and any comment or association we do not declare) byte-identical. If the section
+# is missing entirely — an older restored config — it is appended as a new table at
+# the end of the file, which is where a previously-unused sub-table belongs. awk,
+# never sed (see reference_awk-not-sed-secrets.md).
+#
+# An unknown grammar name here makes octocode REFUSE the config outright
+# (normalize_file_associations bails on an unsupported language), so a typo fails
+# the index loudly instead of silently indexing nothing — the failure mode this
+# whole fix exists to end. derive-code-signatures.test.ts checks the grammar names
+# against the pinned release's own source before they can ever reach a run.
+apply_file_associations() {
+  [ -f "$CFG" ] || return 0
+  _fa_pairs=$(jq -r '.runtime.octocode.file_associations // {} | to_entries[] | "\(.key)=\(.value)"' "$BJ" 2>/dev/null)
+  if [ -z "$_fa_pairs" ]; then
+    echo "[cgc-db] no .runtime.octocode.file_associations declared in $BJ — config.toml [index.file_associations] left untouched"
+    return 0
+  fi
+  awk -v pairs="$_fa_pairs" '
+    function emit(   i) { for (i = 1; i <= count; i++) printf "%s = \"%s\"\n", ext[i], lang[ext[i]] }
+    BEGIN {
+      n = split(pairs, declared, "\n")
+      for (i = 1; i <= n; i++) {
+        eq = index(declared[i], "=")
+        if (eq < 2) continue
+        e = substr(declared[i], 1, eq - 1)
+        sub(/^\./, "", e)
+        if (!(e in lang)) ext[++count] = e
+        lang[e] = substr(declared[i], eq + 1)
+      }
+    }
+    /^\[/ {
+      if (in_fa) { emit(); in_fa = 0 }
+      if ($0 ~ /^\[index\.file_associations\][ \t]*$/) { in_fa = 1; seen = 1 }
+      print; next
+    }
+    in_fa && /^[ \t]*"?\.?[A-Za-z0-9_+-]+"?[ \t]*=/ {
+      key = $0
+      sub(/[ \t]*=.*$/, "", key)
+      gsub(/[ \t"]/, "", key)
+      sub(/^\./, "", key)
+      if (key in lang) next
+      print; next
+    }
+    { print }
+    END {
+      if (in_fa) emit()
+      else if (!seen) { printf "\n[index.file_associations]\n"; emit() }
+    }' "$CFG" > "$CFG.tmp" && mv "$CFG.tmp" "$CFG"
+  echo "[cgc-db] config.toml [index.file_associations] applied from $BJ: $(printf '%s' "$_fa_pairs" | tr '\n' ' ')"
+}
+
 # AUTO-SEED the shared base image (per-repo mode only) — the other half of the
 # 2026-08-21 bootstrap incident (see bootstrap_config_toml() above). Before this,
 # cgc-db-base:latest had to be seeded OUT OF BAND by a human running
@@ -1119,6 +1192,11 @@ else
   fi
   echo "[cgc-db] GraphRAG structural-only (enabled=false use_llm=false forced — no LLM calls)"
 fi
+
+# 4a-bis) declared file associations — after every other config.toml mutation above
+# and before any `octocode index` below, so the walk that decides which files exist
+# at all runs with build.json's extension map in force. See apply_file_associations().
+apply_file_associations
 
 # 4b) SMART INCREMENTAL index — per-repo change-GATED + checkpoint-PUSHED.
 #
