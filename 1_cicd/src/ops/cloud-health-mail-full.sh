@@ -12,26 +12,30 @@
 #     Gate: .summary.critical == 0.
 #
 #  2. CROSS-STORE RECONCILIATION — the liveness probe above does NOT compare
-#     message counts, so a store silently falling behind (e.g. maddy's
+#     store contents, so a store silently falling behind (e.g. maddy's
 #     dual-write to Stalwart failing) goes undetected — this is exactly what
-#     caused the 2026-08-11..08-20 silent mail-loss incident. This layer
-#     counts messages received in the last 24h on Gmail (authoritative
-#     primary), maddy, and Stalwart, and fails if any store's count diverges
-#     from Gmail's beyond tolerance. Reuses existing scripts, no new
-#     clients/credentials:
-#       - a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/count-since.ts
-#         (maddy IMAP + Stalwart JMAP, run via `docker exec cloud-mail-mcp`)
-#       - a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py
+#     caused the 2026-08-11..08-20 silent mail-loss incident. This layer takes
+#     every message Gmail (authoritative primary) received in the last 24h and
+#     fails if more than tolerance of them are ABSENT from maddy or from
+#     Stalwart, matched by Message-ID. Membership, not per-store counts: a
+#     store stamps re-injected mail with its own arrival time, so counting what
+#     each store "received in 24h" read the health_mail-reconcile DAG's
+#     2026-09-14 repair of 146 old messages as "gmail=32 maddy=178
+#     stalwart=181" for a day (details in count-since.ts). Reuses existing
+#     scripts, no new clients/credentials:
+#       - a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py --message-ids
 #         (Gmail REST API via the container's service account, run via
 #         `docker exec google-workspace-mcp`)
+#       - a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/count-since.ts
+#         (maddy IMAP + Stalwart JMAP, run via `docker exec cloud-mail-mcp`)
 #     Both containers run on oci-apps (see each service's build.json
-#     deploy.host) — reached over the SAME SSH alias the caller (the GHA
-#     workflow) already set up for the liveness check.
+#     deploy.host). The Message-IDs are piped from one container into the other
+#     ON oci-apps and never reach this job's log — only the counts come back.
 #
 # Requires (set up by the caller — see 1_cicd/src/cicd/health_mail_full.yml):
 #   - SSH config alias `oci-apps` (same pattern as
 #     1_cicd/src/cicd/cloud-health-reports.yml's "Setup SSH config" step)
-#   - jq on PATH (ubuntu-latest ships it)
+#   - jq and tar on PATH (ubuntu-latest ships both)
 # Optional:
 #   - NTFY_URL — ntfy alert on pass/fail, same topic/headers/tags the working
 #     dagu DAG health_mail-full.yaml already uses (unauthenticated: ntfy's
@@ -55,11 +59,16 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 REPORT_IMAGE="ghcr.io/diegonmarcos/cloud-data-reports:latest"
 NTFY_URL="${NTFY_URL:-http://10.0.0.6:8090}"
 NTFY_TOPIC="health_report_cloud-mail-health-full"
-# The ntfy alert is best-effort: it must never hold the job. Without these the
-# SSH sat ~10min on a half-open mesh connection before dying on a broken pipe.
-# ConnectTimeout caps the handshake; ServerAlive* kills a silently-dropped
-# session after ~30s; the `timeout 60` wrapper on each call is the hard bound.
-NTFY_SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
+# Every SSH call below carries these. ConnectTimeout caps the handshake;
+# ServerAlive* keeps a session that prints nothing for minutes (the reports
+# container is silent while it runs) sending traffic, and kills a
+# silently-dropped one after ~30s instead of letting it hang. Only the ntfy
+# calls used to have them: without them the ntfy SSH once sat ~10min on a
+# half-open mesh connection, and runs 34995321325 and 35022772131 both lost
+# the liveness session ~5 minutes into its silence with "client_loop: send
+# disconnect: Broken pipe" — the dead session then took the Gmail read with it.
+# The `timeout 60` wrapper on each ntfy call stays the hard bound there.
+SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
 
 # Mint a fresh client_credentials token where possible (same reasoning as
 # a_solutions/infra-obs_dagu/src/dags/health_mail-full.yaml: a long-lived
@@ -76,19 +85,15 @@ if [ -n "${AUTHELIA_TOKEN_URL:-}" ] && [ -n "${AUTHELIA_OIDC_CLIENT_ID:-}" ] && 
   [ -n "$FRESH_TOKEN" ] && BEARER="$FRESH_TOKEN"
 fi
 
-# Tolerance for cross-store reconciliation: a store may lag Gmail (the
-# authoritative primary) by up to 2 messages OR 5%, whichever is larger —
-# generous enough to absorb in-flight delivery races at the 24h window edge
-# and API pagination timing, tight enough to catch a stalled dual-write
-# within one run (checks run every 6h, well inside a day).
-tolerance_ok() {
-  local reference="$1" candidate="$2"
-  [ "$reference" -lt 0 ] && return 0   # reference itself failed to count — nothing to compare against
-  [ "$candidate" -lt 0 ] && return 1   # candidate failed to count — treat as divergence
-  local diff=$(( reference > candidate ? reference - candidate : candidate - reference ))
-  local pct_allowance=$(( (reference * 5 + 99) / 100 ))  # ceil(5% of reference)
-  local allowance=$(( pct_allowance > 2 ? pct_allowance : 2 ))
-  [ "$diff" -le "$allowance" ]
+# Tolerance for cross-store reconciliation: a store may lack up to 2 of
+# Gmail's last-24h messages OR 5%, whichever is larger — generous enough to
+# absorb mail still in flight at the window edge (Gmail can hold a message a
+# moment before maddy does), tight enough to catch a stalled dual-write within
+# one run (checks run every 6h, well inside a day).
+missing_allowance() {
+  local reference="$1"
+  local percent_allowance=$(( (reference * 5 + 99) / 100 ))  # ceil(5% of reference)
+  echo $(( percent_allowance > 2 ? percent_allowance : 2 ))
 }
 
 FAIL_REASONS=()
@@ -115,23 +120,30 @@ echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-apps) 
 # a_solutions/infra-obs_reports/src/build.sh does not exist. Pointing this
 # layer at oci-apps makes it read the mirror that self-heals hourly.
 #
+# `bash -s`, not a command string: the login shell of the SSH user on oci-apps
+# is fish, which reads `set -e` as `set --erase`, prints an error and carries
+# on. A failed report run then fell straight through to the `cat` of whatever
+# cloud_mail_full.json an EARLIER run left in the volume, and SSH exited 0 —
+# a stale report read as this run's result.
+#
 # $BEARER is forwarded into the container below as BEARER_TOKEN. Without it the
 # reports entrypoint aborts with "FATAL: BEARER_TOKEN unset and no vault JWT
 # found" — deliberately, so auth-gated probes never false-fail — and this whole
 # layer reports "no valid cloud_mail_full.json produced".
-RESULT_JSON=$(ssh -n oci-apps "
-  set -e
-  docker run --pull always --rm --network host \
-    -v dagu_dagu_data:/var/lib/dagu/data \
-    -v /opt/ssh-keys/dagu:/root/.ssh:ro \
-    -e CLOUD_DATA_DIR=/var/lib/dagu/data/cloud-source/1_cloud-configs/dist \
-    -e REPORTS_DIR=/var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src \
-    -e BEARER_TOKEN='$BEARER' \
-    '$REPORT_IMAGE' mail >&2
-  docker run --rm --entrypoint sh \
-    -v dagu_dagu_data:/var/lib/dagu/data \
-    '$REPORT_IMAGE' -c 'cat /var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src/dist/cloud_mail_full.json'
-") || { echo "::error::liveness report trigger failed (SSH/docker error)"; FAIL_REASONS+=("liveness report did not run"); RESULT_JSON=""; }
+RESULT_JSON=$(ssh $SSH_OPTS oci-apps bash -s <<EOF
+set -e
+docker run --pull always --rm --network host \
+  -v dagu_dagu_data:/var/lib/dagu/data \
+  -v /opt/ssh-keys/dagu:/root/.ssh:ro \
+  -e CLOUD_DATA_DIR=/var/lib/dagu/data/cloud-source/1_cloud-configs/dist \
+  -e REPORTS_DIR=/var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src \
+  -e BEARER_TOKEN='$BEARER' \
+  '$REPORT_IMAGE' mail >&2
+docker run --rm --entrypoint sh \
+  -v dagu_dagu_data:/var/lib/dagu/data \
+  '$REPORT_IMAGE' -c 'cat /var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src/dist/cloud_mail_full.json'
+EOF
+) || { echo "::error::liveness report trigger failed (SSH/docker error)"; FAIL_REASONS+=("liveness report did not run"); RESULT_JSON=""; }
 
 CRITICAL=0; FAILED=0; PASSED=0; WARNINGS=0; TOTAL=0
 if [ -n "$RESULT_JSON" ] && echo "$RESULT_JSON" | jq -e . >/dev/null 2>&1; then
@@ -155,83 +167,95 @@ else
 fi
 
 echo ""
-echo "═══ 2. Cross-store reconciliation (last 24h: Gmail vs maddy vs Stalwart) ═══"
+echo "═══ 2. Cross-store reconciliation (Gmail's last 24h, by Message-ID, in maddy and Stalwart) ═══"
 
 SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-24H +%Y-%m-%dT%H:%M:%SZ)
 echo "Window: since $SINCE"
 
 GMAIL_COUNT=-1
-# Ship the script to the remote VM over the SSH stdin channel (no local-file
-# dependency on the remote side — this local checkout only exists on the
-# GHA runner / dev machine invoking this ops script).
+MADDY_MISSING=-1
+STALWART_MISSING=-1
 GMAIL_SCRIPT="$REPO_ROOT/a_solutions/infra-api_google-workspace-mcp/src/code/gmail/count_recent.py"
-if [ -f "$GMAIL_SCRIPT" ]; then
-  GMAIL_RAW=$(ssh oci-apps "cat > /tmp/count_recent.py && docker cp /tmp/count_recent.py google-workspace-mcp:/tmp/count_recent.py && docker exec google-workspace-mcp /app/.venv/bin/python /tmp/count_recent.py --since '$SINCE'" < "$GMAIL_SCRIPT" 2>&1)
-  GMAIL_STATUS=$?
-  if [ "$GMAIL_STATUS" -eq 0 ] && echo "$GMAIL_RAW" | tail -1 | grep -qE '^[0-9]+$'; then
-    GMAIL_COUNT=$(echo "$GMAIL_RAW" | tail -1)
-    echo "Gmail: $GMAIL_COUNT messages"
-  else
-    echo "::warning::Gmail count failed: $GMAIL_RAW"
-  fi
-else
-  echo "::warning::count_recent.py not found at $GMAIL_SCRIPT — skipping Gmail count"
-fi
-
-MADDY_COUNT=-1
-STALWART_COUNT=-1
-# count-since.ts imports ../../shared/{imap,config}.js by relative path — those
-# already exist in the deployed image at /app/mcp/shared/*.ts (cloud-mail-mcp's own
-# tools import them the same way), so only the new file itself needs copying
-# in, placed at the matching path under /app so the relative import — and
-# node's node_modules walk-up to /app/node_modules for `imapflow` — resolve.
 MAIL_SCRIPT="$REPO_ROOT/a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/count-since.ts"
-if [ -f "$MAIL_SCRIPT" ]; then
-  MAIL_RAW=$(ssh oci-apps "cat > /tmp/count-since.ts && docker exec cloud-mail-mcp mkdir -p /app/mcp/tools/others && docker cp /tmp/count-since.ts cloud-mail-mcp:/app/mcp/tools/others/count-since.ts && docker exec cloud-mail-mcp node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/count-since.ts --since '$SINCE'" < "$MAIL_SCRIPT" 2>&1)
-  MAIL_STATUS=$?
-  MAIL_JSON=$(echo "$MAIL_RAW" | tail -1)
-  if [ "$MAIL_STATUS" -eq 0 ] && echo "$MAIL_JSON" | jq -e . >/dev/null 2>&1; then
+if [ -f "$GMAIL_SCRIPT" ] && [ -f "$MAIL_SCRIPT" ]; then
+  # Both scripts travel in one tar stream (no local-file dependency on the
+  # remote side — this checkout only exists on the GHA runner / dev machine),
+  # then a second session runs them. count-since.ts is placed at the matching
+  # path under /app so its relative ../../shared/{imap,config}.js imports —
+  # already in the deployed image — and node's walk-up to /app/node_modules
+  # for `imapflow` resolve. The remote script prints GMAIL_UNAVAILABLE when
+  # the Gmail read itself fails, so that stays distinguishable from a store or
+  # transport failure below.
+  RECONCILE_OUTPUT=$(tar -cf - -C "$(dirname "$GMAIL_SCRIPT")" count_recent.py -C "$(dirname "$MAIL_SCRIPT")" count-since.ts \
+    | ssh $SSH_OPTS oci-apps "mkdir -p /tmp/mail-health-reconcile && tar -xf - -C /tmp/mail-health-reconcile" 2>&1 \
+    && ssh $SSH_OPTS oci-apps bash -s -- "$SINCE" <<'EOF' 2>&1
+set -uo pipefail
+since="$1"
+staging=/tmp/mail-health-reconcile
+docker cp "$staging/count_recent.py" google-workspace-mcp:/tmp/count_recent.py || exit 1
+docker exec cloud-mail-mcp mkdir -p /app/mcp/tools/others || exit 1
+docker cp "$staging/count-since.ts" cloud-mail-mcp:/app/mcp/tools/others/count-since.ts || exit 1
+if ! message_ids=$(docker exec google-workspace-mcp /app/.venv/bin/python /tmp/count_recent.py --since "$since" --message-ids); then
+  echo "GMAIL_UNAVAILABLE"
+  exit 0
+fi
+printf '%s\n' "$message_ids" \
+  | docker exec -i cloud-mail-mcp node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/count-since.ts --since "$since"
+EOF
+  )
+  RECONCILE_STATUS=$?
+  RECONCILE_RESULT=$(printf '%s\n' "$RECONCILE_OUTPUT" | tail -1)
+  if [ "$RECONCILE_STATUS" -eq 0 ] && [ "$RECONCILE_RESULT" = "GMAIL_UNAVAILABLE" ]; then
+    echo "::warning::Gmail Message-ID read failed: $(printf '%s\n' "$RECONCILE_OUTPUT" | head -5)"
+  elif [ "$RECONCILE_STATUS" -eq 0 ] && echo "$RECONCILE_RESULT" | jq -e . >/dev/null 2>&1; then
     # `jq -r` on a missing key prints the STRING "null", which makes the
-    # `[ "$MADDY_COUNT" -lt 0 ]` guard below a bash arithmetic error rather
-    # than a clean "unavailable". Default and then assert an integer, so an
-    # unparseable count lands on the -1 sentinel instead of leaking through
-    # as something the tolerance check will treat as 0.
-    MADDY_COUNT=$(echo "$MAIL_JSON" | jq -r '.maddy // -1')
-    STALWART_COUNT=$(echo "$MAIL_JSON" | jq -r '.stalwart // -1')
-    [[ "$MADDY_COUNT"    =~ ^-?[0-9]+$ ]] || MADDY_COUNT=-1
-    [[ "$STALWART_COUNT" =~ ^-?[0-9]+$ ]] || STALWART_COUNT=-1
-    echo "maddy: $MADDY_COUNT messages · stalwart: $STALWART_COUNT messages"
+    # `-lt 0` guards below a bash arithmetic error rather than a clean
+    # "unavailable". Default and then assert an integer, so an unparseable
+    # value lands on the -1 sentinel instead of leaking through as something
+    # the tolerance check will treat as 0.
+    GMAIL_COUNT=$(echo "$RECONCILE_RESULT" | jq -r '.gmail // -1')
+    MADDY_MISSING=$(echo "$RECONCILE_RESULT" | jq -r '.maddy_missing // -1')
+    STALWART_MISSING=$(echo "$RECONCILE_RESULT" | jq -r '.stalwart_missing // -1')
+    [[ "$GMAIL_COUNT"      =~ ^-?[0-9]+$ ]] || GMAIL_COUNT=-1
+    [[ "$MADDY_MISSING"    =~ ^-?[0-9]+$ ]] || MADDY_MISSING=-1
+    [[ "$STALWART_MISSING" =~ ^-?[0-9]+$ ]] || STALWART_MISSING=-1
+    echo "Gmail: $GMAIL_COUNT messages · missing from maddy: $MADDY_MISSING · missing from stalwart: $STALWART_MISSING"
   else
-    echo "::warning::maddy/stalwart count failed: $MAIL_RAW"
+    # The Gmail read succeeded or never started, and then the run broke
+    # (SSH/docker error, or count-since.ts crashed). Nothing was reconciled,
+    # and a check that did not run must not look like one that passed.
+    echo "::error::reconciliation run failed: $(printf '%s\n' "$RECONCILE_OUTPUT" | tail -5)"
+    FAIL_REASONS+=("reconciliation did not run (SSH/docker error) — inconclusive")
   fi
 else
-  echo "::warning::count-since.ts not found at $MAIL_SCRIPT — skipping maddy/stalwart count"
+  echo "::warning::count_recent.py or count-since.ts not found under $REPO_ROOT/a_solutions — skipping reconciliation"
 fi
 
 if [ "$GMAIL_COUNT" -ge 0 ]; then
-  # A store count of -1 means the count never ran (SSH/docker failure above), not
-  # that the store is empty. Reporting it as a divergence turns a transport blip
-  # into a phantom "behind Gmail by $((GMAIL_COUNT + 1))" data-loss alarm.
-  if [ "$MADDY_COUNT" -lt 0 ]; then
-    echo "::error::maddy count unavailable — cannot reconcile against Gmail"
-    FAIL_REASONS+=("maddy count unavailable (SSH/docker error) — reconciliation inconclusive")
-  elif ! tolerance_ok "$GMAIL_COUNT" "$MADDY_COUNT"; then
-    echo "::error::maddy diverges from Gmail: gmail=$GMAIL_COUNT maddy=$MADDY_COUNT"
-    FAIL_REASONS+=("maddy behind Gmail by $((GMAIL_COUNT > MADDY_COUNT ? GMAIL_COUNT - MADDY_COUNT : MADDY_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT maddy=$MADDY_COUNT)")
+  ALLOWANCE=$(missing_allowance "$GMAIL_COUNT")
+  # A missing count of -1 means that store could not be read, not that it is
+  # empty. Reporting it as a divergence turns a transport blip into a phantom
+  # "missing $GMAIL_COUNT messages" data-loss alarm.
+  if [ "$MADDY_MISSING" -lt 0 ]; then
+    echo "::error::maddy unreadable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("maddy unreadable (IMAP error) — reconciliation inconclusive")
+  elif [ "$MADDY_MISSING" -gt "$ALLOWANCE" ]; then
+    echo "::error::maddy is missing $MADDY_MISSING of Gmail's $GMAIL_COUNT messages (tolerance $ALLOWANCE)"
+    FAIL_REASONS+=("maddy missing $MADDY_MISSING of Gmail's $GMAIL_COUNT messages from the last 24h")
   fi
-  if [ "$STALWART_COUNT" -lt 0 ]; then
-    echo "::error::stalwart count unavailable — cannot reconcile against Gmail"
-    FAIL_REASONS+=("stalwart count unavailable (SSH/docker error) — reconciliation inconclusive")
-  elif ! tolerance_ok "$GMAIL_COUNT" "$STALWART_COUNT"; then
-    echo "::error::stalwart diverges from Gmail: gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT"
-    FAIL_REASONS+=("stalwart behind Gmail by $((GMAIL_COUNT > STALWART_COUNT ? GMAIL_COUNT - STALWART_COUNT : STALWART_COUNT - GMAIL_COUNT)) messages (gmail=$GMAIL_COUNT stalwart=$STALWART_COUNT)")
+  if [ "$STALWART_MISSING" -lt 0 ]; then
+    echo "::error::stalwart unreadable — cannot reconcile against Gmail"
+    FAIL_REASONS+=("stalwart unreadable (JMAP error) — reconciliation inconclusive")
+  elif [ "$STALWART_MISSING" -gt "$ALLOWANCE" ]; then
+    echo "::error::stalwart is missing $STALWART_MISSING of Gmail's $GMAIL_COUNT messages (tolerance $ALLOWANCE)"
+    FAIL_REASONS+=("stalwart missing $STALWART_MISSING of Gmail's $GMAIL_COUNT messages from the last 24h")
   fi
-  if [ "$MADDY_COUNT" -ge 0 ] && [ "$STALWART_COUNT" -ge 0 ] && [ ${#FAIL_REASONS[@]} -eq 0 ]; then
-    echo "OK: all stores within tolerance of Gmail"
-    RECON_STATUS="stores reconciled against Gmail (gmail=$GMAIL_COUNT maddy=$MADDY_COUNT stalwart=$STALWART_COUNT)"
+  if [ "$MADDY_MISSING" -ge 0 ] && [ "$STALWART_MISSING" -ge 0 ] && [ ${#FAIL_REASONS[@]} -eq 0 ]; then
+    echo "OK: both stores hold Gmail's messages within tolerance"
+    RECON_STATUS="stores reconciled against Gmail (gmail=$GMAIL_COUNT missing: maddy=$MADDY_MISSING stalwart=$STALWART_MISSING)"
   fi
 else
-  echo "::warning::Gmail count unavailable — reconciliation skipped this run (liveness result still gates)"
+  echo "::warning::Gmail reference unavailable — reconciliation skipped this run (liveness result still gates)"
 fi
 
 echo ""
@@ -239,7 +263,7 @@ echo "═══ Result ═══"
 
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
   echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; $RECON_STATUS)"
-  timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
+  timeout 60 ssh -n $SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
     -H 'Title: Mail Health OK ($PASSED/$TOTAL passed)' \
     -H 'Priority: 2' \
     -H 'Tags: white_check_mark,email' \
@@ -251,7 +275,7 @@ echo "Mail Health FAILED:"
 for r in "${FAIL_REASONS[@]}"; do echo "  - $r"; done
 
 DETAIL=$(printf '%s\n' "${FAIL_REASONS[@]}")
-timeout 60 ssh -n $NTFY_SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
+timeout 60 ssh -n $SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
   -H 'Title: Mail Health FAILED' \
   -H 'Priority: 5' \
   -H 'Tags: rotating_light,email' \
