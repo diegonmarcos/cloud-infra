@@ -282,7 +282,34 @@ fi
 set -- $REPOS
 TOTAL=$#
 
-STAGING=$(mktemp -d)
+# STAGING LIVES OFF /tmp, DELIBERATELY — the box reaps /tmp by atime.
+# oci-apps runs a disk watchdog (declared in
+# b_infra/_shared/vm-pilot/src/modules/protection/watchdog.nix, installed as
+# /opt/scripts/disk-watchdog.sh, timer every 5 minutes) whose WARN branch, at
+# 85% root usage, runs `find /tmp -type f -atime +2 -delete` and the same for
+# /var/tmp, BEFORE it prunes docker. Staging the whole multi-repo home is about
+# 8GB, which by itself takes that box from 76% past 85% — so the restore
+# triggers the branch that eats its own staging tree. And `docker cp` restores
+# each file's timestamps from the image, so every staged file lands with an
+# atime days old: measured 2026-09-15, 668 of 668 files of a freshly staged
+# image matched the watchdog's own `-atime +2` predicate. The watchdog then
+# deleted data fragments while this script still held the tree, leaving the
+# newest manifest — just read, hence recently accessed, hence spared — naming
+# fragments that no longer existed.
+#
+# That is what the integrity gate below kept refusing: images that are clean on
+# GHCR and clean when staged alone on that same box, yet torn once staged in
+# full (runs 34950604736 and 35013346878, 13 tables, same list both times).
+# Staging where nothing reaps is the fix; relaxing the gate would only have
+# shipped the half-deleted tree to every agent.
+STAGING_PARENT="${CGC_DB_STAGING_PARENT:-${HOME:-}/.cache}"
+mkdir -p "$STAGING_PARENT" 2>/dev/null || true
+[ -d "$STAGING_PARENT" ] && [ -w "$STAGING_PARENT" ] || {
+  echo "::error::[cgc-db-restore-all] staging parent '$STAGING_PARENT' is not a writable directory (HOME unset?)."
+  echo "::error::[cgc-db-restore-all] set CGC_DB_STAGING_PARENT to a writable path that no tmp reaper touches — staging under /tmp is what tore every restore since 2026-09-12."
+  exit 1
+}
+STAGING=$(mktemp -d "$STAGING_PARENT/cgc-db-staging.XXXXXX")
 CURRENT_CID=""
 cleanup() {
   [ -n "$CURRENT_CID" ] && docker rm -f "$CURRENT_CID" >/dev/null 2>&1

@@ -189,6 +189,28 @@ else
   bad "gate/swap ordering wrong or unlocatable (gate@${GATE_LN:-none} swap@${SWAP_LN:-none}) -- a check after the wipe cannot save the volume"
 fi
 
+# 10. AND THE STAGED TREE MUST SURVIVE LONG ENOUGH TO BE GATED. oci-apps' disk
+#     watchdog deletes /tmp and /var/tmp files whose atime is older than 2 days
+#     as soon as root hits 85%, and `docker cp` stages every file with the
+#     image's own (old) timestamps — so a bare `mktemp -d`, i.e. /tmp, had the
+#     host deleting fragments out of the staging tree mid-restore while the
+#     ~8GB staging was itself what pushed the disk over that threshold. The gate
+#     above then correctly refused images that were clean on GHCR. Pin the
+#     staging location, or that failure returns silently.
+STAGE_LN=$(code_line "$RA_SH" 'STAGING=$(mktemp -d')
+STAGE_CODE=$(awk -v n="${STAGE_LN:-0}" 'NR==n' "$RA_SH")
+case "$STAGE_CODE" in
+  *'mktemp -d "$STAGING_PARENT/'*) ok "staging is created under an explicit parent, not the default temp dir" ;;
+  *) bad "restore-all stages via a bare mktemp -d (so /tmp), where the box's disk watchdog deletes staged fragments by atime: [$STAGE_CODE]" ;;
+esac
+
+PARENT_CODE=$(awk '/^STAGING_PARENT=/{print; exit}' "$RA_SH")
+case "$PARENT_CODE" in
+  "") bad "no STAGING_PARENT assignment in restore-all.sh — nothing decides where the staged tree lives" ;;
+  *"/tmp"*) bad "the staging parent points at a reaped tmp dir: [$PARENT_CODE]" ;;
+  *) ok "the staging parent defaults off /tmp and /var/tmp" ;;
+esac
+
 echo
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ] || exit 1
