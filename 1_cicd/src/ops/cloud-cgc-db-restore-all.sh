@@ -383,6 +383,11 @@ for r in "$@"; do
     continue
   fi
   docker pull -q "$img" >/dev/null
+  # Name the exact bytes staged. The integrity gate below has refused trees whose
+  # every image passes the identical check on GHCR's own layer bytes, and a tag
+  # alone cannot tell "the box staged a different image" from "the box staged the
+  # same image differently". The digest can.
+  _digest=$(docker image inspect --format '{{index .RepoDigests 0}}' "$img" 2>/dev/null || echo "digest-unknown")
   stage_image "$img"
   # Drop this repo's own change-gate manifest (see header) — it would silently
   # clobber the next repo's at the same path otherwise, and neither consumer
@@ -391,7 +396,7 @@ for r in "$@"; do
   docker rmi "$img" >/dev/null 2>&1 || true
   FOUND=$((FOUND + 1))
   STAGED_REPOS="$STAGED_REPOS $r"
-  echo "[cgc-db-restore-all] staged $r ($FOUND/$TOTAL)"
+  echo "[cgc-db-restore-all] staged $r ($FOUND/$TOTAL) $_digest"
 done
 
 # INTEGRITY GATE ON THE STAGED TREE (fail closed) -- see cgc-db-lance-integrity.test.sh.
@@ -448,7 +453,16 @@ lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir
 _staging_torn=$(lance_dangling_tables "$STAGING")
 if [ -n "$_staging_torn" ]; then
   echo "::error::[cgc-db-restore-all] refusing to swap into $TARGET -- dangling lance manifest(s) in the STAGED tree:"
-  printf '%s\n' "$_staging_torn" | sed 's|^|::error::[cgc-db-restore-all]   |'
+  # One line per table carrying what the verdict was computed from: the manifest
+  # read, the fragment names it yielded, and what data/ actually holds. The caller
+  # only surfaces the tail of this log, so the evidence has to fit on these lines;
+  # without it a refusal on the box cannot be compared with the same image's bytes.
+  printf '%s\n' "$_staging_torn" | while IFS= read -r _torn_table; do
+    _torn_manifest=$(ls "$_torn_table/_versions" 2>/dev/null | sort | head -1)
+    _torn_references=$(tr -c '0-9a-f.ln' '\n' < "$_torn_table/_versions/$_torn_manifest" 2>/dev/null \
+                       | grep -E '[0-9a-f]{32,}\.lance$' | tr '\n' ' ' || true)
+    echo "::error::[cgc-db-restore-all]   ${_torn_table#"$STAGING"/} newest=$_torn_manifest versions=$(ls "$_torn_table/_versions" 2>/dev/null | wc -l) data=$(ls "$_torn_table/data" 2>/dev/null | wc -l) references=[$_torn_references] data_sample=[$(ls "$_torn_table/data" 2>/dev/null | head -3 | tr '\n' ' ')]"
+  done
   echo "::error::[cgc-db-restore-all] a manifest naming an absent fragment is unreadable forever. The volume currently being served is left untouched; fix the GHCR image (cgc-db-update.sh self-heals a torn checkpoint by re-indexing that repo from base) and re-run."
   exit 1
 fi
