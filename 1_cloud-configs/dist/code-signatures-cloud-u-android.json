@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13418,
+    "files": 13421,
     "by_lang": {
-      "sh": 204,
-      "py": 40,
+      "sh": 205,
+      "py": 42,
       "java": 711,
       "ts": 2625,
       "nix": 23,
@@ -17,7 +17,7 @@
       "js": 42
     },
     "by_role": {
-      "script": 79,
+      "script": 82,
       "shell": 144,
       "java": 711,
       "entrypoint": 20,
@@ -389,6 +389,31 @@
         "_uncovered()",
         "_foreign_reach()",
         "_unbounded_reach()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-update-ack-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "kotlin_files(root, exclude_prefixes)",
+        "strip_comments(lines)",
+        "branch_body(code_lines, start)",
+        "check_route(root, spec, exclude_prefixes)",
+        "main()"
+      ],
+      "imports": [
+        "argparse",
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "kotlin_files(root, exclude_prefixes)",
+        "strip_comments(lines)",
+        "branch_body(code_lines, start)",
+        "check_route(root, spec, exclude_prefixes)",
+        "main()"
       ]
     },
     {
@@ -1340,6 +1365,31 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-update-ack-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "kotlin_files(root, exclude_prefixes)",
+        "strip_comments(lines)",
+        "branch_body(code_lines, start)",
+        "check_route(root, spec, exclude_prefixes)",
+        "main()"
+      ],
+      "imports": [
+        "argparse",
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "kotlin_files(root, exclude_prefixes)",
+        "strip_comments(lines)",
+        "branch_body(code_lines, start)",
+        "check_route(root, spec, exclude_prefixes)",
+        "main()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-chat-fork-engine.sh",
       "lang": "sh",
       "role": "script",
@@ -2171,6 +2221,26 @@
         "check()",
         "resolve()",
         "count_glob()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/update-ack-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "sandbox()",
+        "run_guard()",
+        "replace_body()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "sandbox()",
+        "run_guard()",
+        "replace_body()"
       ]
     },
     {
@@ -34565,12 +34635,14 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.util.Log",
         "androidx.work.Constraints",
         "androidx.work.Data",
         "androidx.work.ExistingPeriodicWorkPolicy",
         "androidx.work.ExistingWorkPolicy",
         "androidx.work.NetworkType",
         "androidx.work.OneTimeWorkRequestBuilder",
+        "androidx.work.Operation",
         "androidx.work.PeriodicWorkRequestBuilder",
         "androidx.work.WorkManager",
         "java.util.concurrent.TimeUnit"
@@ -34581,9 +34653,11 @@
         "cancelNow(context: Context)",
         "checkNow(context: Context)",
         "downloadNow(context: Context)",
+        "requestCheck(context: Context, origin: String)",
         "enqueueUserInitiated(context: Context, consented: Boolean)",
         "installApk(context: Context, apkUrl: String, packageName: String, label: String)",
-        "class Updater"
+        "class Updater",
+        "class Ack"
       ]
     },
     {
