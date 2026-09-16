@@ -52,6 +52,20 @@
 #     it reaches maddy (IMAP) and Stalwart (JMAP) within 180s, and removes it.
 #     Gate: sent and received by both stores.
 #
+# Three outcomes, not two (#398):
+#   exit 0  every layer ran and passed.
+#   exit 1  a layer ran and the mail stack answered badly — a mail fault.
+#   exit 2  INCONCLUSIVE: the check could not reach oci-apps at all, so it knows
+#           nothing about the mail stack and says so instead of guessing. The
+#           two are separated because they used to share one label: every
+#           non-zero outcome of every layer appended the literal string
+#           "SSH/docker error", chosen without looking at the output (which on
+#           the liveness layer was not even captured), so a dead mailbox and a
+#           dropped mesh connection reached the owner as the same sentence. The
+#           cause is named now by 1_cicd/src/ops/cloud-health-mail-failure-classifier.sh
+#           against the rules in 9_others/mail-health-diagnosis.json, which also
+#           declares the hardened SSH options every call here uses.
+#
 # Requires (set up by the caller — see 1_cicd/src/cicd/health_mail_full.yml):
 #   - SSH config alias `oci-apps` (same pattern as
 #     1_cicd/src/cicd/cloud-health-reports.yml's "Setup SSH config" step)
@@ -79,16 +93,20 @@ REPO_ROOT="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null || pw
 REPORT_IMAGE="ghcr.io/diegonmarcos/cloud-data-reports:latest"
 NTFY_URL="${NTFY_URL:-http://10.0.0.6:8090}"
 NTFY_TOPIC="health_report_cloud-mail-health-full"
-# Every SSH call below carries these. ConnectTimeout caps the handshake;
-# ServerAlive* keeps a session that prints nothing for minutes (the reports
-# container is silent while it runs) sending traffic, and kills a
-# silently-dropped one after ~30s instead of letting it hang. Only the ntfy
-# calls used to have them: without them the ntfy SSH once sat ~10min on a
-# half-open mesh connection, and runs 34995321325 and 35022772131 both lost
-# the liveness session ~5 minutes into its silence with "client_loop: send
-# disconnect: Broken pipe" — the dead session then took the Gmail read with it.
+# Every SSH call below carries these, and every failure below is named by the
+# rules that travel with them. Both are declared in
+# 9_others/mail-health-diagnosis.json — see that file for why each option is
+# there (BatchMode so an unattended run fails instead of waiting on a prompt,
+# ServerAlive* so the minutes of silence while the reports container runs do
+# not read as a dead session, ServerAliveCountMax raised from 3 to 12 so a
+# 30-second mesh blip stops killing a session that would have recovered:
+# that is how runs 34995321325 and 35022772131 died, "client_loop: send
+# disconnect: Broken pipe" about five minutes into the silence, and the dead
+# session took the Gmail read with it).
 # The `timeout 60` wrapper on each ntfy call stays the hard bound there.
-SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
+. "$(dirname "${BASH_SOURCE[0]}")/cloud-health-mail-failure-classifier.sh"
+SSH_OPTS="$(mail_health_ssh_options | tr '\n' ' ')"
+[ -n "${SSH_OPTS// /}" ] || { echo "::error::no ssh_options declared in $MAIL_HEALTH_DIAGNOSIS_JSON — refusing to ssh unhardened"; exit 1; }
 
 # Mint a fresh client_credentials token where possible (same reasoning as
 # a_solutions/infra-obs_dagu/src/dags/health_mail-full.yaml: a long-lived
@@ -116,7 +134,14 @@ missing_allowance() {
   echo $(( percent_allowance > 2 ? percent_allowance : 2 ))
 }
 
+# Two buckets, deliberately not one. A mail finding and a transport fault are
+# different outcomes with different owners, and folding them together is what
+# made "SSH/docker error" the answer to every question this check could be
+# asked. FAIL_REASONS = the mail stack answered badly (exit 1).
+# TRANSPORT_FAILURES = the check never reached it, so the mail state is
+# UNKNOWN and nothing below may claim otherwise (exit 2).
 FAIL_REASONS=()
+TRANSPORT_FAILURES=()
 
 # What layer 2 actually established this run. The pass path used to announce
 # "stores reconciled" unconditionally, including on the branch where the Gmail
@@ -150,7 +175,12 @@ echo "═══ 1. Liveness / e2e diagnostic (cloud-mail-health-full, oci-apps) 
 # reports entrypoint aborts with "FATAL: BEARER_TOKEN unset and no vault JWT
 # found" — deliberately, so auth-gated probes never false-fail — and this whole
 # layer reports "no valid cloud_mail_full.json produced".
-RESULT_JSON=$(ssh $SSH_OPTS oci-apps bash -s <<EOF
+# The remote stderr is captured, not streamed: it is the ONLY evidence of why
+# this layer failed, and streaming it left the failure path with nothing but an
+# exit status to name a cause from — so it named the same one every time. It is
+# replayed to the job log immediately afterwards, so the log is unchanged.
+LIVENESS_STDERR=$(mktemp)
+RESULT_JSON=$(ssh $SSH_OPTS oci-apps bash -s 2>"$LIVENESS_STDERR" <<EOF
 set -e
 docker run --pull always --rm --network host \
   -v dagu_dagu_data:/var/lib/dagu/data \
@@ -163,7 +193,14 @@ docker run --rm --entrypoint sh \
   -v dagu_dagu_data:/var/lib/dagu/data \
   '$REPORT_IMAGE' -c 'cat /var/lib/dagu/data/cloud-source/a_solutions/infra-obs_reports/src/dist/cloud_mail_full.json'
 EOF
-) || { echo "::error::liveness report trigger failed (SSH/docker error)"; FAIL_REASONS+=("liveness report did not run"); RESULT_JSON=""; }
+)
+LIVENESS_STATUS=$?
+cat "$LIVENESS_STDERR" >&2
+if [ "$LIVENESS_STATUS" -ne 0 ]; then
+  mail_health_record_failure "liveness report did not run" "$LIVENESS_STATUS" "$(cat "$LIVENESS_STDERR")"
+  RESULT_JSON=""
+fi
+rm -f "$LIVENESS_STDERR"
 
 CRITICAL=0; FAILED=0; PASSED=0; WARNINGS=0; TOTAL=0
 if [ -n "$RESULT_JSON" ] && echo "$RESULT_JSON" | jq -e . >/dev/null 2>&1; then
@@ -245,11 +282,12 @@ EOF
     [[ "$STALWART_MISSING" =~ ^-?[0-9]+$ ]] || STALWART_MISSING=-1
     echo "Gmail: $GMAIL_COUNT messages · missing from maddy: $MADDY_MISSING · missing from stalwart: $STALWART_MISSING"
   else
-    # The Gmail read succeeded or never started, and then the run broke
-    # (SSH/docker error, or count-since.ts crashed). Nothing was reconciled,
-    # and a check that did not run must not look like one that passed.
+    # The Gmail read succeeded or never started, and then the run broke.
+    # Nothing was reconciled, and a check that did not run must not look like
+    # one that passed — nor like a transport fault when count-since.ts was the
+    # thing that crashed, which is what the old fixed label said either way.
     echo "::error::reconciliation run failed: $(printf '%s\n' "$RECONCILE_OUTPUT" | tail -5)"
-    FAIL_REASONS+=("reconciliation did not run (SSH/docker error) — inconclusive")
+    mail_health_record_failure "reconciliation did not run — inconclusive" "$RECONCILE_STATUS" "$RECONCILE_OUTPUT"
   fi
 else
   echo "::error::count_recent.py or count-since.ts not found under $REPO_ROOT/a_solutions — reconciliation cannot run"
@@ -275,7 +313,7 @@ if [ "$GMAIL_COUNT" -ge 0 ]; then
     echo "::error::stalwart is missing $STALWART_MISSING of Gmail's $GMAIL_COUNT messages (tolerance $ALLOWANCE)"
     FAIL_REASONS+=("stalwart missing $STALWART_MISSING of Gmail's $GMAIL_COUNT messages from the last 24h")
   fi
-  if [ "$MADDY_MISSING" -ge 0 ] && [ "$STALWART_MISSING" -ge 0 ] && [ ${#FAIL_REASONS[@]} -eq 0 ]; then
+  if [ "$MADDY_MISSING" -ge 0 ] && [ "$STALWART_MISSING" -ge 0 ] && [ $(( ${#FAIL_REASONS[@]} + ${#TRANSPORT_FAILURES[@]} )) -eq 0 ]; then
     echo "OK: both stores hold Gmail's messages within tolerance"
     RECON_STATUS="stores reconciled against Gmail (gmail=$GMAIL_COUNT missing: maddy=$MADDY_MISSING stalwart=$STALWART_MISSING)"
   fi
@@ -295,8 +333,16 @@ echo "═══ 3. Send/receive round-trip (submission -> maddy and Stalwart, by
 # addresses in them, and this log carries pass/fail, seconds and counts only.
 ROUND_TRIP_SCRIPT="$REPO_ROOT/a_solutions/infra-api_cloud-mail-mcp/src/code/mcp/tools/others/round-trip.ts"
 if [ -f "$ROUND_TRIP_SCRIPT" ]; then
+  # stderr goes to a file rather than /dev/null: it still must not reach this
+  # log (it can carry SMTP replies with addresses in them), but discarding it
+  # outright left the failure path blind. The classifier reads it and prints a
+  # label only — the text itself is never echoed and the file is removed below.
+  ROUND_TRIP_STDERR=$(mktemp)
   ROUND_TRIP_RESULT=$(ssh $SSH_OPTS oci-apps "docker exec -i cloud-mail-mcp sh -c 'mkdir -p /app/mcp/tools/others && cat > /app/mcp/tools/others/round-trip.ts && exec node /app/node_modules/tsx/dist/cli.mjs /app/mcp/tools/others/round-trip.ts'" \
-    < "$ROUND_TRIP_SCRIPT" 2>/dev/null | tail -1)
+    < "$ROUND_TRIP_SCRIPT" 2>"$ROUND_TRIP_STDERR" | tail -1)
+  # $? and not PIPESTATUS: `set -o pipefail` is on at the top of this file, so
+  # the substitution already carries ssh's status rather than tail's always-zero.
+  ROUND_TRIP_STATUS=$?
   if echo "$ROUND_TRIP_RESULT" | jq -e 'has("sent") and has("maddy") and has("stalwart")' >/dev/null 2>&1; then
     echo "$ROUND_TRIP_RESULT" | jq -r '"sent=\(.sent) · maddy received=\(.maddy.received) in \(.maddy.seconds)s removed=\(.maddy.removed) · stalwart received=\(.stalwart.received) in \(.stalwart.seconds)s removed=\(.stalwart.removed)"'
     if [ "$(echo "$ROUND_TRIP_RESULT" | jq -r '.sent == true and .maddy.received == true and .stalwart.received == true')" = "true" ]; then
@@ -307,11 +353,13 @@ if [ -f "$ROUND_TRIP_SCRIPT" ]; then
       FAIL_REASONS+=("round-trip: $ROUND_TRIP_MISSED")
     fi
   else
-    # No result line means the test never reached a verdict (SSH/docker error
-    # or the script crashed) — delivery is unverified, not proven.
+    # No result line means the test never reached a verdict — delivery is
+    # unverified, not proven. Which of the several ways that happens is what
+    # the captured stderr decides.
     echo "::error::round-trip produced no result — delivery unverified"
-    FAIL_REASONS+=("round-trip did not run (SSH/docker error) — delivery unverified")
+    mail_health_record_failure "round-trip did not run — delivery unverified" "$ROUND_TRIP_STATUS" "$(cat "$ROUND_TRIP_STDERR")"
   fi
+  rm -f "$ROUND_TRIP_STDERR"
 else
   echo "::error::round-trip.ts not found under $REPO_ROOT/a_solutions — delivery cannot be tested"
   FAIL_REASONS+=("round-trip script missing from the checkout — delivery untested")
@@ -319,6 +367,28 @@ fi
 
 echo ""
 echo "═══ Result ═══"
+
+# Transport first, and it is not a mail verdict. When the check could not reach
+# oci-apps it knows nothing about the mail stack, so it says INCONCLUSIVE and
+# exits 2 — a status of its own, so a run log, an alert and a future caller can
+# all tell "mail is broken" from "I could not look". Reporting this as either OK
+# or FAILED would be a claim the run did not earn.
+if [ ${#TRANSPORT_FAILURES[@]} -gt 0 ]; then
+  echo "Mail Health INCONCLUSIVE — TRANSPORT FAILURE (oci-apps was not reached; the mail stack is unjudged):"
+  for r in "${TRANSPORT_FAILURES[@]}"; do echo "  - $r"; done
+  if [ ${#FAIL_REASONS[@]} -gt 0 ]; then
+    echo "Mail findings from the layers that did run (incomplete — see above):"
+    for r in "${FAIL_REASONS[@]}"; do echo "  - $r"; done
+  fi
+  DETAIL=$(printf '%s\n' "${TRANSPORT_FAILURES[@]}" "${FAIL_REASONS[@]+"${FAIL_REASONS[@]}"}")
+  # Over the same SSH that just failed, so this is best-effort by construction.
+  timeout 60 ssh -n $SSH_OPTS oci-apps "curl -s --max-time 15 -X POST '$NTFY_URL/$NTFY_TOPIC' \
+    -H 'Title: Mail Health INCONCLUSIVE (transport)' \
+    -H 'Priority: 4' \
+    -H 'Tags: electric_plug,warning' \
+    -d 'oci-apps unreachable — mail NOT verified this run: $(printf '%s' "$DETAIL" | tr '\n' ';' | sed "s/'/'\\\\''/g")'" || echo "::warning::ntfy notification failed or timed out (expected — the transport to that host is the thing that failed)"
+  exit 2
+fi
 
 if [ ${#FAIL_REASONS[@]} -eq 0 ]; then
   echo "Mail Health OK ($PASSED/$TOTAL liveness checks passed; $RECON_STATUS; round-trip delivered to both stores)"
