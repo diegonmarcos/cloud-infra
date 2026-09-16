@@ -27,6 +27,22 @@ permissions:
   contents: read
   packages: write
 
+# #358 / agent V. This workflow had NO concurrency block at all, while the
+# sibling that dispatches it (cloud-u-containers' dispatch-cloud-infra.yml)
+# already reasons about exactly this hazard and sets one. Two `containers-push`
+# dispatches in quick succession therefore started two independent builds, each
+# pinned to its own announced SHA, and both pushed `:latest` — whichever
+# FINISHED last won, regardless of which commit was newer. V caught the pair
+# live and in_progress: 35043145083 (new commit) against 35043096780 (old).
+#
+# `cancel-in-progress: false`, deliberately. Cancelling the in-flight run would
+# discard a build that may already be the newer one, and the publish step is
+# now guarded independently anyway. Serialising is enough here; the guard is
+# what makes correctness not depend on the serialisation holding.
+concurrency:
+  group: ship-reports-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   preflight-symlinks:
     runs-on: ubuntu-latest
@@ -229,6 +245,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # #358: the tag move itself is guarded, not just serialised.
+      #
+      # The concurrency block above makes two simultaneous publishers rare; it
+      # cannot make them impossible. A manual re-run, a retried job, or a
+      # second workflow can still publish out of order, and a concurrency group
+      # is per-workflow while `:latest` is global to the image. So before
+      # `:latest` is moved, ask whether it already holds an image built from a
+      # commit that is a DESCENDANT of this run's commit — i.e. whether this
+      # push would REVERT a newer one. If it would, the step fails instead of
+      # silently un-shipping the newer fix while reporting success.
+      #
+      # Asserted by 9_others/test/test_ship_latest_monotonic.sh (Phase 51),
+      # whose case 2 reconstructs V's exact pair.
+      - name: Refuse to move :latest backwards
+        id: monotonic
+        run: |
+          set -eu
+          SRC_SHA="$(git -C a_solutions rev-parse HEAD)"
+          echo "src_sha=${SRC_SHA:0:7}" >> "$GITHUB_OUTPUT"
+          bash 1_cicd/src/scripts/cloud-ship-latest-monotonic.sh \
+            '${{ steps.meta.outputs.image }}' \
+            "$SRC_SHA" \
+            a_solutions \
+            origin/main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The existing `:<sha>` tag carries CLOUD-INFRA's commit, but this
+          # image's content comes from cloud-u-containers, so that tag cannot
+          # order two reports builds. `:src-<sha>` is published below and is
+          # the tag that can.
+          MONOTONIC_TAG_PREFIX: "src-"
+
       - name: Create + verify multi-arch manifests
         # TESTER built in: after creating :latest, inspect it and FAIL unless
         # BOTH linux/amd64 and linux/arm64 are present.
@@ -236,8 +284,13 @@ jobs:
           set -eu
           IMAGE='${{ steps.meta.outputs.image }}'
           SHA='${{ steps.meta.outputs.short_sha }}'
+          # `:src-<sha>` records WHICH cloud-u-containers commit this image was
+          # built from. Without it the registry holds no fact that can order
+          # two reports builds, and the backwards-:latest guard above has
+          # nothing to compare — see #358.
+          SRC_SHA='${{ steps.monotonic.outputs.src_sha }}'
           docker buildx imagetools create \
-            -t "$IMAGE:latest" -t "$IMAGE:$SHA" \
+            -t "$IMAGE:latest" -t "$IMAGE:$SHA" -t "$IMAGE:src-$SRC_SHA" \
             "$IMAGE:amd64" "$IMAGE:arm64"
           PLATFORMS=$(docker buildx imagetools inspect "$IMAGE:latest" --raw \
             | jq -r '[.manifests[].platform | "\(.os)/\(.architecture)"] | sort | join(",")')

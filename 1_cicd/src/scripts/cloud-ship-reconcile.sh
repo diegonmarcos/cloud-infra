@@ -195,56 +195,22 @@ probe_vm_real() {
 # the VM pulled, the container's RepoDigest records EITHER the index digest OR
 # the per-arch manifest digest. Comparing against the index alone reports a
 # correct arm64 deploy as drift (PLAN-engine-verbs.md §5).
+#
+# #358: the credential moved, and the logic moved with it into
+# cloud-ship-registry-digest.sh so that `status` answers this question the same
+# way instead of a second time. The old ladder here was
+# CGC_GHCR_PAT -> GH_TOKEN -> anonymous, and it never once read a private
+# package, for the plain reason that ship-reconcile.yml does not set
+# CGC_GHCR_PAT in this job — it only sets GH_TOKEN (see its `Reconcile` step).
+# So the PAT branch was dead code that nonetheless documented reaching for a
+# classic admin token, and the live effect was three fleet packages
+# permanently `undecidable`. It is not reinstated: #359 removed that same
+# credential from this workflow's dispatch step because it carries
+# delete_repo. The VM's own pull credential answers the question instead, on
+# the VM, and is the narrowest thing that can. The VM alias is now passed in
+# for exactly that reason.
 registry_digests_real() {
-  _ref="$1"
-  _path="${_ref#*/}"            # ghcr.io/owner/name:tag -> owner/name:tag
-
-  _tag="${_path##*:}"
-  _repo="${_path%:*}"
-  [ "$_tag" = "$_path" ] && _tag="latest"
-
-  # Token, most-capable credential first. GHCR issues a pull token to anonymous
-  # callers for PUBLIC packages only; kg-store-binaries and
-  # session-memory-binaries are private and answer 403 to both an anonymous
-  # request and this repo's GITHUB_TOKEN, because they are linked to their own
-  # source repos rather than to this one. cgc-db-index.yml hit the identical
-  # wall and documents the resolution: ghcr.io accepts a CLASSIC PAT with
-  # read:packages and refuses a fine-grained one. CGC_GHCR_PAT is that token,
-  # reused here rather than introducing a second secret for the same job.
-  # Nothing here is ever echoed.
-  _tok=""
-  for _cred in "${CGC_GHCR_PAT:-}" "${GH_TOKEN:-}" ""; do
-    if [ -n "$_cred" ]; then
-      _tok="$(curl -sS -u "x:$_cred" \
-                "https://ghcr.io/token?scope=repository:$_repo:pull&service=ghcr.io" \
-              | jq -r '.token // empty' 2>/dev/null || true)"
-    else
-      _tok="$(curl -sS \
-                "https://ghcr.io/token?scope=repository:$_repo:pull&service=ghcr.io" \
-              | jq -r '.token // empty' 2>/dev/null || true)"
-    fi
-    [ -n "$_tok" ] || continue
-    # A token that cannot actually read the manifest is no better than none.
-    if [ "$(curl -sS -o /dev/null -w '%{http_code}' \
-              -H "Authorization: Bearer $_tok" \
-              -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
-              "https://ghcr.io/v2/$_repo/manifests/$_tag")" = "200" ]; then
-      break
-    fi
-    _tok=""
-  done
-  [ -n "$_tok" ] || return 0
-
-  _accept='application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json'
-  _url="https://ghcr.io/v2/$_repo/manifests/$_tag"
-
-  # The index/manifest digest the registry itself reports for the tag.
-  curl -sSI -H "Authorization: Bearer $_tok" -H "Accept: $_accept" "$_url" \
-    | tr -d '\r' | awk -F': ' 'tolower($1)=="docker-content-digest" {print $2}'
-
-  # Plus every child manifest, when the tag resolves to an index.
-  curl -sS -H "Authorization: Bearer $_tok" -H "Accept: $_accept" "$_url" \
-    | jq -r '(.manifests // [])[].digest' 2>/dev/null || true
+  bash "$SCRIPT_DIR/cloud-ship-registry-digest.sh" "$1" "${2:-}"
 }
 
 PROBE_CMD="${RECONCILE_PROBE_CMD:-}"
@@ -376,7 +342,7 @@ for vm in $VMS; do
       *)
         desired="$(awk -F'\t' -v r="$ref" '$1==r {print $2; exit}' "$DESIRED_CACHE")"
         if [ -z "$desired" ]; then
-          desired="$(registry_digests "$ref" | grep '^sha256:' | sort -u | tr '\n' ',' || true)"
+          desired="$(registry_digests "$ref" "$vm" | grep '^sha256:' | sort -u | tr '\n' ',' || true)"
           printf '%s\t%s\n' "$ref" "${desired:-NONE}" >> "$DESIRED_CACHE"
         fi
         ;;

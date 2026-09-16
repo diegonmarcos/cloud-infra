@@ -39,6 +39,14 @@ step_status() {
     # upstream images (postgres, redis, …) show n/a.
     OUR_REGISTRY="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}"
 
+    # The desired-digest seam (#358). One implementation, shared with
+    # cloud-ship-reconcile.sh, so the fleet sweep and the per-service verb
+    # cannot drift apart in what they consider "current" — they disagreed
+    # before: reconcile carried a credential ladder that status did not, so the
+    # same service could read undecidable in one and in-sync in the other.
+    # Overridable so the tester can drive it without a VM or a network.
+    REGISTRY_DIGEST_CMD="${REGISTRY_DIGEST_CMD:-bash ${STEPS_DIR:-$(dirname "${BASH_SOURCE[0]}")}/cloud-ship-registry-digest.sh}"
+
     # ── Config plane: local dist hash vs VM stored hash ───────────────
     LOCAL_HASH="$(find "$DIST_DIR" -type f -exec sha256sum {} \; 2>/dev/null | sort | sha256sum | cut -c1-16)"
     VM_HASH="$(ssh_with_retry "$DEPLOY_HOST" "cat '$DEPLOY_PATH/.dist-hash' 2>/dev/null" 2>/dev/null || true)"
@@ -119,9 +127,26 @@ step_status() {
         case "$_cimg" in
             "$OUR_REGISTRY"/*)
                 _dig="${_repodig##*@}"   # repo@sha256:… → sha256:…
-                _desired="$( { docker manifest inspect "$_cimg" 2>/dev/null | jq -r '.manifests[]?.digest // empty, .config.digest // empty'; \
-                               docker buildx imagetools inspect "$_cimg" --format '{{.Manifest.Digest}}' 2>/dev/null; } \
-                             | grep '^sha256:' | sort -u )"
+                # #358: asked through cloud-ship-registry-digest.sh, and asked
+                # WITH $DEPLOY_HOST, so the question is answered by the VM's own
+                # ghcr pull credential. Three fleet packages are private
+                # (kg-store-binaries, session-memory-binaries,
+                # cf-worker-http-to-wg-public-bridge-binaries); the operator's
+                # local docker may or may not be logged in to them, so a local
+                # probe made the verdict depend on who happened to run it. The
+                # VM that runs the container can always read the image it
+                # pulled, which makes the answer a property of the fleet rather
+                # than of the laptop.
+                #
+                # This also removes the hard `docker buildx` dependency. buildx
+                # is NOT installed on the fleet's VMs (verified on oci-apps,
+                # oci-analytics, gcp-proxy and oci-mail, 2026-09-16) and the
+                # old line silently degraded to per-arch digests only wherever
+                # it was missing — which, for a multi-arch `:latest`, means the
+                # index digest a container actually records is absent from the
+                # candidate set and a correct deploy reads DRIFT.
+                _desired="$($REGISTRY_DIGEST_CMD "$_cimg" "$DEPLOY_HOST" 2>/dev/null \
+                            | grep '^sha256:' | sort -u)"
                 # Undecidable is its own verdict, reported LOUDLY, and it is
                 # never in-sync. Both directions matter: a digest we could not
                 # read and a registry that would not answer are different
