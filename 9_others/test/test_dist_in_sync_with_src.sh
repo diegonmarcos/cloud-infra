@@ -84,6 +84,41 @@ if [ -n "$WF_DRIFT" ]; then
     DRIFT=1
 fi
 
+# ── The compile-only verb must be non-destructive and mode-faithful ────
+#
+# Both checks above invoke `build.sh` with no verb — the full ship pipeline —
+# and compare with `diff -rq`, which does not look at permissions. Between them
+# they were blind to #399 in both of its halves:
+#
+#   · `build.sh build` purged 0_apps/dist and 0_git/dist but had no step that
+#     re-emits the dotfiles tree or dist/LICENSE, so the compile-only verb
+#     DELETED 15 committed artifacts. `ship` put them straight back, so this
+#     lint never saw a thing.
+#   · The exec bit arrived from a `chmod +x` in the DEPLOY phase, which reached
+#     into dist through the .github/workflows/scripts symlink. `build` alone
+#     therefore left 34 scripts at 644 — and a mode diff is exactly what
+#     `diff -rq` does not report.
+#
+# git is the right oracle: it tracks content AND the exec bit, and "clean status
+# after a rebuild" is precisely the contract dist/ has to meet. Checking the
+# cheap verb also matters on its own — `build` is what an agent reaches for when
+# it does not want to touch install paths, and it must be safe to run.
+echo "── build.sh build is non-destructive and mode-faithful ──"
+( cd "$REPO_ROOT" && bash 9_others/build.sh build ) >/dev/null 2>&1 || {
+    echo "::error::9_others/build.sh build failed — fix the engine before lint"
+    exit 1
+}
+BUILD_DIRT=$(git -C "$REPO_ROOT" status --porcelain -- \
+    0_git/dist 0_apps/dist 1_cicd/dist 2_sops/dist 9_others/dist)
+if [ -n "$BUILD_DIRT" ]; then
+    echo "$BUILD_DIRT" | sed 's/^/  /'
+    echo "::error::'build.sh build' left dist/ dirty. Every line above is an artifact the compile-only verb deleted, re-moded or failed to reproduce byte-for-byte — dist/ is supposed to be a faithful, executable copy of src/."
+    echo "Fix: run 'bash 9_others/build.sh build' and commit the dist/ changes, or repair the engine step that does not re-emit them."
+    DRIFT=1
+else
+    echo "  ok — dist/ is clean after a rebuild (content and exec bits)"
+fi
+
 [ "$DRIFT" -eq 1 ] && exit 1
 
-echo "1_cicd/dist/ + .github/workflows/ are in sync with src/."
+echo "1_cicd/dist/ + .github/workflows/ are in sync with src/, and 'build.sh build' leaves dist/ clean."
