@@ -66,12 +66,19 @@ do_build() {
     # entry left stale generated files behind looking healthy. One owner means a
     # plain wipe is both correct and self-maintaining.
     step "purging $(relp "$DIST_DIR")/"
-    # Purge every tier's dist, not just one. Each tier owns its own compiled
-    # output now, so a single rm -rf "$DIST_DIR" would leave 0_git, 0_apps and
-    # 1_cicd holding stale artifacts from the previous build — the exact
-    # stale-output problem the purge exists to prevent.
-    rm -rf "$GIT_DIST" "$APPS_DIST" "$CICD_DIST" "$LIB_DIST" "$SOPS_DIST"
-    mkdir -p "$GIT_DIST/hooks" "$APPS_DIST" "$CICD_DIST/scripts" "$LIB_DIST/test" "$SOPS_DIST"
+    # Purge every tier's dist THIS PHASE RE-EMITS, and only those. Each tier
+    # owns its own compiled output now, so a single rm -rf "$DIST_DIR" would
+    # leave 0_git and 1_cicd holding stale artifacts from the previous build —
+    # the exact stale-output problem the purge exists to prevent.
+    #
+    # $APPS_DIST is NOT in the list: nothing in do_build writes it. The dotfiles
+    # tree is emitted by do_dotfiles, which purges and rebuilds $APPS_DIST/
+    # itself (src/deploy-dotfiles.sh). Wiping it here made `build.sh build`
+    # delete 14 committed dotfile artifacts it had no step to regenerate, so the
+    # compile-only verb could not be run without losing work — a purge is only
+    # correct over output its own phase produces.
+    rm -rf "$GIT_DIST" "$CICD_DIST" "$LIB_DIST" "$SOPS_DIST"
+    mkdir -p "$GIT_DIST/hooks" "$CICD_DIST/scripts" "$LIB_DIST/test" "$SOPS_DIST"
     ok "$(relp "$DIST_DIR")/ ready"
 
     # Static workflows (src/gha/cicd/*.yml → dist/)
@@ -155,6 +162,23 @@ do_build() {
         ok "$(count_glob "$CICD_DIST/actions/*") action(s) → $(relp "$DIST_DIR")/actions/"
     fi
 
+    # LICENSE (src/LICENSE → dist/LICENSE) — copied VERBATIM, never
+    # header-injected. Every other artifact gets the GENERATED-FILE banner
+    # stamped into it; a licence must not. GitHub's licence detector and SPDX
+    # scanners match the text, and a banner above it can make a recognised
+    # licence unrecognised. Altering the text of a licence is also not a
+    # cosmetic act. Source of truth in 0_git/src/ like the other git files.
+    #
+    # This leg lives in BUILD because it is a src→dist render like every other
+    # step here. It used to sit in DEPLOY, which meant the build purge deleted
+    # 0_git/dist/LICENSE and no build step put it back: `build.sh build` left
+    # dist/ incomplete and git reported the deletion.
+    if [ -f "$GIT_SRC/LICENSE" ]; then
+        step "copying LICENSE (verbatim — no generated-file banner)"
+        cp "$GIT_SRC/LICENSE" "$GIT_DIST/LICENSE"
+        ok "→ $(relp "$GIT_DIST")/LICENSE"
+    fi
+
     # GHA flake (src/flake.nix, src/flake.lock → dist/)
     if [ -f "$CICD_SRC/flake.nix" ]; then
         step "rendering flake.nix"
@@ -171,6 +195,12 @@ do_build() {
 
 do_deploy() {
     phase "DEPLOY  dist/ → install paths  (purpose: copy compiled artifacts to where GHA / git / submodules actually read them)"
+    # DEPLOY copies; it does not decide modes. It used to `chmod +x` the .sh
+    # files at each install path, and $SCRIPTS_TARGET is a SYMLINK into
+    # 1_cicd/dist/scripts/ — so that chmod wrote the exec bit back into dist,
+    # from the wrong phase, by accident. The bit now comes from the artifact's
+    # own shebang in do_build (see _ih_apply_mode in src/inject-header.sh),
+    # which is why `build` and `ship` now leave identical modes behind.
     mkdir -p "$TARGET_DIR" "$SCRIPTS_TARGET" "$HOOKS_TARGET"
 
     # Workflows
@@ -204,7 +234,6 @@ do_deploy() {
     if [ -d "$CICD_DIST/scripts" ]; then
         step "deploying scripts  $(relp "$DIST_DIR")/scripts/  →  $(relp "$SCRIPTS_TARGET")/  (consumed by workflow run: blocks)"
         cp -r "$CICD_DIST/scripts/"* "$SCRIPTS_TARGET/" 2>/dev/null || true
-        chmod +x "$SCRIPTS_TARGET/"*.sh 2>/dev/null || true
         ok "$(count_glob "$SCRIPTS_TARGET/*") files → $(relp "$SCRIPTS_TARGET")/"
     fi
 
@@ -212,7 +241,6 @@ do_deploy() {
     if [ -d "$GIT_DIST/hooks" ]; then
         step "deploying hooks  $(relp "$DIST_DIR")/hooks/  →  $(relp "$HOOKS_TARGET")/  (git hooksPath points here via gitconfig include)"
         cp -r "$GIT_DIST/hooks/"* "$HOOKS_TARGET/" 2>/dev/null || true
-        chmod +x "$HOOKS_TARGET/"*.sh 2>/dev/null || true
         ok "$(count_glob "$HOOKS_TARGET/*") files → $(relp "$HOOKS_TARGET")/"
     fi
 
@@ -233,17 +261,11 @@ do_deploy() {
         fi
     done
 
-    # LICENSE — copied VERBATIM, never header-injected.
-    #
-    # Every other artifact here gets the GENERATED-FILE banner stamped into it.
-    # A licence must not: GitHub's licence detector and SPDX scanners match the
-    # text, and a banner above it can make a recognised licence unrecognised.
-    # Altering the text of a licence is also not a cosmetic act. So it is a
-    # plain copy, source of truth in 0_git/src/ like the other git files.
-    if [ -f "$GIT_SRC/LICENSE" ]; then
-        step "copying LICENSE (verbatim — no generated-file banner)"
-        cp "$GIT_SRC/LICENSE" "$GIT_DIST/LICENSE"
-        cp "$GIT_SRC/LICENSE" "$REPO_ROOT/LICENSE"
+    # LICENSE — the dist→repo-root leg. The src→dist leg is a build step; see
+    # do_build, which is what makes `build` alone leave a complete dist/.
+    if [ -f "$GIT_DIST/LICENSE" ]; then
+        step "deploying LICENSE  $(relp "$GIT_DIST")/LICENSE  →  repo root"
+        cp "$GIT_DIST/LICENSE" "$REPO_ROOT/LICENSE"
         ok "→ LICENSE"
     fi
 

@@ -173,8 +173,40 @@ _ih_inject_json() {
         "$src" > "$dest"
 }
 
+# Converge `dest` on the mode its consumers need.
+#
+# The rule is derived from the artifact, never from a per-file list: a file
+# whose first two bytes are `#!` declares itself runnable, and a src file that
+# is already executable stays executable. Both clauses matter — 7 src scripts
+# carry a shebang while sitting at 644, and the extensionless git hooks carry
+# no extension to key a table off.
+#
+# Applied on EVERY copy path, because three of the four did not set a mode at
+# all: `cp` is umask-dependent and the jq JSON path creates a fresh 0644 file.
+# The exec bit used to arrive instead as a side effect of build.sh's DEPLOY
+# phase, whose `chmod +x "$SCRIPTS_TARGET"/*.sh` reached back into dist through
+# the .github/workflows/scripts symlink. `build` alone therefore left 34
+# artifacts at 644 and reported every one of them as modified.
+#
+# Both branches are set, not just the +x one, so a dist file left behind by an
+# earlier run converges instead of keeping a mode its source no longer claims.
+_ih_apply_mode() {
+    local src="$1"
+    local dest="$2"
+    if [ -x "$src" ] || [ "$(head -c2 "$dest" 2>/dev/null)" = '#!' ]; then
+        chmod +x "$dest"
+    else
+        chmod -x "$dest"
+    fi
+}
+
 # Public: inject header when copying `src` → `dest`.
 inject_header() {
+    _ih_copy_one "$1" "$2" || return $?
+    _ih_apply_mode "$1" "$2"
+}
+
+_ih_copy_one() {
     local src="$1"
     local dest="$2"
     local repo_root engine rel_src prefix first_line
@@ -236,9 +268,6 @@ inject_header() {
             cat "$src"
         } > "$dest"
     fi
-
-    # Preserve executable bit.
-    if [ -x "$src" ]; then chmod +x "$dest"; fi
 }
 
 # Public: stamp an already-existing file in place.
