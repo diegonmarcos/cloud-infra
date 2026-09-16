@@ -6,12 +6,22 @@
 #   known-flaky: comma-separated container names that warn instead of fail
 set -e
 
-ALIAS="${1:?Usage: $0 <ssh-alias> <ports> [known-flaky]}"
-PORTS="${2:?Usage: $0 <ssh-alias> <ports> [known-flaky]}"
+ALIAS="${1:?Usage: $0 <ssh-alias> [ports] [known-flaky]}"
+# Ports are OPTIONAL. Most VMs in the registry declare no public_ports, and a
+# VM with none has nothing to port-check — the loop below simply does not run,
+# and container health is still checked. This used to be `${2:?}`, which made
+# cloud-health-all-vms.sh (which passes only the alias) die on the usage guard
+# for every VM, every time, while its `|| echo FAIL` reported green (#20/L5).
+PORTS="${2:-}"
 KNOWN_FLAKY="${3:-}"
 
-CONTAINERS="/tmp/containers.txt"
-PORT_RESULTS="/tmp/port_results"
+# Per-alias scratch paths. These were fixed names under /tmp, which is fine for
+# a single run but not for the all-VMs loop that calls this script four times:
+# the second VM collected the FIRST VM's port results, because the collector
+# globs the whole directory and nothing ever cleared it.
+CONTAINERS="/tmp/containers.$ALIAS.txt"
+PORT_RESULTS="/tmp/port_results.$ALIAS"
+rm -rf "$PORT_RESULTS"
 mkdir -p "$PORT_RESULTS"
 
 # ── Container health ──
