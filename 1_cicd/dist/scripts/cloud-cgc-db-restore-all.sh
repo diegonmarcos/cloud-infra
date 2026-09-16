@@ -415,6 +415,10 @@ MISSING=""
 # Repos actually staged this run — data-driven input to the kg-store
 # (SurrealDB) export/ingest hook below; never a hardcoded list.
 STAGED_REPOS=""
+# "<project_dir> <repo>" per line, and the dirs already attributed. See the
+# attribution block at the end of the loop below.
+PROJECT_OF=""
+SEEN_PROJECT_DIRS=" "
 for r in "$@"; do
   img="${IMAGE_PREFIX}${r}:${TAG}"
   if ! docker manifest inspect "$img" >/dev/null 2>&1; then
@@ -436,6 +440,21 @@ for r in "$@"; do
   docker rmi "$img" >/dev/null 2>&1 || true
   FOUND=$((FOUND + 1))
   STAGED_REPOS="$STAGED_REPOS $r"
+  # Which project dir did THIS image carry? octocode keys a project on
+  # sha256(origin URL), so the dir name says nothing a human can act on. Every
+  # image holds exactly one project, so the dir that is present after staging and
+  # was not present before belongs to $r. Recorded here — and nowhere else — so
+  # the content gate below can name the REPO an operator has to fix rather than a
+  # 64-char project id. Built by observation, never a hardcoded table.
+  for _po_d in "$STAGING"/*/; do
+    [ -d "$_po_d" ] || continue
+    _po_b=${_po_d%/}; _po_b=${_po_b##*/}
+    case "$_po_b" in fastembed | sentencetransformer) continue ;; esac
+    case "$SEEN_PROJECT_DIRS" in *" $_po_b "*) continue ;; esac
+    SEEN_PROJECT_DIRS="$SEEN_PROJECT_DIRS$_po_b "
+    PROJECT_OF="$PROJECT_OF$_po_b $r
+"
+  done
   echo "[cgc-db-restore-all] staged $r ($FOUND/$TOTAL) $_digest"
 done
 
@@ -507,6 +526,83 @@ if [ -n "$_staging_torn" ]; then
   exit 1
 fi
 echo "[cgc-db-restore-all] lance integrity OK -- no dangling manifests in the staged tree"
+
+# ZERO-CONTENT GATE ON THE STAGED TREE (fail closed) -- see cgc-db-zero-content.test.sh.
+#
+# The two checks above ask "is it READABLE?" and "did the right NUMBER of repos
+# arrive?". Neither asks the only question a consumer cares about: does this repo
+# actually HOLD anything? A project dir can be present, structurally perfect and
+# completely empty, and every check upstream of here passes it.
+#
+# That is not hypothetical, it is ticket #352. octocode had no Kotlin grammar, so
+# every .kt file was dropped at the file walk and cloud-u-android shipped a
+# populated-looking store that answered for a fraction of its own tree. The same
+# shape reached the box as "Indexing complete! 0 of 0 files processed" publishing a
+# 4.0GB checkpoint. Nothing anywhere said "not indexed" -- and THAT is the defect.
+# octocode answers a query against an empty store with twenty confident rows of
+# whatever else is in the volume at noise-floor similarity, so a blind repo is
+# indistinguishable from a working one at the query surface. #352 sat for days
+# against acceptance queries that could not pass, because the pipeline was green
+# every single time.
+#
+# So an expected repo that staged NOTHING is refused here, before the swap, in the
+# same fail-closed posture as the integrity gate: the previously-served volume is a
+# better artifact than a confidently empty one.
+#
+# GRANULARITY, stated plainly so nobody mistakes this for more than it is: the unit
+# is the REPO, because the repo is the unit octocode stores and the unit
+# index_repos declares. A repo that indexed most of itself but is blind to one
+# SUBTREE -- aa_cloud-superapp inside cloud-u-android, which is exactly what #352's
+# acceptance queries chase -- still has content and still passes. Catching that
+# needs a declared per-subtree expectation and a real read of the content rows,
+# which is a different check with a different data source.
+# ponytail: repo-granular by design; per-subtree coverage needs its own declared
+# expectations, add it when a subtree regression actually costs a day.
+
+# octocode's three content stores, one per search mode (code / text / docs) -- the
+# same modes the MCP exposes. A project with no fragment in ANY of them has no
+# retrievable content at all. All-three-empty, not any-empty, so a repo that
+# legitimately carries only docs or only code is not failed for it.
+CGC_CONTENT_TABLES="code_blocks text_blocks document_blocks"
+
+zero_content_projects() { # $1 = octocode home -> stdout: one contentless project dir per line
+  _zcp_home="$1"
+  for _zcp_p in "$_zcp_home"/*/; do
+    [ -d "$_zcp_p" ] || continue
+    # Same exclusion set as count_project_dirs()/find_project_dir(): root state,
+    # never project data. These two legitimately hold no content tables.
+    case "${_zcp_p%/}" in */fastembed | */sentencetransformer) continue ;; esac
+    _zcp_found=0
+    for _zcp_t in $CGC_CONTENT_TABLES; do
+      for _zcp_f in "${_zcp_p}storage/${_zcp_t}.lance"/data/*.lance; do
+        # An absent table or an empty data/ leaves the glob unexpanded, so the
+        # -e test is what distinguishes "no rows" from "one row". Fail closed:
+        # anything we cannot positively see content in counts as no content.
+        [ -e "$_zcp_f" ] || continue
+        _zcp_found=1
+        break
+      done
+      if [ "$_zcp_found" = 1 ]; then break; fi
+    done
+    if [ "$_zcp_found" = 0 ]; then printf '%s\n' "${_zcp_p%/}"; fi
+  done
+  :
+}
+
+_staging_blind=$(zero_content_projects "$STAGING")
+if [ -n "$_staging_blind" ]; then
+  echo "::error::[cgc-db-restore-all] refusing to swap into $TARGET -- staged repo(s) hold ZERO indexed content:"
+  printf '%s\n' "$_staging_blind" | while IFS= read -r _blind_dir; do
+    _blind_id=${_blind_dir##*/}
+    # Name the repo, not the sha256. Falls back to the id itself rather than
+    # printing an empty field if attribution somehow missed this dir.
+    _blind_repo=$(printf '%s' "$PROJECT_OF" | awk -v d="$_blind_id" '$1 == d { print $2; exit }')
+    echo "::error::[cgc-db-restore-all]   ${_blind_repo:-$_blind_id} (project $_blind_id) code_blocks=$(ls "$_blind_dir/storage/code_blocks.lance/data" 2>/dev/null | wc -l) text_blocks=$(ls "$_blind_dir/storage/text_blocks.lance/data" 2>/dev/null | wc -l) document_blocks=$(ls "$_blind_dir/storage/document_blocks.lance/data" 2>/dev/null | wc -l) fragments"
+  done
+  echo "::error::[cgc-db-restore-all] a repo with no content blocks is INVISIBLE to every query, and octocode will still answer those queries with twenty unrelated rows instead of saying so. Serving this would be worse than serving the older volume, which is left untouched. Check that repo's index job: an extension octocode has no grammar for (build.json .runtime.octocode.file_associations), a .noindex that swallowed the tree, or an index that reported '0 of 0 files processed'. A new file association needs ONE forced run (workflow input force=true) -- the incremental gate can never apply it on its own."
+  exit 1
+fi
+echo "[cgc-db-restore-all] content OK -- every staged repo holds indexed content blocks"
 
 # ── 3) verify before TARGET is touched at all ───────────────────────────────
 STAGED=$(count_project_dirs)
