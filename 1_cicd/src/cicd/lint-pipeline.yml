@@ -239,6 +239,19 @@ jobs:
       - name: Phase 49 — status gives a true digest verdict, or says it cannot
         run: bash 9_others/test/test_ship_status_digest.sh
 
+      # Phase 50 — #149 / #359. Cross-repo dispatch used to run on a universal
+      # CLASSIC PAT that also carried admin:org and delete_repo: one leaked job
+      # log and the blast radius was the whole org. This asserts the dispatch
+      # path names only the scoped, purpose-built secret, that the secret has
+      # no `||` fallback (a fallback is a SILENT downgrade — green run, broad
+      # token), and that every declared dispatcher is still wired, because a
+      # dispatch that quietly stops firing is the worse failure: pushes
+      # succeed, CI is green, nothing deploys. Reads the cloud-u-containers
+      # checkout that this job already makes into a_solutions/.
+      # Policy is data: 9_others/dispatch-policy.json.
+      - name: Phase 50 — dispatch runs on a scoped credential, not a universal PAT
+        run: bash 9_others/test/test_dispatch_credential_scope.sh
+
       # git clone, not actions/checkout: checkout refuses a `path:` outside
       # $GITHUB_WORKSPACE, and both scripts locate each other as SIBLINGS
       # ($REPO/../cloud-infra) — the same layout as a dev machine's ~/git.

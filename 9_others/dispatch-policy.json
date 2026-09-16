@@ -1,0 +1,121 @@
+{
+  "_comment": [
+    "Declarative policy for CROSS-REPO and SELF-REPO workflow dispatch credentials (#149, #359).",
+    "",
+    "The problem this file closes: dispatch used to run on a universal CLASSIC PAT.",
+    "On 2026-09-16 that token was observed carrying admin:enterprise, admin:org,",
+    "delete_repo, repo, workflow and write:packages. A token that can delete every",
+    "repository in the org was sitting in CI so that one workflow could ask another",
+    "workflow to start. One leaked job log is the whole org.",
+    "",
+    "The end state: dispatch works, and nothing in CI can delete a repo or touch the org.",
+    "Enforced by 9_others/test/test_dispatch_credential_scope.sh, which reads THIS file.",
+    "Never extend banned_for_dispatch by editing the tester — edit this list."
+  ],
+
+  "approved_secret": "CLOUD_INFRA_DISPATCH_TOKEN",
+
+  "_approved_secret_comment": [
+    "One purpose-named secret, one credential, set on every repo that dispatches.",
+    "The NAME did not change in the #149 migration — only the VALUE behind it, from a",
+    "universal classic PAT to the fine-grained token described in required_permissions.",
+    "Keeping the name stable is what let the migration happen without a flag day:",
+    "the workflows already read this name, so rotating the value is a GitHub-UI-only",
+    "step with no code change and no window where dispatch is broken."
+  ],
+
+  "banned_for_dispatch": [
+    "CGC_GHCR_PAT",
+    "GH_PAT",
+    "GITHUB_PAT",
+    "ADMIN_TOKEN",
+    "ORG_TOKEN",
+    "PERSONAL_ACCESS_TOKEN"
+  ],
+
+  "_banned_comment": [
+    "Universal / general-purpose credentials that must never appear in a dispatch binding.",
+    "CGC_GHCR_PAT is the live one and the reason this list exists: commit 329e41fec added",
+    "`DISPATCH_TOKEN: secrets.CLOUD_INFRA_DISPATCH_TOKEN || secrets.CGC_GHCR_PAT` as a",
+    "fallback when the purpose-named secret was missing from this repo. The secret is now",
+    "set here (verified 2026-09-16), so the fallback bought nothing and silently widened",
+    "the dispatch path back to a classic PAT with delete_repo.",
+    "",
+    "CGC_GHCR_PAT itself is NOT banned repo-wide: it is still the correct credential for",
+    "ghcr.io package reads (read:packages), which genuinely requires a classic PAT.",
+    "This list is about the DISPATCH path only."
+  ],
+
+  "required_permissions": {
+    "token_type": "fine-grained personal access token",
+    "resource_owner": "diegonmarcos",
+    "repository_access": ["diegonmarcos/cloud-infra"],
+    "permissions": [
+      {
+        "name": "Contents",
+        "level": "Read and write",
+        "why": "POST /repos/{owner}/{repo}/dispatches (repository_dispatch) requires Contents: Write. This is what cloud-u-containers uses to tell cloud-infra a container changed.",
+        "source": "docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens"
+      },
+      {
+        "name": "Actions",
+        "level": "Read and write",
+        "why": "Write is required by POST /repos/{owner}/{repo}/actions/workflows/{id}/dispatches (workflow_dispatch), used by ship-reconcile.yml to re-queue ship.yml. Read is required by GET .../runs, which the same step uses to VERIFY a run actually appeared.",
+        "source": "docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens"
+      },
+      {
+        "name": "Metadata",
+        "level": "Read",
+        "why": "Mandatory baseline permission on every fine-grained token; GitHub selects it automatically and it cannot be removed."
+      }
+    ],
+    "_explicitly_not_granted": [
+      "Administration — this is what carries repository DELETION on a fine-grained token. Never grant it. Its classic-scope equivalent, delete_repo, is the headline of #359.",
+      "Organization permissions of any kind — the classic admin:org equivalent. Dispatch is a repository operation; it has no org-level need.",
+      "Packages — the dispatch path never reads or writes ghcr.io. That is CGC_GHCR_PAT's job and stays separate.",
+      "Workflows — the ability to EDIT workflow files. Triggering a workflow (Actions) and rewriting one (Workflows) are different powers; dispatch needs only the first."
+    ],
+    "_residual_risk": [
+      "Contents: Write on cloud-infra means a leaked dispatch token can push to cloud-infra's default branch.",
+      "That is inherent to GitHub's repository_dispatch API — there is no narrower permission that",
+      "allows the call. It is bounded to ONE repository and cannot delete it, cannot touch the org,",
+      "and cannot reach any other repo. Removing it entirely would mean replacing repository_dispatch",
+      "with per-workflow workflow_dispatch (Actions: Write only, no Contents at all), which is a real",
+      "option but changes the fan-out: today ONE repository_dispatch fans out to ship.yml,",
+      "ship-wrangler.yml, ship-terraform.yml, ship-gen-configs.yml, ship-reports.yml and",
+      "lint-secrets-coverage.yml at once. Splitting that into six dispatches is exactly the",
+      "'silent subset' shape this pipeline has been burned by before. Not taken."
+    ]
+  },
+
+  "dispatch_consumers": [
+    {
+      "repo": "diegonmarcos/cloud-u-containers",
+      "workflow": ".github/workflows/dispatch-cloud-infra.yml",
+      "kind": "cross-repo",
+      "checkout_paths": ["a_solutions", "../cloud-u-containers"],
+      "_checkout_comment": "Where the tester looks for this repo's tree. 'a_solutions' is the path ship.yml already checks cloud-u-containers out to on the runner; '../cloud-u-containers' is the local sibling clone. The repo is PUBLIC, so plain GITHUB_TOKEN can check it out — no dispatch credential is needed to lint the dispatch credential. If NEITHER path resolves the tester FAILS rather than skipping: a cross-repo consumer that silently stops being checked is exactly the blind spot #149 is about.",
+      "endpoint": "POST /repos/diegonmarcos/cloud-infra/dispatches",
+      "needs": "Contents: Write on diegonmarcos/cloud-infra",
+      "why": "cloud-u-containers is no longer a submodule of cloud-infra (split 2026-09-06). Nothing in cloud-infra watches a push here, so this dispatch is the ONLY signal that a container changed. If it stops firing, every service change sits committed-but-undeployed while the Ship page looks idle."
+    },
+    {
+      "repo": "diegonmarcos/cloud-infra",
+      "workflow": ".github/workflows/ship-reconcile.yml",
+      "kind": "self-repo",
+      "checkout_paths": ["."],
+      "endpoint": "POST /repos/diegonmarcos/cloud-infra/actions/workflows/ship.yml/dispatches",
+      "needs": "Actions: Write (dispatch) + Actions: Read (verify) on diegonmarcos/cloud-infra",
+      "why": "Re-queues a lost deploy (#354). GITHUB_TOKEN cannot do this at all: GitHub suppresses runs triggered by GITHUB_TOKEN to prevent recursion, so the dispatch returns 204 and no run is ever created — a silent no-op that looks exactly like success."
+    }
+  ],
+
+  "_not_a_dispatch_consumer": [
+    "1_cicd/src/scripts/cloud-ship-reconcile.sh registry_digests_real() probes",
+    "CGC_GHCR_PAT -> GH_TOKEN -> anonymous and falls through QUIETLY when none work",
+    "(`[ -n \"$_tok\" ] || return 0`). It looks like a dispatch consumer to a naive grep",
+    "for a token fallback chain, and it is a genuine silent-probe, but its target is",
+    "ghcr.io manifest reads, not the GitHub dispatch API. It is out of scope for #149",
+    "and is left alone deliberately. See the report's 'what is NOT covered' section."
+  ]
+}
