@@ -6,8 +6,13 @@
  *   2. a declared language (derivers.json code-signatures.languages) has tracked files in the repo
  *      but the PINNED octocode indexer does not select that extension. Accepted set = the pinned
  *      release's own src/indexer/file_utils.rs (detect_language arms + ALLOWED_TEXT_EXTENSIONS),
- *      plus build.json .runtime.octocode.file_associations — counted only when
- *      cloud-cgc-db-update.sh actually consumes that key, so a declaration nobody applies is not green;
+ *      plus build.json .runtime.octocode.file_associations — counted only when EVERY script that
+ *      writes config.toml actually consumes that key, so a declaration nobody applies is not green.
+ *      There are TWO such writers and both are required: cloud-cgc-db-update.sh (the CI producer)
+ *      and user-ai_cloud-cgc-pub-mcp/src/code/reindex.sh (the one-shot reindex/index jobs, and the
+ *      box-side tail cloud-cgc-db-restore-all.sh execs inside the MCP container). Checking only the
+ *      first is how kt/kts stayed declared-but-unapplied on the serving boxes while this test was
+ *      green: CI built a Kotlin-aware index, then an on-box reindex rebuilt a Kotlin-blind one over it;
  *   3. the bundled codegraph source code-signatures-<name>.json is missing, carries another repo
  *      name, or holds zero files for a declared language the repo contains (the green-looking no-op).
  *
@@ -26,6 +31,7 @@ const PUB_MCP = firstExisting(join(CLOUD_ROOT, "a_solutions", "user-ai_cloud-cgc
 const DERIVERS_JSON = process.env.DERIVERS_JSON ?? join(import.meta.dirname!, "..", "derivers.json");
 const BUILD_JSON = process.env.CGC_BUILD_JSON ?? join(PUB_MCP, "build.json");
 const UPDATE_SH = process.env.CGC_DB_UPDATE_SH ?? join(CLOUD_ROOT, "1_cicd", "src", "ops", "cloud-cgc-db-update.sh");
+const REINDEX_SH = process.env.CGC_REINDEX_SH ?? join(PUB_MCP, "src", "code", "reindex.sh");
 const GRAPHS_DIR = process.env.CODEGRAPH_GRAPHS_DIR ?? join(PUB_MCP, "src", "code", "graphs");
 
 let failures = 0;
@@ -71,10 +77,13 @@ async function main(): Promise<void> {
   const octocode = JSON.parse(readFileSync(BUILD_JSON, "utf-8")).runtime?.octocode ?? {};
   const { extensions, grammars } = await octocodeAcceptedExtensions(octocode.version);
   const associations: Record<string, string> = octocode.file_associations ?? {};
-  const consumed = existsSync(UPDATE_SH) && readFileSync(UPDATE_SH, "utf-8").includes("file_associations");
+  // EVERY config.toml writer must apply the key, not just the CI producer — an
+  // association the on-box reindex path ignores is undone the next time that path runs.
+  const writers = [UPDATE_SH, REINDEX_SH];
+  const unapplied = writers.filter((p) => !existsSync(p) || !readFileSync(p, "utf-8").includes("file_associations"));
   for (const [e, grammar] of Object.entries(associations)) {
     if (!grammars.has(grammar)) fail(`build.json file_associations ${e} = "${grammar}": octocode ${octocode.version} has no such grammar`);
-    else if (!consumed) fail(`build.json file_associations ${e} = "${grammar}" is declared but ${UPDATE_SH} never applies it to config.toml`);
+    else if (unapplied.length) fail(`build.json file_associations ${e} = "${grammar}" is declared but never applied to config.toml by: ${unapplied.join(", ")}`);
     else extensions.add(e.replace(/^\./, ""));
   }
   console.log(`octocode ${octocode.version}: ${extensions.size} accepted extensions`);
