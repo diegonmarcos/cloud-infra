@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2777,
+    "files": 2778,
     "by_lang": {
       "nix": 147,
       "ts": 1100,
-      "sh": 120,
+      "sh": 121,
       "py": 850,
       "js": 26,
       "rust": 534
@@ -18,7 +18,7 @@
     "by_role": {
       "nix-module": 9,
       "module": 667,
-      "shell": 112,
+      "shell": 113,
       "python": 845,
       "flake": 70,
       "compose": 68,
@@ -12448,7 +12448,8 @@
         "tokio::net::TcpStream",
         "tokio::time::timeout",
         "trust_dns_resolver::config::",
-        "trust_dns_resolver::TokioAsyncResolver"
+        "trust_dns_resolver::TokioAsyncResolver",
+        "these"
       ],
       "symbols": [
         "tcp(ip: &str, port: u16)",
@@ -12508,6 +12509,7 @@
         "super::types::",
         "std::collections::",
         "std::time::Instant",
+        "tokio::time::timeout",
         "explicit",
         "reports_common::probe"
       ],
@@ -12538,11 +12540,20 @@
         "anyhow::Result",
         "chrono::Utc",
         "std::collections::HashMap",
-        "std::time::Instant",
-        "types::"
+        "std::future::Future",
+        "std::time::",
+        "types::",
+        "super::",
+        "std::time::Duration"
       ],
       "symbols": [
-        "run(\n    fleet: Option<&reports_common::fleet::FleetState>,\n)"
+        "with_deadline(\n    layer: &str,\n    budget: Duration,\n    fut: impl Future<Output = Vec<Check>>,\n)",
+        "run(\n    fleet: Option<&reports_common::fleet::FleetState>,\n)",
+        "never()",
+        "wedged_layer_returns_instead_of_hanging()",
+        "wedged_layer_is_loud_and_names_itself()",
+        "healthy_layer_passes_through_unchanged()",
+        "email_budget_exceeds_the_declared_roundtrip()"
       ]
     },
     {
@@ -13325,6 +13336,20 @@
       "symbols": [
         "from(i: TlsCheckInput)",
         "default_true()"
+      ]
+    },
+    {
+      "path": "infra-obs_reports/src/src/cloud-health-full-daily/test-layer-deadlines.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
