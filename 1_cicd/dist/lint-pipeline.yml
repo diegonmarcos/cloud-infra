@@ -232,6 +232,14 @@ jobs:
       # reporting success at one. Both halves failed on 2026-09-09.
       - name: Phase 47 — ship-wg-runner lock is bounded and the unjammer escalates
         run: bash 9_others/test/test_wg_group_lock_bounded.sh
+      # Phase 48 — #354. Phases 46/47 keep the deploy lock reachable and
+      # bounded; neither notices that an EVICTED deploy is never re-queued, so
+      # a service can be committed, built and absent from the fleet behind a
+      # run list that is entirely green. This asserts the reconcile names such
+      # a service from fleet state alone, and that the re-ship it triggers is
+      # bounded so repairing drift cannot itself wedge the lock (#179).
+      - name: Phase 48 — reconcile names deployed-behind services and re-ships them bounded
+        run: bash 9_others/test/test_ship_reconcile.sh
 
       # git clone, not actions/checkout: checkout refuses a `path:` outside
       # $GITHUB_WORKSPACE, and both scripts locate each other as SIBLINGS
