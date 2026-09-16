@@ -1,0 +1,297 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/cicd/ship-reconcile.yml
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+# ┌──────────────────────────────────────────────────────────────────────────┐
+# │  Ship reconcile — re-queue the deploys the concurrency group threw away   │
+# │                                                                          │
+# │  Scripts: 1_cicd/src/scripts/cloud-ship-reconcile.sh                     │
+# │           1_cicd/src/scripts/cloud-ship-reconcile-reship.sh              │
+# │  Bounds:  9_others/ship-reconcile.json                                   │
+# └──────────────────────────────────────────────────────────────────────────┘
+
+name: Ship reconcile
+
+# WHY THIS WORKFLOW EXISTS (#354)
+#
+# ship.yml's deploy gate already DETECTS an evicted deploy and fails loudly:
+# "these services are committed, built, and NOT on the fleet". That half works.
+# What never existed is anything that puts the lost deploy back on the queue.
+# A human reading the gate's error was the entire recovery mechanism, and on
+# 2026-09-09 (#114) nobody read it for four weeks while infra-obs_dagu ran a
+# DAG file that predated its own fix.
+#
+# So this is a loop, not a one-shot. It asks the fleet what it is running,
+# compares that against what the registry holds, and dispatches ship.yml for
+# whatever is behind. It does not care what any dispatch's commit range said —
+# that range is precisely the thing an eviction destroyed. If its own re-ship
+# is evicted in turn, the next scheduled run finds the same drift and ships it
+# again. Convergence by repetition is what makes it immune to the bug it fixes.
+#
+# WHY NOT JUST MAKE ship-wg-runner QUEUE INSTEAD OF CANCEL
+#
+# Because GitHub Actions cannot. A concurrency group holds at most ONE pending
+# run; a newer pending run displaces the older one, and `cancel-in-progress:
+# false` protects only the RUNNING job, never the queue depth. There is no
+# setting that makes the queue two deep, so "queue instead of cancel" is not a
+# configuration this repo declined to use — it is not expressible.
+#
+# It would also be the wrong thing if it were available. #179 is why the group
+# is fleet-wide and aggressive in the first place: cgc-db index jobs held that
+# runner for up to 5.5 hours and ignored graceful cancel. A deep queue behind a
+# 5.5-hour job is a queue of deploys going stale in place, each shipping an
+# increasingly outdated tree by the time it runs. A reconcile has neither
+# problem: it is idempotent, it holds no state between runs, and it always
+# ships HEAD rather than whatever was true when the run was queued.
+#
+# See rep-P.md §5 for the full argument, written so it can be overruled in one
+# read if Diego disagrees.
+
+on:
+  # Four-hourly, offset off the hour so it does not collide with the 6:17 health
+  # report, which holds the same lock.
+  schedule:
+    - cron: '41 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      vms:
+        description: "VM aliases to reconcile, space-separated, or 'all'"
+        required: false
+        default: "all"
+      apply:
+        description: "Re-ship what drifted ('true'), or report only ('false')"
+        required: false
+        default: "true"
+  # A change to the reconcile's own moving parts must exercise them, or this
+  # workflow is only ever proven by a schedule nobody watches.
+  push:
+    branches: [main]
+    paths:
+      - "1_cicd/src/scripts/cloud-ship-reconcile.sh"
+      - "1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
+      - "1_cicd/src/cicd/ship-reconcile.yml"
+      - "9_others/ship-reconcile.json"
+      - ".github/workflows/ship-reconcile.yml"
+      # The compiled scripts, by their TRACKED path. `.github/workflows/scripts`
+      # is a tracked symlink to this directory, so a path filter written against
+      # the symlinked spelling matches nothing git ever reports as changed.
+      - "1_cicd/dist/scripts/cloud-ship-reconcile.sh"
+      - "1_cicd/dist/scripts/cloud-ship-reconcile-reship.sh"
+
+permissions:
+  contents: read
+  # Dispatching ship.yml. See the re-ship step for why GITHUB_TOKEN is not
+  # sufficient on its own and why the dispatch is verified rather than assumed.
+  actions: write
+
+jobs:
+  reconcile:
+    name: Reconcile fleet against registry
+    runs-on: ubuntu-latest
+
+    # This job SSHes every VM over the mesh as 10.0.0.200, so it takes the
+    # fleet's single WG identity and must hold the fleet-wide group like every
+    # other WG job (ship deploy, cgc-db*, health reports, mail health). Listed
+    # in unjam-ship.yml's WG_WORKFLOWS — Phase 46 fails the build if it is not.
+    #
+    # Being in the group means this job can ITSELF be evicted by a newer
+    # entrant. That is acceptable here in a way it is not for a deploy: an
+    # evicted reconcile loses nothing, because the next scheduled run recomputes
+    # the same answer from the fleet. An evicted deploy loses the deploy.
+    concurrency:
+      group: ship-wg-runner
+      cancel-in-progress: false
+
+    # Probing, not building. Four SSH round-trips plus a handful of registry
+    # HEADs is a ~2 minute job; 30 minutes is a generous hang ceiling and keeps
+    # this well inside the Phase 47 bound on how long anything may hold the
+    # fleet's deploy lock.
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers), NOT
+      # a submodule (split out 2026-09-06). The reconcile reads each service's
+      # build.json from here to learn its container names.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Init submodules (cloud-data)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud
+          cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+
+      - name: Install runtime deps (wireguard-tools, jq)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq wireguard-tools jq
+
+      # Port 22 on every VM is firewalled to the mesh, so without wg0 every
+      # probe times out and the reconcile correctly refuses to call the fleet
+      # in-sync. Point at the GENERATED consolidated topology: only it carries
+      # vms[*].wg_public_key, without which the script exits "hub public key not
+      # in config.json".
+      - name: WireGuard up
+        env:
+          CLOUD_CONFIG_JSON: ${{ github.workspace }}/1_cloud-configs/dist/_cloud-data-consolidated.json
+        run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
+
+      # Generated from build-gha.json, which already carries wg_ip, user and
+      # ssh_secret per VM. The two existing copies of this step (health_mail_full
+      # and cloud-health-reports) hardcode the host/IP/user table inline, so a
+      # VM renamed or renumbered in the declarations leaves them pointing at the
+      # old address. Deriving it means a new VM is reconciled the moment it is
+      # declared, with no edit here.
+      - name: Setup SSH config from declarations
+        env:
+          OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+          GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          GHA_CONFIG="1_cloud-configs/dist/build-gha.json"
+          [ -f "$GHA_CONFIG" ] || { echo "::error::$GHA_CONFIG not found — run 9_others/build.sh"; exit 1; }
+
+          mkdir -p ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY"       > ~/.ssh/oci_key
+          printf '%s\n' "$GCP_PROXY_SSH_KEY" > ~/.ssh/gcp_proxy_key
+          chmod 600 ~/.ssh/oci_key ~/.ssh/gcp_proxy_key
+
+          # ssh_secret names WHICH key, so the mapping lives in the declarations
+          # rather than in a case statement here.
+          jq -r '.vms | to_entries[]
+                 | select(.value.wg_ip != null)
+                 | "\(.key)\t\(.value.wg_ip)\t\(.value.user // "ubuntu")\t\(.value.ssh_secret // "OCI_SSH_KEY")"' \
+            "$GHA_CONFIG" \
+          | while IFS="$(printf '\t')" read -r vm ip user secret; do
+              case "$secret" in
+                GCP_PROXY_SSH_KEY) key="~/.ssh/gcp_proxy_key" ;;
+                *)                 key="~/.ssh/oci_key" ;;
+              esac
+              {
+                echo "Host $vm"
+                echo "  HostName $ip"
+                echo "  User $user"
+                echo "  IdentityFile $key"
+                echo "  StrictHostKeyChecking no"
+                echo "  BatchMode yes"
+                echo "  ConnectTimeout 15"
+              } >> ~/.ssh/config
+            done
+          chmod 600 ~/.ssh/config
+          echo "ssh config covers: $(grep -c '^Host ' ~/.ssh/config) VM(s)"
+
+      # Exit 1 is the expected outcome when the fleet is behind — it is a
+      # finding, not a failure, and the re-ship step below is what acts on it.
+      # Exit 2 is a real failure: something could not be read, so no in-sync
+      # claim can be made. Both are distinguished here rather than collapsed.
+      - name: Reconcile
+        id: reconcile
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          VMS="${{ github.event.inputs.vms || 'all' }}"
+          [ "$VMS" = "all" ] && VMS=""
+          # shellcheck disable=SC2086
+          bash 1_cicd/src/scripts/cloud-ship-reconcile.sh $VMS > findings.tsv
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          echo "### Reconcile findings" >> "$GITHUB_STEP_SUMMARY"
+          if [ -s findings.tsv ]; then
+            sed 's/^/    /' findings.tsv >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "    none — every declared container runs the registry's digest" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          [ "$rc" -ne 2 ] || { echo "::error::reconcile could not read part of the fleet — see the log; no service is being called in-sync on that evidence"; exit 1; }
+          exit 0
+
+      - name: Select what to re-ship
+        id: select
+        if: steps.reconcile.outputs.rc == '1'
+        run: |
+          set -euo pipefail
+          SERVICES="$(bash 1_cicd/src/scripts/cloud-ship-reconcile-reship.sh < findings.tsv)"
+          echo "services=$SERVICES" >> "$GITHUB_OUTPUT"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Re-shipping: \`${SERVICES:-nothing}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      # The whole point of #354: something re-queues the lost deploy.
+      #
+      # GITHUB_TOKEN cannot do this alone. GitHub suppresses workflow runs
+      # triggered by GITHUB_TOKEN to prevent recursion, so the dispatch returns
+      # 204 and no run is ever created — a silent no-op that looks exactly like
+      # success. cloud-u-containers hit the same wall dispatching this repo and
+      # solved it with CLOUD_INFRA_DISPATCH_TOKEN; that secret is reused here.
+      #
+      # And the dispatch is VERIFIED, not assumed. A re-ship that reports
+      # success while nothing was queued would recreate the original defect one
+      # layer up: a green run and a stale fleet.
+      - name: Re-ship drifted services
+        if: steps.reconcile.outputs.rc == '1' && steps.select.outputs.services != '' && (github.event.inputs.apply || 'true') == 'true'
+        env:
+          DISPATCH_TOKEN: ${{ secrets.CLOUD_INFRA_DISPATCH_TOKEN }}
+          SERVICES: ${{ steps.select.outputs.services }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DISPATCH_TOKEN:-}" ]; then
+            echo "::error::CLOUD_INFRA_DISPATCH_TOKEN is not set in this repository. GITHUB_TOKEN cannot start a workflow run (GitHub suppresses it to prevent recursion), so there is no fallback that would actually ship. These services are drifted and NOT being re-shipped: $SERVICES"
+            exit 1
+          fi
+
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          before="$(curl -sS -H "Authorization: Bearer $DISPATCH_TOKEN" \
+                      "$api/actions/workflows/ship.yml/runs?per_page=1" \
+                    | jq -r '.workflow_runs[0].id // 0')"
+
+          # One dispatch for every drifted service: ship.yml's detect maps each
+          # service dir to its own VM, so the vm input stays 'all' and the
+          # matrix comes out right without one dispatch per VM.
+          code="$(curl -sS -o /tmp/dispatch.out -w '%{http_code}' \
+            -X POST -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$api/actions/workflows/ship.yml/dispatches" \
+            -d "$(jq -nc --arg s "$SERVICES" '{ref:"main",inputs:{services:$s,vm:"all"}}')")"
+          echo "dispatch HTTP $code"
+          [ "$code" = "204" ] || { echo "::error::ship.yml dispatch refused (HTTP $code)"; cat /tmp/dispatch.out; exit 1; }
+
+          # VERIFY. 204 means "accepted", not "a run exists".
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            after="$(curl -sS -H "Authorization: Bearer $DISPATCH_TOKEN" \
+                       "$api/actions/workflows/ship.yml/runs?per_page=1" \
+                     | jq -r '.workflow_runs[0].id // 0')"
+            if [ "$after" != "$before" ]; then
+              echo "re-ship queued as Ship run $after for: $SERVICES"
+              echo "Re-ship queued as [Ship run $after](https://github.com/${GITHUB_REPOSITORY}/actions/runs/$after)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::dispatch returned 204 but no new Ship run appeared within 60s. The drifted services are still NOT on the fleet: $SERVICES"
+          exit 1
+
+      # Findings that exist but were not re-shipped still have to reach a human.
+      # A reconcile that quietly tolerates what it chose not to fix is back to
+      # being a green tick nobody reads.
+      - name: Report what was left behind
+        if: always() && steps.reconcile.outputs.rc == '1'
+        run: |
+          set -eu
+          held="$(awk -F'\t' '$3 != "drift"' findings.tsv || true)"
+          [ -n "$held" ] || exit 0
+          echo "::warning::reconcile found state it does not auto-repair (see 9_others/ship-reconcile.json for why):"
+          printf '%s\n' "$held" | sed 's/^/  /'
