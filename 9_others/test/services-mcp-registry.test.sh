@@ -118,9 +118,78 @@ for handler in registry.ts meta.ts; do
     fi
 done
 
+
+# ── The peer-map symlinks are dependency edges, not broken links ────────
+#
+# a_solutions/*/src/build-*.json are relative symlinks to
+# 1_cloud-configs/dist/build-*.json. There are 671 of them and ALL of them
+# dangle in a standalone cloud-u-containers checkout, because the path resolves
+# only when the repo sits at a_solutions/ inside cloud-infra — which is exactly
+# how CI checks it out and how .gitmodules (lines 33-43) says the split was
+# designed.
+#
+# That dangle looks like a bug and repointing it would be a real one. ship.yml
+# reverse-walks these links with `readlink -f` to map a regenerated dist file
+# back to the services that consume it; a link that no longer resolves to
+# 1_cloud-configs/dist stops being found, and its service silently stops being
+# rebuilt when its own peer map changes. A no-ship that reports success is the
+# #371 failure mode, and it would have been introduced by "fixing" the link.
+#
+# So the assertion is that the convention HOLDS, not that the link resolves here.
+# Content is never read through this path: the loaders probe /app first and
+# peer-map.ts derives its development candidate from the container ROOT, one
+# level above src/. Nothing dereferences src/build-*.json for content, which is
+# why #378's fallback is unaffected by any of this and stays exercisable.
+
+echo "── peer-map symlink convention ──"
+
+PEER_LINKS_DIR="$ROOT/a_solutions"
+mismatched=""
+link_count=0
+while IFS= read -r link; do
+    # A heredoc fed by a find that matched nothing still delivers one empty
+    # line. Counting it would make "no links found" look like one healthy link,
+    # which is the shape of every fail-open in this pipeline.
+    [ -n "$link" ] || continue
+    link_count=$((link_count + 1))
+    target="$(readlink "$link")"
+    case "$target" in
+        ../../../1_cloud-configs/dist/build-*.json) ;;
+        *) mismatched="$mismatched
+  $link -> $target" ;;
+    esac
+done <<INNER
+$(find -H "$PEER_LINKS_DIR" -mindepth 3 -maxdepth 3 -type l -path '*/src/build-*.json' 2>/dev/null)
+INNER
+
+if [ "$link_count" -eq 0 ]; then
+    echo "::error::found no */src/build-*.json symlinks under $PEER_LINKS_DIR. They are the dependency edges ship.yml reverse-walks to decide what to rebuild; zero of them means this guard is measuring nothing."
+    failed=$((failed + 1))
+elif [ -n "$mismatched" ]; then
+    echo "$mismatched"
+    echo "::error::a service's src/build-*.json no longer points at ../../../1_cloud-configs/dist/. ship.yml reverse-walks these with readlink -f to map a regenerated config back to its consumers; a repointed link drops the service from change detection and it stops shipping without reporting anything."
+    failed=$((failed + 1))
+else
+    echo "  ok — all $link_count src/build-*.json links point into 1_cloud-configs/dist"
+fi
+
+# The projection and the folder lookup must both read the declaration, not a
+# category→prefix table. That table was pre-rename and made getDriftReport()
+# report 69 of 76 services as missing from disk.
+prefix_table="$(grep -rn 'CATEGORY_PREFIX\|PREFIX_TO_CATEGORY' \
+    "$ROOT/a_solutions/infra-api_c3-infra-api/src/code/shared/libs/config.ts" \
+    "$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/src/code/tools/a-knowledge/specs.ts" 2>/dev/null || true)"
+if [ -n "$prefix_table" ]; then
+    echo "$prefix_table"
+    echo "::error::a category→prefix table is back. The folder is declared at services[*].folder for every service; rebuilding it from a prefix table is what made the drift report call 69 of 76 services missing."
+    failed=$((failed + 1))
+else
+    echo "  ok — folder and category come from the declaration, not a prefix table"
+fi
+
 if [ "$failed" -ne 0 ]; then
     echo "::error::$failed registry self-check(s) failed"
     exit 1
 fi
 
-echo "cloud-services-mcp registry self-checks and projection single-sourcing: all passed"
+echo "cloud-services-mcp registry self-checks, projection single-sourcing and peer-map symlink convention: all passed"
