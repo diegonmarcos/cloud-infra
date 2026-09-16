@@ -80,8 +80,7 @@
       "status": "run"
     },
     "test_fetch_vault_action.sh": {
-      "status": "quarantine",
-      "reason": "X2-F4 (#368): ship-reports.yml invokes cloud-builder but never calls ./.github/actions/fetch-vault, so cloud-builder's compose mounts a vault-keys-docker.envfile that was never generated. Every other workflow wires it. Pure source fact, no environment involved."
+      "status": "run"
     },
     "test_gateway_routes_goose.sh": {
       "status": "quarantine",
@@ -141,7 +140,7 @@
     },
     "test_ship_workflows_dual_trigger.sh": {
       "status": "quarantine",
-      "reason": "X2-F10 (#368): 22 pass, 13 fail. ship-wrangler.yml has no 'on: workflow_run:', no if-gate on workflow_run.conclusion, and no dependency on Ship -> gen-configs, so declaration changes never cascade to it. Reads only workflow sources."
+      "reason": "X2-F10 (#372, D3): PARTIALLY FIXED, deliberately still red. ship-wrangler.yml was a REAL cascade gap and is fixed: it now has the workflow_run trigger on 'Ship -> gen-configs (cloud-data)', the if-gate on workflow_run.conclusion, and 1_cloud-configs/dist/build-*.json in its push paths. Evidence it was real: infra-cloud_cloudflare-worker/src/build-cloudflare-worker.json is a symlink to ../../../1_cloud-configs/dist/build-cloudflare-worker.json, so a regenerated config shipped everywhere else and never reached the worker. STILL RED for ship-cgc-db-seed.yml, ship-reconcile.yml and ship-reports.yml, and that needs an OWNER'S DECISION rather than a patch: the tester applies a blanket 'every ship*.yml must cascade off gen-configs' rule, and none of those three references 1_cloud-configs/dist or gen-configs at all (comment-stripped count = 0 for each). ship-reconcile dispatches ship.yml for drifted services, and ship.yml already cascades, so cascading reconcile too looks redundant by design. ship-cgc-db-seed.yml belongs to ticket #352's owner. I did not narrow the tester to make it green: if those three are genuinely out of scope the RULE should become data-driven (cascade required only for config consumers), and that is a decision for whoever owns the ship topology."
     },
     "test_step_docker_isolated_config.sh": {
       "status": "run"
