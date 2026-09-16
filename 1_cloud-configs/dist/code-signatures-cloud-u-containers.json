@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2779,
+    "files": 2787,
     "by_lang": {
       "nix": 147,
-      "ts": 1100,
+      "ts": 1108,
       "sh": 122,
       "py": 850,
       "js": 26,
@@ -17,17 +17,17 @@
     },
     "by_role": {
       "nix-module": 9,
-      "module": 667,
+      "module": 672,
       "shell": 114,
       "python": 845,
       "flake": 70,
       "compose": 68,
       "entrypoint": 48,
-      "mcp-tool": 102,
+      "file": 270,
+      "mcp-tool": 103,
       "workflow-dag": 2,
       "script": 4,
       "rust-module": 529,
-      "file": 268,
       "hook": 53
     }
   },
@@ -1007,7 +1007,8 @@
       "role": "module",
       "exports": [],
       "imports": [
-        "node:assert"
+        "node:assert",
+        "./secrets-status.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -1211,6 +1212,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "isSolutionTreeMissing",
         "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
@@ -1230,6 +1232,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "isSolutionTreeMissing()",
         "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
@@ -1763,6 +1766,7 @@
       "exports": [
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
+        "getSolutionRoots",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -1789,8 +1793,7 @@
         "SOPS_AGE_KEY_FILE",
         "AUTHELIA_TOKEN_PATH",
         "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR"
+        "C3_API_PUBLIC"
       ],
       "imports": [
         "fs",
@@ -1806,6 +1809,7 @@
         "resolveOwnBuildJsonPath()",
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
+        "getSolutionRoots()",
         "syncRepos(force = false)"
       ]
     },
@@ -1900,6 +1904,19 @@
         "zod"
       ],
       "symbols": []
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/secrets-status.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "describeSecretsStatus",
+        "SecretsProbe"
+      ],
+      "imports": [],
+      "symbols": [
+        "describeSecretsStatus(probe: SecretsProbe)"
+      ]
     },
     {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/security.ts",
@@ -2664,8 +2681,8 @@
       ],
       "imports": [
         "fs",
-        "path",
-        "./types.js"
+        "./types.js",
+        "./peer-map.js"
       ],
       "symbols": [
         "pickPort(ports: Record<string, number> | undefined)",
@@ -2687,6 +2704,38 @@
       ],
       "symbols": [
         "class ServiceRegistry"
+      ]
+    },
+    {
+      "path": "infra-api_c3-services-api/src/code/registry/peer-map.selfcheck.mts",
+      "lang": "ts",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:assert/strict"
+      ],
+      "symbols": [
+        "candidatesFor(buildJsonContents: string | null)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-services-api/src/code/registry/peer-map.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "peerMapCandidates",
+        "describeCandidates"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "peerMapCandidates()",
+        "describeCandidates(candidates: string[])"
       ]
     },
     {
@@ -2717,7 +2766,7 @@
       ],
       "imports": [
         "node:fs",
-        "node:path"
+        "./peer-map.js"
       ],
       "symbols": [
         "pickAppPort(ports: Record<string, number> | undefined)",
@@ -3204,7 +3253,8 @@
         "../../shared/libs/ssh.js",
         "../../shared/libs/config.js",
         "../../shared/libs/paths.js",
-        "../../shared/libs/audit.js"
+        "../../shared/libs/audit.js",
+        "../../shared/libs/secrets-status.js"
       ],
       "symbols": [
         "validatePath(path: string)",
@@ -3603,7 +3653,8 @@
       "role": "module",
       "exports": [],
       "imports": [
-        "node:assert"
+        "node:assert",
+        "./secrets-status.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -3807,6 +3858,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "isSolutionTreeMissing",
         "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
@@ -3826,6 +3878,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "isSolutionTreeMissing()",
         "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
@@ -4359,6 +4412,7 @@
       "exports": [
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
+        "getSolutionRoots",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -4385,8 +4439,7 @@
         "SOPS_AGE_KEY_FILE",
         "AUTHELIA_TOKEN_PATH",
         "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR"
+        "C3_API_PUBLIC"
       ],
       "imports": [
         "fs",
@@ -4402,6 +4455,7 @@
         "resolveOwnBuildJsonPath()",
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
+        "getSolutionRoots()",
         "syncRepos(force = false)"
       ]
     },
@@ -4496,6 +4550,19 @@
         "zod"
       ],
       "symbols": []
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/secrets-status.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "describeSecretsStatus",
+        "SecretsProbe"
+      ],
+      "imports": [],
+      "symbols": [
+        "describeSecretsStatus(probe: SecretsProbe)"
+      ]
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/security.ts",
@@ -6052,8 +6119,8 @@
       ],
       "imports": [
         "fs",
-        "path",
-        "./types.js"
+        "./types.js",
+        "./peer-map.js"
       ],
       "symbols": [
         "pickPort(ports: Record<string, number> | undefined)",
@@ -6075,6 +6142,38 @@
       ],
       "symbols": [
         "class ServiceRegistry"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-services-mcp/src/code/registry/peer-map.selfcheck.mts",
+      "lang": "ts",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:assert/strict"
+      ],
+      "symbols": [
+        "candidatesFor(buildJsonContents: string | null)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-services-mcp/src/code/registry/peer-map.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "peerMapCandidates",
+        "describeCandidates"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "peerMapCandidates()",
+        "describeCandidates(candidates: string[])"
       ]
     },
     {
@@ -6105,7 +6204,7 @@
       ],
       "imports": [
         "node:fs",
-        "node:path"
+        "./peer-map.js"
       ],
       "symbols": [
         "pickAppPort(ports: Record<string, number> | undefined)",
@@ -16124,7 +16223,8 @@
       "role": "module",
       "exports": [],
       "imports": [
-        "node:assert"
+        "node:assert",
+        "./secrets-status.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -16328,6 +16428,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "isSolutionTreeMissing",
         "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
@@ -16347,6 +16448,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "isSolutionTreeMissing()",
         "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
@@ -16880,6 +16982,7 @@
       "exports": [
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
+        "getSolutionRoots",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -16906,8 +17009,7 @@
         "SOPS_AGE_KEY_FILE",
         "AUTHELIA_TOKEN_PATH",
         "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR"
+        "C3_API_PUBLIC"
       ],
       "imports": [
         "fs",
@@ -16923,6 +17025,7 @@
         "resolveOwnBuildJsonPath()",
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
+        "getSolutionRoots()",
         "syncRepos(force = false)"
       ]
     },
@@ -17017,6 +17120,19 @@
         "zod"
       ],
       "symbols": []
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/secrets-status.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "describeSecretsStatus",
+        "SecretsProbe"
+      ],
+      "imports": [],
+      "symbols": [
+        "describeSecretsStatus(probe: SecretsProbe)"
+      ]
     },
     {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/security.ts",
@@ -17322,7 +17438,8 @@
       "role": "mcp-tool",
       "exports": [],
       "imports": [
-        "node:assert"
+        "node:assert",
+        "./secrets-status.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -17526,6 +17643,7 @@
         "getServiceFolder",
         "composeCd",
         "getServiceDir",
+        "isSolutionTreeMissing",
         "serviceContainerNames",
         "getVmSshAlias",
         "resolveVmId",
@@ -17545,6 +17663,7 @@
         "getServiceFolder(name: string)",
         "composeCd(remotePath: string)",
         "getServiceDir(name: string)",
+        "isSolutionTreeMissing()",
         "serviceContainerNames(svc: unknown, serviceName: string)",
         "buildAliasMap()",
         "getVmSshAlias(vmId: string)",
@@ -18078,6 +18197,7 @@
       "exports": [
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
+        "getSolutionRoots",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -18104,8 +18224,7 @@
         "SOPS_AGE_KEY_FILE",
         "AUTHELIA_TOKEN_PATH",
         "C3_API_MESH",
-        "C3_API_PUBLIC",
-        "FRONT_DIR"
+        "C3_API_PUBLIC"
       ],
       "imports": [
         "fs",
@@ -18121,6 +18240,7 @@
         "resolveOwnBuildJsonPath()",
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
+        "getSolutionRoots()",
         "syncRepos(force = false)"
       ]
     },
@@ -18215,6 +18335,19 @@
         "zod"
       ],
       "symbols": []
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/secrets-status.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "describeSecretsStatus",
+        "SecretsProbe"
+      ],
+      "imports": [],
+      "symbols": [
+        "describeSecretsStatus(probe: SecretsProbe)"
+      ]
     },
     {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/security.ts",
