@@ -160,9 +160,42 @@ GHA workflow YAML definitions. Deployed to `.github/workflows/`.
 | `ship-ci-image.yml` | Push to `9_others/src/cloud-builder/` | Rebuild cloud-builder Docker image |
 | `ship-gen-configs.yml` | Push to config sources | Regenerate cloud-data configs |
 | `ship-ghcr-images.yml` | Manual | Build + push all Docker images to GHCR |
-| `ship-home-manager.yml` | Push to `b_infra/` | Deploy HM to VMs |
+| `ship-home-manager.yml` | Push to `b_infra/` | Deploy HM to VMs — **requires the deploy-authorization marker** (see below) |
 | `ship-terraform.yml` | Push to terraform sources | Terraform apply |
 | `health.yml` | Cron + manual | Consolidated health check |
+
+### b_infra deploy gate (#414)
+
+**A change under `b_infra/**` deploys home-manager to ALL FOUR VMs — the
+containers on oci-apps get recreated. A commit that does not explicitly
+authorise the deploy must never trigger it.**
+
+Before `ship-home-manager.yml` will ship anything to any VM, the Gate step
+runs `cloud-ship-b-infra-deploy-authorization.sh` (`1_cicd/src/scripts/`) and
+refuses (fail-closed, the job goes red) unless consent is proven by trigger:
+
+| Trigger | Required consent |
+|---------|------------------|
+| `push` to `b_infra/**` | every commit in the push that touches `b_infra/**` must contain the marker `[deploy-fleet]` in its message |
+| `workflow_run` (gen-configs regen) | the upstream commit that triggered gen-configs must contain `[deploy-fleet]` when that commit touched `b_infra/**` |
+| `workflow_dispatch` (manual) | the `confirm_fleet_deploy` input must be set to `true` |
+
+The marker value is declared once in the workflow as `B_INFRA_DEPLOY_MARKER`
+and is the single source of truth; it is deliberately rare and
+self-describing so it cannot be typed by accident and can be grepped for in
+one step.
+
+To authorise a b_infra deploy, include `[deploy-fleet]` in the commit message:
+
+```
+fix(watchdog): scope the prunes #414 [deploy-fleet]
+```
+
+A b_infra change committed WITHOUT the marker is refused (no deploy, red
+run), never silently skipped — a refusal fails the job so a no-deploy run
+can never be mistaken for a successful one. A manual deploy requires
+`confirm_fleet_deploy=true`, which is the same consent expressed as an input
+rather than a commit message.
 
 ---
 
