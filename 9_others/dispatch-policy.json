@@ -12,9 +12,7 @@
     "Enforced by 9_others/test/test_dispatch_credential_scope.sh, which reads THIS file.",
     "Never extend banned_for_dispatch by editing the tester — edit this list."
   ],
-
   "approved_secret": "CLOUD_INFRA_DISPATCH_TOKEN",
-
   "_approved_secret_comment": [
     "One purpose-named secret, one credential, set on every repo that dispatches.",
     "The NAME did not change in the #149 migration — only the VALUE behind it, from a",
@@ -23,7 +21,6 @@
     "the workflows already read this name, so rotating the value is a GitHub-UI-only",
     "step with no code change and no window where dispatch is broken."
   ],
-
   "banned_for_dispatch": [
     "CGC_GHCR_PAT",
     "GH_PAT",
@@ -32,7 +29,6 @@
     "ORG_TOKEN",
     "PERSONAL_ACCESS_TOKEN"
   ],
-
   "_banned_comment": [
     "Universal / general-purpose credentials that must never appear in a dispatch binding.",
     "CGC_GHCR_PAT is the live one and the reason this list exists: commit 329e41fec added",
@@ -45,11 +41,93 @@
     "ghcr.io package reads (read:packages), which genuinely requires a classic PAT.",
     "This list is about the DISPATCH path only."
   ],
-
+  "scan": {
+    "_comment": [
+      "WHAT THE GUARD IS ALLOWED TO SEE. Before #20/L4 this was a hardcoded list of three",
+      "directories scanned at -maxdepth 1 for '*.yml' ONLY. A `curl .../dispatches` or a",
+      "`gh workflow run` written inside a .sh was therefore invisible: the banned universal",
+      "PAT could come back through a shell script and Phase 50 would stay GREEN. A guard",
+      "that cannot see the file cannot fail on it.",
+      "",
+      "So the scan scope is DATA now, like everything else in this file. Three knobs:",
+      "  file_extensions   — which files can even be read",
+      "  exclude_dirs      — directory basenames pruned anywhere in the tree",
+      "  dispatch_markers  — what makes a file a DISPATCHER, i.e. in scope at all",
+      "",
+      "Roots are not listed here on purpose. The scan walks the whole repository plus every",
+      "dispatch_consumers[].checkout_paths tree, recursively. A hardcoded root list is the",
+      "same blind spot one level up: a dispatch moved into a new directory would silently",
+      "stop being checked, and nothing would say so."
+    ],
+    "file_extensions": [
+      "yml",
+      "yaml",
+      "sh",
+      "bash",
+      "py",
+      "ts",
+      "js"
+    ],
+    "_file_extensions_comment": [
+      "Every file type present in this fleet that can hold an HTTP call or a gh invocation.",
+      "yml/yaml — GitHub Actions workflows and Dagu DAGs, the original scope.",
+      "sh/bash  — 459 shell scripts here; this is the gap L4 was raised for.",
+      "ts/js    — infra-api_c3-infra-api/src/code/api/routes/workflows.ts and",
+      "           infra-api_cloud-infra-mcp/src/code/mcp/tools/workflows.ts both dispatch",
+      "           workflows over the REST API from a Node service, so they are real",
+      "           dispatchers, not a hypothetical.",
+      "py       — only 4 files today and none dispatches, but python is the other language",
+      "           an ops one-liner gets written in, and including it costs one array entry.",
+      "",
+      "WHERE THIS STOPS, and why. Not covered: .nix (372 files — declares packages and",
+      "systemd units, never calls the GitHub API), .tf/.hcl (terraform has no dispatch",
+      "resource in use here; it provisions VMs), .md (documentation), Makefile (grepped for,",
+      "there are none in this repo). If any of those ever gains a dispatch, the fix is to add",
+      "the extension to THIS array — never to edit the tester."
+    ],
+    "exclude_dirs": [
+      ".git",
+      "node_modules",
+      "z_archive",
+      "test-legacy"
+    ],
+    "_exclude_dirs_comment": [
+      "Pruned by directory BASENAME, at any depth. z_archive and test-legacy hold retired",
+      "code that is never executed — a banned PAT in a file nothing runs is not a live",
+      "credential path, and failing on it would push the next person to delete history to",
+      "get green. .git and node_modules are not source."
+    ],
+    "dispatch_markers": [
+      "/dispatches",
+      "gh workflow run"
+    ],
+    "_dispatch_markers_comment": [
+      "Fixed strings (grep -F), matched anywhere in the file. A file is in scope only if it",
+      "SENDS a dispatch. Both forms that exist:",
+      "  /dispatches      — POST /repos/{o}/{r}/dispatches (repository_dispatch) and",
+      "                     POST /repos/{o}/{r}/actions/workflows/{id}/dispatches",
+      "                     (workflow_dispatch), whether via curl, gh api, or fetch().",
+      "  gh workflow run  — the gh CLI wrapper for workflow_dispatch, which contains no",
+      "                     '/dispatches' string at all and would otherwise be invisible.",
+      "",
+      "'repository_dispatch' and 'workflow_dispatch' are deliberately NOT markers. Those",
+      "strings appear in a workflow's `on:` block, which makes it a RECEIVER, not a sender.",
+      "Treating a receiver as a dispatcher would fail cgc-db-index.yml for binding",
+      "CGC_GHCR_PAT — which is the CORRECT credential there, for ghcr.io package reads. This",
+      "policy bans universal PATs on the DISPATCH path, not repo-wide.",
+      "",
+      "cloud-u-containers/.github/workflows/dispatch-cloud-infra.yml is the calibration case:",
+      "it is in scope (it POSTs /dispatches), it binds CLOUD_INFRA_DISPATCH_TOKEN and nothing",
+      "else, and it must stay PASSING. A guard that screams at the one place doing it right",
+      "gets switched off."
+    ]
+  },
   "required_permissions": {
     "token_type": "fine-grained personal access token",
     "resource_owner": "diegonmarcos",
-    "repository_access": ["diegonmarcos/cloud-infra"],
+    "repository_access": [
+      "diegonmarcos/cloud-infra"
+    ],
     "permissions": [
       {
         "name": "Contents",
@@ -87,13 +165,15 @@
       "'silent subset' shape this pipeline has been burned by before. Not taken."
     ]
   },
-
   "dispatch_consumers": [
     {
       "repo": "diegonmarcos/cloud-u-containers",
       "workflow": ".github/workflows/dispatch-cloud-infra.yml",
       "kind": "cross-repo",
-      "checkout_paths": ["a_solutions", "../cloud-u-containers"],
+      "checkout_paths": [
+        "a_solutions",
+        "../cloud-u-containers"
+      ],
       "_checkout_comment": "Where the tester looks for this repo's tree. 'a_solutions' is the path ship.yml already checks cloud-u-containers out to on the runner; '../cloud-u-containers' is the local sibling clone. The repo is PUBLIC, so plain GITHUB_TOKEN can check it out — no dispatch credential is needed to lint the dispatch credential. If NEITHER path resolves the tester FAILS rather than skipping: a cross-repo consumer that silently stops being checked is exactly the blind spot #149 is about.",
       "endpoint": "POST /repos/diegonmarcos/cloud-infra/dispatches",
       "needs": "Contents: Write on diegonmarcos/cloud-infra",
@@ -103,13 +183,14 @@
       "repo": "diegonmarcos/cloud-infra",
       "workflow": ".github/workflows/ship-reconcile.yml",
       "kind": "self-repo",
-      "checkout_paths": ["."],
+      "checkout_paths": [
+        "."
+      ],
       "endpoint": "POST /repos/diegonmarcos/cloud-infra/actions/workflows/ship.yml/dispatches",
       "needs": "Actions: Write (dispatch) + Actions: Read (verify) on diegonmarcos/cloud-infra",
       "why": "Re-queues a lost deploy (#354). GITHUB_TOKEN cannot do this at all: GitHub suppresses runs triggered by GITHUB_TOKEN to prevent recursion, so the dispatch returns 204 and no run is ever created — a silent no-op that looks exactly like success."
     }
   ],
-
   "_not_a_dispatch_consumer": [
     "1_cicd/src/scripts/cloud-ship-reconcile.sh registry_digests_real() probes",
     "CGC_GHCR_PAT -> GH_TOKEN -> anonymous and falls through QUIETLY when none work",
