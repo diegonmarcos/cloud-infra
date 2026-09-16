@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13440,
+    "files": 13442,
     "by_lang": {
       "sh": 218,
       "py": 43,
-      "kotlin": 9777,
+      "kotlin": 9779,
       "java": 711,
       "ts": 2625,
       "nix": 23,
@@ -24,7 +24,7 @@
       "module": 1377,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9775,
+      "kotlin": 9777,
       "python": 24,
       "file": 1173,
       "hook": 89,
@@ -101728,6 +101728,9 @@
         "MessageLoadingScaffold(onBack: ()",
         "MessageTopBar( active: ActiveMessage?, onBack: ()",
         "receivedTextToolSource(email: Email)",
+        "copyVerificationCodeOrSayNone(clipboard: ClipboardManager, context: Context, email: Email?)",
+        "verificationCodeFromMessage(email: Email)",
+        "ReadingGroupSeparator()",
         "MessageActions( active: ActiveMessage, onBack: ()",
         "MessageHeadersSheet( state: HeadersState, onDismiss: ()",
         "AttachedMessageSheet( state: AttachedMessageState, onDismiss: ()",
@@ -101755,10 +101758,7 @@
         "InviteRsvp(response: InviteResponse, onRespond: (String)",
         "addToCalendar(context: Context, event: ParsedEvent)",
         "formatEventWhen(event: ParsedEvent)",
-        "formatSize(bytes: Long)",
-        "prefs(context: Context)",
-        "useSoftwareLayer(context: Context)",
-        "isRiskyOldGpu(context: Context, p: android.content.SharedPreferences)"
+        "formatSize(bytes: Long)"
       ]
     },
     {
@@ -116592,6 +116592,33 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/VerificationCode.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "extractVerificationCode"
+      ],
+      "imports": [],
+      "symbols": [
+        "extractVerificationCode(subject: String?, bodyText: String, html: String? = null)",
+        "normaliseText(text: String)",
+        "collectTextCandidates( text: String, out: MutableList<VerificationCodeCandidate>, inSubject: Boolean, )",
+        "collectMarkupCandidates(html: String, out: MutableList<VerificationCodeCandidate>)",
+        "elementText(inner: String)",
+        "normaliseCodeCandidate(raw: String)",
+        "baseScore(code: String)",
+        "disqualified(text: String, start: Int, end: Int)",
+        "phraseBoost(text: String, start: Int, end: Int)",
+        "introducerBonus(text: String, start: Int)",
+        "containsAny(window: String, words: List<String>)",
+        "strongPhraseDirectlyBefore(text: String, start: Int)",
+        "preceding(text: String, start: Int, count: Int)",
+        "following(text: String, end: Int, count: Int)",
+        "isolatedOnItsLine(text: String, start: Int, raw: String)",
+        "class VerificationCodeCandidate"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/unsubscribe/UnsubscribeClient.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -124032,6 +124059,27 @@
       ],
       "symbols": [
         "class SafeFileNameTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/VerificationCodeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VerificationCodeTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "run(subject: String?, body: String, html: String? = null)",
+        "positiveCasesReturnTheCode()",
+        "negativeCasesReturnNull()",
+        "subjectDistractorDoesNotOverruleBodyEvidence()",
+        "class VerificationCodeTest",
+        "class Case"
       ]
     },
     {
