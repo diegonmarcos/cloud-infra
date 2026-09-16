@@ -240,6 +240,16 @@ jobs:
       # bounded so repairing drift cannot itself wedge the lock (#179).
       - name: Phase 48 — reconcile names deployed-behind services and re-ships them bounded
         run: bash 9_others/test/test_ship_reconcile.sh
+      # Phase 49 — #357. Phase 48 proves the RECONCILE compares digests
+      # correctly; this proves the `status` verb does, and it did not. It read
+      # RepoDigests off the CONTAINER object, where that key does not exist,
+      # and jq's `// ""` turned the impossible read into an empty string with
+      # exit 0 — so the in-sync branch was unreachable and every container
+      # running an image we push to GHCR came back DRIFT. Asserts a true
+      # verdict in BOTH directions plus an honest UNDECIDABLE, because a
+      # checker that can only ever say one word is not a checker.
+      - name: Phase 49 — status gives a true digest verdict, or says it cannot
+        run: bash 9_others/test/test_ship_status_digest.sh
 
       # git clone, not actions/checkout: checkout refuses a `path:` outside
       # $GITHUB_WORKSPACE, and both scripts locate each other as SIBLINGS
