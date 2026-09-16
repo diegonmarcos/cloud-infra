@@ -37,6 +37,13 @@
     "cgc-db-ssh-retry.test.sh": {
       "status": "run"
     },
+    "cgc-knowledge-repo-root-resolvable.test.sh": {
+      "status": "quarantine",
+      "reason": "#402: RED on the real defect it was written for, and the fix is not in this repository. cloud-cgc-pub-mcp resolves repository content from getRepoRoot() = dirname($CONFIG_PATH) = .runtime.data_path = /data, which in production is the empty ./data deploy bind — so knowledge_docs overview/readme, knowledge.spec and knowledge.configs all answer \"not found\" while the content sits unread in the octocode_repos volume at .runtime.git_root (/repos/cloud-u-containers, /repos/cloud-infra). 13 of 14 cases pass; the one failure lists all 11 offending lines across context.ts, docs.ts, specs.ts and configs.ts. The resolver lives in diegonmarcos/cloud-u-containers (user-ai_cloud-cgc-pub-mcp/src/code) — move those four modules onto process.env.GIT_ROOT the way tools/b-code-graph-context/codegraph.ts already does, and throw on a missing root instead of returning prose. This entry then REVIVES and must be flipped to \"run\"."
+    },
+    "gh-api-jobs-every-step.test.sh": {
+      "status": "run"
+    },
     "ghcr-artifacts-compose-rewrite.test.sh": {
       "status": "run"
     },
