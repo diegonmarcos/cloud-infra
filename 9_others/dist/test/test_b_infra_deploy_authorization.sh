@@ -93,7 +93,7 @@ cat > "$TMP/workflow_run-marker.json" <<'EOF'
 EOF
 
 echo "Gate script verdicts (marker: $MARKER)"
-export GATE MARKER TMP
+export GATE MARKER TMP B_INFRA_DEPLOY_MARKER="$MARKER"
 
 check "push, b_infra, no marker → REFUSE(1)" 1 \
     bash "$GATE" push "$TMP/push-no-marker.json"
