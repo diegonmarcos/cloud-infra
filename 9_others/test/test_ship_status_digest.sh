@@ -31,6 +31,23 @@ STEP="${STATUS_STEP_OVERRIDE:-$REPO_ROOT/1_cicd/src/scripts/cloud-ship-container
 
 [ -f "$STEP" ] || { echo "FAIL: $STEP missing"; exit 1; }
 
+# declared_container_names() comes from the ENGINE, not the step: the engine
+# defines it before it sources any step file, and both steps that read a
+# service's container list go through it (#20/L3 — the inline
+# `jq '.containers[]?.container_name' 2>/dev/null` it replaced returned a
+# SILENTLY TRUNCATED list on a malformed entry). It is lifted in verbatim
+# rather than stubbed, so this harness exercises the same derivation
+# production does; a stub here would let the step drift away from the engine
+# without any test noticing.
+ENGINE="$(dirname "$STEP")/cloud-ship-container-engine.sh"
+[ -f "$ENGINE" ] || { echo "FAIL: $ENGINE missing"; exit 1; }
+eval "$(sed -n '/^declared_container_names() {/,/^}/p' "$ENGINE")"
+command -v declared_container_names >/dev/null 2>&1 \
+  || { echo "FAIL: declared_container_names() not found in $ENGINE"; exit 1; }
+# The engine provides this too; the function reports through it on the refusal
+# path. Defined at top level so the run_status subshell inherits both.
+log_error() { echo "ERROR: $*"; }
+
 pass=0; fail=0
 ck() {
   if [ "$2" = "$3" ]; then pass=$((pass+1)); echo "  ok   $1"
