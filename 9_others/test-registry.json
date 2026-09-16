@@ -1,0 +1,151 @@
+{
+  "_doc": "Every tester under 9_others/test/ that no workflow names by filename. lint-pipeline.yml registers its testers as hand-written YAML steps, one per tester; a tester added without that step is committed, looks like coverage in a directory listing, and is executed by nothing. 43 of the 101 testers were in that state on 2026-09-16 (ticket #368). This file is the second registry, and unlike the YAML it is data: 9_others/test/run-registered-testers.sh executes what is listed here, and 9_others/test/test_every_tester_is_registered.sh fails when a tester appears under 9_others/test/ that is named neither by a workflow nor by this file. Add new testers HERE, never as another YAML step.",
+  "_doc_status": "run = executed, failure is fatal. quarantine = executed, and asserted to STILL FAIL: if a quarantined tester starts passing, run-registered-testers.sh goes RED and tells you to flip it to run. A quarantine can therefore never rot into a silent skip, and there is no status that swallows an exit code — that is deliberate, it is the defect ticket #368 exists to undo.",
+  "_doc_why": "Eight of the ten quarantined entries below name a production incident in their own header, with the GitHub run id. They were written as the fix for that incident and then never connected to a runner, so the incident they guard has been unguarded ever since. A red entry here is a real defect with an owner to find, not a tester to silence.",
+  "testers": {
+    "cgc-db-gate.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-llm-wiring.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-log-digest.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-manifest-travels.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-octocode-pin.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-package.test.sh": {
+      "status": "quarantine",
+      "reason": "X2-F1 (#368): gate_repo_push case G fails — 'first publish of a PUBLIC repo's package needs GITHUB_TOKEN in env'. Still fails with GITHUB_TOKEN populated, so it is the tester's stub env or the gate's precedence, not a missing secret. 32 of 33 cases pass."
+    },
+    "cgc-db-poll-liveness.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-restore-private-guard.test.sh": {
+      "status": "run"
+    },
+    "cgc-db-ssh-retry.test.sh": {
+      "status": "run"
+    },
+    "ghcr-artifacts-compose-rewrite.test.sh": {
+      "status": "run"
+    },
+    "ghcr-artifacts-runner-label.test.sh": {
+      "status": "run"
+    },
+    "ghcr-artifacts-step-docker-sha-digest.test.sh": {
+      "status": "run"
+    },
+    "pre-commit-gitignore-gate.test.sh": {
+      "status": "run"
+    },
+    "test_binaries_tag_pushable.sh": {
+      "status": "run"
+    },
+    "test_build_schema_api_mcp.sh": {
+      "status": "quarantine",
+      "reason": "X2-F2 (#368): checks 3/4/8 shell out to validate-build-schema.ts, which imports 'ajv'. lint-pipeline.yml has no setup-node and no npm ci, so this cannot pass on the runner as the pipeline stands. Needs a deps step before it can be promoted."
+    },
+    "test_c3_services_api_registry.sh": {
+      "status": "quarantine",
+      "reason": "X2-F3 (#368): two real failures. (5) stdio-only MCP cloud-vault-mcp is in the registry with has_mcp=true, expected false. (6) shares the ajv dependency of X2-F2. Checks 1-4 pass."
+    },
+    "test_compose_port_eviction.sh": {
+      "status": "run"
+    },
+    "test_derive_orphan_prune.sh": {
+      "status": "run"
+    },
+    "test_docker_compose_no_build.sh": {
+      "status": "run"
+    },
+    "test_docker_hash_covers_build_json.sh": {
+      "status": "run"
+    },
+    "test_docker_npm_baked_into_image.sh": {
+      "status": "quarantine",
+      "reason": "X2-F11 (#368): needs the unix repo (checked ~/git/cloud-infra-desktop and the II_Unix submodule) and finds neither. lint-pipeline.yml's init-submodules step includes only I_cloud, so this cannot resolve on the runner as the pipeline stands. Found by test_every_tester_is_registered.sh on its very first run — my own sweep had credited a prose mention in 9_others/src/ensure-deps.sh:125 as a reference."
+    },
+    "test_drive_routing.sh": {
+      "status": "run"
+    },
+    "test_fetch_vault_action.sh": {
+      "status": "quarantine",
+      "reason": "X2-F4 (#368): ship-reports.yml invokes cloud-builder but never calls ./.github/actions/fetch-vault, so cloud-builder's compose mounts a vault-keys-docker.envfile that was never generated. Every other workflow wires it. Pure source fact, no environment involved."
+    },
+    "test_gateway_routes_goose.sh": {
+      "status": "quarantine",
+      "reason": "X2-F5 (#368): a_solutions/user-ai_my-ai-api/src/code/gateway.mjs is 2059 bytes and contains zero occurrences of routeToGoose. Checks C/D/E/F all fail. Either the goose routing was removed, or the tester was written for a feature that never landed. Needs an owner's call, not a patch."
+    },
+    "test_generated_header_present.sh": {
+      "status": "run"
+    },
+    "test_git_nuke.sh": {
+      "status": "quarantine",
+      "reason": "X2-F6 (#368): case 4 (force-pushed origin) dies rc=128 building its own fixture — 'remote HEAD refers to nonexistent ref' then 'fatal: You have nothing to amend'. The fixture assumes a default branch name; this container's init.defaultBranch differs from the runner's. Fixture bug, environment-sensitive. Cases 1-3 pass."
+    },
+    "test_gitignore_synced.sh": {
+      "status": "quarantine",
+      "reason": "X2-F7 (#368): the tester points DIST at 1_cicd/dist/.gitignore (line 27). That path does not exist; the real generated file is 0_git/dist/.gitignore, and it IS tracked and current. The tester carries a stale path from the 2026-04 engine reorg — the tester is wrong, not the tree."
+    },
+    "test_goose_has_cgc.sh": {
+      "status": "run"
+    },
+    "test_goosed_server.sh": {
+      "status": "run"
+    },
+    "test_no_legacy_b_infra_home_manager.sh": {
+      "status": "run"
+    },
+    "test_precommit_allows_gha_workflow.sh": {
+      "status": "run"
+    },
+    "test_precommit_blocks_forced_add.sh": {
+      "status": "run"
+    },
+    "test_precommit_blocks_plaintext_secret.sh": {
+      "status": "run"
+    },
+    "test_redeploy_forces_pull.sh": {
+      "status": "run"
+    },
+    "test_repo_config_gen_engine_resolution.sh": {
+      "status": "run"
+    },
+    "test_service_header_present.sh": {
+      "status": "quarantine",
+      "reason": "X2-F12 (#368): a_solutions/user-comm_chat-mattermost/dist/code/arm64/Dockerfile is missing the 'GENERATED FILE — DO NOT EDIT' banner while its service sets build.headers_enforced. Every other stamped artifact passes. Note how this one surfaced: it exits 0 when a_solutions/ is absent, because its loops then iterate over nothing — it passed vacuously in my first sweep and only went red once the repo was actually there. That vacuity is a second defect in the same file (same shape as #363)."
+    },
+    "test_ship_cargo_cache.sh": {
+      "status": "run"
+    },
+    "test_ship_configs_push_failure.sh": {
+      "status": "quarantine",
+      "reason": "X2-F8 (#368): 'successful push must record .configs-hash' fails (7 of 8 cases pass). The denied-push half — the half the tester was written for — passes. Fixture-based, no a_solutions or network involved."
+    },
+    "test_ship_deploy_gate.sh": {
+      "status": "run"
+    },
+    "test_ship_detects_build_json.sh": {
+      "status": "quarantine",
+      "reason": "X2-F9 (#368): 0 of 4 cases pass. Neither 1_cicd/src/cicd/ship.yml nor .github/workflows/ship.yml includes a_solutions/*/build.json in its push path filter OR its detect pathspec. This is the exact defect of run 32952457089 (a build.json-only change shipped nothing, green) and it is live in the tree today. Highest-value finding here."
+    },
+    "test_ship_terraform_fetch_depth.sh": {
+      "status": "run"
+    },
+    "test_ship_workflows_dual_trigger.sh": {
+      "status": "quarantine",
+      "reason": "X2-F10 (#368): 22 pass, 13 fail. ship-wrangler.yml has no 'on: workflow_run:', no if-gate on workflow_run.conclusion, and no dependency on Ship -> gen-configs, so declaration changes never cascade to it. Reads only workflow sources."
+    },
+    "test_step_docker_isolated_config.sh": {
+      "status": "run"
+    },
+    "test_step_docker_root_docker_repair.sh": {
+      "status": "run"
+    }
+  }
+}
