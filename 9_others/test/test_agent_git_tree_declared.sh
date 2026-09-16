@@ -107,8 +107,10 @@ for bj in "${AGENTS[@]}"; do
 
     if [ "$declared" = "unset" ]; then
         if [ "$legacy_mount" -eq 1 ]; then
-            if [ "$legacy_pin" -eq 1 ]; then
-                pass "$svc: mounts the tree explicitly in compose.nix, external name pinned"
+            if grep -E "\"git_gh:[^\"]+:ro\"" "$compose" >/dev/null 2>&1; then
+                fail "$svc: compose.nix mounts git_gh with :ro — the shared tree is this agent's own working directory and must be read-write. Drop the :ro suffix."
+            elif [ "$legacy_pin" -eq 1 ]; then
+                pass "$svc: mounts the tree explicitly in compose.nix, read-write, external name pinned"
             else
                 fail "$svc: compose.nix mounts git_gh but never pins name = \"$VOLUME_NAME\" — compose will create a project-scoped EMPTY volume"
             fi
@@ -120,8 +122,19 @@ for bj in "${AGENTS[@]}"; do
 
     if [ "$declared" = "true" ]; then
         mount="$(jq -r '.agent.git_tree_mount // ""' "$bj")"
+        writable="$(jq -r '.agent.git_tree_writable // false' "$bj")"
+        # The tree is mounted at the container's own $HOME/git — it is the
+        # agent's WORKING DIRECTORY, not a reference copy. #416 shipped it
+        # read-only and the guard happily printed "(read-only)" as a pass, so
+        # an agent that could not edit, commit or push a single one of the six
+        # repositories looked fully provisioned. A guard that narrates the
+        # defect instead of failing on it is the defect.
+        if [ "$writable" != "true" ]; then
+            fail "$svc: agent.git_tree_writable is \"$writable\" — the shared tree mounts at $mount, which is this agent's own working directory. Read-only there is never right: set agent.git_tree_writable true."
+            continue
+        fi
         case "$mount" in
-            /*) pass "$svc: git_tree true, mount $mount$( [ "$(jq -r '.agent.git_tree_writable // false' "$bj")" = "true" ] && echo " (read-write)" || echo " (read-only)")" ;;
+            /*) pass "$svc: git_tree true, mount $mount (read-write)" ;;
             "") fail "$svc: agent.git_tree is true but agent.git_tree_mount is missing — the engine will throw at build time" ;;
             *)  fail "$svc: agent.git_tree_mount \"$mount\" is not an absolute path" ;;
         esac
