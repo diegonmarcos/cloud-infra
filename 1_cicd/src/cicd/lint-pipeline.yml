@@ -252,6 +252,18 @@ jobs:
       - name: Phase 50 — dispatch runs on a scoped credential, not a universal PAT
         run: bash 9_others/test/test_dispatch_credential_scope.sh
 
+
+      # Phase 51 — #358. Two Ship runs for the SAME image can be in flight from
+      # different commits; each is pinned to its own announced SHA and each
+      # overwrites `:latest`, so the one that FINISHES last wins regardless of
+      # which commit is newer. Agent V caught the pair live and in_progress
+      # (35043145083 new vs 35043096780 old). When the older lands second,
+      # `:latest` reverts to a tree without the newer fix and BOTH runs go
+      # green — a successful run that silently un-ships a fix. Serialising the
+      # publishers makes it rarer; only guarding the tag move makes it wrong to
+      # publish backwards, which is what this asserts.
+      - name: Phase 51 — :latest refuses to move backwards
+        run: bash 9_others/test/test_ship_latest_monotonic.sh
       # git clone, not actions/checkout: checkout refuses a `path:` outside
       # $GITHUB_WORKSPACE, and both scripts locate each other as SIBLINGS
       # ($REPO/../cloud-infra) — the same layout as a dev machine's ~/git.

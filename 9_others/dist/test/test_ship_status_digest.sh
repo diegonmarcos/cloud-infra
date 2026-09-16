@@ -70,12 +70,24 @@ REG_CURRENT="sha256:cc94f83cf3752770511a5a796cb995dbcfa81fc198d91435726e9e9ac4bb
 VM_STALE="sha256:23dc4f39dca0448da1b6885035f16a19c0292344d5cff9f86ee84d4171df1001"
 IMG_ID="sha256:35d13d3817b365f41634c94b0ed2adfdc4f7425e8f42593a7174e854b45440a7"
 OURS="ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-binaries:latest"
+OURS_DEFAULT="$OURS"   # the ref case 8 expects the resolver to be asked about
 
 mkdir -p "$WORK/dist" "$WORK/svc"
 echo "dist-payload" > "$WORK/dist/file"
 cat > "$WORK/svc/build.json" <<'JSON'
 { "containers": [ { "container_name": "cloud-cgc-pub-mcp" } ] }
 JSON
+
+# The injected desired-digest resolver. Emits REG_DIGESTS (empty = the
+# registry would not answer) and logs the arguments it was handed.
+cat > "$WORK/regdig" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\t%s\n' "$1" "${2:-}" >> "$REGDIG_CALLS"
+[ -n "${REG_DIGESTS:-}" ] || exit 0
+printf '%s\n' "$REG_DIGESTS"
+STUB
+chmod +x "$WORK/regdig"
+REGDIG_CALLS="$WORK/regdig-calls"; export REGDIG_CALLS
 
 # ── The harness: run step_status with both impure ops replaced ────────────
 # CTR_REPODIGESTS  — a RepoDigests key planted on the CONTAINER inspect. Real
@@ -116,18 +128,18 @@ run_status() {
       esac
     }
 
-    # The registry seam. `docker manifest inspect` is asked for JSON with
-    # .manifests[].digest; buildx is the second source the step consults.
-    docker() {
-      case "$1 ${2:-}" in
-        "manifest inspect")
-          [ -n "${REG_DIGESTS:-}" ] || return 1
-          printf '%s\n' "$REG_DIGESTS" | jq -R . | jq -s '{manifests: map({digest: .})}'
-          ;;
-        "buildx imagetools") return 1 ;;
-        *) return 1 ;;
-      esac
-    }
+    # The registry seam (#358). The step no longer shells out to `docker
+    # manifest inspect` / `docker buildx imagetools` itself — it asks
+    # cloud-ship-registry-digest.sh, which owns the credential choice and is
+    # shared with cloud-ship-reconcile.sh. So the seam that has to be injected
+    # here is that script, not `docker`.
+    #
+    # The stub records every (ref, vm) pair it is called with, because the
+    # whole point of #358 is WHICH credential answers: the digest must be
+    # resolved against the VM that runs the container, not against whatever
+    # docker login the caller happens to have. Case 8 asserts that.
+    REGISTRY_DIGEST_CMD="$WORK/regdig"
+    export REGISTRY_DIGEST_CMD
 
     . "$STEP"
     step_status
@@ -203,6 +215,27 @@ ck     "our image is probed exactly once" \
        "$(wc -l < "$WORK/img-inspect-calls" | tr -d ' ')" "1"
 ck_has  "and it is the IMAGE ID that is inspected, not the container name" \
        "$(cat "$WORK/img-inspect-calls")" "$IMG_ID"
+
+echo "── case 8: the digest is resolved AGAINST THE VM, not against the caller"
+# #358. Three of the fleet's packages are private (kg-store-binaries,
+# session-memory-binaries, cf-worker-http-to-wg-public-bridge-binaries); ghcr
+# issues no anonymous token for them and refuses this repo's GITHUB_TOKEN, so
+# every sweep called them `undecidable` while all three were in fact in-sync.
+# The credential that CAN read them is the one the VM already used to pull the
+# image. That only holds if the VM is actually passed down to the resolver, so
+# assert the argument rather than the outcome — an implementation that resolves
+# against the operator's own docker login produces an identical verdict here
+# and a wrong one on the fleet.
+: > "$WORK/regdig-calls"
+out="$(CTR_REPODIGESTS="" \
+       IMG_REPODIGESTS="[\"ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-binaries@$REG_CURRENT\"]" \
+       REG_DIGESTS="$REG_CURRENT" run_status)"
+ck     "the desired digest is asked for exactly once" \
+       "$(wc -l < "$WORK/regdig-calls" | tr -d ' ')" "1"
+ck     "and it is asked about the ref the container RUNS" \
+       "$(cut -f1 "$WORK/regdig-calls")" "$OURS_DEFAULT"
+ck     "and it is scoped to the VM that runs it (the pull credential lives there)" \
+       "$(cut -f2 "$WORK/regdig-calls")" "testvm"
 
 echo
 echo "passed: $pass  failed: $fail"
