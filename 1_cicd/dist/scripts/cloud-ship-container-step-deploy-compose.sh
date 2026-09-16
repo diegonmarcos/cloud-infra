@@ -188,7 +188,14 @@ step_compose() {
     # build.json, and lossless — `docker rm -f` drops only the container, named
     # volumes persist.
     EVICT_NAMED=""
-    _cnames="$(jq -r '.containers[]?.container_name // empty' "$SERVICE_DIR/build.json" 2>/dev/null | tr '\n' ' ')"
+    # declared_container_names (engine) fails loudly on a malformed containers{}
+    # instead of returning a silently truncated list — see #20/L3 there. A short
+    # list here is not cosmetic: the containers it omits are the ones that never
+    # get evicted, so `up` finds them still holding their names.
+    # Two statements, not a pipeline: the function's exit status is what must be
+    # checked, and in `f | tr` the shell reports tr's status, not f's.
+    _cnames="$(declared_container_names "$SERVICE_DIR/build.json")" || return 1
+    _cnames="$(printf '%s' "$_cnames" | tr '\n' ' ')"
     [ -n "$_cnames" ] && EVICT_NAMED="for c in $_cnames; do docker rm -f \"\$c\" 2>/dev/null || true; done"
 
     # EVICT_NAMED only knows the names we declare NOW, so it cannot see the one

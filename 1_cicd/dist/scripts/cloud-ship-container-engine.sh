@@ -292,6 +292,60 @@ log() { printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$1"; }
 log_warn() { printf "\033[0;33m[%s] WARNING: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 log_error() { printf "\033[0;31m[%s] ERROR: %s\033[0m\n" "$(date '+%H:%M:%S')" "$1"; }
 
+# ── Declared container names, or a hard failure ───────────────────────
+# The ONE reader of build.json containers{}.container_name. Both the status
+# step and the compose deploy step go through here; neither may re-derive the
+# list with its own jq expression.
+#
+# Debt #20/L3 — why this is a function and not an inline jq call. Both steps
+# used to run, verbatim:
+#
+#     _cnames="$(jq -r '.containers[]?.container_name // empty' build.json 2>/dev/null)"
+#
+# containers{} is a MAP, and `.containers[]?` iterates its VALUES. The `?` only
+# suppresses "cannot iterate" — it does NOT make the body total. So a value that
+# is not an object (infra-db_postlite carried a "_doc_*" note string in the map)
+# makes `.container_name` abort the whole program mid-stream. jq then:
+#   • has already written the names it emitted BEFORE the bad entry to stdout,
+#   • writes the reason to stderr — which `2>/dev/null` deleted,
+#   • exits 5 — which `$(...)` on the right-hand side of an assignment discards,
+#     so even `set -e` never saw it.
+# The caller received a SHORT list and a success status. STATUS and, worse,
+# DEPLOY both operated on 3 of postlite's 8 running containers and reported
+# green. That is a silent wrong answer, not a crash.
+#
+# A deploy that silently covers part of a service is worse than one that
+# refuses, so a malformed entry is now NAMED and FATAL rather than filtered:
+# filtering would let the typo live forever, and the entry the engine skips is
+# exactly the container nobody notices is unmanaged. jq validates the whole map
+# before emitting anything, so a failure yields no partial list to act on.
+declared_container_names() {
+    _dcn_file="$1"
+    if [ ! -f "$_dcn_file" ]; then
+        log_error "declared_container_names: no such build.json: $_dcn_file"
+        return 1
+    fi
+    # No 2>/dev/null, and the exit status is checked: those two omissions ARE
+    # the bug. stderr is folded into the capture so the reason reaches the log.
+    _dcn_out="$(jq -r '
+        (.containers // {})
+        | to_entries
+        | (map(select(.value | type != "object") | .key)) as $malformed
+        | if ($malformed | length) > 0
+          then error("containers{} entries are not objects: "
+                     + ($malformed | join(", "))
+                     + " — a note belongs BESIDE containers{} as a sibling"
+                     + " _doc_containers key, never as an entry inside it")
+          else (map(.value.container_name // empty) | .[])
+          end
+    ' "$_dcn_file" 2>&1)" || {
+        log_error "build.json unusable — refusing to act on a partial container list: $_dcn_file"
+        log_error "  $_dcn_out"
+        return 1
+    }
+    printf '%s\n' "$_dcn_out"
+}
+
 # ── SSH/rsync transport-blip retry helpers ────────────────────────────
 # Single-shot SSH/rsync calls fail the entire ship pipeline when the
 # runner host has transient SSH unreachability (WG flap, sshd MaxStartups

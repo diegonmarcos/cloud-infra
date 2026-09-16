@@ -72,11 +72,13 @@ for compose in "$REPO_ROOT"/a_solutions/*/dist/docker-compose.yml; do
     while read -r cname; do
         [ -n "$cname" ] || continue
         # Assert build.json containers[*].container_name contains it
-        # `.value | select(type == "object")`: a build.json may carry a
-        # "_doc_<name>" STRING inside .containers (infra-db_postlite does);
-        # `.container_name` on a string makes jq abort, which read as "no
-        # match" and failed postlite for sqlite-ntfy / sqlite-vaultwarden
-        # that ARE declared. Skip non-object entries instead.
+        # `.value | select(type == "object")`: `.container_name` on a
+        # non-object makes jq abort, which read as "no match" and failed
+        # postlite for sqlite-ntfy / sqlite-vaultwarden that ARE declared.
+        # infra-db_postlite carried such a "_doc_<name>" STRING inside
+        # .containers until #20/L3 moved it beside the map; the guard stays as
+        # belt-and-braces, but test_container_list_not_truncated.sh is now what
+        # asserts no build.json may carry one at all.
         if jq -e --arg n "$cname" '.containers // {} | to_entries[] | .value | select(type == "object" and .container_name == $n)' "$bj" >/dev/null 2>&1; then
             : # match — silent
         else
