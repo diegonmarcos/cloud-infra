@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2787,
+    "files": 2791,
     "by_lang": {
       "nix": 147,
-      "ts": 1108,
+      "ts": 1112,
       "sh": 122,
       "py": 850,
       "js": 26,
@@ -17,13 +17,13 @@
     },
     "by_role": {
       "nix-module": 9,
-      "module": 672,
+      "module": 674,
       "shell": 114,
       "python": 845,
       "flake": 70,
       "compose": 68,
       "entrypoint": 48,
-      "file": 270,
+      "file": 272,
       "mcp-tool": 103,
       "workflow-dag": 2,
       "script": 4,
@@ -2713,12 +2713,15 @@
       "exports": [],
       "imports": [
         "node:fs",
+        "node:child_process",
         "node:os",
         "node:path",
-        "node:assert/strict"
+        "node:assert/strict",
+        "../registry/peer-map.js"
       ],
       "symbols": [
-        "candidatesFor(buildJsonContents: string | null)"
+        "check(description: string, body: ()",
+        "candidatesFromEntryPoint(entryPoint: string)"
       ]
     },
     {
@@ -2726,6 +2729,8 @@
       "lang": "ts",
       "role": "module",
       "exports": [
+        "findDeclarationRoot",
+        "declarationRoots",
         "peerMapCandidates",
         "describeCandidates"
       ],
@@ -2734,6 +2739,9 @@
         "node:path"
       ],
       "symbols": [
+        "findDeclarationRoot(startDirectory: string)",
+        "developmentRoot()",
+        "declarationRoots()",
         "peerMapCandidates()",
         "describeCandidates(candidates: string[])"
       ]
@@ -2773,6 +2781,35 @@
         "loadReachMap()",
         "getReachUrl(name: string)",
         "reachServiceNames()"
+      ]
+    },
+    {
+      "path": "infra-api_c3-services-api/src/code/registry/summary.selfcheck.mts",
+      "lang": "ts",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./types.js",
+        "./summary.js"
+      ],
+      "symbols": [
+        "check(description: string, body: ()"
+      ]
+    },
+    {
+      "path": "infra-api_c3-services-api/src/code/registry/summary.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "summarizeServices",
+        "ServiceSummary"
+      ],
+      "imports": [
+        "./types.js"
+      ],
+      "symbols": [
+        "summarizeServices(definitions: ServiceDefinition[])"
       ]
     },
     {
@@ -5834,6 +5871,7 @@
         "os",
         "fast-xml-parser",
         "../../registry/index.js",
+        "../../registry/summary.js",
         "../../registry/public-registry.js"
       ],
       "symbols": [
@@ -6151,12 +6189,15 @@
       "exports": [],
       "imports": [
         "node:fs",
+        "node:child_process",
         "node:os",
         "node:path",
-        "node:assert/strict"
+        "node:assert/strict",
+        "../registry/peer-map.js"
       ],
       "symbols": [
-        "candidatesFor(buildJsonContents: string | null)"
+        "check(description: string, body: ()",
+        "candidatesFromEntryPoint(entryPoint: string)"
       ]
     },
     {
@@ -6164,6 +6205,8 @@
       "lang": "ts",
       "role": "module",
       "exports": [
+        "findDeclarationRoot",
+        "declarationRoots",
         "peerMapCandidates",
         "describeCandidates"
       ],
@@ -6172,6 +6215,9 @@
         "node:path"
       ],
       "symbols": [
+        "findDeclarationRoot(startDirectory: string)",
+        "developmentRoot()",
+        "declarationRoots()",
         "peerMapCandidates()",
         "describeCandidates(candidates: string[])"
       ]
@@ -6211,6 +6257,35 @@
         "loadReachMap()",
         "getReachUrl(name: string)",
         "reachServiceNames()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-services-mcp/src/code/registry/summary.selfcheck.mts",
+      "lang": "ts",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./types.js",
+        "./summary.js"
+      ],
+      "symbols": [
+        "check(description: string, body: ()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-services-mcp/src/code/registry/summary.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "summarizeServices",
+        "ServiceSummary"
+      ],
+      "imports": [
+        "./types.js"
+      ],
+      "symbols": [
+        "summarizeServices(definitions: ServiceDefinition[])"
       ]
     },
     {
