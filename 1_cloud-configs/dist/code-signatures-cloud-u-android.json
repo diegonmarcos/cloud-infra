@@ -6,25 +6,25 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13432,
+    "files": 13436,
     "by_lang": {
-      "sh": 212,
+      "sh": 214,
       "py": 43,
-      "kotlin": 9775,
+      "kotlin": 9777,
       "java": 711,
       "ts": 2625,
       "nix": 23,
       "js": 43
     },
     "by_role": {
-      "script": 84,
+      "script": 87,
       "shell": 150,
       "java": 711,
       "entrypoint": 20,
       "module": 1377,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9774,
+      "kotlin": 9775,
       "python": 24,
       "file": 1173,
       "hook": 89,
@@ -2116,6 +2116,28 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/nav-ack-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "run_guard()",
+        "emit_body()",
+        "replace_body()",
+        "sandbox()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "run_guard()",
+        "emit_body()",
+        "replace_body()",
+        "sandbox()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/phone-apps-page-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -2249,6 +2271,35 @@
         "check()",
         "resolve()",
         "count_glob()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/translate-key-handoff.test.kt",
+      "lang": "kotlin",
+      "role": "script",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.translate.KeyHandoff"
+      ],
+      "symbols": [
+        "expect(cond: Boolean, what: String)",
+        "main()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/translate-key-handoff.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "build_and_run()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "build_and_run()",
+        "mutate()"
       ]
     },
     {
@@ -4501,7 +4552,10 @@
         "java.net.ServerSocket",
         "java.net.Socket",
         "java.net.URLDecoder",
-        "java.util.concurrent.atomic.AtomicBoolean"
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit",
+        "java.util.concurrent.atomic.AtomicBoolean",
+        "java.util.concurrent.atomic.AtomicReference"
       ],
       "symbols": [
         "start(ctx: Context)",
@@ -4530,6 +4584,8 @@
         "sysfsDiagnosticJson()",
         "adbNetInfoJson(ctx: Context)",
         "adbStatusJson(ctx: Context)",
+        "ackJson(d: HostDispatch<*>, field: String = \"\", value: String = \"\")",
+        "dispatchToHost( what: String, work: (DevControlBridge.ActivityHost)",
         "reply( w: PrintWriter, status: String, body: String, contentType: String = \"text/plain\", )",
         "parseQuery(raw: String)",
         "aboutJson()",
@@ -4541,8 +4597,7 @@
         "readCrashes(ctx: android.content.Context)",
         "class DevControlServer",
         "class Spec",
-        "class plus",
-        "class owns"
+        "class plus"
       ]
     },
     {
@@ -33858,6 +33913,23 @@
         "prefetchDefaults(Context context)",
         "Thread(new Runnable()",
         "class TranslateEngine"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/translate/src/main/java/com/diegonmarcos/superapp/translate/KeyHandoff.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KeyHandoff"
+      ],
+      "imports": [],
+      "symbols": [
+        "reset()",
+        "onSelfWrite()",
+        "onSelectionChange()",
+        "reclaim()",
+        "class adds",
+        "class KeyHandoff"
       ]
     },
     {
@@ -267492,7 +267564,10 @@
         "java.net.ServerSocket",
         "java.net.Socket",
         "java.net.URLDecoder",
-        "java.util.concurrent.atomic.AtomicBoolean"
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit",
+        "java.util.concurrent.atomic.AtomicBoolean",
+        "java.util.concurrent.atomic.AtomicReference"
       ],
       "symbols": [
         "start(ctx: Context)",
@@ -267520,6 +267595,8 @@
         "appendBoolExtra(label: String, key: String)",
         "appendStringExtra(label: String, key: String)",
         "sysfsDiagnosticJson()",
+        "ackJson(d: HostDispatch<*>, field: String = \"\", value: String = \"\")",
+        "dispatchToHost( what: String, work: (DevControlBridge.ActivityHost)",
         "reply( w: PrintWriter, status: String, body: String, contentType: String = \"text/plain\", )",
         "parseQuery(raw: String)",
         "jsonEscape(s: String)",
@@ -267529,7 +267606,8 @@
         "readCrashes(ctx: android.content.Context)",
         "class DevControlServer",
         "class Spec",
-        "class plus"
+        "class plus",
+        "class HostDispatch"
       ]
     },
     {
