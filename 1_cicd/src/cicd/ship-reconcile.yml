@@ -245,12 +245,25 @@ jobs:
       - name: Re-ship drifted services
         if: steps.reconcile.outputs.rc == '1' && steps.select.outputs.services != '' && (github.event.inputs.apply || 'true') == 'true'
         env:
-          DISPATCH_TOKEN: ${{ secrets.CLOUD_INFRA_DISPATCH_TOKEN }}
+          # CLOUD_INFRA_DISPATCH_TOKEN is the right name for this job and is
+          # what cloud-u-containers uses to dispatch INTO this repo — but it is
+          # a secret of THAT repository, and run 35040144169 proved it is not
+          # set here: the reconcile found 10 drifted services, selected 5, and
+          # could not queue any of them.
+          #
+          # CGC_GHCR_PAT is the classic PAT this repository already keeps as its
+          # general-purpose credential; cgc-db-index.yml uses it the same way
+          # (`GH_TOKEN: secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN`) and
+          # documents why a classic PAT is the only kind that works here. Its
+          # `repo` scope carries actions:write, which is what a dispatch needs.
+          # Preferring the purpose-named secret means adding it later changes
+          # which credential is used without touching this file.
+          DISPATCH_TOKEN: ${{ secrets.CLOUD_INFRA_DISPATCH_TOKEN || secrets.CGC_GHCR_PAT }}
           SERVICES: ${{ steps.select.outputs.services }}
         run: |
           set -euo pipefail
           if [ -z "${DISPATCH_TOKEN:-}" ]; then
-            echo "::error::CLOUD_INFRA_DISPATCH_TOKEN is not set in this repository. GITHUB_TOKEN cannot start a workflow run (GitHub suppresses it to prevent recursion), so there is no fallback that would actually ship. These services are drifted and NOT being re-shipped: $SERVICES"
+            echo "::error::Neither CLOUD_INFRA_DISPATCH_TOKEN nor CGC_GHCR_PAT is set in this repository. GITHUB_TOKEN cannot start a workflow run (GitHub suppresses it to prevent recursion), so there is no fallback that would actually ship — and one that silently queued nothing would be the very defect this workflow exists to close. These services are drifted and NOT being re-shipped: $SERVICES"
             exit 1
           fi
 
