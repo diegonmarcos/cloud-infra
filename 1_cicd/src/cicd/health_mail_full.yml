@@ -67,18 +67,17 @@ jobs:
           CLOUD_CONFIG_JSON: ${{ github.workspace }}/1_cloud-configs/dist/_cloud-data-consolidated.json
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
 
+      # The VM → mesh IP → user → key table is NOT restated here. It is declared
+      # in config.json vms[*].gha and rendered to 1_cloud-configs/dist/build-gha.json;
+      # the renderer below reads that. This step used to carry its own copy of
+      # two of those rows, which is a second source of truth for an IP — and a
+      # health workflow pointed at a stale IP goes green having checked a host
+      # that no longer exists (#20). Only OCI_SSH_KEY is passed, so only the OCI
+      # hosts are rendered; no host list is written by hand to achieve that.
       - name: Setup SSH config
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/oci_key
-          chmod 600 ~/.ssh/oci_key
-          {
-            echo "Host oci-analytics"; echo "  HostName 10.0.0.4"; echo "  User ubuntu"; echo "  IdentityFile ~/.ssh/oci_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host oci-apps";      echo "  HostName 10.0.0.6"; echo "  User ubuntu"; echo "  IdentityFile ~/.ssh/oci_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-          } >> ~/.ssh/config
-          chmod 600 ~/.ssh/config
+        run: bash 1_cicd/src/scripts/cloud-ship-ci-ssh-config.sh
 
       - name: Run mail health check
         env:
