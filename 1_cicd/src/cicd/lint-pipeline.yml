@@ -116,6 +116,14 @@ jobs:
         run: bash 9_others/test/test_native_build_app_dir.sh
       - name: Phase 19 — compose-up never rebuilds on the VM (--no-build)
         run: bash 9_others/test/test_compose_no_build_on_vm.sh
+      # NOT report-only, unlike Phase 11 below. Phase 11 tolerates pre-existing
+      # drift because it compares against compose files that lag; this one only
+      # asserts that the engine refuses a malformed containers{} and that no
+      # build.json carries one. Both are true as of the fix, so any future red
+      # here is a new regression — and the failure mode it guards (ship acting
+      # on a PARTIAL container list, green) is silent in production.
+      - name: Phase 52 — ship never acts on a truncated container list
+        run: bash 9_others/test/test_container_list_not_truncated.sh
       - name: Phase 11 — container_name matches build.json (report-only)
         # Pending unix submodule sync + pre-existing drift cases;
         # cleanup happens per service.

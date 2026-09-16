@@ -74,7 +74,9 @@ step_status() {
     log "═══ status: $SERVICE_NAME @ $DEPLOY_HOST  (config: $CFG) ═══"
     printf "  %-24s %-10s %-12s %-8s\n" "CONTAINER" "STATE" "HEALTH" "IMAGE"
 
-    _cnames="$(jq -r '.containers[]?.container_name // empty' "$SERVICE_DIR/build.json" 2>/dev/null)"
+    # declared_container_names (engine) fails loudly on a malformed containers{}
+    # instead of returning a silently truncated list — see #20/L3 there.
+    _cnames="$(declared_container_names "$SERVICE_DIR/build.json")" || return 1
     [ -z "$_cnames" ] && { log_warn "No containers[].container_name in build.json"; return 0; }
 
     OVERALL=0
