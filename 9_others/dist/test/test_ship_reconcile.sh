@@ -146,9 +146,16 @@ run ""
 ck "empty probe is undecidable, not green" "$rc" "2"
 ck "says so out loud"                      "$(grep -c '::error::.*probe returned nothing' "$WORK/err")" "1"
 
-# 5. A silent registry must never read as in-sync either.
+# 5. A silent registry must never read as in-sync — but it must not be fatal
+#    either. kg-store-binaries and session-memory-binaries are PRIVATE packages
+#    that answer 403 to both an anonymous token and this repo's GITHUB_TOKEN, so
+#    treating an undecidable image as exit 2 made the scheduled reconcile
+#    permanently red. A watchdog that is always red is ignored exactly as fast
+#    as one that is always green.
 run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/unknown-service:latest${T}${VM_STALE}"
-ck "silent registry is undecidable"        "$rc" "2"
+ck "silent registry is not called in-sync" "$(grep -c 'undecidable' "$WORK/out")" "1"
+ck "silent registry is not fatal"          "$rc" "0"
+ck "silent registry is not re-shipped"     "$(grep -c 'drift' "$WORK/out")" "0"
 
 # 6. Declared but not running: reported as `absent`, never as `drift`, because
 #    the workflow re-ships `drift` only and nine services read absent on the
@@ -191,6 +198,23 @@ rc=$?
 ck "mixed containers[] does not abort the sweep" "$rc" "1"
 ck "the healthy service is still reported"       "$(grep -c 'user-ai_cloud-cgc-pub-mcp.*drift' "$WORK/out")" "1"
 ck "the mixed service's objects still parse"     "$(grep -c 'postlite-npm' "$WORK/out")" "1"
+
+# 9. A DIGEST-PINNED ref cannot drift: the container runs exactly the digest it
+#    was pinned to, and that digest is in the ref. gcp-proxy's caddy runs
+#    ghcr.io/diegonmarcos/caddy-l4@sha256:..., and splitting that on the last
+#    ':' yielded repo "…/caddy-l4@sha256" and tag "d8309fad…", which the
+#    registry refused — the most decidable image on the fleet reported as
+#    undecidable. This resolves from the ref with no registry call at all, so
+#    the stub below is deliberately never consulted.
+PINNED="sha256:d8309fad8a32c393ddf7a258b8dbfc990ea928372284804a08bd071a13df6b7c"
+run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${PINNED}"
+ck "digest-pinned ref is in-sync"          "$(grep -c 'undecidable' "$WORK/out")" "0"
+ck "digest-pinned ref is not drift"        "$(grep -c 'drift' "$WORK/out")" "0"
+
+#    ...and a pinned ref whose RUNNING digest does not match the pin is real
+#    drift: the container is not running what it was pinned to.
+run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${VM_STALE}"
+ck "pin violated is reported as drift"     "$(grep -c 'drift' "$WORK/out")" "1"
 
 # ── The re-ship selector: the half that actually re-queues the lost deploy ──
 RESHIP="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
