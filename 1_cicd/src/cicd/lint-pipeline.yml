@@ -102,6 +102,15 @@ jobs:
         run: bash 9_others/test/test_layout_detection_pre_build.sh
       - name: Phase 15b — a lance manifest never names an absent fragment
         run: bash 9_others/test/cgc-db-lance-integrity.test.sh
+      # #360: a file whose own NAME says it is private (services_private.json —
+      # every internal host:port pair) was returned by a plain octocode search on
+      # the PUBLIC surface, which answers anonymously off-mesh. The guard is a
+      # naming convention in noindex_patterns, so the NEXT such file is excluded
+      # the day it is written. Replays the patterns through git's own gitignore
+      # engine — asserting the string is in the JSON would pass on a glob that
+      # matches nothing.
+      - name: Phase 15c — a *_private.json data file never reaches the index
+        run: bash 9_others/test/cgc-db-noindex-private.test.sh
       - name: Phase 16 — every published image also has -binaries tag (report-only)
         # 2026-05-05: scope-fixed to skip compose-build services (those use
         # dockerfile_inline so the image is built on the VM, never shipped to
