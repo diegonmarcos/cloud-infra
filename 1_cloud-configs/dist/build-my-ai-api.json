@@ -1726,10 +1726,10 @@
     }
   },
   "agent": {
-    "_comment": "Shared git checkout (docker volume cloud-git-gh), mounted by _shared/engine.nix. Same layout as my-ai_claude-api: container runs as uid 10001 with HOME=/home/appuser, so the tree belongs at /home/appuser/git. Read-only: goose reads code here; it has no dispatch loop that commits. Flip git_tree_writable to true to change that.",
+    "_comment": "Shared git checkout (docker volume cloud-git-gh), mounted by _shared/engine.nix. Same layout as my-ai_claude-api: container runs as uid 10001 with HOME=/home/appuser, so the tree belongs at /home/appuser/git. Read-write: this is an agent's own working directory. An agent that can read the code but cannot edit, commit or push it cannot do the job it exists for, and a read-only working tree fails in a way that looks like a broken checkout rather than a deliberate policy. Every agi container mounts this tree writable.",
     "git_tree": true,
     "git_tree_mount": "/home/appuser/git",
-    "git_tree_writable": false
+    "git_tree_writable": true
   },
   "upstream_image": "python:3.13-slim",
   "runtime": {
