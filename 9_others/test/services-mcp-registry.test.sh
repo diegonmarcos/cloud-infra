@@ -30,9 +30,15 @@ set -u
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 REGISTRY_DIR="$ROOT/a_solutions/infra-api_c3-services-api/src/code/registry"
+MCP_TOOLS_DIR="$ROOT/a_solutions/infra-api_cloud-services-mcp/src/code/mcp/tools"
 
 if [ ! -d "$REGISTRY_DIR" ]; then
     echo "::error::registry source not found at $REGISTRY_DIR — cloud-u-containers is checked out into a_solutions by the workflow; without it these guards are unrun, not passing."
+    exit 1
+fi
+
+if [ ! -d "$MCP_TOOLS_DIR" ]; then
+    echo "::error::mcp tool handlers not found at $MCP_TOOLS_DIR — same reason; a missing directory is a failure, not a skip."
     exit 1
 fi
 
@@ -70,9 +76,51 @@ for selfcheck in peer-map.selfcheck.mts summary.selfcheck.mts; do
     fi
 done
 
+# ── The projection must have exactly one implementation ─────────────
+#
+# #377 was fixed once and shipped still broken. `registry.services_list` is
+# served from TWO entry points: src/code/mcp/index.ts registers meta.ts, and
+# src/code/mcp/http.ts registers registry.ts. The fix moved meta.ts onto the
+# tested projection in registry/summary.ts and left registry.ts restating it
+# inline, still reading `s.api.type` unconditionally. HTTP is the transport
+# every MCP client actually uses, so the tool went on returning
+# `Cannot read properties of undefined (reading 'type')` on a container built
+# from the fix — a green ship run deploying a defect that was already declared
+# solved. The self-check above passed the whole time, because it tests the
+# projection and nothing asserted who calls it.
+#
+# These two assertions are about CALLERS, which is the part that drifted.
+
+echo "── projection is single-sourced ──"
+
+# Every field of the summary is built in registry/summary.ts. `apiType` is the
+# field that crashed; if it is being constructed inside a tool handler, that
+# handler is restating the projection instead of calling it. #170 is the
+# standing warning that a second copy drifts, and this one did.
+restated="$(grep -rn 'apiType:' "$MCP_TOOLS_DIR" --include='*.ts' || true)"
+if [ -n "$restated" ]; then
+    echo "$restated"
+    echo "::error::a tool handler builds the service summary itself instead of calling summarizeServices() from registry/summary.ts. That is the #377 defect exactly: the projection was fixed in one caller and restated in another."
+    failed=$((failed + 1))
+else
+    echo "  ok — no tool handler restates the summary projection"
+fi
+
+# Both entry points must reach the tested projection. registry.ts had zero
+# calls to it while meta.ts had one, which is how the deployed HTTP handler
+# stayed broken after #377 was called done.
+for handler in registry.ts meta.ts; do
+    if ! grep -q 'summarizeServices(' "$MCP_TOOLS_DIR/$handler"; then
+        echo "::error::$handler serves registry.services_list but never calls summarizeServices(). One entry point fixed is not the tool fixed."
+        failed=$((failed + 1))
+    else
+        echo "  ok — $handler routes through summarizeServices()"
+    fi
+done
+
 if [ "$failed" -ne 0 ]; then
     echo "::error::$failed registry self-check(s) failed"
     exit 1
 fi
 
-echo "cloud-services-mcp registry self-checks: all passed"
+echo "cloud-services-mcp registry self-checks and projection single-sourcing: all passed"
