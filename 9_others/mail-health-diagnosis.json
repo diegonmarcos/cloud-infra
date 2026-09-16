@@ -1,0 +1,81 @@
+{
+  "_doc": "How 1_cicd/src/ops/cloud-health-mail-full.sh reaches oci-apps, and how it names a failure once it gets one. Both used to be hardcoded in that script. Every layer that ended badly appended the same literal string — 'SSH/docker error' — so a mailbox that stopped accepting mail and a mesh connection that dropped mid-report arrived in the report and in the ntfy alert wearing identical words. The owner could not tell which had happened without opening the run log, and on the liveness layer the log did not say either, because that layer sent the remote stderr straight to the job output and kept only the exit status. Ticket #398.",
+  "_doc_ssh_options": "Applied to EVERY ssh invocation in the reporter. BatchMode is the no-interactive-prompt guarantee: without it, a missing key or an unknown host turns a scheduled unattended check into a process sitting on a password prompt until the 60-minute job timeout kills it, and the run reports nothing at all. The ServerAlive pair is the broken-pipe guard — the report container is silent for minutes at a time, so without keepalive traffic a NAT or WireGuard rekey drops the session (runs 34995321325 and 35022772131 died exactly this way, 'client_loop: send disconnect: Broken pipe', about five minutes into the silence). CountMax is 12, not the 3 it was: 3 unacknowledged probes at 10s apart means a 30-second blip on the mesh kills a session that would otherwise have recovered, and re-running the whole liveness report costs minutes while 120 seconds of patience costs nothing. StrictHostKeyChecking is deliberately NOT set here: 1_cicd/src/scripts/cloud-ship-ci-ssh-config.sh already writes 'StrictHostKeyChecking no' for these hosts, and overriding it to accept-new would turn a legitimate VM rebuild into a red mail check that is not a mail fault.",
+  "ssh_options": [
+    "-o BatchMode=yes",
+    "-o ConnectTimeout=10",
+    "-o ServerAliveInterval=10",
+    "-o ServerAliveCountMax=12",
+    "-o TCPKeepAlive=yes"
+  ],
+  "_doc_failure_causes": "ORDERED, first match wins. A rule matches when its pattern matches the captured output (extended regular expression, case-insensitive) AND, if it declares exit_status, the command exited with exactly that status. A rule with no pattern and no exit_status always matches, so the terminal fallback is the LAST entry and nothing may be added after it.",
+  "_doc_no_backslashes": "No pattern may contain a backslash. The classifier reads these rules through jq's @tsv, which escapes a backslash into two, so an escaped group like a literal open-parenthesis written with a backslash arrives at grep as a doubled backslash and silently stops matching. Use a bracket expression instead. mail-health-failure-classifier.test.sh asserts this.",
+  "_doc_class": "class decides the verdict, and that is the whole point of this file. transport = the check never reached the mail stack; the mail state is UNKNOWN, the run is INCONCLUSIVE (exit 2), and the alert says so, because a dropped SSH session is not a mail fault and paging someone about mail loss for one is how alerts stop being read. Every other class = the check ran and something in the mail path answered badly; that is a mail failure (exit 1).",
+  "failure_causes": [
+    {
+      "id": "ssh-session-dropped",
+      "class": "transport",
+      "label": "the SSH session to oci-apps dropped mid-run (broken pipe) — the layer never finished",
+      "pattern": "client_loop: send disconnect|packet_write_wait|Broken pipe|Connection reset by peer|Connection closed by remote host|closed by remote host"
+    },
+    {
+      "id": "ssh-host-unreachable",
+      "class": "transport",
+      "label": "oci-apps was unreachable over the WireGuard mesh (no route, refused, or DNS)",
+      "pattern": "Connection timed out|Operation timed out|No route to host|Network is unreachable|Could not resolve hostname|port 22: Connection refused"
+    },
+    {
+      "id": "ssh-auth-rejected",
+      "class": "transport",
+      "label": "oci-apps rejected this runner's SSH credentials — the check could not log in",
+      "pattern": "Permission denied [(]publickey|Permission denied, please try again|Host key verification failed|Too many authentication failures|no such identity"
+    },
+    {
+      "id": "ssh-failed-without-message",
+      "class": "transport",
+      "label": "ssh itself failed with status 255 and said nothing — treat as a transport fault, not a mail fault",
+      "exit_status": 255
+    },
+    {
+      "id": "docker-daemon-unreachable",
+      "class": "docker",
+      "label": "the Docker daemon on oci-apps did not answer",
+      "pattern": "Cannot connect to the Docker daemon|Is the docker daemon running|while trying to connect to the Docker daemon socket"
+    },
+    {
+      "id": "docker-container-absent",
+      "class": "docker",
+      "label": "a container this check execs into is missing or not running on oci-apps",
+      "pattern": "No such container|Error: No such object|is not running|Container .* is restarting"
+    },
+    {
+      "id": "docker-image-unavailable",
+      "class": "docker",
+      "label": "the reports image could not be pulled on oci-apps",
+      "pattern": "manifest unknown|pull access denied|denied: requested access|toomanyrequests|unauthorized: authentication required"
+    },
+    {
+      "id": "mail-store-auth-rejected",
+      "class": "mail",
+      "label": "a mail store rejected the credentials this check uses (IMAP or JMAP login refused)",
+      "pattern": "AUTHENTICATIONFAILED|LOGIN failed|Invalid credentials|Authentication failed|535 |401 Unauthorized"
+    },
+    {
+      "id": "mail-store-unreachable",
+      "class": "mail",
+      "label": "a mail store refused or timed out the connection (maddy IMAP or Stalwart JMAP down)",
+      "pattern": "ECONNREFUSED|ECONNRESET|EHOSTUNREACH|ETIMEDOUT|connect ETIMEDOUT|IMAP connection|JMAP request failed"
+    },
+    {
+      "id": "remote-script-crashed",
+      "class": "remote-script",
+      "label": "the probe script itself crashed on oci-apps — this check is broken, the mail stack is unjudged",
+      "pattern": "Traceback [(]most recent call last[)]|node:internal|Cannot find module|ModuleNotFoundError|ImportError|SyntaxError|ReferenceError|TypeError|command not found|No such file or directory"
+    },
+    {
+      "id": "unclassified",
+      "class": "unknown",
+      "label": "failed for a reason no rule in 9_others/mail-health-diagnosis.json recognises — the captured output is in the run log above, add a rule for it"
+    }
+  ]
+}
