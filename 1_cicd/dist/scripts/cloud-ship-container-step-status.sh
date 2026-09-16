@@ -98,8 +98,16 @@ step_status() {
         # is a broken probe, and its error text belongs in front of the
         # operator rather than in /dev/null. _digwhy carries the reason so the
         # verdict can say WHY it could not decide instead of just "unknown".
+        # Only for images WE push: an upstream container (postgres, redis, …)
+        # gets an `n/a` verdict either way, and asking the VM for its image is a
+        # round-trip whose answer is discarded. oci-apps declares 68 containers,
+        # so that is dozens of pointless SSH connections per run against a fleet
+        # whose deploy lock has been wedged for hours before (#179).
         _repodig=""; _digwhy=""
-        if [ -z "$_iid" ]; then
+        case "$_cimg" in "$OUR_REGISTRY"/*) _need_digest=1 ;; *) _need_digest=0 ;; esac
+        if [ "$_need_digest" = "0" ]; then
+            :
+        elif [ -z "$_iid" ]; then
             _digwhy="container inspect carried no .Image id"
         else
             _ijson="$(ssh_with_retry "$DEPLOY_HOST" "docker image inspect $_iid" || true)"

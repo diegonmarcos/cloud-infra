@@ -108,6 +108,7 @@ run_status() {
             "$IMG_ID" "$OURS" "${CTR_REPODIGESTS:+,\"RepoDigests\":$CTR_REPODIGESTS}"
           ;;
         "docker image inspect "*)
+          echo "$_cmd" >> "$WORK/img-inspect-calls"
           [ "${IMG_INSPECT_FAILS:-0}" = "1" ] && return 1
           printf '[{"Id":"%s","RepoDigests":%s}]' "$IMG_ID" "${IMG_REPODIGESTS:-[]}"
           ;;
@@ -179,11 +180,29 @@ out="$(CTR_REPODIGESTS="[\"ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-binaries@$REG_
        REG_DIGESTS="$REG_CURRENT" run_status)"
 ck     "verdict follows the IMAGE, not the container"   "$(verdict "$out")" "DRIFT"
 
-echo "── case 7: upstream images are not ours to judge"
+echo "── case 7: upstream images are not ours to judge, and are not probed for it"
+: > "$WORK/img-inspect-calls"
 out="$(CTR_REPODIGESTS="" IMG_REPODIGESTS="[]" REG_DIGESTS="" \
        OURS="postgres:16" run_status)"
 ck     "upstream image reports n/a"               "$(verdict "$out")" "n/a"
 ck_has  "upstream image does not fail the run"     "$out" "RC=0"
+# The verdict alone does not prove this: an implementation that probes the image
+# and then throws the answer away is equally "n/a". oci-apps declares 68
+# containers, so a discarded round-trip per upstream container is dozens of
+# pointless SSH connections into the fleet's deploy lock (#179). Assert the
+# connection is never opened.
+ck     "upstream image is never probed for a digest" \
+       "$(wc -l < "$WORK/img-inspect-calls" | tr -d ' ')" "0"
+
+echo "── case 7b: OUR images ARE probed on the image object (the round-trip happens)"
+: > "$WORK/img-inspect-calls"
+out="$(CTR_REPODIGESTS="" \
+       IMG_REPODIGESTS="[\"ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-binaries@$REG_CURRENT\"]" \
+       REG_DIGESTS="$REG_CURRENT" run_status)"
+ck     "our image is probed exactly once" \
+       "$(wc -l < "$WORK/img-inspect-calls" | tr -d ' ')" "1"
+ck_has  "and it is the IMAGE ID that is inspected, not the container name" \
+       "$(cat "$WORK/img-inspect-calls")" "$IMG_ID"
 
 echo
 echo "passed: $pass  failed: $fail"
