@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13421,
+    "files": 13422,
     "by_lang": {
-      "sh": 205,
+      "sh": 206,
       "py": 42,
       "java": 711,
       "ts": 2625,
@@ -18,7 +18,7 @@
     },
     "by_role": {
       "script": 82,
-      "shell": 144,
+      "shell": 145,
       "java": 711,
       "entrypoint": 20,
       "module": 1376,
@@ -5747,7 +5747,8 @@
         "onTabUnselected(tab: TabLayout.Tab)",
         "onTabReselected(tab: TabLayout.Tab)",
         "addGroupDivider(tabs: TabLayout, position: Int)",
-        "startIndex(pages: List<Sections.Page>)",
+        "startIndex(pages: List<Sections.Page>, saved: Bundle?)",
+        "onSaveInstanceState(outState: Bundle)",
         "render(index: Int, pageId: String)",
         "pageTabKey(sectionId: String, pageId: String)",
         "newInstance(sectionId: String, initialPage: String = \"\")",
@@ -7339,14 +7340,18 @@
         "org.json.JSONArray"
       ],
       "symbols": [
+        "repaintFromStore()",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "fillModes()",
+        "fillSavers()",
         "addPowerSavingAppsEditor(root: LinearLayout, ctx: android.content.Context)",
         "chooseAppFor( ctx: android.content.Context, prefs: PowerSavingAppsPrefs, declared: List<LauncherThemes.HomeApp>, slotId: String, themeId: String, )",
         "installedApps(ctx: android.content.Context)",
         "batteryHungerSection(ctx: android.content.Context, modeLabel: String)",
-        "toggleRow( ctx: android.content.Context, label: String, subtitle: String, checked: Boolean, onChange: (Boolean)",
+        "toggleRow( ctx: android.content.Context, label: String, subtitle: String, checked: ()",
         "toggleGrid( ctx: android.content.Context, items: List<LauncherSettingsPrefs.Item>, prefs: LauncherSettingsPrefs, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
-        "toggleTile( ctx: android.content.Context, item: LauncherSettingsPrefs.Item, on: Boolean, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
+        "toggleTile( ctx: android.content.Context, item: LauncherSettingsPrefs.Item, prefs: LauncherSettingsPrefs, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
+        "paint()",
         "sliderRow( ctx: android.content.Context, label: String, subtitle: String, min: Int, max: Int, value: Int, onChange: (Int)",
         "onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean)",
         "onStartTrackingTouch(sb: SeekBar)",
@@ -7374,11 +7379,7 @@
         "browserPackages(context: android.content.Context)",
         "parseBehaviors()",
         "class LauncherConfigFragment",
-        "class of",
-        "class Option",
-        "class InstalledApp",
-        "class LauncherThemes",
-        "class Theme"
+        "class of"
       ]
     },
     {
@@ -7459,6 +7460,7 @@
       "role": "kotlin",
       "exports": [],
       "imports": [
+        "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.ui.Haptics",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "android.content.Context",
@@ -7472,7 +7474,8 @@
         "spacer(ctx: Context, h: Int)",
         "sectionHeader(ctx: Context, title: String, subtitle: String)",
         "genericTile( ctx: Context, label: String, subtitle: String, isSelected: Boolean, onClick: ()",
-        "rerenderPage()"
+        "rerenderPage()",
+        "applyShellLiveToggles(activity: android.app.Activity?)"
       ]
     },
     {
@@ -8705,6 +8708,22 @@
         "ok()",
         "bad()",
         "check()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-configs-modes-toggle-in-place.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "body()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "body()"
       ]
     },
     {
