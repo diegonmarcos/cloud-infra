@@ -47,7 +47,15 @@ trap "rm -rf '$TMP'" EXIT
 # ── Build fixture: bare upstream + working clone with content ──────
 UPSTREAM="$TMP/upstream.git"
 WORK="$TMP/work"
-git init --bare --quiet "$UPSTREAM"
+# The bare upstream must pin its default branch the same way the work repo on
+# the next line does. Without -c init.defaultBranch=main its HEAD follows the
+# AMBIENT init.defaultBranch, while the work repo always pushes 'main'. On any
+# machine whose default is not main (including a bare GitHub runner, and this
+# container, where it is unset and git falls back to master) the later
+# `git clone` of this upstream warns "remote HEAD refers to nonexistent ref",
+# checks out nothing, and test 4 dies rc=128 on "You have nothing to amend".
+# A fixture must not inherit the property it is testing from its host.
+git -c init.defaultBranch=main init --bare --quiet "$UPSTREAM"
 
 git -c init.defaultBranch=main init --quiet "$WORK"
 cd "$WORK"
@@ -129,7 +137,8 @@ echo "── 5: submodule reset to remote HEAD ──"
 # Set up a submodule fixture: another bare upstream as submodule of work.
 SUB_UPSTREAM="$TMP/sub-upstream.git"
 SUB_BUILD="$TMP/sub-build"
-git init --bare --quiet "$SUB_UPSTREAM"
+# Same pinning as $UPSTREAM above — the submodule upstream is cloned too.
+git -c init.defaultBranch=main init --bare --quiet "$SUB_UPSTREAM"
 git -c init.defaultBranch=main init --quiet "$SUB_BUILD"
 cd "$SUB_BUILD"
 git config user.email "test@example.com"
