@@ -64,7 +64,8 @@ check "missing build.json" "$(select_modes "$TMP/does-not-exist.json")" "0700 06
 # Now the engine decides per key from the material itself.
 strict_for_value() {
     local f="$1"
-    if grep -qE 'PRIVATE KEY-----|AGE-SECRET-KEY-1|PuTTY-User-Key-File' "$f" 2>/dev/null; then
+    if ! jq -e 'type == "object"' "$f" >/dev/null 2>&1 \
+       && grep -qE 'PRIVATE KEY-----|AGE-SECRET-KEY-1|PuTTY-User-Key-File' "$f" 2>/dev/null; then
         echo strict
     else
         echo loose
@@ -91,6 +92,26 @@ check "password stays loose"     "$(strict_for_value "$TMP/pw")"       "loose"
 printf '{"token":"abc","note":"no private key here"}\n' > "$TMP/json"
 check "json blob stays loose"    "$(strict_for_value "$TMP/json")"     "loose"
 
+# ── JSON credential documents (#356) ──────────────────────────────────────
+# The armour test above is necessary but too coarse on its own. A Google or
+# Firebase service-account credential is a JSON OBJECT carrying a PEM in its
+# private_key field, so it matched, and every such key was forced back to 0600
+# — silently undoing container_readable for the very service that introduced
+# the flag (g-workspace-mcp: non-root appuser, uid 10001, could not open its own
+# /run/secrets/GOOGLE_SERVICE_ACCOUNT_KEY owned by uid 1001 mode 0600).
+# Nothing is given up by relaxing these: ssh -i, age and PuTTY read PEM/armour
+# directly and cannot consume a JSON document at all.
+printf '{"type":"service_account","project_id":"p","private_key_id":"i","private_key":"-----BEGIN PRIVATE KEY-----\\nMIIE...\\n-----END PRIVATE KEY-----\\n","client_email":"a@b.iam.gserviceaccount.com","token_uri":"https://oauth2.googleapis.com/token"}\n' > "$TMP/sa.json"
+check "google SA json doc stays loose" "$(strict_for_value "$TMP/sa.json")" "loose"
+
+# The exemption must be narrow: only a JSON OBJECT is a credential document.
+# Bare key material is never one, so it must still be caught. These are the
+# regression guards on #271's half of the contract.
+printf '["-----BEGIN PRIVATE KEY-----","MIIE..."]\n' > "$TMP/arr.json"
+check "json ARRAY of key material stays strict" "$(strict_for_value "$TMP/arr.json")" "strict"
+printf -- '{"not":"json"\n-----BEGIN OPENSSH PRIVATE KEY-----\n' > "$TMP/broken"
+check "unparseable + armour stays strict" "$(strict_for_value "$TMP/broken")" "strict"
+
 # ── Source-level guards ───────────────────────────────────────────────────
 # Everything above is a MIRROR of the engine, so on its own it would happily
 # stay green after someone deleted the rule from the engine. These two read the
@@ -107,6 +128,15 @@ else
 fi
 check "engine enforces per-key strict mode" "$got" "present"
 
+# The mirror above would stay green if someone deleted the exemption from the
+# engine, so read the engine itself (comments already stripped).
+if grep -q 'type == "object"' <<<"$decrypt_src"; then
+    got=present
+else
+    got=missing
+fi
+check "engine exempts json credential documents" "$got" "present"
+
 # `scp -r src dest` copies INTO dest when dest already exists, so naming
 # "$DEPLOY_PATH/.secrets.d" as the destination made every deploy after the first
 # write $DEPLOY_PATH/.secrets.d/.secrets.d/<KEY> — a second copy of every
@@ -121,7 +151,7 @@ fi
 check "secrets.d scp destination is the parent" "$got" "flat"
 
 if [ "$FAILS" -eq 0 ]; then
-    printf 'RESULT: ALL %d ASSERTIONS PASSED\n' "$PASSES"; exit 0
+    printf 'RESULT: ALL %d ASSERTIONS PASSED (incl. json-credential-document exemption)\n' "$PASSES"; exit 0
 else
     printf 'RESULT: %d FAILED, %d PASSED\n' "$FAILS" "$PASSES"; exit 1
 fi

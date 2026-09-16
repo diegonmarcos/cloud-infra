@@ -97,11 +97,25 @@ step_secrets() {
     # build.json asked for, and the relaxation applies only to the rest. grep -q
     # is used deliberately — it answers the question without putting a byte of
     # the value anywhere a log could pick it up.
+    #
+    # The armour test alone is too coarse, though, and it took out the one case
+    # this flag was introduced for. A Google/Firebase service-account credential
+    # is a JSON DOCUMENT that carries a PEM in its private_key field, so it
+    # matches the armour test and got forced back to 0600 — which is exactly the
+    # g-workspace-mcp breakage noted above, reintroduced. What tells a credential
+    # DOCUMENT apart from bare key material is that it parses as a JSON object,
+    # and no strict-permission consumer accepts one: ssh -i, age and PuTTY all
+    # read the armour directly and reject JSON outright, so there is nothing left
+    # to protect by keeping it strict. A PEM held as a plain scalar value is
+    # written to .secrets.d/ as raw text rather than as an object, so bare key
+    # material is unaffected and still stays 0600.
     _strict_keys=""
     for key in $(echo "$_secrets_json" | jq -r 'keys[] | select(startswith("_") | not)'); do
         echo "$_secrets_json" | jq -r --arg k "$key" '.[$k] | tostring' > "$SECRETS_DIR/.secrets.d/$key"
         _kmode=$_fmode
-        if [ "$_kmode" != "0600" ] && grep -qE 'PRIVATE KEY-----|AGE-SECRET-KEY-1|PuTTY-User-Key-File' \
+        if [ "$_kmode" != "0600" ] \
+           && ! jq -e 'type == "object"' "$SECRETS_DIR/.secrets.d/$key" >/dev/null 2>&1 \
+           && grep -qE 'PRIVATE KEY-----|AGE-SECRET-KEY-1|PuTTY-User-Key-File' \
                 "$SECRETS_DIR/.secrets.d/$key" 2>/dev/null; then
             _kmode=0600
             _strict_keys="$_strict_keys $key"
