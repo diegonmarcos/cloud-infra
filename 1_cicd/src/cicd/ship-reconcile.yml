@@ -104,6 +104,14 @@ jobs:
     # fleet's deploy lock.
     timeout-minutes: 30
 
+    # WG_PRIVATE_KEY belongs at JOB level, the way health_mail_full.yml declares
+    # it, because cloud-ship-ci-setup-wireguard.sh reads it from the environment
+    # and exits 0 when it is absent. Scoped to the "WireGuard up" step alone it
+    # was simply never set, so wg0 never came up, the step went green, and every
+    # SSH probe then timed out at 15s against all four VMs (run 35039148393).
+    env:
+      WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+
     steps:
       - uses: actions/checkout@v4
         with:

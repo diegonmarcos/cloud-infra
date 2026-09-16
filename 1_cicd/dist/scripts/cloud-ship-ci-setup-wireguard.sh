@@ -28,6 +28,15 @@
 set -e
 
 if [ -z "${WG_PRIVATE_KEY:-}" ]; then
+  # Exit 0 so the callers that legitimately run mesh-less keep working, but say
+  # it at a volume GitHub renders. A plain echo here reads as a normal log line
+  # and the step goes GREEN with no mesh, which is indistinguishable from
+  # success until something downstream times out: ship-reconcile run
+  # 35039148393 passed "WireGuard up", then every SSH probe timed out at 15s
+  # against all four VMs, because the workflow had simply never passed the
+  # secret. The annotation makes the skip visible in the run summary instead of
+  # 200 lines down.
+  echo "::warning::[wireguard] SKIPPED — WG_PRIVATE_KEY is empty, so wg0 was NOT brought up. Every mesh (10.0.0.x) address is unreachable from this job. If this job talks to a VM, pass WG_PRIVATE_KEY: \${{ secrets.WG_PRIVATE_KEY }} in its env."
   echo "[wireguard] Skipped (no WG_PRIVATE_KEY)"
   exit 0
 fi
