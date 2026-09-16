@@ -171,19 +171,66 @@ in {
       find /var/tmp -type f -atime +2 -delete 2>/dev/null || true
       journalctl --vacuum-size=100M 2>/dev/null || true
       if command -v docker >/dev/null 2>&1; then
-        docker container prune -f 2>/dev/null || true
-        docker image prune -f 2>/dev/null || true
+        # label!=com.docker.compose.project — NEVER prune a declared service.
+        # Copied from infra/prune-maintenance.nix, which already learned this: an
+        # unfiltered `container prune` deletes every stopped container, and that is
+        # how vaultwarden vanished for four days (rebooted 2026-08-30 22:11, pruned
+        # 03:30). That sibling got the filter; this module never did, and on
+        # 2026-09-16 it deleted matomo off oci-apps exactly the same way — created,
+        # started and healthy at 2026-09-15T22:39:58Z, no container and no image
+        # nine hours later. Every declared service is deployed through docker
+        # compose and therefore carries this label; what is left to collect is
+        # stray `docker run` debris, which is all this should ever have reclaimed.
+        # NOT `--filter until=<age>`: that matches on CREATION time, so it would
+        # protect only containers created in the last N hours — precisely backwards.
+        docker container prune -f --filter "label!=com.docker.compose.project" 2>/dev/null || true
+        # until=72h scopes this to dangling images older than 72h. Unscoped, it
+        # untagged matomo-binaries@sha256:9d3a9615 at 05:25:16 — a live deploy
+        # artifact, hours before the CRIT branch finished the job.
+        docker image prune -f --filter "until=72h" 2>/dev/null || true
         docker builder prune -f --keep-storage=1G 2>/dev/null || true
-        docker system prune -f --filter "until=72h" 2>/dev/null || true
+        # NO `docker system prune`: it is a superset of the three scoped calls
+        # above, and its container sweep cannot be scoped as tightly, so it
+        # silently re-opens the exact hole the label filter closes.
+        # prune-maintenance.nix does not run it either — same reason.
       fi
 
       USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
       [ "$USAGE" -lt "$CRIT" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
 
       # ── CRIT (90%) — aggressive prune (swap untouched) ──────────────
+      # BANNED on the automatic path, deliberately. Both were here until
+      # 2026-09-16 and both are listed as forbidden by infra/prune-maintenance.nix
+      # ("WHAT IT DOES NOT RUN") and by protection/guardrails.nix, which blocks
+      # them for humans — but guardrails.nix implements that ban as a PATH wrapper
+      # in ~/.local/bin, and this script runs as a root systemd unit calling docker
+      # directly, so it never traversed the wrapper. The ban was real; the watchdog
+      # was simply not on the code path it protects. Hence it is restated here:
+      #   volume prune    — volumes ARE the databases. A watchdog that deletes a
+      #                     database to free space is not protection, it is the
+      #                     outage. On 2026-09-16 the ONLY reason matomo's data is
+      #                     recoverable is that this branch ran before its volumes
+      #                     went unreferenced.
+      #   image prune -af — `-a` drops TAGGED images, i.e. the fleet's own deploy
+      #                     artifacts. It untagged matomo-binaries:latest and
+      #                     matomo-configs:latest at 06:30:21.
+      #
+      # WHAT CRIT MAY STILL DELETE, and why each set is safe to lose:
+      #   builder cache (-af)   pure derived data, rebuildable from source. On a VM
+      #                         doing native arm64 builds this is the genuinely
+      #                         large reclaimable set, and nothing depends on it.
+      #   dangling images       untagged AND unreferenced by any container. The
+      #     (until=24h)         only cost of being wrong is a re-pull.
+      #   journals -> 50M       logs, not state; WARN already capped them at 100M.
+      #   nix gens >3d          rollback history, not live system state.
+      # That is a real escalation over WARN (which stops at 72h-dangling and a 1G
+      # build cache) without putting a single byte of persistent state at risk.
       echo "[disk-watchdog] CRIT (''${USAGE}%) — aggressive cleanup"
       journalctl --vacuum-size=50M 2>/dev/null || true
-      command -v docker >/dev/null 2>&1 && docker image prune -af 2>/dev/null && docker volume prune -f 2>/dev/null || true
+      if command -v docker >/dev/null 2>&1; then
+        docker builder prune -af 2>/dev/null || true
+        docker image prune -f --filter "until=24h" 2>/dev/null || true
+      fi
       command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage --delete-older-than 3d 2>/dev/null || true
 
       USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
