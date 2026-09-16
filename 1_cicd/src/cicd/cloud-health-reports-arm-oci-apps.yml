@@ -52,25 +52,26 @@ jobs:
       - name: Pull reports image
         run: docker pull ghcr.io/diegonmarcos/cloud-data-reports:arm64
 
+      # One env var per declared key; the renderer matches them to VMs by the
+      # ssh_secret name in the declarations. GCP_T4_SSH_KEY is gone: it was
+      # written to disk as gcp_t4_key and no Host block ever used it, and the
+      # GPU box it belongs to has `gha: null` / no wg_ip in the declarations.
       - name: Setup SSH config for reports container
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
-          GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
         run: |
-          SSH_DIR="$GITHUB_WORKSPACE/.reports-ssh"
-          mkdir -p "$SSH_DIR"
-          printf '%s\n' "$OCI_SSH_KEY"       > "$SSH_DIR/oci_key"
-          printf '%s\n' "$GCP_PROXY_SSH_KEY" > "$SSH_DIR/gcp_proxy_key"
-          printf '%s\n' "$GCP_T4_SSH_KEY"    > "$SSH_DIR/gcp_t4_key"
-          {
-            echo "Host oci-mail";          echo "  HostName 10.0.0.3";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host oci-analytics";     echo "  HostName 10.0.0.4";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host oci-apps";          echo "  HostName 10.0.0.6";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host gcp-proxy";         echo "  HostName 10.0.0.1";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_proxy_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-          } > "$SSH_DIR/config"
-          chmod 700 "$SSH_DIR"
-          chmod 600 "$SSH_DIR/oci_key" "$SSH_DIR/gcp_proxy_key" "$SSH_DIR/gcp_t4_key" "$SSH_DIR/config"
+          # Third copy of the same hand-written VM → IP → user → key table,
+          # identical to the two in cloud-health-reports.yml and
+          # health_mail_full.yml. All three now read the declarations
+          # (config.json vms[*].gha → 1_cloud-configs/dist/build-gha.json)
+          # through one renderer, so an IP change lands in one place (#20).
+          #
+          # SSH_IDENTITY_DIR is the path the reports CONTAINER sees, which is
+          # not where the runner writes the files.
+          SSH_CONFIG_DIR="$GITHUB_WORKSPACE/.reports-ssh" SSH_IDENTITY_DIR=/root/.ssh \
+            bash 1_cicd/src/scripts/cloud-ship-ci-ssh-config.sh
+          chmod 700 "$GITHUB_WORKSPACE/.reports-ssh"
 
       - name: Run reports
         run: |

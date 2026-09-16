@@ -61,25 +61,38 @@ jobs:
       - name: Pull reports image
         run: docker pull ghcr.io/diegonmarcos/cloud-data-reports:latest
 
+      # One env var per declared key. The renderer matches them to VMs by the
+      # ssh_secret NAME the declarations carry, so this list is the whole of
+      # what this job is allowed to reach — no host names, no IPs.
+      #
+      # GCP_T4_SSH_KEY was bound here and written to disk as gcp_t4_key, but no
+      # Host block ever pointed at it: the key was materialised on the runner
+      # for nobody. The gcp-t4 GPU box (declared gcp-L4-e_0 / ssh_alias
+      # gcp-gpu-embed) has `gha: null` and no wg_ip — it is not on the mesh and
+      # is TERMINATED between indexing runs — so the declarations correctly
+      # exclude it and the binding is gone with the hand-written table.
       - name: Setup SSH config for reports container
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
-          GCP_T4_SSH_KEY: ${{ secrets.GCP_T4_SSH_KEY }}
         run: |
-          sudo mkdir -p /tmp/reports-ssh
-          printf '%s\n' "$OCI_SSH_KEY"       | sudo tee /tmp/reports-ssh/oci_key       > /dev/null
-          printf '%s\n' "$GCP_PROXY_SSH_KEY" | sudo tee /tmp/reports-ssh/gcp_proxy_key > /dev/null
-          printf '%s\n' "$GCP_T4_SSH_KEY"    | sudo tee /tmp/reports-ssh/gcp_t4_key   > /dev/null
-          {
-            echo "Host oci-mail";          echo "  HostName 10.0.0.3";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host oci-analytics";     echo "  HostName 10.0.0.4";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host oci-apps";          echo "  HostName 10.0.0.6";   echo "  User ubuntu"; echo "  IdentityFile /root/.ssh/oci_key";       echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-            echo "Host gcp-proxy";         echo "  HostName 10.0.0.1";   echo "  User diego";  echo "  IdentityFile /root/.ssh/gcp_proxy_key"; echo "  StrictHostKeyChecking no"; echo "  BatchMode yes"
-          } | sudo tee /tmp/reports-ssh/config > /dev/null
+          # The VM → mesh IP → user → key table lives in the declarations
+          # (config.json vms[*].gha → 1_cloud-configs/dist/build-gha.json), not
+          # in this file. It was restated here by hand, so this workflow and
+          # health_mail_full.yml each held their own copy of the same IPs; the
+          # copy nobody edits is the one that goes stale, and a health run
+          # against a dead IP is a green that verified nothing (#20).
+          #
+          # SSH_IDENTITY_DIR differs from SSH_CONFIG_DIR because the container
+          # sees this directory mounted at /root/.ssh, so IdentityFile has to
+          # name the path INSIDE the container, not on the runner.
+          SSH_CONFIG_DIR=/tmp/reports-ssh SSH_IDENTITY_DIR=/root/.ssh \
+            bash 1_cicd/src/scripts/cloud-ship-ci-ssh-config.sh
+
+          # ssh inside the container runs as root and refuses a key it does not
+          # own, so ownership is handed over after rendering.
           sudo chown -R root:root /tmp/reports-ssh
           sudo chmod 700 /tmp/reports-ssh
-          sudo chmod 600 /tmp/reports-ssh/oci_key /tmp/reports-ssh/gcp_proxy_key /tmp/reports-ssh/gcp_t4_key /tmp/reports-ssh/config
 
       - name: Run reports
         run: |
