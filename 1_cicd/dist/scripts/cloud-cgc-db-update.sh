@@ -1527,9 +1527,31 @@ for r in $REPOS; do
   fi
   rm -f "$_idx_marker" 2>/dev/null || true
   if [ "$_rc" = "0" ]; then
+    # NO-OP INDEX. The change gate above only lets a repo through when its HEAD
+    # MOVED (or CGC_FORCE), so an index that reports "0 of 0 files processed" did
+    # nothing while something was owed. On 2026-09-15 cloud-u-android came through as
+    #   === incremental index: cloud-u-android (was=none now=30fedcdae..., 26257 files) ===
+    #   cloud-u-android · index took 1s for 26257 files (0.00s/file, rc=0)
+    #   ✓ Indexing complete! 0 of 0 files processed
+    # and the run published a 4.0GB checkpoint and RECORDED that HEAD as indexed.
+    # So the image answers for a tree nobody indexed: ac_cloud-mail's
+    # SignatureEditor.kt, committed SIX DAYS before that HEAD, is absent from every
+    # content table of the published store while the manifest swears the repo is
+    # current. Exactly the shape of the timeout branch below — publishing the bytes
+    # is fine, advancing the manifest is the lie — so it takes the same treatment.
+    _noop_index=0
+    grep -qE 'Indexing complete!.*0 of 0 files processed' "$_log" && _noop_index=1
     octo_log_digest "$_log" 40; rm -f "$_log"
     # graphrag phase only: no LLM-derived edges = no checkpoint (see assert_llm_graph).
     if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi
+    if [ "$_noop_index" = "1" ]; then
+      echo "::warning::[cgc-db] $r · the indexer processed 0 of 0 files although the change gate let it through (was=${last:-none} now=$cur) — octocode treats the DB as current at a commit it never indexed, so the published store answers for an older tree. The checkpoint is published, the manifest is NOT advanced, and this repo stays 'not indexed' and retries. Only a reindex (workflow input force=true) actually clears it."
+      STALE_REPOS="$STALE_REPOS $r"
+      echo "[cgc-db] checkpoint publish after $r (NO-OP index — manifest not advanced)"
+      checkpoint_publish "$r"
+      PUSHED=1
+      continue
+    fi
   elif [ "$_rc" = "124" ]; then
     echo "::warning::[cgc-db] $r is STALE in the ${MANIFEST_PHASE:-default} index: the slice of ${REPO_TIMEOUT_EFF}m expired mid-index, so the DB stays at ${last:-no indexed commit} while origin/main is at $cur. Partial progress is published and the next run resumes; every run until it converges repeats this warning."
     STALE_REPOS="$STALE_REPOS $r"

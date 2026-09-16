@@ -142,6 +142,33 @@ echo '{"cloud-infra":"453c27a3"}' > "$OCTO_HOME/$OTHER/$MANIFEST_NAME"
   && ok "ambiguous home (2+ project dirs) falls back to root instead of guessing" \
   || bad "ambiguous home must not pick a project dir"
 
+echo "── a no-op index must not advance the manifest ──"
+# The change gate only lets a repo through when its HEAD moved, so an index that
+# reports "0 of 0 files processed" did nothing while something was owed. On
+# 2026-09-15 cloud-u-android indexed 26257 files in 1s with rc=0, published a
+# 4.0GB checkpoint, and recorded that HEAD as indexed — so the served store
+# answered for an older tree while the manifest swore it was current. Recording
+# the commit is the lie; the bytes are fine. Structural check: the rc=0 branch
+# must detect it and leave before the manifest write, or the false green returns.
+RC0_BLOCK="$(awk '/^  if \[ "\$_rc" = "0" \]; then/{f=1} f{print} f&&/jq --arg r "\$r" --arg c "\$cur"/{exit}' "$UPD_SH")"
+case "$RC0_BLOCK" in
+  *"0 of 0 files processed"*) ok "the rc=0 path detects an index that processed nothing" ;;
+  *) bad "nothing detects a no-op index: octocode can exit 0 having touched no file and the run records the new HEAD as indexed" ;;
+esac
+# The guard is only worth anything if it leaves BEFORE the manifest write, so
+# compare their line numbers in the real source rather than trusting the block.
+NOOP_LN=$(grep -n '_noop_index' "$UPD_SH" | head -1 | cut -d: -f1)
+MF_WRITE_LN=$(grep -n 'jq --arg r "\$r" --arg c "\$cur"' "$UPD_SH" | head -1 | cut -d: -f1)
+if [ -n "$NOOP_LN" ] && [ -n "$MF_WRITE_LN" ] && [ "$NOOP_LN" -lt "$MF_WRITE_LN" ]; then
+  ok "the no-op branch runs before the manifest write (guard@$NOOP_LN < write@$MF_WRITE_LN)"
+else
+  bad "no-op guard missing or after the manifest write (guard@${NOOP_LN:-none} write@${MF_WRITE_LN:-none}) — a check after the record cannot unwrite it"
+fi
+case "$RC0_BLOCK" in
+  *"checkpoint_publish"*) ok "a no-op index still publishes its checkpoint (bytes are not the problem)" ;;
+  *) bad "the no-op branch drops the checkpoint too — that discards work the timeout branch deliberately keeps" ;;
+esac
+
 echo
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ]
