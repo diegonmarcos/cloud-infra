@@ -28,6 +28,23 @@ on:
       # so a wrangler-service change touches no path in THIS repo and no
       # `paths:` entry can match it. It arrives on repository_dispatch below.
       - "1_cicd/src/cicd/ship-wrangler.yml"
+      # A wrangler service consumes a REGENERATED config through a symlink:
+      # infra-cloud_cloudflare-worker/src/build-cloudflare-worker.json ->
+      # ../../../1_cloud-configs/dist/build-cloudflare-worker.json
+      # git records the content change on the dist path (the symlink itself is
+      # unchanged), and that path is in THIS repository, so unlike a_solutions
+      # it can and must be matched here.
+      - "1_cloud-configs/dist/build-*.json"
+    branches: [main]
+  # A declaration change regenerates 1_cloud-configs/dist/ inside gen-configs
+  # and lands it on main; this workflow has to wait for that and then ship from
+  # the regenerated truth. Without it a declaration change reached ship.yml,
+  # ship-home-manager.yml and ship-terraform.yml — all three cascade — and
+  # stopped here, leaving the worker deployed from the previous config behind a
+  # board of green runs. Same trigger and same gate as those three (#368 X2-F10).
+  workflow_run:
+    workflows: ["Ship → gen-configs (cloud-data)"]
+    types: [completed]
     branches: [main]
   # Container-repo pushes. client_payload.{before,after} is the range the
   # service discovery below diffs inside the a_solutions checkout.
@@ -47,6 +64,10 @@ concurrency:
 jobs:
   wrangler:
     runs-on: ubuntu-latest
+    # A FAILED gen-configs run also arrives as workflow_run 'completed'. Shipping
+    # on it would deploy from a dist/ that was never regenerated. Identical gate
+    # to ship.yml, ship-home-manager.yml and ship-terraform.yml.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write
     # Job-level so the composite fetch-vault action inherits SOPS_AGE_KEY and

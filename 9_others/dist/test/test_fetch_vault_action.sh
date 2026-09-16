@@ -88,7 +88,23 @@ for f in "${SHIP_TPLS[@]}"; do
     tpl=$(basename "$f")
     # Only assert templates that actually invoke cloud-builder; non-builder
     # ship templates don't need vault.
-    grep -q 'cloud-builder' "$f" || { echo "· $tpl does not invoke cloud-builder — skipped"; continue; }
+    #
+    # Comments are stripped FIRST. A bare `grep -q cloud-builder` counted prose
+    # as an invocation, and ship-reports.yml carries exactly one mention — the
+    # comment recording that the cloud-builder route was REMOVED from it on
+    # 2026-08-31 ("WHY THIS REPLACED THE cloud-builder ROUTE"). So this test
+    # demanded a fetch-vault step in the one workflow that had deliberately
+    # stopped needing it, and reported a live defect against a correct tree
+    # (ticket #368, X2-F4). unjam-ship.yml had the same single-comment shape.
+    # A mention is not a call; the difference is the whole check.
+    # grep -c, not `| grep -q`: under `set -o pipefail` a grep -q that exits on
+    # the first match can SIGPIPE the upstream sed, and the pipeline then reports
+    # failure even though the pattern WAS found — which silently demoted ship.yml,
+    # the single biggest cloud-builder caller, to "skipped". grep -c consumes the
+    # whole stream and cannot lose that race.
+    _cb_calls="$(sed 's/[[:space:]]*#.*$//' "$f" | grep -c 'cloud-builder' || true)"
+    [ "${_cb_calls:-0}" -gt 0 ] \
+        || { echo "· $tpl does not invoke cloud-builder — skipped"; continue; }
     if ! grep -q 'uses:.*fetch-vault' "$f"; then
         echo "✗ $tpl invokes cloud-builder but does not call ./.github/actions/fetch-vault — cloud-builder will fail"
         FAILS=$((FAILS + 1))
