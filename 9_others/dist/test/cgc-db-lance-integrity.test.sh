@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 9_others/src/../test/cgc-db-lance-integrity.test.sh
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Tester for the check that ends the cgc index's silent-corruption era (#213).
 #
 # THE FAILURE IT GUARDS: a lance table is data fragments + a chain of manifests,
