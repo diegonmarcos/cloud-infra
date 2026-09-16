@@ -656,12 +656,60 @@ if [ -n "$CONTAINER" ]; then
       sleep 5
     done
     # Last resort: the container may genuinely be gone (removed by a concurrent
-    # op — the 2026-09-03 case). compose recreates it; `|| true` because a
-    # missing compose dir must not mask the real report below.
+    # op — the 2026-09-03 case). A second, routine way to reach "No such
+    # container" is the box's own disk watchdog: its WARN branch at 85% root
+    # usage runs `docker container prune -f`
+    # (b_infra/_shared/vm-pilot/src/modules/protection/watchdog.nix), the swap
+    # above deliberately leaves $MCP_CONTAINER STOPPED, and a stopped container
+    # is exactly what that prune removes. Staging this tree is measured to take
+    # oci-apps from 76% past 85%, so the restore itself arms the watchdog that
+    # then deletes the container it is about to restart.
+    # compose recreates it; `|| true` because a missing compose dir must not
+    # mask the real report below.
+    #
+    # THE COMPOSE PROJECT NAME IS LOAD-BEARING. Ship deploys these containers as
+    # `cd $DEPLOY_PATH && docker compose -f compose/docker-compose.yml --project-directory . up -d`
+    # (cloud-ship-container-step-deploy-compose.sh), so every container and
+    # volume is recorded under project basename($DEPLOY_PATH) — for this
+    # deployment, "cloud-cgc-pub-mcp". Recreating with `cd .../compose && docker
+    # compose ...` instead names the project "compose", and under a foreign
+    # project name compose does not recognise the already-running SIBLING
+    # container as its own: it tries to CREATE it, hits "container name already
+    # in use", and aborts the whole `up` as one transaction — so the container
+    # that actually needed recreating never gets created either. That is run
+    # 35037956239 (job 104674281984) exactly: pub was gone, pvt was healthy, the
+    # recreate died on pvt's name and left pub down with the volume already
+    # swapped and the kg-store stale. deploy-compose.sh's own "Foreign-project
+    # container eviction" comment names this same hazard, naming `cd compose &&
+    # docker compose up` (project="compose") as the way to cause it. Mirror
+    # Ship's invocation; never invent a second project for one deployment.
+    # --project-directory is also what makes the YAML's relative `env_file:` and
+    # `./data` bind mounts resolve to the same paths Ship gave them.
+    #
+    # And bring up ONLY $_c. Naming both containers is what dragged the healthy
+    # sibling into the transaction and turned its name conflict into this one's
+    # failure; $_c is the only one this function was asked to revive.
     _dir="${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose}"
-    if [ -f "$_dir/docker-compose.yml" ] || [ -f "$_dir/compose.yml" ]; then
-      echo "[cgc-db-restore-all] $_c still down — recreating via compose in $_dir"
-      (cd "$_dir" && docker compose --env-file .secrets up -d cloud-cgc-pub-mcp cloud-cgc-pvt-mcp 2>&1) || true
+    _proj_dir=$(dirname "$_dir")
+    _compose_rel=""
+    for _cf in docker-compose.yml compose.yml; do
+      if [ -z "$_compose_rel" ] && [ -f "$_dir/$_cf" ]; then
+        _compose_rel="$(basename "$_dir")/$_cf"
+      fi
+    done
+    if [ -n "$_compose_rel" ]; then
+      # Same probe order as Ship's COMPOSE_HEADER: the deploy symlinks
+      # $DEPLOY_PATH/.secrets -> compose/.secrets so that --project-directory .
+      # and the YAML's `env_file: [".secrets"]` resolve to one file.
+      _env_flag=""
+      if [ -e "$_proj_dir/.secrets" ]; then
+        _env_flag="--env-file .secrets"
+      elif [ -e "$_dir/.secrets" ]; then
+        _env_flag="--env-file $(basename "$_dir")/.secrets"
+      fi
+      echo "[cgc-db-restore-all] $_c still down — recreating via compose in $_proj_dir (project $(basename "$_proj_dir"), service $_c)"
+      # shellcheck disable=SC2086
+      (cd "$_proj_dir" && docker compose -f "$_compose_rel" --project-directory . $_env_flag up -d "$_c" 2>&1) || true
       sleep 5
     else
       echo "[cgc-db-restore-all] WARN no compose file under $_dir — cannot recreate $_c"
@@ -763,7 +811,7 @@ if [ -n "$CONTAINER" ]; then
       echo "[cgc-db-restore-all] kg-store refresh skipped — no repos staged this run"
     fi
   else
-    echo "::error::[cgc-db-restore-all] $CONTAINER is DOWN after the swap — 8 restart/start attempts over ~40s AND the compose recreate all failed (per-attempt docker errors are in the WARN lines above). The kg-store SurrealDB was NOT refreshed, so 8001/8002 hold STALE data. Recover: from ${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose} run 'docker compose --env-file .secrets up -d cloud-cgc-pub-mcp cloud-cgc-pvt-mcp', then re-run the per-container OCTOCODE_SKIP_INDEX=1 reindex.sh tail."
+    echo "::error::[cgc-db-restore-all] $CONTAINER is DOWN after the swap — 8 restart/start attempts over ~40s AND the compose recreate all failed (per-attempt docker errors are in the WARN lines above). The kg-store SurrealDB was NOT refreshed, so 8001/8002 hold STALE data. Recover: from $(dirname "${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose}") run 'docker compose -f $(basename "${CGC_COMPOSE_DIR:-/opt/containers/cloud-cgc-pub-mcp/compose}")/docker-compose.yml --project-directory . --env-file .secrets up -d $CONTAINER', then re-run the per-container OCTOCODE_SKIP_INDEX=1 reindex.sh tail. Run it from the DEPLOY PATH with --project-directory ., not from the compose/ subdir: the subdir form names the project 'compose', which cannot see the existing containers and dies on the sibling's container name."
     RESTORE_MCP_FAILED=1
   fi
 fi
