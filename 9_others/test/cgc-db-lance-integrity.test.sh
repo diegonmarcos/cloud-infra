@@ -349,6 +349,49 @@ else
   bad "cannot locate the host-dir swap branch in restore-all.sh"
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 13. THE THIRD COPY. There are not two of this script, there are three:
+#       1_cicd/src/ops/cloud-cgc-db-restore-all.sh                  (CI -> box)
+#       1_cicd/dist/scripts/cloud-cgc-db-restore-all.sh             (generated)
+#       a_solutions/user-ai_cloud-cgc-pub-mcp/src/cloud-cgc-db-restore-all.sh
+#     The third is a DIFFERENT repository (diegonmarcos/cloud-u-containers) and is
+#     read at Nix eval time by that service's compose.nix (builtins.readFile) into
+#     the db-restore-multi profile, so it is a real execution path, not a stale
+#     copy. When the swap fix landed in 1_cicd on 2026-09-16 that copy still had
+#     the `sh -c ... ; :` form verbatim -- i.e. fixing one copy leaves the compose
+#     path armed with the exact defect. Section 7 pins copies 1 and 2 against
+#     drift; nothing pinned the third.
+#
+#     Scoped to the SWAP REGION on purpose, not whole-file identity: the two files
+#     have legitimately diverged elsewhere (~250 diff lines), and a whole-file pin
+#     would be red from the day it was written and get deleted rather than fixed.
+RA3="$REPO_ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/src/cloud-cgc-db-restore-all.sh"
+swap_region() { # $1=file -> the swap block, both branches
+  sed -n '/THE SWAP MUST BE ABLE TO FAIL/,/swap parity OK: \$_dst_n files in \$TARGET/p' "$1"
+}
+if [ ! -d "$REPO_ROOT/a_solutions" ]; then
+  # Neither pass nor fail: this checkout simply does not have the other repo, and
+  # counting it as a pass would be the "guard that tests nothing" this file exists
+  # to prevent. lint-pipeline.yml always checks it out (actions/checkout with
+  # repository: diegonmarcos/cloud-u-containers, path: a_solutions), so the gate is
+  # real where it gates.
+  echo "  SKIPPED (not counted): a_solutions/ is not checked out here, so the compose copy of restore-all could not be compared. CI always checks it out."
+elif [ ! -f "$RA3" ]; then
+  bad "a_solutions/ is checked out but $RA3 is gone -- the compose db-restore-multi profile reads that path at Nix eval time"
+else
+  R1="$(swap_region "$RA_SH")"
+  R3="$(swap_region "$RA3")"
+  if [ -z "$R1" ]; then
+    bad "could not extract the swap region from $RA_SH -- section 13 cannot compare anything"
+  elif [ -z "$R3" ]; then
+    bad "the compose copy (a_solutions/user-ai_cloud-cgc-pub-mcp/src/cloud-cgc-db-restore-all.sh) has NO fixed swap region: its restore still cannot report a failed copy, so the db-restore-multi path can still wipe a volume and report success"
+  elif [ "$R1" = "$R3" ]; then
+    ok "the compose copy's swap region is identical to 1_cicd's"
+  else
+    bad "the compose copy's swap region has DRIFTED from 1_cicd's -- two execution paths, two behaviours, and only one of them is tested above"
+  fi
+fi
+
 echo
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ] || exit 1
