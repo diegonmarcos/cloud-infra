@@ -66,6 +66,10 @@ ck "maddy refuses the login       -> mail" \
    "$(cause 1 'A1 NO [AUTHENTICATIONFAILED] Invalid credentials')" "mail/mail-store-auth-rejected"
 ck "probe script crashed          -> remote-script" \
    "$(cause 1 'ModuleNotFoundError: No module named googleapiclient')" "remote-script/remote-script-crashed"
+ck "service-account key unreadable by the container uid -> secrets" \
+   "$(cause 1 'gmail count failed: [Errno 13] Permission denied: /run/secrets/GOOGLE_SERVICE_ACCOUNT_KEY')" "secrets/secrets-key-unreadable"
+ck "EACCES on run/secrets also names the class" \
+   "$(cause 1 'cannot open file /run/secrets: EACCES')" "secrets/secrets-key-unreadable"
 
 # An unrecognised failure must say it is unrecognised and carry the evidence
 # onward. Guessing "transport" or "mail" here would be the original defect with
