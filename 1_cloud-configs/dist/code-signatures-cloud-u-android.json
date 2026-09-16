@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13428,
+    "files": 13429,
     "by_lang": {
-      "sh": 210,
+      "sh": 211,
       "py": 43,
       "java": 711,
       "ts": 2625,
@@ -18,7 +18,7 @@
     },
     "by_role": {
       "script": 82,
-      "shell": 149,
+      "shell": 150,
       "java": 711,
       "entrypoint": 20,
       "module": 1377,
@@ -3361,7 +3361,12 @@
         "android.widget.ScrollView",
         "android.widget.TextView",
         "androidx.core.content.ContextCompat",
-        "androidx.fragment.app.Fragment"
+        "androidx.fragment.app.Fragment",
+        "androidx.lifecycle.LifecycleOwner",
+        "androidx.lifecycle.lifecycleScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
@@ -3376,7 +3381,7 @@
         "refreshBar(ctx: Context, onRefresh: ()",
         "renderAllApps( ctx: Context, rootCol: LinearLayout, exclude: Set<String> = emptySet()",
         "renderSmartFolders( ctx: Context, rootCol: LinearLayout, exclude: Set<String> = emptySet()",
-        "renderSmartFoldersAsync( ctx: Context, body: LinearLayout, exclude: Set<String> = emptySet()",
+        "renderSmartFoldersAsync( owner: LifecycleOwner, ctx: Context, body: LinearLayout, exclude: Set<String> = emptySet()",
         "computeSmartFolders( ctx: Context, exclude: Set<String>, )",
         "smartFoldersCached( ctx: Context, exclude: Set<String>, )",
         "renderSmartFolderBody( ctx: Context, rootCol: LinearLayout, rendered: List<SmartRendered>, )",
@@ -96298,7 +96303,14 @@
         "open(path: String)",
         "share(path: String)",
         "send(path: String, build: (Uri, String)",
+        "readText(path: String)",
+        "writeText(path: String, text: String)",
+        "mirrorJobs()",
+        "mirror(sourcePath: String, destinationPath: String, deleteExtra: Boolean)",
+        "mirrorInto( source: File, destination: File, deleteExtra: Boolean, tally: MirrorTally, depthLeft: Int )",
+        "alreadyMirrored(source: File, target: File)",
         "resolve(path: String)",
+        "resolveDeclared(path: String)",
         "parentWithinRoots(dir: File)",
         "describe(file: File)",
         "mimeOf(file: File)",
@@ -96309,7 +96321,8 @@
         "failure(reason: String)",
         "okErr(ok: Boolean, error: String)",
         "class FilesBridge",
-        "class could"
+        "class could",
+        "class MirrorTally"
       ]
     },
     {
@@ -96446,6 +96459,20 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-bridge-contract.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
       ]
     },
     {
