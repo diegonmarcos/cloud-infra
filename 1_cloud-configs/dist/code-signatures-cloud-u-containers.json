@@ -1767,6 +1767,8 @@
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
         "getSolutionRoots",
+        "getContainersRoot",
+        "getRepoDir",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -1791,9 +1793,7 @@
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC"
+        "AUTHELIA_TOKEN_PATH"
       ],
       "imports": [
         "fs",
@@ -1810,6 +1810,8 @@
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
         "getSolutionRoots()",
+        "getContainersRoot()",
+        "getRepoDir(localName: string)",
         "syncRepos(force = false)"
       ]
     },
@@ -4450,6 +4452,8 @@
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
         "getSolutionRoots",
+        "getContainersRoot",
+        "getRepoDir",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -4474,9 +4478,7 @@
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC"
+        "AUTHELIA_TOKEN_PATH"
       ],
       "imports": [
         "fs",
@@ -4493,6 +4495,8 @@
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
         "getSolutionRoots()",
+        "getContainersRoot()",
+        "getRepoDir(localName: string)",
         "syncRepos(force = false)"
       ]
     },
@@ -5726,7 +5730,8 @@
         "fs",
         "path",
         "os",
-        "../../shared/http.js"
+        "../../shared/http.js",
+        "../../registry/peer-map.js"
       ],
       "symbols": [
         "resolveDagu()",
@@ -5745,7 +5750,8 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "fs",
         "path",
-        "os"
+        "os",
+        "../../registry/peer-map.js"
       ],
       "symbols": [
         "loadTopology()",
@@ -5872,7 +5878,8 @@
         "fast-xml-parser",
         "../../registry/index.js",
         "../../registry/summary.js",
-        "../../registry/public-registry.js"
+        "../../registry/public-registry.js",
+        "../../registry/peer-map.js"
       ],
       "symbols": [
         "autheliaApi(path: string, extraHeaders?: Record<string, string>)",
@@ -13303,11 +13310,15 @@
         "super::types::",
         "anyhow::Result",
         "std::time::Duration",
-        "tokio::time::timeout"
+        "tokio::time::timeout",
+        "the"
       ],
       "symbols": [
         "ssh_args(alias: &str, cmd: &str)",
         "ssh_exec_once(vm_alias: &str, command: &str, timeout_secs: u64)",
+        "ssh_exec_once_fresh(vm_alias: &str, command: &str, timeout_secs: u64)",
+        "ssh_exec_once_with(vm_alias: &str, command: &str, timeout_secs: u64, args: Vec<String>)",
+        "is_broken_pipe(stderr: &str)",
         "ssh_exec(vm_alias: &str, command: &str, timeout_secs: u64)",
         "ssh_failure_diagnostic(vm_alias: &str, initial_error: &str)",
         "cloud_vm_status(vm_alias: &str)",
@@ -13779,14 +13790,17 @@
         "std::time::Duration",
         "tokio::time::timeout",
         "ssh_batch_mail",
+        "the",
         "SPF",
         "it",
-        "was",
-        "the"
+        "was"
       ],
       "symbols": [
         "ssh_args(alias: &str, cmd: &str)",
         "ssh_exec_once(vm_alias: &str, command: &str, timeout_secs: u64)",
+        "ssh_exec_once_fresh(vm_alias: &str, command: &str, timeout_secs: u64)",
+        "ssh_exec_once_with(vm_alias: &str, command: &str, timeout_secs: u64, args: Vec<String>)",
+        "is_broken_pipe(stderr: &str)",
         "ssh_exec(vm_alias: &str, command: &str, timeout_secs: u64)",
         "ssh_failure_diagnostic(vm_alias: &str, initial_error: &str)",
         "cloud_vm_status(vm_alias: &str)",
@@ -16199,7 +16213,8 @@
       "imports": [
         "fs",
         "path",
-        "./config.js"
+        "./config.js",
+        "./shared/libs/paths.js"
       ],
       "symbols": [
         "estimateTokens(text: string)",
@@ -17063,6 +17078,8 @@
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
         "getSolutionRoots",
+        "getContainersRoot",
+        "getRepoDir",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -17087,9 +17104,7 @@
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC"
+        "AUTHELIA_TOKEN_PATH"
       ],
       "imports": [
         "fs",
@@ -17106,6 +17121,8 @@
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
         "getSolutionRoots()",
+        "getContainersRoot()",
+        "getRepoDir(localName: string)",
         "syncRepos(force = false)"
       ]
     },
@@ -17361,7 +17378,8 @@
         "fs",
         "path",
         "zod",
-        "../../config.js"
+        "../../config.js",
+        "../../shared/libs/paths.js"
       ],
       "symbols": [
         "readJsonSafe(path: string)",
@@ -17382,6 +17400,7 @@
         "fs",
         "path",
         "../../config.js",
+        "../../shared/libs/paths.js",
         "../../context.js"
       ],
       "symbols": [
@@ -17445,7 +17464,8 @@
         "zod",
         "fs",
         "path",
-        "../../config.js"
+        "../../config.js",
+        "../../shared/libs/paths.js"
       ],
       "symbols": [
         "getSolutionsDir()",
@@ -18278,6 +18298,8 @@
         "getOctocodeRepoConfig",
         "getOctocodeRepos",
         "getSolutionRoots",
+        "getContainersRoot",
+        "getRepoDir",
         "syncRepos",
         "HOME",
         "GIT_BASE",
@@ -18302,9 +18324,7 @@
         "BUILD_SCRIPT",
         "SSH_CONFIG_PATH",
         "SOPS_AGE_KEY_FILE",
-        "AUTHELIA_TOKEN_PATH",
-        "C3_API_MESH",
-        "C3_API_PUBLIC"
+        "AUTHELIA_TOKEN_PATH"
       ],
       "imports": [
         "fs",
@@ -18321,6 +18341,8 @@
         "getOctocodeRepoConfig()",
         "getOctocodeRepos()",
         "getSolutionRoots()",
+        "getContainersRoot()",
+        "getRepoDir(localName: string)",
         "syncRepos(force = false)"
       ]
     },
