@@ -51,6 +51,7 @@
 #               class `absent` = declared, no running container    → REPORT ONLY
 #               class `undecidable` = registry would not answer    → REPORT ONLY
 #               class `unpublished` = running an unpushed image    → REPORT ONLY
+#               class `unreachable` = VM would not answer          → REPORT ONLY
 #   stderr    : the reasoning, one line per service
 #   exit 0    : every declared service reconciles
 #   exit 1    : at least one `drift` finding (re-shippable)
@@ -135,14 +136,39 @@ probe_vm_real() {
   _vm="$1"; shift
   [ "$#" -gt 0 ] || return 0
 
-  _cjson="$(ssh -o BatchMode=yes -o ConnectTimeout=15 "$_vm" \
-              "docker inspect $*" 2>/dev/null || true)"
-  printf '%s' "$_cjson" | jq -e 'type == "array"' >/dev/null 2>&1 || return 0
+  # Retried, because the mesh drops connections and a read-only probe is the
+  # safest thing in the engine to repeat. oci-mail answered normally in run
+  # 35039429321 and timed out at exactly ConnectTimeout in 35039770510 fifteen
+  # minutes later; one transient link fault made the whole fleet sweep
+  # undecidable and the job red. The deploy path already treats ssh 255 as a
+  # link fault rather than a code fault (SHIP_EXIT_TRANSPORT in
+  # cloud-ship-container-step-deploy-rsync.sh); this is the read-only analogue.
+  _cjson=""
+  for _try in 1 2 3; do
+    _cjson="$(ssh -o BatchMode=yes -o ConnectTimeout=15 "$_vm" \
+                "docker inspect $*" 2>/dev/null || true)"
+    printf '%s' "$_cjson" | jq -e 'type == "array"' >/dev/null 2>&1 && break
+    _cjson=""
+    [ "$_try" -lt 3 ] && { note "  $_vm: probe attempt $_try did not answer — retrying"; sleep 5; }
+  done
+
+  # UNREACHABLE is not the same fact as "nothing matched", and collapsing them
+  # is how a silent failure gets built. A VM that answers with an empty array
+  # has told us something true (none of the declared containers are running);
+  # a VM that never answers has told us nothing, and nothing on it may be
+  # called in-sync. The caller needs to tell those apart, so the unreachable
+  # case is stated on the wire rather than inferred from empty output.
+  if [ -z "$_cjson" ]; then
+    printf '#UNREACHABLE\n'
+    return 0
+  fi
 
   # image id -> ref, for the containers that are actually up
   _pairs="$(printf '%s' "$_cjson" \
             | jq -r '.[] | select(.Name != null)
                      | "\(.Name | ltrimstr("/"))\t\(.Image)\t\(.Config.Image // "")"')"
+  # Reachable but nothing declared is running: return cleanly with no rows, so
+  # every declared container falls through to `absent` below.
   [ -n "$_pairs" ] || return 0
 
   _ids="$(printf '%s\n' "$_pairs" | cut -f2 | sort -u | tr '\n' ' ')"
@@ -237,7 +263,7 @@ fi
 [ -n "${VMS// /}" ] || die "no VMs to reconcile"
 
 RC=0
-FOUND_ANY_CONTAINER=0
+FOUND_ANY_VM=0
 
 for vm in $VMS; do
   # service dir -> container names, straight from each service's own build.json.
@@ -292,15 +318,21 @@ for vm in $VMS; do
   note "── $vm: probing $(printf '%s' "$CONTAINERS" | wc -w) declared container(s)"
   OBSERVED="$(probe_vm "$vm" $CONTAINERS || true)"
 
-  # A VM that answers nothing is a BROKEN PROBE, not a clean fleet. Reporting
+  # A VM that will not answer is a BROKEN PROBE, not a clean fleet. Reporting
   # "all in sync" because the ssh failed is the same false-green this whole
-  # script exists to delete.
-  if [ -z "$OBSERVED" ]; then
-    note "::error::$vm: probe returned nothing — cannot assert this VM is in sync"
-    RC=2
+  # script exists to delete, so this stays fatal.
+  if printf '%s\n' "$OBSERVED" | grep -qx '#UNREACHABLE'; then
+    # Reported loudly and recorded as a finding, but it does NOT stop the run.
+    # One VM behind a transient mesh fault used to make the whole sweep exit 2,
+    # which blocked the re-ship of drift already found on the three VMs that
+    # answered perfectly well — #354 continuing quietly because of a dropped
+    # packet. Nothing on THIS VM is called in-sync; everything known about the
+    # others still gets acted on.
+    note "::error::$vm: did not answer after 3 attempts — nothing on this VM is being called in-sync"
+    printf '%s\t%s\t%s\t%s\n' "$vm" "-" "unreachable" "probe failed after 3 attempts"
     continue
   fi
-  FOUND_ANY_CONTAINER=1
+  FOUND_ANY_VM=1
 
   # Cache registry lookups per ref: several containers legitimately share one
   # image (cloud-cgc-pub-mcp and cloud-cgc-pvt-mcp both run
@@ -373,7 +405,7 @@ for vm in $VMS; do
     else
       note "  $dir/$cname: DRIFT — running ${running}, registry has ${desired%%,*}"
       printf '%s\t%s\t%s\t%s\n' "$vm" "$dir" "drift" "$cname running=$running registry=${desired%%,*}"
-      [ "$RC" -eq 2 ] || RC=1
+      RC=1
     fi
   done <<< "$OBSERVED"
 
@@ -388,14 +420,17 @@ for vm in $VMS; do
   rm -f "$DESIRED_CACHE" "$MAP"
 done
 
-if [ "$RC" -eq 0 ] && [ "$FOUND_ANY_CONTAINER" -eq 0 ]; then
-  note "::error::reconcile observed zero containers fleet-wide — that is a broken probe, not a clean fleet"
+# Not "zero containers" — zero VMS. A VM legitimately running none of its
+# declared containers is a real answer (they come out as `absent` findings);
+# no VM answering at all means the reconcile never ran.
+if [ "$FOUND_ANY_VM" -eq 0 ]; then
+  note "::error::no VM answered the probe — the reconcile did not run, and a clean fleet is NOT what this means"
   exit 2
 fi
 
 case "$RC" in
   0) note "RECONCILED — every declared container runs the digest the registry holds" ;;
   1) note "DRIFT — the services listed on stdout are committed, built, and NOT on the fleet" ;;
-  2) note "UNDECIDABLE — a VM would not answer at all; the reconcile could not run for it and nothing on it is being called in-sync" ;;
+  2) note "UNDECIDABLE — the reconcile could not run at all" ;;
 esac
 exit "$RC"
