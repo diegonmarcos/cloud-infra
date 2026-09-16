@@ -10,7 +10,7 @@
 #
 # Both impure operations of the guard are injected, so this needs neither a
 # registry nor a git repository:
-#   MONOTONIC_DIGEST_CMD  <ref>            -> digest
+#   MONOTONIC_DIGEST_CMD  <ref>            -> digest(s), one per line
 #   MONOTONIC_REVLIST_CMD <ours> <branch>  -> commits newer than <ours>
 #
 # The load-bearing case is 2. Case 1 is the one a weaker guard also passes.
@@ -108,6 +108,26 @@ ck_has "prefixed source tag is found and REFUSED" "$out" "RC=3"
 out="$(LATEST_IS="$D_NEW" TAGGED="src-${NEW_SHA:0:7} $D_NEW" NEWER_COMMITS="$NEW_SHA" \
        run_guard "$OLD_SHA")"
 ck_has "without the prefix the same tag is not found" "$out" "RC=0"
+
+echo "── case 7: a MULTI-ARCH tag is reported as its whole digest set"
+# The resolver emits the index digest AND every per-arch child. The first
+# version of the guard reduced that with `sort -u | head -n1`, which returns
+# whichever digest sorts first — a CHILD, not the index — and then printed it
+# as though it were what :latest points at. Caught in the guard's own first
+# live CI run (35047596807), where it announced a child of the real index.
+# The equality test survived that (both sides picked the same representative),
+# so only the REPORTED value was wrong — which is exactly the kind of defect
+# that destroys trust in a guard on the day it finally refuses.
+IDX="sha256:9e0c1f4e00000000000000000000000000000000000000000000000000000000"
+KID1="sha256:0253c34400000000000000000000000000000000000000000000000000000000"
+KID2="sha256:3cae861f00000000000000000000000000000000000000000000000000000000"
+MULTI="$IDX
+$KID1
+$KID2"
+out="$(LATEST_IS="$MULTI" TAGGED="" NEWER_COMMITS="" run_guard "$NEW_SHA")"
+ck_has "the index digest is reported"              "$out" "$IDX"
+ck_has "and so is each child (the set, not a pick)" "$out" "$KID1"
+ck_has "and the second child too"                   "$out" "$KID2"
 
 echo
 echo "passed: $pass  failed: $fail"

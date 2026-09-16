@@ -104,14 +104,26 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # caller states which prefix names the source commit, and publishes that tag.
 PFX="${MONOTONIC_TAG_PREFIX:-}"
 
-# Resolve a ref to its digest. Defaults to the shared resolver so this guard
-# and the drift engines agree on what a tag currently means.
-digest_of() {
+# Resolve a ref to the SET of digests that identify it, as one comparable
+# string. Defaults to the shared resolver so this guard and the drift engines
+# agree on what a tag currently means.
+#
+# A set, not one element. The resolver emits the index digest AND every
+# per-arch child, and the first version of this function took
+# `sort -u | head -n1` — which for a multi-arch tag returns whichever digest
+# sorts first, a CHILD, not the index. The equality test still happened to be
+# right (both sides pick the same representative from identical sets), but the
+# guard then PRINTED a child digest as if it were what `:latest` points at.
+# Caught in its own first live run, 35047596807:
+#   "monotonic: …:latest currently = sha256:0253c344…"   <- a child of 9e0c1f4e…
+# A guard that misreports the thing it just read is one nobody will trust the
+# day it actually refuses, so it compares the whole set and says the whole set.
+digest_set() {
   if [ -n "${MONOTONIC_DIGEST_CMD:-}" ]; then
     $MONOTONIC_DIGEST_CMD "$1"
   else
     bash "$SCRIPT_DIR/cloud-ship-registry-digest.sh" "$1"
-  fi | grep '^sha256:' | head -n1
+  fi | grep '^sha256:' | sort -u | paste -sd, -
 }
 
 # Commits strictly newer than ours on the branch. Empty is the normal answer.
@@ -123,7 +135,7 @@ revlist_newer() {
   fi
 }
 
-CUR="$(digest_of "$IMAGE:latest")"
+CUR="$(digest_set "$IMAGE:latest")"
 if [ -z "$CUR" ]; then
   echo "monotonic: $IMAGE:latest does not resolve yet — first publish, nothing to move backwards over"
   exit 0
@@ -139,7 +151,7 @@ fi
 echo "monotonic: $(printf '%s\n' "$NEWER" | grep -c .) commit(s) newer than ${OURS} — checking whether one of them already published"
 for c in $NEWER; do
   for short in "${PFX}${c:0:7}" "${PFX}${c:0:8}" "${PFX}${c:0:12}" "${PFX}${c}"; do
-    d="$(digest_of "$IMAGE:$short")"
+    d="$(digest_set "$IMAGE:$short")"
     [ -n "$d" ] || continue
     if [ "$d" = "$CUR" ]; then
       echo "::error::REFUSING to move $IMAGE:latest backwards. It currently holds the image built from $c, which is a DESCENDANT of the commit this run is publishing ($OURS). Overwriting it would silently revert that commit's changes while this run reported success — the exact failure this guard exists to stop. Nothing was pushed. If you genuinely intend to roll back, retag deliberately rather than racing :latest."
