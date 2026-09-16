@@ -207,9 +207,14 @@ jobs:
           set -uo pipefail
           VMS="${{ github.event.inputs.vms || 'all' }}"
           [ "$VMS" = "all" ] && VMS=""
+          # `|| rc=$?`, not a bare call followed by `rc=$?`. GHA runs steps under
+          # `bash -e`, so a bare call would abort the step the instant the
+          # reconcile exits 1 — and exit 1 is the EXPECTED outcome, the one that
+          # means "drift found, go re-ship it". Written the obvious way, the
+          # re-ship step could only ever run when there was nothing to re-ship.
+          rc=0
           # shellcheck disable=SC2086
-          bash 1_cicd/src/scripts/cloud-ship-reconcile.sh $VMS > findings.tsv
-          rc=$?
+          bash 1_cicd/src/scripts/cloud-ship-reconcile.sh $VMS > findings.tsv || rc=$?
           echo "rc=$rc" >> "$GITHUB_OUTPUT"
           echo "### Reconcile findings" >> "$GITHUB_STEP_SUMMARY"
           if [ -s findings.tsv ]; then

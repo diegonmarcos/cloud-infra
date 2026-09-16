@@ -164,6 +164,34 @@ cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}"
 ck "digest-less image classed unpublished" "$(grep -c "unpublished" "$WORK/out")" "1"
 
 
+# 8. containers[] is NOT homogeneous across the fleet: infra-db_postlite's array
+#    mixes objects with a bare string, and `.container_name` on a string is a jq
+#    RUNTIME error (exit 5) that arrives AFTER jq has already printed the valid
+#    names. Under `set -o pipefail` that killed the entire fleet sweep, and with
+#    jq's stderr discarded it died having printed nothing — run 35038684236,
+#    0.03s, no output, exit 5. One malformed declaration must cost that service,
+#    never the other 67.
+mkdir -p "$WORK/sol/infra-db_postlite"
+cat > "$WORK/sol/infra-db_postlite/build.json" <<'JSON'
+{ "containers": [ { "container_name": "postlite-npm" },
+                  "a bare string that is not a container object",
+                  { "container_name": "postlite-ntfy" } ] }
+JSON
+cat > "$WORK/gha-mixed.json" <<'JSON'
+{
+  "vms": { "testvm": { "wg_ip": "10.0.0.99" } },
+  "services": {
+    "postlite": { "dir": "infra-db_postlite",         "vm": "testvm", "has_docker": true },
+    "pubmcp":   { "dir": "user-ai_cloud-cgc-pub-mcp", "vm": "testvm", "has_docker": true }
+  }
+}
+JSON
+PROBE_OUTPUT="cloud-cgc-pub-mcp${T}${OURS}${T}${VM_STALE}" GHA_CONFIG="$WORK/gha-mixed.json" SOLUTIONS_DIR="$WORK/sol" DOCKER_REGISTRY="ghcr.io/diegonmarcos" REG_CURRENT="$REG_CURRENT" CHILD_DIGEST="" RECONCILE_PROBE_CMD="$WORK/probe" RECONCILE_REGISTRY_CMD="$WORK/registry"   bash "$RECONCILE" testvm >"$WORK/out" 2>"$WORK/err"
+rc=$?
+ck "mixed containers[] does not abort the sweep" "$rc" "1"
+ck "the healthy service is still reported"       "$(grep -c 'user-ai_cloud-cgc-pub-mcp.*drift' "$WORK/out")" "1"
+ck "the mixed service's objects still parse"     "$(grep -c 'postlite-npm' "$WORK/out")" "1"
+
 # ── The re-ship selector: the half that actually re-queues the lost deploy ──
 RESHIP="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
 [ -f "$RESHIP" ] || { echo "FAIL: $RESHIP missing"; exit 1; }

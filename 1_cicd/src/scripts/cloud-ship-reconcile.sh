@@ -223,10 +223,35 @@ for vm in $VMS; do
     [ -n "$dir" ] || continue
     bj="$SOLUTIONS_DIR/$dir/build.json"
     [ -f "$bj" ] || { note "  $dir: no build.json at $bj — skipped"; continue; }
-    jq -r '(.containers // [])[] | .container_name // empty' "$bj" 2>/dev/null \
-      | while IFS= read -r cn; do
-          [ -n "$cn" ] && printf '%s\t%s\n' "$cn" "$dir" >> "$MAP"
-        done
+
+    # `map(select(type == "object"))` is not defensive padding, it is required:
+    # containers[] is NOT homogeneous across the fleet. infra-db_postlite's
+    # array mixes objects with a bare string, and `.container_name` on a string
+    # is a jq RUNTIME error — jq prints three container names, then exits 5.
+    # Under `set -o pipefail` that killed the whole reconcile at the second VM,
+    # and the `2>/dev/null` this line used to carry meant it died having printed
+    # nothing at all. Run 35038684236 failed exactly that way: 0.03s, no output,
+    # exit 5. A reconcile whose job is to delete silent failures must not have
+    # one of its own.
+    #
+    # Errors are captured and reported rather than discarded, and one unreadable
+    # service is skipped rather than being allowed to abort the fleet sweep —
+    # losing 67 services' worth of answer to one malformed declaration is a far
+    # worse outcome than the malformed declaration itself.
+    _names=""; _jqerr=""
+    if _names="$(jq -r '(.containers // [])
+                        | map(select(type == "object"))
+                        | .[] | .container_name // empty' "$bj" 2>/tmp/reconcile-jq-err)"; then
+      :
+    else
+      _jqerr="$(cat /tmp/reconcile-jq-err 2>/dev/null || true)"
+      note "  $dir: build.json unreadable — skipped. jq said: ${_jqerr:-<no message>}"
+      continue
+    fi
+    [ -n "$_names" ] || { note "  $dir: no containers[].container_name — nothing running to compare"; continue; }
+    printf '%s\n' "$_names" | while IFS= read -r cn; do
+      [ -n "$cn" ] && printf '%s\t%s\n' "$cn" "$dir" >> "$MAP"
+    done
   done < <(jq -r --arg vm "$vm" '.services | to_entries[]
                                  | select(.value.vm == $vm)
                                  | .value.dir' "$GHA_CONFIG")
