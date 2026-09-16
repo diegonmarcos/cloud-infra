@@ -20,10 +20,13 @@
 name: "Ship → home-manager"
 
 # Two triggers, by intent:
-#   push        → b_infra/ change auto-ships immediately (code/module level).
+#   push        → b_infra/ change auto-ships immediately (code/module level),
+#                 but ONLY when the pushed commit carries the required
+#                 deploy-authorization marker (see the Gate step below; #414).
 #   workflow_run → declaration change made gen-configs regen dist/; this
 #                 workflow waits for the new dist/ to commit, THEN ships.
-# Manual workflow_dispatch always available.
+# Manual workflow_dispatch always available, and it requires the
+# confirm_fleet_deploy input to be set to true before it will deploy.
 on:
   push:
     paths:
@@ -39,6 +42,11 @@ on:
         description: "Target VM (e.g. gcp-proxy, oci-apps) or empty for all"
         required: false
         type: string
+      confirm_fleet_deploy:
+        description: "Set to true to authorise a home-manager fleet deploy. This input exists because a b_infra change used to deploy to ALL FOUR VMs unconditionally (#414)."
+        required: false
+        default: "false"
+        type: boolean
 
 # 2026-09-06: joined the fleet-wide WG group — see ship.yml deploy.concurrency.
 concurrency:
@@ -106,6 +114,12 @@ jobs:
     # ship.yml's job-level env (the working reference).
     env:
       SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      # Required marker for a b_infra fleet deploy (#414). A commit touching
+      # b_infra/** must carry this string in its message before
+      # ship-home-manager.yml will ship home-manager to any VM. Set here (not
+      # inline in the gate step) so every invocation of the authorization
+      # script reads the same value and it can be audited in one place.
+      B_INFRA_DEPLOY_MARKER: "[deploy-fleet]"
     steps:
       # Checkout FIRST so the gate's `git diff` has history.
       # ref = upstream SHA (workflow_run) so we examine the commit that
@@ -125,7 +139,7 @@ jobs:
           include: I_cloud
           cloud_data_deploy_key: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
 
-      - name: Gate (manual VM filter + path-relevance check)
+      - name: Gate (deploy-authorization + manual VM filter + path-relevance)
         id: gate
         run: |
           TARGET="${{ inputs.vm }}"
@@ -136,7 +150,38 @@ jobs:
             echo "::notice::skip — other VM targeted ($TARGET ≠ $VM)"
             exit 0
           fi
-          # 2. workflow_run path-relevance: skip if upstream commit didn't touch b_infra/**
+          # 2. Deploy-authorization — FAIL CLOSED. A b_infra deploy to the
+          #    fleet used to be unconditional (#414): ANY commit touching
+          #    b_infra/** shipped home-manager to all four VMs, recreating the
+          #    agent containers on oci-apps and killing every running headless
+          #    agent mid-task. Every trigger that can deploy must now prove
+          #    consent FIRST. The check lives in one testable engine script
+          #    (cloud-ship-b-infra-deploy-authorization.sh); a refusal below
+          #    exits non-zero, so the job goes RED and no Ship step runs.
+          #    delivery: push requires the marker in every b_infra-touching
+          #    commit message; workflow_dispatch requires the
+          #    confirm_fleet_deploy input = true; workflow_run requires the
+          #    marker on the upstream commit (checked after path-relevance,
+          #    below, proves a b_infra change actually flowed).
+          AUTH=".github/workflows/scripts/cloud-ship-b-infra-deploy-authorization.sh"
+          if [ ! -f "$AUTH" ]; then
+            echo "::error::deploy-authorization gate is missing ($AUTH). Refusing to deploy a b_infra change with no gate."
+            exit 1
+          fi
+          case "${{ github.event_name }}" in
+            push)
+              bash "$AUTH" push "$GITHUB_EVENT_PATH"
+              ;;
+            workflow_dispatch)
+              bash "$AUTH" workflow_dispatch "$GITHUB_EVENT_PATH" "${{ inputs.confirm_fleet_deploy }}"
+              ;;
+            workflow_run)
+              # Authorization for workflow_run happens inside block 3 below,
+              # after path-relevance decides whether b_infra actually changed.
+              ;;
+          esac
+          # 3. workflow_run path-relevance: skip if upstream commit didn't
+          #    touch b_infra/**, AND authorise (require the marker) when it did.
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             # FAIL CLOSED (deploy), NOT OPEN (skip), WHEN THE DIFF ITSELF FAILS.
             # This used to be one pipeline ending in `|| true`, so a git error
@@ -148,7 +193,10 @@ jobs:
             # updated while the dashboard says everything is fine. That is the
             # worst possible direction to fail in. Capture git's exit status
             # separately and, if the diff cannot be computed, DEPLOY rather
-            # than assume there was nothing to do.
+            # than assume there was nothing to do. That same worst-case
+            # direction is why the DEPLOY-AUTHORIZATION gate runs BEFORE the
+            # diff is even attempted: a refusal is loud and red, never a green
+            # skip.
             DIFF_OUT=$(git diff --name-only HEAD^ HEAD 2>&1); DIFF_RC=$?
             if [ "$DIFF_RC" -ne 0 ]; then
               echo "::warning::path-relevance diff failed (exit $DIFF_RC) — deploying rather than skipping. git said: ${DIFF_OUT}"
@@ -170,6 +218,10 @@ jobs:
               echo "This run being green does **not** mean the VM was updated." >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
+            # A b_infra change really did flow via gen-configs — require the
+            # same marker the push path demands, so no regeneration silently
+            # deploys an unmarked b_infra change under a second trigger.
+            bash "$AUTH" workflow_run "$GITHUB_EVENT_PATH"
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
