@@ -128,10 +128,14 @@ cloud-cgc-pvt-mcp${T}${OURS}${T}${CHILD_DIGEST}"
 ck "per-arch child digest is in-sync"      "$rc" "0"
 CHILD_DIGEST=""
 
-# 4. A dead probe must never read as a clean fleet.
-run ""
-ck "empty probe is undecidable, not green" "$rc" "2"
-ck "says so out loud"                      "$(grep -c '::error::.*probe returned nothing' "$WORK/err")" "1"
+# 4. A dead probe must never read as a clean fleet. The probe says UNREACHABLE
+#    on the wire rather than leaving the caller to infer it from empty output,
+#    because "the VM would not answer" and "the VM answered, nothing is running"
+#    are different facts and collapsing them is how a dead probe starts reading
+#    as a healthy fleet.
+run "#UNREACHABLE"
+ck "unreachable VM yields no in-sync claim" "$(grep -c 'in-sync' "$WORK/out")" "0"
+ck "unreachable VM says so out loud"        "$(grep -c '::error::.*did not answer' "$WORK/err")" "1"
 
 # 5. A silent registry must never read as in-sync — but it must not be fatal
 #    either. kg-store-binaries and session-memory-binaries are PRIVATE packages
@@ -202,6 +206,24 @@ ck "digest-pinned ref is not drift"        "$(grep -c 'drift' "$WORK/out")" "0"
 #    drift: the container is not running what it was pinned to.
 run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${VM_STALE}"
 ck "pin violated is reported as drift"     "$(grep -c 'drift' "$WORK/out")" "1"
+
+# 10. An UNREACHABLE VM is not a clean VM, and it is also not a reason to stop.
+#     oci-mail answered normally in run 35039429321 and timed out at exactly
+#     ConnectTimeout fifteen minutes later; treating that as fatal blocked the
+#     re-ship of drift already found on the three VMs that answered — #354
+#     continuing quietly because of a dropped packet.
+run "#UNREACHABLE"
+ck "unreachable VM is recorded"            "$(grep -c 'unreachable' "$WORK/out")" "1"
+ck "unreachable VM emits nothing else"     "$(grep -vc 'unreachable' "$WORK/out")" "0"
+ck "unreachable VM is not re-shippable"    "$(grep -c 'drift' "$WORK/out")" "0"
+
+#     ...and a VM that DOES answer with nothing running is a real answer: those
+#     containers are absent, not unknown. Collapsing the two is how a dead probe
+#     starts reading as a clean fleet.
+run ""
+ck "reachable-but-empty is not unreachable" "$(grep -c 'unreachable' "$WORK/out")" "0"
+ck "reachable-but-empty yields absent"      "$(grep -c 'absent' "$WORK/out")" "3"
+ck "reachable-but-empty is not fatal"       "$rc" "0"
 
 # ── The re-ship selector: the half that actually re-queues the lost deploy ──
 RESHIP="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
