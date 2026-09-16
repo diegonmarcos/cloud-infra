@@ -136,6 +136,11 @@ jobs:
       # on a PARTIAL container list, green) is silent in production.
       - name: Phase 52 — ship never acts on a truncated container list
         run: bash 9_others/test/test_container_list_not_truncated.sh
+      # Guards the dispatch side of the same fail-green family: a probe that
+      # triggers a workflow which does not exist, with `|| true` after it, is
+      # indistinguishable from a healthy fleet.
+      - name: Phase 53 — fleet health probe dispatches only real workflows
+        run: bash 9_others/test/test_health_all_vms_dispatch.sh
       - name: Phase 11 — container_name matches build.json (report-only)
         # Pending unix submodule sync + pre-existing drift cases;
         # cleanup happens per service.
