@@ -631,7 +631,12 @@ PREFLIGHT_EOF
             done
         fi
         if [ "$COMPOSE_RC" -ne 0 ]; then
-            log "FAILED (exit $COMPOSE_RC): Docker HM activate on $DEPLOY_HOST (after $_hm_try attempt(s))"
+            # _hm_try is set only by the inline fallback loop below. The detached
+            # activation path never enters that loop, so under `set -u` this line
+            # used to abort the script with "_hm_try: unbound variable" and lose
+            # the real failure reason (a detach timeout). Report the attempt count
+            # only when there were attempts.
+            log "FAILED (exit $COMPOSE_RC): Docker HM activate on $DEPLOY_HOST${_hm_try:+ (after $_hm_try attempt(s))}"
             return 1
         fi
         log "Docker HM activated on $DEPLOY_HOST"
