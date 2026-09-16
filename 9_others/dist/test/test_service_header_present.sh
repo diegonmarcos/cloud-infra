@@ -95,35 +95,61 @@ check_service() {
     done < <(find -L "$src_dir" -type f -print0 2>/dev/null)
 }
 
-echo "── a_solutions/*/dist/ (container engine) ──"
-for bj in "$REPO_ROOT"/a_solutions/*/build.json; do
-    [ -f "$bj" ] || continue
-    check_service "$(dirname "$bj")"
-done
+# ── Scope roots, read as data from generated-header.json ──
+#
+# These were three copy-pasted blocks, and a_solutions/ was reached by a glob
+# that simply iterates zero times when the directory is not there. a_solutions
+# is a SEPARATE repository (diegonmarcos/cloud-u-containers) that CI checks out
+# into this path, so "not there" is the normal state of any checkout that
+# forgot the checkout step — and in that state this tester scanned b_infra and
+# c_vps, found them clean, and printed "PASS (304 files checked)". The container
+# engine, which is the scope this tester was written for, was silently absent
+# from a result that looked like thorough coverage.
+#
+# A check that cannot reach its subject must FAIL, never go quiet. Both
+# reachability conditions below are therefore failures, not skips:
+#   - a scope glob that matches NO service directory at all
+#   - a scope that matches directories but contributes ZERO in-scope files
+SCOPES_TSV="$(jq -r '(.enforced_scopes.scopes // [])[] | "\(.glob)\t\(.label)"' "$HEADER_JSON")"
+[ -n "$SCOPES_TSV" ] || { echo "::error::generated-header.json declares no enforced_scopes — this tester has no subject to check" >&2; exit 1; }
 
-if [ -d "$REPO_ROOT/b_infra" ]; then
+while IFS="$(printf '\t')" read -r scope_glob scope_label; do
+    [ -n "$scope_glob" ] || continue
     echo ""
-    echo "── b_infra/*/dist/ (HM engine) ──"
-    for d in "$REPO_ROOT"/b_infra/*/; do
+    echo "── $scope_label ──"
+    scope_dirs=0
+    scope_before="$CHECKED"
+    for d in "$REPO_ROOT"/$scope_glob; do
+        [ -d "$d" ] || continue
+        scope_dirs=$((scope_dirs + 1))
         check_service "${d%/}"
     done
-fi
-
-if [ -d "$REPO_ROOT/c_vps" ]; then
-    echo ""
-    echo "── c_vps/*/dist/ (terraform engine) ──"
-    for d in "$REPO_ROOT"/c_vps/*/; do
-        check_service "${d%/}"
-    done
-fi
+    if [ "$scope_dirs" -eq 0 ]; then
+        fail "scope '$scope_label' — glob '$scope_glob' matched NO service directory. The subject of this check is not present, so nothing about it was verified. If this is a_solutions/, the cloud-u-containers checkout is missing."
+        continue
+    fi
+    scope_checked=$((CHECKED - scope_before))
+    if [ "$scope_checked" -eq 0 ]; then
+        fail "scope '$scope_label' — $scope_dirs service directory/ies present but ZERO in-scope files checked. Either no service here sets build.headers_enforced, or no dist/ has been built; either way this scope certified nothing."
+    else
+        printf "  · %s: %s service dirs, %s files checked\n" "$scope_label" "$scope_dirs" "$scope_checked"
+    fi
+done <<SCOPES
+$SCOPES_TSV
+SCOPES
 
 echo ""
+# CHECKED == 0 was an `exit 0` with a "SKIPPED (0 in-scope files)" banner. That
+# is the #363 shape exactly — a detector that reaches nothing and reports green.
+# It is a failure now. The per-scope assertions above will normally fire first
+# and say something more specific; this is the backstop.
 if [ "$CHECKED" -eq 0 ]; then
     echo "══════════════════════════════════════════════"
-    echo "service header presence: SKIPPED (0 in-scope files)"
-    echo "Run ./build.sh build on a service to populate dist/."
+    echo "service header presence: FAIL — 0 in-scope files across every declared scope."
+    echo "This tester verified NOTHING. Build a service's dist/ (./build.sh build) or"
+    echo "check that the declared scopes in generated-header.json still exist."
     echo "══════════════════════════════════════════════"
-    exit 0
+    exit 1
 fi
 
 if [ "$FAIL" -eq 0 ]; then

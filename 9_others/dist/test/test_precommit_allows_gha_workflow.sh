@@ -41,7 +41,17 @@ fail() { printf "  ✗ %s\n" "$1" >&2; FAIL=1; }
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 cd "$tmp"
-git init -q
+# Pin BOTH the default branch and the commit identity. This fixture used to
+# run `git init -q` and commit straight away, which silently borrowed the
+# ambient user.email/user.name. That passes on any developer machine and can
+# NEVER pass on a clean GitHub runner, which has no identity configured:
+#   Author identity unknown
+#   fatal: empty ident name (for <runner@...>) not allowed        -> rc=128
+# Invisible locally by construction; it took CI run 35057046207 to surface it
+# (#368, X2-F13). A fixture must supply everything it depends on.
+git -c init.defaultBranch=main init -q
+git config user.email "test@example.com"
+git config user.name  "test"
 git commit -q --allow-empty -m "root"
 mkdir -p .github/workflows
 
