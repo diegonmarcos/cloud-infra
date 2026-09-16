@@ -6,25 +6,25 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13429,
+    "files": 13432,
     "by_lang": {
-      "sh": 211,
+      "sh": 212,
       "py": 43,
+      "kotlin": 9775,
       "java": 711,
       "ts": 2625,
       "nix": 23,
-      "kotlin": 9773,
       "js": 43
     },
     "by_role": {
-      "script": 82,
+      "script": 84,
       "shell": 150,
       "java": 711,
       "entrypoint": 20,
       "module": 1377,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9773,
+      "kotlin": 9774,
       "python": 24,
       "file": 1173,
       "hook": 89,
@@ -1977,6 +1977,34 @@
         "step_phone_install()",
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/analytics-retry.test.kt",
+      "lang": "kotlin",
+      "role": "script",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.analytics.SinkQueue"
+      ],
+      "symbols": [
+        "expect(condition: Boolean, what: String)",
+        "main()",
+        "class name"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/analytics-retry.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "build_and_run()"
+      ],
+      "imports": [],
+      "symbols": [
+        "build_and_run()"
       ]
     },
     {
@@ -9273,6 +9301,9 @@
       "exports": [
         "ok()",
         "bad()",
+        "dispatch()",
+        "where()",
+        "kind()",
         "load()",
         "body()"
       ],
@@ -9280,6 +9311,9 @@
       "symbols": [
         "ok()",
         "bad()",
+        "dispatch()",
+        "where()",
+        "kind()",
         "load()",
         "body()"
       ]
@@ -9835,8 +9869,8 @@
         "java.net.HttpURLConnection",
         "java.net.URL",
         "java.net.URLEncoder",
-        "java.util.ArrayDeque",
         "java.util.concurrent.Executors",
+        "java.util.concurrent.atomic.AtomicBoolean",
         "kotlin.random.Random"
       ],
       "symbols": [
@@ -9874,6 +9908,23 @@
         "delete(u: Uri, s: String?, a: Array<String>?)",
         "update(u: Uri, v: ContentValues?, s: String?, a: Array<String>?)",
         "class AnalyticsInitProvider"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/analytics/src/main/java/com/diegonmarcos/superapp/analytics/SinkQueue.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "java.util.ArrayDeque"
+      ],
+      "symbols": [
+        "offer(event: AnalyticsEvent)",
+        "drain(send: (AnalyticsEvent)",
+        "clear()",
+        "size()",
+        "class SinkQueue",
+        "class with"
       ]
     },
     {
