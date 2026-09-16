@@ -1725,6 +1725,12 @@
       }
     }
   },
+  "agent": {
+    "_comment": "Shared git checkout (docker volume cloud-git-gh), mounted by _shared/engine.nix. Same layout as my-ai_claude-api: container runs as uid 10001 with HOME=/home/appuser, so the tree belongs at /home/appuser/git. Read-only: goose reads code here; it has no dispatch loop that commits. Flip git_tree_writable to true to change that.",
+    "git_tree": true,
+    "git_tree_mount": "/home/appuser/git",
+    "git_tree_writable": false
+  },
   "upstream_image": "python:3.13-slim",
   "runtime": {
     "model": "deepseek/deepseek-v4-flash-0731",

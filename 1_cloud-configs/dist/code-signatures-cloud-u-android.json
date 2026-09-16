@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13438,
+    "files": 13439,
     "by_lang": {
-      "sh": 216,
+      "sh": 217,
       "py": 43,
       "kotlin": 9777,
       "java": 711,
@@ -18,7 +18,7 @@
     },
     "by_role": {
       "script": 88,
-      "shell": 151,
+      "shell": 152,
       "java": 711,
       "entrypoint": 20,
       "module": 1377,
@@ -5511,6 +5511,8 @@
         "android.widget.LinearLayout",
         "android.widget.TextView",
         "android.util.Base64",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.WindowInsetsCompat",
         "org.json.JSONObject",
         "java.text.SimpleDateFormat",
         "java.util.Date",
@@ -5518,6 +5520,8 @@
       ],
       "symbols": [
         "run()",
+        "centreTopReservePx()",
+        "applyCutoutReserve()",
         "parsePetsConfig()",
         "makeToolColumn(toolId: String, iconView: View)",
         "gaitForLevel(level: Int)",
@@ -7470,7 +7474,7 @@
         "toggleGrid( ctx: android.content.Context, items: List<LauncherSettingsPrefs.Item>, prefs: LauncherSettingsPrefs, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
         "toggleTile( ctx: android.content.Context, item: LauncherSettingsPrefs.Item, prefs: LauncherSettingsPrefs, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
         "paint()",
-        "sliderRow( ctx: android.content.Context, label: String, subtitle: String, min: Int, max: Int, value: Int, ticks: Boolean = false, restoreDefault: Int? = null, onChange: (Int)",
+        "sliderRow( ctx: android.content.Context, label: String, subtitle: String, min: Int, max: Int, value: Int, ticks: Boolean = false, presets: List<LauncherSettingsPrefs.Preset> = emptyList()",
         "onProgressChanged(sb: SeekBar, p: Int, fromUser: Boolean)",
         "onStartTrackingTouch(sb: SeekBar)",
         "onStopTrackingTouch(sb: SeekBar)",
@@ -7564,10 +7568,11 @@
         "setToggle(item: Item, v: Boolean)",
         "anim(id: String? = null)",
         "toggleDefault(id: String)",
-        "slider(key: String, fallbackDefault: Int)",
+        "slider(key: String, fallbackDefault: Int? = null)",
         "class LauncherSettingsPrefs",
         "class Item",
         "class Group",
+        "class Preset",
         "class Slider",
         "class Config"
       ]
@@ -9197,6 +9202,24 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-launcher-clock-clears-cutout.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "code()",
+        "has()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "code()",
+        "has()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-launcher-theme-palette.sh",
       "lang": "sh",
       "role": "shell",
@@ -10084,6 +10107,7 @@
       ],
       "symbols": [
         "fleetObjects(key: String)",
+        "applicationOf(id: String)",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
         "onDestroyView()",
         "tabBar(ctx: Context)",
@@ -10121,8 +10145,7 @@
         "dp(ctx: Context, v: Int)",
         "title(ctx: Context, t: String)",
         "caption(ctx: Context, t: String)",
-        "mono(ctx: Context, t: String)",
-        "btn(ctx: Context, label: String, bg: Int, onClick: ()"
+        "applicationHeading(ctx: Context, application: String)"
       ]
     },
     {
@@ -29614,10 +29637,11 @@
       ],
       "symbols": [
         "serialize()",
-        "perform(svc: AccessibilityService)",
+        "perform(svc: AccessibilityService, label: String? = null)",
         "parse(s: String?)",
         "openInHost(ctx: Context, target: String)",
-        "launch(ctx: Context, pkg: String)",
+        "say(ctx: Context, message: String)",
+        "launch(ctx: Context, pkg: String, label: String?)",
         "class GestureAction",
         "class Global",
         "class OpenApp",
@@ -31457,6 +31481,87 @@
         "installedStickerAuthorities(pm: PackageManager)",
         "class StickerRepo",
         "class Pack"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ml-l-text-mlkit/src/main/java/com/diegonmarcos/superapp/translate/LocalTranslateEngineClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LocalTranslateEngineClient"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "translate(text: String, targetTag: String)",
+        "translateFrom(text: String, sourceTag: String, targetTag: String)",
+        "failed(e: Exception)",
+        "supportedLanguages()",
+        "isConnected()",
+        "class LocalTranslateEngineClient"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ml-l-text-mlkit/src/main/java/com/diegonmarcos/superapp/translate/TranslateEngine.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "TranslateEngine",
+        "translateBlocking",
+        "supportedLanguageTags",
+        "prefetchDefaults",
+        "run"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.google.android.gms.tasks.Tasks",
+        "com.google.mlkit.common.model.DownloadConditions",
+        "com.google.mlkit.common.model.RemoteModelManager",
+        "com.google.mlkit.nl.languageid.LanguageIdentification",
+        "com.google.mlkit.nl.languageid.LanguageIdentifier",
+        "com.google.mlkit.nl.translate.TranslateLanguage",
+        "com.google.mlkit.nl.translate.TranslateRemoteModel",
+        "com.google.mlkit.nl.translate.Translation",
+        "com.google.mlkit.nl.translate.Translator",
+        "com.google.mlkit.nl.translate.TranslatorOptions",
+        "java.io.IOException",
+        "java.util.ArrayList",
+        "java.util.List",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "translateBlocking(Context context, String text, String targetTag)",
+        "translateBlocking(Context context, String text, String sourceTag, String targetTag)",
+        "asIo(String stage, long timeoutS, Throwable ex)",
+        "supportedLanguageTags()",
+        "prefetchDefaults(Context context)",
+        "Thread(new Runnable()",
+        "class TranslateEngine"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ml-l-voice-vosk/src/main/java/com/diegonmarcos/superapp/voice/LocalVoiceEngineClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LocalVoiceEngineClient"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Handler",
+        "android.os.Looper",
+        "org.json.JSONObject",
+        "org.vosk.Model",
+        "org.vosk.Recognizer"
+      ],
+      "symbols": [
+        "start( onPartial: (String)",
+        "feed(pcm: ByteArray, len: Int)",
+        "stop()",
+        "isConnected()",
+        "loadOrCacheModel(dir: String)",
+        "class LocalVoiceEngineClient"
       ]
     },
     {
@@ -33907,63 +34012,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/translate-mlkit/src/main/java/com/diegonmarcos/superapp/translate/LocalTranslateEngineClient.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "LocalTranslateEngineClient"
-      ],
-      "imports": [
-        "android.content.Context"
-      ],
-      "symbols": [
-        "translate(text: String, targetTag: String)",
-        "translateFrom(text: String, sourceTag: String, targetTag: String)",
-        "failed(e: Exception)",
-        "supportedLanguages()",
-        "isConnected()",
-        "class LocalTranslateEngineClient"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/translate-mlkit/src/main/java/com/diegonmarcos/superapp/translate/TranslateEngine.java",
-      "lang": "java",
-      "role": "java",
-      "exports": [
-        "TranslateEngine",
-        "translateBlocking",
-        "supportedLanguageTags",
-        "prefetchDefaults",
-        "run"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.google.android.gms.tasks.Tasks",
-        "com.google.mlkit.common.model.DownloadConditions",
-        "com.google.mlkit.common.model.RemoteModelManager",
-        "com.google.mlkit.nl.languageid.LanguageIdentification",
-        "com.google.mlkit.nl.languageid.LanguageIdentifier",
-        "com.google.mlkit.nl.translate.TranslateLanguage",
-        "com.google.mlkit.nl.translate.TranslateRemoteModel",
-        "com.google.mlkit.nl.translate.Translation",
-        "com.google.mlkit.nl.translate.Translator",
-        "com.google.mlkit.nl.translate.TranslatorOptions",
-        "java.io.IOException",
-        "java.util.ArrayList",
-        "java.util.List",
-        "java.util.concurrent.TimeUnit"
-      ],
-      "symbols": [
-        "translateBlocking(Context context, String text, String targetTag)",
-        "translateBlocking(Context context, String text, String sourceTag, String targetTag)",
-        "asIo(String stage, long timeoutS, Throwable ex)",
-        "supportedLanguageTags()",
-        "prefetchDefaults(Context context)",
-        "Thread(new Runnable()",
-        "class TranslateEngine"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/translate/src/main/java/com/diegonmarcos/superapp/translate/KeyHandoff.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -34948,30 +34996,6 @@
         "activeShellChannel(ctx: Context)",
         "ensureShellChannel(ctx: Context)",
         "shellChannelDiagnosis(ctx: Context)"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/voice-vosk/src/main/java/com/diegonmarcos/superapp/voice/LocalVoiceEngineClient.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "LocalVoiceEngineClient"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.os.Handler",
-        "android.os.Looper",
-        "org.json.JSONObject",
-        "org.vosk.Model",
-        "org.vosk.Recognizer"
-      ],
-      "symbols": [
-        "start( onPartial: (String)",
-        "feed(pcm: ByteArray, len: Int)",
-        "stop()",
-        "isConnected()",
-        "loadOrCacheModel(dir: String)",
-        "class LocalVoiceEngineClient"
       ]
     },
     {
