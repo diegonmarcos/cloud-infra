@@ -25,6 +25,9 @@
     "cgc-db-poll-liveness.test.sh": {
       "status": "run"
     },
+    "cgc-db-restore-compose-project.test.sh": {
+      "status": "run"
+    },
     "cgc-db-restore-private-guard.test.sh": {
       "status": "run"
     },
@@ -57,6 +60,9 @@
     "test_compose_port_eviction.sh": {
       "status": "run"
     },
+    "test_container_engine_marker_matches.sh": {
+      "status": "run"
+    },
     "test_derive_orphan_prune.sh": {
       "status": "run"
     },
@@ -85,12 +91,10 @@
       "status": "run"
     },
     "test_git_nuke.sh": {
-      "status": "quarantine",
-      "reason": "X2-F6 (#368): case 4 (force-pushed origin) dies rc=128 building its own fixture — 'remote HEAD refers to nonexistent ref' then 'fatal: You have nothing to amend'. The fixture assumes a default branch name; this container's init.defaultBranch differs from the runner's. Fixture bug, environment-sensitive. Cases 1-3 pass."
+      "status": "run"
     },
     "test_gitignore_synced.sh": {
-      "status": "quarantine",
-      "reason": "X2-F7 (#368): the tester points DIST at 1_cicd/dist/.gitignore (line 27). That path does not exist; the real generated file is 0_git/dist/.gitignore, and it IS tracked and current. The tester carries a stale path from the 2026-04 engine reorg — the tester is wrong, not the tree."
+      "status": "run"
     },
     "test_goose_has_cgc.sh": {
       "status": "run"
@@ -102,8 +106,7 @@
       "status": "run"
     },
     "test_precommit_allows_gha_workflow.sh": {
-      "status": "quarantine",
-      "reason": "X2-F13 (#368): exit 128 on the runner — 'Author identity unknown … fatal: empty ident name'. The fixture runs `git commit` without setting user.email/user.name in the throwaway repo it builds, so it depends on a git identity existing in the ambient environment. It passes on any developer machine and dies on a clean GitHub runner. Surfaced by CI run 35057046207; it is invisible locally."
+      "status": "run"
     },
     "test_precommit_blocks_forced_add.sh": {
       "status": "run"
@@ -119,7 +122,7 @@
     },
     "test_service_header_present.sh": {
       "status": "quarantine",
-      "reason": "X2-F12 (#368): a_solutions/user-comm_chat-mattermost/dist/code/arm64/Dockerfile is missing the 'GENERATED FILE — DO NOT EDIT' banner while its service sets build.headers_enforced. Every other stamped artifact passes. Note how this one surfaced: it exits 0 when a_solutions/ is absent, because its loops then iterate over nothing — it passed vacuously in my first sweep and only went red once the repo was actually there. That vacuity is a second defect in the same file (same shape as #363)."
+      "reason": "X2-F12 (#372, D3): the VACUITY is fixed — the tester now FAILS when a declared scope is unreachable or contributes zero files (proven: rc 0 -> 1 with a_solutions/ absent). It stays RED for the real reason, and the real reason is not 'a lost banner': a_solutions/user-comm_chat-mattermost/dist/code/arm64/Dockerfile IS stamped, by the OTHER engine. cloud-u-containers/_shared/engine.nix hardcoded a different wording than the canonical .marker in 9_others/src/generated-header.json, and 255 container dist/ files carry it. engine.nix is FIXED to emit the canonical marker (cloud-u-containers), and test_container_engine_marker_matches.sh now guards the agreement. This entry must stay quarantined until someone runs a nix container build: dist/ is compiled output, no workflow in cloud-u-containers regenerates it, and this container has no nix. When that build lands this goes green and the quarantine assertion will say so."
     },
     "test_ship_cargo_cache.sh": {
       "status": "run"
@@ -131,8 +134,7 @@
       "status": "run"
     },
     "test_ship_detects_build_json.sh": {
-      "status": "quarantine",
-      "reason": "X2-F9 (#368): 0 of 4 cases pass. Neither 1_cicd/src/cicd/ship.yml nor .github/workflows/ship.yml includes a_solutions/*/build.json in its push path filter OR its detect pathspec. This is the exact defect of run 32952457089 (a build.json-only change shipped nothing, green) and it is live in the tree today. Highest-value finding here."
+      "status": "run"
     },
     "test_ship_terraform_fetch_depth.sh": {
       "status": "run"
