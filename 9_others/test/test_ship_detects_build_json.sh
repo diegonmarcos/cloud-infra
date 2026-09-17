@@ -83,5 +83,44 @@ for f in 1_cicd/src/cicd/ship.yml .github/workflows/ship.yml; do
      "$(classify "$SVC/README.md")" ""
 done
 
+# ── #451: a _shared/ change is a dependency fan-out, not a first-segment map ──
+# `_shared/engine.nix` matches neither branch of the classifier, so it must be
+# forwarded to the engine-consumer reverse-walk, which derives the consumer set
+# from each service's src declaration (`import ../../_shared/engine.nix`). Two
+# things are asserted: the wiring is present in the detect step, and the walk
+# resolves the real engine consumers over THIS checkout (proving the mapping is
+# declaration-derived, never a hardcoded list that can drift).
+ENG_SCRIPT="cloud-ship-detect-engine-consumers.sh"
+for f in 1_cicd/src/cicd/ship.yml .github/workflows/ship.yml; do
+  Y="$REPO_ROOT/$f"
+  [ -f "$Y" ] || { echo "::error::$f missing"; fail=$((fail+1)); continue; }
+  ck "$f: detect step forwards _shared/ to the engine-consumer walk" \
+     "$(grep -c "$ENG_SCRIPT" "$Y" || true)" "1"
+done
+ENG_SRC="$REPO_ROOT/1_cicd/src/scripts/$ENG_SCRIPT"
+if [ -f "$ENG_SRC" ]; then
+  ENG_RES=$(printf '%s\n' '_shared/engine.nix' | bash "$ENG_SRC" 2>/dev/null || true)
+  ENG_RES="${ENG_RES% }"
+  if [ -z "$ENG_RES" ]; then
+    echo "  FAIL engine-consumer walk resolved NOTHING for _shared/engine.nix over the real checkout"
+    fail=$((fail+1))
+  else
+    echo "  ok   engine-consumer walk resolved $(printf '%s' "$ENG_RES" | wc -w | tr -d ' ') service(s) for _shared/engine.nix"
+    # Every resolved name must be a real service dir — a derived mapping that
+    # names a directory that is not there would silently fail to ship.
+    for _svc in $ENG_RES; do
+      if [ -d "$REPO_ROOT/a_solutions/$_svc/src" ]; then
+        echo "  ok   resolved consumer $_svc → real service dir"
+      else
+        echo "  FAIL resolved consumer $_svc has no a_solutions/$_svc/src"
+        fail=$((fail+1))
+      fi
+    done
+  fi
+else
+  echo "  FAIL $ENG_SCRIPT missing — the engine fan-out has no implementation"
+  fail=$((fail+1))
+fi
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
