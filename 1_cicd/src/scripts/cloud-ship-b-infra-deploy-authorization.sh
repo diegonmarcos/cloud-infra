@@ -50,10 +50,16 @@ case "$EVENT_NAME" in
         while jq -e --argjson i "$i" '.commits[$i]' "$PAYLOAD_PATH" >/dev/null 2>&1; do
             # Commit touches b_infra/** iff any added/modified/removed path
             # starts with b_infra/. Emit one of those paths, or empty.
+            # GitHub's push payload sets added/removed to NULL (not []) when a
+            # commit only modifies files — the first real b_infra push
+            # (74c17d50d, 2026-09-17) crashed this jq with "Cannot iterate
+            # over null" and the gate never evaluated the marker. The
+            # alternative-operator pattern must be ((.added) // [])[] — a bare
+            # .added[] // empty still iterates the null and dies first.
             touched=$(jq -r --argjson i "$i" '
-                ([.commits[$i].added[] // empty,
-                  .commits[$i].modified[] // empty,
-                  .commits[$i].removed[] // empty]
+                ([((.commits[$i].added) // [])[],
+                  ((.commits[$i].modified) // [])[],
+                  ((.commits[$i].removed) // [])[]]
                  | map(select(startswith("b_infra/"))) | first // empty)' \
                 "$PAYLOAD_PATH")
             if [ -n "$touched" ]; then
