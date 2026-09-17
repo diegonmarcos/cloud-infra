@@ -64,7 +64,13 @@ GATE="$(mktemp)"
 python3 -c 'import yaml,sys; sys.stdout.write(yaml.safe_load(open(sys.argv[1]))["jobs"]["deploy-gate"]["steps"][0]["run"])' \
   "$REPO_ROOT/.github/workflows/ship.yml" > "$GATE"
 MATRIX='{"include":[{"vm":"oci-apps","changed_dirs":"user-ai_my-ai_claude-api"}]}'
-export MATRIX BUILD_RESULT=success
+# The gate reads the SAME env the workflow maps for it (needs.detect.{result,
+# outputs.verdict, outputs.has_vms} + needs.{build,deploy}.result + matrix).
+# Since #401 (c942be58f) the gate consumes DETECT_RESULT/VERDICT/HAS_VMS; this
+# tester was never updated and ran under dash's set -u with them UNSET, exiting
+# 2 before the gate could judge anything. Supply the faithful env so the gate
+# actually runs.
+export MATRIX BUILD_RESULT=success DETECT_RESULT=success VERDICT=ship HAS_VMS=true
 
 run_gate() { DEPLOY_RESULT="$1" sh "$GATE" >"$GATE.out" 2>&1; }
 
