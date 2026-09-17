@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2795,
+    "files": 2796,
     "by_lang": {
       "nix": 149,
       "ts": 1112,
-      "sh": 124,
+      "sh": 125,
       "py": 850,
       "js": 26,
       "rust": 534
@@ -18,7 +18,7 @@
     "by_role": {
       "nix-module": 9,
       "module": 674,
-      "shell": 116,
+      "shell": 117,
       "python": 845,
       "flake": 71,
       "compose": 69,
@@ -12356,6 +12356,20 @@
       ]
     },
     {
+      "path": "infra-obs_reports/src/entrypoint.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "needs_ssh()",
+        "ssh_material_present()"
+      ],
+      "imports": [],
+      "symbols": [
+        "needs_ssh()",
+        "ssh_material_present()"
+      ]
+    },
+    {
       "path": "infra-obs_reports/src/recon/recon.sh",
       "lang": "sh",
       "role": "shell",
@@ -12444,11 +12458,15 @@
       "lang": "sh",
       "role": "shell",
       "exports": [
-        "gen()"
+        "gen()",
+        "write_run_state()",
+        "send_all()"
       ],
       "imports": [],
       "symbols": [
-        "gen()"
+        "gen()",
+        "write_run_state()",
+        "send_all()"
       ]
     },
     {
@@ -12495,11 +12513,15 @@
       "path": "infra-obs_reports/src/src/cloud-analytics-daily/test.sh",
       "lang": "sh",
       "role": "shell",
-      "exports": [],
+      "exports": [
+        "run_build()"
+      ],
       "imports": [
         "umami-query.sh"
       ],
-      "symbols": []
+      "symbols": [
+        "run_build()"
+      ]
     },
     {
       "path": "infra-obs_reports/src/src/cloud-health-full-daily/build.sh",
@@ -14809,6 +14831,7 @@
         "tokio::time::timeout",
         "TCP",
         "super::",
+        "the",
         "std::time::Instant",
         "tokio::net::TcpListener"
       ],
@@ -14819,6 +14842,7 @@
         "reachable(&self)",
         "terminated(&self)",
         "load(vms: &[FleetVm])",
+        "classify_vm(\n    provider: &str,\n    cloud_name: &str,\n    map: &HashMap<String, String>,\n    tcp_up: Option<bool>,\n    tool_problem: Option<&String>,\n)",
         "classify_gcp(cloud_name: &str, map: &HashMap<String, String>, tcp_up: Option<bool>)",
         "classify_oci(cloud_name: &str, map: &HashMap<String, String>, tcp_up: Option<bool>)",
         "gcloud_list()",
@@ -14828,6 +14852,8 @@
         "classify_gcp_running()",
         "classify_oci_stopped()",
         "classify_unknown_when_not_listed()",
+        "cli_missing_is_a_named_failure_not_not_found()",
+        "cli_present_but_vm_unlisted_stays_not_found()",
         "fleet_reachable_filters_terminated()",
         "short_reason_includes_source()",
         "tcp_liveness_classifies_listener_vs_closed()"
