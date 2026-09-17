@@ -281,27 +281,23 @@ jobs:
               [ -n "$SUB_CHANGED" ] || echo "::warning::containers-push dispatch ${OLD_SUB}..${NEW_SUB} produced an EMPTY diff — nothing will ship"
             fi
 
-            # A service's own build.json drives its image (docker.native_build →
-            # Dockerfile.native) and compose, yet it sits ABOVE src/. On 2026-08-26
-            # a57935adb changed only cloud-cgc-pub-mcp/build.json (new base image +
-            # octocode fetch) and this step mapped it to no service: Build/Deploy
+            # build.json drives the image (docker.native_build -> Dockerfile.native)
+            # and compose but sits ABOVE src/. a57935adb (2026-08-26) changed only
+            # cloud-cgc-pub-mcp/build.json and mapped to NO service: Build/Deploy
             # skipped, run green, consumer never rebuilt.
-            # Paths here are submodule-relative ("<svc>/src/...") so the service
+            # Paths are submodule-relative ("<svc>/src/..."), so the service
             # name is field 1, not field 2 as it was superproject-relative.
             CHANGED_DIRS=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|build\.json$)' \
               | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' || true)
 
-            # A service can consume ANOTHER service's src file through a symlink:
-            # user-comm_tools-maddy/src/mail-rules-general.json is a symlink to
-            # user-comm_tools-stalwart/src/mail-rules-general.json. git reports
-            # only the real path as changed, so the consuming service never
-            # rebuilt. On 2026-08-24 a mail-rules edit shipped tools-stalwart and
-            # left tools-maddy — where the mail actually lives — serving the old
-            # rules, while the run reported success. Same reverse-walk as the
-            # dist-consumer case below, but over changed a_solutions src files.
-            # Same gitlink rule as above: derive from the in-submodule diff, then
-            # re-prefix to superproject-relative paths because the symlink walk
-            # below compares these against readlink targets under $PWD.
+            # A service can consume ANOTHER service's src file through a symlink
+            # (tools-maddy/src/mail-rules-general.json -> tools-stalwart's). git
+            # reports only the real path, so the consuming service never rebuilt
+            # (a mail-rules edit on 2026-08-24 shipped tools-stalwart and left
+            # tools-maddy serving stale rules behind a green run). Same reverse-
+            # walk as the dist-consumer case below, over changed src files:
+            # derive from the in-submodule diff, re-prefix to superproject-
+            # relative paths, compare against readlink targets under $PWD.
             SRC_CHANGED=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/src/' \
               | sed 's|^|a_solutions/|' || true)
             SRC_CONSUMERS=""
@@ -335,40 +331,16 @@ jobs:
               echo "::notice::src-symlink consumer ship:$SRC_CONSUMERS"
             fi
 
-            # A change under _shared/ is owned by NO single service: the shared
-            # container engine is a dependency of every service that imports it,
-            # so an engine change must rebuild all of them. The first-segment
-            # classifier above cannot express that 1→N fan-out — `_shared/engine.nix`
-            # has first segment `_shared` and a remainder matching neither
-            # `src/` nor `build.json`, so an engine-only commit resolved to
-            # ZERO services and the run concluded green having built nothing
-            # (#451). The consumers are derived from the declaration that ALREADY
-            # names the dependency — each service's src imports
-            # ../../_shared/engine.nix — by the reverse-walk in the script below,
-            # the same way the dist-consumer and src-symlink walks fan out.
-            # A build.json service that does not reference the engine (e.g. a
-            # front-end with its own build) is NOT a consumer and must not ship,
-            # or every engine work-item would rebuild the whole fleet
-            # (#146/#235/#248/#263). The walk only fires on repository_dispatch:
-            # SUB_CHANGED is empty on push/workflow_run, so nothing fans out there.
-            ENGINE_CONSUMERS=$(printf '%s\n' "$SUB_CHANGED" \
-              | bash 1_cicd/src/scripts/cloud-ship-detect-engine-consumers.sh || true)
-            if [ -n "$ENGINE_CONSUMERS" ]; then
-              CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$ENGINE_CONSUMERS" \
-                | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
-              echo "::notice::shared-engine consumer ship:$ENGINE_CONSUMERS"
-            fi
+            # A change under _shared/ ships its engine consumers (derived from src/flake.nix by the script).
+            ENGINE_CONSUMERS=$(printf '%s\n' "$SUB_CHANGED" | bash 1_cicd/src/scripts/cloud-ship-detect-engine-consumers.sh || true)
+            CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$ENGINE_CONSUMERS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
 
-            # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json
-            # files. Reverse-walk each service's src/ for symlinks resolving to
-            # any changed dist file, and append the owning service dir to
-            # CHANGED_DIRS. Without this, edits to 9_others/src/ regenerate
-            # the dist but no Ship runs for the symlinked consumers.
-            # Not on repository_dispatch: that event says "a container repo
-            # was pushed" and carries no claim about THIS repo, whose
-            # $BASE..HEAD is then just whatever unrelated commit happens to be
-            # on main. Diffing it would attribute someone else's dist edit to
-            # a container push and ship services that did not change.
+            # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json:
+            # reverse-walk each service's src/ symlinks to a changed dist file
+            # and append the owner to CHANGED_DIRS. Not on repository_dispatch —
+            # that event claims nothing about THIS repo's $BASE..HEAD, so
+            # diffing it would attribute someone else's dist edit to a
+            # container push and ship services that did not change.
             DIST_CHANGED=""
             if [ "$GITHUB_EVENT_NAME" != "repository_dispatch" ]; then
               DIST_CHANGED=$(git diff --name-only "$BASE" HEAD -- '1_cloud-configs/dist/build-*.json' 2>/dev/null)
