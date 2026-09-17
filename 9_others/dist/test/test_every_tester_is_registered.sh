@@ -72,17 +72,24 @@ done
 
 # The reverse rot: an entry left behind after its tester was deleted. Left
 # unchecked, the registry slowly becomes a list of files that are not there,
-# and its count stops meaning anything.
+# and its count stops meaning anything. An entry may name a tester outside
+# 9_others/test/ via the "path" key (e.g. the b_infra protection suite) — the
+# path is repo-root-relative, exactly as run-registered-testers.sh reads it.
 echo "── every registry entry names a tester that exists ──"
-while IFS= read -r name; do
+while IFS=$'\t' read -r name path; do
     [ -n "$name" ] || continue
-    if [ -f "$ROOT/9_others/test/$name" ]; then
+    if [ -n "$path" ]; then
+        tester="$ROOT/$path"
+    else
+        tester="$ROOT/9_others/test/$name"
+    fi
+    if [ -f "$tester" ]; then
         resolved=$((resolved + 1))
     else
-        echo "  ✗ 9_others/test-registry.json lists $name, but 9_others/test/$name does not exist"
+        echo "  ✗ 9_others/test-registry.json lists $name, but ${tester#$ROOT/} does not exist"
         dangling=$((dangling + 1))
     fi
-done < <(jq -r '.testers | keys[]' "$REGISTRY")
+done < <(jq -r '.testers | to_entries[] | [.key, (.value.path // "")] | @tsv' "$REGISTRY")
 
 # A glob that matched nothing would reach the summary with fail=0 and pass, which
 # is the same fail-green shape this test exists to catch.

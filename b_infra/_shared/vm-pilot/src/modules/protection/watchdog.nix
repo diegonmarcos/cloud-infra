@@ -139,6 +139,41 @@ in {
       set -euo pipefail
       WARN=85; CRIT=90; EMERG=95
 
+      # Durable action log — the ONE record that survives every journal vacuum.
+      # journalctl --vacuum-* below erases the journal that would otherwise be
+      # the only trace of what this watchdog deleted and why: on 2026-09-16 the
+      # vacuum on oci-apps ate 16 days of history, including the run that had
+      # just reclaimed 12.13GB minutes earlier. Every deletion below therefore
+      # appends one line here — what + how much it reclaimed — with the freed
+      # amount parsed from the tool's own report where it gives one. This file
+      # is exempted from this script's own /var/log sweep in the EMERG branch.
+      # Env-with-default so a tester can point it at a throwaway file (the same
+      # pattern watchdog-petter.sh uses for its thresholds). The double
+      # single-quote before the brace is the Nix escape that makes this a
+      # literal shell parameter expansion: a bare dollar-brace would be parsed
+      # as Nix interpolation and break the whole module at eval time.
+      WATCHDOG_LOG=''${WATCHDOG_LOG:-/var/log/disk-watchdog.log}
+
+      record() {  # record <action> <detail> [reclaimed]
+        _ts=$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)
+        printf '%s %s %s %s reclaimed=%s\n' "$_ts" "[disk-watchdog]" "$1" "$2" "''${3:-unmeasured}" >> "$WATCHDOG_LOG" 2>/dev/null || true
+        sync "$WATCHDOG_LOG" 2>/dev/null || true
+      }
+
+      reclaimed() {  # reclaimed <tool-output> — pull the freed figure from known prune reports
+        printf '%s\n' "$1" | awk '
+          /Total reclaimed space:/{print $4; next}
+          /^Total:/{print $2; next}
+          {for(v=1;v<=NF;v++){
+             if($v=="freed" && v<NF){
+               if(v+1<NF && $(v+2) ~ /^(B|KB|MB|GB|TB|KiB|MiB|GiB)$/){print $(v+1) " " $(v+2)} else {print $(v+1)}
+               next
+             }
+             if($v=="MiB" && v>1 && $(v-1) ~ /^[0-9]/){print $(v-1) " MiB"; next}
+           }}
+        ' | tail -1
+      }
+
       # Budget awareness: report swapfile + docker total
       SWAP_SIZE_MB=0
       if [ -f /swapfile ]; then
@@ -159,6 +194,8 @@ in {
         exit 0
       fi
 
+      record "run" "start usage=''${USAGE}% swap=''${SWAP_SIZE_MB}MB"
+
       DOCKER_SIZE="N/A"
       if command -v docker >/dev/null 2>&1 && timeout 15 docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
         DOCKER_SIZE=$(timeout 60 docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || timeout 60 docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
@@ -167,9 +204,16 @@ in {
 
       # ── WARN (85%) — gentle cleanup ──────────────────────────────────
       echo "[disk-watchdog] WARNING (''${USAGE}%) — cleaning"
+      _before=$(df -P / | awk 'NR==2{print $4}')
       find /tmp -type f -atime +2 -delete 2>/dev/null || true
+      _after=$(df -P / | awk 'NR==2{print $4}')
+      record "rm" "find /tmp -type f -atime +2" "$(( (_after - _before) * 1024 ))B"
+      _before=$(df -P / | awk 'NR==2{print $4}')
       find /var/tmp -type f -atime +2 -delete 2>/dev/null || true
-      journalctl --vacuum-size=100M 2>/dev/null || true
+      _after=$(df -P / | awk 'NR==2{print $4}')
+      record "rm" "find /var/tmp -type f -atime +2" "$(( (_after - _before) * 1024 ))B"
+      _vac=$(journalctl --vacuum-size=100M 2>/dev/null || true)
+      record "journal" "vacuum-size=100M" "$(reclaimed "$_vac")"
       if command -v docker >/dev/null 2>&1; then
         # label!=com.docker.compose.project — NEVER prune a declared service.
         # Copied from infra/prune-maintenance.nix, which already learned this: an
@@ -183,12 +227,19 @@ in {
         # stray `docker run` debris, which is all this should ever have reclaimed.
         # NOT `--filter until=<age>`: that matches on CREATION time, so it would
         # protect only containers created in the last N hours — precisely backwards.
-        docker container prune -f --filter "label!=com.docker.compose.project" 2>/dev/null || true
+        _cont=$(docker container prune -f --filter "label!=com.docker.compose.project" 2>/dev/null || true)
+        record "docker" "container-prune label!=com.docker.compose.project" "$(reclaimed "$_cont")"
         # until=72h scopes this to dangling images older than 72h. Unscoped, it
         # untagged matomo-binaries@sha256:9d3a9615 at 05:25:16 — a live deploy
         # artifact, hours before the CRIT branch finished the job.
-        docker image prune -f --filter "until=72h" 2>/dev/null || true
-        docker builder prune -f --keep-storage=1G 2>/dev/null || true
+        # builder prune: --keep-storage was renamed, and its first replacement
+        # name --max-storage is itself rejected ("unknown flag") by the docker
+        # on the fleet (27.5.1, verified 2026-09-17). --max-used-space is the
+        # current flag and means the same thing: keep at most 1G of build cache.
+        _img=$(docker image prune -f --filter "until=72h" 2>/dev/null || true)
+        record "docker" "image-prune until=72h" "$(reclaimed "$_img")"
+        _bld=$(docker builder prune -f --max-used-space=1G 2>/dev/null || true)
+        record "docker" "builder-prune max-used-space=1G" "$(reclaimed "$_bld")"
         # NO `docker system prune`: it is a superset of the three scoped calls
         # above, and its container sweep cannot be scoped as tightly, so it
         # silently re-opens the exact hole the label filter closes.
@@ -196,7 +247,11 @@ in {
       fi
 
       USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
-      [ "$USAGE" -lt "$CRIT" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
+      if [ "$USAGE" -lt "$CRIT" ]; then
+        record "run" "finish usage=''${USAGE}%"
+        echo "[disk-watchdog] Resolved ''${USAGE}%"
+        exit 0
+      fi
 
       # ── CRIT (90%) — aggressive prune (swap untouched) ──────────────
       # BANNED on the automatic path, deliberately. Both were here until
@@ -226,15 +281,25 @@ in {
       # That is a real escalation over WARN (which stops at 72h-dangling and a 1G
       # build cache) without putting a single byte of persistent state at risk.
       echo "[disk-watchdog] CRIT (''${USAGE}%) — aggressive cleanup"
-      journalctl --vacuum-size=50M 2>/dev/null || true
+      _vac=$(journalctl --vacuum-size=50M 2>/dev/null || true)
+      record "journal" "vacuum-size=50M" "$(reclaimed "$_vac")"
       if command -v docker >/dev/null 2>&1; then
-        docker builder prune -af 2>/dev/null || true
-        docker image prune -f --filter "until=24h" 2>/dev/null || true
+        _bld=$(docker builder prune -af 2>/dev/null || true)
+        record "docker" "builder-prune -af" "$(reclaimed "$_bld")"
+        _img=$(docker image prune -f --filter "until=24h" 2>/dev/null || true)
+        record "docker" "image-prune until=24h" "$(reclaimed "$_img")"
       fi
-      command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage --delete-older-than 3d 2>/dev/null || true
+      if command -v nix-collect-garbage >/dev/null 2>&1; then
+        _gc=$(nix-collect-garbage --delete-older-than 3d 2>/dev/null || true)
+        record "nix" "collect-garbage --delete-older-than 3d" "$(reclaimed "$_gc")"
+      fi
 
       USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
-      [ "$USAGE" -lt "$EMERG" ] && echo "[disk-watchdog] Resolved ''${USAGE}%" && exit 0
+      if [ "$USAGE" -lt "$EMERG" ]; then
+        record "run" "finish usage=''${USAGE}%"
+        echo "[disk-watchdog] Resolved ''${USAGE}%"
+        exit 0
+      fi
 
       # ── EMERG (95%) — remove swapfile entirely + last resort ─────────
       echo "[disk-watchdog] EMERGENCY (''${USAGE}%) — last resort"
@@ -246,13 +311,28 @@ in {
         echo "[disk-watchdog] Removing swapfile to free ''${FREED_MB}MB"
         swapoff "$SWAPFILE" 2>/dev/null || true
         rm -f "$SWAPFILE"
+        record "rm" "swapfile $SWAPFILE" "''${FREED_MB}MB"
       fi
 
-      find /var/log -name "*.log" -size +10M -exec truncate -s 1M {} \; 2>/dev/null || true
+      # The action log is exempt from this sweep — it is the evidence record.
+      # Everything else >10M is truncated to 1M and each truncation is logged.
+      find /var/log -name "*.log" ! -name "disk-watchdog.log" -size +10M -print0 2>/dev/null \
+        | while IFS= read -r -d '' _f; do
+            _sz=$(stat -c%s "$_f" 2>/dev/null || echo 0)
+            truncate -s 1M "$_f" 2>/dev/null || true
+            record "truncate" "$_f -> 1M" "$(( _sz > 1048576 ? _sz - 1048576 : 0 ))B"
+          done
+      _before=$(df -P / | awk 'NR==2{print $4}')
       find /var/log -name "*.gz" -delete 2>/dev/null || true
-      command -v nix-collect-garbage >/dev/null 2>&1 && nix-collect-garbage -d 2>/dev/null || true
+      _after=$(df -P / | awk 'NR==2{print $4}')
+      record "rm" "find /var/log -name '*.gz'" "$(( (_after - _before) * 1024 ))B"
+      if command -v nix-collect-garbage >/dev/null 2>&1; then
+        _gc=$(nix-collect-garbage -d 2>/dev/null || true)
+        record "nix" "collect-garbage -d" "$(reclaimed "$_gc")"
+      fi
 
       USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
+      record "run" "finish usage=''${USAGE}%"
       echo "[disk-watchdog] Final: ''${USAGE}%"
     '';
   };

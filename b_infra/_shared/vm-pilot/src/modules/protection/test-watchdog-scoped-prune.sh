@@ -86,6 +86,54 @@ else
     nope "sibling infra/prune-maintenance.nix lost the label filter"
 fi
 
+# ── 7. No stale docker flag — --keep-storage is deprecated, --max-storage is rejected ──
+# Verified against the live oci-apps docker (27.5.1) on 2026-09-17:
+#   --keep-storage    still parses but warns "Flag --keep-storage has been
+#                     deprecated ... changed to max-storage"
+#   --max-storage     "unknown flag" — rejected outright
+#   --max-used-space  current flag ("Maximum amount of disk space allowed to
+#                     keep for cache") — the same 1G-keeper as --keep-storage=1G
+if printf '%s\n' "$CODE" | grep -qE '\-\-keep-storage|\-\-max-storage'; then
+    nope "builder prune passes a stale flag (--keep-storage or --max-storage) — the current one is --max-used-space"
+else
+    ok "no stale builder-prune flag (--keep-storage/--max-storage)"
+fi
+if printf '%s\n' "$CODE" | grep -q '\-\-max-used-space'; then
+    ok "builder prune uses the current --max-used-space"
+else
+    nope "builder prune does not pass --max-used-space — the 1G build-cache cap is gone"
+fi
+
+# ── 8. The watchdog keeps a durable action log OUTSIDE the journal ──
+# journalctl --vacuum erases the journal, which was the only record of what the
+# watchdog deleted and why (on oci-apps 2026-09-16 it ate 16 days, including
+# the run that had just reclaimed 12.13GB). #447: every deletion appends to
+# WATCHDOG_LOG, which the vacuum cannot reach.
+if printf '%s\n' "$CODE" | grep -q 'WATCHDOG_LOG='; then
+    ok "durable action log defined (WATCHDOG_LOG)"
+else
+    nope "no WATCHDOG_LOG — the journal vacuum would erase the watchdog's own action record"
+fi
+# The directive must be Nix-escaped in this source file (''$ before the brace):
+# a bare ${ would be parsed as Nix interpolation and would break the entire
+# watchdog module at eval time — a latent build error, not a runtime one.
+if printf '%s\n' "$CODE" | grep -q "WATCHDOG_LOG=''\${"; then
+    ok "WATCHDOG_LOG is Nix-escaped (double single-quote before the brace) — the module still evaluates"
+else
+    nope "WATCHDOG_LOG uses a bare dollar-brace in nix source — Nix interpolation breaks the module eval"
+fi
+
+# ── 9. Every journal vacuum is paired with a record call ──
+# The vacuum is the one deletion that erases its own evidence; each must be
+# mirrored by a record line so the audit survives the vacuum.
+_vac_n=$(printf '%s\n' "$CODE" | grep -c 'journalctl --vacuum' || true)
+_rec_n=$(printf '%s\n' "$CODE" | grep -c 'record "journal"' || true)
+if [ "$_vac_n" -gt 0 ] && [ "$_vac_n" -eq "$_rec_n" ]; then
+    ok "all $_vac_n journal vacuums are paired with a record call"
+else
+    nope "journal vacuums ($_vac_n) vs journal record calls ($_rec_n) are out of balance"
+fi
+
 echo
 [ "$fail" -eq 0 ] && echo "test-watchdog-scoped-prune: PASS" && exit 0
 echo "test-watchdog-scoped-prune: FAIL"
