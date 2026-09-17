@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2791,
+    "files": 2795,
     "by_lang": {
-      "nix": 147,
+      "nix": 149,
       "ts": 1112,
-      "sh": 122,
+      "sh": 124,
       "py": 850,
       "js": 26,
       "rust": 534
@@ -18,10 +18,10 @@
     "by_role": {
       "nix-module": 9,
       "module": 674,
-      "shell": 114,
+      "shell": 116,
       "python": 845,
-      "flake": 70,
-      "compose": 68,
+      "flake": 71,
+      "compose": 69,
       "entrypoint": 48,
       "file": 272,
       "mcp-tool": 103,
@@ -15360,6 +15360,127 @@
       "imports": [],
       "symbols": [
         "log()"
+      ]
+    },
+    {
+      "path": "infra-ops_agents-tmp-reaper/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-ops_agents-tmp-reaper/src/code/entrypoint.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "log()",
+        "scrub_tree()",
+        "reap()"
+      ],
+      "imports": [],
+      "symbols": [
+        "log()",
+        "scrub_tree()",
+        "reap()"
+      ]
+    },
+    {
+      "path": "infra-ops_agents-tmp-reaper/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "services",
+        "agents-tmp-reaper",
+        "image",
+        "container_name",
+        "network_mode",
+        "environment",
+        "TZ",
+        "SCHEDULE",
+        "STALE_MINUTES",
+        "SCRUB_ROOT",
+        "AGENT_CONTAINERS",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "agents-tmp-reaper-logs"
+      ]
+    },
+    {
+      "path": "infra-ops_agents-tmp-reaper/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "own",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
       ]
     },
     {

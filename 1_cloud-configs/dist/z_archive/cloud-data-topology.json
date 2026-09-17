@@ -105,6 +105,7 @@
         "rss-gateway",
         "github-rss",
         "openobserve",
+        "agents-tmp-reaper",
         "crowdsec",
         "cloud-cgc-pub-mcp",
         "cloud-cgc-pvt-mcp",
@@ -3413,6 +3414,32 @@
         "enabled": true
       },
       "flake": "infra-obs_umami"
+    },
+    "agents-tmp-reaper": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-ops_agents-tmp-reaper",
+      "description": "Agent /tmp reaper — periodically clears stale agent scratch from the /tmp of the agent containers on oci-apps, so a runaway agent cache cannot fill the host root filesystem (task 442 / issue 410). Cron-driven maintenance container in the db-agent pattern: docker.sock (read-only) + docker exec, scope locked to the declared AGENT_CONTAINERS' /tmp and STALE_MINUTES of age.",
+      "containers": {
+        "app": {
+          "container_name": "agents-tmp-reaper",
+          "public": false,
+          "env_file": false,
+          "read_only": false,
+          "protocol": "none"
+        }
+      },
+      "container_names": [
+        "agents-tmp-reaper"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-ops_agents-tmp-reaper"
     },
     "authelia": {
       "category": "sec",

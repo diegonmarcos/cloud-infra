@@ -27,6 +27,18 @@
   },
   "services": [
     {
+      "name": "agents-tmp-reaper",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "Agent /tmp reaper — periodically clears stale agent scratch from the /tmp of the agent containers on oci-apps, so a runaway agent cache cannot fill the host root filesystem (task 442 / issue 410). Cron-driven maintenance container in the db-agent pattern: docker.sock (read-only) + docker exec, scope locked to the declared AGENT_CONTAINERS' /tmp and STALE_MINUTES of age.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "agents-tmp-reaper"
+      ]
+    },
+    {
       "name": "alerts-api",
       "category": "tools",
       "vm": "oci-E2-f_1",
@@ -967,6 +979,18 @@
     }
   ],
   "infra": [
+    {
+      "name": "agents-tmp-reaper",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "Agent /tmp reaper — periodically clears stale agent scratch from the /tmp of the agent containers on oci-apps, so a runaway agent cache cannot fill the host root filesystem (task 442 / issue 410). Cron-driven maintenance container in the db-agent pattern: docker.sock (read-only) + docker exec, scope locked to the declared AGENT_CONTAINERS' /tmp and STALE_MINUTES of age.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "agents-tmp-reaper"
+      ]
+    },
     {
       "name": "alerts-api",
       "category": "tools",

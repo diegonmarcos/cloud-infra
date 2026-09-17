@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
-    "description": "umami container config (service=umami, role=app)",
+    "description": "agents-tmp-reaper container config (service=agents-tmp-reaper, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
@@ -28,37 +28,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "umami",
-    "image": "ghcr.io/umami-software/umami:latest",
-    "port": 3006,
-    "port_env": "PORT",
-    "dns": "umami.app",
-    "public": true,
-    "proxy": {
-      "domain": "analytics.diegonmarcos.com",
-      "base_path": "/umami",
-      "auth": "two_factor"
-    },
-    "healthcheck": "curl -sf http://localhost:3006/api/heartbeat || exit 1",
-    "monitoring": {
-      "tls_check": true
-    },
-    "volumes": [],
-    "env_file": true,
-    "depends_on": [
-      "db"
-    ],
-    "resources": {
-      "reservations": {
-        "memory": "256M"
-      }
-    },
+    "container_name": "agents-tmp-reaper",
+    "public": false,
+    "env_file": false,
     "read_only": false,
-    "protocol": "http"
+    "protocol": "none"
   },
-  "service": "umami",
+  "service": "agents-tmp-reaper",
   "role": "app",
-  "vm": "oci-analytics",
+  "vm": "oci-apps",
   "services": {
     "alerts-api": {
       "ip": "10.0.0.4",
@@ -1752,10 +1730,8 @@
       }
     }
   },
-  "secret_env_vars": [
-    "DB_PASSWORD",
-    "APP_SECRET",
-    "ADMIN_USERNAME",
-    "ADMIN_PASSWORD"
-  ]
+  "timezone": "Europe/Berlin",
+  "resources": {
+    "mem_reservation": "16m"
+  }
 }
