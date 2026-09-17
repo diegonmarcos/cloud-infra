@@ -82,6 +82,15 @@ EOF
 cat > "$TMP/push-no-binfra.json" <<'EOF'
 {"commits":[{"id":"abc123","message":"docs: unrelated","added":["README.md"],"modified":[],"removed":[]}]}
 EOF
+# GitHub's push payload uses NULL (not []) for a commit's added/removed when it
+# only modified files — the real shape of the first post-#414 b_infra push
+# (74c17d50d) that crashed the gate's jq. Regression pair for #447.
+cat > "$TMP/push-null-arrays-no-marker.json" <<'EOF'
+{"commits":[{"id":"abc123","message":"fix(watchdog): prune scopes","added":null,"modified":["b_infra/_shared/vm-pilot/src/watchdog.nix","9_others/test-registry.json"],"removed":null}]}
+EOF
+cat > "$TMP/push-null-arrays-marker.json" <<'EOF'
+{"commits":[{"id":"abc123","message":"fix(watchdog): prune scopes [deploy-fleet]","added":null,"modified":["b_infra/_shared/vm-pilot/src/watchdog.nix"],"removed":null}]}
+EOF
 cat > "$TMP/dispatch.json" <<'EOF'
 {"ref":"refs/heads/main"}
 EOF
@@ -103,6 +112,10 @@ check "push, marker on unrelated commit → REFUSE(1)" 1 \
     bash "$GATE" push "$TMP/push-marker-second-commit.json"
 check "push, no b_infra change → allow(0)" 0 \
     bash "$GATE" push "$TMP/push-no-binfra.json"
+check "push, modify-only commit (null arrays), no marker → REFUSE(1)" 1 \
+    bash "$GATE" push "$TMP/push-null-arrays-no-marker.json"
+check "push, modify-only commit (null arrays), marker → allow(0)" 0 \
+    bash "$GATE" push "$TMP/push-null-arrays-marker.json"
 check "dispatch, no confirm → REFUSE(1)" 1 \
     bash "$GATE" workflow_dispatch "$TMP/dispatch.json" "false"
 check "dispatch, confirm=true → allow(0)" 0 \
