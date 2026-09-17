@@ -6,26 +6,28 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13442,
+    "files": 13464,
     "by_lang": {
-      "sh": 218,
+      "sh": 219,
       "py": 43,
-      "kotlin": 9779,
+      "kotlin": 9790,
       "java": 711,
       "ts": 2625,
       "nix": 23,
-      "js": 43
+      "js": 43,
+      "rust": 10
     },
     "by_role": {
       "script": 88,
-      "shell": 153,
+      "shell": 154,
       "java": 711,
       "entrypoint": 20,
       "module": 1377,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9777,
+      "kotlin": 9788,
       "python": 24,
+      "rust-module": 10,
       "file": 1173,
       "hook": 89,
       "nix-module": 3,
@@ -9092,6 +9094,20 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-install-identity-managed.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-install-status-surfaced.sh",
       "lang": "sh",
       "role": "shell",
@@ -10191,6 +10207,7 @@
         "androidx.work.WorkerParameters",
         "com.diegonmarcos.superapp.updater.Advisory",
         "com.diegonmarcos.superapp.updater.AutoUpdatePrefs",
+        "com.diegonmarcos.superapp.updater.InstallIdentity",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.BuildConfig",
@@ -14037,6 +14054,553 @@
         "detectTransformGestures( panZoomLock: Boolean = false, consume: Boolean = true, onGestureStart: (PointerInputChange)",
         "detectPointerTransformGestures( panZoomLock: Boolean = false, numberOfPointers: Int = 1, requisite: PointerRequisite = PointerRequisite.None, consume: Boolean = true, onGestureStart: (PointerInputChange)",
         "class PointerRequisite"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/auth/src/gitea.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/auth/src/github.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/auth/src/https.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/auth/src/ssh.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/onboarding/src/negative.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/onboarding/src/positive.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "get_input"
+      ],
+      "imports": [
+        "crate::Input"
+      ],
+      "symbols": [
+        "get_input()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/src/generate_screenshots.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "crate::env",
+        "image::",
+        "serde_json::Value",
+        "std::"
+      ],
+      "symbols": [
+        "generate_screenshot(config: ScreenshotConfig)",
+        "is_android()",
+        "add_triangles_to_image(img: DynamicImage, triangle_width: u32)",
+        "main(args: &[String])"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/.maestro/src/main.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "serde::",
+        "serde_yaml::Value",
+        "std::env",
+        "std::fs::File",
+        "std::process::",
+        "std::io::"
+      ],
+      "symbols": [
+        "push_flow(yaml_data: &mut Vec<Value>, flow: &str)",
+        "create_yaml(input: &Input, output_file: &str)",
+        "validate_url_format(key: &str, url: &str)",
+        "main()",
+        "run_maestro(path: &str)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/AccessibilityServiceHelper.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccessibilityServiceHelper"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.graphics.drawable.BitmapDrawable",
+        "android.graphics.drawable.Drawable",
+        "android.provider.Settings",
+        "android.text.TextUtils",
+        "android.app.ActivityManager",
+        "java.io.File",
+        "android.widget.Toast",
+        "io.flutter.Log",
+        "io.flutter.plugin.common.MethodCall",
+        "io.flutter.plugin.common.MethodChannel",
+        "java.io.ByteArrayOutputStream"
+      ],
+      "symbols": [
+        "onMethodCall(call: MethodCall, result: MethodChannel.Result)",
+        "bitmapToByteArray(bitmap: Bitmap)",
+        "drawableToBitmap(drawable: Drawable)",
+        "isAccessibilityServiceEnabled(context: Context)",
+        "openAccessibilitySettings()",
+        "class AccessibilityServiceHelper"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/GitSyncAccessibilityService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitSyncAccessibilityService"
+      ],
+      "imports": [
+        "android.accessibilityservice.AccessibilityService",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.view.accessibility.AccessibilityEvent",
+        "android.view.inputmethod.InputMethodManager",
+        "id.flutter.flutter_background_service.BackgroundService"
+      ],
+      "symbols": [
+        "onCreate()",
+        "onAccessibilityEvent(event: AccessibilityEvent?)",
+        "onInterrupt()",
+        "class GitSyncAccessibilityService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/GitSyncService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitSyncService"
+      ],
+      "imports": [
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.IBinder",
+        "io.flutter.Log"
+      ],
+      "symbols": [
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onBind(p0: Intent?)",
+        "class GitSyncService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/GitTileManualSyncService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitTileManualSyncService"
+      ],
+      "imports": [
+        "android.app.PendingIntent",
+        "android.content.Intent",
+        "android.content.Intent.FLAG_ACTIVITY_NEW_TASK",
+        "android.os.Build",
+        "android.service.quicksettings.TileService",
+        "androidx.annotation.RequiresApi"
+      ],
+      "symbols": [
+        "onClick()",
+        "class GitTileManualSyncService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/GitTileSyncService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitTileSyncService"
+      ],
+      "imports": [
+        "android.net.Uri",
+        "android.os.Build",
+        "android.service.quicksettings.TileService",
+        "androidx.annotation.RequiresApi",
+        "es.antonborri.home_widget.HomeWidgetBackgroundIntent"
+      ],
+      "symbols": [
+        "onClick()",
+        "class GitTileSyncService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "io.flutter.embedding.android.FlutterActivity",
+        "io.flutter.embedding.engine.FlutterEngine",
+        "io.flutter.plugin.common.MethodChannel",
+        "android.os.Bundle",
+        "android.view.Window",
+        "android.content.Intent"
+      ],
+      "symbols": [
+        "configureFlutterEngine(flutterEngine: FlutterEngine)",
+        "onCreate(savedInstanceState: Bundle?)",
+        "onNewIntent(intent: Intent)",
+        "handleIntent(intent: Intent?)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/widget/ForceSyncWidget.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SyncAction",
+        "ForceSyncWidget"
+      ],
+      "imports": [
+        "es.antonborri.home_widget.HomeWidgetGlanceState",
+        "es.antonborri.home_widget.HomeWidgetGlanceStateDefinition",
+        "es.antonborri.home_widget.HomeWidgetBackgroundIntent",
+        "android.content.Context",
+        "android.graphics.BitmapFactory",
+        "android.net.Uri",
+        "android.content.Intent",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.graphics.Color",
+        "android.graphics.Color",
+        "androidx.glance.LocalSize",
+        "androidx.glance.ColorFilter",
+        "androidx.glance.unit.ColorProvider",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.glance.GlanceId",
+        "androidx.glance.appwidget.SizeMode",
+        "androidx.glance.layout.ContentScale",
+        "androidx.glance.GlanceModifier",
+        "androidx.glance.Image",
+        "androidx.glance.action.ActionParameters",
+        "androidx.glance.action.clickable",
+        "androidx.glance.appwidget.GlanceAppWidget",
+        "androidx.glance.appwidget.action.ActionCallback",
+        "androidx.glance.appwidget.action.actionRunCallback",
+        "androidx.glance.appwidget.provideContent",
+        "androidx.glance.background",
+        "androidx.glance.currentState",
+        "androidx.glance.layout.Alignment",
+        "androidx.glance.layout.Box",
+        "androidx.glance.layout.Column",
+        "androidx.glance.layout.fillMaxSize",
+        "androidx.glance.layout.padding",
+        "androidx.glance.layout.size",
+        "androidx.glance.state.GlanceStateDefinition",
+        "androidx.glance.text.FontWeight",
+        "androidx.glance.text.Text",
+        "androidx.glance.text.TextStyle",
+        "androidx.glance.layout.Row",
+        "androidx.glance.ImageProvider"
+      ],
+      "symbols": [
+        "onAction( context: Context, glanceId: GlanceId, parameters: ActionParameters )",
+        "provideGlance(context: Context, id: GlanceId)",
+        "GlanceContent()",
+        "class SyncAction",
+        "class ForceSyncWidget"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/widget/ForceSyncWidgetReceiver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ForceSyncWidgetReceiver"
+      ],
+      "imports": [
+        "es.antonborri.home_widget.HomeWidgetGlanceWidgetReceiver"
+      ],
+      "symbols": [
+        "class ForceSyncWidgetReceiver"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/widget/ManualSyncWidget.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ManualSyncAction",
+        "ManualSyncWidget"
+      ],
+      "imports": [
+        "es.antonborri.home_widget.HomeWidgetGlanceState",
+        "es.antonborri.home_widget.HomeWidgetGlanceStateDefinition",
+        "es.antonborri.home_widget.HomeWidgetBackgroundIntent",
+        "es.antonborri.home_widget.actionStartActivity",
+        "android.content.Context",
+        "android.graphics.BitmapFactory",
+        "android.net.Uri",
+        "android.content.Intent",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.graphics.Color",
+        "android.graphics.Color",
+        "androidx.glance.LocalSize",
+        "androidx.glance.ColorFilter",
+        "androidx.glance.unit.ColorProvider",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.glance.GlanceId",
+        "androidx.glance.appwidget.SizeMode",
+        "androidx.glance.layout.ContentScale",
+        "androidx.glance.GlanceModifier",
+        "androidx.glance.Image",
+        "androidx.glance.action.ActionParameters",
+        "androidx.glance.action.clickable",
+        "androidx.glance.appwidget.GlanceAppWidget",
+        "androidx.glance.appwidget.action.ActionCallback",
+        "androidx.glance.appwidget.action.actionRunCallback",
+        "androidx.glance.appwidget.provideContent",
+        "androidx.glance.background",
+        "androidx.glance.currentState",
+        "androidx.glance.layout.Alignment",
+        "androidx.glance.layout.Box",
+        "androidx.glance.layout.Column",
+        "androidx.glance.layout.fillMaxSize",
+        "androidx.glance.layout.padding",
+        "androidx.glance.layout.size",
+        "androidx.glance.state.GlanceStateDefinition",
+        "androidx.glance.text.FontWeight",
+        "androidx.glance.text.Text",
+        "androidx.glance.text.TextStyle",
+        "androidx.glance.layout.Row"
+      ],
+      "symbols": [
+        "onAction( context: Context, glanceId: GlanceId, parameters: ActionParameters )",
+        "provideGlance(context: Context, id: GlanceId)",
+        "GlanceContent(context: Context)",
+        "class ManualSyncAction",
+        "class ManualSyncWidget"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/android/app/src/main/kotlin/com/viscouspot/gitsync/widget/ManualSyncWidgetReceiver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ManualSyncWidgetReceiver"
+      ],
+      "imports": [
+        "es.antonborri.home_widget.HomeWidgetGlanceWidgetReceiver"
+      ],
+      "symbols": [
+        "class ManualSyncWidgetReceiver"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/rust/src/api/git_manager.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "commit_list_run_with_lock",
+        "string_list_run_with_lock",
+        "string_int_list_run_with_lock",
+        "string_conflicttype_list_run_with_lock",
+        "string_pair_run_with_lock",
+        "string_run_with_lock",
+        "int_run_with_lock",
+        "bool_run_with_lock",
+        "void_run_with_lock",
+        "is_locked",
+        "clear_stale_locks",
+        "init",
+        "get_submodule_paths",
+        "clone_repository",
+        "untrack_all",
+        "get_file_diff",
+        "get_commit_diff",
+        "get_workdir_file_diff",
+        "stage_file_lines",
+        "get_recent_commits",
+        "get_commit_diff_stats",
+        "update_submodules",
+        "fetch_remote",
+        "pull_changes",
+        "download_changes",
+        "push_changes",
+        "stage_file_paths",
+        "unstage_file_paths",
+        "get_recommended_action",
+        "commit_changes"
+      ],
+      "imports": [
+        "flutter_rust_bridge::DartFnFuture",
+        "git2::",
+        "osshkeys::",
+        "ssh_key::",
+        "std::",
+        "uuid::Uuid",
+        "nix::fcntl::",
+        "std::fs",
+        "std::io::",
+        "std::io::Read",
+        "std::os::unix::fs::PermissionsExt",
+        "git2::Delta"
+      ],
+      "symbols": [
+        "safe_wline(self, line: u32)",
+        "commit_list_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "string_list_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "string_int_list_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "string_conflicttype_list_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "string_pair_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "string_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "int_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "bool_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "void_run_with_lock(\n    queue_dir: &str,\n    index: i32,\n    priority: i32,\n    fn_name: &str,\n    function: impl Fn()",
+        "drop(&mut self)",
+        "is_locked(queue_dir: &str, index: i32)",
+        "clear_stale_locks(queue_dir: &str, force: bool)",
+        "init(homepath: Option<String>)",
+        "ensure_empty_known_hosts()",
+        "set_author(repo: &Repository, author: &(String, String)",
+        "_log(\n    log: Arc<impl Fn(LogType, String)",
+        "get_submodule_paths(path_string: String)",
+        "clone_repository(\n    url: String,\n    path_string: String,\n    provider: String,\n    credentials: (String, String)",
+        "untrack_all(\n    path_string: &String,\n    file_paths: Option<Vec<String>>,\n    log: impl Fn(LogType, String)",
+        "get_file_diff(\n    path_string: &String,\n    file_path: &String,\n    log: impl Fn(LogType, String)",
+        "get_commit_diff(\n    path_string: &String,\n    start_ref: &String,\n    end_ref: &Option<String>,\n    log: impl Fn(LogType, String)",
+        "get_workdir_file_diff(\n    path_string: &String,\n    file_path: &String,\n    log: impl Fn(LogType, String)",
+        "stage_file_lines(\n    path_string: &String,\n    file_path: &String,\n    selected_line_indices: Vec<i32>,\n    log: impl Fn(LogType, String)",
+        "get_recent_commits(\n    path_string: &String,\n    remote_name: &str,\n    cached_diff_stats: HashMap<String, (i32, i32)",
+        "get_commit_diff_stats(\n    path_string: &String,\n    references: Vec<String>,\n    log: impl Fn(LogType, String)",
+        "fast_forward(\n    repo: &Repository,\n    lb: &mut git2::Reference,\n    rc: &git2::AnnotatedCommit,\n    log_callback: &Arc<impl Fn(LogType, String)",
+        "commit(\n    repo: &Repository,\n    update_ref: Option<&str>,\n    author_committer: &Signature<'_>,\n    message: &str,\n    tree: &Tree<'_>,\n    parents: &[&git2::Commit<'_>],\n    commit_signing_credentials: Option<(String, String)",
+        "update_submodules(\n    path_string: &str,\n    provider: &String,\n    credentials: &(String, String)",
+        "update_submodules_priv(\n    repo: &Repository,\n    provider: &String,\n    credentials: &(String, String)",
+        "fetch_remote(\n    path_string: &str,\n    remote: &String,\n    provider: &String,\n    credentials: &(String, String)",
+        "configure_network_timeouts(repo: &Repository)",
+        "new(stall_timeout_secs: u64)",
+        "check(&self, received_bytes: u64)",
+        "was_stalled(&self)",
+        "fetch_remote_priv(\n    repo: &Repository,\n    remote: &String,\n    provider: &String,\n    credentials: &(String, String)",
+        "pull_changes(\n    path_string: &String,\n    provider: &String,\n    credentials: &(String, String)",
+        "pull_changes_priv(\n    repo: &Repository,\n    remote_name: &str,\n    provider: &String,\n    credentials: &(String, String)",
+        "download_changes(\n    path_string: &String,\n    remote: &String,\n    provider: &String,\n    credentials: &(String, String)",
+        "push_changes(\n    path_string: &String,\n    remote_name: &String,\n    provider: &String,\n    credentials: &(String, String)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gitsync/rust/src/api/test/git_manager.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "new",
+        "get_credentials",
+        "get_user_info",
+        "Config"
+      ],
+      "imports": [
+        "std::env",
+        "std::fs",
+        "std::path::",
+        "std::process::Command",
+        "std::sync::Arc",
+        "std::time::Duration",
+        "futures::executor::block_on",
+        "tempfile::TempDir",
+        "tokio::sync::Mutex",
+        "tokio::time",
+        "dotenv::dotenv",
+        "super::",
+        "std::thread",
+        "crate::"
+      ],
+      "symbols": [
+        "new()",
+        "get_credentials(&self)",
+        "get_user_info(&self)",
+        "mock_callback()",
+        "mock_log(_log_type: crate::LogType, _message: String)",
+        "setup_test_repos()",
+        "test_sync_push_changes_file_edit()",
+        "test_sync_push_changes_file_create()",
+        "test_sync_push_changes_file_delete()",
+        "test_sync_push_changes_folder_create()",
+        "test_sync_push_changes_folder_delete()",
+        "test_sync_pull_changes()",
+        "test_cause_merge_conflict()",
+        "test_force_pull_to_resolve_conflict()",
+        "test_force_push_to_resolve_conflict()",
+        "test_manual_sync()",
+        "test_get_uncommitted_file_paths()",
+        "test_get_branch_name()",
+        "test_clone_repository()"
       ]
     },
     {
@@ -34681,6 +35245,27 @@
         "collect(ctx: Context, appId: String, pkg: String, error: String, apk: File? = null)",
         "line(k: String, v: Any?)",
         "class InstallDiagnostics"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/InstallIdentity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InstallIdentity"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Process",
+        "android.os.UserManager",
+        "android.util.Log"
+      ],
+      "symbols": [
+        "current(context: Context)",
+        "isManaged(context: Context)",
+        "describe(context: Context)",
+        "class InstallIdentity",
+        "class InstallKind"
       ]
     },
     {
@@ -96505,6 +97090,8 @@
         "hasStorageAccess()",
         "requestStorageAccess()",
         "connections()",
+        "apps()",
+        "openApp(appJson: String)",
         "places()",
         "list(path: String, sort: String, descending: Boolean, showHidden: Boolean)",
         "info(path: String)",
