@@ -46,14 +46,22 @@ command -v jq >/dev/null || { echo "::error::jq is required to read the tester r
 
 ran=0; failed=0; quarantined=0; revived=0; missing=0
 
-while IFS=$'\t' read -r name status reason; do
+while IFS=$'\t' read -r name status reason path; do
     [ -n "$name" ] || continue
-    tester="$ROOT/9_others/test/$name"
+    # read collapses consecutive IFS delimiters, so jq below emits "-" for
+    # missing fields instead of the empty string that would shift the columns.
+    [ "$reason" = "-" ] && reason=""
+    [ "$path" = "-" ] && path=""
+    if [ -n "$path" ]; then
+        tester="$ROOT/$path"
+    else
+        tester="$ROOT/9_others/test/$name"
+    fi
 
     # A registry entry naming a file that is not there is a failure, not a skip.
     # Skipping it is how a deleted tester keeps reading as coverage.
     if [ ! -f "$tester" ]; then
-        echo "::error::$name is in test-registry.json but 9_others/test/$name does not exist"
+        echo "::error::$name is in test-registry.json but ${tester#$ROOT/} does not exist"
         missing=$((missing + 1))
         continue
     fi
@@ -97,7 +105,7 @@ while IFS=$'\t' read -r name status reason; do
             ;;
     esac
     rm -f "$out"
-done < <(jq -r '.testers | to_entries[] | [.key, .value.status, (.value.reason // "")] | @tsv' "$REGISTRY")
+done < <(jq -r '.testers | to_entries[] | [.key, .value.status, (.value.reason // "-"), (.value.path // "-")] | @tsv' "$REGISTRY")
 
 echo "── registered testers: $ran ran, $failed failed, $quarantined quarantined, $revived revived, $missing missing ──"
 

@@ -26,6 +26,7 @@ MODULES_DIR="$(cd "$(dirname "$0")/.." && pwd)"   # .../src/modules
 cd "$MODULES_DIR"
 
 command -v nix-instantiate >/dev/null 2>&1 || {
+  echo "::warning::test-protection-data-driven.sh SKIP: nix-instantiate not available on this runner — the PART 1 data-driven assertions did NOT execute. Run this tester where nix is installed for a real verdict."
   echo "SKIP: nix-instantiate not available"; exit 0
 }
 

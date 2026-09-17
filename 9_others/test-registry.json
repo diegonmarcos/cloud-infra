@@ -1,5 +1,5 @@
 {
-  "_doc": "Every tester under 9_others/test/ that no workflow names by filename. lint-pipeline.yml registers its testers as hand-written YAML steps, one per tester; a tester added without that step is committed, looks like coverage in a directory listing, and is executed by nothing. 43 of the 101 testers were in that state on 2026-09-16 (ticket #368). This file is the second registry, and unlike the YAML it is data: 9_others/test/run-registered-testers.sh executes what is listed here, and 9_others/test/test_every_tester_is_registered.sh fails when a tester appears under 9_others/test/ that is named neither by a workflow nor by this file. Add new testers HERE, never as another YAML step.",
+  "_doc": "Every tester under 9_others/test/ that no workflow names by filename. lint-pipeline.yml registers its testers as hand-written YAML steps, one per tester; a tester added without that step is committed, looks like coverage in a directory listing, and is executed by nothing. 43 of the 101 testers were in that state on 2026-09-16 (ticket #368). This file is the second registry, and unlike the YAML it is data: 9_others/test/run-registered-testers.sh executes what is listed here, and 9_others/test/test_every_tester_is_registered.sh fails when a tester appears under 9_others/test/ that is named neither by a workflow nor by this file. Add new testers HERE, never as another YAML step. Testers that do not live under 9_others/test/ (e.g. the b_infra protection suite) are registered the same way, with an optional \"path\" (repo-root-relative) telling the runner where the file is; without a path the runner assumes 9_others/test/NAME.",
   "_doc_status": "run = executed, failure is fatal. quarantine = executed, and asserted to STILL FAIL: if a quarantined tester starts passing, run-registered-testers.sh goes RED and tells you to flip it to run. A quarantine can therefore never rot into a silent skip, and there is no status that swallows an exit code — that is deliberate, it is the defect ticket #368 exists to undo.",
   "_doc_why": "Eight of the ten quarantined entries below name a production incident in their own header, with the GitHub run id. They were written as the fix for that incident and then never connected to a runner, so the incident they guard has been unguarded ever since. A red entry here is a real defect with an owner to find, not a tester to silence.",
   "testers": {
@@ -63,6 +63,18 @@
     },
     "services-mcp-registry.test.sh": {
       "status": "run"
+    },
+    "test-protection-data-driven.sh": {
+      "status": "run",
+      "path": "b_infra/_shared/vm-pilot/src/modules/protection/test-protection-data-driven.sh"
+    },
+    "test-scheduler-no-readonly-rm.sh": {
+      "status": "run",
+      "path": "b_infra/_shared/vm-pilot/src/modules/protection/test-scheduler-no-readonly-rm.sh"
+    },
+    "test-watchdog-scoped-prune.sh": {
+      "status": "run",
+      "path": "b_infra/_shared/vm-pilot/src/modules/protection/test-watchdog-scoped-prune.sh"
     },
     "test_agent_git_tree_declared.sh": {
       "status": "run"
