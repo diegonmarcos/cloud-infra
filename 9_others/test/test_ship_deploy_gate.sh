@@ -48,23 +48,52 @@ done
 # Extracted from the generated workflow rather than restated here, so the test
 # cannot drift into asserting a copy of the logic that no longer ships.
 GATE="$(mktemp)"
+YML="$REPO_ROOT/.github/workflows/ship.yml"
 python3 -c 'import yaml,sys; sys.stdout.write(yaml.safe_load(open(sys.argv[1]))["jobs"]["deploy-gate"]["steps"][0]["run"])' \
-  "$REPO_ROOT/.github/workflows/ship.yml" > "$GATE"
+  "$YML" > "$GATE"
+
+# The gate body runs `set -eu`. An env var it reads that this test never sets is
+# therefore an UNBOUND VARIABLE: sh dies with exit 2 before printing a single
+# line, and every behavioural case below degrades into a meaningless
+# "want '1', got '2'" that says nothing about the gate's actual behaviour.
+#
+# That is not hypothetical. This test was written 2026-09-09 against a gate that
+# read three variables. #401's rewrite (c942be58f) added DETECT_RESULT, VERDICT
+# and HAS_VMS, this test kept exporting the original three, and all five
+# behavioural cases silently stopped testing the gate — they were asserting the
+# exit code of an unbound-variable crash. Phase 55 caught it the first time it
+# ever ran to completion (run 35169520755).
+#
+# So assert the agreement rather than assume it: every env key the step declares
+# must be one this test knows how to supply. When someone extends the gate
+# again, this fails FIRST, by name, instead of poisoning everything below it.
+KNOWN_ENV=' DETECT_RESULT VERDICT HAS_VMS BUILD_RESULT DEPLOY_RESULT MATRIX '
+UNSUPPLIED=''
+for k in $(python3 -c 'import yaml,sys; print(" ".join(sorted(yaml.safe_load(open(sys.argv[1]))["jobs"]["deploy-gate"]["steps"][0].get("env",{}))))' "$YML"); do
+  case "$KNOWN_ENV" in *" $k "*) ;; *) UNSUPPLIED="$UNSUPPLIED $k" ;; esac
+done
+ck "every env var the gate declares is one this test supplies" "${UNSUPPLIED# }" ""
+
 MATRIX='{"include":[{"vm":"oci-apps","changed_dirs":"user-ai_my-ai_claude-api"}]}'
-# The gate reads the SAME env the workflow maps for it (needs.detect.{result,
-# outputs.verdict, outputs.has_vms} + needs.{build,deploy}.result + matrix).
-# Since #401 (c942be58f) the gate consumes DETECT_RESULT/VERDICT/HAS_VMS; this
-# tester was never updated and ran under dash's set -u with them UNSET, exiting
-# 2 before the gate could judge anything. Supply the faithful env so the gate
-# actually runs.
-export MATRIX BUILD_RESULT=success DETECT_RESULT=success VERDICT=ship HAS_VMS=true
+# Deliberately NOT exported. ce2cc7698 fixed the crash by exporting a known-good
+# env once at the top, which works — but an inherited default is how this test
+# drifted in the first place: a case that forgets a variable silently borrows the
+# previous one's value instead of failing. run_gate below passes all six
+# explicitly per case, so each case states its own whole run-shape.
 
-run_gate() { DEPLOY_RESULT="$1" sh "$GATE" >"$GATE.out" 2>&1; }
+# Positional, so every case states the whole run-shape it is describing rather
+# than inheriting half of it from an earlier export.
+#   run_gate <detect_result> <verdict> <has_vms> <build_result> <deploy_result>
+run_gate() {
+  env DETECT_RESULT="$1" VERDICT="$2" HAS_VMS="$3" BUILD_RESULT="$4" \
+      DEPLOY_RESULT="$5" MATRIX="$MATRIX" sh "$GATE" >"$GATE.out" 2>&1
+}
 
-DEPLOY_RESULT=success run_gate success && rc=0 || rc=$?
+# ── A deploy WAS required (verdict=ship) ──
+run_gate success ship true success success && rc=0 || rc=$?
 ck "gate passes when the deploy succeeded" "$rc" "0"
 
-run_gate cancelled && rc=0 || rc=$?
+run_gate success ship true success cancelled && rc=0 || rc=$?
 ck "gate FAILS on an evicted (cancelled) deploy" "$rc" "1"
 ck "gate names the undeployed service" \
    "$(grep -c 'user-ai_my-ai_claude-api' "$GATE.out" || true)" "1"
@@ -73,8 +102,35 @@ ck "gate points at unjam-ship for a cancelled deploy" \
 
 # skipped is what a build failure leaves behind; the services are still absent
 # from the fleet, so the gate must be just as loud.
-run_gate skipped && rc=0 || rc=$?
+run_gate success ship true skipped skipped && rc=0 || rc=$?
 ck "gate FAILS when deploy was skipped" "$rc" "1"
+
+# A containers-push whose diff resolved to no deployable service. detect did not
+# prove there was nothing to ship, it failed to find what there was — so this is
+# the #401 hollow green and must be red, with the reason named.
+run_gate success empty false skipped skipped && rc=0 || rc=$?
+ck "gate FAILS on verdict=empty" "$rc" "1"
+# Anchored on the explanatory clause, not on "verdict='empty'" alone: the
+# generic error line above it interpolates $VERDICT too, so the bare string
+# matches twice and a count of 1 would be wrong.
+ck "gate explains what verdict=empty means" \
+   "$(grep -c "the containers-push diff resolved to no deployable service" "$GATE.out" || true)" "1"
+
+# ── Green BY DECLARATION, not by omission — the other half of #401 ──
+# Untested until 2026-09-17: the gate's whole purpose is telling these two
+# legitimate no-ops apart from the hollow green above, and nothing asserted it.
+run_gate success nothing-to-ship false skipped skipped && rc=0 || rc=$?
+ck "gate is GREEN when detect proved nothing to ship" "$rc" "0"
+
+run_gate success '' '' skipped skipped && rc=0 || rc=$?
+ck "gate is GREEN for a path-irrelevant upstream commit" "$rc" "0"
+
+# detect itself is the basis for every judgement above. If it did not succeed,
+# there is no basis, and no amount of downstream green may conclude success.
+run_gate failure '' '' skipped skipped && rc=0 || rc=$?
+ck "gate FAILS when detect itself did not succeed" "$rc" "1"
+ck "gate names detect as the thing to investigate" \
+   "$(grep -c 'Investigate the detect job itself' "$GATE.out" || true)" "1"
 
 rm -f "$GATE" "$GATE.out"
 echo "--- $pass passed, $fail failed"
