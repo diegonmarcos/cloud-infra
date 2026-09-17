@@ -335,6 +335,30 @@ jobs:
               echo "::notice::src-symlink consumer ship:$SRC_CONSUMERS"
             fi
 
+            # A change under _shared/ is owned by NO single service: the shared
+            # container engine is a dependency of every service that imports it,
+            # so an engine change must rebuild all of them. The first-segment
+            # classifier above cannot express that 1→N fan-out — `_shared/engine.nix`
+            # has first segment `_shared` and a remainder matching neither
+            # `src/` nor `build.json`, so an engine-only commit resolved to
+            # ZERO services and the run concluded green having built nothing
+            # (#451). The consumers are derived from the declaration that ALREADY
+            # names the dependency — each service's src imports
+            # ../../_shared/engine.nix — by the reverse-walk in the script below,
+            # the same way the dist-consumer and src-symlink walks fan out.
+            # A build.json service that does not reference the engine (e.g. a
+            # front-end with its own build) is NOT a consumer and must not ship,
+            # or every engine work-item would rebuild the whole fleet
+            # (#146/#235/#248/#263). The walk only fires on repository_dispatch:
+            # SUB_CHANGED is empty on push/workflow_run, so nothing fans out there.
+            ENGINE_CONSUMERS=$(printf '%s\n' "$SUB_CHANGED" \
+              | bash 1_cicd/src/scripts/cloud-ship-detect-engine-consumers.sh || true)
+            if [ -n "$ENGINE_CONSUMERS" ]; then
+              CHANGED_DIRS=$(printf '%s %s\n' "$CHANGED_DIRS" "$ENGINE_CONSUMERS" \
+                | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ')
+              echo "::notice::shared-engine consumer ship:$ENGINE_CONSUMERS"
+            fi
+
             # Also pick up consumers of regenerated 1_cloud-configs/dist/build-*.json
             # files. Reverse-walk each service's src/ for symlinks resolving to
             # any changed dist file, and append the owning service dir to
