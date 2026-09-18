@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2796,
+    "files": 2800,
     "by_lang": {
       "nix": 149,
-      "ts": 1112,
+      "ts": 1116,
       "sh": 125,
       "py": 850,
       "js": 26,
@@ -17,14 +17,14 @@
     },
     "by_role": {
       "nix-module": 9,
-      "module": 674,
+      "module": 677,
       "shell": 117,
       "python": 845,
       "flake": 71,
       "compose": 69,
       "entrypoint": 48,
       "file": 272,
-      "mcp-tool": 103,
+      "mcp-tool": 104,
       "workflow-dag": 2,
       "script": 4,
       "rust-module": 529,
@@ -1549,6 +1549,27 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/health-match.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "hasGlob",
+        "globToRegex",
+        "isDeployed",
+        "isRunning",
+        "runningNames",
+        "DriftContainer"
+      ],
+      "imports": [],
+      "symbols": [
+        "hasGlob(pat: string)",
+        "globToRegex(pat: string)",
+        "isDeployed(declared: string[], deployed: string[])",
+        "isRunning(status: string | undefined)",
+        "runningNames(containers: DriftContainer[])"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/health.ts",
       "lang": "ts",
       "role": "module",
@@ -1590,7 +1611,8 @@
         "./docker.js",
         "./exec.js",
         "./paths.js",
-        "./types.js"
+        "./types.js",
+        "./health-match.js"
       ],
       "symbols": [
         "getVmIds(vmId?: string)",
@@ -2154,14 +2176,11 @@
       "exports": [],
       "imports": [
         "node:assert/strict",
-        "node:fs"
+        "./code/shared/libs/health-match.ts",
+        "node:fs",
+        "node:path"
       ],
       "symbols": [
-        "hasGlob(pat: string)",
-        "globToRegex(pat: string)",
-        "isDeployed(declared: string[], deployed: string[])",
-        "isRunning(status: string | undefined)",
-        "runningNames(containers: Array<{ name: string; status?: string }>)",
         "findPhotoprismBuildJson()"
       ]
     },
@@ -4243,6 +4262,27 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/health-match.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "hasGlob",
+        "globToRegex",
+        "isDeployed",
+        "isRunning",
+        "runningNames",
+        "DriftContainer"
+      ],
+      "imports": [],
+      "symbols": [
+        "hasGlob(pat: string)",
+        "globToRegex(pat: string)",
+        "isDeployed(declared: string[], deployed: string[])",
+        "isRunning(status: string | undefined)",
+        "runningNames(containers: DriftContainer[])"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/health.ts",
       "lang": "ts",
       "role": "module",
@@ -4284,7 +4324,8 @@
         "./docker.js",
         "./exec.js",
         "./paths.js",
-        "./types.js"
+        "./types.js",
+        "./health-match.js"
       ],
       "symbols": [
         "getVmIds(vmId?: string)",
@@ -17020,6 +17061,27 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/health-match.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "hasGlob",
+        "globToRegex",
+        "isDeployed",
+        "isRunning",
+        "runningNames",
+        "DriftContainer"
+      ],
+      "imports": [],
+      "symbols": [
+        "hasGlob(pat: string)",
+        "globToRegex(pat: string)",
+        "isDeployed(declared: string[], deployed: string[])",
+        "isRunning(status: string | undefined)",
+        "runningNames(containers: DriftContainer[])"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/health.ts",
       "lang": "ts",
       "role": "module",
@@ -17061,7 +17123,8 @@
         "./docker.js",
         "./exec.js",
         "./paths.js",
-        "./types.js"
+        "./types.js",
+        "./health-match.js"
       ],
       "symbols": [
         "getVmIds(vmId?: string)",
@@ -18244,6 +18307,27 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/health-match.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "hasGlob",
+        "globToRegex",
+        "isDeployed",
+        "isRunning",
+        "runningNames",
+        "DriftContainer"
+      ],
+      "imports": [],
+      "symbols": [
+        "hasGlob(pat: string)",
+        "globToRegex(pat: string)",
+        "isDeployed(declared: string[], deployed: string[])",
+        "isRunning(status: string | undefined)",
+        "runningNames(containers: DriftContainer[])"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/health.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -18285,7 +18369,8 @@
         "./docker.js",
         "./exec.js",
         "./paths.js",
-        "./types.js"
+        "./types.js",
+        "./health-match.js"
       ],
       "symbols": [
         "getVmIds(vmId?: string)",
