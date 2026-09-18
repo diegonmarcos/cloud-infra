@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13482,
+    "files": 13500,
     "by_lang": {
-      "sh": 221,
-      "py": 43,
-      "kotlin": 9805,
+      "py": 47,
+      "sh": 223,
+      "kotlin": 9817,
       "java": 711,
       "ts": 2625,
       "nix": 23,
@@ -18,14 +18,14 @@
       "rust": 10
     },
     "by_role": {
-      "script": 88,
+      "script": 94,
       "shell": 156,
       "java": 711,
       "entrypoint": 20,
       "module": 1378,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9803,
+      "kotlin": 9815,
       "python": 24,
       "rust-module": 10,
       "file": 1173,
@@ -35,6 +35,29 @@
     }
   },
   "files": [
+    {
+      "path": ".github/workflows/scripts/cloud_android_workflow_paths.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "make_header(app)",
+        "stale_overlap(text)",
+        "rewrite_paths_block(region_lines, final_entries, app)"
+      ],
+      "imports": [
+        "re"
+      ],
+      "symbols": [
+        "make_header(app)",
+        "_statics()",
+        "_is_current_header_line(l)",
+        "_tokens(text)",
+        "stale_overlap(text)",
+        "_drop_indexes(comments)",
+        "_split(region_lines)",
+        "rewrite_paths_block(region_lines, final_entries, app)"
+      ]
+    },
     {
       "path": ".github/workflows/scripts/cloud-android-build-apk-engine.sh",
       "lang": "sh",
@@ -164,6 +187,33 @@
         "restricted_present(tree, cfg)",
         "find_vendored_trees(repo, cfg)",
         "report(tree, cfg, key, label)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-one-pdf-engine-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "scan_roots(repo, cfg)",
+        "excluded_paths(cfg)",
+        "is_excluded(rel, excls)",
+        "scan_tree(repo, tree, cfg)",
+        "exclusions_engaged(repo, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "_norm(p)",
+        "scan_roots(repo, cfg)",
+        "excluded_paths(cfg)",
+        "is_excluded(rel, excls)",
+        "scan_tree(repo, tree, cfg)",
+        "exclusions_engaged(repo, cfg)",
         "main(argv)"
       ]
     },
@@ -1013,6 +1063,29 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud_android_workflow_paths.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "make_header(app)",
+        "stale_overlap(text)",
+        "rewrite_paths_block(region_lines, final_entries, app)"
+      ],
+      "imports": [
+        "re"
+      ],
+      "symbols": [
+        "make_header(app)",
+        "_statics()",
+        "_is_current_header_line(l)",
+        "_tokens(text)",
+        "stale_overlap(text)",
+        "_drop_indexes(comments)",
+        "_split(region_lines)",
+        "rewrite_paths_block(region_lines, final_entries, app)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-build-apk-engine.sh",
       "lang": "sh",
       "role": "script",
@@ -1141,6 +1214,33 @@
         "restricted_present(tree, cfg)",
         "find_vendored_trees(repo, cfg)",
         "report(tree, cfg, key, label)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-one-pdf-engine-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "scan_roots(repo, cfg)",
+        "excluded_paths(cfg)",
+        "is_excluded(rel, excls)",
+        "scan_tree(repo, tree, cfg)",
+        "exclusions_engaged(repo, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "_norm(p)",
+        "scan_roots(repo, cfg)",
+        "excluded_paths(cfg)",
+        "is_excluded(rel, excls)",
+        "scan_tree(repo, tree, cfg)",
+        "exclusions_engaged(repo, cfg)",
         "main(argv)"
       ]
     },
@@ -2152,6 +2252,26 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/one-pdf-engine-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "contains()",
+        "build_fixture()",
+        "run_guard()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "contains()",
+        "build_fixture()",
+        "run_guard()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/phone-apps-page-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -2285,6 +2405,22 @@
         "check()",
         "resolve()",
         "count_glob()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/test-workflow-header-fence.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "bad()",
+        "run_py()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "run_py()"
       ]
     },
     {
@@ -32158,6 +32294,7 @@
         "recognizeText(bitmap: Bitmap)",
         "recognizeText(file: File)",
         "recognizeText(uri: Uri)",
+        "languageOf(text: com.google.mlkit.vision.text.Text)",
         "loadBitmap(file: File)",
         "loadBitmap(uri: Uri)",
         "prepareForScan(bitmap: Bitmap)",
@@ -247692,6 +247829,85 @@
       ]
     },
     {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/data/data_source/contentindex/FolderContentIndexer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IndexScanner",
+        "FolderContentIndexer"
+      ],
+      "imports": [
+        "kotlinx.coroutines.CancellationException",
+        "kotlinx.coroutines.currentCoroutineContext",
+        "kotlinx.coroutines.ensureActive"
+      ],
+      "symbols": [
+        "scan(item: IndexableMedia)",
+        "indexFolder( albumId: Long, items: List<IndexableMedia>, onProgress: (indexed: Int, total: Int)",
+        "class IndexScanner",
+        "class FolderContentIndexer"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/data/data_source/contentindex/IndexTypes.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IndexableMedia",
+        "toIndexableMedia",
+        "IndexedContent",
+        "IndexSummary"
+      ],
+      "imports": [
+        "com.diegonmarcos.mediacenter.feature_node.domain.model.Media"
+      ],
+      "symbols": [
+        "fingerprint()",
+        "toIndexableMedia()",
+        "class IndexableMedia",
+        "class IndexedContent",
+        "class IndexSummary"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/data/data_source/contentindex/MediaContentIndexDao.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MediaContentIndexDao"
+      ],
+      "imports": [
+        "androidx.room.Dao",
+        "androidx.room.Insert",
+        "androidx.room.OnConflictStrategy",
+        "androidx.room.Query"
+      ],
+      "symbols": [
+        "byMediaId(mediaId: Long)",
+        "forAlbum(albumId: Long)",
+        "countForAlbum(albumId: Long)",
+        "upsert(entity: MediaContentIndexEntity)",
+        "deleteForAlbum(albumId: Long)",
+        "class MediaContentIndexDao"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/data/data_source/contentindex/MediaContentIndexEntity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MediaContentIndexEntity"
+      ],
+      "imports": [
+        "androidx.room.Entity",
+        "androidx.room.Index",
+        "androidx.room.PrimaryKey"
+      ],
+      "symbols": [
+        "class MediaContentIndexEntity"
+      ]
+    },
+    {
       "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/data/data_source/EditHistoryDao.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -247772,6 +247988,8 @@
         "com.diegonmarcos.mediacenter.cloud.data.entity.CloudUploadPrefEntity",
         "com.diegonmarcos.mediacenter.cloud.data.entity.CloudDeleteLocalPrefEntity",
         "com.diegonmarcos.mediacenter.cloud.data.entity.SyncStateEntity",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.MediaContentIndexDao",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.MediaContentIndexEntity",
         "com.diegonmarcos.mediacenter.feature_node.domain.model.AlbumGroup",
         "com.diegonmarcos.mediacenter.feature_node.domain.model.AlbumGroupMember",
         "com.diegonmarcos.mediacenter.feature_node.domain.model.AlbumSection",
@@ -247783,9 +248001,7 @@
         "com.diegonmarcos.mediacenter.feature_node.domain.model.CollectionMedia",
         "com.diegonmarcos.mediacenter.feature_node.domain.model.EditedMedia",
         "com.diegonmarcos.mediacenter.feature_node.domain.model.IgnoredAlbum",
-        "com.diegonmarcos.mediacenter.feature_node.domain.model.LockedAlbum",
-        "com.diegonmarcos.mediacenter.feature_node.domain.model.ImageEmbedding",
-        "com.diegonmarcos.mediacenter.feature_node.domain.model.Media"
+        "com.diegonmarcos.mediacenter.feature_node.domain.model.LockedAlbum"
       ],
       "symbols": [
         "getPinnedDao()",
@@ -247813,6 +248029,7 @@
         "getCloudDeleteLocalPrefDao()",
         "getCloudOfflinePinDao()",
         "getAlbumSectionDao()",
+        "getMediaContentIndexDao()",
         "class InternalDatabase",
         "class RemoveIconEmojiMigration"
       ]
@@ -250714,6 +250931,7 @@
         "androidx.compose.material.icons.outlined.CloudOff",
         "androidx.compose.material.icons.outlined.CloudSync",
         "androidx.compose.material.icons.outlined.Slideshow",
+        "androidx.compose.material.icons.outlined.TextSnippet",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.IconButton",
@@ -250725,8 +250943,7 @@
         "androidx.compose.material3.Surface",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TopAppBarDefaults",
-        "androidx.compose.material3.pulltorefresh.PullToRefreshBox",
-        "androidx.compose.material3.rememberTopAppBarState"
+        "androidx.compose.material3.pulltorefresh.PullToRefreshBox"
       ],
       "symbols": [
         "AlbumTimelineScreen( albumId: Long, albumName: String, paddingValues: PaddingValues, isScrolling: MutableState<Boolean>, albumMediaState: State<MediaState<Media.UriMedia>>, metadataState: State<MediaMetadataState>, sharedTransitionScope: SharedTransitionScope, animatedContentScope: AnimatedContentScope, )",
@@ -252849,6 +253066,101 @@
       ],
       "symbols": [
         "MediaScreen( paddingValues: PaddingValues = PaddingValues(0.dp)"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/contentindex/FolderIndexSheet.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FolderIndexSheet"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.ColumnScope",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.outlined.CheckCircle",
+        "androidx.compose.material.icons.outlined.FolderOff",
+        "androidx.compose.material3.CircularProgressIndicator",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.LinearProgressIndicator",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel",
+        "androidx.lifecycle.compose.collectAsStateWithLifecycle",
+        "com.diegonmarcos.mediacenter.R",
+        "com.diegonmarcos.mediacenter.core.presentation.components.ModalSheet",
+        "com.diegonmarcos.mediacenter.feature_node.domain.model.Media",
+        "com.diegonmarcos.mediacenter.feature_node.domain.util.isImage",
+        "com.diegonmarcos.mediacenter.feature_node.presentation.util.AppBottomSheetState"
+      ],
+      "symbols": [
+        "FolderIndexSheet( state: AppBottomSheetState, albumId: Long, albumName: String, mediaList: List<Media.UriMedia>, onDismiss: ()",
+        "RunningContent(state: FolderIndexUiState.Running, onCancel: ()",
+        "FinishedContent(summary: com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.IndexSummary)",
+        "CancelledContent(state: FolderIndexUiState.Cancelled)"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/contentindex/FolderIndexViewModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FolderIndexUiState",
+        "FolderIndexViewModel"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.Uri",
+        "androidx.lifecycle.ViewModel",
+        "androidx.lifecycle.viewModelScope",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.InternalDatabase",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.FolderContentIndexer",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.IndexScanner",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.IndexSummary",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.IndexableMedia",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.IndexedContent",
+        "com.diegonmarcos.mediacenter.feature_node.data.data_source.contentindex.toIndexableMedia",
+        "com.diegonmarcos.mediacenter.feature_node.domain.model.Media",
+        "com.diegonmarcos.superapp.image.mlkit.BarcodePayload",
+        "com.diegonmarcos.superapp.image.mlkit.ImageScanEngine",
+        "dagger.hilt.android.lifecycle.HiltViewModel",
+        "dagger.hilt.android.qualifiers.ApplicationContext",
+        "kotlinx.coroutines.CancellationException",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.Job",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.flow.asStateFlow",
+        "kotlinx.coroutines.launch",
+        "javax.inject.Inject"
+      ],
+      "symbols": [
+        "startIndex(albumId: Long, items: List<Media.UriMedia>)",
+        "cancel()",
+        "reset()",
+        "scanItem(item: IndexableMedia)",
+        "permissionRefused(uri: Uri)",
+        "actionKind()",
+        "class FolderIndexUiState",
+        "class Idle",
+        "class Running",
+        "class Finished",
+        "class Cancelled",
+        "class FolderIndexViewModel"
       ]
     },
     {
@@ -259480,6 +259792,7 @@
         "androidx.compose.material.icons.outlined.Edit",
         "androidx.compose.material.icons.outlined.Lock",
         "androidx.compose.material.icons.outlined.MovieCreation",
+        "androidx.compose.material.icons.outlined.QrCodeScanner",
         "androidx.compose.material.icons.outlined.Restore",
         "androidx.compose.material.icons.outlined.Share",
         "androidx.compose.material.icons.outlined.Wallpaper",
@@ -259494,8 +259807,7 @@
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.saveable.rememberSaveable",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.runtime.toMutableStateList"
+        "androidx.compose.runtime.setValue"
       ],
       "symbols": [
         "MediaViewSheetActions( media: T, albumsState: State<AlbumState>, vaults: State<VaultState>, restoreMedia: ((Vault, T, ()",
@@ -260553,6 +260865,159 @@
       ],
       "symbols": [
         "class PrivateFolderViewModel"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/scan/ImageScanSheet.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ImageScanSheet"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.widget.Toast",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.ColumnScope",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.selection.SelectionContainer",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.outlined.ContentCopy",
+        "androidx.compose.material.icons.outlined.Event",
+        "androidx.compose.material.icons.outlined.Link",
+        "androidx.compose.material.icons.outlined.Map",
+        "androidx.compose.material.icons.outlined.MailOutline",
+        "androidx.compose.material.icons.outlined.PersonAddAlt",
+        "androidx.compose.material.icons.outlined.Phone",
+        "androidx.compose.material.icons.outlined.QrCodeScanner",
+        "androidx.compose.material.icons.outlined.TextSnippet",
+        "androidx.compose.material.icons.outlined.Wifi",
+        "androidx.compose.material3.CircularProgressIndicator",
+        "androidx.compose.material3.FilledTonalButton",
+        "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel",
+        "androidx.lifecycle.compose.collectAsStateWithLifecycle",
+        "com.diegonmarcos.mediacenter.R"
+      ],
+      "symbols": [
+        "ImageScanSheet( state: AppBottomSheetState, media: Media, onDismiss: ()",
+        "ScanOutcomeContent( outcome: ImageScanOutcome, onCopy: (String)",
+        "BarcodeSection( barcode: BarcodeScan, onCopy: (String)",
+        "OcrSection( ocr: OcrResult, onCopy: (String)",
+        "ActionRow( icon: ImageVector, label: String, onClick: ()",
+        "contextAction(context: Context, handler: (Context)",
+        "SectionLabel(text: String)",
+        "CopyableText(text: String, onCopy: (String)",
+        "barcodeFormatLabel(format: String)",
+        "languageLabel(tag: String)",
+        "copyWithToast(text: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/scan/ImageScanViewModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ScanUiState",
+        "ImageScanViewModel"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.Uri",
+        "androidx.lifecycle.ViewModel",
+        "androidx.lifecycle.viewModelScope",
+        "com.diegonmarcos.superapp.image.mlkit.ImageScanEngine",
+        "dagger.hilt.android.lifecycle.HiltViewModel",
+        "dagger.hilt.android.qualifiers.ApplicationContext",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.flow.asStateFlow",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext",
+        "javax.inject.Inject"
+      ],
+      "symbols": [
+        "scan(uri: Uri)",
+        "reset()",
+        "runScan(uri: Uri)",
+        "permissionRefused(uri: Uri)",
+        "class ScanUiState",
+        "class Idle",
+        "class Scanning",
+        "class Done",
+        "class ImageScanViewModel"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/scan/ScanActions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ScanActions"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.net.wifi.WifiManager",
+        "android.os.Build",
+        "android.provider.CalendarContract",
+        "android.provider.ContactsContract",
+        "com.diegonmarcos.superapp.image.mlkit.BarcodePayload"
+      ],
+      "symbols": [
+        "perform(context: Context, payload: BarcodePayload)",
+        "openUrl(context: Context, url: String)",
+        "joinWifi(context: Context, ssid: String, password: String)",
+        "insertContact(context: Context, vcard: String, name: String?)",
+        "insertCalendarEvent( context: Context, summary: String, location: String, startMillis: Long?, endMillis: Long? )",
+        "dialNumber(context: Context, number: String)",
+        "composeEmail(context: Context, address: String, subject: String?, body: String?)",
+        "openGeo(context: Context, latitude: Double, longitude: Double)",
+        "copyText(context: Context, text: String)",
+        "class ScanActions"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/main/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/scan/ScanModels.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ImageScanOutcome",
+        "ScanFailure",
+        "ScanOutcomeReducer"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.image.mlkit.BarcodeScan",
+        "com.diegonmarcos.superapp.image.mlkit.OcrResult"
+      ],
+      "symbols": [
+        "reduce(barcode: BarcodeScan?, ocr: OcrResult)",
+        "class ImageScanOutcome",
+        "class ScanFailure",
+        "class PermissionRefused",
+        "class UnsupportedFormat",
+        "class ModelNotDownloaded",
+        "class Other",
+        "class ScanOutcomeReducer"
       ]
     },
     {
@@ -267334,6 +267799,50 @@
       ]
     },
     {
+      "path": "ac_cloud-media-center/app/src/test/java/com/diegonmarcos/mediacenter/feature_node/data/data_source/contentindex/FolderContentIndexerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FolderContentIndexerTest"
+      ],
+      "imports": [
+        "kotlinx.coroutines.CancellationException",
+        "kotlinx.coroutines.CompletableDeferred",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.runBlocking",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "item( id: Long, size: Long = 100L, dateModified: Long = 1_700_000_000L, uri: String = \"content://media/external/images/media/$id\" )",
+        "row(id: Long, fingerprint: String, album: Long = albumId)",
+        "byMediaId(mediaId: Long)",
+        "forAlbum(albumId: Long)",
+        "countForAlbum(albumId: Long)",
+        "upsert(entity: MediaContentIndexEntity)",
+        "deleteForAlbum(albumId: Long)",
+        "scan(item: IndexableMedia)",
+        "emptyFolderWalksNothing()",
+        "unchangedItemIsNotRescanned()",
+        "changedItemIsRescannedAndUpserted()",
+        "sameMediaInAnotherAlbumIsRescanned()",
+        "newItemWithBarcodeAndTextCountsBoth()",
+        "noBarcodeNoTextCountsNeither()",
+        "unchangedRowKeepsItsBarcodeAndTextCounts()",
+        "scanFailureIsCountedAndSkipsRow()",
+        "progressReportsAfterEveryItem()",
+        "cancellationStopsTheWalkAndIsRethrown()",
+        "fingerprintChangesWhenSizeOrModDateChanges()",
+        "scannerFailureLeavesNoOrphanRowForTheNextWalk()",
+        "class and",
+        "class FolderContentIndexerTest",
+        "class FakeDao",
+        "class CountingScanner"
+      ]
+    },
+    {
       "path": "ac_cloud-media-center/app/src/test/java/com/diegonmarcos/mediacenter/feature_node/presentation/albums/components/AlbumThumbnailPresentationTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -267417,6 +267926,35 @@
         "deduplicatesById()",
         "matchesFiltersHelper()",
         "class SlideshowPlaylistTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-media-center/app/src/test/java/com/diegonmarcos/mediacenter/feature_node/presentation/scan/ScanOutcomeReducerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ScanOutcomeReducerTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.image.mlkit.BarcodePayload",
+        "com.diegonmarcos.superapp.image.mlkit.BarcodeScan",
+        "com.diegonmarcos.superapp.image.mlkit.OcrResult",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "ocr( text: String = \"Hello world\", error: String? = null, language: String? = null )",
+        "barcodeAndTextProduceBothSections()",
+        "noBarcodeAndNoTextReportBothAbsent()",
+        "cannotDecodeErrorMapsToUnsupportedFormat()",
+        "downloadErrorMapsToModelNotDownloaded()",
+        "unknownErrorIsKeptVerbatim()",
+        "barcodeSurvivesOcrFailure()",
+        "blankOcrTextWithBarcodeMeansBarcodeOnly()",
+        "class ScanOutcomeReducerTest"
       ]
     },
     {
