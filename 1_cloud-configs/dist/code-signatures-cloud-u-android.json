@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19127,
+    "files": 19139,
     "by_lang": {
       "py": 47,
-      "sh": 230,
-      "kotlin": 9848,
+      "sh": 232,
+      "kotlin": 9858,
       "java": 553,
       "ts": 8277,
       "nix": 23,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 116,
-      "shell": 159,
+      "shell": 161,
       "java": 553,
       "entrypoint": 23,
       "module": 5855,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9846,
+      "kotlin": 9856,
       "python": 24,
       "rust-module": 82,
       "file": 2249,
@@ -70,6 +70,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -87,6 +88,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -1135,6 +1137,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -1152,6 +1155,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -3555,7 +3559,7 @@
         "androidx.work.Configuration",
         "com.diegonmarcos.superapp.core.NotificationStore",
         "com.diegonmarcos.superapp.devcontrol.DevControlServer",
-        "com.diegonmarcos.superapp.notificationcenter.KdeStatusService",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
         "com.google.android.material.color.DynamicColors"
       ],
       "symbols": [
@@ -4683,31 +4687,37 @@
       "imports": [
         "android.content.Context",
         "android.os.Bundle",
-        "android.util.Base64",
         "android.view.LayoutInflater",
         "android.view.View",
         "android.view.ViewGroup",
         "android.widget.ImageView",
         "android.widget.LinearLayout",
         "android.widget.ScrollView",
+        "android.widget.Switch",
         "android.widget.TextView",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.launcher.Sections",
-        "com.diegonmarcos.superapp.ui.LauncherPalette",
-        "org.json.JSONObject"
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCustomization",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "com.diegonmarcos.superapp.ui.LauncherPalette"
       ],
       "symbols": [
         "onCreateView(inf: LayoutInflater, c: ViewGroup?, s: Bundle?)",
-        "row(ctx: Context, p: Producer)",
+        "onResume()",
+        "rebuild()",
+        "badgeBox(ctx: Context, b: BadgeDeclaration.Badge)",
+        "customMenu(ctx: Context, b: BadgeDeclaration.Badge)",
+        "control(ctx: Context, b: BadgeDeclaration.Badge, opt: BadgeDeclaration.Option)",
+        "render()",
+        "applyLive(ctx: Context)",
+        "sectionHead(ctx: Context, label: String, sub: String, rule: Boolean)",
         "title(ctx: Context, s: String)",
         "caption(ctx: Context, s: String)",
         "dp(v: Int)",
-        "declaredProducers()",
         "newInstance()",
-        "class PushFragment",
-        "class Producer"
+        "class PushFragment"
       ]
     },
     {
@@ -5066,6 +5076,9 @@
         "android.media.session.PlaybackState",
         "android.os.Build",
         "androidx.core.app.NotificationCompat",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCustomization",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
         "com.diegonmarcos.superapp.notificationcenter.PhoneNotificationListenerService",
         "com.diegonmarcos.superapp.R"
       ],
@@ -5074,7 +5087,10 @@
         "listenerEnabled()",
         "activeController()",
         "transport(target: String)",
+        "persistent()",
+        "showWhenIdle()",
         "refresh()",
+        "postIdle()",
         "cancel()",
         "pi(target: String)",
         "ensureChannel()",
@@ -6703,6 +6719,149 @@
         "class WireGuardProfiles",
         "class Profile",
         "class Peer"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeCustomization.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeCustomization"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration.Badge",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration.Option"
+      ],
+      "symbols": [
+        "prefs(ctx: Context)",
+        "key(badgeId: String, optionKey: String)",
+        "declaredDefault(badge: Badge, optionKey: String)",
+        "bool(ctx: Context, badge: Badge, option: Option)",
+        "bool(ctx: Context, badge: Badge, optionKey: String)",
+        "text(ctx: Context, badge: Badge, optionKey: String)",
+        "set(ctx: Context, badge: Badge, optionKey: String, value: String)",
+        "set(ctx: Context, badge: Badge, optionKey: String, value: Boolean)",
+        "isEnabled(ctx: Context, badge: Badge)",
+        "isPersistent(ctx: Context, badge: Badge)",
+        "class BadgeCustomization"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeDeclaration.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeDeclaration"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parse(json: String)",
+        "badges(all: List<Badge>)",
+        "restartServices(all: List<Badge>)",
+        "badgesOf(all: List<Badge>, service: String)",
+        "strings(a: JSONArray?)",
+        "options(a: JSONArray?)",
+        "class BadgeDeclaration",
+        "class Option",
+        "class Badge"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeRestartReceiver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeRestartReceiver"
+      ],
+      "imports": [
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.util.Log"
+      ],
+      "symbols": [
+        "onReceive(context: Context?, intent: Intent?)",
+        "class BadgeRestartReceiver"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeServices.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeServices"
+      ],
+      "imports": [
+        "android.app.ActivityManager",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.provider.Settings",
+        "android.util.Base64",
+        "android.util.Log",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration.Badge"
+      ],
+      "symbols": [
+        "ensureAll(ctx: Context)",
+        "start(ctx: Context, fqcn: String)",
+        "statuses(ctx: Context)",
+        "status(ctx: Context, b: Badge)",
+        "missingRequirement(ctx: Context, b: Badge)",
+        "healthConnectInstalled(ctx: Context)",
+        "isServiceRunning(ctx: Context, fqcn: String)",
+        "simpleName(fqcn: String)",
+        "class BadgeServices",
+        "class State",
+        "class Status",
+        "class that",
+        "class without"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/HealthBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HealthBadgeService"
+      ],
+      "imports": [
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "androidx.core.app.NotificationCompat",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.health.HealthConnectGateway",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Job",
+        "kotlinx.coroutines.SupervisorJob",
+        "kotlinx.coroutines.cancel",
+        "kotlinx.coroutines.launch",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "schedule()",
+        "run()",
+        "badge()",
+        "refreshMs()",
+        "refresh()",
+        "build(today: HealthConnectGateway.ActivityToday?)",
+        "ensureChannel()",
+        "class HealthBadgeService"
       ]
     },
     {
@@ -8546,6 +8705,74 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BadgeDeclarationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeDeclarationTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "declaration(extra: String = \"\")",
+        "class BadgeDeclarationTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/BottomNavSelectedPillTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavSelectedPillTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.graphics.Color",
+        "android.graphics.Rect",
+        "android.graphics.drawable.InsetDrawable",
+        "android.view.ContextThemeWrapper",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.View.MeasureSpec",
+        "android.view.ViewGroup",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.google.android.material.bottomnavigation.BottomNavigationView",
+        "com.google.android.material.color.MaterialColors",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "inflateRealLayout()",
+        "resolvedItemBackgroundIsThePillDrawable()",
+        "pillWrapsIconAndLabelAndIsCentredInTheItemCell()",
+        "onlyTheSelectedItemPaintsThePill()",
+        "drawNav()",
+        "pillBounds(item: View)",
+        "rectIn(ancestor: ViewGroup, v: View)",
+        "probe(bitmap: Bitmap, item: ViewGroup, dy: Int)",
+        "class the",
+        "class BottomNavSelectedPillTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -9691,6 +9918,22 @@
         "ok()",
         "bad()",
         "has()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-push-badges.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
       ]
     },
     {
@@ -14913,6 +15156,7 @@
         "client(context: Context)",
         "grantedPermissions(context: Context)",
         "readDailySnapshot(context: Context, day: LocalDate = LocalDate.now()",
+        "readActivityToday( context: Context, day: LocalDate = LocalDate.now()",
         "emptySnapshot(day: LocalDate)",
         "readMetricWindow( context: Context, metric: HealthMetrics.Metric, windowDays: Int, )",
         "readMetricDay( context: Context, metric: HealthMetrics.Metric, day: LocalDate, )",
@@ -14927,6 +15171,7 @@
         "class Availability",
         "class the",
         "class DailySnapshot",
+        "class ActivityToday",
         "class WindowRow",
         "class RawRow",
         "class SourceBreakdown"
@@ -80330,6 +80575,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -80347,6 +80593,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assert_apk_identity()",
+        "_assert_apk_payload()",
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
@@ -141721,6 +141968,20 @@
     },
     {
       "path": "ac_cloud-affine/test/test-licence-clean.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()"
+      ]
+    },
+    {
+      "path": "ac_cloud-affine/test/test-root-scope-services.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
@@ -210632,10 +210893,12 @@
         "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AttachFile",
+        "androidx.compose.material.icons.filled.ContentCopy",
         "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.CircularProgressIndicator",
         "androidx.compose.material3.Icon",
+        "androidx.compose.material3.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.minimumInteractiveComponentSize",
@@ -210651,10 +210914,8 @@
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.setValue",
-        "app.sterna.core.jmap.model.EmailBodyPart",
-        "app.sterna.ui.theme.LocalMailListPalette",
-        "app.sterna.ui.theme.MailListDimens"
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue"
       ],
       "symbols": [
         "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, flash: Float, card: Color, )",
@@ -210663,6 +210924,7 @@
         "ThreadPill( count: Int, expanded: Boolean, onToggleExpand: (()",
         "NotUploadedLabel(fill: Color)",
         "DraftLabel(fill: Color)",
+        "ListRowActions( email: Email, onOpenAttachment: ((EmailBodyPart)",
         "AttachmentChips( email: Email, parts: List<EmailBodyPart>, fill: Color, openingKey: String?, onOpen: (EmailBodyPart)",
         "AttachmentChip( part: EmailBodyPart, fill: Color, busy: Boolean, onOpen: ()",
         "attachmentChipLabel(name: String, max: Int = MAX_CHIP_NAME)",
@@ -211985,6 +212247,10 @@
         "HomeScreen"
       ],
       "imports": [
+        "androidx.compose.animation.core.animateIntAsState",
+        "androidx.compose.animation.core.snap",
+        "androidx.compose.animation.core.tween",
+        "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
@@ -211997,29 +212263,41 @@
         "androidx.compose.foundation.layout.width",
         "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.automirrored.filled.Send",
+        "androidx.compose.material.icons.filled.Create",
+        "androidx.compose.material.icons.filled.Person",
+        "androidx.compose.material.icons.filled.RssFeed",
+        "androidx.compose.material.icons.filled.Schedule",
+        "androidx.compose.material.icons.filled.Search",
+        "androidx.compose.material.icons.filled.Settings",
+        "androidx.compose.material.icons.filled.Snooze",
+        "androidx.compose.material.icons.filled.Star",
+        "androidx.compose.material3.AssistChip",
         "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
-        "androidx.lifecycle.compose.collectAsStateWithLifecycle",
-        "androidx.lifecycle.viewmodel.compose.viewModel",
-        "app.sterna.R",
-        "app.sterna.ui.components.Monogram",
-        "app.sterna.ui.components.accountColorOf",
-        "app.sterna.ui.settings.DetailScaffold"
+        "androidx.compose.ui.res.stringResource"
       ],
       "symbols": [
         "HomeScreen( onBack: ()",
         "NoAccounts(modifier: Modifier)",
-        "AccountSection(stats: AccountMailStats)",
-        "statRows(stats: AccountMailStats)",
-        "StatRow(label: String, value: String)"
+        "ShortcutsRow(actions: List<HomeAction>)",
+        "QuickmarksRow(actions: List<HomeAction>)",
+        "AccountSection(stats: AccountMailStats, motionOn: Boolean)",
+        "statsOf(stats: AccountMailStats)",
+        "StatRow(label: String, value: Int?, accent: Color, motionOn: Boolean)",
+        "class HomeAction",
+        "class Stat"
       ]
     },
     {
@@ -213353,13 +213631,16 @@
         "rememberMotionEnabled"
       ],
       "imports": [
+        "android.content.Context",
+        "android.os.PowerManager",
         "android.provider.Settings",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.remember",
         "androidx.compose.ui.platform.LocalContext"
       ],
       "symbols": [
-        "rememberMotionEnabled()"
+        "rememberMotionEnabled()",
+        "motionEnabled(animatorDurationScale: Float, powerSaveMode: Boolean)"
       ]
     },
     {
@@ -216974,6 +217255,28 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/components/EmailListItemPreviewAndActionsRowTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EmailListItemPreviewAndActionsRowTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.settings.PreviewLines",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "previewBlock()",
+        "ListRowActions(...)",
+        "listRowActionsBlock()",
+        "ListRowActions(\")",
+        "class EmailListItemPreviewAndActionsRowTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/components/LoadingRingTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -219539,6 +219842,27 @@
         "mailbox( id: String, unread: Int = 0, role: String? = null, subscribed: Boolean = true, )",
         "account( id: String, protocol: MailProtocol = MailProtocol.JMAP, onlySubscribed: Boolean = false, )",
         "class AccountMailStatsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/home/HomeAnimatedStatsWiringTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HomeAnimatedStatsWiringTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "AccountSection(stats: AccountMailStats, motionOn: Boolean)",
+        "StatRow(label: String, value: Int?, accent: Color, motionOn: Boolean)",
+        "block(file: File, prefix: String, count: Int)",
+        "only(lines: List<String>, needle: String)",
+        "codeLines(file: File)",
+        "class HomeAnimatedStatsWiringTest"
       ]
     },
     {
@@ -222621,6 +222945,22 @@
         "stripSource()",
         "UnsubscribeStrip(\")",
         "class UnsubscribeStripTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/MotionTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MotionTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class MotionTest"
       ]
     },
     {
