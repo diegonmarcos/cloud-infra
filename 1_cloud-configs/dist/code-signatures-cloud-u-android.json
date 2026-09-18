@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 13464,
+    "files": 13482,
     "by_lang": {
-      "sh": 219,
+      "sh": 221,
       "py": 43,
-      "kotlin": 9790,
+      "kotlin": 9805,
       "java": 711,
       "ts": 2625,
       "nix": 23,
-      "js": 43,
+      "js": 44,
       "rust": 10
     },
     "by_role": {
       "script": 88,
-      "shell": 154,
+      "shell": 156,
       "java": 711,
       "entrypoint": 20,
-      "module": 1377,
+      "module": 1378,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9788,
+      "kotlin": 9803,
       "python": 24,
       "rust-module": 10,
       "file": 1173,
@@ -3451,6 +3451,7 @@
         "com.diegonmarcos.superapp.App",
         "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ShellActivity",
         "com.diegonmarcos.superapp.settings.LauncherProfile",
         "com.diegonmarcos.superapp.settings.LauncherProfiles",
         "com.diegonmarcos.superapp.settings.LauncherProfilePrefs",
@@ -3501,6 +3502,7 @@
         "makeFolderCard( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, cellSize: Int = dp(ctx, 60)",
         "showFolderDialog( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, )",
         "makeExpandedAppTile( ctx: Context, app: PhoneApp, dialog: Dialog, launcherApps: LauncherApps, )",
+        "openConstellation(ctx: Context)",
         "dp(ctx: Context, v: Int)",
         "invalidateCache()",
         "warmUp(ctx: Context)",
@@ -3565,7 +3567,10 @@
         "android.content.Context",
         "android.content.pm.ApplicationInfo",
         "android.os.Build",
+        "android.os.Process",
         "android.util.Base64",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.R",
         "org.json.JSONArray"
       ],
       "symbols": [
@@ -3576,6 +3581,7 @@
         "select(ctx: Context, apps: List<PhoneApp>)",
         "rankToApps(ranked: List<String>, apps: List<PhoneApp>)",
         "loadFromBuildConfig()",
+        "installedLibSlots(ctx: Context)",
         "class PhoneSmartFolders",
         "class Rule",
         "class SmartFolder"
@@ -5860,6 +5866,8 @@
         "android.widget.FrameLayout",
         "android.widget.LinearLayout",
         "androidx.fragment.app.Fragment",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.WindowInsetsCompat",
         "com.diegonmarcos.superapp.ShellActivity",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.core.Collapsible",
@@ -8772,6 +8780,22 @@
         "ok()",
         "bad()",
         "strip()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-bottom-nav-selected-pill.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
       ]
     },
     {
@@ -32064,6 +32088,125 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/ml-l-image-mlkit/src/main/java/com/diegonmarcos/superapp/image/BarcodePayload.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BarcodePayload",
+        "BarcodePayloadParser"
+      ],
+      "imports": [],
+      "symbols": [
+        "parse(raw: String)",
+        "parseWifi(value: String)",
+        "parseContact(value: String)",
+        "parseCalendar(value: String)",
+        "field(name: String)",
+        "epochMillis(dt: String?)",
+        "parseMailto(value: String)",
+        "parseGeo(value: String)",
+        "unescape(text: String)",
+        "urlDecode(text: String)",
+        "class BarcodePayload",
+        "class Url",
+        "class Wifi",
+        "class Contact",
+        "class Calendar",
+        "class Phone",
+        "class Email",
+        "class Geo",
+        "class Plain",
+        "class BarcodePayloadParser"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ml-l-image-mlkit/src/main/java/com/diegonmarcos/superapp/image/ImageScanEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ImageScanEngine",
+        "BarcodeScan",
+        "OcrSegment",
+        "OcrResult"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.BitmapFactory",
+        "android.graphics.Matrix",
+        "android.media.ExifInterface",
+        "android.net.Uri",
+        "com.google.mlkit.vision.common.InputImage",
+        "com.google.mlkit.vision.text.TextRecognition",
+        "com.google.mlkit.vision.text.latin.TextRecognizerOptions",
+        "com.google.zxing.BarcodeFormat",
+        "com.google.zxing.BinaryBitmap",
+        "com.google.zxing.DecodeHintType",
+        "com.google.zxing.MultiFormatReader",
+        "com.google.zxing.NotFoundException",
+        "com.google.zxing.RGBLuminanceSource",
+        "com.google.zxing.common.HybridBinarizer",
+        "java.io.File",
+        "java.util.EnumMap",
+        "java.util.EnumSet"
+      ],
+      "symbols": [
+        "supportedFormats()",
+        "decodeBarcode(bitmap: Bitmap)",
+        "decodeBarcode(file: File)",
+        "decodeBarcode(uri: Uri)",
+        "recognizeText(bitmap: Bitmap)",
+        "recognizeText(file: File)",
+        "recognizeText(uri: Uri)",
+        "loadBitmap(file: File)",
+        "loadBitmap(uri: Uri)",
+        "prepareForScan(bitmap: Bitmap)",
+        "prepareForOcr(bitmap: Bitmap)",
+        "maxDimension(bitmap: Bitmap)",
+        "scaleInto(bitmap: Bitmap, maxDimension: Int)",
+        "sampleOptions(width: Int, height: Int)",
+        "computeInSampleSize(width: Int, height: Int)",
+        "readFileExifOrientation(file: File)",
+        "applyExifRotation(bitmap: Bitmap, orientation: Int)",
+        "class from",
+        "class ImageScanEngine",
+        "class BarcodeScan",
+        "class OcrSegment",
+        "class OcrResult"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ml-l-image-mlkit/src/test/java/com/diegonmarcos/superapp/image/mlkit/BarcodePayloadParserTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BarcodePayloadParserTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "httpUrl()",
+        "urlIsNotTel()",
+        "wpaWifi()",
+        "openWifi()",
+        "wifiWithoutSsidIsPlain()",
+        "mecardContact()",
+        "vcardContact()",
+        "veventCalendar()",
+        "telPhone()",
+        "mailtoWithSubjectAndBody()",
+        "geo()",
+        "unknownIsPlain()",
+        "blankIsPlain()",
+        "plainHasNoNullText()",
+        "class BarcodePayloadParserTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/ml-l-text-mlkit/src/main/java/com/diegonmarcos/superapp/translate/LocalTranslateEngineClient.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -35257,7 +35400,6 @@
       "imports": [
         "android.content.Context",
         "android.os.Process",
-        "android.os.UserHandle",
         "android.os.UserManager",
         "android.util.Log"
       ],
@@ -37506,7 +37648,11 @@
       "exports": [
         "keystorePropertiesFile",
         "useKeystoreProperties",
-        "keystoreProperties"
+        "keystoreProperties",
+        "appMetadataJson",
+        "voiceSection",
+        "voiceShutterTrigger",
+        "voiceShutterEnabledByDefault"
       ],
       "imports": [
         "java.io.FileInputStream",
@@ -38320,6 +38466,40 @@
         "refreshHints()",
         "analyze(image: ImageProxy)",
         "class QRAnalyzer"
+      ]
+    },
+    {
+      "path": "ac_cloud-camera/app/src/main/java/cld/camera/analyzer/ScannedPayload.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ScannedPayload"
+      ],
+      "imports": [
+        "com.google.zxing.Result",
+        "com.google.zxing.client.result.AddressBookParsedResult",
+        "com.google.zxing.client.result.CalendarParsedResult",
+        "com.google.zxing.client.result.ParsedResult",
+        "com.google.zxing.client.result.ParsedResultType",
+        "com.google.zxing.client.result.ResultParser",
+        "com.google.zxing.client.result.TextParsedResult",
+        "com.google.zxing.client.result.URIParsedResult",
+        "com.google.zxing.client.result.WifiParsedResult",
+        "java.net.URI"
+      ],
+      "symbols": [
+        "fromResult(result: Result)",
+        "fromText(rawText: String)",
+        "describeContact(contact: Contact)",
+        "describeCalendar(event: CalendarEvent)",
+        "usesWebScheme(value: String)",
+        "class must",
+        "class ScannedPayload",
+        "class Url",
+        "class Wifi",
+        "class Contact",
+        "class CalendarEvent",
+        "class PlainText"
       ]
     },
     {
@@ -39159,6 +39339,8 @@
         "android.os.Looper",
         "android.os.VibrationEffect",
         "android.os.Vibrator",
+        "android.provider.CalendarContract",
+        "android.provider.ContactsContract",
         "android.provider.Settings",
         "android.text.util.Linkify",
         "android.util.Log",
@@ -39175,11 +39357,11 @@
         "android.view.animation.Animation",
         "android.view.animation.LinearInterpolator",
         "android.view.animation.RotateAnimation",
-        "android.widget.FrameLayout",
-        "android.widget.ImageButton",
-        "android.widget.ImageView"
+        "android.widget.FrameLayout"
       ],
       "symbols": [
+        "scheduleNoBarcodeHint()",
+        "clearNoBarcodeHint()",
         "startFocusTimer()",
         "cancelFocusTimer()",
         "showAudioPermissionDeniedDialog(onDisableAudio: ()",
@@ -39207,10 +39389,8 @@
         "restartRecordingWithMicPermission()",
         "shareLatestMedia()",
         "bytesToHex(bytes: ByteArray)",
-        "onScanResultSuccess(rawText: String)",
-        "onTabSelected(tab: TabLayout.Tab?)",
-        "onTabReselected(tab: TabLayout.Tab?)",
-        "onTabUnselected(tab: TabLayout.Tab?)",
+        "onScanResultSuccess(rawText: String, result: com.google.zxing.Result? = null)",
+        "openScannedUrl(url: String)",
         "onTouch(v: View, event: MotionEvent)",
         "onScale(detector: ScaleGestureDetector)",
         "onScaleBegin(detector: ScaleGestureDetector)",
@@ -40068,6 +40248,33 @@
         "executeIfAlive(r: Runnable)",
         "storageLocationToUiString(ctx: Context, sl: String)",
         "removePendingFlagFromUri(contentResolver: ContentResolver, uri: Uri)"
+      ]
+    },
+    {
+      "path": "ac_cloud-camera/app/src/main/java/cld/camera/voice/VoiceShutterController.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VoiceShutterController",
+        "EngineAccess"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "android.content.pm.PackageManager",
+        "androidx.core.content.ContextCompat",
+        "cld.camera.BuildConfig",
+        "cld.camera.R",
+        "java.io.File"
+      ],
+      "symbols": [
+        "setEnabled(enable: Boolean)",
+        "run()",
+        "canListen()",
+        "isModelDownloaded()",
+        "isEngineReachable()",
+        "class VoiceShutterController",
+        "class EngineAccess"
       ]
     },
     {
@@ -97076,17 +97283,37 @@
         "android.app.Activity",
         "android.content.Context",
         "android.content.Intent",
+        "android.content.SharedPreferences",
         "android.net.Uri",
         "android.os.Build",
         "android.os.Environment",
         "android.os.StatFs",
+        "android.provider.ContactsContract.Intents.Insert",
+        "android.provider.DocumentsContract",
         "android.provider.Settings",
         "android.webkit.JavascriptInterface",
         "android.webkit.MimeTypeMap",
         "androidx.core.content.FileProvider",
+        "com.diegonmarcos.superapp.image.mlkit.BarcodePayload",
+        "com.diegonmarcos.superapp.image.mlkit.ImageScanEngine",
         "org.json.JSONArray",
         "org.json.JSONObject",
-        "java.io.File"
+        "java.io.BufferedInputStream",
+        "java.io.BufferedOutputStream",
+        "java.io.File",
+        "java.io.FileInputStream",
+        "java.io.FileOutputStream",
+        "java.security.MessageDigest",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.concurrent.ConcurrentHashMap",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.atomic.AtomicBoolean",
+        "java.util.concurrent.atomic.AtomicInteger",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipInputStream",
+        "java.util.zip.ZipOutputStream"
       ],
       "symbols": [
         "hasStorageAccess()",
@@ -97095,10 +97322,17 @@
         "apps()",
         "openApp(appJson: String)",
         "places()",
+        "volumeLabelOf(dir: File)",
+        "requestTreeGrant()",
+        "treeGrantInfo()",
+        "forgetTreeGrant()",
+        "persistTreeGrant(uri: Uri?)",
+        "readTreeGrant()",
         "list(path: String, sort: String, descending: Boolean, showHidden: Boolean)",
         "info(path: String)",
         "usage(path: String)",
         "createFolder(parentPath: String, name: String)",
+        "createFile(parentPath: String, name: String)",
         "rename(path: String, name: String)",
         "transfer(pathsJson: String, destinationPath: String, move: Boolean)",
         "delete(pathsJson: String)",
@@ -97107,24 +97341,21 @@
         "send(path: String, build: (Uri, String)",
         "readText(path: String)",
         "writeText(path: String, text: String)",
-        "mirrorJobs()",
-        "mirror(sourcePath: String, destinationPath: String, deleteExtra: Boolean)",
-        "mirrorInto( source: File, destination: File, deleteExtra: Boolean, tally: MirrorTally, depthLeft: Int )",
-        "alreadyMirrored(source: File, target: File)",
-        "resolve(path: String)",
-        "resolveDeclared(path: String)",
-        "parentWithinRoots(dir: File)",
-        "describe(file: File)",
-        "mimeOf(file: File)",
-        "sanitize(name: String)",
-        "uniqueIn(destination: File, name: String)",
-        "eachPath(pathsJson: String, action: (File)",
-        "pathResult(file: File)",
-        "failure(reason: String)",
-        "okErr(ok: Boolean, error: String)",
-        "class FilesBridge",
-        "class could",
-        "class MirrorTally"
+        "startJob(work: (BackgroundJob, AtomicBoolean)",
+        "statusOf(token: String, features: JSONObject)",
+        "cancelJob(token: String)",
+        "search(root: String, query: String, contentToo: Boolean)",
+        "searchStatus(token: String)",
+        "walkSearch( dir: File, needle: String, contentToo: Boolean, job: BackgroundJob, cancelled: AtomicBoolean, found: JSONArray )",
+        "matchesText(file: File, needle: String)",
+        "archive(pathsJson: String, destinationZipPath: String)",
+        "zipFolderInto( source: File, prefix: String, zip: ZipOutputStream, depthLeft: Int )",
+        "uniqueZipName(used: MutableSet<String>, name: String, isFolder: Boolean)",
+        "extract(zipPath: String, destinationDir: String)",
+        "properties(path: String)",
+        "propertiesStatus(token: String)",
+        "walkProperties( dir: File, job: BackgroundJob, cancelled: AtomicBoolean, tally: (Long, Boolean, Boolean)",
+        "digestFile(file: File, job: BackgroundJob, cancelled: AtomicBoolean)"
       ]
     },
     {
@@ -97135,6 +97366,7 @@
         "MainActivity"
       ],
       "imports": [
+        "android.content.Intent",
         "android.os.Bundle",
         "android.webkit.WebSettings",
         "android.webkit.WebView",
@@ -97149,6 +97381,8 @@
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
         "onPageFinished(view: WebView, url: String)",
+        "onNewIntent(intent: Intent)",
+        "handlePdfIntent(intent: Intent?)",
         "insetScriptFor(insets: Insets)",
         "cssPixels(devicePixels: Int)",
         "publishInsets(webView: WebView)",
@@ -97276,6 +97510,18 @@
         "pass()",
         "fail()"
       ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-pdf-reader-smoke.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path",
+        "os"
+      ],
+      "symbols": []
     },
     {
       "path": "ac_cloud-ide/build.sh",
@@ -98381,6 +98627,7 @@
       "symbols": [
         "hasPermission(context: Context)",
         "query(context: Context, q: String, limit: Int)",
+        "photoUriFor(context: Context, email: String)",
         "class AndroidContacts"
       ]
     },
@@ -98442,6 +98689,40 @@
         "trim()",
         "class PhotoCache",
         "class Entry"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/contacts/SenderAvatarLoader.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SenderAvatarLoader"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.BitmapFactory",
+        "androidx.compose.ui.graphics.ImageBitmap",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "app.sterna.ui.attachment.AttachmentOpen",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "okhttp3.OkHttpClient",
+        "okhttp3.Request",
+        "java.io.File",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "pickAvatar(device: T?, domain: T?)",
+        "domainOf(email: String)",
+        "faviconCandidates(domain: String)",
+        "cacheFile(cacheDir: File, domain: String)",
+        "cached(domain: String)",
+        "load(context: Context, domain: String)",
+        "fetchLogo(domain: String)",
+        "decode(bytes: ByteArray)",
+        "class only",
+        "class SenderAvatarLoader",
+        "class Cached"
       ]
     },
     {
@@ -98584,14 +98865,12 @@
         "app.sterna.core.data.settings.PreviewLines",
         "app.sterna.core.data.settings.PURE_BLACK_DEFAULT",
         "app.sterna.core.data.settings.ThemeMode",
-        "app.sterna.core.data.settings.UNREAD_TINT_DEFAULT",
         "app.sterna.ui.SternaApp",
         "app.sterna.ui.compose.ComposerResumeSlot",
         "app.sterna.ui.message.NavFadeGuard",
         "app.sterna.ui.components.LocalListDensity",
         "app.sterna.ui.components.LocalListMonogram",
         "app.sterna.ui.components.LocalPreviewLines",
-        "app.sterna.ui.components.LocalUnreadTint",
         "app.sterna.ui.theme.SternaTheme"
       ],
       "symbols": [
@@ -99896,10 +100175,13 @@
         "androidx.compose.ui.layout.ContentScale",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.unit.dp",
-        "app.sterna.contacts.ContactPhotos"
+        "app.sterna.contacts.AndroidContacts",
+        "app.sterna.contacts.ContactPhotos",
+        "app.sterna.contacts.SenderAvatarLoader"
       ],
       "symbols": [
-        "ContactAvatar( email: String, name: String?, photoUri: String?, modifier: Modifier = Modifier, )"
+        "ContactAvatar( email: String, name: String?, photoUri: String?, modifier: Modifier = Modifier, )",
+        "resolve( context: android.content.Context, email: String, photoUri: String?, )"
       ]
     },
     {
@@ -99948,12 +100230,12 @@
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.setValue",
         "app.sterna.core.jmap.model.EmailBodyPart",
-        "app.sterna.ui.rememberMotionEnabled",
-        "androidx.compose.ui.Alignment"
+        "app.sterna.ui.theme.LocalMailListPalette",
+        "app.sterna.ui.theme.MailListDimens"
       ],
       "symbols": [
-        "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, unread: Boolean, unreadTint: Boolean, flash: Float, )",
-        "chipFill( scheme: ColorScheme, selected: Boolean, unread: Boolean, unreadTint: Boolean, )",
+        "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, flash: Float, card: Color, )",
+        "chipFill(scheme: ColorScheme)",
         "EmailListItem( email: Email, onClick: ()",
         "ThreadPill( count: Int, expanded: Boolean, onToggleExpand: (()",
         "NotUploadedLabel(fill: Color)",
@@ -100037,15 +100319,13 @@
       "exports": [
         "LocalListDensity",
         "LocalPreviewLines",
-        "LocalUnreadTint",
         "LocalListMonogram"
       ],
       "imports": [
         "androidx.compose.runtime.compositionLocalOf",
         "app.sterna.core.data.settings.LIST_MONOGRAM_DEFAULT",
         "app.sterna.core.data.settings.ListDensity",
-        "app.sterna.core.data.settings.PreviewLines",
-        "app.sterna.core.data.settings.UNREAD_TINT_DEFAULT"
+        "app.sterna.core.data.settings.PreviewLines"
       ],
       "symbols": []
     },
@@ -102324,7 +102604,7 @@
         "MessageHeadersSheet( state: HeadersState, onDismiss: ()",
         "AttachedMessageSheet( state: AttachedMessageState, onDismiss: ()",
         "MessageContent( viewModel: MessageViewModel, emailId: String, accountId: String?, /** True once the reader has settled on this page — see the latch in [MessagePage]. */ everActive: Boolean, onComposeTo: (address: String)",
-        "ConversationBody( messages: List<ThreadMessage>, blockRemote: Boolean, /** Whether this sender is on the image allowlist, i.e. nothing was ever held back here. */ senderAllowed: Boolean, onShowImages: ()",
+        "ConversationBody( messages: List<ThreadMessage>, blockRemote: Boolean, /** Whether this sender is on the image allowlist, i.e. nothing was ever held back here. */ senderAllowed: Boolean, stripTracking: Boolean, confirmLinks: Boolean, attachmentStatus: String?, onOpenAttachment: (EmailBodyPart, String)",
         "ReplyForwardBar(onReply: (mode: String)",
         "MessageHeader( msg: ThreadMessage, full: Email?, attachmentStatus: String?, onOpenAttachment: (EmailBodyPart, String)",
         "MessageTagRow(tags: List<MessageTag>)",
@@ -102340,14 +102620,14 @@
         "signatureTint(state: PgpSignatureState)",
         "signatureSummary(sig: PgpSignatureState, signer: String?)",
         "PgpStatusCard(crypto: CryptoUiState, onAction: ()",
-        "ImagesStrip(blocked: Boolean, onShowImages: ()",
         "UnsubscribeStrip( options: UnsubscribeOptions, state: UnsubscribeState, onUnsubscribe: ()",
         "ReadReceiptStrip( // What [readReceiptStrip] decided, HANDED IN: the caller ran the decision once, to know whether to // draw this row and its divider at all. Not the offer and the state again — a second reading of // the same rule is a rule no test can hold. strip: ReadReceiptStrip, onSendReadReceipt: ()",
         "CalendarEventCard( invite: CalendarInvite, onRespond: (String)",
         "InviteRsvp(response: InviteResponse, onRespond: (String)",
         "addToCalendar(context: Context, event: ParsedEvent)",
         "formatEventWhen(event: ParsedEvent)",
-        "formatSize(bytes: Long)"
+        "formatSize(bytes: Long)",
+        "prefs(context: Context)"
       ]
     },
     {
@@ -102594,23 +102874,6 @@
       ]
     },
     {
-      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/RemoteImages.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [],
-      "imports": [
-        "androidx.annotation.StringRes",
-        "app.sterna.R"
-      ],
-      "symbols": [
-        "hasRemoteRefs(html: String?)",
-        "isRemoteRef(value: String)",
-        "imagesStripPresent(plainText: Boolean, senderAllowed: Boolean, html: String?)",
-        "imagesStripBody(blocked: Boolean)",
-        "class ImagesStripBody"
-      ]
-    },
-    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/ReplyBar.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -102699,6 +102962,71 @@
         "leave(settled: Boolean, action: ()",
         "release()",
         "class LeaveLatch"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/navigation/BottomNav.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavAction",
+        "BottomNavItem",
+        "bottomNavItems",
+        "bottomNavOwns"
+      ],
+      "imports": [],
+      "symbols": [
+        "bottomNavOwns(route: String)",
+        "class BottomNavAction",
+        "class BottomNavItem"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/navigation/BottomNavBar.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavBar"
+      ],
+      "imports": [
+        "android.widget.Toast",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.ChatBubble",
+        "androidx.compose.material.icons.filled.Home",
+        "androidx.compose.material.icons.filled.Mail",
+        "androidx.compose.material.icons.filled.RssFeed",
+        "androidx.compose.material.icons.filled.Videocam",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.IconButton",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.navigation.NavController",
+        "app.sterna.R",
+        "app.sterna.ui.rememberLeaveOnce",
+        "app.sterna.ui.theme.bottomNavIslandInset",
+        "app.sterna.ui.theme.bottomNavIslandShape"
+      ],
+      "symbols": [
+        "BottomNavBar(nav: NavController, currentRoute: String)",
+        "onItemTap( context: android.content.Context, nav: NavController, item: BottomNavItem, currentRoute: String, leaveOnce: (()",
+        "launchInstalledApp( context: android.content.Context, packageName: String, missingMessage: String, )",
+        "missingResource(id: String)",
+        "itemDescription(id: String)",
+        "iconFor(id: String)"
       ]
     },
     {
@@ -102971,6 +103299,106 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/rss/RssScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssScreen"
+      ],
+      "imports": [
+        "android.net.Uri",
+        "android.widget.Toast",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.imePadding",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.Close",
+        "androidx.compose.material.icons.filled.OpenInNew",
+        "androidx.compose.material.icons.filled.RssFeed",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.IconButton",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.lifecycle.compose.collectAsStateWithLifecycle",
+        "androidx.lifecycle.viewmodel.compose.viewModel",
+        "app.sterna.R"
+      ],
+      "symbols": [
+        "RssScreen( onBack: ()",
+        "FeedSection( feed: app.sterna.core.data.rss.RssFeed, url: String, onOpen: (String)",
+        "ArticleRow(title: String, summary: String, published: String, onClick: ()",
+        "FeedUnavailableRow(url: String, message: String, onRemove: ()",
+        "openInMiniBrowser( context: android.content.Context, uri: String?, leaveOnce: (()",
+        "resolveArticleUrl(feedUrl: String, link: String)",
+        "inputIsHttp(s: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/rss/RssViewModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFeedUi",
+        "RssMessage",
+        "RssSubscribeOutcome",
+        "RssViewModel"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.lifecycle.AndroidViewModel",
+        "androidx.lifecycle.viewModelScope",
+        "app.sterna.container",
+        "app.sterna.core.data.rss.RssFetchFailure",
+        "app.sterna.core.data.rss.RssFeed",
+        "app.sterna.core.data.rss.RssFetcher",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.SharingStarted",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.flow.asStateFlow",
+        "kotlinx.coroutines.flow.stateIn",
+        "kotlinx.coroutines.launch"
+      ],
+      "symbols": [
+        "refresh()",
+        "subscribe(raw: String)",
+        "unsubscribe(url: String)",
+        "fetch(url: String)",
+        "feedUiFor(reason: RssFetchFailure, url: String)",
+        "isFeedAddress(raw: String)",
+        "class so",
+        "class RssFeedUi",
+        "class Fetched",
+        "class Unavailable",
+        "class RssMessage",
+        "class RssSubscribeOutcome",
+        "class RssViewModel"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/scheduled/ScheduledSendCancel.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -103201,14 +103629,14 @@
         "androidx.compose.material3.DatePicker",
         "androidx.compose.material3.DatePickerDialog",
         "androidx.compose.material3.ExperimentalMaterial3Api",
-        "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.Scaffold",
         "androidx.compose.material3.Surface",
-        "androidx.compose.material3.Switch"
+        "androidx.compose.material3.Switch",
+        "androidx.compose.material3.Text"
       ],
       "symbols": [
         "SearchScreen( onBack: ()",
@@ -103875,7 +104303,6 @@
         "app.sterna.core.data.settings.PreviewLines",
         "app.sterna.core.data.settings.PURE_BLACK_DEFAULT",
         "app.sterna.core.data.settings.REPLY_BAR_DEFAULT",
-        "app.sterna.core.data.settings.UNREAD_TINT_DEFAULT",
         "app.sterna.core.data.settings.SettingsBackup",
         "app.sterna.core.data.settings.SettingsBackupCodec",
         "app.sterna.core.data.settings.SwipeAction",
@@ -103897,7 +104324,6 @@
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
-        "setUnreadTint(enabled: Boolean)",
         "setPureBlack(enabled: Boolean)",
         "setListMonogram(enabled: Boolean)",
         "setContactSuggestions(value: Boolean)",
@@ -104587,24 +105013,52 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/theme/MailList.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.runtime.compositionLocalOf",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.lerp",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "pulledToBlack()",
+        "mailListTextInk(unread: Boolean, palette: MailListPalette)",
+        "class exists",
+        "class MailListPalette",
+        "class MailListDimens",
+        "class MailListTextInk"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/theme/Theme.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
+        "bottomNavIslandShape",
+        "bottomNavIslandInset",
         "SternaTheme"
       ],
       "imports": [
         "android.app.Activity",
         "android.os.Build",
         "androidx.compose.foundation.isSystemInDarkTheme",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.dynamicDarkColorScheme",
         "androidx.compose.material3.dynamicLightColorScheme",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.runtime.SideEffect",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.dp",
         "androidx.core.view.WindowCompat",
         "app.sterna.core.data.settings.ThemeMode"
       ],
@@ -105246,6 +105700,25 @@
       ],
       "symbols": [
         "class PhotoCacheTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/contacts/SenderAvatarLoaderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SenderAvatarLoaderTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertSame",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class SenderAvatarLoaderTest"
       ]
     },
     {
@@ -106079,9 +106552,10 @@
         "androidx.compose.material3.lightColorScheme",
         "androidx.compose.ui.graphics.Color",
         "app.sterna.ui.theme.ArcticColorScheme",
+        "app.sterna.ui.theme.ArcticMailListPalette",
         "app.sterna.ui.theme.PelagicColorScheme",
+        "app.sterna.ui.theme.PelagicMailListPalette",
         "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertNotEquals",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "kotlin.math.abs",
@@ -106125,7 +106599,7 @@
         "java.io.File"
       ],
       "symbols": [
-        "chipFill(\", \"val chipBackground = chipFill(\")",
+        "chipFill(scheme: ColorScheme)",
         "ThreadPill(\")",
         "ThreadPill(` — this rule reads \" + \"its parameter list and has nothing to read without it.\" } assertEquals( \"ThreadPill must take the fill as a parameter ('fill: Color,')",
         "DraftLabel(fill: Color)",
@@ -111467,6 +111941,25 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReadingPaneShowImagesIconTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReadingPaneShowImagesIconTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "messageScreenSource()",
+        "repoRoot()",
+        "class ReadingPaneShowImagesIconTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReadReceiptCoverSubjectCallSiteTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -111569,39 +112062,6 @@
         "codeLines(file: File)",
         "mainSources()",
         "class ReadReceiptTriggerWiringTest"
-      ]
-    },
-    {
-      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/RemoteImagesTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "RemoteImagesTest"
-      ],
-      "imports": [
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertFalse",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test",
-        "java.io.File"
-      ],
-      "symbols": [
-        "MessageContent(\")",
-        "hasLine(lines: List<String>, exact: String)",
-        "screenLines()",
-        "stripLines()",
-        "ImagesStrip(\")",
-        "headerSource()",
-        "MessageHeader(\")",
-        "headerCallLines()",
-        "ConversationBody(\")",
-        "bodyCallLines()",
-        "block(signature: String)",
-        "class RemoteImagesTest",
-        "class could",
-        "class reads",
-        "class stays",
-        "class or"
       ]
     },
     {
@@ -113028,26 +113488,6 @@
       ]
     },
     {
-      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/UnreadTintWiringTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UnreadTintWiringTest"
-      ],
-      "imports": [
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test",
-        "java.io.File"
-      ],
-      "symbols": [
-        "messageListSection()",
-        "assertBlock(file: File, expected: List<String>, what: String)",
-        "codeLines(file: File)",
-        "class UnreadTintWiringTest"
-      ]
-    },
-    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/UnsavedExitTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -113205,6 +113645,25 @@
       "symbols": [
         "sent(body: String)",
         "class TextToolScopeTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/theme/MailListPaletteTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailListPaletteTest"
+      ],
+      "imports": [
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class MailListPaletteTest"
       ]
     },
     {
@@ -116835,6 +117294,85 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/rss/RssFeed.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFeed",
+        "RssItem"
+      ],
+      "imports": [],
+      "symbols": [
+        "class RssFeed",
+        "class RssItem"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/rss/RssFeedParser.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssParseFailure",
+        "RssParseResult",
+        "RssFeedParser"
+      ],
+      "imports": [
+        "org.xmlpull.v1.XmlPullParser",
+        "org.xmlpull.v1.XmlPullParserFactory",
+        "java.io.Reader"
+      ],
+      "symbols": [
+        "parse(input: Reader)",
+        "parseDocument(parser: XmlPullParser)",
+        "parseRss(parser: XmlPullParser)",
+        "parseRssItem(parser: XmlPullParser)",
+        "parseAtom(parser: XmlPullParser)",
+        "parseAtomEntry(parser: XmlPullParser)",
+        "textOf(parser: XmlPullParser)",
+        "itemFields()",
+        "toItem()",
+        "class RssParseFailure",
+        "class RssParseResult",
+        "class Ok",
+        "class Failed",
+        "class RssFeedParser",
+        "class ItemFields"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/rss/RssFetcher.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFetchFailure",
+        "RssFetchResult",
+        "RssFetcher",
+        "isFeedAddress"
+      ],
+      "imports": [
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "okhttp3.HttpUrl.Companion.toHttpUrlOrNull",
+        "okhttp3.OkHttpClient",
+        "okhttp3.Request",
+        "java.io.IOException",
+        "java.io.StringReader",
+        "java.net.UnknownHostException",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "fetch(url: String)",
+        "fetchBody(request: Request)",
+        "defaultRssHttpClient()",
+        "isFeedAddress(raw: String)",
+        "class RssFetchFailure",
+        "class RssFetchResult",
+        "class Loaded",
+        "class Failed",
+        "class RssFetcher"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/settings/SettingsBackup.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -116870,7 +117408,6 @@
         "NotificationContent",
         "SettingsRepository",
         "REPLY_BAR_DEFAULT",
-        "UNREAD_TINT_DEFAULT",
         "PURE_BLACK_DEFAULT",
         "ASK_READ_RECEIPT_DEFAULT",
         "LIST_MONOGRAM_DEFAULT",
@@ -116897,7 +117434,6 @@
         "setDynamicColor(enabled: Boolean)",
         "setListDensity(density: ListDensity)",
         "setPreviewLines(value: PreviewLines)",
-        "setUnreadTint(enabled: Boolean)",
         "setPureBlack(enabled: Boolean)",
         "setListMonogram(enabled: Boolean)",
         "setSwipeRightAction(action: SwipeAction)",
@@ -116925,6 +117461,7 @@
         "setImageAllowed(sender: String, allowed: Boolean)",
         "clearImageAllowlist()",
         "setImageAllowlist(senders: Set<String>)",
+        "setRssSubscribed(url: String, subscribed: Boolean)",
         "setDeliveryMode(mode: DeliveryMode)",
         "setNotificationContent(mode: NotificationContent)",
         "snapshotBackup()",
@@ -124004,6 +124541,39 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/rss/RssFeedAddressTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFeedAddressTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class RssFeedAddressTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/rss/RssFeedParserTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFeedParserTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.StringReader"
+      ],
+      "symbols": [
+        "class RssFeedParserTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/settings/NotificationContentStoredTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -124278,33 +124848,6 @@
         "aBackupWrittenBeforeTheyExistedStillImports()",
         "theyAreCarriedAsFalseWhenExplicitlyOff()",
         "class SettingsBackupSignatureTest"
-      ]
-    },
-    {
-      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/settings/SettingsBackupUnreadTintTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SettingsBackupUnreadTintTest"
-      ],
-      "imports": [
-        "androidx.datastore.preferences.core.booleanPreferencesKey",
-        "androidx.datastore.preferences.core.emptyPreferences",
-        "androidx.datastore.preferences.core.preferencesOf",
-        "kotlinx.serialization.json.Json",
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertFalse",
-        "org.junit.Assert.assertNull",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test"
-      ],
-      "symbols": [
-        "theSwitchSurvivesAJsonRoundTrip()",
-        "aBackupWrittenBeforeItExistedStillImports()",
-        "itIsCarriedAsFalseWhenExplicitlyOff()",
-        "unreadRowsAreTintedUntilSomebodyTurnsItOff()",
-        "theSwitchIsReadBackFromTheKeyItWasWrittenTo()",
-        "class SettingsBackupUnreadTintTest"
       ]
     },
     {
@@ -128547,6 +129090,24 @@
         "bad()",
         "has()",
         "hasnt()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-mail-message-list-cards.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "has()",
+        "lacks()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "has()",
+        "lacks()"
       ]
     },
     {
