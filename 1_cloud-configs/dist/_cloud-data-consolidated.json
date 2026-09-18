@@ -6044,6 +6044,11 @@
         "git_tree_is_working_directory": true
       },
       "upstream_image": "ghcr.io/diegonmarcos/hermes-agent:latest",
+      "tests": {
+        "agent-toolbelt-declared": {
+          "cmd": "node ../_shared/test-agent-toolbelt.mjs"
+        }
+      },
       "runtime": {
         "model": "deepseek/deepseek-v4-flash-0731",
         "backend_url": "https://openrouter.ai/api/v1",
@@ -7784,6 +7789,12 @@
         "10.0.0.0/24",
         "172.18.0.0/16"
       ],
+      "_doc_tests": "Registered #502 (this repo's tester CI only runs what a build.json's `tests` key names, per .github/scripts/run-service-tests.sh -- an unnamed tester sits in the tree, executable, and reached by nothing, same pattern cloud-u-android's #368 found 44 times over). mail-rules was a golden+structural suite for derive-mail-rules.ts with no build.json anywhere pointing at it, so it had never run in CI despite existing since #269. It pins the declared mail folder tree (parent/child nesting, not just names) and the Sieve/maddy artifact derivation; #502 added the structural assertions for the Alerts/noAlerts split, the 24 House -> F0 move (with real de-dup), and the CLOUD -> 40 C3 renumber.",
+      "tests": {
+        "mail-rules": {
+          "cmd": "bash ../_shared/lib/mail-rules.tests/run-tests.sh"
+        }
+      },
       "api": {
         "has_api": false,
         "has_web_ui": true,
