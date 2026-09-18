@@ -325,6 +325,39 @@ jobs:
         run: |
           "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux/da_my-ai/data/claude/gen-mcp-tpl.sh" --check
 
+  # ── #453: the registered-tester suite is its own job ──────────────────
+  #
+  # Phase 54+55 were the last two steps of `preflight`, which is 65
+  # unconditional steps — the first one that fails aborts the job and the
+  # testers never run, silently. They live here as their own job with NO
+  # `needs:`, so this job starts concurrently with `preflight` and cannot
+  # inherit any of its failures. `preflight` going red can no longer swallow
+  # the registered-tester suite.
+  #
+  # Real prerequisites, verified by executing the suite (not guessed):
+  #   • implicit actions/checkout — the testers read the repo tree.
+  #   • Checkout cloud-u-containers into a_solutions — 14 registered testers
+  #     resolve a_solutions/ paths and FAIL if the checkout is absent.
+  #   NOT needed (verified by execution): the I_cloud submodule and the
+  #   shellcheck install — the run passes with neither present.
+  registered-testers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers);
+      # the registered testers resolve paths under it (see test headers —
+      # e.g. cgc-knowledge-repo-root-resolvable refuses to pass without it).
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       # ── #368: the two steps that end the hand-maintained tester list ──────
       #
       # Every step above registers ONE tester by naming its filename. Writing a
