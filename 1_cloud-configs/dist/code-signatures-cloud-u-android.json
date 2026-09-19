@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19142,
+    "files": 19145,
     "by_lang": {
       "py": 47,
       "sh": 234,
-      "kotlin": 9859,
+      "kotlin": 9862,
       "java": 553,
       "ts": 8277,
       "nix": 23,
@@ -25,7 +25,7 @@
       "module": 5855,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9857,
+      "kotlin": 9860,
       "python": 24,
       "rust-module": 82,
       "file": 2249,
@@ -6764,9 +6764,11 @@
         "restartServices(all: List<Badge>)",
         "badgesOf(all: List<Badge>, service: String)",
         "strings(a: JSONArray?)",
+        "instruments(a: JSONArray?)",
         "options(a: JSONArray?)",
         "class BadgeDeclaration",
         "class Option",
+        "class Instrument",
         "class Badge"
       ]
     },
@@ -6944,6 +6946,84 @@
         "refresh(ctx: Context)",
         "renotifyPi(ctx: Context)",
         "class KdeStatusService"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/MarketsBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MarketsBadgeService"
+      ],
+      "imports": [
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "android.os.PowerManager",
+        "androidx.core.app.NotificationCompat",
+        "com.diegonmarcos.superapp.MainActivity",
+        "com.diegonmarcos.superapp.R",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.SupervisorJob",
+        "kotlinx.coroutines.cancel",
+        "kotlinx.coroutines.launch"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "schedule()",
+        "run()",
+        "badge()",
+        "instruments()",
+        "powerSaving()",
+        "refreshMs()",
+        "staleAfterMs()",
+        "refresh()",
+        "renotify()",
+        "build()",
+        "tickerPi(url: String)",
+        "ensureChannel()",
+        "class walks",
+        "class MarketsBadgeService"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/MarketsQuotes.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MarketsQuotes"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration.Instrument",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.net.URLEncoder",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "unavailable(symbol: String, reason: String)",
+        "chartUrl(symbol: String)",
+        "parse(symbol: String, body: String?)",
+        "fetch(instrument: Instrument)",
+        "row(instrument: Instrument, quote: Quote?, nowMillis: Long, staleAfterMillis: Long)",
+        "summary( instruments: List<Instrument>, quotes: Map<String, Quote>, nowMillis: Long, staleAfterMillis: Long, )",
+        "format(price: Double, decimals: Int)",
+        "ageText(ms: Long)",
+        "class MarketsQuotes",
+        "class Status",
+        "class Quote"
       ]
     },
     {
@@ -8730,6 +8810,30 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/MarketsBadgeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MarketsBadgeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "markets()",
+        "okQuote(price: Double, asOf: Long)",
+        "class MarketsBadgeTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/BottomNavGeometryTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8772,6 +8876,7 @@
         "theBarsEndInsetsAreTheDeclaredOneOnBothEnds()",
         "everyLabelHasFontPaddingOff()",
         "selectingAnItemDoesNotMoveItsIconOrItsLabel()",
+        "theEdgePillsShareTheIslandsEndCurvature()",
         "icon(cell: ViewGroup)",
         "label(cell: ViewGroup)",
         "ink(cell: ViewGroup)",
@@ -210975,10 +211080,12 @@
         "androidx.compose.material3.CircularProgressIndicator",
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.IconButton",
+        "androidx.compose.material3.LocalContentColor",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.minimumInteractiveComponentSize",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.animation.core.Animatable",
         "androidx.compose.animation.core.FastOutSlowInEasing",
         "androidx.compose.animation.core.Spring",
@@ -210989,9 +211096,7 @@
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberCoroutineScope",
-        "androidx.compose.runtime.setValue"
+        "androidx.compose.runtime.remember"
       ],
       "symbols": [
         "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, flash: Float, card: Color, )",
