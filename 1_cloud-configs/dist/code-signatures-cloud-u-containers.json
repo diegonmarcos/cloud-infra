@@ -6,20 +6,20 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2810,
+    "files": 2813,
     "by_lang": {
       "nix": 149,
       "ts": 1117,
-      "sh": 125,
-      "js": 35,
+      "sh": 126,
+      "js": 37,
       "py": 850,
       "rust": 534
     },
     "by_role": {
       "nix-module": 9,
       "module": 678,
-      "shell": 117,
-      "file": 281,
+      "shell": 118,
+      "file": 283,
       "python": 845,
       "flake": 71,
       "compose": 69,
@@ -35920,6 +35920,8 @@
       "lang": "js",
       "role": "file",
       "exports": [
+        "TELEGRAM_MAX_MESSAGE",
+        "deliverChatReply",
         "startTelegram"
       ],
       "imports": [
@@ -36044,6 +36046,43 @@
       "imports": [
         "node:fs",
         "node:path"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "user-ai_my-ai-api/src/code/start.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "respawn()"
+      ],
+      "imports": [],
+      "symbols": [
+        "respawn()"
+      ]
+    },
+    {
+      "path": "user-ai_my-ai-api/src/code/test-my-ai-declarative-supervision.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:os",
+        "node:child_process"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "user-ai_my-ai-api/src/code/test-my-ai-gateway-fail-loud.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./bots/telegram.mjs"
       ],
       "symbols": []
     },
@@ -52108,6 +52147,7 @@
         "buildJson",
         "container",
         "services",
+        "so",
         "never"
       ],
       "imports": [],
@@ -52121,6 +52161,7 @@
         "my-ai-api",
         "image",
         "container_name",
+        "restart",
         "network_mode",
         "env_file",
         "environment",
@@ -52150,8 +52191,7 @@
         "BRIDGE_NAME_TAIL_BYTES",
         "BRIDGE_NAME_MAX_CHARS",
         "volumes",
-        "healthcheck",
-        "test"
+        "healthcheck"
       ]
     },
     {
