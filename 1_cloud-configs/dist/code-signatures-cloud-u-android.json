@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19139,
+    "files": 19142,
     "by_lang": {
       "py": 47,
-      "sh": 232,
-      "kotlin": 9858,
+      "sh": 234,
+      "kotlin": 9859,
       "java": 553,
       "ts": 8277,
       "nix": 23,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 116,
-      "shell": 161,
+      "shell": 163,
       "java": 553,
       "entrypoint": 23,
       "module": 5855,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9856,
+      "kotlin": 9857,
       "python": 24,
       "rust-module": 82,
       "file": 2249,
@@ -4892,9 +4892,9 @@
         "readLogcat(n: Int)",
         "readTraceTail(ctx: android.content.Context, n: Int)",
         "readCrashes(ctx: android.content.Context)",
+        "readExitReasons(ctx: android.content.Context, n: Int)",
         "class DevControlServer",
-        "class Spec",
-        "class plus"
+        "class Spec"
       ]
     },
     {
@@ -8357,10 +8357,13 @@
         "android.view.View",
         "android.view.ViewGroup",
         "android.widget.TextView",
+        "com.diegonmarcos.superapp.R",
         "com.google.android.material.bottomnavigation.BottomNavigationView"
       ],
       "symbols": [
-        "disableFontPaddingRecursively(view: View)",
+        "collectTextViews(view: View, into: MutableList<TextView>)",
+        "applyVerticalGeometry(labels: List<TextView>)",
+        "class now",
         "class CenteredLabelBottomNavigationView"
       ]
     },
@@ -8724,6 +8727,63 @@
       "symbols": [
         "declaration(extra: String = \"\")",
         "class BadgeDeclarationTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/BottomNavGeometryTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavGeometryTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.graphics.Rect",
+        "android.graphics.drawable.InsetDrawable",
+        "android.view.ContextThemeWrapper",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.View.MeasureSpec",
+        "android.view.ViewGroup",
+        "android.widget.ImageView",
+        "android.widget.TextView",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.google.android.material.bottomnavigation.BottomNavigationView",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "inflateMeasureAndLayout()",
+        "barIsExactlyAsTallAsTheDeclaredItemGeometryNeeds()",
+        "theIconToLabelGapIsTheDeclaredOne()",
+        "theIconAndLabelInkIsCentredInItsCellByTheDeclaredPad()",
+        "theSelectedPillWrapsThatInkConcentrically()",
+        "theBarIsNotAllowedToFillItsParent()",
+        "theIconIsTheDeclaredSize()",
+        "theBarsEndInsetsAreTheDeclaredOneOnBothEnds()",
+        "everyLabelHasFontPaddingOff()",
+        "selectingAnItemDoesNotMoveItsIconOrItsLabel()",
+        "icon(cell: ViewGroup)",
+        "label(cell: ViewGroup)",
+        "ink(cell: ViewGroup)",
+        "drawNav()",
+        "pill(cell: ViewGroup)",
+        "title(cell: ViewGroup)",
+        "rectIn(ancestor: ViewGroup, v: View)",
+        "descendants()",
+        "walk(v: View)",
+        "dp(px: Int)",
+        "dump()",
+        "class BottomNavGeometryTest"
       ]
     },
     {
@@ -9386,6 +9446,22 @@
       "symbols": [
         "ok()",
         "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-home-avatar-icon-cache.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
       ]
     },
     {
@@ -210924,7 +211000,8 @@
         "ThreadPill( count: Int, expanded: Boolean, onToggleExpand: (()",
         "NotUploadedLabel(fill: Color)",
         "DraftLabel(fill: Color)",
-        "ListRowActions( email: Email, onOpenAttachment: ((EmailBodyPart)",
+        "ListRowActions( email: Email, onLoadMessage: (suspend (Email)",
+        "rowMessage(row: Email, onLoadMessage: (suspend (Email)",
         "AttachmentChips( email: Email, parts: List<EmailBodyPart>, fill: Color, openingKey: String?, onOpen: (EmailBodyPart)",
         "AttachmentChip( part: EmailBodyPart, fill: Color, busy: Boolean, onOpen: ()",
         "attachmentChipLabel(name: String, max: Int = MAX_CHIP_NAME)",
@@ -217269,6 +217346,9 @@
         "java.io.File"
       ],
       "symbols": [
+        "EmailListItem(...)",
+        "emailListItemBlock()",
+        "EmailListItem(\")",
         "previewBlock()",
         "ListRowActions(...)",
         "listRowActionsBlock()",
@@ -239794,6 +239874,24 @@
         "bad()",
         "has()",
         "hasnt()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-mail-list-row-actions.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "has()",
+        "lacks()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "has()",
+        "lacks()"
       ]
     },
     {
