@@ -6325,7 +6325,7 @@
       "upstream_image": "python:3.13-slim",
       "runtime": {
         "model": "deepseek/deepseek-v4-flash-0731",
-        "claude_model": "claude-sonnet-4-6",
+        "claude_model": "claude-opus-5",
         "_model_aliases_comment": "requested-id → OpenRouter slug. Callers pick a model per request; unknown/absent ids fall back to `model` (passthrough also works — OpenRouter accepts arbitrary slugs, so goose can send any OpenRouter model id directly). No Claude aliases here: this stack does not route Claude.",
         "model_aliases": {
           "glm": "z-ai/glm-5",
@@ -6480,9 +6480,10 @@
       "_upstream_image_doc": "Top-level upstream_image marks this as a Type-B vendored-Dockerfile build: the ship engine builds src/code/Dockerfile (staged to dist/code/arm64/) natively on the arm64 cloud-builder. It is NOT injected as a FROM-override build-arg — it only selects BUILD_CONTEXT=dist/code/arch. The real multi-stage Dockerfile (builder compiles the Headroom sidecar, runtime installs node) is preserved. The old docker.native_build:image-wrapper was WRONG: image-wrapper with no cmd made the native block skip AND blocked Type-B auto-detect, so CI silently built nothing and only recreated the stale image.",
       "upstream_image": "python:3.13-slim",
       "runtime": {
-        "model": "claude-sonnet-4-6",
+        "model": "claude-opus-5",
         "_model_aliases_comment": "requested-id → real `claude --model` id. Callers pick a cheaper tier per request (cgc octocode indexing asks for claude-haiku); unknown/absent ids fall back to `model`.",
         "model_aliases": {
+          "claude-opus": "claude-opus-5",
           "claude-sonnet": "claude-sonnet-4-6",
           "claude-haiku": "claude-haiku-4-5"
         },
