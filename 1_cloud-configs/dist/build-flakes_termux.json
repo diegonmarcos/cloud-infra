@@ -6408,6 +6408,10 @@
         "telegram-sendfile": {
           "cmd": "node test-my-ai-telegram-sendfile.mjs",
           "cwd": "src/code"
+        },
+        "flake-copies-complete": {
+          "cmd": "node test-my-ai-flake-copies-complete.mjs",
+          "cwd": "src/code"
         }
       },
       "api": {
@@ -6515,7 +6519,52 @@
           "exclude_models": [
             "claude-haiku-4-5"
           ]
-        }
+        },
+        "_repos_comment": "The ONE declaration of what lands in the shared agent tree (docker volume cloud-git-gh, mounted at $HOME/git in EVERY agi container by _shared/engine.nix). bootstrap_repos() in src/code/start.sh iterates THIS list; it used to carry a hardcoded four-repo shell loop, which is why the tree had drifted to seven — cloud-data, cloud-data-my-ai-memory and cloud-vault were cloned by hand and would have vanished on the next volume recreate. They are declared here now. Clones run as appuser (uid 10001), NOT as root: gitea used to hold a rw mount on this same tree and its root-owned writes left 260 unwritable paths (#558). `dir` overrides the checkout directory when it differs from the repo name — the front family names its members front-<thing>, so diegonmarcos.github.io is checked out as front-diegonmarcos exactly as ffront/repos.json (the front registry index) declares. `submodules` is only for cloud-infra, whose a_solutions is empty without it.",
+        "_repos_size_warning": "front-assets-cdn is ~1.4GB and front-diegonmarcos ~460MB. oci-apps root was at 94% after #492 reclaimed 5.3GB. If the volume runs out, DROP A LINE HERE rather than hand-deleting a checkout — a hand-deleted repo is re-cloned on the next boot.",
+        "repos": [
+          {
+            "repo": "cloud-infra",
+            "submodules": true
+          },
+          {
+            "repo": "cloud-u-containers"
+          },
+          {
+            "repo": "cloud-u-android"
+          },
+          {
+            "repo": "cloud-u-linux"
+          },
+          {
+            "repo": "cloud-data"
+          },
+          {
+            "repo": "cloud-data-my-ai-memory"
+          },
+          {
+            "repo": "cloud-vault"
+          },
+          {
+            "repo": "ffront"
+          },
+          {
+            "repo": "diegonmarcos.github.io",
+            "dir": "front-diegonmarcos"
+          },
+          {
+            "repo": "front-assets-cdn"
+          },
+          {
+            "repo": "front-data"
+          },
+          {
+            "repo": "front-galaxy-gaia"
+          },
+          {
+            "repo": "front-unity"
+          }
+        ]
       },
       "tests": {
         "resume-by-name": {
@@ -6528,6 +6577,10 @@
         },
         "resume-task-store-reachability": {
           "cmd": "node test-claude-resume-store.mjs",
+          "cwd": "src/code"
+        },
+        "bootstrap-repos-declared": {
+          "cmd": "node test-bootstrap-repos-declared.mjs",
           "cwd": "src/code"
         }
       },
