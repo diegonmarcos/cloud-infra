@@ -1296,10 +1296,10 @@
     },
     {
       "table": "container",
-      "id": "hermes_agent",
-      "key": "container:hermes_agent",
+      "id": "cloud_agi_hermes",
+      "key": "container:cloud_agi_hermes",
       "properties": {
-        "name": "hermes-agent",
+        "name": "cloud-agi-hermes",
         "image": "ghcr.io/diegonmarcos/hermes-agent:latest",
         "role": "app",
         "port": 8642,
@@ -1374,10 +1374,10 @@
     },
     {
       "table": "container",
-      "id": "my_ai_api",
-      "key": "container:my_ai_api",
+      "id": "cloud_agi_goose",
+      "key": "container:cloud_agi_goose",
       "properties": {
-        "name": "my-ai-api",
+        "name": "cloud-agi-goose",
         "image": "ghcr.io/diegonmarcos/my-ai-api:latest",
         "role": "app",
         "port": 3217,
@@ -1400,10 +1400,10 @@
     },
     {
       "table": "container",
-      "id": "my_ai_claude_api",
-      "key": "container:my_ai_claude_api",
+      "id": "cloud_agi_claude",
+      "key": "container:cloud_agi_claude",
       "properties": {
-        "name": "my-ai_claude-api",
+        "name": "cloud-agi-claude",
         "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
         "role": "app",
         "port": 3117,
@@ -4410,8 +4410,8 @@
     {
       "table": "runs_container",
       "from": "service:hermes_agent",
-      "to": "container:hermes_agent",
-      "key": "service:hermes_agent->runs_container->container:hermes_agent",
+      "to": "container:cloud_agi_hermes",
+      "key": "service:hermes_agent->runs_container->container:cloud_agi_hermes",
       "properties": {
         "role": "app"
       }
@@ -4458,8 +4458,8 @@
     {
       "table": "runs_container",
       "from": "service:my_ai_api",
-      "to": "container:my_ai_api",
-      "key": "service:my_ai_api->runs_container->container:my_ai_api",
+      "to": "container:cloud_agi_goose",
+      "key": "service:my_ai_api->runs_container->container:cloud_agi_goose",
       "properties": {
         "role": "app"
       }
@@ -4474,8 +4474,8 @@
     {
       "table": "runs_container",
       "from": "service:my_ai_claude_api",
-      "to": "container:my_ai_claude_api",
-      "key": "service:my_ai_claude_api->runs_container->container:my_ai_claude_api",
+      "to": "container:cloud_agi_claude",
+      "key": "service:my_ai_claude_api->runs_container->container:cloud_agi_claude",
       "properties": {
         "role": "app"
       }
