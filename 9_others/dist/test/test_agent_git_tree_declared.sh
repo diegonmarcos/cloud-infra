@@ -32,8 +32,10 @@
 # ║      silent pass — that is the whole failure mode being guarded. ║
 # ║   2. Every category:"agi" container states agent.git_tree        ║
 # ║      EXPLICITLY (true or false). Omission is the #345 defect.    ║
-# ║   3. git_tree:true implies an absolute agent.git_tree_mount —    ║
-# ║      the engine refuses to guess, so the data must say where.    ║
+# ║   3. git_tree:true mounts at the ONE engine-declared path        ║
+# ║      (engine.nix gitTreeMountPath, absolute), and no container   ║
+# ║      re-declares agent.git_tree_mount — #561 made that a build   ║
+# ║      error, because three per-container answers drifted apart.   ║
 # ║   4. The external volume name is PINNED wherever the mount is    ║
 # ║      produced. Without the pin compose invents a project-scoped  ║
 # ║      volume and mounts an EMPTY directory with no error, which   ║
@@ -134,7 +136,15 @@ for bj in "${AGENTS[@]}"; do
     fi
 
     if [ "$declared" = "true" ]; then
-        mount="$(jq -r '.agent.git_tree_mount // ""' "$bj")"
+        # #561: the mount path is no longer per-container — engine.nix declares
+        # it once (gitTreeMountPath) and THROWS if a build.json sets
+        # agent.git_tree_mount. Read the path the engine will actually use, and
+        # fail on a stale per-container field instead of demanding one.
+        mount="$(sed -n 's/^[[:space:]]*gitTreeMountPath[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' "$ENGINE" | head -1)"
+        if [ "$(jq -r '.agent | has("git_tree_mount")' "$bj")" = "true" ]; then
+            fail "$svc: build.json still sets agent.git_tree_mount — engine.nix throws on it since #561; the path is engine-owned ($mount)"
+            continue
+        fi
         writable="$(jq -r '.agent.git_tree_writable // false' "$bj")"
         # The tree is mounted at the container's own $HOME/git — it is the
         # agent's WORKING DIRECTORY, not a reference copy. #416 shipped it
@@ -148,8 +158,8 @@ for bj in "${AGENTS[@]}"; do
         fi
         case "$mount" in
             /*) pass "$svc: git_tree true, mount $mount (read-write)" ;;
-            "") fail "$svc: agent.git_tree is true but agent.git_tree_mount is missing — the engine will throw at build time" ;;
-            *)  fail "$svc: agent.git_tree_mount \"$mount\" is not an absolute path" ;;
+            "") fail "$svc: git_tree true but engine.nix declares no gitTreeMountPath — nothing tells the engine where to mount the tree" ;;
+            *)  fail "$svc: engine.nix gitTreeMountPath \"$mount\" is not an absolute path" ;;
         esac
     elif [ "$declared" = "false" ]; then
         reason="$(jq -r '.agent._comment // ""' "$bj")"
