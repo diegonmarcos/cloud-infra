@@ -1259,6 +1259,12 @@ jobs:
             if [ "$DEPLOY_RESULT" = "cancelled" ]; then
               echo "::error::'cancelled' with no steps run means the deploy was evicted from the ship-wg-runner concurrency queue. Clear the wedge with the unjam-ship workflow, then re-ship."
             fi
+            # #560: the deploy engine now fails on a declared container left in
+            # `created` (never started) or dead, instead of logging `docker ps`
+            # and exiting 0. That verdict reaches the run through THIS gate.
+            if [ "$DEPLOY_RESULT" = "failure" ]; then
+              echo "::error::Deploy failed. If its log has 'liveness: DEAD', a declared container did not start ('created' = compose created it and never started it): docker ps -a lists it and its digest matches, but the service is down. Re-ship it; do not trust ps or digests."
+            fi
             if [ "$MATRIX_COUNT" -gt 0 ]; then
               echo "::error::re-ship with: workflow_dispatch on ship.yml, services=<dirs above>, vm=<vm above>."
             fi

@@ -19,7 +19,9 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# Search up for .git: a fixed ../.. is one level short from the rendered copy
+# in 9_others/dist/test/, which then died on a missing reconcile script.
+REPO_ROOT="$(_d="$SCRIPT_DIR"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 RECONCILE="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-reconcile.sh"
 
 [ -f "$RECONCILE" ] || { echo "FAIL: $RECONCILE missing"; exit 1; }
@@ -75,7 +77,9 @@ esac
 SH
 chmod +x "$WORK/registry"
 
-# Probe stub: prints the TSV the real ssh probe would print.
+# Probe stub: prints the TSV the real ssh probe would print —
+# <container> <ref> <digest> <State.Status>. The state column is #560's; a row
+# without one is a probe that lost it, and is never read as live.
 cat > "$WORK/probe" <<'SH'
 #!/usr/bin/env bash
 printf '%s\n' "$PROBE_OUTPUT"
@@ -85,7 +89,7 @@ chmod +x "$WORK/probe"
 run() {
   PROBE_OUTPUT="$1" \
   GHA_CONFIG="$WORK/build-gha.json" \
-  SOLUTIONS_DIR="$WORK/sol" \
+  SOLUTIONS_DIR="${SOL:-$WORK/sol}" \
   DOCKER_REGISTRY="ghcr.io/diegonmarcos" \
   REG_CURRENT="$REG_CURRENT" \
   CHILD_DIGEST="${CHILD_DIGEST:-}" \
@@ -100,9 +104,9 @@ T=$(printf '\t')
 echo "--- Phase 48: ship reconcile ---"
 
 # 1. Fleet current: both containers run exactly what the registry holds.
-run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}
-cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}
-postgres${T}docker.io/library/postgres:16${T}sha256:deadbeef"
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}${T}running
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running
+postgres${T}docker.io/library/postgres:16${T}sha256:deadbeef${T}running"
 ck "in-sync fleet exits 0"                 "$rc" "0"
 ck "in-sync fleet names nothing"           "$(grep -c drift "$WORK/out")" "0"
 ck "upstream image is not our drift"       "$(grep -c 'infra-dat_storage' "$WORK/out")" "0"
@@ -110,9 +114,9 @@ ck "upstream image is not our drift"       "$(grep -c 'infra-dat_storage' "$WORK
 # 2. THE LIVE CASUALTY. Registry moved, the VM did not. This is the case that
 #    was invisible before: the run list was green, obs_health_drift said "ok",
 #    and the service was four commits behind.
-run "cloud-cgc-pub-mcp${T}${OURS}${T}${VM_STALE}
-cloud-cgc-pvt-mcp${T}${OURS}${T}${VM_STALE}
-postgres${T}docker.io/library/postgres:16${T}sha256:deadbeef"
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${VM_STALE}${T}running
+cloud-cgc-pvt-mcp${T}${OURS}${T}${VM_STALE}${T}running
+postgres${T}docker.io/library/postgres:16${T}sha256:deadbeef${T}running"
 ck "deployed-behind fleet exits 1"         "$rc" "1"
 ck "names the drifted service"             "$(grep -c 'user-ai_cloud-cgc-pub-mcp.*drift' "$WORK/out")" "2"
 ck "does not name the current service"     "$(grep -c 'infra-dat_storage' "$WORK/out")" "0"
@@ -123,8 +127,8 @@ ck "reports the running digest"            "$(grep -c "$VM_STALE" "$WORK/out")" 
 #    arm64 deploy on every single reconcile — an infinite ship loop on the
 #    shared WG runner, which is strictly worse than the bug being fixed.
 CHILD_DIGEST="sha256:1111111111111111111111111111111111111111111111111111111111111111"
-run "cloud-cgc-pub-mcp${T}${OURS}${T}${CHILD_DIGEST}
-cloud-cgc-pvt-mcp${T}${OURS}${T}${CHILD_DIGEST}"
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${CHILD_DIGEST}${T}running
+cloud-cgc-pvt-mcp${T}${OURS}${T}${CHILD_DIGEST}${T}running"
 ck "per-arch child digest is in-sync"      "$rc" "0"
 CHILD_DIGEST=""
 
@@ -143,7 +147,7 @@ ck "unreachable VM says so out loud"        "$(grep -c '::error::.*did not answe
 #    treating an undecidable image as exit 2 made the scheduled reconcile
 #    permanently red. A watchdog that is always red is ignored exactly as fast
 #    as one that is always green.
-run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/unknown-service:latest${T}${VM_STALE}"
+run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/unknown-service:latest${T}${VM_STALE}${T}running"
 ck "silent registry is not called in-sync" "$(grep -c 'undecidable' "$WORK/out")" "1"
 ck "silent registry is not fatal"          "$rc" "0"
 ck "silent registry is not re-shipped"     "$(grep -c 'drift' "$WORK/out")" "0"
@@ -151,14 +155,14 @@ ck "silent registry is not re-shipped"     "$(grep -c 'drift' "$WORK/out")" "0"
 # 6. Declared but not running: reported as `absent`, never as `drift`, because
 #    the workflow re-ships `drift` only and nine services read absent on the
 #    real fleet for reasons that are not #354.
-run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}"
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
 ck "missing container classed absent"      "$(grep -c "absent${T}cloud-cgc-pvt-mcp" "$WORK/out")" "1"
 ck "absent is not classed drift"           "$(grep -c "drift" "$WORK/out")" "0"
 
 # 7. An image built on the VM and never pushed has no RepoDigest. Calling that
 #    in-sync would hide exactly the state a failed push leaves behind.
-run "cloud-cgc-pub-mcp${T}${OURS}${T}
-cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}"
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${T}running
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
 ck "digest-less image classed unpublished" "$(grep -c "unpublished" "$WORK/out")" "1"
 
 
@@ -184,7 +188,7 @@ cat > "$WORK/gha-mixed.json" <<'JSON'
   }
 }
 JSON
-PROBE_OUTPUT="cloud-cgc-pub-mcp${T}${OURS}${T}${VM_STALE}" GHA_CONFIG="$WORK/gha-mixed.json" SOLUTIONS_DIR="$WORK/sol" DOCKER_REGISTRY="ghcr.io/diegonmarcos" REG_CURRENT="$REG_CURRENT" CHILD_DIGEST="" RECONCILE_PROBE_CMD="$WORK/probe" RECONCILE_REGISTRY_CMD="$WORK/registry"   bash "$RECONCILE" testvm >"$WORK/out" 2>"$WORK/err"
+PROBE_OUTPUT="cloud-cgc-pub-mcp${T}${OURS}${T}${VM_STALE}${T}running" GHA_CONFIG="$WORK/gha-mixed.json" SOLUTIONS_DIR="$WORK/sol" DOCKER_REGISTRY="ghcr.io/diegonmarcos" REG_CURRENT="$REG_CURRENT" CHILD_DIGEST="" RECONCILE_PROBE_CMD="$WORK/probe" RECONCILE_REGISTRY_CMD="$WORK/registry"   bash "$RECONCILE" testvm >"$WORK/out" 2>"$WORK/err"
 rc=$?
 ck "mixed containers[] does not abort the sweep" "$rc" "1"
 ck "the healthy service is still reported"       "$(grep -c 'user-ai_cloud-cgc-pub-mcp.*drift' "$WORK/out")" "1"
@@ -198,13 +202,13 @@ ck "the mixed service's objects still parse"     "$(grep -c 'postlite-npm' "$WOR
 #    undecidable. This resolves from the ref with no registry call at all, so
 #    the stub below is deliberately never consulted.
 PINNED="sha256:d8309fad8a32c393ddf7a258b8dbfc990ea928372284804a08bd071a13df6b7c"
-run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${PINNED}"
+run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${PINNED}${T}running"
 ck "digest-pinned ref is in-sync"          "$(grep -c 'undecidable' "$WORK/out")" "0"
 ck "digest-pinned ref is not drift"        "$(grep -c 'drift' "$WORK/out")" "0"
 
 #    ...and a pinned ref whose RUNNING digest does not match the pin is real
 #    drift: the container is not running what it was pinned to.
-run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${VM_STALE}"
+run "cloud-cgc-pub-mcp${T}ghcr.io/diegonmarcos/caddy-l4@${PINNED}${T}${VM_STALE}${T}running"
 ck "pin violated is reported as drift"     "$(grep -c 'drift' "$WORK/out")" "1"
 
 # 10. An UNREACHABLE VM is not a clean VM, and it is also not a reason to stop.
@@ -224,6 +228,58 @@ run ""
 ck "reachable-but-empty is not unreachable" "$(grep -c 'unreachable' "$WORK/out")" "0"
 ck "reachable-but-empty yields absent"      "$(grep -c 'absent' "$WORK/out")" "3"
 ck "reachable-but-empty is not fatal"       "$rc" "0"
+
+# ── #560: a matching digest is not a live service ──
+# my-ai-api sat in `created` — compose created it, never started it — running
+# exactly the registry's digest. This script called it in-sync and both
+# telegram bots were down. State is judged before the digest.
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}${T}created
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
+ck "#560: created container is classed created"    "$(grep -c "created${T}cloud-cgc-pub-mcp" "$WORK/out")" "1"
+ck "#560: created is re-shippable (exit 1)"        "$rc" "1"
+ck "#560: created is NOT called in-sync"           "$(grep -c 'cloud-cgc-pub-mcp: in-sync' "$WORK/err")" "0"
+ck "#560: its live sibling still is"               "$(grep -c 'cloud-cgc-pvt-mcp: in-sync' "$WORK/err")" "1"
+
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}${T}exited
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
+ck "exited long-runner is classed stopped"         "$(grep -c "stopped${T}cloud-cgc-pub-mcp" "$WORK/out")" "1"
+ck "stopped is report-only (exit 0)"               "$rc" "0"
+
+# A probe row that lost its state is not evidence of life.
+run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
+ck "a row with no state is never in-sync"          "$(grep -c "stopped${T}cloud-cgc-pub-mcp state=unreported" "$WORK/out")" "1"
+
+# An init job that finished is live — and one_shot comes from build.json.
+mkdir -p "$WORK/sol1/user-ai_cloud-cgc-pub-mcp" "$WORK/sol1/infra-dat_storage"
+cp "$WORK/sol/infra-dat_storage/build.json" "$WORK/sol1/infra-dat_storage/"
+cat > "$WORK/sol1/user-ai_cloud-cgc-pub-mcp/build.json" <<'JSON'
+{ "containers": [ { "container_name": "cloud-cgc-pub-mcp", "one_shot": true },
+                  { "container_name": "cloud-cgc-pvt-mcp" } ] }
+JSON
+SOL="$WORK/sol1" run "cloud-cgc-pub-mcp${T}${OURS}${T}${REG_CURRENT}${T}exited
+cloud-cgc-pvt-mcp${T}${OURS}${T}${REG_CURRENT}${T}running"
+ck "exited declared one_shot is not stopped"       "$(grep -c 'stopped' "$WORK/out")" "0"
+ck "  ...and goes on to the digest (in-sync)"      "$(grep -c 'cloud-cgc-pub-mcp: in-sync' "$WORK/err")" "1"
+
+# The REAL probe, over a stubbed ssh: its jq must carry State.Status onto the
+# wire, or every case above is testing a column production never sends.
+mkdir -p "$WORK/bin"
+cat > "$WORK/bin/ssh" <<'SH'
+#!/usr/bin/env bash
+case "$*" in
+  *"docker image inspect"*) printf '[{"Id":"sha256:img1","RepoDigests":["ghcr.io/diegonmarcos/cloud-cgc-pub-mcp-binaries@%s"]}]' "$REG_CURRENT" ;;
+  *"docker inspect"*) printf '[{"Name":"/cloud-cgc-pub-mcp","Image":"sha256:img1","Config":{"Image":"%s"},"State":{"Status":"created"}},{"Name":"/cloud-cgc-pvt-mcp","Image":"sha256:img1","Config":{"Image":"%s"},"State":{"Status":"running"}}]' "$OURS" "$OURS" ;;
+esac
+SH
+chmod +x "$WORK/bin/ssh"
+PATH="$WORK/bin:$PATH" OURS="$OURS" REG_CURRENT="$REG_CURRENT" GHA_CONFIG="$WORK/build-gha.json" \
+  SOLUTIONS_DIR="$WORK/sol" DOCKER_REGISTRY="ghcr.io/diegonmarcos" \
+  RECONCILE_REGISTRY_CMD="$WORK/registry" bash "$RECONCILE" testvm >"$WORK/out" 2>"$WORK/err"
+rc=$?
+ck "real probe: created container is classed created" "$(grep -c "created${T}cloud-cgc-pub-mcp" "$WORK/out")" "1"
+ck "real probe: running sibling is in-sync"           "$(grep -c 'cloud-cgc-pvt-mcp: in-sync' "$WORK/err")" "1"
+ck "real probe: exit 1"                               "$rc" "1"
 
 # ── The re-ship selector: the half that actually re-queues the lost deploy ──
 RESHIP="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
@@ -263,6 +319,14 @@ ck "says the cap applied"                   "$(grep -c '::warning::4 services ar
 out="$(printf '%s\n' "v${T}svc-a${T}drift${T}c" | RESHIP_CONFIG="$WORK/nope.json" bash "$RESHIP" 2>"$WORK/rerr")"
 ck "missing config dispatches nothing"      "$out" ""
 ck "missing config says so"                 "$(grep -c '::error::.*refusing to guess' "$WORK/rerr")" "1"
+
+# #560 against the SHIPPED bounds, not a fixture: `created` is a deploy cut
+# short and the fleet's config re-ships it; `stopped` stays with a human.
+out="$(printf '%s\n' "oci-apps${T}user-ai_my-ai_claude-api${T}created${T}my-ai-api state=created
+oci-apps${T}infra-obs_dagu${T}stopped${T}dagu state=exited" \
+       | RESHIP_CONFIG="$REPO_ROOT/9_others/ship-reconcile.json" bash "$RESHIP" 2>"$WORK/rerr")"
+ck "#560: shipped config re-ships a created container" "$out" "user-ai_my-ai_claude-api"
+ck "#560: shipped config holds a stopped one"          "$(grep -c 'stopped: 1 finding' "$WORK/rerr")" "1"
 
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

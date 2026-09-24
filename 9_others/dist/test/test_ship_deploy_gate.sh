@@ -113,6 +113,17 @@ ck "gate names the undeployed service" \
 ck "gate points at unjam-ship for a cancelled deploy" \
    "$(grep -c 'unjam-ship' "$GATE.out" || true)" "1"
 
+# #560: the deploy engine now FAILS on a declared container left in `created`
+# (step_compose's liveness gate). The gate is where that reaches the run, and
+# it must say what a failed deploy may mean — ps and digests both lied.
+run_gate success ship true success failure && rc=0 || rc=$?
+ck "gate FAILS on a failed deploy" "$rc" "1"
+ck "gate points a failed deploy at the liveness verdict (#560)" \
+   "$(grep -c "liveness: DEAD" "$GATE.out" || true)" "1"
+run_gate success ship true success cancelled && rc=0 || rc=$?
+ck "a cancelled deploy is not told about liveness" \
+   "$(grep -c "liveness: DEAD" "$GATE.out" || true)" "0"
+
 # skipped is what a build failure leaves behind; the services are still absent
 # from the fleet, so the gate must be just as loud.
 run_gate success ship true skipped skipped && rc=0 || rc=$?

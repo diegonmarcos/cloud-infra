@@ -427,9 +427,12 @@ PULL_GATE
         log "Post-hook receipt verified for revision $_ph_rev"
     fi
 
-    # Verify
-    log "Verifying containers are running..."
+    # Verify — a gate, not a log line (#560). This used to print `docker ps`
+    # filtered by name and return 0 whatever it said, so a deploy could END
+    # with a container in `created` and still exit green. Compose completes
+    # `up` for every declared container or this step goes red.
+    log "Verifying declared containers are live..."
     sleep 3
-    ssh_with_retry "$DEPLOY_HOST" "docker ps --filter 'name=$(basename $DEPLOY_PATH)' --format '{{.Names}} {{.Status}}'" 2>/dev/null | while read -r line; do log "  $line"; done
+    assert_declared_containers_live || return 1
     log "Done."
 }
