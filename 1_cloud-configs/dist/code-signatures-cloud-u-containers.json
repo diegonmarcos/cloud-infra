@@ -6,20 +6,20 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2833,
+    "files": 2836,
     "by_lang": {
-      "sh": 129,
-      "nix": 151,
+      "sh": 130,
+      "nix": 152,
       "ts": 1117,
-      "js": 52,
+      "js": 53,
       "py": 850,
       "rust": 534
     },
     "by_role": {
-      "shell": 121,
-      "nix-module": 11,
+      "shell": 122,
+      "nix-module": 12,
       "module": 678,
-      "file": 298,
+      "file": 299,
       "python": 845,
       "flake": 71,
       "compose": 69,
@@ -43,6 +43,18 @@
       "symbols": []
     },
     {
+      "path": "_dispatch/prep.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "prune_own()"
+      ],
+      "imports": [],
+      "symbols": [
+        "prune_own()"
+      ]
+    },
+    {
       "path": "_dispatch/test-dispatch-fail-opens.sh",
       "lang": "sh",
       "role": "shell",
@@ -58,6 +70,23 @@
         "run()",
         "prep()",
         "fire()"
+      ]
+    },
+    {
+      "path": "_shared/agent-credential.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "agentSpec"
+      ],
+      "imports": [],
+      "symbols": [
+        "var",
+        "declared",
+        "isAgent",
+        "checkNames",
+        "withhold",
+        "environment"
       ]
     },
     {
@@ -151,8 +180,10 @@
       "exports": [],
       "imports": [
         "./memory-ceiling.nix",
+        "./agent-credential.nix",
         "./agent-memory.nix",
         "memory-ceiling.nix",
+        "agent-credential.nix",
         "agent-memory.nix"
       ],
       "symbols": [
@@ -185,7 +216,9 @@
         "mergeSecretsInto",
         "env_file",
         "volumes",
+        "mergeSecretsEnvOnly",
         "agentSpec",
+        "agentCredential",
         "wantsGitTree",
         "gitTreeKey",
         "gitTreeName",
@@ -193,9 +226,7 @@
         "_gitTreeMountGuard",
         "gitTreeMount",
         "agentMemory",
-        "gitTreeWritable",
-        "gitTreeSuffix",
-        "gitTreeGitEnv"
+        "gitTreeWritable"
       ]
     },
     {
@@ -400,6 +431,19 @@
         "appDb",
         "buildApp"
       ]
+    },
+    {
+      "path": "_shared/test-agent-credential-scope.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ],
+      "symbols": []
     },
     {
       "path": "_shared/test-agent-memory-one-declaration.mjs",
