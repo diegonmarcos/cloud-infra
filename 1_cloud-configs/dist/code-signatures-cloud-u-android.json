@@ -6,27 +6,27 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19165,
+    "files": 19176,
     "by_lang": {
-      "py": 50,
-      "sh": 245,
-      "kotlin": 9867,
+      "py": 51,
+      "sh": 247,
+      "kotlin": 9874,
       "java": 554,
       "ts": 8277,
-      "nix": 23,
+      "nix": 24,
       "js": 67,
       "rust": 82
     },
     "by_role": {
       "script": 119,
-      "shell": 173,
+      "shell": 175,
       "java": 554,
       "entrypoint": 23,
       "module": 5855,
       "compose": 1,
-      "flake": 19,
-      "kotlin": 9865,
-      "python": 25,
+      "flake": 20,
+      "kotlin": 9872,
+      "python": 26,
       "rust-module": 82,
       "file": 2249,
       "hook": 144,
@@ -3269,7 +3269,7 @@
       ],
       "symbols": [
         "cloudComms_registryResolves()",
-        "cloudIde_registryResolves()",
+        "cloudMyTerminal_registryResolves()",
         "everyExtappTargetResolves()",
         "commsSection_tilesPointAtForks()",
         "class ExternalAppsTest",
@@ -3838,7 +3838,7 @@
         "makeFolderCard( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, cellSize: Int = dp(ctx, 60)",
         "showFolderDialog( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, )",
         "makeExpandedAppTile( ctx: Context, app: PhoneApp, dialog: Dialog, launcherApps: LauncherApps, )",
-        "openConstellation(ctx: Context)",
+        "openStore(ctx: Context)",
         "dp(ctx: Context, v: Int)",
         "invalidateCache()",
         "warmUp(ctx: Context)",
@@ -3978,6 +3978,22 @@
         "newInstance()",
         "class RecentAppsFragment",
         "class AppInfo"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/StoreShelves.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreShelves"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.appstore.AppStoreHost"
+      ],
+      "symbols": [
+        "of(ctx: Context, labelsByPackage: Map<String, String>)",
+        "class StoreShelves"
       ]
     },
     {
@@ -8967,6 +8983,33 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/StoreShelvesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreShelvesTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.appstore.StoreCloudFragment",
+        "com.diegonmarcos.superapp.appstore.StorePhoneFragment",
+        "com.diegonmarcos.superapp.launcher.SectionPages",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class StoreShelvesTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/configs/PushPaneLiveBadgeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9638,7 +9681,9 @@
         "bad()",
         "has()"
       ],
-      "imports": [],
+      "imports": [
+        "test-store-identity.sh"
+      ],
       "symbols": [
         "ok()",
         "bad()",
@@ -10969,90 +11014,8 @@
       "symbols": [
         "class with",
         "class AppStoreHost",
-        "class to"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/ConstellationFragment.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ConstellationFragment"
-      ],
-      "imports": [
-        "android.app.AlertDialog",
-        "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.PackageManager",
-        "android.graphics.Typeface",
-        "android.net.Uri",
-        "android.os.Bundle",
-        "android.provider.Settings",
-        "android.text.TextUtils",
-        "android.util.Base64",
-        "android.view.Gravity",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "android.widget.Toast",
-        "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.adbdebug.PackageVerifier",
-        "com.diegonmarcos.superapp.adbdebug.ShellAccess",
-        "com.diegonmarcos.superapp.adbdebug.WirelessDebugging",
-        "com.diegonmarcos.superapp.updater.Advisory",
-        "com.diegonmarcos.superapp.updater.AutoUpdatePrefs",
-        "com.diegonmarcos.superapp.updater.BootstrapInstall",
-        "com.diegonmarcos.superapp.updater.Fleet",
-        "com.diegonmarcos.superapp.updater.UpdateProgress",
-        "com.diegonmarcos.superapp.updater.Updater",
-        "kotlin.concurrent.thread",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "fleetObjects(key: String)",
-        "applicationOf(id: String)",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "onDestroyView()",
-        "confirmDowngrade(app: Fleet.App, candidateCode: Long, installedCode: Long)",
-        "tabBar(ctx: Context)",
-        "paintTabs()",
-        "renderTab(ctx: Context)",
-        "renderFleet(ctx: Context, list: List<Fleet.App>, blurb: String)",
-        "filterBar(ctx: Context, list: List<Fleet.App>)",
-        "paintFilter()",
-        "inFilter(app: Fleet.App)",
-        "renderList(ctx: Context, list: List<Fleet.App>)",
-        "updateSummary(list: List<Fleet.App>)",
-        "progressPanel(ctx: Context)",
-        "renderProgress(state: UpdateProgress.State)",
-        "renderHeader(ctx: Context)",
-        "apply()",
-        "report(r: PackageVerifier.Result)",
-        "fleetRow(ctx: Context, app: Fleet.App)",
-        "detailBody(ctx: Context, app: Fleet.App, into: LinearLayout)",
-        "linkChip(label: String, url: String)",
-        "current()",
-        "checkAll(ctx: Context, list: List<Fleet.App> = current()",
-        "paint(appId: String, s: Fleet.State)",
-        "human(b: Long)",
-        "install(ctx: Context, app: Fleet.App)",
-        "directInstall(ctx: Context, app: Fleet.App)",
-        "updateAll(ctx: Context, what: String, targets: List<Fleet.App>)",
-        "installMissing(ctx: Context)",
-        "renderPerms(ctx: Context)",
-        "paint()",
-        "renderAndroidPerms(ctx: Context, into: LinearLayout, pkg: String)",
-        "renderCloudPerms(ctx: Context, into: LinearLayout, pkg: String)",
-        "sameSignature(ctx: Context, pkg: String)",
-        "openApp(ctx: Context, pkg: String)",
-        "openDeveloperOptions(ctx: Context)",
-        "dp(ctx: Context, v: Int)",
-        "title(ctx: Context, t: String)",
-        "caption(ctx: Context, t: String)"
+        "class to",
+        "class Shelf"
       ]
     },
     {
@@ -11097,6 +11060,128 @@
         "start(context: Context)",
         "checkNow(context: Context)",
         "class ConstellationWorker"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreCloudFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreCloudFragment"
+      ],
+      "imports": [
+        "android.app.AlertDialog",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.graphics.Typeface",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "android.provider.Settings",
+        "android.text.TextUtils",
+        "android.util.Base64",
+        "android.view.Gravity",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ProgressBar",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.adbdebug.PackageVerifier",
+        "com.diegonmarcos.superapp.adbdebug.ShellAccess",
+        "com.diegonmarcos.superapp.adbdebug.WirelessDebugging",
+        "com.diegonmarcos.superapp.updater.Advisory",
+        "com.diegonmarcos.superapp.updater.AutoUpdatePrefs",
+        "com.diegonmarcos.superapp.updater.BootstrapInstall",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.Updater",
+        "kotlin.concurrent.thread",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "fleetObjects(key: String)",
+        "applicationOf(id: String)",
+        "headingOf(app: Fleet.App)",
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "onDestroyView()",
+        "confirmDowngrade(app: Fleet.App, candidateCode: Long, installedCode: Long)",
+        "tabBar(ctx: Context)",
+        "paintTabs()",
+        "renderTab(ctx: Context)",
+        "renderFleet(ctx: Context, list: List<Fleet.App>, blurb: String)",
+        "filterBar(ctx: Context, list: List<Fleet.App>)",
+        "paintFilter()",
+        "inFilter(app: Fleet.App)",
+        "renderList(ctx: Context, list: List<Fleet.App>)",
+        "updateSummary(list: List<Fleet.App>)",
+        "progressPanel(ctx: Context)",
+        "renderProgress(state: UpdateProgress.State)",
+        "renderHeader(ctx: Context)",
+        "apply()",
+        "report(r: PackageVerifier.Result)",
+        "fleetRow(ctx: Context, app: Fleet.App)",
+        "detailBody(ctx: Context, app: Fleet.App, into: LinearLayout)",
+        "linkChip(label: String, url: String)",
+        "current()",
+        "checkAll(ctx: Context, list: List<Fleet.App> = current()",
+        "paint(appId: String, s: Fleet.State)",
+        "human(b: Long)",
+        "install(ctx: Context, app: Fleet.App)",
+        "directInstall(ctx: Context, app: Fleet.App)",
+        "updateAll(ctx: Context, what: String, targets: List<Fleet.App>)",
+        "installMissing(ctx: Context)",
+        "renderPerms(ctx: Context)",
+        "paint()",
+        "renderAndroidPerms(ctx: Context, into: LinearLayout, pkg: String)",
+        "renderCloudPerms(ctx: Context, into: LinearLayout, pkg: String)",
+        "sameSignature(ctx: Context, pkg: String)",
+        "openApp(ctx: Context, pkg: String)",
+        "openDeveloperOptions(ctx: Context)",
+        "dp(ctx: Context, v: Int)",
+        "caption(ctx: Context, t: String)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StorePhoneFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StorePhoneFragment"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.graphics.Typeface",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "android.provider.Settings",
+        "android.text.TextUtils",
+        "android.view.Gravity",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "rows(ctx: Context)",
+        "render(ctx: Context, into: LinearLayout, rows: List<Row>)",
+        "row(ctx: Context, r: Row)",
+        "dp(ctx: Context, v: Int)",
+        "caption(ctx: Context, t: String)",
+        "btn(ctx: Context, label: String, onClick: ()",
+        "class StorePhoneFragment",
+        "class Row"
       ]
     },
     {
@@ -11621,9 +11706,12 @@
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.WindowInsetsSides",
+        "androidx.compose.foundation.layout.consumeWindowInsets",
         "androidx.compose.foundation.layout.displayCutout",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.only",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.systemBars",
@@ -11650,10 +11738,7 @@
         "androidx.compose.ui.geometry.Offset",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.graphics.painter.Painter",
-        "androidx.compose.ui.graphics.vector.ImageVector",
-        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
-        "androidx.compose.ui.input.nestedscroll.NestedScrollConnection",
-        "androidx.compose.ui.input.nestedscroll.NestedScrollSource"
+        "androidx.compose.ui.graphics.vector.ImageVector"
       ],
       "symbols": [
         "itemTag(id: String)",
@@ -11664,7 +11749,7 @@
         "onPreScroll(available: Offset, source: NestedScrollSource)",
         "rememberBottomNavCollapse()",
         "mailEntries()",
-        "BottomNavBar(nav: NavController, currentRoute: String)",
+        "BottomNavBar(nav: NavController, currentRoute: String, content: @Composable ()",
         "onItemTap( context: android.content.Context, nav: NavController, item: BottomNavItem, currentRoute: String, leaveOnce: (()",
         "launchInstalledApp( context: android.content.Context, packageName: String, missingMessage: String, )",
         "missingResource(id: String)",
@@ -11721,6 +11806,8 @@
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.systemBars",
+        "androidx.compose.foundation.layout.windowInsetsPadding",
         "androidx.compose.foundation.lazy.LazyColumn",
         "androidx.compose.foundation.lazy.LazyListState",
         "androidx.compose.foundation.lazy.rememberLazyListState",
@@ -11746,9 +11833,7 @@
         "androidx.compose.ui.test.assertCountEquals",
         "androidx.compose.ui.test.hasContentDescription",
         "androidx.compose.ui.test.isSelected",
-        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
-        "androidx.compose.ui.test.onAllNodesWithTag",
-        "androidx.compose.ui.test.onFirst"
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule"
       ],
       "symbols": [
         "evaluate()",
@@ -11763,6 +11848,9 @@
         "otherColour(msg: String, unexpected: Color, actual: Color)",
         "inside(msg: String, outer: Rect, inner: Rect)",
         "check(sel: String)",
+        "showMailBar()",
+        "navBarInset(px: Int)",
+        "assertScreenAboveIsland(why: String)",
         "BottomNavIsland(\")",
         "class BottomNavIslandTest"
       ]
@@ -98585,809 +98673,6 @@
       "symbols": []
     },
     {
-      "path": "ac_cloud-ide/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "_ghcr_publish()",
-        "_ghcr_source()",
-        "log()",
-        "errlog()",
-        "in_nix()",
-        "prefer_host()",
-        "_json()",
-        "_abi_fields()",
-        "step_bundle_frontend()",
-        "_resolve_ssh_key()",
-        "_resolve_signing()",
-        "_enforce_signature()",
-        "step_build()",
-        "step_release()",
-        "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()",
-        "_verify_release_asset()",
-        "_publish_release_asset()"
-      ],
-      "imports": [],
-      "symbols": [
-        "_ghcr_publish()",
-        "_ghcr_source()",
-        "log()",
-        "errlog()",
-        "in_nix()",
-        "prefer_host()",
-        "_json()",
-        "_abi_fields()",
-        "step_bundle_frontend()",
-        "_resolve_ssh_key()",
-        "_resolve_signing()",
-        "_enforce_signature()",
-        "step_build()",
-        "step_release()",
-        "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()",
-        "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "description",
-        "inputs",
-        "outputs",
-        "pkgs",
-        "config",
-        "allowUnfree",
-        "androidEnv",
-        "toolsVersion",
-        "platformToolsVersion",
-        "buildToolsVersions",
-        "platformVersions",
-        "includeNDK",
-        "ndkVersions",
-        "cmakeVersions",
-        "includeEmulator",
-        "includeSystemImages",
-        "androidSdk",
-        "name",
-        "buildInputs",
-        "ANDROID_HOME",
-        "ANDROID_SDK_ROOT",
-        "JAVA_HOME",
-        "GRADLE_OPTS",
-        "shellHook"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/assets/frontend/js/boot.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "selectProfile(p, pill)",
-        "buildSections(p)",
-        "runItem(item)",
-        "filterSearch(q)",
-        "showAbout()"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/assets/frontend/js/transport.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "_encode(op)",
-        "_decode(str)",
-        "makeWsImpl()"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/assets/frontend/vendor/xterm-addon-search.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "i(e)",
-        "i(s)",
-        "class n"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/assets/frontend/vendor/xterm.js",
-      "lang": "js",
-      "role": "module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "i(e)",
-        "s(e,t)",
-        "r(e,t,r,n)",
-        "n(e,t,i)",
-        "h(e,t)",
-        "i(t)",
-        "i(e,t,i)",
-        "r(e,t,i,s)",
-        "n(e,t)",
-        "o(e,t)",
-        "a(e,t,i,s,r,n)",
-        "c(e,t)",
-        "v(e,t,i)",
-        "s(e)",
-        "p(e,t)",
-        "e(t,i=5)",
-        "d(e)",
-        "_(e,t)",
-        "t(e,t)",
-        "t(e,t,i)",
-        "a(e,t,i)",
-        "w(e,t)",
-        "D(e)",
-        "r(e,t)",
-        "i(s)",
-        "class extends",
-        "class P",
-        "class i",
-        "class c",
-        "class l",
-        "class d",
-        "class e",
-        "class o",
-        "class a",
-        "class r",
-        "class n",
-        "class S",
-        "class k",
-        "class s",
-        "class h"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/AboutActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AboutActivity"
-      ],
-      "imports": [
-        "android.content.ClipData",
-        "android.content.ClipboardManager",
-        "android.content.Context",
-        "android.content.pm.PackageManager",
-        "android.graphics.Typeface",
-        "android.os.Bundle",
-        "android.util.Base64",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "android.widget.Toast",
-        "androidx.appcompat.app.AppCompatActivity",
-        "com.diegonmarcos.ide.update.UpdateProgress",
-        "com.diegonmarcos.ide.update.Updater",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.text.DateFormat",
-        "java.util.Date"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "onResume()",
-        "onPause()",
-        "renderProgress(s: UpdateProgress.State)",
-        "section(ctx: Context, host: LinearLayout, head: String, body: (LinearLayout)",
-        "row(ctx: Context, host: LinearLayout, key: String, value: String)",
-        "title(ctx: Context, text: String)",
-        "sectionHeader(ctx: Context, text: String)",
-        "small(ctx: Context, text: String)",
-        "actionButton(ctx: Context, label: String, onClick: ()",
-        "copy(ctx: Context, v: String)",
-        "permissionState(perm: String)",
-        "openAppSettings()",
-        "openUnknownAppSourcesSettings()",
-        "fmtMillis(ms: Long)",
-        "dirSize(dir: java.io.File)",
-        "readLoadAvg()",
-        "readCpuBusyIdle()",
-        "readUptime()",
-        "fmtSecs(s: Long)",
-        "sizeStr(bytes: Long)",
-        "dp(v: Int)",
-        "class AboutActivity",
-        "class limit"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/App.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "App"
-      ],
-      "imports": [
-        "android.app.Application",
-        "com.diegonmarcos.ide.update.Updater"
-      ],
-      "symbols": [
-        "onCreate()",
-        "class App"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/AppProcessUptime.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AppProcessUptime"
-      ],
-      "imports": [
-        "android.os.SystemClock"
-      ],
-      "symbols": [
-        "initOnce()",
-        "class AppProcessUptime"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/ConfigsActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ConfigsActivity"
-      ],
-      "imports": [
-        "android.content.ClipData",
-        "android.content.ClipboardManager",
-        "android.content.Context",
-        "android.graphics.Color",
-        "android.os.Bundle",
-        "android.text.InputType",
-        "android.view.Gravity",
-        "android.view.ViewGroup",
-        "android.widget.Button",
-        "android.widget.EditText",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "android.widget.Toast",
-        "androidx.appcompat.app.AlertDialog",
-        "androidx.appcompat.app.AppCompatActivity",
-        "com.diegonmarcos.ide.update.UpdateProgress",
-        "com.diegonmarcos.ide.update.Updater"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "startUpdateCheck()",
-        "onResume()",
-        "showTerminalConnDialog(backend: String)",
-        "dp(v: Int)",
-        "class ConfigsActivity"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/DevApiServer.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "DevApiServer"
-      ],
-      "imports": [
-        "java.net.InetAddress",
-        "java.net.ServerSocket"
-      ],
-      "symbols": [
-        "start()",
-        "stop()",
-        "class DevApiServer"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/DevControlActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "DevControlActivity"
-      ],
-      "imports": [
-        "android.content.ClipData",
-        "android.content.ClipboardManager",
-        "android.content.ContentValues",
-        "android.content.Context",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.os.Build",
-        "android.os.Bundle",
-        "android.provider.MediaStore",
-        "android.view.Gravity",
-        "android.view.ViewGroup",
-        "android.widget.Button",
-        "android.widget.CheckBox",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "android.widget.Toast",
-        "androidx.appcompat.app.AppCompatActivity"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "actionBtn(label: String, onClick: ()",
-        "captureLogcat(scrollView: ScrollView)",
-        "copyLogcat()",
-        "exportLogcat()",
-        "dp(v: Int)",
-        "class DevControlActivity"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/DiagnosticsPush.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "DiagnosticsPush"
-      ],
-      "imports": [
-        "android.content.ContentValues",
-        "android.content.Context",
-        "android.os.Build",
-        "android.os.Environment",
-        "android.provider.MediaStore",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "buildRecord( appId: String, versionName: String, versionCode: String, gitSha: String, device: String, androidRelease: String, sdkInt: Int, tsIso: String, logcat: String, crashes: String, extra: Map<String, String> = emptyMap()",
-        "field(k: String, v: String, last: Boolean = false)",
-        "esc(s: String)",
-        "captureRecord(ctx: Context)",
-        "pushToCloud(body: String)",
-        "downloadBundle(ctx: Context, filename: String, body: String)",
-        "class DiagnosticsPush"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/Endpoints.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "Endpoints"
-      ],
-      "imports": [
-        "android.util.Base64",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "codeServerUrl()",
-        "workspaceRoot()",
-        "giteaBase()",
-        "sftpCount()",
-        "class Endpoints"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/IdePrefs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "IdePrefs"
-      ],
-      "imports": [
-        "android.content.Context"
-      ],
-      "symbols": [
-        "sp(ctx: Context)",
-        "terminalBackend(ctx: Context)",
-        "setTerminalBackend(ctx: Context, v: String)",
-        "terminalHost(ctx: Context, backend: String)",
-        "terminalPort(ctx: Context, backend: String)",
-        "terminalUser(ctx: Context, backend: String)",
-        "setTerminalConn(ctx: Context, backend: String, host: String, port: Int, user: String)",
-        "devApiEnabled(ctx: Context)",
-        "setDevApiEnabled(ctx: Context, v: Boolean)",
-        "clearTerminalConn(ctx: Context, backend: String)",
-        "class IdePrefs"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/MainActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "MainActivity"
-      ],
-      "imports": [
-        "android.os.Bundle",
-        "android.text.InputType",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.view.inputmethod.EditorInfo",
-        "android.webkit.WebChromeClient",
-        "android.webkit.WebSettings",
-        "android.webkit.WebView",
-        "android.webkit.WebViewClient",
-        "android.widget.Button",
-        "android.widget.EditText",
-        "android.widget.LinearLayout",
-        "androidx.appcompat.app.AppCompatActivity",
-        "androidx.webkit.WebViewCompat",
-        "androidx.webkit.WebViewFeature"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "openBrowser(url: String)",
-        "onBackPressed()",
-        "onDestroy()",
-        "dpx(v: Int)",
-        "class MainActivity"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/SshBackend.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SshBackend"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.jcraft.jsch.ChannelExec",
-        "com.jcraft.jsch.ChannelShell",
-        "com.jcraft.jsch.JSch",
-        "com.jcraft.jsch.JSchException",
-        "com.jcraft.jsch.Session",
-        "java.io.File",
-        "java.io.OutputStream",
-        "java.util.concurrent.ConcurrentHashMap"
-      ],
-      "symbols": [
-        "ensureKeyPair()",
-        "publicKeyOpenSsh()",
-        "session(target: TerminalTargets.Target)",
-        "openShell( target: TerminalTargets.Target, id: String, cols: Int, rows: Int, cwd: String, onData: (String)",
-        "write(id: String, data: String)",
-        "resize(id: String, cols: Int, rows: Int)",
-        "kill(id: String)",
-        "listDir(target: TerminalTargets.Target, path: String)",
-        "readFile(target: TerminalTargets.Target, path: String)",
-        "writeFile(target: TerminalTargets.Target, path: String, content: String)",
-        "execReadAll(target: TerminalTargets.Target, cmd: String)",
-        "execWithInput(target: TerminalTargets.Target, cmd: String, input: String)",
-        "testConnection(target: TerminalTargets.Target)",
-        "disconnectAll()",
-        "class SshBackend",
-        "class ShellEntry"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/TerminalBridge.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "TerminalBridge"
-      ],
-      "imports": [
-        "android.app.Activity",
-        "android.webkit.JavascriptInterface",
-        "android.webkit.WebView",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.util.concurrent.Executors"
-      ],
-      "symbols": [
-        "openConfigs()",
-        "openDevControl()",
-        "browserOpen(url: String)",
-        "ptyStart(id: String, cols: Int, rows: Int, cwd: String)",
-        "ptyWrite(id: String, data: String)",
-        "ptyResize(id: String, cols: Int, rows: Int)",
-        "ptyKill(id: String)",
-        "listDir(rid: Int, path: String)",
-        "readFile(rid: Int, path: String)",
-        "writeFile(rid: Int, path: String, content: String)",
-        "q(s: String)",
-        "emitRaw(js: String)",
-        "class TerminalBridge"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/TerminalTargets.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "TerminalTargets"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.util.Base64",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "forBackend(key: String)",
-        "effectiveTarget(ctx: Context, key: String)",
-        "class TerminalTargets",
-        "class Target"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/Ui.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "Ui"
-      ],
-      "imports": [
-        "android.app.Activity",
-        "android.content.res.ColorStateList",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.graphics.drawable.RippleDrawable",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.widget.LinearLayout",
-        "android.widget.TextView"
-      ],
-      "symbols": [
-        "dp(a: Activity, v: Int)",
-        "cardBg(a: Activity, accent: Boolean = false)",
-        "appCard( a: Activity, glyph: String, titleText: String, statusText: String, enabled: Boolean, onLongPress: (()",
-        "rowCard(a: Activity, label: String, onTap: ()",
-        "header(a: Activity, titleText: String, subText: String)",
-        "screen(a: Activity, root: View)",
-        "glyphFor(name: String)",
-        "class Ui"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/AutoUpdatePrefs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AutoUpdatePrefs"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.os.Build"
-      ],
-      "symbols": [
-        "silent(ctx: Context)",
-        "setSilent(ctx: Context, on: Boolean)",
-        "canInstallSilently(ctx: Context)",
-        "class AutoUpdatePrefs"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/GhcrClient.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [],
-      "imports": [
-        "org.json.JSONObject",
-        "java.io.File",
-        "java.io.IOException",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "token()",
-        "manifest(tag: String, token: String)",
-        "blob( digest: String, token: String, target: File, onProgress: ((bytesRead: Long, totalBytes: Long)",
-        "openConn(url: URL, headers: Map<String, String>)",
-        "openGet(url: URL, headers: Map<String, String>)",
-        "class GhcrClient",
-        "class ManifestLayer"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/PackageInstallerReceiver.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "PackageInstallerReceiver"
-      ],
-      "imports": [
-        "android.app.ActivityManager",
-        "android.app.Notification",
-        "android.app.NotificationChannel",
-        "android.app.NotificationManager",
-        "android.app.PendingIntent",
-        "android.content.BroadcastReceiver",
-        "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.PackageInstaller",
-        "android.os.Build",
-        "android.util.Log",
-        "android.widget.Toast"
-      ],
-      "symbols": [
-        "onReceive(context: Context, intent: Intent)",
-        "isForeground(context: Context)",
-        "notifyConfirm(context: Context, confirm: Intent)",
-        "surface(context: Context, short: String, full: String)",
-        "class PackageInstallerReceiver"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/UpdateChecker.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [],
-      "imports": [
-        "android.content.Context",
-        "android.content.pm.PackageManager",
-        "android.util.Log",
-        "java.io.File",
-        "java.security.MessageDigest"
-      ],
-      "symbols": [
-        "check()",
-        "deviceAbiSuffix()",
-        "currentInstalledApkSha256()",
-        "sha256(file: File)",
-        "class UpdateChecker",
-        "class Update"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/UpdateInstaller.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [],
-      "imports": [
-        "android.app.PendingIntent",
-        "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.PackageInstaller",
-        "android.os.Build",
-        "android.util.Log",
-        "java.io.File"
-      ],
-      "symbols": [
-        "install(apk: File)",
-        "reapStaleSessions(installer: PackageInstaller)",
-        "createdAt(info: PackageInstaller.SessionInfo)",
-        "class UpdateInstaller"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/UpdateProgress.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UpdateProgress"
-      ],
-      "imports": [],
-      "symbols": [
-        "setListener(l: ((State)",
-        "update(next: State)",
-        "reset()",
-        "class UpdateProgress",
-        "class State",
-        "class Idle",
-        "class CheckingManifest",
-        "class UpToDate",
-        "class Downloading",
-        "class Installing",
-        "class Done",
-        "class Failed"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/Updater.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "Updater"
-      ],
-      "imports": [
-        "android.content.Context",
-        "androidx.work.Constraints",
-        "androidx.work.ExistingPeriodicWorkPolicy",
-        "androidx.work.ExistingWorkPolicy",
-        "androidx.work.NetworkType",
-        "androidx.work.OneTimeWorkRequestBuilder",
-        "androidx.work.PeriodicWorkRequestBuilder",
-        "androidx.work.WorkManager",
-        "java.util.concurrent.TimeUnit"
-      ],
-      "symbols": [
-        "start(context: Context)",
-        "cancel(context: Context)",
-        "checkNow(context: Context)",
-        "class Updater"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/update/UpdateWorker.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UpdateWorker"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.util.Log",
-        "androidx.work.CoroutineWorker",
-        "androidx.work.WorkerParameters",
-        "kotlinx.coroutines.Dispatchers",
-        "kotlinx.coroutines.withContext"
-      ],
-      "symbols": [
-        "doWork()",
-        "class UpdateWorker"
-      ]
-    },
-    {
-      "path": "ac_cloud-ide/hub/src/main/java/com/diegonmarcos/ide/UpdateOverlay.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UpdateOverlay"
-      ],
-      "imports": [
-        "android.app.Dialog",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.ColorDrawable",
-        "android.os.Bundle",
-        "android.os.Handler",
-        "android.os.Looper",
-        "android.view.Gravity",
-        "android.view.ViewGroup",
-        "android.view.Window",
-        "android.widget.Button",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.TextView",
-        "androidx.fragment.app.DialogFragment",
-        "com.diegonmarcos.ide.update.UpdateProgress"
-      ],
-      "symbols": [
-        "onCreateDialog(savedInstanceState: Bundle?)",
-        "onStart()",
-        "onStop()",
-        "applyState(state: UpdateProgress.State)",
-        "autoClose()",
-        "toMib()",
-        "dp(v: Int)",
-        "newInstance()",
-        "class UpdateOverlay"
-      ]
-    },
-    {
       "path": "ac_cloud-keyboard/app/src/main/java/com/diegonmarcos/cloudkeyboard/AidlTranslateEngineClient.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -102630,6 +101915,9 @@
         "androidx.compose.animation.core.animateIntAsState",
         "androidx.compose.animation.core.snap",
         "androidx.compose.animation.core.tween",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
@@ -102640,8 +101928,10 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.width",
         "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.automirrored.filled.Send",
@@ -102656,17 +101946,12 @@
         "androidx.compose.material3.AssistChip",
         "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.graphics.vector.ImageVector",
-        "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.res.stringResource"
+        "androidx.compose.ui.Modifier"
       ],
       "symbols": [
         "HomeScreen( onBack: ()",
@@ -110265,6 +109550,64 @@
         "only(lines: List<String>, needle: String)",
         "codeLines(file: File)",
         "class HomeDestinationWiringTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/home/ShortcutsRowCircleTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShortcutsRowCircleTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.Create",
+        "androidx.compose.material.icons.filled.Search",
+        "androidx.compose.material.icons.filled.Settings",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.PixelMap",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.graphics.toPixelMap",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.hasClickAction",
+        "androidx.compose.ui.test.hasContentDescription",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.performClick",
+        "kotlin.math.abs",
+        "kotlin.math.roundToInt",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show()",
+        "circles()",
+        "pixels(b: Rect)",
+        "distance(a: Color, b: Color)",
+        "class ShortcutsRowCircleTest"
       ]
     },
     {
@@ -269921,6 +269264,809 @@
       "symbols": [
         "build_abi()",
         "add_abi()"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "prefer_host()",
+        "_json()",
+        "_abi_fields()",
+        "step_bundle_frontend()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "prefer_host()",
+        "_json()",
+        "_abi_fields()",
+        "step_bundle_frontend()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "androidEnv",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "ndkVersions",
+        "cmakeVersions",
+        "includeEmulator",
+        "includeSystemImages",
+        "androidSdk",
+        "name",
+        "buildInputs",
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "GRADLE_OPTS",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/assets/frontend/js/boot.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "selectProfile(p, pill)",
+        "buildSections(p)",
+        "runItem(item)",
+        "filterSearch(q)",
+        "showAbout()"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/assets/frontend/js/transport.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "_encode(op)",
+        "_decode(str)",
+        "makeWsImpl()"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/assets/frontend/vendor/xterm-addon-search.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "i(e)",
+        "i(s)",
+        "class n"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/assets/frontend/vendor/xterm.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "i(e)",
+        "s(e,t)",
+        "r(e,t,r,n)",
+        "n(e,t,i)",
+        "h(e,t)",
+        "i(t)",
+        "i(e,t,i)",
+        "r(e,t,i,s)",
+        "n(e,t)",
+        "o(e,t)",
+        "a(e,t,i,s,r,n)",
+        "c(e,t)",
+        "v(e,t,i)",
+        "s(e)",
+        "p(e,t)",
+        "e(t,i=5)",
+        "d(e)",
+        "_(e,t)",
+        "t(e,t)",
+        "t(e,t,i)",
+        "a(e,t,i)",
+        "w(e,t)",
+        "D(e)",
+        "r(e,t)",
+        "i(s)",
+        "class extends",
+        "class P",
+        "class i",
+        "class c",
+        "class l",
+        "class d",
+        "class e",
+        "class o",
+        "class a",
+        "class r",
+        "class n",
+        "class S",
+        "class k",
+        "class s",
+        "class h"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/AboutActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AboutActivity"
+      ],
+      "imports": [
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.graphics.Typeface",
+        "android.os.Bundle",
+        "android.util.Base64",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ProgressBar",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.appcompat.app.AppCompatActivity",
+        "com.diegonmarcos.ide.update.UpdateProgress",
+        "com.diegonmarcos.ide.update.Updater",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.text.DateFormat",
+        "java.util.Date"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onResume()",
+        "onPause()",
+        "renderProgress(s: UpdateProgress.State)",
+        "section(ctx: Context, host: LinearLayout, head: String, body: (LinearLayout)",
+        "row(ctx: Context, host: LinearLayout, key: String, value: String)",
+        "title(ctx: Context, text: String)",
+        "sectionHeader(ctx: Context, text: String)",
+        "small(ctx: Context, text: String)",
+        "actionButton(ctx: Context, label: String, onClick: ()",
+        "copy(ctx: Context, v: String)",
+        "permissionState(perm: String)",
+        "openAppSettings()",
+        "openUnknownAppSourcesSettings()",
+        "fmtMillis(ms: Long)",
+        "dirSize(dir: java.io.File)",
+        "readLoadAvg()",
+        "readCpuBusyIdle()",
+        "readUptime()",
+        "fmtSecs(s: Long)",
+        "sizeStr(bytes: Long)",
+        "dp(v: Int)",
+        "class AboutActivity",
+        "class limit"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/App.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.ide.update.Updater"
+      ],
+      "symbols": [
+        "onCreate()",
+        "class App"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/AppProcessUptime.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppProcessUptime"
+      ],
+      "imports": [
+        "android.os.SystemClock"
+      ],
+      "symbols": [
+        "initOnce()",
+        "class AppProcessUptime"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/ConfigsActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsActivity"
+      ],
+      "imports": [
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.graphics.Color",
+        "android.os.Bundle",
+        "android.text.InputType",
+        "android.view.Gravity",
+        "android.view.ViewGroup",
+        "android.widget.Button",
+        "android.widget.EditText",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.appcompat.app.AlertDialog",
+        "androidx.appcompat.app.AppCompatActivity",
+        "com.diegonmarcos.ide.update.UpdateProgress",
+        "com.diegonmarcos.ide.update.Updater"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "startUpdateCheck()",
+        "onResume()",
+        "showTerminalConnDialog(backend: String)",
+        "dp(v: Int)",
+        "class ConfigsActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/DevApiServer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DevApiServer"
+      ],
+      "imports": [
+        "java.net.InetAddress",
+        "java.net.ServerSocket"
+      ],
+      "symbols": [
+        "start()",
+        "stop()",
+        "class DevApiServer"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/DevControlActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DevControlActivity"
+      ],
+      "imports": [
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.ContentValues",
+        "android.content.Context",
+        "android.graphics.Color",
+        "android.graphics.Typeface",
+        "android.os.Build",
+        "android.os.Bundle",
+        "android.provider.MediaStore",
+        "android.view.Gravity",
+        "android.view.ViewGroup",
+        "android.widget.Button",
+        "android.widget.CheckBox",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.appcompat.app.AppCompatActivity"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "actionBtn(label: String, onClick: ()",
+        "captureLogcat(scrollView: ScrollView)",
+        "copyLogcat()",
+        "exportLogcat()",
+        "dp(v: Int)",
+        "class DevControlActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/DiagnosticsPush.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DiagnosticsPush"
+      ],
+      "imports": [
+        "android.content.ContentValues",
+        "android.content.Context",
+        "android.os.Build",
+        "android.os.Environment",
+        "android.provider.MediaStore",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "buildRecord( appId: String, versionName: String, versionCode: String, gitSha: String, device: String, androidRelease: String, sdkInt: Int, tsIso: String, logcat: String, crashes: String, extra: Map<String, String> = emptyMap()",
+        "field(k: String, v: String, last: Boolean = false)",
+        "esc(s: String)",
+        "captureRecord(ctx: Context)",
+        "pushToCloud(body: String)",
+        "downloadBundle(ctx: Context, filename: String, body: String)",
+        "class DiagnosticsPush"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/Endpoints.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Endpoints"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "codeServerUrl()",
+        "workspaceRoot()",
+        "giteaBase()",
+        "sftpCount()",
+        "class Endpoints"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/IdePrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IdePrefs"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "sp(ctx: Context)",
+        "terminalBackend(ctx: Context)",
+        "setTerminalBackend(ctx: Context, v: String)",
+        "terminalHost(ctx: Context, backend: String)",
+        "terminalPort(ctx: Context, backend: String)",
+        "terminalUser(ctx: Context, backend: String)",
+        "setTerminalConn(ctx: Context, backend: String, host: String, port: Int, user: String)",
+        "devApiEnabled(ctx: Context)",
+        "setDevApiEnabled(ctx: Context, v: Boolean)",
+        "clearTerminalConn(ctx: Context, backend: String)",
+        "class IdePrefs"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "android.text.InputType",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.view.inputmethod.EditorInfo",
+        "android.webkit.WebChromeClient",
+        "android.webkit.WebSettings",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "android.widget.Button",
+        "android.widget.EditText",
+        "android.widget.LinearLayout",
+        "androidx.appcompat.app.AppCompatActivity",
+        "androidx.webkit.WebViewCompat",
+        "androidx.webkit.WebViewFeature"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "openBrowser(url: String)",
+        "onBackPressed()",
+        "onDestroy()",
+        "dpx(v: Int)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/SshBackend.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SshBackend"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.jcraft.jsch.ChannelExec",
+        "com.jcraft.jsch.ChannelShell",
+        "com.jcraft.jsch.JSch",
+        "com.jcraft.jsch.JSchException",
+        "com.jcraft.jsch.Session",
+        "java.io.File",
+        "java.io.OutputStream",
+        "java.util.concurrent.ConcurrentHashMap"
+      ],
+      "symbols": [
+        "ensureKeyPair()",
+        "publicKeyOpenSsh()",
+        "session(target: TerminalTargets.Target)",
+        "openShell( target: TerminalTargets.Target, id: String, cols: Int, rows: Int, cwd: String, onData: (String)",
+        "write(id: String, data: String)",
+        "resize(id: String, cols: Int, rows: Int)",
+        "kill(id: String)",
+        "listDir(target: TerminalTargets.Target, path: String)",
+        "readFile(target: TerminalTargets.Target, path: String)",
+        "writeFile(target: TerminalTargets.Target, path: String, content: String)",
+        "execReadAll(target: TerminalTargets.Target, cmd: String)",
+        "execWithInput(target: TerminalTargets.Target, cmd: String, input: String)",
+        "testConnection(target: TerminalTargets.Target)",
+        "disconnectAll()",
+        "class SshBackend",
+        "class ShellEntry"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/TerminalBridge.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TerminalBridge"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.webkit.JavascriptInterface",
+        "android.webkit.WebView",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "openConfigs()",
+        "openDevControl()",
+        "browserOpen(url: String)",
+        "ptyStart(id: String, cols: Int, rows: Int, cwd: String)",
+        "ptyWrite(id: String, data: String)",
+        "ptyResize(id: String, cols: Int, rows: Int)",
+        "ptyKill(id: String)",
+        "listDir(rid: Int, path: String)",
+        "readFile(rid: Int, path: String)",
+        "writeFile(rid: Int, path: String, content: String)",
+        "q(s: String)",
+        "emitRaw(js: String)",
+        "class TerminalBridge"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/TerminalTargets.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TerminalTargets"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "forBackend(key: String)",
+        "effectiveTarget(ctx: Context, key: String)",
+        "class TerminalTargets",
+        "class Target"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/Ui.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Ui"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.res.ColorStateList",
+        "android.graphics.Color",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
+        "android.graphics.drawable.RippleDrawable",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.TextView"
+      ],
+      "symbols": [
+        "dp(a: Activity, v: Int)",
+        "cardBg(a: Activity, accent: Boolean = false)",
+        "appCard( a: Activity, glyph: String, titleText: String, statusText: String, enabled: Boolean, onLongPress: (()",
+        "rowCard(a: Activity, label: String, onTap: ()",
+        "header(a: Activity, titleText: String, subText: String)",
+        "screen(a: Activity, root: View)",
+        "glyphFor(name: String)",
+        "class Ui"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/AutoUpdatePrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutoUpdatePrefs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build"
+      ],
+      "symbols": [
+        "silent(ctx: Context)",
+        "setSilent(ctx: Context, on: Boolean)",
+        "canInstallSilently(ctx: Context)",
+        "class AutoUpdatePrefs"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/GhcrClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.io.IOException",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "token()",
+        "manifest(tag: String, token: String)",
+        "blob( digest: String, token: String, target: File, onProgress: ((bytesRead: Long, totalBytes: Long)",
+        "openConn(url: URL, headers: Map<String, String>)",
+        "openGet(url: URL, headers: Map<String, String>)",
+        "class GhcrClient",
+        "class ManifestLayer"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/PackageInstallerReceiver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PackageInstallerReceiver"
+      ],
+      "imports": [
+        "android.app.ActivityManager",
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageInstaller",
+        "android.os.Build",
+        "android.util.Log",
+        "android.widget.Toast"
+      ],
+      "symbols": [
+        "onReceive(context: Context, intent: Intent)",
+        "isForeground(context: Context)",
+        "notifyConfirm(context: Context, confirm: Intent)",
+        "surface(context: Context, short: String, full: String)",
+        "class PackageInstallerReceiver"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/UpdateChecker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.util.Log",
+        "java.io.File",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "check()",
+        "deviceAbiSuffix()",
+        "currentInstalledApkSha256()",
+        "sha256(file: File)",
+        "class UpdateChecker",
+        "class Update"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/UpdateInstaller.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.app.PendingIntent",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageInstaller",
+        "android.os.Build",
+        "android.util.Log",
+        "java.io.File"
+      ],
+      "symbols": [
+        "install(apk: File)",
+        "reapStaleSessions(installer: PackageInstaller)",
+        "createdAt(info: PackageInstaller.SessionInfo)",
+        "class UpdateInstaller"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/UpdateProgress.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UpdateProgress"
+      ],
+      "imports": [],
+      "symbols": [
+        "setListener(l: ((State)",
+        "update(next: State)",
+        "reset()",
+        "class UpdateProgress",
+        "class State",
+        "class Idle",
+        "class CheckingManifest",
+        "class UpToDate",
+        "class Downloading",
+        "class Installing",
+        "class Done",
+        "class Failed"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/Updater.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Updater"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.work.Constraints",
+        "androidx.work.ExistingPeriodicWorkPolicy",
+        "androidx.work.ExistingWorkPolicy",
+        "androidx.work.NetworkType",
+        "androidx.work.OneTimeWorkRequestBuilder",
+        "androidx.work.PeriodicWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "start(context: Context)",
+        "cancel(context: Context)",
+        "checkNow(context: Context)",
+        "class Updater"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/update/UpdateWorker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UpdateWorker"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "androidx.work.CoroutineWorker",
+        "androidx.work.WorkerParameters",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "doWork()",
+        "class UpdateWorker"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/hub/src/main/java/com/diegonmarcos/ide/UpdateOverlay.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UpdateOverlay"
+      ],
+      "imports": [
+        "android.app.Dialog",
+        "android.graphics.Color",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.ColorDrawable",
+        "android.os.Bundle",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.view.Gravity",
+        "android.view.ViewGroup",
+        "android.view.Window",
+        "android.widget.Button",
+        "android.widget.LinearLayout",
+        "android.widget.ProgressBar",
+        "android.widget.TextView",
+        "androidx.fragment.app.DialogFragment",
+        "com.diegonmarcos.ide.update.UpdateProgress"
+      ],
+      "symbols": [
+        "onCreateDialog(savedInstanceState: Bundle?)",
+        "onStart()",
+        "onStop()",
+        "applyState(state: UpdateProgress.State)",
+        "autoClose()",
+        "toMib()",
+        "dp(v: Int)",
+        "newInstance()",
+        "class UpdateOverlay"
       ]
     },
     {
@@ -469104,6 +469250,223 @@
         "JAVA_HOME",
         "GRADLE_OPTS",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/app/resolve_runtime.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "elf_needs(path)",
+        "rootfs_index(zf)",
+        "resolve(zip_path, binary, launcher)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "struct",
+        "sys",
+        "zipfile"
+      ],
+      "symbols": [
+        "elf_needs(path)",
+        "rootfs_index(zf)",
+        "resolve(zip_path, binary, launcher)"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.app.Activity",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.os.Bundle",
+        "android.webkit.WebResourceError",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerRuntime.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebServerRuntime"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.system.Os",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.util.zip.ZipInputStream"
+      ],
+      "symbols": [
+        "install()",
+        "start(log: File)",
+        "class knows",
+        "class WebServerRuntime"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebServerService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.IBinder",
+        "java.io.File"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "class WebServerService"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "GRADLE_OPTS",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-webserver/test/test-webserver-rootfs.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
       ]
     },
     {
