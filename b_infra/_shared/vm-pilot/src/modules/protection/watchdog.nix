@@ -3,7 +3,7 @@
 # with swap+docker budget awareness), kernel watchdog petter.
 #
 # Disk watchdog tiers:
-#   85% WARN  — tmp/journals/docker prune (incl. images >72h)
+#   85% WARN  — tmp/journals (never below the retention floor)/docker prune (incl. images >72h)
 #   90% CRIT  — aggressive prune (swap untouched)
 #   95% EMERG — remove swapfile entirely + truncate logs + nix GC
 #
@@ -31,6 +31,9 @@ let
   lowMemPrune   = prot "low_mem_prune_mb"     50;
   ntfyBase      = consolidated.native.monitoring.ntfy_base or "https://rss.diegonmarcos.com";
   ntfyTopic     = prot "ntfy_topic"           "watchdog-dropbear";
+  # #413: no fallback literal on purpose — a floor nobody declared is not a floor.
+  journalFloorDays = prot "journal_retention_floor_days"
+    (throw "watchdog.nix: native.protection.journal_retention_floor_days is not declared in config.json");
 in {
   # ── Disk swap ─────────────────────────────────────────────────────────
   home.file.".local/share/system-protection/disk-swap.sh" = {
@@ -212,8 +215,13 @@ in {
       find /var/tmp -type f -atime +2 -delete 2>/dev/null || true
       _after=$(df -P / | awk 'NR==2{print $4}')
       record "rm" "find /var/tmp -type f -atime +2" "$(( (_after - _before) * 1024 ))B"
-      _vac=$(journalctl --vacuum-size=100M 2>/dev/null || true)
-      record "journal" "vacuum-size=100M" "$(reclaimed "$_vac")"
+      # #413: --vacuum-time ONLY, at the declared retention floor. --vacuum-size
+      # deletes the oldest archives until the cap is met, whatever their age — on
+      # 2026-09-16 that erased 16 days of oci-apps journal, including the record
+      # of this watchdog's own 12.13GB deletion. Only entries older than the floor
+      # (config.json native.protection.journal_retention_floor_days) may go.
+      _vac=$(journalctl --vacuum-time=${toString journalFloorDays}d 2>/dev/null || true)
+      record "journal" "vacuum-time=${toString journalFloorDays}d" "$(reclaimed "$_vac")"
       if command -v docker >/dev/null 2>&1; then
         # label!=com.docker.compose.project — NEVER prune a declared service.
         # Copied from infra/prune-maintenance.nix, which already learned this: an
@@ -276,13 +284,13 @@ in {
       #                         large reclaimable set, and nothing depends on it.
       #   dangling images       untagged AND unreferenced by any container. The
       #     (until=24h)         only cost of being wrong is a re-pull.
-      #   journals -> 50M       logs, not state; WARN already capped them at 100M.
+      # NOT the journal: WARN already vacuumed down to the retention floor, and
+      # below the floor is exactly what #413 forbids — there is nothing more
+      # CRIT may take from it.
       #   nix gens >3d          rollback history, not live system state.
       # That is a real escalation over WARN (which stops at 72h-dangling and a 1G
       # build cache) without putting a single byte of persistent state at risk.
       echo "[disk-watchdog] CRIT (''${USAGE}%) — aggressive cleanup"
-      _vac=$(journalctl --vacuum-size=50M 2>/dev/null || true)
-      record "journal" "vacuum-size=50M" "$(reclaimed "$_vac")"
       if command -v docker >/dev/null 2>&1; then
         _bld=$(docker builder prune -af 2>/dev/null || true)
         record "docker" "builder-prune -af" "$(reclaimed "$_bld")"
@@ -375,6 +383,7 @@ in {
     Environment=DISK_EMERG=${toString diskEmerg}
     Environment=DOCKER_FAIL_THRESHOLD=${toString dockerFail}
     Environment=LOW_MEM_PRUNE_MB=${toString lowMemPrune}
+    Environment=JOURNAL_FLOOR_DAYS=${toString journalFloorDays}
     Environment=NTFY=${ntfyBase}/${ntfyTopic}
     OOMScoreAdjust=-999
     MemoryMax=32M

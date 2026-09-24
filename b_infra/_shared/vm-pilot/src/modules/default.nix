@@ -72,7 +72,7 @@ in {
     # ── Infra
     ./infra/shell-path.nix
     ./infra/system-cleanup.nix
-    ./infra/prune-maintenance.nix
+    (import ./infra/prune-maintenance.nix { inherit vmName; })
 
     # ── Packages
     ./packages/node-npm-deps.nix
