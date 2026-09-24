@@ -246,6 +246,8 @@
       "disk_emerg_pct": 90,
       "docker_fail_threshold": 120,
       "low_mem_prune_mb": 50,
+      "_doc_journal_retention_floor_days": "#413: the journal is the fleet's forensic record, and on 2026-09-16 the oci-apps disk-watchdog's --vacuum-size erased 16 days of it (including its own 12.13GB deletion). No automatic path — disk-watchdog, watchdog-petter, prune-maintenance — may delete journal entries younger than this: every vacuum is --vacuum-time=<this>d, never --vacuum-size/--vacuum-files, which delete by volume regardless of age. Asserted by protection/test-watchdog-scoped-prune.sh + test-protection-data-driven.sh.",
+      "journal_retention_floor_days": 14,
       "tier1_services": [],
       "tier1_mem_min_mb": 48,
       "tier1_max_restarts": 3,
