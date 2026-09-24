@@ -31,6 +31,9 @@ cat > "$T/bin/curl" <<'EOF'
 printf 'called\n' >> "$STUB_CALLS"
 for a in "$@"; do case "$a" in @*) cp "${a#@}" "$STUB_SEEN_HEADER";; esac; done
 printf 'HTTP/2 %s\r\n' "${STUB_CODE:-200}"
+# Case I: a token containing OVER gets STUB_OVER_SCOPES, so one holder can be
+# over-scoped while the others are not.
+for a in "$@"; do case "$a" in @*) grep -q OVER "${a#@}" && [ -n "${STUB_OVER_SCOPES:-}" ] && STUB_SCOPES="$STUB_OVER_SCOPES";; esac; done
 [ -n "${STUB_SCOPES+x}" ] && printf 'x-oauth-scopes: %s\r\n' "$STUB_SCOPES"
 printf 'content-type: application/json\r\n\r\n'
 EOF
@@ -39,7 +42,12 @@ cat > "$T/bin/gh" <<'EOF'
 [ "$1 $2" = "auth token" ] && [ -n "${STUB_GH_TOKEN:-}" ] && { printf '%s\n' "$STUB_GH_TOKEN"; exit 0; }
 exit 1
 EOF
-chmod +x "$T/bin/curl" "$T/bin/gh"
+# sops -d --extract '["VAR"]' FILE -> contents of FILE.tok; no .tok = decrypt fails.
+cat > "$T/bin/sops" <<'EOF'
+#!/usr/bin/env bash
+f="${@: -1}"; [ -f "$f.tok" ] && { cat "$f.tok"; exit 0; }; exit 1
+EOF
+chmod +x "$T/bin/curl" "$T/bin/gh" "$T/bin/sops"
 
 var="$(jq -r .env_var "$POLICY")"
 FAKE="fake-token-for-test-439"
@@ -112,6 +120,39 @@ else
     n="$(jq -r "$(jq -r .repository_access.jq "$POLICY") | length" "$C/${src#cloud-u-containers/}" 2>/dev/null)"
     ck "H repository_access resolves to >=1 repo from runtime.repos" "$([ "${n:-0}" -ge 1 ] && echo yes)" "yes"
 fi
+
+echo "── I: the guard probes the token each holder DECLARES in sops (#359)"
+GUARD="$ROOT/9_others/src/agent-credential-declared-guard.sh"
+holders="$(jq -r '.holders[]' "$POLICY")"
+nh="$(printf '%s\n' $holders | grep -c .)"
+first="$(printf '%s\n' $holders | head -1)"
+# The scope the brief names, taken from the measured token, never typed as data.
+enterprise="$(jq -r '(.measured_2026_09_24.x_oauth_scopes - .allowed_classic_scopes)[] | select(. == "admin:enterprise")' "$POLICY")"
+ck "I admin:enterprise is measured AND outside allowed_classic_scopes" "$enterprise" "admin:enterprise"
+mkc() { # mkc <holder> <token|-> : fake container sops file (+ decryptable value)
+    mkdir -p "$T/c/$1/src"; printf '%s: ENC[AES256_GCM,data:x,type:str]\n' "$var" > "$T/c/$1/src/secrets.yaml"
+    rm -f "$T/c/$1/src/secrets.yaml.tok"; [ "$2" = "-" ] || printf '%s' "$2" > "$T/c/$1/src/secrets.yaml.tok"; }
+rung() { local c="$1"; shift; : > "$T/calls.$c"
+    out="$(env -i PATH="$T/bin:$PATH" STUB_CALLS="$T/calls.$c" STUB_SEEN_HEADER="$T/hdr.$c" \
+        AGENT_CONTAINERS_ROOT="$T/c" "$@" bash "$GUARD" 2>&1)"; rc=$?; }
+
+for h in $holders; do mkc "$h" "fake-ok-$h-359"; done
+rung I1 STUB_SCOPES="$allowed"
+ck "I1 every holder within policy -> exit 0" "$rc" "0"
+ck "I1 every holder was probed (from policy.holders)" "$(calls I1)" "$nh"
+
+mkc "$first" "fake-OVER-$first-359"
+rung I2 STUB_SCOPES="$allowed" STUB_OVER_SCOPES="$allowed, $enterprise"
+ck "I2 one holder declares admin:enterprise -> exit 1" "$rc" "1"
+ck "I2 the error names that holder" "$(printf '%s' "$out" | grep -c "::error::$first declares an over-scoped")" "1"
+ck "I2 only that holder is flagged" "$(printf '%s' "$out" | grep -c 'declares an over-scoped')" "1"
+ck "I2 admin:enterprise is listed as excess" "$(printf '%s\n' "$out" | grep -cx "  excess: $enterprise")" "1"
+ck "I2 no token printed" "$(printf '%s' "$out" | grep -c 'fake-\(ok\|OVER\)-')" "0"
+
+mkc "$first" "-"
+rung I3 STUB_SCOPES="$allowed"
+ck "I3 a holder whose sops value cannot be decrypted -> exit 1, never a pass" "$rc" "1"
+ck "I3 it says so" "$(printf '%s' "$out" | grep -c "::error::$first: could not decrypt")" "1"
 
 echo "── agent-credential-scope: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
