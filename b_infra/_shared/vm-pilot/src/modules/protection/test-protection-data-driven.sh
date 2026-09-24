@@ -49,7 +49,13 @@ let
   config = {};
   ls = import ./protection/load-shedder.nix { inherit config pkgs lib; ramMB = 1024; vmName = "oci-mail"; };
   t1raw = import ./protection/tier1-apps.nix { inherit config pkgs lib; vmName = "gcp-proxy"; };
-  t1emptyRaw = import ./protection/tier1-apps.nix { inherit config pkgs lib; vmName = "oci-apps"; };
+  # A VM whose EFFECTIVE tier-1 list is empty, found in the data rather than
+  # named here: this used to be a hardcoded "oci-apps", which gained a tier-1
+  # list on 2026-09-06 — unnoticed, because nothing ran this tester until #413.
+  effT1 = v: ((cons._home_manager.vms.${v} or {}).protection or {}).tier1_services
+               or (cons.native.protection.tier1_services or []);
+  emptyVm = lib.findFirst (v: effT1 v == []) null (builtins.attrNames cons._home_manager.vms);
+  t1emptyRaw = import ./protection/tier1-apps.nix { inherit config pkgs lib; vmName = emptyVm; };
   ha = import ./agents/health-agent.nix { inherit config pkgs lib; vmName = "oci-apps"; };
   wd = import ./protection/watchdog.nix { inherit config pkgs lib; ramMB = 1024; vmName = "oci-mail"; };
   t1 = t1raw.content;
@@ -69,14 +75,19 @@ let
   # *declared* has to look at the file a human edits.
   ociApps = builtins.fromJSON (builtins.readFile ../../../../nixhm-sudo-oci-apps/build.json);
   has = lib.hasInfix;
+  codeLines = t: builtins.filter (l: builtins.isString l && builtins.match "[[:space:]]*#.*" l == null)
+                   (builtins.split "\n" t);
 in {
   # ── §3C graduated shed + P4 per-VM override (oci-mail warn=30) ──────────
-  ls_tier1_maddy   = has ''TIER1_SERVICES="maddy stalwart mail-puller"'' lsText;
+  # Expected list read from the consolidated data (#363: never a literal copy —
+  # the literal went stale when stalwart-sorter joined oci-mail's tier-1).
+  ls_tier1_oci_mail = effT1 "oci-mail" != []
+    && has ''TIER1_SERVICES="${lib.concatStringsSep " " (effT1 "oci-mail")}"'' lsText;
   ls_warn_override = has "MEM_PSI_WARN=30" lsText;   # per-VM override wins over default 35
   ls_page_default  = has "MEM_PSI_PAGE=65" lsText;
   # ── §3B tier1 slice reserved memory (gcp-proxy: 5 svc × 48MB = 240M) ────
   t1_gcp_on        = t1raw.condition;               # gcp-proxy has tier1 → module active
-  t1_apps_off      = ! t1emptyRaw.condition;        # oci-apps no tier1 → mkIf false
+  t1_empty_off     = emptyVm != null && ! t1emptyRaw.condition;  # empty tier1 → mkIf false
   t1_slice_reserve = has "MemoryMin=240M" (t1.home.file.".local/share/system-protection/tier1.slice".text);
   t1_caddy_list    = has ''TIER1="caddy introspect-proxy authelia hickory-dns wireguard-mesh-ws-tunnel"''
                        (t1.home.file.".local/share/system-protection/tier1-watchdog.sh".text);
@@ -90,10 +101,11 @@ in {
   wd_lowmem_prune  = has "LOW_MEM_PRUNE_MB=50" wdText;
   # ── #413 journal retention floor, in the RENDERED scripts ───────────────
   wd_journal_floor    = has "journalctl --vacuum-time=${floor}d" wdDisk;
-  wd_no_vacuum_size   = ! (has "--vacuum-size" wdDisk || has "--vacuum-files" wdDisk);
+  # Code lines only: the rendered script's comments explain WHY --vacuum-size is banned.
+  wd_no_vacuum_size   = ! lib.any (l: has "--vacuum-size" l || has "--vacuum-files" l) (codeLines wdDisk);
   wd_petter_floor_env = has "JOURNAL_FLOOR_DAYS=${floor}" wdText;
   pm_journal_floor    = has "journalctl --vacuum-time=${floor}d" pmText;
-  pm_no_vacuum_size   = ! (has "--vacuum-size" pmText || has "--vacuum-files" pmText);
+  pm_no_vacuum_size   = ! lib.any (l: has "--vacuum-size" l || has "--vacuum-files" l) (codeLines pmText);
   # ── un-shed: the crit shed must have an inverse, and it must be paced ────
   # The shed list is what makes the shed reversible; without it the recovery
   # edge can only restart docker, which is how ~40 containers stayed stopped on
