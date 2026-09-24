@@ -5882,7 +5882,9 @@
         "git_tree": true,
         "git_tree_writable": true,
         "_comment_working_directory": "Hermes' main process is an s6-supervised idle holder; the real work arrives as `docker exec`, which starts at the image WorkingDir (/opt/hermes) — outside the checkout. The agent then sees zero repositories and answers as if the code did not exist. Starting it in the tree is the point of mounting the tree.",
-        "git_tree_is_working_directory": true
+        "git_tree_is_working_directory": true,
+        "_memory_briefing_env_doc": "#556. The memory system itself is declared once in _shared/agent-memory.nix and published by engine.nix as AGENT_MEMORY_DIR/_INDEX/_ENTRIES/_TYPES/_BRIEFING. hermes reads no AGENT_* var: its system-prompt extension is HERMES_EPHEMERAL_SYSTEM_PROMPT, which gateway/run_config_loaders.py resolves BEFORE display.personality / agent.system_prompt (neither is set in src/configs/config.yaml) and agent/turn_context.py APPENDS to the base prompt at API-call time, so the tool instructions hermes needs are not replaced. What is declared here is the env var NAME, never the briefing text — a second copy of the text is how claude, goose and hermes came to be told three different things. NOTE: HERMES_WRITE_SAFE_ROOT=/opt/data is an image default, so hermes must write entries with the terminal toolset; its file toolset is sandboxed away from the shared tree.",
+        "memory_briefing_env": "HERMES_EPHEMERAL_SYSTEM_PROMPT"
       },
       "upstream_image": "ghcr.io/diegonmarcos/hermes-agent:latest",
       "tests": {
@@ -6600,18 +6602,7 @@
             "repo": "front-unity"
           }
         ],
-        "_memory_comment": "The agentic memory system, declared once. It already EXISTED in the shared tree (cloud-data-my-ai-memory/b_projects/home-diego: a 72-line MEMORY.md index over 169 entries) and no agent was ever pointed at it — a-context-inject-memory.sh is NAMED for memory but injected only the principles checklist, so every oci-apps agent ran with zero recall while a full store sat mounted at its own $HOME/git. dir is resolved inside the container against the shared tree mount. MEMORY.md is the INDEX and the only file injected at session start; entries under memory-entries/<type>/ are read on demand, never preloaded — a subdirectory that auto-loads turned a 4.5k-token preload into 87k once already.",
-        "memory": {
-          "dir": "git/cloud-data-my-ai-memory/b_projects/home-diego",
-          "index": "MEMORY.md",
-          "entries": "memory-entries",
-          "types": [
-            "feedback",
-            "project",
-            "reference",
-            "user"
-          ]
-        }
+        "_memory_comment": "MOVED (#556). runtime.memory used to be declared here and reached ONLY this container: measured 2026-09-24, cloud-agi-claude had AGENT_MEMORY_DIR while my-ai-api (goose) and hermes-agent had none, so two of the three oci-apps agents still ran with zero recall behind a ticket that read as done. The memory system is now declared once in _shared/engine.nix next to gitTreeMountPath and published to EVERY container with agent.git_tree as AGENT_MEMORY_DIR / _INDEX / _ENTRIES / _TYPES / _BRIEFING. Setting runtime.memory here again is a build error."
       },
       "tests": {
         "resume-by-name": {
@@ -6637,6 +6628,9 @@
         "agent-memory-system": {
           "cmd": "node test-agent-memory-system.mjs",
           "cwd": "src/code"
+        },
+        "agent-memory-one-declaration": {
+          "cmd": "node ../_shared/test-agent-memory-one-declaration.mjs"
         },
         "git-tree-one-mount-pattern": {
           "cmd": "node test-git-tree-one-mount-pattern.mjs",

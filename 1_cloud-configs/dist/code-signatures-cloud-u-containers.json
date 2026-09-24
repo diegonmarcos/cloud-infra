@@ -6,20 +6,20 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2828,
+    "files": 2830,
     "by_lang": {
-      "nix": 150,
+      "nix": 151,
       "ts": 1117,
       "sh": 126,
-      "js": 51,
+      "js": 52,
       "py": 850,
       "rust": 534
     },
     "by_role": {
-      "nix-module": 10,
+      "nix-module": 11,
       "module": 678,
       "shell": 118,
-      "file": 297,
+      "file": 298,
       "python": 845,
       "flake": 71,
       "compose": 69,
@@ -32,6 +32,37 @@
     }
   },
   "files": [
+    {
+      "path": "_shared/agent-memory.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "gitTreeMount",
+        "from",
+        "buildJson",
+        "not",
+        "title",
+        "for"
+      ],
+      "imports": [],
+      "symbols": [
+        "repoPath",
+        "dir",
+        "index",
+        "entries",
+        "types",
+        "typesStr",
+        "briefing",
+        "guard",
+        "env",
+        "AGENT_MEMORY_DIR",
+        "AGENT_MEMORY_INDEX",
+        "AGENT_MEMORY_ENTRIES",
+        "AGENT_MEMORY_TYPES",
+        "AGENT_MEMORY_BRIEFING",
+        "aliasEnv"
+      ]
+    },
     {
       "path": "_shared/docker.nix",
       "lang": "nix",
@@ -91,7 +122,9 @@
       "exports": [],
       "imports": [
         "./memory-ceiling.nix",
-        "memory-ceiling.nix"
+        "./agent-memory.nix",
+        "memory-ceiling.nix",
+        "agent-memory.nix"
       ],
       "symbols": [
         "svcDirName",
@@ -130,10 +163,10 @@
         "gitTreeMountPath",
         "_gitTreeMountGuard",
         "gitTreeMount",
+        "agentMemory",
         "gitTreeWritable",
         "gitTreeSuffix",
-        "gitTreeGitEnv",
-        "AGENT_GIT_TREE"
+        "gitTreeGitEnv"
       ]
     },
     {
@@ -338,6 +371,19 @@
         "appDb",
         "buildApp"
       ]
+    },
+    {
+      "path": "_shared/test-agent-memory-one-declaration.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ],
+      "symbols": []
     },
     {
       "path": "_shared/test-agent-toolbelt.mjs",
@@ -35945,10 +35991,6 @@
         "BRIDGE_SESSIONS_KEEP",
         "BRIDGE_RESUME_SESSION_NAME",
         "BRIDGE_RESUME_CWD",
-        "AGENT_MEMORY_DIR",
-        "AGENT_MEMORY_INDEX",
-        "AGENT_MEMORY_ENTRIES",
-        "AGENT_MEMORY_TYPES",
         "BRIDGE_BOOTSTRAP_REPOS",
         "BRIDGE_RESUME_EXCLUDE_MODELS",
         "HEADROOM_ENABLED",
@@ -35957,7 +35999,11 @@
         "HEADROOM_PORT",
         "HEADROOM_SAVINGS_PROFILE",
         "HEADROOM_MIN_TOKENS",
-        "HEADROOM_PROXY_ENABLED"
+        "HEADROOM_PROXY_ENABLED",
+        "HEADROOM_PROXY_PORT",
+        "HEADROOM_PROXY_BIND",
+        "HEADROOM_PROXY_BACKEND",
+        "HEADROOM_WORKSPACE_DIR"
       ]
     },
     {
