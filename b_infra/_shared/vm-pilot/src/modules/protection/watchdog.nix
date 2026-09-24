@@ -324,8 +324,11 @@ in {
 
       # The action log is exempt from this sweep — it is the evidence record.
       # Everything else >10M is truncated to 1M and each truncation is logged.
+      # `'''` is the Nix escape for a literal two-single-quote pair: a bare pair
+      # ENDS this indented string, which is how this module stopped evaluating
+      # on 2026-09-17 (#413 — caught the first time the nix tester really ran).
       find /var/log -name "*.log" ! -name "disk-watchdog.log" -size +10M -print0 2>/dev/null \
-        | while IFS= read -r -d '' _f; do
+        | while IFS= read -r -d ''' _f; do
             _sz=$(stat -c%s "$_f" 2>/dev/null || echo 0)
             truncate -s 1M "$_f" 2>/dev/null || true
             record "truncate" "$_f -> 1M" "$(( _sz > 1048576 ? _sz - 1048576 : 0 ))B"
