@@ -84,16 +84,59 @@ on:
 # overlap, because they write the same per-phase manifest and the same per-repo
 # GHCR tags. cancel-in-progress is false so a running semantic→graphrag chain is
 # NEVER cancelled mid-flight — the sequential chain always completes.
+#
+# #418: `queue: max`. Without it a group holds ONE running and ONE pending run,
+# and every newer entrant CANCELS the pending one before it has started a single
+# job. Measured 2026-09-24 over the last 40 runs: 20 ended `cancelled`, 6 of the 8
+# workflow_dispatch reindexes among them — each with zero jobs, i.e. it never
+# executed. 35908826779 (schedule) was cancelled at 08:53:55Z, one second after
+# schedule 35977946827 was created. A forced reindex (#352/#375) cannot survive
+# that: the next cron evicts it. max = FIFO, up to 100 waiting, nothing evicted.
 concurrency:
   group: cgc-db
   cancel-in-progress: false
+  queue: max
 
 jobs:
+  # #418: the price of `queue: max`. One run keeps its jobs busy ~14h (35840158564:
+  # 19:03Z -> 09:27Z next day) and cron fires every 12h, so an unbounded FIFO of
+  # scheduled runs would grow forever and a dispatch would wait behind all of them.
+  # A scheduled run that reaches the front while a NEWER scheduled run is already
+  # queued is redundant — same inputs (all repos, both phases, change-gated), and
+  # the newer one clones newer HEADs. So it cancels ITSELF, naming its successor:
+  # conclusion `cancelled`, never a green run that did nothing. Dispatches are never
+  # coalesced — their inputs (repos, force, phase) are what the requester asked for.
+  coalesce:
+    name: "coalesce · newer scheduled run queued?"
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Cancel this scheduled run if a newer scheduled run waits behind it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ME: ${{ github.run_id }}
+          # The tester (9_others/test/cgc-db-queue-no-eviction.test.sh) extracts and
+          # EXECUTES this filter. Run ids are monotonic, so "newer" is `.id > ME`.
+          SUPERSEDED_BY: '[.workflow_runs[] | select(.event == "schedule" and .status != "completed" and .id > (env.ME | tonumber)) | .id] | max // empty'
+        run: |
+          NEWER=$(gh api "repos/${{ github.repository }}/actions/workflows/cgc-db.yml/runs?event=schedule&per_page=50" --jq "$SUPERSEDED_BY")
+          [ -z "$NEWER" ] && { echo "no newer scheduled run queued — this run proceeds"; exit 0; }
+          echo "::notice::superseded by queued scheduled run $NEWER (same inputs, newer HEADs) — cancelling $ME so the queue stays bounded"
+          gh run cancel "$ME" -R "${{ github.repository }}"
+          sleep 300
+          echo "::error::cancel of run $ME did not take effect within 300s"
+          exit 1
+
   # Phase 1 — structural semantic index. Runs unless the manual dispatch asked for
   # graphrag only. On schedule (event_name != workflow_dispatch) it always runs.
   semantic:
     name: "phase · semantic"
-    if: ${{ github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'semantic' }}
+    # needs coalesce, which is SKIPPED on dispatch — hence !cancelled() (a status
+    # function), without which a skipped need would skip this job too.
+    needs: coalesce
+    if: ${{ !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'semantic') }}
     uses: ./.github/workflows/cgc-db-index.yml
     with:
       phase: semantic
@@ -120,12 +163,14 @@ jobs:
   # That gate was correct for the old SERIAL job (all-or-nothing); it is wrong for a
   # per-repo matrix, where each graphrag job restores its own repo's image and stands
   # or falls alone. `cancelled` stays excluded — that means the operator stopped the run.
+  # !cancelled(), not always(): always() starts this job even in a CANCELLED run, so a
+  # run the operator stopped — or that #418's coalesce job cancelled — still ran graphrag.
   graphrag:
     name: "phase · graphrag"
     needs: semantic
     if: >-
       ${{
-        always()
+        !cancelled()
         && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'graphrag')
         && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped' || needs.semantic.result == 'failure')
       }}
