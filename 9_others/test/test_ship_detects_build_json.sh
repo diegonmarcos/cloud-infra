@@ -122,5 +122,36 @@ else
   fail=$((fail+1))
 fi
 
+# ── #564: the exact dispatch ranges of the two runs reported as "detection dead" ──
+# Ship 35992310672 (a_solutions 7048de16..e2ec667f: _shared/engine.nix, both
+# kg-store build.json+compose.nix, my-ai-api build.json) and 35992663222
+# (e2ec667f..d1a612e1). The changed-file set is READ from cloud-u-containers
+# history, not restated, and run through the live classifier + engine walk.
+# 35992310672 resolved a real ship (4 VMs) and died at Build → oci-apps on a
+# #542-renamed build-*.json; 35992663222's range touched only .github/, so its
+# verdict=empty was correct. Both facts are pinned here so the next "nothing
+# deploys" starts from the right layer.
+Y="$REPO_ROOT/1_cicd/src/cicd/ship.yml"
+RE="$(sed -n 's/.*CHANGED_DIRS=\$(printf .*grep -E '"'"'\([^'"'"']*\)'"'"'.*/\1/p' "$Y" | head -1)"
+resolve() {
+  _set="$(git -C "$REPO_ROOT/a_solutions" diff --name-only "$1" "$2" 2>/dev/null)" || return 1
+  [ -n "$_set" ] || { echo "__EMPTYDIFF__"; return 0; }
+  { printf '%s\n' "$_set" | grep -E "$RE" | awk -F/ '{print $1}'
+    printf '%s\n' "$_set" | bash "$ENG_SRC" 2>/dev/null | tr ' ' '\n'; } | grep -v '^$' | sort -u | tr '\n' ' ' | sed 's/ $//'
+}
+if git -C "$REPO_ROOT/a_solutions" cat-file -e 'd1a612e1d46439df2f0309bfdd7df4f1bc6bf361^{commit}' 2>/dev/null; then
+  R1="$(resolve 7048de166e8ce49651b8054c34248b5619668633 e2ec667ff16f075435772961557df5377c44e191)"
+  for _svc in user-ai_kg-store user-ai_kg-store-pub user-ai_my-ai-api; do
+    ck "run 35992310672 range resolves $_svc" "$(printf ' %s ' "$R1" | grep -c " $_svc " || true)" "1"
+  done
+  ck "run 35992310672 range fans _shared/ out to >10 engine consumers" \
+     "$([ "$(printf '%s' "$R1" | wc -w)" -gt 10 ] && echo yes || echo no)" "yes"
+  ck "run 35992663222 range (.github/ only) resolves to NO service — verdict=empty was honest" \
+     "$(resolve e2ec667ff16f075435772961557df5377c44e191 d1a612e1d46439df2f0309bfdd7df4f1bc6bf361)" ""
+else
+  echo "  FAIL a_solutions history lacks d1a612e1 — the #564 ranges were NOT verified (needs fetch-depth: 0)"
+  fail=$((fail+1))
+fi
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
