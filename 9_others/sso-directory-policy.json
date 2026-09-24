@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "#467: does the Authelia SSO stack need an LDAP server? Decision 2026-09-24: NO. Recorded",
+    "here with the condition that would change it.",
+    "",
+    "Authelia uses authentication_backend: file with ONE user (infra-sec_authelia",
+    "src/templates/init.sh.tpl). Caddy protects routes with forward_auth plus the bearer",
+    "introspect path, and Authelia is also the OIDC provider. No live service is set up to",
+    "authenticate against LDAP: a scan for LDAP_ env vars and ldap:// or ldaps:// URLs outside",
+    "z_archive finds nothing. A directory with no consumers would be one more",
+    "container on the SSO critical path and would protect nothing.",
+    "",
+    "Adding it would also cause an outage. Moving Authelia to an ldap backend restarts Authelia.",
+    "While it is down, every forward_auth route returns errors, and the bearer path does too,",
+    "because it goes through infra-sec_introspect-proxy into Authelia (a GLOBAL bearer outage).",
+    "Shipping infra-sec_caddy-public to change the routes also takes SSO down (#55). Neither",
+    "change is justified with zero consumers.",
+    "",
+    "Checked by 9_others/test/test_sso_ldap_consumers.sh. It FAILS when an LDAP consumer",
+    "appears, so #467 gets looked at again, instead of that service quietly sending logins to",
+    "a directory that does not exist."
+  ],
+  "ldap_consumer_markers": [
+    "LDAP_",
+    "ldap://",
+    "ldaps://"
+  ],
+  "file_extensions": [
+    "nix", "json", "yml", "yaml", "tpl", "toml", "conf", "env", "sh", "ts", "js", "py", "ini"
+  ],
+  "exclude_dirs": [
+    ".git", "node_modules", "z_archive", "dist", "vendor"
+  ],
+  "declared_ldap_consumers": [],
+  "authelia_rendered_config": "infra-sec_authelia/dist/configs/configuration.yml",
+  "authelia_backend": "file",
+  "sso_gaps_2026_09_24": [
+    "Mail has two password stores that disagree: maddy (local_authdb) and Stalwart (its own directory). activate.sh.tpl records maddy with five accounts and Stalwart with two. Radicale (calendar and contacts) checks passwords against MADDY over IMAP, but live IMAPS goes to STALWART. Fix without LDAP: point Radicale at Stalwart and retire the maddy authdb.",
+    "No live app uses Authelia's OIDC provider for its own sign-in. Gitea, Mattermost, PhotoPrism, HedgeDoc, Filebrowser, Umami and OpenObserve sit behind forward_auth and keep their own accounts as well. Each could use OIDC with the provider that already exists, which needs no new container.",
+    "Login-bearing routes outside Authelia: vault. (Vaultwarden, WG-only, SIGNUPS_ALLOWED=true), matrix. (continuwuity, PUBLIC, token registration), chat. /api/v4/* (public bypass), IMAPS and SMTPS through SNI on :443 (public), Gitea SSH :2222 (WG-only).",
+    "Stale OIDC client: 'nocodb' in infra-sec_authelia/src/oidc-clients.json points at a service that now exists only in z_archive/bc-obs_nocodb. Removing it restarts Authelia, which interrupts SSO. Do it in a planned window, not as a drive-by."
+  ]
+}
