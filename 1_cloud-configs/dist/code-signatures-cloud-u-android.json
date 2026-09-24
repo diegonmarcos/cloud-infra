@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19156,
+    "files": 19165,
     "by_lang": {
-      "py": 49,
-      "sh": 240,
-      "kotlin": 9865,
-      "java": 553,
+      "py": 50,
+      "sh": 245,
+      "kotlin": 9867,
+      "java": 554,
       "ts": 8277,
       "nix": 23,
       "js": 67,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "script": 119,
-      "shell": 168,
-      "java": 553,
+      "shell": 173,
+      "java": 554,
       "entrypoint": 23,
       "module": 5855,
       "compose": 1,
       "flake": 19,
-      "kotlin": 9863,
-      "python": 24,
+      "kotlin": 9865,
+      "python": 25,
       "rust-module": 82,
       "file": 2249,
       "hook": 144,
@@ -4808,11 +4808,13 @@
         "PushFragment"
       ],
       "imports": [
+        "android.app.Notification",
         "android.content.Context",
         "android.os.Bundle",
         "android.view.LayoutInflater",
         "android.view.View",
         "android.view.ViewGroup",
+        "android.widget.Button",
         "android.widget.ImageView",
         "android.widget.LinearLayout",
         "android.widget.ScrollView",
@@ -6927,6 +6929,10 @@
       ],
       "imports": [
         "android.app.ActivityManager",
+        "android.app.Notification",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
         "android.content.Context",
         "android.content.Intent",
         "android.provider.Settings",
@@ -6939,6 +6945,8 @@
       "symbols": [
         "ensureAll(ctx: Context)",
         "start(ctx: Context, fqcn: String)",
+        "repostOnDismiss(svc: Service, requestCode: Int)",
+        "live(ctx: Context, b: Badge)",
         "statuses(ctx: Context)",
         "status(ctx: Context, b: Badge)",
         "missingRequirement(ctx: Context, b: Badge)",
@@ -8959,6 +8967,54 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/configs/PushPaneLiveBadgeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PushPaneLiveBadgeTest"
+      ],
+      "imports": [
+        "android.app.ActivityManager",
+        "android.app.Application",
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.Button",
+        "android.widget.TextView",
+        "androidx.core.app.NotificationCompat",
+        "androidx.fragment.app.FragmentActivity",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "all(v: View)",
+        "render()",
+        "badge()",
+        "ownerRunning(b: BadgeDeclaration.Badge)",
+        "stateRow(texts: List<String>, b: BadgeDeclaration.Badge, state: Int)",
+        "post(b: BadgeDeclaration.Badge)",
+        "class PushPaneLiveBadgeTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BadgeDeclarationTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9002,6 +9058,34 @@
         "markets()",
         "okQuote(price: Double, asOf: Long)",
         "class MarketsBadgeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/onehand/OneHandResolvedTargetTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OneHandResolvedTargetTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "clean()",
+        "store(slot: String, value: String)",
+        "resolved(slot: String)",
+        "class OneHandResolvedTargetTest"
       ]
     },
     {
@@ -391298,6 +391382,7 @@
         "android.util.Pair",
         "android.view.WindowManager",
         "com.termux.R",
+        "com.termux.cloud.CloudRootfs",
         "com.termux.app.utils.CrashUtils",
         "com.termux.shared.file.FileUtils",
         "com.termux.shared.file.TermuxFileUtils",
@@ -391329,6 +391414,7 @@
         "setupBootstrapIfNeeded(final Activity activity, final Runnable whenDone)",
         "Thread()",
         "run()",
+        "stageCloudRootfs(final Activity activity, final Runnable whenDone)",
         "showBootstrapErrorDialog(Activity activity, Runnable whenDone, String message)",
         "sendBootstrapCrashReportNotification(Activity activity, String message)",
         "setupStorageSymlinks(final Context context)",
@@ -391654,6 +391740,43 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/cloud/CloudRootfs.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "CloudRootfs",
+        "isStaged",
+        "stage"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.res.AssetManager",
+        "android.system.ErrnoException",
+        "android.system.Os",
+        "com.termux.BuildConfig",
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.FileInputStream",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.nio.charset.StandardCharsets"
+      ],
+      "symbols": [
+        "CloudRootfs()",
+        "stageDir()",
+        "isStaged(Context context)",
+        "stage(Context context)",
+        "baked(AssetManager assets)",
+        "isSymlink(File file)",
+        "read(InputStream stream)",
+        "class CloudRootfs"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/app/src/main/java/com/termux/filepicker/TermuxDocumentsProvider.java",
       "lang": "java",
       "role": "java",
@@ -391874,6 +391997,86 @@
         "step_phone_install()",
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/rootfs/build-rootfs.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "resolved()",
+        "from_abi()"
+      ],
+      "imports": [],
+      "symbols": [
+        "resolved()",
+        "from_abi()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/rootfs/enter.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "fallback()"
+      ],
+      "imports": [],
+      "symbols": [
+        "fallback()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/rootfs/resolve.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "die(msg)",
+        "load()",
+        "resolve(decl, shared)",
+        "tarball_lines(tarballs, docker_arch)",
+        "main()"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "shlex",
+        "sys",
+        "urllib.request"
+      ],
+      "symbols": [
+        "die(msg)",
+        "load()",
+        "resolve(decl, shared)",
+        "tarball_lines(tarballs, docker_arch)",
+        "main()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/rootfs/verify-inside.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "bad()",
+        "check()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/rootfs/verify-rootfs.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "resolved()",
+        "enter()"
+      ],
+      "imports": [],
+      "symbols": [
+        "resolved()",
+        "enter()"
       ]
     },
     {
@@ -396675,6 +396878,24 @@
       "symbols": [
         "subscribed_repositories()",
         "updatable_packages()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-rootfs-declared.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "json()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "json()",
+        "mutate()"
       ]
     },
     {
