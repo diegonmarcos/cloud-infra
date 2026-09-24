@@ -16,7 +16,7 @@
 #   docker container prune -f --filter              drop stopped containers that
 #     'label!=com.docker.compose.project'           are NOT a declared service
 #   docker image prune -f --filter until=72h        drop dangling images >72h
-#   docker builder prune -f --keep-storage=1G       cap build cache at 1G
+#   docker builder prune -f --max-used-space=1G     cap build cache at 1G
 #   journalctl --vacuum-time=14d --vacuum-size=200M cap journals
 #   nix-collect-garbage --delete-older-than 7d      drop hm gens >7d
 #   nix-store --optimise                            retroactive hardlink dedup
@@ -76,7 +76,10 @@
         # backwards, since the long-lived ones are the ones worth keeping.
         docker container prune -f --filter "label!=com.docker.compose.project" 2>&1 | sed "s/^/$LOG_PREFIX docker-container: /"
         docker image prune -f --filter "until=72h" 2>&1 | sed "s/^/$LOG_PREFIX docker-image: /"
-        docker builder prune -f --keep-storage=1G 2>&1 | sed "s/^/$LOG_PREFIX docker-builder: /"
+        # --max-used-space, not --keep-storage: docker 27.5.1 (all four VMs,
+        # measured 2026-09-24) prints a deprecation warning for the old name,
+        # and its first rename --max-storage is rejected as an unknown flag.
+        docker builder prune -f --max-used-space=1G 2>&1 | sed "s/^/$LOG_PREFIX docker-builder: /"
 
         DOCKER_AFTER=$(docker system df --format '{{.Type}} {{.Reclaimable}}' 2>/dev/null \
           | awk '{print $0}' | tr '\n' '|' || echo "?")
