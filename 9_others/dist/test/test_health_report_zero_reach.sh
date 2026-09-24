@@ -40,6 +40,8 @@
 #                          a guard that always fails proves nothing either)
 #   3. no snapshot      -> `build.sh all` must exit NON-ZERO (a run that
 #                          recorded no fleet state also verified nothing)
+#   4. :22 answers everywhere but no host returned SSH data -> NON-ZERO.
+#                          TCP reach is not collection (#391).
 #
 #   Passing an alternative orchestrator as $1 is how the fix was mutation-
 #   proved in both directions: point it at a PRE-FIX checkout of build.sh and
@@ -89,7 +91,22 @@ fixture_one='{"version":1,"generated_at":"2026-09-16T05:12:42Z","fleet_state":{"
   "oci-mail":"Running",
   "oci-analytics":{"Unknown":{"reason":"tcp :22 probe failed"}},
   "oci-apps":{"Unknown":{"reason":"tcp :22 probe failed"}},
-  "gcp-proxy":{"Unknown":{"reason":"tcp :22 probe failed"}}}}}'
+  "gcp-proxy":{"Unknown":{"reason":"tcp :22 probe failed"}}}},
+  "vms":[{"name":"oci-mail","uptime":"up 3 weeks"},{"name":"oci-analytics","uptime":""},
+         {"name":"oci-apps","uptime":""},{"name":"gcp-proxy","uptime":""}]}'
+# The #391 shape: every :22 answers (so every VM classifies RunningUnverified,
+# i.e. "reached"), but the runner's ssh refuses its own config — "Bad owner or
+# permissions on /root/.ssh/config" — so not one host returns SSH-collected
+# data. Measured for real 2026-09-24 in cloud-data run 36022330282: "hosts
+# reached: 4 of 4" printed beside "L3 Platform: ssh=0/4", with oci-mail's
+# uptime, disk and container list all empty.
+fixture_tcp_only='{"version":1,"generated_at":"2026-09-24T15:54:38Z","fleet_state":{"vms":{
+  "oci-mail":{"RunningUnverified":{"reason":"oci CLI has no usable credentials; TCP :22 up"}},
+  "oci-analytics":{"RunningUnverified":{"reason":"oci CLI has no usable credentials; TCP :22 up"}},
+  "oci-apps":{"RunningUnverified":{"reason":"oci CLI has no usable credentials; TCP :22 up"}},
+  "gcp-proxy":{"RunningUnverified":{"reason":"gcloud CLI not installed; TCP :22 up"}}}},
+  "vms":[{"name":"oci-mail","uptime":""},{"name":"oci-analytics","uptime":""},
+         {"name":"oci-apps","uptime":""},{"name":"gcp-proxy","uptime":""}]}'
 
 # ── Drive the real orchestrator against a stubbed master crate ────────────
 # $1 = fixture JSON, or the empty string to write no snapshot at all.
@@ -166,6 +183,15 @@ if [ "$rc" -ne 0 ]; then
     ok "no _run_state.json -> exit $rc (non-zero)"
 else
     bad "no _run_state.json -> exit 0. A run that recorded no fleet state proved nothing either."
+    sed 's/^/      /' "$OUTPUT_LOG"
+fi
+
+# ── 4. TCP reach with zero SSH collection is also vacuity (#391) ─────────
+rc="$(run_orchestrator "$fixture_tcp_only")"
+if [ "$rc" -ne 0 ]; then
+    ok "4 of 4 :22-reachable but 0 collected -> exit $rc (non-zero)"
+else
+    bad "4 of 4 :22-reachable, 0 collected -> exit 0. A runner whose ssh refused every host published a green report (#391)."
     sed 's/^/      /' "$OUTPUT_LOG"
 fi
 
