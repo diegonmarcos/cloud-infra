@@ -5918,7 +5918,12 @@
           "port": 8001,
           "protocol": "http",
           "db_engine": "surrealdb",
-          "image": "ghcr.io/diegonmarcos/kg-store:latest"
+          "image": "ghcr.io/diegonmarcos/kg-store:latest",
+          "resources": {
+            "_comment": "THE ONE DECLARATION of this container's memory budget. src/compose.nix reads mem_limit twice off this single value: once as the cgroup ceiling (deploy.resources.limits.memory) and once to size SurrealDB's own RocksDB caches (SURREAL_ROCKSDB_BLOCK_CACHE_SIZE = half of it, SURREAL_ROCKSDB_WRITE_BUFFER_SIZE = an eighth). Both halves are required: the cgroup alone converts the leak into an OOM kill, and the engine budget alone leaves nothing enforcing it. Change this number and BOTH move — no literal is written in compose.nix. Sized from measurement: kg-store's resident set on oci-apps 2026-09-24 was 140.6MiB, so 1G is ~7x headroom, against the ~10.6GB it held uncapped.",
+            "mem_limit": "1G",
+            "mem_reservation": "128M"
+          }
         }
       },
       "container_names": [
@@ -5941,6 +5946,11 @@
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb",
+      "tests": {
+        "memory-ceiling": {
+          "cmd": "node ../_shared/test-kg-store-memory-ceiling.mjs"
+        }
+      },
       "kg": {
         "namespace": "infra",
         "database": "production",
@@ -6099,7 +6109,12 @@
           "port": 8002,
           "protocol": "http",
           "db_engine": "surrealdb",
-          "image": "ghcr.io/diegonmarcos/kg-store-pub:latest"
+          "image": "ghcr.io/diegonmarcos/kg-store-pub:latest",
+          "resources": {
+            "_comment": "THE ONE DECLARATION of this container's memory budget — see user-ai_kg-store/build.json for the full note. src/compose.nix derives both the cgroup ceiling and SurrealDB's RocksDB cache budget from this single value; no literal is written in compose.nix. Measured resident set on oci-apps 2026-09-24: 131.1MiB.",
+            "mem_limit": "1G",
+            "mem_reservation": "128M"
+          }
         }
       },
       "container_names": [
@@ -6419,9 +6434,13 @@
           "cmd": "node test-bots-lifetime-split.mjs",
           "cwd": "src/code"
         },
+        "bot-auth-required-workflow": {
+          "cmd": "node test-bot-auth-required-workflow.mjs",
+          "cwd": "src/code"
+        },
         "agi-container-naming": {
-          "cmd": "node ../../_shared/test-agi-container-naming.mjs",
-          "cwd": "_shared"
+          "cmd": "node test-agi-container-naming.mjs",
+          "cwd": "../_shared"
         }
       },
       "api": {
@@ -6615,6 +6634,10 @@
         },
         "git-tree-one-mount-pattern": {
           "cmd": "node test-git-tree-one-mount-pattern.mjs",
+          "cwd": "src/code"
+        },
+        "auth-required-classifier": {
+          "cmd": "node test-claude-auth-required-classifier.mjs",
           "cwd": "src/code"
         }
       },

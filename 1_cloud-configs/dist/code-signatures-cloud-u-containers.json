@@ -6,20 +6,20 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2824,
+    "files": 2828,
     "by_lang": {
-      "nix": 149,
+      "nix": 150,
       "ts": 1117,
       "sh": 126,
-      "js": 48,
+      "js": 51,
       "py": 850,
       "rust": 534
     },
     "by_role": {
-      "nix-module": 9,
+      "nix-module": 10,
       "module": 678,
       "shell": 118,
-      "file": 294,
+      "file": 297,
       "python": 845,
       "flake": 71,
       "compose": 69,
@@ -89,13 +89,21 @@
       "lang": "nix",
       "role": "nix-module",
       "exports": [],
-      "imports": [],
+      "imports": [
+        "./memory-ceiling.nix",
+        "memory-ceiling.nix"
+      ],
       "symbols": [
         "svcDirName",
         "svcPath",
         "bannerLines",
         "mkBanner",
+        "composeDefaultsFile",
         "composeDefaults",
+        "applyMemoryCeiling",
+        "policy",
+        "category",
+        "title",
         "agentToolbelt",
         "toolbeltApt",
         "toolbeltVerify",
@@ -125,12 +133,7 @@
         "gitTreeWritable",
         "gitTreeSuffix",
         "gitTreeGitEnv",
-        "AGENT_GIT_TREE",
-        "GIT_CONFIG_COUNT",
-        "GIT_CONFIG_KEY_0",
-        "GIT_CONFIG_VALUE_0",
-        "GIT_CONFIG_KEY_1",
-        "GIT_CONFIG_VALUE_1"
+        "AGENT_GIT_TREE"
       ]
     },
     {
@@ -229,6 +232,29 @@
         "portEnv",
         "valueOf",
         "allEnvs"
+      ]
+    },
+    {
+      "path": "_shared/memory-ceiling.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "#",
+        "or",
+        "for",
+        "post"
+      ],
+      "imports": [],
+      "symbols": [
+        "declared",
+        "byCategory",
+        "catKey",
+        "fallback",
+        "withMemory",
+        "d",
+        "r",
+        "l",
+        "apply"
       ]
     },
     {
@@ -369,6 +395,19 @@
         "check_file()",
         "need_cmd()"
       ]
+    },
+    {
+      "path": "_shared/test-kg-store-memory-ceiling.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:child_process",
+        "node:path",
+        "node:url"
+      ],
+      "symbols": []
     },
     {
       "path": "_shared/test-src-terraform.sh",
@@ -19262,6 +19301,12 @@
         "app",
         "port",
         "binariesImage",
+        "memLimit",
+        "memParts",
+        "memBytes",
+        "blockCacheBytes",
+        "writeBufferBytes",
+        "maxWriteBufferNumber",
         "services",
         "surrealdb",
         "image",
@@ -19270,6 +19315,14 @@
         "restart",
         "user",
         "env_file",
+        "environment",
+        "SURREAL_ROCKSDB_BLOCK_CACHE_SIZE",
+        "SURREAL_ROCKSDB_WRITE_BUFFER_SIZE",
+        "SURREAL_ROCKSDB_MAX_WRITE_BUFFER_NUMBER",
+        "deploy",
+        "resources",
+        "limits",
+        "reservations",
         "command",
         "volumes",
         "healthcheck",
@@ -19388,6 +19441,12 @@
         "app",
         "port",
         "binariesImage",
+        "memLimit",
+        "memParts",
+        "memBytes",
+        "blockCacheBytes",
+        "writeBufferBytes",
+        "maxWriteBufferNumber",
         "services",
         "surrealdb",
         "image",
@@ -19396,6 +19455,14 @@
         "restart",
         "user",
         "env_file",
+        "environment",
+        "SURREAL_ROCKSDB_BLOCK_CACHE_SIZE",
+        "SURREAL_ROCKSDB_WRITE_BUFFER_SIZE",
+        "SURREAL_ROCKSDB_MAX_WRITE_BUFFER_NUMBER",
+        "deploy",
+        "resources",
+        "limits",
+        "reservations",
         "command",
         "volumes",
         "healthcheck",
@@ -19625,14 +19692,18 @@
       "exports": [
         "startLogin",
         "submitCode",
-        "loginStatus"
+        "loginStatus",
+        "AUTH_REQUIRED_SIGNATURES",
+        "isAuthRequired"
       ],
       "imports": [
         "node:child_process",
         "node:fs",
         "node:path"
       ],
-      "symbols": []
+      "symbols": [
+        "class of"
+      ]
     },
     {
       "path": "user-ai_my-ai_claude-api/src/code/py/compress_service.py",
@@ -19773,6 +19844,17 @@
       "imports": [
         "node:fs",
         "node:path"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "user-ai_my-ai_claude-api/src/code/test-claude-auth-required-classifier.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "./login.mjs"
       ],
       "symbols": []
     },
@@ -35998,6 +36080,8 @@
       "role": "file",
       "exports": [
         "MYAI_LOCAL_URL",
+        "oauthLoginWorkflow",
+        "authRequiredReply",
         "HISTORY_CAP",
         "getState",
         "routeToGoose",
@@ -36171,6 +36255,17 @@
       "symbols": [
         "respawn()"
       ]
+    },
+    {
+      "path": "user-ai_my-ai-api/src/code/test-bot-auth-required-workflow.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "./bots/route.mjs"
+      ],
+      "symbols": []
     },
     {
       "path": "user-ai_my-ai-api/src/code/test-bots-lifetime-split.mjs",
