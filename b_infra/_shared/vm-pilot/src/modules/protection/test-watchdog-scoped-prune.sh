@@ -21,6 +21,7 @@ set -eu
 
 SRC="$(cd "$(dirname "$0")" && pwd)/watchdog.nix"
 SIB="$(cd "$(dirname "$0")" && pwd)/../infra/prune-maintenance.nix"
+PET="$(cd "$(dirname "$0")" && pwd)/watchdog-petter.sh"
 fail=0
 ok()   { printf "  [ok] %s\n"   "$1"; }
 nope() { printf "  [FAIL] %s\n" "$1"; fail=1; }
@@ -32,40 +33,93 @@ echo "test-watchdog-scoped-prune: $SRC"
 # pass or fail on prose. Strip comments first, then assert against code only.
 CODE=$(sed 's/[[:space:]]*#.*$//' "$SRC")
 
-# ── 1. No unscoped `container prune` ──────────────────────────────────
-# A bare `docker container prune -f` takes every stopped container, declared or not.
-if printf '%s\n' "$CODE" | grep -q 'docker container prune' \
-   && ! printf '%s\n' "$CODE" | grep 'docker container prune' \
-        | grep -q 'label!=com.docker.compose.project'; then
-    nope "container prune is present but NOT filtered on label!=com.docker.compose.project"
-else
-    ok "container prune is absent or label-scoped"
-fi
+# Checks 1-4 and 7 apply to EVERY automatic prune path, not just this module:
+# #447 fixed the flag here and left infra/prune-maintenance.nix on the
+# deprecated one, because this tester only ever read watchdog.nix. A rule
+# asserted against one of its three call sites is a rule for that site only.
+cli_checks() {  # cli_checks <label> <code>
+    _l=$1; CODE=$2
+    # ── 1. No unscoped `container prune` ──────────────────────────────────
+    # A bare `docker container prune -f` takes every stopped container, declared or not.
+    if printf '%s\n' "$CODE" | grep -q 'docker container prune' \
+       && ! printf '%s\n' "$CODE" | grep 'docker container prune' \
+            | grep -q 'label!=com.docker.compose.project'; then
+        nope "[$_l] container prune is present but NOT filtered on label!=com.docker.compose.project"
+    else
+        ok "[$_l] container prune is absent or label-scoped"
+    fi
 
-# ── 2. No volume pruning anywhere on the automatic path ───────────────
-# Volumes are the databases. There is no safe automatic form of this.
-if printf '%s\n' "$CODE" | grep -qE 'docker[[:space:]]+volume[[:space:]]+(prune|rm)'; then
-    nope "watchdog still prunes/removes docker volumes — databases live there"
-else
-    ok "no docker volume prune/rm on the automatic path"
-fi
+    # ── 2. No volume pruning anywhere on the automatic path ───────────────
+    # Volumes are the databases. There is no safe automatic form of this.
+    if printf '%s\n' "$CODE" | grep -qE 'docker[[:space:]]+volume[[:space:]]+(prune|rm)'; then
+        nope "[$_l] watchdog still prunes/removes docker volumes — databases live there"
+    else
+        ok "[$_l] no docker volume prune/rm on the automatic path"
+    fi
 
-# ── 3. No `image prune -a` — `-a` drops TAGGED images ─────────────────
-# Matches -a, -af, -fa and --all. Dangling-only pruning (no -a) is fine.
-if printf '%s\n' "$CODE" | grep 'docker image prune' \
-     | grep -qE '(^|[[:space:]])-(-all|[a-z]*a[a-z]*)([[:space:]]|$)'; then
-    nope "image prune uses -a/--all — that deletes TAGGED fleet deploy artifacts"
-else
-    ok "image prune is dangling-only (no -a/--all)"
-fi
+    # ── 3. No `image prune -a` — `-a` drops TAGGED images ─────────────────
+    # Matches -a, -af, -fa and --all. Dangling-only pruning (no -a) is fine.
+    if printf '%s\n' "$CODE" | grep 'docker image prune' \
+         | grep -qE '(^|[[:space:]])-(-all|[a-z]*a[a-z]*)([[:space:]]|$)'; then
+        nope "[$_l] image prune uses -a/--all — that deletes TAGGED fleet deploy artifacts"
+    else
+        ok "[$_l] image prune is dangling-only (no -a/--all)"
+    fi
 
-# ── 4. No `docker system prune` ───────────────────────────────────────
-# Its container sweep cannot be scoped as tightly as the label filter, so it
-# silently re-opens the hole check 1 closes.
-if printf '%s\n' "$CODE" | grep -q 'docker system prune'; then
-    nope "docker system prune is back — it re-opens the unscoped container sweep"
+    # ── 4. No `docker system prune` ───────────────────────────────────────
+    # Its container sweep cannot be scoped as tightly as the label filter, so it
+    # silently re-opens the hole check 1 closes.
+    if printf '%s\n' "$CODE" | grep -q 'docker system prune'; then
+        nope "[$_l] docker system prune is back — it re-opens the unscoped container sweep"
+    else
+        ok "[$_l] no docker system prune"
+    fi
+
+    # ── 7. No stale docker flag — --keep-storage is deprecated, --max-storage is rejected ──
+    # Verified against the live oci-apps docker (27.5.1) on 2026-09-17:
+    #   --keep-storage    still parses but warns "Flag --keep-storage has been
+    #                     deprecated ... changed to max-storage"
+    #   --max-storage     "unknown flag" — rejected outright
+    #   --max-used-space  current flag ("Maximum amount of disk space allowed to
+    #                     keep for cache") — the same 1G-keeper as --keep-storage=1G
+    if printf '%s\n' "$CODE" | grep -qE '\-\-keep-storage|\-\-max-storage'; then
+        nope "[$_l] builder prune passes a stale flag (--keep-storage or --max-storage) — the current one is --max-used-space"
+    else
+        ok "[$_l] no stale builder-prune flag (--keep-storage/--max-storage)"
+    fi
+    if printf '%s\n' "$CODE" | grep -q '\-\-max-used-space'; then
+        ok "[$_l] builder prune uses the current --max-used-space"
+    else
+        nope "[$_l] builder prune does not pass --max-used-space — the 1G build-cache cap is gone"
+    fi
+}
+
+cli_checks "watchdog.nix" "$CODE"
+cli_checks "prune-maintenance.nix" "$(sed 's/[[:space:]]*#.*$//' "$SIB")"
+CODE=$(sed 's/[[:space:]]*#.*$//' "$SRC")
+
+# ── 1b. watchdog-petter.sh — the same rules in docker-API form ────────
+# It prunes through the socket (curl POST), not the CLI, so the CLI greps
+# above cannot see it. #353 measured its unfiltered /containers/prune as the
+# September umami/matomo killer on oci-analytics. Its unit is disabled by this
+# module's activation, but the script still ships to /opt/scripts.
+PCODE=$(sed 's/^[[:space:]]*#.*$//' "$PET")
+_cp=$(printf '%s\n' "$PCODE" | grep -c '/containers/prune' || true)
+_cps=$(printf '%s\n' "$PCODE" | grep '/containers/prune' | grep -c '%22label%21%22%3A%7B%22com.docker.compose.project%22' || true)
+if [ "$_cp" -gt 0 ] && [ "$_cp" -eq "$_cps" ]; then
+    ok "[watchdog-petter.sh] all $_cp /containers/prune calls are label!=com.docker.compose.project scoped"
 else
-    ok "no docker system prune"
+    nope "[watchdog-petter.sh] $_cps of $_cp /containers/prune calls are label-scoped — an unscoped one deletes stopped declared services"
+fi
+if printf '%s\n' "$PCODE" | grep -q '/volumes/prune'; then
+    nope "[watchdog-petter.sh] POSTs /volumes/prune — databases live there"
+else
+    ok "[watchdog-petter.sh] no /volumes/prune"
+fi
+if printf '%s\n' "$PCODE" | grep '/images/prune' | grep -qE 'dangling%22%3A%7B%22false|dangling=false'; then
+    nope "[watchdog-petter.sh] /images/prune with dangling=false — that deletes TAGGED images"
+else
+    ok "[watchdog-petter.sh] /images/prune is dangling-only"
 fi
 
 # ── 5. CRIT must still be able to free something ──────────────────────
@@ -84,24 +138,6 @@ if grep -q 'label!=com.docker.compose.project' "$SIB"; then
     ok "sibling infra/prune-maintenance.nix still carries the reference pattern"
 else
     nope "sibling infra/prune-maintenance.nix lost the label filter"
-fi
-
-# ── 7. No stale docker flag — --keep-storage is deprecated, --max-storage is rejected ──
-# Verified against the live oci-apps docker (27.5.1) on 2026-09-17:
-#   --keep-storage    still parses but warns "Flag --keep-storage has been
-#                     deprecated ... changed to max-storage"
-#   --max-storage     "unknown flag" — rejected outright
-#   --max-used-space  current flag ("Maximum amount of disk space allowed to
-#                     keep for cache") — the same 1G-keeper as --keep-storage=1G
-if printf '%s\n' "$CODE" | grep -qE '\-\-keep-storage|\-\-max-storage'; then
-    nope "builder prune passes a stale flag (--keep-storage or --max-storage) — the current one is --max-used-space"
-else
-    ok "no stale builder-prune flag (--keep-storage/--max-storage)"
-fi
-if printf '%s\n' "$CODE" | grep -q '\-\-max-used-space'; then
-    ok "builder prune uses the current --max-used-space"
-else
-    nope "builder prune does not pass --max-used-space — the 1G build-cache cap is gone"
 fi
 
 # ── 8. The watchdog keeps a durable action log OUTSIDE the journal ──
