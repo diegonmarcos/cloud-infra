@@ -170,6 +170,72 @@ else
     nope "journal vacuums ($_vac_n) vs journal record calls ($_rec_n) are out of balance"
 fi
 
+# ── 10. #413: no journal vacuum may go below the declared retention floor ──
+# --vacuum-size / --vacuum-files delete the OLDEST archives until a volume cap
+# is met, whatever their age: on oci-apps 2026-09-16 that erased 16 days. Only
+# --vacuum-time can honour a floor, and its value must be the declared one
+# (config.json native.protection.journal_retention_floor_days), never a literal.
+# Applies to all three automatic vacuum sites, for the same reason as 1-4/7.
+floor_checks() {  # floor_checks <label> <code> <required-arg>
+    _l=$1; _c=$2; _want=$3
+    _vl=$(printf '%s\n' "$_c" | grep 'journalctl --vacuum' || true)
+    _n=$(printf '%s\n' "$_vl" | grep -c 'journalctl --vacuum' || true)
+    if [ "$_n" -eq 0 ]; then
+        nope "[$_l] no journal vacuum found — this check would pass on nothing"
+        return
+    fi
+    if printf '%s\n' "$_c" | grep -qE -- '--vacuum-(size|files)'; then
+        nope "[$_l] journal vacuum by size/files — deletes by volume regardless of age, below any retention floor"
+    else
+        ok "[$_l] no --vacuum-size/--vacuum-files"
+    fi
+    _good=$(printf '%s\n' "$_vl" | grep -cF -- "--vacuum-time=$_want" || true)
+    if [ "$_good" -eq "$_n" ]; then
+        ok "[$_l] all $_n journal vacuums are --vacuum-time=$_want (the declared floor)"
+    else
+        nope "[$_l] $_good of $_n journal vacuums use --vacuum-time=$_want — the rest bypass the declared floor"
+    fi
+}
+PM_CODE=$(sed 's/[[:space:]]*#.*$//' "$SIB")
+floor_checks "watchdog.nix" "$CODE" '${toString journalFloorDays}d'
+floor_checks "prune-maintenance.nix" "$PM_CODE" '${toString journalFloorDays}d'
+floor_checks "watchdog-petter.sh" "$PCODE" '"${JOURNAL_FLOOR_DAYS}d"'
+# journalFloorDays must be bound to the declared key in both Nix modules, and
+# the petter must receive it from its unit — else the checks above are names only.
+for _pair in "watchdog.nix:$CODE" "prune-maintenance.nix:$PM_CODE"; do
+    _l=${_pair%%:*}; _c=${_pair#*:}
+    # Same line, not -A1: the next line carries the key name in a throw message /
+    # fallback, which made a rebind to another key pass (mutation-caught).
+    if printf '%s\n' "$_c" | grep -qE 'journalFloorDays = [^;]*journal_retention_floor_days'; then
+        ok "[$_l] journalFloorDays is read from journal_retention_floor_days"
+    else
+        nope "[$_l] journalFloorDays is not bound to journal_retention_floor_days"
+    fi
+done
+if printf '%s\n' "$CODE" | grep -qF 'Environment=JOURNAL_FLOOR_DAYS=${toString journalFloorDays}'; then
+    ok "[watchdog-petter.sh] its unit is given JOURNAL_FLOOR_DAYS from the declared floor"
+else
+    nope "[watchdog-petter.sh] unit does not pass JOURNAL_FLOOR_DAYS — the petter's vacuum would be skipped or unbounded"
+fi
+# The DERIVED value every VM actually gets (consolidated snapshot the modules
+# read: per-VM override over native default) must be a positive whole number of
+# days. 0 or a missing key would make --vacuum-time=0d / eval-throw.
+CONS="$(cd "$(dirname "$0")/.." && pwd)/_cloud-data-consolidated.json"
+if command -v jq >/dev/null 2>&1; then
+    _bad=$(jq -r '(.native.protection.journal_retention_floor_days) as $d
+        | (._home_manager.vms // {}) | to_entries[]
+        | ((.value.protection // {}).journal_retention_floor_days // $d) as $f
+        | select(($f|type) != "number" or $f < 1 or ($f|floor) != $f) | "\(.key)=\($f)"' "$CONS" 2>&1)
+    _vms=$(jq -r '(._home_manager.vms // {}) | length' "$CONS" 2>/dev/null || echo 0)
+    if [ -z "$_bad" ] && [ "${_vms:-0}" -gt 0 ]; then
+        ok "every one of $_vms VMs resolves a positive whole-day journal floor in the consolidated data"
+    else
+        nope "journal floor missing/invalid in consolidated data (vms=$_vms): $_bad"
+    fi
+else
+    nope "jq missing — cannot read the derived journal floor"
+fi
+
 echo
 [ "$fail" -eq 0 ] && echo "test-watchdog-scoped-prune: PASS" && exit 0
 echo "test-watchdog-scoped-prune: FAIL"

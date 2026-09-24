@@ -358,6 +358,16 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # #413: the vm-pilot protection tester (test-protection-data-driven.sh)
+      # evaluates the Nix modules with nix-instantiate. Without nix on this
+      # runner it printed a SKIP and exited 0, so the registry reported "ok"
+      # for a tester that had never asserted anything — including the check
+      # that the disk-watchdog's journal vacuum honours the retention floor.
+      # nixpkgs on NIX_PATH because the tester imports <nixpkgs/lib>.
+      - uses: cachix/install-nix-action@v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
       # ── #368: the two steps that end the hand-maintained tester list ──────
       #
       # Every step above registers ONE tester by naming its filename. Writing a

@@ -257,7 +257,10 @@ $ctr"
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/containers/prune?filters=%7B%22label%21%22%3A%7B%22com.docker.compose.project%22%3Atrue%7D%7D" >/dev/null 2>&1 || true
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D" >/dev/null 2>&1 || true
     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST "http://localhost/build/prune?all=true" >/dev/null 2>&1 || true
-    journalctl --vacuum-size=50M >/dev/null 2>&1 || true
+    # #413: never below the declared retention floor (JOURNAL_FLOOR_DAYS, set
+    # by watchdog.nix from native.protection.journal_retention_floor_days). No
+    # default: unset means undeclared, and an undeclared floor must not vacuum.
+    [ -n "${JOURNAL_FLOOR_DAYS:-}" ] && journalctl --vacuum-time="${JOURNAL_FLOOR_DAYS}d" >/dev/null 2>&1 || true
   elif [ "$DISK_PCT" -ge "$DISK_HIGH" ]; then
     pre_action_report "DISK_HIGH" "Disk usage ${DISK_PCT}% (≥${DISK_HIGH}%)" "prune+buildcache"
     ntfy 4 "Disk high" "${DISK_PCT}% used — pruning images+buildcache" "warning,floppy_disk"

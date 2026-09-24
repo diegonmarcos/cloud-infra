@@ -17,7 +17,9 @@
 #     'label!=com.docker.compose.project'           are NOT a declared service
 #   docker image prune -f --filter until=72h        drop dangling images >72h
 #   docker builder prune -f --max-used-space=1G     cap build cache at 1G
-#   journalctl --vacuum-time=14d --vacuum-size=200M cap journals
+#   journalctl --vacuum-time=<floor>d               age out journals older than
+#                                                   native.protection.journal_retention_floor_days
+#                                                   (#413 — never --vacuum-size, it ignores age)
 #   nix-collect-garbage --delete-older-than 7d      drop hm gens >7d
 #   nix-store --optimise                            retroactive hardlink dedup
 #
@@ -30,9 +32,17 @@
 # Schedule: daily 03:30 (staggered 30min before disk-swap-maintenance at
 # 04:00 to avoid IO contention on E2 Micros).
 #
-# Imported by: ./default.nix (parameterless — every VM gets it).
+# Imported by: ./default.nix with vmName (every VM gets it).
+{ vmName }:
 { config, pkgs, lib, ... }:
 
+let
+  consolidated = builtins.fromJSON (builtins.readFile ../_cloud-data-consolidated.json);
+  protVm = (consolidated._home_manager.vms.${vmName} or {}).protection or {};
+  journalFloorDays = protVm.journal_retention_floor_days
+    or consolidated.native.protection.journal_retention_floor_days
+    or (throw "prune-maintenance.nix: native.protection.journal_retention_floor_days is not declared in config.json");
+in
 {
   home.file.".local/share/system-protection/infra-prune-maintenance.sh" = {
     executable = true;
@@ -90,8 +100,7 @@
 
       # ── Journald rotation ────────────────────────────────────────────
       if command -v journalctl >/dev/null 2>&1; then
-        journalctl --vacuum-time=14d 2>&1 | sed "s/^/$LOG_PREFIX journal-time: /" | tail -3
-        journalctl --vacuum-size=200M 2>&1 | sed "s/^/$LOG_PREFIX journal-size: /" | tail -3
+        journalctl --vacuum-time=${toString journalFloorDays}d 2>&1 | sed "s/^/$LOG_PREFIX journal-time: /" | tail -3
       fi
 
       # ── Nix gc + retroactive optimise ────────────────────────────────
