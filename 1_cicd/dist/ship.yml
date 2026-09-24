@@ -154,6 +154,15 @@ jobs:
       # NO local dist/ regen — gen-configs already ran first and committed
       # the canonical dist/ to origin/main, which actions/checkout pulled.
 
+      # #564 — a container RENAME moves the generated dist/build-<container_name>.json
+      # out from under every flake that reads the old name. #542 did it to three
+      # services; one failed Build → oci-apps (and with it every VM's deploy in
+      # run 35992310672), one was latent, one kept building from a frozen copy.
+      # Runs on EVERY event so the containers-push that carries a rename is the
+      # run that goes red, not whichever later push happens to rebuild it.
+      - name: Guard — flake build-*.json refs are files dist/ still emits
+        run: bash 9_others/test/test_flake_build_json_in_dist.sh
+
       - name: Build VM matrix
         id: matrix
         if: ${{ steps.paths.outputs.skip != 'true' }}
