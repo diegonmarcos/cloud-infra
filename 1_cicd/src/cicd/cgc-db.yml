@@ -21,6 +21,16 @@
 # └──────────────────────────────────────────────────────────────┘
 
 name: "cgc-db (two-phase octocode index → GHCR → oci-apps)"
+# #418: a queued run has zero jobs and the API does not return dispatch inputs, so
+# with queue:max holding several runs nobody could tell whether "the forced
+# cloud-infra reindex" was already waiting — a duplicate costs hours, a missing one
+# blocks #375. The title carries every dispatch input (the tester derives the list
+# from `inputs:` below, so a new input that is not surfaced here goes RED).
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('cgc-db · dispatch · phase={0} repos={1} force={2} restore={3} surfaces={4}',
+                inputs.phase, inputs.repos || 'all', inputs.force, inputs.restore, inputs.surfaces)
+      || format('cgc-db · {0}', github.event_name) }}
 
 on:
   workflow_dispatch:

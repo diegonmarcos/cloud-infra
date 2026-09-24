@@ -59,6 +59,10 @@ w("group", c.get("group")); w("queue", c.get("queue")); w("cip", c.get("cancel-i
 w("co_if", co.get("if")); w("filter", (step.get("env") or {}).get("SUPERSEDED_BY"))
 w("run", step.get("run")); w("sem_needs", j.get("semantic", {}).get("needs"))
 w("sem_if", j.get("semantic", {}).get("if")); w("gr_if", j.get("graphrag", {}).get("if"))
+# PyYAML reads the `on:` key as boolean True.
+ins = ((y.get(True) or y.get("on") or {}).get("workflow_dispatch") or {}).get("inputs") or {}
+rn = y.get("run-name") or ""
+w("unsurfaced", " ".join(k for k in ins if f"inputs.{k}" not in rn)); w("n_inputs", len(ins))
 PY
 
   # ── 1. no eviction ──
@@ -99,7 +103,11 @@ GH
   ck "$f: not superseded -> proceeds (rc 0, cancels nothing)" \
      "$(go "$(runs "$(R 100 schedule in_progress)")")" "rc=0 cancels="
 
-  # ── 4. a cancelled run must not start the phases ──
+  # ── 4. a queued dispatch names its inputs (the API cannot) ──
+  ck "$f: dispatch inputs parsed (guards a vacuous pass)" "$([ "$(cat "$T/n_inputs")" -gt 0 ] && echo yes)" "yes"
+  ck "$f: every dispatch input is surfaced in run-name" "$(cat "$T/unsurfaced")" ""
+
+  # ── 5. a cancelled run must not start the phases ──
   ck "$f: semantic needs coalesce" "$(cat "$T/sem_needs")" "coalesce"
   ck "$f: semantic gated on !cancelled()" "$(grep -c '!cancelled()' "$T/sem_if" || true)" "1"
   ck "$f: graphrag uses !cancelled(), not always() (always() runs in a cancelled run)" \
