@@ -185,6 +185,32 @@ resource "cloudflare_record" "a_records" {
 }
 
 # =============================================================================
+# DNS Records — AAAA records (#519)
+#
+# The IPv6 twin of each a_record's PRIMARY value: `ip6` if the record sets one,
+# else `proxy_ip6` — but only when the record does not override `ip`, because
+# an overridden record points at some other host whose v6 we don't know.
+# extra_ips are v4 multi-value extras and get no twin.
+# =============================================================================
+
+resource "cloudflare_record" "aaaa_records" {
+  for_each = {
+    for r in local.dns.a_records : r.name => r
+    if can(r.ip6) || !can(r.ip)
+  }
+
+  zone_id = var.cloudflare_zone_id
+  name    = each.value.name
+  type    = "AAAA"
+  content = can(each.value.ip6) ? each.value.ip6 : local.config.proxy_ip6
+  proxied = each.value.proxied
+  ttl     = each.value.ttl
+  comment = each.value.comment == null ? null : substr(each.value.comment, 0, 100)
+
+  allow_overwrite = true
+}
+
+# =============================================================================
 # DNS Records — CNAME records
 # =============================================================================
 

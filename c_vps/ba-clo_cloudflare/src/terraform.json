@@ -6,6 +6,8 @@
   "domain": "diegonmarcos.com",
   "_proxy_ip_doc": "Public edge = oci-analytics (129.151.228.66). gcp-proxy:443 is closed publicly (session goal: gcp-proxy is wg-only). Public clients hit oci-analytics:443 which runs caddy-public — a layer4 SNI mux: mail (imap./smtps.) → maddy L4; pure-public SNIs (gh-pages + auth=none) → local :8443 L7 serve; everything else → raw-TLS passthrough to gcp-proxy 10.1.0.2:443 over wg-public, where TLS terminates + path-routes + the @wg gate runs. WG0 clients (hickory at 10.0.0.1:53) resolve via the multi-value extra_ip directly to gcp-proxy 10.0.0.1.",
   "proxy_ip": "129.151.228.66",
+  "_proxy_ip6_doc": "IPv6 twin of proxy_ip: oci-analytics VNIC address, declared in c_vps/vps_oci (oci_core_ipv6.analytics_v6, output analytics_ipv6). Every a_record WITHOUT a per-record ip override gets an AAAA to this (or to its own ip6). Without it an IPv6-only uplink (no NAT64/DNS64) cannot reach the fleet at all (#519). Requires ::/0 tcp/443 in the OCI security list.",
+  "proxy_ip6": "2603:c026:c104:8f00:0:c704:63b:6eee",
   "account_id": "e5cb0a0c6f448e54f217de484259f0ae",
 
   "dns_records": {
