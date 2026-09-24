@@ -77,6 +77,82 @@ _assert_published_ports() {
     return 1
 }
 
+# ── #560: a container in `created` is DEAD, not stale ─────────────────
+# An evicted deploy left my-ai-api in state `created`: never started, no logs,
+# ExitCode 0. `docker ps -a` listed it, its image digest matched the registry,
+# and both telegram bots were down behind a deploy that looked fine. Every
+# cheap probe read healthy because none of them asked the one question that
+# matters: did this container ever START? `docker compose ps` (no -a) does not
+# even list a created container, so the wait loop below never saw it.
+#
+# The declared list comes from build.json's containers{}, not from whatever
+# compose happens to list — a container compose never started is exactly the
+# one a compose listing can omit.
+#
+# Pure, so the tester can drive it without a VM:
+#   $1     declared container names (whitespace separated)
+#   $2     declared one-shot names (containers{}.<k>.one_shot == true)
+#   stdin  "<name>|<State.Status>|<State.ExitCode>" per line, as docker inspect prints
+#   stdout "DEAD <name> <why>" / "MISSING <name>" per finding
+#   rc     1 iff any declared container is DEAD
+# Live = running, or restarting (step_health's crash-loop check owns that one,
+# with logs). exited is live ONLY for a declared one-shot that exited 0.
+#
+# ponytail: MISSING is reported, not fatal — some declared containers are
+# on-demand or run outside compose (the reconcile's `absent` list). Make it
+# fatal once build.json can say which containers a deploy must create.
+_container_liveness() {
+    local declared="$1" oneshot="$2" states name line st code dead=0
+    states="$(cat)"
+    for name in $declared; do
+        line="$(printf '%s\n' "$states" | awk -F'|' -v n="$name" '{sub(/^\//, "", $1)} $1 == n {print $2 "|" $3; exit}')"
+        if [ -z "$line" ]; then echo "MISSING $name"; continue; fi
+        st="${line%%|*}"; code="${line#*|}"
+        case "$st" in
+            running|restarting) ;;
+            exited)
+                case " $oneshot " in
+                    *" $name "*) [ "$code" = "0" ] || { echo "DEAD $name one-shot exited $code"; dead=1; } ;;
+                    *) echo "DEAD $name exited $code (not a declared one_shot)"; dead=1 ;;
+                esac ;;
+            created) echo "DEAD $name created — never started"; dead=1 ;;
+            *) echo "DEAD $name $st"; dead=1 ;;
+        esac
+    done
+    return "$dead"
+}
+
+# Observe the declared containers on the VM and fail the step on any DEAD one.
+# Called at the end of step_compose (the deploy cannot END in created) and by
+# step_health (the post-deploy guard), so both `ship` and `rollout` see it.
+assert_declared_containers_live() {
+    local bj="$SERVICE_DIR/build.json" names oneshot out verdict rc=0
+    names="$(declared_container_names "$bj")" || return 1
+    names="$(printf '%s' "$names" | tr '\n' ' ')"
+    [ -n "${names// /}" ] || { log "liveness: no containers{}.container_name declared — nothing to check"; return 0; }
+    oneshot="$(jq -r '(.containers // {}) | to_entries[] | .value
+                      | select(type == "object" and .one_shot == true)
+                      | .container_name // empty' "$bj" | tr '\n' ' ')" || return 1
+
+    # The trailing marker separates "VM answered, nothing matched" from "VM did
+    # not answer": without it an unreachable host reads as all-MISSING, which is
+    # only a warning — the silent pass this function exists to delete.
+    out="$(ssh_with_retry "$DEPLOY_HOST" "bash -c 'docker inspect --format \"{{.Name}}|{{.State.Status}}|{{.State.ExitCode}}\" $names 2>/dev/null; echo __liveness_probed__'" 2>/dev/null || true)"
+    case "$out" in
+        *__liveness_probed__*) ;;
+        *) log_error "liveness: $DEPLOY_HOST did not answer the container-state probe — refusing to call $names live"; return 1 ;;
+    esac
+
+    verdict="$(printf '%s\n' "$out" | grep -v '^__liveness_probed__$' | _container_liveness "$names" "$oneshot")" || rc=$?
+    [ -n "$verdict" ] && printf '%s\n' "$verdict" | while read -r l; do log "  liveness: $l"; done
+    if [ "$rc" -ne 0 ]; then
+        log_error "liveness: declared container(s) are not live on $DEPLOY_HOST — the deploy did not finish (#560)."
+        log_error "  'created' = compose created it and never started it; docker ps -a lists it and every digest matches, but it is DEAD."
+        return 1
+    fi
+    log "Declared containers live: $names"
+}
+
 step_health() {
     CURRENT_STEP="health"
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host -- skipping health"; return 0; }
@@ -148,6 +224,9 @@ EOF
 
         if [ "$all_ok" = "true" ]; then
             log "All containers healthy (${elapsed}s)"
+            # "All healthy" above is over what `compose ps` LISTS, and it does
+            # not list a created container (#560). Ask about the declared ones.
+            assert_declared_containers_live || return 1
             # Repair before asserting: on "iptables": false hosts the compose up
             # that just ran is itself what broke the published-port mapping, so
             # asserting first would only report a breakage we can fix here.
@@ -164,5 +243,7 @@ EOF
     # Timeout — show final state
     log "TIMEOUT: Not all containers healthy after ${timeout}s"
     ssh_with_retry "$DEPLOY_HOST" "bash -c 'cd \"$DEPLOY_PATH\" && docker compose $cf ps'" 2>/dev/null | while read -r l; do log "  $l"; done
+    # A lone created container leaves `compose ps` empty and lands here; name it.
+    assert_declared_containers_live || true
     return 1
 }

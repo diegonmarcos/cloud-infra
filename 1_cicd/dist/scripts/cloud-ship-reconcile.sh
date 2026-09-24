@@ -65,9 +65,11 @@
 #               class `undecidable` = registry would not answer    → REPORT ONLY
 #               class `unpublished` = running an unpushed image    → REPORT ONLY
 #               class `unreachable` = VM would not answer          → REPORT ONLY
+#               class `created` = container exists, never started → RE-SHIP (#560)
+#               class `stopped` = container exists, not live      → REPORT ONLY
 #   stderr    : the reasoning, one line per service
 #   exit 0    : every declared service reconciles
-#   exit 1    : at least one `drift` finding (re-shippable)
+#   exit 1    : at least one re-shippable finding (`drift`, or `created` — #560)
 #   exit 2    : the reconcile itself could not run (config, or a VM that would
 #               not answer at all). NOT used for individual images that could
 #               not be decided — two of the fleet's packages are private and
@@ -82,11 +84,32 @@
 # outside compose. Auto-shipping them would hold the WG runner for an hour to
 # fix nothing, which is the #179 failure mode wearing a different hat.
 #
+# A MATCHING DIGEST IS NOT A LIVE SERVICE (#560)
+#
+# This note used to stop at the digest, and the probe `docker inspect`s every
+# declared container WHATEVER its state. An evicted deploy left my-ai-api in
+# `created` — compose created it and never started it, no logs, ExitCode 0 —
+# running the correct digest, so it read `in-sync` here while both telegram
+# bots were down. "Deployed" has two halves: the right image, and a container
+# that STARTED. The state is now checked first:
+#   running / restarting          → live, go on to the digest
+#   exited + declared one_shot    → live (an init job that finished), digest
+#   created                       → `created`: the deploy never finished. The
+#                                   same #354 mechanism (a deploy cut short), so
+#                                   it re-ships by default — see ship-reconcile.json.
+#   anything else                 → `stopped`: reported for a human. A crashed
+#                                   long-runner is not fixed by re-deploying the
+#                                   same image, and re-shipping it every run would
+#                                   hold the WG lock to fix nothing (#179).
+# The deploy itself now refuses to end in `created` (assert_declared_containers_live
+# in cloud-ship-container-step-deploy-health.sh); this is the net for the
+# deploy that never got to run that check — the evicted one.
+#
 # TESTING SEAMS
 #
 # The two impure operations are injectable so the tester needs neither a fleet
 # nor a network. Both default to the real implementation:
-#   RECONCILE_PROBE_CMD     <vm> <container>...  -> TSV container/ref/digest
+#   RECONCILE_PROBE_CMD     <vm> <container>...  -> TSV container/ref/digest/state
 #   RECONCILE_REGISTRY_CMD  <image_ref>          -> one sha256:... per line
 # 9_others/test/test_ship_reconcile.sh drives both.
 
@@ -132,7 +155,7 @@ fi
 command -v jq >/dev/null 2>&1 || die "jq is required"
 
 # ── Seam 1: observe one VM ────────────────────────────────────────────────
-# Prints TSV: <container> <config_image_ref> <running_repo_digest>
+# Prints TSV: <container> <config_image_ref> <running_repo_digest> <State.Status>
 #
 # Two round-trips, because the two facts live on two different Docker objects
 # and conflating them is a real bug in the tree: step_status reads
@@ -176,10 +199,12 @@ probe_vm_real() {
     return 0
   fi
 
-  # image id -> ref, for the containers that are actually up
+  # image id -> ref -> state, for every declared container that EXISTS.
+  # "Exists" is not "up": inspect answers for a container stuck in `created`
+  # too, so the state travels with the row and the caller judges it (#560).
   _pairs="$(printf '%s' "$_cjson" \
             | jq -r '.[] | select(.Name != null)
-                     | "\(.Name | ltrimstr("/"))\t\(.Image)\t\(.Config.Image // "")"')"
+                     | "\(.Name | ltrimstr("/"))\t\(.Image)\t\(.Config.Image // "")\t\(.State.Status // "")"')"
   # Reachable but nothing declared is running: return cleanly with no rows, so
   # every declared container falls through to `absent` below.
   [ -n "$_pairs" ] || return 0
@@ -194,9 +219,9 @@ probe_vm_real() {
   _digests="$(printf '%s' "$_ijson" \
               | jq -r '(.[]? | "\(.Id)\t\(.RepoDigests[0] // "")")' 2>/dev/null || true)"
 
-  printf '%s\n' "$_pairs" | while IFS="$(printf '\t')" read -r _c _id _ref; do
+  printf '%s\n' "$_pairs" | while IFS="$(printf '\t')" read -r _c _id _ref _st; do
     _d="$(printf '%s\n' "$_digests" | awk -F'\t' -v id="$_id" '$1==id {print $2; exit}')"
-    printf '%s\t%s\t%s\n' "$_c" "$_ref" "${_d##*@}"
+    printf '%s\t%s\t%s\t%s\n' "$_c" "$_ref" "${_d##*@}" "$_st"
   done
 }
 
@@ -271,9 +296,12 @@ for vm in $VMS; do
     # losing 67 services' worth of answer to one malformed declaration is a far
     # worse outcome than the malformed declaration itself.
     _names=""; _jqerr=""
+    # One row per container: <name>\t<one_shot>. one_shot is how an exited
+    # init job is told apart from a dead long-runner (#560).
     if _names="$(jq -r '(.containers // [])
                         | map(select(type == "object"))
-                        | .[] | .container_name // empty' "$bj" 2>/tmp/reconcile-jq-err)"; then
+                        | .[] | select(.container_name)
+                        | "\(.container_name)\t\(.one_shot == true)"' "$bj" 2>/tmp/reconcile-jq-err)"; then
       :
     else
       _jqerr="$(cat /tmp/reconcile-jq-err 2>/dev/null || true)"
@@ -281,8 +309,8 @@ for vm in $VMS; do
       continue
     fi
     [ -n "$_names" ] || { note "  $dir: no containers[].container_name — nothing running to compare"; continue; }
-    printf '%s\n' "$_names" | while IFS= read -r cn; do
-      [ -n "$cn" ] && printf '%s\t%s\n' "$cn" "$dir" >> "$MAP"
+    printf '%s\n' "$_names" | while IFS="$(printf '\t')" read -r cn os; do
+      [ -n "$cn" ] && printf '%s\t%s\t%s\n' "$cn" "$dir" "$os" >> "$MAP"
     done
   done < <(jq -r --arg vm "$vm" '.services | to_entries[]
                                  | select(.value.vm == $vm)
@@ -323,8 +351,33 @@ for vm in $VMS; do
     cname="$(printf '%s' "$line" | cut -f1)"
     ref="$(printf '%s' "$line" | cut -f2)"
     running="$(printf '%s' "$line" | cut -f3)"
+    state="$(printf '%s' "$line" | cut -f4)"
     dir="$(awk -F'\t' -v c="$cname" '$1==c {print $2; exit}' "$MAP")"
+    oneshot="$(awk -F'\t' -v c="$cname" '$1==c {print $3; exit}' "$MAP")"
     [ -n "$dir" ] || continue
+
+    # Liveness BEFORE the digest, and before the upstream skip: a created
+    # postgres is as dead as a created app, and its digest proves nothing (#560).
+    case "$state" in
+      running|restarting) ;;
+      exited)
+        if [ "$oneshot" != "true" ]; then
+          note "  $dir/$cname: STOPPED — exited, and not a declared one_shot"
+          printf '%s\t%s\t%s\t%s\n' "$vm" "$dir" "stopped" "$cname state=exited"
+          continue
+        fi ;;
+      created)
+        note "  $dir/$cname: CREATED — never started; the deploy did not finish, whatever the digest says"
+        printf '%s\t%s\t%s\t%s\n' "$vm" "$dir" "created" "$cname state=created"
+        RC=1
+        continue ;;
+      *)
+        # Empty included: the real probe always reports a state, so a row
+        # without one is a probe that lost it — never evidence of life.
+        note "  $dir/$cname: STOPPED — state '${state:-<unreported>}'"
+        printf '%s\t%s\t%s\t%s\n' "$vm" "$dir" "stopped" "$cname state=${state:-unreported}"
+        continue ;;
+    esac
 
     case "$ref" in
       "$OUR_REGISTRY"/*) ;;
@@ -389,7 +442,7 @@ for vm in $VMS; do
   done <<< "$OBSERVED"
 
   # Declared containers the probe never mentioned are not running at all.
-  while IFS="$(printf '\t')" read -r cname dir; do
+  while IFS="$(printf '\t')" read -r cname dir _os; do
     [ -n "$cname" ] || continue
     printf '%s' "$OBSERVED" | cut -f1 | grep -qxF "$cname" && continue
     note "  $dir/$cname: ABSENT — declared but not running (reported, not re-shipped)"
@@ -408,8 +461,8 @@ if [ "$FOUND_ANY_VM" -eq 0 ]; then
 fi
 
 case "$RC" in
-  0) note "RECONCILED — every declared container runs the digest the registry holds" ;;
-  1) note "DRIFT — the services listed on stdout are committed, built, and NOT on the fleet" ;;
+  0) note "RECONCILED — every declared container is live and runs the digest the registry holds" ;;
+  1) note "DRIFT — the services listed on stdout are committed, built, and NOT running on the fleet" ;;
   2) note "UNDECIDABLE — the reconcile could not run at all" ;;
 esac
 exit "$RC"
