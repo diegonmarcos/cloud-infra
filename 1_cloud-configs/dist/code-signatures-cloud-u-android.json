@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19828,
+    "files": 19832,
     "by_lang": {
       "py": 53,
-      "sh": 265,
-      "kotlin": 9933,
+      "sh": 266,
+      "kotlin": 9936,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 132,
-      "shell": 188,
+      "shell": 189,
       "java": 606,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9931,
+      "kotlin": 9934,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -2477,7 +2477,9 @@
         "declould_frontend()",
         "sever_nbstore()",
         "run_guard()",
-        "run_guard_repo()"
+        "run_guard_repo()",
+        "build_acode()",
+        "run_acode()"
       ],
       "imports": [],
       "symbols": [
@@ -2488,7 +2490,9 @@
         "declould_frontend()",
         "sever_nbstore()",
         "run_guard()",
-        "run_guard_repo()"
+        "run_guard_repo()",
+        "build_acode()",
+        "run_acode()"
       ]
     },
     {
@@ -4912,21 +4916,19 @@
         "PushFragment"
       ],
       "imports": [
-        "android.app.Notification",
         "android.content.Context",
         "android.os.Bundle",
         "android.view.LayoutInflater",
         "android.view.View",
         "android.view.ViewGroup",
         "android.widget.Button",
-        "android.widget.ImageView",
         "android.widget.LinearLayout",
         "android.widget.ScrollView",
         "android.widget.Switch",
+        "android.widget.Toast",
         "android.widget.TextView",
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.launcher.Sections",
         "com.diegonmarcos.superapp.notificationcenter.BadgeCustomization",
         "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
         "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
@@ -4937,6 +4939,7 @@
         "onResume()",
         "rebuild()",
         "badgeBox(ctx: Context, b: BadgeDeclaration.Badge)",
+        "launched(ctx: Context, results: Map<BadgeDeclaration.Badge, String?>)",
         "customMenu(ctx: Context, b: BadgeDeclaration.Badge)",
         "control(ctx: Context, b: BadgeDeclaration.Badge, opt: BadgeDeclaration.Option)",
         "render()",
@@ -5319,6 +5322,7 @@
         "transport(target: String)",
         "persistent()",
         "showWhenIdle()",
+        "repost()",
         "refresh()",
         "postIdle()",
         "cancel()",
@@ -7055,6 +7059,8 @@
         "android.provider.Settings",
         "android.util.Base64",
         "android.util.Log",
+        "android.view.View",
+        "android.view.ViewGroup",
         "androidx.core.content.ContextCompat",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration.Badge"
@@ -7063,7 +7069,12 @@
         "ensureAll(ctx: Context)",
         "start(ctx: Context, fqcn: String)",
         "repostOnDismiss(svc: Service, requestCode: Int)",
+        "pinned(ctx: Context, badgeId: String)",
+        "launch(ctx: Context, b: Badge)",
+        "launchAll(ctx: Context)",
+        "clearNonBadges(ctx: Context)",
         "live(ctx: Context, b: Badge)",
+        "view(ctx: Context, n: Notification, parent: ViewGroup)",
         "statuses(ctx: Context)",
         "status(ctx: Context, b: Badge)",
         "missingRequirement(ctx: Context, b: Badge)",
@@ -9314,6 +9325,7 @@
         "androidx.fragment.app.FragmentActivity",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCustomization",
         "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
         "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
         "org.junit.Assert.assertEquals",
@@ -9483,14 +9495,17 @@
       ],
       "imports": [
         "android.app.Application",
+        "androidx.compose.ui.semantics.SemanticsActions",
         "androidx.compose.ui.test.assertTextEquals",
         "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.text.TextLayoutResult",
         "androidx.core.graphics.Insets",
         "androidx.core.view.ViewCompat",
         "androidx.core.view.WindowInsetsCompat",
         "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
         "com.diegonmarcos.superapp.launcher.Sections",
         "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "org.junit.runner.RunWith",
@@ -10423,6 +10438,20 @@
         "ok()",
         "bad()",
         "check()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-main-menu-bottom-nav-derived.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -12224,7 +12253,13 @@
         "BottomNavBar"
       ],
       "imports": [
+        "android.content.Context",
+        "android.os.PowerManager",
+        "android.provider.Settings",
         "android.widget.Toast",
+        "androidx.compose.animation.core.animateFloatAsState",
+        "androidx.compose.animation.core.snap",
+        "androidx.compose.animation.core.tween",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
@@ -12257,13 +12292,7 @@
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip",
-        "androidx.compose.ui.geometry.Offset",
-        "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.graphics.painter.Painter",
-        "androidx.compose.ui.graphics.vector.ImageVector"
+        "androidx.compose.ui.Alignment"
       ],
       "symbols": [
         "itemTag(id: String)",
@@ -12271,6 +12300,8 @@
         "labelTag(id: String)",
         "bottomNavInsets()",
         "BottomNavIsland( entries: List<BottomNavEntry>, selectedId: String?, onSelect: (BottomNavEntry)",
+        "barMotionEnabled(animatorDurationScale: Float, powerSaveMode: Boolean)",
+        "rememberBarMotion(key: Any?)",
         "onPreScroll(available: Offset, source: NestedScrollSource)",
         "rememberBottomNavCollapse()",
         "mailEntries()",
@@ -12355,6 +12386,8 @@
       ],
       "imports": [
         "android.content.ComponentName",
+        "android.content.Context",
+        "android.os.PowerManager",
         "android.graphics.Bitmap",
         "android.graphics.Canvas",
         "android.view.View",
@@ -12391,9 +12424,7 @@
         "androidx.compose.ui.semantics.SemanticsActions",
         "androidx.compose.ui.test.assert",
         "androidx.compose.ui.test.assertCountEquals",
-        "androidx.compose.ui.test.hasContentDescription",
-        "androidx.compose.ui.test.isSelected",
-        "androidx.compose.ui.test.junit4.createAndroidComposeRule"
+        "androidx.compose.ui.test.hasContentDescription"
       ],
       "symbols": [
         "evaluate()",
@@ -12408,6 +12439,9 @@
         "otherColour(msg: String, unexpected: Color, actual: Color)",
         "inside(msg: String, outer: Rect, inner: Rect)",
         "check(sel: String)",
+        "showDriven()",
+        "iconsOnlyHeight()",
+        "collapseFrames(frames: Int)",
         "showMailBar()",
         "navBarInset(px: Int)",
         "assertScreenAboveIsland(why: String)",
@@ -38833,7 +38867,7 @@
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberCoroutineScope"
+        "androidx.compose.ui.input.nestedscroll.nestedScroll"
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
@@ -39250,6 +39284,7 @@
         "androidx.compose.ui.platform.LocalView",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.assertTextEquals",
         "androidx.compose.ui.test.isSelected",
         "androidx.compose.ui.test.junit4.createAndroidComposeRule",
@@ -39270,8 +39305,7 @@
         "org.junit.runners.model.Statement",
         "org.robolectric.RobolectricTestRunner",
         "org.robolectric.RuntimeEnvironment",
-        "org.robolectric.Shadows.shadowOf",
-        "org.robolectric.annotation.Config"
+        "org.robolectric.Shadows.shadowOf"
       ],
       "symbols": [
         "evaluate()",
@@ -97680,8 +97714,9 @@
         "stored(key, fallback)",
         "store(key, value)",
         "panelHeader(title, ...actions)",
-        "renderBacklog(panel)",
+        "renderBacklogView(panel, title, entry, ...extra)",
         "load(file)",
+        "renderBacklog(panel)",
         "renderRepos(panel)",
         "renderAgents(panel)",
         "renderHome(panel)",
@@ -117057,7 +117092,6 @@
         "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AttachFile",
-        "androidx.compose.material.icons.filled.ContentCopy",
         "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.CircularProgressIndicator",
@@ -117079,7 +117113,8 @@
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember"
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope"
       ],
       "symbols": [
         "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, flash: Float, card: Color, )",
@@ -118388,8 +118423,11 @@
         "AccountMailStats"
       ],
       "imports": [
+        "androidx.annotation.StringRes",
+        "app.sterna.R",
         "app.sterna.core.data.account.MailProtocol",
         "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.core.data.db.AccountHomeCounts",
         "app.sterna.core.jmap.model.Mailbox",
         "app.sterna.ui.inbox.drawerUnreadCount",
         "app.sterna.ui.inbox.showOnlySubscribedFor",
@@ -118397,11 +118435,15 @@
       ],
       "symbols": [
         "accountUnreadTotal(drawnFolders: List<Mailbox>)",
-        "accountMailStats( account: StoredAccount, allFolders: List<Mailbox>, drawnFolders: List<Mailbox>, /** `MailRepository.folderRowsBadgeUnread` for this account — asked of the repository, never * re-derived from the protocol here, so there is one answer to \"can a row badge unread\". */ unreadIsCounted: Boolean, cachedMessages: Int, )",
+        "accountMailStats( account: StoredAccount, allFolders: List<Mailbox>, drawnFolders: List<Mailbox>, /** `MailRepository.folderRowsBadgeUnread` for this account — asked of the repository, never * re-derived from the protocol here, so there is one answer to \"can a row badge unread\". */ unreadIsCounted: Boolean, cachedMessages: Int, /** `StorageRepository.homeCounts` for this account; null = it has no cached mail at all. */ home: AccountHomeCounts? = null, )",
         "accountHost(account: StoredAccount)",
-        "accountMailStatsList( accounts: List<StoredAccount>, foldersPerAccount: List<List<Mailbox>>, cachedMessages: Map<String, Int>, /** `MailRepository.folderRowsBadgeUnread`, per account id. */ unreadIsCounted: (String)",
+        "accountMailStatsList( accounts: List<StoredAccount>, foldersPerAccount: List<List<Mailbox>>, cachedMessages: Map<String, Int>, /** `StorageRepository.homeCounts`, per account id. */ homeCounts: Map<String, AccountHomeCounts> = emptyMap()",
+        "totalUnread(accounts: List<AccountMailStats>)",
+        "heroUnread(accounts: List<AccountMailStats>)",
+        "of(accounts: List<AccountMailStats>)",
         "class rather",
-        "class AccountMailStats"
+        "class AccountMailStats",
+        "class HomeMood"
       ]
     },
     {
@@ -118412,6 +118454,8 @@
         "HomeScreen"
       ],
       "imports": [
+        "androidx.annotation.StringRes",
+        "androidx.compose.animation.core.animateFloatAsState",
         "androidx.compose.animation.core.animateIntAsState",
         "androidx.compose.animation.core.snap",
         "androidx.compose.animation.core.tween",
@@ -118431,6 +118475,7 @@
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.width",
         "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material.icons.Icons",
@@ -118448,20 +118493,30 @@
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
-        "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier"
+        "androidx.compose.runtime.Composable"
       ],
       "symbols": [
         "HomeScreen( onBack: ()",
+        "HomeContent(ui: HomeUi, onOpen: (HomeDestination)",
         "NoAccounts(modifier: Modifier)",
+        "actionsOf(kind: HomeDestination.Kind, onOpen: (HomeDestination)",
         "ShortcutsRow(actions: List<HomeAction>)",
+        "barSegmentTag(accountId: String)",
+        "statTag(accountId: String, key: String)",
         "QuickmarksRow(actions: List<HomeAction>)",
+        "rememberRevealed(motionOn: Boolean)",
+        "CountUp( target: Int, motionOn: Boolean, style: TextStyle, color: Color, modifier: Modifier = Modifier, delayMillis: Int = 0, )",
+        "accentOf(stats: AccountMailStats)",
+        "Hero(accounts: List<AccountMailStats>, motionOn: Boolean)",
+        "UnreadBar(accounts: List<AccountMailStats>, motionOn: Boolean)",
         "AccountSection(stats: AccountMailStats, motionOn: Boolean)",
         "statsOf(stats: AccountMailStats)",
-        "StatRow(label: String, value: Int?, accent: Color, motionOn: Boolean)",
+        "StatRow(accountId: String, stat: Stat, accent: Color, motionOn: Boolean, delayMillis: Int)",
+        "FactRow(label: String, value: String, tag: String)",
+        "class HomeDestination",
+        "class Kind",
         "class HomeAction",
+        "class GlassOrb",
         "class Stat"
       ]
     },
@@ -118479,6 +118534,7 @@
         "androidx.lifecycle.viewModelScope",
         "app.sterna.container",
         "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.core.data.db.AccountHomeCounts",
         "kotlinx.coroutines.ExperimentalCoroutinesApi",
         "kotlinx.coroutines.flow.Flow",
         "kotlinx.coroutines.flow.SharingStarted",
@@ -118493,9 +118549,10 @@
       ],
       "symbols": [
         "statsFor(accounts: List<StoredAccount>)",
-        "cachedMessagesByAccount()",
+        "cacheNumbers()",
         "class HomeUi",
-        "class HomeViewModel"
+        "class HomeViewModel",
+        "class CacheNumbers"
       ]
     },
     {
@@ -119464,6 +119521,7 @@
         "MessageTopBar( active: ActiveMessage?, onBack: ()",
         "receivedTextToolSource(email: Email)",
         "copyVerificationCodeOrSayNone(clipboard: ClipboardManager, context: Context, email: Email?)",
+        "CopyCodeIcon()",
         "verificationCodeFromMessage(email: Email)",
         "ReadingGroupSeparator()",
         "MessageActions( active: ActiveMessage, onBack: ()",
@@ -119492,8 +119550,7 @@
         "InviteRsvp(response: InviteResponse, onRespond: (String)",
         "addToCalendar(context: Context, event: ParsedEvent)",
         "formatEventWhen(event: ParsedEvent)",
-        "formatSize(bytes: Long)",
-        "prefs(context: Context)"
+        "formatSize(bytes: Long)"
       ]
     },
     {
@@ -123434,6 +123491,7 @@
         "java.io.File"
       ],
       "symbols": [
+        "CopyCodeIcon()",
         "EmailListItem(...)",
         "emailListItemBlock()",
         "EmailListItem(\")",
@@ -123442,6 +123500,64 @@
         "listRowActionsBlock()",
         "ListRowActions(\")",
         "class EmailListItemPreviewAndActionsRowTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/components/EmailListItemRow3RenderedTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EmailListItemRow3RenderedTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.graphics.toPixelMap",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithContentDescription",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.test.performClick",
+        "app.sterna.R",
+        "app.sterna.core.data.settings.ThemeMode",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.core.jmap.model.EmailAddress",
+        "app.sterna.core.jmap.model.EmailBodyPart",
+        "app.sterna.ui.text.TextTool",
+        "app.sterna.ui.theme.LocalMailListPalette",
+        "app.sterna.ui.theme.SternaTheme",
+        "kotlin.math.abs",
+        "kotlin.math.roundToInt",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show(unread: Boolean)",
+        "bounds(label: String, byText: Boolean = false)",
+        "inkedPixels(b: Rect)",
+        "assertRow3Visible(unread: Boolean)",
+        "class EmailListItemRow3RenderedTest"
       ]
     },
     {
@@ -125995,20 +126111,26 @@
         "AccountMailStatsTest"
       ],
       "imports": [
+        "app.sterna.R",
         "app.sterna.core.data.account.MailProtocol",
         "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.core.data.db.AccountHomeCounts",
         "app.sterna.core.jmap.model.Mailbox",
         "app.sterna.ui.inbox.collapsedFolderIds",
         "app.sterna.ui.inbox.drawerUnreadCount",
         "app.sterna.ui.inbox.mailboxTree",
         "app.sterna.ui.inbox.visibleFolders",
         "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
         "org.junit.Test"
       ],
       "symbols": [
         "mailbox( id: String, unread: Int = 0, role: String? = null, subscribed: Boolean = true, )",
         "account( id: String, protocol: MailProtocol = MailProtocol.JMAP, onlySubscribed: Boolean = false, )",
+        "card( id: String = \"a\", unread: Int? = 0, cached: Int = 0, starred: Int = 0, )",
+        "mood(unread: Int?, cached: Int = 1)",
         "class AccountMailStatsTest"
       ]
     },
@@ -126025,12 +126147,72 @@
         "org.junit.Test"
       ],
       "symbols": [
-        "AccountSection(stats: AccountMailStats, motionOn: Boolean)",
-        "StatRow(label: String, value: Int?, accent: Color, motionOn: Boolean)",
-        "block(file: File, prefix: String, count: Int)",
-        "only(lines: List<String>, needle: String)",
-        "codeLines(file: File)",
+        "code(line: String)",
         "class HomeAnimatedStatsWiringTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/home/HomeContentRenderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HomeContentRenderTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.os.PowerManager",
+        "android.provider.Settings",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.graphics.toPixelMap",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.semantics.SemanticsActions",
+        "androidx.compose.ui.semantics.SemanticsProperties",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertTextEquals",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performSemanticsAction",
+        "app.sterna.R",
+        "app.sterna.core.data.account.MailProtocol",
+        "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.core.data.db.AccountHomeCounts",
+        "app.sterna.core.jmap.model.Mailbox",
+        "java.text.DateFormat",
+        "java.util.Date",
+        "kotlin.math.abs",
+        "kotlin.math.roundToInt",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "evaluate()",
+        "mailbox(id: String, unread: Int, subscribed: Boolean = true)",
+        "account(id: String, protocol: MailProtocol = MailProtocol.JMAP, color: Int? = null)",
+        "knownMailbox()",
+        "show( ui: HomeUi, batterySaver: Boolean = false, manualClock: Boolean = false, animatorScale: Float? = null, )",
+        "textOf(tag: String)",
+        "string(id: Int, vararg args: Any)",
+        "date(millis: Long)",
+        "heroAt(millisAfterStart: Long)",
+        "pixels(b: Rect)",
+        "near(a: Color, b: Color)",
+        "class HomeContentRenderTest"
       ]
     },
     {
@@ -132186,6 +132368,7 @@
         "EmailKeyRow",
         "SenderVolumeRow",
         "AccountMessageCount",
+        "AccountHomeCounts",
         "MailboxUnread"
       ],
       "imports": [
@@ -134453,6 +134636,7 @@
       ],
       "imports": [
         "android.content.Context",
+        "app.sterna.core.data.db.AccountHomeCounts",
         "app.sterna.core.data.db.EmailBodyDao",
         "app.sterna.core.data.db.EmailDao",
         "app.sterna.core.data.db.EmailFtsDao",
@@ -134470,6 +134654,7 @@
       ],
       "symbols": [
         "usage()",
+        "homeCounts(sinceMillis: Long)",
         "clearAllCache()",
         "accountMessageCount(accountId: String)",
         "clearAccountCache(accountId: String)",
@@ -138259,6 +138444,33 @@
         "credentials(server: ScriptedImapServer)",
         "unusedTokenRefresher()",
         "class GroupTokenSurvivesTheAppendRoundTripTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/mail/HomeCountsSqlTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HomeCountsSqlTest"
+      ],
+      "imports": [
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.sql.Connection",
+        "java.sql.DriverManager"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "add(account: String, id: String, flagged: Boolean = false, attachment: Boolean = false, sortKey: Long)",
+        "counts(since: Long)",
+        "knownMailbox()",
+        "class HomeCountsSqlTest",
+        "class Counts"
       ]
     },
     {
@@ -346278,6 +346490,7 @@
         "android.os.Environment",
         "android.provider.Settings",
         "androidx.core.content.ContextCompat",
+        "com.getcapacitor.JSArray",
         "com.getcapacitor.JSObject",
         "com.getcapacitor.Plugin",
         "com.getcapacitor.PluginCall",
@@ -346289,7 +346502,9 @@
       ],
       "symbols": [
         "hasExternalStorageAccess()",
+        "guardedFile(call: PluginCall, path: String)",
         "readFile(call: PluginCall)",
+        "listDir(call: PluginCall)",
         "openSettings(call: PluginCall)",
         "class ExternalFilePlugin"
       ]
@@ -346938,8 +347153,11 @@
       "exports": [
         "ExternalFileReadResult",
         "ExternalReadError",
+        "ExternalDirEntry",
+        "ExternalDirListing",
         "ExternalFilePluginType",
         "ExternalFile",
+        "EXTERNAL_FILE_ROOT",
         "EXTERNAL_FILE_ERRORS"
       ],
       "imports": [
