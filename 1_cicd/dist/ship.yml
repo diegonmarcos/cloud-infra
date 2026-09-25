@@ -407,17 +407,9 @@ jobs:
               # workflow_run the same empty set IS genuinely nothing-to-do (the
               # gen-configs dist refresh landing as a no-op), so it stays green.
               #
-              # Exception: a push whose EVERY path sits under a declared
-              # no-deploy dir (1_cicd/src/ship-no-deploy-paths.json — today
-              # _dispatch/, the agent-runner scripts that reach the agents by
-              # `git pull` of the shared tree, not by an image) IS a proven
-              # no-op. It resolved "empty" for acee1ce2e and turned Ship red
-              # for a change that has nothing to ship (run 36147323786).
-              _NODEPLOY=$(jq -r '.dirs[]' 1_cicd/src/ship-no-deploy-paths.json)
-              _LEFT=$(printf '%s\n' "$SUB_CHANGED" | grep -v '^$' \
-                | grep -vxE "($(printf '%s' "$_NODEPLOY" | paste -sd'|'))/.*" || true)
+              # Exception: only no-deploy paths (_dispatch/) = proven no-op.
               if [ "${{ github.event_name }}" = "repository_dispatch" ] \
-                 && { [ -n "$_LEFT" ] || [ -z "$SUB_CHANGED" ]; }; then
+                 && ! printf '%s\n' "$SUB_CHANGED" | bash 1_cicd/src/scripts/cloud-ship-detect-nodeploy-only.sh; then
                 echo "verdict=empty" >> "$GITHUB_OUTPUT"
               else
                 echo "verdict=nothing-to-ship" >> "$GITHUB_OUTPUT"
