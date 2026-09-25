@@ -337,7 +337,10 @@ step_compose() {
             #      with no running/stopped container referencing them AND last
             #      used > 30 days ago — safe for steady-state VMs, cleans the
             #      historical pulls that accumulate over months.
-            #   6. journalctl --vacuum-size=50M
+            #   6. journalctl --vacuum-time=<floor>d — #413: never --vacuum-size, it
+            #      deletes by volume regardless of age and erased 16 days of oci-apps
+            #      journal. Floor: config.json native.protection.journal_retention_floor_days;
+            #      undeclared → no vacuum (an undeclared floor must not delete).
             #   7. rm /var/disk-reserve/ballast.bin (engineered safety net)
             #
             # REVERTED 2026-05-05: an "orphan /var/lib/containerd" cleanup step
@@ -366,6 +369,11 @@ step_compose() {
             #     regenerates them; heavy script's existing 7-day retention
             #     handles the next cycle if ship continues to fail.
             #   - apt cache (apt-get clean) — regenerable, cheap to clear.
+            JOURNAL_FLOOR_DAYS=$(jq -r '.native.protection.journal_retention_floor_days // empty' "${CLOUD_ROOT:-$STEPS_DIR/../../../..}/config.json" 2>/dev/null)
+            case "$JOURNAL_FLOOR_DAYS" in
+                ''|*[!0-9]*) JOURNAL_VACUUM_CMD=true ;;
+                *) JOURNAL_VACUUM_CMD="sudo journalctl --vacuum-time=${JOURNAL_FLOOR_DAYS}d >/dev/null 2>&1" ;;
+            esac
             ssh_vm "sudo find /var/lib/docker/containers -name '*-json.log' -size +50M -exec truncate -s 0 {} + 2>/dev/null || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST http://localhost/containers/prune >/dev/null 2>&1 || true; \
                     curl -sf --max-time 30 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22dangling%22%3A%7B%22true%22%3Atrue%7D%7D' >/dev/null 2>&1 || true; \
@@ -373,7 +381,7 @@ step_compose() {
                     curl -sf --max-time 60 --unix-socket /var/run/docker.sock -X POST 'http://localhost/images/prune?filters=%7B%22until%22%3A%5B%22720h%22%5D%7D' >/dev/null 2>&1 || true; \
                     sudo find /var/backups/evidence -name 'vm-system.tar.gz' -delete 2>/dev/null || true; \
                     sudo apt-get clean -qq 2>/dev/null || true; \
-                    sudo journalctl --vacuum-size=50M >/dev/null 2>&1 || true; \
+                    $JOURNAL_VACUUM_CMD || true; \
                     sudo rm -f /var/disk-reserve/ballast.bin 2>/dev/null || true" 2>&1 | tee -a "$BUILD_LOG_FILE" || true
             FREE_KB=$(ssh_vm "df -P / 2>/dev/null | awk 'NR==2 {print \$4}'" 2>/dev/null)
             : "${FREE_KB:=0}"
