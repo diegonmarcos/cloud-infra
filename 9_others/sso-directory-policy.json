@@ -26,18 +26,47 @@
     "ldaps://"
   ],
   "file_extensions": [
-    "nix", "json", "yml", "yaml", "tpl", "toml", "conf", "env", "sh", "ts", "js", "py", "ini"
+    "nix",
+    "json",
+    "yml",
+    "yaml",
+    "tpl",
+    "toml",
+    "conf",
+    "env",
+    "sh",
+    "ts",
+    "js",
+    "py",
+    "ini"
   ],
   "exclude_dirs": [
-    ".git", "node_modules", "z_archive", "dist", "vendor"
+    ".git",
+    "node_modules",
+    "z_archive",
+    "dist",
+    "vendor"
   ],
   "declared_ldap_consumers": [],
   "authelia_rendered_config": "infra-sec_authelia/dist/configs/configuration.yml",
   "authelia_backend": "file",
   "sso_gaps_2026_09_24": [
-    "Mail has two password stores that disagree: maddy (local_authdb) and Stalwart (its own directory). activate.sh.tpl records maddy with five accounts and Stalwart with two. Radicale (calendar and contacts) checks passwords against MADDY over IMAP, but live IMAPS goes to STALWART. Fix without LDAP: point Radicale at Stalwart and retire the maddy authdb.",
-    "No live app uses Authelia's OIDC provider for its own sign-in. Gitea, Mattermost, PhotoPrism, HedgeDoc, Filebrowser, Umami and OpenObserve sit behind forward_auth and keep their own accounts as well. Each could use OIDC with the provider that already exists, which needs no new container.",
-    "Login-bearing routes outside Authelia: vault. (Vaultwarden, WG-only, SIGNUPS_ALLOWED=true), matrix. (continuwuity, PUBLIC, token registration), chat. /api/v4/* (public bypass), IMAPS and SMTPS through SNI on :443 (public), Gitea SSH :2222 (WG-only).",
-    "Stale OIDC client: 'nocodb' in infra-sec_authelia/src/oidc-clients.json points at a service that now exists only in z_archive/bc-obs_nocodb. Removing it restarts Authelia, which interrupts SSO. Do it in a planned window, not as a drive-by."
-  ]
+    "RESOLVED 2026-09-25 (#467 follow-up). Mail password stores: Stalwart is authoritative (imap. and smtps. on :443 already terminate there). Its activate hook has created every declared user from the same build.json users and pass_env as maddy since 2026-09-05, so the declarations no longer disagree; the 'maddy five, Stalwart two' count was measured 2026-09-04, before that hook. Radicale (calendar and contacts) now checks IMAP logins against Stalwart's IMAPS listener (declared imap_ssl port) instead of maddy. No password value was changed. Maddy's authdb is still declared for :25 inbound and rollback; retiring it is a separate change.",
+    "OPEN, by design. No live app uses Authelia's OIDC provider for its own sign-in. Gitea, Mattermost, PhotoPrism, HedgeDoc, Filebrowser, Umami and OpenObserve sit behind forward_auth and keep their own accounts as well. Each could use OIDC with the provider that already exists, which needs no new container.",
+    "RESOLVED 2026-09-25 where a route can take forward_auth, KEPT where it cannot. vault.: Vaultwarden's open signup is now off (SIGNUPS_ALLOWED=false; invitations still work). The route stays outside forward_auth because the Bitwarden apps and extension cannot answer an Authelia redirect, and it is WG-only. matrix. (continuwuity, public, registration by token) stays public: federation and Matrix clients cannot do forward_auth. chat. /api/v4/* stays a bypass: the Mattermost apps and bots need it and Mattermost authenticates them itself. IMAPS and SMTPS through SNI on :443, and Gitea SSH :2222, are not HTTP, so forward_auth cannot apply; each checks its own credentials.",
+    "RESOLVED 2026-09-25. The stale 'nocodb' OIDC client is deleted from infra-sec_authelia/src/oidc-clients.json. Deploying it restarts Authelia: forward_auth and the bearer path (via infra-sec_introspect-proxy) error for the length of the restart. The now-unused AUTHELIA_OIDC_CLIENT_NOCODB_SECRET is still in the sops files, because a value cannot be removed without the age key; drop it at the next secrets edit."
+  ],
+  "sso_gaps_closed": {
+    "_comment": "Checked by 9_others/test/test_sso_gaps_closed.sh against cloud-u-containers.",
+    "removed_oidc_clients": [
+      "nocodb"
+    ],
+    "radicale_auth_upstream": "stalwart",
+    "radicale_forbidden_upstream": "maddy",
+    "radicale_dirs": [
+      "user-prod_calendar-radicale",
+      "user-prod_contacts-radicale"
+    ],
+    "vaultwarden_signups_allowed": "false"
+  }
 }
