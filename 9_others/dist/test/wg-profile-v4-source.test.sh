@@ -17,7 +17,7 @@
 #
 # Android installs VPN routes with no preferred source, so the kernel sources
 # EVERY IPv4 packet on the tun from its FIRST IPv4 Address. The profiles hold
-# two IPv4 identities (wg0 10.0.0.9, wg-public 10.1.0.9) on one tun, and each
+# two IPv4 identities (e.g. wg0 10.0.0.9, wg-public 10.1.0.9) on one tun, and each
 # hub only accepts its own (cryptokey routing: anything else is dropped as
 # "unallowed src IP" and counted in the hub's rx_frame_errors — 87873 of them
 # on oci-analytics' wg-public, 0 on wg0, measured 2026-09-24). With 10.0.0.9
@@ -48,7 +48,9 @@ done
 exec python3 - "$PROFILES" "$TOPOLOGY" <<'PY'
 import ipaddress, json, re, sys
 
-profiles = json.load(open(sys.argv[1]))["profiles"]
+# #573: profiles are published PER PEER (profiles.<peer>.<profile>); every phone is asserted.
+profiles = {f"{peer}/{pid}": prof for peer, profs in json.load(open(sys.argv[1]))["profiles"].items()
+            for pid, prof in profs.items()}
 native = json.load(open(sys.argv[2]))["native"]
 meshes = {"wg0": native.get("wireguard") or {}, "wg-public": native.get("wireguard_public") or {}}
 

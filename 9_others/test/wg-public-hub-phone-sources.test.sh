@@ -30,7 +30,9 @@ done
 exec python3 - "$PROFILES" "$TOPOLOGY" "$RENDERER" <<'PY'
 import ipaddress, json, re, sys
 
-profiles = json.load(open(sys.argv[1]))["profiles"]
+# #573: profiles are published PER PEER (profiles.<peer>.<profile>); every phone is asserted.
+profiles = {f"{peer}/{pid}": prof for peer, profs in json.load(open(sys.argv[1]))["profiles"].items()
+            for pid, prof in profs.items()}
 clients = (json.load(open(sys.argv[2]))["native"].get("wireguard_public") or {}).get("clients", {})
 renderer = open(sys.argv[3]).read()
 
