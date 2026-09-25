@@ -69,22 +69,29 @@ runs:
         ENV_FILE="$HOME/git/cloud-vault/vault-keys-bash.env"
         DOCKER_ENV="$HOME/git/cloud-vault/vault-keys-docker.envfile"
         MISSING=""
-        # Multi-line secrets (age key, PEM SSH keys) are emitted by generate_env
-        # as <KEY>_FILE=<path>, NOT inline <KEY>=<value> — this is the intended
-        # contract and must stay. Scalars (GITHUB_TOKEN, WG_PRIVATE_KEY) stay
-        # inline. Accept EITHER form so both dialects validate as present.
+        # Scalars (GITHUB_TOKEN, WG_PRIVATE_KEY) are inline <KEY>=<value> in
+        # bash.env. Multi-line secrets (age key, PEM SSH keys) are NOT in
+        # bash.env at all since cloud-vault a2191da (#479 stopped emitting
+        # their <KEY>_FILE paths — dangling on every host but one); they live
+        # in vault-keys-systemd.yaml as a `<KEY>: |-` block. Each key is
+        # checked where the emitter actually puts it, not in either/or.
         # Key set tracks the LIVE VM fleet (oci-mail, oci-analytics, oci-apps,
         # gcp-proxy). gcp-t4 was decommissioned (moved to z_archive/) so its
         # GCP_T4_SSH_KEY is no longer provisioned in vault — requiring it here
         # would fail this check forever.
-        for k in SOPS_AGE_KEY WG_PRIVATE_KEY GITHUB_TOKEN OCI_SSH_KEY GCP_PROXY_SSH_KEY; do
-          grep -qE "^${k}(_FILE)?=" "$ENV_FILE" || MISSING="$MISSING $k"
+        YAML_ENV="$HOME/git/cloud-vault/vault-keys-systemd.yaml"
+        [ -f "$YAML_ENV" ] || { echo "::error::vault-keys-systemd.yaml not generated"; exit 1; }
+        for k in WG_PRIVATE_KEY GITHUB_TOKEN; do
+          grep -qE "^${k}=" "$ENV_FILE" || MISSING="$MISSING $k"
+        done
+        for k in SOPS_AGE_KEY OCI_SSH_KEY GCP_PROXY_SSH_KEY; do
+          grep -qE "^${k}:" "$YAML_ENV" || MISSING="$MISSING $k"
         done
         if [ -n "$MISSING" ]; then
-          echo "::error::Missing required infra keys in vault-keys-bash.env:$MISSING"
+          echo "::error::Missing required infra keys (scalars in vault-keys-bash.env, multi-line in vault-keys-systemd.yaml):$MISSING"
           exit 1
         fi
-        echo "All 5 required infra keys present in vault-keys-bash.env (inline or _FILE)"
+        echo "All 5 required infra keys present (2 scalars in bash.env, 3 multi-line in systemd.yaml)"
 
         # Sanity: docker.envfile must carry at least the scalar (single-line)
         # secrets that cloud-builder's compose env_file: passes through. The
