@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19894,
+    "files": 19897,
     "by_lang": {
       "py": 53,
-      "sh": 273,
-      "kotlin": 9992,
+      "sh": 274,
+      "kotlin": 9994,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 132,
-      "shell": 196,
+      "shell": 197,
       "java": 606,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9990,
+      "kotlin": 9992,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -7992,6 +7992,33 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/VaultFile.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultFile"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "classify(text: String, knownSchemaVersions: Set<Int>, blobSections: Set<String>)",
+        "blobSections(importSchemaJson: String)",
+        "sectionsOf(root: JSONObject)",
+        "countEnc(v: Any?, skip: String = \"\")",
+        "class VaultFile",
+        "class Verdict",
+        "class Empty",
+        "class NotJson",
+        "class Encrypted",
+        "class UnknownSchema",
+        "class Bundle",
+        "class Blob",
+        "class Unrecognised"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/recovery/AdvisoryFeed.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8326,25 +8353,32 @@
         "ImportConfigsFragment"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.ui.snack",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.R",
+        "android.content.Context",
         "android.net.Uri",
         "android.os.Bundle",
         "android.util.Base64",
         "android.view.View",
         "android.widget.TextView",
         "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.annotation.StringRes",
         "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.profile.VaultConnect",
+        "com.diegonmarcos.superapp.profile.VaultFile",
         "com.google.android.material.button.MaterialButton",
-        "com.google.android.material.textfield.TextInputEditText",
-        "org.json.JSONObject"
+        "com.google.android.material.textfield.TextInputEditText"
       ],
       "symbols": [
         "onViewCreated(view: View, savedInstanceState: Bundle?)",
         "loadFromUri(uri: Uri)",
+        "describe(v: VaultFile.Verdict, store: Boolean)",
+        "classify(text: String)",
+        "importSchemaJson()",
+        "report(@StringRes res: Int, vararg args: Any)",
         "newInstance()",
-        "class ImportConfigsFragment"
+        "class ImportConfigsFragment",
+        "class with"
       ]
     },
     {
@@ -9959,6 +9993,51 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/VaultFileImportTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultFileImportTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.net.Uri",
+        "android.util.Base64",
+        "android.widget.TextView",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.settings.ImportConfigsFragment",
+        "com.google.android.material.button.MaterialButton",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.Shadows.shadowOf",
+        "java.io.ByteArrayInputStream"
+      ],
+      "symbols": [
+        "reset()",
+        "encLeaves(v: Any?)",
+        "sectionsOf(o: JSONObject)",
+        "fragment()",
+        "statusText()",
+        "type(text: String)",
+        "save()",
+        "serve(name: String, bytes: ByteArray)",
+        "decryptedFixture()",
+        "class VaultFileImportTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/BottomNavGeometryTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -11314,6 +11393,30 @@
         "ok()",
         "bad()",
         "has()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-profile-file-import.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "checks()",
+        "p()",
+        "x()",
+        "scratch()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "checks()",
+        "p()",
+        "x()",
+        "scratch()"
       ]
     },
     {
@@ -116017,6 +116120,7 @@
         "androidx.compose.foundation.border",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.combinedClickable",
+        "androidx.compose.foundation.gestures.awaitFirstDown",
         "androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
@@ -116049,8 +116153,7 @@
         "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material.icons.filled.FilterList",
         "androidx.compose.material.icons.filled.Folder",
-        "androidx.compose.material.icons.filled.FolderOpen",
-        "androidx.compose.material.icons.filled.Lock"
+        "androidx.compose.material.icons.filled.FolderOpen"
       ],
       "symbols": [
         "FilesScreen(controller: FilesController, actions: DriveActions, hasAccess: Boolean, modifier: Modifier = Modifier)",
@@ -116105,8 +116208,8 @@
         "kotlinx.serialization.json.Json"
       ],
       "symbols": [
-        "parent()",
         "child(childName: String)",
+        "parent()",
         "parentOrNull()",
         "crumbs()",
         "pane(id: PaneId)",
@@ -116736,8 +116839,8 @@
         "com.diegonmarcos.clouddrive.ui.Hairline"
       ],
       "symbols": [
-        "RcloneSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs.Snapshot, actions: DriveActions, onMessage: (String)",
-        "MountsSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs.Snapshot, actions: DriveActions, onMessage: (String)"
+        "RcloneSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onMessage: (String)",
+        "MountsSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onMessage: (String)"
       ]
     },
     {
@@ -116888,7 +116991,7 @@
         "tab(id: String)",
         "topIslandInsets()",
         "ToolbarIsland( title: String, subtitle: String? = null, modifier: Modifier = Modifier, leading: (@Composable ()",
-        "IslandAction(icon: ImageVector, description: String, onClick: ()",
+        "IslandAction(icon: ImageVector, description: String, enabled: Boolean = true, tint: Color = MaterialTheme.colorScheme.onSurface, onClick: ()",
         "DriveCard( header: String, modifier: Modifier = Modifier, badge: String? = null, light: StatusLight.State? = null, summary: String? = null, summaryMonospace: Boolean = false, hero: Boolean = false, onClick: (()",
         "CapsuleBadge(text: String, modifier: Modifier = Modifier)",
         "Pill(text: String, onClick: ()",
@@ -117336,6 +117439,7 @@
       ],
       "imports": [
         "android.content.ComponentName",
+        "android.os.Looper",
         "androidx.activity.ComponentActivity",
         "androidx.compose.material3.Text",
         "androidx.compose.ui.test.assertIsDisplayed",

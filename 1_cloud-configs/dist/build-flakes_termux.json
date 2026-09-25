@@ -1028,14 +1028,13 @@
         "default_user_env": "SMTP_USER"
       },
       "profile_connect": {
-        "_doc": "Superapp Configs>Profile>Connect (#566). POST /profile/connect/start mails a one-time code to mail_to over the same maddy:25 delivery as /mail/http-to-smtp; POST /profile/connect/fetch {code} decrypts cloud-vault configs/<bundle_file> at request time with the server's own age key and returns {schema, bundle}. Bearer (Caddy mkProtected + in-app X-Auth-User check) AND the mailed code are both required. Nothing here is a secret: the age key (a single AGE-SECRET-KEY-1 line) arrives from src/secrets.yaml under the name age_key_secret, through env_file .secrets (a non-agent service gets no /run/secrets mount, #359).",
+        "_doc": "Superapp Configs>Profile>Connect (#566). POST /profile/connect/start mails a one-time code to mail_to over the same maddy:25 delivery as /mail/http-to-smtp; POST /profile/connect/fetch {code} decrypts cloud-vault E0_configs/<bundle_file> at request time with the server's own age key and returns {schema, bundle}. Bearer (Caddy mkProtected + in-app X-Auth-User check) AND the mailed code are both required. Nothing here is a secret: the age key (a single AGE-SECRET-KEY-1 line) arrives from src/secrets.yaml under the name age_key_secret, through env_file .secrets (a non-agent service gets no /run/secrets mount, #359).",
         "mail_to": "me@diegonmarcos.com",
         "mail_from": "superapp-connect@diegonmarcos.com",
         "code_ttl_s": 600,
         "resend_cooldown_s": 60,
         "max_attempts": 5,
-        "_doc_bundle": "bundle_host_dir is the cloud-vault configs/ directory ON oci-analytics, mounted read-only at bundle_mount. It holds only sops ciphertext (configs/profile-secrets.json) and the schema.",
-        "bundle_host_dir": "/home/ubuntu/git/cloud-vault/configs",
+        "_doc_bundle": "The bundle dir on oci-analytics is deploy.host_sync.profile_bundle.host_dir (#586: cloud-vault E0_configs/, was configs/): the ONE declaration compose.nix mounts read-only at bundle_mount and the engine fills. bundle_file and schema_file name the files inside that mount; test-profile-connect.ts F5 pins that host_sync ships exactly them.",
         "bundle_mount": "/profile-bundle",
         "bundle_file": "profile-secrets.json",
         "schema_file": "schema.json",
