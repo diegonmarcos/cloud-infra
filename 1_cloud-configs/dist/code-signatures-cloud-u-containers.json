@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2836,
+    "files": 2839,
     "by_lang": {
       "sh": 130,
       "nix": 152,
-      "ts": 1117,
+      "ts": 1120,
       "js": 53,
       "py": 850,
       "rust": 534
@@ -18,7 +18,7 @@
     "by_role": {
       "shell": 122,
       "nix-module": 12,
-      "module": 678,
+      "module": 681,
       "file": 299,
       "python": 845,
       "flake": 71,
@@ -2418,7 +2418,8 @@
         "./routes/health.js",
         "./routes/analytics.js",
         "./routes/mail.js",
-        "./routes/superapp.js"
+        "./routes/superapp.js",
+        "./routes/profileConnect.js"
       ],
       "symbols": [
         "buildApp()"
@@ -2520,6 +2521,23 @@
       ]
     },
     {
+      "path": "infra-api_c3-public-api/src/code/api/routes/profileConnect.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerProfileConnect"
+      ],
+      "imports": [
+        "fastify",
+        "nodemailer",
+        "../../shared/config.js",
+        "../../shared/profile-connect.js"
+      ],
+      "symbols": [
+        "registerProfileConnect(app: FastifyInstance, cfg: AppConfig)"
+      ]
+    },
+    {
       "path": "infra-api_c3-public-api/src/code/api/routes/superapp.ts",
       "lang": "ts",
       "role": "module",
@@ -2546,10 +2564,44 @@
         "MailCfg",
         "AppConfig"
       ],
-      "imports": [],
+      "imports": [
+        "./profile-connect.js"
+      ],
       "symbols": [
         "readInt(name: string, fallback: number)",
         "loadConfig()"
+      ]
+    },
+    {
+      "path": "infra-api_c3-public-api/src/code/shared/profile-connect.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "identity",
+        "maskAddress",
+        "codeMail",
+        "missingParts",
+        "loadBundle",
+        "ProfileConnectCfg",
+        "IssueResult",
+        "VerifyResult",
+        "CodeStore",
+        "DecryptError"
+      ],
+      "imports": [
+        "node:crypto",
+        "node:child_process",
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "identity(headers: Record<string, string | string[] | undefined>)",
+        "maskAddress(addr: string)",
+        "codeMail(cfg: Pick<ProfileConnectCfg, \"mailFrom\" | \"mailTo\" | \"codeTtlS\">, code: string, user: string, now: Date)",
+        "missingParts(cfg: ProfileConnectCfg)",
+        "loadBundle(cfg: ProfileConnectCfg)",
+        "class CodeStore",
+        "class DecryptError"
       ]
     },
     {
@@ -2583,6 +2635,7 @@
         "ports",
         "matches",
         "primaryPort",
+        "pc",
         "services",
         "c3-public-api",
         "image",
@@ -2599,9 +2652,8 @@
         "SMTP_HOST",
         "SMTP_PORT",
         "SMTP_HELO_DOMAIN",
-        "healthcheck",
-        "test",
-        "interval"
+        "PROFILE_CONNECT_MAIL_TO",
+        "PROFILE_CONNECT_MAIL_FROM"
       ]
     },
     {
@@ -2639,6 +2691,21 @@
         "apt",
         "title"
       ]
+    },
+    {
+      "path": "infra-api_c3-public-api/src/test-profile-connect.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "./code/shared/profile-connect.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_c3-services-api/build.sh",
