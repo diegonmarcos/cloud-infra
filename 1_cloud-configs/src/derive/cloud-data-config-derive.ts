@@ -2081,8 +2081,8 @@ function deriveWireguardPeers(c: any): DerivedFile {
 // the WireGuard config, so the phone has to fetch it BEFORE it can join the
 // mesh. A wg-only route is unreachable by definition at that moment.
 //
-// Adding a user is a DATA addition (a key in src/inputs/superapp-users.json),
-// never a code change.
+// Adding a user, an identity or a peer is a DATA addition (in
+// src/inputs/superapp-users.json), never a code change (#573).
 function deriveSuperappConfig(c: any): DerivedFile[] {
   const INPUTS_DIR = resolve(ENGINE_DIR, "../inputs");
   const readInput = (file: string): any | undefined => {
@@ -2184,18 +2184,62 @@ function deriveSuperappConfig(c: any): DerivedFile[] {
     };
   };
 
+  // #573 — User (1) -> identities (N, ONE primary) -> peers (N, ONE primary)
+  // -> auth_providers, all from superapp-users.json. A peer's mesh identity is
+  // READ from the consolidated declaration through its wg_client key (never
+  // restated in the users file); its redacted profiles come from
+  // superapp-wireguard-profiles.json, which regen-superapp-wireguard-profiles.js
+  // publishes PER PEER. The top-level `wireguard` block stays the PRIMARY
+  // peer's profiles: it is the block the APK's wireguard-profiles guard mirrors
+  // and ConfigAutoImport applies, and the phone that runs the app is that peer
+  // until the owner picks another in Profile ▸ Sign-in.
+  const onePrimary = (slug: string, what: string, entries: [string, any][]): string => {
+    const prim = entries.filter(([, e]) => e?.primary === true).map(([k]) => k);
+    if (prim.length !== 1) {
+      throw new Error(
+        `superapp-users.json: user '${slug}' declares ${prim.length} primary ${what} ` +
+        `(${prim.join(", ") || "none"}) — exactly one is required`,
+      );
+    }
+    return prim[0];
+  };
+  const wg0Clients = c.native?.wireguard?.clients ?? {};
+  const wgPubClients = c.native?.wireguard_public?.clients ?? {};
+  const meshRow = (row: any) => (row ? { wg_ip: row.wg_ip ?? null, wg_ipv6: row.wg_ipv6 ?? null } : null);
+
   const files: DerivedFile[] = [];
   for (const [slug, user] of Object.entries(usersInput.users as Record<string, any>)) {
-    const wireguard: Record<string, any> = {};
-    for (const profName of (user.wireguard_profiles ?? [])) {
-      const prof = wgInput?.profiles?.[profName];
-      if (!prof) continue;
-      wireguard[profName] = {
-        name: prof.name,
-        config_text: prof.config_text,
-        parsed: parseWgQuick(prof.config_text),
+    const identities = (user.identities ?? []) as any[];
+    onePrimary(slug, "identities", identities.map((i, n) => [i?.email ?? `#${n}`, i]));
+    for (const [pid, peer] of Object.entries((user.peers ?? {}) as Record<string, any>)) {
+      if (!peer?.wg_client || (!wg0Clients[peer.wg_client] && !wgPubClients[peer.wg_client])) {
+        throw new Error(`superapp-users.json: peer '${pid}' of '${slug}' names wg_client '${peer?.wg_client}', which is on neither mesh`);
+      }
+    }
+    const primaryPeer = onePrimary(slug, "peers", Object.entries(user.peers ?? {}));
+
+    const peers: Record<string, any> = {};
+    for (const [pid, peer] of Object.entries((user.peers ?? {}) as Record<string, any>)) {
+      const wireguard: Record<string, any> = {};
+      for (const [profName, prof] of Object.entries((wgInput?.profiles?.[pid] ?? {}) as Record<string, any>)) {
+        wireguard[profName] = {
+          name: prof.name,
+          config_text: prof.config_text,
+          parsed: parseWgQuick(prof.config_text),
+        };
+      }
+      peers[pid] = {
+        label: peer.label ?? pid,
+        kind: peer.kind ?? null,
+        primary: peer.primary === true,
+        vault_device: peer.vault_device ?? null,
+        wg_client: peer.wg_client,
+        wg0: meshRow(wg0Clients[peer.wg_client]),
+        wg_public: meshRow(wgPubClients[peer.wg_client]),
+        wireguard,
       };
     }
+    const wireguard = peers[primaryPeer].wireguard;
 
     files.push({
       name: `build-cloud-superapp-${slug}.json`,
@@ -2217,6 +2261,9 @@ function deriveSuperappConfig(c: any): DerivedFile[] {
           "+ _cloud-data-consolidated.json + derive-mesh-snapshot.build() " +
           "via cloud-data-config-derive.ts/superapp-config",
         profile: user.profile ?? {},
+        identities,
+        peers,
+        auth_providers: user.auth_providers ?? [],
         wireguard,
         mesh,
         services: {

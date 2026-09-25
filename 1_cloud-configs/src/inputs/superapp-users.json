@@ -1,5 +1,8 @@
 {
-  "_doc": "Per-user registry for the Cloud SuperApp full-config artifact. The derive engine emits ONE build-cloud-superapp-<slug>.json per key here, so adding a user is a DATA addition — no code change. `profile` maps 1:1 onto the app's ProfilePrefs keys (name, email, initials, company, location, website, titles_v2, picture_uri, banner_uri); `wireguard_profiles` names entries in superapp-wireguard-profiles.json.",
+  "_doc": "THE ONE declaration of the Cloud SuperApp's users (#573): User (1) -> identities (N, exactly ONE primary) -> peers (N, exactly ONE primary) -> auth_providers. The derive engine emits ONE build-cloud-superapp-<slug>.json per key here (served bearer-gated at /pub/superapp/config/<slug>), so adding a user, an identity or a peer is a DATA addition — no code change. `profile` maps 1:1 onto the app's ProfilePrefs keys. Nothing in the app's Kotlin names a user, an address or a device: it reads this file's emitted form.",
+  "_doc_identities": "The addresses that are this user. `primary` marks the one the profile, the mail 2FA code and the Authelia bearer belong to; the others are the same person's other mailboxes on the same domain. Exactly one primary, or the deriver refuses.",
+  "_doc_peers": "The user's devices, keyed by the id the vault's staged peers section uses (cloud-vault configs/peers/sources.json). `wg_client` is the row on BOTH meshes (cloud-infra config.json#native.wireguard.clients and cloud-u-containers/infra-net_wireguard-public/build.json#wireguard_public.clients) — the peer's mesh identity is READ from there, never restated here. `vault_wg_dir` is the vault directory (A0_keys/providers/wireguard/<dir>) whose config-* files are this peer's wg-quick profiles; regen-superapp-wireguard-profiles.js reads every peer that declares one, redacts the PrivateKey and emits superapp-wireguard-profiles.json per peer. `vault_device` is the key the vault's electronics/apps sections use for this device. `primary` marks the ONE peer whose profiles also appear at the artifact's top-level `wireguard` (the block the APK's ui.wireguard_profiles guard mirrors); exactly one, or the deriver refuses.",
+  "_doc_auth_providers": "Which sign-in providers the superapp may offer this user, in order (the first is primary). The app's build.json::ui.vault_connect.sign_in.providers is the WIRING for each id (endpoints, client ids); this is the POLICY: a provider not listed here is not offered for this user.",
   "_source": "cloud-u-android/aa_cloud-superapp/build.json::ui.profile_default",
   "_security": "NO SECRETS IN THIS FILE. This repo is PUBLIC. WireGuard private keys are never carried by the artifact — see superapp-wireguard-profiles.json.",
   "users": {
@@ -15,7 +18,19 @@
         "picture_uri": "",
         "banner_uri": ""
       },
-      "wireguard_profiles": ["v4-full", "v4-split", "v6-full", "v6-split"]
+      "identities": [
+        { "email": "me@diegonmarcos.com", "primary": true, "label": "personal" },
+        { "email": "42@diegonmarcos.com", "label": "42" },
+        { "email": "admin@diegonmarcos.com", "label": "admin" },
+        { "email": "x@diegonmarcos.com", "label": "x" }
+      ],
+      "peers": {
+        "surface-8-pro":   { "label": "Surface Pro 8",       "kind": "notebook", "wg_client": "surface",     "vault_device": "surface" },
+        "samsung-s21plus": { "label": "Samsung Galaxy S21+", "kind": "phone",    "wg_client": "termux",      "vault_device": "galaxy",      "vault_wg_dir": "termux-public",      "primary": true },
+        "samsung-a37":     { "label": "Samsung Galaxy A37",  "kind": "phone",    "wg_client": "samsung-a37", "vault_device": "samsung-a37",
+                             "_pending": "#573 declared on wg0 (config.json) with its keypair in the vault; its wg-public client row lives in cloud-u-containers/infra-net_wireguard-public/build.json, which #573 could not touch. Once that row exists: add it to cloud-vault A0_keys/providers/wireguard/phone-profiles.json#derived, run derive-phone-profiles.py, and set vault_wg_dir: samsung-a37-public here. Until then the artifact carries no profiles for it and the app says 'profiles pending'." }
+      },
+      "auth_providers": ["authelia", "github", "google"]
     }
   }
 }
