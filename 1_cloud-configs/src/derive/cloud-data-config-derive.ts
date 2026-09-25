@@ -1262,7 +1262,13 @@ function deriveCaddy(c: any): DerivedFile[] {
   // caddyfile-public.nix renders the right gate per endpoint.
   const isEdgeMcp = (e: any) => isPublic(e) || e?.bearer_auth === true;
   const publicMcpRoutes = mcpRoutes
-    .map((g: any) => ({ ...g, endpoints: (g.endpoints ?? []).filter(isEdgeMcp) }))
+    .map((g: any) => {
+      const endpoints = (g.endpoints ?? []).filter(isEdgeMcp);
+      // The hub banner must advertise only what THIS edge routes: the
+      // unfiltered fallback_message listed wg_only paths the edge never
+      // registers, so off-mesh clients got a 200 banner for a dead route (#568).
+      return { ...g, endpoints, fallback_message: "MCP Hub -- use " + endpoints.map((e: any) => `${e.base_path}/mcp`).join(", ") };
+    })
     .filter((g: any) => (g.endpoints ?? []).length > 0);
 
   // (oidc_public is computed earlier, next to authUpstreams, so the main
