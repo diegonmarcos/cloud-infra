@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19832,
+    "files": 19840,
     "by_lang": {
       "py": 53,
       "sh": 266,
-      "kotlin": 9936,
+      "kotlin": 9944,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -25,7 +25,7 @@
       "module": 6356,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9934,
+      "kotlin": 9942,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -5572,6 +5572,12 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.App",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.ExternalInstall",
+        "com.diegonmarcos.superapp.appstore.FleetInstall",
+        "com.diegonmarcos.superapp.appstore.PhoneAppActions",
+        "com.diegonmarcos.superapp.appstore.SourceResolver",
+        "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.ui.SystemInfoPopup",
         "com.diegonmarcos.superapp.apps.SuitePhoneAppsFragment",
         "com.diegonmarcos.superapp.apps.PhoneAppsFragment",
@@ -5586,6 +5592,8 @@
         "android.graphics.drawable.GradientDrawable",
         "android.net.Uri",
         "android.os.Build",
+        "android.os.Handler",
+        "android.os.Looper",
         "android.os.Process",
         "android.os.UserHandle",
         "android.provider.Settings",
@@ -5595,13 +5603,17 @@
         "android.view.Window",
         "android.widget.ImageView",
         "android.widget.LinearLayout",
-        "android.widget.TextView"
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "kotlin.concurrent.thread"
       ],
       "symbols": [
         "show(ctx: Context, pkg: String)",
         "requestUninstall(ctx: Context, pkg: String)",
+        "requestUpdate(ctx: Context, fleetApp: Fleet.App?, resolver: SourceResolver.Config?, pkg: String, label: String)",
         "queryShortcuts(launcher: LauncherApps?, pkg: String, me: UserHandle)",
         "makeMenuRow(ctx: Context, label: String, kind: String, onClick: ()",
+        "sectionHeader(ctx: Context, title: String, d: Float)",
         "divider(ctx: Context, d: Float)",
         "class AppLongPressMenu"
       ]
@@ -5638,6 +5650,33 @@
         "repaint(view: View?, selected: Boolean)",
         "dp(ctx: Context, v: Int)",
         "class AppTabsStyle"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/AppUrls.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppUrls"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.PhoneAppActions",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "of(ctx: Context, pkg: String)",
+        "ours(pkg: String, externalApps: String, cfg: String, publicSvc: String, privateSvc: String)",
+        "website(pkg: String, cfg: String, metaOf: (String)",
+        "isWebUrl(v: String)",
+        "decode(b64: String)",
+        "arr(json: String)",
+        "class AppUrls",
+        "class Link"
       ]
     },
     {
@@ -7461,6 +7500,44 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/FleetCockpitView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetCockpitView"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.accessibility.AccessibilityNodeInfoCompat",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.ui.StatusLight"
+      ],
+      "symbols": [
+        "hero(ctx: Context, title: String, subtitle: String, iconRes: Int)",
+        "card(ctx: Context, label: String, tag: String, iconRes: Int, toggleAction: String)",
+        "paint(light: TextView, state: StatusLight.State, rowLabel: String)",
+        "pill(ctx: Context, label: String, onClick: ()",
+        "lightView(ctx: Context)",
+        "badge(ctx: Context, iconRes: Int, sizeDp: Int, fill: Int, ink: Int)",
+        "surface(ctx: Context, fill: Int, hairline: Int)",
+        "dp(ctx: Context, v: Int)",
+        "class is",
+        "class FleetCockpitView",
+        "class Hero",
+        "class Card"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GithubImport.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7553,7 +7630,9 @@
         "androidx.lifecycle.lifecycleScope",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.launcher.AppTabsStyle",
+        "com.diegonmarcos.superapp.launcher.Sections",
         "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.ui.StatusLight",
         "com.diegonmarcos.superapp.ui.snack",
         "com.google.android.material.tabs.TabLayout",
         "kotlinx.coroutines.Dispatchers",
@@ -7581,6 +7660,8 @@
         "vaultFetch(status: TextView)",
         "showVaultFailure( status: TextView, o: com.diegonmarcos.superapp.core.ConfigSyncClient.Outcome.Failed, )",
         "renderImported(ctx: android.content.Context, into: LinearLayout)",
+        "paintCard( card: FleetCockpitView.Card, rows: List<VaultCockpit.Row>, section: VaultCockpit.Section, summary: String? = null, )",
+        "repaintHero()",
         "renderRaw(ctx: android.content.Context, into: LinearLayout, section: VaultConnect.Section)",
         "renderDeviceSelector( ctx: android.content.Context, into: LinearLayout, devices: List<VaultCockpit.Device>, )",
         "onNothingSelected(parent: android.widget.AdapterView<*>?)",
@@ -7591,16 +7672,14 @@
         "renderMail(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView)",
         "renderMesh(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, device: VaultCockpit.Device?, status: TextView)",
         "renderDrive(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView)",
-        "renderAi(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView)",
+        "renderAi(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView, card: FleetCockpitView.Card, section: VaultCockpit.Section)",
         "renderApps(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, device: VaultCockpit.Device?)",
         "importedValue(ctx: android.content.Context, row: VaultConnect.Row)",
         "onResume()",
         "onPause()",
         "onDestroyView()",
         "requiredField( ctx: android.content.Context, initial: String, save: (String)",
-        "refreshStatus()",
-        "syncStateView(ctx: android.content.Context)",
-        "secretField( ctx: android.content.Context, stored: ()"
+        "refreshStatus()"
       ]
     },
     {
@@ -7713,6 +7792,7 @@
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
         "com.diegonmarcos.superapp.settings.ConfigsPrefs",
         "com.diegonmarcos.superapp.texttools.TextToolsClient",
+        "com.diegonmarcos.superapp.ui.StatusLight",
         "com.wireguard.config.Config",
         "org.json.JSONArray",
         "org.json.JSONObject",
@@ -7721,9 +7801,13 @@
       ],
       "symbols": [
         "parseLayout(o: JSONObject)",
+        "deviceIcon(layout: Layout, device: Device?)",
         "devices(bundle: JSONObject)",
         "selectedDevice(ctx: Context)",
         "selectDevice(ctx: Context, id: String)",
+        "sectionLight(rows: List<Row>, observed: Boolean = true)",
+        "overallLight(lights: Collection<StatusLight.State>)",
+        "tally(rows: List<Row>)",
         "pending(v: Any?)",
         "pendingText(v: JSONObject)",
         "addressesOf(conf: String)",
@@ -7750,6 +7834,7 @@
         "class Device",
         "class State",
         "class Row",
+        "class Tally",
         "class TunnelState",
         "class MailDeclared",
         "class AiState",
@@ -9186,6 +9271,29 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/AppUrlsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppUrlsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.superapp.launcher.AppUrls",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "ours(pkg: String)",
+        "class AppUrlsTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/StorePhoneActionsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9271,6 +9379,58 @@
         "e(pkg: String, origin: String?, ours: Boolean)",
         "class StorePhoneAppsTest",
         "class Bar"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/StoreResolverTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreResolverTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "android.os.Looper",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.TextView",
+        "androidx.fragment.app.FragmentActivity",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.appstore.AppInventory",
+        "com.diegonmarcos.superapp.appstore.ExternalInstall",
+        "com.diegonmarcos.superapp.appstore.FDroidIndex",
+        "com.diegonmarcos.superapp.appstore.PhoneAppActions",
+        "com.diegonmarcos.superapp.appstore.SourceResolver",
+        "com.diegonmarcos.superapp.appstore.StoreBar",
+        "com.diegonmarcos.superapp.appstore.StorePhoneFragment",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.appstore.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.R",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "java.io.File",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipOutputStream"
+      ],
+      "symbols": [
+        "playOnly()",
+        "direct()",
+        "mutated(edit: (JSONObject)",
+        "texts(v: View)",
+        "rendered()",
+        "class StoreResolverTest"
       ]
     },
     {
@@ -9424,6 +9584,40 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/FleetCockpitViewTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetCockpitViewTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.drawable.GradientDrawable",
+        "android.view.ContextThemeWrapper",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.ui.StatusLight",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "all(v: View)",
+        "build(layout: VaultCockpit.Layout)",
+        "class FleetCockpitViewTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/VaultCockpitTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9435,6 +9629,8 @@
         "android.content.Context",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
+        "com.diegonmarcos.superapp.profile.VaultCockpit.State",
+        "com.diegonmarcos.superapp.ui.StatusLight.State",
         "org.json.JSONObject",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertNull",
@@ -9445,6 +9641,7 @@
         "org.robolectric.annotation.Config"
       ],
       "symbols": [
+        "row(s: S)",
         "conf(address: String, vararg peers: String)",
         "bundle()",
         "class VaultCockpitTest"
@@ -11491,6 +11688,59 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/ExternalInstall.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExternalInstall"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.UpdateProgress"
+      ],
+      "symbols": [
+        "run(ctx: Context, cfg: SourceResolver.Config, app: SourceResolver.External)",
+        "class ExternalInstall"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FDroidIndex.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FDroidIndex"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build",
+        "android.util.JsonReader",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.source.Download",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.io.InputStream",
+        "java.io.InputStreamReader",
+        "java.security.MessageDigest",
+        "java.util.jar.JarFile"
+      ],
+      "symbols": [
+        "suggested(cfg: JSONObject, pkg: String)",
+        "fetch(ctx: Context, cfg: JSONObject, pkg: String)",
+        "verifiedIndex(ctx: Context, url: String, entryName: String, certSha256: String)",
+        "verifiedEntry(jar: File, entryName: String, certSha256: String)",
+        "lookup(input: InputStream, pkg: String)",
+        "appHead(r: JsonReader)",
+        "versionsOf(r: JsonReader)",
+        "sha256Hex(b: ByteArray)",
+        "class tree",
+        "class FDroidIndex",
+        "class Version",
+        "class Entry"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetInstall.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -11527,17 +11777,78 @@
       ],
       "symbols": [
         "sources(ctx: Context)",
+        "resolver(sources: JSONObject)",
+        "forMissing(ctx: Context, app: SourceResolver.External, fleetApp: Fleet.App?, sources: JSONObject, cfg: SourceResolver.Config)",
+        "s(id: Int)",
         "installerOf(ctx: Context, pkg: String)",
         "fleetByPackage(fleet: List<Fleet.App>)",
         "of(ctx: Context, pkg: String, fleetApp: Fleet.App?, shellReady: Boolean, sources: JSONObject = sources(ctx)",
-        "s(id: Int)",
         "isOurs(ctx: Context, fleetMember: Boolean, installer: String?)",
         "storePage(sources: JSONObject, installer: String?, pkg: String)",
+        "hostPage(ctx: Context, sources: JSONObject)",
         "origin(ctx: Context, pkg: String, fleetMember: Boolean, sources: JSONObject)",
         "appInfo(pkg: String)",
         "class PhoneAppActions",
         "class Kind",
         "class Action"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/SourceResolver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SourceResolver"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.core.content.pm.PackageInfoCompat",
+        "com.diegonmarcos.superapp.updater.AbiUpdateTag",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.VersionOrder",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.source.Download",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "asFleetApp()",
+        "config(sources: JSONObject)",
+        "resolve(cfg: Config, pkg: String)",
+        "external(pkg: String, o: JSONObject, order: List<String>)",
+        "source(o: JSONObject)",
+        "ofFleet(s: Fleet.State)",
+        "installed(ctx: Context, pkg: String)",
+        "local(ctx: Context, app: External)",
+        "check(ctx: Context, cfg: Config, app: External)",
+        "compareNames(remote: String?, installed: String?)",
+        "parts(s: String?)",
+        "remoteVersion(cfg: Config, app: External, src: Source)",
+        "normalise(src: Source.Vendor, raw: String)",
+        "path(o: JSONObject, p: String?)",
+        "fetch(ctx: Context, cfg: Config, app: External, src: Source)",
+        "fetchVendor(ctx: Context, app: External, src: Source.Vendor)",
+        "fill(t: String)",
+        "identity(ctx: Context, pkg: String, apk: VerifiedApk)",
+        "sidecar(url: String)",
+        "getJson(url: String)",
+        "class SourceResolver",
+        "class Source",
+        "class Vendor",
+        "class FDroid",
+        "class Play",
+        "class External",
+        "class Config",
+        "class Note",
+        "class Check",
+        "class NotInstalled",
+        "class Installed",
+        "class UpdateAvailable",
+        "class Unknown",
+        "class Remote"
       ]
     },
     {
@@ -11716,18 +12027,26 @@
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.superapp.adbdebug.ShellChannels",
         "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
         "kotlin.concurrent.thread"
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
         "onResume()",
-        "reload()",
+        "reload(then: (()",
         "onDestroyView()",
         "exportTo(uri: Uri)",
         "importFrom(uri: Uri)",
         "rows(ctx: Context)",
         "render(ctx: Context, into: LinearLayout, rows: List<Row>)",
         "row(ctx: Context, r: Row)",
+        "paint(ctx: Context, tv: TextView, s: SourceResolver.Check, r: Row)",
+        "via(k: String?)",
+        "checkAll()",
+        "installAll()",
+        "updateAll()",
+        "batch(ctx: Context, targets: List<Row>)",
+        "installOne(app: Context, r: Row)",
         "act(ctx: Context, r: Row, a: PhoneAppActions.Action)",
         "toastLater(ctx: Context, msg: String)",
         "dp(ctx: Context, v: Int)",
@@ -38111,7 +38430,9 @@
       "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/source/Download.kt",
       "lang": "kotlin",
       "role": "kotlin",
-      "exports": [],
+      "exports": [
+        "Download"
+      ],
       "imports": [
         "android.util.Log",
         "java.io.File",
