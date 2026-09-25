@@ -64,6 +64,57 @@ drop_protected() {
     '
 }
 
+# ── deploy.host_sync: vault files for bind mounts OUTSIDE remote_path ──────
+#
+# build.json#deploy.host_sync.<name> = { vault_dir, host_dir, files[] }.
+# The listed files are copied from the ship's own vault checkout (fetch-vault
+# / ship.yml put it at ~/git/cloud-vault) to host_dir on the VM, the path the
+# service's compose.nix bind-mounts from the SAME entry — one declaration.
+#
+# First user: c3-public-api's profile bundle (#586). Its compose bind-mounted
+# /home/ubuntu/git/cloud-vault/configs, nothing in the pipeline ever wrote a
+# file there, docker pre-created the missing source as an empty root-owned
+# stub, and Profile ▸ Connect has served an empty bundle dir since #566 while
+# every ship went green. Only the listed files travel — the vault itself never
+# lands on a public-edge VM. A missing source is FATAL: a silent skip is
+# exactly the empty mount this step exists to end.
+host_sync_entries() {   # one TSV line per entry: name  vault_dir  host_dir  "file file"
+    jq -r '.deploy.host_sync // {} | to_entries[] | select(.key | startswith("_") | not)
+           | [.key, .value.vault_dir, .value.host_dir, (.value.files | join(" "))] | @tsv' "$CONFIG"
+}
+
+step_host_sync() {
+    _hs_vault="${VAULT_DIR:-$HOME/git/cloud-vault}"
+    _hs_entries="$(host_sync_entries)" \
+        || { log_error "host_sync: deploy.host_sync in $CONFIG is malformed — each entry needs vault_dir, host_dir and files[]"; return 1; }
+    [ -z "$_hs_entries" ] && return 0
+    # heredoc, not a pipe: `return` must leave THIS function, not a subshell
+    while IFS="$(printf '\t')" read -r _hs_name _hs_from _hs_to _hs_files; do
+        [ -n "$_hs_name" ] || continue
+        [ -n "$_hs_to" ] && [ -n "$_hs_files" ] \
+            || { log_error "host_sync $_hs_name: host_dir and files[] are both required"; return 1; }
+        _hs_src="$_hs_vault/$_hs_from"
+        [ -d "$_hs_src" ] \
+            || { log_error "host_sync $_hs_name: $_hs_src is not on this runner (no vault checkout?) — $DEPLOY_HOST:$_hs_to would stay empty"; return 1; }
+        _hs_paths=""
+        for _hs_f in $_hs_files; do
+            [ -f "$_hs_src/$_hs_f" ] || { log_error "host_sync $_hs_name: $_hs_src/$_hs_f is missing"; return 1; }
+            _hs_paths="$_hs_paths $_hs_src/$_hs_f"
+        done
+        # docker owns a pre-created bind source as root; take it so the ssh
+        # user's rsync can write, then hand the files over read-only.
+        ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p '$_hs_to' && sudo chown \$(whoami):\$(whoami) '$_hs_to'" \
+            || { log_error "host_sync $_hs_name: could not prepare $DEPLOY_HOST:$_hs_to"; return 1; }
+        # shellcheck disable=SC2086  # _hs_paths is a deliberate word list
+        rsync_with_retry -az --checksum --chmod=F444 $_hs_paths "$DEPLOY_HOST:$_hs_to/" \
+            || { log_error "host_sync $_hs_name: rsync to $DEPLOY_HOST:$_hs_to failed"; return 1; }
+        log "host_sync $_hs_name: $_hs_files → $DEPLOY_HOST:$_hs_to (from $_hs_src)"
+    done <<EOF_HOST_SYNC
+$_hs_entries
+EOF_HOST_SYNC
+    return 0
+}
+
 step_deploy() {
     CURRENT_STEP="deploy"
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host -- skipping deploy"; return 0; }
@@ -135,6 +186,9 @@ step_deploy() {
             || log_warn "could not clear $DEPLOY_HOST:$DEPLOY_PATH/.secrets.d — stale keys may survive this deploy"
         scp_secret ".secrets.d" -r "$DIST_DIR/.secrets.d" "$DEPLOY_HOST:$DEPLOY_PATH/" || return $?
     fi
+
+    # Vault-sourced files for bind mounts outside DEPLOY_PATH (see step_host_sync).
+    step_host_sync || return $?
 
     log "Deployed to $DEPLOY_HOST:$DEPLOY_PATH"
 
