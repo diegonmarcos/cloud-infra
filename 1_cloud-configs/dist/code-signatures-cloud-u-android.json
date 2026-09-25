@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19840,
+    "files": 19845,
     "by_lang": {
       "py": 53,
-      "sh": 266,
-      "kotlin": 9944,
+      "sh": 268,
+      "kotlin": 9947,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 132,
-      "shell": 189,
+      "shell": 191,
       "java": 606,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9942,
+      "kotlin": 9945,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -4681,7 +4681,7 @@
         "section(ctx: Context, label: String, subtitle: String)",
         "spacer(ctx: Context)",
         "dp(v: Int)",
-        "newInstance()",
+        "newInstance(embedded: Boolean = false)",
         "class of",
         "class ControlFragment",
         "class Bound",
@@ -6284,7 +6284,7 @@
       "imports": [
         "com.diegonmarcos.superapp.rss.RssFeedFragment",
         "com.diegonmarcos.superapp.settings.LauncherConfigFragment",
-        "com.diegonmarcos.superapp.settings.LauncherProfilesFragment",
+        "com.diegonmarcos.superapp.settings.LauncherPresetsFragment",
         "com.diegonmarcos.superapp.cloud.C3MeshFragment",
         "com.diegonmarcos.superapp.cloud.C3HealthFragment",
         "com.diegonmarcos.superapp.cloud.CalendarMonthFragment",
@@ -8278,7 +8278,6 @@
       "symbols": [
         "repaintFromStore()",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "fillModes()",
         "fillSavers()",
         "toggleRow( ctx: android.content.Context, label: String, subtitle: String, checked: ()",
         "toggleGrid( ctx: android.content.Context, items: List<LauncherSettingsPrefs.Item>, prefs: LauncherSettingsPrefs, onFlip: (LauncherSettingsPrefs.Item, Boolean)",
@@ -8298,8 +8297,11 @@
         "togglesFor(themeId: String)",
         "togglesFor(theme: LauncherTheme)",
         "parseToggles()",
+        "parseTogglesFrom(arr: JSONArray)",
         "apply(ctx: android.content.Context, theme: LauncherTheme)",
+        "applyToggles(ctx: android.content.Context, toggles: Map<String, Boolean>)",
         "isModified(ctx: android.content.Context, theme: LauncherTheme)",
+        "differs(ctx: android.content.Context, toggles: Map<String, Boolean>)",
         "parseFeatures()",
         "behaviorFor(profileId: String)",
         "behaviorFor(profile: LauncherProfile)",
@@ -8317,6 +8319,63 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/settings/LauncherModes.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LauncherModes",
+        "LauncherModePrefs",
+        "LauncherPresets"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "declaration()",
+        "load()",
+        "apply(ctx: Context, mode: Mode)",
+        "isModified(ctx: Context, mode: Mode)",
+        "groups()",
+        "class LauncherModes",
+        "class Mode",
+        "class LauncherModePrefs",
+        "class LauncherPresets",
+        "class Group"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/settings/LauncherPresetsFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LauncherPresetsFragment"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.ShellActivity"
+      ],
+      "symbols": [
+        "onCreateView(inf: LayoutInflater, c: ViewGroup?, s: Bundle?)",
+        "repaintAll()",
+        "fillSandboxes(box: LinearLayout)",
+        "fillThemes(box: LinearLayout)",
+        "fillModes(box: LinearLayout)",
+        "newInstance()",
+        "class names",
+        "class LauncherPresetsFragment"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/settings/LauncherProfilePrefs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8331,28 +8390,6 @@
         "fromId(id: String?)",
         "class LauncherProfilePrefs",
         "class LauncherProfile"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/settings/LauncherProfilesFragment.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "LauncherProfilesFragment"
-      ],
-      "imports": [
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "androidx.fragment.app.Fragment"
-      ],
-      "symbols": [
-        "onCreateView(inf: LayoutInflater, c: ViewGroup?, s: Bundle?)",
-        "newInstance()",
-        "class LauncherProfilesFragment"
       ]
     },
     {
@@ -10619,6 +10656,22 @@
         "bad()",
         "code()",
         "has()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-launcher-presets.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
       ]
     },
     {
@@ -16473,8 +16526,8 @@
       ],
       "symbols": [
         "GitSyncScreen( target: String?, onOpenFile: (String)",
-        "RepoListScreen( repos: List<ManagedRepo>, credentials: GitCredentialStore, addPrefill: String?, onAddDismiss: ()",
-        "AddRepoDialog(prefillPath: String, credentials: GitCredentialStore, onDismiss: ()",
+        "RepoListScreen( repos: List<ManagedRepo>, credentials: GitCredentialStore, addPrefill: String?, addPrefillUrl: String?, onAddDismiss: ()",
+        "AddRepoDialog(prefillPath: String, prefillUrl: String, credentials: GitCredentialStore, onDismiss: ()",
         "refresh()",
         "run(label: String, block: (GitEngine)",
         "RepoScreen( repo: ManagedRepo, credentials: GitCredentialStore, onOpenFile: (String)",
@@ -36675,6 +36728,7 @@
         "write(file: File, remotes: List<RcloneRemote>)",
         "upsert(file: File, remote: RcloneRemote)",
         "remove(file: File, name: String)",
+        "declare(file: File, remotes: List<RcloneRemote>)",
         "isValidName(name: String)",
         "class RcloneRemote",
         "class RcloneConfig"
@@ -36872,6 +36926,7 @@
         "statsLinesParseAndOtherLinesDoNot()",
         "lsjsonParsesAndSortsDirectoriesFirst()",
         "versionAndHumanUnits()",
+        "configDeclareAddsMissingRemotesAndNeverTouchesExistingOnes()",
         "jobStoreDeclareKeepsUserJobsAndDeclaredHistory()",
         "remoteTypesCatalogueIsWellFormed()",
         "class RcloneEngineTest"
@@ -98022,6 +98077,7 @@
         "fileSystem",
         "components/toast",
         "lib/openFolder",
+        "lib/openFile",
         "plugins/browser",
         "markdown-it",
         "dompurify",
@@ -98035,6 +98091,8 @@
         "stored(key, fallback)",
         "store(key, value)",
         "panelHeader(title, ...actions)",
+        "sharedRoot()",
+        "storePath(relative)",
         "renderBacklogView(panel, title, entry, ...extra)",
         "load(file)",
         "renderBacklog(panel)",
@@ -111959,6 +112017,8 @@
       "role": "python",
       "exports": [
         "resolve(app_root, fleet_id)",
+        "app_by_fleet_id(app_root, fleet_id)",
+        "shared_root(app_root, fleet_id)",
         "main(argv)"
       ],
       "imports": [
@@ -111971,6 +112031,8 @@
       ],
       "symbols": [
         "resolve(app_root, fleet_id)",
+        "app_by_fleet_id(app_root, fleet_id)",
+        "shared_root(app_root, fleet_id)",
         "main(argv)"
       ]
     },
@@ -115161,16 +115223,19 @@
         "com.diegonmarcos.cloudlib.mounts.MountStore",
         "com.diegonmarcos.cloudlib.mounts.MountUri",
         "com.diegonmarcos.cloudlib.mounts.MountsScreen",
+        "com.diegonmarcos.cloudlib.rclone.RcloneConfig",
         "com.diegonmarcos.cloudlib.rclone.RcloneJob",
         "com.diegonmarcos.cloudlib.rclone.RcloneJobStore",
+        "com.diegonmarcos.cloudlib.rclone.RcloneRemote",
+        "com.diegonmarcos.cloudlib.rclone.RcloneRunner",
         "com.diegonmarcos.cloudlib.rclone.RcloneScreen",
         "java.io.File",
         "org.json.JSONArray"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
-        "EngineRoute(engine: String, target: String?, onOpenFile: (String)",
-        "intent(context: Context, engine: String, target: String)",
+        "EngineRoute(engine: String, target: String?, cloneUrl: String?, onOpenFile: (String)",
+        "intent(context: Context, engine: String, target: String, url: String = \"\")",
         "declareFromBuild(context: Context)",
         "decode(b64: String)",
         "class EngineActivity"
@@ -115263,6 +115328,36 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/GitSyncWorker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitSyncWorker"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "androidx.work.Constraints",
+        "androidx.work.ExistingPeriodicWorkPolicy",
+        "androidx.work.NetworkType",
+        "androidx.work.PeriodicWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "androidx.work.Worker",
+        "androidx.work.WorkerParameters",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "com.diegonmarcos.cloudlib.gitsync.GitEngine",
+        "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
+        "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
+        "java.io.File",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "doWork()",
+        "schedule(context: Context)",
+        "class GitSyncWorker"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/MainActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -115291,6 +115386,24 @@
         "cssPixels(devicePixels: Int)",
         "publishInsets(webView: WebView)",
         "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/SharedStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SharedStore"
+      ],
+      "imports": [
+        "android.os.Environment",
+        "java.io.File"
+      ],
+      "symbols": [
+        "root()",
+        "repoDir(name: String)",
+        "resolve(path: String)",
+        "class SharedStore"
       ]
     },
     {
@@ -115504,6 +115617,20 @@
     },
     {
       "path": "ac_cloud-drive/test/test-drive-rclone-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-shared-store.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
