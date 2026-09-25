@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19845,
+    "files": 19855,
     "by_lang": {
       "py": 53,
-      "sh": 268,
-      "kotlin": 9947,
+      "sh": 270,
+      "kotlin": 9955,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 132,
-      "shell": 191,
+      "shell": 193,
       "java": 606,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9945,
+      "kotlin": 9953,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -5631,12 +5631,16 @@
         "android.graphics.drawable.GradientDrawable",
         "android.view.Gravity",
         "android.view.View",
+        "android.view.ViewGroup",
         "android.widget.LinearLayout",
         "android.widget.TextView",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.WindowInsetsCompat",
+        "com.diegonmarcos.superapp.R",
         "com.google.android.material.tabs.TabLayout"
       ],
       "symbols": [
-        "apply(tabLayout: TabLayout)",
+        "apply(tabLayout: TabLayout, underTopChrome: Boolean = true)",
         "onTabSelected(tab: TabLayout.Tab)",
         "onTabUnselected(tab: TabLayout.Tab)",
         "onTabReselected(tab: TabLayout.Tab)",
@@ -5645,6 +5649,8 @@
         "applyEqual(tabs: TabLayout, divider: ()",
         "charWidth(sizePx: Float)",
         "findLabel(v: View?)",
+        "inset(tabLayout: TabLayout, underTopChrome: Boolean)",
+        "margins(liveInset: Int)",
         "makePill(ctx: Context, label: String, selected: Boolean)",
         "makePillBg(ctx: Context, selected: Boolean)",
         "repaint(view: View?, selected: Boolean)",
@@ -6384,8 +6390,6 @@
         "android.widget.FrameLayout",
         "android.widget.LinearLayout",
         "androidx.fragment.app.Fragment",
-        "androidx.core.view.ViewCompat",
-        "androidx.core.view.WindowInsetsCompat",
         "com.diegonmarcos.superapp.ShellActivity",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.core.Collapsible",
@@ -7488,7 +7492,7 @@
         "text()",
         "apply(context: Context, root: JSONObject)",
         "planProfile(context: Context, o: JSONObject?, commits: MutableList<()",
-        "planWireGuard(context: Context, o: JSONObject?, commits: MutableList<()",
+        "planWireGuard(context: Context, root: JSONObject, o: JSONObject?, commits: MutableList<()",
         "parsePeers(arr: JSONArray)",
         "spliceKey(conf: String, privateKey: String)",
         "planBaked(section: String, value: Any?, source: String)",
@@ -7547,23 +7551,11 @@
       "imports": [
         "android.util.Log",
         "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.ConfigSyncClient",
-        "org.json.JSONObject",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
+        "com.diegonmarcos.superapp.core.ConfigSyncClient"
       ],
       "symbols": [
-        "deviceFlowConfigured()",
-        "requestDeviceCode()",
-        "pollForToken(deviceCode: String)",
         "fetchArtifact(token: String)",
-        "postForm(url: String, fields: Map<String, String>)",
-        "class GithubImport",
-        "class DeviceCode",
-        "class Step",
-        "class Pending",
-        "class Token",
-        "class Failed"
+        "class GithubImport"
       ]
     },
     {
@@ -7644,6 +7636,24 @@
         "beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "afterTextChanged(s: Editable?)",
+        "autheliaProvider()",
+        "journeyState(ctx: android.content.Context)",
+        "ask(step: ProfileJourney.Step)",
+        "stepLabel(step: ProfileJourney.Step)",
+        "lockText(s: ProfileJourney.State, step: ProfileJourney.Step)",
+        "profilesText(peer: UserRegistry.Peer)",
+        "identityTag(id: UserRegistry.Identity)",
+        "summaries(s: ProfileJourney.State)",
+        "heroSummary(s: ProfileJourney.State)",
+        "paintJourney()",
+        "renderJourney(ctx: android.content.Context, into: LinearLayout)",
+        "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
+        "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
+        "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "statusView(ctx: android.content.Context)",
+        "stamp()",
+        "showMailCodeDialog()",
         "tabStrip( ctx: android.content.Context, tabs: List<Tab>, )",
         "show(index: Int)",
         "onTabSelected(tab: TabLayout.Tab)",
@@ -7661,25 +7671,64 @@
         "showVaultFailure( status: TextView, o: com.diegonmarcos.superapp.core.ConfigSyncClient.Outcome.Failed, )",
         "renderImported(ctx: android.content.Context, into: LinearLayout)",
         "paintCard( card: FleetCockpitView.Card, rows: List<VaultCockpit.Row>, section: VaultCockpit.Section, summary: String? = null, )",
-        "repaintHero()",
-        "renderRaw(ctx: android.content.Context, into: LinearLayout, section: VaultConnect.Section)",
-        "renderDeviceSelector( ctx: android.content.Context, into: LinearLayout, devices: List<VaultCockpit.Device>, )",
-        "onNothingSelected(parent: android.widget.AdapterView<*>?)",
-        "onItemSelected(parent: android.widget.AdapterView<*>?, v: View?, pos: Int, id: Long)",
-        "renderRows(ctx: android.content.Context, into: LinearLayout, rows: List<VaultCockpit.Row>)",
-        "applyButton(ctx: android.content.Context, what: String, onApply: ()",
-        "redraw()",
-        "renderMail(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView)",
-        "renderMesh(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, device: VaultCockpit.Device?, status: TextView)",
-        "renderDrive(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView)",
-        "renderAi(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, status: TextView, card: FleetCockpitView.Card, section: VaultCockpit.Section)",
-        "renderApps(ctx: android.content.Context, into: LinearLayout, bundle: org.json.JSONObject, device: VaultCockpit.Device?)",
-        "importedValue(ctx: android.content.Context, row: VaultConnect.Row)",
-        "onResume()",
-        "onPause()",
-        "onDestroyView()",
-        "requiredField( ctx: android.content.Context, initial: String, save: (String)",
-        "refreshStatus()"
+        "repaintHero()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourney.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileJourney"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.ui.StatusLight"
+      ],
+      "symbols": [
+        "defaultIdentity(s: State)",
+        "defaultPeer(s: State)",
+        "done(s: State, step: Step)",
+        "lock(s: State, step: Step)",
+        "phase(s: State, step: Step)",
+        "next(s: State)",
+        "stepNumber(s: State)",
+        "allDone(s: State)",
+        "light(phase: Phase)",
+        "overall(s: State)",
+        "bodyOpen(phase: Phase)",
+        "tag(step: Step)",
+        "class is",
+        "class ProfileJourney",
+        "class Step",
+        "class Phase",
+        "class Lock",
+        "class State"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourneyView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileJourneyView"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.ui.StatusLight"
+      ],
+      "symbols": [
+        "build( ctx: Context, heroTitle: String, heroSubtitle: String, heroIcon: Int, labels: Map<ProfileJourney.Step, String>, icons: Map<ProfileJourney.Step, Int>, toggleAction: String, )",
+        "paint( j: Journey, state: ProfileJourney.State, summaries: Map<ProfileJourney.Step, String>, heroSummary: String, )",
+        "choice(ctx: Context, text: String, selected: Boolean, onClick: ()",
+        "dp(ctx: Context, v: Int)",
+        "class ProfileJourneyView",
+        "class Journey"
       ]
     },
     {
@@ -7774,6 +7823,80 @@
         "dp(ctx: Context, v: Int)",
         "class QrGalleryDialog",
         "class Palette"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/SignIn.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignIn"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "grants(what: String)",
+        "parseProviders(o: JSONObject)",
+        "provider(id: String)",
+        "providerGranting(what: String)",
+        "parseDeviceCode(o: JSONObject)",
+        "parseTokenStep(o: JSONObject)",
+        "requestDeviceCode(p: Provider)",
+        "pollForToken(p: Provider, deviceCode: String)",
+        "parseIdentity(o: JSONObject)",
+        "identity(p: Provider, token: String)",
+        "postForm(url: String, fields: Map<String, String>)",
+        "class SignIn",
+        "class Kind",
+        "class Provider",
+        "class Session",
+        "class Current",
+        "class DeviceCode",
+        "class Step",
+        "class Pending",
+        "class Token",
+        "class Failed"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/UserRegistry.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UserRegistry"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "identity(email: String)",
+        "peer(id: String)",
+        "parse(root: JSONObject)",
+        "peerProfiles(root: JSONObject, peerId: String)",
+        "remember(root: JSONObject)",
+        "remember(ctx: Context, root: JSONObject)",
+        "current(ctx: Context)",
+        "registryOnly(root: JSONObject)",
+        "appliedAt(ctx: Context)",
+        "markApplied(ctx: Context, stamp: String)",
+        "selectedIdentity(ctx: Context)",
+        "selectIdentity(ctx: Context, email: String)",
+        "selectedPeer(ctx: Context)",
+        "selectPeer(ctx: Context, id: String)",
+        "prefs(ctx: Context)",
+        "class UserRegistry",
+        "class Identity",
+        "class Peer",
+        "class Registry",
+        "class Current"
       ]
     },
     {
@@ -9547,6 +9670,37 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/AppTabsStyleTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppTabsStyleTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.view.ContextThemeWrapper",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "androidx.core.graphics.Insets",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.WindowInsetsCompat",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.google.android.material.tabs.TabLayout",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "strip()",
+        "margins(t: TabLayout)",
+        "statusBar(px: Int)",
+        "class AppTabsStyleTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BadgeDeclarationTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9652,6 +9806,98 @@
         "all(v: View)",
         "build(layout: VaultCockpit.Layout)",
         "class FleetCockpitViewTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/ProfileJourneyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileJourneyTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.view.ContextThemeWrapper",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.TextView",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.profile.ProfileJourney.Lock",
+        "com.diegonmarcos.superapp.profile.ProfileJourney.Phase",
+        "com.diegonmarcos.superapp.profile.ProfileJourney.State",
+        "com.diegonmarcos.superapp.profile.ProfileJourney.Step",
+        "com.diegonmarcos.superapp.ui.StatusLight",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "registry()",
+        "build()",
+        "cards(root: View)",
+        "walk(v: View)",
+        "class ProfileJourneyTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/SignInTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignInTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "declared()",
+        "class SignInTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/UserRegistryTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UserRegistryTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "artifact()",
+        "class UserRegistryTest"
       ]
     },
     {
@@ -11079,6 +11325,24 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-profile-journey.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "t4()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "t4()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-profile-vault-connect.sh",
       "lang": "sh",
       "role": "shell",
@@ -11152,6 +11416,26 @@
       "symbols": [
         "ok()",
         "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-tab-strip-spacing.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "t2()",
+        "t3()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "t2()",
+        "t3()"
       ]
     },
     {
