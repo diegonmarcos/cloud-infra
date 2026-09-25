@@ -71,6 +71,9 @@ let
     port      = null;
     publicKey = c.wg_public_key;
     role      = c.role;
+    # Extra source addresses the hub accepts from this client (declared as
+    # clients.<name>.extra_allowed_ips in the mesh owner's build.json).
+    extraAllowedIps = c.extra_allowed_ips or [];
   };
   # Mesh ULA v6 subnet (null on IPv4-only meshes / wg-public until added)
   subnetV6 = cloudData.mesh.subnet_v6 or null;
@@ -127,7 +130,7 @@ let
     "Endpoint = ${peer.endpoint}:${toString peer.port}\n"
   else "") +
   (if peer.role == "client" then
-    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}\n"
+    "AllowedIPs = ${peer.address}/32${lib.optionalString (peer.addressV6 or null != null) ", ${peer.addressV6}/128"}${lib.concatMapStrings (ip: ", ${ip}") (peer.extraAllowedIps or [])}\n"
   else if peer.role == "hub" then
     "AllowedIPs = ${cloudData.mesh.subnet}${lib.optionalString (subnetV6 != null) ", ${subnetV6}"}\n"
   else
