@@ -405,8 +405,33 @@ do_dotfiles() {
     sh "$LIB_SRC/deploy-dotfiles.sh" "$APPS_SRC" "$APPS_DIST/dotfiles" "$REPO_ROOT"
 }
 
+# ── fleet dotfiles ──────────────────────────────────────────────────────────
+# dist/dotfiles/ → the SAME files in every repo of manifest.json:fleet.
+# Refreshes dist/dotfiles/ first (do_dotfiles) so the fleet gets what the
+# deriver currently says, not whatever was last committed. `fleet-check` emits
+# nothing and fails on drift — the guard (tester: dotfiles-fleet.test.sh).
+# --require-all: an emit that silently skips a repo is the drift this exists
+# to end, so a laptop/agent run must have every repo checked out.
+do_fleet() {
+    phase "FLEET DOTFILES  dist/dotfiles/ → every repo in manifest.json:fleet"
+    do_dotfiles
+    sh "$LIB_SRC/deploy-dotfiles-fleet.sh" --require-all "$APPS_SRC" "$APPS_DIST/dotfiles" "${CLOUD_GIT_BASE:-$HOME/git}"
+}
+do_fleet_check() {
+    phase "FLEET DOTFILES CHECK  (read-only)"
+    sh "$LIB_SRC/deploy-dotfiles-fleet.sh" "$@" "$APPS_SRC" "$APPS_DIST/dotfiles" "${CLOUD_GIT_BASE:-$HOME/git}"
+}
+
 CMD="${1:-ship}"
 case "$CMD" in
+    fleet)
+        log "MODE: fleet  (dist/dotfiles/ → every repo in the fleet)"
+        do_fleet
+        ;;
+    fleet-check)
+        shift
+        do_fleet_check "$@"
+        ;;
     # build       = src/  → dist/                  (compile only)
     # deploy/ship = src/  → dist/  → install path  (full pipeline; default)
     # `ship` matches the rest of the cloud repo's per-service `build.sh ship`
@@ -429,12 +454,14 @@ case "$CMD" in
         ;;
     *)
         cat >&2 <<USAGE
-Usage: $0 [build | ship | deploy]
+Usage: $0 [build | ship | deploy | dotfiles | fleet | fleet-check]
 
   build           src/                       → dist/                              (compile only — no deploy)
   ship  (default) src/  → dist/  → installed (full pipeline; default)
   deploy          src/  → dist/  → installed (alias for ship)
   dotfiles        src/apps/ → dist/dotfiles/ → .claude/ .vscode/ .obsidian/
+  fleet           dotfiles, then the same files into EVERY repo in manifest.json:fleet
+  fleet-check     read-only: exit 1 if any fleet repo's dotfiles drifted [--require-all]
 
 After 'ship'/'deploy', .github/workflows/, .github/actions/, .github/flake.{nix,lock},
 .gitmodules, .gitignore, gitconfig include, scripts/, hooks/, and submodule

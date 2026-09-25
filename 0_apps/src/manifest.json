@@ -18,5 +18,117 @@
     "mcp.json": ".mcp.json",
     "sops.yaml": ".sops.yaml"
   },
-  "_root_targets_doc": "Single files deployed to the repo ROOT rather than into a directory. .mcp.json is Claude Code's project-scoped MCP server registry. cloud used to carry it as a tracked symlink to /home/diego/.mcp.json, which resolved on exactly one laptop and dangled in every clone, CI runner and container — and Claude Code loads NO servers when .mcp.json cannot be read, silently. src/apps/root/mcp.json is a real file so each repo is self-contained. In cloud it is refreshed from 1_cloud-configs/dist/mcp.json, which derive-mcp-json.ts generates from the .mcp blocks in a_solutions/*/build.json. sops.yaml is per-REPO, not universal: cloud encrypts four patterns (secrets.yaml, secrets_backup.yaml, jwks_key.yaml, terraform.tfstate.enc) while unix encrypts its own set, and most repos have none at all. The mapping here is shared; the file each repo supplies under src/apps/root/ is its own. A repo with no src/apps/root/sops.yaml simply skips it. sops.yaml now lives in the 2_sops/ tier rather than under 0_apps/src/root/, since sops is its own concern; deploy-dotfiles.sh looks there for it."
+  "_root_targets_doc": "Single files deployed to the repo ROOT rather than into a directory. .mcp.json is Claude Code's project-scoped MCP server registry. cloud used to carry it as a tracked symlink to /home/diego/.mcp.json, which resolved on exactly one laptop and dangled in every clone, CI runner and container — and Claude Code loads NO servers when .mcp.json cannot be read, silently. src/apps/root/mcp.json is a real file so each repo is self-contained. In cloud it is refreshed from 1_cloud-configs/dist/mcp.json, which derive-mcp-json.ts generates from the .mcp blocks in a_solutions/*/build.json. sops.yaml is per-REPO, not universal: cloud encrypts four patterns (secrets.yaml, secrets_backup.yaml, jwks_key.yaml, terraform.tfstate.enc) while unix encrypts its own set, and most repos have none at all. The mapping here is shared; the file each repo supplies under src/apps/root/ is its own. A repo with no src/apps/root/sops.yaml simply skips it. sops.yaml now lives in the 2_sops/ tier rather than under 0_apps/src/root/, since sops is its own concern; deploy-dotfiles.sh looks there for it.",
+  "fleet": {
+    "_doc": "ONE declaration of which repos must carry the SAME dotfiles, and how. Emitted by 9_others/src/deploy-dotfiles-fleet.sh (build.sh fleet) from 0_apps/dist/dotfiles/ — the output of the dotfiles build above — into every repo listed here, and verified by the same script in --check mode (tester: 9_others/test/dotfiles-fleet.test.sh). Raised 2026-09-25 (#569) when cloud-data-my-ai-memory had NO .mcp.json and its sessions saw a stale 9-server list without cloud-infra-mcp, while cloud-data, cloud-vault, front-* carried 8, 9 and 11 servers depending on when someone last copied the file by hand. Adding a repo to the fleet = one entry here; nothing else.",
+    "_semantics": "Same additive per-file rule as `targets`: only files that exist in dist/dotfiles/ are written or compared; anything else in .claude/ .vscode/ .obsidian/ is machine state and untouched. A symlink where a managed file belongs is DRIFT (it dangles off the machine that made it) and is replaced by a real file.",
+    "repos": [
+      {
+        "dir": "cloud-infra",
+        "github": "cloud-infra",
+        "private": false
+      },
+      {
+        "dir": "cloud-data",
+        "github": "cloud-data",
+        "private": true
+      },
+      {
+        "dir": "cloud-data-my-ai-memory",
+        "github": "cloud-data-my-ai-memory",
+        "private": true,
+        "sources": {
+          "prefix": "4___ASSETS___/4.2.Config",
+          "map": {
+            ".mcp.json": "mcp.json",
+            ".claude": "claude",
+            ".vscode": "vscode",
+            ".obsidian": "obsidian"
+          },
+          "_doc": "This repo generates every root dot path from a source under 4___ASSETS___/4.2.Config/ (gen-dotfiles.sh, guarded by check-dotfiles-generated.sh, which goes RED on a root dotfile that is edited in place or undeclared). So the fleet files are written into that SOURCE as well as the root copy: the repo's own emitter then reproduces the root byte-for-byte and its guard stays green. `map` = root dot path -> name under prefix. Each mapped path must also be declared in that repo's layout.json:dotfiles."
+        }
+      },
+      {
+        "dir": "cloud-u-android",
+        "github": "cloud-u-android",
+        "private": false
+      },
+      {
+        "dir": "cloud-u-containers",
+        "github": "cloud-u-containers",
+        "private": false,
+        "ci_skip": "Any push to cloud-u-containers redeploys the fleet and kills every running agent, so its dotfiles are emitted into a local commit and shipped in an idle-fleet window. Until that lands the CI guard must not go red on it. REMOVE this field once its dotfiles are on main; the full check (build.sh fleet-check --require-all) still covers it."
+      },
+      {
+        "dir": "cloud-u-linux",
+        "github": "cloud-u-linux",
+        "private": false
+      },
+      {
+        "dir": "cloud-vault",
+        "github": "cloud-vault",
+        "private": true
+      },
+      {
+        "dir": "ffront",
+        "github": "ffront",
+        "private": false
+      },
+      {
+        "dir": "front-assets-cdn",
+        "github": "front-assets-cdn",
+        "private": false
+      },
+      {
+        "dir": "front-data",
+        "github": "front-data",
+        "private": false
+      },
+      {
+        "dir": "front-diegonmarcos",
+        "github": "diegonmarcos.github.io",
+        "private": false
+      },
+      {
+        "dir": "front-galaxy-gaia",
+        "github": "front-galaxy-gaia",
+        "private": true
+      },
+      {
+        "dir": "front-unity",
+        "github": "front-unity",
+        "private": true
+      }
+    ],
+    "_repos_doc": "dir = clone directory under ~/git; github = repository name on GitHub (differs for front-diegonmarcos); private only decides whether CI can fetch it to verify (CI has no token for private repos, so the guard there skips them loudly and the full check runs wherever every repo is checked out). ci_skip = the CI guard leaves this repo out and says why; it is never a reason to leave it out of the emit. sources = the repo generates its root dotfiles from a source tree of its own; the fleet files are written there too so its own guard stays green.",
+    "root_files": [
+      "mcp.json"
+    ],
+    "_root_files_doc": "The subset of root_targets that is fleet-wide. sops.yaml is per-repo by design (each repo encrypts its own patterns) and is excluded.",
+    "module_mirrors": [
+      {
+        "from": "root",
+        "to": "0_apps/src/root",
+        "only": [
+          "mcp.json"
+        ]
+      },
+      {
+        "from": "root",
+        "to": "0_apps/dist/dotfiles/root",
+        "only": [
+          "mcp.json"
+        ]
+      },
+      {
+        "from": "claude",
+        "to": "0_apps/src/claude"
+      },
+      {
+        "from": "claude",
+        "to": "0_apps/dist/dotfiles/claude"
+      }
+    ],
+    "_module_mirrors_doc": "Some repos (front-assets-cdn, front-unity) carry their OWN copy of this module, whose `build.sh dotfiles` re-deploys its src/ over the repo root. Left stale it silently undoes the emit on the next build there — a second declaration of the same file. So the fleet files are also written into those copies, but ONLY where the destination directory already exists: a repo without the module never gets one. `from` is a subdirectory of dist/dotfiles/, `to` is repo-relative. `only` limits a mirror to named files: dist/dotfiles/root also holds sops.yaml, which is per-repo (see root_files) and must never be mirrored."
+  }
 }
