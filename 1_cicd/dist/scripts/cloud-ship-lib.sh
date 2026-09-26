@@ -160,7 +160,7 @@ cmd_exists() { command -v "$1" >/dev/null 2>&1; }
 # unauthenticated and the push died "denied: write_package" (ship.yml, 2026-06-22).
 # Returns 0 on the first method that succeeds, 1 if all fail.
 ghcr_login() {
-    _gl_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
+    _gl_vault="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A_A0-Providers/B_SERVICES-CLOUD/b0-github/api-key_opaque/token}"
     _gl_user="${GHCR_USER:-diegonmarcos}"
     if [ -f "$_gl_vault" ] && docker login ghcr.io -u "$_gl_user" --password-stdin < "$_gl_vault" >/dev/null 2>&1; then
         log "GHCR login OK (vault)"; return 0
