@@ -212,7 +212,7 @@ is_private_repo() { # $1=LOCAL_NAME → rc 0 if private_repos, else 1
 # whole). Public repos are unaffected — they keep linking to their own repo.
 resolve_repo_source_label() { # $1=PKG (for error msg) $2=LOCAL_NAME → stdout: LABEL value; rc 1 (empty stdout) if unresolved
   if is_private_repo "$2"; then
-    printf 'https://github.com/diegonmarcos/cloud-vault\n'
+    printf 'https://github.com/diegonmarcos/cloud-me_vault\n'
     return 0
   fi
   _rsl_remote=$(resolve_remote_name "$2") || {
