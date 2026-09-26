@@ -51,7 +51,7 @@ runs:
         # docker.envfile, systemd.yaml, pub.json. Failing to generate any of
         # them is a hard error (downstream cloud-builder mounts docker.envfile
         # via compose env_file: — silent miss = the original CI breakage).
-        bash ./build.sh env
+        bash ./others/build.sh env
         ENV_FILE="$HOME/git/cloud-vault/vault-keys-bash.env"
         DOCKER_ENV="$HOME/git/cloud-vault/vault-keys-docker.envfile"
         [ -f "$ENV_FILE" ]   || { echo "::error::vault-keys-bash.env not generated";   exit 1; }

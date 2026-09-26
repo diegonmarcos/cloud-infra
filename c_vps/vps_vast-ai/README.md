@@ -60,4 +60,4 @@ vastai destroy instance <id>  # full stop, no more charges
 
 - Not on WireGuard mesh — Ollama API is public (use firewall or SSH tunnel)
 - No static IP — update SSH config and any API consumers after each rental
-- Credentials: `~/git/cloud-vault/A0_keys/providers/vast-ai/`
+- Credentials: vast-ai provider config removed from vault during the #591 reorg; no longer available.
