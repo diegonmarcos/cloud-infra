@@ -32,7 +32,7 @@ const out = {
   _doc:
     "Redacted wg-quick profiles for the Cloud SuperApp full-config artifact, ONE MAP PER PEER (profiles.<peer id>.<profile id>). SECURITY: the PrivateKey VALUE is stripped at the source boundary, so this PUBLIC repo can never carry it. Real keys stay in cloud-vault (PRIVATE); the device holds its own key and imports it from file.",
   _source:
-    "cloud-vault/A0_keys/providers/wireguard/<peer.vault_wg_dir>/config-* for every peer in superapp-users.json that declares vault_wg_dir",
+    "cloud-vault/A_A0-Providers/C_TOOLS-INFRA/c0-wireguard/<peer.vault_wg_dir>/config-* for every peer in superapp-users.json that declares vault_wg_dir",
   _regenerate: "node 1_cloud-configs/src/inputs/regen-superapp-wireguard-profiles.js",
   private_key_placeholder: PLACEHOLDER,
   profiles: {},
