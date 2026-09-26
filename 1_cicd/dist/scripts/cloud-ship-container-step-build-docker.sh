@@ -717,7 +717,7 @@ NEOF
     # `2>/dev/null` combined with set -e. Now: stderr is preserved (for
     # debuggability) and `|| true` keeps the pipeline going since downstream
     # `docker push` will surface its own error if auth is genuinely broken.
-    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
+    VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A_A0-Providers/B_SERVICES-CLOUD/b0-github/api-key_opaque/token}"
     GHCR_USER="${GHCR_USER:-diegonmarcos}"
     if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ]; then
         echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin 2>&1 \
@@ -1059,7 +1059,7 @@ NEOF
             # the local-push login block above for the full rationale. This is
             # the REMOTE_BUILD (arm64-on-VM) push that dagu and every arm64
             # service uses, so it MUST prefer GITHUB_TOKEN to get public images.
-            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
+            VAULT_GHCR_TOKEN_PATH="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A_A0-Providers/B_SERVICES-CLOUD/b0-github/api-key_opaque/token}"
             GHCR_USER="${GHCR_USER:-diegonmarcos}"
             # When authenticating with GITHUB_TOKEN, the docker-login username
             # must be the Actions actor (owner==actor==diegonmarcos here).

@@ -49,7 +49,7 @@ step_configs_push() {
     # openobserve-configs, wireguard-mesh-configs, wireguard-mesh-ws-tunnel-configs
     # and tools-http-to-smtp-proxy-api-configs all show repository=NONE, while the
     # -binaries packages built by step_docker (GITHUB_TOKEN-first) are repo-linked.
-    _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A0_keys/providers/github/api-key_opaque/token}"
+    _vault_tok="${VAULT_GHCR_TOKEN_PATH:-${HOME}/git/cloud-vault/A_A0-Providers/B_SERVICES-CLOUD/b0-github/api-key_opaque/token}"
     _ghcr_user="${GHCR_USER:-diegonmarcos}"
     if [ -n "${GITHUB_TOKEN:-}" ] && [ -n "${GITHUB_ACTOR:-}" ] && \
          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin >/dev/null 2>&1; then
