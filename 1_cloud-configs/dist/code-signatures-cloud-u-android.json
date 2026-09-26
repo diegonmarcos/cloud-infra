@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19897,
+    "files": 19904,
     "by_lang": {
       "py": 53,
-      "sh": 274,
-      "kotlin": 9994,
+      "sh": 275,
+      "kotlin": 10000,
       "java": 607,
       "ts": 8413,
       "nix": 24,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 132,
-      "shell": 197,
+      "shell": 198,
       "java": 606,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 20,
-      "kotlin": 9992,
+      "kotlin": 9998,
       "python": 28,
       "rust-module": 82,
       "file": 2255,
@@ -7470,6 +7470,7 @@
       "imports": [
         "android.content.Context",
         "android.util.Log",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.core.ConfigSyncClient",
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
@@ -7534,23 +7535,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GithubImport.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GithubImport"
-      ],
-      "imports": [
-        "android.util.Log",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.ConfigSyncClient"
-      ],
-      "symbols": [
-        "fetchArtifact(token: String)",
-        "class GithubImport"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GitSshVault.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7559,7 +7543,7 @@
       ],
       "imports": [
         "android.util.Log",
-        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
         "com.diegonmarcos.superapp.core.ConfigSyncClient",
         "com.jcraft.jsch.JSch",
         "com.jcraft.jsch.Session",
@@ -7610,8 +7594,20 @@
         "android.widget.LinearLayout",
         "android.widget.ScrollView",
         "android.widget.TextView",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.ViewCompositionStrategy",
+        "androidx.compose.ui.viewinterop.AndroidView",
         "androidx.fragment.app.Fragment",
         "androidx.lifecycle.lifecycleScope",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.cloudlib.auth.ConfigArtifact",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInHost",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.SignInWays",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.launcher.AppTabsStyle",
         "com.diegonmarcos.superapp.launcher.Sections",
@@ -7628,7 +7624,6 @@
         "beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "afterTextChanged(s: Editable?)",
-        "autheliaProvider(kind: SignIn.Kind)",
         "journeyState(ctx: android.content.Context)",
         "ask(step: ProfileJourney.Step)",
         "stepLabel(step: ProfileJourney.Step)",
@@ -7663,38 +7658,8 @@
         "vaultFetch(status: TextView)",
         "showVaultFailure( status: TextView, o: com.diegonmarcos.superapp.core.ConfigSyncClient.Outcome.Failed, )",
         "renderImported(ctx: android.content.Context, into: LinearLayout)",
-        "paintCard( card: FleetCockpitView.Card, rows: List<VaultCockpit.Row>, section: VaultCockpit.Section, summary: String? = null, )"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourney.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfileJourney"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.ui.StatusLight"
-      ],
-      "symbols": [
-        "defaultIdentity(s: State)",
-        "defaultPeer(s: State)",
-        "done(s: State, step: Step)",
-        "lock(s: State, step: Step)",
-        "phase(s: State, step: Step)",
-        "next(s: State)",
-        "stepNumber(s: State)",
-        "allDone(s: State)",
-        "light(phase: Phase)",
-        "overall(s: State)",
-        "bodyOpen(phase: Phase)",
-        "tag(step: Step)",
-        "class is",
-        "class ProfileJourney",
-        "class Step",
-        "class Phase",
-        "class Lock",
-        "class State"
+        "paintCard( card: FleetCockpitView.Card, rows: List<VaultCockpit.Row>, section: VaultCockpit.Section, summary: String? = null, )",
+        "repaintHero()"
       ]
     },
     {
@@ -7711,10 +7676,13 @@
         "android.view.ViewGroup",
         "android.widget.LinearLayout",
         "android.widget.TextView",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.ui.StatusLight"
       ],
       "symbols": [
+        "light(phase: ProfileJourney.Phase)",
+        "overall(s: ProfileJourney.State)",
         "build( ctx: Context, heroTitle: String, heroSubtitle: String, heroIcon: Int, labels: Map<ProfileJourney.Step, String>, icons: Map<ProfileJourney.Step, Int>, toggleAction: String, )",
         "paint( j: Journey, state: ProfileJourney.State, summaries: Map<ProfileJourney.Step, String>, heroSummary: String, )",
         "choice(ctx: Context, text: String, selected: Boolean, onClick: ()",
@@ -7818,80 +7786,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/SignIn.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SignIn"
-      ],
-      "imports": [
-        "android.util.Base64",
-        "android.util.Log",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.ConfigSyncClient",
-        "org.json.JSONObject",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "grants(what: String)",
-        "parseProviders(o: JSONObject)",
-        "provider(id: String)",
-        "providerGranting(what: String)",
-        "parseDeviceCode(o: JSONObject)",
-        "parseTokenStep(o: JSONObject)",
-        "requestDeviceCode(p: Provider)",
-        "pollForToken(p: Provider, deviceCode: String)",
-        "parseIdentity(o: JSONObject)",
-        "identity(p: Provider, token: String)",
-        "postForm(url: String, fields: Map<String, String>)",
-        "class SignIn",
-        "class Kind",
-        "class Provider",
-        "class Session",
-        "class Current",
-        "class DeviceCode",
-        "class Step",
-        "class Pending",
-        "class Token",
-        "class Failed"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/UserRegistry.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UserRegistry"
-      ],
-      "imports": [
-        "android.content.Context",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "identity(email: String)",
-        "peer(id: String)",
-        "parse(root: JSONObject)",
-        "peerProfiles(root: JSONObject, peerId: String)",
-        "remember(root: JSONObject)",
-        "remember(ctx: Context, root: JSONObject)",
-        "current(ctx: Context)",
-        "registryOnly(root: JSONObject)",
-        "appliedAt(ctx: Context)",
-        "markApplied(ctx: Context, stamp: String)",
-        "selectedIdentity(ctx: Context)",
-        "selectIdentity(ctx: Context, email: String)",
-        "selectedPeer(ctx: Context)",
-        "selectPeer(ctx: Context, id: String)",
-        "prefs(ctx: Context)",
-        "class UserRegistry",
-        "class Identity",
-        "class Peer",
-        "class Registry",
-        "class Current"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/VaultCockpit.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7954,68 +7848,6 @@
         "class MailDeclared",
         "class AiState",
         "class that"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/VaultConnect.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "VaultConnect"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.core.ConfigSyncClient",
-        "org.json.JSONArray",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "start(e: Endpoints, auth: Auth)",
-        "fetch(e: Endpoints, auth: Auth, code: String)",
-        "start(e: Endpoints, bearer: String)",
-        "fetch(e: Endpoints, bearer: String, code: String)",
-        "post(e: Endpoints, path: String, auth: Auth, body: JSONObject)",
-        "hint(kind: ConfigSyncClient.Kind)",
-        "unknownSchemaVersion(response: JSONObject, known: Set<Int>)",
-        "sections(response: JSONObject)",
-        "isPending(v: Any?)",
-        "flatten(v: Any?, path: String, out: MutableList<Row>)",
-        "join(path: String, key: String)",
-        "class VaultConnect",
-        "class Endpoints",
-        "class Auth",
-        "class Bearer",
-        "class Cookie",
-        "class Hint",
-        "class Row",
-        "class Section",
-        "class Imported"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/VaultFile.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "VaultFile"
-      ],
-      "imports": [
-        "org.json.JSONArray",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "classify(text: String, knownSchemaVersions: Set<Int>, blobSections: Set<String>)",
-        "blobSections(importSchemaJson: String)",
-        "sectionsOf(root: JSONObject)",
-        "countEnc(v: Any?, skip: String = \"\")",
-        "class VaultFile",
-        "class Verdict",
-        "class Empty",
-        "class NotJson",
-        "class Encrypted",
-        "class UnknownSchema",
-        "class Bundle",
-        "class Blob",
-        "class Unrecognised"
       ]
     },
     {
@@ -8364,8 +8196,8 @@
         "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.annotation.StringRes",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.profile.VaultConnect",
-        "com.diegonmarcos.superapp.profile.VaultFile",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.cloudlib.auth.VaultFile",
         "com.google.android.material.button.MaterialButton",
         "com.google.android.material.textfield.TextInputEditText"
       ],
@@ -9849,10 +9681,13 @@
         "android.widget.TextView",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.profile.ProfileJourney.Lock",
-        "com.diegonmarcos.superapp.profile.ProfileJourney.Phase",
-        "com.diegonmarcos.superapp.profile.ProfileJourney.State",
-        "com.diegonmarcos.superapp.profile.ProfileJourney.Step",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney.Lock",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney.Phase",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney.State",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney.Step",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
         "com.diegonmarcos.superapp.ui.StatusLight",
         "org.json.JSONArray",
         "org.json.JSONObject",
@@ -9874,59 +9709,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/SignInTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SignInTest"
-      ],
-      "imports": [
-        "android.app.Application",
-        "android.util.Base64",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "org.json.JSONObject",
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertFalse",
-        "org.junit.Assert.assertNull",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test",
-        "org.junit.runner.RunWith",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.annotation.Config",
-        "java.io.File"
-      ],
-      "symbols": [
-        "declared()",
-        "class SignInTest"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/UserRegistryTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "UserRegistryTest"
-      ],
-      "imports": [
-        "android.app.Application",
-        "androidx.test.core.app.ApplicationProvider",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertNull",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test",
-        "org.junit.runner.RunWith",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.annotation.Config",
-        "java.io.File"
-      ],
-      "symbols": [
-        "artifact()",
-        "class UserRegistryTest"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/VaultCockpitTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9937,6 +9719,7 @@
         "android.app.Application",
         "android.content.Context",
         "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
         "com.diegonmarcos.superapp.profile.VaultCockpit.State",
         "com.diegonmarcos.superapp.ui.StatusLight.State",
@@ -9957,42 +9740,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/VaultConnectTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "VaultConnectTest"
-      ],
-      "imports": [
-        "android.app.Application",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.ConfigSyncClient",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "org.junit.After",
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Before",
-        "org.junit.Test",
-        "org.junit.runner.RunWith",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.annotation.Config",
-        "java.net.InetAddress",
-        "java.net.ServerSocket",
-        "kotlin.concurrent.thread"
-      ],
-      "symbols": [
-        "up()",
-        "line()",
-        "down()",
-        "endpoints()",
-        "leavesOf(v: Any?, out: MutableList<String>)",
-        "pendingSources(v: Any?, out: MutableList<String>)",
-        "fixture()",
-        "class VaultConnectTest"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/VaultFileImportTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10005,6 +9752,8 @@
         "android.util.Base64",
         "android.widget.TextView",
         "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.cloudlib.auth.VaultFile",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.settings.ImportConfigsFragment",
@@ -12489,6 +12238,389 @@
         "fileBtn(ctx: Context, label: String, onClick: ()",
         "class StorePhoneFragment",
         "class Row"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/AuthDeclaration.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthDeclaration"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "decode(b64: String)",
+        "parse(text: String)",
+        "class AuthDeclaration",
+        "class ConfigSource",
+        "class Declaration"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/ConfigArtifact.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigArtifact"
+      ],
+      "imports": [
+        "android.util.Log",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient"
+      ],
+      "symbols": [
+        "endpoint()",
+        "fetchWithBearer(token: String)",
+        "fetchWithCookie(cookie: String)",
+        "fetchFromRepo(token: String)",
+        "class ConfigArtifact"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/DeviceGrant.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeviceGrant"
+      ],
+      "imports": [
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.delay",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "run(p: SignIn.Provider, report: (Phase)",
+        "class DeviceGrant",
+        "class Phase",
+        "class Asking",
+        "class Prompt",
+        "class Approved",
+        "class Failed",
+        "class Expired",
+        "class Approval"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/ProfileJourney.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileJourney"
+      ],
+      "imports": [],
+      "symbols": [
+        "defaultIdentity(s: State)",
+        "defaultPeer(s: State)",
+        "done(s: State, step: Step)",
+        "lock(s: State, step: Step)",
+        "phase(s: State, step: Step)",
+        "next(s: State)",
+        "stepNumber(s: State)",
+        "allDone(s: State)",
+        "bodyOpen(phase: Phase)",
+        "tag(step: Step)",
+        "class is",
+        "class ProfileJourney",
+        "class Step",
+        "class Phase",
+        "class Lock",
+        "class State"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/SignIn.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignIn"
+      ],
+      "imports": [
+        "android.util.Log",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "grants(what: String)",
+        "parseProviders(o: JSONObject)",
+        "byKind(kind: Kind)",
+        "offered(policy: List<String>)",
+        "extractToken(text: String)",
+        "provider(id: String)",
+        "providerGranting(what: String)",
+        "parseDeviceCode(o: JSONObject)",
+        "parseTokenStep(o: JSONObject)",
+        "requestDeviceCode(p: Provider)",
+        "pollForToken(p: Provider, deviceCode: String)",
+        "parseIdentity(o: JSONObject)",
+        "identity(p: Provider, token: String)",
+        "postForm(url: String, fields: Map<String, String>)",
+        "class SignIn",
+        "class Kind",
+        "class Provider",
+        "class Session",
+        "class Current",
+        "class DeviceCode",
+        "class Step",
+        "class Pending",
+        "class Token",
+        "class Failed"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/SignInUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignInHost",
+        "SignInResult",
+        "SignInTags",
+        "SignInWays"
+      ],
+      "imports": [
+        "android.webkit.CookieManager",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.FilledTonalButton",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalUriHandler",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.input.KeyboardCapitalization",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "onSignedIn(result: SignInResult)",
+        "onWebSession(cookie: String)",
+        "way(id: String)",
+        "SignInWays( host: SignInHost, policy: List<String> = emptyList()",
+        "StatusLine(text: String, failed: Boolean)",
+        "BearerDialog(p: SignIn.Provider, onDismiss: ()",
+        "WebAuthDialog(p: SignIn.Provider, host: SignInHost, onDismiss: ()",
+        "DeviceFlowDialog(p: SignIn.Provider, onDismiss: ()",
+        "word(phase: DeviceGrant.Phase)",
+        "identityOf(artifact: JSONObject)",
+        "class SignInHost",
+        "class SignInResult",
+        "class SignInTags",
+        "class Open",
+        "class None",
+        "class Bearer",
+        "class Web",
+        "class Device"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/UserRegistry.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UserRegistry"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "identity(email: String)",
+        "peer(id: String)",
+        "parse(root: JSONObject)",
+        "peerProfiles(root: JSONObject, peerId: String)",
+        "remember(root: JSONObject)",
+        "remember(ctx: Context, root: JSONObject)",
+        "current(ctx: Context)",
+        "registryOnly(root: JSONObject)",
+        "appliedAt(ctx: Context)",
+        "markApplied(ctx: Context, stamp: String)",
+        "selectedIdentity(ctx: Context)",
+        "selectIdentity(ctx: Context, email: String)",
+        "selectedPeer(ctx: Context)",
+        "selectPeer(ctx: Context, id: String)",
+        "prefs(ctx: Context)",
+        "class UserRegistry",
+        "class Identity",
+        "class Peer",
+        "class Registry",
+        "class Current"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/VaultConnect.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultConnect"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "start(e: Endpoints, auth: Auth)",
+        "fetch(e: Endpoints, auth: Auth, code: String)",
+        "start(e: Endpoints, bearer: String)",
+        "fetch(e: Endpoints, bearer: String, code: String)",
+        "post(e: Endpoints, path: String, auth: Auth, body: JSONObject)",
+        "hint(kind: ConfigSyncClient.Kind)",
+        "unknownSchemaVersion(response: JSONObject, known: Set<Int>)",
+        "sections(response: JSONObject)",
+        "isPending(v: Any?)",
+        "flatten(v: Any?, path: String, out: MutableList<Row>)",
+        "join(path: String, key: String)",
+        "class VaultConnect",
+        "class Endpoints",
+        "class Auth",
+        "class Bearer",
+        "class Cookie",
+        "class Hint",
+        "class Row",
+        "class Section",
+        "class Imported"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/VaultFile.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultFile"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "classify(text: String, knownSchemaVersions: Set<Int>, blobSections: Set<String>)",
+        "blobSections(importSchemaJson: String)",
+        "sectionsOf(root: JSONObject)",
+        "countEnc(v: Any?, skip: String = \"\")",
+        "class VaultFile",
+        "class Verdict",
+        "class Empty",
+        "class NotJson",
+        "class Encrypted",
+        "class UnknownSchema",
+        "class Bundle",
+        "class Blob",
+        "class Unrecognised"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/SignInTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignInTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "declared()",
+        "class SignInTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/UserRegistryTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UserRegistryTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "artifact()",
+        "class UserRegistryTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/VaultConnectTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultConnectTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "up()",
+        "line()",
+        "down()",
+        "endpoints()",
+        "leavesOf(v: Any?, out: MutableList<String>)",
+        "pendingSources(v: Any?, out: MutableList<String>)",
+        "fixture()",
+        "class VaultConnectTest"
       ]
     },
     {
@@ -115742,6 +115874,80 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/configs/DriveAuthApply.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveAuthApply"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.GitSyncWorker",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
+        "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
+        "com.diegonmarcos.cloudlib.rclone.RcloneConfig",
+        "com.diegonmarcos.cloudlib.rclone.RcloneRemote",
+        "com.diegonmarcos.cloudlib.rclone.RcloneRunner",
+        "java.io.File",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "text()",
+        "section(artifact: JSONObject, id: String)",
+        "gitToken(artifact: JSONObject, key: String)",
+        "rcloneRemotes(artifact: JSONObject, key: String)",
+        "plan(artifact: JSONObject, applies: Map<String, String>, repos: List<ManagedRepo>)",
+        "apply(ctx: Context, artifact: JSONObject)",
+        "class dispatches",
+        "class DriveAuthApply",
+        "class Step",
+        "class Report"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/configs/SignInCard.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignInCard",
+        "DriveSignInHost"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.Pill",
+        "com.diegonmarcos.clouddrive.ui.StatusLight",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInHost",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.SignInWays",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry"
+      ],
+      "symbols": [
+        "SignInCard(modifier: Modifier = Modifier)",
+        "onSignedIn(result: SignInResult)",
+        "class DriveSignInHost"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/Declarations.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -115778,6 +115984,7 @@
         "parseMirrorJobs(text: String)",
         "parseRemotes(text: String)",
         "parseRcloneJobs(text: String)",
+        "parseAuthApplies(text: String)",
         "iconNames(tabs: List<TabDecl>, sync: SyncDecl, files: FilesDecl)",
         "class Declarations",
         "class TabDecl",
@@ -117234,6 +117441,34 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/configs/DriveAuthApplyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveAuthApplyTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.jsonObject",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "repo(name: String, auth: String)",
+        "class on",
+        "class DriveAuthApplyTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/DeclarationsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -117600,6 +117835,26 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-configs-sign-in.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "codeof()",
+        "s2()",
+        "s4()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "codeof()",
+        "s2()",
+        "s4()"
       ]
     },
     {
