@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19976,
+    "files": 19982,
     "by_lang": {
       "py": 54,
-      "sh": 295,
-      "kotlin": 10010,
-      "java": 607,
+      "sh": 297,
+      "kotlin": 10012,
+      "java": 609,
       "ts": 8413,
       "nix": 63,
       "js": 452,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 140,
-      "shell": 210,
-      "java": 606,
+      "shell": 212,
+      "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 22,
-      "kotlin": 10008,
+      "kotlin": 10010,
       "python": 29,
       "nix-module": 40,
       "file": 2257,
@@ -6999,6 +6999,7 @@
         "org.json.JSONObject"
       ],
       "symbols": [
+        "parseProfiles(from: JSONObject)",
         "byId(id: String)",
         "render(profile: Profile)",
         "class only",
@@ -7639,6 +7640,10 @@
         "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
         "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
         "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "renderVault(ctx: android.content.Context, into: LinearLayout)",
+        "renderRepos(ctx: android.content.Context, into: LinearLayout)",
+        "profileRepos()",
+        "profileTabOrder()",
         "statusView(ctx: android.content.Context)",
         "stamp()",
         "showMailCodeDialog()",
@@ -7655,11 +7660,7 @@
         "vaultAuthText(ctx: android.content.Context)",
         "showVaultBrowserDialog()",
         "vaultStart(status: TextView)",
-        "vaultFetch(status: TextView)",
-        "showVaultFailure( status: TextView, o: com.diegonmarcos.superapp.core.ConfigSyncClient.Outcome.Failed, )",
-        "renderImported(ctx: android.content.Context, into: LinearLayout)",
-        "paintCard( card: FleetCockpitView.Card, rows: List<VaultCockpit.Row>, section: VaultCockpit.Section, summary: String? = null, )",
-        "repaintHero()"
+        "vaultFetch(status: TextView)"
       ]
     },
     {
@@ -11117,7 +11118,11 @@
         "has()",
         "hasnt()",
         "codeof()",
-        "hasnt_code()"
+        "hasnt_code()",
+        "tab_order_ok()",
+        "wg_has_externals()",
+        "route_to_store_phone()",
+        "sweep()"
       ],
       "imports": [],
       "symbols": [
@@ -11126,7 +11131,11 @@
         "has()",
         "hasnt()",
         "codeof()",
-        "hasnt_code()"
+        "hasnt_code()",
+        "tab_order_ok()",
+        "wg_has_externals()",
+        "route_to_store_phone()",
+        "sweep()"
       ]
     },
     {
@@ -13947,6 +13956,10 @@
         "importFrom(uri: Uri)",
         "rows(ctx: Context)",
         "render(ctx: Context, into: LinearLayout, rows: List<Row>)",
+        "filterToggle(ctx: Context)",
+        "pill(label: String, onlyInstalled: Boolean)",
+        "styleFilter()",
+        "redraw()",
         "row(ctx: Context, r: Row)",
         "paint(ctx: Context, tv: TextView, s: SourceResolver.Check, r: Row)",
         "via(k: String?)",
@@ -118739,6 +118752,23 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/StoreMigration.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreMigration"
+      ],
+      "imports": [
+        "java.io.File"
+      ],
+      "symbols": [
+        "isClone(dir: File)",
+        "migrate(root: File, gitSubdir: String, repoNames: Set<String>)",
+        "class StoreMigration",
+        "class Move"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/StoreSeed.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -119754,6 +119784,31 @@
         "aModeChangeKeepsEverySizeAlreadyLearned()",
         "aDegenerateSizeNeverBreaksTheMaths()",
         "class PdfLayoutTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/StoreMigrationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreMigrationTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tmp()",
+        "clone(dir: File)",
+        "straysAtRootAreMovedIntoTheGitFolder()",
+        "alreadyMigratedRepoIsLeftAlone()",
+        "strayIsLeftWhenDestinationExists()",
+        "undeclaredFoldersAndPlainDirsAreIgnored()",
+        "class StoreMigrationTest"
       ]
     },
     {
@@ -294712,7 +294767,9 @@
         "android.content.IntentFilter",
         "android.content.ServiceConnection",
         "android.net.Uri",
+        "android.os.Build",
         "android.os.Bundle",
+        "android.os.Environment",
         "android.os.IBinder",
         "android.view.ContextMenu",
         "android.view.ContextMenu.ContextMenuInfo",
@@ -294739,12 +294796,11 @@
         "com.termux.shared.android.PermissionUtils",
         "com.termux.shared.data.DataUtils",
         "com.termux.shared.termux.TermuxConstants",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY",
-        "com.termux.app.activities.HelpActivity",
-        "com.termux.app.activities.SettingsActivity"
+        "com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY"
       ],
       "symbols": [
         "onCreate(Bundle savedInstanceState)",
+        "requestManageStorageIfNeeded()",
         "onStart()",
         "onResume()",
         "onStop()",
@@ -294782,8 +294838,7 @@
         "run()",
         "onActivityResult(int requestCode, int resultCode, @Nullable Intent data)",
         "onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)",
-        "getNavBarHeight()",
-        "getTermuxActivityRootView()"
+        "getNavBarHeight()"
       ]
     },
     {
@@ -294799,6 +294854,7 @@
         "android.app.Application",
         "android.content.Context",
         "com.termux.BuildConfig",
+        "com.termux.cloud.CloudTermuxProperties",
         "com.termux.shared.errors.Error",
         "com.termux.shared.logger.Logger",
         "com.termux.shared.termux.TermuxBootstrap",
@@ -295052,6 +295108,35 @@
         "getLastTermuxSession()",
         "getIndexOfSession(TerminalSession terminalSession)",
         "getTerminalSessionForHandle(String sessionHandle)"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/cloud/CloudTermuxProperties.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "CloudTermuxProperties",
+        "ensureAllowExternalApps"
+      ],
+      "imports": [
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.FileInputStream",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.nio.charset.StandardCharsets"
+      ],
+      "symbols": [
+        "CloudTermuxProperties()",
+        "ensureAllowExternalApps()",
+        "withAllowExternalApps(String contents)",
+        "join(String[] lines)",
+        "read(InputStream stream)",
+        "class CloudTermuxProperties"
       ]
     },
     {
@@ -301720,6 +301805,20 @@
       "symbols": [
         "subscribed_repositories()",
         "updatable_packages()"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/test/test-allow-external-apps.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -413305,8 +413404,11 @@
         "android.content.pm.PackageManager",
         "android.graphics.Color",
         "android.net.Uri",
+        "android.os.Build",
         "android.os.Bundle",
+        "android.os.Environment",
         "android.os.IBinder",
+        "android.provider.Settings",
         "android.view.ContextMenu",
         "android.view.ContextMenu.ContextMenuInfo",
         "android.view.Gravity",
@@ -413327,13 +413429,11 @@
         "com.termux.shared.data.DataUtils",
         "com.termux.shared.termux.TermuxConstants",
         "com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY",
-        "com.termux.app.activities.HelpActivity",
-        "com.termux.app.activities.SettingsActivity",
-        "com.termux.shared.settings.preferences.TermuxAppSharedPreferences",
-        "com.termux.app.terminal.TermuxSessionsListViewController"
+        "com.termux.app.activities.HelpActivity"
       ],
       "symbols": [
         "onCreate(Bundle savedInstanceState)",
+        "requestManageStorageIfNeeded()",
         "onStart()",
         "onResume()",
         "onStop()",
@@ -413371,8 +413471,7 @@
         "getNavBarHeight()",
         "getTermuxActivityRootView()",
         "getTermuxActivityBottomSpaceView()",
-        "getExtraKeysView()",
-        "setExtraKeysView(ExtraKeysView extraKeysView)"
+        "getExtraKeysView()"
       ]
     },
     {
@@ -413385,6 +413484,7 @@
       ],
       "imports": [
         "android.app.Application",
+        "com.termux.cloud.CloudTermuxProperties",
         "com.termux.shared.crash.TermuxCrashUtils",
         "com.termux.shared.settings.preferences.TermuxAppSharedPreferences",
         "com.termux.shared.logger.Logger"
@@ -413807,6 +413907,35 @@
         "isSymlink(File file)",
         "read(InputStream stream)",
         "class CloudRootfs"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/cloud/CloudTermuxProperties.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "CloudTermuxProperties",
+        "ensureAllowExternalApps"
+      ],
+      "imports": [
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.FileInputStream",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.nio.charset.StandardCharsets"
+      ],
+      "symbols": [
+        "CloudTermuxProperties()",
+        "ensureAllowExternalApps()",
+        "withAllowExternalApps(String contents)",
+        "join(String[] lines)",
+        "read(InputStream stream)",
+        "class CloudTermuxProperties"
       ]
     },
     {
@@ -418911,6 +419040,20 @@
       "symbols": [
         "subscribed_repositories()",
         "updatable_packages()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-allow-external-apps.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
