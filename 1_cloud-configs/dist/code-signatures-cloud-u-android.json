@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 19982,
+    "files": 20000,
     "by_lang": {
       "py": 54,
-      "sh": 297,
-      "kotlin": 10012,
+      "sh": 305,
+      "kotlin": 10022,
       "java": 609,
       "ts": 8413,
       "nix": 63,
@@ -18,14 +18,14 @@
       "rust": 82
     },
     "by_role": {
-      "script": 140,
-      "shell": 212,
+      "script": 142,
+      "shell": 218,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 22,
-      "kotlin": 10010,
+      "kotlin": 10020,
       "python": 29,
       "nix-module": 40,
       "file": 2257,
@@ -100,10 +100,15 @@
         "gradle_root_of(build_file, root)",
         "resolve(build_file, root)",
         "application_count(path)",
+        "discover_artifacts(root)",
+        "rootfs_libs(root)",
+        "check_rootfs_libs(root)",
         "main()"
       ],
       "imports": [
         "argparse",
+        "glob",
+        "hashlib",
         "json",
         "os",
         "re",
@@ -115,6 +120,18 @@
         "gradle_root_of(build_file, root)",
         "resolve(build_file, root)",
         "application_count(path)",
+        "_artifacts_in(blob, path=\"\")",
+        "_dig(blob, dotted)",
+        "_content_address(app_dir, artifact)",
+        "_build_json(app_dir)",
+        "_variants(app_dir)",
+        "_companion(app_dir, companion_id)",
+        "_lib_naming(root)",
+        "_asset_name(asset_prefix, module)",
+        "discover_artifacts(root)",
+        "rootfs_libs(root)",
+        "_one_transport(root, app, module)",
+        "check_rootfs_libs(root)",
         "main()"
       ]
     },
@@ -540,6 +557,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -556,10 +574,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -573,6 +592,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -599,8 +619,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -660,6 +679,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -676,10 +696,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -693,6 +714,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -719,8 +741,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -740,6 +761,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -756,10 +778,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -773,6 +796,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -799,8 +823,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -820,6 +843,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -836,10 +860,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -853,6 +878,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -879,8 +905,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -900,6 +925,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -916,10 +942,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -933,6 +960,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -959,8 +987,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -976,6 +1003,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -983,23 +1018,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -1009,6 +1038,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -1016,6 +1053,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1031,16 +1069,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -1126,6 +1155,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -1133,23 +1170,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -1159,6 +1190,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -1166,6 +1205,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1181,16 +1221,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -1258,10 +1289,15 @@
         "gradle_root_of(build_file, root)",
         "resolve(build_file, root)",
         "application_count(path)",
+        "discover_artifacts(root)",
+        "rootfs_libs(root)",
+        "check_rootfs_libs(root)",
         "main()"
       ],
       "imports": [
         "argparse",
+        "glob",
+        "hashlib",
         "json",
         "os",
         "re",
@@ -1273,6 +1309,18 @@
         "gradle_root_of(build_file, root)",
         "resolve(build_file, root)",
         "application_count(path)",
+        "_artifacts_in(blob, path=\"\")",
+        "_dig(blob, dotted)",
+        "_content_address(app_dir, artifact)",
+        "_build_json(app_dir)",
+        "_variants(app_dir)",
+        "_companion(app_dir, companion_id)",
+        "_lib_naming(root)",
+        "_asset_name(asset_prefix, module)",
+        "discover_artifacts(root)",
+        "rootfs_libs(root)",
+        "_one_transport(root, app, module)",
+        "check_rootfs_libs(root)",
         "main()"
       ]
     },
@@ -1698,6 +1746,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1714,10 +1763,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -1731,6 +1781,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1757,8 +1808,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -1818,6 +1868,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1834,10 +1885,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -1851,6 +1903,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1877,8 +1930,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -1898,6 +1950,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1914,10 +1967,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -1931,6 +1985,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1957,8 +2012,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -1978,6 +2032,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -1994,10 +2049,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -2011,6 +2067,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -2037,8 +2094,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -2058,6 +2114,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -2074,10 +2131,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -2091,6 +2149,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -2117,8 +2176,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -2134,6 +2192,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -2141,23 +2207,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -2167,6 +2227,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -2174,6 +2242,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -2189,16 +2258,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -2284,6 +2344,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -2291,23 +2359,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -2317,6 +2379,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -2324,6 +2394,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -2339,16 +2410,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -2385,6 +2447,8 @@
       "role": "script",
       "exports": [
         "scaffold()",
+        "scaffold_rootfs_lib()",
+        "write_manifest()",
         "case_is()",
         "untouched()",
         "reinstate_defect()",
@@ -2394,11 +2458,29 @@
         "delete_canonical()",
         "empty_the_fleet()",
         "corrupt_the_fleet()",
-        "add_valid_override()"
+        "add_valid_override()",
+        "jq_edit()",
+        "fleet_edit()",
+        "undeclare_artifact()",
+        "drop_artifact_row()",
+        "bump_artifact_identity()",
+        "break_artifact_pointer()",
+        "rename_artifact_lib()",
+        "revert_to_artifact_kind()",
+        "demote_library_to_catalogue()",
+        "reinstate_runtime_download()",
+        "strip_the_trust_check()",
+        "orphan_the_companion()",
+        "ungate_the_companion()",
+        "offbrand_the_package()",
+        "break_per_abi_assets()",
+        "strand_the_library_group()"
       ],
       "imports": [],
       "symbols": [
         "scaffold()",
+        "scaffold_rootfs_lib()",
+        "write_manifest()",
         "case_is()",
         "untouched()",
         "reinstate_defect()",
@@ -2408,7 +2490,23 @@
         "delete_canonical()",
         "empty_the_fleet()",
         "corrupt_the_fleet()",
-        "add_valid_override()"
+        "add_valid_override()",
+        "jq_edit()",
+        "fleet_edit()",
+        "undeclare_artifact()",
+        "drop_artifact_row()",
+        "bump_artifact_identity()",
+        "break_artifact_pointer()",
+        "rename_artifact_lib()",
+        "revert_to_artifact_kind()",
+        "demote_library_to_catalogue()",
+        "reinstate_runtime_download()",
+        "strip_the_trust_check()",
+        "orphan_the_companion()",
+        "ungate_the_companion()",
+        "offbrand_the_package()",
+        "break_per_abi_assets()",
+        "strand_the_library_group()"
       ]
     },
     {
@@ -2643,6 +2741,42 @@
         "edit_translator()",
         "empty_manifest()",
         "move_entry_source()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/test-apk-identity-reader.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "mkapk()",
+        "assert_identity()",
+        "case_is()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mkapk()",
+        "assert_identity()",
+        "case_is()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/test-fork-companion-assets.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "assert_eq()",
+        "assert_contains()",
+        "run_in_fixture()",
+        "run_in_fixture_status()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "assert_eq()",
+        "assert_contains()",
+        "run_in_fixture()",
+        "run_in_fixture_status()",
+        "mutate()"
       ]
     },
     {
@@ -4897,6 +5031,7 @@
         "com.diegonmarcos.superapp.adbdebug.ShizukuShellChannel",
         "com.diegonmarcos.superapp.adbdebug.ShellChannel",
         "com.diegonmarcos.superapp.adbdebug.LocalHotspot",
+        "com.diegonmarcos.superapp.adbdebug.PackageVerifier",
         "com.diegonmarcos.superapp.adbdebug.WifiDirect",
         "com.diegonmarcos.superapp.adbdebug.WirelessDebugging",
         "android.content.pm.PackageManager"
@@ -7622,9 +7757,15 @@
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "renderPerson(ctx: android.content.Context, col: LinearLayout)",
         "beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "afterTextChanged(s: Editable?)",
+        "profileInfoSections()",
+        "renderInfos(ctx: android.content.Context, into: LinearLayout)",
+        "renderTokens(ctx: android.content.Context, into: LinearLayout)",
+        "held(present: Boolean)",
+        "infoRow(ctx: android.content.Context, key: String, value: String)",
         "journeyState(ctx: android.content.Context)",
         "ask(step: ProfileJourney.Step)",
         "stepLabel(step: ProfileJourney.Step)",
@@ -7642,6 +7783,8 @@
         "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
         "renderVault(ctx: android.content.Context, into: LinearLayout)",
         "renderRepos(ctx: android.content.Context, into: LinearLayout)",
+        "renderWizard(ctx: android.content.Context, into: LinearLayout)",
+        "openWizardRoute(route: String)",
         "profileRepos()",
         "profileTabOrder()",
         "statusView(ctx: android.content.Context)",
@@ -7652,15 +7795,7 @@
         "onTabSelected(tab: TabLayout.Tab)",
         "onTabUnselected(tab: TabLayout.Tab)",
         "onTabReselected(tab: TabLayout.Tab)",
-        "mailConfirmationField(ctx: android.content.Context)",
-        "confirmMailCode()",
-        "vaultEndpoints()",
-        "vaultCodeField(ctx: android.content.Context)",
-        "vaultAuth(status: TextView)",
-        "vaultAuthText(ctx: android.content.Context)",
-        "showVaultBrowserDialog()",
-        "vaultStart(status: TextView)",
-        "vaultFetch(status: TextView)"
+        "mailConfirmationField(ctx: android.content.Context)"
       ]
     },
     {
@@ -7849,6 +7984,44 @@
         "class MailDeclared",
         "class AiState",
         "class that"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/Wizard.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Wizard"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.adbdebug.PackageVerifier",
+        "android.content.pm.PackageManager",
+        "android.os.Build",
+        "android.os.Environment",
+        "androidx.core.app.NotificationManagerCompat",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.superapp.network.WireGuardPrefs",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "steps()",
+        "done(ctx: Context, check: String)",
+        "declaredApps()",
+        "installed(ctx: Context, app: Fleet.App)",
+        "has(ctx: Context, pkg: String)",
+        "filesAccessGranted()",
+        "notificationAccessGranted(ctx: Context)",
+        "playProtectScanOff(ctx: Context)",
+        "dumpGranted(ctx: Context)",
+        "class Wizard",
+        "class Step",
+        "class key"
       ]
     },
     {
@@ -9291,6 +9464,43 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/ApkCacheRetentionTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ApkCacheRetentionTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "android.content.pm.ApplicationInfo",
+        "android.content.pm.PackageInfo",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.appstore.BatchInstall",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "java.io.File",
+        "java.security.MessageDigest",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipOutputStream"
+      ],
+      "symbols": [
+        "cache(name: String, pkg: String, code: Long)",
+        "install(pkg: String, code: Long)",
+        "stage(ctx: Context, t: BatchInstall.Target)",
+        "install(ctx: Context, t: BatchInstall.Target, a: VerifiedApk)",
+        "class ApkCacheRetentionTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/AppUrlsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9478,6 +9688,40 @@
       ],
       "symbols": [
         "class StoreShelvesTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/StoreSourceTabsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreSourceTabsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.TextView",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.appstore.PhoneAppActions",
+        "com.diegonmarcos.superapp.appstore.SourceResolver",
+        "com.diegonmarcos.superapp.appstore.StoreSourceTabs",
+        "com.diegonmarcos.superapp.appstore.R",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "pills(v: View)",
+        "walk(x: View)",
+        "class StoreSourceTabsTest"
       ]
     },
     {
@@ -11003,6 +11247,20 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-perms-play-protect.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-phone-apps-strip-and-lazy-smart-folders.sh",
       "lang": "sh",
       "role": "shell",
@@ -11119,9 +11377,10 @@
         "hasnt()",
         "codeof()",
         "hasnt_code()",
+        "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
-        "route_to_store_phone()",
+        "infos_ok()",
         "sweep()"
       ],
       "imports": [],
@@ -11132,9 +11391,10 @@
         "hasnt()",
         "codeof()",
         "hasnt_code()",
+        "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
-        "route_to_store_phone()",
+        "infos_ok()",
         "sweep()"
       ]
     },
@@ -11186,16 +11446,24 @@
         "ok()",
         "bad()",
         "codeof()",
-        "fourways()",
-        "t4()"
+        "waysin()",
+        "t4()",
+        "wizard_order()",
+        "real_checks()",
+        "apps_measured()",
+        "routes_land()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "bad()",
         "codeof()",
-        "fourways()",
-        "t4()"
+        "waysin()",
+        "t4()",
+        "wizard_order()",
+        "real_checks()",
+        "apps_measured()",
+        "routes_land()"
       ]
     },
     {
@@ -11262,6 +11530,20 @@
     },
     {
       "path": "aa_cloud-superapp/test/test-stack-render-lifecycle.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-store-identity-line.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
@@ -13494,6 +13776,7 @@
         "android.widget.TextView",
         "androidx.fragment.app.FragmentActivity",
         "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.FleetIdentity",
         "com.diegonmarcos.superapp.updater.VersionOrder",
         "com.google.android.material.bottomsheet.BottomSheetDialog",
         "kotlin.concurrent.thread"
@@ -13510,7 +13793,6 @@
         "kv(ctx: Context, k: String, v: String)",
         "action(ctx: Context, label: String, detail: String, onTap: ()",
         "note(ctx: Context, text: String)",
-        "human(b: Long)",
         "ts(ms: Long)",
         "dp(ctx: Context, v: Int)",
         "class ApkDetailSheet"
@@ -13558,6 +13840,33 @@
         "class AppStoreHost",
         "class to",
         "class Shelf"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/BatchInstall.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatchInstall"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk"
+      ],
+      "symbols": [
+        "stage(ctx: Context, t: Target)",
+        "install(ctx: Context, t: Target, apk: VerifiedApk)",
+        "engine(cfg: SourceResolver.Config)",
+        "run( ctx: Context, targets: List<Target>, engine: Engine, onPhase: (Phase, Target, Int, Int)",
+        "class BatchInstall",
+        "class Target",
+        "class Outcome",
+        "class Phase",
+        "class exists",
+        "class Engine"
       ]
     },
     {
@@ -13614,9 +13923,12 @@
       "imports": [
         "android.content.Context",
         "com.diegonmarcos.superapp.updater.Fleet",
-        "com.diegonmarcos.superapp.updater.UpdateProgress"
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk"
       ],
       "symbols": [
+        "stage(ctx: Context, cfg: SourceResolver.Config, app: SourceResolver.External)",
+        "install(ctx: Context, app: SourceResolver.External, apk: VerifiedApk)",
         "run(ctx: Context, cfg: SourceResolver.Config, app: SourceResolver.External)",
         "class ExternalInstall"
       ]
@@ -13634,6 +13946,7 @@
         "android.util.JsonReader",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "com.diegonmarcos.superapp.updater.source.Download",
         "org.json.JSONObject",
         "java.io.File",
@@ -13668,9 +13981,12 @@
         "android.content.Context",
         "com.diegonmarcos.superapp.updater.Advisory",
         "com.diegonmarcos.superapp.updater.Fleet",
-        "com.diegonmarcos.superapp.updater.UpdateProgress"
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk"
       ],
       "symbols": [
+        "stage(ctx: Context, app: Fleet.App)",
+        "install(ctx: Context, app: Fleet.App, apk: VerifiedApk)",
         "run(ctx: Context, app: Fleet.App)",
         "class FleetInstall"
       ]
@@ -13725,18 +14041,20 @@
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.VersionOrder",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "com.diegonmarcos.superapp.updater.source.Download",
         "org.json.JSONObject",
-        "java.io.File",
         "java.net.HttpURLConnection",
         "java.net.URL"
       ],
       "symbols": [
+        "inTab(kind: Kind)",
         "asFleetApp()",
+        "kind(id: String?)",
         "config(sources: JSONObject)",
         "resolve(cfg: Config, pkg: String)",
-        "external(pkg: String, o: JSONObject, order: List<String>)",
-        "source(o: JSONObject)",
+        "external(pkg: String, o: JSONObject, order: List<String>, kinds: Map<String, Kind>)",
+        "source(o: JSONObject, kinds: Map<String, Kind>)",
         "ofFleet(s: Fleet.State)",
         "installed(ctx: Context, pkg: String)",
         "local(ctx: Context, app: External)",
@@ -13753,10 +14071,12 @@
         "sidecar(url: String)",
         "getJson(url: String)",
         "class SourceResolver",
+        "class Kind",
         "class Source",
         "class Vendor",
         "class FDroid",
         "class Play",
+        "class Store",
         "class External",
         "class Config",
         "class Note",
@@ -13839,6 +14159,7 @@
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.superapp.updater.BootstrapInstall",
         "com.diegonmarcos.superapp.updater.Fleet",
+        "com.diegonmarcos.superapp.updater.FleetIdentity",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.Updater",
         "kotlin.concurrent.thread",
@@ -13869,6 +14190,7 @@
         "current()",
         "checkAll(ctx: Context, list: List<Fleet.App> = current()",
         "paint(appId: String, s: Fleet.State)",
+        "identity(fields: Set<FleetIdentity.Field>)",
         "human(b: Long)",
         "install(ctx: Context, app: Fleet.App)",
         "directInstall(ctx: Context, app: Fleet.App)",
@@ -13883,8 +14205,7 @@
         "dp(ctx: Context, v: Int)",
         "caption(ctx: Context, t: String)",
         "applicationHeading(ctx: Context, heading: String)",
-        "mono(ctx: Context, t: String)",
-        "btn(ctx: Context, label: String, bg: Int, onClick: ()"
+        "mono(ctx: Context, t: String)"
       ]
     },
     {
@@ -13945,6 +14266,7 @@
         "com.diegonmarcos.superapp.adbdebug.ShellChannels",
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "kotlin.concurrent.thread"
       ],
       "symbols": [
@@ -13967,6 +14289,7 @@
         "installAll()",
         "updateAll()",
         "batch(ctx: Context, targets: List<Row>)",
+        "clearCache()",
         "installOne(app: Context, r: Row)",
         "act(ctx: Context, r: Row, a: PhoneAppActions.Action)",
         "toastLater(ctx: Context, msg: String)",
@@ -13976,6 +14299,29 @@
         "fileBtn(ctx: Context, label: String, onClick: ()",
         "class StorePhoneFragment",
         "class Row"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreSourceTabs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreSourceTabs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.widget.HorizontalScrollView",
+        "android.widget.LinearLayout",
+        "android.widget.TextView"
+      ],
+      "symbols": [
+        "labels(ctx: Context, kinds: List<SourceResolver.Kind>)",
+        "render( ctx: Context, kinds: List<SourceResolver.Kind>, selected: SourceResolver.Kind?, onSelect: (SourceResolver.Kind?)",
+        "pill(ctx: Context, label: String, on: Boolean, onClick: ()",
+        "class StoreSourceTabs"
       ]
     },
     {
@@ -13990,10 +14336,13 @@
         "org.json.JSONObject"
       ],
       "symbols": [
+        "remedyFor(message: String, declared: List<GrantRemedy> = grantRemedies)",
+        "explain(message: String, declared: List<GrantRemedy> = grantRemedies)",
         "decode(b64: String)",
         "parse(text: String)",
         "class AuthDeclaration",
         "class ConfigSource",
+        "class GrantRemedy",
         "class Declaration"
       ]
     },
@@ -14273,6 +14622,31 @@
         "class Bundle",
         "class Blob",
         "class Unrecognised"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/GrantRemedyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GrantRemedyTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner"
+      ],
+      "symbols": [
+        "theDeclaredRowIsFoundInsideTheProvidersOwnErrorText()",
+        "explainKeepsTheErrorAndAddsTheRemedyAndTheUrl()",
+        "aRemedyWithoutAUrlAddsNoUrlLine()",
+        "anUnmatchedMessageIsUnchanged()",
+        "withNothingDeclaredTheWordingIsTheBareError()",
+        "theParserReadsTheDeclaredTable()",
+        "class GrantRemedyTest"
       ]
     },
     {
@@ -39678,6 +40052,7 @@
       ],
       "symbols": [
         "describe()",
+        "readable(ctx: Context)",
         "state(ctx: Context)",
         "g(key: String, def: Int)",
         "values(scan: Boolean)",
@@ -40374,6 +40749,7 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "com.diegonmarcos.superapp.updater.install.UpdateInstaller",
         "com.diegonmarcos.superapp.updater.source.Download",
         "android.content.Context",
@@ -40474,6 +40850,55 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/cache/ApkCache.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ApkCache"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.pm.PackageInfo",
+        "android.content.pm.PackageManager",
+        "android.os.Build",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.updater.BuildConfig",
+        "com.diegonmarcos.superapp.updater.apk.ApkIntegrity",
+        "java.io.File",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "dir(ctx: Context)",
+        "file(ctx: Context, name: String)",
+        "isOurs(ctx: Context, f: File)",
+        "keep(ctx: Context, apk: File)",
+        "record(apk: File)",
+        "drop(apk: File)",
+        "recordFile(apk: File)",
+        "reapIfInstalled(ctx: Context, apk: File)",
+        "entries(ctx: Context)",
+        "totalBytes(ctx: Context)",
+        "evict(ctx: Context)",
+        "superseded(e: Entry)",
+        "clear(ctx: Context)",
+        "installedInfo(ctx: Context, pkg: String)",
+        "versionCodeOf(pi: PackageInfo)",
+        "signingFlags()",
+        "certOf(pi: PackageInfo)",
+        "archiveCert(ctx: Context, apk: File)",
+        "hex(b: ByteArray)",
+        "class the",
+        "class ApkCache",
+        "class header",
+        "class Record",
+        "class Retention",
+        "class Reaped",
+        "class Kept",
+        "class Entry",
+        "class Eviction"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/Fleet.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -40483,6 +40908,7 @@
       "imports": [
         "com.diegonmarcos.superapp.updater.apk.ApkIntegrity",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "com.diegonmarcos.superapp.updater.install.InstallChannel",
         "com.diegonmarcos.superapp.updater.install.InstallGate",
         "com.diegonmarcos.superapp.updater.install.SessionInstall",
@@ -40544,6 +40970,27 @@
         "class because",
         "class Installed",
         "class UpdateAvailable"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/FleetIdentity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetIdentity"
+      ],
+      "imports": [],
+      "symbols": [
+        "of(app: Fleet.App, state: Fleet.State, fields: Set<Field> = FULL)",
+        "part(field: Field, app: Fleet.App, state: Fleet.State)",
+        "version(name: String?, code: Long, buildCode: Long)",
+        "sha(sha12: String?)",
+        "size(bytes: Long)",
+        "human(bytes: Long)",
+        "buildCodeOf(state: Fleet.State)",
+        "sha12Of(state: Fleet.State)",
+        "class FleetIdentity",
+        "class Field"
       ]
     },
     {
@@ -40689,6 +41136,7 @@
         "PackageInstallerReceiver"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "com.diegonmarcos.superapp.updater.install.InstallGate",
         "android.app.ActivityManager",
         "android.app.Notification",
@@ -40725,6 +41173,7 @@
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "android.content.Context",
         "java.io.File"
       ],
@@ -40801,6 +41250,7 @@
         "com.diegonmarcos.superapp.updater.Updater",
         "com.diegonmarcos.superapp.updater.apk.ApkIntegrity",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
         "android.content.Context",
         "android.content.pm.PackageManager",
         "android.util.Log",
@@ -45650,6 +46100,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -45666,10 +46117,11 @@
         "step_build_fork()",
         "_ghcr_gate_public()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()"
+        "_oci_pull_blob()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -45683,6 +46135,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -45709,8 +46162,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -92265,6 +92717,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -92281,10 +92734,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -92298,6 +92752,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -92324,8 +92779,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -117392,6 +117846,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -117408,10 +117863,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -117425,6 +117881,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -117451,8 +117908,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -117493,8 +117949,6 @@
         "androidx.compose.ui.res.colorResource",
         "androidx.compose.ui.text.style.TextAlign",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.R",
@@ -117540,7 +117994,6 @@
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DrivePrefs",
         "com.diegonmarcos.clouddrive.R",
@@ -117556,7 +118009,8 @@
         "com.diegonmarcos.clouddrive.ui.SectionHeader",
         "com.diegonmarcos.clouddrive.ui.StatusLight",
         "com.diegonmarcos.clouddrive.ui.StatusLightRow",
-        "java.io.File"
+        "java.io.File",
+        "java.text.DateFormat"
       ],
       "symbols": [
         "resolve(path: String)",
@@ -117596,13 +118050,13 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.DrivePrefs",
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.clouddrive.backups.BackupsScreen",
         "com.diegonmarcos.clouddrive.backups.MirrorRunner",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.EmptyState",
         "com.diegonmarcos.clouddrive.ui.IconCatalog",
@@ -117624,6 +118078,7 @@
         "android.content.Context",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.GitSyncWorker",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
         "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
         "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
         "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
@@ -117638,7 +118093,8 @@
         "section(artifact: JSONObject, id: String)",
         "gitToken(artifact: JSONObject, key: String)",
         "rcloneRemotes(artifact: JSONObject, key: String)",
-        "plan(artifact: JSONObject, applies: Map<String, String>, repos: List<ManagedRepo>)",
+        "plan( artifact: JSONObject, applies: Map<String, String>, repos: List<ManagedRepo>, credentials: Map<String, String> = credentialIds, )",
+        "vaultGitToken(ctx: Context)",
         "apply(ctx: Context, artifact: JSONObject)",
         "class dispatches",
         "class DriveAuthApply",
@@ -117670,13 +118126,13 @@
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.BuildConfig",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.DrivePrefs",
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.Pill",
         "com.diegonmarcos.clouddrive.ui.PillRow",
@@ -117714,13 +118170,13 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.BuildConfig",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.DrivePrefs",
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.clouddrive.files.Places",
         "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.Pill",
         "com.diegonmarcos.clouddrive.ui.PillRow",
@@ -117754,9 +118210,9 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.Pill",
         "com.diegonmarcos.clouddrive.ui.StatusLight",
@@ -117800,6 +118256,7 @@
         "webUrl(name: String)",
         "inNameFamilies(name: String)",
         "constellationPathOf(packageName: String)",
+        "ownerOnlyPathOf(packageName: String)",
         "unsectioned()",
         "matches(isDirectory: Boolean, mimeType: String, extension: String)",
         "cloneUrl(repo: GitRepoDecl)",
@@ -117824,13 +118281,12 @@
         "parseMirrorJobs(text: String)",
         "parseRemotes(text: String)",
         "parseRcloneJobs(text: String)",
+        "parseAuthCredentialIds(text: String)",
         "parseAuthApplies(text: String)",
         "iconNames(tabs: List<TabDecl>, configs: ConfigsDecl, files: FilesDecl, volumes: VolumesDecl? = null, sync: SyncDecl? = null)",
         "class Declarations",
         "class TabDecl",
-        "class PageDecl",
-        "class ConfigsDecl",
-        "class SyncDecl"
+        "class PageDecl"
       ]
     },
     {
@@ -118130,8 +118586,8 @@
         "androidx.compose.ui.res.colorResource",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "java.io.File",
         "java.text.DateFormat",
         "java.util.Date"
@@ -118381,7 +118837,6 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.R",
@@ -118733,6 +119188,24 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/SeedReport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SeedOutcome",
+        "SeedReport"
+      ],
+      "imports": [],
+      "symbols": [
+        "line()",
+        "tally()",
+        "lines()",
+        "text()",
+        "class SeedOutcome",
+        "class SeedReport"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/SharedStore.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -118763,7 +119236,14 @@
       ],
       "symbols": [
         "isClone(dir: File)",
+        "headResolves(dir: File)",
+        "gitDir(dir: File)",
+        "hasWorktree(dir: File)",
+        "completeness(dir: File)",
+        "isComplete(dir: File)",
         "migrate(root: File, gitSubdir: String, repoNames: Set<String>)",
+        "settle(stray: File, dest: File)",
+        "relocate(from: File, to: File)",
         "class StoreMigration",
         "class Move"
       ]
@@ -118792,6 +119272,8 @@
       ],
       "symbols": [
         "doWork()",
+        "reportFile(context: Context)",
+        "lastReport(context: Context)",
         "schedule(context: Context)",
         "class StoreSeedWorker"
       ]
@@ -118900,8 +119382,7 @@
         "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier)",
         "clone(name: String)",
         "fetchListing(token: String)",
-        "onSignedIn(result: SignInResult)",
-        "GitLoginBox( page: Declarations.GitPageDecl, host: SignInHost, login: GitLogin, listing: GitListing, onSshKeyPath: (String)",
+        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, onSshKeyPath: (String)",
         "GitRepoRow( name: String, repoName: String, isPrivate: Boolean, fork: Boolean, repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?, running: GitSyncCoordinator.Running?, cloning: Boolean, expanded: Boolean, onToggle: ()",
         "rowStats(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
         "lightOf(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
@@ -119038,7 +119519,6 @@
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.DrivePrefs",
@@ -119047,7 +119527,8 @@
         "com.diegonmarcos.clouddrive.ui.CapsuleBadge",
         "com.diegonmarcos.clouddrive.ui.DriveCard",
         "com.diegonmarcos.clouddrive.ui.DriveMetrics",
-        "com.diegonmarcos.clouddrive.ui.DriveTags"
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.EmptyState"
       ],
       "symbols": [
         "RcloneSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onMessage: (String)",
@@ -119134,7 +119615,6 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "androidx.work.WorkInfo",
         "androidx.work.WorkManager",
         "com.diegonmarcos.clouddrive.Declarations",
@@ -119142,6 +119622,7 @@
         "com.diegonmarcos.clouddrive.DrivePrefs",
         "com.diegonmarcos.clouddrive.GitSyncWorker",
         "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.EmptyState",
         "com.diegonmarcos.clouddrive.ui.IconCatalog",
@@ -119205,7 +119686,6 @@
         "androidx.compose.material3.LinearProgressIndicator",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
-        "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
@@ -119216,7 +119696,8 @@
         "androidx.compose.ui.res.colorResource",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.text.font.FontWeight"
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow"
       ],
       "symbols": [
         "tab(id: String)",
@@ -119290,14 +119771,20 @@
       "imports": [
         "androidx.compose.material3.LocalContentColor",
         "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.isSpecified",
         "com.diegonmarcos.clouddrive.R"
       ],
       "symbols": [
-        "DriveTheme(content: @Composable ()"
+        "dense(scale: Float = DriveMetrics.textScale)",
+        "denseTypography()",
+        "DriveTheme(content: @Composable ()",
+        "class chrome"
       ]
     },
     {
@@ -119505,12 +119992,14 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.DriveActions",
+        "com.diegonmarcos.clouddrive.SharedStore",
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.clouddrive.sync.ConnectionRow",
         "com.diegonmarcos.clouddrive.sync.RcloneCoordinator",
@@ -119519,12 +120008,10 @@
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.EmptyState",
         "com.diegonmarcos.clouddrive.ui.Hairline",
-        "com.diegonmarcos.clouddrive.ui.IconCatalog",
-        "com.diegonmarcos.clouddrive.ui.Pill",
-        "com.diegonmarcos.clouddrive.ui.PillRow"
+        "com.diegonmarcos.clouddrive.ui.IconCatalog"
       ],
       "symbols": [
-        "ConstellationVolumes(onOpenPath: (String)",
+        "ConstellationVolumes(actions: DriveActions, onOpenPath: (String)",
         "MachineVolumes(modifier: Modifier = Modifier)",
         "S3Volumes(coordinator: RcloneCoordinator, modifier: Modifier = Modifier)"
       ]
@@ -119544,6 +120031,7 @@
         "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ColumnScope",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.RowScope",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -119555,6 +120043,7 @@
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.collectAsState",
         "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.key",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.rememberCoroutineScope",
@@ -119564,7 +120053,6 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
         "com.diegonmarcos.clouddrive.DrivePrefs",
@@ -119573,18 +120061,21 @@
         "com.diegonmarcos.clouddrive.sync.MountsSyncScreen",
         "com.diegonmarcos.clouddrive.sync.RcloneCoordinator",
         "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
         "com.diegonmarcos.clouddrive.ui.DriveTags",
-        "com.diegonmarcos.clouddrive.ui.EmptyState",
-        "com.diegonmarcos.clouddrive.ui.IconCatalog",
-        "com.diegonmarcos.clouddrive.ui.Pill"
+        "com.diegonmarcos.clouddrive.ui.EmptyState"
       ],
       "symbols": [
         "VolumesScreen(rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onOpenPath: (String)",
         "say(msg: String)",
+        "VolumeSection( label: String, secClasses: List<Declarations.VolumeClassDecl>, auth: Declarations.PersonalAuthDecl?, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onOpenPath: (String)",
+        "ClassBody( id: String, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onOpenPath: (String)",
         "ClassStrip( label: String, classes: List<Declarations.VolumeClassDecl>, current: String, onPick: (String)",
         "class pills",
         "class no",
-        "class id"
+        "class id",
+        "class and",
+        "class in"
       ]
     },
     {
@@ -119787,6 +120278,30 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/SeedReportTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SeedReportTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "ok(name: String)",
+        "everyDeclaredRepositorySeededIsComplete()",
+        "aTruncatedPassIsIncompleteAndNamesTheTail()",
+        "oneFailureIsReportedAndBlocksTheVerdict()",
+        "aMissingOutcomeIsNotComplete()",
+        "anUndeclarableRepositoryDoesNotLoopForever()",
+        "theReportHasOneLinePerRepositoryPlusTheTally()",
+        "class SeedReportTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/StoreMigrationTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -119803,11 +120318,17 @@
       ],
       "symbols": [
         "tmp()",
-        "clone(dir: File)",
+        "clone(dir: File, content: String = dir.name)",
+        "husk(dir: File)",
+        "completenessScoresTheThreeThingsThatMakeACopyUsable()",
         "straysAtRootAreMovedIntoTheGitFolder()",
         "alreadyMigratedRepoIsLeftAlone()",
-        "strayIsLeftWhenDestinationExists()",
+        "theCompleteRootCopyReplacesAnIncompleteGitCopy()",
+        "theRedundantRootHuskIsRemovedWhenGitIsComplete()",
+        "neitherCopyCompleteMeansNothingIsDeleted()",
+        "bothCompleteKeepsTheGitCopyAndDropsTheDuplicate()",
         "undeclaredFoldersAndPlainDirsAreIgnored()",
+        "aPlainUserFolderIsNeverDeletedForTheCompleteClone()",
         "class StoreMigrationTest"
       ]
     },
@@ -120070,6 +120591,30 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-density.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t6()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t6()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-engine-modules.sh",
       "lang": "sh",
       "role": "shell",
@@ -120183,6 +120728,30 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-git-vault-credential.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "a1()",
+        "a3()",
+        "a4()",
+        "r1()",
+        "r2()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "a1()",
+        "a3()",
+        "a4()",
+        "r1()",
+        "r2()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-mounts-engine.sh",
       "lang": "sh",
       "role": "shell",
@@ -120229,17 +120798,47 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-seed-and-migration.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "s1()",
+        "s2()",
+        "s3()",
+        "s4()",
+        "m1()",
+        "m2()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "s1()",
+        "s2()",
+        "s3()",
+        "s4()",
+        "m1()",
+        "m2()",
+        "mutate()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-shared-store.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
         "pass()",
-        "fail()"
+        "fail()",
+        "deep_linked()"
       ],
       "imports": [],
       "symbols": [
         "pass()",
-        "fail()"
+        "fail()",
+        "deep_linked()"
       ]
     },
     {
@@ -120296,6 +120895,30 @@
         "fail()",
         "g2()",
         "g6()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-volumes-sections.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "v1()",
+        "v2()",
+        "v2b()",
+        "v3()",
+        "m_screen()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "v1()",
+        "v2()",
+        "v2b()",
+        "v3()",
+        "m_screen()"
       ]
     },
     {
@@ -135271,6 +135894,10 @@
       "symbols": [
         "codeLines(file: File)",
         "existing(rel: String)",
+        "appBlocks()",
+        "universalAppKeys()",
+        "braceMatched(text: String, open: Int)",
+        "declaredOptionalFields(buildJsonText: String)",
         "objectContaining(key: String, value: String)",
         "keys(block: String)",
         "stringValue(block: String, key: String)",
@@ -136752,6 +137379,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -136768,10 +137396,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -136785,6 +137414,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -136811,8 +137441,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -153975,6 +154604,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -153991,10 +154621,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -154008,6 +154639,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -154034,8 +154666,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -290770,6 +291401,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -290786,10 +291418,11 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()"
+        "_fetch_upstream_apk()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -290803,6 +291436,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -290829,8 +291463,7 @@
         "_verify_asset_abi_neutral()",
         "_sha256_sidecar()",
         "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
+        "_publish_release_asset()"
       ]
     },
     {
@@ -293603,6 +294236,11 @@
       "lang": "py",
       "role": "python",
       "exports": [
+        "env_symlink_line(profile_link: str)",
+        "env_target_unreachable(env_rel, existing, new_files, new_executables)",
+        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str)",
+        "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
+        "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
         "capture(cmd)",
         "main()"
@@ -293610,6 +294248,7 @@
       "imports": [
         "pathlib",
         "os",
+        "re",
         "stat",
         "subprocess",
         "sys",
@@ -293617,6 +294256,11 @@
         "zipfile"
       ],
       "symbols": [
+        "env_symlink_line(profile_link: str)",
+        "env_target_unreachable(env_rel, existing, new_files, new_executables)",
+        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str)",
+        "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
+        "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
         "capture(cmd)",
         "main()"
@@ -294880,18 +295524,23 @@
       "role": "java",
       "exports": [
         "run",
-        "showBootstrapErrorDialog"
+        "showBootstrapErrorDialog",
+        "showLibMissingDialog"
       ],
       "imports": [
         "android.app.Activity",
         "android.app.AlertDialog",
         "android.app.ProgressDialog",
         "android.content.Context",
+        "android.content.ActivityNotFoundException",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
         "android.os.Build",
         "android.os.Environment",
         "android.system.Os",
         "android.util.Pair",
         "android.view.WindowManager",
+        "com.termux.BuildConfig",
         "com.termux.R",
         "com.termux.shared.file.FileUtils",
         "com.termux.shared.termux.crash.TermuxCrashUtils",
@@ -294909,33 +295558,40 @@
         "java.io.File",
         "java.io.FileInputStream",
         "java.io.FileOutputStream",
+        "java.io.IOException",
         "java.io.InputStream",
         "java.io.InputStreamReader",
         "java.nio.charset.StandardCharsets",
+        "java.security.DigestInputStream",
+        "java.security.MessageDigest",
         "java.util.ArrayList",
         "java.util.Arrays",
         "java.util.List",
-        "java.util.zip.ZipEntry",
-        "java.util.zip.ZipInputStream",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_FILES_DIR_PATH",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_STAGING_PREFIX_DIR",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_STAGING_PREFIX_DIR_PATH"
+        "java.util.zip.ZipEntry"
       ],
       "symbols": [
-        "readBakedBootstrapVersion(Activity activity)",
+        "trustedLibSourceDir(Activity activity)",
+        "readLibManifest(Activity activity)",
+        "openBootstrapFromLib(Activity activity, LibBootstrapManifest manifest)",
+        "sha256OfQuiet(File file)",
+        "sha256Of(File file)",
+        "hex(byte[] bytes)",
         "readInstalledBootstrapVersion()",
         "setupBootstrapIfNeeded(final Activity activity, final Runnable whenDone)",
-        "restOfSetupIfNeeded(final Activity activity, final Runnable whenDone, final String bakedBootstrapVersion)",
+        "restOfSetupIfNeeded(final Activity activity, final Runnable whenDone, final LibBootstrapManifest libManifest)",
         "Thread()",
         "run()",
         "showBootstrapErrorDialog(Activity activity, Runnable whenDone, String message)",
+        "showLibMissingDialog(Activity activity, Runnable whenDone, String message)",
         "sendBootstrapCrashReportNotification(Activity activity, String message)",
         "setupStorageSymlinks(final Context context)",
         "ensureDirectoryExists(File directory)",
         "determineTermuxArchName()",
         "class TermuxInstaller",
+        "class only",
+        "class last",
+        "class LibMissing",
+        "class LibBootstrapManifest",
         "class what",
         "class installed"
       ]
@@ -295251,6 +295907,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -295258,23 +295922,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -295284,6 +295942,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -295291,6 +295957,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -295306,16 +295973,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -301828,13 +302486,17 @@
       "exports": [
         "ok()",
         "bad()",
-        "q()"
+        "q()",
+        "sha_gated()"
       ],
-      "imports": [],
+      "imports": [
+        "/nix/store/5pmf0nlk348101av1wzcp18v089cably-nix-on-droid-session-init.sh"
+      ],
       "symbols": [
         "ok()",
         "bad()",
-        "q()"
+        "q()",
+        "sha_gated()"
       ]
     },
     {
@@ -413509,7 +414171,9 @@
         "android.app.Activity",
         "android.app.AlertDialog",
         "android.app.ProgressDialog",
+        "android.content.ActivityNotFoundException",
         "android.content.Context",
+        "android.content.Intent",
         "android.os.Environment",
         "android.system.Os",
         "android.util.Pair",
@@ -413548,6 +414212,9 @@
         "Thread()",
         "run()",
         "stageCloudRootfs(final Activity activity, final Runnable whenDone)",
+        "showCloudRootfsLibMissingDialog(Activity activity, String message, Runnable whenDone)",
+        "showCloudRootfsStageErrorDialog(Activity activity, String message, Runnable whenDone)",
+        "openCloudStore(Activity activity)",
         "showBootstrapErrorDialog(Activity activity, Runnable whenDone, String message)",
         "sendBootstrapCrashReportNotification(Activity activity, String message)",
         "setupStorageSymlinks(final Context context)",
@@ -413878,17 +414545,22 @@
       "role": "java",
       "exports": [
         "CloudRootfs",
+        "LibMissing",
         "isStaged",
         "stage"
       ],
       "imports": [
         "android.content.Context",
+        "android.content.pm.ApplicationInfo",
+        "android.content.pm.PackageManager",
         "android.content.res.AssetManager",
         "android.system.ErrnoException",
         "android.system.Os",
         "com.termux.BuildConfig",
         "com.termux.shared.logger.Logger",
         "com.termux.shared.termux.TermuxConstants",
+        "org.json.JSONException",
+        "org.json.JSONObject",
         "java.io.ByteArrayOutputStream",
         "java.io.File",
         "java.io.FileInputStream",
@@ -413896,17 +414568,31 @@
         "java.io.IOException",
         "java.io.InputStream",
         "java.io.OutputStream",
-        "java.nio.charset.StandardCharsets"
+        "java.nio.charset.StandardCharsets",
+        "java.security.DigestInputStream",
+        "java.security.MessageDigest",
+        "java.security.NoSuchAlgorithmException",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipFile"
       ],
       "symbols": [
         "CloudRootfs()",
+        "LibMissing(String message)",
         "stageDir()",
         "isStaged(Context context)",
         "stage(Context context)",
-        "baked(AssetManager assets)",
+        "trustedLibSourceDir(Context context)",
+        "readManifest(String libSourceDir)",
+        "field(JSONObject manifest, String name)",
+        "libManifest(Context context)",
+        "extractPayload(String libSourceDir, String payload, String want, File dir)",
+        "sha256()",
+        "sha256(File file)",
+        "hex(byte[] bytes)",
         "isSymlink(File file)",
         "read(InputStream stream)",
-        "class CloudRootfs"
+        "class CloudRootfs",
+        "class LibMissing"
       ]
     },
     {
@@ -414094,6 +414780,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -414101,23 +414795,17 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
         "step_release()",
         "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_verify_contract()",
-        "step_materialize_fork()",
-        "step_build_fork()",
-        "step_publish_fork()"
+        "step_test()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "log()",
         "errlog()",
@@ -414127,6 +414815,14 @@
         "_variant_field()",
         "_variant_gh_asset()",
         "_export_variant_abis()",
+        "_companion_ids()",
+        "_companion_json()",
+        "_companion_asset()",
+        "_companion_paths_file()",
+        "_companion_should_publish()",
+        "_companion_stamp()",
+        "_build_companions()",
+        "_publish_companions()",
         "_fork_json()",
         "_is_hubless()",
         "_single_fork_key()",
@@ -414134,6 +414830,7 @@
         "step_bundle_forks()",
         "_resolve_signing()",
         "_enforce_signature()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_step_build_single_app()",
         "step_build()",
@@ -414149,16 +414846,7 @@
         "step_materialize_fork()",
         "step_build_fork()",
         "step_publish_fork()",
-        "_oci_pull_blob()",
-        "_fetch_upstream_apk()",
-        "_resign_apk()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()"
+        "_oci_pull_blob()"
       ]
     },
     {
@@ -419064,14 +419752,16 @@
         "ok()",
         "bad()",
         "json()",
-        "mutate()"
+        "mutate()",
+        "sha_gated()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "bad()",
         "json()",
-        "mutate()"
+        "mutate()",
+        "sha_gated()"
       ]
     },
     {
@@ -474313,6 +475003,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_fork_json()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_resign_apk()",
         "_fetch_upstream_apk()",
@@ -474331,10 +475022,11 @@
         "step_emulator()",
         "_release_var()",
         "_variant_field()",
-        "_variant_artifact()",
-        "_variant_gh_asset()"
+        "_variant_artifact()"
       ],
-      "imports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sh"
+      ],
       "symbols": [
         "_ghcr_publish()",
         "_ghcr_source()",
@@ -474346,6 +475038,7 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_fork_json()",
+        "_apk_declared_packages()",
         "_assert_apk_identity()",
         "_resign_apk()",
         "_fetch_upstream_apk()",
@@ -474374,8 +475067,7 @@
         "step_oras_pull()",
         "step_phone_install()",
         "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()",
-        "_verify_release_asset()"
+        "_sha256_sidecar()"
       ]
     },
     {
