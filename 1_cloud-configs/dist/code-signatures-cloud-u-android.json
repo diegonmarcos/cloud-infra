@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20002,
+    "files": 20008,
     "by_lang": {
       "py": 54,
       "sh": 305,
-      "kotlin": 10024,
+      "kotlin": 10030,
       "java": 609,
       "ts": 8413,
       "nix": 63,
@@ -25,7 +25,7 @@
       "module": 6355,
       "compose": 1,
       "flake": 22,
-      "kotlin": 10022,
+      "kotlin": 10028,
       "python": 29,
       "nix-module": 40,
       "file": 2257,
@@ -14340,9 +14340,11 @@
         "explain(message: String, declared: List<GrantRemedy> = grantRemedies)",
         "decode(b64: String)",
         "parse(text: String)",
+        "gitChain(block: JSONObject?)",
         "class AuthDeclaration",
         "class ConfigSource",
         "class GrantRemedy",
+        "class GitRung",
         "class Declaration"
       ]
     },
@@ -18971,6 +18973,82 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhDeviceLogin.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhDeviceLogin"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "toString()",
+        "login( clientIds: List<String> = GhRunner.CLIENT_IDS, scope: String = SCOPE, http: Http = Http.Real, sleep: (Long)",
+        "post(url: String, body: String)",
+        "enc(s: String)",
+        "class uses",
+        "class GhDeviceLogin",
+        "class Phase",
+        "class Starting",
+        "class Prompt",
+        "class Pending",
+        "class Granted",
+        "class Failed",
+        "class Http",
+        "class Real"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhRunner.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhRunner"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.io.File"
+      ],
+      "symbols": [
+        "run(args: List<String>, token: String? = null)",
+        "api(path: String, token: String)",
+        "checkToken(token: String)",
+        "class produces",
+        "class GhRunner",
+        "class Result"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitAuthChain.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitAuthChain"
+      ],
+      "imports": [],
+      "symbols": [
+        "toString()",
+        "narrative()",
+        "resolve( chain: List<Rung>, store: GitCredentialStore?, credentialId: String, )",
+        "rungs( declared: List<Pair<String, String>>, implementations: Map<String, ()",
+        "class GitAuthChain",
+        "class Answer",
+        "class Credential",
+        "class Unreachable",
+        "class Declined",
+        "class NoImplementation",
+        "class holds",
+        "class Rung",
+        "class Result",
+        "class Step",
+        "class Outcome"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitCredentialStore.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -19189,6 +19267,28 @@
         "remove(id: String)",
         "idFor(path: String)",
         "class RepoRegistry"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/test/java/com/diegonmarcos/cloudlib/gitsync/GitAuthChainTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitAuthChainTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "rung(id: String, label: String, answer: ()",
+        "unreachable(why: String = \"connect timed out\")",
+        "credential(token: String)",
+        "class GitAuthChainTest",
+        "class Recorder"
       ]
     },
     {
@@ -19797,6 +19897,26 @@
         "test_get_uncommitted_file_paths()",
         "test_get_branch_name()",
         "test_clone_repository()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gix/src/main/java/com/diegonmarcos/cloudlib/gix/GixRunner.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GixRunner"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.io.File"
+      ],
+      "symbols": [
+        "run(verb: String, args: List<String> = emptyList()",
+        "clone(url: String, target: File, depth: Int = 0, onLine: (String)",
+        "fetch(repo: File, onLine: (String)",
+        "supports(verb: String)",
+        "class GixRunner",
+        "class Result"
       ]
     },
     {
@@ -118103,6 +118223,34 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/configs/DriveGitChain.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveGitChain"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.cloudlib.gh.GhDeviceLogin",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuthChain",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "credentialId()",
+        "rungs( declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, bearer: String = \"\", onPhase: (GhDeviceLogin.Phase)",
+        "fleet(config: JSONObject, bearer: String)",
+        "github(config: JSONObject, onPhase: (GhDeviceLogin.Phase)",
+        "resolve( ctx: Context, bearer: String = \"\", onPhase: (GhDeviceLogin.Phase)",
+        "declaredOrder(declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain)",
+        "class DriveGitChain"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/configs/GeneralPage.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -119383,7 +119531,8 @@
         "cloneViaTerminal(name: String)",
         "clone(name: String)",
         "fetchListing(token: String)",
-        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, onSshKeyPath: (String)",
+        "startChain()",
+        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, onSshKeyPath: (String)",
         "GitRepoRow( name: String, repoName: String, isPrivate: Boolean, fork: Boolean, repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?, running: GitSyncCoordinator.Running?, cloning: Boolean, expanded: Boolean, onToggle: ()",
         "rowStats(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
         "lightOf(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
@@ -119393,6 +119542,7 @@
         "HistoryRow(e: SyncEvent, fmt: DateFormat, compact: Boolean = false)",
         "RepoSettingsSheet(repo: ManagedRepo, coordinator: GitSyncCoordinator, onDismiss: ()",
         "class GitLogin",
+        "class GitChainState",
         "class GitListing"
       ]
     },
