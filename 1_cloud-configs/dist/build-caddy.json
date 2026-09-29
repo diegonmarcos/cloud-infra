@@ -412,6 +412,14 @@
           "comment": "C3 Services REST API — service API gateway Fastify API"
         },
         {
+          "base_path": "/git",
+          "upstream": "10.0.0.4:8123",
+          "public_paths": [
+            "/git/health"
+          ],
+          "comment": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back."
+        },
+        {
           "base_path": "/scrappers",
           "upstream": "10.0.0.6:3020",
           "public_paths": [
@@ -716,6 +724,10 @@
     {
       "service": "superapp-mcp.app",
       "upstream": "10.0.0.6:3110"
+    },
+    {
+      "service": "git-proxy-api.app",
+      "upstream": "10.0.0.4:8123"
     },
     {
       "service": "g-personal-mcp.app",
@@ -1098,6 +1110,27 @@
       "port": 3110,
       "protocol": "http",
       "upstream": "10.0.0.6:3110",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "git-proxy-api.app",
+      "redirect_to": "https://git-proxy-api-http-8123.app",
+      "container": "git-proxy-api",
+      "container_key": "app",
+      "svc": "git-proxy-api",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "git-proxy-api-http-8123.app",
+      "container": "git-proxy-api",
+      "container_key": "app",
+      "svc": "git-proxy-api",
+      "vm": "oci-E2-f_1",
+      "port": 8123,
+      "protocol": "http",
+      "upstream": "10.0.0.4:8123",
       "source": "containers.app.port"
     },
     {
@@ -2276,6 +2309,16 @@
     },
     {
       "host": "api.diegonmarcos.com",
+      "path": "/git",
+      "upstream": "10.0.0.4:8123",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back."
+    },
+    {
+      "host": "api.diegonmarcos.com",
       "path": "/scrappers",
       "upstream": "10.0.0.6:3020",
       "kind": "reverse_proxy",
@@ -2744,6 +2787,16 @@
       "host": "superapp-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3110",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "git-proxy-api.app",
+      "path": null,
+      "upstream": "10.0.0.4:8123",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3230,6 +3283,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-superapp-mcp",
+      "notes": null
+    },
+    {
+      "host": "git-proxy-api-http-8123.app",
+      "path": null,
+      "upstream": "10.0.0.4:8123",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "git-proxy-api",
       "notes": null
     },
     {

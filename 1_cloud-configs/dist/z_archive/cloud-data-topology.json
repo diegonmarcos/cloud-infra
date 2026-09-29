@@ -51,6 +51,7 @@
       "containers": [
         "alerts-api",
         "c3-public-api",
+        "git-proxy-api",
         "unbound-dns64",
         "umami",
         "umami-db",
@@ -669,6 +670,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "cloud-vault-mcp"
+      },
+      {
+        "name": "git-proxy-api.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "git-proxy-api"
       },
       {
         "name": "g-personal-mcp.app",
@@ -1826,6 +1833,86 @@
         "app": 3111
       },
       "flake": "infra-api_cloud-vault-mcp"
+    },
+    "git-proxy-api": {
+      "category": "app",
+      "vm": "oci-E2-f_1",
+      "folder": "infra-api_git-proxy-api",
+      "description": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back.",
+      "domain": "api.diegonmarcos.com/git",
+      "port": 8123,
+      "dns": "git-proxy-api.app",
+      "upstream": "10.0.0.4:8123",
+      "containers": {
+        "app": {
+          "container_name": "git-proxy-api",
+          "image": "ghcr.io/diegonmarcos/git-proxy-api:latest",
+          "port": 8123,
+          "port_env": "PORT",
+          "dns": "git-proxy-api.app",
+          "public": true,
+          "proxy": {
+            "auth": "two_factor",
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/git",
+            "public_paths": [
+              "/git/health"
+            ]
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "git-proxy-api"
+      ],
+      "all_ports": [
+        "8123"
+      ],
+      "all_dns": [
+        "git-proxy-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "_doc": "auth=two_factor is what the deriver turns into the Caddy mkProtected block: `@bearer header Authorization Bearer*` -> forward_auth 10.0.0.1:4182 /auth (infra-sec_introspect-proxy), with the interactive Authelia session as the non-bearer fallback. That is exactly the credential the phone ALREADY holds (cloud-u-android ab_cloud-libs-shared/build.json auth.sign_in.providers[id=authelia], kind=authelia_bearer, scope authelia.bearer.authz) — no new OIDC client, no new grant. Only /git/health is pre-auth, via the engine-supported public_paths[] array, so #646's chain has an unauthenticated reachability probe.",
+        "primary": {
+          "wg_only": false,
+          "auth": "two_factor",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/git",
+          "public_paths": [
+            "/git/health"
+          ]
+        }
+      },
+      "declared_ports": {
+        "app": 8123
+      },
+      "health": {
+        "path": "/git/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "flake": "infra-api_git-proxy-api"
     },
     "google-personal-mcp": {
       "category": "app",

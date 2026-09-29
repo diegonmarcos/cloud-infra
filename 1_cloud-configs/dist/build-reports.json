@@ -26,6 +26,10 @@
       "url": "https://api.diegonmarcos.com/c3-services-api/c3-services-api/health"
     },
     {
+      "service": "git-proxy-api",
+      "url": "https://api.diegonmarcos.com/git/git/health"
+    },
+    {
       "service": "gitea",
       "url": "https://git.diegonmarcos.com/"
     },
@@ -150,6 +154,10 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
+    },
+    {
+      "service": "git-proxy-api",
+      "domain": "api.diegonmarcos.com/git"
     },
     {
       "service": "gitea",
@@ -284,6 +292,10 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
+    },
+    {
+      "service": "git-proxy-api",
+      "domain": "api.diegonmarcos.com/git"
     },
     {
       "service": "gitea",
@@ -570,6 +582,19 @@
         "app": 3111
       },
       "health": null
+    },
+    "git-proxy-api": {
+      "name": "git-proxy-api",
+      "vm": "oci-E2-f_1",
+      "domain": "api.diegonmarcos.com/git",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8123
+      },
+      "health": {
+        "path": "/git/health"
+      }
     },
     "google-personal-mcp": {
       "name": "google-personal-mcp",
@@ -1477,6 +1502,15 @@
       "dns": "vault-mcp.app"
     },
     {
+      "service": "git-proxy-api",
+      "dns": "git-proxy-api.app"
+    },
+    {
+      "service": "git-proxy-api",
+      "container": "app",
+      "dns": "git-proxy-api.app"
+    },
+    {
       "service": "google-personal-mcp",
       "dns": "g-personal-mcp.app"
     },
@@ -2088,6 +2122,7 @@
         "services": [
           "alerts-api",
           "c3-public-api",
+          "git-proxy-api",
           "unbound-dns64",
           "umami",
           "caddy-public"
@@ -2331,6 +2366,19 @@
           "app": 3111
         },
         "health": null
+      },
+      "git-proxy-api": {
+        "name": "git-proxy-api",
+        "vm": "oci-E2-f_1",
+        "domain": "api.diegonmarcos.com/git",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8123
+        },
+        "health": {
+          "path": "/git/health"
+        }
       },
       "google-personal-mcp": {
         "name": "google-personal-mcp",

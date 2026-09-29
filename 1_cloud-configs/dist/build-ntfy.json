@@ -392,6 +392,31 @@
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
     },
+    "git-proxy-api": {
+      "ip": "10.0.0.4",
+      "ports": {
+        "app": 8123
+      },
+      "vm": "oci-analytics",
+      "healthcheck": "/health",
+      "domain": "api.diegonmarcos.com/git",
+      "description": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back.",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/git",
+        "api_url": "https://api.diegonmarcos.com/git/git",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/git",
+        "endpoint_count": 4,
+        "display_name": "Git Proxy API",
+        "description": "Authelia-fronted read path to GitHub: list repos and stream a tarball. The GitHub credential stays server-side; the caller only ever presents an Authelia bearer.",
+        "auth": "mixed"
+      }
+    },
     "google-personal-mcp": {
       "ip": "10.0.0.6",
       "ports": {

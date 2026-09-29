@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20000,
+    "files": 20002,
     "by_lang": {
       "py": 54,
       "sh": 305,
-      "kotlin": 10022,
+      "kotlin": 10024,
       "java": 609,
       "ts": 8413,
       "nix": 63,
@@ -25,7 +25,7 @@
       "module": 6355,
       "compose": 1,
       "flake": 22,
-      "kotlin": 10020,
+      "kotlin": 10022,
       "python": 29,
       "nix-module": 40,
       "file": 2257,
@@ -118250,6 +118250,7 @@
         "urlFor(owner: String, name: String)",
         "reposUrl(page: Int)",
         "webUrlFor(owner: String, name: String)",
+        "argv(op: String, url: String, dest: String)",
         "op(id: String)",
         "remoteMode(id: String)",
         "cloneUrl(name: String, mode: String = REMOTE_HTTPS)",
@@ -118285,8 +118286,7 @@
         "parseAuthApplies(text: String)",
         "iconNames(tabs: List<TabDecl>, configs: ConfigsDecl, files: FilesDecl, volumes: VolumesDecl? = null, sync: SyncDecl? = null)",
         "class Declarations",
-        "class TabDecl",
-        "class PageDecl"
+        "class TabDecl"
       ]
     },
     {
@@ -119337,6 +119337,8 @@
         "GitReposScreen"
       ],
       "imports": [
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
@@ -119374,12 +119376,11 @@
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.collectAsState",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateOf"
+        "androidx.compose.runtime.collectAsState"
       ],
       "symbols": [
         "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier)",
+        "cloneViaTerminal(name: String)",
         "clone(name: String)",
         "fetchListing(token: String)",
         "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, onSshKeyPath: (String)",
@@ -119633,6 +119634,38 @@
       "symbols": [
         "SyncScreen( git: GitSyncCoordinator, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, page: String? = null, onPageConsumed: ()",
         "say(msg: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/TerminalGit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TerminalGit"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "java.io.File"
+      ],
+      "symbols": [
+        "installed(ctx: Context, pkg: String)",
+        "granted(ctx: Context, permission: String)",
+        "decide( decl: Declarations.GitTerminalDecl?, op: String, installed: Boolean, granted: Boolean, resolvesService: Boolean, dest: File, )",
+        "extras( decl: Declarations.GitTerminalDecl, argv: List<String>, dest: File, )",
+        "plan( ctx: Context, decl: Declarations.GitTerminalDecl?, op: String, url: String, dest: File, )",
+        "run( ctx: Context, decl: Declarations.GitTerminalDecl?, op: String, url: String, dest: File, )",
+        "class TerminalGit",
+        "class Outcome",
+        "class Sent",
+        "class NotDeclared",
+        "class NoSuchOp",
+        "class NotInstalled",
+        "class NeedsPermission",
+        "class NoService",
+        "class Refused"
       ]
     },
     {
@@ -120398,6 +120431,34 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/TerminalGitTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TerminalGitTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.Declarations",
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.jsonArray",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "decide(installed: Boolean, granted: Boolean, resolves: Boolean, op: String = Declarations.GIT_OP_CLONE)",
+        "t_mutated(action: String)",
+        "class TerminalGitTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/ui/DriveShellTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -120701,7 +120762,8 @@
         "p1()",
         "p2()",
         "p3()",
-        "p4()"
+        "p4()",
+        "t642()"
       ],
       "imports": [],
       "symbols": [
@@ -120710,7 +120772,8 @@
         "p1()",
         "p2()",
         "p3()",
-        "p4()"
+        "p4()",
+        "t642()"
       ]
     },
     {

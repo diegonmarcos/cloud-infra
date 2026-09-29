@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 311,
-    "edges": 426,
+    "nodes": 315,
+    "edges": 432,
     "by_table": {
       "vm": 4,
-      "service": 71,
-      "container": 92,
-      "domain": 42,
+      "service": 72,
+      "container": 93,
+      "domain": 43,
       "repo": 3,
-      "module": 71,
+      "module": 72,
       "package": 28
     }
   },
@@ -428,6 +428,32 @@
         "role": "app",
         "port": 3111,
         "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "git_proxy_api",
+      "key": "service:git_proxy_api",
+      "properties": {
+        "name": "git-proxy-api",
+        "category": "app",
+        "description": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back.",
+        "domain": "api.diegonmarcos.com/git",
+        "port": 8123,
+        "vm": "oci-analytics",
+        "folder": "infra-api_git-proxy-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "git_proxy_api",
+      "key": "container:git_proxy_api",
+      "properties": {
+        "name": "git-proxy-api",
+        "image": "ghcr.io/diegonmarcos/git-proxy-api:latest",
+        "role": "app",
+        "port": 8123,
+        "public": true
       }
     },
     {
@@ -2266,6 +2292,14 @@
     },
     {
       "table": "domain",
+      "id": "api_diegonmarcos_com/git",
+      "key": "domain:api_diegonmarcos_com/git",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/git"
+      }
+    },
+    {
+      "table": "domain",
       "id": "api_diegonmarcos_com/http_to_smtp_proxy_api",
       "key": "domain:api_diegonmarcos_com/http_to_smtp_proxy_api",
       "properties": {
@@ -2691,6 +2725,17 @@
         "repo": "cloud",
         "category": "data",
         "service": "cloud-vault-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_git_proxy_api",
+      "key": "module:infra_api_git_proxy_api",
+      "properties": {
+        "name": "infra-api_git-proxy-api",
+        "repo": "cloud",
+        "category": "app",
+        "service": "git-proxy-api"
       }
     },
     {
@@ -3890,6 +3935,22 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:git_proxy_api",
+      "to": "vm:oci_analytics",
+      "key": "service:git_proxy_api->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:git_proxy_api",
+      "to": "container:git_proxy_api",
+      "key": "service:git_proxy_api->runs_container->container:git_proxy_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:google_personal_mcp",
       "to": "vm:oci_apps",
       "key": "service:google_personal_mcp->hosted_on->vm:oci_apps",
@@ -5082,6 +5143,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:git_proxy_api",
+      "to": "service:caddy",
+      "key": "service:git_proxy_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/git"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:google_personal_mcp",
       "to": "service:caddy",
       "key": "service:google_personal_mcp->proxied_by->service:caddy",
@@ -5474,6 +5544,13 @@
       "from": "domain:mcp_diegonmarcos_com",
       "to": "service:cloud_vault_mcp",
       "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_vault_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/git",
+      "to": "service:git_proxy_api",
+      "key": "domain:api_diegonmarcos_com/git->routes_to->service:git_proxy_api",
       "properties": {}
     },
     {
@@ -5908,6 +5985,20 @@
       "from": "module:infra_api_cloud_vault_mcp",
       "to": "service:cloud_vault_mcp",
       "key": "module:infra_api_cloud_vault_mcp->implements->service:cloud_vault_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_git_proxy_api",
+      "to": "repo:cloud",
+      "key": "module:infra_api_git_proxy_api->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_git_proxy_api",
+      "to": "service:git_proxy_api",
+      "key": "module:infra_api_git_proxy_api->implements->service:git_proxy_api",
       "properties": {}
     },
     {

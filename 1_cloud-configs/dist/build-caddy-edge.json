@@ -228,6 +228,14 @@
           "comment": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
         },
         {
+          "base_path": "/git",
+          "upstream": "10.0.0.4:8123",
+          "public_paths": [
+            "/git/health"
+          ],
+          "comment": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back."
+        },
+        {
           "base_path": "/scrappers",
           "upstream": "10.0.0.6:3020",
           "public_paths": [

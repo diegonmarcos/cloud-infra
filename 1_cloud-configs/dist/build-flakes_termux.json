@@ -432,11 +432,12 @@
       "services": [
         "alerts-api",
         "c3-public-api",
+        "git-proxy-api",
         "unbound-dns64",
         "umami",
         "caddy-public"
       ],
-      "container_count": 7
+      "container_count": 8
     },
     "oci-A1-f_0": {
       "ip": "82.70.229.129",
@@ -2127,6 +2128,159 @@
         "auth": "none",
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
+    },
+    "git-proxy-api": {
+      "category": "app",
+      "vm": "oci-E2-f_1",
+      "folder": "infra-api_git-proxy-api",
+      "description": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back.",
+      "enabled": true,
+      "domain": "api.diegonmarcos.com/git",
+      "flake": "infra-api_git-proxy-api",
+      "port": 8123,
+      "dns": "git-proxy-api.app",
+      "upstream": "10.0.0.4:8123",
+      "containers": {
+        "app": {
+          "container_name": "git-proxy-api",
+          "image": "ghcr.io/diegonmarcos/git-proxy-api:latest",
+          "port": 8123,
+          "port_env": "PORT",
+          "dns": "git-proxy-api.app",
+          "public": true,
+          "proxy": {
+            "auth": "two_factor",
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/git",
+            "public_paths": [
+              "/git/health"
+            ]
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "git-proxy-api"
+      ],
+      "all_ports": [
+        "8123"
+      ],
+      "all_dns": [
+        "git-proxy-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "_doc": "auth=two_factor is what the deriver turns into the Caddy mkProtected block: `@bearer header Authorization Bearer*` -> forward_auth 10.0.0.1:4182 /auth (infra-sec_introspect-proxy), with the interactive Authelia session as the non-bearer fallback. That is exactly the credential the phone ALREADY holds (cloud-u-android ab_cloud-libs-shared/build.json auth.sign_in.providers[id=authelia], kind=authelia_bearer, scope authelia.bearer.authz) — no new OIDC client, no new grant. Only /git/health is pre-auth, via the engine-supported public_paths[] array, so #646's chain has an unauthenticated reachability probe.",
+        "primary": {
+          "wg_only": false,
+          "auth": "two_factor",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/git",
+          "public_paths": [
+            "/git/health"
+          ]
+        }
+      },
+      "declared_ports": {
+        "app": 8123
+      },
+      "health": {
+        "path": "/git/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "resources": {
+        "_doc": "A tarball is streamed, never buffered, so memory does not scale with repository size. 128M is headroom for node's baseline plus the JWKS cache.",
+        "mem_limit": "128M",
+        "mem_reservation": "32M"
+      },
+      "runtime": {
+        "_doc": "THE endpoint contract, declared once, here. The image-wrapper generator COPYs build.json to /app/build.json, so code/contract.mjs reads this exact block at runtime and GET /git/endpoints serves it verbatim — there is no second copy to drift from. #646's client asserts against that response instead of hardcoding paths, which is the drift #371 was (client dialling 10.0.0.4 while the service deployed to 10.0.0.6).",
+        "base_path": "/git",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/git/health",
+            "auth": "none",
+            "description": "Liveness. The only pre-auth route. Returns {\"status\":\"ok\",\"service\":\"git-proxy-api\"} and nothing about GitHub — an unreachable service must look unreachable, never like a 200 with an error body (#568)."
+          },
+          {
+            "method": "GET",
+            "path": "/git/endpoints",
+            "auth": "authelia_bearer",
+            "description": "This contract, verbatim from build.json runtime. Machine-readable so a client can assert its own call list against ours."
+          },
+          {
+            "method": "GET",
+            "path": "/git/repos",
+            "auth": "authelia_bearer",
+            "description": "The repos the server-side GitHub credential can see. Returns {repos:[{full_name,owner,name,private,default_branch,updated_at,size_kb}]} — a projection, never the upstream body, so no upstream field can carry a credential through."
+          },
+          {
+            "method": "GET",
+            "path": "/git/repos/:owner/:repo/tarball",
+            "auth": "authelia_bearer",
+            "description": "Streamed gzip tarball of :ref (query `ref`, default the repo's default branch). Proxied straight from GitHub's codeload redirect to the caller — nothing is written to disk, which is deliberate: oci disks have sat at 87-97% and an unscoped prune has destroyed services twice (#353/#393)."
+          }
+        ],
+        "upstream": {
+          "api_base": "https://api.github.com",
+          "timeout_ms": 20000,
+          "_token_doc": "GITHUB_TOKEN arrives ONLY as a sops-decrypted env_file value (src/secrets.yaml -> dist/.secrets -> compose env_file). It is read once at startup, used ONLY in upstream.mjs#upstreamHeaders as an outbound Authorization header, and every response body this service emits is passed through redactSecrets() first. code/test-contract-and-authz.mjs mutation-proves both halves."
+        },
+        "authelia": {
+          "jwks_url": "https://auth.diegonmarcos.com/jwks.json",
+          "issuer": "https://auth.diegonmarcos.com",
+          "required_scope": "authelia.bearer.authz",
+          "jwks_cache_ttl_s": 600,
+          "jwks_fetch_timeout_ms": 3000,
+          "_doc": "Same three values infra-sec_introspect-proxy validates on, so a token minted for ANY existing Authelia client (cli, cloud-admin, claude-*) works here unchanged. Verified in-service as well as at the Caddy edge: the edge gate does not exist when the service is dialled directly over the mesh, and the tester has to be able to assert a refusal."
+        }
+      },
+      "tests": {
+        "contract-and-authz": {
+          "cmd": "node test-contract-and-authz.mjs",
+          "cwd": "src"
+        }
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/git",
+        "api_url": "https://api.diegonmarcos.com/git/git",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/git",
+        "endpoint_count": 4,
+        "display_name": "Git Proxy API",
+        "description": "Authelia-fronted read path to GitHub: list repos and stream a tarball. The GitHub credential stays server-side; the caller only ever presents an Authelia bearer.",
+        "auth": "mixed"
+      },
+      "secret_env_vars": [
+        "GITHUB_TOKEN"
+      ]
     },
     "google-personal-mcp": {
       "category": "app",
