@@ -532,6 +532,11 @@ function deriveCaddy(c: any): DerivedFile[] {
       // upstream after introspect-proxy validates it (gitea: it reads any
       // Authorization as its own token and 401s what the gate passed).
       ...(proxy.strip_authorization ? { strip_authorization: true } : {}),
+      // identity: the upstream's reverse-proxy-auth header plus the declared
+      // fleet-identity -> upstream-user tables (gitea). caddyfile.nix strips
+      // the header from clients, maps X-Auth-User / Remote-User through the
+      // tables after forward_auth, and 403s an identity with no row.
+      ...(proxy.identity ? { identity: proxy.identity } : {}),
       comment: svc.description,
     };
     routes.push(route);
