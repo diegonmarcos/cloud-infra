@@ -237,8 +237,11 @@ case " $* " in
     n=$(cat "$SCEN/psi-cursor")
     v=$(sed -n "${n}p" "$SCEN/psi-seq")
     # A "U" prefix means something outside the shedder (a ship, a human)
-    # brought docker up long ago — so no start grace applies.
-    case "$v" in U*) rm -f "$SCEN/docker-down"; echo 1 > "$SCEN/enter"; v=${v#U} ;; esac
+    # brought docker up long ago — so no start grace applies. "enter" is
+    # removed, not set to 1µs: 1µs after boot is an age equal to the host's
+    # uptime, and a GHA runner is often up <180s, so E's second episode sat in
+    # GRACE, never shed, and failed CI (lint-pipeline 36704742910).
+    case "$v" in U*) rm -f "$SCEN/docker-down" "$SCEN/enter"; v=${v#U} ;; esac
     if [ -z "$v" ]; then : > "$SCEN/psi-exhausted"; echo 0
     else echo $((n + 1)) > "$SCEN/psi-cursor"; echo "$v"; fi ;;
   *"/proc/pressure/"*) echo 0 ;;   # cpu/io are logged, never shed on
@@ -425,12 +428,19 @@ START_FAILS=1 run_scenario E "70 70 70 0 U0 70 70 70 0 0" ""
 
 assert "first episode's failed start was reported" log_has E "RECOVERY FAILED"
 assert "latch re-armed when docker came back" log_has E "RE-ARMED"
-assert "second episode's recovery restarted docker" log_has E "RECOVERY: docker.service started"
+# Without these the recovery assertion is only as good as the fixture: a second
+# episode that never shed has nothing to recover and fails for the wrong reason.
+assert "second episode's pressure was counted, not graced" log_lacks E "GRACE:"
+assert "second episode really did a full shed" log_count E "SHED-PAGE:" 2
+assert "second episode's recovery restarted docker" log_count E "RECOVERY: docker.service started" 1
 assert "second episode was not refused" log_lacks E "restart already attempted and failed"
 
 $RUN_AS rm -f "$SHED_LIST" "$FIRED"
 
 if [ "$FAILED" -ne 0 ]; then
+  # The shedder's own log is the only thing that says WHY; without it the
+  # previous failure needed a local re-render to diagnose.
+  for l in "$WORK"/*/log; do sed "s|^|   ${l%/log}: |; s|$WORK/||" "$l"; done | grep -v 'breach' || true
   echo "FAIL: $FAILED runtime assertion(s) failed — the shed has no working inverse"
   exit 1
 fi
