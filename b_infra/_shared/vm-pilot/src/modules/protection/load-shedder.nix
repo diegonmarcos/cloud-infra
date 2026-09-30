@@ -47,6 +47,12 @@ let
   # containers at once is itself a load spike, and re-entering pressure
   # immediately after recovering from it is the flap this avoids.
   unshedDelaySecs = cfg "unshed_delay_secs" 5;
+  # Seconds after docker.service enters active during which pressure is NOT
+  # counted toward a shed, and the longest the recovery start waits for docker
+  # to come up. dockerd's own startup (containerd boot + live-restore reattach)
+  # peaks near 510M on a 954M box; on 2026-09-30 that alone drove memPSI to 89
+  # and the shedder stopped the daemon it had restarted 32 seconds earlier.
+  dockerStartGraceSecs = cfg "docker_start_grace_secs" 180;
 
   # Tier-1 services that survive graduated shed (stopped only on page-level).
   tier1Services = cfg "tier1_services" [];
@@ -75,6 +81,7 @@ in {
       INTERVAL=${toString interval}
       BACKOFF=${toString backoff}
       NEED=${toString needBreaches}
+      DOCKER_START_GRACE=${toString dockerStartGraceSecs}
       TIER1_SERVICES="${tier1List}"    # space-separated container names to protect
       NTFY_TOPIC="${ntfyTopic}"        # data-driven topic (default health_resources)
       NTFY_BASE="${ntfyBase}"          # public-edge fallback base
@@ -84,6 +91,13 @@ in {
       psi_avg10() {
         awk -F'avg10=' -v kind="$2" '$1 ~ "^"kind { split($2, a, " "); print a[1]; exit }' \
           "/proc/pressure/$1" 2>/dev/null || echo 0
+      }
+
+      # Seconds since docker.service last entered active; huge if it never did.
+      docker_age() {
+        _enter=$(systemctl show -p ActiveEnterTimestampMonotonic --value docker.service 2>/dev/null)
+        [ "''${_enter:-0}" -gt 0 ] 2>/dev/null || { echo 999999; return; }
+        awk -v e="$_enter" '{ printf "%d\n", $1 - e / 1000000 }' /proc/uptime
       }
 
       # P1/§4A: notify ntfy — try WG-direct first (10.0.0.6=oci-apps:8090), then
@@ -120,7 +134,12 @@ in {
         # non-tier1 are stopped in one `docker stop`, so ordering only affects which
         # frees first if the stop itself is slow — never correctness.
         _running=$(timeout 5 docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' 2>/dev/null \
-                   | sort -k2 -h -r | awk '{print $1}')
+                   | sort -k2 -h -r | awk '$1 != "--" {print $1}')
+        # `docker stats` prints "--" as the NAME of any container whose stats
+        # it cannot collect — which under thrash is all of them. On 2026-09-30
+        # 06:20 seven "--" rows were shed instead of real containers, landed in
+        # the shed-list, and the UNSHED that followed reported "--" as still
+        # down and spent its single shot on containers that never existed.
         [ -z "$_running" ] && _running=$(docker ps --format '{{.Names}}' 2>/dev/null || echo "")
         _to_stop=""
         for _c in $_running; do
@@ -160,6 +179,17 @@ in {
         MEM=$(psi_avg10 memory some); MEM_I=''${MEM%%.*}; MEM_I=''${MEM_I:-0}
         IO=$(psi_avg10 io full);      IO_I=''${IO%%.*};  IO_I=''${IO_I:-0}
 
+        # The single-shot latches are per EPISODE, not per process lifetime.
+        # recovery_failed exists so a docker that cannot start is not retried
+        # in a loop; once docker is observed active again (systemd's own
+        # Restart=always, or a ship) that condition is gone, and keeping the
+        # latch only guarantees the next full shed is permanent — which is how
+        # oci-analytics stayed dark after 2026-09-30 08:14.
+        if [ "''${recovery_failed:-0}" -ne 0 ] && systemctl is-active --quiet docker.service; then
+          recovery_failed=0
+          logger -t load-shedder "RE-ARMED: docker.service is active again — recovery latch cleared"
+        fi
+
         # ── Warn level (no action, just notify) ───────────────────────────
         if [ "$MEM_I" -ge "$MEM_PSI_WARN" ] && [ "$MEM_I" -lt "$MEM_PSI_CRIT" ] && [ "$shed_level" -eq 0 ]; then
           logger -t load-shedder "WARN: memPSI=''${MEM} (threshold=$MEM_PSI_WARN)"
@@ -175,7 +205,12 @@ in {
         fi
 
         # ── Crit level: track breaches ────────────────────────────────────
-        if [ "$MEM_I" -ge "$MEM_PSI_CRIT" ] && [ "$MEM_I" -lt "$MEM_PSI_PAGE" ]; then
+        # Pressure inside the docker start grace window is docker starting,
+        # not demand: counting it makes the shedder undo its own recovery.
+        if [ "$MEM_I" -ge "$MEM_PSI_CRIT" ] && [ "$(docker_age)" -lt "$DOCKER_START_GRACE" ]; then
+          breaches_crit=0; breaches_page=0
+          logger -t load-shedder "GRACE: memPSI=''${MEM} not counted — docker.service started <''${DOCKER_START_GRACE}s ago"
+        elif [ "$MEM_I" -ge "$MEM_PSI_CRIT" ] && [ "$MEM_I" -lt "$MEM_PSI_PAGE" ]; then
           breaches_crit=$((breaches_crit + 1))
           breaches_page=0
           logger -t load-shedder "CRIT breach ''${breaches_crit}/$NEED: memPSI=''${MEM} cpuPSI=''${CPU}"
@@ -199,7 +234,8 @@ in {
             # recoveries were literally `systemctl start docker.service`.
             # Rules that keep this honest:
             #   • fires ONLY here, on the demonstrated pressure-cleared edge
-            #   • ONE attempt, ever — `recovery_failed` latches it off, so a
+            #   • ONE attempt per episode — `recovery_failed` latches it off
+            #     until docker is seen active again (see RE-ARMED), so a
             #     broken docker escalates to PAGE instead of flapping. We
             #     latch rather than exit because the unit is Restart=always;
             #     exiting would recreate the very retry loop this forbids.
@@ -224,7 +260,7 @@ in {
               elif [ "''${unshed_failed:-0}" -ne 0 ]; then
                 logger -p daemon.err -t load-shedder "UNSHED: already attempted and failed — not retrying (manual action required)"
               else
-                _want=$(tr '\n' ' ' < "$_shed_list")
+                _want=$(sort -u "$_shed_list" | tr '\n' ' ')
                 logger -t load-shedder "UNSHED: single-shot start of shed containers:$_want"
                 for _c in $_want; do
                   docker start "$_c" >/dev/null 2>&1 || true
@@ -249,7 +285,14 @@ in {
             else
               logger -t load-shedder "RECOVERY: single-shot start of docker.service"
               timeout 120 systemctl start docker.service 2>/dev/null || true
-              sleep 5
+              # Wait, don't sample once: docker.service is Restart=always, so a
+              # first start that exits 1 is retried by systemd 5s later. On
+              # 2026-09-30 a one-shot check 5s after the start read that retry
+              # as failure and latched, while docker came up 15s later.
+              _waited=0
+              until systemctl is-active --quiet docker.service || [ "$_waited" -ge "$DOCKER_START_GRACE" ]; do
+                sleep 5; _waited=$((_waited + 5))
+              done
               if systemctl is-active --quiet docker.service; then
                 rm -f /run/load-shedder.fired 2>/dev/null || true
                 logger -t load-shedder "RECOVERY: docker.service started (live-restore reattaches containers)"
@@ -278,6 +321,9 @@ in {
         # ── Crit-level shed: stop non-tier1 only ─────────────────────────
         elif [ "$breaches_crit" -ge "$NEED" ] && [ "$shed_level" -lt 1 ]; then
           logger -t load-shedder "SHED-CRIT: memPSI=''${MEM} — shedding non-tier1 containers"
+          # New episode, new single shot: a failed UNSHED from an earlier
+          # episode must not leave this one's containers down for good.
+          unshed_failed=0
           if shed_non_tier1; then
             ntfy_send 4 "crit" "LOAD SHED — non-tier1 stopped" "memPSI=''${MEM}%% ≥ $MEM_PSI_CRIT%% × $NEED. Stopped non-tier1. Tier1 [${tier1List}] still running. Recover: build.sh ship."
             : > /run/load-shedder.fired 2>/dev/null || true

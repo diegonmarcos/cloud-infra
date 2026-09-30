@@ -150,11 +150,23 @@ if [ -e "$SHED_LIST" ] || systemctl is-active --quiet load-shedder.service 2>/de
   echo "SKIP(runtime): a live load-shedder owns /run/load-shedder.* on this host"
   exit 0
 fi
+# The GHA runner is not root, so without sudo this gate used to SKIP and exit 0
+# on the one host that runs the tester — every PART 2 scenario read as coverage
+# while asserting nothing. Everything the shedder calls that matters is stubbed,
+# so running it as root on a throwaway runner touches only /run/load-shedder.*.
+RUN_AS=""
 if ! ( : > "$SHED_LIST" ) 2>/dev/null; then
-  echo "SKIP(runtime): /run is not writable — re-run as root to exercise the un-shed loop"
-  exit 0
+  if sudo -n true 2>/dev/null; then
+    RUN_AS="sudo -n"
+  elif [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "::error::PART 2 cannot write /run and has no sudo — the shedder scenarios would not run"
+    exit 1
+  else
+    echo "SKIP(runtime): /run is not writable — re-run as root to exercise the un-shed loop"
+    exit 0
+  fi
 fi
-rm -f "$SHED_LIST"
+$RUN_AS rm -f "$SHED_LIST"
 
 cat > "$RENDER_NIX" <<'EOF'
 let lib = import <nixpkgs/lib>;
@@ -196,7 +208,14 @@ run_scenario() {
   : > "$SCEN/log"; : > "$SCEN/docker-calls"; : > "$SCEN/starts"
   : > "$SCEN/timeline"; : > "$SCEN/ntfy"; : > "$SCEN/systemctl-calls"
   printf '%s\n' $TIER1 $SHEDDABLE | sort > "$SCEN/running"
-  rm -f "$SHED_LIST" "$FIRED"
+  # Optional scenario knobs, read from the caller's environment:
+  #   STATS_ROWS         `docker stats` output (unset = stats fails, ps fallback)
+  #   START_FAILS        how many `systemctl start docker.service` calls fail
+  #   SYSTEMD_RESTARTS=1 a failed start comes up on its own (Restart=always)
+  [ -n "${STATS_ROWS:-}" ] && printf '%s\n' "$STATS_ROWS" > "$SCEN/stats"
+  echo "${START_FAILS:-0}" > "$SCEN/start-fails-docker"
+  [ -n "${SYSTEMD_RESTARTS:-}" ] && : > "$SCEN/systemd-restarts"
+  $RUN_AS rm -f "$SHED_LIST" "$FIRED"
 
   mk_stub() { # $1 = command name; body on stdin. Paths baked, not inherited:
               # the stubs must work regardless of how the shedder is invoked.
@@ -213,6 +232,9 @@ case " $* " in
   *"/proc/pressure/memory"*)
     n=$(cat "$SCEN/psi-cursor")
     v=$(sed -n "${n}p" "$SCEN/psi-seq")
+    # A "U" prefix means something outside the shedder (a ship, a human)
+    # brought docker up long ago — so no start grace applies.
+    case "$v" in U*) rm -f "$SCEN/docker-down"; echo 1 > "$SCEN/enter"; v=${v#U} ;; esac
     if [ -z "$v" ]; then : > "$SCEN/psi-exhausted"; echo 0
     else echo $((n + 1)) > "$SCEN/psi-cursor"; echo "$v"; fi ;;
   *"/proc/pressure/"*) echo 0 ;;   # cpu/io are logged, never shed on
@@ -235,8 +257,8 @@ cmd="$1"; shift
 case "$cmd" in
   ps) cat "$SCEN/running" ;;
   # `docker stats` is timeout-guarded in shed_non_tier1 because it is unreliable
-  # under thrash; fail it so the `docker ps` fallback is what gets exercised.
-  stats) exit 1 ;;
+  # under thrash; by default fail it so the `docker ps` fallback is exercised.
+  stats) [ -f "$SCEN/stats" ] || exit 1; cat "$SCEN/stats" ;;
   stop)
     # Snapshot the persisted list at the instant the shed happens — the shedder
     # deletes it on a successful un-shed, and it is the thing under test.
@@ -256,10 +278,30 @@ esac
 exit 0
 STUB
 
-  # docker.service stays up throughout: these scenarios are the shed_level=1
-  # container un-shed, not the full-shed daemon restart.
+  # docker.service is up unless a full shed stopped it. "enter" is its
+  # ActiveEnterTimestampMonotonic in usec — absent means "never", i.e. no grace.
   mk_stub systemctl <<'STUB'
 echo "$*" >> "$SCEN/systemctl-calls"
+now_us() { "$AWK_REAL" '{ printf "%d\n", $1 * 1000000 }' /proc/uptime; }
+case "$1" in
+  is-active)
+    if [ -e "$SCEN/up-after-polls" ]; then
+      n=$(($(cat "$SCEN/up-after-polls") - 1))
+      if [ "$n" -le 0 ]; then rm -f "$SCEN/up-after-polls" "$SCEN/docker-down"; now_us > "$SCEN/enter"
+      else echo "$n" > "$SCEN/up-after-polls"; fi
+    fi
+    [ -e "$SCEN/docker-down" ] && exit 3 ;;
+  stop) [ "$2" = docker.service ] && : > "$SCEN/docker-down" ;;
+  start)
+    n=$(cat "$SCEN/start-fails-docker")
+    if [ "$n" -gt 0 ]; then
+      echo $((n - 1)) > "$SCEN/start-fails-docker"
+      [ -e "$SCEN/systemd-restarts" ] && echo 2 > "$SCEN/up-after-polls"
+      exit 1
+    fi
+    rm -f "$SCEN/docker-down"; now_us > "$SCEN/enter" ;;
+  show) cat "$SCEN/enter" 2>/dev/null || echo 0 ;;
+esac
 exit 0
 STUB
 
@@ -279,10 +321,12 @@ STUB
   # SIGTERM we asked for; a stray "Terminated" in the middle of passing
   # assertions reads like a failure. A subshell would not work here: bash execs
   # it into timeout, leaving no shell inside to redirect.
-  { timeout 60 env PATH="$SCEN/bin:$PATH" sh "$SHEDDER" >/dev/null 2>&1 || true; } 2>/dev/null
+  { timeout 60 $RUN_AS env PATH="$SCEN/bin:$PATH" sh "$SHEDDER" >/dev/null 2>&1 || true; } 2>/dev/null
 }
 
 log_has()  { grep -qF "$2" "$WORK/$1/log"; }
+log_lacks() { ! log_has "$@"; }
+log_count() { [ "$(grep -cF "$2" "$WORK/$1/log")" -eq "$3" ]; }
 ntfy_has() { grep -qF "$2" "$WORK/$1/ntfy"; }
 # Same multiset of names, order-independent.
 same_set() { [ "$(sort "$1" | tr -d ' ')" = "$(printf '%s\n' $2 | sort | tr -d ' ')" ]; }
@@ -318,27 +362,65 @@ assert "shed list cleared after a clean un-shed" test ! -e "$SHED_LIST"
 assert "fired marker cleared after a clean un-shed" test ! -e "$FIRED"
 echo "   unshed pause between starts (secs): $(unshed_delay_used A | tr '\n' ' ')"
 
-# ── B: one container refuses to start — latch, do not retry ───────────────
-# Two full crit->clear cycles. The second cycle is what makes the latch
-# assertion non-vacuous: the shedder gets a second recovery edge and must
-# still not touch docker start.
-echo "-- scenario B: failed restart latches off instead of retrying"
+# ── B: one container refuses to start — one shot PER EPISODE ──────────────
+# Two full crit->clear cycles. The latch used to be per process lifetime, so
+# the second episode refused to un-shed at all: git-proxy-api stayed down on
+# oci-analytics after 2026-09-29 21:36 because an earlier episode had spent it.
+# Each episode now gets exactly one attempt — every shed name started once per
+# episode, never retried inside one.
+echo "-- scenario B: a failed un-shed does not disarm the next episode"
 run_scenario B "55 55 55 0 55 55 55 0 0" "agent-runner-1"
 
 assert "the second crit cycle really did shed again" count_calls B 2 "stop "
-assert "each container was attempted exactly once across BOTH cycles" \
-  count_lines "$WORK/B/starts" "$(printf '%s\n' $SHEDDABLE | wc -l)"
-assert "the first cycle attempted every shed name" \
-  same_set "$WORK/B/starts" "$SHEDDABLE"
+assert "every shed name was started exactly once in EACH episode" \
+  same_set "$WORK/B/starts" "$SHEDDABLE $SHEDDABLE"
 assert "failure was reported, not swallowed" log_has B "UNSHED FAILED: still down: agent-runner-1"
-assert "failure paged" ntfy_has B "UNSHED FAILED — containers still down"
-assert "second recovery edge refused to retry" log_has B "already attempted and failed — not retrying"
-assert "shed list kept for the human after a failed un-shed" test -e "$SHED_LIST"
+assert "failure paged in both episodes" log_count B "UNSHED FAILED" 2
+assert "the second episode was not refused by the first one's latch" \
+  log_lacks B "already attempted and failed — not retrying"
+assert "shed list kept for the human after a failed un-shed" $RUN_AS test -e "$SHED_LIST"
 
-rm -f "$SHED_LIST" "$FIRED"
+# ── C: `docker stats` under thrash names every container "--" ─────────────
+# Measured on oci-analytics 2026-09-30 06:20: seven "--" rows were shed and
+# persisted, and the un-shed then spent its shot on names that never existed.
+echo "-- scenario C: '--' rows from docker stats are not container names"
+STATS_ROWS="-- -- / --
+-- -- / --
+-- -- / --" run_scenario C "55 55 55 0 0" ""
+
+assert "shed list holds the real non-tier1 containers, no '--'" \
+  same_set "$WORK/C/shed-list-snapshot" "$SHEDDABLE"
+assert "un-shed succeeded" log_has C "UNSHED: all shed containers restarted"
+
+# ── D: the recovery the shedder starts must not be shed by its own spike ──
+# Measured 2026-09-30 08:13: the single-shot start exited 1, systemd's
+# Restart=always brought docker up 20s later, the shedder had already sampled
+# once and latched RECOVERY FAILED — then dockerd's startup pushed memPSI to 89
+# and a second SHED-PAGE stopped the daemon for good.
+echo "-- scenario D: failed-then-restarted docker start, then startup pressure"
+START_FAILS=1 SYSTEMD_RESTARTS=1 run_scenario D "70 70 70 0 90 90 90 90 0 0" ""
+
+assert "recovery waited for systemd's retry instead of latching" \
+  log_has D "RECOVERY: docker.service started"
+assert "no false RECOVERY FAILED" log_lacks D "RECOVERY FAILED"
+assert "startup pressure was held in grace" log_has D "GRACE:"
+assert "exactly one full shed — the recovery was not shed again" log_count D "SHED-PAGE:" 1
+
+# ── E: a spent recovery latch re-arms once docker is seen up again ─────────
+# The first start fails for real (no systemd retry). Docker is then brought up
+# from outside; the next full-shed episode must get its own recovery attempt.
+echo "-- scenario E: recovery latch is per episode"
+START_FAILS=1 run_scenario E "70 70 70 0 U0 70 70 70 0 0" ""
+
+assert "first episode's failed start was reported" log_has E "RECOVERY FAILED"
+assert "latch re-armed when docker came back" log_has E "RE-ARMED"
+assert "second episode's recovery restarted docker" log_has E "RECOVERY: docker.service started"
+assert "second episode was not refused" log_lacks E "restart already attempted and failed"
+
+$RUN_AS rm -f "$SHED_LIST" "$FIRED"
 
 if [ "$FAILED" -ne 0 ]; then
   echo "FAIL: $FAILED runtime assertion(s) failed — the shed has no working inverse"
   exit 1
 fi
-echo "PASS: crit shed is reversible, paced, and latches off on a failed restart"
+echo "PASS: shed is reversible, paced, one shot per episode, and does not shed its own recovery"
