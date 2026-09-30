@@ -66,8 +66,12 @@ jobs:
   detect:
     name: Detect changes
     runs-on: ubuntu-latest
-    # Skip when triggered by gen-configs failure
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    # No job-level `if:` on the upstream conclusion. It used to skip detect
+    # whenever gen-configs did not succeed, and a skipped detect is exactly
+    # what the deploy gate (#401) must refuse — so every gen-configs run that
+    # was merely SUPERSEDED (concurrency group gen-configs, cancel-in-progress)
+    # turned its Ship red with no verdict (run 36703675956). The upstream
+    # conclusion is now judged inside the path-relevance gate below.
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       has_vms: ${{ steps.matrix.outputs.has_vms }}
@@ -76,7 +80,7 @@ jobs:
       #   nothing-to-ship  -> detect positively proved nothing deployable changed; skip is correct
       #   empty            -> a containers-push diffed to zero deployable changes; NOT a proven no-op
       #   (absent)         -> the path-relevance gate skipped the matrix step; a declared no-op
-      verdict: ${{ steps.matrix.outputs.verdict }}
+      verdict: ${{ steps.matrix.outputs.verdict || steps.paths.outputs.verdict }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -130,6 +134,30 @@ jobs:
           # shape. Only the regenerated dist files can appear here. Container
           # changes reach this workflow on repository_dispatch, which this
           # gate does not run for at all.
+          #
+          # Upstream conclusion first. `cancelled` on gen-configs means a newer
+          # gen-configs run superseded it; that run regenerates dist/ from a
+          # tree containing this one's trigger and fires its own Ship. It is
+          # nothing-to-ship for THIS run only if the cancelled run landed
+          # nothing on main — its commits say "via run <id>", so check.
+          # Any other non-success means dist/ was not regenerated: fail.
+          UP_ID="${{ github.event.workflow_run.id }}"
+          UP_CONCLUSION="${{ github.event.workflow_run.conclusion }}"
+          case "$UP_CONCLUSION" in
+            success) ;;
+            cancelled)
+              if git log origin/main --format='%h %s' --grep="via run ${UP_ID} " | grep .; then
+                echo "::error::gen-configs run $UP_ID was cancelled AFTER landing the commit above on main — its dist/ changes have no Ship verdict. Re-run gen-configs."
+                exit 1
+              fi
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "verdict=nothing-to-ship" >> "$GITHUB_OUTPUT"
+              echo "::notice::gen-configs run $UP_ID was superseded and landed nothing on main — nothing to ship; the superseding run's Ship carries the verdict"
+              exit 0 ;;
+            *)
+              echo "::error::gen-configs run $UP_ID ended '$UP_CONCLUSION' — dist/ was not regenerated, so there is nothing trustworthy to detect from. Fix gen-configs."
+              exit 1 ;;
+          esac
           CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null \
               | grep -E '^1_cloud-configs/dist/build-' | head -1 || true)
           if [ -z "$CHANGED" ]; then

@@ -69,8 +69,12 @@ for f in "$WF_DIR"/ship*.yml; do
     # Test 4: job-level if-gate on workflow_run conclusion
     # Pattern allows either format:
     #   if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    # ship.yml judges the conclusion inside detect instead (a skipped detect
+    # fails its deploy gate, so a superseded gen-configs must yield a verdict).
     if grep -qE "github\.event_name *!= *'workflow_run'.*conclusion *== *'success'" "$f"; then
         report pass "$base" "has if-gate on workflow_run.conclusion == 'success'"
+    elif grep -qF 'UP_CONCLUSION="${{ github.event.workflow_run.conclusion }}"' "$f"; then
+        report pass "$base" "judges workflow_run.conclusion inside detect"
     else
         report fail "$base" "MISSING if-gate — failed gen-configs runs won't be filtered out"
     fi
