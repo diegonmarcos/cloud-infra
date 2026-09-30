@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20009,
+    "files": 20013,
     "by_lang": {
-      "py": 54,
-      "sh": 306,
-      "kotlin": 10030,
+      "py": 55,
+      "sh": 308,
+      "kotlin": 10031,
       "java": 609,
       "ts": 8413,
       "nix": 63,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "script": 142,
-      "shell": 219,
+      "shell": 221,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 22,
-      "kotlin": 10028,
-      "python": 29,
+      "kotlin": 10029,
+      "python": 30,
       "nix-module": 40,
       "file": 2257,
       "rust-module": 82,
@@ -2455,6 +2455,12 @@
         "drop_the_throw()",
         "reinstate_single_constant_bake()",
         "add_chunked_bake()",
+        "reinstate_single_constant_tree_bake()",
+        "add_chunked_tree_bake()",
+        "widen_the_chunk_step()",
+        "_write_agenda_tree_bake()",
+        "add_placeholder_tree_bake()",
+        "scan_for_real_in_a_placeholder_app()",
         "delete_canonical()",
         "empty_the_fleet()",
         "corrupt_the_fleet()",
@@ -2469,12 +2475,7 @@
         "revert_to_artifact_kind()",
         "demote_library_to_catalogue()",
         "reinstate_runtime_download()",
-        "strip_the_trust_check()",
-        "orphan_the_companion()",
-        "ungate_the_companion()",
-        "offbrand_the_package()",
-        "break_per_abi_assets()",
-        "strand_the_library_group()"
+        "strip_the_trust_check()"
       ],
       "imports": [],
       "symbols": [
@@ -2487,6 +2488,12 @@
         "drop_the_throw()",
         "reinstate_single_constant_bake()",
         "add_chunked_bake()",
+        "reinstate_single_constant_tree_bake()",
+        "add_chunked_tree_bake()",
+        "widen_the_chunk_step()",
+        "_write_agenda_tree_bake()",
+        "add_placeholder_tree_bake()",
+        "scan_for_real_in_a_placeholder_app()",
         "delete_canonical()",
         "empty_the_fleet()",
         "corrupt_the_fleet()",
@@ -6754,6 +6761,7 @@
         "onViewCreated(view: View, savedInstanceState: Bundle?)",
         "bindTile( tileView: View, tileId: String, label: String, @DrawableRes iconRes: Int, palette: List<Pair<Int, Int>>, )",
         "groupHeader(text: String)",
+        "subgroupHeader(text: String)",
         "tilePalette(ctx: android.content.Context)",
         "color(id: Int)",
         "newInstance(title: String, tiles: List<Tile>)",
@@ -10588,6 +10596,22 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-configs-two-sections.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-constellation-appstore.sh",
       "lang": "sh",
       "role": "shell",
@@ -13971,6 +13995,47 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FeedViewer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FeedViewer"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.graphics.Typeface",
+        "android.net.Uri",
+        "android.text.TextUtils",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "kotlin.concurrent.thread",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.json.JSONTokener"
+      ],
+      "symbols": [
+        "feeds(ctx: Context)",
+        "parse(decl: JSONObject)",
+        "words(a: JSONArray?)",
+        "labels(feeds: List<Feed>)",
+        "load(feed: Feed)",
+        "fill(template: String, item: JSONObject)",
+        "path(item: JSONObject, dotted: String)",
+        "render(ctx: Context, into: LinearLayout, feed: Feed, open: (String)",
+        "row(ctx: Context, feed: Feed, e: Entry, open: (String)",
+        "opener(ctx: Context)",
+        "caption(ctx: Context, t: String)",
+        "dp(ctx: Context, v: Int)",
+        "class FeedViewer",
+        "class Feed",
+        "class Entry",
+        "class needs"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetInstall.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14069,6 +14134,7 @@
         "fill(t: String)",
         "identity(ctx: Context, pkg: String, apk: VerifiedApk)",
         "sidecar(url: String)",
+        "getBody(url: String)",
         "getJson(url: String)",
         "class SourceResolver",
         "class Kind",
@@ -14168,6 +14234,7 @@
       "symbols": [
         "fleetObjects(key: String)",
         "applicationOf(id: String)",
+        "shelfOf(app: Fleet.App)",
         "headingOf(app: Fleet.App)",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
         "onDestroyView()",
@@ -14175,6 +14242,7 @@
         "tabBar(ctx: Context)",
         "paintTabs()",
         "renderTab(ctx: Context)",
+        "renderFeed(ctx: Context, feed: FeedViewer.Feed)",
         "renderFleet(ctx: Context, list: List<Fleet.App>, blurb: String)",
         "filterBar(ctx: Context, list: List<Fleet.App>)",
         "paintFilter()",
@@ -14203,9 +14271,7 @@
         "sameSignature(ctx: Context, pkg: String)",
         "openApp(ctx: Context, pkg: String)",
         "dp(ctx: Context, v: Int)",
-        "caption(ctx: Context, t: String)",
-        "applicationHeading(ctx: Context, heading: String)",
-        "mono(ctx: Context, t: String)"
+        "caption(ctx: Context, t: String)"
       ]
     },
     {
@@ -18973,36 +19039,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhDeviceLogin.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GhDeviceLogin"
-      ],
-      "imports": [
-        "org.json.JSONObject",
-        "java.io.IOException",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "toString()",
-        "login( clientIds: List<String> = GhRunner.CLIENT_IDS, scope: String = SCOPE, http: Http = Http.Real, sleep: (Long)",
-        "post(url: String, body: String)",
-        "enc(s: String)",
-        "class uses",
-        "class GhDeviceLogin",
-        "class Phase",
-        "class Starting",
-        "class Prompt",
-        "class Pending",
-        "class Granted",
-        "class Failed",
-        "class Http",
-        "class Real"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhRunner.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -19038,6 +19074,7 @@
         "class GitAuthChain",
         "class Answer",
         "class Credential",
+        "class Served",
         "class Unreachable",
         "class Declined",
         "class NoImplementation",
@@ -42711,6 +42748,43 @@
         "_assemble()",
         "_verify_asset_abi_neutral()",
         "_ghcr_gate_public()"
+      ]
+    },
+    {
+      "path": "ab_cloud-terminal-store/login-init.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [],
+      "imports": [
+        "$CLOUD_STORE_INSTALL_DIR/declaration.sh"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ab_cloud-terminal-store/render-store.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "load()",
+        "check_login_init(decl)",
+        "tools_of(terminal)",
+        "render(terminal)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "_dig(blob, dotted)",
+        "_value(spec, app_dir)",
+        "_quote(value)",
+        "load()",
+        "check_login_init(decl)",
+        "tools_of(terminal)",
+        "render(terminal)",
+        "main(argv)"
       ]
     },
     {
@@ -118233,7 +118307,6 @@
         "android.content.Context",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
-        "com.diegonmarcos.cloudlib.gh.GhDeviceLogin",
         "com.diegonmarcos.cloudlib.gitsync.GitAuthChain",
         "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
         "org.json.JSONObject",
@@ -118242,12 +118315,13 @@
       ],
       "symbols": [
         "credentialId()",
-        "rungs( declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, bearer: String = \"\", onPhase: (GhDeviceLogin.Phase)",
+        "rungs( ctx: Context, declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, bearer: String = \"\", )",
         "fleet(config: JSONObject, bearer: String)",
-        "github(config: JSONObject, onPhase: (GhDeviceLogin.Phase)",
-        "resolve( ctx: Context, bearer: String = \"\", onPhase: (GhDeviceLogin.Phase)",
+        "onDevice(ctx: Context)",
+        "resolve( ctx: Context, bearer: String = \"\", )",
         "declaredOrder(declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain)",
-        "class DriveGitChain"
+        "class DriveGitChain",
+        "class was"
       ]
     },
     {
@@ -119424,6 +119498,34 @@
         "lastReport(context: Context)",
         "schedule(context: Context)",
         "class StoreSeedWorker"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/FleetGit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetGit"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.clouddrive.configs.DriveGitChain",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "rung()",
+        "reposUrl()",
+        "healthUrl()",
+        "bearerProvider()",
+        "repos(bearer: String)",
+        "class FleetGit",
+        "class Outcome",
+        "class Listed",
+        "class Refused",
+        "class Blocked",
+        "class Unreachable"
       ]
     },
     {
@@ -294495,9 +294597,12 @@
       "lang": "py",
       "role": "python",
       "exports": [
+        "load_render_store()",
+        "profile_missing(generation: str, tools)",
+        "store_init_line(install_dir: str)",
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
-        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str)",
+        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -294506,6 +294611,7 @@
       ],
       "imports": [
         "pathlib",
+        "importlib.util",
         "os",
         "re",
         "stat",
@@ -294515,9 +294621,12 @@
         "zipfile"
       ],
       "symbols": [
+        "load_render_store()",
+        "profile_missing(generation: str, tools)",
+        "store_init_line(install_dir: str)",
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
-        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str)",
+        "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -302746,16 +302855,23 @@
         "ok()",
         "bad()",
         "q()",
-        "sha_gated()"
+        "sha_gated()",
+        "fake_build_json()",
+        "decl_value()",
+        "store()"
       ],
       "imports": [
-        "/nix/store/5pmf0nlk348101av1wzcp18v089cably-nix-on-droid-session-init.sh"
+        "/nix/store/5pmf0nlk348101av1wzcp18v089cably-nix-on-droid-session-init.sh",
+        "/data/data/cld.termux.nix/files/home/.nix-profile/etc/profile.d/nix-on-droid-session-init.sh"
       ],
       "symbols": [
         "ok()",
         "bad()",
         "q()",
-        "sha_gated()"
+        "sha_gated()",
+        "fake_build_json()",
+        "decl_value()",
+        "store()"
       ]
     },
     {
@@ -415116,7 +415232,9 @@
         "resolved()",
         "from_abi()"
       ],
-      "imports": [],
+      "imports": [
+        "enter.sh"
+      ],
       "symbols": [
         "resolved()",
         "from_abi()"
