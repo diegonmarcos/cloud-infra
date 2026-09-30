@@ -6,30 +6,30 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20057,
+    "files": 20071,
     "by_lang": {
-      "py": 57,
-      "sh": 317,
-      "kotlin": 10063,
+      "py": 56,
+      "sh": 321,
+      "kotlin": 10071,
       "java": 609,
       "ts": 8413,
       "nix": 64,
       "js": 452,
-      "rust": 82
+      "rust": 85
     },
     "by_role": {
       "script": 144,
-      "shell": 230,
+      "shell": 234,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10061,
-      "python": 30,
+      "kotlin": 10069,
+      "python": 29,
       "nix-module": 40,
       "file": 2257,
-      "rust-module": 82,
+      "rust-module": 85,
       "hook": 150,
       "mcp-tool": 53
     }
@@ -483,7 +483,8 @@
         "strip_comments(lines)",
         "branch_body(code_lines, start)",
         "dispatch_regions(code_lines, subjects)",
-        "check_route(root, spec, exclude_prefixes, subjects)",
+        "group_scoped_problems(root, entries)",
+        "check_route(root, spec, exclude_prefixes, subjects, group_scoped=frozenset()",
         "main()"
       ],
       "imports": [
@@ -497,7 +498,8 @@
         "strip_comments(lines)",
         "branch_body(code_lines, start)",
         "dispatch_regions(code_lines, subjects)",
-        "check_route(root, spec, exclude_prefixes, subjects)",
+        "group_scoped_problems(root, entries)",
+        "check_route(root, spec, exclude_prefixes, subjects, group_scoped=frozenset()",
         "main()"
       ]
     },
@@ -1682,7 +1684,8 @@
         "strip_comments(lines)",
         "branch_body(code_lines, start)",
         "dispatch_regions(code_lines, subjects)",
-        "check_route(root, spec, exclude_prefixes, subjects)",
+        "group_scoped_problems(root, entries)",
+        "check_route(root, spec, exclude_prefixes, subjects, group_scoped=frozenset()",
         "main()"
       ],
       "imports": [
@@ -1696,7 +1699,8 @@
         "strip_comments(lines)",
         "branch_body(code_lines, start)",
         "dispatch_regions(code_lines, subjects)",
-        "check_route(root, spec, exclude_prefixes, subjects)",
+        "group_scoped_problems(root, entries)",
+        "check_route(root, spec, exclude_prefixes, subjects, group_scoped=frozenset()",
         "main()"
       ]
     },
@@ -2628,6 +2632,7 @@
         "ok()",
         "fail()",
         "skip()",
+        "copy_declared()",
         "run_guard()",
         "rule_count()",
         "emit_body()",
@@ -2639,6 +2644,7 @@
         "ok()",
         "fail()",
         "skip()",
+        "copy_declared()",
         "run_guard()",
         "rule_count()",
         "emit_body()",
@@ -2906,17 +2912,25 @@
       "exports": [
         "ok()",
         "fail()",
+        "copy_declared()",
         "sandbox()",
         "run_guard()",
-        "replace_body()"
+        "replace_body()",
+        "gbox()",
+        "gmut()",
+        "gman()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "fail()",
+        "copy_declared()",
         "sandbox()",
         "run_guard()",
-        "replace_body()"
+        "replace_body()",
+        "gbox()",
+        "gmut()",
+        "gman()"
       ]
     },
     {
@@ -10544,6 +10558,38 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-c3-family-apps.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "check()",
+        "mutate()",
+        "m_gut_row()",
+        "m_kind_lib()",
+        "m_page_target()",
+        "m_drop_tile()",
+        "m_add_label()",
+        "m_wrong_url()",
+        "m_family_of_one()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "check()",
+        "mutate()",
+        "m_gut_row()",
+        "m_kind_lib()",
+        "m_page_target()",
+        "m_drop_tile()",
+        "m_add_label()",
+        "m_wrong_url()",
+        "m_family_of_one()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-c3-is-an-app.sh",
       "lang": "sh",
       "role": "shell",
@@ -12056,8 +12102,10 @@
         "runtimeInputs",
         "runtimeEnv",
         "text",
-        "source",
         "executable",
+        "LIMITS",
+        "n",
+        "source",
         "REPO_SOT",
         "DEST_CLAUDE",
         "DEST_RGIGNORE",
@@ -14534,6 +14582,48 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/AuthMission.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthMission"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "extra(key: String)",
+        "result(key: String)",
+        "parse(o: JSONObject?)",
+        "map(key: String)",
+        "decide(contract: Contract?, installed: Boolean, granted: Boolean, resolves: Boolean)",
+        "intent(contract: Contract, req: Request)",
+        "installed(ctx: Context, pkg: String)",
+        "plan(ctx: Context, contract: Contract?, req: Request)",
+        "toString()",
+        "read(contract: Contract, resultCode: Int, data: Intent?)",
+        "class AuthMission",
+        "class Contract",
+        "class Request",
+        "class Outcome",
+        "class Sent",
+        "class NotDeclared",
+        "class NotInstalled",
+        "class NotGranted",
+        "class NoActivity",
+        "class Refused",
+        "class Capture",
+        "class Cookie",
+        "class Redirect",
+        "class Cancelled",
+        "class Malformed"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/ConfigArtifact.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14574,6 +14664,80 @@
         "class Failed",
         "class Expired",
         "class Approval"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/OAuthWeb.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OAuthWeb"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "org.json.JSONObject",
+        "java.net.URI",
+        "java.net.URLDecoder",
+        "java.net.URLEncoder",
+        "java.security.SecureRandom"
+      ],
+      "symbols": [
+        "authorizeUrl(state: String)",
+        "toString()",
+        "parse(o: JSONObject?)",
+        "newState()",
+        "landing(client: Client, url: String, expectedState: String)",
+        "isLanding(redirectUri: String, url: String)",
+        "allowed(allowHosts: List<String>, redirectUri: String, url: String)",
+        "exchange(client: Client, code: String)",
+        "identity(client: Client, token: String)",
+        "enc(s: String)",
+        "query(url: String)",
+        "class OAuthWeb",
+        "class Client",
+        "class Landing",
+        "class Code",
+        "class Denied",
+        "class StateMismatch",
+        "class NotALanding"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/OAuthWebDialog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OAuthWebTags",
+        "OAuthWebDialog"
+      ],
+      "imports": [
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.viewinterop.AndroidView"
+      ],
+      "symbols": [
+        "OAuthWebDialog( title: String, url: String, redirectPrefix: String, allowHosts: List<String>, onLanded: (String)",
+        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
+        "class OAuthWebTags"
       ]
     },
     {
@@ -14834,6 +14998,31 @@
         "withNothingDeclaredTheWordingIsTheBareError()",
         "theParserReadsTheDeclaredTable()",
         "class GrantRemedyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/OAuthWebTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OAuthWebTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "declaredAuth()",
+        "class OAuthWebTest"
       ]
     },
     {
@@ -43599,6 +43788,42 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/AuthMissionActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthMissionActivity"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.os.Bundle",
+        "android.util.Base64",
+        "android.view.ViewGroup",
+        "android.webkit.CookieManager",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "android.widget.Button",
+        "android.widget.LinearLayout",
+        "androidx.appcompat.app.AppCompatActivity",
+        "org.json.JSONObject",
+        "java.net.URI"
+      ],
+      "symbols": [
+        "extras()",
+        "results()",
+        "onCreate(savedInstanceState: Bundle?)",
+        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
+        "onBackPressed()",
+        "allowed(allow: List<String>, redirectPrefix: String, url: String)",
+        "returnCookie(cookie: String)",
+        "returnRedirect(url: String)",
+        "cancel()",
+        "refuse(why: String)",
+        "class AuthMissionActivity"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/MainActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -43761,6 +43986,389 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/test/test-browser-auth-mission.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "m1()",
+        "m2()",
+        "m3()",
+        "m4()",
+        "m5()",
+        "_red()",
+        "_green()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "m1()",
+        "m2()",
+        "m3()",
+        "m4()",
+        "m5()",
+        "_red()",
+        "_green()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.app.Activity",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.os.Bundle",
+        "android.webkit.WebResourceError",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/ServerProcess.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ServerProcess"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.io.File"
+      ],
+      "symbols": [
+        "start(log: File)",
+        "class knows",
+        "class ServerProcess"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebServerService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.IBinder",
+        "java.io.File"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "class WebServerService"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_server()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_ssh_key()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_server()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "ANDROID_HOME",
+        "ANDROID_SDK_ROOT",
+        "JAVA_HOME",
+        "GRADLE_OPTS",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/about.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "fmt_bytes",
+        "sections"
+      ],
+      "imports": [
+        "crate::Ctx",
+        "std::fs",
+        "std::process::Command",
+        "super::"
+      ],
+      "symbols": [
+        "row(rows: &mut Rows, k: &str, v: impl Into<String>)",
+        "read(path: &str)",
+        "dash(v: Option<String>)",
+        "fmt_bytes(n: u64)",
+        "fmt_secs(s: u64)",
+        "getprops()",
+        "meminfo_kb(text: &str, key: &str)",
+        "disk(path: &str)",
+        "disk_rows(rows: &mut Rows, label: &str, path: &str)",
+        "sections(ctx: &Ctx)",
+        "utc_string(secs: u64)",
+        "bytes_and_dates()",
+        "every_section_has_rows()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/main.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "q",
+        "bytes",
+        "json",
+        "html",
+        "text",
+        "handle",
+        "Ctx",
+        "Req",
+        "Resp"
+      ],
+      "imports": [
+        "std::io::",
+        "std::net::",
+        "std::path::PathBuf",
+        "std::time::",
+        "super::"
+      ],
+      "symbols": [
+        "q(&self, key: &str)",
+        "bytes(status: u16, ctype: &'static str, body: Vec<u8>)",
+        "json(status: u16, body: String)",
+        "html(body: String)",
+        "text(status: u16, body: &str)",
+        "reason(status: u16)",
+        "pct_decode(s: &str, form: bool)",
+        "parse_request(head: &str)",
+        "handle(ctx: &Ctx, req: &Req)",
+        "serve(ctx: &Ctx, mut stream: TcpStream)",
+        "usage()",
+        "main()",
+        "temp_root()",
+        "start(root: PathBuf)",
+        "get(port: u16, target: &str)",
+        "get_method(port: u16, method: &str, target: &str)",
+        "end_to_end_every_declared_route_answers()",
+        "a_route_added_to_the_table_shows_in_the_json_and_a_removed_one_does_not()",
+        "request_parsing()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/routes.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "find",
+        "check_table",
+        "jstr",
+        "routes_json",
+        "routes_json_of",
+        "resolve_in_root",
+        "esc_html",
+        "mime_for",
+        "pct_encode",
+        "Kind",
+        "Route"
+      ],
+      "imports": [
+        "crate::",
+        "std::collections::HashSet",
+        "std::fs",
+        "std::os::unix::fs::MetadataExt",
+        "std::path::",
+        "std::time::",
+        "a",
+        "they",
+        "super::"
+      ],
+      "symbols": [
+        "find(path: &str)",
+        "check_table()",
+        "jstr(s: &str)",
+        "jerr(status: u16, msg: &str)",
+        "routes_json()",
+        "page_shell(_ctx: &Ctx, _req: &Req)",
+        "api_routes(_ctx: &Ctx, _req: &Req)",
+        "api_health(ctx: &Ctx, _req: &Req)",
+        "api_config(ctx: &Ctx, _req: &Req)",
+        "api_about(ctx: &Ctx, _req: &Req)",
+        "resolve_in_root(root: &Path, url_path: &str)",
+        "api_ls(ctx: &Ctx, req: &Req)",
+        "api_read(ctx: &Ctx, req: &Req)",
+        "api_search(ctx: &Ctx, req: &Req)",
+        "esc_html(s: &str)",
+        "mime_for(path: &Path)",
+        "page_files(ctx: &Ctx, req: &Req)",
+        "pct_encode(seg: &str)",
+        "table_is_well_formed()",
+        "every_declared_path_dispatches_to_itself()",
+        "routes_json_lists_exactly_the_table()",
+        "the_five_tabs_in_order_with_home_centre()",
+        "resolve_refuses_escape()",
+        "json_strings_escape()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "mutate()",
+        "m_route_outside()",
+        "m_nav_hardcoded()",
+        "m_placeholder()",
+        "m_no_legacy_packaging()",
+        "m_old_asset()",
+        "m_drop_home_tab()",
+        "m_view_orphan()",
+        "m_render_drops_route()",
+        "m_kotlin_port()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "mutate()",
+        "m_route_outside()",
+        "m_nav_hardcoded()",
+        "m_placeholder()",
+        "m_no_legacy_packaging()",
+        "m_old_asset()",
+        "m_drop_home_tab()",
+        "m_view_orphan()",
+        "m_render_drops_route()",
+        "m_kotlin_port()"
       ]
     },
     {
@@ -119506,6 +120114,7 @@
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.sync.FleetGit",
         "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.cloudlib.auth.OAuthWeb",
         "com.diegonmarcos.cloudlib.gitsync.GitAuthChain",
         "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
         "org.json.JSONObject",
@@ -119514,6 +120123,9 @@
       ],
       "symbols": [
         "credentialId()",
+        "rung(id: String)",
+        "webClient()",
+        "file(ctx: Context, token: String)",
         "rungs( ctx: Context, declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, session: String = \"\", )",
         "fleet(config: JSONObject, session: String)",
         "onDevice(ctx: Context)",
@@ -119654,6 +120266,73 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/debugapi/DriveDebugApi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveDebugApi"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.BuildConfig",
+        "com.diegonmarcos.clouddrive.DriveDebugLog",
+        "com.diegonmarcos.clouddrive.GitSyncWorker",
+        "com.diegonmarcos.clouddrive.SharedStore",
+        "com.diegonmarcos.clouddrive.configs.DriveAuthApply",
+        "com.diegonmarcos.clouddrive.configs.DriveGitChain",
+        "com.diegonmarcos.clouddrive.sync.FleetGit",
+        "com.diegonmarcos.clouddrive.sync.FleetSession",
+        "com.diegonmarcos.clouddrive.sync.GitSyncCoordinator",
+        "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "java.io.File",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.SupervisorJob"
+      ],
+      "symbols": [
+        "coordinator(ctx: Context)",
+        "register(ctx: Context)",
+        "healthJson(ctx: Context)",
+        "gitRoute(ctx: Context, op: String, query: Map<String, String>)",
+        "stateJson(ctx: Context)",
+        "chainJson(ctx: Context)",
+        "listJson(rungId: String)",
+        "cloneJson(ctx: Context, query: Map<String, String>)",
+        "outcome()",
+        "sessionJson(query: Map<String, String>)",
+        "logTailJson(ctx: Context, query: Map<String, String>)",
+        "errJson(why: String)",
+        "jsonStr(s: String?)",
+        "esc(s: String)",
+        "class DriveDebugApi",
+        "class over"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/debugapi/DriveDebugApiProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveDebugApiProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.database.Cursor",
+        "android.net.Uri"
+      ],
+      "symbols": [
+        "onCreate()",
+        "query( uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?, )",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update( uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?, )",
+        "class DriveDebugApiProvider"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/Declarations.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -119769,6 +120448,7 @@
         "write(ctx: Context, level: String, tag: String, msg: String, t: Throwable?)",
         "appendViaMediaStore(ctx: Context, payload: String)",
         "findRow(ctx: Context, name: String)",
+        "tail(ctx: Context, lines: Int)",
         "appendLegacy(payload: String)",
         "class composed",
         "class DriveDebugLog"
@@ -120763,15 +121443,23 @@
         "sessionProvider()",
         "sessionHeader()",
         "cloneUrl(rungId: String, owner: String, name: String, listed: String)",
+        "clonesOnSession(rungId: String)",
         "cloneUrlFrom(template: String, order: List<String>, owner: String, name: String, listed: String)",
         "explainCloneFailure(why: String)",
+        "pageLimit(base: String)",
+        "pagedUrl(base: String, page: Int)",
+        "isLastPage(count: Int, limit: Int)",
         "repos(session: String, rungId: String = \"\")",
+        "onePage(url: String, session: String, config: JSONObject?, field: String)",
         "class FleetGit",
         "class Outcome",
         "class Listed",
         "class Refused",
         "class Blocked",
-        "class Unreachable"
+        "class Unreachable",
+        "class Page",
+        "class Ok",
+        "class Stop"
       ]
     },
     {
@@ -120898,7 +121586,14 @@
         "fetchFleetListing(rungId: String)",
         "fetchListing(token: String)",
         "startChain()",
-        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, fleetHost: SignInHost, onSshKeyPath: (String)",
+        "hostOf(url: String)",
+        "cloudPortalUrl()",
+        "cloudAllowHosts(rungId: String)",
+        "missionWord(outcome: AuthMission.Outcome)",
+        "completeGithub(landingUrl: String)",
+        "completeCloud(cookie: String, rungId: String)",
+        "startWay(way: Declarations.GitWayDecl)",
+        "GitWayCard( way: Declarations.GitWayDecl, isCloud: Boolean, page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, signingIn: Boolean, clientConfigured: Boolean, rungDeclared: Boolean, cloudFallback: Boolean, fleetHost: SignInHost, onSignIn: ()",
         "GitRepoRow( name: String, repoName: String, isPrivate: Boolean, fork: Boolean, repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?, running: GitSyncCoordinator.Running?, cloning: Boolean, expanded: Boolean, onToggle: ()",
         "rowStats(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
         "lightOf(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
@@ -121888,6 +122583,23 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/FleetGitPagingTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetGitPagingTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class FleetGitPagingTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/FleetGitTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -122224,6 +122936,42 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-debug-api.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "_stage()",
+        "_sub()",
+        "_green()",
+        "_red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "_stage()",
+        "_sub()",
+        "_green()",
+        "_red()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-debug-log.sh",
       "lang": "sh",
       "role": "shell",
@@ -122237,6 +122985,7 @@
         "t4()",
         "t5()",
         "t6()",
+        "t7()",
         "_stage()",
         "_sub()",
         "_json()",
@@ -122254,6 +123003,7 @@
         "t4()",
         "t5()",
         "t6()",
+        "t7()",
         "_stage()",
         "_sub()",
         "_json()",
@@ -122442,6 +123192,38 @@
         "p3()",
         "p4()",
         "t642()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-git-parallel-ways.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "w1()",
+        "w2()",
+        "w3()",
+        "w4()",
+        "w5()",
+        "w6()",
+        "_red()",
+        "_green()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "w1()",
+        "w2()",
+        "w3()",
+        "w4()",
+        "w5()",
+        "w6()",
+        "_red()",
+        "_green()"
       ]
     },
     {
@@ -296024,6 +296806,7 @@
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
+        "probe_usershell_exec(login_inner: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -296048,6 +296831,7 @@
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
+        "probe_usershell_exec(login_inner: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -493789,223 +494573,6 @@
         "ok()",
         "bad()",
         "check()"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/app/resolve_runtime.py",
-      "lang": "py",
-      "role": "python",
-      "exports": [
-        "elf_needs(path)",
-        "rootfs_index(zf)",
-        "resolve(zip_path, binary, launcher)"
-      ],
-      "imports": [
-        "json",
-        "os",
-        "struct",
-        "sys",
-        "zipfile"
-      ],
-      "symbols": [
-        "elf_needs(path)",
-        "rootfs_index(zf)",
-        "resolve(zip_path, binary, launcher)"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/MainActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "MainActivity"
-      ],
-      "imports": [
-        "android.Manifest",
-        "android.app.Activity",
-        "android.content.Intent",
-        "android.content.pm.PackageManager",
-        "android.os.Bundle",
-        "android.webkit.WebResourceError",
-        "android.webkit.WebResourceRequest",
-        "android.webkit.WebView",
-        "android.webkit.WebViewClient"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError)",
-        "class MainActivity"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerRuntime.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "WebServerRuntime"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.system.Os",
-        "org.json.JSONObject",
-        "java.io.File",
-        "java.util.zip.ZipInputStream"
-      ],
-      "symbols": [
-        "install()",
-        "start(log: File)",
-        "class knows",
-        "class WebServerRuntime"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerService.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "WebServerService"
-      ],
-      "imports": [
-        "android.app.Notification",
-        "android.app.NotificationChannel",
-        "android.app.NotificationManager",
-        "android.app.Service",
-        "android.content.Intent",
-        "android.os.IBinder",
-        "java.io.File"
-      ],
-      "symbols": [
-        "onBind(intent: Intent?)",
-        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
-        "onDestroy()",
-        "class WebServerService"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "_ghcr_publish()",
-        "_ghcr_source()",
-        "log()",
-        "errlog()",
-        "in_nix()",
-        "in_nix_emulator()",
-        "prefer_host()",
-        "_resolve_ssh_key()",
-        "_resolve_signing()",
-        "_enforce_signature()",
-        "step_build()",
-        "step_release()",
-        "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_waydroid_install()",
-        "step_emulator()",
-        "_release_var()",
-        "_variant_field()",
-        "_variant_artifact()",
-        "_variant_gh_asset()",
-        "_variant_tag_suffix()",
-        "_export_variant_abis()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()"
-      ],
-      "imports": [],
-      "symbols": [
-        "_ghcr_publish()",
-        "_ghcr_source()",
-        "log()",
-        "errlog()",
-        "in_nix()",
-        "in_nix_emulator()",
-        "prefer_host()",
-        "_resolve_ssh_key()",
-        "_resolve_signing()",
-        "_enforce_signature()",
-        "step_build()",
-        "step_release()",
-        "step_dev()",
-        "step_test()",
-        "step_instrument()",
-        "step_lint()",
-        "step_clean()",
-        "step_shell()",
-        "step_ship()",
-        "step_waydroid_install()",
-        "step_emulator()",
-        "_release_var()",
-        "_variant_field()",
-        "_variant_artifact()",
-        "_variant_gh_asset()",
-        "_variant_tag_suffix()",
-        "_export_variant_abis()",
-        "_resolve_template()",
-        "_ghcr_gate_public()",
-        "step_oras_push()",
-        "step_oras_pull()",
-        "step_phone_install()",
-        "_verify_asset_abi_neutral()",
-        "_sha256_sidecar()",
-        "_verify_release_asset()",
-        "_publish_release_asset()",
-        "step_gh_release()"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "description",
-        "inputs",
-        "outputs",
-        "pkgs",
-        "config",
-        "allowUnfree",
-        "baseAndroidArgs",
-        "toolsVersion",
-        "platformToolsVersion",
-        "buildToolsVersions",
-        "platformVersions",
-        "includeNDK",
-        "androidEnv",
-        "androidSdk",
-        "emulatorEnv",
-        "includeEmulator",
-        "includeSystemImages",
-        "systemImageTypes",
-        "abiVersions",
-        "emulatorSdk",
-        "name",
-        "buildInputs",
-        "ANDROID_HOME",
-        "ANDROID_SDK_ROOT",
-        "JAVA_HOME",
-        "GRADLE_OPTS",
-        "shellHook"
-      ]
-    },
-    {
-      "path": "ac_cloud-webserver/test/test-webserver-rootfs.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "pass()",
-        "fail()"
-      ],
-      "imports": [],
-      "symbols": [
-        "pass()",
-        "fail()"
       ]
     },
     {
