@@ -6,7 +6,8 @@
 # ║         config.json, vault/**, src/inputs/**                     ║
 # ║ Writes: 1_cloud-configs/dist/*.json                              ║
 # ║                                                                  ║
-# ║ Usage: ./build.sh [all|link-builds|consolidate|derive|test|clean]║
+# ║ Usage: ./build.sh [all|check-inputs|link-builds|consolidate|     ║
+# ║                    derive|test|clean|ship]                       ║
 # ╚══════════════════════════════════════════════════════════════════╝
 #
 # This module is the derive job and nothing else. No git config, no GHA
@@ -69,10 +70,25 @@ if ! command -v ensure_node_deps >/dev/null 2>&1; then
     }
 fi
 
+# The declared input set: a_solutions/*/build.json. Since 2026-09-06 that is a
+# separate repository (cloud-u-containers) that CI checks out at a_solutions/;
+# on any other checkout it is simply absent. Every step below reads it, and
+# none of them failed on its absence — they derived from nothing and wrote the
+# result (dist/ gutted, src/inputs/builds/ symlinks all deleted). Fail first.
+require_inputs() {
+    set -- "$SOLUTIONS_DIR"/*/build.json
+    [ -e "$1" ] && return 0
+    log "FATAL: declared input set a_solutions/*/build.json is absent or empty ($SOLUTIONS_DIR)."
+    log "  a_solutions is cloud-u-containers, a separate repo; check it out there (CI does)."
+    log "  Refusing to derive from nothing — dist/ is left untouched."
+    exit 1
+}
+
 # Mirror every a_solutions/<folder>/build.json as
 # 1_cloud-configs/src/inputs/builds/build-<folder>.json (symlink). Declarative index —
 # one place to list every service's raw build.json.
 link_builds() {
+    require_inputs
     mkdir -p "$BUILDS"
     # Drop stale build-*.json symlinks first
     command find "$BUILDS" -maxdepth 1 -name 'build-*.json' -type l -delete 2>/dev/null
@@ -94,6 +110,7 @@ link_builds() {
 }
 
 consolidate() {
+    require_inputs
     ensure_node_deps
     mkdir -p "$DIST"
     log "Consolidating → $DIST/_cloud-data-consolidated.json"
@@ -101,6 +118,7 @@ consolidate() {
 }
 
 derive() {
+    require_inputs
     ensure_node_deps
     mkdir -p "$DIST"
     DERIVERS_JSON="$SCRIPT_DIR/src/derivers.json"
@@ -296,6 +314,7 @@ clean() {
 
 
 case "${1:-all}" in
+    check-inputs) require_inputs ;;
     link-builds) link_builds ;;
     consolidate) consolidate ;;
     derive)      derive ;;
@@ -303,5 +322,5 @@ case "${1:-all}" in
     clean)       clean ;;
     all)         link_builds; consolidate; derive ;;
     ship)        link_builds; consolidate; derive; run_tests ;;
-    *)           echo "Usage: $0 [all|link-builds|consolidate|derive|test|clean|ship]"; exit 1 ;;
+    *)           echo "Usage: $0 [all|check-inputs|link-builds|consolidate|derive|test|clean|ship]"; exit 1 ;;
 esac

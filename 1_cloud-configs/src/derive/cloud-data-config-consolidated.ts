@@ -1054,6 +1054,27 @@ function main() {
       );
     }
   }
+  // SERVICE-COUNT FLOOR. A partial or missing a_solutions checkout does not
+  // fail anything upstream of here — it just yields fewer services, and every
+  // build-*.json derived from this file silently loses them. The count may
+  // only drop by services whose removal is DECLARED, i.e. whose build.json was
+  // moved to a_solutions/z_archive/ (cloud-u-containers' retirement idiom).
+  // A plain deletion or an absent checkout has no such declaration and fails.
+  if (existsSync(OUTPUT_JSON)) {
+    const prev = Object.keys(JSON.parse(readFileSync(OUTPUT_JSON, "utf-8"))?.services ?? {});
+    const next = Object.keys(consolidated.services ?? {});
+    const archived = new Set(scanBuildJsons(join(SOLUTIONS_DIR, "z_archive")).map((e) => e.name));
+    const declaredRemovals = prev.filter((n) => !next.includes(n) && archived.has(n));
+    if (next.length + declaredRemovals.length < prev.length) {
+      const undeclared = prev.filter((n) => !next.includes(n) && !archived.has(n));
+      throw new Error(
+        `refusing to write ${OUTPUT_JSON}: service count would collapse ${prev.length} -> ${next.length} ` +
+        `with ${declaredRemovals.length} declared removal(s). Undeclared: ${undeclared.join(", ")}.\n` +
+        `  Retire a service by moving it to a_solutions/z_archive/; a missing or partial ` +
+        `a_solutions checkout is not a removal.`,
+      );
+    }
+  }
   writeFileSync(OUTPUT_JSON, jsonStr);
 
   // Refresh MATERIALIZED service copies. Most consumers symlink
