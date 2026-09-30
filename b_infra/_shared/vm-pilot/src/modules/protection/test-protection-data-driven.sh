@@ -176,7 +176,9 @@ in (import ./protection/load-shedder.nix {
 EOF
 
 SHEDDER="$WORK/load-shedder.sh"
-nix-instantiate --eval --strict --raw "$RENDER_NIX" > "$SHEDDER"
+# --json + jq, not --raw: nix-instantiate has no --raw (that is `nix eval`), so
+# this line failed on the first CI run that ever reached it.
+nix-instantiate --eval --strict --json "$RENDER_NIX" | jq -r . > "$SHEDDER"
 
 # Tier-1 comes from the rendered script, not from a copy of the JSON in this
 # test: duplicating the list here would make the test pass while the shipped
@@ -216,6 +218,8 @@ run_scenario() {
   echo "${START_FAILS:-0}" > "$SCEN/start-fails-docker"
   [ -n "${SYSTEMD_RESTARTS:-}" ] && : > "$SCEN/systemd-restarts"
   $RUN_AS rm -f "$SHED_LIST" "$FIRED"
+  #   STALE_SHED_LIST    lines already in the shed-list when the shedder starts
+  [ -n "${STALE_SHED_LIST:-}" ] && printf '%s\n' $STALE_SHED_LIST | $RUN_AS tee "$SHED_LIST" >/dev/null
 
   mk_stub() { # $1 = command name; body on stdin. Paths baked, not inherited:
               # the stubs must work regardless of how the shedder is invoked.
@@ -338,7 +342,7 @@ starts_are_paced() { awk '/^start:/ { if ((getline nxt) <= 0 || nxt !~ /^sleep:/
 unshed_delay_used() { awk '/^start:/ { if ((getline nxt) > 0) { sub(/^sleep:/, "", nxt); print nxt } }' "$WORK/$1/timeline" | sort -u; }
 # Exact-token match, not grep -w: "-" is a word boundary, so -w would let a
 # stopped ntfy-exporter satisfy an assertion about tier-1 ntfy.
-never_touched() { ! tr ' ' '\n' < "$WORK/$1/docker-calls" | grep -qxF "$2"; }
+never_touched() { ! tr ' ' '\n' < "$WORK/$1/docker-calls" | grep -qxF -e "$2"; }
 
 # ── A: pressure clears, every shed container comes back ───────────────────
 # Three crit ticks (>= crit, < page) reach NEED, then a clear tick fires the
@@ -391,6 +395,13 @@ STATS_ROWS="-- -- / --
 assert "shed list holds the real non-tier1 containers, no '--'" \
   same_set "$WORK/C/shed-list-snapshot" "$SHEDDABLE"
 assert "un-shed succeeded" log_has C "UNSHED: all shed containers restarted"
+
+# The same "--" already sitting in /run from the pre-fix shedder (oci-analytics
+# has 34 of them) must not fail every un-shed until the next reboot.
+echo "-- scenario C2: a stale '--' left in the shed-list by the old shedder"
+STALE_SHED_LIST="-- -- umami" run_scenario C2 "55 55 55 0 0" ""
+assert "stale '--' did not fail the un-shed" log_has C2 "UNSHED: all shed containers restarted"
+assert "'--' was never passed to docker start" never_touched C2 "--"
 
 # ── D: the recovery the shedder starts must not be shed by its own spike ──
 # Measured 2026-09-30 08:13: the single-shot start exited 1, systemd's

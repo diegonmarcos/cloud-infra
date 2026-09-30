@@ -260,7 +260,10 @@ in {
               elif [ "''${unshed_failed:-0}" -ne 0 ]; then
                 logger -p daemon.err -t load-shedder "UNSHED: already attempted and failed — not retrying (manual action required)"
               else
-                _want=$(sort -u "$_shed_list" | tr '\n' ' ')
+                # "--" filtered here too: a list written by the pre-fix
+                # shedder (see shed_non_tier1) lives until reboot, and one
+                # "--" makes every later un-shed report FAILED.
+                _want=$(grep -vxF -e '--' "$_shed_list" | sort -u | tr '\n' ' ')
                 logger -t load-shedder "UNSHED: single-shot start of shed containers:$_want"
                 for _c in $_want; do
                   docker start "$_c" >/dev/null 2>&1 || true
