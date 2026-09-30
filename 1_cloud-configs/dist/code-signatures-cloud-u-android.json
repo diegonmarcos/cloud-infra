@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20013,
+    "files": 20031,
     "by_lang": {
       "py": 55,
-      "sh": 308,
-      "kotlin": 10031,
+      "sh": 313,
+      "kotlin": 10043,
       "java": 609,
       "ts": 8413,
-      "nix": 63,
+      "nix": 64,
       "js": 452,
       "rust": 82
     },
     "by_role": {
       "script": 142,
-      "shell": 221,
+      "shell": 226,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
-      "flake": 22,
-      "kotlin": 10029,
+      "flake": 23,
+      "kotlin": 10041,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
@@ -9310,6 +9310,7 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.view.ViewGroup",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.darkColorScheme",
@@ -9323,7 +9324,7 @@
         "items(ctx: Context, mode: String)",
         "colorScheme(ctx: Context)",
         "attr(id: Int)",
-        "configure(nav: BottomNavIslandView, mode: String)",
+        "configure(nav: BottomNavIslandView, mode: String, content: ViewGroup)",
         "class ShellBottomNav"
       ]
     },
@@ -9502,7 +9503,8 @@
       ],
       "symbols": [
         "cache(name: String, pkg: String, code: Long)",
-        "install(pkg: String, code: Long)",
+        "install(pkg: String, code: Long, from: File? = null)",
+        "installDifferent(pkg: String, code: Long, bytes: ByteArray)",
         "stage(ctx: Context, t: BatchInstall.Target)",
         "install(ctx: Context, t: BatchInstall.Target, a: VerifiedApk)",
         "class ApkCacheRetentionTest"
@@ -10107,6 +10109,37 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/ShellBottomNavCollapseTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellBottomNavCollapseTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.widget.FrameLayout",
+        "android.widget.ScrollView",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "firstId()",
+        "islandHeight()",
+        "labelCount()",
+        "class ShellBottomNavCollapseTest",
+        "class Scroll"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/ShellIslandHarness.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10119,8 +10152,10 @@
         "android.graphics.Canvas",
         "android.view.ContextThemeWrapper",
         "android.view.Gravity",
+        "android.view.View",
         "android.view.ViewGroup",
         "android.widget.FrameLayout",
+        "android.widget.ScrollView",
         "androidx.activity.ComponentActivity",
         "androidx.compose.ui.geometry.Rect",
         "androidx.compose.ui.graphics.Color",
@@ -10143,6 +10178,11 @@
         "evaluate()",
         "px(id: Int)",
         "showShellNav(select: String)",
+        "givePageToScroll()",
+        "page()",
+        "pageLayout()",
+        "layOut(view: View)",
+        "scrollContentBy(dy: Int)",
         "bounds(tag: String)",
         "island()",
         "cell(id: String)",
@@ -10484,6 +10524,42 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-c3-is-an-app.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t34()",
+        "t5()",
+        "mutate()",
+        "m_page_target()",
+        "m_drop_external()",
+        "m_add_label()",
+        "m_gut_fleet_row()",
+        "m_fleet_wrong_kind()",
+        "m_orphan_section()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t34()",
+        "t5()",
+        "mutate()",
+        "m_page_target()",
+        "m_drop_external()",
+        "m_add_label()",
+        "m_gut_fleet_row()",
+        "m_fleet_wrong_kind()",
+        "m_orphan_section()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-camera-tiles.sh",
       "lang": "sh",
       "role": "shell",
@@ -10636,13 +10712,15 @@
       "exports": [
         "ok()",
         "bad()",
-        "lite_before_tiny()"
+        "lite_before_tiny()",
+        "body_of()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "bad()",
-        "lite_before_tiny()"
+        "lite_before_tiny()",
+        "body_of()"
       ]
     },
     {
@@ -10870,6 +10948,20 @@
         "code()",
         "hasnt_code()",
         "has_code()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-island-terminal-target.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -14014,7 +14106,10 @@
         "kotlin.concurrent.thread",
         "org.json.JSONArray",
         "org.json.JSONObject",
-        "org.json.JSONTokener"
+        "org.json.JSONTokener",
+        "java.io.IOException",
+        "java.text.DateFormat",
+        "java.util.Date"
       ],
       "symbols": [
         "feeds(ctx: Context)",
@@ -14022,6 +14117,8 @@
         "words(a: JSONArray?)",
         "labels(feeds: List<Feed>)",
         "load(feed: Feed)",
+        "read(feed: Feed, url: String)",
+        "explain(t: Throwable)",
         "fill(template: String, item: JSONObject)",
         "path(item: JSONObject, dotted: String)",
         "render(ctx: Context, into: LinearLayout, feed: Feed, open: (String)",
@@ -14135,6 +14232,7 @@
         "identity(ctx: Context, pkg: String, apk: VerifiedApk)",
         "sidecar(url: String)",
         "getBody(url: String)",
+        "isQuota(code: Int, c: HttpURLConnection)",
         "getJson(url: String)",
         "class SourceResolver",
         "class Kind",
@@ -14240,6 +14338,8 @@
         "onDestroyView()",
         "confirmDowngrade(app: Fleet.App, candidateCode: Long, installedCode: Long)",
         "tabBar(ctx: Context)",
+        "lineDivider(ctx: Context)",
+        "tabButton(ctx: Context, index: Int, label: String, style: TabStyle)",
         "paintTabs()",
         "renderTab(ctx: Context)",
         "renderFeed(ctx: Context, feed: FeedViewer.Feed)",
@@ -14269,9 +14369,7 @@
         "renderAndroidPerms(ctx: Context, into: LinearLayout, pkg: String)",
         "renderCloudPerms(ctx: Context, into: LinearLayout, pkg: String)",
         "sameSignature(ctx: Context, pkg: String)",
-        "openApp(ctx: Context, pkg: String)",
-        "dp(ctx: Context, v: Int)",
-        "caption(ctx: Context, t: String)"
+        "openApp(ctx: Context, pkg: String)"
       ]
     },
     {
@@ -14356,6 +14454,7 @@
         "updateAll()",
         "batch(ctx: Context, targets: List<Row>)",
         "clearCache()",
+        "refreshCacheLabel()",
         "installOne(app: Context, r: Row)",
         "act(ctx: Context, r: Row, a: PhoneAppActions.Action)",
         "toastLater(ctx: Context, msg: String)",
@@ -15419,6 +15518,10 @@
       "imports": [
         "android.content.Context",
         "android.util.AttributeSet",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.view.ViewTreeObserver",
+        "android.widget.ScrollView",
         "androidx.annotation.DrawableRes",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.material3.ColorScheme",
@@ -15432,8 +15535,17 @@
         "androidx.compose.ui.res.painterResource"
       ],
       "symbols": [
+        "collapseOnScrollIn(content: ViewGroup)",
+        "onContentScrolled()",
+        "hookScrollables(root: View)",
+        "attachCollapse()",
+        "detachCollapse()",
+        "onViewAttachedToWindow(v: View)",
+        "onViewDetachedFromWindow(v: View)",
         "Content()",
         "Island()",
+        "collapseFor(collapsed: Boolean, delta: Float)",
+        "scrolledOffset(root: View)",
         "item(id: String)",
         "icon(id: String)",
         "label(id: String)",
@@ -41032,11 +41144,16 @@
         "record(apk: File)",
         "drop(apk: File)",
         "recordFile(apk: File)",
+        "decide(ctx: Context, apk: File)",
+        "keep(why: String)",
+        "installedSha256(ctx: Context, pkg: String)",
         "reapIfInstalled(ctx: Context, apk: File)",
         "entries(ctx: Context)",
         "totalBytes(ctx: Context)",
         "evict(ctx: Context)",
         "superseded(e: Entry)",
+        "plan(ctx: Context)",
+        "clearRedundant(ctx: Context)",
         "clear(ctx: Context)",
         "installedInfo(ctx: Context, pkg: String)",
         "versionCodeOf(pi: PackageInfo)",
@@ -41051,8 +41168,10 @@
         "class Retention",
         "class Reaped",
         "class Kept",
+        "class Decision",
         "class Entry",
-        "class Eviction"
+        "class Eviction",
+        "class Plan"
       ]
     },
     {
@@ -43617,6 +43736,494 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/C3BottomNav.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "C3BottomNav"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavIslandView",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavViewItem"
+      ],
+      "symbols": [
+        "items(ctx: Context)",
+        "iconsResolve(ctx: Context)",
+        "configure(nav: BottomNavIslandView, onOpen: (String)",
+        "sync(nav: BottomNavIslandView, tabId: String?)",
+        "color(ctx: Context, id: Int)",
+        "class C3BottomNav"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/C3HealthFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "C3HealthFragment"
+      ],
+      "imports": [
+        "android.graphics.drawable.GradientDrawable",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.ProgressBar",
+        "android.widget.TextView",
+        "androidx.core.view.isVisible",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.cloudc3.R"
+      ],
+      "symbols": [
+        "onUrlClicked(url: String)",
+        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "addSectionHeader(parent: LinearLayout, label: String)",
+        "newInstance(scope: String = SCOPE_ALL)",
+        "class C3HealthFragment",
+        "class UrlClickListener"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/Services.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Services"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "org.json.JSONArray"
+      ],
+      "symbols": [
+        "publicServices()",
+        "privateServices()",
+        "decode(b64: String)",
+        "class Services",
+        "class PublicService",
+        "class PrivateService"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/Declarations.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Declarations"
+      ],
+      "imports": [
+        "java.util.Base64",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonElement",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.contentOrNull"
+      ],
+      "symbols": [
+        "decode(b64: String)",
+        "element(text: String)",
+        "objects(e: JsonElement?)",
+        "str(key: String)",
+        "parseTabs(text: String)",
+        "parsePages(text: String)",
+        "parseExternalApps(text: String)",
+        "iconNames()",
+        "class Declarations",
+        "class TabDecl",
+        "class PageDecl",
+        "class ExternalAppDecl"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "android.widget.FrameLayout",
+        "androidx.activity.enableEdgeToEdge",
+        "androidx.appcompat.app.AppCompatActivity",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.WindowInsetsCompat",
+        "androidx.fragment.app.commit",
+        "com.diegonmarcos.cloudc3.cloud.C3HealthFragment",
+        "com.diegonmarcos.cloudc3.pages.AppsFragment",
+        "com.diegonmarcos.cloudc3.pages.ConfigsFragment",
+        "com.diegonmarcos.cloudc3.pages.HomeFragment",
+        "com.diegonmarcos.cloudc3.pages.ObservFragment",
+        "com.diegonmarcos.cloudc3.pages.TopologyFragment",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavIslandView"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onSaveInstanceState(outState: Bundle)",
+        "show(tabId: String)",
+        "onUrlClicked(url: String)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/AppsFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppsFragment"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.graphics.drawable.GradientDrawable",
+        "android.os.Bundle",
+        "android.view.Gravity",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.core.content.ContextCompat",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.cloudc3.R"
+      ],
+      "symbols": [
+        "onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?, )",
+        "onResume()",
+        "paint()",
+        "row( ctx: Context, tile: Declarations.ExternalAppDecl, installed: Boolean, )",
+        "px(v: Int)",
+        "isInstalled(ctx: Context, pkg: String)",
+        "launch(ctx: Context, pkg: String, label: String)",
+        "class AppsFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/PagedFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PagedFragment"
+      ],
+      "imports": [
+        "android.graphics.Color",
+        "android.graphics.drawable.GradientDrawable",
+        "android.os.Bundle",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "androidx.core.content.ContextCompat",
+        "androidx.fragment.app.Fragment",
+        "androidx.fragment.app.commit",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.cloudc3.R"
+      ],
+      "symbols": [
+        "pages()",
+        "pageFragment(pageId: String)",
+        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "onSaveInstanceState(outState: Bundle)",
+        "open(pageId: String, strip: LinearLayout)",
+        "paint(strip: LinearLayout)",
+        "chip(page: Declarations.PageDecl, onTap: (String)",
+        "px(v: Int)",
+        "class PagedFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/SimplePages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HomeFragment",
+        "AboutFragment"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.drawable.GradientDrawable",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.core.content.ContextCompat",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.cloudc3.R",
+        "com.diegonmarcos.cloudc3.cloud.Services"
+      ],
+      "symbols": [
+        "onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?, )",
+        "label(tabId: String)",
+        "card(ctx: Context, title: String, lines: List<String>)",
+        "px(v: Int)",
+        "class HomeFragment",
+        "class AboutFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/TabFragments.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TopologyFragment",
+        "ObservFragment",
+        "ConfigsFragment",
+        "UndeclaredPageFragment"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "android.view.Gravity",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.TextView",
+        "androidx.core.content.ContextCompat",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.cloudc3.R",
+        "com.diegonmarcos.cloudc3.cloud.C3HealthFragment"
+      ],
+      "symbols": [
+        "pages()",
+        "pageFragment(pageId: String)",
+        "onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?, )",
+        "newInstance(pageId: String)",
+        "class TopologyFragment",
+        "class ObservFragment",
+        "class ConfigsFragment",
+        "class is",
+        "class UndeclaredPageFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/DeclarationsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeclarationsTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.jsonArray",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "buildJson()",
+        "ui()",
+        "uiText(key: String)",
+        "class DeclarationsTest",
+        "class and"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/test/test-c3-shell.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "t7()",
+        "t8()",
+        "mutate()",
+        "c_t1()",
+        "c_t2()",
+        "c_t3()",
+        "c_t4()",
+        "c_t5()",
+        "c_t6()",
+        "c_t7()",
+        "c_t8()",
+        "jqset()",
+        "m_sixth_tab()",
+        "m_home_offset()",
+        "m_drop_branch()",
+        "m_orphan_branch()",
+        "m_parallel()",
+        "m_bad_icon()",
+        "m_dead_drawable()",
+        "m_wrong_pkg()",
+        "m_add_label()",
+        "m_drop_query()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "t7()",
+        "t8()",
+        "mutate()",
+        "c_t1()",
+        "c_t2()",
+        "c_t3()",
+        "c_t4()",
+        "c_t5()",
+        "c_t6()",
+        "c_t7()",
+        "c_t8()",
+        "jqset()",
+        "m_sixth_tab()",
+        "m_home_offset()",
+        "m_drop_branch()",
+        "m_orphan_branch()",
+        "m_parallel()",
+        "m_bad_icon()",
+        "m_dead_drawable()",
+        "m_wrong_pkg()",
+        "m_add_label()",
+        "m_drop_query()",
+        "m_declare_unbuilt()",
+        "m_placeholder_body()",
+        "m_escape_flag()",
+        "m_empty_tab()",
+        "m_compose_screen()",
+        "m_consume_insets()",
+        "m_drop_cutout()",
+        "m_hardcode_top()"
       ]
     },
     {
@@ -118306,6 +118913,7 @@
       "imports": [
         "android.content.Context",
         "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.sync.FleetGit",
         "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
         "com.diegonmarcos.cloudlib.gitsync.GitAuthChain",
         "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
@@ -118315,10 +118923,10 @@
       ],
       "symbols": [
         "credentialId()",
-        "rungs( ctx: Context, declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, bearer: String = \"\", )",
-        "fleet(config: JSONObject, bearer: String)",
+        "rungs( ctx: Context, declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain, session: String = \"\", )",
+        "fleet(config: JSONObject, session: String)",
         "onDevice(ctx: Context)",
-        "resolve( ctx: Context, bearer: String = \"\", )",
+        "resolve( ctx: Context, session: String = \"\", )",
         "declaredOrder(declared: List<AuthDeclaration.GitRung> = AuthDeclaration.gitChain)",
         "class DriveGitChain",
         "class was"
@@ -119515,17 +120123,32 @@
         "java.net.URL"
       ],
       "symbols": [
-        "rung()",
+        "rung(id: String = \"\")",
         "reposUrl()",
         "healthUrl()",
-        "bearerProvider()",
-        "repos(bearer: String)",
+        "sessionProvider()",
+        "sessionHeader()",
+        "repos(session: String, rungId: String = \"\")",
         "class FleetGit",
         "class Outcome",
         "class Listed",
         "class Refused",
         "class Blocked",
         "class Unreachable"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/FleetSession.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetSession"
+      ],
+      "imports": [],
+      "symbols": [
+        "remember(value: String)",
+        "forget()",
+        "class FleetSession"
       ]
     },
     {
@@ -119630,11 +120253,14 @@
       ],
       "symbols": [
         "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier)",
+        "onSignedIn(result: SignInResult)",
+        "onWebSession(cookie: String)",
         "cloneViaTerminal(name: String)",
         "clone(name: String)",
+        "fetchFleetListing(rungId: String)",
         "fetchListing(token: String)",
         "startChain()",
-        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, onSshKeyPath: (String)",
+        "GitLoginBox( page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, fleetHost: SignInHost, onSshKeyPath: (String)",
         "GitRepoRow( name: String, repoName: String, isPrivate: Boolean, fork: Boolean, repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?, running: GitSyncCoordinator.Running?, cloning: Boolean, expanded: Boolean, onToggle: ()",
         "rowStats(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
         "lightOf(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
@@ -121015,6 +121641,8 @@
         "c1()",
         "c2()",
         "c2b()",
+        "c8()",
+        "c9()",
         "c3()",
         "c3b()",
         "c4()",
@@ -121026,7 +121654,8 @@
         "_sub()",
         "_json()",
         "_green()",
-        "_red()"
+        "_red()",
+        "_c9()"
       ],
       "imports": [],
       "symbols": [
@@ -121036,6 +121665,8 @@
         "c1()",
         "c2()",
         "c2b()",
+        "c8()",
+        "c9()",
         "c3()",
         "c3b()",
         "c4()",
@@ -121047,7 +121678,8 @@
         "_sub()",
         "_json()",
         "_green()",
-        "_red()"
+        "_red()",
+        "_c9()"
       ]
     },
     {
@@ -259142,6 +259774,7 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.view.ViewGroup",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.ui.graphics.Color",
@@ -259151,7 +259784,7 @@
       ],
       "symbols": [
         "items(ctx: Context)",
-        "configure(nav: BottomNavIslandView, onOpen: (String)",
+        "configure( nav: BottomNavIslandView, content: ViewGroup, onOpen: (String)",
         "attr(id: Int)",
         "sync(nav: BottomNavIslandView, sectionId: String?)",
         "class MeBottomNav"
@@ -259334,12 +259967,15 @@
         "android.view.ContextThemeWrapper",
         "android.view.LayoutInflater",
         "android.view.View",
+        "android.widget.FrameLayout",
+        "android.widget.ScrollView",
         "androidx.activity.ComponentActivity",
         "androidx.compose.ui.geometry.Rect",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.test.assertCountEquals",
         "androidx.compose.ui.test.isSelected",
         "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.onNodeWithTag",
         "androidx.compose.ui.test.performClick",
         "androidx.core.graphics.Insets",
@@ -259350,6 +259986,7 @@
         "com.google.android.material.color.MaterialColors",
         "kotlin.math.abs",
         "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertTrue",
         "org.junit.Rule",
         "org.junit.Test",
@@ -259362,12 +259999,13 @@
         "org.robolectric.Shadows.shadowOf",
         "org.robolectric.annotation.Config",
         "org.robolectric.annotation.GraphicsMode",
-        "com.diegonmarcos.superapp.bottomnav.R",
-        "com.google.android.material.R"
+        "com.diegonmarcos.superapp.bottomnav.R"
       ],
       "symbols": [
         "evaluate()",
         "show(select: String?)",
+        "givePageToScroll()",
+        "scrollContentBy(dy: Int)",
         "bounds(tag: String)",
         "cell(id: String)",
         "island()",
@@ -259376,6 +260014,7 @@
         "paint()",
         "probe(bmp: Bitmap, id: String)",
         "same(a: Color, b: Color)",
+        "labelCount()",
         "class MeBottomNavTest"
       ]
     },
@@ -292472,6 +293111,7 @@
         "onCreate(savedInstanceState: Bundle?)",
         "startUpdateCheck()",
         "onResume()",
+        "terminalSetupBlocks()",
         "showTerminalConnDialog(backend: String)",
         "dp(v: Int)",
         "class ConfigsActivity"
@@ -292689,6 +293329,9 @@
         "openConfigs()",
         "openDevControl()",
         "browserOpen(url: String)",
+        "terminals()",
+        "selectTerminal(key: String)",
+        "probeTerminal()",
         "ptyStart(id: String, cols: Int, rows: Int, cwd: String)",
         "ptyWrite(id: String, data: String)",
         "ptyResize(id: String, cols: Int, rows: Int)",
@@ -292715,6 +293358,8 @@
       ],
       "symbols": [
         "forBackend(key: String)",
+        "target(key: String)",
+        "all()",
         "effectiveTarget(ctx: Context, key: String)",
         "class TerminalTargets",
         "class Target"
@@ -292964,6 +293609,22 @@
         "dp(v: Int)",
         "newInstance()",
         "class UpdateOverlay"
+      ]
+    },
+    {
+      "path": "ac_cloud-myterminal/test/test-terminal-targets-are-ours.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "body()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "body()"
       ]
     },
     {

@@ -7661,6 +7661,8 @@
         "verifyAutheliaBearer(token)",
         "sendJson(res, status, obj)",
         "ghFetch(url, accept)",
+        "cachedFeed(owner, repo, kind)",
+        "feedHandler(kind)",
         "serve(req, res, url)"
       ]
     },
@@ -7696,7 +7698,13 @@
         "projectRepo",
         "validName",
         "validRef",
-        "REDACTED"
+        "repoDeclared",
+        "clampPerPage",
+        "feedUrl",
+        "projectCommit",
+        "projectRun",
+        "REDACTED",
+        "FEED_KINDS"
       ],
       "imports": [],
       "symbols": [
@@ -7706,7 +7714,12 @@
         "tarballUrl(apiBase, owner, repo, ref)",
         "projectRepo(r)",
         "validName(s)",
-        "validRef(s)"
+        "validRef(s)",
+        "repoDeclared(repos, owner, repo)",
+        "clampPerPage(raw, max)",
+        "feedUrl(apiBase, owner, repo, kind, perPage)",
+        "projectCommit(c)",
+        "projectRun(r)"
       ]
     },
     {
@@ -7789,6 +7802,7 @@
         "node:http",
         "node:crypto",
         "node:fs",
+        "node:os",
         "node:path",
         "node:url",
         "./code/authz.mjs",
@@ -7802,6 +7816,7 @@
         "testRedactionUnit()",
         "testContract()",
         "threw(fn)",
+        "testFeedsUnit()",
         "testLive()",
         "mintJwt(claims, signWith = privateKey, alg = 'RS256')",
         "mintUnsigned(claims)",
