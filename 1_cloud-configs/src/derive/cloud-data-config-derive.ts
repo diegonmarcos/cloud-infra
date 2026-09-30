@@ -528,6 +528,10 @@ function deriveCaddy(c: any): DerivedFile[] {
       // jmap.diegonmarcos.com's dedicated rate-limit zone + 50MB upload cap).
       ...(proxy.security_import ? { security_import: proxy.security_import } : {}),
       ...(proxy.max_upload ? { max_upload: proxy.max_upload } : {}),
+      // strip_authorization: caddyfile.nix withholds the fleet bearer from the
+      // upstream after introspect-proxy validates it (gitea: it reads any
+      // Authorization as its own token and 401s what the gate passed).
+      ...(proxy.strip_authorization ? { strip_authorization: true } : {}),
       comment: svc.description,
     };
     routes.push(route);
