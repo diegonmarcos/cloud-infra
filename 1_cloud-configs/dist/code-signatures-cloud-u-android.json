@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20071,
+    "files": 20075,
     "by_lang": {
       "py": 56,
-      "sh": 321,
-      "kotlin": 10071,
+      "sh": 322,
+      "kotlin": 10074,
       "java": 609,
       "ts": 8413,
       "nix": 64,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 144,
-      "shell": 234,
+      "shell": 235,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10069,
+      "kotlin": 10072,
       "python": 29,
       "nix-module": 40,
       "file": 2257,
@@ -95,6 +95,8 @@
       "lang": "py",
       "role": "script",
       "exports": [
+        "gradle_scripts(root)",
+        "find_inline_chunks(root)",
         "find_bakes(root)",
         "find_consumers(root)",
         "gradle_root_of(build_file, root)",
@@ -115,6 +117,8 @@
         "sys"
       ],
       "symbols": [
+        "gradle_scripts(root)",
+        "find_inline_chunks(root)",
         "find_bakes(root)",
         "find_consumers(root)",
         "gradle_root_of(build_file, root)",
@@ -1296,6 +1300,8 @@
       "lang": "py",
       "role": "script",
       "exports": [
+        "gradle_scripts(root)",
+        "find_inline_chunks(root)",
         "find_bakes(root)",
         "find_consumers(root)",
         "gradle_root_of(build_file, root)",
@@ -1316,6 +1322,8 @@
         "sys"
       ],
       "symbols": [
+        "gradle_scripts(root)",
+        "find_inline_chunks(root)",
         "find_bakes(root)",
         "find_consumers(root)",
         "gradle_root_of(build_file, root)",
@@ -2478,7 +2486,11 @@
         "reinstate_defect()",
         "drop_the_throw()",
         "reinstate_single_constant_bake()",
+        "add_helper_bake()",
         "add_chunked_bake()",
+        "paste_a_second_helper()",
+        "widen_the_helper_step()",
+        "move_the_helper()",
         "reinstate_single_constant_tree_bake()",
         "add_chunked_tree_bake()",
         "widen_the_chunk_step()",
@@ -2495,11 +2507,7 @@
         "drop_artifact_row()",
         "bump_artifact_identity()",
         "break_artifact_pointer()",
-        "rename_artifact_lib()",
-        "revert_to_artifact_kind()",
-        "demote_library_to_catalogue()",
-        "reinstate_runtime_download()",
-        "strip_the_trust_check()"
+        "rename_artifact_lib()"
       ],
       "imports": [],
       "symbols": [
@@ -2511,7 +2519,11 @@
         "reinstate_defect()",
         "drop_the_throw()",
         "reinstate_single_constant_bake()",
+        "add_helper_bake()",
         "add_chunked_bake()",
+        "paste_a_second_helper()",
+        "widen_the_helper_step()",
+        "move_the_helper()",
         "reinstate_single_constant_tree_bake()",
         "add_chunked_tree_bake()",
         "widen_the_chunk_step()",
@@ -6520,6 +6532,7 @@
         "defaultMode()",
         "modeForPageId(pageId: String)",
         "tabOwnerOf(sectionId: String, pageId: String)",
+        "headingOf(section: Section, page: Page)",
         "appTilesFor(page: Page)",
         "tilesOf(sectionId: String)",
         "tabPagesOf(sectionId: String, owner: Page)",
@@ -6539,8 +6552,7 @@
         "privateServices()",
         "newsFeeds()",
         "mailAccounts()",
-        "externalApps()",
-        "externalApp(id: String)"
+        "externalApps()"
       ]
     },
     {
@@ -13959,6 +13971,8 @@
         "android.widget.ScrollView",
         "android.widget.TextView",
         "androidx.fragment.app.FragmentActivity",
+        "android.widget.Toast",
+        "com.diegonmarcos.superapp.updater.BootstrapInstall",
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.FleetIdentity",
         "com.diegonmarcos.superapp.updater.VersionOrder",
@@ -13967,6 +13981,9 @@
       ],
       "symbols": [
         "show(activity: FragmentActivity, app: Fleet.App, state: Fleet.State?)",
+        "detailAction(activity: FragmentActivity, app: Fleet.App, a: FleetActions.Action)",
+        "directInstall(activity: FragmentActivity, app: Fleet.App)",
+        "toast(ctx: Context, msg: String)",
         "renderInstalled(ctx: Context, into: LinearLayout, d: Fleet.InstalledDetails?)",
         "renderAvailable( ctx: Context, into: LinearLayout, app: Fleet.App, state: Fleet.State?, installed: Fleet.InstalledDetails?, asset: Fleet.ReleaseAsset?, sha256: String?, onVerifyExact: ()",
         "verifyExact( activity: FragmentActivity, app: Fleet.App, installed: Fleet.InstalledDetails?, into: LinearLayout, )",
@@ -14201,6 +14218,26 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetActions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetActions"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "row(ctx: Context)",
+        "details(ctx: Context)",
+        "label(ctx: Context, id: String)",
+        "read(ctx: Context, key: String)",
+        "class FleetActions",
+        "class Action"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetInstall.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14235,6 +14272,7 @@
         "android.net.Uri",
         "android.os.Build",
         "android.provider.Settings",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
         "com.diegonmarcos.superapp.updater.Fleet",
         "org.json.JSONObject"
       ],
@@ -14251,6 +14289,7 @@
         "hostPage(ctx: Context, sources: JSONObject)",
         "origin(ctx: Context, pkg: String, fleetMember: Boolean, sources: JSONObject)",
         "appInfo(pkg: String)",
+        "forceStop(ctx: Context, pkg: String)",
         "class PhoneAppActions",
         "class Kind",
         "class Action"
@@ -14389,7 +14428,6 @@
         "android.widget.TextView",
         "android.widget.Toast",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.updater.BootstrapInstall",
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.FleetIdentity",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
@@ -14429,15 +14467,15 @@
         "identity(fields: Set<FleetIdentity.Field>)",
         "human(b: Long)",
         "install(ctx: Context, app: Fleet.App)",
-        "directInstall(ctx: Context, app: Fleet.App)",
+        "rowAction(ctx: Context, app: Fleet.App, a: FleetActions.Action)",
+        "stop(ctx: Context, app: Fleet.App)",
         "updateAll(ctx: Context, what: String, targets: List<Fleet.App>)",
         "installMissing(ctx: Context)",
         "renderPerms(ctx: Context)",
         "paint()",
         "renderAndroidPerms(ctx: Context, into: LinearLayout, pkg: String)",
         "renderCloudPerms(ctx: Context, into: LinearLayout, pkg: String)",
-        "sameSignature(ctx: Context, pkg: String)",
-        "openApp(ctx: Context, pkg: String)"
+        "sameSignature(ctx: Context, pkg: String)"
       ]
     },
     {
@@ -44578,18 +44616,24 @@
         "android.widget.ScrollView",
         "android.widget.TextView",
         "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.cloudc3.R",
         "com.diegonmarcos.superapp.ops.dagu.DaguPrefs",
         "com.google.android.material.bottomsheet.BottomSheetDialog",
+        "com.google.android.material.dialog.MaterialAlertDialogBuilder",
         "com.google.android.material.tabs.TabLayout"
       ],
       "symbols": [
-        "show(activity: FragmentActivity, containerName: String, label: String, openUrl: String)",
+        "show( activity: FragmentActivity, containerName: String, label: String, openUrl: String, onDismiss: (()",
         "render(index: Int)",
         "onTabSelected(tab: TabLayout.Tab)",
         "onTabUnselected(tab: TabLayout.Tab)",
         "onTabReselected(tab: TabLayout.Tab)",
         "renderInfos( ctx: Context, pane: LinearLayout, name: String, vm: String, service: String, pub: Services.PublicService?, priv: Services.PrivateService?, )",
         "renderActions( ctx: Context, pane: LinearLayout, dialog: BottomSheetDialog, name: String, vm: String, service: String, pub: Services.PublicService?, priv: Services.PrivateService?, openUrl: String, )",
+        "containerAction( ctx: Context, status: TextView, vm: String, name: String, act: String, bearer: String, )",
+        "confirmStop(ctx: Context, name: String, go: ()",
+        "showLogs(ctx: Context, status: TextView, vm: String, name: String, bearer: String)",
+        "stateText(ctx: Context, s: FleetDown.State)",
         "dispatch(status: TextView, call: ()",
         "show(t: TextView, text: String, ok: Boolean? = null)",
         "header(ctx: Context, label: String, name: String, vm: String)",
@@ -44622,6 +44666,48 @@
         "parseEpochMs(raw: String)",
         "class DaguRunsFeed",
         "class Run"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/FleetDown.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDown"
+      ],
+      "imports": [
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.jsonArray",
+        "kotlinx.serialization.json.jsonObject"
+      ],
+      "symbols": [
+        "measure( declared: List<Declared>, deployed: (vm: String)",
+        "runningOn(vm: String, body: String)",
+        "stateFrom(outcome: OpsClient.Outcome)",
+        "act(action: String, call: ()",
+        "declared()",
+        "state(vm: String, name: String, bearer: String)",
+        "load(bearer: String)",
+        "logs(vm: String, name: String, bearer: String)",
+        "str(key: String)",
+        "class FleetDown",
+        "class Declared",
+        "class State",
+        "class Docker",
+        "class Missing",
+        "class Unread",
+        "class Down",
+        "class Report",
+        "class Unreachable",
+        "class NothingDeclared",
+        "class Measured",
+        "class Listing",
+        "class Seen",
+        "class Blind",
+        "class ActionResult"
       ]
     },
     {
@@ -44815,10 +44901,12 @@
         "java.net.URL"
       ],
       "symbols": [
+        "get(path: String, bearer: String, what: String)",
         "container(vm: String, name: String, action: String, bearer: String)",
         "service(vm: String, service: String, action: String, bearer: String)",
         "dispatchWorkflow(repo: String, workflow: String, ref: String, bearer: String)",
         "post(path: String, bearer: String, what: String, json: String? = null)",
+        "request(method: String, path: String, bearer: String, what: String, json: String?)",
         "fail(kind: Kind, message: String)",
         "class OpsClient",
         "class Kind",
@@ -45115,13 +45203,28 @@
         "android.widget.TextView",
         "androidx.core.content.ContextCompat",
         "androidx.fragment.app.Fragment",
+        "androidx.lifecycle.lifecycleScope",
         "com.diegonmarcos.cloudc3.BuildConfig",
         "com.diegonmarcos.cloudc3.Declarations",
         "com.diegonmarcos.cloudc3.R",
-        "com.diegonmarcos.cloudc3.cloud.Services"
+        "com.diegonmarcos.cloudc3.cloud.ContainerSheet",
+        "com.diegonmarcos.cloudc3.cloud.FleetDown",
+        "com.diegonmarcos.cloudc3.cloud.Services",
+        "com.diegonmarcos.cloudc3.cloud.StatusLight",
+        "com.diegonmarcos.superapp.ops.dagu.DaguPrefs",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext",
+        "java.text.DateFormat",
+        "java.util.Date"
       ],
       "symbols": [
         "onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?, )",
+        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "onDestroyView()",
+        "measure()",
+        "render(report: FleetDown.Report)",
+        "line(text: String, light: StatusLight.State? = null, onTap: (()",
         "label(tabId: String)",
         "card(ctx: Context, title: String, lines: List<String>)",
         "px(v: Int)",
@@ -45191,6 +45294,30 @@
         "uiText(key: String)",
         "class DeclarationsTest",
         "class and"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/FleetDownTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDownTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.cloud.FleetDown",
+        "com.diegonmarcos.cloudc3.cloud.FleetDown.Declared",
+        "com.diegonmarcos.cloudc3.cloud.FleetDown.Report",
+        "com.diegonmarcos.cloudc3.cloud.FleetDown.State",
+        "com.diegonmarcos.cloudc3.cloud.OpsClient",
+        "com.diegonmarcos.cloudc3.cloud.OpsClient.Outcome",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "deployed(vm: String, vararg running: Pair<String, String>)",
+        "class FleetDownTest"
       ]
     },
     {
@@ -45299,6 +45426,28 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/test/test-c3-down.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "mutate()"
       ]
     },
     {
