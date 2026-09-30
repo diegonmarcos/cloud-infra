@@ -14,6 +14,18 @@ on:
       - "c_vps/ba-clo_cloudflare/src/main.tf"
       - "c_vps/vps_*/src/main.tf"
       - "b_infra/**/src/*.nix"
+      # Per-VM build.json, added 2026-09-30. These files are the DOCUMENTED
+      # source of the protection overrides (load-shedder.nix: "Per-VM overrides
+      # live in b_infra/nixhm-sudo-<alias>/build.json .protection"), but the
+      # module does not read them — it reads the CONSOLIDATED artifact this
+      # workflow regenerates. Without this entry the override file could not
+      # trigger regeneration of the artifact carrying its own overrides, so any
+      # .protection edit was inert on arrival: the HM ship rebuilt byte-identical
+      # config and reused the previous store path (oci-analytics generations 168/169
+      # pointed at the SAME store paths as 166/167), which is indistinguishable
+      # from a successful deploy. Measured on #647: git-proxy-api was added to
+      # tier1_services in b8ab9163e and the running shedder never saw it.
+      - "b_infra/**/build.json"
       # The config tiers, promoted out of the old single 9_others/ directory.
       # (The second entry used to read 1_cicd/dist/1_cicd/src/scripts/**
       # — a doubled path that matched nothing, so script edits never triggered
