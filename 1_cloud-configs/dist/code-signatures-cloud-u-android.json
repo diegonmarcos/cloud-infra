@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20031,
+    "files": 20057,
     "by_lang": {
-      "py": 55,
-      "sh": 313,
-      "kotlin": 10043,
+      "py": 57,
+      "sh": 317,
+      "kotlin": 10063,
       "java": 609,
       "ts": 8413,
       "nix": 64,
@@ -18,14 +18,14 @@
       "rust": 82
     },
     "by_role": {
-      "script": 142,
-      "shell": 226,
+      "script": 144,
+      "shell": 230,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10041,
+      "kotlin": 10061,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
@@ -441,6 +441,16 @@
         "_pin_identity()",
         "_explain()"
       ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-test-coverage-gen.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [],
+      "imports": [
+        "glob"
+      ],
+      "symbols": []
     },
     {
       "path": ".github/workflows/scripts/cloud-android-test-engine.sh",
@@ -1630,6 +1640,16 @@
         "_pin_identity()",
         "_explain()"
       ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-test-coverage-gen.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [],
+      "imports": [
+        "glob"
+      ],
+      "symbols": []
     },
     {
       "path": "1_cicd/src/scripts/cloud-android-test-engine.sh",
@@ -19248,6 +19268,7 @@
         "org.eclipse.jgit.transport.RefSpec",
         "org.eclipse.jgit.transport.RemoteRefUpdate",
         "org.eclipse.jgit.transport.SshTransport",
+        "org.eclipse.jgit.transport.TransportHttp",
         "org.eclipse.jgit.transport.URIish",
         "org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider",
         "org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory",
@@ -19290,6 +19311,7 @@
         "sshCallback(auth: GitAuth.Ssh)",
         "configure(hc: OpenSshConfig.Host, session: Session)",
         "createDefaultJSch(fs: FS)",
+        "sessionCallback(auth: GitAuth.Session)",
         "httpsCredentials(username: String, secret: String)",
         "class GitEngine"
       ]
@@ -19314,6 +19336,7 @@
         "kotlinx.serialization.Serializable"
       ],
       "symbols": [
+        "toString()",
         "class GitChange",
         "class GitFileStatus",
         "class GitStatusSnapshot",
@@ -19325,6 +19348,7 @@
         "class None",
         "class Https",
         "class Ssh",
+        "class Session",
         "class GitOpResult",
         "class ManagedRepo"
       ]
@@ -19473,6 +19497,7 @@
         "conflictSurfacesInStatusAndResolvesOursOrTheirs()",
         "syncCommitsPullsAndPushesInOneTap()",
         "forcePushOverwritesTheRemoteAndForcePullOverwritesTheLocalSide()",
+        "sessionAuthNeverPrintsItsValueAndOnlyTouchesHttpTransports()",
         "branchesAreReadOnlyByConstruction()",
         "class GitEngineTest"
       ]
@@ -43792,6 +43817,409 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/C3MeshFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "C3MeshFragment"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.R",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "androidx.fragment.app.Fragment"
+      ],
+      "symbols": [
+        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "newInstance()",
+        "class C3MeshFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/C3StackFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "C3StackFragment"
+      ],
+      "imports": [
+        "android.graphics.Typeface",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.core.view.isVisible",
+        "androidx.fragment.app.Fragment",
+        "androidx.lifecycle.lifecycleScope",
+        "androidx.swiperefreshlayout.widget.SwipeRefreshLayout",
+        "com.diegonmarcos.cloudc3.R",
+        "com.google.android.material.card.MaterialCardView",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.async",
+        "kotlinx.coroutines.awaitAll",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "onTargetClicked(target: String)",
+        "isUnread(r: NotifRow)",
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "sectionTitleView(ctx: android.content.Context, text: String)",
+        "buildPanel( ctx: android.content.Context, inflater: LayoutInflater, panel: Stacks.StackPanel, )",
+        "renderBody( ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel, )",
+        "renderFeed(ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel)",
+        "loadingRow(ctx: android.content.Context, label: String)",
+        "renderRepoCommitsFeed( ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel, gitea: Boolean, )",
+        "renderGithubRunsFeed(ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel)",
+        "renderRunStatsFeed(ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel)",
+        "runStatsRow( ctx: android.content.Context, label: String, runs: List<GitHubFeed.Run>, now: Long, url: String, )",
+        "renderDaguRunsFeed(ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel)",
+        "feedEmptyLabel(status: GitHubFeed.Status, noun: String)",
+        "feedStaleLabel(status: GitHubFeed.Status)",
+        "daguStatusLabel(code: Int)",
+        "daguSeverity(code: Int)",
+        "repoHeader(ctx: android.content.Context, title: String, sub: String)",
+        "emptyRow(ctx: android.content.Context, label: String)",
+        "githubRow(ctx: android.content.Context, title: String, meta: String, url: String, severity: String, action: View? = null)",
+        "ghaTriggerRow(ctx: android.content.Context, ref: Stacks.RepoRef, workflowFile: String)",
+        "newestMeasured(topic: String)",
+        "renderNotificationCenter( ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel, )",
+        "renderNtfyGroups( ctx: android.content.Context, body: LinearLayout, panel: Stacks.StackPanel, )",
+        "paintNtfyGroup( ctx: android.content.Context, state: TextView, rowsBox: LinearLayout, result: NtfyResult, topic: String = \"\", limit: Int = 0, )",
+        "pollTopics(topics: List<String>)",
+        "all(r: NtfyResult)",
+        "withinGroup(rows: List<NotifRow>)",
+        "groupBlock( ctx: android.content.Context, g: NotifGroup, state: GroupState, homeBody: LinearLayout, )",
+        "yesNo(id: String)",
+        "isArchived(ctx: android.content.Context, key: String)",
+        "setArchived(ctx: android.content.Context, key: String, archived: Boolean)",
+        "archivePill( ctx: android.content.Context, key: String, block: View, homeBody: LinearLayout, )",
+        "placeGroup( ctx: android.content.Context, block: View, key: String, homeBody: LinearLayout, )",
+        "buildArchiveSection(ctx: android.content.Context)",
+        "syncArchiveHeader()",
+        "groupAvatar(ctx: android.content.Context, g: NotifGroup)",
+        "monogramColor(key: String)",
+        "notifRowView(ctx: android.content.Context, r: NotifRow)",
+        "attachSwipeToRead(holder: View, r: NotifRow, paint: (Boolean)"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/CloudData.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudData"
+      ],
+      "imports": [
+        "android.content.Context",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "load(ctx: Context, force: Boolean = false)",
+        "services(root: JSONObject)",
+        "cachedOrNull(ctx: Context)",
+        "loadNtfyTopics(ctx: Context, force: Boolean = false)",
+        "fetchRaw(url: String)",
+        "class CloudData"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/ContainerConfigs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ContainerConfigs"
+      ],
+      "imports": [],
+      "symbols": [
+        "forContainer(name: String)",
+        "caddyRoutes()",
+        "meshBlocks()",
+        "autheliaGuarded()",
+        "class ContainerConfigs",
+        "class Block"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/ContainerSheet.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ContainerSheet"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.ops.dagu.DaguPrefs",
+        "com.google.android.material.bottomsheet.BottomSheetDialog",
+        "com.google.android.material.tabs.TabLayout"
+      ],
+      "symbols": [
+        "show(activity: FragmentActivity, containerName: String, label: String, openUrl: String)",
+        "render(index: Int)",
+        "onTabSelected(tab: TabLayout.Tab)",
+        "onTabUnselected(tab: TabLayout.Tab)",
+        "onTabReselected(tab: TabLayout.Tab)",
+        "renderInfos( ctx: Context, pane: LinearLayout, name: String, vm: String, service: String, pub: Services.PublicService?, priv: Services.PrivateService?, )",
+        "renderActions( ctx: Context, pane: LinearLayout, dialog: BottomSheetDialog, name: String, vm: String, service: String, pub: Services.PublicService?, priv: Services.PrivateService?, openUrl: String, )",
+        "dispatch(status: TextView, call: ()",
+        "show(t: TextView, text: String, ok: Boolean? = null)",
+        "header(ctx: Context, label: String, name: String, vm: String)",
+        "card(ctx: Context)",
+        "blockTitle(ctx: Context, text: String)",
+        "kv(ctx: Context, k: String, v: String)",
+        "action(ctx: Context, label: String, detail: String, onTap: ()",
+        "note(ctx: Context, text: String)",
+        "dp(ctx: Context, v: Int)",
+        "class ContainerSheet"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/DaguRunsFeed.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DaguRunsFeed"
+      ],
+      "imports": [
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "recentRuns(serverUrl: String, token: String, limit: Int)",
+        "parseEpochMs(raw: String)",
+        "class DaguRunsFeed",
+        "class Run"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/GiteaFeed.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GiteaFeed"
+      ],
+      "imports": [
+        "android.content.Context",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONArray",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "commits( ctx: Context, owner: String, repo: String, limit: Int = 1, )",
+        "fetchCached(ctx: Context, key: String, url: String)",
+        "fetch(url: String)",
+        "parseIso8601(s: String)",
+        "class GiteaFeed"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/GitHubFeed.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitHubFeed"
+      ],
+      "imports": [
+        "android.content.Context",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONArray",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "commits(ctx: Context, owner: String, repo: String, perPage: Int = 5)",
+        "runs(ctx: Context, owner: String, repo: String, perPage: Int = 5)",
+        "fetchCached(ctx: Context, key: String, url: String)",
+        "fetch(url: String)",
+        "parseIso8601(s: String)",
+        "ago(ms: Long)",
+        "class GitHubFeed",
+        "class Status",
+        "class Feed",
+        "class Fetched",
+        "class Commit",
+        "class Run"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/Haptics.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Haptics"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build",
+        "android.os.VibrationEffect",
+        "android.os.Vibrator",
+        "android.os.VibratorManager",
+        "android.view.HapticFeedbackConstants",
+        "android.view.View"
+      ],
+      "symbols": [
+        "tap(view: View)",
+        "fire(ctx: Context, intensity: Float, durationMs: Long)",
+        "vibrator(ctx: Context)",
+        "class Haptics"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/IndexTiles.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IndexTiles"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "com.google.android.material.card.MaterialCardView"
+      ],
+      "symbols": [
+        "grid(ctx: Context, cols: Int, cells: List<Cell>)",
+        "card(ctx: Context, cell: Cell)",
+        "spacer(ctx: Context)",
+        "dp(ctx: Context, v: Int)",
+        "class IndexTiles",
+        "class Cell"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/MeshView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshView"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.R",
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.widget.LinearLayout",
+        "android.widget.TextView"
+      ],
+      "symbols": [
+        "statusText(ctx: Context)",
+        "render(ctx: Context, inflater: LayoutInflater, root: LinearLayout)",
+        "renderTransportCard( ctx: Context, root: LinearLayout, inflater: LayoutInflater, t: Stacks.MeshTransport, nodes: List<Stacks.MeshNode>, peers: List<Stacks.MeshPeer>, )",
+        "addSubheader(ctx: Context, host: LinearLayout, text: String)",
+        "addLine(ctx: Context, host: LinearLayout, text: String, titleSize: Boolean = false, dim: Boolean = false)",
+        "class MeshView"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/NtfyCatalog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NtfyCatalog"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "config()",
+        "labels()",
+        "labelOf(topic: String)",
+        "taxons()",
+        "taxonOf(key: String)",
+        "readBaseUrl()",
+        "webBaseUrl()",
+        "pollWindow()",
+        "pollUrl(topic: String, window: String = pollWindow()",
+        "readVerdict(code: Int)",
+        "advisoryTopic()",
+        "class NtfyCatalog"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/NtfyScopes.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NtfyScopes"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "config()",
+        "load()",
+        "scopeOf(topic: String, scopes: List<Scope> = load()",
+        "fallbackChannels()",
+        "class NtfyScopes",
+        "class Scope"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/OpsClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OpsClient"
+      ],
+      "imports": [
+        "android.util.Log",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "container(vm: String, name: String, action: String, bearer: String)",
+        "service(vm: String, service: String, action: String, bearer: String)",
+        "dispatchWorkflow(repo: String, workflow: String, ref: String, bearer: String)",
+        "post(path: String, bearer: String, what: String, json: String? = null)",
+        "fail(kind: Kind, message: String)",
+        "class OpsClient",
+        "class Kind",
+        "class Outcome",
+        "class Ok",
+        "class Failed"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/Services.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -43810,6 +44238,115 @@
         "class Services",
         "class PublicService",
         "class PrivateService"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/StackAnchors.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StackAnchors"
+      ],
+      "imports": [
+        "android.view.View",
+        "android.widget.ScrollView",
+        "androidx.core.view.isVisible"
+      ],
+      "symbols": [
+        "reset(scroll: ScrollView?)",
+        "register(id: String, view: View)",
+        "dispatch(target: String)",
+        "scrollTo(id: String)",
+        "offsetIn(view: View, scroll: ScrollView)",
+        "class StackAnchors"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/StackFilters.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StackFilters"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "prefs(ctx: Context)",
+        "selected(ctx: Context, page: String, filter: Stacks.StackFilter)",
+        "select(ctx: Context, page: String, filterId: String, optionId: String)",
+        "lastSeen(ctx: Context, page: String)",
+        "markSeen(ctx: Context, page: String, at: Long)",
+        "readsKey(page: String)",
+        "readKeys(ctx: Context, page: String)",
+        "markRead(ctx: Context, page: String, id: String, read: Boolean)",
+        "pruneRead(ctx: Context, page: String, prefix: String, present: Set<String>)",
+        "class StackFilters"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/Stacks.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Stacks"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "com.diegonmarcos.cloudc3.BuildConfig",
+        "org.json.JSONArray"
+      ],
+      "symbols": [
+        "stackTopology()",
+        "stackObservability()",
+        "tileColumns()",
+        "decode(b64: String)",
+        "parseStack(b64: String)",
+        "cloudServices()",
+        "mesh()",
+        "iconResFor(ctx: Context, name: String)",
+        "class Stacks",
+        "class StackPanel",
+        "class PanelAnchor",
+        "class StackFilter",
+        "class FilterOption",
+        "class AggTile",
+        "class RepoRef",
+        "class CloudDash",
+        "class CloudGroup",
+        "class CloudSub",
+        "class CloudContainer",
+        "class DashProvider",
+        "class MeshNode",
+        "class MeshPeer",
+        "class MeshTransport",
+        "class Mesh"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/cloud/StatusLight.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StatusLight"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.cloudc3.R"
+      ],
+      "symbols": [
+        "of(reading: Boolean?, observed: Boolean = true)",
+        "glyph(state: State)",
+        "labelRes(state: State)",
+        "label(ctx: Context, state: State)",
+        "text(ctx: Context, state: State)",
+        "colourRes(state: State)",
+        "colour(ctx: Context, state: State)",
+        "description(ctx: Context, rowLabel: String, state: State)",
+        "class StatusLight",
+        "class State"
       ]
     },
     {
@@ -43859,8 +44396,12 @@
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.core.view.ViewCompat",
         "androidx.core.view.WindowInsetsCompat",
+        "android.widget.Toast",
+        "androidx.fragment.app.Fragment",
         "androidx.fragment.app.commit",
         "com.diegonmarcos.cloudc3.cloud.C3HealthFragment",
+        "com.diegonmarcos.cloudc3.cloud.C3MeshFragment",
+        "com.diegonmarcos.cloudc3.cloud.C3StackFragment",
         "com.diegonmarcos.cloudc3.pages.AppsFragment",
         "com.diegonmarcos.cloudc3.pages.ConfigsFragment",
         "com.diegonmarcos.cloudc3.pages.HomeFragment",
@@ -43873,6 +44414,7 @@
         "onSaveInstanceState(outState: Bundle)",
         "show(tabId: String)",
         "onUrlClicked(url: String)",
+        "onTargetClicked(target: String)",
         "class MainActivity"
       ]
     },
@@ -44000,7 +44542,10 @@
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.cloudc3.Declarations",
         "com.diegonmarcos.cloudc3.R",
-        "com.diegonmarcos.cloudc3.cloud.C3HealthFragment"
+        "com.diegonmarcos.cloudc3.cloud.C3HealthFragment",
+        "com.diegonmarcos.cloudc3.cloud.C3MeshFragment",
+        "com.diegonmarcos.cloudc3.cloud.C3StackFragment",
+        "com.diegonmarcos.superapp.ops.dagu.DaguFragment"
       ],
       "symbols": [
         "pages()",
@@ -44146,6 +44691,50 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/test/test-c3-full-copy.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "mutate()",
+        "pyjson()",
+        "m_drop_feed()",
+        "m_drop_arm()",
+        "m_lose_file()",
+        "m_hollow_file()",
+        "m_unbake()",
+        "m_dead_anchor()",
+        "m_orphan_page()",
+        "m_drop_module()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "mutate()",
+        "pyjson()",
+        "m_drop_feed()",
+        "m_drop_arm()",
+        "m_lose_file()",
+        "m_hollow_file()",
+        "m_unbake()",
+        "m_dead_anchor()",
+        "m_orphan_page()",
+        "m_drop_module()"
       ]
     },
     {
@@ -101601,7 +102190,7 @@
         "store(key, value)",
         "panelHeader(title, ...actions)",
         "sharedRoot()",
-        "storePath(relative)",
+        "gitPath(relative)",
         "renderBacklogView(panel, title, entry, ...extra)",
         "load(file)",
         "renderBacklog(panel)",
@@ -115530,6 +116119,7 @@
         "resolve(app_root, fleet_id)",
         "app_by_fleet_id(app_root, fleet_id)",
         "shared_root(app_root, fleet_id)",
+        "git_subdir(app_root, fleet_id)",
         "main(argv)"
       ],
       "imports": [
@@ -115544,6 +116134,7 @@
         "resolve(app_root, fleet_id)",
         "app_by_fleet_id(app_root, fleet_id)",
         "shared_root(app_root, fleet_id)",
+        "git_subdir(app_root, fleet_id)",
         "main(argv)"
       ]
     },
@@ -118982,6 +119573,9 @@
         "OthersPage"
       ],
       "imports": [
+        "android.os.Build",
+        "android.widget.Toast",
+        "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Spacer",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -118998,6 +119592,7 @@
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
         "com.diegonmarcos.clouddrive.BuildConfig",
@@ -119014,7 +119609,7 @@
       ],
       "symbols": [
         "OthersPage(prefs: DrivePrefs, actions: DriveActions, rcloneVersion: String?, modifier: Modifier = Modifier)",
-        "AboutRow(label: String, value: String)"
+        "AboutRow(label: String, value: String, tag: String? = null, onClick: (()"
       ]
     },
     {
@@ -119141,6 +119736,42 @@
         "launchApp(packageName: String, fallbackUrl: String)",
         "openAuthProfile(pkg: String, target: String, extra: String)",
         "class DriveActions"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveDebugLog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveDebugLog"
+      ],
+      "imports": [
+        "android.content.ContentValues",
+        "android.content.Context",
+        "android.net.Uri",
+        "android.os.Build",
+        "android.os.Environment",
+        "android.provider.MediaStore",
+        "android.util.Log",
+        "java.io.File",
+        "java.io.PrintWriter",
+        "java.io.StringWriter",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "i(ctx: Context, tag: String, msg: String)",
+        "w(ctx: Context, tag: String, msg: String, t: Throwable? = null)",
+        "e(ctx: Context, tag: String, msg: String, t: Throwable? = null)",
+        "line(epochMillis: Long, level: String, tag: String, msg: String)",
+        "write(ctx: Context, level: String, tag: String, msg: String, t: Throwable?)",
+        "appendViaMediaStore(ctx: Context, payload: String)",
+        "findRow(ctx: Context, name: String)",
+        "appendLegacy(payload: String)",
+        "class composed",
+        "class DriveDebugLog"
       ]
     },
     {
@@ -120087,7 +120718,6 @@
       ],
       "imports": [
         "android.content.Context",
-        "android.util.Log",
         "androidx.work.Constraints",
         "androidx.work.ExistingWorkPolicy",
         "androidx.work.NetworkType",
@@ -120095,6 +120725,9 @@
         "androidx.work.WorkManager",
         "androidx.work.Worker",
         "androidx.work.WorkerParameters",
+        "com.diegonmarcos.clouddrive.configs.DriveAuthApply",
+        "com.diegonmarcos.clouddrive.configs.DriveGitChain",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
         "com.diegonmarcos.cloudlib.gitsync.GitEngine",
         "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
         "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
@@ -120102,6 +120735,7 @@
       ],
       "symbols": [
         "doWork()",
+        "authDemanded(why: String)",
         "reportFile(context: Context)",
         "lastReport(context: Context)",
         "schedule(context: Context)",
@@ -120128,6 +120762,9 @@
         "healthUrl()",
         "sessionProvider()",
         "sessionHeader()",
+        "cloneUrl(rungId: String, owner: String, name: String, listed: String)",
+        "cloneUrlFrom(template: String, order: List<String>, owner: String, name: String, listed: String)",
+        "explainCloneFailure(why: String)",
         "repos(session: String, rungId: String = \"\")",
         "class FleetGit",
         "class Outcome",
@@ -120255,8 +120892,9 @@
         "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier)",
         "onSignedIn(result: SignInResult)",
         "onWebSession(cookie: String)",
-        "cloneViaTerminal(name: String)",
-        "clone(name: String)",
+        "cloneViaTerminal(name: String, url: String)",
+        "clone(name: String, listedUrl: String = \"\", listedSshUrl: String = \"\")",
+        "cloneViaFleet(rungId: String, gh: GitHubRepos.Repo)",
         "fetchFleetListing(rungId: String)",
         "fetchListing(token: String)",
         "startChain()",
@@ -120283,6 +120921,7 @@
       ],
       "imports": [
         "android.content.Context",
+        "com.diegonmarcos.clouddrive.DriveDebugLog",
         "com.diegonmarcos.clouddrive.GitSyncWorker",
         "com.diegonmarcos.clouddrive.SharedStore",
         "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
@@ -120302,6 +120941,7 @@
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
+        "authFor(repo: ManagedRepo)",
         "refresh()",
         "save(repo: ManagedRepo)",
         "remove(repo: ManagedRepo)",
@@ -120312,6 +120952,7 @@
         "runOp(repo: ManagedRepo, opId: String, message: String = \"\")",
         "setRemote(repo: ManagedRepo, mode: com.diegonmarcos.clouddrive.Declarations.GitRemoteModeDecl, owner: String, name: String)",
         "cloneInto(name: String, url: String, authKind: String, username: String, token: String, sshKeyPath: String = \"\")",
+        "hostOf(url: String)",
         "class GitSyncCoordinator",
         "class Glance",
         "class Step",
@@ -121209,6 +121850,9 @@
         "aMissingOutcomeIsNotComplete()",
         "anUndeclarableRepositoryDoesNotLoopForever()",
         "theReportHasOneLinePerRepositoryPlusTheTally()",
+        "aMissingCredentialIsTerminalNotARetry()",
+        "aTransientFailureBesideABlockedRepositoryStillRetries()",
+        "theAuthDemandMatchesTheMeasuredTransportWording()",
         "class SeedReportTest"
       ]
     },
@@ -121241,6 +121885,28 @@
         "undeclaredFoldersAndPlainDirsAreIgnored()",
         "aPlainUserFolderIsNeverDeletedForTheCompleteClone()",
         "class StoreMigrationTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/FleetGitTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetGitTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "declaredOrderResolvesTheTemplateAgainstTheListingItemsOwnOwner()",
+        "reorderingTheDeclarationReordersTheAttempt()",
+        "anUnresolvableEntryFallsToTheNextDeclaredOneAndNothingResolvableIsBlank()",
+        "aRedirectMidCloneNamesTheGateAndTheSignInThatFixesIt()",
+        "aRefusalNamesTheFleetItselfNotTheGate()",
+        "anUnrecognisedFailurePassesThroughUnrewritten()",
+        "class FleetGitTest"
       ]
     },
     {
@@ -121510,6 +122176,34 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-build-sha.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "t1()",
+        "t2()",
+        "_stage()",
+        "_sub()",
+        "_green()",
+        "_red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "t1()",
+        "t2()",
+        "_stage()",
+        "_sub()",
+        "_green()",
+        "_red()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-configs-sign-in.sh",
       "lang": "sh",
       "role": "shell",
@@ -121527,6 +122221,44 @@
         "codeof()",
         "s2()",
         "s4()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-debug-log.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "_stage()",
+        "_sub()",
+        "_json()",
+        "_green()",
+        "_red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "t6()",
+        "_stage()",
+        "_sub()",
+        "_json()",
+        "_green()",
+        "_red()"
       ]
     },
     {
@@ -121650,12 +122382,15 @@
         "c5_one()",
         "c5b()",
         "c6()",
+        "c10()",
+        "c11()",
         "_stage()",
         "_sub()",
         "_json()",
         "_green()",
         "_red()",
-        "_c9()"
+        "_c9()",
+        "_c11()"
       ],
       "imports": [],
       "symbols": [
@@ -121674,12 +122409,15 @@
         "c5_one()",
         "c5b()",
         "c6()",
+        "c10()",
+        "c11()",
         "_stage()",
         "_sub()",
         "_json()",
         "_green()",
         "_red()",
-        "_c9()"
+        "_c9()",
+        "_c11()"
       ]
     },
     {
@@ -121759,6 +122497,24 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-one-store.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "scan()"
+      ],
+      "imports": [
+        "test-drive-shared-store.sh"
+      ],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "scan()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-pdf-engine.sh",
       "lang": "sh",
       "role": "shell",
@@ -121801,6 +122557,8 @@
         "s2()",
         "s3()",
         "s4()",
+        "s5()",
+        "s6()",
         "m1()",
         "m2()",
         "mutate()"
@@ -121813,6 +122571,8 @@
         "s2()",
         "s3()",
         "s4()",
+        "s5()",
+        "s6()",
         "m1()",
         "m2()",
         "mutate()"
@@ -303516,6 +304276,7 @@
         "ok()",
         "bad()",
         "q()",
+        "notice_echoed()",
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
@@ -303529,6 +304290,7 @@
         "ok()",
         "bad()",
         "q()",
+        "notice_echoed()",
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
