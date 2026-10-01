@@ -59,6 +59,12 @@ let
   # peaks near 510M on a 954M box; on 2026-09-30 that alone drove memPSI to 89
   # and the shedder stopped the daemon it had restarted 32 seconds earlier.
   dockerStartGraceSecs = cfg "docker_start_grace_secs" 180;
+  # Post-activation arm check (load-shedder-arm-check.sh): how many times to
+  # ask systemctl, how long each answer may take, and the pause between. A
+  # 1-CPU box under load answers slowly; 10s was too short on 2026-10-01.
+  armCheckAttempts    = cfg "arm_check_attempts" 4;
+  armCheckTimeoutSecs = cfg "arm_check_timeout_secs" 15;
+  armCheckPauseSecs   = cfg "arm_check_pause_secs" 5;
 
   # Tier-1 services that survive graduated shed (stopped only on page-level).
   tier1Services = cfg "tier1_services" [];
@@ -407,6 +413,11 @@ in {
     '';
   };
 
+  home.file.".local/share/system-protection/load-shedder-arm-check.sh" = {
+    executable = true;
+    source = ./load-shedder-arm-check.sh;
+  };
+
   home.file.".local/share/system-protection/load-shedder.service".text = ''
     [Unit]
     Description=Load shedder — stop docker on memory pressure to keep WireGuard/SSH alive
@@ -456,13 +467,13 @@ in {
     # VERIFY it actually armed. A silently-unguarded VM is exactly how oci-mail
     # thrashed to 85%% memPSI with the shedder never firing (2026-07-03): the
     # old activation swallowed install/start failures into a bare echo nobody
-    # sees, and never confirmed the service came up. Retry once, then FAIL LOUD
-    # + drop a persistent marker the health report surfaces.
+    # sees, and never confirmed the service came up. The arm check retries a
+    # slow systemctl instead of reading a timed-out query as "inactive" (the
+    # 2026-10-01 false marker on oci-analytics), restarts once on a real
+    # inactive/failed, then FAIL LOUD + drop a persistent marker the health
+    # report surfaces.
     $SUDO rm -f /run/load-shedder.deploy-failed 2>/dev/null || true
-    if ! timeout 10 $SUDO systemctl is-active --quiet load-shedder.service; then
-      sleep 2; timeout 10 $SUDO systemctl restart --no-block load-shedder.service 2>/dev/null || true; sleep 2
-    fi
-    if timeout 10 $SUDO systemctl is-active --quiet load-shedder.service; then
+    if $SUDO sh "$SRC/load-shedder-arm-check.sh" ${toString armCheckAttempts} ${toString armCheckTimeoutSecs} ${toString armCheckPauseSecs}; then
       echo "[load-shedder] ARMED ✓ (MEMORY-PSI-ONLY: mem>=${toString memPsiCrit}%% sustained → stop docker)"
     else
       echo "[load-shedder] ✗✗✗ FAILED TO ARM — VM UNPROTECTED against memory thrash ✗✗✗" >&2
