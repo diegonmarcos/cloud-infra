@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20079,
+    "files": 20091,
     "by_lang": {
-      "py": 57,
-      "sh": 327,
-      "kotlin": 10072,
+      "py": 59,
+      "sh": 332,
+      "kotlin": 10077,
       "java": 609,
       "ts": 8413,
       "nix": 64,
@@ -18,14 +18,14 @@
       "rust": 85
     },
     "by_role": {
-      "script": 147,
-      "shell": 237,
+      "script": 150,
+      "shell": 241,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10070,
+      "kotlin": 10075,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
@@ -92,6 +92,37 @@
         "step_secrets()",
         "step_sign()",
         "step_deploy()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-engine-contract-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "code(path)",
+        "sources(root)",
+        "engine_modules(root)",
+        "engine_service(module_dir)",
+        "client_calls(app_dir, key)",
+        "check(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "code(path)",
+        "sources(root)",
+        "engine_modules(root)",
+        "engine_service(module_dir)",
+        "client_calls(app_dir, key)",
+        "check(root)",
+        "main(argv)"
       ]
     },
     {
@@ -1320,6 +1351,37 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-engine-contract-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "code(path)",
+        "sources(root)",
+        "engine_modules(root)",
+        "engine_service(module_dir)",
+        "client_calls(app_dir, key)",
+        "check(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "code(path)",
+        "sources(root)",
+        "engine_modules(root)",
+        "engine_service(module_dir)",
+        "client_calls(app_dir, key)",
+        "check(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-firestack-pin-health.sh",
       "lang": "sh",
       "role": "script",
@@ -2514,6 +2576,32 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/engine-contract-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "guard()",
+        "sub()",
+        "js()",
+        "landed()",
+        "red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "guard()",
+        "sub()",
+        "js()",
+        "landed()",
+        "red()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/fleet-manifest-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -2602,7 +2690,8 @@
         "_build_json()",
         "_tester()",
         "_run()",
-        "_clean()"
+        "_clean()",
+        "_nested()"
       ],
       "imports": [
         "cloud-android-test-engine.sh"
@@ -2613,7 +2702,8 @@
         "_build_json()",
         "_tester()",
         "_run()",
-        "_clean()"
+        "_clean()",
+        "_nested()"
       ]
     },
     {
@@ -7814,7 +7904,7 @@
         "java.net.URL"
       ],
       "symbols": [
-        "fetchArtifact(cacheDir: File, privateKeyPem: String, passphrase: String)",
+        "fetchArtifact( cacheDir: File, privateKeyPem: String, passphrase: String, path: String = AuthDeclaration.configSource.gitPath, )",
         "readBlob(repository: Repository, ref: String, path: String)",
         "sessionFactory( privateKeyPem: String, passphrase: String, knownHosts: String, )",
         "createDefaultJSch(fs: FS)",
@@ -7824,6 +7914,30 @@
         "failed(kind: ConfigSyncClient.Kind, message: String)",
         "class in",
         "class GitSshVault"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/InfoMask.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InfoMask"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "hides(fullPath: String, value: String)",
+        "rows(sectionId: String, value: Any?)",
+        "walk(section: String, v: Any?, path: String, out: MutableList<Row>)",
+        "join(path: String, key: String)",
+        "parse(o: JSONObject?)",
+        "list(key: String)",
+        "class or",
+        "class InfoMask",
+        "class Kind",
+        "class Row"
       ]
     },
     {
@@ -7870,13 +7984,14 @@
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
+        "tabLabel(index: Int)",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
         "renderPerson(ctx: android.content.Context, col: LinearLayout)",
         "beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
         "afterTextChanged(s: Editable?)",
-        "profileInfoSections()",
         "renderInfos(ctx: android.content.Context, into: LinearLayout)",
+        "infoValue(ctx: android.content.Context, row: InfoMask.Row)",
         "renderTokens(ctx: android.content.Context, into: LinearLayout)",
         "held(present: Boolean)",
         "infoRow(ctx: android.content.Context, key: String, value: String)",
@@ -7890,26 +8005,25 @@
         "heroSummary(s: ProfileJourney.State)",
         "paintJourney()",
         "renderJourney(ctx: android.content.Context, into: LinearLayout)",
+        "connectDecl()",
+        "connectLines()",
         "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "buildWay( ctx: android.content.Context, s: ProfileJourney.State, way: Way, policy: List<String>, cell: LinearLayout, extras: LinearLayout, status: TextView, )",
+        "signInWay(ctx: android.content.Context, way: Way, providerIds: List<String>)",
+        "lineHeld(ctx: android.content.Context, line: Line)",
         "buildStoredBearer(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout, status: TextView)",
         "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
         "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
         "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "renderConfigApply(ctx: android.content.Context, into: LinearLayout)",
         "renderVault(ctx: android.content.Context, into: LinearLayout)",
+        "renderDevicePick(ctx: android.content.Context, into: LinearLayout)",
+        "renderSetup(ctx: android.content.Context, into: LinearLayout)",
         "renderRepos(ctx: android.content.Context, into: LinearLayout)",
         "renderWizard(ctx: android.content.Context, into: LinearLayout)",
         "openWizardRoute(route: String)",
         "profileRepos()",
-        "profileTabOrder()",
-        "statusView(ctx: android.content.Context)",
-        "stamp()",
-        "showMailCodeDialog()",
-        "tabStrip( ctx: android.content.Context, tabs: List<Tab>, )",
-        "show(index: Int)",
-        "onTabSelected(tab: TabLayout.Tab)",
-        "onTabUnselected(tab: TabLayout.Tab)",
-        "onTabReselected(tab: TabLayout.Tab)",
-        "mailConfirmationField(ctx: android.content.Context)"
+        "profileTabs()"
       ]
     },
     {
@@ -8075,8 +8189,12 @@
         "meshRows(bundle: JSONObject, device: Device, current: TunnelState)",
         "applyMesh(prefs: WireGuardPrefs, name: String, conf: String)",
         "mailDeclared(bundle: JSONObject, email: String)",
+        "mailAccounts(bundle: JSONObject, domain: String)",
+        "mailAccountRows(accounts: List<MailDeclared>, deviceEmail: String)",
         "mailRows(d: MailDeclared?, prefs: JmapPrefs)",
         "applyMail(prefs: JmapPrefs, d: MailDeclared)",
+        "aboutRows(bundle: JSONObject, fields: Map<String, String>, device: (String)",
+        "applyAbout(bundle: JSONObject, fields: Map<String, String>, set: (String, String)",
         "keyboardRows(bundle: JSONObject, deviceText: String)",
         "driveRows(bundle: JSONObject, prefs: ConfigsPrefs)",
         "secretRow(label: String, item: String, section: String, key: String)",
@@ -8094,10 +8212,7 @@
         "class State",
         "class Row",
         "class Tally",
-        "class TunnelState",
-        "class MailDeclared",
-        "class AiState",
-        "class that"
+        "class TunnelState"
       ]
     },
     {
@@ -10029,6 +10144,31 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/InfoMaskTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InfoMaskTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "bundle()",
+        "allRows(mask: InfoMask)",
+        "class InfoMaskTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/ProfileJourneyTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10068,6 +10208,29 @@
         "cards(root: View)",
         "walk(v: View)",
         "class ProfileJourneyTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/SetupItemsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SetupItemsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.superapp.profile.VaultCockpit.State",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "bundle()",
+        "class SetupItemsTest"
       ]
     },
     {
@@ -10499,6 +10662,40 @@
       "symbols": [
         "ok()",
         "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-account-three-tabs.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "fnof()",
+        "lines_ok()",
+        "amut()",
+        "oauth_free()",
+        "masked_row_blank()",
+        "draws_no_secret()",
+        "mask_leaks()",
+        "verdict_ok()",
+        "pat_clean()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "codeof()",
+        "fnof()",
+        "lines_ok()",
+        "amut()",
+        "oauth_free()",
+        "masked_row_blank()",
+        "draws_no_secret()",
+        "mask_leaks()",
+        "verdict_ok()",
+        "pat_clean()"
       ]
     },
     {
@@ -11634,7 +11831,7 @@
         "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
-        "infos_ok()",
+        "tab_mut()",
         "sweep()"
       ],
       "imports": [],
@@ -11648,7 +11845,7 @@
         "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
-        "infos_ok()",
+        "tab_mut()",
         "sweep()"
       ]
     },
@@ -11701,6 +11898,7 @@
         "bad()",
         "codeof()",
         "waysin()",
+        "lib_dead()",
         "t4()",
         "wizard_order()",
         "real_checks()",
@@ -11713,6 +11911,7 @@
         "bad()",
         "codeof()",
         "waysin()",
+        "lib_dead()",
         "t4()",
         "wizard_order()",
         "real_checks()",
@@ -13939,6 +14138,68 @@
         "_resolve_signing()",
         "_enforce_signature()",
         "_assemble()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-engine-services.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "engines()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_sub()",
+        "_json()",
+        "_stage()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "engines()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_sub()",
+        "_json()",
+        "_stage()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-git-binaries.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "c5_one()",
+        "c5b()",
+        "c6()",
+        "c7()",
+        "_stage()",
+        "_sub()",
+        "_json()",
+        "_green()",
+        "_red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "c5_one()",
+        "c5b()",
+        "c6()",
+        "c7()",
+        "_stage()",
+        "_sub()",
+        "_json()",
+        "_green()",
+        "_red()"
       ]
     },
     {
@@ -19379,6 +19640,28 @@
         "detectTransformGestures( panZoomLock: Boolean = false, consume: Boolean = true, onGestureStart: (PointerInputChange)",
         "detectPointerTransformGestures( panZoomLock: Boolean = false, numberOfPointers: Int = 1, requisite: PointerRequisite = PointerRequisite.None, consume: Boolean = true, onGestureStart: (PointerInputChange)",
         "class PointerRequisite"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhBackendService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhBackendService"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.core.DataBackendService",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, args: Array<String>)",
+        "result(r: GhRunner.Result)",
+        "arg(args: Array<String>, i: Int)",
+        "start(runner: GhRunner, host: String)",
+        "poll()",
+        "class GhBackendService",
+        "class Login"
       ]
     },
     {
@@ -121622,6 +121905,41 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GhEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhEngine"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.os.SystemClock",
+        "com.diegonmarcos.clouddrive.BuildConfig",
+        "com.diegonmarcos.superapp.core.DataBackendClient",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "toString()",
+        "check()",
+        "status(host: String)",
+        "repoList(limit: Int, fields: String)",
+        "credential(host: String)",
+        "login(host: String, onPrompt: (code: String, url: String)",
+        "ask(method: String, vararg args: String)",
+        "result(o: JSONObject)",
+        "pageOnHost(url: String, host: String)",
+        "class GhEngine",
+        "class Check",
+        "class Ready",
+        "class NotInstalled",
+        "class TooOld",
+        "class Result",
+        "class Credential"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GitHubRepos.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -123268,6 +123586,48 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-gh-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "d7()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_gone()",
+        "_sub()",
+        "_json()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "d7()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_gone()",
+        "_sub()",
+        "_json()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-git-auth-chain.sh",
       "lang": "sh",
       "role": "shell",
@@ -123284,8 +123644,6 @@
         "c3b()",
         "c4()",
         "c7()",
-        "c5_one()",
-        "c5b()",
         "c6()",
         "c10()",
         "c11()",
@@ -123311,8 +123669,6 @@
         "c3b()",
         "c4()",
         "c7()",
-        "c5_one()",
-        "c5b()",
         "c6()",
         "c10()",
         "c11()",
@@ -296996,6 +297352,7 @@
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
         "probe_usershell_exec(login_inner: str)",
+        "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -297021,6 +297378,7 @@
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
         "probe_usershell_exec(login_inner: str)",
+        "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
         "run(cmd)",
@@ -298208,9 +298566,7 @@
         "android.content.IntentFilter",
         "android.content.ServiceConnection",
         "android.net.Uri",
-        "android.os.Build",
         "android.os.Bundle",
-        "android.os.Environment",
         "android.os.IBinder",
         "android.view.ContextMenu",
         "android.view.ContextMenu.ContextMenuInfo",
@@ -298237,7 +298593,9 @@
         "com.termux.shared.android.PermissionUtils",
         "com.termux.shared.data.DataUtils",
         "com.termux.shared.termux.TermuxConstants",
-        "com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY"
+        "com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY",
+        "com.termux.app.activities.HelpActivity",
+        "com.termux.app.activities.SettingsActivity"
       ],
       "symbols": [
         "onCreate(Bundle savedInstanceState)",
@@ -305287,6 +305645,7 @@
         "ok()",
         "bad()",
         "q()",
+        "storage_request_fits_target()",
         "notice_echoed()",
         "sha_gated()",
         "fake_build_json()",
@@ -305301,6 +305660,7 @@
         "ok()",
         "bad()",
         "q()",
+        "storage_request_fits_target()",
         "notice_echoed()",
         "sha_gated()",
         "fake_build_json()",
