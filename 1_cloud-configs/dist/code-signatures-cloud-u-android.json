@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20113,
+    "files": 20116,
     "by_lang": {
       "py": 61,
-      "sh": 339,
-      "kotlin": 10088,
+      "sh": 341,
+      "kotlin": 10089,
       "java": 609,
       "ts": 8413,
       "nix": 64,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 154,
-      "shell": 246,
+      "shell": 248,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10086,
+      "kotlin": 10087,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
@@ -12219,6 +12219,22 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-store-controls.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "body_of()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "body_of()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-store-identity-line.sh",
       "lang": "sh",
       "role": "shell",
@@ -14760,7 +14776,6 @@
         "feeds(ctx: Context)",
         "parse(decl: JSONObject)",
         "words(a: JSONArray?)",
-        "labels(feeds: List<Feed>)",
         "load(feed: Feed)",
         "read(feed: Feed, url: String)",
         "explain(t: Throwable)",
@@ -14982,6 +14997,7 @@
         "android.view.LayoutInflater",
         "android.view.View",
         "android.view.ViewGroup",
+        "android.widget.HorizontalScrollView",
         "android.widget.LinearLayout",
         "android.widget.ProgressBar",
         "android.widget.ScrollView",
@@ -15005,7 +15021,7 @@
         "confirmDowngrade(app: Fleet.App, candidateCode: Long, installedCode: Long)",
         "tabBar(ctx: Context)",
         "lineDivider(ctx: Context)",
-        "tabButton(ctx: Context, index: Int, label: String, style: TabStyle)",
+        "tabButton(ctx: Context, index: Int, control: StoreControls.Control)",
         "paintTabs()",
         "renderTab(ctx: Context)",
         "renderFeed(ctx: Context, feed: FeedViewer.Feed)",
@@ -15036,6 +15052,32 @@
         "renderPerms(ctx: Context)",
         "paint()",
         "renderAndroidPerms(ctx: Context, into: LinearLayout, pkg: String)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreControls.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreControls"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.drawable.GradientDrawable",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "style(token: String)",
+        "page(id: String, caption: String? = null)",
+        "load(ctx: Context)",
+        "parse(decl: JSONObject)",
+        "argb(o: JSONObject, key: String)",
+        "background(ctx: Context, style: Style, active: Boolean, fillOverride: Int? = null)",
+        "class maps",
+        "class StoreControls",
+        "class Style",
+        "class Control",
+        "class Decl"
       ]
     },
     {
@@ -19999,15 +20041,18 @@
         "java.net.UnknownHostException",
         "java.security.SecureRandom",
         "java.util.Base64",
+        "java.util.concurrent.atomic.AtomicLong",
+        "java.util.concurrent.atomic.AtomicReference",
         "kotlin.concurrent.thread"
       ],
       "symbols": [
         "serve(client: Socket)",
+        "relay(client: Socket, fromGh: InputStream, upstream: Socket)",
+        "now()",
         "cause(host: String, port: Int, e: IOException)",
         "probe(host: String, port: Int = 443)",
         "readHead(input: InputStream)",
         "reply(out: OutputStream, status: String)",
-        "pump(from: InputStream, to: OutputStream)",
         "class GhNetProxy"
       ]
     },
@@ -20084,6 +20129,10 @@
         "theProxyTunnelsOnlyForItsOwnGhToItsOwnHosts()",
         "anUnreachableHostIsNamedWithAndroidsReason()",
         "aRefusedPortIsNamedAsTcpNotDns()",
+        "aTunnelTheNetworkBreaksMidPostReachesGhAsABreakNotAnEnd()",
+        "answering(delayFor: (Int)",
+        "aTunnelGitHubHasAnsweredIsEndedOnceQuiet()",
+        "aRequestWaitingForItsAnswerIsNeverCutForQuiet()",
         "theEngineHoldsItsNetworkFromBeforeGhStartsUntilGhHasExited()",
         "aSignInThatThrowsStillReleasesTheHold()",
         "class GhLoginTest"
@@ -122021,6 +122070,7 @@
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "onResume()",
         "Root()",
         "requestStorageAccess()",
         "requestTreeGrant()",
@@ -122308,6 +122358,8 @@
         "tally()",
         "lines()",
         "text()",
+        "withoutStorage(names: List<String>, hasStorage: Boolean)",
+        "pending(declared: Int, unmetered: Boolean)",
         "class SeedOutcome",
         "class SeedReport"
       ]
@@ -122374,6 +122426,7 @@
         "androidx.work.WorkerParameters",
         "com.diegonmarcos.clouddrive.configs.DriveAuthApply",
         "com.diegonmarcos.clouddrive.configs.DriveGitChain",
+        "com.diegonmarcos.clouddrive.files.Places",
         "com.diegonmarcos.cloudlib.gitsync.GitAuth",
         "com.diegonmarcos.cloudlib.gitsync.GitEngine",
         "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
@@ -122386,6 +122439,8 @@
         "reportFile(context: Context)",
         "lastReport(context: Context)",
         "schedule(context: Context)",
+        "kick(context: Context)",
+        "enqueue(context: Context, policy: ExistingWorkPolicy)",
         "class StoreSeedWorker"
       ]
     },
@@ -123568,6 +123623,8 @@
         "aMissingCredentialIsTerminalNotARetry()",
         "aTransientFailureBesideABlockedRepositoryStillRetries()",
         "theAuthDemandMatchesTheMeasuredTransportWording()",
+        "aFreshPhoneWithoutStorageNamesEveryRepositoryAndRetries()",
+        "aQueuedSeedSaysWhatItWaitsFor()",
         "class SeedReportTest"
       ]
     },
@@ -124158,6 +124215,38 @@
         "fail()",
         "f1()",
         "f4()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-fresh-phone.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "f1()",
+        "f2()",
+        "f3()",
+        "f4()",
+        "f5()",
+        "f6()",
+        "f7()",
+        "run()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "f1()",
+        "f2()",
+        "f3()",
+        "f4()",
+        "f5()",
+        "f6()",
+        "f7()",
+        "run()",
+        "mut()"
       ]
     },
     {
