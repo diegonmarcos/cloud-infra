@@ -23,16 +23,19 @@
 const { readFileSync, writeFileSync, readdirSync } = require("fs");
 const { join } = require("path");
 
-const VAULT =
-  process.env.WG_VAULT_DIR ?? join(process.env.HOME, "git/cloud-vault/A0_keys/providers/wireguard");
+// ONE spelling of the vault directory: the default path and the `_source`
+// note below both read it, so a vault reorganisation cannot move one and leave
+// the other naming a directory that no longer exists (the 2026-09-26 move left
+// the default at A0_keys/providers/wireguard and the script dead on ENOENT).
+const VAULT_REL = "A_A0-Providers/C_TOOLS-INFRA/c0-wireguard";
+const VAULT = process.env.WG_VAULT_DIR ?? join(process.env.HOME, "git/cloud-vault", VAULT_REL);
 const PLACEHOLDER = "<PROVIDED_BY_DEVICE>";
 const users = JSON.parse(readFileSync(join(__dirname, "superapp-users.json"), "utf-8")).users;
 
 const out = {
   _doc:
     "Redacted wg-quick profiles for the Cloud SuperApp full-config artifact, ONE MAP PER PEER (profiles.<peer id>.<profile id>). SECURITY: the PrivateKey VALUE is stripped at the source boundary, so this PUBLIC repo can never carry it. Real keys stay in cloud-vault (PRIVATE); the device holds its own key and imports it from file.",
-  _source:
-    "cloud-vault/A_A0-Providers/C_TOOLS-INFRA/c0-wireguard/<peer.vault_wg_dir>/config-* for every peer in superapp-users.json that declares vault_wg_dir",
+  _source: `cloud-vault/${VAULT_REL}/<peer.vault_wg_dir>/config-* for every peer in superapp-users.json that declares vault_wg_dir`,
   _regenerate: "node 1_cloud-configs/src/inputs/regen-superapp-wireguard-profiles.js",
   private_key_placeholder: PLACEHOLDER,
   profiles: {},
