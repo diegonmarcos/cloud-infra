@@ -354,9 +354,11 @@ PULL_GATE
         rsync -az "$TMP_SCRIPT" "$DEPLOY_HOST:$DEPLOY_PATH/$SCRIPT_NAME"
         # Same reasoning as the standard path below — this custom script also
         # pulls images, so it must not hold a single ssh session open either.
-        ssh_run_detached "$DEPLOY_HOST" \
+        # compose_run, not ssh_run_detached: a service that declares deploy.drain must not be
+        # recreated under live agents (cloud-ship-container-step-deploy-drain.sh).
+        compose_run \
             "cd $DEPLOY_PATH && sh $SCRIPT_NAME; _rc=\$?; rm -f $SCRIPT_NAME; exit \$_rc" \
-            "compose-custom-$(basename "$DEPLOY_PATH")"
+            "compose-custom-$(basename "$DEPLOY_PATH")" "$_cnames"
         rm -f "$TMP_SCRIPT"
         trap - EXIT
     else
@@ -394,7 +396,8 @@ PULL_GATE
         # minutes with an almost-idle ssh channel, which is exactly when the
         # wg path to the CI runner lapses and drops the stream (exit 255).
         # See ssh_run_detached in cloud-ship-container-engine.sh.
-        ssh_run_detached "$DEPLOY_HOST" "$PAYLOAD" "compose-$(basename "$DEPLOY_PATH")"
+        # compose_run = ssh_run_detached, behind the agent drain when deploy.drain is declared.
+        compose_run "$PAYLOAD" "compose-$(basename "$DEPLOY_PATH")" "$_cnames"
     fi
 
     # ── Post-hook, with a REVISION-SCOPED run receipt ──────────────────

@@ -587,6 +587,7 @@ for _step in \
     cloud-ship-container-step-verify-secret-consumption.sh \
     cloud-ship-container-step-deploy-rsync.sh \
     cloud-ship-container-step-deploy-compose.sh \
+    cloud-ship-container-step-deploy-drain.sh \
     cloud-ship-container-step-deploy-health.sh \
     cloud-ship-container-step-status.sh \
     cloud-ship-container-step-logs.sh \
