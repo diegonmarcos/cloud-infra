@@ -187,7 +187,13 @@ TIER1="$(sed -n 's/^TIER1_SERVICES="\([^"]*\)".*/\1/p' "$SHEDDER" | head -1)"
 [ -n "$TIER1" ] || { echo "FAIL: no TIER1_SERVICES in rendered script"; exit 1; }
 # Sheddable fixtures. ntfy-exporter shares a prefix with tier-1 "ntfy" on
 # purpose: a prefix match instead of an equality match would wrongly protect it.
-SHEDDABLE="my-ai-api agent-runner-1 ntfy-exporter agent-runner-2 umami"
+# umami/umami-db are the measured dependency pair (see COMPOSE_LABELS): "umami"
+# sorts before "umami-db", so any un-shed that ignores depends_on starts the
+# dependent first.
+SHEDDABLE="my-ai-api agent-runner-1 ntfy-exporter agent-runner-2 umami umami-db"
+# Compose labels as `docker inspect` reports them: name|project|service|depends_on.
+COMPOSE_LABELS="umami|umami|umami|umami-db:service_healthy:false
+umami-db|umami|umami-db|"
 echo "   tier1 (from rendered script): $TIER1"
 echo "   sheddable fixtures:           $SHEDDABLE"
 
@@ -210,6 +216,12 @@ run_scenario() {
   : > "$SCEN/log"; : > "$SCEN/docker-calls"; : > "$SCEN/starts"
   : > "$SCEN/timeline"; : > "$SCEN/ntfy"; : > "$SCEN/systemctl-calls"
   printf '%s\n' $TIER1 $SHEDDABLE | sort > "$SCEN/running"
+  cp "$SCEN/running" "$SCEN/exists"
+  printf '%s\n' "$COMPOSE_LABELS" > "$SCEN/labels"
+  #   SLOW_HEALTH        names that report "starting" for 2 polls after a start
+  #   UNHEALTHY          names that start but report "unhealthy"
+  printf '%s\n' ${SLOW_HEALTH:-} | grep -v '^$' > "$SCEN/slow-health" || true
+  printf '%s\n' ${UNHEALTHY:-} | grep -v '^$' > "$SCEN/unhealthy" || true
   # Optional scenario knobs, read from the caller's environment:
   #   STATS_ROWS         `docker stats` output (unset = stats fails, ps fallback)
   #   START_FAILS        how many `systemctl start docker.service` calls fail
@@ -279,8 +291,41 @@ case "$cmd" in
       echo "$c" >> "$SCEN/starts"
       echo "start:$c" >> "$SCEN/timeline"
       grep -qxF "$c" "$SCEN/start-fails" 2>/dev/null && exit 1
+      # What umami did on 2026-10-01 01:16: started while its depends_on
+      # target was not up yet, failed its own DB check and exited.
+      deps=$(grep "^$c|" "$SCEN/labels" | cut -d'|' -f4 | tr ',' '\n' | cut -d: -f1)
+      proj=$(grep "^$c|" "$SCEN/labels" | cut -d'|' -f2)
+      for d in $deps; do
+        dc=$("$AWK_REAL" -F'|' -v p="$proj" -v s="$d" '$2 == p && $3 == s { print $1 }' "$SCEN/labels")
+        if ! grep -qxF "$dc" "$SCEN/running" || [ -e "$SCEN/polls-$dc" ]; then
+          echo "died:$c" >> "$SCEN/timeline"; continue 2
+        fi
+      done
       echo "$c" >> "$SCEN/running"
+      grep -qxF "$c" "$SCEN/slow-health" && echo 2 > "$SCEN/polls-$c"
     done ;;
+  inspect)
+    [ "$1" = --format ] || exit 1
+    fmt="$2"; shift 2
+    rc=0
+    for c in "$@"; do
+      grep -qxF "$c" "$SCEN/exists" || { rc=1; continue; }
+      case "$fmt" in
+        *compose*)
+          grep "^$c|" "$SCEN/labels" | sed 's|^|/|' | grep . || echo "/$c|||" ;;
+        *State*)
+          if ! grep -qxF "$c" "$SCEN/running"; then st=exited
+          elif grep -qxF "$c" "$SCEN/unhealthy"; then st=unhealthy
+          elif [ -e "$SCEN/polls-$c" ]; then
+            n=$(($(cat "$SCEN/polls-$c") - 1)); st=starting
+            if [ "$n" -le 0 ]; then rm -f "$SCEN/polls-$c"; else echo "$n" > "$SCEN/polls-$c"; fi
+          elif grep -qxF "$c" "$SCEN/slow-health"; then st=healthy
+          else st=running; fi
+          echo "health:$c:$st" >> "$SCEN/timeline"
+          echo "$st" ;;
+      esac
+    done
+    exit $rc ;;
 esac
 exit 0
 STUB
@@ -339,10 +384,13 @@ ntfy_has() { grep -qF "$2" "$WORK/$1/ntfy"; }
 same_set() { [ "$(sort "$1" | tr -d ' ')" = "$(printf '%s\n' $2 | sort | tr -d ' ')" ]; }
 count_lines() { [ "$(wc -l < "$1")" -eq "$2" ]; }
 count_calls() { [ "$(grep -c "^$3" "$WORK/$1/docker-calls")" -eq "$2" ]; }
-# Pacing: the shedder must pause between each start, so every start line in the
-# timeline is immediately followed by a sleep line.
-starts_are_paced() { awk '/^start:/ { if ((getline nxt) <= 0 || nxt !~ /^sleep:/) { bad = 1 } } END { exit bad }' "$WORK/$1/timeline"; }
-unshed_delay_used() { awk '/^start:/ { if ((getline nxt) > 0) { sub(/^sleep:/, "", nxt); print nxt } }' "$WORK/$1/timeline" | sort -u; }
+# Pacing: the shedder must pause between each start, so no two start lines in
+# the timeline are without a sleep between them, and the last start is followed
+# by one. (Readiness polls may sit between a start and its pause.)
+starts_are_paced() { awk '/^start:/ { if (open) bad = 1; open = 1 } /^sleep:/ { open = 0 } END { exit (bad || open) }' "$WORK/$1/timeline"; }
+unshed_delay_used() { awk '/^start:/ { open = 1 } /^sleep:/ && open { sub(/^sleep:/, ""); print; open = 0 }' "$WORK/$1/timeline" | sort -u; }
+# $2 occurs on a timeline line strictly before $3.
+before() { awk -v a="$2" -v b="$3" '$0 == a && !sa { sa = NR } $0 == b && !sb { sb = NR } END { exit !(sa && sb && sa < sb) }' "$WORK/$1/timeline"; }
 # Exact-token match, not grep -w: "-" is a word boundary, so -w would let a
 # stopped ntfy-exporter satisfy an assertion about tier-1 ntfy.
 never_touched() { ! tr ' ' '\n' < "$WORK/$1/docker-calls" | grep -qxF -e "$2"; }
@@ -363,6 +411,8 @@ for t in $TIER1; do
   assert "tier-1 $t was never stopped or started" never_touched A "$t"
 done
 assert "starts are paced one-by-one (start always followed by a sleep)" starts_are_paced A
+assert "umami-db was started before its dependent umami" before A "start:umami-db" "start:umami"
+assert "no dependent died for want of its dependency" log_lacks A "UNSHED FAILED"
 assert "un-shed reported success" log_has A "UNSHED: all shed containers restarted"
 assert "recovery was notified loudly" ntfy_has A "RECOVERY — shed containers restarted"
 assert "shed list cleared after a clean un-shed" test ! -e "$SHED_LIST"
@@ -435,6 +485,25 @@ assert "second episode really did a full shed" log_count E "SHED-PAGE:" 2
 assert "second episode's recovery restarted docker" log_count E "RECOVERY: docker.service started" 1
 assert "second episode was not refused" log_lacks E "restart already attempted and failed"
 
+# ── F: a dependency that takes its time to turn healthy ───────────────────
+# Started first is not enough: umami's DB check runs seconds after its start,
+# so umami-db has to be HEALTHY before umami is started, not merely started.
+echo "-- scenario F: dependent waits for its dependency's healthcheck"
+SLOW_HEALTH="umami-db" run_scenario F "55 55 55 0 0" ""
+
+assert "umami-db's healthcheck was polled until healthy" before F "health:umami-db:starting" "health:umami-db:healthy"
+assert "umami was started only after umami-db reported healthy" before F "health:umami-db:healthy" "start:umami"
+assert "un-shed succeeded" log_has F "UNSHED: all shed containers restarted"
+
+# ── G: started but unhealthy is a failure, not a success ──────────────────
+# The verdict used to be "does docker ps list it right after its start" — a
+# container that starts and then fails its healthcheck read as restored.
+echo "-- scenario G: a container that comes up unhealthy is reported FAILED"
+UNHEALTHY="agent-runner-2" run_scenario G "55 55 55 0 0" ""
+
+assert "unhealthy container reported as still down" log_has G "UNSHED FAILED: still down: agent-runner-2"
+assert "its healthy peers were still all started" same_set "$WORK/G/starts" "$SHEDDABLE"
+
 $RUN_AS rm -f "$SHED_LIST" "$FIRED"
 
 if [ "$FAILED" -ne 0 ]; then
@@ -444,4 +513,4 @@ if [ "$FAILED" -ne 0 ]; then
   echo "FAIL: $FAILED runtime assertion(s) failed — the shed has no working inverse"
   exit 1
 fi
-echo "PASS: shed is reversible, paced, one shot per episode, and does not shed its own recovery"
+echo "PASS: shed is reversible, paced, dependency-ordered, one shot per episode, and does not shed its own recovery"

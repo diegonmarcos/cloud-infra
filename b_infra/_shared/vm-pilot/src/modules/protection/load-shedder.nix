@@ -47,6 +47,12 @@ let
   # containers at once is itself a load spike, and re-entering pressure
   # immediately after recovering from it is the flap this avoids.
   unshedDelaySecs = cfg "unshed_delay_secs" 5;
+  # Longest wait, per container, for a just-started shed container to report
+  # healthy (or running, if it has no healthcheck) before the next one starts.
+  # A dependent started before its dependency is up dies on its own startup
+  # check: on 2026-10-01 01:16 umami was started 14s before umami-db, failed
+  # "Can't reach database server", and the single shot was spent.
+  unshedReadyWaitSecs = cfg "unshed_ready_wait_secs" 120;
   # Seconds after docker.service enters active during which pressure is NOT
   # counted toward a shed, and the longest the recovery start waits for docker
   # to come up. dockerd's own startup (containerd boot + live-restore reattach)
@@ -82,6 +88,7 @@ in {
       BACKOFF=${toString backoff}
       NEED=${toString needBreaches}
       DOCKER_START_GRACE=${toString dockerStartGraceSecs}
+      UNSHED_READY_WAIT=${toString unshedReadyWaitSecs}
       TIER1_SERVICES="${tier1List}"    # space-separated container names to protect
       NTFY_TOPIC="${ntfyTopic}"        # data-driven topic (default health_resources)
       NTFY_BASE="${ntfyBase}"          # public-edge fallback base
@@ -98,6 +105,57 @@ in {
         _enter=$(systemctl show -p ActiveEnterTimestampMonotonic --value docker.service 2>/dev/null)
         [ "''${_enter:-0}" -gt 0 ] 2>/dev/null || { echo 999999; return; }
         awk -v e="$_enter" '{ printf "%d\n", $1 - e / 1000000 }' /proc/uptime
+      }
+
+      # Order shed containers so each starts after the in-list containers it
+      # depends_on. `docker start` knows nothing of compose's depends_on, so the
+      # order has to come from compose's own labels (service names, scoped to
+      # the project). Names docker cannot inspect go last, still in the list,
+      # so they keep their start attempt and their FAILED verdict.
+      unshed_order() {
+        _known=$(docker inspect --format '{{.Name}}|{{index .Config.Labels "com.docker.compose.project"}}|{{index .Config.Labels "com.docker.compose.service"}}|{{index .Config.Labels "com.docker.compose.depends_on"}}' "$@" 2>/dev/null \
+          | awk -F'|' '
+              { sub(/^\//, "", $1); n[NR] = $1; p[NR] = $2; d[NR] = $4; if ($3 != "") svc[$2 "/" $3] = $1 }
+              END {
+                for (i = 1; i <= NR; i++) {
+                  m = split(d[i], dl, ",")
+                  for (j = 1; j <= m; j++) {
+                    split(dl[j], f, ":"); k = p[i] "/" f[1]
+                    if ((k in svc) && svc[k] != n[i]) need[i] = need[i] " " svc[k]
+                  }
+                }
+                left = NR
+                while (left > 0) {
+                  prog = 0
+                  for (i = 1; i <= NR; i++) {
+                    if (i in done) continue
+                    ok = 1; m = split(need[i], r, " ")
+                    for (j = 1; j <= m; j++) if (!(r[j] in up)) ok = 0
+                    if (ok) { print n[i]; up[n[i]] = 1; done[i] = 1; left--; prog = 1 }
+                  }
+                  # A dependency cycle cannot be ordered; start the rest as listed.
+                  if (!prog) for (i = 1; i <= NR; i++) if (!(i in done)) { print n[i]; up[n[i]] = 1; done[i] = 1; left-- }
+                }
+              }')
+        for _c in $_known; do printf '%s ' "$_c"; done
+        for _c in "$@"; do
+          printf '%s\n' $_known | grep -qxF -e "$_c" || printf '%s ' "$_c"
+        done
+      }
+
+      # 0 once a just-started container is healthy (or running, if it has no
+      # healthcheck); 1 if it exits, turns unhealthy, or the wait runs out.
+      wait_ready() {
+        _w=0
+        while :; do
+          case "$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$1" 2>/dev/null)" in
+            healthy|running) return 0 ;;
+            starting|created|restarting) ;;
+            *) return 1 ;;
+          esac
+          [ "$_w" -ge "$UNSHED_READY_WAIT" ] && return 1
+          sleep 5; _w=$((_w + 5))
+        done
       }
 
       # P1/§4A: notify ntfy — try WG-direct first (10.0.0.6=oci-apps:8090), then
@@ -263,15 +321,16 @@ in {
                 # "--" filtered here too: a list written by the pre-fix
                 # shedder (see shed_non_tier1) lives until reboot, and one
                 # "--" makes every later un-shed report FAILED.
-                _want=$(grep -vxF -e '--' "$_shed_list" | sort -u | tr '\n' ' ')
-                logger -t load-shedder "UNSHED: single-shot start of shed containers:$_want"
-                for _c in $_want; do
-                  docker start "$_c" >/dev/null 2>&1 || true
-                  sleep ${toString unshedDelaySecs}
-                done
+                # shellcheck disable=SC2046
+                _want=$(unshed_order $(grep -vxF -e '--' "$_shed_list" | sort -u))
+                logger -t load-shedder "UNSHED: single-shot start of shed containers: $_want"
+                # Each start waits for the container to be ready before the
+                # next: the verdict is what the container did, not whether
+                # `docker ps` happened to list it the instant after its start.
                 _still=""
                 for _c in $_want; do
-                  docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$_c" || _still="$_still $_c"
+                  { docker start "$_c" >/dev/null 2>&1 && wait_ready "$_c"; } || _still="$_still $_c"
+                  sleep ${toString unshedDelaySecs}
                 done
                 if [ -z "$_still" ]; then
                   rm -f "$_shed_list" /run/load-shedder.fired 2>/dev/null || true
