@@ -245,7 +245,19 @@ WATCHDOG_UNIT
       $SUDO install -m644 "$UNIT_TMP" /etc/systemd/system/my-watchdog.service
       rm -f "$UNIT_TMP"
       $SUDO systemctl daemon-reload
-      systemctl --user disable --now my-watchdog.service 2>/dev/null || true
+      # RETIRE THE USER COPY BY ITS BUS PATH. The ship runs this activation
+      # as `sudo -u <user>`, and sudo strips XDG_RUNTIME_DIR, so a bare
+      # `systemctl --user` here could never reach the user manager — and the
+      # `2>/dev/null || true` it used to carry hid that. oci-analytics (the
+      # 1/8-OCPU public edge) ran BOTH samplers for a month: measured
+      # 2026-10-01 the user copy at ~8.6% of a vCPU and the root copy at ~16%,
+      # together the whole burst baseline before a single container ran.
+      # No bus socket means no user manager, so no user copy can be running.
+      _ubus="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+      if [ -S "$_ubus/bus" ]; then
+        XDG_RUNTIME_DIR="$_ubus" systemctl --user disable --now my-watchdog.service \
+          || echo "[my-stack] WARN: could not retire the user my-watchdog — two samplers may be running" >&2
+      fi
       if [ -x "$HOME/.local/bin/my-watchdog" ]; then
         if $SUDO systemctl enable --now my-watchdog.service 2>/dev/null; then
           echo "[my-stack] my-watchdog running as root"
