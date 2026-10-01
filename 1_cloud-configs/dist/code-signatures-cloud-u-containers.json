@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2853,
+    "files": 2854,
     "by_lang": {
       "sh": 132,
-      "nix": 155,
+      "nix": 156,
       "ts": 1121,
       "js": 61,
       "py": 850,
@@ -17,7 +17,7 @@
     },
     "by_role": {
       "shell": 123,
-      "nix-module": 13,
+      "nix-module": 14,
       "module": 682,
       "file": 307,
       "script": 5,
@@ -10862,9 +10862,12 @@
       "symbols": [
         "app",
         "giteaConfig",
+        "gate",
+        "identity",
         "portHttp",
         "portSsh",
         "domain",
+        "socketDir",
         "binariesImage",
         "services",
         "gitea",
@@ -10886,13 +10889,17 @@
         "GITEA__mirror__DEFAULT_INTERVAL",
         "GITEA__repository__ENABLE_PUSH_CREATE_USER",
         "GITEA__repository__ENABLE_PUSH_CREATE_ORG",
-        "volumes",
-        "healthcheck",
-        "test",
-        "interval",
-        "timeout",
-        "retries",
-        "gitea_data"
+        "GITEA__server__PROTOCOL",
+        "GITEA__server__HTTP_ADDR",
+        "GITEA__service__ENABLE_REVERSE_PROXY_AUTHENTICATION",
+        "GITEA__service__ENABLE_REVERSE_PROXY_AUTHENTICATION_API",
+        "GITEA__service__ENABLE_REVERSE_PROXY_AUTO_REGISTRATION",
+        "GITEA__service__ENABLE_REVERSE_PROXY_EMAIL",
+        "GITEA__service__ENABLE_REVERSE_PROXY_FULL_NAME",
+        "GITEA__security__REVERSE_PROXY_AUTHENTICATION_USER",
+        "GITEA__security__REVERSE_PROXY_TRUSTED_PROXIES",
+        "GITEA__security__REVERSE_PROXY_LIMIT",
+        "volumes"
       ]
     },
     {
@@ -10906,8 +10913,10 @@
       ],
       "imports": [
         "../../_shared/engine.nix",
+        "./gate.nix",
         "./compose.nix",
         "../_shared/engine.nix",
+        "gate.nix",
         "compose.nix"
       ],
       "symbols": [
@@ -10951,14 +10960,37 @@
       ]
     },
     {
-      "path": "infra-dat_gitea/src/test-edge-bearer-strip.ts",
+      "path": "infra-dat_gitea/src/gate.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "gate",
+        "trusted",
+        "bare",
+        "checked",
+        "vars"
+      ]
+    },
+    {
+      "path": "infra-dat_gitea/src/test-reverse-proxy-auth.ts",
       "lang": "ts",
       "role": "module",
       "exports": [],
       "imports": [
-        "node:fs"
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:http",
+        "\\${builtins.fetchTarball"
       ],
-      "symbols": []
+      "symbols": [
+        "caddyBin()",
+        "req(p: number, path: string, headers: Record<string, string>, localAddress = \"127.0.0.1\")",
+        "startCaddy(config: string, p: number)"
+      ]
     },
     {
       "path": "infra-db_postlite/build.sh",
