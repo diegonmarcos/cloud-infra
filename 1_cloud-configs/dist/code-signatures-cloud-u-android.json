@@ -6,30 +6,30 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20091,
+    "files": 20106,
     "by_lang": {
-      "py": 59,
-      "sh": 332,
-      "kotlin": 10077,
+      "py": 60,
+      "sh": 338,
+      "kotlin": 10083,
       "java": 609,
       "ts": 8413,
       "nix": 64,
       "js": 452,
-      "rust": 85
+      "rust": 87
     },
     "by_role": {
-      "script": 150,
-      "shell": 241,
+      "script": 152,
+      "shell": 246,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10075,
+      "kotlin": 10081,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
-      "rust-module": 85,
+      "rust-module": 87,
       "hook": 150,
       "mcp-tool": 53
     }
@@ -104,6 +104,7 @@
         "engine_modules(root)",
         "engine_service(module_dir)",
         "client_calls(app_dir, key)",
+        "coupled(root, modules)",
         "check(root)",
         "main(argv)"
       ],
@@ -121,6 +122,7 @@
         "engine_modules(root)",
         "engine_service(module_dir)",
         "client_calls(app_dir, key)",
+        "coupled(root, modules)",
         "check(root)",
         "main(argv)"
       ]
@@ -1360,6 +1362,7 @@
         "engine_modules(root)",
         "engine_service(module_dir)",
         "client_calls(app_dir, key)",
+        "coupled(root, modules)",
         "check(root)",
         "main(argv)"
       ],
@@ -1377,6 +1380,7 @@
         "engine_modules(root)",
         "engine_service(module_dir)",
         "client_calls(app_dir, key)",
+        "coupled(root, modules)",
         "check(root)",
         "main(argv)"
       ]
@@ -1615,6 +1619,26 @@
       "symbols": [
         "_subjects()",
         "_classify()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-release-orphan-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "release_assets(repo, tag)",
+        "main()"
+      ],
+      "imports": [
+        "argparse",
+        "json",
+        "os",
+        "subprocess",
+        "sys"
+      ],
+      "symbols": [
+        "release_assets(repo, tag)",
+        "main()"
       ]
     },
     {
@@ -2902,6 +2926,22 @@
         "ok()",
         "bad()",
         "_rc()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/release-orphan-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "bad()",
+        "expect()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "expect()"
       ]
     },
     {
@@ -7875,6 +7915,36 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GhEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhEngine"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.os.SystemClock",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.core.DataBackendClient",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "check()",
+        "token(host: String)",
+        "login(host: String, onPrompt: (code: String, url: String)",
+        "ask(method: String, vararg args: String)",
+        "pageOnHost(url: String, host: String)",
+        "class GhEngine",
+        "class Check",
+        "class Ready",
+        "class NotInstalled",
+        "class TooOld",
+        "class Result"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GitSshVault.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7930,14 +8000,18 @@
       "symbols": [
         "hides(fullPath: String, value: String)",
         "rows(sectionId: String, value: Any?)",
+        "schemaRows(section: SchemaSection, data: Any?)",
+        "unfilled(v: Any?)",
         "walk(section: String, v: Any?, path: String, out: MutableList<Row>)",
         "join(path: String, key: String)",
         "parse(o: JSONObject?)",
         "list(key: String)",
+        "parseSchema(o: JSONObject?)",
         "class or",
         "class InfoMask",
         "class Kind",
-        "class Row"
+        "class Row",
+        "class SchemaSection"
       ]
     },
     {
@@ -7992,9 +8066,6 @@
         "afterTextChanged(s: Editable?)",
         "renderInfos(ctx: android.content.Context, into: LinearLayout)",
         "infoValue(ctx: android.content.Context, row: InfoMask.Row)",
-        "renderTokens(ctx: android.content.Context, into: LinearLayout)",
-        "held(present: Boolean)",
-        "infoRow(ctx: android.content.Context, key: String, value: String)",
         "journeyState(ctx: android.content.Context)",
         "ask(step: ProfileJourney.Step)",
         "stepLabel(step: ProfileJourney.Step)",
@@ -8010,6 +8081,9 @@
         "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
         "buildWay( ctx: android.content.Context, s: ProfileJourney.State, way: Way, policy: List<String>, cell: LinearLayout, extras: LinearLayout, status: TextView, )",
         "signInWay(ctx: android.content.Context, way: Way, providerIds: List<String>)",
+        "wayPill(ctx: android.content.Context, way: Way, onClick: ()",
+        "ghSignIn(way: Way, status: TextView)",
+        "ghPrompt(ctx: android.content.Context, status: TextView, code: String, page: String?)",
         "lineHeld(ctx: android.content.Context, line: Line)",
         "buildStoredBearer(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout, status: TextView)",
         "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
@@ -8017,13 +8091,13 @@
         "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
         "renderConfigApply(ctx: android.content.Context, into: LinearLayout)",
         "renderVault(ctx: android.content.Context, into: LinearLayout)",
-        "renderDevicePick(ctx: android.content.Context, into: LinearLayout)",
         "renderSetup(ctx: android.content.Context, into: LinearLayout)",
+        "renderFleetIndex(ctx: android.content.Context, into: LinearLayout)",
+        "openIndexed(id: String)",
         "renderRepos(ctx: android.content.Context, into: LinearLayout)",
         "renderWizard(ctx: android.content.Context, into: LinearLayout)",
         "openWizardRoute(route: String)",
-        "profileRepos()",
-        "profileTabs()"
+        "profileRepos()"
       ]
     },
     {
@@ -8196,8 +8270,10 @@
         "aboutRows(bundle: JSONObject, fields: Map<String, String>, device: (String)",
         "applyAbout(bundle: JSONObject, fields: Map<String, String>, set: (String, String)",
         "keyboardRows(bundle: JSONObject, deviceText: String)",
-        "driveRows(bundle: JSONObject, prefs: ConfigsPrefs)",
+        "driveRows(bundle: JSONObject, prefs: ConfigsPrefs, deviceRepos: String)",
         "secretRow(label: String, item: String, section: String, key: String)",
+        "driveSessionRows(chain: List<com.diegonmarcos.cloudlib.auth.AuthDeclaration.GitRung>, device: String)",
+        "ownerEmail(bundle: JSONObject, layout: Layout)",
         "applyDrive(bundle: JSONObject, prefs: ConfigsPrefs)",
         "aiState(snapshotJson: String?)",
         "aiRows(bundle: JSONObject, layout: Layout, state: AiState?, peerDownText: String, unmappedText: String)",
@@ -8210,9 +8286,7 @@
         "class Layout",
         "class Device",
         "class State",
-        "class Row",
-        "class Tally",
-        "class TunnelState"
+        "class Row"
       ]
     },
     {
@@ -10683,7 +10757,17 @@
         "draws_no_secret()",
         "mask_leaks()",
         "verdict_ok()",
-        "pat_clean()"
+        "pat_clean()",
+        "connect_tail_ok()",
+        "pills_ok()",
+        "gh_ok()",
+        "gmut()",
+        "schema_rows_cover()",
+        "schema_code_ok()",
+        "schema_drift()",
+        "fmut()",
+        "index_ok()",
+        "hm()"
       ],
       "imports": [],
       "symbols": [
@@ -10700,7 +10784,17 @@
         "draws_no_secret()",
         "mask_leaks()",
         "verdict_ok()",
-        "pat_clean()"
+        "pat_clean()",
+        "connect_tail_ok()",
+        "pills_ok()",
+        "gh_ok()",
+        "gmut()",
+        "schema_rows_cover()",
+        "schema_code_ok()",
+        "schema_drift()",
+        "fmut()",
+        "index_ok()",
+        "hm()"
       ]
     },
     {
@@ -11970,6 +12064,34 @@
         "ok()",
         "bad()",
         "jq_get()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-self-update-background.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "_fun()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "_fun()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "mut()"
       ]
     },
     {
@@ -14124,7 +14246,9 @@
         "_enforce_signature()",
         "_assemble()"
       ],
-      "imports": [],
+      "imports": [
+        "cloud-android-test-engine.sh"
+      ],
       "symbols": [
         "_ghcr_publish()",
         "_ghcr_source()",
@@ -16441,6 +16565,7 @@
       "symbols": [
         "methodNames()",
         "dispatch(method: String, args: Array<String>)",
+        "class name",
         "class CalBackendService"
       ]
     },
@@ -19655,12 +19780,14 @@
         "GhBackendService"
       ],
       "imports": [
+        "android.util.Log",
         "com.diegonmarcos.superapp.core.DataBackendService",
         "org.json.JSONObject"
       ],
       "symbols": [
         "methodNames()",
         "dispatch(method: String, args: Array<String>)",
+        "answer(method: String, args: Array<String>)",
         "result(r: GhRunner.Result)",
         "arg(args: Array<String>, i: Int)",
         "start(runner: GhRunner, host: String)",
@@ -19670,19 +19797,49 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhNetProxy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhNetProxy"
+      ],
+      "imports": [
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.security.SecureRandom",
+        "java.util.Base64",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "serve(client: Socket)",
+        "readHead(input: InputStream)",
+        "reply(out: OutputStream, status: String)",
+        "pump(from: InputStream, to: OutputStream)",
+        "class GhNetProxy"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhRunner.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
         "GhRunner",
+        "GhLogin",
         "GhOutput"
       ],
       "imports": [
         "android.content.Context",
+        "android.util.Log",
         "java.io.File"
       ],
       "symbols": [
         "run(args: List<String>, token: String? = null)",
+        "logged(args: List<String>, r: Result)",
         "start(args: List<String>, token: String?)",
         "api(path: String, token: String)",
         "checkToken(token: String)",
@@ -19691,14 +19848,51 @@
         "repoList(limit: Int, fields: String)",
         "credential(host: String)",
         "toString()",
+        "drain(process: Process, onLine: (String)",
+        "start()",
         "deviceCode(line: String)",
         "verificationUrl(line: String, host: String)",
+        "why(output: String)",
         "credential(answer: String)",
         "class produces",
         "class GhRunner",
         "class Result",
         "class Credential",
+        "class GhLogin",
         "class GhOutput"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/gh/src/test/java/com/diegonmarcos/cloudlib/gh/GhLoginTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhLoginTest"
+      ],
+      "imports": [
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.util.Base64",
+        "kotlin.concurrent.thread",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fakeGh(lines: List<String>, exit: Int? = null)",
+        "waitFor(ms: Long, done: ()",
+        "codeSeenWhileGhRuns(drain: (Process, (String)",
+        "theCodeAndThePageReachTheJobWhileGhIsStillWaiting()",
+        "readingGhToTheEndFirstIsCaught()",
+        "aFailureIsGhsOwnWordsNotTheLastLine()",
+        "connect(proxy: GhNetProxy, target: String, auth: String?)",
+        "credentialOf(proxy: GhNetProxy)",
+        "theProxyTunnelsOnlyForItsOwnGhToItsOwnHosts()",
+        "anUnreachableHostIsNamedWithAndroidsReason()",
+        "class GhLoginTest"
       ]
     },
     {
@@ -42207,7 +42401,9 @@
         "UpdateWorker"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
         "com.diegonmarcos.superapp.updater.install.InstallRefused",
+        "com.diegonmarcos.superapp.updater.install.ShellInstall",
         "com.diegonmarcos.superapp.updater.install.UpdateInstaller",
         "com.diegonmarcos.superapp.updater.source.UpdateChecker",
         "android.content.Context",
@@ -42220,6 +42416,7 @@
       "symbols": [
         "doWork()",
         "updateFleet()",
+        "installSelf(apk: VerifiedApk)",
         "class UpdateWorker"
       ]
     },
@@ -44342,70 +44539,6 @@
       ]
     },
     {
-      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/MainActivity.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "MainActivity"
-      ],
-      "imports": [
-        "android.Manifest",
-        "android.app.Activity",
-        "android.content.Intent",
-        "android.content.pm.PackageManager",
-        "android.os.Bundle",
-        "android.webkit.WebResourceError",
-        "android.webkit.WebResourceRequest",
-        "android.webkit.WebView",
-        "android.webkit.WebViewClient"
-      ],
-      "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError)",
-        "class MainActivity"
-      ]
-    },
-    {
-      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/ServerProcess.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ServerProcess"
-      ],
-      "imports": [
-        "android.content.Context",
-        "java.io.File"
-      ],
-      "symbols": [
-        "start(log: File)",
-        "class knows",
-        "class ServerProcess"
-      ]
-    },
-    {
-      "path": "ac_cloud-c3-webserver/app/src/main/java/com/diegonmarcos/cloudwebserver/WebServerService.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "WebServerService"
-      ],
-      "imports": [
-        "android.app.Notification",
-        "android.app.NotificationChannel",
-        "android.app.NotificationManager",
-        "android.app.Service",
-        "android.content.Intent",
-        "android.os.IBinder",
-        "java.io.File"
-      ],
-      "symbols": [
-        "onBind(intent: Intent?)",
-        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
-        "onDestroy()",
-        "class WebServerService"
-      ]
-    },
-    {
       "path": "ac_cloud-c3-webserver/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -44420,13 +44553,11 @@
         "_resolve_ssh_key()",
         "_resolve_signing()",
         "_enforce_signature()",
-        "step_server()",
+        "_tauri_build()",
         "step_build()",
         "step_release()",
         "step_dev()",
         "step_test()",
-        "step_instrument()",
-        "step_lint()",
         "step_clean()",
         "step_shell()",
         "step_ship()",
@@ -44437,9 +44568,11 @@
         "_variant_artifact()",
         "_variant_gh_asset()",
         "_variant_tag_suffix()",
-        "_export_variant_abis()",
         "_resolve_template()",
-        "_ghcr_gate_public()"
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()"
       ],
       "imports": [],
       "symbols": [
@@ -44453,13 +44586,11 @@
         "_resolve_ssh_key()",
         "_resolve_signing()",
         "_enforce_signature()",
-        "step_server()",
+        "_tauri_build()",
         "step_build()",
         "step_release()",
         "step_dev()",
         "step_test()",
-        "step_instrument()",
-        "step_lint()",
         "step_clean()",
         "step_shell()",
         "step_ship()",
@@ -44470,7 +44601,6 @@
         "_variant_artifact()",
         "_variant_gh_asset()",
         "_variant_tag_suffix()",
-        "_export_variant_abis()",
         "_resolve_template()",
         "_ghcr_gate_public()",
         "step_oras_push()",
@@ -44502,6 +44632,7 @@
         "buildToolsVersions",
         "platformVersions",
         "includeNDK",
+        "ndkVersions",
         "androidEnv",
         "androidSdk",
         "emulatorEnv",
@@ -44514,6 +44645,7 @@
         "buildInputs",
         "ANDROID_HOME",
         "ANDROID_SDK_ROOT",
+        "NDK_HOME",
         "JAVA_HOME",
         "GRADLE_OPTS",
         "shellHook"
@@ -44525,10 +44657,10 @@
       "role": "rust-module",
       "exports": [
         "fmt_bytes",
-        "sections"
+        "groups"
       ],
       "imports": [
-        "crate::Ctx",
+        "crate::",
         "std::fs",
         "std::process::Command",
         "super::"
@@ -44543,14 +44675,14 @@
         "meminfo_kb(text: &str, key: &str)",
         "disk(path: &str)",
         "disk_rows(rows: &mut Rows, label: &str, path: &str)",
-        "sections(ctx: &Ctx)",
+        "groups(ctx: &Ctx)",
         "utc_string(secs: u64)",
         "bytes_and_dates()",
-        "every_section_has_rows()"
+        "every_group_is_a_declared_macro_and_every_section_has_rows()"
       ]
     },
     {
-      "path": "ac_cloud-c3-webserver/server/src/main.rs",
+      "path": "ac_cloud-c3-webserver/server/src/lib.rs",
       "lang": "rust",
       "role": "rust-module",
       "exports": [
@@ -44560,6 +44692,7 @@
         "html",
         "text",
         "handle",
+        "start",
         "Ctx",
         "Req",
         "Resp"
@@ -44582,8 +44715,7 @@
         "parse_request(head: &str)",
         "handle(ctx: &Ctx, req: &Req)",
         "serve(ctx: &Ctx, mut stream: TcpStream)",
-        "usage()",
-        "main()",
+        "start(port: u16, root: &str)",
         "temp_root()",
         "start(root: PathBuf)",
         "get(port: u16, target: &str)",
@@ -44649,6 +44781,141 @@
       ]
     },
     {
+      "path": "ac_cloud-c3-webserver/src-tauri/build.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/src-tauri/gen/android/app/build.gradle.kts",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "buildJson",
+        "androidJson",
+        "fleetVersionCode"
+      ],
+      "imports": [
+        "java.time.Duration",
+        "java.time.LocalDateTime",
+        "java.time.ZoneOffset",
+        "java.time.format.DateTimeFormatter",
+        "org.jetbrains.kotlin.gradle.dsl.JvmTarget"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-c3-webserver/src-tauri/gen/android/app/src/main/java/com/diegonmarcos/cloudwebserver/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "androidx.activity.enableEdgeToEdge"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/src-tauri/gen/android/buildSrc/src/main/java/com/diegonmarcos/cloudwebserver/kotlin/BuildTask.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BuildTask"
+      ],
+      "imports": [
+        "java.io.File",
+        "org.apache.tools.ant.taskdefs.condition.Os",
+        "org.gradle.api.DefaultTask",
+        "org.gradle.api.GradleException",
+        "org.gradle.api.logging.LogLevel",
+        "org.gradle.api.tasks.Input",
+        "org.gradle.api.tasks.TaskAction",
+        "javax.inject.Inject",
+        "org.gradle.process.ExecOperations"
+      ],
+      "symbols": [
+        "assemble()",
+        "runTauriCli(executable: String)",
+        "class BuildTask"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/src-tauri/gen/android/buildSrc/src/main/java/com/diegonmarcos/cloudwebserver/kotlin/RustPlugin.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TASK_GROUP",
+        "Config",
+        "RustPlugin"
+      ],
+      "imports": [
+        "com.android.build.api.dsl.ApplicationExtension",
+        "org.gradle.api.DefaultTask",
+        "org.gradle.api.Plugin",
+        "org.gradle.api.Project",
+        "org.gradle.kotlin.dsl.configure",
+        "org.gradle.kotlin.dsl.get"
+      ],
+      "symbols": [
+        "apply(project: Project)",
+        "class Config",
+        "class RustPlugin"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/src-tauri/src/lib.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "run"
+      ],
+      "imports": [
+        "Tauri",
+        "tauri::"
+      ],
+      "symbols": [
+        "run()",
+        "request_storage(window: &tauri::WebviewWindow)"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-about-mirror.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "mirror()",
+        "plant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mirror()",
+        "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-no-kotlin.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "guard()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "guard()",
+        "mutate()"
+      ]
+    },
+    {
       "path": "ac_cloud-c3-webserver/test/test-c3-webserver.sh",
       "lang": "sh",
       "role": "shell",
@@ -44670,7 +44937,11 @@
         "m_drop_home_tab()",
         "m_view_orphan()",
         "m_render_drops_route()",
-        "m_kotlin_port()"
+        "m_rust_port()",
+        "m_window_before_bind()",
+        "m_identifier_drift()",
+        "m_about_no_back_link()",
+        "m_copy_all_drops_rows()"
       ],
       "imports": [],
       "symbols": [
@@ -44691,7 +44962,11 @@
         "m_drop_home_tab()",
         "m_view_orphan()",
         "m_render_drops_route()",
-        "m_kotlin_port()"
+        "m_rust_port()",
+        "m_window_before_bind()",
+        "m_identifier_drift()",
+        "m_about_no_back_link()",
+        "m_copy_all_drops_rows()"
       ]
     },
     {
@@ -121922,6 +122197,7 @@
         "android.content.pm.PackageManager",
         "android.os.SystemClock",
         "com.diegonmarcos.clouddrive.BuildConfig",
+        "com.diegonmarcos.clouddrive.DriveDebugLog",
         "com.diegonmarcos.superapp.core.DataBackendClient",
         "org.json.JSONObject"
       ],
@@ -121933,7 +122209,12 @@
         "credential(host: String)",
         "login(host: String, onPrompt: (code: String, url: String)",
         "ask(method: String, vararg args: String)",
+        "callLine(method: String, o: JSONObject)",
         "result(o: JSONObject)",
+        "log(msg: String)",
+        "of(o: JSONObject)",
+        "follow(poll: ()",
+        "why(output: String)",
         "pageOnHost(url: String, host: String)",
         "class GhEngine",
         "class Check",
@@ -121941,7 +122222,8 @@
         "class NotInstalled",
         "class TooOld",
         "class Result",
-        "class Credential"
+        "class Credential",
+        "class Poll"
       ]
     },
     {
@@ -122062,14 +122344,15 @@
         "cloudAllowHosts(rungId: String)",
         "missionWord(outcome: AuthMission.Outcome)",
         "completeCloud(cookie: String, rungId: String)",
+        "ghLog(msg: String)",
         "ghUnavailable()",
         "fetchGhListing()",
         "ghCheck()",
         "openGhPage(url: String)",
+        "copyGhCode(code: String)",
         "startGhLogin()",
         "cloneViaGh(repo: GitHubRepos.Repo)",
         "startWay(way: Declarations.GitWayDecl)",
-        "lastLine(output: String)",
         "GitWayCard( way: Declarations.GitWayDecl, isCloud: Boolean, page: Declarations.GitPageDecl, login: GitLogin, listing: GitListing, chain: GitChainState, ghAuth: GhAuth, signingIn: Boolean, rungDeclared: Boolean, cloudFallback: Boolean, fleetHost: SignInHost, onSignIn: ()",
         "GitRepoRow( name: String, repoName: String, isPrivate: Boolean, fork: Boolean, repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?, running: GitSyncCoordinator.Running?, cloning: Boolean, expanded: Boolean, onToggle: ()",
         "rowStats(repo: ManagedRepo?, glance: GitSyncCoordinator.Glance?)",
@@ -123097,6 +123380,31 @@
         "aRefusalNamesTheFleetItselfNotTheGate()",
         "anUnrecognisedFailurePassesThroughUnrewritten()",
         "class FleetGitTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/GhLoginFollowTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhLoginFollowTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "poll()",
+        "follow(engine: Engine, maxPolls: Int = 50, onPrompt: (String, String)",
+        "theCodeReachesTheCardWhileGhIsStillWaiting()",
+        "aGhThatNeverEndsStillShowedItsCodeAndThenSaysItTimedOut()",
+        "ghsFailureIsItsOwnWordsAndNoCodeIsShown()",
+        "theDeviceFlowPromptIsNotAReason()",
+        "anEngineThatStopsAnsweringIsNamed()",
+        "class GhLoginFollowTest",
+        "class Engine"
       ]
     },
     {
@@ -261742,10 +262050,8 @@
         "android.widget.TextView",
         "androidx.core.content.ContextCompat",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.cal.CalEngine",
-        "com.diegonmarcos.superapp.cal.CalTodo",
-        "com.diegonmarcos.superapp.cal.TodoStore",
         "org.json.JSONArray",
+        "org.json.JSONObject",
         "java.text.SimpleDateFormat",
         "java.util.Date",
         "java.util.Locale",
@@ -261753,17 +262059,48 @@
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "renderEvents(ctx: Context, col: LinearLayout)",
-        "renderTodos(ctx: Context, col: LinearLayout)",
-        "todoRow(ctx: Context, t: CalTodo, accent: Int)",
+        "load(col: LinearLayout)",
+        "renderEvents(ctx: Context, col: LinearLayout, events: JSONArray, engine: CalEngineClient)",
+        "renderTodos(ctx: Context, col: LinearLayout, todos: JSONArray)",
+        "due(t: JSONObject)",
+        "todoRow(ctx: Context, t: JSONObject, accent: Int)",
         "row( ctx: Context, title: String, detail: String, trailing: String, accent: Int, progress: Int? = null, )",
         "heading(ctx: Context, text: String)",
         "emptyState(ctx: Context, title: String, body: String)",
         "dp(ctx: Context, v: Int)",
-        "syncOnce(col: LinearLayout)",
+        "syncOnce(col: LinearLayout, engine: CalEngineClient)",
         "newInstance(mode: String)",
         "class copied",
         "class AgendaFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/CalEngineClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalEngineClient"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "com.diegonmarcos.superapp.core.DataBackendClient",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "check()",
+        "events(fromUtc: Long, toUtc: Long)",
+        "todos()",
+        "sync()",
+        "ask(method: String, vararg args: String)",
+        "rows(method: String, text: String)",
+        "class CalEngineClient",
+        "class Check",
+        "class Ready",
+        "class NotInstalled",
+        "class TooOld"
       ]
     },
     {
@@ -262290,6 +262627,44 @@
         "ok()",
         "bad()",
         "check()"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/test/test-me-cal-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "m1()",
+        "m2()",
+        "m3()",
+        "m4()",
+        "m5()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_gone()",
+        "_sub()",
+        "_json()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "m1()",
+        "m2()",
+        "m3()",
+        "m4()",
+        "m5()",
+        "_red()",
+        "_green()",
+        "_applied()",
+        "_gone()",
+        "_sub()",
+        "_json()"
       ]
     },
     {
@@ -295704,6 +296079,22 @@
       ]
     },
     {
+      "path": "ac_cloud-myterminal/test/test-store-tab-drives-cloud-store.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "get()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "get()"
+      ]
+    },
+    {
       "path": "ac_cloud-myterminal/test/test-terminal-targets-are-ours.sh",
       "lang": "sh",
       "role": "shell",
@@ -297356,6 +297747,7 @@
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
+        "add_login_trace(login_inner: str)",
         "probe_usershell_exec(login_inner: str)",
         "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
@@ -297382,6 +297774,7 @@
         "env_symlink_line(profile_link: str)",
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "patch_login_inner(login_inner: str, app_id: str, fallback_script: str,\n                      profile_link: str, login_shell: str, store_install_dir: str = \"\")",
+        "add_login_trace(login_inner: str)",
         "probe_usershell_exec(login_inner: str)",
         "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
@@ -305652,6 +306045,8 @@
         "q()",
         "storage_request_fits_target()",
         "notice_echoed()",
+        "perms_in()",
+        "legacy_request_covers_check()",
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
@@ -305667,6 +306062,8 @@
         "q()",
         "storage_request_fits_target()",
         "notice_echoed()",
+        "perms_in()",
+        "legacy_request_covers_check()",
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
