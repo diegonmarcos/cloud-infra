@@ -7610,6 +7610,7 @@
       "role": "file",
       "exports": [
         "decideAuth",
+        "decideSession",
         "scopesOf",
         "SCHEME"
       ],
@@ -7617,6 +7618,7 @@
       "symbols": [
         "of (header, verifier)",
         "decideAuth(authHeader, verify, requiredScope)",
+        "decideSession(cookie, verify, users)",
         "scopesOf(claims)",
         "refuse(status, code, error)"
       ]
@@ -7659,10 +7661,12 @@
         "findBuildJson()",
         "fetchJwks()",
         "verifyAutheliaBearer(token)",
+        "verifyAutheliaSession(cookie, method, path)",
         "sendJson(res, status, obj)",
         "ghFetch(url, accept)",
         "cachedFeed(owner, repo, kind)",
         "feedHandler(kind)",
+        "proxyGit(req, res, { owner, repo }, suffix)",
         "serve(req, res, url)"
       ]
     },
@@ -7692,6 +7696,8 @@
       "role": "file",
       "exports": [
         "upstreamHeaders",
+        "gitUpstreamHeaders",
+        "gitUrl",
         "redactSecrets",
         "reposUrl",
         "tarballUrl",
@@ -7704,11 +7710,14 @@
         "projectCommit",
         "projectRun",
         "REDACTED",
+        "GIT_PASS_HEADERS",
         "FEED_KINDS"
       ],
       "imports": [],
       "symbols": [
         "upstreamHeaders(token)",
+        "gitUpstreamHeaders(token, reqHeaders = {})",
+        "gitUrl(gitBase, owner, repo, suffix)",
         "redactSecrets(value, secrets)",
         "reposUrl(apiBase, page)",
         "tarballUrl(apiBase, owner, repo, ref)",
@@ -7822,6 +7831,7 @@
         "mintUnsigned(claims)",
         "good0()",
         "req(path, token)",
+        "reqH(path, headers, init = {})",
         "firstLeak(seen)",
         "safeJson(t)",
         "hash(s)",
