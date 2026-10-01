@@ -42,8 +42,11 @@ _sync_published_port_dnat() {
               "cd '$DEPLOY_PATH' && sudo bash -s -- '$cf'" < "$helper" 2>/dev/null || true)
     [ -z "$out" ] && return 0
     # Only surface real changes; a fully correct fleet prints "ok ..." per port.
-    echo "$out" | grep -v '^ok ' | while read -r l; do
-        [ -n "$l" ] && log "  dnat: $l"
+    # A case, not `grep -v '^ok '`: on an all-ok host that grep matches nothing
+    # and exits 1, and CI exports pipefail into this `set -e` engine, so the
+    # whole ship died here silently with every port answering.
+    echo "$out" | while read -r l; do
+        case "$l" in ''|'ok '*) ;; *) log "  dnat: $l" ;; esac
     done
     return 0
 }

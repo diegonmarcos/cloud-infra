@@ -103,5 +103,21 @@ ck "step_compose no longer ends on a logged-and-ignored docker ps" \
 ck "step_health gates its success path on liveness" \
    "$(body "$HEALTH" step_health | grep -c '^[[:space:]]*assert_declared_containers_live || return 1$')" "1"
 
+# ── The DNAT repair must not kill the ship it is repairing ──
+# CI runs the engine under `set -e` with pipefail exported via SHELLOPTS. On a
+# host whose DNAT is already right the helper prints only "ok ..." lines; a
+# filter that then matches nothing exited 1, and the stalwart deploy of Ship
+# 36841265088 died right after "Declared containers live" with no error line,
+# while every published port was answering.
+dnat() { ( set -eo pipefail; ssh() { printf '%s\n' "$DNAT_OUT"; }
+           STEPS_DIR="$SCRIPTS" DEPLOY_HOST=h DEPLOY_PATH=/p
+           _sync_published_port_dnat "-f c.yml"; echo REACHED ) 2>&1; }
+ck "dnat repair: an all-ok host does not abort the step under pipefail" \
+   "$(DNAT_OUT='ok 10.0.0.3:2443 -> 172.18.0.2:443
+ok 10.0.0.3:2993 -> 172.18.0.2:993' dnat)" "REACHED"
+ck "dnat repair: a real change is still logged" \
+   "$(DNAT_OUT='ok 10.0.0.3:2443 -> 172.18.0.2:443
+added 10.0.0.3:2993 -> 172.18.0.2:993' dnat | grep -c '^  dnat: added 10.0.0.3:2993')" "1"
+
 echo "--- $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
