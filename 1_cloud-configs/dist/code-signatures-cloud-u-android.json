@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20124,
+    "files": 20128,
     "by_lang": {
       "py": 61,
-      "sh": 343,
-      "kotlin": 10095,
+      "sh": 344,
+      "kotlin": 10098,
       "java": 609,
       "ts": 8413,
       "nix": 64,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 154,
-      "shell": 250,
+      "shell": 251,
       "java": 608,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
       "flake": 23,
-      "kotlin": 10093,
+      "kotlin": 10096,
       "python": 30,
       "nix-module": 40,
       "file": 2257,
@@ -7071,6 +7071,100 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/DnsFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DnsFragment"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.provider.Settings",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.CheckBox",
+        "android.widget.EditText",
+        "android.widget.LinearLayout",
+        "android.widget.RadioButton",
+        "android.widget.RadioGroup",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "android.widget.Toast",
+        "androidx.fragment.app.Fragment",
+        "com.wireguard.android.backend.Tunnel",
+        "java.net.InetAddress",
+        "java.text.DateFormat",
+        "java.util.Date"
+      ],
+      "symbols": [
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "drawFallbacks()",
+        "refreshAndroid(modeGroup: RadioGroup, host: EditText)",
+        "meshUp(ctx: Context)",
+        "fleetResolvers(ctx: Context)",
+        "refreshStatus(ctx: Context)",
+        "applyToTunnel(ctx: Context)",
+        "testLookup(ctx: Context)",
+        "background(work: ()",
+        "toast(msg: String)",
+        "dp(ctx: Context, v: Int)",
+        "header(ctx: Context, text: String)",
+        "caption(ctx: Context, text: String)",
+        "readonly(ctx: Context, text: String)",
+        "button(ctx: Context, text: String, onClick: ()",
+        "newInstance()",
+        "class DnsFragment"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/FleetDns.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDns"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.ConnectivityManager",
+        "android.net.NetworkCapabilities",
+        "android.os.Build",
+        "android.provider.Settings",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.ByteArrayOutputStream",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress"
+      ],
+      "symbols": [
+        "preset(id: String?)",
+        "parse(json: String)",
+        "effective(d: Decl, presetId: String?)",
+        "splitServers(csv: String)",
+        "vpnServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
+        "isMeshName(d: Decl, name: String)",
+        "upstreamsFor(d: Decl, name: String, meshUp: Boolean, presetServers: List<String>, fleetResolvers: List<String>)",
+        "vpnServers(ctx: Context, fleetDnsCsv: String)",
+        "readAndroid(ctx: Context)",
+        "global(key: String)",
+        "writeAndroid(ctx: Context, mode: String, host: String)",
+        "query(server: String, name: String, timeoutMs: Int)",
+        "parseAnswer(b: ByteArray, len: Int, id: Int, questionEnd: Int)",
+        "u16(i: Int)",
+        "class FleetDns",
+        "class Preset",
+        "class Decl",
+        "class Prefs",
+        "class AndroidDns"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/NetworkInfoPopup.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7272,6 +7366,8 @@
         "savePeers(peers: List<PeerData>)",
         "derivedInterfacePublicKey()",
         "toWgConfig()",
+        "toTunnelConfig()",
+        "buildConfig(dns: String)",
         "hydrateFromConfig(cfg: Config)",
         "defaultPeersJson()",
         "parsePeers(raw: String)",
@@ -10218,6 +10314,39 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/FleetDnsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDnsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertThrows",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "servers(id: String, fb: List<String> = emptyList()",
+        "defaultPresetIsDeclaredAndUsable()",
+        "eachPublicPresetIsItsServersThenItsFallback()",
+        "mirrorPutsNoServerOnTheVpn()",
+        "privateOnlyIsTheFleetResolverAndNothingElse()",
+        "privateWithFallbacksIsFleetFirstThenTheChosenFallbackInOrder()",
+        "anUnavailablePresetIsNeverChosenNorUsedAsAFallback()",
+        "aPrivatePresetWithNoFleetResolverFailsLoudly()",
+        "meshNamesGoToTheFleetResolverWhileTheMeshIsUp()",
+        "theWireParserReadsAnAAndAnNxdomain()",
+        "class FleetDnsTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BadgeDeclarationTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -11405,6 +11534,20 @@
         "bad()",
         "has()",
         "hasnt()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-fleet-dns.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {

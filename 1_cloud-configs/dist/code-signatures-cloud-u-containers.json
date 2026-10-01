@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2859,
+    "files": 2860,
     "by_lang": {
-      "sh": 136,
+      "sh": 137,
       "nix": 156,
       "ts": 1122,
       "js": 61,
@@ -16,7 +16,7 @@
       "rust": 534
     },
     "by_role": {
-      "shell": 127,
+      "shell": 128,
       "nix-module": 14,
       "module": 683,
       "file": 307,
@@ -38,7 +38,8 @@
       "role": "shell",
       "exports": [],
       "imports": [
-        "run.sh"
+        "run.sh",
+        "reap.sh"
       ],
       "symbols": []
     },
@@ -62,12 +63,30 @@
       "role": "shell",
       "exports": [
         "refuse()",
-        "prune_own()"
+        "prune_own()",
+        "free_mb()",
+        "disk_preflight()"
       ],
       "imports": [],
       "symbols": [
         "refuse()",
-        "prune_own()"
+        "prune_own()",
+        "free_mb()",
+        "disk_preflight()"
+      ]
+    },
+    {
+      "path": "_dispatch/reap.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "reap_slot()"
+      ],
+      "imports": [
+        "live.sh"
+      ],
+      "symbols": [
+        "reap_slot()"
       ]
     },
     {
@@ -97,7 +116,10 @@
         "mk()",
         "g()",
         "prep()",
-        "fire()"
+        "fire()",
+        "rfire()",
+        "wts()",
+        "dprep()"
       ],
       "imports": [],
       "symbols": [
@@ -106,7 +128,10 @@
         "mk()",
         "g()",
         "prep()",
-        "fire()"
+        "fire()",
+        "rfire()",
+        "wts()",
+        "dprep()"
       ]
     },
     {
