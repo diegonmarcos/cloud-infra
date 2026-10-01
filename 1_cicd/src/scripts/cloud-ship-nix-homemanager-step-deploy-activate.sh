@@ -258,6 +258,79 @@ fi
 REMOTE_SCRIPT_EOF
 }
 
+# ── Detached activation: launch an uploaded script, wait for its verdict ──
+# The script runs under setsid+nohup, so a dropped SSH session cannot kill it,
+# and short ssh round trips poll for the exit code it leaves behind while its
+# log streams here. The return value IS that exit code.
+#
+# #657: the wait ends at the JOB's deadline (HM_DEADLINE_EPOCH, set by
+# ship-home-manager.yml), not at a constant of its own. It used to be a fixed
+# 120 x 15s = 30 min inside a 45-min job, and a docker activation on the 1 GB
+# VMs takes 36-64 min (measured 2026-09-29/30 from the rc markers those
+# activations left behind: oci-analytics 36-49, oci-mail 44, gcp-proxy 52-64,
+# every one exit 0). Every ship to those VMs went red while its generation
+# went live, and the cleanup after the timeout deleted the log of the
+# activation that was still running. Now:
+#   rc marker present          that is the verdict
+#   wrapper gone, no marker    never started or was killed (OOM, reboot): fail
+#                              now instead of waiting out the deadline
+#   deadline reached           fail as STILL RUNNING and leave the markers, so
+#                              the real outcome can still be read on the VM
+# Remote logic stays behind `sh -c '...'` with no quote or backslash inside:
+# oci-mail's login shell is fish.
+_hm_detached_wait() {  # <uploaded-script> <label>
+    local _rsh="$1" _label="$2"
+    local _rlog="${1%.sh}.log" _rrc="${1%.sh}.rc" _rpid="${1%.sh}.pid"
+    local _ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
+    local _poll="${HM_POLL_SECS:-15}" _deadline="${HM_DEADLINE_EPOCH:-}"
+    # ponytail: 2h cap only when run outside CI; the workflow passes the real deadline
+    case "$_deadline" in ''|*[!0-9]*) _deadline=$(( $(date +%s) + 7200 )) ;; esac
+    local _seen=0 _out _pc _rest _state _rcval _sz _chunk
+
+    ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+      "rm -f '$_rrc' '$_rpid'; : > '$_rlog'; nohup setsid sh -c 'echo \$\$ > \"$_rpid\"; bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_LAUNCHED" \
+      2>&1 | tee -a "$BUILD_LOG_FILE" || true
+    log "$_label on $DEPLOY_HOST (detached; polling for up to $(( (_deadline - $(date +%s)) / 60 ))min)"
+
+    while :; do
+        sleep "$_poll"
+        # One round trip: new log bytes, "<alive>:<rc>", log size. Liveness is
+        # read BEFORE the rc marker: the wrapper writes rc and only then exits,
+        # so "gone" can never race a verdict that is still being written.
+        _pc=0
+        _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
+          "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; sh -c 'kill -0 \"\$(cat \"\$1\" 2>/dev/null)\" 2>/dev/null && printf 1: || printf 0:; cat \"\$2\" 2>/dev/null' _ '$_rpid' '$_rrc'; printf '__HMSZ__'; stat -c %s '$_rlog' 2>/dev/null || printf 0") || _pc=$?
+        if [ "$_pc" -ne 0 ]; then
+            log "poll reconnect (ssh $_pc) — activation still running on $DEPLOY_HOST"
+        else
+            _chunk="${_out%%__HMRC__*}"; _chunk="${_chunk%$'\n'}"
+            _rest="${_out#*__HMRC__}"
+            _state="${_rest%%__HMSZ__*}"
+            _rcval="$(printf '%s' "${_state#*:}" | tr -dc '0-9')"
+            _sz="$(printf '%s' "${_rest#*__HMSZ__}" | tr -dc '0-9')"
+            [ -n "$_chunk" ] && printf '%s' "$_chunk" | tee -a "$BUILD_LOG_FILE"
+            [ -n "$_sz" ] && _seen="$_sz"
+            if [ -n "$_rcval" ]; then
+                ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "rm -f '$_rsh' '$_rlog' '$_rrc' '$_rpid'" 2>/dev/null || true
+                return "$_rcval"
+            fi
+            if [ "${_state%%:*}" = 0 ]; then
+                log "activation on $DEPLOY_HOST is not running and left no exit code (never started, or killed: OOM, reboot) — log kept at $_rlog"
+                return 1
+            fi
+        fi
+        if [ $(( $(date +%s) + _poll )) -ge "$_deadline" ]; then
+            if [ "$_pc" -ne 0 ]; then
+                log "could not reach $DEPLOY_HOST at the job deadline — verdict unknown, the activation may still be running"
+            else
+                log "activation on $DEPLOY_HOST is STILL RUNNING at the job deadline — verdict unknown, not a failed activation"
+            fi
+            log "  its exit code will land in $DEPLOY_HOST:$_rrc (log: $_rlog); markers left in place on purpose"
+            return 1
+        fi
+    done
+}
+
 step_compose() {
     [ -z "$DEPLOY_HOST" ] && { log "No deploy.host — skipping compose"; return 0; }
     [ -z "$HM_CONFIG" ] && { log "ERROR: hm.config not set in build.json"; return 1; }
@@ -555,7 +628,11 @@ PREFLIGHT_EOF
         # reconnects; the activation keeps running. COMPOSE_RC becomes the job's
         # REAL exit code (via `echo $? > rc`), not ssh's transport 255.
         _ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
-        _tag="hm-act-$$"; _rsh="/tmp/$_tag.sh"; _rlog="/tmp/$_tag.log"; _rrc="/tmp/$_tag.rc"
+        # $$ alone repeats run after run (the builder container's PID namespace
+        # hands out the same numbers: hm-act-207 exists on three VMs), and an
+        # activation that outlives its job now keeps its markers — so the tag
+        # carries the time too, or a later ship could read another's rc.
+        _tag="hm-act-$(date +%s)-$$"; _rsh="/tmp/$_tag.sh"
         COMPOSE_RC=1
         _detach_started=0
 
@@ -571,46 +648,10 @@ PREFLIGHT_EOF
         done
 
         if [ "$_up" -eq 0 ]; then
-            # 2) Launch DETACHED — reparented to init, SIGHUP-immune, I/O detached;
-            #    the launch ssh returns immediately even if it drops right after.
-            set +e
-            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-              "rm -f '$_rrc'; : > '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_LAUNCHED" \
-              2>&1 | tee -a "$BUILD_LOG_FILE"
-            set -e
+            # 2+3) Launch detached, then wait for the activation's own exit code.
             _detach_started=1
-            log "Docker HM activate on $DEPLOY_HOST (detached; polling for completion)"
-
-            # 3) Poll the rc marker, streaming new log bytes. 120 × 15s = 30min.
-            _seen=0; _rcval=""
-            for _p in $(seq 1 120); do
-                set +e
-                _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; stat -c %s '$_rlog' 2>/dev/null || printf 0")
-                _pc=$?; set -e
-                if [ "$_pc" -eq 0 ]; then
-                    _chunk="${_out%%__HMRC__*}"
-                    _rest="${_out#*__HMRC__}"
-                    _rcpart="${_rest%%__HMSZ__*}"
-                    _szpart="${_rest#*__HMSZ__}"
-                    _rcpart="$(printf '%s' "$_rcpart" | tr -dc '0-9')"
-                    _szpart="$(printf '%s' "$_szpart" | tr -dc '0-9')"
-                    [ -n "$_chunk" ] && printf '%s' "$_chunk" | tee -a "$BUILD_LOG_FILE"
-                    [ -n "$_szpart" ] && _seen="$_szpart"
-                    if [ -n "$_rcpart" ]; then _rcval="$_rcpart"; break; fi
-                else
-                    log "poll reconnect (ssh $_pc) — activation still running on $DEPLOY_HOST"
-                fi
-                sleep 15
-            done
-
-            if [ -n "$_rcval" ]; then
-                COMPOSE_RC="$_rcval"
-            else
-                log "activation did not report completion within 30min on $DEPLOY_HOST"
-                COMPOSE_RC=1
-            fi
-            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "rm -f '$_rsh' '$_rlog' '$_rrc'" 2>/dev/null || true
+            COMPOSE_RC=0
+            _hm_detached_wait "$_rsh" "Docker HM activate" || COMPOSE_RC=$?
         fi
 
         # FALLBACK: detach couldn't even start the upload → original inline stream
@@ -660,44 +701,14 @@ PREFLIGHT_EOF
         # script, launch it detached (nohup+setsid, SIGHUP-immune), poll a
         # result marker over short cheap reconnections instead.
         _ka="-o ServerAliveInterval=20 -o ServerAliveCountMax=6 -o ConnectTimeout=20"
-        _tag="hm-rb-$$"; _rsh="/tmp/$_tag.sh"; _rlog="/tmp/$_tag.log"; _rrc="/tmp/$_tag.rc"
+        _tag="hm-rb-$(date +%s)-$$"; _rsh="/tmp/$_tag.sh"
         SWITCH_RC=1
         set +e
         printf '#!/bin/bash\nset -e\n%s\n' "$SWITCH_CMD" | ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "cat > '$_rsh'"
         _up=$?; set -e
         if [ "$_up" -eq 0 ]; then
-            set +e
-            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-              "rm -f '$_rrc'; : > '$_rlog'; nohup setsid sh -c 'bash \"$_rsh\" > \"$_rlog\" 2>&1; echo \$? > \"$_rrc\"' </dev/null >/dev/null 2>&1 & echo HM_RB_LAUNCHED" \
-              2>&1 | tee -a "$BUILD_LOG_FILE"
-            set -e
-            log "Remote build HM switch on $DEPLOY_HOST (detached; polling, max 60min)"
-            _seen=0; _rcval=""
-            for _p in $(seq 1 240); do
-                set +e
-                _out=$(ssh $SSH_OPTS $_ka "$DEPLOY_HOST" \
-                  "tail -c +$(( _seen + 1 )) '$_rlog' 2>/dev/null; printf '\\n__HMRC__'; cat '$_rrc' 2>/dev/null; printf '__HMSZ__'; stat -c %s '$_rlog' 2>/dev/null || printf 0")
-                _pc=$?; set -e
-                if [ "$_pc" -eq 0 ]; then
-                    _chunk="${_out%%__HMRC__*}"
-                    _rest="${_out#*__HMRC__}"
-                    _rcpart="$(printf '%s' "${_rest%%__HMSZ__*}" | tr -dc '0-9')"
-                    _szpart="$(printf '%s' "${_rest#*__HMSZ__}" | tr -dc '0-9')"
-                    [ -n "$_chunk" ] && printf '%s' "$_chunk" | tee -a "$BUILD_LOG_FILE"
-                    [ -n "$_szpart" ] && _seen="$_szpart"
-                    if [ -n "$_rcpart" ]; then _rcval="$_rcpart"; break; fi
-                else
-                    log "poll reconnect (ssh $_pc) — remote build still running on $DEPLOY_HOST"
-                fi
-                sleep 15
-            done
-            if [ -n "$_rcval" ]; then
-                SWITCH_RC="$_rcval"
-            else
-                log "remote build HM switch did not complete within 60min on $DEPLOY_HOST"
-                SWITCH_RC=1
-            fi
-            ssh $SSH_OPTS $_ka "$DEPLOY_HOST" "rm -f '$_rsh' '$_rlog' '$_rrc'" 2>/dev/null || true
+            SWITCH_RC=0
+            _hm_detached_wait "$_rsh" "Remote build HM switch" || SWITCH_RC=$?
         fi
         if [ "$SWITCH_RC" -ne 0 ]; then
             log "FAILED (exit $SWITCH_RC): HM switch on $DEPLOY_HOST"

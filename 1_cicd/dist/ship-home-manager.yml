@@ -60,9 +60,16 @@ jobs:
     # 1GB VM, or a dropped WG tunnel) holds this max-parallel:1 +
     # cancel-in-progress:false group for hours, jamming EVERY subsequent
     # home-manager deploy (observed 2026-07-08: a 1.5h wedge cascaded into
-    # repeated queue jams). 45m is generous for a first-build 5-7GB closure
-    # cp to a small VM yet kills a true hang, freeing the serialized group.
-    timeout-minutes: 45
+    # repeated queue jams).
+    #
+    # It was 45, on the belief that 45m is generous for a closure cp to a small
+    # VM. Measured, it is not (#657): a docker activation on the 1 GB VMs takes
+    # 36-64 min, every one exit 0, so the ship was declared failed while the
+    # generation it shipped went live. 90 matches ship.yml's deploy jobs and is
+    # far under the ship-wg-runner ceiling (test_wg_group_lock_bounded.sh). A
+    # dead activation no longer holds the group for the full budget: the engine
+    # fails as soon as the process is gone without an exit code.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       # max-parallel: 1 — all matrix jobs share the same WireGuard address
@@ -261,6 +268,14 @@ jobs:
         # when their job fails — the persistent VMs are what gates the
         # workflow's overall conclusion.
         continue-on-error: ${{ steps.transient.outputs.transient == 'true' }}
+        # The engine's wait for the detached activation ends before this step
+        # does, and the step ends before the job does: HM_DEADLINE_EPOCH below
+        # hands the engine the wall-clock end of this step (85 min - 3 for
+        # teardown), so an activation still running then is reported as STILL
+        # RUNNING with its markers kept, instead of a constant of its own
+        # declaring it failed (#657) or GitHub SIGKILLing the poller mid-wait.
+        # Same pattern as ship.yml's SHIP_DEADLINE_EPOCH.
+        timeout-minutes: 85
         env:
           OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
           GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}
@@ -273,6 +288,7 @@ jobs:
           GITHUB_REPOSITORY: diegonmarcos/cloud-infra
           GITHUB_SHA: ${{ github.sha }}
         run: |
+          export HM_DEADLINE_EPOCH=$(( $(date +%s) + 4920 ))
           echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           # BUILDER_IMAGE is exported by ./.github/actions/resolve-builder-image
           # which reads II_Unix/cb_containers-builders/build.json (master).
@@ -297,4 +313,5 @@ jobs:
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
             -v "$GITHUB_WORKSPACE:/root/git/cloud-infra" \
             -e VM="${{ matrix.vm }}" \
+            -e HM_DEADLINE_EPOCH \
             cloud-builder ship-hm ${{ matrix.vm }}
