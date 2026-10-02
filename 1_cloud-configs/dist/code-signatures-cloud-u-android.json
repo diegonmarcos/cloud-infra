@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20152,
+    "files": 20183,
     "by_lang": {
-      "py": 74,
-      "sh": 353,
-      "kotlin": 10100,
+      "py": 76,
+      "sh": 358,
+      "kotlin": 10123,
       "java": 613,
       "ts": 8413,
-      "nix": 60,
+      "nix": 61,
       "js": 452,
       "rust": 87
     },
     "by_role": {
-      "script": 171,
-      "shell": 255,
+      "script": 174,
+      "shell": 259,
       "java": 612,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
-      "flake": 22,
-      "kotlin": 10098,
+      "flake": 23,
+      "kotlin": 10121,
       "python": 31,
       "nix-module": 37,
       "file": 2257,
@@ -358,6 +358,27 @@
         "check_module(repo, module, locales, policy, fail)",
         "check_file(res, module, filename, base, locales, quantities, fail)",
         "main()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-lib-classes.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "sources(root, lib)",
+        "renders(root, lib)",
+        "lines(root, lib)",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_lib_closure",
+        "glob"
+      ],
+      "symbols": [
+        "sources(root, lib)",
+        "renders(root, lib)",
+        "lines(root, lib)",
+        "main(argv)"
       ]
     },
     {
@@ -1805,6 +1826,27 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-lib-classes.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "sources(root, lib)",
+        "renders(root, lib)",
+        "lines(root, lib)",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_lib_closure",
+        "glob"
+      ],
+      "symbols": [
+        "sources(root, lib)",
+        "renders(root, lib)",
+        "lines(root, lib)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-licence-boundary-guard.py",
       "lang": "py",
       "role": "script",
@@ -3170,6 +3212,26 @@
         "ok()",
         "fail()",
         "run_case()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/lib-classes.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()",
+        "J()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()",
+        "J()"
       ]
     },
     {
@@ -8523,13 +8585,13 @@
         "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
         "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
         "renderConfigApply(ctx: android.content.Context, into: LinearLayout)",
-        "renderVault(ctx: android.content.Context, into: LinearLayout)",
         "renderSetup(ctx: android.content.Context, into: LinearLayout)",
         "renderFleetIndex(ctx: android.content.Context, into: LinearLayout)",
         "openIndexed(id: String)",
         "renderRepos(ctx: android.content.Context, into: LinearLayout)",
         "renderWizard(ctx: android.content.Context, into: LinearLayout)",
-        "openWizardRoute(route: String)"
+        "openWizardRoute(route: String)",
+        "profileRepos()"
       ]
     },
     {
@@ -11456,6 +11518,7 @@
         "pills_ok()",
         "gh_ok()",
         "gmut()",
+        "vault_leg_ok()",
         "schema_rows_cover()",
         "schema_code_ok()",
         "schema_drift()",
@@ -11485,6 +11548,7 @@
         "pills_ok()",
         "gh_ok()",
         "gmut()",
+        "vault_leg_ok()",
         "schema_rows_cover()",
         "schema_code_ok()",
         "schema_drift()",
@@ -16244,12 +16308,15 @@
       ],
       "imports": [
         "android.content.Context",
+        "org.json.JSONArray",
         "org.json.JSONObject"
       ],
       "symbols": [
         "identity(email: String)",
         "peer(id: String)",
         "parse(root: JSONObject)",
+        "fromVault(bundle: JSONObject)",
+        "adopt(ctx: Context, root: JSONObject)",
         "peerProfiles(root: JSONObject, peerId: String)",
         "remember(root: JSONObject)",
         "remember(ctx: Context, root: JSONObject)",
@@ -16428,7 +16495,9 @@
       ],
       "symbols": [
         "artifact()",
-        "class UserRegistryTest"
+        "vaultBundle()",
+        "class UserRegistryTest",
+        "class at"
       ]
     },
     {
@@ -17768,6 +17837,138 @@
         "setLastSync(ctx: Context, millis: Long)",
         "class TodoStore",
         "class kdoc"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/native/build-qalc.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "log()",
+        "die()",
+        "cfg()",
+        "fetch()",
+        "build_dep()"
+      ],
+      "imports": [],
+      "symbols": [
+        "log()",
+        "die()",
+        "cfg()",
+        "fetch()",
+        "build_dep()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/native/publish-qalc.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "log()",
+        "die()",
+        "cfg()"
+      ],
+      "imports": [],
+      "symbols": [
+        "log()",
+        "die()",
+        "cfg()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/src/main/java/com/diegonmarcos/cloudlib/calc/CalcBackendService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcBackendService"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.core.DataBackendService"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, args: Array<String>)",
+        "class CalcBackendService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/src/main/java/com/diegonmarcos/cloudlib/calc/CalcEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcEngine"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "str(b: ByteArray)",
+        "bytes(s: String)",
+        "native(block: ()",
+        "info()",
+        "eval(expr: String, optionsJson: String?)",
+        "plot(expr: String, xmin: Double, xmax: Double, steps: Int)",
+        "complete(prefix: String, max: Int)",
+        "items(kind: String, category: String, max: Int)",
+        "ratesInfo()",
+        "fetchRates()",
+        "download(url: String, target: File)",
+        "error(msg: String)",
+        "class CalcEngine"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/src/main/java/com/diegonmarcos/cloudlib/calc/EvalOptions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EvalOptions"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parse(json: String?)",
+        "base(key: String, def: Int)",
+        "class EvalOptions"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/src/main/java/com/diegonmarcos/cloudlib/calc/QalcNative.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "init(userDir: ByteArray)",
+        "eval( expr: ByteArray, inBase: Int, outBase: Int, precision: Int, angle: Int, approx: Int, mixedUnits: Boolean, unicode: Boolean, timeoutMs: Int, )",
+        "plot(expr: ByteArray, xmin: Double, xmax: Double, steps: Int, timeoutMs: Int)",
+        "complete(prefix: ByteArray, max: Int)",
+        "items(kind: ByteArray, category: ByteArray, max: Int)",
+        "ratesSources()",
+        "reloadRates()",
+        "info()",
+        "class QalcNative"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/calc/src/test/java/com/diegonmarcos/cloudlib/calc/EvalOptionsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EvalOptionsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class EvalOptionsTest"
       ]
     },
     {
@@ -47353,6 +47554,704 @@
         "m_compose_screen()",
         "m_consume_insets()",
         "m_drop_cutout()"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/debugapi/CalcDebugApi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcDebugApi"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudcalc.BuildConfig",
+        "com.diegonmarcos.cloudcalc.Declarations",
+        "com.diegonmarcos.cloudcalc.engine.CalcClient",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "register(ctx: Context)",
+        "evalJson(client: CalcClient, q: Map<String, String>)",
+        "modesJson()",
+        "parse(json: String)",
+        "class CalcDebugApi"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/debugapi/CalcDebugApiProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcDebugApiProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.database.Cursor",
+        "android.net.Uri"
+      ],
+      "symbols": [
+        "onCreate()",
+        "query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
+        "class CalcDebugApiProvider"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/Declarations.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Declarations"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "modesOf(tab: String)",
+        "mode(id: String)",
+        "decode(b64: String)",
+        "parseTabs(json: String)",
+        "parseModes(json: String)",
+        "key(v: Any)",
+        "choices(a: JSONArray?)",
+        "objects()",
+        "strings()",
+        "class is",
+        "class Declarations",
+        "class Tab",
+        "class Key",
+        "class Action",
+        "class Field",
+        "class Output",
+        "class Form",
+        "class Choice",
+        "class CatalogSource",
+        "class Plot",
+        "class Meter",
+        "class Mode"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/Dsp.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Dsp"
+      ],
+      "imports": [
+        "kotlin.math.PI",
+        "kotlin.math.cos",
+        "kotlin.math.log10",
+        "kotlin.math.max",
+        "kotlin.math.sin",
+        "kotlin.math.sqrt"
+      ],
+      "symbols": [
+        "hann(n: Int)",
+        "fft(re: DoubleArray, im: DoubleArray)",
+        "db(x: Double)",
+        "levelDbfs(pcm: ShortArray, count: Int = pcm.size)",
+        "spectrumDb(pcm: ShortArray, n: Int)",
+        "aWeightingDb(f: Double)",
+        "aWeightedDbfs(levelDbfs: Double, spectrumDb: DoubleArray, sampleRate: Int)",
+        "peakHz(spectrumDb: DoubleArray, sampleRate: Int)",
+        "class Dsp"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/engine/CalcApi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcApi"
+      ],
+      "imports": [],
+      "symbols": [
+        "info()",
+        "eval(expr: String, options: String)",
+        "plot(expr: String, xmin: Double, xmax: Double, steps: Int)",
+        "complete(prefix: String, max: Int)",
+        "items(kind: String, category: String, max: Int)",
+        "ratesInfo()",
+        "fetchRates()",
+        "class CalcApi"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/engine/CalcClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcClient"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "com.diegonmarcos.cloudcalc.BuildConfig",
+        "com.diegonmarcos.superapp.core.DataBackendClient",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "check()",
+        "ask(method: String, vararg args: String)",
+        "info()",
+        "eval(expr: String, options: String)",
+        "plot(expr: String, xmin: Double, xmax: Double, steps: Int)",
+        "complete(prefix: String, max: Int)",
+        "items(kind: String, category: String, max: Int)",
+        "ratesInfo()",
+        "fetchRates()",
+        "class CalcClient"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/Logic.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Logic"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "press(text: String, key: Declarations.Key)",
+        "lastWord(text: String)",
+        "complete(text: String, name: String)",
+        "placeholders(template: String)",
+        "fill(template: String, values: Map<String, String>)",
+        "convert(value: String, from: String, to: String)",
+        "options(base: String, overrides: Map<String, Int>)",
+        "result(json: String)",
+        "optionValue(options: String, key: String, def: Int)",
+        "items(json: String)",
+        "plot(json: String)",
+        "remember(history: List<Entry>, e: Entry, max: Int)",
+        "encode(history: List<Entry>)",
+        "decode(json: String?)",
+        "class Logic",
+        "class Result",
+        "class Item",
+        "class Plot",
+        "class Entry"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Bundle",
+        "androidx.activity.ComponentActivity",
+        "androidx.activity.compose.setContent",
+        "androidx.activity.enableEdgeToEdge",
+        "com.diegonmarcos.cloudcalc.engine.CalcClient",
+        "com.diegonmarcos.cloudcalc.ui.CalcShell",
+        "com.diegonmarcos.cloudcalc.ui.CalcState",
+        "com.diegonmarcos.cloudcalc.ui.CalcTheme"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/CalcShell.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcShell",
+        "CalcTags"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.WindowInsetsSides",
+        "androidx.compose.foundation.layout.consumeWindowInsets",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.only",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.statusBars",
+        "androidx.compose.foundation.layout.windowInsetsPadding",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.material3.FilterChip",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.runtime.key",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.input.nestedscroll.nestedScroll",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "com.diegonmarcos.cloudcalc.Declarations",
+        "com.diegonmarcos.cloudcalc.R",
+        "com.diegonmarcos.cloudcalc.engine.CalcApi",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavEntry",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavIsland",
+        "com.diegonmarcos.superapp.bottomnav.bottomNavInsets",
+        "com.diegonmarcos.superapp.bottomnav.rememberBottomNavCollapse"
+      ],
+      "symbols": [
+        "CalcShell(api: CalcApi, state: CalcState)",
+        "TabContent(tabId: String)",
+        "tab(id: String)",
+        "chip(id: String)",
+        "mode(id: String)",
+        "key(label: String)",
+        "class CalcTags"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/CalcState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcState",
+        "LocalCalcApi",
+        "LocalCalcState"
+      ],
+      "imports": [
+        "android.content.SharedPreferences",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateListOf",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.staticCompositionLocalOf",
+        "com.diegonmarcos.cloudcalc.Declarations",
+        "com.diegonmarcos.cloudcalc.Logic",
+        "com.diegonmarcos.cloudcalc.engine.CalcApi"
+      ],
+      "symbols": [
+        "remember(e: Logic.Entry, max: Int)",
+        "clearHistory()",
+        "send(modeId: String, text: String)",
+        "class CalcState"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/CalcTheme.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcTheme",
+        "CalcMetrics"
+      ],
+      "imports": [
+        "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.dp",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.cloudcalc.R"
+      ],
+      "symbols": [
+        "CalcTheme(content: @Composable ()",
+        "col(id: Int)",
+        "class CalcMetrics"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/IconCatalog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IconCatalog"
+      ],
+      "imports": [
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.Apps",
+        "androidx.compose.material.icons.filled.Build",
+        "androidx.compose.material.icons.filled.Calculate",
+        "androidx.compose.material.icons.filled.History",
+        "androidx.compose.material.icons.filled.ShowChart",
+        "androidx.compose.material.icons.filled.SwapHoriz",
+        "androidx.compose.ui.graphics.vector.ImageVector"
+      ],
+      "symbols": [
+        "vector(name: String)",
+        "class IconCatalog"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/MeterScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeterReading",
+        "MeterMode"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.annotation.SuppressLint",
+        "android.content.pm.PackageManager",
+        "android.media.AudioFormat",
+        "android.media.AudioRecord",
+        "android.media.MediaRecorder",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.cloudcalc.Declarations",
+        "com.diegonmarcos.cloudcalc.Dsp",
+        "com.diegonmarcos.cloudcalc.R",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.currentCoroutineContext"
+      ],
+      "symbols": [
+        "MeterMode(mode: Declarations.Mode)",
+        "MeterLive(meter: Declarations.Meter)",
+        "record(meter: Declarations.Meter, emit: (MeterReading)",
+        "class MeterReading"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/ui/ModeScreens.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ModeScreen"
+      ],
+      "imports": [
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.AssistChip",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.DropdownMenu",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.material3.FilledTonalButton",
+        "androidx.compose.material3.FilterChip",
+        "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Path"
+      ],
+      "symbols": [
+        "io(block: ()",
+        "ModeScreen(mode: Declarations.Mode)",
+        "ExpressionMode(mode: Declarations.Mode)",
+        "historyMax()",
+        "ChoiceRow(choices: List<Declarations.Choice>, options: String, onPick: (Declarations.Choice)",
+        "ResultBlock(result: Logic.Result?)",
+        "CatalogMode(mode: Declarations.Mode)",
+        "ConverterMode(mode: Declarations.Mode)",
+        "ratesLine(json: String)",
+        "fetchedLine(json: String)",
+        "UnitPicker(units: List<Logic.Item>, selected: String, modifier: Modifier, onPick: (String)",
+        "FormMode(mode: Declarations.Mode)",
+        "FormBody(mode: Declarations.Mode, form: Declarations.Form)",
+        "PlotMode(mode: Declarations.Mode)",
+        "sx(x: Double)",
+        "sy(y: Double)",
+        "HistoryMode(mode: Declarations.Mode)"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/test/java/com/diegonmarcos/cloudcalc/CalcShellTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcShellTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "com.diegonmarcos.cloudcalc.engine.CalcApi",
+        "com.diegonmarcos.cloudcalc.ui.CalcShell",
+        "com.diegonmarcos.cloudcalc.ui.CalcState",
+        "com.diegonmarcos.cloudcalc.ui.CalcTags",
+        "com.diegonmarcos.cloudcalc.ui.CalcTheme",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "info()",
+        "eval(expr: String, options: String)",
+        "plot(expr: String, xmin: Double, xmax: Double, steps: Int)",
+        "complete(prefix: String, max: Int)",
+        "items(kind: String, category: String, max: Int)",
+        "ratesInfo()",
+        "fetchRates()",
+        "launch()",
+        "class CalcShellTest",
+        "class FakeEngine"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/test/java/com/diegonmarcos/cloudcalc/DeclarationsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeclarationsTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class DeclarationsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/test/java/com/diegonmarcos/cloudcalc/DspTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DspTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "kotlin.math.PI",
+        "kotlin.math.sin"
+      ],
+      "symbols": [
+        "sine(bin: Int, amp: Double)",
+        "class DspTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/test/java/com/diegonmarcos/cloudcalc/LogicTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LogicTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class LogicTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/test/test-calc-shell.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mutate()"
       ]
     },
     {
