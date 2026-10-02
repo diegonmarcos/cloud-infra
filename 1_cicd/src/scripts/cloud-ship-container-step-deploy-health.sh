@@ -170,6 +170,13 @@ step_health() {
     # `docker compose ps` find NO compose file → empty listing → false "No
     # containers found". bash -c because the oci-apps login shell is fish.
     local cf="-f $REMOTE_COMPOSE_REL --project-directory ."
+    # Same interpolation source as the `compose up` that just ran
+    # (step_compose: --env-file .secrets). Without it compose cannot render a
+    # `${VAR:?}` that only sops provides, `ps` fails, its stderr is dropped
+    # below, and a healthy deploy times out as "No containers listed" (#760:
+    # matomo, once its plaintext DB-password fallback was removed). The scp
+    # step puts .secrets at $DEPLOY_PATH/.secrets exactly when this exists.
+    [ -f "$DIST_DIR/.secrets" ] && cf="--env-file .secrets $cf"
 
     log "Waiting for containers to be healthy (timeout: ${timeout}s)..."
 
