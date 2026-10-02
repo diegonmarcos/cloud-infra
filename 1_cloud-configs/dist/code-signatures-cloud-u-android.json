@@ -6,28 +6,28 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20128,
+    "files": 20144,
     "by_lang": {
-      "py": 61,
-      "sh": 344,
-      "kotlin": 10098,
-      "java": 609,
+      "py": 68,
+      "sh": 351,
+      "kotlin": 10100,
+      "java": 613,
       "ts": 8413,
-      "nix": 64,
+      "nix": 60,
       "js": 452,
       "rust": 87
     },
     "by_role": {
-      "script": 154,
-      "shell": 251,
-      "java": 608,
+      "script": 163,
+      "shell": 255,
+      "java": 612,
       "entrypoint": 23,
       "module": 6355,
       "compose": 1,
-      "flake": 23,
-      "kotlin": 10096,
-      "python": 30,
-      "nix-module": 40,
+      "flake": 22,
+      "kotlin": 10098,
+      "python": 31,
+      "nix-module": 37,
       "file": 2257,
       "rust-module": 87,
       "hook": 150,
@@ -92,6 +92,28 @@
         "step_secrets()",
         "step_sign()",
         "step_deploy()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-dns-resolver-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "tracked(root)",
+        "scan(root, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "subprocess",
+        "sys"
+      ],
+      "symbols": [
+        "tracked(root)",
+        "scan(root, cfg)",
+        "main(argv)"
       ]
     },
     {
@@ -271,6 +293,49 @@
         "restricted_present(tree, cfg)",
         "find_vendored_trees(repo, cfg)",
         "report(tree, cfg, key, label)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-mesh-membership-audit.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "manifest_tags(axml: bytes)",
+        "membership(tags)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "manifest_tags(axml: bytes)",
+        "membership(tags)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-mesh-source-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "deps(text, patch=False)",
+        "scripts(top)",
+        "read(p)",
+        "closure(seed, edges)",
+        "manifest_gaps(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "deps(text, patch=False)",
+        "scripts(top)",
+        "read(p)",
+        "closure(seed, edges)",
+        "manifest_gaps(root)",
         "main(argv)"
       ]
     },
@@ -1228,6 +1293,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ],
@@ -1241,6 +1307,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ]
@@ -1384,6 +1451,28 @@
         "step_secrets()",
         "step_sign()",
         "step_deploy()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-dns-resolver-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "tracked(root)",
+        "scan(root, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "subprocess",
+        "sys"
+      ],
+      "symbols": [
+        "tracked(root)",
+        "scan(root, cfg)",
+        "main(argv)"
       ]
     },
     {
@@ -1563,6 +1652,49 @@
         "restricted_present(tree, cfg)",
         "find_vendored_trees(repo, cfg)",
         "report(tree, cfg, key, label)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-mesh-membership-audit.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "manifest_tags(axml: bytes)",
+        "membership(tags)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "manifest_tags(axml: bytes)",
+        "membership(tags)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-mesh-source-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "deps(text, patch=False)",
+        "scripts(top)",
+        "read(p)",
+        "closure(seed, edges)",
+        "manifest_gaps(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "deps(text, patch=False)",
+        "scripts(top)",
+        "read(p)",
+        "closure(seed, edges)",
+        "manifest_gaps(root)",
         "main(argv)"
       ]
     },
@@ -2520,6 +2652,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ],
@@ -2533,6 +2666,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ]
@@ -2645,6 +2779,28 @@
       "imports": [],
       "symbols": [
         "build_and_run()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/dns-resolver-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "bad()",
+        "judge()",
+        "expect_red()",
+        "expect_green()",
+        "probe_red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "judge()",
+        "expect_red()",
+        "expect_green()",
+        "probe_red()"
       ]
     },
     {
@@ -2809,6 +2965,22 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/install-pinned-tools.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "run_case()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "run_case()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/licence-boundary-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -2836,6 +3008,24 @@
         "run_guard_repo()",
         "build_acode()",
         "run_acode()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/mesh-source-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()"
       ]
     },
     {
@@ -7094,6 +7284,7 @@
         "android.widget.TextView",
         "android.widget.Toast",
         "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.firewall.FirewallController",
         "com.wireguard.android.backend.Tunnel",
         "java.net.InetAddress",
         "java.text.DateFormat",
@@ -7105,6 +7296,8 @@
         "refreshAndroid(modeGroup: RadioGroup, host: EditText)",
         "meshUp(ctx: Context)",
         "fleetResolvers(ctx: Context)",
+        "planFor(ctx: Context, up: Boolean, idle: String)",
+        "idleLabel(ctx: Context, idle: String)",
         "refreshStatus(ctx: Context)",
         "applyToTunnel(ctx: Context)",
         "testLookup(ctx: Context)",
@@ -7116,7 +7309,8 @@
         "readonly(ctx: Context, text: String)",
         "button(ctx: Context, text: String, onClick: ()",
         "newInstance()",
-        "class DnsFragment"
+        "class DnsFragment",
+        "class Snapshot"
       ]
     },
     {
@@ -7135,6 +7329,11 @@
         "android.util.Base64",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.wireguard.config.Config",
+        "com.wireguard.config.Interface",
+        "com.wireguard.config.Peer",
+        "com.wireguard.crypto.Key",
+        "com.wireguard.crypto.KeyPair",
         "org.json.JSONArray",
         "org.json.JSONObject",
         "java.io.ByteArrayOutputStream",
@@ -7148,9 +7347,14 @@
         "effective(d: Decl, presetId: String?)",
         "splitServers(csv: String)",
         "vpnServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
+        "meshDownServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
+        "meshDownConfig(d: Decl, servers: List<String>, fleetResolvers: List<String>, self: KeyPair, sink: KeyPair)",
         "isMeshName(d: Decl, name: String)",
         "upstreamsFor(d: Decl, name: String, meshUp: Boolean, presetServers: List<String>, fleetResolvers: List<String>)",
+        "meshDownKeys()",
+        "key(k: String)",
         "vpnServers(ctx: Context, fleetDnsCsv: String)",
+        "syncMeshDown(ctx: Context, raiseNow: Boolean)",
         "readAndroid(ctx: Context)",
         "global(key: String)",
         "writeAndroid(ctx: Context, mode: String, host: String)",
@@ -10322,6 +10526,9 @@
       ],
       "imports": [
         "android.app.Application",
+        "com.wireguard.config.InetNetwork",
+        "com.wireguard.crypto.KeyPair",
+        "java.net.InetAddress",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertNotEquals",
@@ -10342,6 +10549,10 @@
         "anUnavailablePresetIsNeverChosenNorUsedAsAFallback()",
         "aPrivatePresetWithNoFleetResolverFailsLoudly()",
         "meshNamesGoToTheFleetResolverWhileTheMeshIsUp()",
+        "down(id: String, fb: List<String> = emptyList()",
+        "downConfig(id: String, fb: List<String> = emptyList()",
+        "withoutTheMeshEachPresetKeepsWhatItCanStillReach()",
+        "theMeshDownTunnelRoutesNothingButAnUnreachableFleetResolver()",
         "theWireParserReadsAnAAndAnNxdomain()",
         "class FleetDnsTest"
       ]
@@ -14672,6 +14883,20 @@
         "_json()",
         "_green()",
         "_red()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-mesh-membership.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "mutate()"
       ]
     },
     {
@@ -19137,6 +19362,8 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.net.ConnectivityManager",
+        "android.net.NetworkCapabilities",
         "android.os.Build",
         "android.util.Log",
         "java.io.BufferedReader",
@@ -19166,6 +19393,10 @@
         "canonicalOp(path: String)",
         "infoJson(ctx: Context)",
         "docsJson(ctx: Context)",
+        "dnsFields(ctx: Context)",
+        "dnsFields(network: String?, servers: List<String>, privateActive: Boolean?, privateServer: String?)",
+        "resolveJson(ctx: Context, host: String)",
+        "jsonStr(s: String?)",
         "readLogcat(n: Int)",
         "readCrashes(ctx: Context)",
         "reply( w: PrintWriter, status: String, body: String, contentType: String = \"text/plain\", )",
@@ -19394,6 +19625,24 @@
         "bearerOf_acceptsTheFormsRealClientsSend()",
         "bearerOf_rejectsAnythingElse()",
         "class AppDebugServerAuthTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/devtools/src/test/java/com/diegonmarcos/superapp/devtools/AppDebugServerDnsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppDebugServerDnsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "underTheVpn_theMenuUpstreamsAreListed()",
+        "noNetworkAndOldAndroid_areNullsNotStrings()",
+        "privateDnsHost_isEscaped()",
+        "class AppDebugServerDnsTest"
       ]
     },
     {
@@ -20344,43 +20593,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhNetProxy.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GhNetProxy"
-      ],
-      "imports": [
-        "java.io.IOException",
-        "java.io.InputStream",
-        "java.io.OutputStream",
-        "java.net.ConnectException",
-        "java.net.InetAddress",
-        "java.net.InetSocketAddress",
-        "java.net.NoRouteToHostException",
-        "java.net.ServerSocket",
-        "java.net.Socket",
-        "java.net.SocketTimeoutException",
-        "java.net.UnknownHostException",
-        "java.security.SecureRandom",
-        "java.util.Base64",
-        "java.util.concurrent.atomic.AtomicBoolean",
-        "java.util.concurrent.atomic.AtomicLong",
-        "java.util.concurrent.atomic.AtomicReference",
-        "kotlin.concurrent.thread"
-      ],
-      "symbols": [
-        "serve(client: Socket)",
-        "relay(client: Socket, fromGh: InputStream, upstream: Socket)",
-        "now()",
-        "cause(host: String, port: Int, e: IOException)",
-        "probe(host: String, port: Int = 443)",
-        "readHead(input: InputStream)",
-        "reply(out: OutputStream, status: String)",
-        "class GhNetProxy"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/gh/src/main/java/com/diegonmarcos/cloudlib/gh/GhRunner.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20394,6 +20606,7 @@
         "android.net.ConnectivityManager",
         "android.net.NetworkCapabilities",
         "android.util.Log",
+        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
         "java.io.File"
       ],
       "symbols": [
@@ -20430,6 +20643,7 @@
         "GhLoginTest"
       ],
       "imports": [
+        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
         "java.net.ServerSocket",
         "java.net.Socket",
         "java.util.Base64",
@@ -20448,8 +20662,8 @@
         "theCodeAndThePageReachTheJobWhileGhIsStillWaiting()",
         "readingGhToTheEndFirstIsCaught()",
         "aFailureIsGhsOwnWordsNotTheLastLine()",
-        "connect(proxy: GhNetProxy, target: String, auth: String?)",
-        "credentialOf(proxy: GhNetProxy)",
+        "connect(proxy: ResolverProxy, target: String, auth: String?)",
+        "credentialOf(proxy: ResolverProxy)",
         "theProxyTunnelsOnlyForItsOwnGhToItsOwnHosts()",
         "anUnreachableHostIsNamedWithAndroidsReason()",
         "aRefusedPortIsNamedAsTcpNotDns()",
@@ -21354,6 +21568,8 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.util.Log",
+        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
         "java.io.File"
       ],
       "symbols": [
@@ -39361,6 +39577,7 @@
         "android.os.IBinder",
         "android.util.Log",
         "com.diegonmarcos.superapp.net.INetBackend",
+        "com.wireguard.android.backend.BackendException",
         "com.wireguard.android.backend.GoBackend",
         "com.wireguard.android.backend.Tunnel",
         "com.wireguard.config.Config"
@@ -39369,12 +39586,17 @@
         "getName()",
         "onStateChange(newState: Tunnel.State)",
         "tunnelFor(name: String)",
+        "otherTunnelUp(leaving: String? = null)",
+        "reconcileIdle(leaving: String? = null)",
+        "idleStatus()",
         "getState(tunnelName: String?)",
         "setState(tunnelName: String?, state: String?, wgQuickConfig: String?)",
         "getStatisticsRaw(tunnelName: String?)",
         "getVersion()",
         "isAlwaysOn()",
         "isLockdownEnabled()",
+        "setIdleTunnel(tunnelName: String?, wgQuickConfig: String?, raiseNow: Boolean)",
+        "getIdleStatus()",
         "onBind(intent: Intent?)",
         "class is",
         "class NetBackendService",
@@ -39469,6 +39691,7 @@
         "onStartCommand(@Nullable final Intent intent, final int flags, final int startId)",
         "setOwner(final GoBackend owner)",
         "class GoBackend",
+        "class is",
         "class AlwaysOnCallback",
         "class VpnService"
       ]
@@ -39541,6 +39764,9 @@
         "isAlwaysOn()",
         "isLockdownEnabled()",
         "getRunningTunnelNames()",
+        "setIdleTunnel(tunnelName: String, config: Config?, raiseNow: Boolean)",
+        "idleStatus()",
+        "idleAnswer(call: (INetBackend)",
         "unbind()",
         "class AidlBackend",
         "class the"
@@ -41094,6 +41320,8 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.util.Log",
+        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
         "java.io.File",
         "java.util.concurrent.TimeUnit"
       ],
@@ -41101,6 +41329,7 @@
         "cancel()",
         "waitFor()",
         "base()",
+        "process(args: List<String>)",
         "capture(args: List<String>, onStderr: (String)",
         "version()",
         "remotes()",
@@ -41960,6 +42189,134 @@
         "deviceCap_usesLongestPrefix()",
         "fieldParsers_tolerateSamsungFormat()",
         "class SfcVerdictTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/sysdns/src/bridge/java/com/diegonmarcos/cloudlib/sysdns/SystemDnsBridge.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "SystemDnsBridge",
+        "Upstream",
+        "Answer",
+        "Log",
+        "port",
+        "close",
+        "reply",
+        "run",
+        "android",
+        "query",
+        "execute",
+        "onAnswer",
+        "onError"
+      ],
+      "imports": [
+        "android.annotation.TargetApi",
+        "android.net.DnsResolver",
+        "java.io.Closeable",
+        "java.io.DataInputStream",
+        "java.io.DataOutputStream",
+        "java.io.IOException",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.util.Arrays",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "SystemDnsBridge(int port, Upstream upstream, Log log)",
+        "port()",
+        "serveUdp()",
+        "serveTcp()",
+        "serveTcpClient(Socket c)",
+        "resolve(final byte[] q, final Answer done)",
+        "arcount(byte[] q)",
+        "questionEnd(byte[] m)",
+        "fit(byte[] q, byte[] a, int limit)",
+        "servfail(byte[] q)",
+        "daemon(String name, Runnable body)",
+        "android()",
+        "class SystemDnsBridge",
+        "class Upstream",
+        "class Answer",
+        "class Log",
+        "class takes"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/sysdns/src/main/java/com/diegonmarcos/cloudlib/sysdns/ResolverProxy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ResolverProxy"
+      ],
+      "imports": [
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.net.ConnectException",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.NoRouteToHostException",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.net.SocketTimeoutException",
+        "java.net.UnknownHostException",
+        "java.security.SecureRandom",
+        "java.util.Base64",
+        "java.util.concurrent.atomic.AtomicBoolean",
+        "java.util.concurrent.atomic.AtomicLong",
+        "java.util.concurrent.atomic.AtomicReference",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "serve(client: Socket)",
+        "relay(client: Socket, fromGh: InputStream, upstream: Socket)",
+        "now()",
+        "cause(host: String, port: Int, e: IOException)",
+        "probe(host: String, port: Int = 443)",
+        "readHead(input: InputStream)",
+        "reply(out: OutputStream, status: String)",
+        "class ResolverProxy"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/sysdns/src/test/java/com/diegonmarcos/cloudlib/sysdns/SysDnsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SysDnsTest"
+      ],
+      "imports": [
+        "java.io.DataInputStream",
+        "java.io.DataOutputStream",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.util.Base64",
+        "kotlin.concurrent.thread",
+        "org.junit.Assert.assertArrayEquals",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "answer(records: Int)",
+        "udpAsk(port: Int, q: ByteArray)",
+        "tcpAsk(port: Int, q: ByteArray)",
+        "bridge(upstream: SystemDnsBridge.Upstream)",
+        "aQueryIsAnsweredByTheSystemResolverUnderTheClientsOwnId()",
+        "aLookupTheResolverCannotAnswerIsServfailWithTheQuestionEchoed()",
+        "anAnswerTooBigForUdpIsTruncatedThereAndWholeOverTcp()",
+        "anyHostModeTunnelsToWhateverTheEngineIsAskedForButStillOnlyForItsOwnChildren()",
+        "connect(target: String, auth: String?)",
+        "class SysDnsTest"
       ]
     },
     {
@@ -115068,6 +115425,7 @@
         "com.foxdebug.acode.rk.exec.terminal.*"
       ],
       "symbols": [
+        "startDnsBridge()",
         "onCreate()",
         "onBind(Intent intent)",
         "onStartCommand(Intent intent, int flags, int startId)",
@@ -298498,6 +298856,8 @@
         "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
+        "resolv_conf_body(nameservers: list)",
+        "patch_bin_login_dns(bin_login: str, app_id: str, resolv_conf: str)",
         "run(cmd)",
         "capture(cmd)",
         "main()"
@@ -298526,6 +298886,8 @@
         "require_fish_login_shell(login_shell: str)",
         "retarget_usershell(login_inner: str, profile_link: str, login_shell: str)",
         "patch_etc_profile(etc_profile: str, fallback_script: str)",
+        "resolv_conf_body(nameservers: list)",
+        "patch_bin_login_dns(bin_login: str, app_id: str, resolv_conf: str)",
         "run(cmd)",
         "capture(cmd)",
         "main()"
@@ -299667,6 +300029,55 @@
       ]
     },
     {
+      "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/app/TerminalDebugApi.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "run"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.PowerManager",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.termux.BuildConfig",
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.shell.command.ExecutionCommand",
+        "com.termux.shared.shell.command.ExecutionCommand.Runner",
+        "com.termux.shared.shell.command.environment.ShellEnvironmentUtils",
+        "com.termux.shared.termux.TermuxConstants",
+        "com.termux.shared.termux.shell.TermuxShellManager",
+        "com.termux.shared.termux.shell.command.environment.TermuxShellEnvironment",
+        "org.json.JSONArray",
+        "org.json.JSONException",
+        "org.json.JSONObject",
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.InputStreamReader",
+        "java.io.Reader",
+        "java.nio.charset.StandardCharsets",
+        "java.util.Arrays",
+        "java.util.HashMap",
+        "java.util.Map",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "TerminalDebugApi()",
+        "register(Context context)",
+        "exec(Context app, Map<String, String> query)",
+        "selftest(Context app)",
+        "ready(Context app)",
+        "run(Context app, String cmd, int timeout)",
+        "run()",
+        "finish()",
+        "text()",
+        "class TerminalDebugApi",
+        "class Drain"
+      ]
+    },
+    {
       "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/app/TermuxActivity.java",
       "lang": "java",
       "role": "java",
@@ -299799,6 +300210,8 @@
       "imports": [
         "android.app.Application",
         "android.content.Context",
+        "android.os.Build",
+        "com.diegonmarcos.cloudlib.sysdns.SystemDnsBridge",
         "com.termux.BuildConfig",
         "com.termux.cloud.CloudTermuxProperties",
         "com.termux.shared.errors.Error",
@@ -299812,10 +300225,12 @@
         "com.termux.shared.termux.shell.command.environment.TermuxShellEnvironment",
         "com.termux.shared.termux.shell.am.TermuxAmSocketServer",
         "com.termux.shared.termux.shell.TermuxShellManager",
-        "com.termux.shared.termux.theme.TermuxThemeUtils"
+        "com.termux.shared.termux.theme.TermuxThemeUtils",
+        "java.io.IOException"
       ],
       "symbols": [
         "onCreate()",
+        "startDnsBridge()",
         "setLogConfig(Context context)",
         "class TermuxApplication"
       ]
@@ -299872,9 +300287,9 @@
         "java.util.zip.ZipEntry"
       ],
       "symbols": [
-        "trustedLibSourceDir(Activity activity)",
-        "readLibManifest(Activity activity)",
-        "openBootstrapFromLib(Activity activity, LibBootstrapManifest manifest)",
+        "trustedLibSourceDir(Context context)",
+        "readLibManifest(Context context)",
+        "openBootstrapFromLib(Context context, LibBootstrapManifest manifest)",
         "sha256OfQuiet(File file)",
         "sha256Of(File file)",
         "hex(byte[] bytes)",
@@ -299884,6 +300299,9 @@
         "restOfSetupIfNeeded(final Activity activity, final Runnable whenDone, final LibBootstrapManifest libManifest)",
         "Thread()",
         "run()",
+        "ensureInstalled(Context context)",
+        "isBootstrapCurrent(LibBootstrapManifest libManifest)",
+        "installBootstrap(Context context, LibBootstrapManifest libManifest)",
         "showBootstrapErrorDialog(Activity activity, Runnable whenDone, String message)",
         "showLibMissingDialog(Activity activity, Runnable whenDone, String message)",
         "sendBootstrapCrashReportNotification(Activity activity, String message)",
@@ -299895,6 +300313,7 @@
         "class last",
         "class LibMissing",
         "class LibBootstrapManifest",
+        "class BootstrapFailure",
         "class what",
         "class installed"
       ]
@@ -300277,140 +300696,6 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()"
-      ]
-    },
-    {
-      "path": "ac_cloud-nix-on-droid/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [
-        "nix/deps-scripts.nix",
-        "nix/go-maven-resolver.nix"
-      ],
-      "symbols": [
-        "description",
-        "inputs",
-        "outputs",
-        "system",
-        "pkgs",
-        "buildToolsVersion",
-        "aapt2buildToolsVersion",
-        "android",
-        "includeNDK",
-        "ndkVersions",
-        "platformVersions",
-        "buildToolsVersions",
-        "includeEmulator",
-        "includeSystemImages",
-        "jdk",
-        "gradle",
-        "version",
-        "hash",
-        "defaultJava",
-        "extraGradleFlags",
-        "overrideGradleFlags",
-        "gradleFlags",
-        "buildGradlePackage",
-        "scripts",
-        "go-maven-resolver",
-        "default",
-        "pname",
-        "src",
-        "lockFile",
-        "buildJdk",
-        "ANDROID_SDK_ROOT",
-        "ANDROID_NDK_ROOT",
-        "nativeBuildInputs",
-        "gradleBuildFlags",
-        "installPhase",
-        "JAVA_HOME",
-        "packages"
-      ]
-    },
-    {
-      "path": "ac_cloud-nix-on-droid/nix/deps-scripts.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "bash",
-        "coreutils",
-        "curl",
-        "jq",
-        "htmlq",
-        "gawk",
-        "gitMinimal",
-        "gnused",
-        "gnugrep",
-        "gradle",
-        "fetchurl",
-        "parallel",
-        "moreutils",
-        "writeShellApplication",
-        "go-maven-resolver",
-        "callPackage"
-      ],
-      "imports": [
-        "url2json.nix"
-      ],
-      "symbols": [
-        "url2json",
-        "resolve-gradle-deps",
-        "name",
-        "runtimeInputs",
-        "inheritPath",
-        "text",
-        "gen-deps-lock",
-        "bashOptions",
-        "out",
-        "deps_list",
-        "regen-lock",
-        "build-apk"
-      ]
-    },
-    {
-      "path": "ac_cloud-nix-on-droid/nix/go-maven-resolver.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "buildGoModule",
-        "fetchFromGitHub"
-      ],
-      "imports": [],
-      "symbols": [
-        "pname",
-        "version",
-        "vendorHash",
-        "src",
-        "owner",
-        "repo",
-        "rev",
-        "hash",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "ac_cloud-nix-on-droid/nix/url2json.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "stdenv",
-        "fetchurl"
-      ],
-      "imports": [],
-      "symbols": [
-        "name",
-        "phases",
-        "src",
-        "url",
-        "hash",
-        "executable",
-        "buildPhase"
       ]
     },
     {
@@ -306803,7 +307088,8 @@
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
-        "store()"
+        "store()",
+        "dns_patch_ok()"
       ],
       "imports": [
         "/nix/store/5pmf0nlk348101av1wzcp18v089cably-nix-on-droid-session-init.sh",
@@ -306824,7 +307110,8 @@
         "sha_gated()",
         "fake_build_json()",
         "decl_value()",
-        "store()"
+        "store()",
+        "dns_patch_ok()"
       ]
     },
     {
@@ -306845,6 +307132,34 @@
         "gate()",
         "mutation()",
         "order_ok()"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/test/test-one-agp-pin.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/test/test-terminal-debug-api.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -417070,6 +417385,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ],
@@ -417083,6 +417399,7 @@
         "step_configure()",
         "_resolve_signing()",
         "step_build()",
+        "step_runtime()",
         "step_host_deps()",
         "step_asset_path()"
       ]
@@ -418364,6 +418681,43 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/app/TerminalDebugApi.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.os.PowerManager",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.termux.cloud.CloudDnsBridge",
+        "com.termux.cloud.CloudExecService",
+        "com.termux.cloud.CloudRootfs",
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "org.json.JSONArray",
+        "org.json.JSONException",
+        "org.json.JSONObject",
+        "java.io.ByteArrayOutputStream",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.nio.charset.StandardCharsets",
+        "java.util.Arrays",
+        "java.util.Map"
+      ],
+      "symbols": [
+        "TerminalDebugApi()",
+        "register(Context context)",
+        "exec(Context app, Map<String, String> query)",
+        "selftest(Context app)",
+        "ready(Context app)",
+        "run(Context app, String cmd, int timeout)",
+        "readAll(InputStream in)",
+        "class TerminalDebugApi"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/app/src/main/java/com/termux/app/TermuxActivity.java",
       "lang": "java",
       "role": "java",
@@ -418559,6 +418913,9 @@
         "setupBootstrapIfNeeded(final Activity activity, final Runnable whenDone)",
         "Thread()",
         "run()",
+        "ensureInstalled(Context context)",
+        "isPrefixInstalled()",
+        "installBootstrap(Context context)",
         "stageCloudRootfs(final Activity activity, final Runnable whenDone)",
         "showCloudRootfsLibMissingDialog(Activity activity, String message, Runnable whenDone)",
         "showCloudRootfsStageErrorDialog(Activity activity, String message, Runnable whenDone)",
@@ -418568,7 +418925,8 @@
         "setupStorageSymlinks(final Context context)",
         "ensureDirectoryExists(File directory)",
         "loadZipBytes()",
-        "class TermuxInstaller"
+        "class TermuxInstaller",
+        "class BootstrapFailure"
       ]
     },
     {
@@ -418677,6 +419035,7 @@
         "com.termux.app.settings.properties.TermuxAppSharedProperties",
         "com.termux.app.terminal.TermuxTerminalSessionClient",
         "com.termux.app.utils.PluginUtils",
+        "com.termux.cloud.CloudDnsBridge",
         "com.termux.shared.data.IntentUtils",
         "com.termux.shared.models.errors.Errno",
         "com.termux.shared.shell.ShellUtils",
@@ -418692,8 +419051,7 @@
         "com.termux.shared.notification.NotificationUtils",
         "com.termux.shared.packages.PermissionUtils",
         "com.termux.shared.data.DataUtils",
-        "com.termux.shared.models.ExecutionCommand",
-        "com.termux.shared.shell.TermuxTask"
+        "com.termux.shared.models.ExecutionCommand"
       ],
       "symbols": [
         "onCreate()",
@@ -418846,6 +419204,27 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/cloud/CloudDnsBridge.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "CloudDnsBridge",
+        "start"
+      ],
+      "imports": [
+        "android.os.Build",
+        "com.diegonmarcos.cloudlib.sysdns.SystemDnsBridge",
+        "com.termux.BuildConfig",
+        "com.termux.shared.logger.Logger",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "CloudDnsBridge()",
+        "start()",
+        "class CloudDnsBridge"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/app/src/main/java/com/termux/cloud/CloudExecService.java",
       "lang": "java",
       "role": "java",
@@ -418859,6 +419238,7 @@
       ],
       "imports": [
         "android.app.Service",
+        "android.content.Context",
         "android.content.Intent",
         "android.os.Bundle",
         "android.os.IBinder",
@@ -418878,6 +419258,7 @@
         "exec(String executable, String[] args, String stdin, String workdir, int timeoutMs)",
         "prefix()",
         "toolsDir()",
+        "run(Context context, String executable, String[] args, String stdin, String workdir, int timeout)",
         "run()",
         "finish()",
         "text()",
@@ -418895,6 +419276,7 @@
         "CloudRootfs",
         "LibMissing",
         "isStaged",
+        "isUnpacked",
         "stage",
         "refreshFiles"
       ],
@@ -418928,6 +419310,7 @@
         "LibMissing(String message)",
         "stageDir()",
         "isStaged(Context context)",
+        "isUnpacked()",
         "stage(Context context)",
         "refreshFiles(Context context)",
         "bytes(InputStream in)",
@@ -419260,6 +419643,25 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/rootfs/verify-dns-responder.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "answer(q)",
+        "main()"
+      ],
+      "imports": [
+        "socket",
+        "struct",
+        "sys",
+        "threading"
+      ],
+      "symbols": [
+        "answer(q)",
+        "main()"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/rootfs/verify-inside.sh",
       "lang": "sh",
       "role": "shell",
@@ -419281,7 +419683,8 @@
         "resolved()",
         "enter()",
         "readable_listing()",
-        "readable_ok()"
+        "readable_ok()",
+        "probe()"
       ],
       "imports": [
         "enter.sh"
@@ -419290,7 +419693,8 @@
         "resolved()",
         "enter()",
         "readable_listing()",
-        "readable_ok()"
+        "readable_ok()",
+        "probe()"
       ]
     },
     {
@@ -424132,6 +424536,20 @@
         "sha_gated()",
         "refreshes_when_staged()",
         "no_storage_tree()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-terminal-debug-api.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
