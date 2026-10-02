@@ -21,6 +21,7 @@
 # Usage: cloud-ship-detect-nodeploy-only.sh < <changed-paths>   (ship.yml's $SUB_CHANGED)
 #   cwd must be the cloud-infra checkout.
 set -eu
-dirs=$(jq -r '.dirs | join("|")' 1_cicd/src/ship-no-deploy-paths.json)
+# Regex-escaped so a "." in a declared path (.github) matches only itself.
+re=$(jq -r '[(.dirs[] | gsub("\\."; "\\.") + "/.*"), ((.files // [])[] | gsub("\\."; "\\."))] | join("|")' 1_cicd/src/ship-no-deploy-paths.json)
 paths=$(grep -v '^$' || true)
-[ -n "$paths" ] && ! printf '%s\n' "$paths" | grep -qvxE "($dirs)/.*"
+[ -n "$paths" ] && ! printf '%s\n' "$paths" | grep -qvxE "($re)"

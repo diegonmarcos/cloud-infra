@@ -123,9 +123,9 @@ else
 fi
 
 # ── #564: the exact dispatch ranges of the two runs reported as "detection dead" ──
-# Ship 35992310672 (a_solutions dfdd6b87..02350a7d: _shared/engine.nix, both
+# Ship 35992310672 (a_solutions 2d5e21fa..348d1134: _shared/engine.nix, both
 # kg-store build.json+compose.nix, my-ai-api build.json) and 35992663222
-# (02350a7d..0360d2a2). The changed-file set is READ from cloud-u-containers
+# (348d1134..07577053). The changed-file set is READ from cloud-u-containers
 # history, not restated, and run through the live classifier + engine walk.
 # 35992310672 resolved a real ship (4 VMs) and died at Build → oci-apps on a
 # #542-renamed build-*.json; 35992663222's range touched only .github/, so its
@@ -139,17 +139,17 @@ resolve() {
   { printf '%s\n' "$_set" | grep -E "$RE" | awk -F/ '{print $1}'
     printf '%s\n' "$_set" | bash "$ENG_SRC" 2>/dev/null | tr ' ' '\n'; } | grep -v '^$' | sort -u | tr '\n' ' ' | sed 's/ $//'
 }
-if git -C "$REPO_ROOT/a_solutions" cat-file -e '0360d2a255ca28c304b6ee3b021dfd61419be889^{commit}' 2>/dev/null; then
-  R1="$(resolve dfdd6b876cd4acfde7c3ce88cd2faa4f3aee6792 02350a7d02d6486531a56862b4429b8aa0bab36e)"
+if git -C "$REPO_ROOT/a_solutions" cat-file -e '075770532175307b75747525508231f18e5f83eb^{commit}' 2>/dev/null; then
+  R1="$(resolve 2d5e21fa6d3599bcd87d911a8564f619080b5457 348d1134c746b463b2e974075cba9946b263a776)"
   for _svc in user-ai_kg-store user-ai_kg-store-pub user-ai_my-ai-api; do
     ck "run 35992310672 range resolves $_svc" "$(printf ' %s ' "$R1" | grep -c " $_svc " || true)" "1"
   done
   ck "run 35992310672 range fans _shared/ out to >10 engine consumers" \
      "$([ "$(printf '%s' "$R1" | wc -w)" -gt 10 ] && echo yes || echo no)" "yes"
   ck "run 35992663222 range (.github/ only) resolves to NO service — verdict=empty was honest" \
-     "$(resolve 02350a7d02d6486531a56862b4429b8aa0bab36e 0360d2a255ca28c304b6ee3b021dfd61419be889)" ""
+     "$(resolve 348d1134c746b463b2e974075cba9946b263a776 075770532175307b75747525508231f18e5f83eb)" ""
 else
-  echo "  FAIL a_solutions history lacks 0360d2a2 — the #564 ranges were NOT verified (needs fetch-depth: 0)"
+  echo "  FAIL a_solutions history lacks 07577053 — the #564 ranges were NOT verified (needs fetch-depth: 0)"
   fail=$((fail+1))
 fi
 
