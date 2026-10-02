@@ -91,3 +91,41 @@ rm -rf /tmp/_verify.git
 ```
 
 Last run: **2026-04-22 — all 6 needles at 0 hits.** ✅
+
+---
+
+## Phase H — full-history rewrite of the public repos (2026-10-02, #759)
+
+The April purge was undone by this very file: it listed the 6 purged needles in
+plaintext on `main`, so they were public again from the next push on. They are
+now `REDACTED` here and in every past version of this file.
+
+`git filter-repo --replace-text` (exact values, never patterns) plus
+`--invert-paths --path-glob '*raw_logs/conversation_*'` was run on
+cloud-infra, cloud-u-containers and cloud-infra-desktop, then force-pushed
+(rulesets `main-no-rewrite` disabled only for the push, restored identical).
+Every commit SHA changed (the root is a GitHub-signed web commit, which
+filter-repo re-creates unsigned). Desktop's 136 tags were re-pointed; its 13
+releases follow the tag names and kept their assets.
+
+| repo | old main | new main (`[skip ci]` marker) |
+|------|----------|-------------------------------|
+| cloud-infra | `a03c9577354819b9b0e6044f4b7101fc22a73856` | `cdf05d32ccca348848464063452702036d54c3aa` |
+| cloud-u-containers | `814d1e169ae84599f818400c4ee4e20bfc1bb620` | `7e8b3c16e44d66aeedb958cb011f9f3d31b4ea3e` |
+| cloud-infra-desktop | `2d9196ad9fa4a67fe70b0fb462b0e900cad82c9d` | `2895bb31d0d30d41ed3afd6d3bf4c1bbb90872ed` |
+
+**Clones made before the rewrite:** never merge them into the new `main` — a
+merge re-publishes everything purged. With no unpushed commits:
+`git fetch origin && git reset --keep origin/main`. With unpushed commits:
+`git rebase --onto origin/main <old-base>`. `pull.rebase=true` (set on the
+shared cloud-infra checkout) is safe: it rebases from the fork point.
+
+**Still open:**
+- GitHub keeps serving every pre-rewrite SHA (and PR refs) until GitHub
+  Support garbage-collects the repos; the request lists the SHAs.
+- Two needles are still **live in the current cloud-u-containers tree** and
+  were deliberately not rewritten, because they are working config: the S3
+  access-key id in `infra-obs_dagu/{src,dist}/.../ops_backup-*.yaml`, and the
+  Matomo DB password as a fallback default in `infra-obs_matomo/src/compose.nix`
+  and `infra-obs_reports/.../cloud-health-full-daily/src/collect.rs`. They
+  need to move to sops before their history can be cleaned.
