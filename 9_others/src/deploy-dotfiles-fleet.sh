@@ -58,10 +58,17 @@ if (!f || !Array.isArray(f.repos) || f.repos.length === 0) { console.error("FATA
 const q = process.argv[2];
 if (q === "repos") for (const r of f.repos) console.log(r.dir);
 if (q === "pairs") {
-  // <dist subdir>/<file> -> <repo-relative path>, for directory targets and the fleet-wide root files
+  // <dist subdir>/<file> -> <repo-relative path>, for directory targets and the fleet-wide root files.
+  // public_* (leak-scan gates) go only to repos declared private:false.
   for (const [tool, target] of Object.entries(m.targets || {})) console.log("dir\t" + tool + "\t" + target);
   for (const rf of f.root_files || []) console.log("root\t" + rf + "\t" + m.root_targets[rf]);
+  const r = f.repos.find(x => x.dir === process.argv[3]);
+  if (r && r.private === false) {
+    for (const [tool, target] of Object.entries(m.public_targets || {})) console.log("dir\t" + tool + "\t" + target);
+    for (const [rf, target] of Object.entries(m.public_root_targets || {})) console.log("root\t" + rf + "\t" + target);
+  }
 }
+if (q === "hooks") { const r = f.repos.find(x => x.dir === process.argv[3]); if (r && r.private === false && m.public_targets && m.public_targets.githooks) console.log(m.public_targets.githooks); }
 if (q === "sources") { const r = f.repos.find(x => x.dir === process.argv[3]); if (r && r.sources) for (const [dot, name] of Object.entries(r.sources.map)) console.log(r.sources.prefix + "\t" + dot + "\t" + name); }
 if (q === "mirrors") for (const x of f.module_mirrors || []) console.log(x.from + "\t" + x.to + "\t" + (x.only ? x.only.join(" ") : "-"));
 ' "$MANIFEST" "$@"; }
@@ -107,7 +114,7 @@ for repo in $REPOS; do
     fi
     checked=$((checked + 1))
 
-    mf pairs | while IFS="$TAB" read -r kind name target; do
+    mf pairs "$repo" | while IFS="$TAB" read -r kind name target; do
         if [ "$kind" = dir ]; then
             [ -d "$DF_DIST/$name" ] || continue
             files_of "$DF_DIST/$name" | while read -r rel; do
@@ -118,6 +125,14 @@ for repo in $REPOS; do
             sync "$DF_DIST/root/$name" "$root/$target" "$repo" "$target"
         fi
     done
+
+    # A hook file does nothing until git is told where hooks live. Wire it on emit
+    # where the clone has no hooksPath at all; a repo that already points git at
+    # its own hooks (0_git/dist/hooks) chains to .githooks/pre-commit from there.
+    hooks_dir="$(mf hooks "$repo")"
+    if [ -n "$hooks_dir" ] && [ "$CHECK" = 0 ] && [ -z "$(git -C "$root" config core.hooksPath 2>/dev/null)" ]; then
+        git -C "$root" config core.hooksPath "$hooks_dir" && note "WROTE" "$repo" "core.hooksPath=$hooks_dir (git config)"
+    fi
 
     # Repos that generate their root dotfiles from a source tree of their own
     # (manifest fleet.repos[].sources): write the same files into that source too.

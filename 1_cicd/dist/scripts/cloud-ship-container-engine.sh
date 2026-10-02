@@ -585,6 +585,7 @@ for _step in \
     cloud-ship-container-step-docs.sh \
     cloud-ship-container-step-secrets-decrypt.sh \
     cloud-ship-container-step-verify-secret-consumption.sh \
+    cloud-ship-container-step-verify-dist-leaks.sh \
     cloud-ship-container-step-deploy-rsync.sh \
     cloud-ship-container-step-deploy-compose.sh \
     cloud-ship-container-step-deploy-drain.sh \
@@ -685,7 +686,7 @@ echo "========================================"
 case "${1:-all}" in
     docker)   step_docker ;;
     push)     step_docker ;;   # alias: build image + push to GHCR
-    build)    step_build ;;
+    build)    step_build; step_verify_dist_leaks ;;
     docs)     step_docs ;;
     secrets)  step_secrets ;;
     verify)   step_verify_secrets ;;
@@ -710,7 +711,7 @@ case "${1:-all}" in
             LOGS_TAIL="${2:-100}"; LOGS_FOLLOW="${3:-}"; step_logs
         fi
         ;;
-    all)      step_build; step_docs; step_secrets; step_verify_secrets ;;
+    all)      step_build; step_docs; step_secrets; step_verify_secrets; step_verify_dist_leaks ;;
     ship)
         # Runner: where to build Docker images (auto, local, oci-apps, gha)
         RUNNER="${2:-auto}"
@@ -720,7 +721,7 @@ case "${1:-all}" in
         # a loop, so the case-arm continued into the standard pipeline,
         # double-running step_build + step_secrets.
         if [ "$WRANGLER_DEPLOY" = "true" ]; then
-            step_build; step_secrets; step_wrangler; exit 0
+            step_build; step_secrets; step_verify_dist_leaks; step_wrangler; exit 0
         fi
         if [ "$TERRAFORM_DEPLOY" = "true" ]; then
             step_build; step_secrets; step_terraform; exit 0
@@ -837,7 +838,7 @@ case "${1:-all}" in
         fi
         _ship_build_phase
         ;;
-    wrangler) step_wrangler ;;
+    wrangler) step_verify_dist_leaks; step_wrangler ;;
     terraform) step_build; step_secrets; step_terraform ;;
     tf-plan) shift; step_build; step_secrets; step_terraform_plan "$@" ;;
     tf-import) step_build; step_secrets; step_terraform_import ;;

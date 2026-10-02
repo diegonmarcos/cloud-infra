@@ -73,6 +73,15 @@ expect C9 1 'FAIL: --require-all' -- run --require-all --check
 echo '{"targets":{}}' > "$S/manifest.json"
 expect C10 1 'no fleet.repos' -- run --check
 
+# C11: the CI fetcher must fetch a public repo that has NO ci_skip. Its TSV used
+# an empty field for "no skip"; read with IFS=<tab> collapses it, the path list
+# slid into `skip`, and every public repo was reported "ci_skip" — L1 checked
+# 0 repos and passed for weeks. git is stubbed: no network.
+mkdir -p "$T/stub"; printf '#!/bin/sh\n[ "$1" = clone ] && for a; do d="$a"; done && mkdir -p "$d"; exit 0\n' > "$T/stub/git"; chmod +x "$T/stub/git"
+echo '{"targets":{"claude":".claude"},"root_targets":{},"fleet":{"repos":[{"dir":"p1","github":"p1","private":false},{"dir":"p2","github":"p2","private":false,"ci_skip":"why"},{"dir":"v","github":"v","private":true}]}}' > "$S/manifest.json"
+out="$(PATH="$T/stub:$PATH" sh "$ROOT/9_others/src/fetch-fleet-public.sh" "$S/manifest.json" "$T/fetched" 2>&1)"
+grep -q 'p1 fetched' <<<"$out" && grep -q 'p2 skipped (ci_skip' <<<"$out" && grep -q 'v skipped (private' <<<"$out" && ok "C11 fetcher: public→fetched, ci_skip→skipped, private→skipped" || { bad "C11 fetcher misclassifies repos"; echo "$out" | sed 's/^/    /'; }
+
 # ── part 2: the real declaration ───────────────────────────────────────────
 M="$ROOT/0_apps/src/manifest.json"
 n=$(jq '.fleet.repos|length' "$M"); u=$(jq '[.fleet.repos[].dir]|unique|length' "$M")

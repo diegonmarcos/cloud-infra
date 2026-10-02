@@ -454,3 +454,16 @@ fi
 # raced .gitignore and swept in ignored paths, refuse the commit here rather
 # than let GitHub's secret scanner be the first thing that notices.
 assert_no_forced_gitignored
+
+# ══════════════════════════════════════════════════════════
+# LEAK SCAN — secret-SHAPED values, whatever the file is called
+# ══════════════════════════════════════════════════════════
+# Everything above judges files by NAME or ignore-status. A signed JWT pasted
+# into wrangler.toml passed all of it (2026-10-01): the file is not named like a
+# secret and was meant to be tracked. .githooks/leak-scan is the fleet-wide
+# scanner (emitted from 0_apps/src/githooks/, rules in .gitleaks.toml); this
+# repo's hooksPath points at 0_git/dist/hooks, so it is chained from here.
+# Runs last, over the final staged set — including what this hook auto-staged.
+if [ -f "$(git rev-parse --show-toplevel)/.githooks/leak-scan" ]; then
+  sh "$(git rev-parse --show-toplevel)/.githooks/leak-scan" --staged || exit 1
+fi

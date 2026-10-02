@@ -48,7 +48,7 @@ SERVER_PORT = 5000
 # Create an OAuth App at: https://github.com/settings/developers
 # Set callback URL to: https://cloud.diegonmarcos.com/cloud_dash.html
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID', 'Ov23liOg9JhezyYUCHmS')
-GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', 'REDACTED')
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET', '')
 # Allowed GitHub usernames that can perform admin actions (reboot, etc.)
 GITHUB_ALLOWED_USERS = os.environ.get('GITHUB_ALLOWED_USERS', 'diegonmarcos').split(',')
 

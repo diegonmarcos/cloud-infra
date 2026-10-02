@@ -48,10 +48,13 @@ command -v node >/dev/null 2>&1 || {
 
 # Manifest readers live in one place so a missing interpreter can never again
 # be reported as malformed data.
-json_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(Object.keys(m.targets||{}).join(" "))' "$1"; }
-json_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String(m.targets[process.argv[2]]))' "$1" "$2"; }
-json_root_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(Object.keys(m.root_targets||{}).join(" "))' "$1"; }
-json_root_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String(m.root_targets[process.argv[2]]))' "$1" "$2"; }
+# Directory targets and root files each come in two sections: the universal
+# one, and public_* (leak-scan gates — see manifest _public_doc). This repo
+# owns the manifest and is public, so it installs both.
+json_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(Object.keys({...m.targets,...m.public_targets}).join(" "))' "$1"; }
+json_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String({...m.targets,...m.public_targets}[process.argv[2]]))' "$1" "$2"; }
+json_root_keys()   { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(Object.keys({...m.root_targets,...m.public_root_targets}).join(" "))' "$1"; }
+json_root_target() { node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.stdout.write(String({...m.root_targets,...m.public_root_targets}[process.argv[2]]))' "$1" "$2"; }
 
 # ── refresh src/claude/ from the ONE claude SoT ─────────────────────────────
 # Same pattern as the mcp.json refresh below, one tier up: src/ is a GENERATED

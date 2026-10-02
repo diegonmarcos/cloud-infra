@@ -293,11 +293,11 @@ My guess from service names: all are actively used → declare them properly. Pe
 ### A5. Real credential leaks in git history (from repo-scan)
 
 3 real credentials in git history of the (public) `cloud` repo:
-- `AWS_ACCESS_KEY_ID: REDACTED` (OCI S3, 8 commits)
-- `C3_BEARER_TOKEN = "eyJ…"` (JWT, 2 commits)
-- `C3_API_KEY = "REDACTED"` (1 commit)
-- `ADMIN_PASSWORD: REDACTED` (stalwart secrets.yaml.new — uncommitted workspace leftover)
-- `MYSQL_ROOT_PASSWORD=REDACTED` + `MATOMO_DATABASE_PASSWORD=${VAR:-REDACTED}` (11 commits)
+- `AWS_ACCESS_KEY_ID: <redacted>` (OCI S3, 8 commits)
+- `C3_BEARER_TOKEN = "<redacted>"` (JWT, 2 commits)
+- `C3_API_KEY = <redacted>` (1 commit)
+- `ADMIN_PASSWORD: <redacted>` (stalwart secrets.yaml.new — uncommitted workspace leftover)
+- `MYSQL_ROOT_PASSWORD=<redacted>` + `MATOMO_DATABASE_PASSWORD=${VAR:-<redacted>}` (11 commits)
 
 **Plan**: existing `project_secrets_remediation.md` + plan I drafted earlier (rotate → purge HEAD → `git filter-repo` → force-push → CI gate).
 

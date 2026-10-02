@@ -12,11 +12,14 @@ MANIFEST="$1"; DEST="$2"
 mkdir -p "$DEST"
 node -e '
 const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-const paths = [...Object.values(m.targets || {}).map(t => "/" + t + "/"), ...Object.values(m.root_targets || {}).map(t => "/" + t), ...(m.fleet.module_mirrors || []).map(x => "/" + x.to + "/")];
-for (const r of m.fleet.repos) console.log([r.dir, r.github, r.private ? "private" : "public", r.ci_skip ? "skip" : "", [...new Set(paths)].join(" ")].join("\t"));
+const paths = [...Object.values({...m.targets, ...m.public_targets}).map(t => "/" + t + "/"), ...Object.values({...m.root_targets, ...m.public_root_targets}).map(t => "/" + t), ...(m.fleet.module_mirrors || []).map(x => "/" + x.to + "/")];
+// "-" not "": read with IFS=<tab> collapses an empty field (tab is IFS
+// whitespace), which shifted the path list into `skip` and reported EVERY
+// public repo as ci_skip — the live guard then checked 0 repos and passed.
+for (const r of m.fleet.repos) console.log([r.dir, r.github, r.private ? "private" : "public", r.ci_skip ? "skip" : "-", [...new Set(paths)].join(" ")].join("\t"));
 ' "$MANIFEST" | while IFS="$(printf '\t')" read -r dir gh vis skip paths; do
     [ "$vis" = public ] || { echo "fetch-fleet-public: $dir skipped (private — CI has no token)"; continue; }
-    [ -z "$skip" ] || { echo "fetch-fleet-public: $dir skipped (ci_skip in manifest)"; continue; }
+    [ "$skip" = "-" ] || { echo "fetch-fleet-public: $dir skipped (ci_skip in manifest)"; continue; }
     GIT_LFS_SKIP_SMUDGE=1 git clone -q --depth 1 --filter=blob:none --sparse --no-checkout "https://github.com/diegonmarcos/$gh.git" "$DEST/$dir"
     # shellcheck disable=SC2086  # $paths is a space-separated list by construction
     git -C "$DEST/$dir" sparse-checkout set --no-cone $paths
