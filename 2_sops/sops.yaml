@@ -10,6 +10,13 @@ creation_rules:
     key_groups:
       - age:
           - *diego
+  # Per-service secret FRAGMENTS (src/secrets.<name>.yaml): merged into the same
+  # dist/.secrets by step_secrets. A new fragment needs only this public
+  # recipient, where adding a key to secrets.yaml needs the private key (#760).
+  - path_regex: (^|.*/)secrets\.[A-Za-z0-9_-]+\.yaml$
+    key_groups:
+      - age:
+          - *diego
   # Backup secrets files
   - path_regex: (^|.*/)secrets_backup\.yaml$
     key_groups:

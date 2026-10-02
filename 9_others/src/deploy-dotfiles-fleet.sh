@@ -60,9 +60,13 @@ if (q === "repos") for (const r of f.repos) console.log(r.dir);
 if (q === "pairs") {
   // <dist subdir>/<file> -> <repo-relative path>, for directory targets and the fleet-wide root files.
   // public_* (leak-scan gates) go only to repos declared private:false.
-  for (const [tool, target] of Object.entries(m.targets || {})) console.log("dir\t" + tool + "\t" + target);
-  for (const rf of f.root_files || []) console.log("root\t" + rf + "\t" + m.root_targets[rf]);
+  // scope "public": a repo that owns its own editor/agent dotfiles (and a module
+  // copy of its own) takes ONLY the leak/purge gates — never .claude/.mcp.json.
   const r = f.repos.find(x => x.dir === process.argv[3]);
+  if (!r || r.scope !== "public") {
+    for (const [tool, target] of Object.entries(m.targets || {})) console.log("dir\t" + tool + "\t" + target);
+    for (const rf of f.root_files || []) console.log("root\t" + rf + "\t" + m.root_targets[rf]);
+  }
   if (r && r.private === false) {
     for (const [tool, target] of Object.entries(m.public_targets || {})) console.log("dir\t" + tool + "\t" + target);
     for (const [rf, target] of Object.entries(m.public_root_targets || {})) console.log("root\t" + rf + "\t" + target);
@@ -70,7 +74,7 @@ if (q === "pairs") {
 }
 if (q === "hooks") { const r = f.repos.find(x => x.dir === process.argv[3]); if (r && r.private === false && m.public_targets && m.public_targets.githooks) console.log(m.public_targets.githooks); }
 if (q === "sources") { const r = f.repos.find(x => x.dir === process.argv[3]); if (r && r.sources) for (const [dot, name] of Object.entries(r.sources.map)) console.log(r.sources.prefix + "\t" + dot + "\t" + name); }
-if (q === "mirrors") for (const x of f.module_mirrors || []) console.log(x.from + "\t" + x.to + "\t" + (x.only ? x.only.join(" ") : "-"));
+if (q === "mirrors") { const r = f.repos.find(x => x.dir === process.argv[3]); if (!r || r.scope !== "public") for (const x of f.module_mirrors || []) console.log(x.from + "\t" + x.to + "\t" + (x.only ? x.only.join(" ") : "-")); }
 ' "$MANIFEST" "$@"; }
 
 SELF="$(cd "$DF_SRC/.." && pwd -P)"   # the repo that owns the declaration: it is the source, not a mirror target
@@ -151,7 +155,7 @@ for repo in $REPOS; do
     # Module copies — only where the destination dir already exists, and never in
     # the repo that owns the declaration (its own module IS the source).
     [ "$(cd "$root" && pwd -P)" = "$SELF" ] && continue
-    mf mirrors | while IFS="$TAB" read -r from to only; do
+    mf mirrors "$repo" | while IFS="$TAB" read -r from to only; do
         [ -d "$DF_DIST/$from" ] && [ -d "$root/$to" ] || continue
         files_of "$DF_DIST/$from" | while read -r rel; do
             case " $only " in *" $rel "*) ;; *) [ "$only" = "-" ] || continue ;; esac

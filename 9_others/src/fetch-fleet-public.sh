@@ -12,11 +12,14 @@ MANIFEST="$1"; DEST="$2"
 mkdir -p "$DEST"
 node -e '
 const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-const paths = [...Object.values({...m.targets, ...m.public_targets}).map(t => "/" + t + "/"), ...Object.values({...m.root_targets, ...m.public_root_targets}).map(t => "/" + t), ...(m.fleet.module_mirrors || []).map(x => "/" + x.to + "/")];
+const dirs = o => Object.values(o || {}).map(t => "/" + t + "/"), files = o => Object.values(o || {}).map(t => "/" + t);
+const pub = [...dirs(m.public_targets), ...files(m.public_root_targets)];
+const all = [...dirs(m.targets), ...files(m.root_targets), ...pub, ...(m.fleet.module_mirrors || []).map(x => "/" + x.to + "/")];
 // "-" not "": read with IFS=<tab> collapses an empty field (tab is IFS
 // whitespace), which shifted the path list into `skip` and reported EVERY
 // public repo as ci_skip — the live guard then checked 0 repos and passed.
-for (const r of m.fleet.repos) console.log([r.dir, r.github, r.private ? "private" : "public", r.ci_skip ? "skip" : "-", [...new Set(paths)].join(" ")].join("\t"));
+// scope "public" repos carry only the public gates (deploy-dotfiles-fleet.sh), so only those are fetched.
+for (const r of m.fleet.repos) console.log([r.dir, r.github, r.private ? "private" : "public", r.ci_skip ? "skip" : "-", [...new Set(r.scope === "public" ? pub : all)].join(" ")].join("\t"));
 ' "$MANIFEST" | while IFS="$(printf '\t')" read -r dir gh vis skip paths; do
     [ "$vis" = public ] || { echo "fetch-fleet-public: $dir skipped (private — CI has no token)"; continue; }
     [ "$skip" = "-" ] || { echo "fetch-fleet-public: $dir skipped (ci_skip in manifest)"; continue; }
