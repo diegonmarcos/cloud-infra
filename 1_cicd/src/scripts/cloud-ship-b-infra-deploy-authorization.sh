@@ -46,8 +46,16 @@ case "$EVENT_NAME" in
         # marker. Iterating each commit (not just the head) closes the hole
         # where a b_infra change rides along in an earlier commit while the
         # marker sits on an unrelated later one.
+        # The count is a plain assignment so a jq failure aborts under
+        # `set -e`. It used to be the loop condition itself
+        # (`while jq -e ... 2>/dev/null`), where ANY jq error and an empty
+        # commit list both ended the loop at once and fell through to
+        # `authorised`. A push that lists no commits names nobody who could
+        # carry the marker.
+        n=$(jq '(.commits // []) | length' "$PAYLOAD_PATH")
+        [ "$n" -gt 0 ] || fail_closed "push payload lists no commits, so no commit can be shown to carry the marker '$REQUIRED_MARKER'."
         i=0
-        while jq -e --argjson i "$i" '.commits[$i]' "$PAYLOAD_PATH" >/dev/null 2>&1; do
+        while [ "$i" -lt "$n" ]; do
             # Commit touches b_infra/** iff any added/modified/removed path
             # starts with b_infra/. Emit one of those paths, or empty.
             # GitHub's push payload sets added/removed to NULL (not []) when a
@@ -56,11 +64,24 @@ case "$EVENT_NAME" in
             # over null" and the gate never evaluated the marker. The
             # alternative-operator pattern must be ((.added) // [])[] — a bare
             # .added[] // empty still iterates the null and dies first.
+            # A commit whose three lists are ALL null carries no file
+            # information, and "no b_infra path found" was read as "does not
+            # touch b_infra" — fail OPEN. Measured 2026-10-02: b42686f40
+            # (my-stack.nix, no marker) and 234c50380 (no marker) both printed
+            # `authorised` on real push payloads while this same script
+            # REFUSES the same commit given its file lists, and b42686f40 then
+            # shipped home-manager to the fleet unasked. The workflow only
+            # fires on b_infra/** pushes, so an unlisted commit is presumed
+            # to touch b_infra and must carry the marker.
             touched=$(jq -r --argjson i "$i" '
-                ([((.commits[$i].added) // [])[],
-                  ((.commits[$i].modified) // [])[],
-                  ((.commits[$i].removed) // [])[]]
-                 | map(select(startswith("b_infra/"))) | first // empty)' \
+                .commits[$i] as $c
+                | if ([$c.added, $c.modified, $c.removed] | all(. == null))
+                  then "<unlisted files>"
+                  else ([(($c.added) // [])[],
+                         (($c.modified) // [])[],
+                         (($c.removed) // [])[]]
+                        | map(select(startswith("b_infra/"))) | first // empty)
+                  end' \
                 "$PAYLOAD_PATH")
             if [ -n "$touched" ]; then
                 msg=$(jq -r --argjson i "$i" '.commits[$i].message' "$PAYLOAD_PATH")

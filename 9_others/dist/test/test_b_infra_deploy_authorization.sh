@@ -91,6 +91,20 @@ EOF
 cat > "$TMP/push-null-arrays-marker.json" <<'EOF'
 {"commits":[{"id":"abc123","message":"fix(watchdog): prune scopes [deploy-fleet]","added":null,"modified":["b_infra/_shared/vm-pilot/src/watchdog.nix"],"removed":null}]}
 EOF
+# All three lists null = the payload says nothing about this commit's files.
+# "No b_infra path found" in nothing was read as "does not touch b_infra":
+# b42686f40 (2026-10-01, no marker) printed `authorised` on its real push and
+# shipped home-manager to the fleet. Unlisted must count as touched, and a push
+# listing no commits at all must refuse.
+cat > "$TMP/push-unlisted-no-marker.json" <<'EOF'
+{"commits":[{"id":"abc123","message":"vm-pilot: retire the user sampler","added":null,"modified":null,"removed":null}]}
+EOF
+cat > "$TMP/push-unlisted-marker.json" <<'EOF'
+{"commits":[{"id":"abc123","message":"vm-pilot: retire the user sampler [deploy-fleet]"}]}
+EOF
+cat > "$TMP/push-no-commits.json" <<'EOF'
+{"commits":[]}
+EOF
 cat > "$TMP/dispatch.json" <<'EOF'
 {"ref":"refs/heads/main"}
 EOF
@@ -116,6 +130,12 @@ check "push, modify-only commit (null arrays), no marker → REFUSE(1)" 1 \
     bash "$GATE" push "$TMP/push-null-arrays-no-marker.json"
 check "push, modify-only commit (null arrays), marker → allow(0)" 0 \
     bash "$GATE" push "$TMP/push-null-arrays-marker.json"
+check "push, commit with unlisted files, no marker → REFUSE(1)" 1 \
+    bash "$GATE" push "$TMP/push-unlisted-no-marker.json"
+check "push, commit with unlisted files, marker → allow(0)" 0 \
+    bash "$GATE" push "$TMP/push-unlisted-marker.json"
+check "push, payload lists no commits → REFUSE(1)" 1 \
+    bash "$GATE" push "$TMP/push-no-commits.json"
 check "dispatch, no confirm → REFUSE(1)" 1 \
     bash "$GATE" workflow_dispatch "$TMP/dispatch.json" "false"
 check "dispatch, confirm=true → allow(0)" 0 \
