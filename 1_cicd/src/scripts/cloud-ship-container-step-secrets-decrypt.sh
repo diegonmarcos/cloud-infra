@@ -33,6 +33,28 @@ step_secrets() {
     # Decrypt once to JSON — all extraction done by jq, never parse secret values as text
     _secrets_json=$(sops -d --output-type json "$secrets_file")
 
+    # Fragments: src/secrets.<name>.yaml, merged into the same three outputs.
+    # Adding a key to secrets.yaml needs its sops data key, i.e. the PRIVATE age
+    # key; a NEW file needs only the public recipient in .sops.yaml. Without
+    # fragments a value that had to leave plaintext (#760: the backup DAGs' S3
+    # key id, public in git) could only move to sops on the one laptop holding
+    # the key. A key defined twice fails the step: a silent override would make
+    # which value ships depend on glob order.
+    for _frag in "$SRC_DIR"/secrets.*.yaml; do
+        [ -f "$_frag" ] || continue
+        _frag_json=$(sops -d --output-type json "$_frag")
+        _dup=$(jq -rn --argjson a "$_secrets_json" --argjson b "$_frag_json" \
+            '[($a | keys[]) as $k | select($b | has($k)) | $k] | join(" ")')
+        if [ -n "$_dup" ]; then
+            log "FATAL: $(basename "$_frag") redefines key(s) already set: $_dup"
+            unset _secrets_json _frag_json
+            return 1
+        fi
+        _secrets_json=$(jq -n --argjson a "$_secrets_json" --argjson b "$_frag_json" '$a + $b')
+        log "Merged fragment $(basename "$_frag") ($(echo "$_frag_json" | jq 'keys | length') keys)"
+    done
+    unset _frag_json _dup
+
     # ── .secrets dotenv (env_file format) ─────────────────────────────
     # Newlines escaped (env_file format can't carry literal \n).
     # Single-quote values containing $ so compose doesn't interpolate them.
