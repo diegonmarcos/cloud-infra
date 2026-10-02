@@ -33,12 +33,13 @@ run_step() {
 # 1: base + fragment merge into all three outputs
 C="$TMP/merge"; mkdir -p "$C/src"; echo '{}' > "$C/build.json"
 echo '{"A":"one","_credentials":"meta"}' > "$C/src/secrets.yaml"
-echo '{"B":"two"}'                        > "$C/src/secrets.extra.yaml"
+echo '{"B":"two","_credentials":"own"}'   > "$C/src/secrets.extra.yaml"
 if run_step "$C"; then ok "merge: step exits 0"; else bad "merge: step failed"; sed 's/^/    /' "$C/out"; fi
 grep -qx 'A=one' "$C/dist/.secrets" && grep -qx 'B=two' "$C/dist/.secrets" \
     && ok "merge: .secrets carries base and fragment keys" || bad "merge: .secrets missing a key"
 [ "$(jq -c . "$C/dist/.secrets.json" 2>/dev/null)" = '{"A":"one","B":"two"}' ] \
     && ok "merge: .secrets.json = base + fragment, _-keys filtered" || bad "merge: .secrets.json wrong"
+grep -q 'redefines' "$C/out" && bad "merge: both files' _credentials counted as a duplicate" || ok "merge: _credentials in both files is not a duplicate"
 [ "$(cat "$C/dist/.secrets.d/B" 2>/dev/null)" = two ] && ok "merge: .secrets.d/B written" || bad "merge: .secrets.d/B missing"
 
 # 2: duplicate key across files -> step fails, names the key, writes nothing

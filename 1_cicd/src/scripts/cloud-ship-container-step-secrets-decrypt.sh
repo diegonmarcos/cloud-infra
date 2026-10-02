@@ -39,12 +39,14 @@ step_secrets() {
     # fragments a value that had to leave plaintext (#760: the backup DAGs' S3
     # key id, public in git) could only move to sops on the one laptop holding
     # the key. A key defined twice fails the step: a silent override would make
-    # which value ships depend on glob order.
+    # which value ships depend on glob order. `_`-metadata (each file's own
+    # _credentials block, required by secrets-schema.md) is never shipped, so
+    # it is neither merged nor compared.
     for _frag in "$SRC_DIR"/secrets.*.yaml; do
         [ -f "$_frag" ] || continue
-        _frag_json=$(sops -d --output-type json "$_frag")
+        _frag_json=$(sops -d --output-type json "$_frag" | jq 'with_entries(select(.key | startswith("_") | not))')
         _dup=$(jq -rn --argjson a "$_secrets_json" --argjson b "$_frag_json" \
-            '[($a | keys[]) as $k | select($b | has($k)) | $k] | join(" ")')
+            '[($b | keys[]) as $k | select($a | has($k)) | $k] | join(" ")')
         if [ -n "$_dup" ]; then
             log "FATAL: $(basename "$_frag") redefines key(s) already set: $_dup"
             unset _secrets_json _frag_json
