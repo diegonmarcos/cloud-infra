@@ -6,22 +6,22 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2860,
+    "files": 2863,
     "by_lang": {
       "sh": 137,
       "nix": 156,
+      "py": 853,
       "ts": 1122,
       "js": 61,
-      "py": 850,
       "rust": 534
     },
     "by_role": {
       "shell": 128,
       "nix-module": 14,
+      "python": 848,
       "module": 683,
       "file": 307,
       "script": 5,
-      "python": 845,
       "flake": 72,
       "compose": 70,
       "entrypoint": 48,
@@ -290,6 +290,71 @@
         "gitTreeKey",
         "gitTreeName",
         "gitTreeMountPath"
+      ]
+    },
+    {
+      "path": "_shared/jev-gate/__init__.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "register(ctx)"
+      ],
+      "imports": [
+        "importlib.util",
+        "logging",
+        "os"
+      ],
+      "symbols": [
+        "_gate()",
+        "register(ctx)"
+      ]
+    },
+    {
+      "path": "_shared/jev-gate/jev_gate.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "load_config(path=None)",
+        "use_cfg(cfg, use)",
+        "redact(text, cfg)",
+        "never_auto_approve(tool, tool_input, cfg)",
+        "decide(state, questions, cfg)",
+        "log(cfg, **event)",
+        "safety(use, tool, tool_input, project, task, cfg)",
+        "claude_hook(event, cfg)",
+        "goose_hook(event, cfg)",
+        "select_tools(request, cfg, api_call_count=1, api_mode=\"chat_completions\")",
+        "main(argv)"
+      ],
+      "imports": [
+        "hashlib",
+        "json",
+        "os",
+        "re",
+        "sys",
+        "time",
+        "urllib.request"
+      ],
+      "symbols": [
+        "load_config(path=None)",
+        "use_cfg(cfg, use)",
+        "redact(text, cfg)",
+        "_normalize(part, patterns)",
+        "never_auto_approve(tool, tool_input, cfg)",
+        "_key(cfg)",
+        "decide(state, questions, cfg)",
+        "_prob(x)",
+        "log(cfg, **event)",
+        "safety(use, tool, tool_input, project, task, cfg)",
+        "claude_hook(event, cfg)",
+        "goose_hook(event, cfg)",
+        "_tool_name(t)",
+        "_tool_desc(t)",
+        "_last_user_text(messages)",
+        "_has_tool_traffic(messages)",
+        "select_tools(request, cfg, api_call_count=1, api_mode=\"chat_completions\")",
+        "_without_tools(request)",
+        "main(argv)"
       ]
     },
     {
@@ -576,6 +641,51 @@
         "check_dir()",
         "check_file()",
         "need_cmd()"
+      ]
+    },
+    {
+      "path": "_shared/test-jev-gate.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "reset(reply=None, status=200, raw=None, delay=0.0)",
+        "nouls(**scores)",
+        "choice(name, p, others=None)",
+        "test_config(mod)",
+        "load(path, name)",
+        "suite(mod)",
+        "mutation_tests()",
+        "cli_and_wiring()",
+        "main()",
+        "class Mock",
+        "class Handler"
+      ],
+      "imports": [
+        "copy",
+        "http.server",
+        "importlib.util",
+        "json",
+        "os",
+        "re",
+        "shutil",
+        "subprocess",
+        "sys",
+        "tempfile",
+        "threading",
+        "time"
+      ],
+      "symbols": [
+        "reset(reply=None, status=200, raw=None, delay=0.0)",
+        "nouls(**scores)",
+        "choice(name, p, others=None)",
+        "test_config(mod)",
+        "load(path, name)",
+        "suite(mod)",
+        "mutation_tests()",
+        "cli_and_wiring()",
+        "main()",
+        "class Mock",
+        "class Handler"
       ]
     },
     {
@@ -19881,6 +19991,8 @@
         "buildJson",
         "container",
         "engine",
+        "jevGateDir",
+        "jevGateTemplates",
         "packages",
         "pkgs",
         "default",

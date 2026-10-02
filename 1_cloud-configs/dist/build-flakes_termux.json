@@ -6203,6 +6203,10 @@
       },
       "upstream_image": "ghcr.io/diegonmarcos/hermes-agent:latest",
       "tests": {
+        "jev-gate": {
+          "cmd": "python3 test-jev-gate.py",
+          "cwd": "../_shared"
+        },
         "agent-toolbelt-declared": {
           "cmd": "node ../_shared/test-agent-toolbelt.mjs"
         }
@@ -6222,7 +6226,8 @@
       "secret_env_vars": [
         "TELEGRAM_BOT_TOKEN",
         "OPENAI_API_KEY",
-        "GH_TOKEN"
+        "GH_TOKEN",
+        "OPENROUTER_API_KEY"
       ]
     },
     "kg-store": {
@@ -6720,6 +6725,10 @@
         }
       },
       "tests": {
+        "jev-gate": {
+          "cmd": "python3 test-jev-gate.py",
+          "cwd": "../_shared"
+        },
         "session-model-routing": {
           "cmd": "node test-my-ai-telegram-session-model.ts",
           "cwd": "src/code"
@@ -6932,6 +6941,10 @@
         "_memory_comment": "MOVED (#556). runtime.memory used to be declared here and reached ONLY this container: measured 2026-09-24, cloud-agi-claude had AGENT_MEMORY_DIR while my-ai-api (goose) and hermes-agent had none, so two of the three oci-apps agents still ran with zero recall behind a ticket that read as done. The memory system is now declared once in _shared/engine.nix next to gitTreeMountPath and published to EVERY container with agent.git_tree as AGENT_MEMORY_DIR / _INDEX / _ENTRIES / _TYPES / _BRIEFING. Setting runtime.memory here again is a build error."
       },
       "tests": {
+        "jev-gate": {
+          "cmd": "python3 test-jev-gate.py",
+          "cwd": "../_shared"
+        },
         "resume-by-name": {
           "cmd": "node test-my-ai-resume-by-name.mjs",
           "cwd": "src/code"
@@ -6989,7 +7002,8 @@
       },
       "secret_env_vars": [
         "AUTHELIA_OIDC_TOKEN_CLAUDE_ADMIN",
-        "GH_TOKEN"
+        "GH_TOKEN",
+        "OPENROUTER_API_KEY"
       ]
     },
     "session-memory": {

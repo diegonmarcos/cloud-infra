@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20144,
+    "files": 20152,
     "by_lang": {
-      "py": 68,
-      "sh": 351,
+      "py": 74,
+      "sh": 353,
       "kotlin": 10100,
       "java": 613,
       "ts": 8413,
@@ -18,7 +18,7 @@
       "rust": 87
     },
     "by_role": {
-      "script": 163,
+      "script": 171,
       "shell": 255,
       "java": 612,
       "entrypoint": 23,
@@ -35,6 +35,68 @@
     }
   },
   "files": [
+    {
+      "path": ".github/workflows/scripts/cloud_android_ci_fanout.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "glob_re(pattern)",
+        "triggers(path)",
+        "fires(kind, patterns, files)",
+        "changed(spec, root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "yaml"
+      ],
+      "symbols": [
+        "glob_re(pattern)",
+        "triggers(path)",
+        "fires(kind, patterns, files)",
+        "changed(spec, root)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud_android_lib_closure.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(p)",
+        "deps(text, patch=False)",
+        "walk(top, exts)",
+        "scripts(top)",
+        "closure(seed, edges, allowed=None)",
+        "lib_edges(root)",
+        "shared_libs(root)",
+        "module_map(root, app)",
+        "included(root, app)",
+        "by_reference(root, app, libs)",
+        "analyse(root, app, edges=None, libs=None)",
+        "inputs(root, app, edges=None, libs=None)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "read(p)",
+        "_code(line)",
+        "deps(text, patch=False)",
+        "walk(top, exts)",
+        "scripts(top)",
+        "closure(seed, edges, allowed=None)",
+        "lib_edges(root)",
+        "shared_libs(root)",
+        "module_map(root, app)",
+        "included(root, app)",
+        "by_reference(root, app, libs)",
+        "analyse(root, app, edges=None, libs=None)",
+        "inputs(root, app, edges=None, libs=None)",
+        "main(argv)"
+      ]
+    },
     {
       "path": ".github/workflows/scripts/cloud_android_workflow_paths.py",
       "lang": "py",
@@ -223,6 +285,34 @@
       ]
     },
     {
+      "path": ".github/workflows/scripts/cloud-android-guard-triggers.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "load(root)",
+        "declared(name, spec)",
+        "strip_managed(lines)",
+        "push_block(lines)",
+        "inject(root)",
+        "reads(log, root)",
+        "coverage(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "load(root)",
+        "declared(name, spec)",
+        "strip_managed(lines)",
+        "push_block(lines)",
+        "inject(root)",
+        "reads(log, root)",
+        "coverage(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": ".github/workflows/scripts/cloud-android-health-full.sh",
       "lang": "sh",
       "role": "script",
@@ -319,23 +409,18 @@
       "lang": "py",
       "role": "script",
       "exports": [
-        "deps(text, patch=False)",
-        "scripts(top)",
-        "read(p)",
-        "closure(seed, edges)",
         "manifest_gaps(root)",
+        "removals(top)",
         "main(argv)"
       ],
       "imports": [
+        "cloud_android_lib_closure",
         "glob",
         "xml.etree.ElementTree"
       ],
       "symbols": [
-        "deps(text, patch=False)",
-        "scripts(top)",
-        "read(p)",
-        "closure(seed, edges)",
         "manifest_gaps(root)",
+        "removals(top)",
         "main(argv)"
       ]
     },
@@ -1395,6 +1480,68 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud_android_ci_fanout.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "glob_re(pattern)",
+        "triggers(path)",
+        "fires(kind, patterns, files)",
+        "changed(spec, root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "yaml"
+      ],
+      "symbols": [
+        "glob_re(pattern)",
+        "triggers(path)",
+        "fires(kind, patterns, files)",
+        "changed(spec, root)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud_android_lib_closure.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(p)",
+        "deps(text, patch=False)",
+        "walk(top, exts)",
+        "scripts(top)",
+        "closure(seed, edges, allowed=None)",
+        "lib_edges(root)",
+        "shared_libs(root)",
+        "module_map(root, app)",
+        "included(root, app)",
+        "by_reference(root, app, libs)",
+        "analyse(root, app, edges=None, libs=None)",
+        "inputs(root, app, edges=None, libs=None)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "read(p)",
+        "_code(line)",
+        "deps(text, patch=False)",
+        "walk(top, exts)",
+        "scripts(top)",
+        "closure(seed, edges, allowed=None)",
+        "lib_edges(root)",
+        "shared_libs(root)",
+        "module_map(root, app)",
+        "included(root, app)",
+        "by_reference(root, app, libs)",
+        "analyse(root, app, edges=None, libs=None)",
+        "inputs(root, app, edges=None, libs=None)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud_android_workflow_paths.py",
       "lang": "py",
       "role": "script",
@@ -1582,6 +1729,34 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-guard-triggers.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "load(root)",
+        "declared(name, spec)",
+        "strip_managed(lines)",
+        "push_block(lines)",
+        "inject(root)",
+        "reads(log, root)",
+        "coverage(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "load(root)",
+        "declared(name, spec)",
+        "strip_managed(lines)",
+        "push_block(lines)",
+        "inject(root)",
+        "reads(log, root)",
+        "coverage(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-health-full.sh",
       "lang": "sh",
       "role": "script",
@@ -1678,23 +1853,18 @@
       "lang": "py",
       "role": "script",
       "exports": [
-        "deps(text, patch=False)",
-        "scripts(top)",
-        "read(p)",
-        "closure(seed, edges)",
         "manifest_gaps(root)",
+        "removals(top)",
         "main(argv)"
       ],
       "imports": [
+        "cloud_android_lib_closure",
         "glob",
         "xml.etree.ElementTree"
       ],
       "symbols": [
-        "deps(text, patch=False)",
-        "scripts(top)",
-        "read(p)",
-        "closure(seed, edges)",
         "manifest_gaps(root)",
+        "removals(top)",
         "main(argv)"
       ]
     },
@@ -2935,6 +3105,28 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/guard-triggers.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "fixture()",
+        "expect()",
+        "wf()",
+        "names()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "fixture()",
+        "expect()",
+        "wf()",
+        "names()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/i18n-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -2978,6 +3170,28 @@
         "ok()",
         "fail()",
         "run_case()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/lib-closure.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "lib()",
+        "app()",
+        "inputs()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "lib()",
+        "app()",
+        "inputs()",
+        "check()"
       ]
     },
     {
@@ -15669,6 +15883,7 @@
         "state(link: Link, live: Live)",
         "fix(link: Link, live: Live, engineLabel: String)",
         "probe(ctx: Context, fleet: List<Fleet.App>, links: List<Link>)",
+        "awaitWoken( first: Map<String, Int>, asleep: Set<String>, timeoutMs: Long, pollMs: Long, sweep: ()",
         "get(port: Int, path: String, token: String)",
         "contractOf(pm: PackageManager, action: String, pkg: String)",
         "guarded(pm: PackageManager, pkg: String)",
