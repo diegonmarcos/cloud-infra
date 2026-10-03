@@ -1,0 +1,52 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/cicd/licence-inventory-guard.yml
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+name: licence-inventory-guard
+# #827 (the #805 method, extended): licenses/inventory.json is this repository's
+# licence map - every top-level directory, every directory carrying a foreign
+# LICENSE/COPYING/NOTICE, every licence-bearing binary, every npm / PyPI / Cargo
+# / Go dependency, every flake input, container base image and Terraform
+# provider, each with its licence. A map nobody keeps whole is worse than none,
+# because it reads as complete. This guard fails the push that adds a subject
+# with no entry and names it, so the entry lands in the same commit
+# (licenses/curated.json, then `python3 9_others/src/licence-inventory.py refresh .`).
+#
+# NO PATH FILTER, on purpose: the subjects it must catch are a new top-level
+# directory, a new flake input or a new LICENSE anywhere in the tree; a filter
+# would have to list "everything". The check reads build files and three JSON
+# files, takes about a second and never touches the network (licence lookup
+# happens only in `refresh`, run by hand).
+#
+# Not legal advice: green means the inventory is complete, not that the licences
+# are compatible. LICENSING.md lists the known conflicts.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  licence-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The tester first: 17 must-fail and 5 must-pass cases on a fixture repo,
+      # then 6 mutants of the guard that must each turn the suite red.
+      - name: The check still fails when the inventory is incomplete
+        run: bash 9_others/test/test_licence_inventory_guard.sh
+
+      - name: Every dependency, image, input, vendored directory and binary has a licence entry
+        run: python3 9_others/src/licence-inventory.py check .
