@@ -83,7 +83,10 @@ on:
   # the full drift from the fleet. Last-writer-wins is safe for a reconcile
   # in a way it never is for a deploy. Loop bound: see the job's `if:`.
   workflow_run:
-    workflows: ["Ship"]
+    # #842 — "Ship → home-manager" is listed for the requeue-evicted-run job
+    # below ONLY; the reconcile job's `if:` ignores it (it repairs ship.yml
+    # services, not home-manager generations).
+    workflows: ["Ship", "Ship → home-manager"]
     types: [completed]
     branches: [main]
   # A change to the reconcile's own moving parts must exercise them, or this
@@ -138,11 +141,14 @@ jobs:
     # would loop reconcile -> Ship(fail) -> reconcile and hold the WG lock
     # forever. The 4-hourly schedule still sees that drift.
     # Tested by 9_others/test/test_ship_burst_no_dropped_deploy.sh.
+    # #842: only a completed *Ship* chains a reconcile; home-manager
+    # completions are handled by requeue-evicted-run.
     if: >-
       github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'cancelled' ||
-      (github.event.workflow_run.conclusion == 'failure' &&
-       github.event.workflow_run.event != 'workflow_dispatch')
+      (github.event.workflow_run.name == 'Ship' &&
+       (github.event.workflow_run.conclusion == 'cancelled' ||
+        (github.event.workflow_run.conclusion == 'failure' &&
+         github.event.workflow_run.event != 'workflow_dispatch')))
 
     # Probing, not building. Four SSH round-trips plus a handful of registry
     # HEADs is a ~2 minute job; 30 minutes is a generous hang ceiling and keeps
@@ -434,3 +440,85 @@ jobs:
           echo "requeue dispatch HTTP $code"
           [ "$code" = "204" ] || { echo "::error::requeue refused (HTTP $code)"; cat /tmp/requeue.out; exit 1; }
           echo "::notice::reconcile job was evicted by a newer ship-wg-runner entrant; requeued"
+
+  # #842 — Ship → home-manager runs EVICTED BEFORE THEY START.
+  # ship-home-manager.yml holds ship-wg-runner at WORKFLOW level, so a queued
+  # run waits in the group's single pending slot and is cancelled whole by the
+  # next entrant (Ship deploy, cgc-db, health report, reconcile, another
+  # home-manager) before any job exists. 12 consecutive runs ended that way on
+  # 2026-10-03 (e.g. 37136779792, 37137915925, 37139060658) and each one was a
+  # dropped delivery: a b_infra push or a gen-configs data regen that never
+  # reached the fleet.
+  #
+  # Same mechanism as #840's `requeue`: an out-of-group job reacting to the
+  # cancelled run. It does NOT dispatch a new deploy. It asks GitHub to RE-RUN
+  # the evicted run (POST /actions/runs/{id}/rerun): same event, same payload,
+  # same head_sha, same inputs — so the #414 [deploy-fleet] consent gate runs
+  # again, unchanged, on the same commit. A requeue can never authorise what
+  # the original run could not; it only gives it the turn it was denied.
+  #
+  # Requeued ONLY when all hold (every one is a loop/safety bound, each killed
+  # as a mutant by 9_others/test/test_ship_hm_eviction_requeue.sh):
+  #   - conclusion == cancelled AND no job of the run ever started a step
+  #     (EVICTED_BEFORE_START). A real failure, a red consent gate, a timeout,
+  #     a human or unjam-ship cancelling a running deploy: never requeued.
+  #   - no NEWER home-manager run is queued/in progress/succeeded
+  #     (NEWER_COVERING). The newer run ships a descendant commit, so it covers
+  #     this one; re-running the older commit after it would ROLL BACK the
+  #     fleet, and requeuing every evictee of a burst would just make them
+  #     evict each other. Only the newest evicted delivery is requeued.
+  #   - run_attempt < MAX_EVICTION_REQUEUES. Past that the job goes RED naming
+  #     the run: a dropped delivery is never silent.
+  requeue-evicted-run:
+    name: Requeue evicted home-manager run
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.name == 'Ship → home-manager' &&
+      github.event.workflow_run.conclusion == 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Re-run the evicted run (same commit, same consent gate)
+        env:
+          DISPATCH_TOKEN: ${{ secrets.CLOUD_INFRA_DISPATCH_TOKEN }}
+          READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          WF_PATH: ${{ github.event.workflow_run.path }}
+          MAX_EVICTION_REQUEUES: "8"
+          # Input: the run's /jobs?filter=latest. True when no job ran a step.
+          EVICTED_BEFORE_START: '[.jobs[] | select(.started_at != null and ((.steps // []) | length) > 0)] | length == 0'
+          # Input: the workflow's /runs. Newest run id > RUN_ID that is still
+          # pending/running or concluded success, else empty.
+          NEWER_COVERING: '[.workflow_runs[] | select(.id > (env.RUN_ID | tonumber)) | select(.status != "completed" or .conclusion == "success") | .id] | max // empty'
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          get() { curl -fsS -H "Authorization: Bearer ${DISPATCH_TOKEN:-$READ_TOKEN}" -H "Accept: application/vnd.github+json" "$1"; }
+          run_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/$RUN_ID"
+
+          if [ "$(get "$api/actions/runs/$RUN_ID/jobs?filter=latest&per_page=100" | jq -r "$EVICTED_BEFORE_START")" != "true" ]; then
+            echo "::notice::$run_url was cancelled AFTER a job started (human/unjam/timeout) — not an eviction; not requeuing"
+            exit 0
+          fi
+          wf="$(basename "$WF_PATH")"
+          newer="$(get "$api/actions/workflows/$wf/runs?per_page=50" | jq -r "$NEWER_COVERING")"
+          if [ -n "$newer" ]; then
+            echo "::notice::newer home-manager run $newer is pending/running/succeeded and ships a descendant commit — it covers evicted $run_url; not requeuing (a re-run would roll the fleet back)"
+            exit 0
+          fi
+          if [ "$ATTEMPT" -ge "$MAX_EVICTION_REQUEUES" ]; then
+            echo "::error::$run_url was evicted from ship-wg-runner before starting on $ATTEMPT attempts; requeue bound reached. Its delivery is NOT on the fleet — re-run it once the group is quiet."
+            exit 1
+          fi
+          if [ -z "${DISPATCH_TOKEN:-}" ]; then
+            echo "::error::$run_url was evicted before starting and CLOUD_INFRA_DISPATCH_TOKEN is not set, so it cannot be re-run (GITHUB_TOKEN-initiated runs are suppressed). Its delivery is NOT on the fleet."
+            exit 1
+          fi
+          code="$(curl -sS -o /tmp/rerun.out -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer $DISPATCH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$api/actions/runs/$RUN_ID/rerun")"
+          echo "rerun HTTP $code"
+          [ "$code" = "201" ] || { echo "::error::re-run of $run_url refused (HTTP $code)"; cat /tmp/rerun.out; exit 1; }
+          echo "::notice::home-manager run $RUN_ID (attempt $ATTEMPT) was evicted before starting; re-run queued — same commit, same [deploy-fleet] gate"
+          echo "Re-queued evicted [home-manager run $RUN_ID]($run_url) (attempt $((ATTEMPT + 1)))" >> "$GITHUB_STEP_SUMMARY"

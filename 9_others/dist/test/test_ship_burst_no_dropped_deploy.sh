@@ -84,6 +84,7 @@ def model(ship, rec, scenario):
     def finish_ship(run, concl, t):
         if on_ship:
             ctx = {"github.event_name": "workflow_run",
+                   "github.event.workflow_run.name": ship_name,
                    "github.event.workflow_run.conclusion": concl,
                    "github.event.workflow_run.event": run["event"]}
             if expr(job_if, ctx):   # workflow_run is delivered AFTER the run ends
