@@ -42,11 +42,11 @@ Contact for commercial licensing: Diego Nepomuceno Marcos — <https://diegonmar
 | Container services | their upstream licences | Since 2026-09-06 the per-service source (`a_solutions/`) lives in **cloud-u-containers**, which has its own `LICENSING.md` and inventory. |
 | Everything fetched at build time | its upstream licence | flake inputs and every Nix package built from them, container base images, Terraform providers, npm / PyPI packages - section 3. Not relicensed. |
 
-## 3. Third-party dependencies (from `licenses/inventory.json`, 38 subjects)
+## 3. Third-party dependencies (from `licenses/inventory.json`, 39 subjects)
 
 | Kind | Subjects | Licences |
 |---|---|---|
-| Top-level directories | 22 (+ `0_git/src`, `0_git/dist` holding the licence text) | all own, PolyForm-NC |
+| Top-level directories | 23 incl. `licenses/` (+ `0_git/src`, `0_git/dist` holding the licence text) | all own, PolyForm-NC |
 | Flake inputs | `nixpkgs`, `home-manager` | MIT (the Nix expressions; each package keeps its own `meta.license`) |
 | Flake inputs (own) | this repo's `config.json` fetched as a non-flake input | own |
 | Container base image | `debian` (vm-pilot transport image) | per-package Debian licences |
