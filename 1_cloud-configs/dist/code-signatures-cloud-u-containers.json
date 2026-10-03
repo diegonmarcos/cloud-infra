@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2865,
+    "files": 2870,
     "by_lang": {
-      "sh": 137,
-      "nix": 156,
+      "sh": 140,
+      "nix": 158,
       "py": 855,
       "ts": 1122,
       "js": 61,
       "rust": 534
     },
     "by_role": {
-      "shell": 128,
+      "shell": 131,
       "nix-module": 14,
       "python": 850,
       "module": 683,
       "file": 307,
       "script": 5,
-      "flake": 72,
-      "compose": 70,
+      "flake": 73,
+      "compose": 71,
       "entrypoint": 48,
       "mcp-tool": 104,
       "workflow-dag": 2,
@@ -16391,6 +16391,160 @@
         "baseImage",
         "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-ops_disk-janitor/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-ops_disk-janitor/src/code/entrypoint.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "log()",
+        "free_kb()",
+        "pct_used()",
+        "prune_images()",
+        "prune_volumes()",
+        "sweep_slots()",
+        "prune_logs()",
+        "notify()",
+        "run_pass()"
+      ],
+      "imports": [],
+      "symbols": [
+        "log()",
+        "free_kb()",
+        "pct_used()",
+        "prune_images()",
+        "prune_volumes()",
+        "sweep_slots()",
+        "prune_logs()",
+        "notify()",
+        "run_pass()"
+      ]
+    },
+    {
+      "path": "infra-ops_disk-janitor/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "services",
+        "disk-janitor",
+        "image",
+        "container_name",
+        "network_mode",
+        "environment",
+        "TZ",
+        "SCHEDULE",
+        "MODE",
+        "IMAGE_MIN_AGE_HOURS",
+        "IMAGE_KEEP_PER_REPO",
+        "BUILD_CACHE_MIN_AGE_HOURS",
+        "VOLUME_MIN_AGE_DAYS",
+        "DISPATCH_CONTAINERS",
+        "DISPATCH_ROOT",
+        "LOG_RETENTION_DAYS",
+        "ALERT_FREE_GB",
+        "NTFY_URL",
+        "NTFY_TOPIC",
+        "HOST_ROOT",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "disk-janitor-logs"
+      ]
+    },
+    {
+      "path": "infra-ops_disk-janitor/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "own",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "infra-ops_disk-janitor/src/test/test-policy.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "fail()"
       ]
     },
     {
@@ -71075,6 +71229,7 @@
       "symbols": [
         "_load(platform: str)",
         "_persist(name: str, data: dict)",
+        "_data_dir_writable()",
         "health()",
         "list_targets()",
         "scrape(platform: str, req: ScrapeReq)",
@@ -71297,10 +71452,16 @@
         "vmIp",
         "port",
         "services",
-        "scrappers-api",
+        "scrappers-api-volume-owner",
         "image",
         "container_name",
+        "user",
+        "restart",
         "network_mode",
+        "volumes",
+        "command",
+        "scrappers-api",
+        "depends_on",
         "environment",
         "PYTHONUNBUFFERED",
         "DATA_DIR",
@@ -71308,7 +71469,6 @@
         "BASE_PATH",
         "PORT",
         "HTTP_HOST",
-        "volumes",
         "healthcheck",
         "test",
         "interval",

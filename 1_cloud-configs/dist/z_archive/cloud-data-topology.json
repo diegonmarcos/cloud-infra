@@ -107,6 +107,7 @@
         "github-rss",
         "openobserve",
         "agents-tmp-reaper",
+        "disk-janitor",
         "crowdsec",
         "cloud-cgc-pub-mcp",
         "cloud-cgc-pvt-mcp",
@@ -3547,6 +3548,32 @@
         "networks": []
       },
       "flake": "infra-ops_agents-tmp-reaper"
+    },
+    "disk-janitor": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-ops_disk-janitor",
+      "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+      "containers": {
+        "app": {
+          "container_name": "disk-janitor",
+          "public": false,
+          "env_file": false,
+          "read_only": false,
+          "protocol": "none"
+        }
+      },
+      "container_names": [
+        "disk-janitor"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-ops_disk-janitor"
     },
     "authelia": {
       "category": "sec",

@@ -404,6 +404,18 @@
       ]
     },
     {
+      "name": "disk-janitor",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "disk-janitor"
+      ]
+    },
+    {
       "name": "etherpad",
       "category": "app",
       "vm": "oci-A1-f_0",
@@ -1207,6 +1219,18 @@
       "networks": [],
       "containers": [
         "dbgate"
+      ]
+    },
+    {
+      "name": "disk-janitor",
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+      "domain": "—",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "disk-janitor"
       ]
     },
     {

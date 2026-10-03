@@ -494,6 +494,7 @@
         "ntfy",
         "openobserve",
         "agents-tmp-reaper",
+        "disk-janitor",
         "crowdsec",
         "cloud-cgc-pub-mcp",
         "hermes-agent",
@@ -524,7 +525,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 66
+      "container_count": 67
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -2270,7 +2271,7 @@
         "feeds": {
           "_doc": "The allow-list for the commits/runs routes is DATA, here, not code: the server refuses any owner/repo not listed, so a caller cannot spend the server-side credential's quota on arbitrary repositories. Seeded from the repos the superapp Store's GitHub commits and workflow-run panels declare (cloud-u-android aa_cloud-superapp build.json ui.sections stack_observability). Every successful upstream answer is cached in memory for cache_ttl_s, keyed by (repo, kind) and always fetched at max_per_page then sliced, so the whole fleet polling costs at most 2 x len(repos) upstream calls per TTL window, however many phones ask.",
           "cache_ttl_s": 120,
-          "max_per_page": 20,
+          "max_per_page": 50,
           "repos": [
             "diegonmarcos/cloud-infra",
             "diegonmarcos/cloud-infra-desktop",
@@ -4896,6 +4897,50 @@
         "healthcheck_paths": []
       }
     },
+    "disk-janitor": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-ops_disk-janitor",
+      "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+      "enabled": true,
+      "flake": "infra-ops_disk-janitor",
+      "containers": {
+        "app": {
+          "container_name": "disk-janitor",
+          "public": false,
+          "env_file": false,
+          "read_only": false,
+          "protocol": "none"
+        }
+      },
+      "container_names": [
+        "disk-janitor"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "timezone": "Europe/Berlin",
+      "resources": {
+        "mem_reservation": "16m"
+      },
+      "tests": {
+        "policy-dry-run": {
+          "cmd": "bash test/test-policy.sh",
+          "cwd": "src"
+        }
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "authelia": {
       "category": "sec",
       "vm": "gcp-E2-f_0",
@@ -5386,6 +5431,12 @@
           "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
           "db_catalog_template": "DB catalog — container={container} engine={engine} port={port} upstream={upstream} path={path} vm={vm}",
           "app_hub_fallback": "Not Found"
+        }
+      },
+      "tests": {
+        "authelia-rd-keeps-prefix": {
+          "cmd": "bash test/test-authelia-rd-keeps-prefix.sh",
+          "cwd": "src"
         }
       },
       "api": {

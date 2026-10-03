@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 315,
-    "edges": 432,
+    "nodes": 318,
+    "edges": 436,
     "by_table": {
       "vm": 4,
-      "service": 72,
-      "container": 93,
+      "service": 73,
+      "container": 94,
       "domain": 43,
       "repo": 3,
-      "module": 72,
+      "module": 73,
       "package": 28
     }
   },
@@ -1056,6 +1056,32 @@
       "key": "container:agents_tmp_reaper",
       "properties": {
         "name": "agents-tmp-reaper",
+        "image": null,
+        "role": "app",
+        "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "disk_janitor",
+      "key": "service:disk_janitor",
+      "properties": {
+        "name": "disk-janitor",
+        "category": "tools",
+        "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "infra-ops_disk-janitor"
+      }
+    },
+    {
+      "table": "container",
+      "id": "disk_janitor",
+      "key": "container:disk_janitor",
+      "properties": {
+        "name": "disk-janitor",
         "image": null,
         "role": "app",
         "port": null,
@@ -2971,6 +2997,17 @@
     },
     {
       "table": "module",
+      "id": "infra_ops_disk_janitor",
+      "key": "module:infra_ops_disk_janitor",
+      "properties": {
+        "name": "infra-ops_disk-janitor",
+        "repo": "cloud",
+        "category": "tools",
+        "service": "disk-janitor"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_sec_authelia",
       "key": "module:infra_sec_authelia",
       "properties": {
@@ -4298,6 +4335,22 @@
       "from": "service:agents_tmp_reaper",
       "to": "container:agents_tmp_reaper",
       "key": "service:agents_tmp_reaper->runs_container->container:agents_tmp_reaper",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:disk_janitor",
+      "to": "vm:oci_apps",
+      "key": "service:disk_janitor->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:disk_janitor",
+      "to": "container:disk_janitor",
+      "key": "service:disk_janitor->runs_container->container:disk_janitor",
       "properties": {
         "role": "app"
       }
@@ -6293,6 +6346,20 @@
       "from": "module:infra_ops_agents_tmp_reaper",
       "to": "service:agents_tmp_reaper",
       "key": "module:infra_ops_agents_tmp_reaper->implements->service:agents_tmp_reaper",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_ops_disk_janitor",
+      "to": "repo:cloud",
+      "key": "module:infra_ops_disk_janitor->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_ops_disk_janitor",
+      "to": "service:disk_janitor",
+      "key": "module:infra_ops_disk_janitor->implements->service:disk_janitor",
       "properties": {}
     },
     {

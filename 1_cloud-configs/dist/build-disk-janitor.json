@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
-    "description": "news-gdelt container config (service=news-gdelt, role=app)",
+    "description": "disk-janitor container config (service=disk-janitor, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
@@ -28,13 +28,13 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "news-gdelt",
-    "image": "ghcr.io/diegonmarcos/news-gdelt:latest",
-    "port": 3019,
-    "protocol": "http",
-    "port_env": "PORT"
+    "container_name": "disk-janitor",
+    "public": false,
+    "env_file": false,
+    "read_only": false,
+    "protocol": "none"
   },
-  "service": "news-gdelt",
+  "service": "disk-janitor",
   "role": "app",
   "vm": "oci-apps",
   "services": {
@@ -1768,5 +1768,14 @@
       }
     }
   },
-  "timezone": "Europe/Paris"
+  "timezone": "Europe/Berlin",
+  "resources": {
+    "mem_reservation": "16m"
+  },
+  "tests": {
+    "policy-dry-run": {
+      "cmd": "bash test/test-policy.sh",
+      "cwd": "src"
+    }
+  }
 }

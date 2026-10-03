@@ -6,18 +6,18 @@
   },
   "repo": "cloud",
   "counts": {
-    "files": 683,
+    "files": 686,
     "by_lang": {
       "nix": 304,
-      "sh": 348,
+      "sh": 351,
       "ts": 28,
       "js": 1,
       "py": 2
     },
     "by_role": {
       "flake": 6,
-      "script": 129,
-      "shell": 218,
+      "script": 131,
+      "shell": 219,
       "module": 29,
       "engine": 1,
       "python": 2,
@@ -577,12 +577,16 @@
       "exports": [
         "scp_secret()",
         "drop_protected()",
+        "host_sync_entries()",
+        "step_host_sync()",
         "step_deploy()"
       ],
       "imports": [],
       "symbols": [
         "scp_secret()",
         "drop_protected()",
+        "host_sync_entries()",
+        "step_host_sync()",
         "step_deploy()"
       ]
     },
@@ -787,6 +791,16 @@
         "_changed_entries()",
         "_binds_block()"
       ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-ship-hm-path-relevance.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [],
+      "imports": [
+        "build.sh"
+      ],
+      "symbols": []
     },
     {
       "path": ".github/workflows/scripts/cloud-ship-latest-monotonic.sh",
@@ -2050,6 +2064,16 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-ship-hm-path-relevance.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [],
+      "imports": [
+        "build.sh"
+      ],
+      "symbols": []
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-ship-latest-monotonic.sh",
       "lang": "sh",
       "role": "script",
@@ -2664,7 +2688,9 @@
       "path": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
       "lang": "ts",
       "role": "module",
-      "exports": [],
+      "exports": [
+        "monitoringUrl"
+      ],
       "imports": [
         "fs",
         "path",
@@ -2695,6 +2721,7 @@
         "deriveSuperappConfig(c: any)",
         "deriveFirewallRules(c: any)",
         "deriveMonitoringTargets(c: any)",
+        "monitoringUrl(domain: string, path: string)",
         "deriveBuildReports(c: any)",
         "deriveBuildNotify(c: any)",
         "deriveBackupTargets(c: any)",
@@ -2709,8 +2736,7 @@
         "deriveTopology(c: any)",
         "deriveConfigs(c: any)",
         "deriveDeps(c: any)",
-        "deriveServiceConnections(c: any)",
-        "deriveKgSchema(c: any)"
+        "deriveServiceConnections(c: any)"
       ]
     },
     {
@@ -4798,6 +4824,24 @@
         "ok()",
         "bad()",
         "run_orchestrator()"
+      ]
+    },
+    {
+      "path": "9_others/test/test_hm_ship_path_relevance.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check_dist_symlinks()"
+      ],
+      "imports": [
+        "cloud-ship-hm-path-relevance.sh"
+      ],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check_dist_symlinks()"
       ]
     },
     {

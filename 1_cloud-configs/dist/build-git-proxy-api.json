@@ -842,6 +842,19 @@
         "healthcheck_paths": []
       }
     },
+    "disk-janitor": {
+      "ip": "10.0.0.6",
+      "ports": {},
+      "vm": "oci-apps",
+      "description": "oci-apps disk janitor (#811) — declared, scheduled cleanup so agents and ships never hit disk-full: unused images older than N hours (keeping every image a container references and the newest K per repository), build cache, ANONYMOUS dangling volumes only after an age + label safety check, finished dispatch _work slots via the dispatcher's own reap.sh (slots with unpushed or uncommitted work are kept and reported), and dispatch logs past retention. Alerts ntfy when root free space is below a threshold and writes a metrics JSON each pass. MODE=dry-run reports only; MODE=enforce deletes.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "authelia": {
       "ip": "10.0.0.1",
       "ports": {
@@ -1838,7 +1851,7 @@
     "feeds": {
       "_doc": "The allow-list for the commits/runs routes is DATA, here, not code: the server refuses any owner/repo not listed, so a caller cannot spend the server-side credential's quota on arbitrary repositories. Seeded from the repos the superapp Store's GitHub commits and workflow-run panels declare (cloud-u-android aa_cloud-superapp build.json ui.sections stack_observability). Every successful upstream answer is cached in memory for cache_ttl_s, keyed by (repo, kind) and always fetched at max_per_page then sliced, so the whole fleet polling costs at most 2 x len(repos) upstream calls per TTL window, however many phones ask.",
       "cache_ttl_s": 120,
-      "max_per_page": 20,
+      "max_per_page": 50,
       "repos": [
         "diegonmarcos/cloud-infra",
         "diegonmarcos/cloud-infra-desktop",
