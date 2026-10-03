@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2870,
+    "files": 2876,
     "by_lang": {
       "sh": 140,
       "nix": 158,
       "py": 855,
-      "ts": 1122,
-      "js": 61,
+      "ts": 1127,
+      "js": 62,
       "rust": 534
     },
     "by_role": {
       "shell": 131,
       "nix-module": 14,
       "python": 850,
-      "module": 683,
-      "file": 307,
+      "module": 686,
+      "file": 308,
       "script": 5,
       "flake": 73,
       "compose": 71,
       "entrypoint": 48,
-      "mcp-tool": 104,
+      "mcp-tool": 106,
       "workflow-dag": 2,
       "rust-module": 529,
       "hook": 53
@@ -2503,6 +2503,42 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/vm-files-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "normalizeAbs",
+        "readDenied",
+        "treeDenied",
+        "writeTarget",
+        "resolvedInside",
+        "looksText",
+        "envLine",
+        "shq",
+        "READ_FILE_DEFAULT_BYTES",
+        "READ_FILE_MAX_BYTES",
+        "READ_TREE_DEFAULT_BYTES",
+        "READ_TREE_MAX_BYTES",
+        "WRITE_FILE_MAX_BYTES",
+        "READ_DENY",
+        "TREE_EXCLUDES",
+        "WriteRoot",
+        "WRITE_ROOTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "normalizeAbs(p: string)",
+        "readDenied(p: string)",
+        "treeDenied(p: string)",
+        "under(path: string, root: string)",
+        "writeTarget(\n  vmId: string, container: string, p: string,\n)",
+        "resolvedInside(resolved: string, root: string)",
+        "looksText(buf: Uint8Array)",
+        "envLine(e: string)",
+        "shq(v: string)"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/compose.nix",
       "lang": "nix",
       "role": "compose",
@@ -3742,6 +3778,7 @@
         "./tools/vps-ops.js",
         "./tools/delivery.js",
         "./tools/operations.js",
+        "./tools/vm-files.js",
         "./tools/mail-ops.js",
         "./tools/frontend.js",
         "./tools/telegram.js",
@@ -4136,6 +4173,27 @@
         "textResult(text: string, isError = false)",
         "missingTokenResult()",
         "registerTelegramTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/vm-files.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerVmFilesTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/config.js",
+        "../../shared/libs/audit.js",
+        "../../shared/libs/vm-files-policy.js"
+      ],
+      "symbols": [
+        "where(snippet: string, container?: string, user?: string, stdin = false)",
+        "stat(vmId: string, path: string, container?: string)",
+        "registerVmFilesTools(server: McpServer)"
       ]
     },
     {
@@ -5283,6 +5341,53 @@
         "validateSince(since: string)",
         "validatePathComponent(path: string)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/vm-files-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "normalizeAbs",
+        "readDenied",
+        "treeDenied",
+        "writeTarget",
+        "resolvedInside",
+        "looksText",
+        "envLine",
+        "shq",
+        "READ_FILE_DEFAULT_BYTES",
+        "READ_FILE_MAX_BYTES",
+        "READ_TREE_DEFAULT_BYTES",
+        "READ_TREE_MAX_BYTES",
+        "WRITE_FILE_MAX_BYTES",
+        "READ_DENY",
+        "TREE_EXCLUDES",
+        "WriteRoot",
+        "WRITE_ROOTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "normalizeAbs(p: string)",
+        "readDenied(p: string)",
+        "treeDenied(p: string)",
+        "under(path: string, root: string)",
+        "writeTarget(\n  vmId: string, container: string, p: string,\n)",
+        "resolvedInside(resolved: string, root: string)",
+        "looksText(buf: Uint8Array)",
+        "envLine(e: string)",
+        "shq(v: string)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-vm-files-policy.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./shared/libs/vm-files-policy.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/compose.nix",
@@ -18613,6 +18718,42 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/vm-files-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "normalizeAbs",
+        "readDenied",
+        "treeDenied",
+        "writeTarget",
+        "resolvedInside",
+        "looksText",
+        "envLine",
+        "shq",
+        "READ_FILE_DEFAULT_BYTES",
+        "READ_FILE_MAX_BYTES",
+        "READ_TREE_DEFAULT_BYTES",
+        "READ_TREE_MAX_BYTES",
+        "WRITE_FILE_MAX_BYTES",
+        "READ_DENY",
+        "TREE_EXCLUDES",
+        "WriteRoot",
+        "WRITE_ROOTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "normalizeAbs(p: string)",
+        "readDenied(p: string)",
+        "treeDenied(p: string)",
+        "under(path: string, root: string)",
+        "writeTarget(\n  vmId: string, container: string, p: string,\n)",
+        "resolvedInside(resolved: string, root: string)",
+        "looksText(buf: Uint8Array)",
+        "envLine(e: string)",
+        "shq(v: string)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/a-knowledge/configs.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -19856,6 +19997,42 @@
         "validateContainerName(name: string)",
         "validateSince(since: string)",
         "validatePathComponent(path: string)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/vm-files-policy.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "normalizeAbs",
+        "readDenied",
+        "treeDenied",
+        "writeTarget",
+        "resolvedInside",
+        "looksText",
+        "envLine",
+        "shq",
+        "READ_FILE_DEFAULT_BYTES",
+        "READ_FILE_MAX_BYTES",
+        "READ_TREE_DEFAULT_BYTES",
+        "READ_TREE_MAX_BYTES",
+        "WRITE_FILE_MAX_BYTES",
+        "READ_DENY",
+        "TREE_EXCLUDES",
+        "WriteRoot",
+        "WRITE_ROOTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "normalizeAbs(p: string)",
+        "readDenied(p: string)",
+        "treeDenied(p: string)",
+        "under(path: string, root: string)",
+        "writeTarget(\n  vmId: string, container: string, p: string,\n)",
+        "resolvedInside(resolved: string, root: string)",
+        "looksText(buf: Uint8Array)",
+        "envLine(e: string)",
+        "shq(v: string)"
       ]
     },
     {
