@@ -70,6 +70,22 @@ on:
         description: "Re-ship what drifted ('true'), or report only ('false')"
         required: false
         default: "true"
+  # #840 — EVENT-DRIVEN reconcile, not just the 4-hourly sweep.
+  # Ship runs 37136391107 (#824 scrappers-api) and 37136741612 (#655 caddy)
+  # built their service and then lost the deploy job to a newer entrant on
+  # ship-wg-runner (one pending slot per group; not configurable). The
+  # schedule above would only notice up to four hours later. Now every Ship
+  # run that did NOT end green — evicted deploy, cancelled run, failed gate —
+  # immediately queues a reconcile, which ships whatever the fleet is behind
+  # on at HEAD. During a burst many such reconciles are queued and most are
+  # themselves evicted; that loses nothing, because a reconcile is stateless
+  # and the LAST one standing (it always runs after the last Ship) recomputes
+  # the full drift from the fleet. Last-writer-wins is safe for a reconcile
+  # in a way it never is for a deploy. Loop bound: see the job's `if:`.
+  workflow_run:
+    workflows: ["Ship"]
+    types: [completed]
+    branches: [main]
   # A change to the reconcile's own moving parts must exercise them, or this
   # workflow is only ever proven by a schedule nobody watches.
   push:
@@ -109,6 +125,24 @@ jobs:
     concurrency:
       group: ship-wg-runner
       cancel-in-progress: false
+
+    # #840 loop bound. A workflow_run reconcile fires for a Ship that was
+    #   - `cancelled`: what an evicted deploy makes the whole run conclude
+    #     (both incident runs read `cancelled`, Deploy job `cancelled`). This
+    #     includes a reconcile-dispatched Ship that was itself evicted; that
+    #     chain only continues while newer entrants keep arriving, i.e. it ends
+    #     with the burst.
+    #   - `failure` from a push / repository_dispatch / gen-configs cascade.
+    # A `failure` of a workflow_dispatch Ship (a reconcile re-ship or a human
+    # re-ship that genuinely failed) does NOT chain: otherwise a broken deploy
+    # would loop reconcile -> Ship(fail) -> reconcile and hold the WG lock
+    # forever. The 4-hourly schedule still sees that drift.
+    # Tested by 9_others/test/test_ship_burst_no_dropped_deploy.sh.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'cancelled' ||
+      (github.event.workflow_run.conclusion == 'failure' &&
+       github.event.workflow_run.event != 'workflow_dispatch')
 
     # Probing, not building. Four SSH round-trips plus a handful of registry
     # HEADs is a ~2 minute job; 30 minutes is a generous hang ceiling and keeps
@@ -255,7 +289,11 @@ jobs:
       # success while nothing was queued would recreate the original defect one
       # layer up: a green run and a stale fleet.
       - name: Re-ship drifted services
-        if: steps.reconcile.outputs.rc == '1' && steps.select.outputs.services != '' && (github.event.inputs.apply || 'true') == 'true'
+        # A `push` run (an edit to this workflow or its scripts) is REPORT-ONLY
+        # (#840): proving the probe works must never deploy services as a side
+        # effect of a workflow-file commit. schedule / workflow_run / dispatch
+        # still apply.
+        if: steps.reconcile.outputs.rc == '1' && steps.select.outputs.services != '' && github.event_name != 'push' && (github.event.inputs.apply || 'true') == 'true'
         env:
           # One credential, no fallback. The scopes this needs — Actions:Write
           # to dispatch, Actions:Read to verify — are declared in
@@ -336,3 +374,63 @@ jobs:
           [ -n "$held" ] || exit 0
           echo "::warning::reconcile found state it does not auto-repair (see 9_others/ship-reconcile.json for why):"
           printf '%s\n' "$held" | sed 's/^/  /'
+
+  # #840 — the reconcile's OWN eviction must not be silent either.
+  # The reconcile job sits on ship-wg-runner, so during a push burst the next
+  # deploy evicts it from the pending slot exactly as it evicted the deploy the
+  # reconcile was queued to repair. Nothing would then follow: an evicted job
+  # ends the run `cancelled` and no further Ship failure is coming once the
+  # burst's last deploy goes green. Modelled and proven by
+  # 9_others/test/test_ship_burst_no_dropped_deploy.sh (scenario "burst" fails
+  # without this job).
+  #
+  # This job is NOT in the group, so it still runs after the eviction (the same
+  # `always()` property ship.yml's Deploy gate relies on), and re-dispatches
+  # this workflow. A dispatch, not a workflow_run self-trigger: workflow_run
+  # chains stop at three levels, a dispatch with the scoped PAT does not.
+  # Bound: it fires only when the reconcile job was cancelled, i.e. a newer
+  # entrant took the slot; once the burst ends the requeued run is not evicted
+  # and the chain stops. A push-triggered (report-only) run is never requeued,
+  # because a requeue is a dispatch and dispatches apply.
+  requeue:
+    name: Requeue evicted reconcile
+    needs: reconcile
+    if: always() && needs.reconcile.result == 'cancelled' && github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Re-dispatch Ship reconcile
+        env:
+          DISPATCH_TOKEN: ${{ secrets.CLOUD_INFRA_DISPATCH_TOKEN }}
+          VMS: ${{ github.event.inputs.vms || 'all' }}
+          APPLY: ${{ github.event.inputs.apply || 'true' }}
+          ME: ${{ github.run_id }}
+          # A NEWER reconcile run that is not finished makes this requeue
+          # redundant — it recomputes the same drift from the fleet. Without
+          # this check two evicted reconciles requeue each other and ping-pong
+          # on the pending slot for as long as the running job holds the lock.
+          # Executed against a fixture by test_ship_burst_no_dropped_deploy.sh.
+          NEWER_RECONCILE: '[.workflow_runs[] | select(.status != "completed" and .id > (env.ME | tonumber)) | .id] | max // empty'
+        run: |
+          set -euo pipefail
+          newer="$(curl -sS -H "Authorization: Bearer ${DISPATCH_TOKEN:-$GITHUB_TOKEN}" \
+                     "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/ship-reconcile.yml/runs?per_page=30" \
+                   | jq -r "$NEWER_RECONCILE")"
+          if [ -n "$newer" ]; then
+            echo "::notice::reconcile run $newer is newer and still pending/running — it covers this evicted one; not requeuing"
+            exit 0
+          fi
+          if [ -z "${DISPATCH_TOKEN:-}" ]; then
+            echo "::error::reconcile was evicted from ship-wg-runner and CLOUD_INFRA_DISPATCH_TOKEN is not set, so it cannot be requeued (GITHUB_TOKEN dispatches are suppressed). Drift waits for the next scheduled reconcile."
+            exit 1
+          fi
+          code="$(curl -sS -o /tmp/requeue.out -w '%{http_code}' \
+            -X POST -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/ship-reconcile.yml/dispatches" \
+            -d "$(jq -nc --arg v "$VMS" --arg a "$APPLY" '{ref:"main",inputs:{vms:$v,apply:$a}}')")"
+          echo "requeue dispatch HTTP $code"
+          [ "$code" = "204" ] || { echo "::error::requeue refused (HTTP $code)"; cat /tmp/requeue.out; exit 1; }
+          echo "::notice::reconcile job was evicted by a newer ship-wg-runner entrant; requeued"
