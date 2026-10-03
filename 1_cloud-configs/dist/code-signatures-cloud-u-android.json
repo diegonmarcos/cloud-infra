@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20472,
+    "files": 20474,
     "by_lang": {
-      "py": 97,
+      "py": 99,
       "sh": 375,
       "kotlin": 10362,
       "java": 622,
@@ -18,7 +18,7 @@
       "rust": 87
     },
     "by_role": {
-      "script": 196,
+      "script": 198,
       "shell": 270,
       "java": 621,
       "entrypoint": 23,
@@ -50,6 +50,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
+        "refreshed(wf_dir, files)",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -70,6 +71,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
+        "refreshed(wf_dir, files)",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -121,7 +123,8 @@
       "exports": [
         "make_header(app)",
         "stale_overlap(text)",
-        "rewrite_paths_block(region_lines, final_entries, app)"
+        "deferred_inputs(text)",
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
       ],
       "imports": [
         "re"
@@ -134,7 +137,8 @@
         "stale_overlap(text)",
         "_drop_indexes(comments)",
         "_split(region_lines)",
-        "rewrite_paths_block(region_lines, final_entries, app)"
+        "deferred_inputs(text)",
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
       ]
     },
     {
@@ -402,6 +406,30 @@
         "_one_transport(root, app, module)",
         "check_rootfs_libs(root)",
         "main()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-fleet-refresh.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "refreshable(root)",
+        "release_baselines(root, apps)",
+        "plan(root, baselines)",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_workflow_paths",
+        "glob"
+      ],
+      "symbols": [
+        "refreshable(root)",
+        "_gh(*args, binary=False)",
+        "_asset_and_tag(root, app)",
+        "release_baselines(root, apps)",
+        "_is_commit(root, sha)",
+        "plan(root, baselines)",
+        "main(argv)"
       ]
     },
     {
@@ -1757,6 +1785,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
+        "refreshed(wf_dir, files)",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -1777,6 +1806,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
+        "refreshed(wf_dir, files)",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -1828,7 +1858,8 @@
       "exports": [
         "make_header(app)",
         "stale_overlap(text)",
-        "rewrite_paths_block(region_lines, final_entries, app)"
+        "deferred_inputs(text)",
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
       ],
       "imports": [
         "re"
@@ -1841,7 +1872,8 @@
         "stale_overlap(text)",
         "_drop_indexes(comments)",
         "_split(region_lines)",
-        "rewrite_paths_block(region_lines, final_entries, app)"
+        "deferred_inputs(text)",
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
       ]
     },
     {
@@ -2109,6 +2141,30 @@
         "_one_transport(root, app, module)",
         "check_rootfs_libs(root)",
         "main()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-fleet-refresh.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "refreshable(root)",
+        "release_baselines(root, apps)",
+        "plan(root, baselines)",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_workflow_paths",
+        "glob"
+      ],
+      "symbols": [
+        "refreshable(root)",
+        "_gh(*args, binary=False)",
+        "_asset_and_tag(root, app)",
+        "release_baselines(root, apps)",
+        "_is_commit(root, sha)",
+        "plan(root, baselines)",
+        "main(argv)"
       ]
     },
     {
@@ -4048,13 +4104,15 @@
       "exports": [
         "ok()",
         "fail()",
-        "compare()"
+        "compare()",
+        "mutant()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "fail()",
-        "compare()"
+        "compare()",
+        "mutant()"
       ]
     },
     {
