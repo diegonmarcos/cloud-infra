@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20475,
+    "files": 20478,
     "by_lang": {
       "py": 99,
-      "sh": 375,
-      "kotlin": 10363,
+      "sh": 376,
+      "kotlin": 10365,
       "java": 622,
       "ts": 8413,
       "nix": 63,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 198,
-      "shell": 270,
+      "shell": 271,
       "java": 621,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10361,
+      "kotlin": 10363,
       "python": 36,
       "nix-module": 38,
       "file": 2257,
@@ -27779,6 +27779,7 @@
         "android.text.TextWatcher",
         "android.util.AttributeSet",
         "android.util.TypedValue",
+        "helium314.keyboard.latin.utils.Log",
         "android.view.View",
         "android.view.WindowManager",
         "android.view.inputmethod.EditorInfo",
@@ -27793,6 +27794,7 @@
         "helium314.keyboard.keyboard.KeyboardLayoutSet",
         "helium314.keyboard.keyboard.KeyboardSwitcher",
         "helium314.keyboard.keyboard.KeyboardTypeface",
+        "helium314.keyboard.keyboard.KeyboardViewState",
         "helium314.keyboard.keyboard.MainKeyboardView",
         "helium314.keyboard.keyboard.PointerTracker",
         "helium314.keyboard.keyboard.internal.KeyDrawParams",
@@ -27807,9 +27809,7 @@
         "helium314.keyboard.latin.utils.ResourceUtils",
         "helium314.keyboard.latin.utils.ToolbarKey",
         "helium314.keyboard.latin.utils.getPlatformDialogThemeContext",
-        "helium314.keyboard.latin.utils.createToolbarKey",
-        "helium314.keyboard.latin.utils.getCodeForToolbarKey",
-        "helium314.keyboard.latin.utils.getCodeForToolbarKeyLongClick"
+        "helium314.keyboard.latin.utils.createToolbarKey"
       ],
       "symbols": [
         "onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int)",
@@ -27817,6 +27817,7 @@
         "beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int)",
         "onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int)",
         "afterTextChanged(s: Editable?)",
+        "rebuildStripKeys()",
         "setupClipKey(params: KeyDrawParams)",
         "setupToolbarKeys()",
         "setupBottomRowKeyboard(editorInfo: EditorInfo, listener: KeyboardActionListener)",
@@ -30718,15 +30719,15 @@
         "setSymbolsKeyboard",
         "setSymbolsShiftedKeyboard",
         "isImeSuppressedByHardwareKeyboard",
+        "setEmojiCategoryStripShown",
+        "getViewMode",
+        "closePanelIfOpen",
+        "requestToolbarCheck",
         "setEmojiKeyboard",
         "setClipboardKeyboard",
         "setNumpadKeyboard",
         "toggleNumpad",
-        "getKeyboardSwitchState",
-        "onToggleKeyboard",
-        "requestUpdatingShiftState",
-        "startDoubleTapShiftKeyTimer",
-        "cancelDoubleTapShiftKeyTimer"
+        "getKeyboardSwitchState"
       ],
       "imports": [
         "android.annotation.SuppressLint",
@@ -30795,6 +30796,12 @@
         "setSymbolsShiftedKeyboard()",
         "isImeSuppressedByHardwareKeyboard( @NonNull final SettingsValues settingsValues, @NonNull final KeyboardSwitchState toggleState)",
         "setMainKeyboardFrame( @NonNull final SettingsValues settingsValues, @NonNull final KeyboardSwitchState toggleState)",
+        "applyViewState()",
+        "show(@Nullable final View view, final boolean visible)",
+        "setEmojiCategoryStripShown(final boolean shown)",
+        "getViewMode()",
+        "closePanelIfOpen(@NonNull final String why)",
+        "requestToolbarCheck(@NonNull final String trigger)",
         "setEmojiKeyboard()",
         "setClipboardKeyboard()",
         "setNumpadKeyboard()",
@@ -30804,13 +30811,7 @@
         "requestUpdatingShiftState(final int autoCapsFlags, @Nullable final RecapitalizeMode recapitalizeMode)",
         "startDoubleTapShiftKeyTimer()",
         "cancelDoubleTapShiftKeyTimer()",
-        "setOneHandedModeEnabled(boolean enabled)",
-        "setOneHandedModeEnabled(boolean enabled, boolean force)",
-        "switchOneHandedMode()",
-        "setFloatingKeyboardEnabled(boolean enabled)",
-        "toggleSplitKeyboardMode()",
-        "reloadKeyboard()",
-        "reloadMainKeyboard()"
+        "setOneHandedModeEnabled(boolean enabled)"
       ]
     },
     {
@@ -30979,6 +30980,39 @@
         "deallocateMemory()",
         "setKeyIconColor(Key key, Drawable icon, Keyboard keyboard)",
         "class KeyboardView"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/keyboard/KeyboardViewState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KeyboardViewState"
+      ],
+      "imports": [],
+      "symbols": [
+        "toString()",
+        "shows(piece: Piece)",
+        "isPanel(kind: PanelKind)",
+        "openPanel(kind: PanelKind)",
+        "showEmojiCategoryStrip(shown: Boolean)",
+        "toTyping(suppressed: Boolean)",
+        "toggleTarget(kind: PanelKind)",
+        "consumesBack()",
+        "onInputViewRecreated()",
+        "deferToolbarCheck(trigger: String)",
+        "plan(inputs: Inputs)",
+        "plan(mode: Mode, imeSuppressed: Boolean, inputs: Inputs, emojiCategoryStrip: Boolean = true)",
+        "clipboardStripKeys(enabled: List<K>, secondaryStripVisible: Boolean, close: K)",
+        "class KeyboardViewState",
+        "class PanelKind",
+        "class Mode",
+        "class Typing",
+        "class Panel",
+        "class Piece",
+        "class Exit",
+        "class Inputs",
+        "class Plan"
       ]
     },
     {
@@ -40946,6 +40980,34 @@
       ],
       "symbols": [
         "usage()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/keyboard/KeyboardViewStateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KeyboardViewStateTest"
+      ],
+      "imports": [
+        "helium314.keyboard.keyboard.KeyboardViewState.Exit",
+        "helium314.keyboard.keyboard.KeyboardViewState.Inputs",
+        "helium314.keyboard.keyboard.KeyboardViewState.Mode",
+        "helium314.keyboard.keyboard.KeyboardViewState.PanelKind",
+        "helium314.keyboard.keyboard.KeyboardViewState.Piece",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "everyPanelRendersAVisibleExitUnderEverySetting()",
+        "clipboardAlwaysShowsItsCloseKey()",
+        "panelsAreMutuallyExclusiveAndTypingShowsNoPanel()",
+        "toolbarKeyAndBackLeadBackToTyping()",
+        "lockedConfigChangeWhileClipboardOpenKeepsTheExit()",
+        "class KeyboardViewStateTest"
       ]
     },
     {
@@ -134181,6 +134243,18 @@
       "imports": [],
       "symbols": [
         "checks()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-keyboard/test/test-keyboard-view-state-exit.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
         "mutate()"
       ]
     },
