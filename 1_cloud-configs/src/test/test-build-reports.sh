@@ -110,6 +110,18 @@ else
     FAILS=$((FAILS + 1))
 fi
 
+# 6. No path-mounted service's prefix doubled (#647). domain "host/git" +
+#    health.path "/git/health" once emitted host/git/git/health, a route the
+#    edge's prefix gate 302s with or without the container — an alert that
+#    could never fire.
+doubled=$(jq -r '.endpoint_checks[] | select(.url | test("^https://[^/]+(/[^/]+)\\1(/|$)")) | "\(.service): \(.url)"' "$DIST")
+if [ -n "$doubled" ]; then
+    echo "✗ endpoint URLs with a doubled path prefix:"; echo "$doubled" | sed 's/^/    /'
+    FAILS=$((FAILS + 1))
+else
+    echo "✓ no endpoint URL doubles its path prefix"
+fi
+
 if [ "$FAILS" -eq 0 ]; then
     echo "test-build-reports: PASS"
     exit 0

@@ -2329,7 +2329,7 @@ function deriveMonitoringTargets(c: any): DerivedFile {
       const path = (typeof rawPath === "string" && rawPath.startsWith("/")) ? rawPath : "/";
       endpointChecks.push({
         service: svcName,
-        url: `https://${svc.domain}${path}`,
+        url: monitoringUrl(svc.domain, path),
       });
     }
     if (mon.dns_check && svc.domain) {
@@ -2359,6 +2359,23 @@ function deriveMonitoringTargets(c: any): DerivedFile {
       vms: vmList,
     },
   };
+}
+
+// A path-mounted service declares domain "host/prefix" AND a health.path that
+// already carries the prefix ("/git/health"), because Caddy forwards the full
+// path. Naive concatenation probed "host/git/git/health" — a route the edge's
+// prefix gate answers with a 302 whether or not the container exists, so the
+// alert could never fire (#647). Join on the host when the path already starts
+// with the domain's prefix; otherwise append as before.
+export function monitoringUrl(domain: string, path: string): string {
+  const slash = domain.indexOf("/");
+  if (slash > 0) {
+    const prefix = domain.slice(slash).replace(/\/+$/, "");
+    if (prefix && (path === prefix || path.startsWith(prefix + "/"))) {
+      return `https://${domain.slice(0, slash)}${path}`;
+    }
+  }
+  return `https://${domain}${path}`;
 }
 
 // build-reports.json — single derived file consumed by every reports/ rust
@@ -2391,7 +2408,7 @@ function deriveBuildReports(c: any): DerivedFile {
       const path = (typeof rawPath === "string" && rawPath.startsWith("/")) ? rawPath : "/";
       endpointChecks.push({
         service: svcName,
-        url: `https://${svc.domain}${path}`,
+        url: monitoringUrl(svc.domain, path),
       });
     }
     if (mon.dns_check && svc.domain) {
